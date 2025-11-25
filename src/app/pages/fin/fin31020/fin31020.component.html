@@ -9,16 +9,16 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="調整科目代號" controlName="AccNoFrom" [options]="AccNoOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.AccNoFrom" [submitted]="submitted" />
+            <app-dropdown label="調整科目代號" controlName="CAR_AccNo" [options]="AccNoOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.CAR_AccNo" [submitted]="submitted" />
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="加減項" controlName="minus" [options]="minusOption" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.minus" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="加減項" controlName="CAR_Type" [options]="minusOption" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.CAR_Type" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="備註" controlName="remark" [control]="queryForm.controls.remark"
+            <app-input-text label="備註" controlName="Remark" [control]="queryForm.controls.Remark"
               [submitted]="submitted"></app-input-text>
           </div>
         </div>

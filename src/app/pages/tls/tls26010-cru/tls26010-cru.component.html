@@ -7,20 +7,20 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="預售活動編號" controlName="pod_no" [control]="df().pod_no"
-          [submitted]="submitted" [disabled]="false">
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="預售活動編號" controlName="pod_no"
+          [control]="dialogForm().pod_no" [submitted]="submitted" [disabled]="false">
         </app-input-text>
 
         <app-calendar-range class="col-12 md:col-6 lg:col-8" calendarType="dateRange" label="預售期間"
-          [startControl]="df().pod_sdate" [endControl]="df().pod_edate" [submitted]="submitted">
+          [startControl]="dialogForm().pod_sdate" [endControl]="dialogForm().pod_edate" [submitted]="submitted">
         </app-calendar-range>
 
-        <app-input-text class="col-12 md:col-8 lg:col-8" label="預售名稱" controlName="pod_desc" [control]="df().pod_desc"
-          [submitted]="submitted">
+        <app-input-text class="col-12 md:col-8 lg:col-8" label="預售名稱" controlName="pod_desc"
+          [control]="dialogForm().pod_desc" [submitted]="submitted">
         </app-input-text>
 
         <app-input-text class="col-12 md:col-4 lg:col-4" label="核准狀態" controlName="pod_status"
-          [control]="df().pod_status" [disabled]="false">
+          [control]="dialogForm().pod_status" [disabled]="false">
         </app-input-text>
       </div>
 
@@ -44,7 +44,7 @@
     <app-table [showCheckBox]="true" [showEdit]="false" [showDetail]="false" [showManage]="false"
       [showReportMode]="false" [isRowSelectable]="isRowSelectableWrapper" (delete)="onDelete($event, 'ecr')"
       (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()" [lazy]="true" [data]="ecrTableData()"
-      [dataKey]="'ecr_no'" [tableKey]="'TLS26010_ECR'" [loading]="service.tableLoading()" [columns]="columns">
+      [dataKey]="'ecr_no'" [tableKey]="'TLS26010_ECR'" [loading]="service.tableLoading()" [columns]="ecr_Column">
     </app-table>
   </div>
 </div>
@@ -62,33 +62,46 @@
       [showReportMode]="false" [isRowSelectable]="isRowSelectableWrapper" [showExcel]="isFormEditable"
       (exportExcel)="onExportExcel()" (importExcel)="onImportExcel($event)" (delete)="onDelete($event, 'tlt')"
       (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()" [lazy]="true" [loading]="service.tableLoading()"
-      [data]="tltTableData()" [dataKey]="'tlt_no'" [tableKey]="'TLS26010_TLT'" [columns]="columns2">
+      [data]="tltTableData()" [dataKey]="'tlt_no'" [tableKey]="'TLS26010_TLT'" [columns]="tlt_Column">
     </app-table>
   </div>
 </div>
 
-<app-dialog [visible]="!!dialogVisible()" [header]="dialogHeader()"
+<!-- 收銀機/專櫃 Dialog選單 -->
+<app-dialog [visible]="dialogVisible() === 'ecr' || dialogVisible() === 'tlt'" [header]="dialogHeader()"
   (visibleChange)="onVisibleChange($event); dt.dt.reset()" (save)="onDialogSubmit()" [height]="'auto'"
   [loading]="loading">
   <form [formGroup]="dataForm">
     <div class="grid p-fluid">
       <div class="col-12 md:col-6 lg:col-4">
         <app-multi-select label="館別" controlName="sys3800" [options]="service.sys3800Options()" optionLabel="Name"
-          optionValue="No" appendTo="body" [control]="df().sys3800" [loading]="service.sys3800Loading()"
+          optionValue="No" appendTo="body" [control]="dialogForm().sys3800" [loading]="service.sys3800Loading()"
           [submitted]="submitted"></app-multi-select>
       </div>
 
       <div class="col-12 md:col-6 lg:col-4">
         <app-multi-select label="樓層" controlName="sys3900" [options]="service.sys3900Options()" optionLabel="Name"
-          optionValue="No" appendTo="body" [control]="df().sys3900" [loading]="service.sys3900Loading()"
+          optionValue="No" appendTo="body" [control]="dialogForm().sys3900" [loading]="service.sys3900Loading()"
           [submitted]="submitted"></app-multi-select>
       </div>
 
       <div class="col-12 md:col-6 lg:col-4">
         <app-multi-select label="區域" controlName="sys3A00" [options]="service.sys3A00Options()" optionLabel="Name"
-          optionValue="No" appendTo="body" [control]="df().sys3A00" [loading]="service.sys3A00Loading()"
+          optionValue="No" appendTo="body" [control]="dialogForm().sys3A00" [loading]="service.sys3A00Loading()"
           [submitted]="submitted"></app-multi-select>
       </div>
+
+      <ng-container *ngIf="dialogVisible() === 'ecr'">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="專櫃編號" controlName="ecr_no" [options]="ecr_no_Option" optionLabel="label"
+            optionValue="value" [control]="dialogForm().ecr_nos" [submitted]="submitted"></app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="收銀機號" controlName="tlt_no" [options]="tlt_no_Option" optionLabel="label"
+            optionValue="value" [control]="dialogForm().tlt_nos" [submitted]="submitted"></app-dropdown>
+        </div>
+      </ng-container>
 
       <div class="col-12">
         <app-table #dt [showCheckBox]="true" [showManage]="false" [showDelete]="false" [showReportMode]="false"

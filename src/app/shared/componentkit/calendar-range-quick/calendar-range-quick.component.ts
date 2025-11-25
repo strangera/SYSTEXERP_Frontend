@@ -1,14 +1,14 @@
+import { NgClass, NgIf, NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input, OnInit, ViewChild } from '@angular/core';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { TimeRangeOption, timeRangeOptions, timeUnitOptions } from './calendar-range-quick.model';
-import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
-import { SelectButtonChangeEvent, SelectButtonModule } from 'primeng/selectbutton';
-import { NgIf, NgClass, NgStyle } from '@angular/common';
+import { PrimeTemplate } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
-import { PrimeTemplate } from 'primeng/api';
+import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
+import { SelectButtonChangeEvent, SelectButtonModule } from 'primeng/selectbutton';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
+import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { TimeRangeOption, timeRangeOptions, timeUnitOptions } from './calendar-range-quick.model';
 
 @Component({
   selector: 'app-calendar-range-quick',
@@ -108,11 +108,12 @@ export class CalendarRangeQuickComponent extends BasicKitComponent implements On
     }
   }
   onInput(event: any) {
-    if (event.target.value.length === 4 && event.data && event.target.value.indexOf('/') === -1) {
-      event.target.value = event.target.value + '/';
-    }
-    if (event.target.value.length === 7 && event.data && event.target.value.lastIndexOf('/') === event.target.value.indexOf('/')) {
-      event.target.value = event.target.value + '/';
-    }
+    // !!! 一開始說的需求，現在又說不要
+    // if (event.target.value.length === 4 && event.data && event.target.value.indexOf('/') === -1) {
+    //   event.target.value = event.target.value + '/';
+    // }
+    // if (event.target.value.length === 7 && event.data && event.target.value.lastIndexOf('/') === event.target.value.indexOf('/')) {
+    //   event.target.value = event.target.value + '/';
+    // }
   }
 }

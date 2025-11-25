@@ -32,9 +32,10 @@
 </div>
 <div class="card">
   <app-table tableKey="fin11200" dataKey="ID" [data]="data" [columns]="columns" [showEdit]="false" [showDetail]="false"
-    [showCheckBox]="true" [showDelete]="false" [multiSortMeta]="[{ field: 'ID', order: 1 }]"
-    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading" [addButton]="addButton" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
+    [showCheckBox]="true" [showDelete]="false"
+    [multiSortMeta]="[{ field: 'GUI_YYMM', order: 1 }, { field: 'GUI_TRACK', order: 1 }]" [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+    [addButton]="addButton" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
     [buttonsLoading]="manageLoading">
     <header>
       <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }" pTooltip="下傳"

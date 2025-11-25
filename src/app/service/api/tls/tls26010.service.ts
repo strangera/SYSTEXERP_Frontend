@@ -114,12 +114,15 @@ export class TLS26010Service {
   /** 取得收銀機號 */
   public loadPreorderECRList(query: DependentDataQuery & { ecr_type: string; }): void {
     this.ecrLoading.set(true);
-    this.http.post<BaseQueryResponse<EcrItem>>(`${apiUrl}/queryECRDropDownList`, query).pipe(
+    this.http.post<BaseQueryResponse<any>>(`${apiUrl}/queryECRDropDownList`, query).pipe(
       take(1),
       tap(res => {
-        this.ecrOptions.set(res.Data);
+        const mapped = (res.Data ?? []).map(item => ({
+          ...item,
+        }));
+        this.ecrOptions.set(mapped);
         console.log('收銀機號查詢 request 💡:', query);
-        this.logger.debug(`收銀機號查詢結果:`, [res]);
+        console.log(`收銀機號查詢結果:`, res.Data);
       }),
       finalize(() => this.ecrLoading.set(false)),
     ).subscribe();
@@ -144,7 +147,7 @@ export class TLS26010Service {
     this.tableLoading.set(true);
     return this.http.post<BaseQueryResponse<TLS26010Data>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26010`, query).pipe(
       take(1),
-      tap(res => this.logger.debug(`預購活動檔期查詢結果:`, [res])),
+      tap(res => this.logger.debug(`預購活動檔期查詢結果:`, res)),
       finalize(() => this.tableLoading.set(false))
     );
   }
@@ -196,8 +199,8 @@ export class TLS26010Service {
                 pod_status: currentData[index].pod_status === ApprovalStatus.已核准
                   ? ApprovalStatus.未核准
                   : ApprovalStatus.已核准,
-                tlt_nos: data.talent_list.map(t => t.tlt_no!),
-                ecr_nos: data.ecr_list.map(e => e.ecr_no!),
+                talent_list: data.talent_list.map(t => t.tlt_no!),
+                ecr_list: data.ecr_list.map(e => e.ecr_no!),
               };
               currentData[index] = updatedData;
             }

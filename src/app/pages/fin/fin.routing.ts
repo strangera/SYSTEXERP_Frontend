@@ -157,7 +157,7 @@ export const finRoutes: Routes = [
   // 廠商付款明細表
   { path: 'fin29060', loadComponent: () => import('./fin29060/fin29060.component').then(m => m.FIN29060Component) },
   // 廠商應付對科目明細表
-  // { path: 'fin29070', loadComponent: () => import('./fin29070/fin29070.component').then(m => m.FIN29070Component) },
+  { path: 'fin29070', loadComponent: () => import('./fin29070/fin29070.component').then(m => m.FIN29070Component) },
   // 應付帳款預估表
   { path: 'fin29080', loadComponent: () => import('./fin29080/fin29080.component').then(m => m.FIN29080Component) },
   // 貼現三聯式發票列印
@@ -209,6 +209,10 @@ export const finRoutes: Routes = [
   // 產生年中版本作業
   // { path: 'fin41040', loadComponent: () => import('./fin41040/fin41040.component').then(m => m.FIN41040Component) },
   // { path: 'fin41040cru', loadComponent: () => import('./fin41040-cru/fin41040-cru.component').then(m => m.FIN41040CRUComponent) },
+  // 部門預算編制明細維護
+  // { path: 'fin41050', loadComponent: () => import('./fin41050/fin41050.component').then(m => m.Fin41050Component) },
+  // 部門預算審核作業
+  // { path: 'fin41060', loadComponent: () => import('./fin41060/fin41060.component').then(m => m.Fin41060Component) },
   // 預計損益表
   // { path: 'fin42010', loadComponent: () => import('./fin42010/fin42010.component').then(m => m.FIN42010Component) },
   // 預算、實績比較表
@@ -219,6 +223,8 @@ export const finRoutes: Routes = [
   // { path: 'fin42040', loadComponent: () => import('./fin42040/fin42040.component').then(m => m.FIN42040Component) },
   // 預算版本比較表
   // { path: 'fin42050', loadComponent: () => import('./fin42050/fin42050.component').then(m => m.FIN42050Component) },
+  // 部門科目明細表(由總帳管理系統移至預算管理系統)
+  // { path: 'fin42060', loadComponent: () => import('./fin42060/fin42060.component').then(m => m.Fin42060Component) },
   // 資材系統
   // { path: 'fin51010', loadComponent: () => import('./fin51010/fin51010.component').then(m => m.FIN51010Component) },
   // { path: 'fin51010cru', loadComponent: () => import('./fin51010-cru/fin51010-cru.component').then(m => m.FIN51010CRUComponent) },

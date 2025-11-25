@@ -23,7 +23,7 @@ import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
-import { finalize, Observable, tap } from 'rxjs';
+import { finalize, map, Observable, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailData, FIN52030Payload } from '../fin52030/fin52030.model';
 import { FIN53010Data, FIN53010DetailTable, FIN53010InsertPayload, FIN53010InsertResult, FIN53010UpdateResult, QueryFIN53010Detail } from '../fin53010/fin53010.model';
 
@@ -286,12 +286,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.service.getRefNameList();
     this.service.getAccDescList([]);
 
-    if (!this.isFormCreateable) this.service.loadFIN53010Detail(this.rowdata!.id).pipe(
-      tap(res => {
+    if (!this.isFormCreateable) this.service.loadFIN53010Detail(this.rowdata!.id).subscribe({
+      next: res => {
         this.fin53010DetailData.set(res.Data);
         this.totalRecords.set(res.TotalCount);
-      })
-    ).subscribe();
+      },
+    });
   }
 
   public onSubmit(): void {
@@ -327,9 +327,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         : this.service.updateFIN53010Data({ ...payload, id: this.rowdata!.id, UPD_USR_No: this.user.user_No });
 
       request.pipe(
-        tap(({ Status }) => Status === '0000' && this.onCancel())
       ).subscribe({
-        next: () => this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功'),
+        next: res => {
+          if (res.Status === '0000') this.onCancel();
+          this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功');
+        },
         error: () => this.messageService.errorBubble(this.isFormCreateable ? '新增失敗' : '更新失敗'),
       });
     });
@@ -445,43 +447,44 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.logger.debug('getVocherTemplate:', [payload]);
     if (this.loading) return;
     this.service.getFin52030(payload).pipe(
+      tap(res => this.logger.debug(`getVocherTemplate:`, [res])),
       finalize(() => this.displayDialog.set(!0)),
-      tap(res => this.logger.debug('取得常用傳票結果:', [res]))
     ).subscribe();
   }
 
   public onApplyTemplate(): void {
     this.logger.debug('onApplyTemplate:', [this.selectedDetail()]);
     this.service.getFin52030Detail(this.selectedDetail()[0]?.TempNo, this.df().CompNo.value!, Number(this.user.mid)).pipe(
-      tap(res => {
-        if (res.Status === '0000' && res.Data) {
-          this.logger.debug('套用常用傳票結果:', [res]);
-          const data = res.Data;
-          this.dataForm.patchValue({
-            VouType: data.VouType,
-            CRT_USR_No: data.CRT_USR_No ?? void 0,
-            CRT_Date: data.CRT_Date || void 0,
-            UPD_USR_No: data.UPD_USR_No ?? void 0,
-            UPD_Date: data.UPD_Date || void 0,
-          });
-          this.tableData.set(data.Details.map((v, index) => ({
-            ...v,
-            id: v.id!,
-            ...(v.AccDC === '0' ? { AccAmtC: v.AccAmt } : {}),
-            ...(v.AccDC === '1' ? { AccAmtD: v.AccAmt } : {}),
-            ...(v.NoteDesc ? { NoteDesc: this.service.noteDescMap().get(String(v.AccNo))?.label } : {}),
-            AccNo: v.AccNo,
-            DetailNo: v.DetailNo,
-            AccName: this.service.accNoMap().get(String(v.AccNo))?.label,
-            DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
-              ?? this.service.usrMap().get(String(v.DetailNo))?.label,
-            SerNo: v.SerNo,
-            index: v.index,
-          })));
-          this.displayDialog.set(!1);
-        }
-      })
-    ).subscribe();
+      tap(res => this.logger.debug(`onApplyTemplate:`, [res])),
+      map(res => { if (res.Status === '0000') return res; throw new Error(res.Message || '取得常用傳票明細失敗'); }),
+      finalize(() => this.displayDialog.set(!1)),
+    ).subscribe({
+      next: res => {
+        const data = res.Data;
+        this.dataForm.patchValue({
+          VouType: data.VouType,
+          CRT_USR_No: data.CRT_USR_No ?? void 0,
+          CRT_Date: data.CRT_Date || void 0,
+          UPD_USR_No: data.UPD_USR_No ?? void 0,
+          UPD_Date: data.UPD_Date || void 0,
+        });
+        this.tableData.set(data.Details.map((v, index) => ({
+          ...v,
+          id: v.id!,
+          ...(v.AccDC === '0' ? { AccAmtC: v.AccAmt } : {}),
+          ...(v.AccDC === '1' ? { AccAmtD: v.AccAmt } : {}),
+          ...(v.NoteDesc ? { NoteDesc: this.service.noteDescMap().get(String(v.AccNo))?.label } : {}),
+          AccNo: v.AccNo,
+          DetailNo: v.DetailNo,
+          AccName: this.service.accNoMap().get(String(v.AccNo))?.label,
+          DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
+            ?? this.service.usrMap().get(String(v.DetailNo))?.label,
+          SerNo: v.SerNo,
+          index: v.index,
+        })));
+      },
+      error: err => this.messageService.errorBubble(err.message || '取得常用傳票明細失敗'),
+    });
   }
 
   // Template 相關方法

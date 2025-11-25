@@ -64,7 +64,7 @@ export class TLS21020Service {
   }
 
   public queryTLS21020(query: TLS21020Query): Observable<BaseQueryResponse<TLS21020Data>> {
-    return this.http.post<BaseQueryResponse<TLS21020Data>>(`${apiUrl}/queryTLS21020`, query).pipe(
+    return this.http.post<BaseQueryResponse<TLS21020Data>>(`${apiUrl}/queryTLS21020`, Object.freeze(query)).pipe(
       take(1),
       map(res => {
         res.Data = res.Data?.map(item => ({

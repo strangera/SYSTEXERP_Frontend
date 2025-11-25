@@ -415,8 +415,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls43020', loadComponent: () => import('./tls43020/tls43020.component').then(m => m.TLS43020Component) },
   // 訊息群組維護作業
   { path: 'tls43040', loadComponent: () => import('./tls43040/tls43040.component').then(m => m.TLS43040Component) },
-  // 訊息狀態查詢作業
-  { path: 'tls43050', loadComponent: () => import('./tls43050/tls43050.component').then(m => m.TLS43050Component) },
   // POS即時連線監看
   { path: 'tls44010', loadComponent: () => import('./tls44010/tls44010.component').then(m => m.TLS44010Component) },
   // EDC即時連線監看
@@ -427,6 +425,7 @@ export const tlsRoutes: Routes = [
   { path: 'tls46010', loadComponent: () => import('./tls46010/tls46010.component').then(m => m.TLS46010Component) },
   // POS環境變數維護作業
   { path: 'tls46020', loadComponent: () => import('./tls46020/tls46020.component').then(m => m.TLS46020Component) },
+  // 收銀機異動排程維護
   { path: 'tls46030', loadComponent: () => import('./tls46030/tls46030.component').then(m => m.TLS46030Component) },
   // 設定檔群組維護
   { path: 'tls46040', loadComponent: () => import('./tls46040/tls46040.component').then(m => m.TLS46040Component) },
@@ -454,12 +453,11 @@ export const tlsRoutes: Routes = [
   { path: 'tls43020cru', loadComponent: () => import('./tls43020-cru/tls43020-cru.component').then(m => m.TLS43020CRUComponent) },
   // 訊息群組維護作業 CRU
   { path: 'tls43040cru', loadComponent: () => import('./tls43040-cru/tls43040-cru.component').then(m => m.TLS43040CRUComponent) },
-  // 訊息狀態查詢作業 CRU
-  { path: 'tls43050cru', loadComponent: () => import('./tls43050-cru/tls43050-cru.component').then(m => m.TLS43050CRUComponent) },
   // 網路位置設定 CRU
   { path: 'tls46010cru', loadComponent: () => import('./tls46010-cru/tls46010-cru.component').then(m => m.TLS46010CRUComponent) },
   // POS環境變數維護作業 CRU
   { path: 'tls46020cru', loadComponent: () => import('./tls46020-cru/tls46020-cru.component').then(m => m.TLS46020CRUComponent) },
+  // 收銀機異動排程維護
   { path: 'tls46030cru', loadComponent: () => import('./tls46030-cru/tls46030-cru.component').then(m => m.TLS46030CRUComponent) },
   // 設定檔群組維護 CRU
   { path: 'tls46040cru', loadComponent: () => import('./tls46040-cru/tls46040-cru.component').then(m => m.TLS46040CRUComponent) },

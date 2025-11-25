@@ -72,7 +72,9 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
   columns: Column[] = [
     { field: 'CRN_No', header: '退貨單號', visible: true }, // 採購單號
     { field: 'VEN_No', header: '廠商編號', visible: true }, // 廠商代號
-    { field: 'LOGO_No', header: '品牌代碼', visible: true }, // LOGO代碼
+    { field: 'VEN_Name', header: '廠商名稱', visible: true }, // 廠商名稱
+    { field: 'LOGO_No', header: '品牌代碼', visible: true }, // 品牌代碼
+    { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true }, // 品牌名稱
     { field: 'HOS_No', header: '倉庫代碼', visible: true }, // 倉庫代碼
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true }, // 倉庫名稱
     { field: 'org_id', header: '組織代碼', visible: true }, // 組織代碼

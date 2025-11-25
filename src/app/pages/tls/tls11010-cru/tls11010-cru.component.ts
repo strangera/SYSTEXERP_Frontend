@@ -1,5 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
-import { Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import {
+  Validators,
+  FormsModule,
+  ReactiveFormsModule,
+  FormGroup,
+  AbstractControl,
+  ValidationErrors,
+} from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '../../../shared/service/validation.service';
@@ -34,20 +42,68 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
   ],
 })
 export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
+  // 欄位中文名稱（用在錯誤泡泡）
+  private labelOf: Record<string, string> = {
+    LOCATION_No: '店位代碼',
+    LOCATION_Name: '店位說明',
+    org_id: '組織代碼/名稱',
+    building_no: '館別',
+    FLOOR_NO: '樓層',
+    AREA_NO: '區域',
+    GROSS_SPACE: '簽約坪數',
+    NET_SPACE: '營業坪數',
+    LOCATION_Status: '使用狀態',
+    Purpose_no: '用途代碼/名稱',
+    Draw_X: '平面圖 X 座標',
+    Draw_Y: '平面圖 Y 座標',
+  };
+
+  /** 錯誤泡泡的欄位檢查順序 */
+  private checkOrder: string[] = [
+    'LOCATION_No',
+    'LOCATION_Name',
+    'org_id',
+    'building_no',
+    'FLOOR_NO',
+    'AREA_NO',
+    'GROSS_SPACE',
+    'NET_SPACE',
+    'LOCATION_Status',
+    'Purpose_no',
+    'Draw_X',
+    'Draw_Y',
+  ];
+
   // 建立表單欄位
   dataForm = this.formBuilder.nonNullable.group({
-    LOCATION_Name: ['', [Validators.maxLength(30)]],         // 店位說明
-    org_id: ['', [Validators.maxLength(20)]],                 // 組織代碼
+    LOCATION_Name: ['', [Validators.maxLength(30)]], // 店位說明
+    org_id: ['', [Validators.maxLength(20)]], // 組織代碼
     building_no: ['', [Validators.required, Validators.maxLength(1)]], // 館別代碼
-    FLOOR_NO: ['', [Validators.required, Validators.maxLength(2)]],    // 樓層代碼
-    AREA_NO: ['', [Validators.required, Validators.maxLength(2)]],     // 區域代碼
-    GROSS_SPACE: [null, [Validators.min(0), Validators.max(9999.999)]],// 簽約坪數
-    NET_SPACE: [null, [Validators.required, Validators.min(0), Validators.max(9999.999)]], // 營業坪數
+    FLOOR_NO: ['', [Validators.required, Validators.maxLength(2)]], // 楼層代碼
+    AREA_NO: ['', [Validators.required, Validators.maxLength(2)]], // 區域代碼
+
+    // 簽約坪數
+    GROSS_SPACE: [
+      null,
+      [
+        Validators.min(0),
+        Validators.max(9999.999),
+        Validators.pattern(/^[0-9]*\.?[0-9]*$/), // 只能 0-9 和一個小數點
+      ],
+    ],
+
+    NET_SPACE: [
+      null,
+      [Validators.required, Validators.min(0), Validators.max(9999.999)],
+    ], // 營業坪數
     LOCATION_Status: ['0', [Validators.required, Validators.maxLength(1)]], // 使用狀態（字串 '0' 預設未使用）
-    Purpose_no: [null, [Validators.required]],                // 用途代碼
-    Draw_X: ['', [Validators.maxLength(255)]],                // X 座標
-    Draw_Y: ['', [Validators.maxLength(255)]],                // Y 座標
-    LOCATION_No: [{ value: '由系統帶入', disabled: true }, [Validators.required, Validators.maxLength(10)]], // 店位代碼
+    Purpose_no: [null, [Validators.required]], // 用途代碼
+    Draw_X: ['', [Validators.maxLength(255)]], // X 座標
+    Draw_Y: ['', [Validators.maxLength(255)]], // Y 座標
+    LOCATION_No: [
+      { value: '由系統帶入', disabled: true },
+      [Validators.required, Validators.maxLength(10)],
+    ], // 店位代碼
   });
 
   floorOptions: any[] = [];
@@ -68,8 +124,37 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
     super();
   }
 
-  ngOnInit(): void {
-    this.initializePage('TLS11010', this.dataForm);
+ngOnInit(): void {
+  this.initializePage('TLS11010', this.dataForm);
+
+  // 🔸簽約坪數：監聽 valueChanges，輸入中文時提示並移除
+  const grossCtrl = this.dataForm.get('GROSS_SPACE') as any;
+
+  grossCtrl?.valueChanges
+    .pipe(untilDestroyed(this))
+    .subscribe((val: any) => {
+      if (val === null || val === undefined || val === '') {
+        return;
+      }
+
+      const str = String(val);
+      const chineseRegex = /[\u4E00-\u9FFF]/g;
+
+      if (!chineseRegex.test(str)) {
+        return;
+      }
+
+      // 提示使用者（中文對話泡泡）
+      this.messageService.warnBubble('「簽約坪數」不得輸入中文，請改用數字。');
+
+      // 把所有中文移除
+      const noChinese = str.replace(chineseRegex, '');
+
+      // 空字串就設回 null，有值就轉成 number
+      const nextVal = noChinese === '' ? null : Number(noChinese);
+
+      grossCtrl.setValue(nextVal, { emitEvent: false });
+    });
 
     // --- 使用狀態選單邏輯 ---
     if (this.crudstatus === CRUDStatus.Create) {
@@ -105,7 +190,7 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
           break;
         case '1': // 使用中
         default:
-          // 使用中只能維持使用中（依你原本邏輯）
+          // 使用中只能維持使用中
           this.LOCATION_Status_Options = [{ value: '1', label: '使用中' }];
           this.dataForm.get('LOCATION_Status')?.disable();
           break;
@@ -178,7 +263,8 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
 
         if (this.crudstatus === CRUDStatus.Edit) {
           const matchedUsage = this.usageOptions.find(
-            (opt) => String(opt.value) === String(this.rowdata?.Purpose_no).trim(),
+            (opt) =>
+              String(opt.value) === String(this.rowdata?.Purpose_no).trim(),
           );
           if (matchedUsage) {
             this.dataForm.patchValue({ Purpose_no: matchedUsage.value });
@@ -192,13 +278,35 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
       .subscribe((res) => (this.BUILDING_NO_Options = res));
   }
 
-  onSubmit(): void {
-    this.handleSubmit(this.dataForm, () => {
+  /** 送出：改成像 FIN13050 一樣，先用中文警告泡泡顯示所有錯誤 */
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(null, () => {
+      // 觸發 Angular 驗證
+      Object.values(this.dataForm.controls).forEach((c) =>
+        c.markAsTouched(),
+      );
+      this.submitted = true;
+
+      if (this.dataForm.invalid) {
+        // 顯示所有欄位錯誤（中文）
+        this.showTopErrors();
+        this.messageService.unblockUi();
+        this.loading = false;
+        return;
+      }
+
       const raw = this.dataForm.getRawValue() as any;
 
       // 正規化 payload
-      raw.GROSS_SPACE = Number(raw.GROSS_SPACE);
-      raw.NET_SPACE = Number(raw.NET_SPACE);
+      raw.GROSS_SPACE =
+        raw.GROSS_SPACE === null || raw.GROSS_SPACE === ''
+          ? null
+          : Number(raw.GROSS_SPACE);
+      raw.NET_SPACE =
+        raw.NET_SPACE === null || raw.NET_SPACE === ''
+          ? null
+          : Number(raw.NET_SPACE);
+
       raw.LOCATION_Status = String(raw.LOCATION_Status);
       raw.org_id = raw.org_id?.trim() === '' ? null : raw.org_id;
 
@@ -209,14 +317,18 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
           .pipe(untilDestroyed(this))
           .subscribe({
             next: () => {
-              this.messageService.successBubble(this.translate.instant('success_message'));
+              this.messageService.successBubble(
+                this.translate.instant('success_message'),
+              );
               this.dataForm.reset();
               this.dataForm.markAsPristine();
               // 重設預設狀態為未使用
               this.dataForm.patchValue({ LOCATION_Status: '0' });
             },
             error: () => {
-              this.messageService.errorBubble(this.translate.instant('create_failed'));
+              this.messageService.errorBubble(
+                this.translate.instant('create_failed'),
+              );
             },
           });
       } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
@@ -235,14 +347,78 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
               this.router.navigate(['account/tls', 'tls11010']);
             },
             error: () => {
-              this.messageService.errorBubble(this.translate.instant('update_failed'));
+              this.messageService.errorBubble(
+                this.translate.instant('update_failed'),
+              );
             },
           });
+      } else {
+        this.messageService.unblockUi();
       }
     });
   }
 
-  // 刪除
+  /** 只用右上角泡泡顯示全部錯誤（逐條，中文） */
+  private showTopErrors(): void {
+    const msgs: string[] = [];
+
+    // 依排序清單檢查
+    this.checkOrder.forEach((name) => {
+      const msg = this.buildFieldError(name);
+      if (msg) msgs.push(msg);
+    });
+
+    // 其餘欄位
+    Object.keys(this.dataForm.controls).forEach((name) => {
+      if (this.checkOrder.includes(name)) return;
+      const msg = this.buildFieldError(name);
+      if (msg && !msgs.includes(msg)) msgs.push(msg);
+    });
+
+    if (msgs.length) {
+      msgs.forEach((m) => this.messageService.errorBubble(m));
+    }
+  }
+
+  /** 單欄位錯誤轉成中文描述 */
+  private buildFieldError(ctrlName: string): string | null {
+    const ctrl: AbstractControl | null = this.dataForm.get(ctrlName);
+    if (!ctrl || !ctrl.errors) return null;
+
+    const label = this.labelOf[ctrlName] ?? ctrlName;
+    const e: ValidationErrors = ctrl.errors;
+
+    if (e['required']) {
+      return `「${label}」為必填，請輸入資料。`;
+    }
+
+    if (e['maxlength']) {
+      const max = (e['maxlength'] as any).requiredLength;
+      const actual = (e['maxlength'] as any).actualLength;
+      return `「${label}」長度不可超過 ${max} 碼，目前為 ${actual} 碼。`;
+    }
+
+    if (e['min']) {
+      const min = (e['min'] as any).min;
+      return `「${label}」數值不可小於 ${min}。`;
+    }
+
+    if (e['max']) {
+      const max = (e['max'] as any).max;
+      return `「${label}」數值不可大於 ${max}。`;
+    }
+
+    if (e['pattern']) {
+      if (ctrlName === 'GROSS_SPACE' || ctrlName === 'NET_SPACE') {
+        return `「${label}」僅能輸入數字與一個小數點。`;
+      }
+      return `「${label}」格式有誤，請檢查輸入資料。`;
+    }
+
+    return `「${label}」格式有誤，請檢查輸入資料。`;
+  }
+
+  // 刪除（這裡原本就是中文 confirm，保留）
   onDelete(): void {
     const id = this.rowdata?.id;
     if (!id) {

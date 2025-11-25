@@ -1,19 +1,19 @@
-import { saveAs } from 'file-saver';
-import { CurrentPageService } from './../../../core/layout/app.menulist/current-page.service';
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ChangeDetectorRef, inject, Injectable  } from '@angular/core';
-import { QueryStateService } from '../../service/query-state.service';
-import { TableService } from '../../componentkit/table/report.service';
 import { HttpResponse } from '@angular/common/http';
-import { Column } from '../../componentkit/table/table.model';
-import { AuthService } from '../../../service/system/auth.service';
-import { TableExport } from '../../componentkit/table/table-export/table-export.component';
-import { REPORT_TITLES } from '../../componentkit/table/report-titles';
+import { ChangeDetectorRef, inject, Injectable } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { SystemOptionsService } from '@service/system/sys1000.service';
 import { SystemDataService } from '@service/system/system-data.service';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
+import { saveAs } from 'file-saver';
+import { AuthService } from '../../../service/system/auth.service';
+import { REPORT_TITLES } from '../../componentkit/table/report-titles';
+import { TableService } from '../../componentkit/table/report.service';
+import { TableExport } from '../../componentkit/table/table-export/table-export.component';
+import { Column } from '../../componentkit/table/table.model';
+import { QueryStateService } from '../../service/query-state.service';
+import { CurrentPageService } from './../../../core/layout/app.menulist/current-page.service';
 
 @UntilDestroy()
 @Injectable({
@@ -45,8 +45,8 @@ export abstract class BasicPrintDataComponent {
     }
   }
 
-  exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string): void {    
-    
+  exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string): void {
+
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`${apiUrl ? apiUrl : `query${ProgNo}`}`);

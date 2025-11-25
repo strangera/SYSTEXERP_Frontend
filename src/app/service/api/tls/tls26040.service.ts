@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
 
@@ -12,7 +12,6 @@ export interface TLS26040QueryRequest extends BaseQueryRequest {
   sad_preorder_date_start?: string;// 預購業值入帳日_起
   sad_preorder_date_end?: string;  // 預購業值入帳日_迄
   batch_no?: string;               // 預售業值歸屬批號
-  IsNotlt_no?: string;             // 篩選條件
 }
 
 // --- TLS26040 查詢插入 Model 定義 ---
@@ -70,43 +69,39 @@ export class TLS26040Service {
   // 查詢SALCHARGEM資料表
   queryTLS26040(data: TLS26040QueryRequest): Observable<BaseQueryResponse<TLS26040Data>> {
     return this.http.post<BaseQueryResponse<TLS26040Data>>(`${this.apiUrl}/queryTLS26040`, data);
-
-    // 回傳假資料
-    return new Observable<BaseQueryResponse<TLS26040Data>>(observer => {
-      const Data: BaseQueryResponse<TLS26040Data> = {
-        TotalCount: 2,
-        Data: [
-          {
-            id: 1,
-            sad_date: '2025-08-01',
-            tlt_no: 'TLT001',
-            tlt_name: '專櫃一',
-            sad_preorder_date: '2025-07-25',
-            sad_preorder_amt: 150000,
-            batch_no: 'BATCH2025001'
-          },
-          {
-            id: 2,
-            sad_date: '2025-08-02',
-            tlt_no: 'TLT002',
-            tlt_name: '專櫃二',
-            sad_preorder_date: '2025-07-26',
-            sad_preorder_amt: 200000,
-            batch_no: 'BATCH2025002'
-          }
-        ],
-        Status: '',
-        Message: '',
-        TotalPage: 0
-      };
-      observer.next(Data);
-      observer.complete();
-    });
   }
 
   // 查詢SALCHARGEM資料表(插入用)
   queryTLS26040Insert(data: TLS26040QueryInsertRequest): Observable<BaseQueryResponse<TLS26040Data>> {
-    return this.http.post<BaseQueryResponse<TLS26040Data>>(`${this.apiUrl}/queryTLS26040_insert`, data);
+    // return this.http.post<BaseQueryResponse<TLS26040Data>>(`${this.apiUrl}/queryTLS26040_insert`, data);
+
+    // 回傳假資料
+    return of({
+      Data: [
+        {
+          id: 1,
+          sad_date: '2024-01-01',
+          sad_preorder_date: '',
+          tlt_no: 'TLT001',
+          tlt_name: '專櫃A',
+          batch_no: 'BATCH001',
+          sad_preorder_amt: 100000
+        },
+        {
+          id: 2,
+          sad_date: '2024-01-02',
+          sad_preorder_date: '',
+          tlt_no: 'TLT002',
+          tlt_name: '專櫃B',
+          batch_no: 'BATCH002',
+          sad_preorder_amt: 150000
+        }
+      ],
+      TotalCount: 2,
+      TotalPage: 1,
+      Status: 'Success',
+      Message: '查詢成功'
+    });
   }
 
   // 查詢預售明細(POS5006)資料

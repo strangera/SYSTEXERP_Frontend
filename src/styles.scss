@@ -7,17 +7,6 @@ body {
   font-family: var(--font-family);
 }
 
-.button-opacity {
-  opacity: 0.25;
-}
-
-.create-accordionTab,
-.edit-accordionTab {
-  background-color: #a2e7c6;
-  color: black;
-  font-weight: bold;
-}
-
 @media (max-width: 991px) {
   .card {
     border-radius: 0;
@@ -55,35 +44,13 @@ input[disabled],
   border-radius: 30px;
 }
 
-// 以下用來調整暗黑明亮模式(需要用var()來調整)
-.p-accordion .p-accordion-content,
-.p-panel .p-panel-content {
-  border: 1px solid var(--surface-d);
-  background: var(--surface-a);
-  color: var(--text-color);
-}
-
-.p-accordion
-  .p-accordion-header:not(.p-disabled).p-highlight
-  .p-accordion-header-link {
-  border: 1px solid var(--surface-d);
-}
-
 .p-panel .p-panel-header {
-  border: 1px solid var(--surface-d);
   background: var(--surface-d);
-  color: var(--text-color);
-}
-
-.p-toast {
-  z-index: 10000 !important;
 }
 
 .p-accordion-header-link {
-  font-size: 12px;
   background-color: var(--accordion-header-bg) !important;
   color: var(--accordion-header-text) !important;
-  font-weight: bold;
 }
 
 .p-selectbutton {

@@ -87,22 +87,14 @@
               optionValue="value"
               [submitted]="submitted"></app-multi-select>
           </div>
+               <app-calendar-range calendarType="dateMonthRange" class="col-12 md:col-6 lg:col-4" label="扣款起日"
+                    [startControl]="queryForm.controls.tpy_bdate_start"
+                    [endControl]="queryForm.controls.tpy_bdate_end" [submitted]="submitted" />
+                <app-calendar-range calendarType="dateMonthRange" class="col-12 md:col-6 lg:col-4" label="扣款迄日"
+                    [startControl]="queryForm.controls.tpy_edate_start"
+                    [endControl]="queryForm.controls.tpy_edate_end" [submitted]="submitted" />
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick
-              label="扣款起日"
-              [startControl]="queryForm.controls.tpy_bdate_start"
-              [endControl]="queryForm.controls.tpy_bdate_end"
-              [submitted]="submitted"></app-calendar-range-quick>
-          </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick
-              label="扣款迄日"
-              [startControl]="queryForm.controls.tpy_edate_start"
-              [endControl]="queryForm.controls.tpy_edate_end"
-              [submitted]="submitted"></app-calendar-range-quick>
-          </div>
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

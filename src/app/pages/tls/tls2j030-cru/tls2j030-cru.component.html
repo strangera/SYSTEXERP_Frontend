@@ -37,8 +37,8 @@
 
         <app-table-edit title="商品明細" tableKey="DetailEdit" class="col-12" [data]="detailEditData"
           [columns]="columnsdetail" dataStatusField="status" [loading]="editLoading" [tableRequired]="true"
-          [showDelete]="false" [showInsert]="false" (dataChange)="detailEditData = $event" [canInsert]="false"
-          [showCheckBox]="false">
+          [showDelete]="true" [showInsert]="true" (dataChange)="detailEditData = $event" [canInsert]="true"
+          [showCheckBox]="true">
         </app-table-edit>
 
         <!-- 按鈕 -->

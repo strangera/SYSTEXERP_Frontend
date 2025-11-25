@@ -31,7 +31,7 @@
 <div class="card">
   <app-table dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)" [showCheckBox]="true"
     (delete)="onDelete($event)" [showDetail]="false" (selectionChange)="selectedRows = $event"
-    [selectedItems]="selectedRows" [editDisabled]="editDisabled" [multiSortMeta]="[{ field: 'id', order: 1 }]"
+    [selectedItems]="selectedRows" [editDisabled]="editDisabled" [multiSortMeta]="queryForm.controls.SortBy.value"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
     [loading]="loading">
   </app-table>

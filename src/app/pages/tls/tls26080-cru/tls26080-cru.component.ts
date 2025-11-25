@@ -19,7 +19,7 @@ import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
 import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
-import { finalize, tap } from 'rxjs';
+import { finalize, map, tap } from 'rxjs';
 import * as XLSX from 'xlsx';
 import { CampaignData, TLS26080Data, TLS26080Detail, TLS26080InsertPayload } from '../tls26080/tls26080.model';
 
@@ -152,7 +152,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     { field: 'Remark', header: '活動備註' },
   ];
 
-  public readonly defaultInsertData = {
+  public readonly defaultInsertData: Partial<TLS26080Detail> = {
     pod_status: ApprovalStatus.未核准,
   };
 
@@ -228,10 +228,10 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     { field: 'approved_date', header: '審核日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
   ]);
 
-  public readonly counterColumnsGroup: Column[] = [
+  public readonly counterColumnsGroup = computed<Column[]>(() => [
     { field: 'groupField1', header: '匯入分攤' },
     { field: 'groupField2', header: '合約建檔' },
-  ];
+  ]);
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.tableLoading()
@@ -257,7 +257,11 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     if (!this.isFormCreateable) {
       this.tableLoading.set(!0);
       this.service.loadTLS26080Detail(this.rowdata!.pod_no).pipe(
-        tap(res => {
+        tap(res => this.logger.debug(`load:`, [this.rowdata, res])),
+        map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
+        finalize(() => this.tableLoading.set(!1)),
+      ).subscribe({
+        next: res => {
           const data = res.Data;
           this.tableData.set(data.map(v => ({
             ...v,
@@ -265,9 +269,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
             tpy_rate_D17: Number(v.tpy_rate_D17),
           })));
           this.totalRecords.set(res.TotalCount || 0);
-        }),
-        finalize(() => this.tableLoading.set(!1))
-      ).subscribe();
+        },
+        error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+      });
     }
 
     // this.service.getTLTTalentChargeOptions();
@@ -276,9 +280,13 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
     this.campaignLoading.set(!0);
     this.service.loadCampaignData().pipe(
-      tap(res => this.campaignData.set(res.Data)),
+      tap(res => this.logger.debug(`loadCampaignData:`, [res])),
+      map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
       finalize(() => this.campaignLoading.set(!1))
-    ).subscribe();
+    ).subscribe({
+      next: res => this.campaignData.set(res.Data),
+      error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+    });
   }
 
   public onSubmit(): void {
@@ -293,14 +301,21 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         return void this.messageService.errorBubble('請至少新增一筆專櫃資料');
       }
 
+      /**
+       * pod_sdate, pod_edate, pod_busdate 這三個後端要求ISO格式
+       *
+       * 但是interceptor會把Date拿掉尾端的Z，變成"yyyy-MM-ddTHH:mm:ss.sss"
+       *
+       * 導致日期範圍無法判斷
+       */
       const payload: TLS26080InsertPayload = {
         ...d,
         pod_no: d.pod_no ?? '',
         pod_type: '2',
         pod_desc: this.selectedCampaign()?.CampaignName ?? d.pod_desc ?? '',
-        pod_sdate: d.pod_sdate!.toISOString(),
-        pod_edate: d.pod_edate!.toISOString(),
-        pod_busdate: d.pod_busdate!.toISOString(),
+        pod_sdate: d.pod_sdate!,
+        pod_edate: d.pod_edate!,
+        pod_busdate: d.pod_busdate!,
         TALPORDERD_VOUCHERDetails: validTableData.map(item => ({
           pod_no: d.pod_no!,
           talent_id: Number(item.talent_id) ?? null,
@@ -316,14 +331,16 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         })),
       };
 
-      this.logger.debug(`onSubmit:`, [d, payload, this.tableData()]);
-
       this.service.insertTLS26080(payload).pipe(
-        tap(() => this.dataForm.reset()),
+        tap(res => this.logger.debug(`onSubmit:`, [d, payload, res])),
+        map(res => { if (res.Status === '0000') return res; throw new Error(res.Message || '新增失敗'); }),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
-        next: () => { this.messageService.successBubble('新增成功'); this.onCancel(); },
-        error: () => this.messageService.errorBubble('新增失敗'),
+        next: () => {
+          this.onCancel();
+          this.messageService.successBubble('新增成功');
+        },
+        error: err => this.messageService.errorBubble(err.message || '新增失敗'),
       });
     });
   }
@@ -359,17 +376,19 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
     this.uploadLoading.set(!0);
     this.service.uploadFile(formData).pipe(
-      tap(data => {
-        if (data.length > 0) {
-          this.tableData.set(data.map(item => ({
-            ...item,
-            tpy_rate_D16: Number(item.tpy_rate_D16),
-            tpy_rate_D17: Number(item.tpy_rate_D17),
-          })));
-        }
-      }),
+      tap(res => this.logger.debug(`uploadFile:`, [res])),
       finalize(() => this.uploadLoading.set(!1))
-    ).subscribe();
+    ).subscribe({
+      next: data => {
+        this.tableData.set(data.map(item => ({
+          ...item,
+          tpy_rate_D16: Number(item.tpy_rate_D16),
+          tpy_rate_D17: Number(item.tpy_rate_D17),
+        })));
+        this.messageService.successBubble('上傳成功');
+      },
+      error: err => this.messageService.errorBubble(err.message || '上傳失敗'),
+    });
 
     this.fileUpload().clear();
     this.logger.debug(`fileUploadEffect:`, [formData]);
