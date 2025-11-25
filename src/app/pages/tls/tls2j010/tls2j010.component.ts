@@ -1,15 +1,15 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { TLS2J010Service } from '@service/api/tls/tls2j010.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { TLS2J010Service } from '@service/api/tls/tls2j010.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 @Component({
   selector: 'app-tls2j010',
@@ -83,6 +83,8 @@ export class TLS2J010Component extends BasicQueryPageComponent<any> implements O
             if (res?.Status === '0000') {
               this.data = res.Data || [];
               this.totalRecords = res.TotalCount ?? this.data.length;
+              // 保存查詢狀態
+              this.queryStateService.setQueryState(this.ProgNo, frm.value);
             } else {
               this.data = [];
               this.totalRecords = 0;
