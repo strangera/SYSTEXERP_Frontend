@@ -243,7 +243,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   ngOnInit(): void {
     this.initializePage('TLS13010', '/tls/tls13010cru', this.queryForm, (form) => this.onSubmit(form));
     this.checkExistingWorkflow();
-    this.loadPOS2013Options();
+    this.initializeDropdownOptions();
   }
 
   /**
@@ -262,28 +262,27 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     }
   }
   /**
-   * 載入 POS2013 選項 TODO:因為好像有點壞掉了
+   * 初始化所有下拉選單選項
    */
-  private loadPOS2013Options(): void {
-    console.log('📍 開始載入 POS2013 選項');
+  private initializeDropdownOptions(): void {
+    console.log('📍 TLS13010 查詢頁面：開始初始化下拉選單選項');
 
-    // 如果服務已經載入完成，直接使用
-    const options = this.tls13010DropdownService.getPOS2013Options();
-    if (options.length > 0) {
-      this.pos2013Options = options;
-      console.log('✅ POS2013 選項已載入:', this.pos2013Options.length);
-      return;
-    }
+    // 初始化所有選項（包含 POS2013、洽談者、支付編號等）
+    this.tls13010DropdownService.initialize().subscribe({
+      next: (results) => {
+        console.log('✅ TLS13010 查詢頁面：所有下拉選單載入完成');
 
-    // 如果未載入，持續檢查直到載入完成
-    const checkInterval = setInterval(() => {
-      const latestOptions = this.tls13010DropdownService.getPOS2013Options();
-      if (latestOptions.length > 0) {
-        this.pos2013Options = latestOptions;
-        console.log('✅ POS2013 選項載入完成:', this.pos2013Options.length);
-        clearInterval(checkInterval);
+        // 設定廠商統一編號選項
+        this.pos2013Options = this.tls13010DropdownService.getPOS2013Options();
+        console.log('  廠商統一編號:', this.pos2013Options.length, '個');
+        console.log('  洽談者:', this.tls13010DropdownService.negotiatorOptions.length, '個');
+        console.log('  支付編號:', this.tls13010DropdownService.payNoOptions.length, '個');
+      },
+      error: (error) => {
+        console.error('❌ TLS13010 查詢頁面：下拉選單載入失敗:', error);
+        this.pos2013Options = [];
       }
-    }, 200); // 每 200ms 檢查一次
+    });
   }
 
   /**

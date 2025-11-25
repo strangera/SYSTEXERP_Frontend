@@ -430,7 +430,7 @@ export class TLS13010DropdownService {
   /**
  * 載入支付編號選項（含重試）
  */
-  private initPayNoOptionsWithRetry(): Observable<DropdownOption[]> {
+  public initPayNoOptionsWithRetry(): Observable<DropdownOption[]> {
     console.log('🔄 開始載入支付編號選項');
 
     return this.negotiatorService.getPOS1006Options().pipe(
