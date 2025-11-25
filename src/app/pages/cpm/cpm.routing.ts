@@ -8,12 +8,14 @@ export const cpmRoutes: Routes = [
   // { path: 'cpm11030', loadComponent: () => import('./cpm11030/cpm11030.component').then(m => m.CPM11030Component) }, // 設備出借作業
   // { path: 'cpm11030cru', loadComponent: () => import('./cpm11030-cru/cpm11030-cru.component').then(m => m.CPM11030CRUComponent) },
   // { path: 'cpm11040', loadComponent: () => import('./cpm11040/cpm11040.component').then(m => m.CPM11040Component) }, // 設備歸還作業
-  // { path: 'cpm11040HQ', loadComponent: () => import('./cpm11040-hq/cpm11040-hq.component').then(m => m.Cpm11040HQComponent) },
   { path: 'cpm11050', loadComponent: () => import('./cpm11050/cpm11050.component').then(m => m.CPM11050Component) }, // 遺失/拾獲管理作業
   { path: 'cpm11050cru', loadComponent: () => import('./cpm11050-cru/cpm11050-cru.component').then(m => m.CPM11050CRUComponent) }, // 遺失/拾獲管理作業
   { path: 'cpm11060', loadComponent: () => import('./cpm11060/cpm11060.component').then(m => m.CPM11060Component) }, // 總機廣播服務
   { path: 'cpm11060cru', loadComponent: () => import('./cpm11060-cru/cpm11060-cru.component').then(m => m.CPM11060CRUComponent) }, // 總機廣播服務 CRU
   // { path: 'cpm11070', loadComponent: () => import('./cpm11070/cpm11070.component').then(m => m.CPM11070Component) }, // 全館店櫃資訊查詢
+  // { path: 'cpm11080', loadComponent: () => import('./cpm11080/cpm11080.component').then(m => m.Cpm11080Component) }, // 總機廣播服務
+  // { path: 'cpm11090', loadComponent: () => import('./cpm11090/cpm11090.component').then(m => m.Cpm11090Component) }, // 尋人登錄作業
+  // { path: 'cpm11100', loadComponent: () => import('./cpm11100/cpm11100.component').then(m => m.Cpm11100Component) }, // 全館店櫃資訊查詢
   { path: 'cpm12010', loadComponent: () => import('./cpm12010/cpm12010.component').then(m => m.CPM12010Component) }, // 顧客意見類別維護
   { path: 'cpm12010cru', loadComponent: () => import('./cpm12010-cru/cpm12010-cru.component').then(m => m.CPM12010CRUComponent) },
   // { path: 'cpm12020', loadComponent: () => import('./cpm12020/cpm12020.component').then(m => m.CPM12020Component) }, // 顧客意見責任單位維護
@@ -24,7 +26,6 @@ export const cpmRoutes: Routes = [
   { path: 'cpm12040cru', loadComponent: () => import('./cpm12040-cru/cpm12040-cru.component').then(m => m.CPM12040CRUComponent) },
   // { path: 'cpm12050', loadComponent: () => import('./cpm12050/cpm12050.component').then(m => m.CPM12050Component) }, // 顧客意見管理作業
   // { path: 'cpm12050cru', loadComponent: () => import('./cpm12050-cru/cpm12050-cru.component').then(m => m.CPM12050CRUComponent) },
-  // { path: 'cpm12050HQ', loadComponent: () => import('./cpm12050-hq/cpm12050-hq.component').then(m => m.Cpm12050HQComponent) },
   // { path: 'cpm12060', loadComponent: () => import('./cpm12060/cpm12060.component').then(m => m.CPM12060Component) }, // 顧客意見處理狀況表
   // { path: 'cpm12070', loadComponent: () => import('./cpm12070/cpm12070.component').then(m => m.CPM12070Component) }, // 顧客意見類別統計表
   { path: 'cpm13010', loadComponent: () => import('./cpm13010/cpm13010.component').then(m => m.CPM13010Component) }, // 停車費折抵補登作業

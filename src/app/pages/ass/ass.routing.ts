@@ -33,8 +33,6 @@ export const assRoutes: Routes = [
   // { path: 'ass13010cru', loadComponent: () => import('./ass13010-cru/ass13010-cru.component').then(m => m.ASS13010CRUComponent) },
   // { path: 'ass13020', loadComponent: () => import('./ass13020/ass13020.component').then(m => m.ASS13020Component) }, // 資產轉入
   // { path: 'ass13020cru', loadComponent: () => import('./ass13020-cru/ass13020-cru.component').then(m => m.ASS13020CRUComponent) },
-  // { path: 'ass13030', loadComponent: () => import('./ass13030/ass13030.component').then(m => m.ASS13030Component) }, // 資產報廢作業
-  // { path: 'ass13030cru', loadComponent: () => import('./ass13030-cru/ass13030-cru.component').then(m => m.ASS13030CRUComponent) },
   // { path: 'ass13040', loadComponent: () => import('./ass13040/ass13040.component').then(m => m.ASS13040Component) }, // 批次報廢作業
   // { path: 'ass13040cru', loadComponent: () => import('./ass13040-cru/ass13040-cru.component').then(m => m.ASS13040CRUComponent) },
   // { path: 'ass13050', loadComponent: () => import('./ass13050/ass13050.component').then(m => m.ASS13050Component) }, // 移轉交接表
