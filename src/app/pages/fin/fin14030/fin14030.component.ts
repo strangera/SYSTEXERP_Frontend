@@ -1,22 +1,22 @@
+import { CommonModule, JsonPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, convertDateToYYYYMM } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { DomSanitizer } from '@angular/platform-browser';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { apiOption } from '@shared/models/sys/sysb000.model';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { Fin14030Service } from '@service/api/fin/fin14030.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { apiOption } from '@shared/models/sys/sysb000.model';
+import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import { CommonModule, JsonPipe } from '@angular/common';
-import { Fin14030Service } from '@service/api/fin/fin14030.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { environment } from 'src/environments/environment';
-import { DomSanitizer } from '@angular/platform-browser';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, convertDateToYYYYMM } from '../../../shared/componentkit/table/table.model';
 
 //1.1.4.3 形成申報書
 @Component({
@@ -113,7 +113,6 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
       // 這裡彈窗顯示
       this.dialogData = body;
       this.auditMode = '審核';   // 或者根據狀態切換 '反審核'
-      this.showDialog = true;
 
       this.fin14030Service.printFIN14030(body).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
@@ -130,10 +129,14 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
 
             // ⬇️ 用 sanitizer 包裝
             this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(rawUrl);
+            this.showDialog = true;
             this.loading = false;
           }
         },
-        error: () => { this.loading = false; },
+        error: () => {
+          this.showDialog = false;
+          this.loading = false;
+        },
       });
     });
   }

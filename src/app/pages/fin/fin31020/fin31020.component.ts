@@ -24,9 +24,9 @@ import { DropDownListService } from './../../../service/utility/dropDownList.ser
 })
 export class FIN31020Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    AccNoFrom: [""],
-    minus: [1],
-    remark: ["", Validators.maxLength(100)],
+    CAR_AccNo: [""],
+    CAR_Type: [1],
+    Remark: ["", Validators.maxLength(100)],
     ...createPaginationConfig([{ field: 'VouNo', order: 1 }]),
   });
   AccNoOptions: any[] = []; // 科目代號選項
@@ -34,10 +34,15 @@ export class FIN31020Component extends BasicQueryPageComponent<any> implements O
   totalRecords = 0
   data: any[] = [];
   columns: any[] = [
-    { field: 'col1', header: '調整科目代號', visible: true },
-    { field: 'col2', header: '加減項', visible: true },
-    { field: 'col3', header: '備註', visible: true },
-    // 其他欄位
+    { field: 'CAR_AccNo', header: '調整科目代號', visible: true },
+    { field: 'CAR_Type', header: '加減項', visible: true },
+    { field: 'Remark', header: '備註', visible: true },
+    { field: 'CRT_Date', header: '調整科目代號', visible: true },
+    { field: 'CRT_USR_No', header: '加減項', visible: true },
+    { field: 'CRT_USR_Name', header: '備註', visible: true },
+    { field: 'UPD_Date', header: '調整科目代號', visible: true },
+    { field: 'UPD_USR_No', header: '加減項', visible: true },
+    { field: 'UPD_USR_Name', header: '備註', visible: true },
   ];
   minusOption: any[] = [
     { value: 1, label: '加項' },
