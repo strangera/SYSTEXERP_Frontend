@@ -152,7 +152,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     { field: 'Remark', header: '活動備註' },
   ];
 
-  public readonly defaultInsertData = {
+  public readonly defaultInsertData: Partial<TLS26080Detail> = {
     pod_status: ApprovalStatus.未核准,
   };
 
@@ -228,10 +228,10 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     { field: 'approved_date', header: '審核日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
   ]);
 
-  public readonly counterColumnsGroup: Column[] = [
+  public readonly counterColumnsGroup = computed<Column[]>(() => [
     { field: 'groupField1', header: '匯入分攤' },
     { field: 'groupField2', header: '合約建檔' },
-  ];
+  ]);
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.tableLoading()
@@ -257,6 +257,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     if (!this.isFormCreateable) {
       this.tableLoading.set(!0);
       this.service.loadTLS26080Detail(this.rowdata!.pod_no).pipe(
+        finalize(() => this.tableLoading.set(!1)),
         tap(res => {
           const data = res.Data;
           this.tableData.set(data.map(v => ({
@@ -266,7 +267,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
           })));
           this.totalRecords.set(res.TotalCount || 0);
         }),
-        finalize(() => this.tableLoading.set(!1))
       ).subscribe();
     }
 
@@ -293,6 +293,13 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         return void this.messageService.errorBubble('請至少新增一筆專櫃資料');
       }
 
+      /**
+       * pod_sdate, pod_edate, pod_busdate 這三個後端要求ISO格式
+       *
+       * 但是interceptor會把Date拿掉尾端的Z，變成"yyyy-MM-ddTHH:mm:ss.sss"
+       *
+       * 導致日期範圍無法判斷
+       */
       const payload: TLS26080InsertPayload = {
         ...d,
         pod_no: d.pod_no ?? '',
@@ -316,7 +323,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         })),
       };
 
-      this.logger.debug(`onSubmit:`, [d, payload, this.tableData()]);
+      this.logger.debug(`onSubmit:`, [d, payload, structuredClone(payload), this.tableData()]);
 
       this.service.insertTLS26080(payload).pipe(
         tap(() => this.dataForm.reset()),

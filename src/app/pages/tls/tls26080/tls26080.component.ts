@@ -108,21 +108,22 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     this.handleSubmit(this.queryForm, () => {
       this.tableLoading.set(!0);
 
-      const { org_id, ...payload } = this.queryForm.getRawValue();
+      const raw = this.queryForm.getRawValue();
+      const payload = <TLS26080Query>{
+        SortBy: raw.SortBy,
+        PageSize: raw.pageSize,
+        PageIndex: raw.pageIndex,
+        POD_No: raw.pod_no,
+        POD_Desc: raw.pod_desc,
+        POD_SDate_start: raw.pod_sdate,
+        POD_SDate_end: raw.pod_edate,
+        POD_BusDate: raw.pod_busdate,
+      };
 
-      this.logger.debug(`submit:`, [payload]);
-
+      this.logger.debug(`submit:`, [raw, payload]);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-      this.service.loadTLS26080(<TLS26080Query>{
-        SortBy: payload.SortBy,
-        PageSize: payload.pageSize,
-        PageIndex: payload.pageIndex,
-        POD_No: payload.pod_no,
-        POD_Desc: payload.pod_desc,
-        POD_SDate_start: payload.pod_sdate,
-        POD_SDate_end: payload.pod_edate,
-        POD_BusDate: payload.pod_busdate,
-      }).pipe(
+
+      this.service.loadTLS26080(payload).pipe(
         tap(res => {
           this.tableData.set(res.Data);
           this.totalRecords.set(res.TotalCount || 0);
