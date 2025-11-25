@@ -36,9 +36,8 @@
     <app-table-report [data]="data" [columns]="columns" [lastQueryBody]="lastQueryBody" [queryFunction]="queryFunction"
       (edit)="onEdit($event)" [showDelete]="true" [showReportMode]="false" [dataKey]="'id'" (detail)="onDetail($event)"
       [totalRecords]="totalRecords" [showCheckBox]="true" [loading]="loading" [selectedItems]="selectedItems"
-      [loading]="loading" (selectionChange)="selectedItems = $event" [showExcel]="false" [showDetail]="true"
-      [showManage]="true" [showEdit]="true" (delete)="onDelete()">
-
+      (selectionChange)="selectedItems = $event" [showExcel]="false" [showDetail]="true" [showManage]="true"
+      [showEdit]="true" (delete)="onDelete()" [showSort]="true">
     </app-table-report>
   </div>
 </div>
