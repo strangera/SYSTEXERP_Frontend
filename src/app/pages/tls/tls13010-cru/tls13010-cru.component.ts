@@ -506,6 +506,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         this.loadVendorOptions(),
         this.loadBankOptions(),
         this.loadNegotiatorOptions(),
+        this.loadPayNoOptions(),
       ]);
 
       console.log('   所有下拉選單選項載入完成');
@@ -573,6 +574,21 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     } catch (error) {
       console.error('    ❌ 洽談者選項載入失敗:', error);
       this.negotiatorOptions = [];
+    }
+  }
+
+  /**
+   * 載入支付編號選項
+   */
+  private async loadPayNoOptions(): Promise<void> {
+    try {
+      await firstValueFrom(
+        this.tls13010DropdownService.initPayNoOptionsWithRetry()
+      );
+      console.log(`     支付編號選項已載入 (${this.tls13010DropdownService.payNoOptions.length} 個)`);
+    } catch (error) {
+      console.error('    ❌ 支付編號選項載入失敗:', error);
+      this.tls13010DropdownService.payNoOptions = [];
     }
   }
 

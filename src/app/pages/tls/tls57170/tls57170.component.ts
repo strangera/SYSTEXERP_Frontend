@@ -88,7 +88,6 @@ export class TLS57170Component extends BasicQueryPageComponent<TLS57170Data> imp
   }
 
   onSubmit(form: FormGroup) {
-    console.log(form.getRawValue());
     this.handleSubmit(form, () => {
       this.tls57170Service.queryTLS57170({
         ...form.getRawValue(),

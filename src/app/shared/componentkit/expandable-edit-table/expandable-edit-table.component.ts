@@ -2778,14 +2778,14 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
  */
   hasRowErrors(rowData: any): boolean {
     // 檢查主要資料是否有錯誤標記
-    if (rowData._hasError || rowData._hasValidationError) {
+    if (rowData._hasError || rowData._hasValidationError || rowData._hasDuplicateDateError) {
       return true;
     }
 
     // 檢查詳細項目是否有錯誤
     if (rowData[this.detailKey]) {
       return rowData[this.detailKey].some((detail: any) =>
-        detail._hasError || detail._hasValidationError || detail._hasDateOverlapError
+        detail._hasError || detail._hasValidationError || detail._hasDateOverlapError || detail._hasDuplicateDateError
       );
     }
 
@@ -2796,7 +2796,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
    * 檢查詳細項目是否有錯誤
    */
   hasDetailErrors(detailData: any): boolean {
-    return !!(detailData._hasError || detailData._hasValidationError || detailData._hasDateOverlapError);
+    return !!(detailData._hasError || detailData._hasValidationError || detailData._hasDateOverlapError || detailData._hasDuplicateDateError);
   }
 
   /**
