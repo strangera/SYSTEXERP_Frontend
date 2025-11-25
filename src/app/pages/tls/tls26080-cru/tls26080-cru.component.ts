@@ -377,7 +377,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     this.uploadLoading.set(!0);
     this.service.uploadFile(formData).pipe(
       tap(res => this.logger.debug(`uploadFile:`, [res])),
-      map(res => { if (res.length) return res; throw new Error('上傳失敗，請確認檔案內容'); }),
       finalize(() => this.uploadLoading.set(!1))
     ).subscribe({
       next: data => {
