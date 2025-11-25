@@ -13,7 +13,6 @@ const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
 @Injectable({ providedIn: 'root' })
 export class FIN52030Service {
 
-  public readonly tableLoading = signal(!1);
   public readonly accLoading = signal(!1);
   public readonly venLoading = signal(!1);
   public readonly usrLoading = signal(!1);
@@ -54,12 +53,9 @@ export class FIN52030Service {
   ) { }
 
   public loadFIN52030(payload: FIN52030Payload): Observable<BaseQueryResponse<FIN52030Data>> {
-    this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<FIN52030Data>>(`${apiUrl}/queryFIN52030`, payload).pipe(
       take(1),
-      tap(res => this.logger.debug('查詢FIN52030結果:', [res]),
-        finalize(() => this.tableLoading.set(!1))
-      )
+      tap(res => this.logger.debug('查詢FIN52030結果:', [res]))
     );
   }
 
@@ -67,43 +63,30 @@ export class FIN52030Service {
     return this.http.post<FIN52030DetailDataResponse>(`${apiUrl}/queryFIN52030Detail`, { id }).pipe(
       take(1),
       tap(res => this.logger.debug('查詢FIN52030 Detail結果:', [res])),
-      finalize(() => this.tableLoading.set(!1)),
     );
   }
 
   public updateFIN52030Data(payload: FIN52030UpdatePayload): Observable<BaseQueryResponse<FIN52030Data>> {
-    this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<FIN52030Data>>(`${apiUrl}/updateFIN52030`, payload).pipe(
       take(1),
       tap(res => { }),
-      finalize(() => {
-        this.tableLoading.set(!1);
-        this.logger.debug('更新FIN52030結果:', []);
-      })
+      finalize(() => this.logger.debug('更新FIN52030結果:', []))
     );
   }
 
   public insertFIN52030Data(payload: FIN52030InsertPayload): Observable<BaseQueryResponse<FIN52030Data>> {
-    this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<FIN52030Data>>(`${apiUrl}/insertFIN52030`, payload).pipe(
       take(1),
       tap(res => { }),
-      finalize(() => {
-        this.tableLoading.set(!1);
-        this.logger.debug('插入FIN52030結果:', []);
-      })
+      finalize(() => this.logger.debug('插入FIN52030結果:', []))
     );
   }
 
   public deleteFIN52030Data(payload: number[]): Observable<BaseQueryResponse<Record<string, any>>> {
-    this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<Record<string, any>>>(`${apiUrl}/deleteFIN52030`, { ids: payload }).pipe(
       take(1),
       tap(res => { }),
-      finalize(() => {
-        this.tableLoading.set(!1);
-        this.logger.debug('刪除FIN52030結果:', []);
-      })
+      finalize(() => this.logger.debug('刪除FIN52030結果:', []))
     );
   }
 

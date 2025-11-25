@@ -20,7 +20,7 @@ import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
-import { finalize, map, switchMap } from 'rxjs';
+import { finalize, map, switchMap, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailData, FIN52030DetailTable, VendorList } from '../fin52030/fin52030.model';
 
 @Component({
@@ -67,6 +67,8 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   public readonly tableData = signal<FIN52030DetailTable[]>([]);
   private readonly selectedOrgId = signal<string>('100000');
 
+  public readonly tableLoading = signal<boolean>(!0);
+
   public selectedItems: FIN52030Data[] = [];
 
   public readonly rowEditCanSave = signal<boolean>(!1);
@@ -111,12 +113,12 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       ? this.dataForm.patchValue({ CRT_USR_No: name, CRT_Date: date })
       : this.dataForm.patchValue({ UPD_USR_No: name, UPD_Date: date });
 
-    this.service.tableLoading.set(!1);
+    this.tableLoading.set(!1);
   }, { allowSignalWrites: !0 });
 
   public readonly dataEffect = effect(() => {
     if (this.isFormCreateable) return void (() => {
-      this.service.tableLoading.set(!1);
+      this.tableLoading.set(!1);
       this.dataEffect.destroy();
     });
     const data = this.fin52030DetailData();
@@ -148,7 +150,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   }, { allowSignalWrites: !0 });
 
   public readonly loadingEffect = effect(() => {
-    this.loading = this.service.tableLoading()
+    this.loading = this.tableLoading()
       || this.service.accLoading()
       || this.service.venLoading()
       || this.service.usrLoading()
@@ -257,7 +259,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const d = this.dataForm.getRawValue();
-      const raw = {
+      const payload = <any>{
         ...d,
         Details: this.tableData().map(({ AccAmtD, AccAmtC, NoteDesc, ...rest }, index) => ({
           ...rest,
@@ -268,21 +270,18 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
         })),
       };
 
-      const payload = Object.keys(raw).reduce((acc, key) => {
-        const v = raw[key as keyof typeof raw];
-        if (v !== null && v !== void 0 && v !== '') acc[key as keyof typeof raw] = v;
-        return acc;
-      }, {} as any);
-
-      this.logger.debug(`onSubmit:`, [d, raw, payload, this.rowdata, this.tableData()]);
-
+      this.tableLoading.set(!0);
       const request = this.isFormCreateable
         ? this.service.insertFIN52030Data({ ...payload, CRT_USR_No: this.user.user_No })
         : this.service.updateFIN52030Data({ ...payload, id: this.rowdata!.id, UPD_USR_No: this.user.user_No });
 
-      request.subscribe({
-        next: res => {
-          if (res.Status === '0000') this.onCancel();
+      request.pipe(
+        tap(res => this.logger.debug(`onSubmit:`, [payload, res])),
+        map(res => { if (res.Status === '0000') return res; throw new Error(this.isFormCreateable ? '新增失敗' : '更新失敗'); }),
+        finalize(() => this.tableLoading.set(!1)),
+      ).subscribe({
+        next: () => {
+          this.onCancel();
           this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功');
         },
         error: () => this.messageService.errorBubble(this.isFormCreateable ? '新增失敗' : '更新失敗'),
