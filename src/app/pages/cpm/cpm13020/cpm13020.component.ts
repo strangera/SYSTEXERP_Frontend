@@ -124,12 +124,19 @@ ngOnInit(): void {
       }));
     });
 
-  // 檢視模式切換：清空總計
+  // 檢視模式切換：清空總計 + 清空列表
   this.queryForm.controls.reportMode.valueChanges
     .pipe(untilDestroyed(this))
     .subscribe(v => {
       this.reportMode = (v === 'POS' ? 'POS' : 'ALL');
-      this.grandTotal = null;
+
+      // ⬇️ 這三行是重點
+      this.grandTotal = null;     // 清總計
+      this.rows = [];             // 清 table 資料
+      this.totalRecords = 0;      // 清總筆數（paginator 也會變成 0）
+
+      // 如果希望切換模式時順便把頁碼重設為第 1 頁，可以加這行（避免觸發 onSubmit 再打 API 所以關閉 emitEvent）
+      // this.queryForm.patchValue({ pageIndex: 1 }, { emitEvent: false });
     });
 
   // ✅ 用 get() 逐一訂閱，避免 controls[key] 型別造成 subscribe 聯集簽章錯誤

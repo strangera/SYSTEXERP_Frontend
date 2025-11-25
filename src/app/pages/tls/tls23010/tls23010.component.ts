@@ -218,101 +218,118 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     ecrs: any[]; cashiers: any[];
   }>;
 
-  // ========= 查詢（明細 / 彙總） =========
-  onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      const val = this.queryForm.getRawValue() as any;
-      const isSummary = !!this.queryForm.get('showSummary')?.value;
+// ========= 查詢（明細 / 彙總） =========
+onSubmit(frm: FormGroup) {
+  this.handleSubmit(frm, () => {
+    const val = this.queryForm.getRawValue() as any;
+    const isSummary = !!this.queryForm.get('showSummary')?.value;
 
-      const pageSize = 30;
-      const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
-      const sortByArr = (Array.isArray(val?.SortBy) && val.SortBy.length
-        ? val.SortBy
-        : (this.sortMeta.length ? this.sortMeta : this.defaultSort)
-      ).map((s: any) => ({ ...s }));
+    const pageSize = 30;
+    const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
+    const sortByArr = (Array.isArray(val?.SortBy) && val.SortBy.length
+      ? val.SortBy
+      : (this.sortMeta.length ? this.sortMeta : this.defaultSort)
+    ).map((s: any) => ({ ...s }));
 
-      const payload: any = {
-        ...val,
-        TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
-        TXN_DateEnd: this.toDateOnly(val?.TXN_DateEnd),
-      };
-      delete payload.showSummary;
+    const payload: any = {
+      ...val,
+      TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
+      TXN_DateEnd: this.toDateOnly(val?.TXN_DateEnd),
+    };
+    delete payload.showSummary;
 
-      if (!isSummary) {
-        Object.assign(payload, { pageSize, pageIndex, SortBy: sortByArr });
-      } else {
-        Object.assign(payload, { SortBy: sortByArr });
-        delete payload.pageIndex;
-        delete payload.pageSize;
-      }
-
-      Object.keys(payload).forEach((k) => {
-        const v = payload[k];
-        if (v === null || v === undefined) delete payload[k];
-        if (Array.isArray(v) && v.length === 0) delete payload[k];
-        if (typeof v === 'string' && v.trim() === '') delete payload[k];
-      });
-
-      this.historyRequestBody = { ...payload };
-      this.loading = true;
-
-      if (isSummary) {
-        this.tls23010Service
-          .queryTLS23010Summary(payload)
-          .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-          .subscribe({
-            next: (resp) => {
-              const dataArr = Array.isArray(resp?.Data) ? resp.Data : [];
-              const head = dataArr[0] ?? {};
-              const details =
-                Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
-                  Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
-                    [];
-
-              this.summaryData = details.map((row: any) => ({ ...row }));
-              this.data = [];
-              this.totalRecords = this.summaryData.length;
-
-              this.detailTotals = {};
-              this.updatePdfSummary?.();
-              this.queryStateService?.setQueryState?.(this.ProgNo, this.queryForm.value);
-            },
-            error: () => {
-              this.summaryData = [];
-              this.totalRecords = 0;
-            },
-          });
-      } else {
-        this.tls23010Service
-          .queryTLS23010(payload)
-          .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-          .subscribe({
-            next: (resp) => {
-              const queryData = Array.isArray(resp?.Data?.QueryData)
-                ? resp.Data.QueryData
-                : Array.isArray(resp?.Data)
-                  ? resp.Data
-                  : [];
-
-              // 以 TXN_No 作為唯一鍵，這裡不再產生自訂 id
-              this.data = queryData as TLS23010Data[];
-
-              this.detailTotals = this.coerceTotals(resp?.Data?.TotalSummary);
-              this.summaryData = [];
-              this.totalRecords = Number(resp?.TotalCount ?? this.data.length ?? 0);
-
-              this.updatePdfSummary?.();
-              this.queryStateService?.setQueryState?.(this.ProgNo, this.queryForm.value);
-            },
-            error: () => {
-              this.data = [];
-              this.totalRecords = 0;
-              this.pdfSummary = [];
-            },
-          });
-      }
+    Object.keys(payload).forEach((k) => {
+      const v = payload[k];
+      if (v === null || v === undefined) delete payload[k];
+      if (Array.isArray(v) && v.length === 0) delete payload[k];
+      if (typeof v === 'string' && v.trim() === '') delete payload[k];
     });
-  }
+
+    this.loading = true;
+
+    if (!isSummary) {
+      // ===== 明細：後端分頁 + 後端排序 =====
+      Object.assign(payload, { pageSize, pageIndex, SortBy: sortByArr });
+      this.historyRequestBody = { ...payload };
+
+      this.tls23010Service
+        .queryTLS23010(payload)
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe({
+          next: (resp: any) => {
+            const queryData = Array.isArray(resp?.Data?.QueryData)
+              ? resp.Data.QueryData
+              : Array.isArray(resp?.Data)
+                ? resp.Data
+                : [];
+
+            this.data = queryData as TLS23010Data[];
+            this.summaryData = [];
+
+            this.detailTotals = this.coerceTotals(resp?.Data?.TotalSummary);
+            this.totalRecords = Number(resp?.TotalCount ?? this.data.length ?? 0);
+
+            this.updatePdfSummary?.();
+            this.queryStateService?.setQueryState?.(this.ProgNo, this.queryForm.value);
+          },
+          error: () => {
+            this.data = [];
+            this.summaryData = [];
+            this.totalRecords = 0;
+            this.detailTotals = {};
+            this.pdfSummary = [];
+          },
+        });
+
+      return;
+    }
+
+    // ===== 彙總：一次抓回，畫面上用 summaryData 顯示 =====
+    Object.assign(payload, { SortBy: sortByArr });
+    delete payload.pageIndex;
+    delete payload.pageSize;
+
+    this.tls23010Service
+      .queryTLS23010Summary(payload)
+      .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+      .subscribe({
+        next: (resp: any) => {
+          const dataArr = Array.isArray(resp?.Data) ? resp.Data : [];
+          const head = dataArr[0] ?? {};
+
+          const details =
+            Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
+            Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
+            [];
+
+          this.summaryData = details.map((row: any) => ({ ...row }));
+          this.data = [];
+          this.totalRecords = this.summaryData.length;
+
+          // 這個只給匯出 / 其它 API 用，不影響 TableReport 自己的查詢
+          const summaryPageSize = this.summaryData.length || 30;
+          this.historyRequestBody = {
+            ...payload,
+            pageIndex: 1,
+            pageSize: summaryPageSize,
+          };
+
+          this.detailTotals = {};
+          this.updatePdfSummary?.();
+          this.queryStateService?.setQueryState?.(this.ProgNo, this.queryForm.value);
+        },
+        error: () => {
+          this.summaryData = [];
+          this.data = [];
+          this.totalRecords = 0;
+          this.detailTotals = {};
+          this.pdfSummary = [];
+        },
+      });
+  });
+}
+
+
 
   onToggleSummary() {
     this.queryForm.patchValue({ pageIndex: 1, pageSize: 30 }, { emitEvent: false });
@@ -335,26 +352,36 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
       }))
     );
 
-  // ========= 提供給 <app-table-report> 的查詢封裝（彙總，切 30 筆分頁） =========
-  public queryTLS23010SummaryForReport = (body: any) =>
-    this.tls23010Service.queryTLS23010Summary({
-      ...body,
-      TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
-      TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
-    }).pipe(
-      map((resp: any) => {
-        const dataArr = Array.isArray(resp?.Data) ? resp.Data : [];
-        const head = dataArr[0] ?? {};
-        const all =
-          Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
-            Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
-              [];
-        const pageIndex = Number(body?.pageIndex ?? 1);
-        const pageSize = Number(body?.pageSize ?? 30);
-        const slice = all.slice((pageIndex - 1) * pageSize, pageIndex * pageSize);
-        return { Data: slice, TotalCount: all.length, GrandTotal: null };
-      })
-    );
+// ========= 提供給 <app-table-report> 的查詢封裝（彙總） =========
+public queryTLS23010SummaryForReport = (body: any) =>
+  this.tls23010Service.queryTLS23010Summary({
+    ...body,
+    TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+    TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
+  }).pipe(
+    map((resp: any) => {
+      const dataArr = Array.isArray(resp?.Data) ? resp.Data : [];
+      const head = dataArr[0] ?? {};
+
+      const all =
+        Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
+        Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
+        [];
+
+      // 不在這裡做排序、也不自行切分頁
+      // 排序交給後端依 body.SortBy 處理
+      // 分頁交給 TableReport 透過 pageIndex / pageSize 控制
+
+      return {
+        Data: all,
+        TotalCount: all.length,
+        GrandTotal: null,
+      };
+    })
+  );
+
+
+
 
   // ========= 展開列：載入明細 =========
   loadDetails = (row: TLS23010Data) => {
@@ -707,7 +734,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     { field: 'ORG_TXN_No', header: '原交易序號', visible: true, style: 'text-right' },
 
     { field: 'TXN_PkngUID', header: '停車車牌', visible: true },
-    { field: 'TXN_MemID', header: '會員卡號', visible: true },
+    { field: 'TXN_MemCard', header: '會員卡號', visible: true },
 
     { field: 'TXN_TotDisc', header: '折扣/讓金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
 
