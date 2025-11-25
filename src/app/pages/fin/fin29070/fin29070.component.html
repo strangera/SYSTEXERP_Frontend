@@ -9,25 +9,18 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <!-- 廠商代號(起訖) -->
-          <div class="col-12 md:col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-6">
             <app-dropdown-range label="廠商代號" controlName="VEN_No" [startControl]="queryForm.controls.VEN_No_From"
               [endControl]="queryForm.controls.VEN_No_To" [submitted]="submitted" [options]="vendorOptions"
               optionLabel="label" optionValue="value" />
           </div>
           <!-- 立帳日期(起訖) - 必填 -->
-          <div class="col-12 md:col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-6">
             <app-calendar-range calendarType="dateRange" label="立帳日期" [startControl]="queryForm.controls.ODM_Date_From"
               [endControl]="queryForm.controls.ODM_Date_To" [submitted]="submitted">
             </app-calendar-range>
           </div>
-
-          <!-- 應付控制科目 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="應付控制科目" [control]="queryForm.controls.AccNo_APControl" [submitted]="submitted">
-            </app-input-text>
-          </div>
         </div>
-
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>

@@ -46,7 +46,6 @@ export class FIN29070Component extends BasicQueryPageComponent<FIN29070Data> imp
     VEN_No_To: [null, Validators.required],                         // 廠商代號(迄)
     ODM_Date_From: [null, Validators.required], // 立帳日期(起) - 必填
     ODM_Date_To: [null, Validators.required],   // 立帳日期(迄) - 必填
-    AccNo_APControl: [null],                   // 應付控制科目
     ...createPaginationConfig([])
   });
 
@@ -73,7 +72,7 @@ export class FIN29070Component extends BasicQueryPageComponent<FIN29070Data> imp
     // 載入廠商下拉選單
     this.dropDownListService.queryPOS2013_DropDownList()
       .pipe(untilDestroyed(this)).subscribe(res =>
-        this.vendorOptions = res.Data.map((x: any) => ({ label: `${x.No} - ${x.Name}`, value: x.No })));
+        this.vendorOptions = res.Data.map((x: any) => ({ label: `${x.VEN_No} - ${x.Name}`, value: x.VEN_No })));
   }
 
   onSubmit(form: FormGroup) {

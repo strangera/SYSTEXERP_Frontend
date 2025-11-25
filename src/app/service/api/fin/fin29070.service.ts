@@ -10,7 +10,6 @@ export interface FIN29070QueryRequest extends BaseQueryRequest {
   VEN_No_To: string;             // 廠商代號(迄)
   ODM_Date_From: string;          // 立帳日期(起) - 必填
   ODM_Date_To: string;            // 立帳日期(迄) - 必填
-  AccNo_APControl?: string;       // 應付控制科目
 }
 
 // 明細 Row
