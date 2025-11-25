@@ -263,18 +263,16 @@ export const COLUMNS_CHANGE_VIEW: Column[] = [
 
 /** 新增模式用的商品明細欄位（用於 table-edit） */
 export const COLUMNS_DETAIL_EDIT: EditColumn[] = [
-  // { field: 'txn_item', header: '項次', type: 'inputNumber', maxLength: 6, validate: [validateRequired] },
   { field: 'INV_ItemName', header: '項目名稱', type: 'input', maxLength: 50, validate: [validateRequired] },
   { field: 'INV_Qty', header: '數量', type: 'inputNumber', minFractionDigits: 0, maxFractionDigits: 3, validate: [validateRequired] },
-  { field: 'TXN_SaleAmt', header: '金額', type: 'inputNumber', minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
+  { field: 'INV_SaleAmt', header: '金額', type: 'inputNumber', minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
 ];
-
 /** 查看模式用的商品明細欄位（用於 app-table） */
 export const COLUMNS_DETAIL_VIEW: Column[] = [
   // { field: 'TXN_Item', header: '項次', visible: true },
   { field: 'INV_ItemName', header: '項目名稱', visible: true },
   { field: 'INV_Qty', header: '銷售數量', visible: true },
-  { field: 'TXN_SaleAmt', header: '銷售金額', visible: true, format: formatAmount },
+  { field: 'INV_SaleAmt', header: '銷售金額', visible: true, format: formatAmount },
 ];
 
 // ===== 介面定義 =====
@@ -301,9 +299,9 @@ export interface TLS2J030Data {
   TXN_Notes?: string;          // 備註
 
   // 商品明細欄位（對應 COLUMNS_DETAIL_EDIT）
-  txn_item?: number;           // 項次
+  // txn_item?: number;           // 項次
   INV_ItemName?: string;       // 項目名稱
   INV_Qty?: number;            // 數量
-  // TXN_SaleAmt 已在上面定義，這裡是商品的金額
+  INV_SaleAmt?: number;        // 商品明細金額（與TXN_SaleAmt區別）
 }
 
