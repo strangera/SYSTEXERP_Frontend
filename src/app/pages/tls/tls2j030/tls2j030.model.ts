@@ -316,7 +316,7 @@ export const COLUMNS_CHANGE_VIEW: Column[] = [
 
 /** 新增模式用的商品明細欄位（用於 table-edit） */
 export const COLUMNS_DETAIL_EDIT: EditColumn[] = [
-  { field: 'INV_ItemName', header: '項目名稱', type: 'input', maxLength: 50, validate: [validateRequired] },
+  { field: 'INV_ItemName', header: '項目名稱', width: '100%', type: 'input', maxLength: 50, validate: [validateRequired] },
   { field: 'INV_Qty', header: '數量', type: 'inputNumber', minFractionDigits: 0, maxFractionDigits: 3, validate: [validateRequired] },
   { field: 'INV_SaleAmt', header: '金額', type: 'inputNumber', minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
 ];
