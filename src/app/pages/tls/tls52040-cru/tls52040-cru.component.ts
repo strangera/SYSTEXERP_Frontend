@@ -268,7 +268,7 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
         ...this.data,
         ...response.Data.Data.map((item: ITLS52040Detail) => ({
           ...item,
-          RJD_ConfirmQty: 1,
+          RJD_ConfirmQty: (item.CRN_SubQty || 0) - (item.RJD_ConfirmQty_Finished || 0),
           RJD_BuyPrc: item.RJD_BuyNet,
           RJD_BuyNet: 0,
         }))

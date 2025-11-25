@@ -74,20 +74,18 @@
     <!-- 非群組表頭 -->
     <ng-container *ngIf="!columnGroup?.length">
       <tr>
-        <th *ngIf="data.length && showReorder" class="w-1rem text-center"></th>
+        <th *ngIf="_tableData.length && showReorder" class="w-1rem text-center"></th>
 
-        <th class="w-1rem text-center">{{ serialName }}
+        <th [attr.colspan]="
+        (canInsert && !disabled && _tableData.length > 0 && _tableData[_tableData.length - 1]._isAutoInsertCandidate && !showCheckBox) ? 2 : 1
+    " class="w-1rem text-center">{{ serialName }}
         </th>
-        <!-- <th [attr.colspan]="
-    (canInsert && !disabled && _tableData.length > 0 && _tableData[_tableData.length - 1]?._isAutoInsertCandidate && !showCheckBox) ? 2 : 1
-" class="w-1rem text-center">{{ serialName }}
-</th> -->
+
         <th
           *ngIf="showCheckBox && !disabled && _tableData.length > (canInsert && _tableData[_tableData.length - 1]?._isAutoInsertCandidate ? 1 : 0)"
           class="w-1rem text-center">
           <p-tableHeaderCheckbox [disabled]="disabled" />
         </th>
-
         <th *ngFor="let col of columns" pReorderableColumn pResizableColumn class="text-center">
           {{ col.header }}
           <span *ngIf="isRequired(col)" class="text-red-500">*</span>

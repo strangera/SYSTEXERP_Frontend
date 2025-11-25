@@ -29,7 +29,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 })
 export class TLS2C050Component extends BasicQueryPageComponent<unknown> implements OnInit {
   queryForm = this.formBuilder.group({
-    cls_date: [new Date(), [Validators.required]],
+    cls_date: [null as Date | null, [Validators.required]],
   });
 
   closeDate: string | undefined;
@@ -167,7 +167,15 @@ export class TLS2C050Component extends BasicQueryPageComponent<unknown> implemen
       )
       .subscribe({
         next: ([closeDate, summaryDate]) => {
-          this.closeDate = closeDate;
+          this.closeDate = closeDate;// 假設 closeDate 已經被正確轉換為一個 Date 物件
+          const originalDate = new Date(closeDate);
+
+          // 取得原本的日期，並加上 1 天
+          // setDate(getDate() + 1) 是在 JavaScript 中處理日期加減的標準方式
+          originalDate.setDate(originalDate.getDate() + 1);
+
+          // 將計算後的新日期更新到表單欄位
+          this.queryForm.patchValue({ cls_date: originalDate });
           this.summaryDate = summaryDate;
         },
       });

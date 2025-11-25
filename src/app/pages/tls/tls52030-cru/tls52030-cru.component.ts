@@ -268,7 +268,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
         ...this.data,
         ...response.Data.Data.map((item: IODDetail) => ({
           ...item,
-          ODD_ConfirmQty: 1
+          ODD_ConfirmQty: (item.POD_SubQty || 0) - item.ODD_ConfirmQty_Finished,
         }))
       ];
       this.calculateTotals();
