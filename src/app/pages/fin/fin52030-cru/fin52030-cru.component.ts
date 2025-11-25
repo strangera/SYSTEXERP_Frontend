@@ -20,7 +20,7 @@ import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
-import { finalize, switchMap, tap } from 'rxjs';
+import { finalize, map, switchMap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailData, FIN52030DetailTable, VendorList } from '../fin52030/fin52030.model';
 
 @Component({
@@ -280,10 +280,11 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
         ? this.service.insertFIN52030Data({ ...payload, CRT_USR_No: this.user.user_No })
         : this.service.updateFIN52030Data({ ...payload, id: this.rowdata!.id, UPD_USR_No: this.user.user_No });
 
-      request.pipe(
-        tap(({ Status }) => Status === '0000' && this.onCancel())
-      ).subscribe({
-        next: () => this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功'),
+      request.subscribe({
+        next: res => {
+          if (res.Status === '0000') this.onCancel();
+          this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功');
+        },
         error: () => this.messageService.errorBubble(this.isFormCreateable ? '新增失敗' : '更新失敗'),
       });
     });
@@ -356,16 +357,15 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     if (ids.length === 0) return;
 
     this.service.deleteFIN52030Data(ids).pipe(
-      switchMap(res => {
-        return this.service.loadFIN52030Detail(this.rowdata!.id);
-      }),
-      tap(res => {
-        this.fin52030DetailData.set(res.Data);
-        this.totalRecords.set(res.TotalCount ?? 0);
-      }),
+      switchMap(res => this.service.loadFIN52030Detail(this.rowdata!.id)),
+      map(res => { if (res.Status === '0000') return res; throw new Error('讀取失敗'); }),
       finalize(() => this.logger.debug('onDelete:', [event, ids, this.tableData()])),
     ).subscribe({
-      next: () => this.messageService.successBubble('刪除成功'),
+      next: res => {
+        this.fin52030DetailData.set(res.Data);
+        this.totalRecords.set(res.TotalCount ?? 0);
+        this.messageService.successBubble('刪除成功');
+      },
       error: () => this.messageService.errorBubble('刪除失敗')
     });
   }
