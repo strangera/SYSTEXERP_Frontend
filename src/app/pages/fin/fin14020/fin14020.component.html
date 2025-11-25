@@ -6,10 +6,10 @@
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
-        <div class="grid p-fluid">
-          <app-calendar calendarType="dateMonthOne" class="col-12 md:col-6 lg:col-4" label="結轉資料年月"
-            [control]="queryForm.controls.DeclareYM"
-            [submitted]="submitted" />
+        <div class="grid p-fluid gap-2">
+          <!-- 結轉申報年月 -->
+          <app-year-month class="col-12 md:col-6 lg:col-4" label="結轉申報年月" [control]="queryForm.controls.DeclareYM"
+            [submitted]="submitted"></app-year-month>
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
