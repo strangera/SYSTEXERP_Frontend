@@ -23,6 +23,7 @@ export interface TLS57170Data {
   LOGO_No: string | null;         // 品牌編號
   PLU_MagNo: string | null;       // 商品管理編號
   LOGO_CH_NAME: string | null;    // 品名
+  PLU_Name: string | null;        // 商品名稱 (新增)
   PLU_No: string | null;          // 國際條碼
   Amt_A: number | null;           // 期末存貨售價(A)
   FeeRate_B: number | null;       // 推銷費用率(B)
@@ -38,6 +39,7 @@ export interface TLS57170QueryResponse {
   Data: {
     mainData: TLS57170Data[];
     totalData: Array<{
+      LOGO_No: string | null;           // 品牌編號 (新增)
       UP_PORFIT_Total: number | null;
       DOWN_COST_Total: number | null;
     }>;
@@ -46,7 +48,7 @@ export interface TLS57170QueryResponse {
     Code: string;
     Message: string;
     Details: string;
-  };
+  } | null;                             // 改為可為 null
   Meta: {
     Timestamp: string;
     RequestId: string;
