@@ -20,7 +20,7 @@ import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
-import { finalize, map, switchMap } from 'rxjs';
+import { concatMap, finalize, map, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailData, FIN52030DetailTable, VendorList } from '../fin52030/fin52030.model';
 
 @Component({
@@ -67,6 +67,8 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   public readonly tableData = signal<FIN52030DetailTable[]>([]);
   private readonly selectedOrgId = signal<string>('100000');
 
+  public readonly tableLoading = signal<boolean>(!0);
+
   public selectedItems: FIN52030Data[] = [];
 
   public readonly rowEditCanSave = signal<boolean>(!1);
@@ -98,10 +100,10 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   });
 
   public readonly dropdownEffect = effect(() => {
-    const accNos = this.service.accNoList();
-    const vendors = this.service.vendorList();
-    const usrs = this.service.usrList();
-    const accDescs = this.service.noteDescList();
+    const accNos = this.service.accNoOptions();
+    const vendors = this.service.vendorOptions();
+    const usrs = this.service.usrOptions();
+    const accDescs = this.service.noteDescOptions();
     const [name, date] = [this.user.user_Name, new Date()];
 
     if (!accNos.length || !vendors.length || !usrs.length) return;
@@ -111,12 +113,12 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       ? this.dataForm.patchValue({ CRT_USR_No: name, CRT_Date: date })
       : this.dataForm.patchValue({ UPD_USR_No: name, UPD_Date: date });
 
-    this.service.tableLoading.set(!1);
+    this.tableLoading.set(!1);
   }, { allowSignalWrites: !0 });
 
   public readonly dataEffect = effect(() => {
     if (this.isFormCreateable) return void (() => {
-      this.service.tableLoading.set(!1);
+      this.tableLoading.set(!1);
       this.dataEffect.destroy();
     });
     const data = this.fin52030DetailData();
@@ -148,7 +150,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   }, { allowSignalWrites: !0 });
 
   public readonly loadingEffect = effect(() => {
-    this.loading = this.service.tableLoading()
+    this.loading = this.tableLoading()
       || this.service.accLoading()
       || this.service.venLoading()
       || this.service.usrLoading()
@@ -173,7 +175,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       required: !0,
       showClear: !1,
       disabled: () => this.service.accLoading(),
-      options: () => this.service.accNoList(),
+      options: () => this.service.accNoOptions(),
       optionLabel: 'value',
       optionValue: 'value',
       templateLabel: 'templateLabel',
@@ -193,7 +195,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       type: 'dropdown',
       disabled: () => this.service.noteDescLoading(),
       options: (v: FIN52030DetailTable) => computed(() =>
-        this.service.noteDescList().find(item => item.value === v.AccNo)?.data ?? [])(),
+        this.service.noteDescOptions().find(item => item.value === v.AccNo)?.data ?? [])(),
       optionLabel: 'label',
       optionValue: 'value',
     },
@@ -216,7 +218,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       header: '組織代號',
       type: 'dropdown',
       showClear: !1,
-      options: () => this.service.orgNoList(),
+      options: () => this.service.orgNoOptions(),
       optionLabel: 'label',
       optionValue: 'value',
     },
@@ -224,7 +226,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       field: 'SubDetailNo',
       header: '對象別編號',
       type: 'dropdown',
-      options: () => this.service.refNameList(),
+      options: () => this.service.refNameOptions(),
       optionLabel: 'label',
       optionValue: 'value',
     },
@@ -244,12 +246,12 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
     if (!this.isFormCreateable) this.service.loadFIN52030Detail(this.rowdata!.id).subscribe();
 
-    this.service.getOrgNoList();
-    this.service.getRefNameList();
-    this.service.getAccNoList();
-    this.service.getVendorList();
-    this.service.getUsrList();
-    this.service.getAccDescList([]);
+    this.service.getOrgNoOptions();
+    this.service.getRefNameOptions();
+    this.service.getAccNoOptions();
+    this.service.getVendorOptions();
+    this.service.getUsrOptions();
+    this.service.getAccDescOptions([]);
 
     this.logger.debug(`init:`, [this.user, this.rowdata]);
   }
@@ -257,7 +259,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const d = this.dataForm.getRawValue();
-      const raw = {
+      const payload = <any>{
         ...d,
         Details: this.tableData().map(({ AccAmtD, AccAmtC, NoteDesc, ...rest }, index) => ({
           ...rest,
@@ -268,21 +270,18 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
         })),
       };
 
-      const payload = Object.keys(raw).reduce((acc, key) => {
-        const v = raw[key as keyof typeof raw];
-        if (v !== null && v !== void 0 && v !== '') acc[key as keyof typeof raw] = v;
-        return acc;
-      }, {} as any);
-
-      this.logger.debug(`onSubmit:`, [d, raw, payload, this.rowdata, this.tableData()]);
-
+      this.tableLoading.set(!0);
       const request = this.isFormCreateable
         ? this.service.insertFIN52030Data({ ...payload, CRT_USR_No: this.user.user_No })
         : this.service.updateFIN52030Data({ ...payload, id: this.rowdata!.id, UPD_USR_No: this.user.user_No });
 
-      request.subscribe({
-        next: res => {
-          if (res.Status === '0000') this.onCancel();
+      request.pipe(
+        tap(res => this.logger.debug(`onSubmit:`, [payload, res])),
+        map(res => { if (res.Status === '0000') return res; throw new Error(this.isFormCreateable ? '新增失敗' : '更新失敗'); }),
+        finalize(() => this.tableLoading.set(!1)),
+      ).subscribe({
+        next: () => {
+          this.onCancel();
           this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功');
         },
         error: () => this.messageService.errorBubble(this.isFormCreateable ? '新增失敗' : '更新失敗'),
@@ -356,17 +355,21 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
     if (ids.length === 0) return;
 
+    this.tableLoading.set(!0);
     this.service.deleteFIN52030Data(ids).pipe(
-      switchMap(res => this.service.loadFIN52030Detail(this.rowdata!.id)),
+      tap(res => this.logger.debug(`onDelete:`, [ids, res])),
+      map(res => { if (res.Status === '0000') return res; throw new Error('刪除失敗'); }),
+      concatMap(() => this.service.loadFIN52030Detail(this.rowdata!.id)),
+      tap(res => this.logger.debug(`onDelete reload detail:`, [res])),
       map(res => { if (res.Status === '0000') return res; throw new Error('讀取失敗'); }),
-      finalize(() => this.logger.debug('onDelete:', [event, ids, this.tableData()])),
+      finalize(() => this.tableLoading.set(!1)),
     ).subscribe({
       next: res => {
-        this.fin52030DetailData.set(res.Data);
-        this.totalRecords.set(res.TotalCount ?? 0);
+        this.fin52030DetailData.set(res.Data || []);
+        this.totalRecords.set(res.TotalCount || 0);
         this.messageService.successBubble('刪除成功');
       },
-      error: () => this.messageService.errorBubble('刪除失敗')
+      error: err => this.messageService.errorBubble(err.message || '刪除失敗'),
     });
   }
 
@@ -395,8 +398,8 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   /** 根據所選模板類型與搜尋條件取得並過濾模板資料 */
   public getFilteredTemplateData(): (VendorList | Option)[] {
     const src = this.selectedTemplateType === 'vendor'
-      ? this.service.vendorList()
-      : this.service.usrList();
+      ? this.service.vendorOptions()
+      : this.service.usrOptions();
 
     const term = this.templateSearchTerm?.trim().toLowerCase();
     if (!term) return src;

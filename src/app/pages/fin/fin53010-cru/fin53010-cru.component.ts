@@ -13,7 +13,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { EditColumn, EditColumnExtend } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, FieldChangeEvent, formatAmount } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
@@ -23,9 +23,9 @@ import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
-import { finalize, map, Observable, tap } from 'rxjs';
+import { concatMap, finalize, map, Observable, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailData, FIN52030Payload } from '../fin52030/fin52030.model';
-import { FIN53010Data, FIN53010DetailTable, FIN53010InsertPayload, FIN53010InsertResult, FIN53010UpdateResult, QueryFIN53010Detail } from '../fin53010/fin53010.model';
+import { FIN53010Data, FIN53010DetailTable, FIN53010InsertResult, FIN53010UpdateResult, QueryFIN53010Detail } from '../fin53010/fin53010.model';
 
 @Component({
   selector: 'app-fin53010-cru',
@@ -85,6 +85,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly selectedDetail = signal<FIN52030DetailData[]>([]);
   private readonly selectedOrgId = signal<string>('100000');
 
+  public readonly tableLoading = signal<boolean>(!1);
+
   public selectedItems: FIN53010Data[] = [];
   public rowEditCanSave = signal<boolean>(!1);
   public displayDialog = signal<boolean>(!1);
@@ -118,12 +120,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   });
 
   public readonly loadingEffect = effect(() => {
-    this.loading = this.service.accLoading()
+    this.loading = this.tableLoading()
+      || this.service.accLoading()
       || this.service.venLoading()
       || this.service.usrLoading()
       || this.service.orgNoLoading()
       || this.service.voucherTypeLoading()
-      || this.service.tableLoading()
       || this.service.refNameLoading()
       || this.service.noteDescLoading();
   });
@@ -131,7 +133,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   // 載入資料的 effect
   public readonly dataEffect = effect(() => {
     if (this.isFormCreateable) return void (() => {
-      this.service.tableLoading.set(!1);
+      this.tableLoading.set(!1);
       this.dataEffect.destroy();
     });
     const data = this.fin53010DetailData();
@@ -176,8 +178,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly vouTypeTemp = signal<'1' | '2' | '3' | void>(void 0);
   public readonly vouTermSearchTemp = signal<string>('');
   public readonly detailCountTemp = signal<boolean | null>(null);
-  public readonly filteredVoucherTemplateList = computed(() =>
-    this.service.voucherTemplateList().filter(v => {
+  public readonly filteredVoucherTemplateOptions = computed(() =>
+    this.service.voucherTemplateOptions().filter(v => {
       return (!this.vouTypeTemp() || v.VouType === this.vouTypeTemp())
         && (this.detailCountTemp() === null ? !0 : this.detailCountTemp() ? v.DetailCount > 0 : v.DetailCount === 0)
         && (v.TempNo.includes(this.vouTermSearchTemp()) || v.TempName.includes(this.vouTermSearchTemp()));
@@ -199,7 +201,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       type: 'dropdown',
       required: !0,
       showClear: !1,
-      options: () => this.service.accNoList(),
+      options: () => this.service.accNoOptions(),
       optionLabel: 'value',
       optionValue: 'value',
       templateLabel: 'templateLabel',
@@ -216,8 +218,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       field: 'NoteDesc',
       header: '摘要',
       type: 'dropdown',
-      options: (v: FIN53010DetailTable) => computed(() =>
-        this.service.noteDescList().find(item => item.value === v.AccNo)?.data ?? [])(),
+      options: (v: FIN53010DetailTable) => this.service.noteDescOptions().find(item => item.value === v.AccNo)?.data ?? [],
       optionLabel: 'label',
       optionValue: 'value',
     },
@@ -238,7 +239,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       header: '組織代號',
       type: 'dropdown',
       showClear: !1,
-      options: () => this.service.orgNoList(),
+      options: () => this.service.orgNoOptions(),
       optionLabel: 'label',
       optionValue: 'value',
     },
@@ -254,7 +255,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       field: 'ReflNo',
       header: '對象別編號',
       type: 'dropdown',
-      options: () => this.service.refNameList(),
+      options: () => this.service.refNameOptions(),
       optionLabel: 'label',
       optionValue: 'value',
     },
@@ -279,25 +280,32 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public ngOnInit(): void {
     this.initializePage('FIN53010', this.dataForm);
 
-    this.service.getAccNoList();
-    this.service.getVendorList();
-    this.service.getUsrList();
-    this.service.getOrgNoList();
-    this.service.getRefNameList();
-    this.service.getAccDescList([]);
+    this.service.getAccNoOptions();
+    this.service.getVendorOptions();
+    this.service.getUsrOptions();
+    this.service.getOrgNoOptions();
+    this.service.getRefNameOptions();
+    this.service.getAccDescOptions();
 
-    if (!this.isFormCreateable) this.service.loadFIN53010Detail(this.rowdata!.id).subscribe({
-      next: res => {
-        this.fin53010DetailData.set(res.Data);
-        this.totalRecords.set(res.TotalCount);
-      },
-    });
+    if (!this.isFormCreateable) {
+      this.tableLoading.set(!0);
+      this.service.loadFIN53010Detail(this.rowdata!.id).pipe(
+        map(res => { if (res.Status === '0000') return res; throw new Error('載入傳票明細失敗'); }),
+        finalize(() => this.tableLoading.set(!1)),
+      ).subscribe({
+        next: res => {
+          this.fin53010DetailData.set(res.Data);
+          this.totalRecords.set(res.TotalCount);
+        },
+        error: err => this.messageService.errorBubble(err.message || '載入傳票明細失敗'),
+      });
+    }
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const { VouNo, ...d } = this.dataForm.getRawValue();
-      const raw = {
+      const payload = <any>{
         ...d,
         Details: this.tableData().map(({ AccAmtD, AccAmtC, NoteDesc, ...rest }, index) => {
           return {
@@ -314,25 +322,21 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         ...(this.isFormCreateable ? {} : { VouNo }),
       };
 
-      const payload: FIN53010InsertPayload = Object.keys(raw).reduce((acc, key) => {
-        const v = raw[key as keyof typeof raw];
-        if (v !== null && v !== void 0 && v !== '') acc[key as keyof typeof raw] = v;
-        return acc;
-      }, {} as any);
-
-      this.logger.debug(`onSubmit:`, [d, payload, this.rowdata, this.tableData()]);
-
+      this.tableLoading.set(!0);
       const request: Observable<FIN53010InsertResult | FIN53010UpdateResult> = this.isFormCreateable
         ? this.service.insertFIN53010Data({ ...payload, CRT_USR_No: this.user.user_No })
         : this.service.updateFIN53010Data({ ...payload, id: this.rowdata!.id, UPD_USR_No: this.user.user_No });
 
       request.pipe(
+        tap(res => this.logger.debug(`onSubmit:`, [payload, res])),
+        map(res => { if (res.Status === '0000') return res; throw new Error(this.isFormCreateable ? '新增失敗' : '更新失敗'); }),
+        finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
-        next: res => {
-          if (res.Status === '0000') this.onCancel();
+        next: () => {
+          this.onCancel();
           this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功');
         },
-        error: () => this.messageService.errorBubble(this.isFormCreateable ? '新增失敗' : '更新失敗'),
+        error: err => this.messageService.errorBubble(err.message || (this.isFormCreateable ? '新增失敗' : '更新失敗')),
       });
     });
   }
@@ -377,11 +381,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           rowData.SubDetailNo = '';
           break;
 
-        case 'NoteDesc':
-          rowData.NoteDesc = String(this.service.noteDescMap().get(event.rowData.AccNo)?.data
-            ?.find(d => d.value === event.value)?.label
-            || event.value || '');
-          break;
+        // case 'NoteDesc':
+        //   rowData.NoteDesc = String(this.service.noteDescMap().get(event.rowData.AccNo)?.data
+        //     ?.find(d => d.value === event.value)?.label
+        //     || event.value || '');
+        //   break;
       }
 
       // 如果會計科目是進項稅額，且組織是部門，則自動改為共同
@@ -401,22 +405,33 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     });
   }
 
-  public onDelete(event: FIN53010DetailTable[]): void {
+  public onDelete(event: (FIN53010DetailTable & EditColumnExtend)[]): void {
     let ids: number[] = [];
     for (let e of event) {
       if (RegExp(/^[^0-9]/).test(String(e.SerNo))) continue;
 
       const data = this.tableData();
       const idx = data.findIndex(d => d.SerNo === e.SerNo);
+      if (e[idx]?._dataStatus === 'new') {
+        // 如果是新資料則直接從 tableData 移除
+        this.tableData.update(current => current.filter(d => d.SerNo !== e.SerNo));
+        continue;
+      }
       if (idx > -1) ids.push(idx + 1);
     }
-    this.logger.debug(`onDelete:`, [event, ids]);
 
+    if (!ids.length) return;
+    this.tableLoading.set(!0);
     this.service.deleteFIN53010Data(ids).pipe(
-      finalize(() => this.service.loadFIN53010Detail(this.rowdata!.id))
+      tap(res => this.logger.debug(`onDelete:`, [ids, res])),
+      map(res => { if (res.Status === '0000') return res; throw new Error('刪除失敗'); }),
+      concatMap(() => this.service.loadFIN53010Detail(this.rowdata!.id)),
+      tap(res => this.logger.debug(`reload after delete:`, [res])),
+      map(res => { if (res.Status === '0000') return res; throw new Error('載入傳票明細失敗'); }),
+      finalize(() => this.tableLoading.set(!1)),
     ).subscribe({
       next: () => this.messageService.successBubble('刪除成功'),
-      error: () => this.messageService.errorBubble('刪除失敗')
+      error: err => this.messageService.errorBubble(err.message || '刪除失敗')
     });
   }
 
@@ -444,20 +459,27 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       // ...(!this.isFormCreateable ? { UPD_USR_No: this.user.user_No } : {}),
     };
 
-    this.logger.debug('getVocherTemplate:', [payload]);
     if (this.loading) return;
+
+    this.tableLoading.set(!0);
     this.service.getFin52030(payload).pipe(
-      tap(res => this.logger.debug(`getVocherTemplate:`, [res])),
-      finalize(() => this.displayDialog.set(!0)),
+      tap(res => this.logger.debug(`getFin52030:`, [res])),
+      finalize(() => {
+        this.tableLoading.set(!1);
+        this.displayDialog.set(!0);
+      }),
     ).subscribe();
   }
 
   public onApplyTemplate(): void {
-    this.logger.debug('onApplyTemplate:', [this.selectedDetail()]);
+    this.tableLoading.set(!0);
     this.service.getFin52030Detail(this.selectedDetail()[0]?.TempNo, this.df().CompNo.value!, Number(this.user.mid)).pipe(
       tap(res => this.logger.debug(`onApplyTemplate:`, [res])),
       map(res => { if (res.Status === '0000') return res; throw new Error(res.Message || '取得常用傳票明細失敗'); }),
-      finalize(() => this.displayDialog.set(!1)),
+      finalize(() => {
+        this.tableLoading.set(!1);
+        this.displayDialog.set(!1);
+      }),
     ).subscribe({
       next: res => {
         const data = res.Data;
@@ -496,8 +518,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   /** 根據所選模板類型與搜尋條件取得並過濾模板資料 */
   public getFilteredTemplateData(): Option[] {
     const src = this.selectedTemplateType === 'vendor'
-      ? this.service.vendorList()
-      : this.service.usrList();
+      ? this.service.vendorOptions()
+      : this.service.usrOptions();
 
     const term = this.templateSearchTerm?.trim().toLowerCase();
     if (!term) return src;

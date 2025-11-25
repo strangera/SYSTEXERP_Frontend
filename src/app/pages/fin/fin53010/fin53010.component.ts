@@ -15,7 +15,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, tap } from 'rxjs';
+import { finalize, map, tap } from 'rxjs';
 import { FIN53010Data, FIN53010Payload } from './fin53010.model';
 
 @Component({
@@ -69,8 +69,10 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
   public readonly tableData = signal<FIN53010Data[]>([]);
   public readonly totalRecords = signal(0);
 
+  public readonly tableLoading = signal<boolean>(!1);
+
   public readonly loadingEffect = effect(() => {
-    this.loading = this.service.tableLoading()
+    this.loading = this.tableLoading()
       || this.service.accLoading()
       || this.service.venLoading()
       || this.service.usrLoading()
@@ -103,9 +105,9 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
   public ngOnInit(): void {
     this.initializePage('FIN53010', '/FIN/FIN53010CRU', this.queryForm, this.onSubmit.bind(this));
 
-    this.service.getVoucherTypeList();
-    this.service.getAccNoList();
-    this.service.getUsrList();
+    this.service.getVoucherTypeOptions();
+    this.service.getAccNoOptions();
+    this.service.getUsrOptions();
   }
 
   public onSubmit(): void {
@@ -113,28 +115,26 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
       const vns = this.qf().VouNoStart.value;
       const vne = this.qf().VouNoEnd.value;
 
-      const raw = {
+      const payload = <FIN53010Payload>{
         ...this.queryForm.getRawValue(),
         VouNoStart: vns ? String(vns).padEnd(12, '0') : void 0,
         VouNoEnd: vne ? String(vne).padEnd(12, '9') : void 0,
       };
 
-      const payload = Object.keys(raw).reduce((acc, key) => {
-        const v = (<Record<string, any>>raw)[key];
-        if (v !== null && v !== void 0 && v !== '') (<Record<string, any>>acc)[key] = v;
-        return acc;
-      }, {} as FIN53010Payload);
-
-      this.logger.debug(`onSubmit:`, [this.qf(), raw, payload]);
-
-      this.service.loadFIN53010(payload).pipe(
-        tap(res => {
-          this.tableData.set(res.Data);
-          this.totalRecords.set(res.TotalCount);
-          this.service.getAccDescList(res.Data.map(d => d.Remark).filter(Boolean));
-        }),
-      ).subscribe();
+      this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.service.loadFIN53010(payload).pipe(
+        map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
+        tap(res => this.service.getAccDescOptions(res.Data.map(d => d.Remark).filter(Boolean))),
+        finalize(() => this.tableLoading.set(!1)),
+      ).subscribe({
+        next: res => {
+          this.tableData.set(res.Data || []);
+          this.totalRecords.set(res.TotalCount || 0);
+          this.logger.debug(`onSubmit:`, [payload, res]);
+        },
+        error: err => this.messageService.errorBubble(err.message || 'FIN53010查詢失敗:'),
+      });
     });
   }
 }

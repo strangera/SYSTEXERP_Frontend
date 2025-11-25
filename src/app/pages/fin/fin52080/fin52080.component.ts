@@ -1,4 +1,4 @@
-import { Component, computed, effect, OnInit } from '@angular/core';
+import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -15,7 +15,8 @@ import { ValidationService } from '@shared/service/validation.service';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { AccDCType, FIN52080Data, FIN52080Query, LedgerMDType, VoucherType } from './fin52080.model';
+import { finalize, map, tap } from 'rxjs';
+import { AccDCType, FIN52080Data, FIN52080Query, FIN52080Tree, LedgerMDType, VoucherType } from './fin52080.model';
 
 @Component({
   selector: 'app-fin52080',
@@ -75,9 +76,17 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
   private readonly accNoSignal = toSignal(this.qf().AccNo.valueChanges);
   private readonly classNoSignal = toSignal(this.qf().ClassNo.valueChanges);
 
+  public readonly FIN52080Tree = signal<FIN52080Tree[]>([]);
+
+  public readonly tableLoading = signal<boolean>(!1);
+  public readonly treeLoading = signal<boolean>(!1);
+
+  public tableData = signal<FIN52080Data[]>([]);
+  public readonly totalRecords = computed(() => this.filteredData().length);
+
   public readonly filteredData = computed(() => {
     const formValue = this.queryForm.getRawValue();
-    return this.service.FIN52080Data().filter(item => {
+    return this.tableData().filter(item => {
       return (!formValue.AccNo || item.AccNo.includes(formValue.AccNo))
         && (!formValue.AccCname || item.AccCName.includes(formValue.AccCname))
         && (!formValue.AccEname || item.AccEName?.includes(formValue.AccEname))
@@ -91,8 +100,6 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
         && (!formValue.Input_YN?.length || formValue.Input_YN.includes(item.Input_YN));
     });
   });
-
-  public readonly totalRecords = computed(() => this.filteredData().length);
 
   /** accNo驗證 綁定classNo用 */
   public readonly accNoEffect = effect(() => {
@@ -116,9 +123,9 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
   });
 
   public readonly loadingEffect = effect(() => {
-    this.loading = this.service.tableLoading()
-      || this.service.classNoLoading()
-      || this.service.treeLoading();
+    this.loading = this.tableLoading()
+      || this.treeLoading()
+      || this.service.classNoLoading();
   });
 
   /**
@@ -142,7 +149,7 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
     { field: 'AccEName', header: '科目英文名稱' },
     { field: 'AccDC', header: '借/貸', options: this.service.accDCOption, format: v => this.service.accDCOption.find(o => o.No === v)?.Name || v },
     { field: 'Ledger_MD', header: '統制/明細', options: this.service.ledgerMDOption, format: v => this.service.ledgerMDOption.find(o => o.No === v)?.Name || v },
-    { field: 'ClassNo', header: '三碼代號', options: this.service.classNoOption(), format: v => this.service.classNoOption().find(o => o.ClassNo === v)?.ClassCName || v },
+    { field: 'ClassNo', header: '三碼代號', options: this.service.classNoOptions(), format: v => this.service.classNoOptions().find(o => o.ClassNo === v)?.ClassCName || v },
     { field: 'ABAT_YN', header: '是否為沖帳代號', options: this.service.whetherOption, format: v => this.service.whetherOption.find(o => o.No === v)?.Name || v },
     { field: 'Voucher_Type', header: '傳票格式', options: this.service.voucherTypeOption, format: v => this.service.voucherTypeOption.find(o => o.No === v)?.Name || v },
     { field: 'Budget_YN', header: '是否為預算科目', options: this.service.whetherOption, format: v => this.service.whetherOption.find(o => o.No === v)?.Name || v },
@@ -162,9 +169,18 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
     this.initializePage('FIN52080', '/FIN/FIN52080CRU', this.queryForm, this.onSubmit.bind(this));
 
     this.service.getClassNos();
-    this.service.getFIN52080Tree();
 
-    this.logger.debug(`init:`, [this.service.classNoOption(), this.service.classNoMap()]);
+    this.treeLoading.set(!0);
+    this.service.getFIN52080Tree().pipe(
+      tap(res => this.logger.debug(`init:`, [])),
+      map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
+      finalize(() => this.treeLoading.set(!1)),
+    ).subscribe({
+      next: res => this.FIN52080Tree.set(res.Data || []),
+      error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+    });
+
+    this.logger.debug(`init:`, [this.service.classNoOptions(), this.service.classNoMap()]);
   }
 
   public onSubmit(): void {
@@ -186,11 +202,17 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
         Voucher_Type: (this.qf().Voucher_Type.value ?? []).join(),
       };
 
-      this.logger.debug(`對象及對帳維護作業 request:`, [payload]);
-
-      this.service.loadFIN52080(payload).subscribe();
-
+      this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.service.loadFIN52080(payload).pipe(
+        tap(res => this.logger.debug(`onSubmit:`, [payload, res])),
+        map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
+        finalize(() => this.tableLoading.set(!1)),
+      ).subscribe({
+        next: res => this.tableData.set(res.Data || []),
+        error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+      });
+
     });
   };
 

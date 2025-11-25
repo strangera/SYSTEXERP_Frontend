@@ -1,4 +1,4 @@
-import { Component, computed, effect, OnInit } from '@angular/core';
+import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN54030Service } from '@service/api/fin/fin54030.service';
@@ -9,6 +9,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize, map, tap } from 'rxjs';
 import { FIN54030Data } from './fin54030.model';
 
 @Component({
@@ -37,8 +38,11 @@ export class FIN54030Component extends BasicQueryPageComponent<FIN54030Data> imp
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
+  public readonly tableData = signal<FIN54030Data>(Object.create(null));
+  public readonly tableLoading = signal<boolean>(!1);
+
   public readonly dataEffect = effect(() => {
-    const data = this.service.FIN54030Data();
+    const data = this.tableData();
     if (!data?.TargetYM?.length) return;
     const ym = new Date(+data.TargetYM.slice(0, 4), +data.TargetYM.slice(4, 6) - 1, 1);
     this.logger.debug(`data`, [data, ym]);
@@ -52,7 +56,7 @@ export class FIN54030Component extends BasicQueryPageComponent<FIN54030Data> imp
   });
 
   public readonly loadingEffect = effect(() => {
-    this.loading = this.service.tableLoading()
+    this.loading = this.tableLoading()
       || this.service.closeLoading();
   });
 
@@ -65,16 +69,33 @@ export class FIN54030Component extends BasicQueryPageComponent<FIN54030Data> imp
 
   public ngOnInit(): void {
     this.initializePage('FIN54030', void 0, this.queryForm, this.onSubmit.bind(this));
-    this.service.loadFIN54030();
+
+    this.tableLoading.set(!0);
+    this.service.loadFIN54030().pipe(
+      tap(res => this.logger.debug(`init:`, [res])),
+      map(res => { if (res.Status === '0000') return res.Data; else throw new Error(res.Message || '查詢失敗'); }),
+      finalize(() => this.tableLoading.set(!1)),
+    ).subscribe({
+      next: res => this.tableData.set(res || Object.create(null)),
+      error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+    });
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      this.logger.debug(`onSubmit:`, [this.queryForm.getRawValue(), this.qf().TargetYM.value]);
-      if (!this.qf().TargetYM.value?.length) return;
+      if (!this.qf().TargetYM.value?.length) return this.messageService.errorBubble('請選擇目標年月');
+
+      this.tableLoading.set(!0);
       this.qf().CntPostFlag1.value! > 0
-        ? this.messageService.errorBubble('已建立傳票大於0，不允許關帳')
-        : this.service.closeFIN54030(this.qf().TargetYM.value!, '1');
+        ? (() => { this.messageService.errorBubble('已建立傳票大於0，不允許關帳'); this.tableLoading.set(!1); })()
+        : this.service.closeFIN54030(this.qf().TargetYM.value!, '1').pipe(
+          tap(res => this.logger.debug(`onSubmit:`, [res])),
+          map(res => { if (res.Status === '0000') return res; throw new Error('儲存失敗'); }),
+          finalize(() => this.tableLoading.set(!1)),
+        ).subscribe({
+          next: () => this.messageService.successBubble('儲存成功'),
+          error: err => this.messageService.errorBubble(err.message || '儲存失敗'),
+        });
     });
   }
 }

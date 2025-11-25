@@ -11,7 +11,6 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, tap } from 'rxjs';
 import { FIN52010Data, FIN52010UpdatePayload } from './fin52010.model';
 
 @Component({
@@ -62,8 +61,8 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
   });
 
   public readonly dataEffect = effect(() => {
-    const orgUsr = this.service.orgUsrList();
-    const gls1005 = this.service.gls1005List();
+    const orgUsr = this.service.orgUsrOptions();
+    const gls1005 = this.service.gls1005Options();
     const { OpenDate, CloseDate, ...rest } = this.service.FIN52010Data();
 
     if (!orgUsr.length || !gls1005.length) return;
@@ -99,8 +98,8 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
   public ngOnInit(): void {
     this.initializePage('FIN52010', void 0, this.dataForm);
 
-    this.service.getTblUsrOrgList();
-    this.service.getGLS1005DropDownList();
+    this.service.getTblUsrOrgOptions();
+    this.service.getGLS1005DropDownOptions();
     this.service.loadFIN52010(this.user!.CompNo);
 
     this.logger.debug(`init:`, [this.user]);

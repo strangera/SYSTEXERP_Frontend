@@ -36,7 +36,7 @@
           <app-dropdown class="col-12 md:col-6 lg:col-4"
                         label="建立者"
                         controlName="CRT_USR_No"
-                        [options]="service.usrList()"
+                        [options]="service.usrOptions()"
                         optionLabel="label"
                         optionValue="value"
                         [loading]="service.usrLoading()"
@@ -45,7 +45,7 @@
           <app-dropdown class="col-12 md:col-6 lg:col-4"
                         label="修改者"
                         controlName="UPD_USR_No"
-                        [options]="service.usrList()"
+                        [options]="service.usrOptions()"
                         optionLabel="label"
                         optionValue="value"
                         [loading]="service.usrLoading()"
@@ -73,7 +73,7 @@
                [lazy]="true"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"
-               [loading]="service.tableLoading()"
+               [loading]="tableLoading()"
                [dataKey]="'id'"
                [tableKey]="'FIN52030'"></app-table>
   </div>

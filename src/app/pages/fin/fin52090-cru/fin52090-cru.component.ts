@@ -1,4 +1,4 @@
-import { Component, OnInit, computed } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN52090Service } from '@service/api/fin/fin52090.service';
@@ -9,6 +9,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
+import { finalize, map, tap } from 'rxjs';
 import { FIN52090Insert } from '../fin52090/fin52090.model';
 
 @Component({
@@ -29,14 +30,16 @@ import { FIN52090Insert } from '../fin52090/fin52090.model';
 })
 export class FIN52090CRUComponent extends BasicCruPageComponent<unknown> implements OnInit {
 
-  public dataForm = this.formBuilder.nonNullable.group({
+  public readonly dataForm = this.formBuilder.nonNullable.group({
     AccNo: new FormControl<string | void>(void 0, [Validators.required]),
     NoteDesc: new FormControl<string | void>(void 0, [Validators.required, Validators.maxLength(100)]),
   });
   public readonly df = computed(() => this.dataForm.controls);
 
+  public readonly saving = signal<boolean>(!1);
+
   public readonly loadingEffect = computed(() => {
-    this.loading = this.service.tableLoading()
+    this.loading = this.saving()
       || this.service.accNoLoading();
   });
 
@@ -50,7 +53,6 @@ export class FIN52090CRUComponent extends BasicCruPageComponent<unknown> impleme
   ngOnInit(): void {
     this.initializePage('FIN52090', this.dataForm);
 
-    this.service.accNo.set([]);
     this.service.getAccNo();
 
     this.logger.debug(`init:`, [this.rowdata, this.crudstatus, this.service.accNo()]);
@@ -59,16 +61,20 @@ export class FIN52090CRUComponent extends BasicCruPageComponent<unknown> impleme
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const payload = <FIN52090Insert>{
-        AccNo: this.df().AccNo.value ?? '',
-        NoteDesc: this.df().NoteDesc.value ?? '',
+        ...this.dataForm.getRawValue(),
       };
 
-      this.logger.debug(`onSubmit:`, [payload]);
-
-      this.service.saveFIN52090Data(payload).subscribe(res => {
-        if (res.Status !== '0000') return this.messageService.errorBubble('資料儲存失敗，請再次檢查欄位');
-        this.messageService.successBubble('資料儲存成功');
-        this.onCancel();
+      this.saving.set(!0);
+      this.service.saveFIN52090Data(payload).pipe(
+        tap(res => this.logger.debug('onSubmit:', [payload, res])),
+        map(res => { if (res.Status !== '0000') throw new Error('資料儲存失敗'); return res; }),
+        finalize(() => this.saving.set(!1)),
+      ).subscribe({
+        next: () => {
+          this.onCancel();
+          this.messageService.successBubble('資料儲存成功');
+        },
+        error: err => this.messageService.errorBubble(err.message || '資料儲存失敗'),
       });
     });
   }
