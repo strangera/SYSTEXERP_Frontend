@@ -1,19 +1,19 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { NgIf } from '@angular/common';
-import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { TLS2J020Service } from '@service/api/tls/tls2j020.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { TLS2J020Service } from '@service/api/tls/tls2j020.service';
+import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 @Component({
   selector: 'app-tls2j020-cru',
@@ -39,6 +39,7 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
   mode: CRUDStatus = CRUDStatus.Create; // 新增 or 編輯模式
   override formTitle = '';
   busTypeOptions: any[] = [];
+  editCHGItemOptions: any[] = []; // 編輯模式下的品項名稱選項
   data: any[] = [];
   selectedItems: any[] = [];
   totalRecords = 0;
@@ -59,15 +60,21 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
   editColumns: EditColumn[] = [
     {
       field: 'bus_type',
-      header: '大分類代碼',
-      type: 'dropdown',
+      header: '大分類代碼/名稱',
+      type: 'input',
       width: '200px',
-      options: () => this.busTypeOptions,
-      optionLabel: 'Name',
-      optionValue: 'No',
+      disabled: () => true // 編輯模式下大分類不可修改，只顯示
+    },
+    {
+      field: 'CHG_ItemName',
+      header: '品項名稱',
+      type: 'dropdown',
+      width: '250px',
+      options: () => this.editCHGItemOptions,
+      optionLabel: 'CHG_ItemName',
+      optionValue: 'CHG_ItemName',
       showClear: false
     },
-    { field: 'CHG_ItemName', header: '品項名稱', type: 'input', width: '250px' },
     {
       field: 'Item_TaxType', header: '稅別', type: 'dropdown', width: '150px',
       options: [
@@ -142,15 +149,27 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
     }
   }
   patchEditData(rowData: any) {
-    this.dataForm.patchValue({
-      bus_type: rowData.bus_type
-    });
+    // 確保 busTypeOptions 已載入後再設定值
+    const busTypeValue = rowData.bus_type;
 
+    // 載入編輯品項選項
+    this.loadEditCHGItemOptions(rowData.id);
+
+    // 等待 busTypeOptions 載入完成後設定下拉選單值
+    setTimeout(() => {
+      this.dataForm.patchValue({
+        bus_type: busTypeValue
+      });
+    }, 100);
+
+    // 為編輯模式的數據顯示完整的大分類代碼/名稱
+    const busTypeDisplay = `${rowData.bus_type}-${rowData.bus_type_name}`;
     this.data = [{
       id: rowData.id,
       ID: rowData.id,
       tds1009_id: rowData.tds1009_id || 0,
-      bus_type: rowData.bus_type,
+      bus_type: busTypeDisplay, // 顯示完整的代碼/名稱
+      bus_type_code: busTypeValue, // 保留原始代碼用於提交
       bus_type_name: rowData.bus_type_name,
       CHG_ItemName: rowData.CHG_ItemName,
       Item_TaxType: rowData.Item_TaxType,
@@ -190,11 +209,13 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
   loadOptions() {
     this.dropDownListService.queryTLTBUSTYPE_DropDownList()
       .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        this.busTypeOptions = response.Data.map((item: any) => ({
-          Name: `${item.No}-${item.Name}`,
-          No: item.No
-        }));
+      .subscribe({
+        next: (response) => {
+          this.busTypeOptions = response.Data.map((item: any) => ({
+            Name: `${item.No}-${item.Name}`,
+            No: item.No
+          }));
+        },
       });
   }
   loadCreateItems(busType: string) {
@@ -202,8 +223,10 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
       ID: busType
     };
 
+    console.log('TLS2J020 新增模式使用 dropdownTLS2J020editCHG_ItemName API，請求參數:', payload);
     this.loading = true;
 
+    // 直接使用可用的API，不再嘗試 queryTLS2J020_add
     this.tls2j020Service
       .dropdownTLS2J020editCHG_ItemName(payload)
       .pipe(
@@ -212,14 +235,58 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
       )
       .subscribe({
         next: (res) => {
+          console.log('TLS2J020 dropdownTLS2J020editCHG_ItemName 回應:', res);
           if (res.Status === '0000') {
-            this.data = res.Data ?? [];
+            // 為數據預設設定 Item_TaxType 為 '1' (應稅)
+            this.data = (res.Data ?? []).map((item: any) => ({
+              ...item,
+              Item_TaxType: '1' // 預設應稅
+            }));
             this.totalRecords = this.data.length;
+            console.log('處理後的資料:', this.data);
           } else {
+            console.error('API錯誤:', res.Status, res.Message);
             this.data = [];
             this.totalRecords = 0;
-            this.messageService.errorBubble(res.Message || '查詢失敗');
+            this.messageService.errorBubble(`查詢失敗: ${res.Message || '未知錯誤'} (狀態碼: ${res.Status})`);
           }
+        },
+        error: (error) => {
+          console.error('HTTP錯誤:', error);
+          this.data = [];
+          this.totalRecords = 0;
+          this.messageService.errorBubble('查詢品項資料失敗，請檢查網路連線或聯絡系統管理員');
+        }
+      });
+  }
+
+  /** 載入編輯品項選項 */
+  loadEditCHGItemOptions(recordId: number) {
+    const payload = {
+      ID: recordId.toString()
+    };
+
+    console.log('TLS2J020 編輯模式載入品項選項，請求參數:', payload);
+
+    this.tls2j020Service
+      .dropdownTLS2J020editCHG_ItemName(payload)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          console.log('TLS2J020 編輯品項選項回應:', res);
+          if (res.Status === '0000') {
+            this.editCHGItemOptions = res.Data ?? [];
+            console.log('編輯品項選項:', this.editCHGItemOptions);
+          } else {
+            console.error('載入編輯品項選項失敗:', res.Status, res.Message);
+            this.editCHGItemOptions = [];
+            this.messageService.errorBubble(`載入品項選項失敗: ${res.Message || '未知錯誤'}`);
+          }
+        },
+        error: (error) => {
+          console.error('載入編輯品項選項HTTP錯誤:', error);
+          this.editCHGItemOptions = [];
+          this.messageService.errorBubble('載入品項選項失敗，請檢查網路連線或聯絡系統管理員');
         }
       });
   }
@@ -271,6 +338,11 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
             this.totalRecords = 0;
           }
         },
+        error: () => {
+          this.data = [];
+          this.totalRecords = 0;
+          this.messageService.errorBubble('查詢失敗，請稍後再試');
+        }
       });
   }
 
@@ -319,7 +391,9 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
             this.messageService.errorBubble(res.Message || '新增失敗');
           }
         },
-
+        error: () => {
+          this.messageService.errorBubble('新增失敗，請稍後再試');
+        }
       });
   }
 
@@ -346,7 +420,7 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
     const requestBody = {
       id: updateItem.id || updateItem.ID || 0,
       tds1009_id: updateItem.tds1009_id || 0,
-      bus_type: this.dataForm.get('bus_type')?.value || updateItem.bus_type || '',
+      bus_type: updateItem.bus_type_code || this.dataForm.get('bus_type')?.value || '', // 使用原始代碼
       CHG_ItemName: updateItem.CHG_ItemName.trim(),  // 使用後端期望的 Pascal Case
       Item_TaxType: updateItem.Item_TaxType.trim(),  // 使用後端期望的 Pascal Case
       upd_date: new Date().toISOString(),
@@ -370,6 +444,9 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
             this.messageService.errorBubble(res.Message || '更新失敗');
           }
         },
+        error: () => {
+          this.messageService.errorBubble('更新失敗，請稍後再試');
+        }
       });
   }
 

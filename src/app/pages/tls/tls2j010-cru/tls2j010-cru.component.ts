@@ -1,15 +1,15 @@
-import { Component, OnInit, } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TLS2J010Service } from '@service/api/tls/tls2j010.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TLS2J010Service } from '@service/api/tls/tls2j010.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { finalize } from 'rxjs';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 @Component({
   selector: 'app-tls2j010-cru',
@@ -77,7 +77,7 @@ export class TLS2J010CRUComponent extends BasicCruPageComponent<any> implements 
             next: (res) => {
               if (res?.Status === '0000') {
                 this.messageService.successBubble('新增成功');
-                this.onCancel();
+                this.onCancel(); // 返回列表頁面
               } else {
                 this.messageService.errorBubble('新增失敗: ' + (res?.Message || '未知錯誤'));
               }

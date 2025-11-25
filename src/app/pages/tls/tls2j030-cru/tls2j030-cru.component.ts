@@ -1,3 +1,5 @@
+
+
 import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -103,7 +105,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   private initializeEcrNo() {
     // 如果 queryEcrNo API 目前無法使用，可以直接設定預設值
     // 根據你的範例，ECR_No 是 "000081"
-    this.currentEcrNo = '000081';
+    this.currentEcrNo = '890000';
 
     // 如果需要使用 API 查詢，可以取消註解下面幾行
     // const defaultIP = '192.168.1.81'; // 根據你的範例，使用 000081 對應的 IP
@@ -135,9 +137,9 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       )
       .subscribe({
         next: (res) => {
-          this.detailNaturalData = res.natural?.Data ?? [];
-          this.detailChangeData = res.change?.Data ?? [];
-          this.detailItemData = res.item?.Data ?? [];
+          this.detailNaturalData = this.formatTxnNoInData(res.natural?.Data ?? []);
+          this.detailChangeData = this.formatTxnNoInData(res.change?.Data ?? []);
+          this.detailItemData = this.formatTxnNoInData(res.item?.Data ?? []);
         },
       });
   }
@@ -161,6 +163,13 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       GUI_DingType: guiDingType,
     }];
 
+    this.detailEditData = [{
+      _TABLE_KEY: `detail_${Date.now()}`,
+      status: 'insert',
+      INV_ItemName: '',
+      INV_Qty: 0,
+      INV_SaleAmt: 0,
+    }]
     // 進新增頁就自動取發票號碼
     if (this.currentEcrNo) {
       this.getNextGUINo(todayStr);
@@ -383,9 +392,9 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
             return;
           }
 
-          // 保存來源發票資料
-          this.sourceInvoiceData = source;
-          this.data = list;
+          // 保存來源發票資料（格式化TXN_No）
+          this.sourceInvoiceData = this.formatTxnNoInSingleData(source);
+          this.data = this.formatTxnNoInData(list);
           this.messageService.successBubble('查詢成功');
 
           // 初始化新增資料（換開 + 明細）
@@ -401,10 +410,11 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     // POS2100List: 來源發票資料
     const pos2100List = this.data.map(item => {
       const sourceItem = item as unknown as Record<string, unknown>;
+      const txnNo = (sourceItem['TXN_No'] as number) || 0;
       return {
         TXN_Date: (sourceItem['TXN_Date'] as string) || new Date().toISOString().split('T')[0],
         ECR_No: (sourceItem['ECR_No'] as string) || '',
-        TXN_No: (sourceItem['TXN_No'] as number) || 0,
+        TXN_No: this.formatTxnNo(txnNo),
         TXN_GUIBegNo: (sourceItem['TXN_GUIBegNo'] as string) || '',
         TXN_GUIEndNo: (sourceItem['TXN_GUIEndNo'] as string) || '',
         TXN_TotGUI: (sourceItem['TXN_TotGUI'] as number) || 0,
@@ -439,7 +449,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     // POS21011List: 商品明細資料
     const pos21011List = this.detailEditData.map(item => ({
       INV_ItemName: item.INV_ItemName || '',
-      TXN_SaleAmt: item.TXN_SaleAmt || 0,
+      INV_SaleAmt: item.INV_SaleAmt || 0,
       INV_Qty: item.INV_Qty || 0
     }));
 
@@ -501,5 +511,47 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     this.changeEditData = [];
     this.detailEditData = [];
     this.sourceInvoiceData = null;
+  }
+
+  /**
+   * 格式化交易序號，小於6碼時前面蠇0補足6碼
+   * @param txnNo 交易序號
+   * @returns 格式化後的6位數字串
+   */
+  private formatTxnNo(txnNo: number | string): string {
+    const txnNoStr = txnNo.toString();
+    return txnNoStr.padStart(6, '0');
+  }
+
+  /**
+   * 格式化陣列資料中的TXN_No欄位
+   * @param dataArray 資料陣列
+   * @returns 格式化後的資料陣列
+   */
+  private formatTxnNoInData(dataArray: any[]): any[] {
+    return dataArray.map(item => {
+      if (item && typeof item.TXN_No !== 'undefined') {
+        return {
+          ...item,
+          TXN_No: this.formatTxnNo(item.TXN_No)
+        };
+      }
+      return item;
+    });
+  }
+
+  /**
+   * 格式化單筆資料中的TXN_No欄位
+   * @param data 單筆資料
+   * @returns 格式化後的資料
+   */
+  private formatTxnNoInSingleData(data: any): any {
+    if (data && typeof data.TXN_No !== 'undefined') {
+      return {
+        ...data,
+        TXN_No: this.formatTxnNo(data.TXN_No)
+      };
+    }
+    return data;
   }
 }
