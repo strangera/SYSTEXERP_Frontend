@@ -144,7 +144,7 @@ export const finRoutes: Routes = [
   // { path: 'fin28020', loadComponent: () => import('./fin28020/fin28020.component').then(m => m.FIN28020Component) },
   // { path: 'fin28020cru', loadComponent: () => import('./fin28020-cru/fin28020-cru.component').then(m => m.FIN28020CRUComponent) },
   // 保留款彙總表
-  // { path: 'fin29010', loadComponent: () => import('./fin29010/fin29010.component').then(m => m.FIN29010Component) },
+  { path: 'fin29010', loadComponent: () => import('./fin29010/fin29010.component').then(m => m.FIN29010Component) },
   // 匯款明細表
   { path: 'fin29020', loadComponent: () => import('./fin29020/fin29020.component').then(m => m.FIN29020Component) },
   // 開票明細表

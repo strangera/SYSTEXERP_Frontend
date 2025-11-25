@@ -1,126 +1,109 @@
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 // Shared
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { Fin29010Request, Fin29010Response, Fin29010Service } from '@service/api/fin/fin29010.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-//
 
 //1.2.9.1 保留款彙總表
 @Component({
   selector: 'app-fin29010',
   templateUrl: './fin29010.component.html',
-  styleUrl: './fin29010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [AsyncPipe, ButtonModule, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TranslateModule]
 })
-export class FIN29010Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    startAccountYm: [], //帳款年月
-    endAccountYm: [], //帳款年月
-    factoryID: [], // 廠客代號
-    showReserveAmount: [1, []], // 目前保留金額為零是否顯示
+export class FIN29010Component extends BasicQueryPageComponent<Fin29010Response> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    ACP_YYYYMM_Start: [null], //帳款年月
+    ACP_YYYYMM_End: [null], //帳款年月
+    VEN_No: [null], // 廠客代號
+    ShowIfReserveAmtZero: [true], // 目前保留金額為零是否顯示
+    PageSize: [30],
+    PageIndex: [1],
+    // SortBy: []
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+  data: Fin29010Response[] = [];
+  historyRequestBody: Fin29010Request | null = null;
+  totalRecords = 0;
+  columns: ReportColumn[] = [
+    { field: 'VEN_No', header: '廠商編號' },
+    { field: 'VEN_Name', header: '廠商名稱' },
+    { field: 'ACP_YYYYMM', header: '年月' },
+    { field: 'acp_termno', header: '帳次' },
+    { field: 'ACP_Amt', header: '應付金額', format: formatAmount },
+    { field: 'ACP_ReserveAmt', header: '保留金額', format: formatAmount },
+    { field: 'RET_Amt', header: '退保留金額', format: formatAmount },
+    { field: 'Current_ReserveAmt', header: '目前保留金額', format: formatAmount },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '廠客代號', visible: true },
-    { field: 'col2', header: '廠客名稱', visible: true },
-    { field: 'col3', header: '年月/帳次', visible: true },
-    { field: 'col4', header: '應付金額', visible: true },
-    { field: 'col5', header: '保留金額', visible: true },
-    { field: 'col6', header: '退保留金額', visible: true },
-    { field: 'col7', header: '目前保留金額', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  factoryIDOptions: any[] = [];
-  showOptions: any[] = [
-    { value: 1, label: '顯示' },
-    { value: 2, label: '不顯示' },
-  ];
-
+  factoryIDOptions = [];
+  VEN_NoOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
+    public readonly fin29010Service: Fin29010Service,
+    private readonly fileExportService: FileExportService,
+    private readonly datePipe: DatePipe,
+    private readonly dropdown: DropdownApiService
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '120024';
-    this.cruPage = '/FIN2000/FIN29010CRU';
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('FIN29010');
   }
-
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+    this.handleSubmit(frm, () => {
+      const body = {
+        ...frm.value,
+        ACP_YYYYMM_Start: this.datePipe.transform(frm.value.ACP_YYYYMM_Start, 'yyyyMM'),
+        ACP_YYYYMM_End: this.datePipe.transform(frm.value.ACP_YYYYMM_End, 'yyyyMM'),
+      }
+      this.fin29010Service.queryFIN29010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+        this.totalRecords = res.TotalCount;
+        this.data = res.Data;
+        this.historyRequestBody = body;
+      })
+    });
+  }
+  btnLoading = false;
+  onExportPDF() {
+    if (!this.historyRequestBody) {
+      return;
     }
 
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
+    const export$ = this.fin29010Service.exportFIN29010PDF(this.historyRequestBody);
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+    // 呼叫 Service 執行匯出，並將直到銷毀的邏輯加入
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
+      '.xlsx',
+      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
+    );
   }
+  onExportXLSX() {
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
+    if (!this.historyRequestBody) {
+      return;
     }
-  }
+    const export$ = this.fin29010Service.exportFIN29010Excel(this.historyRequestBody);
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+    // 呼叫 Service 執行匯出，並將直到銷毀的邏輯加入
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
+      '.pdf',
+      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
+    );
   }
 }
