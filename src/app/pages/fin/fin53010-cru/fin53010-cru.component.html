@@ -5,7 +5,7 @@
     @if (isFormCreateable) {
     <app-button btnType="query"
                 label="套用常用傳票"
-                [loading]="service.fin52030Loading() ||loading "
+                [loading]="service.fin52030Loading() || loading"
                 (click)="getVocherTemplate()"></app-button>
     }
     <app-button btnType="back"
@@ -143,7 +143,7 @@
                         [data]="tableData()"
                         [defaultInsertData]="defaultInsertData()"
                         [footerData]="footerData()"
-                        [loading]="service.tableLoading()"
+                        [loading]="tableLoading()"
                         [tableKey]="'FIN52030_detail'"
                         [columns]="columns()"></app-table-edit>
       </p-panel>

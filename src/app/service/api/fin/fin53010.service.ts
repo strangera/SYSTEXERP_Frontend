@@ -14,7 +14,6 @@ const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
 @Injectable({ providedIn: 'root' })
 export class FIN53010Service {
 
-  public readonly tableLoading = signal<boolean>(!1);
   public readonly accLoading = signal<boolean>(!1);
   public readonly venLoading = signal<boolean>(!1);
   public readonly usrLoading = signal<boolean>(!1);
@@ -100,47 +99,37 @@ export class FIN53010Service {
   ) { }
 
   public loadFIN53010(payload: FIN53010Payload): Observable<BaseQueryResponse<FIN53010Data>> {
-    this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<FIN53010Data>>(`${apiUrl}/queryFIN53010`, payload).pipe(
       take(1),
       tap(res => this.logger.debug('查詢FIN53010結果:', [res])),
-      finalize(() => this.tableLoading.set(!1))
     );
   }
 
   public loadFIN53010Detail(id: number): Observable<FIN53010DataDetail> {
-    this.tableLoading.set(!0);
     return this.http.post<FIN53010DataDetail>(`${apiUrl}/queryFIN53010Detail`, { id }).pipe(
       take(1),
       tap(res => this.logger.debug('查詢FIN53010 Detail結果:', [res])),
-      finalize(() => this.tableLoading.set(!1))
     );
   }
 
   public insertFIN53010Data(payload: FIN53010InsertPayload): Observable<FIN53010InsertResult> {
-    this.tableLoading.set(!0);
     return this.http.post<FIN53010InsertResult>(`${apiUrl}/insertFIN53010`, payload).pipe(
       take(1),
       tap(res => this.logger.debug('插入FIN53010結果:', [res])),
-      finalize(() => this.tableLoading.set(!1))
     );
   }
 
   public updateFIN53010Data(payload: FIN53010UpdatePayload): Observable<FIN53010UpdateResult> {
-    this.tableLoading.set(!0);
     return this.http.post<FIN53010UpdateResult>(`${apiUrl}/updateFIN53010`, payload).pipe(
       take(1),
       tap(res => this.logger.debug('更新FIN53010結果:', [res])),
-      finalize(() => this.tableLoading.set(!1))
     );
   }
 
   public deleteFIN53010Data(payload: number[]): Observable<FIN53010DeleteResult> {
-    this.tableLoading.set(!0);
     return this.http.post<FIN53010DeleteResult>(`${apiUrl}/deleteFIN53010`, { ids: payload }).pipe(
       take(1),
       tap(res => this.logger.debug('刪除FIN53010結果:', [res])),
-      finalize(() => this.tableLoading.set(!1))
     );
   }
 
@@ -207,9 +196,9 @@ export class FIN53010Service {
     ).subscribe();
   }
 
-  public getAccDescList(AccNo: string[]): void {
+  public getAccDescList(AccNo: string[] = []): Observable<AccDescOption[]> {
     this.noteDescLoading.set(!0);
-    this.http.post<NoteDescResponse>(`${apiUrl}/queryAccNoNoteDescDropdown`, { AccNo: Array.from(new Set(AccNo)) }).pipe(
+    return this.http.post<NoteDescResponse>(`${apiUrl}/queryAccNoNoteDescDropdown`, { AccNo: Array.from(new Set(AccNo)) }).pipe(
       take(1),
       map(res => Object.entries(res.Data.AccNoNoteDesc).map(([key, value]) =>
         ({ value: key, label: value[0], data: value.map((v, i) => ({ value: String(i), label: v })) } as AccDescOption)) ?? []),
@@ -218,7 +207,7 @@ export class FIN53010Service {
         this.logger.debug('查詢NoteDescList結果:', [res]);
       }),
       finalize(() => this.noteDescLoading.set(!1)),
-    ).subscribe();
+    );
   }
 
   public getOrgNoList(): void {
