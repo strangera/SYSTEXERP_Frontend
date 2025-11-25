@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
-import { Observable, tap, catchError, throwError, switchMap, EMPTY } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { catchError, EMPTY, Observable, switchMap, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ApiResponse, AuthService } from './auth.service';
 
