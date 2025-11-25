@@ -15,7 +15,7 @@ import { Column, createPaginationConfig } from '@shared/componentkit/table/table
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, tap } from 'rxjs';
+import { finalize, map, tap } from 'rxjs';
 import { TLS26080Data, TLS26080Query } from './tls26080.model';
 
 @Component({
@@ -108,27 +108,30 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     this.handleSubmit(this.queryForm, () => {
       this.tableLoading.set(!0);
 
-      const { org_id, ...payload } = this.queryForm.getRawValue();
-
-      this.logger.debug(`submit:`, [payload]);
+      const raw = this.queryForm.getRawValue();
+      const payload = <TLS26080Query>{
+        SortBy: raw.SortBy,
+        PageSize: raw.pageSize,
+        PageIndex: raw.pageIndex,
+        POD_No: raw.pod_no,
+        POD_Desc: raw.pod_desc,
+        POD_SDate_start: raw.pod_sdate,
+        POD_SDate_end: raw.pod_edate,
+        POD_BusDate: raw.pod_busdate,
+      };
 
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-      this.service.loadTLS26080(<TLS26080Query>{
-        SortBy: payload.SortBy,
-        PageSize: payload.pageSize,
-        PageIndex: payload.pageIndex,
-        POD_No: payload.pod_no,
-        POD_Desc: payload.pod_desc,
-        POD_SDate_start: payload.pod_sdate,
-        POD_SDate_end: payload.pod_edate,
-        POD_BusDate: payload.pod_busdate,
-      }).pipe(
-        tap(res => {
+      this.service.loadTLS26080(payload).pipe(
+        tap(res => this.logger.debug(`onSubmit:`, [raw, payload, res])),
+        map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
+        finalize(() => this.tableLoading.set(!1))
+      ).subscribe({
+        next: res => {
           this.tableData.set(res.Data);
           this.totalRecords.set(res.TotalCount || 0);
-        }),
-        finalize(() => this.tableLoading.set(!1))
-      ).subscribe();
+        },
+        error: err => this.messageService.errorBubble(err.message, '查詢失敗'),
+      });
     });
   }
 

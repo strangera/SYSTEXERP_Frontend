@@ -13,7 +13,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { tap } from 'rxjs';
+import { map, tap } from 'rxjs';
 import { ASS2100ENGMeterType, ASS21010Data, ASS21010Payload, EngType } from './ass21010.model';
 
 @Component({
@@ -125,33 +125,35 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
         return acc;
       }, {}) as unknown as ASS21010Payload;
 
-      this.logger.debug(`onSubmit:`, [raw]);
-      this.service.loadASS21010(payload).pipe(
-        tap(response => {
-          this.tableData.set(response.Data.Data);
-          this.totalRecords.set(response.Data.TotalCount || 0);
-        })
-      ).subscribe();
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.service.loadASS21010(payload).pipe(
+        tap(res => this.logger.debug(`onSubmit:`, [raw, payload, res])),
+        map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); })
+      ).subscribe({
+        next: res => {
+          this.tableData.set(res.Data.Data);
+          this.totalRecords.set(res.Data.TotalCount || 0);
+        },
+        error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+      });
     });
   }
 
   public onDelete(data: ASS21010Data[]): void {
     this.logger.debug(`Deleting ASS21010:`, [data, this.user, this.queryForm.getRawValue(), this.authService.currentUserValue]);
-    for (const d of data) {
-      this.service.deleteASS21010({ ...d, ...this.usrData() })
-        .pipe(
-          tap(() => this.tableData.update(v =>
-            v.filter(d => data.some(item => d.ID !== item.ID)))),
-        ).subscribe({
-          next: () => this.messageService.successBubble('刪除成功'),
-          error: () => this.messageService.errorBubble('刪除失敗')
-        });
+    for (let i = 0; i < data.length; i++) {
+      this.service.deleteASS21010({ ...data[i], ...this.usrData() }).pipe(
+        map(res => { if (res.Status === '0000') return res; throw new Error('刪除失敗'); }),
+      ).subscribe({
+        next: () => {
+          this.tableData.update(table =>
+            table.filter(value => data.some(item => value.ID !== item.ID)));
+          this.messageService.successBubble('刪除成功');
+        },
+        error: err => this.messageService.errorBubble(err.message || '刪除失敗'),
+      });
+      if (i === data.length - 1) this.onSubmit();
     }
-    this.service.loadASS21010(<ASS21010Payload>{
-      ...this.queryForm.getRawValue(),
-      ...this.usrData(),
-    });
   }
 
   public onExport(type: string): void {

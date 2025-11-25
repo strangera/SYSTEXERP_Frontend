@@ -13,7 +13,7 @@ import { validateRequired } from '@shared/componentkit/table-edit/validate-field
 import { createPaginationConfig, Maps } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, mergeMap, tap } from 'rxjs';
+import { finalize, map, mergeMap, tap } from 'rxjs';
 import { EntryType, TLS21020Data, TLS21020Query, TLS21020UpdateQuery } from './tls21020.model';
 
 @Component({
@@ -78,18 +78,21 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     /**
      * !不要再蓋過去了
      */
-    const payload: TLS21020Query = Object.freeze({ ENTRY_TYPE, pageSize: 1e9 });
+    const payload: TLS21020Query = { ENTRY_TYPE, pageSize: 1e9 };
 
     this.tableLoading.set(!0);
+    this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
     this.service.queryTLS21020(payload).pipe(
-      tap(res => {
+      tap(res => this.logger.debug(`queryTLS21020:`, [ENTRY_TYPE, payload, res])),
+      map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
+      finalize(() => this.tableLoading.set(!1)),
+    ).subscribe({
+      next: res => {
         this.tableData.set(res.Data ?? []);
         this.totalRecords.set(res.TotalCount ?? 0);
-      }),
-      finalize(() => this.tableLoading.set(!1)),
-    ).subscribe();
-    this.logger.debug(`entryType changed:`, [ENTRY_TYPE, payload]);
-    this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      },
+      error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+    });
   }, { allowSignalWrites: !0 });
 
   private readonly AccDCMap = new Map<'D' | 'C', '借' | '貸'>([['D', '借'], ['C', '貸']]);
@@ -255,19 +258,22 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         return row as TLS21020UpdateQuery;
       });
 
-      this.logger.debug(`onSubmit:`, [payload]);
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       this.tableLoading.set(!0);
       this.service.updateTLS21020(payload).pipe(
+        tap(res => this.logger.debug(`updateTLS21020:`, [data, payload, res])),
         mergeMap(() => this.service.queryTLS21020({ ENTRY_TYPE })),
-        tap(res => this.logger.debug(`更新:`, [res])),
-        tap(res => {
-          res.Status === '0000' && this.messageService.successBubble('更新成功');
+        tap(res => this.logger.debug(`queryTLS21020:`, [res])),
+        map(res => { if (res.Status === '0000') return res; throw new Error('更新失敗'); }),
+        finalize(() => this.tableLoading.set(!1)),
+      ).subscribe({
+        next: res => {
           this.tableData.set(res.Data ?? []);
           this.totalRecords.set(res.TotalCount ?? 0);
-        }),
-        finalize(() => this.tableLoading.set(!1)),
-      ).subscribe();
-      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+          this.messageService.successBubble('更新成功');
+        },
+        error: err => this.messageService.errorBubble(err.message, '更新失敗'),
+      });
     });
   }
 

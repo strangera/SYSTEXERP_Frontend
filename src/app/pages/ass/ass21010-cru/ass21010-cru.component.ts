@@ -11,7 +11,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { tap } from 'rxjs';
+import { map, tap } from 'rxjs';
 import { ASS21010Data, ASS21010Payload, EngType } from '../ass21010/ass21010.model';
 
 @Component({
@@ -96,10 +96,14 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
       };
 
       this.service.updateASS21010(payload).pipe(
-        tap(({ Status }) => Status === '0000' && this.onCancel())
+        tap(res => this.logger.debug(`onSubmit:`, [d, payload, res])),
+        map(res => { if (res.Status === '0000') return res; throw new Error('更新失敗'); })
       ).subscribe({
-        next: () => this.messageService.successBubble('更新成功'),
-        error: () => this.messageService.errorBubble('更新失敗'),
+        next: () => {
+          this.onCancel();
+          this.messageService.successBubble('更新成功');
+        },
+        error: err => this.messageService.errorBubble(err.message || '更新失敗'),
       });
     });
   }

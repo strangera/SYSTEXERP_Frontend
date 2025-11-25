@@ -91,7 +91,7 @@
                         (dataChange)="tableData.set($event)"
                         (fieldChange)="onFieldChange($event)"
                         [columns]="counterColumns()"
-                        [columnGroup]="counterColumnsGroup"
+                        [columnGroup]="counterColumnsGroup()"
                         [insertDisabled]="isFormReadable"
                         [defaultInsertData]="defaultInsertData"
                         [showReorder]="!isFormReadable"
