@@ -47,7 +47,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
     GUI_YYMM: ['', Validators.required], // 發票年月
     ECR_NoList: [null], // 收銀機號
     GUI_StatusList: [null], // 發票狀態
-    ...createPaginationConfig([{ field: 'ID', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'GUI_YYMM', order: 1 }, { field: 'GUI_TRACK', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
   monthOptions = monthOptions;
@@ -84,7 +84,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
       currentDate.setMonth(currentDate.getMonth() - 1);
     }
     this.queryForm.get('GUI_YYMM')?.setValue(
-      this.datePipe.transform(currentDate, 'yyyyMM'));
+      this.datePipe.transform((currentDate), 'yyyyMM'));
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {

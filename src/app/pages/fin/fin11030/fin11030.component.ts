@@ -38,14 +38,14 @@ import { APS2001Data, columns } from './fin11030.model';
 })
 //1.1.1.3 銷項品項資料設定
 export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> implements OnInit {
-  queryForm = this.formBuilder.group({
+  queryForm = this.formBuilder.nonNullable.group({
     SAL_GUIYYYYMM_start: [null, [Validators.required]],
     SAL_GUIYYYYMM_end: [null, [Validators.required]],
     SAL_GUITrack: ['', [Validators.maxLength(2)]],
     SAL_GUINo_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]],
     SAL_GUINo_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]],
     SAL_GUIPaper: [null],
-    ...createPaginationConfig([{ field: 'id', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'SAL_GUIYYYYMM', order: 1 }, { field: 'SAL_GUITrack', order: 1 }]), // 分頁和排序參數
   }, { validators: this.validationService.guiNumberRangeValidator('SAL_GUINo_start', 'SAL_GUINo_end') });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   SAL_GUIPaperOptions = getSYS1000Options('SAL_GUIPaper');     // 發票類別選項
