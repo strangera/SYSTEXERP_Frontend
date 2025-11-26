@@ -1,9 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { TLS41010Item } from '../../pages/tls/tls41010/tls41010.model';
-import { ApiResponse } from '../system/auth.service'; // 假設 ApiResponse 介面在此定義
 // 通用的下拉選單項目介面，用於大部分返回 { No: string, Name: string } 的 API
 export interface IDropdownItem {
   value?: string;

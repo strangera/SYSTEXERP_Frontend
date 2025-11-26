@@ -1,9 +1,9 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { ApiResponse } from '@service/system/auth.service';
-import { environment } from 'src/environments/environment';
+import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { SortMeta } from 'primeng/api';
+import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 // 定義查詢 Request Body 的介面
 // 根據 Swagger/OpenAPI 的 Request Body Schema 進行定義

@@ -1,9 +1,9 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { ApiResponse } from '@service/system/auth.service'; // 確保路徑正確
-import { environment } from 'src/environments/environment'; // 確保路徑正確
+import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 確保路徑正確
 import { SortMeta } from 'primeng/api'; // 確保路徑正確
+import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment'; // 確保路徑正確
 
 // --- 共用介面定義 ---
 

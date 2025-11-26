@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
-import { ApiResponse } from '@service/system/auth.service';
 import { environment } from 'src/environments/environment';
 
 // 定義圖片相關的資料模型

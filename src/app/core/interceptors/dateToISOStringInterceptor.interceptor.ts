@@ -1,8 +1,8 @@
+import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { HttpEvent, HttpInterceptor, HttpHandler, HttpRequest, HttpResponse } from '@angular/common/http';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators'; // 注意這裡要從 'rxjs/operators' 引入 map
-import { ApiResponse } from '@service/system/auth.service';
 
 @Injectable() // 必須添加此裝飾器，以便 Angular 可以注入此服務
 export class DateToISOStringInterceptor implements HttpInterceptor {

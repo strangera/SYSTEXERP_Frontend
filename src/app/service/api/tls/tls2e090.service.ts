@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 假設 ApiResponse 在這裡定義
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { ApiResponse } from '@service/system/auth.service'; // 假設 ApiResponse 在這裡定義
 
 // 定義 Request Body 的介面 (與 TLS2E050 相同，但補齊 Swagger 中多餘的欄位)
 export interface Tls2e090QueryBody {

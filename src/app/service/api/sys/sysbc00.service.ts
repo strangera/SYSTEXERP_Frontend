@@ -1,9 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { SortMeta } from 'primeng/api';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
-import { SortMeta } from 'primeng/api';
-import { ApiResponse } from '../../system/auth.service';
 import { IAps1004Data } from './sys1004.service';
 
 /** 查詢條件介面 (querySYSBC00) */

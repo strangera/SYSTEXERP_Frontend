@@ -1,9 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 請確認你的 ApiResponse 路徑是否正確
+import { SortMeta } from 'primeng/api';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
-import { SortMeta } from 'primeng/api';
-import { ApiResponse } from '../../system/auth.service'; // 請確認你的 ApiResponse 路徑是否正確
 
 // --- 1.1.2 發票作業(電子式發票各系統配號維護-11220-FIN12010) ---
 

@@ -1,23 +1,23 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS27040Data, TLS27040Service } from '@service/api/tls/tls27040.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 // 假設這些模型/選項已在其他地方定義
-import { POS6118_TxnTypeOptions, pos6118TxnFgOptions, POS6119_TxnCodeOptions, POS6119P_TxnTypeOptions, pos6119pTxnFgOptions, pos6119TxnFgOptions, POS611XOptions, TxnTypeOptions } from '../tls27040/tls27040.model';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { finalize, Observable } from 'rxjs';
-import { ApiResponse } from '@service/system/auth.service'; // 確保 AuthService 被導入
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { formatTxnNo } from '@shared/models/system/query-form.model';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 確保 AuthService 被導入
+import { finalize, Observable } from 'rxjs';
+import { POS6118_TxnTypeOptions, pos6118TxnFgOptions, POS6119_TxnCodeOptions, POS6119P_TxnTypeOptions, pos6119pTxnFgOptions, pos6119TxnFgOptions, POS611XOptions } from '../tls27040/tls27040.model';
 
 @Component({
   selector: 'app-tls27040-cru',

@@ -6,6 +6,7 @@ import { Router, RouterLink } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { SystemDataService } from '@service/system/system-data.service';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { MenuItem, PrimeTemplate } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -18,7 +19,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { concatMap, finalize, Subscription, throwError } from 'rxjs'; // 引入 tap
 import { LayoutService } from '../../../core/layout/layout.service';
 import type { OuterTokenResponse } from '../../../service/system/auth.service';
-import { ApiResponse, AuthService } from '../../../service/system/auth.service';
+import { AuthService } from '../../../service/system/auth.service';
 import { UserCodeService } from '../../../service/system/user-code.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { UserInfo } from '../../../shared/models/system/userInfo';
