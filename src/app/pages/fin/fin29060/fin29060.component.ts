@@ -4,27 +4,24 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { FIN29060Data, FIN29060Service, QueryFIN29060Request } from '../../../service/api/fin/fin29060.service';
+import { FIN29060Data, FIN29060Service, QueryFIN29060DetailRequest, QueryFIN29060Request } from '../../../service/api/fin/fin29060.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { DropDownListService } from './../../../service/utility/dropDownList.service';
-//
-
 //1.2.9.6 廠商付款明細表
 @Component({
   selector: 'app-fin29060',
   templateUrl: './fin29060.component.html',
   styleUrl: './fin29060.component.scss',
   standalone: true,
-  imports: [DropdownRangeComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberRangeComponent, CalendarRangeComponent, InputTextComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [DropdownRangeComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, InputTextComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -52,15 +49,16 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
     { field: 'VendorNo', header: '廠商編號', visible: true },
     { field: 'VendorName', header: '廠商名稱', visible: true },
     { field: 'AccNo', header: '會計科目', visible: true },
-    { field: 'PostDate', header: '立帳日期', visible: true },
-    { field: 'ACP_Amt', header: '立帳金額', visible: true },
+    { field: 'PostDate', header: '立帳日期', visible: true, format: formatDate },
+    { field: 'ACP_Amt', header: '立帳金額', visible: true, format: formatAmount },
     { field: 'Summary', header: '摘要', visible: true },
-    { field: 'PayAmt', header: '付款金額', visible: true },
-    { field: 'PayRefDate', header: '開票/匯款日期', visible: true },
-    { field: 'BalanceAmt', header: '帳款餘額', visible: true },
+    { field: 'PayAmt', header: '付款金額', visible: true, format: formatAmount },
+    { field: 'PayRefDate', header: '開票/匯款日期', visible: true, format: formatDate },
+    { field: 'BalanceAmt', header: '帳款餘額', visible: true, format: formatAmount },
     { field: 'PaymentNo', header: '電匯/開票/單號', visible: true },
     { field: 'VoucherNo', header: '傳票號碼', visible: true }
   ];
+
   // ----------------------------------------------------------------
   showUpOptions = [
     { value: 1, label: '顯示' },
@@ -133,5 +131,62 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
 
         });
     });
+  }
+
+  override onDetail(rowData: FIN29060Data): void {
+    if (!rowData.VoucherNo) {
+      this.messageService.warnBubble('傳票號碼不存在，無法查詢明細');
+      return;
+    }
+
+    const detailRequest: QueryFIN29060DetailRequest = {
+      VouNo: rowData.VoucherNo
+    };
+
+    this.loading = true;
+    this.messageService.blockUi();
+
+    this.fin29060Service
+      .queryFIN29060Detail(detailRequest)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.loading = false;
+          this.messageService.unblockUi();
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          // 處理 blob 回應 - 通常是下載檔案
+          if (response.body) {
+            const contentDisposition = response.headers.get('content-disposition');
+            let filename = `FIN29060_明細_${rowData.VoucherNo}.pdf`;
+
+            if (contentDisposition) {
+              const filenameMatch = contentDisposition.match(/filename\*?=['"]?(?:UTF-\d['"])?([^;'"\r\n]+)['"]?;?/);
+              if (filenameMatch) {
+                filename = decodeURIComponent(filenameMatch[1]);
+              }
+            }
+
+            const blob = new Blob([response.body], { type: response.headers.get('content-type') || 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+
+            // 創建下載連結
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+
+            // 清理
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+
+            this.messageService.successBubble('明細報表已下載');
+          }
+        },
+
+      });
   }
 }

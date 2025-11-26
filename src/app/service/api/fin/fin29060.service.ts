@@ -20,6 +20,11 @@ export interface QueryFIN29060Request extends BaseQueryRequest {
   ShowZeroBalance?: boolean;          // 顯示零餘額
 }
 
+// 明細查詢請求介面
+export interface QueryFIN29060DetailRequest {
+  VouNo: string;                      // 傳票號碼
+}
+
 // 查詢結果資料介面
 export interface FIN29060Data {
   ACP_No: string;                     // 應付帳款編號
@@ -45,7 +50,7 @@ export class FIN29060Service {
   queryFIN29060(data: QueryFIN29060Request): Observable<BaseQueryResponse<FIN29060Data>> {
     return this.http.post<BaseQueryResponse<FIN29060Data>>(`${this.apiUrl}/queryFIN29060`, data);
   }
-  queryFIN29060Detail(data: QueryFIN29060Request): Observable<HttpResponse<Blob>> {
+  queryFIN29060Detail(data: QueryFIN29060DetailRequest): Observable<HttpResponse<Blob>> {
     return this.http.post(`${this.apiUrl}/queryFIN29060Detail`, data, {
       observe: 'response',
       responseType: 'blob'
