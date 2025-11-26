@@ -17,10 +17,10 @@ export class TLS21020Service {
   public readonly TLS21020GLS1005Options = signal<TLS21020GLS1005Data[]>([]);
   public readonly SYS3100Options = signal<Option[]>([]);
   public readonly GLS1005Options = signal<Option[]>([]);
-  public readonly POS2013Options = signal<POS2013[]>([]);
+  public readonly POS2013Options = signal<Option[]>([]);
 
   public readonly POS2013Map = computed(() =>
-    new Map<string, POS2013>(this.POS2013Options().map(item => [item.VEN_No!, item]))
+    new Map<string, Option>(this.POS2013Options().map(item => [item.value, item]))
   );
 
   public readonly entryTypeMap = new Map<string, string>([
@@ -66,14 +66,7 @@ export class TLS21020Service {
   public queryTLS21020(query: TLS21020Query): Observable<BaseQueryResponse<TLS21020Data>> {
     return this.http.post<BaseQueryResponse<TLS21020Data>>(`${apiUrl}/queryTLS21020`, Object.freeze(query)).pipe(
       take(1),
-      map(res => {
-        res.Data = res.Data?.map(item => ({
-          ...item,
-          ObjectNo: item.ObjectNo || 'N',
-        }));
-        this.logger.debug(`query tls21020:`, [res]);
-        return res;
-      }),
+      tap(res => this.logger.debug(`query TLS21020:`, [res])),
     );
   }
 
@@ -129,8 +122,8 @@ export class TLS21020Service {
       take(1),
       map(res => (res ?? []) as POS2013[]),
       tap(res => {
-        this.POS2013Options.set(res);
-        this.logger.debug(`POS2013 Data:`, [res]);
+        this.POS2013Options.set(res.map(item => ({ value: item.VEN_No!, label: `${item.VEN_No} - ${item.Name}` } as Option)));
+        this.logger.debug(`POS2013s:`, [res]);
       }),
       finalize(() => this.pos2013Loading.set(!1)),
     ).subscribe();
