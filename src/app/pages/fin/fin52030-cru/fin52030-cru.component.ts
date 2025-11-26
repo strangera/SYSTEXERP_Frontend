@@ -63,11 +63,11 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   public readonly df = computed(() => this.dataForm.controls);
 
   public readonly fin52030DetailData = signal<FIN52030DetailData>(Object.create(null));
-  public readonly totalRecords = signal<number>(0);
-  public readonly tableData = signal<FIN52030DetailTable[]>([]);
   private readonly selectedOrgId = signal<string>('100000');
 
+  public readonly tableData = signal<FIN52030DetailTable[]>([]);
   public readonly tableLoading = signal<boolean>(!0);
+  public readonly totalRecords = signal<number>(0);
 
   public selectedItems: FIN52030Data[] = [];
 
@@ -99,6 +99,10 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     return !diff;
   });
 
+  public readonly getId = computed(() => {
+    return this.rowdata?.id || void 0;
+  });
+
   public readonly dropdownEffect = effect(() => {
     const accNos = this.service.accNoOptions();
     const vendors = this.service.vendorOptions();
@@ -117,10 +121,8 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   }, { allowSignalWrites: !0 });
 
   public readonly dataEffect = effect(() => {
-    if (this.isFormCreateable) return void (() => {
-      this.tableLoading.set(!1);
-      this.dataEffect.destroy();
-    });
+    if (this.isFormCreateable) return this.dataEffect.destroy();
+
     const data = this.fin52030DetailData();
     this.logger.debug(`set init table:`, [data]);
     if (!data.Details?.length) return;
@@ -157,6 +159,26 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       || this.service.RefNameLoading()
       || this.service.noteDescLoading();
   });
+
+  public readonly initEffect = effect(() => {
+    if (!this.isFormCreateable) this.initEffect.destroy();
+    const id = this.getId();
+    if (typeof id !== 'number' || !Number.isInteger(id)) return;
+
+    this.tableLoading.set(!0);
+    this.service.loadFIN52030Detail(this.getId()!).pipe(
+      tap(res => this.logger.debug(`ngOnInit load detail:`, [res])),
+      map(res => { if (res.Status === '0000') return res; throw new Error('讀取失敗'); }),
+      tap(res => this.fin52030DetailData.set(res.Data || Object.create(null))),
+      finalize(() => {
+        this.tableLoading.set(!1);
+        this.initEffect.destroy();
+      }),
+    ).subscribe({
+      next: res => this.tableData.set(res.Data?.Details || []),
+      error: err => this.messageService.errorBubble(err.message || '讀取失敗'),
+    });
+  }, { allowSignalWrites: !0 });
 
   // Template 相關屬性
   public selectedTemplateType = 'vendor';
@@ -243,8 +265,6 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
   public ngOnInit(): void {
     this.initializePage('FIN52030', this.dataForm);
-
-    if (!this.isFormCreateable) this.service.loadFIN52030Detail(this.rowdata!.id).subscribe();
 
     this.service.getOrgNoOptions();
     this.service.getRefNameOptions();
