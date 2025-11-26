@@ -83,6 +83,7 @@
                         (fieldChange)="onFieldChange($event)"
                         (delete)="onDelete($event)"
                         (rowReorderData)="onRowReorder($event)"
+                        [disabled]="isFormReadable"
                         [data]="tableData()"
                         [defaultInsertData]="defaultNewRow()"
                         [footerData]="footerData()"

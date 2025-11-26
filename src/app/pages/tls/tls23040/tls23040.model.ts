@@ -1,14 +1,3 @@
-// ✅ 後端回傳通用包裝
-export interface ApiResponse<T> {
-  Status: string;
-  Data: T;
-  Error: any;
-  Meta: any;
-  Message: string;
-  TotalCount: number;
-  TotalPage: number;
-}
-
 // ✅ 明細型別（依你回傳欄位）
 export interface InvoiceDetail {
   ID: number;

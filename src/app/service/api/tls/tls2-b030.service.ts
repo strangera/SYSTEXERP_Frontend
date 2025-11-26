@@ -1,9 +1,10 @@
-import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
-import { TLS2B030Request, TLS2B030Row, ApiResponse, PayTypeItem } from '../../../pages/tls/tls2b030/tls2b030.model';
+import { PayTypeItem, TLS2B030Request, TLS2B030Row } from '../../../pages/tls/tls2b030/tls2b030.model';
 
 @Injectable({ providedIn: 'root' })
 export class TLS2B030Service {

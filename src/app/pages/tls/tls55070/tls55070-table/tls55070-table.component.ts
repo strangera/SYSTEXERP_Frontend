@@ -30,11 +30,11 @@ import {
   FileUploadModule,
 } from 'primeng/fileupload';
 import { Subject, takeUntil } from 'rxjs';
-import { BasicPrintData2Component } from '../../componentextends/basic-print/basic-print-data2.component';
-import { FunsrightInfo } from '../../models/system/funsrightInfo';
 
 import { DecimalPipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { BasicPrintData2Component } from '@shared/componentextends/basic-print/basic-print-data2.component';
+import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
 import { BlockUIModule } from 'primeng/blockui';
 import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
@@ -145,7 +145,7 @@ export class TLS55070TableComponent
   @Input() totalRecords = 0;
 
   /** 群組（僅序號 + rowspan） */
-  @Input() groupKey: string = 'TXN_SaleNoteNo';           // 父層可以改成 '_grp' 或任何欄位
+  @Input() groupKey = 'TXN_SaleNoteNo';           // 父層可以改成 '_grp' 或任何欄位
   @Input() groupRowsBy: string | string[] = '';           // 排序優先的群組欄位（可不使用）
 
   /** 需要直向合併的欄位 */

@@ -1,25 +1,25 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize, Observable } from 'rxjs';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
 import { SelectItem } from 'primeng/api'; // PrimeNG SelectItem
+import { finalize, Observable } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 // 導入 SYS0770 服務和模型
 import {
   QuerySYS0770Request,
-  QueryUsersResponse,
   QueryUserRolesResponse,
+  QueryUsersResponse,
   Sys0770Service
 } from '@service/api/sys/sys0770.service';
-import { ApiResponse } from '@service/system/auth.service';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 
 // 定義授權型態的列舉
 export enum AuthorizationType {

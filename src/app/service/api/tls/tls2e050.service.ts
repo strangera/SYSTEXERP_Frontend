@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -128,20 +129,6 @@ export interface SalChargeCategoryMainData extends SalChargeMainData {
 }
 
 export type SalChargeCategoryTotalData = SalChargeTotalData; // Total data 結構與 querySalCharge 相同
-
-
-// --- 統一 Response 介面 ---
-export interface ApiResponse<T, F> {
-  Status: string;
-  Message: string;
-  Data: T[];
-  footerData: F[];
-  Error?: { Code: string; Message: string; Details: string };
-  Meta?: { Timestamp: string; RequestId: string };
-  TotalCount: number;
-  TotalPage: number;
-}
-
 
 // --- Angular Service ---
 

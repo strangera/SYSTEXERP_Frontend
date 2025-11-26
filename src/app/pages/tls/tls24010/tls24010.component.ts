@@ -5,13 +5,13 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS41010Service } from '@service/api/tls/tls41010.service';
-import { ApiResponse } from '@service/system/auth.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { AutoCompleteComponent } from '@shared/componentkit/auto-complete/auto-complete.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { ValidationService } from '@shared/service/validation.service';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
 import { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';

@@ -1,9 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { SortMeta } from 'primeng/api';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../system/auth.service';
-import { SortMeta } from 'primeng/api';
 
 /** 顧客意見類別資料結構 */
 export interface Cpm12010Data {

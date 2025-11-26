@@ -59,13 +59,17 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   });
   public readonly df = computed(() => this.dataForm.controls);
 
-  private readonly dfSignal = toSignal(this.dataForm.valueChanges, { initialValue: this.dataForm.getRawValue() });
   private readonly podDescSignal = toSignal(this.df().pod_desc.valueChanges);
+  private readonly podSdateSignal = toSignal(this.df().pod_sdate.valueChanges);
+  private readonly podEdateSignal = toSignal(this.df().pod_edate.valueChanges);
+  private readonly podBusdateSignal = toSignal(this.df().pod_busdate.valueChanges);
 
   public readonly tls26080Data = signal<TLS26080Data[]>([]);
   public readonly tableData = signal<TLS26080Detail[]>([]);
   public readonly totalRecords = signal(0);
   public readonly campaignData = signal<CampaignData[]>([]);
+
+  public readonly isSubmitDisabled = signal<boolean>(!0);
 
   // 頁面專屬 Loading 狀態
   public readonly tableLoading = signal<boolean>(!1);
@@ -78,28 +82,59 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     { label: '正檔日至截止日', value: 'N' }
   ];
 
+  public readonly getPodNo = computed(() => {
+    return this.rowdata?.pod_no || void 0;
+  });
+
+  public readonly initEffect = effect(() => {
+    if (this.isFormCreateable) return this.initEffect.destroy();
+    const id = this.getPodNo();
+    if (!id) return;
+
+    this.tableLoading.set(!0);
+    this.service.loadTLS26080Detail(id).pipe(
+      tap(res => this.logger.debug(`load:`, [this.rowdata, res])),
+      map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
+      finalize(() => this.tableLoading.set(!1)),
+    ).subscribe({
+      next: res => {
+        const data = res.Data;
+        this.tableData.set(data.map(v => ({
+          ...v,
+          tpy_rate_D16: Number(v.tpy_rate_D16),
+          tpy_rate_D17: Number(v.tpy_rate_D17),
+        })));
+        this.totalRecords.set(res.TotalCount || 0);
+      },
+      error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+    });
+  }, { allowSignalWrites: !0 });
+
   /** 驗證表單和表格資料是否完整 */
-  public readonly isSubmitDisabled = computed(() => {
-    const data = this.dfSignal();
-    this.logger.debug(`isSubmitDisabled:`, [data, this.tableData()]);
+  public readonly validatorEffect = effect(() => {
+    const sdate = this.podSdateSignal();
+    const edate = this.podEdateSignal();
+    const busdate = this.podBusdateSignal();
+    const data = this.tableData();
+    this.logger.debug(`validatorEffect:`, [data]);
 
     // 表單必填欄位
-    if (!data!.pod_sdate || !data!.pod_edate || !data!.pod_busdate) return !0;
+    if (!sdate || !edate || !busdate) return this.isSubmitDisabled.set(!0);
 
     // 活動起迄日期必須正確
-    if (data!.pod_sdate! > data!.pod_edate!) return !0;
+    if (sdate! > edate!) return this.isSubmitDisabled.set(!0);
 
     // 活動正檔日期必須在活動起迄日期之間
-    if (data!.pod_busdate! < data!.pod_sdate! || data!.pod_busdate! >= data!.pod_edate!) return !0;
+    if (busdate! < sdate! || busdate! >= edate!) return this.isSubmitDisabled.set(!0);
 
     // 取得有效的表格資料（排除自動新增的候選行）
-    const validTableData = this.tableData().filter(item => !item._isAutoInsertCandidate);
+    const validTableData = data?.filter(item => !item._isAutoInsertCandidate) || [];
 
     // 至少要有一筆專櫃資料
-    if (!validTableData.length) return !0;
+    if (!validTableData.length) return this.isSubmitDisabled.set(!0);
 
     // 驗證表格資料的必填欄位和數值範圍
-    return validTableData.some(item => {
+    this.isSubmitDisabled.set(validTableData.some(item => {
       if (!item.talent_id || !item.calc_date_type) return !0;
 
       // 檢查 tpy_rate_D16 和 tpy_rate_D17 是否有值
@@ -115,8 +150,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       if (basisPoint_D16 < 0 || basisPoint_D16 > 1e4 || basisPoint_D17 < 0 || basisPoint_D17 > 1e4) return !0;
 
       return !1;
-    });
-  });
+    }));
+  }, { allowSignalWrites: !0 });
 
   /** 根據選擇的活動名稱取得活動資料 */
   private readonly selectedCampaign = computed(() => {
@@ -252,27 +287,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public ngOnInit(): void {
     this.initializePage('TLS26080', this.dataForm);
-    if (!this.rowdata?.pod_no && !this.isFormCreateable) this.onCancel();
-
-    if (!this.isFormCreateable) {
-      this.tableLoading.set(!0);
-      this.service.loadTLS26080Detail(this.rowdata!.pod_no).pipe(
-        tap(res => this.logger.debug(`load:`, [this.rowdata, res])),
-        map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
-        finalize(() => this.tableLoading.set(!1)),
-      ).subscribe({
-        next: res => {
-          const data = res.Data;
-          this.tableData.set(data.map(v => ({
-            ...v,
-            tpy_rate_D16: Number(v.tpy_rate_D16),
-            tpy_rate_D17: Number(v.tpy_rate_D17),
-          })));
-          this.totalRecords.set(res.TotalCount || 0);
-        },
-        error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
-      });
-    }
 
     // this.service.getTLTTalentChargeOptions();
     this.service.getTLTTalentOptions();

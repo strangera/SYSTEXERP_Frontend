@@ -1,17 +1,9 @@
-import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
-
-// 共用回傳型別
-export interface ApiResponse<T> {
-  Status: string;
-  Message?: string;
-  Data: T;
-  TotalCount?: number;
-  [key: string]: any;
-}
 
 // 每列資料型別
 export interface Fin34010Row {
@@ -50,7 +42,7 @@ export class Fin34010Service {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   /** 查詢應收帳款明細表 */
   queryFIN34010(

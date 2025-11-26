@@ -59,9 +59,9 @@ export class TLS57170Component extends BasicQueryPageComponent<TLS57170Data> imp
   data: TLS57170Data[] = [];
   selectedItems: TLS57170Data[] = [];
   totalRecords = 0;
-  footerData: any[] = [];
   exportPDFbtnLoading = false;
   exportExcelbtnLoading = false;
+  subTotalData: any[] = [];
 
   // 下拉選單選項
   HOS_NOOptions = this.dropdown.queryPos2034();
@@ -79,8 +79,8 @@ export class TLS57170Component extends BasicQueryPageComponent<TLS57170Data> imp
     { field: 'FeeRate_B', header: '推銷費用率(B)', visible: true },
     { field: 'Amt_C', header: '淨變現價值(C)', visible: true, format: formatAmount },
     { field: 'STK_UnitCost_D', header: '期末成本價(D)', visible: true, format: formatAmount },
-    { field: 'UP_PORFIT', header: '回升利益', visible: true, format: formatAmount, isTotal: true },
-    { field: 'DOWN_COST', header: '跌價損失', visible: true, format: formatAmount, isTotal: true },
+    { field: 'UP_PORFIT', header: '回升利益', visible: true, format: formatAmount, isSubTotal: true },
+    { field: 'DOWN_COST', header: '跌價損失', visible: true, format: formatAmount, isSubTotal: true },
   ];
 
   ngOnInit(): void {
@@ -97,11 +97,13 @@ export class TLS57170Component extends BasicQueryPageComponent<TLS57170Data> imp
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
         .subscribe(response => {
           this.data = response.Data.mainData || [];
-          this.footerData = [{
-            group_name: '總計',
-            UP_PORFIT: response.Data.totalData[0]?.UP_PORFIT_Total,
-            DOWN_COST: response.Data.totalData[0]?.DOWN_COST_Total,
-          }];
+          this.subTotalData = response.Data.totalData
+            .map(item =>
+            ({
+              LOGO_No: item.LOGO_No,
+              UP_PORFIT: item.UP_PORFIT_Total,
+              DOWN_COST: item.DOWN_COST_Total,
+            }));
           this.totalRecords = response.TotalCount
           this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
         });

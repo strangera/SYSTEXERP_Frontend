@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
+import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
-import { ApiResponse } from '@service/system/auth.service';
+import { environment } from '../../../../environments/environment';
 
 // 組織及對象維護作業 (GLS1016)
 export interface Fin52040Request {
@@ -26,7 +26,7 @@ export interface Fin52040Response {
 export class FIN52040Service {
   private apiUrl = `${environment.ApiUrl}/FIN0000/GLS1000`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // 查詢 對象及對帳維護作業
   queryFIN52040(data: Fin52040Request): Observable<ApiResponse<Fin52040Response[]>> {

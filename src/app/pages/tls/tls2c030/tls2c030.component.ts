@@ -17,7 +17,6 @@ import { Column, createPaginationConfig, formatDate, formatDateTime } from '../.
 @Component({
   selector: 'app-tls2c030',
   templateUrl: './tls2c030.component.html',
-  styleUrl: './tls2c030.component.scss',
   standalone: true,
   imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule, TableComponent]
 })
@@ -121,7 +120,7 @@ export class TLS2C030Component extends BasicQueryPageComponent<TLS2C030Data> imp
       const selected = new Date(selectedDate);
       const lastClose = new Date(this.closeDate);
 
-      if (selected <= lastClose) {
+      if (selected < lastClose) {
         this.messageService.warnBubble('已關帳，無法進行調整。');
         return;
       }

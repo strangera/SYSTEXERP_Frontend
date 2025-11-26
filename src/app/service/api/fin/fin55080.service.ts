@@ -1,6 +1,6 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ApiResponse } from '@service/system/auth.service'; // 假設路徑
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 假設路徑
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment'; // 假設路徑
 /**
@@ -77,7 +77,7 @@ export class Fin55080Service {
    */
   exportFIN55080(request: QueryFIN55080Request): Observable<ExportFileResponse> {
     // 假設匯出 API 路徑為 /FIN0000/GLS1000/exportFIN55080PDF
-    return this.http.post(`${this.apiUrl}/exportFIN55080`, request, {
+    return this.http.post(`${this.apiUrl}/exportFIN55080Execl`, request, {
       observe: 'response',
       responseType: 'blob'
     });

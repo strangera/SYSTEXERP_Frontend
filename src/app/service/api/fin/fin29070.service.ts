@@ -37,7 +37,7 @@ export class FIN29070Service {
 
   /** 匯出廠商應付對應科目明細表 Excel */
   exportFIN29070Excel(req: FIN29070QueryRequest): Observable<HttpResponse<Blob>> {
-    return this.http.post(`${this.apiUrl}/exportFIN29070Excel`, req, {
+    return this.http.post(`${this.apiUrl}/exportFIN29070`, req, {
       observe: 'response',
       responseType: 'blob' as 'json',
     }) as Observable<HttpResponse<Blob>>;

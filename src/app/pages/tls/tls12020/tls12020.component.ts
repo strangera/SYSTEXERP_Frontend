@@ -1,24 +1,22 @@
 
-import { Component, OnInit } from '@angular/core';
 import { formatDate } from '@angular/common';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { Component, OnInit } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { TLS12020Service } from '../../../service/api/tls/tls12020.service';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TLS12020Service } from '../../../service/api/tls/tls12020.service';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
-import { yesterday } from '@shared/models/system/query-form.model';
-import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
-import { finalize } from 'rxjs';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls12020',
@@ -34,22 +32,21 @@ import { finalize } from 'rxjs';
     InputTextComponent,
     CalendarRangeComponent,
     TableComponent,
-    MultiSelectComponent
   ],
 })
 export class TLS12020Component extends BasicQueryPageComponent<any> implements OnInit {
   industryCodeOptions: IDropdownItem[] = [];
   queryForm = this.formBuilder.group({
-    location_no: [''],
-    ven_uniform: [''], // 原本 vendorUID, 廠商統一編號
-    VEN_Name: ['', Validators.maxLength(60)], // 原本 ven_name
-    VEN_EngName: ['', Validators.maxLength(60)],
-    building_no: [''], // 館別（必填）
+    location_no: [null],
+    ven_uniform: [null], // 原本 vendorUID, 廠商統一編號
+    VEN_Name: [null, Validators.maxLength(60)], // 原本 ven_name
+    VEN_EngName: [null, Validators.maxLength(60)],
+    building_no: [null], // 館別（必填）
     InterviewDateStart: [yesterday], // 原本 contact_Datestart
     InterviewDateEnd: [yesterday],   // 原本 contact_Dateend
-    contact_USR_No: [''],
+    contact_USR_No: [null],
     contact_USR_Name: [this.authService.currentUserValue?.user_No], // 訪談人員
-    willing_level: [''], // 後端要 string，不要 null
+    willing_level: [null], // 後端要 string，不要 null
     ...createPaginationConfig([{ field: 'location_no', order: 1 }]), // 原本是 ECR_LocNo
   });
 
@@ -79,10 +76,8 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
   willinglevelOptions: IDropdownItem[] = [];
   locationOptions: IDropdownItem[] = [];
   buildingNoOptions: IDropdownItem[] = [];
-  btnLoading = false;
   constructor(
     private tls12020Service: TLS12020Service,
-    private locationOptionsService: LocationOptionsService,
     private dropDownListService: DropDownListService
   ) {
     super();
@@ -182,7 +177,7 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
 
       this.tls12020Service
         .queryTLS12020(params)
-        .pipe(finalize(() => (this.btnLoading = false)))
+        .pipe(finalize(() => (this.loading = false)))
         .subscribe({
           next: (res) => {
             const data = (res.Data ?? []).map((row: { building_no: string; bus_type: string; willing_level: string }) => ({

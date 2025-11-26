@@ -1,15 +1,15 @@
+import { NgClass, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { first } from 'rxjs';
-import { NgIf, NgClass } from '@angular/common';
-import { AuthService } from '../../../service/system/auth.service';
-import { userLogin } from '../../../shared/models/system/userLogin';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { PasswordModule } from 'primeng/password';
-import { Button, ButtonDirective } from 'primeng/button';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { environment } from 'src/environments/environment';
 import { Router } from '@angular/router';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { userLogin } from '@shared/models/system/userInfo';
+import { Button, ButtonDirective } from 'primeng/button';
+import { PasswordModule } from 'primeng/password';
+import { first } from 'rxjs';
+import { environment } from 'src/environments/environment';
+import { AuthService } from '../../../service/system/auth.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
 @UntilDestroy()
 @Component({
@@ -47,56 +47,56 @@ export class LoginComponent implements OnInit {
     private notemessage: NotificationService,
     private router: Router,
   ) { }
-ngOnInit(): void {
-  console.log('[LoginComponent] ngOnInit triggered');
+  ngOnInit(): void {
+    console.log('[LoginComponent] ngOnInit triggered');
 
-  try {
-    if (typeof window !== 'undefined') {
-      const topWin = window.top as (Window & typeof globalThis) | null;
-      const selfWin = window.self as Window & typeof globalThis;
-      if (topWin && topWin !== selfWin) {
-        console.log('[LoginComponent] 逃離 iframe');
-        topWin.location.replace(window.location.href);
+    try {
+      if (typeof window !== 'undefined') {
+        const topWin = window.top as (Window & typeof globalThis) | null;
+        const selfWin = window.self as Window & typeof globalThis;
+        if (topWin && topWin !== selfWin) {
+          console.log('[LoginComponent] 逃離 iframe');
+          topWin.location.replace(window.location.href);
+          return;
+        }
+      }
+    } catch {
+      console.log('[LoginComponent] iframe try-catch fallback');
+      window.location.replace(window.location.href);
+      return;
+    }
+
+    const loggedIn = this.authService.isLoggedIn();
+    console.log('[LoginComponent] isLoggedIn:', loggedIn);
+
+    if (loggedIn) {
+      const redirect = this.getRedirectFromPreLoginOrLocation();
+      console.log('[LoginComponent] redirect:', redirect);
+
+      if (redirect) {
+        console.log('[LoginComponent] 已登入且有 redirectURL，開始 getOuterToken()');
+        this.saveCurrentUrlOnce();
+
+        this.authService.getOuterToken()
+          .pipe(first(), untilDestroyed(this))
+          .subscribe({
+            next: (res) => {
+              console.log('[LoginComponent] getOuterToken success:', res);
+              const target = this.appendOrReplaceParam(redirect, 'token', res.token);
+              console.log('[LoginComponent] redirect to:', target);
+              window.location.href = target;
+            },
+            error: (err) => {
+              console.error('[LoginComponent] getOuterToken error:', err);
+              this.notemessage.errorBubble('取得外部登入票證失敗，改為進入系統首頁');
+              this.router.navigate(['/sso/dashboard']);
+            }
+          });
+
         return;
       }
     }
-  } catch {
-    console.log('[LoginComponent] iframe try-catch fallback');
-    window.location.replace(window.location.href);
-    return;
   }
-
-  const loggedIn = this.authService.isLoggedIn();
-  console.log('[LoginComponent] isLoggedIn:', loggedIn);
-
-  if (loggedIn) {
-    const redirect = this.getRedirectFromPreLoginOrLocation();
-    console.log('[LoginComponent] redirect:', redirect);
-
-    if (redirect) {
-      console.log('[LoginComponent] 已登入且有 redirectURL，開始 getOuterToken()');
-      this.saveCurrentUrlOnce();
-
-      this.authService.getOuterToken()
-        .pipe(first(), untilDestroyed(this))
-        .subscribe({
-          next: (res) => {
-            console.log('[LoginComponent] getOuterToken success:', res);
-            const target = this.appendOrReplaceParam(redirect, 'token', res.token);
-            console.log('[LoginComponent] redirect to:', target);
-            window.location.href = target;
-          },
-          error: (err) => {
-            console.error('[LoginComponent] getOuterToken error:', err);
-            this.notemessage.errorBubble('取得外部登入票證失敗，改為進入系統首頁');
-            this.router.navigate(['/sso/dashboard']);
-          }
-        });
-
-      return;
-    }
-  }
-}
 
   private saveCurrentUrlOnce(): void {
     if (typeof window === 'undefined') return;
@@ -112,62 +112,62 @@ ngOnInit(): void {
 
   /** 取出 redirectURL（優先讀取目前網址，其次讀 localStorage: preLoginUrlOnce） */
   /** 取出 redirectURL（優先讀取目前網址，其次讀 localStorage: preLoginUrlOnce） */
-private getRedirectFromPreLoginOrLocation(): string {
-  try {
-    const href = window.location.href;
-    console.log('[getRedirectFromPreLoginOrLocation] href:', href);
+  private getRedirectFromPreLoginOrLocation(): string {
+    try {
+      const href = window.location.href;
+      console.log('[getRedirectFromPreLoginOrLocation] href:', href);
 
-    // ✅ 1. 嘗試用 URL 物件取出（大小寫都支援）
-    const u = new URL(href);
-    let direct =
-      u.searchParams.get('redirectURL') ||
-      u.searchParams.get('redirecturl') ||
-      u.searchParams.get('redirect') ||
-      '';
+      // ✅ 1. 嘗試用 URL 物件取出（大小寫都支援）
+      const u = new URL(href);
+      let direct =
+        u.searchParams.get('redirectURL') ||
+        u.searchParams.get('redirecturl') ||
+        u.searchParams.get('redirect') ||
+        '';
 
-    if (direct) {
-      try {
-        const decoded = decodeURIComponent(direct);
-        console.log('[LoginComponent] redirect (URLSearchParams decoded):', decoded);
-        return decoded;
-      } catch {
-        console.log('[LoginComponent] redirect (URLSearchParams raw):', direct);
-        return direct;
+      if (direct) {
+        try {
+          const decoded = decodeURIComponent(direct);
+          console.log('[LoginComponent] redirect (URLSearchParams decoded):', decoded);
+          return decoded;
+        } catch {
+          console.log('[LoginComponent] redirect (URLSearchParams raw):', direct);
+          return direct;
+        }
       }
-    }
 
-    // ✅ 2. fallback：直接用 regex 抓，容錯性最高
-    const match = href.match(/[?&](redirecturl|redirectURL|redirect)=([^&#]+)/i);
-    if (match && match[2]) {
-      const decoded = decodeURIComponent(match[2].replace(/\+/g, '%20'));
-      console.log('[LoginComponent] redirect (regex decoded):', decoded);
-      return decoded;
-    }
+      // ✅ 2. fallback：直接用 regex 抓，容錯性最高
+      const match = href.match(/[?&](redirecturl|redirectURL|redirect)=([^&#]+)/i);
+      if (match && match[2]) {
+        const decoded = decodeURIComponent(match[2].replace(/\+/g, '%20'));
+        console.log('[LoginComponent] redirect (regex decoded):', decoded);
+        return decoded;
+      }
 
-    // ✅ 3. 再讀 localStorage 備份
-    const raw = localStorage.getItem(this.URL_KEY);
-    if (raw) {
-      const q = raw.indexOf('?');
-      if (q !== -1) {
-        const qs = raw.slice(q + 1);
-        for (const kv of qs.split('&')) {
-          const [k, v = ''] = kv.split('=');
-          if (/(redirecturl|redirect)/i.test(k)) {
-            const decoded = decodeURIComponent(v);
-            console.log('[LoginComponent] redirect (localStorage decoded):', decoded);
-            return decoded;
+      // ✅ 3. 再讀 localStorage 備份
+      const raw = localStorage.getItem(this.URL_KEY);
+      if (raw) {
+        const q = raw.indexOf('?');
+        if (q !== -1) {
+          const qs = raw.slice(q + 1);
+          for (const kv of qs.split('&')) {
+            const [k, v = ''] = kv.split('=');
+            if (/(redirecturl|redirect)/i.test(k)) {
+              const decoded = decodeURIComponent(v);
+              console.log('[LoginComponent] redirect (localStorage decoded):', decoded);
+              return decoded;
+            }
           }
         }
       }
-    }
 
-    console.log('[LoginComponent] redirect not found anywhere');
-    return '';
-  } catch (err) {
-    console.error('[getRedirectFromPreLoginOrLocation] error:', err);
-    return '';
+      console.log('[LoginComponent] redirect not found anywhere');
+      return '';
+    } catch (err) {
+      console.error('[getRedirectFromPreLoginOrLocation] error:', err);
+      return '';
+    }
   }
-}
 
   /** 安全地把查詢參數（token）附加/覆蓋到 URL 上 */
   private appendOrReplaceParam(url: string, key: string, value: string): string {
@@ -217,21 +217,22 @@ private getRedirectFromPreLoginOrLocation(): string {
                 error: () => {
                   this.notemessage.errorBubble('取得外部登入票證失敗，改為進入系統首頁');
                   this.router.navigate(['/sso/dashboard']);
+                  this.loading = false;
                 }
               });
           } else {
             // 沒有 redirectURL：照舊進系統首頁
             this.router.navigate(['/sso/dashboard']);
+            this.loading = false;
           }
 
           this.loading = false;
         },
-        error: () => {
+        error: (err) => {
+          this.notemessage.errorBubble(err.message || '登入失敗，請檢查網路或系統狀態');
           this.loginForm.patchValue({ password: '' }); // 清空密碼
-          this.loading = false;
+          this.loading = false; // 🔑 必須關閉 loading 狀態，否則按鈕會一直轉
         }
       });
-
-    this.notemessage.unblockUi();
   }
 }

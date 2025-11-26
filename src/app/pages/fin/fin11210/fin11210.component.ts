@@ -5,6 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin11200Service } from '@service/api/fin/fin11200.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { ExecSpFuncService } from '@service/utility/execSpFunc.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
@@ -48,6 +49,7 @@ export class FIN11210Component extends BasicQueryPageComponent<FIN11210Data> imp
   data: FIN11210Data[] = [];
   selectedItems: FIN11210Data[] = [];
   totalRecords = 0;
+  btnLoading = false; // 下傳按鈕載入狀態
 
   ECR_No_Options: any[] = [
     { Name: '全機台', No: 'ALL' }
@@ -72,7 +74,8 @@ export class FIN11210Component extends BasicQueryPageComponent<FIN11210Data> imp
     private fin11210Service: FIN11210Service,
     private fin11200Service: Fin11200Service,
     private dropDownListService: DropDownListService,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
+    private execSpFuncService: ExecSpFuncService
   ) {
     super();
   }
@@ -125,6 +128,29 @@ export class FIN11210Component extends BasicQueryPageComponent<FIN11210Data> imp
             No: item.No,
             Name: `${item.No} - ${item.Name}`
           }));
+      });
+  }
+  // 下傳
+  onUpload() {
+    const storeNo = this.authService.currentUserValue?.SYS_StoreNo;
+    const params = {
+      SYS_StoreNo: storeNo || '',
+      EXP_StoreNo: storeNo || '',
+      EXP_Type: 'POS1009',
+      EXP_DocNo: `${storeNo};${this.selectedItems[0].ECR_No};${this.selectedItems[0].ARG_No}`,
+      EXP_DataFlag: 'S2P',
+      EXP_Desc: ''
+    };
+
+    this.execSpFuncService.ExecSpFunc(params)
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        if (response.Success) {
+          this.messageService.successBubble('下傳成功');
+          this.selectedItems = [];
+        } else {
+          this.messageService.errorBubble(`下傳失敗，錯誤代碼：${response.ErrCode}，錯誤訊息：${response.ErrMsg}`);
+        }
       });
   }
 }

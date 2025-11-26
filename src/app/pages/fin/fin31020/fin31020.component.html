@@ -31,9 +31,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" [showDelete]="false" (detail)="onDetail($event)"
-    [showReportMode]="false" [showManage]="false" dataKey="SeqNo" [multiSortMeta]="[{ field: 'VouNo', order: 1 }]"
-    [totalRecords]="totalRecords" [showCheckBox]="true"
+  <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" [showDelete]="true" (detail)="onDetail($event)"
+    [showReportMode]="false" [showManage]="true" dataKey="SeqNo" [multiSortMeta]="[{ field: 'CAR_AccNo', order: 1 }]"
+    [totalRecords]="totalRecords" [showCheckBox]="true" [showEdit]="true" [showCheckBox]="false"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showExcel]="false">
   </app-table>

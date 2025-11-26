@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
@@ -28,7 +28,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { tls2b010tableComponent } from '../../../shared/componentkit/tls2-b010-table/tls2b010table.component';
+import { tls2b010tableComponent } from './tls2-b010-table/tls2b010table.component';
 
 @Component({
   selector: 'app-tls2b010',
@@ -55,7 +55,7 @@ import { tls2b010tableComponent } from '../../../shared/componentkit/tls2-b010-t
     RadioButtonModule, // ← 使用 PrimeNG 原生 radio
   ],
 })
-export class TLS2B010Component extends BasicQueryPageComponent<any> {
+export class TLS2B010Component extends BasicQueryPageComponent<any> implements OnInit {
   readonly yesterday: Date = (() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -66,7 +66,7 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
   ECRNoOptions: any[] = [];
   CounterOptions: any[] = [];
   data: any[] = [];
-  closeDate: string = '查詢中...';
+  closeDate = '查詢中...';
 
   ECR_TypeOptions = [
     { label: '全部', value: null },
@@ -92,7 +92,7 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
     { value: 1, label: '支付別溢欠明細表' },
     { value: 2, label: '溢欠簡表' },
   ];
-  printedAt: string = '';
+  printedAt = '';
   simpleData: any[] = [];
 
   /** ★ 後端「明細表」Totals 承接容器（提供給 footer 總計列） */

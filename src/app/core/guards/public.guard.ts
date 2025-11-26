@@ -1,14 +1,15 @@
 // public.guard.ts
-import { Injectable } from '@angular/core';
-import { CanActivate, ActivatedRouteSnapshot, UrlTree, Router } from '@angular/router';
+import { inject, Injectable } from '@angular/core';
+import { ActivatedRouteSnapshot, CanActivate, Router, UrlTree } from '@angular/router';
 import { AuthService } from '@service/system/auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class PublicGuard implements CanActivate {
-  constructor(private auth: AuthService, private router: Router) { }
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
   // public.guard.ts
   canActivate(route: ActivatedRouteSnapshot): boolean | UrlTree {
-    const loggedIn = this.auth.isLoggedIn();
+    const loggedIn = this.authService.isLoggedIn();
     const fullUrl = window.location.href; // <== 直接用原始網址解析
     const redirect = route.queryParamMap.get('redirectURL') ?? route.queryParamMap.get('redirect');
 

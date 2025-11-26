@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeUrl } from '@angular/platform-browser';
 import { SortMeta } from 'primeng/api';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { FileSelectEvent } from 'primeng/fileupload';
@@ -8,10 +8,9 @@ import { MultiSelectChangeEvent } from 'primeng/multiselect';
 import { Table, TableColumnReorderEvent, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { Observable } from 'rxjs';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
-import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent } from '../table/table.model';
 import { COMMON_IMPORTS } from '../table/import-table';
 import { TableUtilityService } from '../table/table-utility.service';
-import { SafeUrl } from '@angular/platform-browser';
+import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent } from '../table/table.model';
 
 @Component({
   selector: 'app-customFooter-table',
@@ -26,6 +25,7 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
   @Input() dataKey = 'ID';                                                      // table 資料key
   @Input() tableKey: string | undefined = undefined;                            // table 唯一標識 (必填)
   @Input() apiUrl?: string;                                                     // table API URL (可選)
+  @Input() DataKeyName: string | undefined = undefined;
   @Input() title: string | undefined = undefined;                               // table 標題
   @Input() columns!: Column[];                                                  // table 欄位配置 (必填)
   originalColumns!: Column[];                                                   // table 原始欄位
@@ -75,6 +75,7 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
   // 資料小計
   @Input() groupRowsBy = '';                                                    // table 群組資料
   @Input() subTotalData: any[] = []; // 後端提供的小計資料
+  @Input() subTotalTitle = '';                                       // 小計標題
   groupedDataCache = new Map();                                                 // 用於緩存已分組的數據
   @Input() showSubTotal = false;                                                // 是否顯示群組小計
   // 資料總計

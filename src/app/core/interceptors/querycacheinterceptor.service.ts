@@ -1,7 +1,7 @@
+import { HttpEvent, HttpHandler, HttpInterceptor, HttpRequest, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { HttpEvent, HttpInterceptor, HttpHandler, HttpRequest, HttpResponse } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
 import { QueryStateService } from '@shared/service/query-state.service';
+import { Observable, tap } from 'rxjs';
 
 @Injectable()
 export class QueryCacheInterceptorService implements HttpInterceptor {
@@ -14,8 +14,7 @@ export class QueryCacheInterceptorService implements HttpInterceptor {
     return next.handle(req).pipe(
       tap(event => {
         if (event instanceof HttpResponse && event.status === 200) {
-          const url = req.url;
-          const api = url.split('/').pop();
+          const api = req.url.split('/').pop();
           if (api) {
             this.queryState.setQueryState(`${api}`, req.body);
           }

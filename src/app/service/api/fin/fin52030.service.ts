@@ -91,7 +91,7 @@ export class FIN52030Service {
   }
 
   public getRefNameOptions(): void {
-    this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorOptions`, {}).pipe(
+    this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorList`, {}).pipe(
       take(1),
       map(res => res.Data?.map(item => ({ value: item.VEN_No, label: item.VEN_Name } as Option)) ?? []),
       tap(res => this.refNameOptions.set(res)),

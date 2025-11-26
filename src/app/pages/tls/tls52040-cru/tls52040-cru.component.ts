@@ -242,8 +242,10 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
   selectedItemsDialog: ITLS52040Detail[] = [];
   dialogColumns: Column[] = [
     { field: 'CRN_No', header: '退貨單編號' },
+    { field: 'APPLY_USR_Name', header: '申請人' },
     { field: 'APPLY_Date', header: '申請日期', format: formatDate },
     { field: 'APRV_Date', header: '審核日期', format: formatDate },
+    { field: 'VEN_No', header: '廠商編號' },
   ]
   onShowDialog() {
     this.dialogVisible = true

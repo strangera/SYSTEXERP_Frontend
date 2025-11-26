@@ -1,9 +1,9 @@
-import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http'; //  匯入 HttpResponse
+import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 假設 ApiResponse 介面已定義
+import { SortMeta } from 'primeng/api';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { SortMeta } from 'primeng/api';
-import { ApiResponse } from '@service/system/auth.service'; // 假設 ApiResponse 介面已定義
 
 /**
  * 查詢庫齡分析表 (queryTLS57160) 的請求主體介面

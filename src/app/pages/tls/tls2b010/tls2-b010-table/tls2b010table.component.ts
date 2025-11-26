@@ -23,12 +23,12 @@ import {
 
 import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { Observable, Subject, takeUntil } from 'rxjs';
-import { NotificationService } from '../../component/notification-message/notification.service';
-import { BasicPrintData2Component } from '../../componentextends/basic-print/basic-print-data2.component';
-import { FunsrightInfo } from '../../models/system/funsrightInfo';
 
 import { NgClass, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { BasicPrintData2Component } from '@shared/componentextends/basic-print/basic-print-data2.component';
+import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
 import { BlockUIModule } from 'primeng/blockui';
 import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
@@ -107,7 +107,7 @@ export class tls2b010tableComponent
 
   // 直向合併
   /** 群組鍵（資料欄位名稱）預設 'ECR_No' */
-  public groupKey: string = 'ECR_No';
+  public groupKey = 'ECR_No';
   /** 需要直向合併的欄位 */
   @Input() mergedColumns: string[] = [];
   get hasRowSpan(): boolean {
@@ -370,7 +370,7 @@ export class tls2b010tableComponent
 
 
     const pageSize = event.rows && event.rows > 0 ? event.rows : this.rows;
-    let pageIndex = (event.first ?? 0) / pageSize + 1;
+    const pageIndex = (event.first ?? 0) / pageSize + 1;
 
     const sortRaw = event.multiSortMeta ?? (event as any).multisortmeta ??
       (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);

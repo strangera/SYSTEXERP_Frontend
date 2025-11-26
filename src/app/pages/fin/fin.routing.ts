@@ -119,9 +119,6 @@ export const finRoutes: Routes = [
   // 保留款沖款維護
   // { path: 'fin24020', loadComponent: () => import('./fin24020/fin24020.component').then(m => m.FIN24020Component) },
   // { path: 'fin24020cru', loadComponent: () => import('./fin24020-cru/fin24020-cru.component').then(m => m.FIN24020CRUComponent) },
-  // 帳款貼現沖帳維護
-  // { path: 'fin24030', loadComponent: () => import('./fin24030/fin24030.component').then(m => m.FIN24030Component) },
-  // { path: 'fin24030cru', loadComponent: () => import('./fin24030-cru/fin24030-cru.component').then(m => m.FIN24030CRUComponent) },
   // 產生電匯付款資料
   // { path: 'fin25010', loadComponent: () => import('./fin25010/fin25010.component').then(m => m.FIN25010Component) },
   // { path: 'fin25010cru', loadComponent: () => import('./fin25010-cru/fin25010-cru.component').then(m => m.FIN25010CRUComponent) },
@@ -156,6 +153,7 @@ export const finRoutes: Routes = [
   { path: 'fin29050cru', loadComponent: () => import('./fin29050-cru/fin29050-cru.component').then(m => m.FIN29050CRUComponent) },
   // 廠商付款明細表
   { path: 'fin29060', loadComponent: () => import('./fin29060/fin29060.component').then(m => m.FIN29060Component) },
+  { path: 'fin29060cru', loadComponent: () => import('./fin29060-cru/fin29060-cru.component').then(m => m.FIN29060CRUComponent) },
   // 廠商應付對科目明細表
   { path: 'fin29070', loadComponent: () => import('./fin29070/fin29070.component').then(m => m.FIN29070Component) },
   // 應付帳款預估表

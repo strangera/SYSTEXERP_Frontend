@@ -45,6 +45,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
   public readonly tableData = signal<TLS21020Data[]>([]);
   public readonly totalRecords = signal<number>(0);
+  public readonly tableLoading = signal<boolean>(!1);
 
   /** entryType 改變時,取得table 資料 */
   public readonly entryTypeEffect = effect(() => {
@@ -109,9 +110,14 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     // ABAT_YN: !1, 照要求隱藏
     Org_ID: !0,
     AccNotes: !0,
+    // PAY_No: !1,
   });
   private readonly allColumns = computed((): EditColumn[] => [
-    { field: 'AccDC', header: '借/貸', format: (v: 'D' | 'C') => this.AccDCMap.get(v) || v },
+    {
+      field: 'AccDC',
+      header: '借/貸',
+      format: (v: 'D' | 'C') => this.AccDCMap.get(v) || v,
+    },
     { field: 'ItemDesc', header: '項目名稱' },
     {
       field: 'AccNo',
@@ -168,13 +174,9 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       header: '應收廠商',
       groupField: 'Vendor',
       type: 'dropdown',
-      format: (v: string) => {
-        const item = this.service.POS2013Map().get(v);
-        return item ? (item.ShortName ?? item.Name)! : v;
-      },
       options: this.service.POS2013Options,
-      optionValue: 'VEN_No',
-      templateLabel: 'ShortName',
+      optionValue: 'value',
+      templateLabel: 'label',
       showClear: !1,
       disabled: (v, i, row) => row.ABAT_YN === 'N',
     },
@@ -216,8 +218,6 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     ObjectNo: 'N',
   };
 
-  public readonly tableLoading = signal<boolean>(!1);
-
   public readonly loadingEffect = effect(() => {
     this.loading = this.tableLoading()
       || this.service.gls1005Loading()
@@ -243,6 +243,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
       const ENTRY_TYPE = this.entryTypeSignal();
+      this.logger.debug(`onSubmit:`, [ENTRY_TYPE, this.tableData()]);
       if (!ENTRY_TYPE || !this.dt().validateAndShowErrors()) return void (this.loading = !1);
 
       const data = this.tableData().filter(v => !v._isAutoInsertCandidate);
@@ -258,8 +259,8 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         return row as TLS21020UpdateQuery;
       });
 
-      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       this.tableLoading.set(!0);
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       this.service.updateTLS21020(payload).pipe(
         tap(res => this.logger.debug(`updateTLS21020:`, [data, payload, res])),
         concatMap(() => this.service.queryTLS21020({ ENTRY_TYPE })),
@@ -281,14 +282,13 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     // Org_ID 必填
     if (this.isEmpty(rowData.Org_ID)) return this.fail('組織代碼必須填寫');
 
-    // ABAT_YN 為 Y 時，VEN_No 與 PAY_days 必填
-    if (rowData.ABAT_YN !== 'N') {
+    // ABAT_YN 為 Y 時，VEN_No 必填
+    if (rowData.ABAT_YN !== 'N')
       if (this.isEmpty(rowData.VEN_No)) return this.fail('應收廠商必須填寫');
-      if (this.isEmpty(rowData.PAY_days)) return this.fail('付款天數必須填寫');
-    }
 
     // 可選欄位警告檢查
     if (this.validateValue(rowData.PAY_days)) return this.warn('付款天數必須為大於等於0的整數');
+    if (this.isEmpty(rowData.PAY_days)) return this.warn('付款天數必須填寫');
     if (this.isEmpty(rowData.PAY_No)) return this.warn('付款別編號必須填寫');
     if (this.isEmpty(rowData.AccNotes)) return this.warn('傳票備註必須填寫');
     if (this.isEmpty(rowData.AccNo)) return this.warn('會計科目必須填寫');

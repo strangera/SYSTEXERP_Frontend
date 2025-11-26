@@ -68,7 +68,6 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   columnsdetail = COLUMNS_DETAIL_EDIT;
   columnsDetailView = COLUMNS_DETAIL_VIEW;
   isViewMode = false;
-  btnLoading = false;
   queryLoading = false;  // 專門用於查詢來源發票的 loading
   editLoading = false;   // 專門用於 table-edit 的 loading
   constructor(
@@ -470,27 +469,29 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   /** 新增資料 */
   private insertData() {
     if (!this.data || this.data.length === 0) {
+      this.loading = false;
       this.messageService.warnBubble('請先查詢來源發票');
       return;
     }
 
     if (!this.changeEditData || this.changeEditData.length === 0) {
+      this.loading = false;
       this.messageService.warnBubble('請填寫換開發票資料');
       return;
     }
 
     if (!this.detailEditData || this.detailEditData.length === 0) {
+      this.loading = false;
       this.messageService.warnBubble('請填寫商品明細資料');
       return;
     }
 
     const payload = this.formatInsertData();
 
-    this.btnLoading = true;
     this.tls2j030Service.insertTLS2J030(payload)
       .pipe(
         untilDestroyed(this),
-        finalize(() => this.btnLoading = false)
+        finalize(() => { this.loading = false })
       )
       .subscribe({
         next: (res) => {

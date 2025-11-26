@@ -1,9 +1,9 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ApiResponse } from '@service/system/auth.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable, map } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { Option } from '@service/utility/dropdown-api.model';
 
 // 請求主體的介面 (與匯出共用)
 // 為了遵循 API 規範，我們需要將 QueryFIN55070Request 擴充，納入分頁/排序參數。
@@ -22,7 +22,7 @@ export interface ExportFIN55070Request {
   Offset?: number;
   SortBy?: SortBy[];
 
-  DateFrom: string; 
+  DateFrom: string;
   DateTo: string;
   Ledger_MD?: string;
   OrgId?: string;
@@ -136,14 +136,14 @@ export class Fin55070Service {
     });
   }
   getAccNoList(): Observable<Option[]> {
-  return this.http.post<{ Data: { AccNo: string; AccCName: string }[] }>(`${this.apiDropUrl}/queryAccNoDropdown`, {}).pipe(
-    map(res => res.Data.map(item => ({
-      value: item.AccNo,
-      label: item.AccNo+' - '+item.AccCName
-    } as Option)))
-  );
-}
+    return this.http.post<{ Data: { AccNo: string; AccCName: string }[] }>(`${this.apiDropUrl}/queryAccNoDropdown`, {}).pipe(
+      map(res => res.Data.map(item => ({
+        value: item.AccNo,
+        label: item.AccNo + ' - ' + item.AccCName
+      } as Option)))
+    );
+  }
 
 
-  
+
 }

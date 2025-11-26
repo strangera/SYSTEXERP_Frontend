@@ -3,17 +3,17 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
+import { QueryStateService } from '@shared/service/query-state.service';
 import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
 import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { MultiSelectChangeEvent, MultiSelectModule } from 'primeng/multiselect';
 import { TooltipModule } from 'primeng/tooltip';
-import { Column } from '../table.model';
-import { QueryStateService } from '@shared/service/query-state.service';
-import { TableExportComponent } from '../table-export/table-export.component';
-import { toggleButtons } from './table-caption.model';
-import { TableUtilityService } from '../table-utility.service';
 import { Observable } from 'rxjs';
+import { TableExportComponent } from '../table-export/table-export.component';
+import { TableUtilityService } from '../table-utility.service';
+import { Column } from '../table.model';
+import { toggleButtons } from './table-caption.model';
 
 @Component({
   selector: 'app-table-caption',
@@ -49,6 +49,7 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
   @Input() tableKey: string | undefined = undefined;// table 唯一標識 (必填)
   @Input() expansionColumns: Column[] = [];  // 收合展開 欄位配置(expansion必需配置)
   @Input() apiUrl?: string;                         // table API URL (可選)
+  @Input() DataKeyName?: string;                    // table 資料key名稱 (可選)
   @Input() disabled = false;                        // table 是否禁用
   // Header 相關
   @Input() showCaption = true;                // 是否顯示 Caption

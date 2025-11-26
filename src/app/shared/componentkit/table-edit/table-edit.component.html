@@ -255,4 +255,6 @@
     </tr>
   </ng-template>
 </p-table>
-<span *ngIf="tableDataEmpty" class="block w-full text-right text-red-500">{{ errorMessage }}</span>
+<span *ngIf="tableDataEmpty" class="block w-full text-right text-red-500">
+  {{ errorMessage ? errorMessage : validateOnlySelected ? '請至少選擇一筆資料' : '至少輸入一筆資料' }}
+</span>

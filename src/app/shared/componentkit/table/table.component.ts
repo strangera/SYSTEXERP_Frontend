@@ -31,6 +31,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() tableKey: string | undefined = undefined;
   /** table API URL (可選) */
   @Input() apiUrl?: string;
+  /** table 資料名稱 (可選) */
+  @Input() DataKeyName: string | undefined = undefined;
   /** table 標題 @default undefined */
   @Input() title: string | undefined = undefined;
   /** table 欄位配置 (必填) */
