@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
-import { AfterViewInit, Component, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
@@ -27,10 +27,10 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { CashierService } from '@service/basic/queryPOS2001.service';
 import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { tls2b010tableComponent } from '@shared/componentkit/tls2-b010-table/tls2b010table.component';
-import { TLS55070TableComponent } from '@shared/componentkit/tls55070-table/tls55070-table.component';
 import { TLS55070Service } from '../../../service/api/tls/tls55070.service';
 import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { tls2b010tableComponent } from '../tls2b010/tls2-b010-table/tls2b010table.component';
+import { TLS55070TableComponent } from './tls55070-table/tls55070-table.component';
 
 const TOTAL_FIELD_MAP = { TXN_SaleAmt: 'Total_TXN_SaleAmt' } as const;
 type TotalFieldMap = typeof TOTAL_FIELD_MAP;
@@ -59,7 +59,7 @@ type SubtotalFieldMap = typeof SUBTOTAL_FIELD_MAP;
     TLS55070TableComponent,
   ],
 })
-export class TLS55070Component extends BasicQueryPageComponent<any> implements AfterViewInit {
+export class TLS55070Component extends BasicQueryPageComponent<any> implements AfterViewInit, OnInit {
   /** 用銷售單號當群組鍵（也當排序的群組欄） */
   readonly groupByField = '_grp'; // 內部群組鍵
   /** 讓 rowspan 依銷售單號合併（在 ngAfterViewInit 指定給子元件的 groupKey） */
@@ -166,8 +166,8 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
   ];
 
   // LOGO/HOS_No / 專櫃 / 銷售人員
-  logoOptions: Array<{ label: string; value: string }> = [];
-  hosOptions: Array<{ label: string; value: string }> = [];
+  logoOptions: { label: string; value: string }[] = [];
+  hosOptions: { label: string; value: string }[] = [];
   CounterOptions: any[] = [];
   cashierOptions: any[] = [];
 
@@ -574,9 +574,9 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
    *   - 忽略 UI 專用欄位（像 _rowKey 之類）
    */
   private toApiSort(
-    uiSort: Array<{ field: string; order: 1 | -1 }>
-  ): Array<{ field: string; order: 1 | -1 }> {
-    const out: Array<{ field: string; order: 1 | -1 }> = [];
+    uiSort: { field: string; order: 1 | -1 }[]
+  ): { field: string; order: 1 | -1 }[] {
+    const out: { field: string; order: 1 | -1 }[] = [];
     let injectedSaleNo = false;
 
     for (const s of uiSort ?? []) {

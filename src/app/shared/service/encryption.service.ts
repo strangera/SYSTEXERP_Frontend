@@ -1,7 +1,7 @@
-import { Injectable } from "@angular/core";
-import * as CryptoJS from 'crypto-js';
-import { environment } from "../../../environments/environment";
 import { formatDate } from "@angular/common";
+import { Injectable } from "@angular/core";
+import CryptoJS from 'crypto-js';
+import { environment } from "../../../environments/environment";
 
 @Injectable({
   providedIn: "root"

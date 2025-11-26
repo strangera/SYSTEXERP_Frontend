@@ -1,5 +1,5 @@
 import { animate, state, style, transition, trigger } from "@angular/animations";
-import { NotificationService } from "../../component/notification-message/notification.service";
+import { NotificationService } from "@shared/component/notification-message/notification.service";
 import { SortMeta } from "primeng/api";
 export interface Column {
   field: string;     // 欄位名稱
@@ -27,7 +27,7 @@ export interface Column {
   headerRow?: 1 | 2;
 
   /** 樣式（template 有用到 [ngClass]="col.style"） */
-  style?: string | string[] | Set<string> | { [klass: string]: any };
+  style?: string | string[] | Set<string> | Record<string, any>;
 
   /** 必填星號（template 有 col.required） */
   required?: boolean;

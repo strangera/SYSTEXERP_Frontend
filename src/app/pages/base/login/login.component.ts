@@ -3,13 +3,13 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { userLogin } from '@shared/models/system/userInfo';
 import { Button, ButtonDirective } from 'primeng/button';
 import { PasswordModule } from 'primeng/password';
 import { first } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { userLogin } from '../../../shared/models/system/userLogin';
 
 @UntilDestroy()
 @Component({
