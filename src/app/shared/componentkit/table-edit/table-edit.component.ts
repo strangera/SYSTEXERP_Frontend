@@ -53,69 +53,64 @@ import { ColumnGroup, EditColumn, FieldChangeEvent } from './table-edit.model';
   ],
 })
 export class TableEditComponent implements OnChanges, AfterContentInit {
-  @ViewChild('dt', { static: false }) dt!: Table;         // table 元件
+  @ViewChild('dt', { static: false }) dt!: Table;     // table 元件
   @ViewChild('fileUpload') fileUpload!: FileUpload; // 檔案上傳 元件
   // 基本設置
-  dataKey = '_TABLE_KEY';                                 // table 資料key
-  @Input() tableKey: string | undefined = undefined;      // table 唯一標識 (必填)
-  @Input() title: string | undefined = undefined;         // table 標題
-  @Input() tableRequired = false;                         // table 是否為必填
-  tableDataEmpty = false;                                 // table 資料是否為空
-  @Input() columns!: EditColumn[];                        // table 欄位配置 (必填)
-  @Input() data: any[] = [];                              // table 資料 (必填)
-  public _tableData: any[] = [];                          // 內部用於表格顯示的資料 (包含新增行)
-  @Output() dataChange = new EventEmitter<any[]>();       // table 資料改變 (事件)
-  @Input() loading = false;                               // 是否顯示 loading
-  @Input() disabled = false;                              // 是否禁用 table
+  dataKey = '_TABLE_KEY';                 // table 資料key
+  @Input() tableKey: string | undefined = undefined;   // table 唯一標識 (必填)
+  @Input() title: string | undefined = undefined;     // table 標題
+  @Input() tableRequired = false;             // table 是否為必填
+  tableDataEmpty = false;                 // table 資料是否為空
+  @Input() columns!: EditColumn[];            // table 欄位配置 (必填)
+  @Input() data: any[] = [];               // table 資料 (必填)
+  public _tableData: any[] = [];             // 內部用於表格顯示的資料 (包含新增行)
+  @Output() dataChange = new EventEmitter<any[]>();    // table 資料改變 (事件)
+  @Input() loading = false;                // 是否顯示 loading
+  @Input() disabled = false;               // 是否禁用 table
   @Input() multiSortMeta: SortMeta[] | null | undefined = undefined; // table 多重排序
-  @Input() serialName = '序號';                            // table 序號欄位名稱
+  @Input() serialName = '序號';              // table 序號欄位名稱
   // 欄位群組
-  @Input() columnGroup?: ColumnGroup[];                                         // table 群組欄位
+  @Input() columnGroup?: ColumnGroup[];                     // table 群組欄位
   // select 選擇Row相關
-  @Input() showCheckBox = true;                                               // 是否顯示 checkbox
-  @Input() selectedItems: any = [];                                             // table 已勾選資料
+  @Input() showCheckBox = true;                        // 是否顯示 checkbox
+  @Input() selectedItems: any = [];                       // table 已勾選資料
   @Input() isRowSelectable: (rowData: any, rowIndex: number, data: any) => boolean | undefined = () => true; // 可選擇(條件)
-  @Output() selectionChange = new EventEmitter<any>();                          // 資料變更(事件)
+  @Output() selectionChange = new EventEmitter<any>();             // 資料變更(事件)
   // Header(左) 相關
-  @Input() showInsert = false;                // 是否顯示 新增按鈕
-  @Input() showDelete = true;                // 是否顯示 刪除按鈕
-  @Input() insertDisabled = false;            // 新增按鈕是否禁用
+  @Input() showInsert = false;        // 是否顯示 新增按鈕
+  @Input() showDelete = true;        // 是否顯示 刪除按鈕
+  @Input() insertDisabled = false;      // 新增按鈕是否禁用
   @Output() insert = new EventEmitter<any>(); // 新增事件
   // Header(右) 相關
-  @Input() showExcel = false;                      // 是否顯示 匯出Excel
-  @Input() showExcelExport = true;                 // 是否顯示 匯出Excel按鈕
-  @Input() showExcelImport = true;                 // 是否顯示 匯入Excel按鈕
-  @Input() showCustomExcelImport = false;         // 是否顯示 自訂匯入Excel按鈕
+  @Input() showExcel = false;           // 是否顯示 匯出Excel
+  @Input() showExcelExport = true;         // 是否顯示 匯出Excel按鈕
+  @Input() showExcelImport = true;         // 是否顯示 匯入Excel按鈕
+  @Input() showCustomExcelImport = false;     // 是否顯示 自訂匯入Excel按鈕
   @Output() exportExcel = new EventEmitter<any>(); // 匯出 Excel 事件
-  @Input() exportExcelLoading = false;             // 匯出 Excel loading
+  @Input() exportExcelLoading = false;       // 匯出 Excel loading
   @Output() importExcel = new EventEmitter<FileSelectEvent>(); // 匯入 Excel 事件
   // 禁止新增
   @Input() canInsert = true;
   @Output() delete = new EventEmitter<any>(); // 刪除事件
   // rowEdit 相關
-  @Input() showReorder = true;                     // 是否顯示順序調整
+  @Input() showReorder = true;           // 是否顯示順序調整
   @Input() rowEditDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
-  @Input() defaultInsertData: any = {};             // 預設新增資料 (可選，預設為所有資料為null)
-  @Input() dataStatusField = '_dataStatus';          // 資料狀態 (如果有值增加狀態欄位；如果沒有值不增加狀態欄位)
-  @Input() dataStatusValue = {                      // 預設 original/new/modified/deleted (可選)
+  @Input() defaultInsertData: any = {};       // 預設新增資料 (可選，預設為所有資料為null)
+  @Input() dataStatusField = '_dataStatus';     // 資料狀態 (如果有值增加狀態欄位；如果沒有值不增加狀態欄位)
+  @Input() dataStatusValue = {           // 預設 original/new/modified/deleted (可選)
     Original: 'original',
     New: 'new',
     Modified: 'modified',
     Deleted: 'deleted'
   };
-  // 驗證整行[rowValidate]，範例：
-  // validateEntireRow(rowData: T) {
-  //   if (驗證條件) {
-  //     return { isValid: false, errorMessage: '錯誤訊息' };
-  //   }
-  //   return { isValid: true, errorMessage: '' };
-  // }
+  // 驗證相關
   @Input() rowValidate: ((rowData: any, index?: number) => { isValid: boolean, errorMessage: string; }) | undefined = undefined;
   @Output() fieldChange = new EventEmitter<FieldChangeEvent>(); // input 變更事件
-  @Output() rowReorderData = new EventEmitter<TableRowReorderEvent>();      // row reorder 事件
+  @Output() rowReorderData = new EventEmitter<TableRowReorderEvent>();   // row reorder 事件
   @Input() errorMessage = '至少輸入一筆資料'; // 錯誤訊息
-  // 總計
-  @Input() footerData: any;                  // (總計)頁尾資料
+  @Input() footerData: any;         // (總計)頁尾資料
+  /** 新增：是否只判斷驗證已選擇的資料，預設為 false */
+  @Input() validateOnlySelected = false;
 
   public readonly percentKeyFilter = /^(100(\.0{1,2})?|(\d{1,2})(\.\d*)?)$/; // 驗證百分比
 
@@ -124,10 +119,12 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     private readonly cdr: ChangeDetectorRef,
     private readonly messageService: NotificationService
   ) { }
+
+  // ... (ngOnChanges 和其他方法保持不變，直到 validateAndShowErrors)
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
       // 1. 將外部傳入的資料深拷貝，作為內部顯示的起點
-      //    確保只有來自父層的資料才進入此處
+      //  確保只有來自父層的資料才進入此處
       if (changes['data'].currentValue === this._tableData) {
         // 這是由 dataChange 事件觸發的回流，不需要再次處理
         return;
@@ -201,10 +198,10 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   }
   ngAfterContentInit(): void {
     // setTimeout(() => {
-    //   if (!this.disabled && this.canInsert) {
-    //     this.insertRow();
-    //     this.cdr.detectChanges();
-    //   }
+    //  if (!this.disabled && this.canInsert) {
+    //   this.insertRow();
+    //   this.cdr.detectChanges();
+    //  }
     // }, 0);
   }
   onSelectionChange(event: any) {
@@ -221,7 +218,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       this.dataKey,
       this.defaultInsertData,
       this.dataStatusField, // 將 dataStatusField 傳給服務
-      this.dataStatusValue  // 將 dataStatusValue 傳給服務
+      this.dataStatusValue // 將 dataStatusValue 傳給服務
     );
     this._tableData = data;
     this.cdr.detectChanges();
@@ -330,11 +327,11 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       this.insertRow(); // *** 這裡會將新增行加入 this._tableData ***
     }
     // 3. 【關鍵】：發射乾淨的資料給父層
-    //    注意：這裡發射的陣列應該是空陣列，因為 this._tableData 現在只包含新增行。
+    //  注意：這裡發射的陣列應該是空陣列，因為 this._tableData 現在只包含新增行。
     const cleanData = this._tableData.filter(item => !item._isAutoInsertCandidate);
     this.dataChange.emit(cleanData);
   }
-
+  // ... (validateAllRows 保持不變)
   validateAllRows(): boolean {
     // 排除自動插入的空行
     const rowsToValidate = this.data.filter(row => !row._isAutoInsertCandidate);
@@ -361,7 +358,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
 
     return isValid;
   }
-
+  // ... (validateField 保持不變)
   // 對單一欄位執行驗證，並更新 rowData 中的錯誤狀態
   validateField(rowData: any, col: EditColumn, value: any): boolean {
     // 確保 _validationErrors 物件存在
@@ -392,7 +389,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     // 如果所有欄位都有效，可以考慮清除整行的 _validationErrors 屬性
     // 但通常不需要，因為只需要檢查特定欄位的錯誤
     // if (Object.keys(rowData._validationErrors).length === 0) {
-    //   delete rowData._validationErrors;
+    //  delete rowData._validationErrors;
     // }
     return isValidField;
   }
@@ -400,20 +397,71 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
    /* // !!! 1. 宣告：@ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
    /* // !!! 2. 在提交呼叫共通元件：const valid = this.tableEditComponent.validateAndShowErrors();
    /* // !!! 3. 使用 valid 來判斷是否通過
- /* 執行完整的驗證並處理錯誤提示
- * @returns {boolean} 整個表格是否有效
- */
+ /**
+   * 執行完整的驗證並處理錯誤提示
+   * @returns {boolean} 整個表格是否有效
+   */
   validateAndShowErrors(): boolean {
-    // 1. 檢查 Table 是否為必填且為空
-    if (!this.disabled && this.data && !this.data.length && this.tableRequired) {
-      this.tableDataEmpty = true;
-      this.cdr.detectChanges(); // 立即更新狀態
-      return false;
+    // 1. 清除所有行的舊有驗證錯誤狀態 (保持上一步的優化)
+    for (const rowData of this.data) {
+      if (rowData._validationErrors) {
+        delete rowData._validationErrors;
+      }
+      if (rowData._rowValidationError) {
+        delete rowData._rowValidationError;
+      }
     }
 
-    // 遍歷所有行
-    for (const rowData of this.data) {
-      if (rowData._isAutoInsertCandidate) { continue; }
+    // --- 【優化後的整體必填檢查】 ---
+    if (this.tableRequired && !this.disabled) {
+      // 排除自動插入的空行後，取得有效資料
+      const actualData = this.data.filter(row => !row._isAutoInsertCandidate);
+
+      let shouldCheckActualDataEmpty = true;
+
+      if (this.validateOnlySelected) {
+        // 在 validateOnlySelected 模式下，判斷是否有選擇的資料
+        if (this.selectedItems && this.selectedItems.length > 0) {
+          // 如果有選擇資料，則通過表格必填檢查
+          shouldCheckActualDataEmpty = false;
+        }
+      } else {
+        // 在非 validateOnlySelected 模式下，只要實際資料有東西就通過表格必填檢查
+        if (actualData.length > 0) {
+          shouldCheckActualDataEmpty = false;
+        }
+      }
+
+      // 最終判斷是否為「表格空」的錯誤
+      if (shouldCheckActualDataEmpty) {
+        this.tableDataEmpty = true;
+        this.cdr.detectChanges(); // 立即更新狀態
+        return false; // 表格必填但沒資料/沒選取
+      } else {
+        this.tableDataEmpty = false; // 有資料或有選取，清除表格空狀態
+      }
+    } else {
+      this.tableDataEmpty = false; // 如果非必填或被禁用，清除表格空狀態
+    }
+    // --- 【整體必填檢查結束】 ---
+
+    // 確定要驗證的資料集
+    let rowsToValidate: any[];
+    if (this.validateOnlySelected && this.selectedItems.length > 0) {
+      // 🌟 如果設定為只驗證已選擇的資料，則使用 selectedItems
+      rowsToValidate = this.selectedItems;
+    } else if (this.validateOnlySelected && this.selectedItems.length === 0) {
+      // 🌟 如果開啟 validateOnlySelected 但沒有選擇任何項目，則視為通過行/欄位驗證
+      this.data = [...this.data];
+      this.cdr.detectChanges();
+      return true;
+    } else {
+      // 否則驗證所有非新增行的資料
+      rowsToValidate = this.data.filter(row => !row._isAutoInsertCandidate);
+    }
+
+    // 遍歷需要驗證的行 (欄位和行驗證)
+    for (const rowData of rowsToValidate) {
 
       // --- 欄位驗證 (Field Validation) ---
       for (const col of this.columns) {
@@ -438,7 +486,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
         }
 
         if (hasError) {
-          // 關鍵修改 1：發現錯誤時，強制刷新並返回
+          // 發現錯誤時，強制刷新並返回
           this.data = [...this.data];
           this.cdr.detectChanges();
 
@@ -453,7 +501,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       }
 
       if (rowData._rowValidationError?.isValid === false) {
-        // 關鍵修改 2：發現整行錯誤時，強制刷新並返回
+        // 發現整行錯誤時，強制刷新並返回
         this.data = [...this.data];
         this.cdr.detectChanges();
 
@@ -462,12 +510,14 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       }
     }
 
-    // 3. 關鍵修改 3：驗證通過前，確保表格資料參考更新（清除任何先前可能殘留的錯誤樣式）
+    // 驗證通過前，確保表格資料參考更新（清除任何先前可能殘留的錯誤樣式）
     this.data = [...this.data];
     this.cdr.detectChanges();
 
     return true; // 所有行都驗證通過
   }
+
+  // ... (hasRowError 和後續方法保持不變)
   /**
  * 檢查該行是否包含任何欄位錯誤或整行驗證錯誤。
  */
@@ -524,8 +574,8 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   lastRow() {
     return this.data.length > 0 ? this.data.length - 1 : -1;
   }
-  onExportExcel() { this.exportExcel.emit(); }                      // 匯出Excel範本 事件
-  onImportExcel(event?: FileSelectEvent) {                           // 匯入Excel
+  onExportExcel() { this.exportExcel.emit(); }           // 匯出Excel範本 事件
+  onImportExcel(event?: FileSelectEvent) {              // 匯入Excel
     this.importExcel.emit(event);
     if (event) {
       this.fileUpload.clear();

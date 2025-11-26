@@ -10,7 +10,6 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
@@ -21,7 +20,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 @Component({
   selector: 'app-tls2j020',
   templateUrl: './tls2j020.component.html',
-  styleUrl: './tls2j020.component.scss',
   standalone: true,
   imports: [MultiSelectComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TableReportComponent, TranslateModule]
 })
@@ -30,7 +28,8 @@ export class TLS2J020Component extends BasicQueryPageComponent<any> implements O
     CHG_ItemName: ['', [Validators.maxLength(10)]],
     bus_type: [[]],
     Item_TaxType: [['1']],
-    ...createPaginationConfig([{ field: 'id', order: 1 }]),
+    pageSize: [30],
+    pageIndex: [1],
   });
 
   selectedItems: any[] = [];
