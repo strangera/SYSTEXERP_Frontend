@@ -9,44 +9,44 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-range label="廠客代號" [startControl]="queryForm.controls.VendorNoFrom"
-              [endControl]="queryForm.controls.VendorNoTo" [submitted]="submitted" [options]="VendorNoOptions"
+            <app-dropdown-range label="廠商代號" [startControl]="queryForm.controls.VEN_No_From"
+              [endControl]="queryForm.controls.VEN_No_To" [submitted]="submitted" [options]="VendorNoOptions"
               optionLabel="label" optionValue="value" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="立帳日期"
-              [startControl]="queryForm.controls.BillingDateFrom" [endControl]="queryForm.controls.BillingDateTo"
-              [submitted]="submitted">
+            <app-calendar-range calendarType="dateRange" label="立帳日期" [startControl]="queryForm.controls.ODM_Date_From"
+              [endControl]="queryForm.controls.ODM_Date_To" [submitted]="submitted">
             </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range calendarType="dateRange" label="開票/匯款日期"
-              [startControl]="queryForm.controls.startTransferDate" [endControl]="queryForm.controls.endTransferDate"
+              [startControl]="queryForm.controls.PayRefDate_From" [endControl]="queryForm.controls.PayRefDate_To"
               [submitted]="submitted"></app-calendar-range>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-range label="科目代號" [startControl]="queryForm.controls.AccNoFrom"
-              [endControl]="queryForm.controls.AccNoTo" [submitted]="submitted" [options]="AccNoOptions"
+            <app-dropdown-range label="會計科目代號" [startControl]="queryForm.controls.AccNo_From"
+              [endControl]="queryForm.controls.AccNo_To" [submitted]="submitted" [options]="AccNoOptions"
               optionLabel="label" optionValue="value" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="摘要" controlName="summary" [control]="queryForm.controls.summary"
+            <app-input-text label="摘要" controlName="ACP_Desc" [control]="queryForm.controls.ACP_Desc"
               [submitted]="submitted"></app-input-text>
           </div>
         </div>
 
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="未付款是否顯示" groupname="noPay" [control]="queryForm.controls.noPay" [options]="[
+            <app-radiobutton label="未付款是否顯示" groupname="ShowUnpaid" [control]="queryForm.controls.ShowUnpaid" [options]="[
                 { label: '顯示', value: 'Y' },
                 { label: '不顯示', value: 'N' }
               ]" [submitted]="submitted">
             </app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="帳款餘額為零是否顯示" groupname="showUp" [control]="queryForm.controls.showUp" [options]="[
+            <app-radiobutton label="帳款餘額為零是否顯示" groupname="ShowZeroBalance"
+              [control]="queryForm.controls.ShowZeroBalance" [options]="[
                { label: '顯示', value: 'Y' },
                 { label: '不顯示', value: 'N' }
               ]" [submitted]="submitted">
@@ -63,7 +63,7 @@
 </div>
 <div class="card">
   <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" [showDelete]="false" (detail)="onDetail($event)"
-    [showReportMode]="false" [showManage]="false" dataKey="SeqNo" [multiSortMeta]="[{ field: 'VouNo', order: 1 }]"
+    [showReportMode]="false" [showManage]="false" dataKey="SeqNo" [multiSortMeta]="[{ field: 'ACP_No', order: 1 }]"
     [totalRecords]="totalRecords" [showCheckBox]="true"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showExcel]="false">
