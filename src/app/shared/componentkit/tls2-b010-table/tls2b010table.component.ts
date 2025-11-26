@@ -342,15 +342,19 @@ export class tls2b010tableComponent
     return offset + localNo;
   }
   /** 給右上角頁碼下拉用 */
-  goToPage(pageNumber: number) {
-    const newFirst = (pageNumber - 1) * this.rows;
-    if (this.first === newFirst && this.selectedPage === pageNumber) return;
+goToPage(pageNumber: number) {
+  // ✅ 改成用 groupPageSize，而不是 rows
+  const unit = this.groupPageSize && this.groupPageSize > 0 ? this.groupPageSize : this.rows;
+  const newFirst = (pageNumber - 1) * unit;
 
-    this.first = newFirst;
-    this.selectedPage = pageNumber;
+  if (this.first === newFirst && this.selectedPage === pageNumber) return;
 
-    if (!this.lazy) this.rebuildPageGroupMeta();
-  }
+  this.first = newFirst;
+  this.selectedPage = pageNumber;
+
+  if (!this.lazy) this.rebuildPageGroupMeta();
+}
+
 
   onPageChange(event: TablePageEvent) {
     this.first = event.first;
@@ -364,46 +368,52 @@ export class tls2b010tableComponent
     }
   }
 
-  loadDataLazy(event: TableLazyLoadEvent, force = false) {
-    if (this._skipFirstLazy && !force) { this._skipFirstLazy = false; return; }
-    if (force) { this._skipFirstLazy = false; }
+loadDataLazy(event: TableLazyLoadEvent, force = false) {
+  if (this._skipFirstLazy && !force) { this._skipFirstLazy = false; return; }
+  if (force) { this._skipFirstLazy = false; }
 
+  // ✅ pageSize 統一用 groupPageSize（你要的一頁 20 筆），沒有才退回 event.rows / rows
+  const pageSize =
+    (this.groupPageSize && this.groupPageSize > 0)
+      ? this.groupPageSize
+      : (event.rows && event.rows > 0 ? event.rows : (this.rows || 20));
 
-    const pageSize = event.rows && event.rows > 0 ? event.rows : this.rows;
-    let pageIndex = (event.first ?? 0) / pageSize + 1;
+  const sortRaw = event.multiSortMeta ?? (event as any).multisortmeta ??
+    (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
+  const normalized = this.normalizeSortMeta(sortRaw);
+  const sort = this.ensureGroupFirst(normalized);
+  const sortSig = JSON.stringify(sort);
 
-    const sortRaw = event.multiSortMeta ?? (event as any).multisortmeta ??
-      (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
-    const normalized = this.normalizeSortMeta(sortRaw);
-    const sort = this.ensureGroupFirst(normalized);
-    const sortSig = JSON.stringify(sort);
+  const userSorted = !!(event.sortField || (Array.isArray(event.multiSortMeta) && event.multiSortMeta.length));
 
-    // 判斷這次 onLazyLoad 是否真的是「使用者點了排序」
-    const userSorted = !!(event.sortField || (Array.isArray(event.multiSortMeta) && event.multiSortMeta.length));
+  // ✅ pageIndex 直接吃「現在選到第幾頁」，不要再用 first / pageSize + 1
+  const pageIndex = this.selectedPage ?? 1;
 
-    if (!this.lastSortSig) {
-      this.lastSortSig = sortSig;
-    } else if (sortSig !== this.lastSortSig) {
-      this.lastSortSig = sortSig;
+  if (!this.lastSortSig) {
+    this.lastSortSig = sortSig;
+  } else if (sortSig !== this.lastSortSig) {
+    this.lastSortSig = sortSig;
 
-      if (userSorted && pageIndex !== 1) {
-        this.first = 0;
-        this.selectedPage = 1;
-        return;
-      }
+    // 若使用者改排序，強制回第 1 頁
+    if (userSorted && pageIndex !== 1) {
+      this.first = 0;
+      this.selectedPage = 1;
+      return;
     }
-
-    this.selectedPage = pageIndex;
-    this.queryState.setQueryState(this.tableKey + 'Sort', sort);
-
-    const payload: LazyLoadEvent = { pageIndex, pageSize, SortBy: sort };
-
-    const key = `${pageIndex}|${pageSize}|${sortSig}`;
-    if (!force && key === this.lastEmitKey) return;
-    this.lastEmitKey = key;
-
-    this.lazyLoadData.emit(payload);
   }
+
+  // 這裡 selectedPage 已經由 goToPage / onPageChange 維護，不要再覆寫
+  this.queryState.setQueryState(this.tableKey + 'Sort', sort);
+
+  const payload: LazyLoadEvent = { pageIndex, pageSize, SortBy: sort };
+
+  const key = `${pageIndex}|${pageSize}|${sortSig}`;
+  if (!force && key === this.lastEmitKey) return;
+  this.lastEmitKey = key;
+
+  this.lazyLoadData.emit(payload);
+}
+
 
   /* ======================= 群組 / RowSpan ======================= */
 
