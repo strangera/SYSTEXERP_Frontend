@@ -75,6 +75,7 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
   // 資料小計
   @Input() groupRowsBy = '';                                                    // table 群組資料
   @Input() subTotalData: any[] = []; // 後端提供的小計資料
+  @Input() subTotalTitle = '';                                       // 小計標題
   groupedDataCache = new Map();                                                 // 用於緩存已分組的數據
   @Input() showSubTotal = false;                                                // 是否顯示群組小計
   // 資料總計
