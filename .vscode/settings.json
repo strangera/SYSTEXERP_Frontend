@@ -73,6 +73,12 @@
     "projectKey": "TSRDERP"
   },
   "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
     "source.organizeImports": "explicit"
-  }
+  },
+  "editor.bracketPairColorization.enabled": true,
+  "javascript.suggest.paths": true,
+  "typescript.suggest.paths": true,
+  "html.suggest.paths": true,
+  "typescript.referencesCodeLens.enabled": true,
 }

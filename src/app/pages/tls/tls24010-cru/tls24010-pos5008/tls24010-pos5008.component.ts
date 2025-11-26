@@ -1,19 +1,18 @@
 import { NgClass, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { POS5008Data } from '../../../../service/api/tls/tls24010.service';
+import { SystemOption, SystemOptionsService } from '../../../../service/system/sys1000.service';
+import { DropDownListService, IDropdownItem } from '../../../../service/utility/dropDownList.service';
+import { DropdownComponent } from '../../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../../shared/componentkit/input-text/input-text.component';
 import { Column } from '../../../../shared/componentkit/table/table.model';
 import { CRD_TypeOptions, POS5008Columns } from '../tls24010-cru.model';
-import { DropDownListService, IDropdownItem } from '../../../../service/utility/dropDownList.service';
-import { SystemOption } from '../../../../shared/models/sys/sys1000.model';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { SystemOptionsService } from '../../../../service/system/sys1000.service';
-import { InputTextComponent } from '../../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberComponent } from '../../../../shared/componentkit/input-number/input-number.component';
-import { DropdownComponent } from '../../../../shared/componentkit/dropdown/dropdown.component';
 
 @UntilDestroy()
 @Component({

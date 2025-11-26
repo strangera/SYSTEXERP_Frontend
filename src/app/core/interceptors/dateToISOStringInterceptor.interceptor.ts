@@ -71,10 +71,27 @@ export class DateToISOStringInterceptor implements HttpInterceptor {
         // 現在 dataObject[key] 是安全的 (類型為 unknown)
         const value = dataObject[key];
         acc[key] = typeof value === 'string' && this.isDateString(value)
-          ? new Date(value)
+          ? (() => {
+            // 關鍵修正點：確保解析行為一致
+            let dateString = value;
+
+            // 檢查字串是否結尾有時區 (Z 或 +HH:MM)。
+            // 如果沒有，我們假設它應該是本地時間 (例如，台灣時間+08:00)，
+            // 但為了讓瀏覽器正確解析，最簡單的方法是讓 JS 把它當作本地時間
+            if (dateString.length === 19 && dateString.charAt(10) === 'T') {
+              // YYYY-MM-DDTHH:mm:ss 格式，後面沒有 Z
+              // 解決方式：插入一個空格，讓 JS 將其當作本地時間解析 (舊版 Chrome/Firefox 行為)
+              // 或者更安全：手動將 T 替換為空格，這是跨環境解析本地日期的標準 HACK
+              dateString = dateString.replace('T', ' ');
+            }
+
+            // 註：如果後端數據永遠是本地時間，這是最簡單的處理方式。
+            return new Date(dateString);
+
+          })()
           : this.deserializeDates(value);
         return acc;
-      }, {} as Record<string, unknown>) as T; // 替換 as any
+      }, {} as Record<string, unknown>) as T;
     }
     return data;
   }
