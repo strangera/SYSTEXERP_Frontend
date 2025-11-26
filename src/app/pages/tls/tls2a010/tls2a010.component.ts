@@ -383,7 +383,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     }
     const dialogRowData = {
       ...rowData,
-      MOD_PayAmt: rowData.BOOK_PayAmt ?? 0
+      MOD_PayAmt: rowData.MOD_PayAmt != null ? rowData.MOD_PayAmt : (rowData.BOOK_PayAmt ?? 0) // 調整實收有資料就帶入，沒有就預設系統帳金額
     };
     // 觸發初始計算
     this.calculateAdjustedAmounts(dialogRowData);
