@@ -13,6 +13,7 @@ export interface QueryFIN31020Request extends BaseQueryRequest {
 
 // 查詢結果資料介面
 export interface FIN31020Data {
+  Id?: number;            // ID (編輯時需要)
   CAR_AccNo: string;      // 調整科目代號
   CAR_Type: number;       // 加減項 (1:加項, 2:減項)
   Remark: string;         // 備註
@@ -22,6 +23,76 @@ export interface FIN31020Data {
   UPD_Date: string;       // 更新日期
   UPD_USR_No: string;     // 更新人員代號
   UPD_USR_Name: string;   // 更新人員姓名
+}
+
+// 新增請求介面 (必填: mid、CAR_AccNo、CAR_type、CRT_Date、CRT_USR_No、CRT_USR_Name)
+export interface InsertFIN31020Request {
+  Mid: number;            // 必填欄位
+  CAR_AccNo: string;      // 調整科目代號 (必填)
+  CAR_Type: string;       // 加減項 (必填)
+  Remark?: string;        // 備註 (非必填)
+}
+
+// 編輯請求介面 (必填: mid、CAR_AccNo、CAR_type、UPD_Date、UPD_USR_No、UPD_USR_Name)
+export interface UpdateFIN31020Request {
+  Id: number;             // ID
+  Mid: number;            // 必填欄位
+  CAR_AccNo: string;      // 調整科目代號 (必填，但不可修改)
+  CAR_Type: string;       // 加減項 (必填)
+  Remark?: string;        // 備註 (非必填)
+}
+
+// 查詢單筆資料請求介面
+export interface QueryFIN31020DetailRequest {
+  CAR_AccNo: string;  // 調整科目代號
+}
+
+// 查詢單筆資料回應介面
+export interface QueryFIN31020DetailResponse {
+  Status: string;
+  Data: {
+    Id: number;
+    Mid: number;
+    CAR_AccNo: string;
+    CAR_Type: string;
+    Remark: string;
+    CRT_Date: string;
+    CRT_USR_No: string;
+    CRT_USR_Name: string;
+    UPD_Date: string;
+    UPD_USR_No: string;
+    UPD_USR_Name: string;
+  };
+  Error?: {
+    Code: string;
+    Message: string;
+    Details: string;
+  };
+  Meta?: {
+    Timestamp: string;
+    RequestId: string;
+  };
+  Message: string;
+  TotalCount: number;
+  TotalPage: number;
+}
+
+// API 回應介面
+export interface FIN31020ApiResponse {
+  Status: string;
+  Message: string;
+  Data?: { Id: number } | FIN31020Data;
+  Error?: {
+    Code: string;
+    Message: string;
+    Details: string;
+  };
+  Meta?: {
+    Timestamp: string;
+    RequestId: string;
+  };
+  TotalCount?: number;
+  TotalPage?: number;
 }
 
 @Injectable({
@@ -36,15 +107,19 @@ export class FIN31020Service {
     return this.http.post<BaseQueryResponse<FIN31020Data>>(`${this.apiUrl}/queryFIN31020`, data);
   }
 
-  queryFIN31020Detail(data: { id: number }): Observable<{ Data: FIN31020Data }> {
-    return this.http.post<{ Data: FIN31020Data }>(`${this.apiUrl}/queryFIN31020Detail`, data);
+  queryFIN31020Detail(data: QueryFIN31020DetailRequest): Observable<QueryFIN31020DetailResponse> {
+    return this.http.post<QueryFIN31020DetailResponse>(`${this.apiUrl}/queryFIN31020Detail`, data);
   }
 
-  insertFIN31020(data: Omit<FIN31020Data, 'CRT_Date' | 'CRT_USR_No' | 'CRT_USR_Name' | 'UPD_Date' | 'UPD_USR_No' | 'UPD_USR_Name'>): Observable<{ Success: boolean; Message: string }> {
-    return this.http.post<{ Success: boolean; Message: string }>(`${this.apiUrl}/insertFIN31020`, data);
+  insertFIN31020(data: InsertFIN31020Request): Observable<FIN31020ApiResponse> {
+    return this.http.post<FIN31020ApiResponse>(`${this.apiUrl}/insertFIN31020`, data);
   }
 
-  updateFIN31020(data: FIN31020Data): Observable<{ Success: boolean; Message: string }> {
-    return this.http.post<{ Success: boolean; Message: string }>(`${this.apiUrl}/updateFIN31020`, data);
+  updateFIN31020(data: UpdateFIN31020Request): Observable<FIN31020ApiResponse> {
+    return this.http.post<FIN31020ApiResponse>(`${this.apiUrl}/updateFIN31020`, data);
+  }
+
+  deleteFIN31020(idList: number[]): Observable<FIN31020ApiResponse> {
+    return this.http.post<FIN31020ApiResponse>(`${this.apiUrl}/deleteFIN31020`, { idList });
   }
 }
