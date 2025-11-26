@@ -1,7 +1,7 @@
 import { registerLocaleData } from '@angular/common';
 import { HttpBackend, HttpClient, HttpErrorResponse } from '@angular/common/http';
 import zhHant from '@angular/common/locales/zh-Hant';
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, Injector } from '@angular/core';
 import { Router } from '@angular/router';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy'; // 確保導入 untilDestroyed
@@ -46,7 +46,7 @@ export class AuthService {
   private readonly notemessage = inject(NotificationService);
   private readonly queryStateService = inject(QueryStateService);
   private readonly httpBackend = inject(HttpBackend); // 用於創建不經過攔截器的 HttpClient
-
+  private readonly injector = inject(Injector);
   // ----------------------------------------------------
   // **修改: InactivityService 延遲載入優化**
   // 由於 InactivityService 僅在登入成功後使用，我們保留私有屬性，
@@ -124,7 +124,7 @@ export class AuthService {
 
         // **修改: InactivityService 延遲初始化**
         // 這裡使用 inject() 函數獲取實例，這是現代 Angular 的最佳實踐
-        this.inactivityService ??= inject(InactivityService);
+        this.inactivityService ??= this.injector.get(InactivityService);
         this.inactivityService.setupListener();
         this.inactivityService.startTimer();
 

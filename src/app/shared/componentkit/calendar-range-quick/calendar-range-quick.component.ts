@@ -109,11 +109,11 @@ export class CalendarRangeQuickComponent extends BasicKitComponent implements On
   }
   onInput(event: any) {
     // !!! 一開始說的需求，現在又說不要
-    // if (event.target.value.length === 4 && event.data && event.target.value.indexOf('/') === -1) {
-    //   event.target.value = event.target.value + '/';
-    // }
-    // if (event.target.value.length === 7 && event.data && event.target.value.lastIndexOf('/') === event.target.value.indexOf('/')) {
-    //   event.target.value = event.target.value + '/';
-    // }
+    if (event.target.value.length === 4 && event.data && event.target.value.indexOf('/') === -1) {
+      event.target.value = event.target.value + '/';
+    }
+    if (event.target.value.length === 7 && event.data && event.target.value.lastIndexOf('/') === event.target.value.indexOf('/')) {
+      event.target.value = event.target.value + '/';
+    }
   }
 }
