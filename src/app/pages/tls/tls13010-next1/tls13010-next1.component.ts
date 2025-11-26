@@ -1,27 +1,26 @@
-import { FareColumnDefinitions } from './Services/fare-column-definitions';
-import { FareStatusService } from './Services/fare-status.service';
-import { FareDataService } from './Services/fare-data.service';
-import { FareCalculationService } from './Services/fare-calculation.service';
-import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { NgFor, NgIf } from '@angular/common';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { Router, NavigationEnd, ActivatedRoute, NavigationExtras } from '@angular/router';
-import { Subscription } from 'rxjs';
-import { filter } from 'rxjs/operators';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
-import { ContractFlowService } from '../tls13010/services/contract-flow.service';
-import { FareItem, ContractInfo, WorkflowStep } from '../tls13010/tls13010.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf, NgFor } from '@angular/common';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { AccordionModule } from 'primeng/accordion';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { DialogComponent } from "@shared/componentkit/dialog/dialog.component";
-import { FareValidationService } from './Services/fare-validation.service';
+import { AccordionModule } from 'primeng/accordion';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { Subscription } from 'rxjs';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { ContractFlowService } from '../tls13010/services/contract-flow.service';
 import { TLS13010_DROPDOWN_OPTIONS, TLS13010DropdownService } from '../tls13010/tls13010.dropdown';
+import { ContractInfo, FareItem, WorkflowStep } from '../tls13010/tls13010.model';
+import { FareCalculationService } from './Services/fare-calculation.service';
+import { FareColumnDefinitions } from './Services/fare-column-definitions';
+import { FareDataService } from './Services/fare-data.service';
 import { FareDefaultsService } from './Services/fare-defaults.service';
+import { FareStatusService } from './Services/fare-status.service';
+import { FareValidationService } from './Services/fare-validation.service';
 
 
 // 介面定義
@@ -1308,18 +1307,26 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   override onCancel(): void {
+    const extras: NavigationExtras = {
+      state: { fromRoute: this.router.url },
+    };
     if (this.isViewMode) {
-      this.router.navigate(['account/tls/tls13010cru']);
+      this.router.navigate(['account/tls/tls13010cru'], extras);
       return;
     }
 
     this.saveFareDataToWorkflow();
-    this.router.navigate(['account/tls/tls13010cru']);
+    this.router.navigate(['account/tls/tls13010cru'], extras);
   }
 
   onRealCancel(): void {
     this.saveFareDataToWorkflow();
-    this.router.navigate(['account/tls/tls13010']);
+
+    const extras: NavigationExtras = {
+      state: { fromRoute: this.router.url }
+    };
+
+    this.router.navigate(['account/tls/tls13010'], extras);
     this.messageService.infoBubble('已離開契約編輯流程');
   }
 

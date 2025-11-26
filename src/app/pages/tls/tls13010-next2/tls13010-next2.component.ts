@@ -1,24 +1,25 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { NgIf } from '@angular/common';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { lastValueFrom, Subscription } from 'rxjs';
+import { NavigationExtras } from '@angular/router';
+import { MenubarComponent } from "@shared/component/menubar/menubar.component";
+import { ButtonComponent } from "@shared/componentkit/button/button.component";
+import { AccordionModule } from "primeng/accordion";
+import { Button } from "primeng/button";
+import { DialogModule } from "primeng/dialog";
+import { ProgressSpinnerModule } from "primeng/progressspinner";
+import { Subscription } from 'rxjs';
+import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { ContractSubmitService } from '../tls13010-next3/SubmitService/contract-submit.service';
 import { ContractFlowService } from '../tls13010/services/contract-flow.service';
-import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
-import { ContractInfo, CommissionItem, WorkflowStep } from '../tls13010/tls13010.model';
+import { CommissionItem, ContractInfo } from '../tls13010/tls13010.model';
 import { CommissionDataService } from './Services/commission-data.service';
-import { TLS13010Next2ColumnsConfig } from './Services/tls13010-next2-columns.config';
 import { CommissionTableService } from './Services/commission-table.service';
 import { CommissionValidationService } from './Services/commission-validation.service';
-import { AccordionModule } from "primeng/accordion";
-import { ProgressSpinnerModule } from "primeng/progressspinner";
-import { NgIf } from '@angular/common';
-import { ButtonComponent } from "@shared/componentkit/button/button.component";
-import { DialogModule } from "primeng/dialog";
-import { MenubarComponent } from "@shared/component/menubar/menubar.component";
-import { Button } from "primeng/button";
-import { ContractSubmitService } from '../tls13010-next3/SubmitService/contract-submit.service';
+import { TLS13010Next2ColumnsConfig } from './Services/tls13010-next2-columns.config';
 
 @Component({
   selector: 'app-tls13010-next2',
@@ -1184,12 +1185,22 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   // === 導航方法 ===
   override onCancel(): void {
     this.saveToWorkflow();
-    this.router.navigate(['account/tls/tls13010next1']);
+
+    const extras: NavigationExtras = {
+      state: { fromRoute: this.router.url }
+    };
+
+    this.router.navigate(['account/tls/tls13010next1'], extras);
   }
 
   onClearAndExit(): void {
     this.contractFlowService.clearTempData();
-    this.router.navigate(['account/tls/tls13010']);
+
+    const extras: NavigationExtras = {
+      state: { fromRoute: this.router.url }
+    };
+
+    this.router.navigate(['account/tls/tls13010'], extras);
     this.notificationService.infoBubble('已清空暫存資料並離開');
   }
 
