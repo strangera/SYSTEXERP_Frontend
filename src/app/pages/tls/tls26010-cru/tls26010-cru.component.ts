@@ -98,6 +98,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       building_nos: string[];
       floor_nos: string[];
       area_nos: string[];
+      ecr_no?: string | null; // 收銀機號(收銀機查詢)
+      tlt_no?: string | null; // 專櫃編號(收銀機查詢)
     };
     date: {
       pod_sdate?: Date | null;
@@ -126,6 +128,10 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       building_nos: this.sys3800Signal() || [],
       floor_nos: this.sys3900Signal() || [],
       area_nos: this.sys3A00Signal() || [],
+      // ecr_no: (this.ecrNosSignal() || []).map(item => item.ECR_No),  // 收銀機號
+      // tlt_no: (this.tltNosSignal() || []).map(item => item.tlt_no),   // 專櫃編號
+      ecr_no: "",
+      tlt_no: "",
     };
     const date = {
       pod_sdate: this.sdateSignal(),
@@ -182,7 +188,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       this.dialogVisible() === 'tlt' ? this.tlt_Dialog_Column : []
   );
   public readonly dialogDataKey = computed(() =>
-    this.dialogVisible() === 'ecr' ? 'ecr_no' :
+    this.dialogVisible() === 'ecr' ? 'ECR_No' :
       this.dialogVisible() === 'tlt' ? 'talent_id' : ''
   );
   public readonly dialogTableKey = computed(() =>
@@ -278,6 +284,9 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
           building_nos: [],
           floor_nos: [],
           area_nos: [],
+          //api調整後新增
+          ecr_no: null,
+          tlt_no: null,
         },
         date: {
           pod_sdate: null,
@@ -466,7 +475,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       const originalData: Map<string, EcrItem> = this.detailDataMap().ecr_list;
       const changedData: Map<string, EcrItem> = this.ecrNosMap();
       console.log('子表送出_編輯模式');
-      console.log('原收銀機子表', this.detailDataMap());
+      console.log('原收銀機子表', originalData);
       console.log('新收銀機子表', changedData);
       this.ecrTableFiltered.set(this.buildCrudList<EcrItem>(originalData, changedData));
       this.logger.debug(`ECR Dialog Submit:`, [originalData, changedData, this.ecrTableData()]);
@@ -523,40 +532,58 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
    * @returns CRUD 列表
    */
   private buildCrudList = <T extends { Status?: ItemOperationStatus; }>(
-    original: Map<string, T>,
-    selected: Map<string, T>
+    original: Map<string | number, T>,
+    selected: Map<string | number, T>
   ): T[] => {
-    const result = new Map<string, T>([]);
+    // 先把 keys normalize 成 string
+    const normalize = (m: Map<any, T>) =>
+      new Map<string, T>(Array.from(m.entries()).map(([k, v]) => [String(k), v]));
 
-    // 動態 key（ECR_No 或 tlt_no）
+    const originalNorm = normalize(original);
+    const selectedNorm = normalize(selected);
+
     const key = this.dialogDataKey();
-
-    // 建立 dialogIndex：用動態 key 做索引（確保轉字串）
     const dialogIndex = new Map<string, T>(
       this.dialogData().map((it: any) => [String(it[key]), it])
     );
 
-    for (const [id, item] of original) {
-      // 刪除: 原本有但現在沒有
-      if (!selected.has(id)) {
+    const result = new Map<string, T>();
+
+    console.log('originalNorm keys:', Array.from(originalNorm.keys()));
+    console.log('selectedNorm keys:', Array.from(selectedNorm.keys()));
+    console.log('dialogIndex keys:', Array.from(dialogIndex.keys()));
+    // 看dialogIndex有沒有originalNorm
+
+    for (const [id, item] of originalNorm) {
+      if (!selectedNorm.has(id)) {
         result.set(id, { ...item, Status: ItemOperationStatus.Deleted });
-        continue;
+        console.log('有資料刪除', id, item);
+      } else {
+        const latest = dialogIndex.get(id) ?? item;
+        result.set(id, { ...latest, Status: ItemOperationStatus.Original });
+        console.log('有資料保留', id);
       }
-      // 保留: 原本有且現在也有
-      result.set(id, { ...item, Status: ItemOperationStatus.Original });
     }
 
     // 新增: 原本沒有但現在有
-    for (const [id] of selected) {
-      if (!original.has(id) && !result.has(id)) {
-        const newItem = dialogIndex.get(id);
-        if (newItem) result.set(id, { ...(newItem as T), Status: ItemOperationStatus.New });
+    for (const [id, newItem] of selectedNorm) {
+      if (!originalNorm.has(id) && !result.has(id)) {
+        const dialogItem = dialogIndex.get(id);
+        if (dialogItem) {
+          result.set(id, { ...(dialogItem as T), Status: ItemOperationStatus.New });
+          console.log('有資料新增', id);
+        } else {
+          // fallback: 若 dialogIndex 沒有，但 selected 有，直接用 selected 資料
+          result.set(id, { ...(newItem as T), Status: ItemOperationStatus.New });
+          console.log('有資料新增(用selected)', id);
+        }
       }
     }
 
     this.logger.debug(`buildCrudList:`, [original, selected, result]);
     return Array.from(result.values());
   };
+
 
   public ngOnDestroy(): void {
     this.dependencyChangeSubject.complete();
@@ -608,6 +635,5 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       this.tlt_no_Option = res.Data.map(item => ({ ...item, Label: `${item.No} - ${item.Name}`, }));
       console.log('tlt_no_Option', this.ecr_no_Option);
     })
-
   }
 }
