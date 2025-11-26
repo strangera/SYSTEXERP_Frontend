@@ -107,7 +107,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   @Input() rowValidate: ((rowData: any, index?: number) => { isValid: boolean, errorMessage: string; }) | undefined = undefined;
   @Output() fieldChange = new EventEmitter<FieldChangeEvent>(); // input 變更事件
   @Output() rowReorderData = new EventEmitter<TableRowReorderEvent>();   // row reorder 事件
-  @Input() errorMessage = '至少輸入一筆資料'; // 錯誤訊息
+  @Input() errorMessage: string | undefined; // 錯誤訊息
   @Input() footerData: any;         // (總計)頁尾資料
   /** 新增：是否只判斷驗證已選擇的資料，預設為 false */
   @Input() validateOnlySelected = false;

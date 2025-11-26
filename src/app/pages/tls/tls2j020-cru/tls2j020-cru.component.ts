@@ -169,7 +169,7 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
     const updateItem = this.data[0]; // 編輯模式通常只有一筆資料
     const requestBody = {
       id: updateItem.id || updateItem.ID || 0,
-      tds1009_id: updateItem.tds1009_id || 0,
+      tds1009_id: updateItem.TDS1009_id || 0,
       bus_type: updateItem.bus_type_code || this.dataForm.get('bus_type')?.value || '', // 使用原始代碼
       CHG_ItemName: updateItem.CHG_ItemName.trim(),  // 使用後端期望的 Pascal Case
       Item_TaxType: updateItem.Item_TaxType.trim(),  // 使用後端期望的 Pascal Case
