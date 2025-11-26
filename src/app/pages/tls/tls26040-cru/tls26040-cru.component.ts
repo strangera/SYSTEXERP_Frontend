@@ -55,7 +55,7 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
     sad_date_end: [this.yesterday, [Validators.required]],                            // 預售日期_迄
     tlt_noList: [[]],                                                                 // 專櫃編號清單(多選)
     IsNotlt_no: ['Y', [Validators.required]],                                         // 篩選條件
-    ECR_No: [[]],                                                                     // 收銀機號(多選) TODO: 欄位英文名稱待確認
+    ECR_NoList: [[]],                                                                 // 收銀機號清單(多選)
     TXN_No: ['', [Validators.maxLength(8), this.validationService.numberValidator]],  // 交易序號
   });
 
@@ -73,9 +73,7 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
     { field: 'sad_date', header: '預售日期', visible: true, format: formatDate },
     { field: 'tlt_no', header: '櫃別編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
-    { field: 'sad_preorder_amt', header: '業績金額', visible: true, format: formatAmount },
+    { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, format: formatAmount },
   ];
 
   // 專櫃編號選項
@@ -108,7 +106,6 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      // TODO: 會需要串接新的api
       this.tls26040Service.queryTLS26040Insert({
         ...frm.getRawValue(),
         sad_date_start: this.datePipe.transform(frm.value.sad_date_start, 'yyyy-MM-dd') ?? '',
@@ -119,7 +116,7 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
           // 預售總金額加總
-          this.totalAmount = this.data.reduce((sum, item) => sum + (item.sad_preorder_amt ?? 0), 0);
+          this.totalAmount = this.data.reduce((sum, item) => sum + (item.TXN_TotSaleAmt ?? 0), 0);
         });
     });
   }
@@ -166,6 +163,6 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
   }
 
   selectionChange(event: TLS26040Data[]) {
-    this.dataForm2.controls.est_amount.setValue(event.reduce((sum, item) => sum + (item.sad_preorder_amt ?? 0), 0));
+    this.dataForm2.controls.est_amount.setValue(event.reduce((sum, item) => sum + (item.TXN_TotSaleAmt ?? 0), 0));
   }
 }

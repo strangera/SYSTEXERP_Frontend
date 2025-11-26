@@ -9,6 +9,7 @@ export interface TLS26040QueryRequest extends BaseQueryRequest {
   sad_date_start?: string;         // 銷售日期_起
   sad_date_end?: string;           // 銷售日期_迄
   tlt_noList?: string[];           // 專櫃編號清單
+  ECR_NoList?: string[];           // 收銀機號清單 (新增)
   sad_preorder_date_start?: string;// 預購業值入帳日_起
   sad_preorder_date_end?: string;  // 預購業值入帳日_迄
   batch_no?: string;               // 預售業值歸屬批號
@@ -18,6 +19,7 @@ export interface TLS26040QueryRequest extends BaseQueryRequest {
 export interface TLS26040QueryInsertRequest {
   sad_date_start?: string;         // 銷售日期_起
   sad_date_end?: string;           // 銷售日期_迄
+  ECR_NoList?: string[];           // 收銀機號清單 (新增)
   tlt_noList?: string[];           // 專櫃編號清單
   IsNotlt_no?: string;             // 篩選條件
 }
@@ -31,9 +33,14 @@ export interface TLS26040DetailRequest extends BaseQueryRequest {
 // --- TLS26040 新增 Model 定義 ---
 export interface TLS26040InsertRequest {
   sad_preorder_date?: string;      // 預購業值入帳日
+  sad_date_start?: string;         // 銷售日期_起
+  sad_date_end?: string;           // 銷售日期_迄
   idList?: number[];               // ID清單
-  sad_date_start?: string,        // 銷售日期_起
-  sad_date_end?: string,      // 銷售日期_迄
+}
+
+// --- TLS26040 還原 Model 定義 --- (新增)
+export interface TLS26040RevertRequest {
+  id: number;                      // ID
 }
 
 // --- TLS26040 回應資料 Model 定義 ---
@@ -44,7 +51,7 @@ export interface TLS26040Data {
   tlt_no: string;
   tlt_name: string;
   batch_no: string;
-  sad_preorder_amt: number;
+  TXN_TotSaleAmt: number;          // 修正欄位名稱
   details?: any[];  // 展開的詳細資料
 }
 
@@ -85,7 +92,7 @@ export class TLS26040Service {
           tlt_no: 'TLT001',
           tlt_name: '專櫃A',
           batch_no: 'BATCH001',
-          sad_preorder_amt: 100000
+          TXN_TotSaleAmt: 100000
         },
         {
           id: 2,
@@ -94,7 +101,7 @@ export class TLS26040Service {
           tlt_no: 'TLT002',
           tlt_name: '專櫃B',
           batch_no: 'BATCH002',
-          sad_preorder_amt: 150000
+          TXN_TotSaleAmt: 150000
         }
       ],
       TotalCount: 2,
@@ -112,5 +119,10 @@ export class TLS26040Service {
   // 新增預售資料
   insertTLS26040(data: TLS26040InsertRequest): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/insertTLS26040`, data);
+  }
+
+  // 還原預售資料 (新增)
+  revertTLS26040(data: TLS26040RevertRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/RevertTLS26040`, data);
   }
 }

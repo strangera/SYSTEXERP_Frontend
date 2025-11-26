@@ -3,7 +3,6 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
 import { TLS26040Data, TLS26040Service } from '../../../service/api/tls/tls26040.service';
@@ -14,7 +13,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls26040',
@@ -22,8 +21,16 @@ import { AddButton, Column, createPaginationConfig, formatDate } from '../../../
   styleUrl: './tls26040.component.scss',
   standalone: true,
   imports: [
-    MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule,
-    CalendarRangeComponent, InputTextComponent, TableComponent, TranslateModule, MultiSelectComponent, DropdownComponent
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeComponent,
+    InputTextComponent,
+    TableComponent,
+    TranslateModule,
+    MultiSelectComponent
   ]
 })
 export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> implements OnInit {
@@ -34,7 +41,6 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
     sad_preorder_date_start: [null],                  // 結帳日期_起
     sad_preorder_date_end: [null],                    // 結帳日期_迄
     batch_no: ['', [Validators.maxLength(12)]],       // 批號
-    IsNotlt_no: ['Y', [Validators.required]],        // 篩選條件 TODO: 待移除
     ...createPaginationConfig([{ field: 'sad_date', order: -1 }])
   });
 
@@ -58,7 +64,7 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
     { field: 'tlt_no', header: '櫃別編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
     { field: 'batch_no', header: '批號', visible: true },
-    { field: 'sad_preorder_amt', header: '金額', visible: true, format: (value: number) => value.toLocaleString() },
+    { field: 'TXN_TotSaleAmt', header: '金額', visible: true, format: formatAmount },
   ];
 
   // 展開詳細資料的欄位定義
@@ -68,7 +74,7 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true },
-    { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, format: (value: number) => value.toLocaleString() },
+    { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, format: formatAmount },
   ];
 
   // 專櫃編號選項
@@ -117,7 +123,16 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
   };
 
   onRestore(rowData: TLS26040Data) {
-    console.log('認列還原', rowData);
-    // TODO:在此處加入認列還原的邏輯
+    this.messageService.confirm({
+      header: `是否確認還原？`,
+      accept: () => {
+        this.tls26040Service.revertTLS26040({ id: rowData.id })
+          .pipe(untilDestroyed(this))
+          .subscribe(() => {
+            this.messageService.successBubble('還原成功');
+            this.onSubmit(this.queryForm);
+          });
+      }
+    });
   }
 }
