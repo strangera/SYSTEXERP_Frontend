@@ -1,9 +1,9 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { SortMeta } from 'primeng/api';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../system/auth.service';
 
 export interface QueryTLS57100Request {
   ReportType: '明細' | '彙總';

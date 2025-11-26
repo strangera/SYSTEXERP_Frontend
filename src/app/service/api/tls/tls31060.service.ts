@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '@service/system/auth.service';
 import { TLS31020Total } from './tls31020.service';
 
 export interface TLS31060Request {
@@ -51,7 +51,7 @@ export interface TLS31060PrintDetailRequest extends TLS31060DetailRequest {
 export interface TLS31060Item {
   org_id: string;
   org_name: string;
-  
+
   budget: number;
   AVN_TotSaleAmt: number;
   AchievementRate: number;
@@ -110,7 +110,7 @@ export class Tls31060Service {
 
   apiUrl: string = environment.ApiUrl + '/TLS0000/TLS3000';
   constructor(private http: HttpClient) { }
-      
+
   // 查詢各組織之營業報表
   queryTLS31060(body: TLS31060Request): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS31060`, body).pipe(
@@ -119,12 +119,12 @@ export class Tls31060Service {
           Data: res.Data?.Data,
           TotalCount: res.TotalCount,
           Message: res.Message,
-          TotalData: res.Data?.TotalData 
+          TotalData: res.Data?.TotalData
         };
       })
     );
   }
-  
+
   // 查詢單組織展開之營業報表
   queryTLS31060Detail(body: TLS31060DetailRequest): Observable<any> {
     return this.http.post<ApiResponse<TLS31060DetailResponse>>(`${this.apiUrl}/queryTLS31060Detail`, body).pipe(
@@ -138,12 +138,12 @@ export class Tls31060Service {
       })
     );
   }
-    
+
   // 產出各組織之營業報表
   printTLS31060(body: TLS31060PrintRequest): Observable<ApiResponse<{ Print_URL: string }>> {
     return this.http.post<ApiResponse<{ Print_URL: string }>>(`${this.apiUrl}/printTLS31060`, body);
   }
-    
+
   // 產出單組織展開之營業報表
   printTLS31060Detail(body: TLS31060PrintDetailRequest): Observable<ApiResponse<{ Print_URL: string }>> {
     return this.http.post<ApiResponse<{ Print_URL: string }>>(`${this.apiUrl}/printTLS31060Detail`, body);

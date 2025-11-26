@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '@service/system/auth.service';
 import { TLS31020Total } from './tls31020.service';
 
 export interface TLS31040Request {
@@ -51,7 +51,7 @@ export interface TLS31040PrintDetailRequest extends TLS31040DetailRequest {
 export interface TLS31040Item {
   tlt_kind: string;
   tlt_kind_name: string;
-  
+
   budget: number;
   AVN_TotSaleAmt: number;
   AchievementRate: number;
@@ -108,43 +108,43 @@ export interface TLS31040DetailResponse {
 })
 export class Tls31040Service {
   apiUrl: string = environment.ApiUrl + '/TLS0000/TLS3000';
-    constructor(private http: HttpClient) { }
-    
-    // 查詢各櫃別之營業報表
-    queryTLS31040(body: TLS31040Request): Observable<any> {
-      return this.http.post<any>(`${this.apiUrl}/queryTLS31040`, body).pipe(
-            map(res => {
-              return {
-                Data: res.Data?.Data,
-                TotalCount: res.TotalCount,
-                Message: res.Message,
-                TotalData: res.Data?.TotalData 
-              };
-            })
-          );
-    }
+  constructor(private http: HttpClient) { }
 
-    // 查詢單櫃別展開之營業報表
-    queryTLS31040Detail(body: TLS31040DetailRequest):  Observable<any> {
-      return this.http.post<ApiResponse<TLS31040DetailResponse>>(`${this.apiUrl}/queryTLS31040Detail`, body).pipe(
-            map(res => {
-              return {
-                Data: res.Data?.Data,
-                TotalCount: res.TotalCount,
-                Message: res.Message,
-                TotalData: res.Data?.TotalData,
-              };
-            })
-          );
-    }
-  
-    // 產出各櫃別之營業報表
-    printTLS31040(body: TLS31040PrintRequest): Observable<ApiResponse<{ Print_URL: string }>> {
-      return this.http.post<ApiResponse<{ Print_URL: string }>>(`${this.apiUrl}/printTLS31040`, body);
-    }
-  
-    // 產出單櫃別展開之營業報表
-    printTLS31040Detail(body: TLS31040PrintDetailRequest): Observable<ApiResponse<{ Print_URL: string }>> {
-      return this.http.post<ApiResponse<{ Print_URL: string }>>(`${this.apiUrl}/printTLS31040Detail`, body);
-    }
+  // 查詢各櫃別之營業報表
+  queryTLS31040(body: TLS31040Request): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS31040`, body).pipe(
+      map(res => {
+        return {
+          Data: res.Data?.Data,
+          TotalCount: res.TotalCount,
+          Message: res.Message,
+          TotalData: res.Data?.TotalData
+        };
+      })
+    );
+  }
+
+  // 查詢單櫃別展開之營業報表
+  queryTLS31040Detail(body: TLS31040DetailRequest): Observable<any> {
+    return this.http.post<ApiResponse<TLS31040DetailResponse>>(`${this.apiUrl}/queryTLS31040Detail`, body).pipe(
+      map(res => {
+        return {
+          Data: res.Data?.Data,
+          TotalCount: res.TotalCount,
+          Message: res.Message,
+          TotalData: res.Data?.TotalData,
+        };
+      })
+    );
+  }
+
+  // 產出各櫃別之營業報表
+  printTLS31040(body: TLS31040PrintRequest): Observable<ApiResponse<{ Print_URL: string }>> {
+    return this.http.post<ApiResponse<{ Print_URL: string }>>(`${this.apiUrl}/printTLS31040`, body);
+  }
+
+  // 產出單櫃別展開之營業報表
+  printTLS31040Detail(body: TLS31040PrintDetailRequest): Observable<ApiResponse<{ Print_URL: string }>> {
+    return this.http.post<ApiResponse<{ Print_URL: string }>>(`${this.apiUrl}/printTLS31040Detail`, body);
+  }
 }

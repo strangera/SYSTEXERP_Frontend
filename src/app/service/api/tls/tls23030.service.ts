@@ -1,6 +1,7 @@
 /* src/app/service/api/tls/tls23030.service.ts */
-import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable, map, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
@@ -10,15 +11,6 @@ export interface TLS23030SumPayNoRow {
   CRD_Type: string;   // 後端可能同時給 CRD_Name
   CRD_Name: string;
   Total_TXN_PayAmt: number;
-}
-export interface ApiResponse<T> {
-  Status: string;
-  Data: T[];
-  Error?: { Code: string; Message: string; Details?: string };
-  Meta?: { Timestamp?: string; RequestId?: string };
-  Message?: string;
-  TotalCount?: number;
-  TotalPage?: number;
 }
 
 export interface POS1006Item {

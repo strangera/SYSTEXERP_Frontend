@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { catchError, EMPTY, Observable, switchMap, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ApiResponse, AuthService } from './auth.service';
+import { AuthService } from './auth.service';
 
 interface Favorite {
   USER_No: string | undefined,

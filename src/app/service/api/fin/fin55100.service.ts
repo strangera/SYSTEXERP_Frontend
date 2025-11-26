@@ -1,6 +1,6 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ApiResponse } from '@service/system/auth.service'; // 假設路徑
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 假設路徑
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 

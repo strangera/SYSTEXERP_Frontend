@@ -148,13 +148,3 @@ export interface ContractItem {
   CanEdit: boolean;
   CanVoid: boolean;
 }
-
-/**
- * API 服務基礎回應格式
- */
-export interface ApiResponse<T> {
-  Status: string;
-  Message?: string;
-  Data?: T;
-  TotalCount?: number;
-}

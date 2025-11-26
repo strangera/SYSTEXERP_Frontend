@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '@service/system/auth.service';
 
 export interface TLS31020Request {
   TXN_DateS: string | Date;
@@ -152,7 +152,7 @@ export class Tls31020Service {
           Data: res.Data?.QueryData,
           TotalCount: res.TotalCount,
           Message: res.Message,
-          TotalData: res.Data?.TotalData 
+          TotalData: res.Data?.TotalData
         };
       })
     );

@@ -1,21 +1,21 @@
-import { ValidationService } from '@shared/service/validation.service';
+import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { PanelModule } from 'primeng/panel';
+import { concatMap, finalize, forkJoin, Observable, of } from 'rxjs';
 import { Aps1004Request, Sys1004Service } from '../../../service/api/sys/sys1004.service';
 import { ISysbc00Data, Sysbc00Service } from '../../../service/api/sys/sysbc00.service';
-import { concatMap, finalize, forkJoin, Observable, of } from 'rxjs';
-import { validateDuplicate, validateMaxLength, validateMaxNumber, validateRequired } from '../../../shared/componentkit/table/validate-field.model';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { ApiResponse } from '@service/system/auth.service';
+import { Column } from '../../../shared/componentkit/table/table.model';
+import { validateDuplicate, validateMaxLength, validateMaxNumber, validateRequired } from '../../../shared/componentkit/table/validate-field.model';
 
 @Component({
   selector: 'app-sysbc00.cru',
