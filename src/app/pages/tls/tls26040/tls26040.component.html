@@ -8,8 +8,8 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 銷售日期起迄 -->
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="銷售日期"
+          <!-- 預售日期起迄 -->
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="預售日期"
             [startControl]="queryForm.controls.sad_date_start" [endControl]="queryForm.controls.sad_date_end"
             [submitted]="submitted"></app-calendar-range>
 
