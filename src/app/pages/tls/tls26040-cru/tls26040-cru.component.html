@@ -64,13 +64,20 @@
 
 <div class="card">
   <div class="col-12 align-items-start">
-    <span class="text-red-500 text-sm font-bold">查詢預售總金額：{{totalAmount}}</span>
+    <span class="text-red-500 text-sm font-bold">查詢預售總金額：{{totalAmount | number}}</span>
   </div>
   <app-table tableKey="TLS26040_CRU" dataKey="id" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event; selectionChange($event)"
     [multiSortMeta]="[{ field: 'sad_date', order: -1 }]" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit(dataForm)" [lazy]="true" [loading]="loading"
-    [showDelete]="false" [showCheckBox]="true" [showManage]="false" [showReportMode]="false" [showPaginator]="false"
-    [showFilter]="false" [showPage]="false">
+    [showDelete]="false" [showCheckBox]="true" [showEdit]="false" [showReportMode]="false" [showPaginator]="false"
+    [showFilter]="false" [showPage]="false" (detail)="onDetail($event)">
   </app-table>
 </div>
+
+<app-dialog [visible]="dialogVisible" header="預售明細資料" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
+  [showFooter]="false" [loading]="dialogLoading">
+  <app-table tableKey="TLS26040DialogTable" dataKey="TXN_No" [data]="dialogData" [columns]="dialogColumns"
+    [showHeader]="false" [showManage]="false" [showCheckBox]="false" scrollHeight="350px" [showCaption]="false">
+  </app-table>
+</app-dialog>

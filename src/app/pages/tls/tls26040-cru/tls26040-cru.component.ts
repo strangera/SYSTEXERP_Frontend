@@ -1,9 +1,10 @@
-import { DatePipe, NgIf } from '@angular/common';
+import { CommonModule, DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
@@ -11,7 +12,7 @@ import { formatAmount, formatDate } from '@shared/componentkit/table2/table2.mod
 import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { TLS26040Data, TLS26040Service } from '../../../service/api/tls/tls26040.service';
+import { TLS26040Data, TLS26040DetailData, TLS26040Service } from '../../../service/api/tls/tls26040.service';
 import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -39,7 +40,9 @@ import { Column } from '../../../shared/componentkit/table/table.model';
     DropdownComponent,
     CalendarComponent,
     InputTextComponent,
-    InputNumberComponent
+    InputNumberComponent,
+    DialogComponent,
+    CommonModule
   ]
 })
 export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> implements OnInit {
@@ -164,5 +167,38 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
 
   selectionChange(event: TLS26040Data[]) {
     this.dataForm2.controls.est_amount.setValue(event.reduce((sum, item) => sum + (item.TXN_TotSaleAmt ?? 0), 0));
+  }
+
+  // dialog 顯示相關
+  dialogVisible = false;
+  dialogLoading = false;
+  dialogData: TLS26040DetailData[] = [];
+
+  dialogColumns: Column[] = [
+    { field: 'TXN_Date', header: '預售日期', visible: true, format: formatDate },
+    { field: 'TLT_No', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, format: formatAmount },
+  ];
+
+  saveDialog() {
+    this.dialogVisible = false;
+    this.dialogData = [];
+  }
+
+  // 載入明細資料
+  onDetail(event: any) {
+    this.dialogLoading = true;
+    this.tls26040Service.queryTLS26040Detail({
+      sad_date: event.sad_date,
+      tlt_no: event.tlt_no
+    })
+      .pipe(untilDestroyed(this), finalize(() => this.dialogLoading = false))
+      .subscribe(response => {
+        this.dialogData = response.Data;
+        this.dialogVisible = true;
+      });
   }
 }

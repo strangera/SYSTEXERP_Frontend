@@ -35,8 +35,8 @@ import { AddButton, Column, createPaginationConfig, formatAmount, formatDate } f
 })
 export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    sad_date_start: [''],                           // 銷售日期_起
-    sad_date_end: [''],                             // 銷售日期_迄
+    sad_date_start: [''],                           // 預售日期_起
+    sad_date_end: [''],                             // 預售日期_迄
     tlt_noList: [[]],                                 // 專櫃編號(多選)
     sad_preorder_date_start: [null],                  // 結帳日期_起
     sad_preorder_date_end: [null],                    // 結帳日期_迄

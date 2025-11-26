@@ -6,8 +6,8 @@ import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/
 
 // --- TLS26040 查詢 Model 定義 ---
 export interface TLS26040QueryRequest extends BaseQueryRequest {
-  sad_date_start?: string;         // 銷售日期_起
-  sad_date_end?: string;           // 銷售日期_迄
+  sad_date_start?: string;         // 預售日期_起
+  sad_date_end?: string;           // 預售日期_迄
   tlt_noList?: string[];           // 專櫃編號清單
   ECR_NoList?: string[];           // 收銀機號清單 (新增)
   sad_preorder_date_start?: string;// 預購業值入帳日_起
@@ -17,8 +17,8 @@ export interface TLS26040QueryRequest extends BaseQueryRequest {
 
 // --- TLS26040 查詢插入 Model 定義 ---
 export interface TLS26040QueryInsertRequest {
-  sad_date_start?: string;         // 銷售日期_起
-  sad_date_end?: string;           // 銷售日期_迄
+  sad_date_start?: string;         // 預售日期_起
+  sad_date_end?: string;           // 預售日期_迄
   ECR_NoList?: string[];           // 收銀機號清單 (新增)
   tlt_noList?: string[];           // 專櫃編號清單
   IsNotlt_no?: string;             // 篩選條件
@@ -26,15 +26,15 @@ export interface TLS26040QueryInsertRequest {
 
 // --- TLS26040 明細查詢 Model 定義 ---
 export interface TLS26040DetailRequest extends BaseQueryRequest {
-  sad_date?: string;               // 銷售日期
+  sad_date?: string;               // 預售日期
   tlt_no?: string;                 // 專櫃編號
 }
 
 // --- TLS26040 新增 Model 定義 ---
 export interface TLS26040InsertRequest {
   sad_preorder_date?: string;      // 預購業值入帳日
-  sad_date_start?: string;         // 銷售日期_起
-  sad_date_end?: string;           // 銷售日期_迄
+  sad_date_start?: string;         // 預售日期_起
+  sad_date_end?: string;           // 預售日期_迄
   idList?: number[];               // ID清單
 }
 
@@ -80,28 +80,28 @@ export class TLS26040Service {
 
   // 查詢SALCHARGEM資料表(插入用)
   queryTLS26040Insert(data: TLS26040QueryInsertRequest): Observable<BaseQueryResponse<TLS26040Data>> {
-    // return this.http.post<BaseQueryResponse<TLS26040Data>>(`${this.apiUrl}/queryTLS26040_insert`, data);
+    return this.http.post<BaseQueryResponse<TLS26040Data>>(`${this.apiUrl}/queryTLS26040_insert`, data);
 
     // 回傳假資料
     return of({
       Data: [
         {
           id: 1,
-          sad_date: '2024-01-01',
-          sad_preorder_date: '',
-          tlt_no: 'TLT001',
-          tlt_name: '專櫃A',
-          batch_no: 'BATCH001',
-          TXN_TotSaleAmt: 100000
+          sad_date: '2025-07-06',
+          sad_preorder_date: '2025-07-11',
+          tlt_no: '001087',
+          tlt_name: 'GUERLAIN',
+          batch_no: '20250711001',
+          TXN_TotSaleAmt: 46815
         },
         {
           id: 2,
-          sad_date: '2024-01-02',
-          sad_preorder_date: '',
-          tlt_no: 'TLT002',
-          tlt_name: '專櫃B',
-          batch_no: 'BATCH002',
-          TXN_TotSaleAmt: 150000
+          sad_date: '2025-07-05',
+          sad_preorder_date: '2025-07-11',
+          tlt_no: '001087',
+          tlt_name: 'GUERLAIN',
+          batch_no: '20250711001',
+          TXN_TotSaleAmt: 311022
         }
       ],
       TotalCount: 2,
