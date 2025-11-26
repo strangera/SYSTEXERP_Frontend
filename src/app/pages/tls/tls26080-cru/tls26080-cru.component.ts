@@ -87,7 +87,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   });
 
   public readonly initEffect = effect(() => {
-    if (!this.isFormCreateable) this.initEffect.destroy();
+    if (this.isFormCreateable) return this.initEffect.destroy();
     const id = this.getPodNo();
     if (!id) return;
 
