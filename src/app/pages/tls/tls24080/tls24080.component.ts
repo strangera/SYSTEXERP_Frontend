@@ -1,22 +1,22 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { addDaysToDate, Column, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS24080ResultData, Tls24080Service } from '@service/api/tls/tls24080.service';
-import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
+import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { DiscCodeEditColumn, PayNoEditColumn, PreOrderEditColumn, TLTIdEditColumn, TLTNoEditColumn, VoidEditColumn } from './tls24080.model';
-import { yesterday } from '@shared/models/system/query-form.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { addDaysToDate, Column, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
+import { DiscCodeEditColumn, PayNoEditColumn, PreOrderEditColumn, TLTIdEditColumn, TLTNoEditColumn, VoidEditColumn } from './tls24080.model';
 
 @Component({
   selector: 'app-tls24080',
@@ -63,6 +63,7 @@ export class TLS24080Component extends BasicQueryPageComponent<TLS24080ResultDat
   ];
   data: TLS24080ResultData[] = [];
   columns: Column[] = TLTNoEditColumn;
+  DataKeyName = 'TLTNoEdit';
   constructor(
     private readonly dropDownList: DropDownListService,
     public readonly tls24080Service: Tls24080Service,
@@ -74,12 +75,12 @@ export class TLS24080Component extends BasicQueryPageComponent<TLS24080ResultDat
     });
     this.queryForm.get('EditType')?.valueChanges.pipe(untilDestroyed(this)).subscribe(editType => {
       switch (editType) {
-        case 'TLTNoEdit': this.columns = TLTNoEditColumn; break;
-        case 'DiscCodeEdit': this.columns = DiscCodeEditColumn; break;
-        case 'TLTIdEdit': this.columns = TLTIdEditColumn; break;
-        case 'PayNoEdit': this.columns = PayNoEditColumn; break;
-        case 'PreOrderEdit': this.columns = PreOrderEditColumn; break;
-        case 'VoidEdit': this.columns = VoidEditColumn; break;
+        case 'TLTNoEdit': this.columns = TLTNoEditColumn; this.DataKeyName = 'TLTNoEdit'; break;
+        case 'DiscCodeEdit': this.columns = DiscCodeEditColumn; this.DataKeyName = 'DiscCodeEdit'; break;
+        case 'TLTIdEdit': this.columns = TLTIdEditColumn; this.DataKeyName = 'TLTIdEdit'; break;
+        case 'PayNoEdit': this.columns = PayNoEditColumn; this.DataKeyName = 'PayNoEdit'; break;
+        case 'PreOrderEdit': this.columns = PreOrderEditColumn; this.DataKeyName = 'PreOrderEdit'; break;
+        case 'VoidEdit': this.columns = VoidEditColumn; this.DataKeyName = 'VoidEdit'; break;
         default: this.columns = [];
       }
       setTimeout(() => {

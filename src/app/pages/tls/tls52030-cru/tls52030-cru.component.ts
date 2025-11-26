@@ -242,8 +242,10 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
   selectedItemsDialog: IODDetail[] = [];
   dialogColumns: Column[] = [
     { field: 'PO_No', header: '採購單編號' },
+    { field: 'APPLY_USR_Name', header: '申請人' },
     { field: 'APPLY_Date', header: '申請日期', format: formatDate },
     { field: 'APRV_Date', header: '審核日期', format: formatDate },
+    { field: 'VEN_No', header: '廠商編號' },
   ]
   onShowDialog() {
     this.dialogVisible = true

@@ -45,7 +45,7 @@ export abstract class BasicPrintDataComponent {
     }
   }
 
-  exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string): void {
+  exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string): void {
 
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
@@ -85,7 +85,8 @@ export abstract class BasicPrintDataComponent {
         ...event,
         footer_DataType: ProgNo
       },
-      file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`
+      file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`,
+      data_key_name: DataKeyName
     };
 
     this.tableService.exportPDF(body).pipe(untilDestroyed(this)).subscribe({
@@ -115,7 +116,7 @@ export abstract class BasicPrintDataComponent {
       }
     });
   }
-  exportExcelDownload(event: TableExport, columns: Column[], apiUrl?: string): void {
+  exportExcelDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`${apiUrl ? apiUrl : `query${ProgNo}`}`);
@@ -152,6 +153,7 @@ export abstract class BasicPrintDataComponent {
       columns: excelColumns,
       config: event,
       file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`,
+      data_key_name: DataKeyName
     };
     this.tableService.exportExcel(body).pipe(untilDestroyed(this)).subscribe({
       next: (response: HttpResponse<Blob>) => {
