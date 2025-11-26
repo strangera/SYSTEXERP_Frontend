@@ -104,8 +104,8 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
   simpleData: any[] = [];
 
   queryForm = this.formBuilder.group({
-    // TXN_Date: [this.yesterday, [Validators.required]],
-    TXN_Date: [new Date('2025-08-01'), [Validators.required]],
+    TXN_Date: [this.yesterday, [Validators.required]],
+    // TXN_Date: [new Date('2025-08-01'), [Validators.required]],
     ECR_No_List: [[]],
     TLT_No_List: [[]],
     tlt_building: [null],
@@ -163,13 +163,47 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
     this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
     this.tls11010Service.getBuildingOptions().subscribe((res) => (this.BUILDING_NO_Options = res));
 
-    this.queryForm.get('reimbursementType')?.valueChanges.subscribe(() => {
-      this.updateColumnVisibility(this.queryForm.get('reimbursementType')?.value ?? []);
-    });
+  this.queryForm.get('reimbursementType')?.valueChanges.subscribe((val) => {
+  if (this.queryForm.get('reporttype')?.value === 1) {
+    this.updateColumnVisibility(val ?? []);
+  }
+});
     this.updateColumnVisibility(this.queryForm.get('reimbursementType')?.value || []);
+
+    // 🔹 監聽「報表格式」切換：明細表 ↔ 簡表 時先清空 table
+this.queryForm.get('reporttype')?.valueChanges.subscribe((val) => {
+  this.onReportTypeChange(val ?? 1);  // 如果是 null，就當成 1
+});
 
     this.printedAt = this.datePipe.transform(new Date(), 'yyyy/MM/dd HH:mm') || '';
     this.refreshCloseDate();
+  }
+  // 報表格式切換時（1: 明細表, 2: 簡表）先清空資料與總計
+  onReportTypeChange(reporttype: number): void {
+    // 清空兩個 table 的資料來源
+    this.data = [];
+    this.simpleData = [];
+
+    // 重置總筆數
+    this.totalRecords = 0;
+
+    // 重置明細表總計
+    this.detailTotals = {
+      BOOK_PayAmt: 0,
+      ACT_PayAmt: 0,
+      OVER_PayAmt: 0,
+    };
+
+    // 簡表 lazy key 也重置，避免之後第一次排序被當成重複而 skip
+    if (reporttype === 2) {
+      this.lastSimpleLazyKey = null;
+    }
+
+    // 如果你希望切換時欄位可見性也重新套一次（只影響明細表）
+    if (reporttype === 1) {
+      const selected = this.queryForm.get('reimbursementType')?.value || [];
+      this.updateColumnVisibility(selected);
+    }
   }
 
   updateColumnVisibility(selectedValues: number[]) {
@@ -297,7 +331,7 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
 
             // 綁到通用資料來源 + 切換欄位組
             this.data = this.simpleData;
-            this.columns = this.simplecolumns;
+            // this.columns = this.simplecolumns;
 
             // 總筆數
             this.totalRecords =
