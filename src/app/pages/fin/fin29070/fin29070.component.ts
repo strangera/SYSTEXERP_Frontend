@@ -46,7 +46,7 @@ export class FIN29070Component extends BasicQueryPageComponent<FIN29070Data> imp
     VEN_No_To: [null, Validators.required],                         // 廠商代號(迄)
     ODM_Date_From: [null, Validators.required], // 立帳日期(起) - 必填
     ODM_Date_To: [null, Validators.required],   // 立帳日期(迄) - 必填
-    ...createPaginationConfig([])
+    ...createPaginationConfig([{ field: 'VendorNo', order: 1 }])
   });
 
   data: FIN29070Data[] = [];
