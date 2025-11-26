@@ -1,4 +1,3 @@
-// --Commonly used imports--
 import { NgFor, NgIf } from '@angular/common';
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -75,10 +74,10 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
     ID: [''], // ID (隱藏)
     Mid: [Number(this.authService.getUserInfo()?.mid)], // Mid (隱藏)
     // SYS_StoreNo: ['', [Validators.maxLength(10)]], // 分店編號
-    ENG_YYMM: ['', [Validators.required, Validators.maxLength(6)]], // 結算年月
+    ENG_YYMM: ['' as string | Date, [Validators.required, Validators.maxLength(6)]], // 結算年月
     ENG_Type: ['', [Validators.required, Validators.maxLength(3)]], // 能源類型
     ENG_MeterNo: ['', [Validators.required, Validators.maxLength(5)]], // 錶號
-    ENG_Date: [''], // 本次抄錶日
+    ENG_Date: ['' as string | Date], // 本次抄錶日
     ENG_CurrentReading: [0, [Validators.max(9999999999)]], // 本次抄錶度數 (最多小數後4位)
     ENG_Amount: [0, [Validators.max(9999999999)]], // 本次結算金額
     CRT_Date: [''], // 建立日期
@@ -87,6 +86,8 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
     UPD_Date: [''], // 變更日期 (隱藏)
     UPD_USR_No: [''], // 變更人員代碼 (隱藏)
     UPD_USR_Name: [''], // 變更人員姓名 (隱藏)
+    ENG_LastReadingDate: [null as string | Date | null], // 上次抄錶日
+    ENG_CurrentReading_Last: [0, [Validators.max(9999999999)]], // 上次抄錶度數
   });
 
   //
@@ -108,8 +109,134 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
   ngOnInit(): void {
     this.initializePage('ASS21030', this.dataForm);
     this.loadOptions();
+    this.setupMeterNoListener(); // 設置錶號監聽
 
     console.log('取得資料', this.dataForm.value);
+  }
+
+  // 監聽錶號變更,自動帶入上次抄表資料
+  setupMeterNoListener() {
+    this.dataForm.controls.ENG_MeterNo.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(meterNo => {
+        if (meterNo) {
+          if (this.crudstatus === CRUDStatus.Create) {
+            // 新增模式: 取得最新一筆
+            this.fetchLatestReading(meterNo);
+          } else if (this.crudstatus === CRUDStatus.Edit) {
+            // 編輯模式: 取得上一期
+            this.fetchPreviousReading(meterNo);
+          }
+        }
+      });
+  }
+
+  // 取得最新抄表記錄 (新增時使用)
+  fetchLatestReading(meterNo: string) {
+    const mid = this.dataForm.controls.Mid.value;
+    const engType = this.dataForm.controls.ENG_Type.value;
+
+    // 確保有必要的參數
+    if (!engType) {
+      this.messageService.warnBubble('請先選擇能源類型');
+      return;
+    }
+
+    const requestBody = {
+      Mid: mid,
+      ENG_Type: engType,
+      ENG_MeterNo: meterNo
+    };
+
+    this.ass21030Service.getLatestReading(requestBody)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (response) => {
+          if (response.Status === '0000' && response.Data) {
+            // 自動帶入最新抄表資料
+            this.dataForm.patchValue({
+              ENG_LastReadingDate: response.Data.ENG_LastReadingDate,
+              ENG_CurrentReading_Last: response.Data.ENG_LastReading
+            });
+            console.log('已自動帶入最新抄表記錄:', response.Data);
+          } else {
+            // 沒有歷史記錄,清空欄位
+            this.dataForm.patchValue({
+              ENG_LastReadingDate: null,
+              ENG_CurrentReading_Last: 0
+            });
+            console.log('查無該錶號的歷史抄表記錄');
+          }
+        },
+        error: (error) => {
+          console.error('取得最新抄表記錄失敗:', error);
+          // 清空欄位
+          this.dataForm.patchValue({
+            ENG_LastReadingDate: null,
+            ENG_CurrentReading_Last: 0
+          });
+        }
+      });
+  }
+
+  // 取得上一期抄表記錄 (編輯時使用)
+  fetchPreviousReading(meterNo: string) {
+    const mid = this.dataForm.controls.Mid.value;
+    const engType = this.dataForm.controls.ENG_Type.value;
+    const engYYMM = this.dataForm.controls.ENG_YYMM.value;
+
+    // 確保有必要的參數
+    if (!engType || !engYYMM || engYYMM === '') {
+      console.log('缺少必要參數');
+      return;
+    }
+
+    // 將 Date 物件轉換為 YYYYMM 格式字串
+    let formattedYYMM = '';
+    if (engYYMM instanceof Date) {
+      const year = engYYMM.getFullYear();
+      const month = String(engYYMM.getMonth() + 1).padStart(2, '0');
+      formattedYYMM = `${year}${month}`;
+    } else if (typeof engYYMM === 'string') {
+      formattedYYMM = engYYMM;
+    }
+
+    const requestBody = {
+      Mid: mid,
+      ENG_Type: engType,
+      ENG_MeterNo: meterNo,
+      CurrentYYMM: formattedYYMM
+    };
+
+    this.ass21030Service.getPreviousReading(requestBody)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (response) => {
+          if (response.Status === '0000' && response.Data) {
+            // 自動帶入上一期抄表資料
+            this.dataForm.patchValue({
+              ENG_LastReadingDate: response.Data.ENG_PreviousReadingDate,
+              ENG_CurrentReading_Last: response.Data.ENG_PreviousReading
+            });
+            console.log('已自動帶入上一期抄表記錄:', response.Data);
+          } else {
+            // 沒有上一期記錄,清空欄位
+            this.dataForm.patchValue({
+              ENG_LastReadingDate: null,
+              ENG_CurrentReading_Last: 0
+            });
+            console.log('查無上一期抄表記錄');
+          }
+        },
+        error: (error) => {
+          console.error('取得上一期抄表記錄失敗:', error);
+          // 清空欄位
+          this.dataForm.patchValue({
+            ENG_LastReadingDate: null,
+            ENG_CurrentReading_Last: 0
+          });
+        }
+      });
   }
 
   onSubmit(frm: FormGroup) {
@@ -119,6 +246,32 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
     if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
+    }
+
+    // 新增模式下的額外驗證
+    if (this.crudstatus === CRUDStatus.Create) {
+      // 驗證本次抄表度數不可小於上次抄表度數
+      const currentReading = this.dataForm.controls.ENG_CurrentReading.value;
+      const lastReading = this.dataForm.controls.ENG_CurrentReading_Last.value;
+      if (currentReading < lastReading) {
+        this.messageService.warnBubble('本次抄表度數不可小於上次抄表度數');
+        this.messageService.unblockUi();
+        return;
+      }
+
+      // 驗證本次抄表日期不可小於上次抄表日期
+      const currentDate = this.dataForm.controls.ENG_Date.value;
+      const lastDate = this.dataForm.controls.ENG_LastReadingDate.value;
+      if (currentDate && lastDate) {
+        const currentDateTime = currentDate instanceof Date ? currentDate.getTime() : new Date(currentDate).getTime();
+        const lastDateTime = lastDate instanceof Date ? lastDate.getTime() : new Date(lastDate).getTime();
+
+        if (currentDateTime < lastDateTime) {
+          this.messageService.warnBubble('本次抄表日期不可小於上次抄表日期');
+          this.messageService.unblockUi();
+          return;
+        }
+      }
     }
 
     const formValue = frm.getRawValue();
@@ -176,15 +329,6 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
 
   // 讀取dopropdown選項
   loadOptions() {
-    // 查詢 接待人員
-    // this.tls12010Service.queryTBLUSER_DropDownList({}).subscribe((response) => {
-    //   this.contact_USR_Option = response.Data.map((item: any) => ({
-    //     No: item.No, // 接待人員 代碼
-    //     Name: item.Name, // 接待人員 名稱
-    //     Label: item.No + '/' + item.Name, // 組合成顯示用的Label
-    //   }));
-    //   console.log('接待人員代號:', this.contact_USR_Option);
-    // });
     this.ass21030Service.queryENG1001_ENG_MeterNo_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.ENG_MeterNo_Option = response.Data.map((item: any) => ({
         No: item.ENG_MeterNo, // 能源表號

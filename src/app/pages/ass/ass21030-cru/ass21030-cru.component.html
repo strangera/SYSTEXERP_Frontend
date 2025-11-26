@@ -1,4 +1,3 @@
-<!-- <p>ass21030 works</p> -->
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
@@ -37,6 +36,26 @@
             [control]="dataForm.controls.ENG_MeterNo"
             [submitted]="submitted"
           ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="上次抄錶日"
+            controlName="ENG_LastReadingDate"
+            [control]="dataForm.controls.ENG_LastReadingDate"
+            [submitted]="submitted"
+            [readonly]="true"
+          ></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="上次抄錶度數"
+            controlName="ENG_CurrentReading_Last"
+            [control]="dataForm.controls.ENG_CurrentReading_Last"
+            [maxFractionDigits]="4"
+            [submitted]="submitted"
+            [readonly]="true"
+          ></app-input-number>
         </div>
       </div>
       <div class="grid p-fluid">

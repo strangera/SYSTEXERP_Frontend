@@ -36,4 +36,14 @@ export class ASS21030Service {
   queryENG1001_ENG_MeterNo_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/Share/queryENG1001_ENG_MeterNo_DropDownList`, body);
   }
+
+  // 取得錶號最新一筆抄表記錄 (新增時使用)
+  getLatestReading(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/getLatestReading`, body);
+  }
+
+  // 取得上一期抄表記錄 (編輯/檢視時使用)
+  getPreviousReading(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/getPreviousReading`, body);
+  }
 }
