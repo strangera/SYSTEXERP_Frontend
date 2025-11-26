@@ -200,11 +200,11 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     this.tltTableFiltered().filter(item => item.Status !== ItemOperationStatus.Deleted)
   );
   public readonly detailDataMap = computed(() => ({
-    ecr_list: new Map((this.originalDetailData()?.ecr_list || []).map(item => [item.ecr_no, item] as const)),
+    ecr_list: new Map((this.originalDetailData()?.ecr_list || []).map(item => [item.ECR_No, item] as const)),
     tlt_list: new Map((this.originalDetailData()?.talent_list || []).map(item => [String(item.tlt_no!), item] as const)),
   }));
   public readonly ecrNosMap = computed(() =>
-    new Map((this.ecrNosSignal() || []).map(item => [item.ecr_no, item] as const))
+    new Map((this.ecrNosSignal() || []).map(item => [item.ECR_No, item] as const))
   );
   public readonly tltNosMap = computed(() =>
     new Map((this.tltNosSignal() || []).map(item => [item.tlt_no, item] as const))
@@ -407,7 +407,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   }
 
   public onSubmit(frm: FormGroup): void {
-    console.log('接收表單', frm);
+    console.log('總表送出', frm);
     this.handleSubmit(this.dataForm, () => {
       const d = this.dataForm.getRawValue();
       const payload: PodRequest = {
@@ -454,6 +454,9 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     if (!dialog) return;
 
     if (this.crudstatus === CRUDStatus.Create) {
+      console.log('子表送出_新增模式');
+      console.log('收銀機子表', this.ecrTableFiltered);
+      console.log('專軌子表', this.tltTableFiltered);
       this.ecrTableFiltered.set((this.dialogForm().ecr_nos.value || []).map(item => ({ ...item, Status: ItemOperationStatus.New } as EcrItem)));
       this.tltTableFiltered.set((this.dialogForm().tlt_nos.value || []).map(item => ({ ...item, Status: ItemOperationStatus.New } as TltItem)));
       return void this.onVisibleChange(false); // 關閉對話框並清除資料;
@@ -462,6 +465,9 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     if (dialog === 'ecr') {
       const originalData: Map<string, EcrItem> = this.detailDataMap().ecr_list;
       const changedData: Map<string, EcrItem> = this.ecrNosMap();
+      console.log('子表送出_編輯模式');
+      console.log('原收銀機子表', this.detailDataMap());
+      console.log('新收銀機子表', changedData);
       this.ecrTableFiltered.set(this.buildCrudList<EcrItem>(originalData, changedData));
       this.logger.debug(`ECR Dialog Submit:`, [originalData, changedData, this.ecrTableData()]);
     }
@@ -568,7 +574,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       // 刪除 ecr Table 對應資料
       const updatedEcrList = this.ecrTableFiltered().map(item => {
         if (Array.isArray(data)) {
-          return data.some(d => d.ecr_no === item.ecr_no)
+          return data.some(d => d.ecr_no === item.ECR_No)
             ? { ...item, Status: ItemOperationStatus.Deleted }
             : item;
         }

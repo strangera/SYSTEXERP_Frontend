@@ -33,7 +33,7 @@ export interface EcrItem {
   building_name?: string;
   building_no?: string;
   ecr_name: string;
-  ecr_no: string;
+  ECR_No: string;
   ecr_type?: string;
   floor_name?: string;
   floor_no?: string;
