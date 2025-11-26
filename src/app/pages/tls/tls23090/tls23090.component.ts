@@ -167,6 +167,23 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     Total_Count: 'TOTAL_Total_Count', Total_Amount: 'TOTAL_Total_Amount',
   };
 
+  /* ★ 排序欄位 alias：送 API 時把欄位改成後端要的名稱 ----------------- */
+  private readonly sortFieldAliasMap: Record<string, string> = {
+    Others_Amount: 'O_Amount',
+    Others_Count: 'O_Count',
+    Total_Amount: 'Amount',
+    Total_Count: 'Count',
+  };
+
+  private mapSortFields(sortBy: any[] | undefined | null): any[] | undefined {
+    if (!Array.isArray(sortBy)) return sortBy ?? undefined;
+    return sortBy.map(s => ({
+      ...s,
+      field: this.sortFieldAliasMap[s.field] ?? s.field,
+    }));
+  }
+  /* ---------------------------------------------------------------- */
+
   /* ----------------- 欄位設定（依模式切換） ----------------- */
   columns: any[] = [];
 
@@ -272,9 +289,12 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
         ? this.defaultSortCounter
         : this.defaultSortCredit;
 
-      const sortByArr: any[] =
+      const rawSortByArr: any[] =
         (Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy :
           (this.sortMeta.length ? this.sortMeta : defaultSort)).map((s: any) => ({ ...s }));
+
+      // ★ 送 API 前，把欄位名稱轉成後端要的 alias
+      const sortByArr = this.mapSortFields(rawSortByArr);
 
       const payloadBase = this.prune({
         TXN_DateStart: this.toDateOnly(val?.TXN_DateStart ?? this.yesterday),
@@ -392,16 +412,21 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   /* ----------------- 給 app-table-report 的查詢函式（統一送大小寫分頁參數） ----------------- */
 
   /** 信用卡明細（✅ 產出 GrandTotal；僅在 pageIndex===1 同步到 this.grandTotal） */
-  public queryTLS23090CreditForReport = (body: any) =>
-    this.tls23090Service.queryTLS23090({
-      ...(body || {}),
-      // ✅ 只補小寫
-      TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
-      TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
-      pageSize: body?.pageSize ?? 30,
-      pageIndex: body?.pageIndex ?? 1,
-      // ⛔ 不再送 PageSize / PageIndex
-    })
+  public queryTLS23090CreditForReport = (body: any) => {
+    // ★ 報表查詢一樣要把 SortBy 欄位轉 alias
+    const apiSortBy = this.mapSortFields(body?.SortBy);
+
+    return this.tls23090Service
+      .queryTLS23090({
+        ...(body || {}),
+        SortBy: apiSortBy,
+        // ✅ 只補小寫
+        TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+        TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
+        pageSize: body?.pageSize ?? 30,
+        pageIndex: body?.pageIndex ?? 1,
+        // ⛔ 不再送 PageSize / PageIndex
+      })
       .pipe(
         map((res: any) => {
           const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res?.Data] : []);
@@ -429,13 +454,17 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
           return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
         })
       );
-
+  }
 
   /** 專櫃卡別分析（✅ 產出 GrandTotal；僅在 pageIndex===1 同步到 this.grandTotal） */
-  public queryTLS23090CounterForReport = (body: any) =>
-    this.tls23090Service
+  public queryTLS23090CounterForReport = (body: any) => {
+    // ★ 專櫃卡別分析的報表排序也要轉 alias
+    const apiSortBy = this.mapSortFields(body?.SortBy);
+
+    return this.tls23090Service
       .queryTLS23090CounterCard({
         ...(body || {}),
+        SortBy: apiSortBy,
         // ✅ 只送小寫
         pageSize: body?.pageSize ?? 30,
         pageIndex: body?.pageIndex ?? 1,
@@ -494,6 +523,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
           return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
         })
       );
+  }
 
   /* ----------------- 檢視模式切換 ----------------- */
   onModeChange(): void { this.applyViewMode(); }
