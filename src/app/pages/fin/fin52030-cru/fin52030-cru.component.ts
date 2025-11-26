@@ -166,7 +166,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     if (typeof id !== 'number' || !Number.isInteger(id)) return;
 
     this.tableLoading.set(!0);
-    this.service.loadFIN52030Detail(this.getId()!).pipe(
+    this.service.loadFIN52030Detail(id).pipe(
       tap(res => this.logger.debug(`ngOnInit load detail:`, [res])),
       map(res => { if (res.Status === '0000') return res; throw new Error('讀取失敗'); }),
       tap(res => this.fin52030DetailData.set(res.Data || Object.create(null))),
