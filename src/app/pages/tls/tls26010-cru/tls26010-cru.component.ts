@@ -1,7 +1,7 @@
 import { NgIf } from '@angular/common';
 import { Component, computed, effect, OnDestroy, OnInit, signal, Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26010Service } from '@service/api/tls/tls26010.service';
@@ -51,9 +51,7 @@ import { EcrItem, PodRequest, TLS26010Data, TLS26010Detail, TltItem } from '../t
   ]
 })
 export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> implements OnInit, OnDestroy {
-  public readonly CRUDStatus = CRUDStatus;
-
-  public dataForm = this.formBuilder.nonNullable.group({
+  public dataForm = this.formBuilder.group({
     pod_no: [{ value: '自動給號', disabled: true }], // 預售活動編號
     pod_desc: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]), // 預售名稱
     pod_sdate: new FormControl<Date>(new Date(), [Validators.required, this.validationService.dateAfterTodayValidator()]), // 預售期間(起)
@@ -408,7 +406,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     XLSX.writeFile(wb, `專櫃範本_${new Date().toISOString().split('T')[0]}.xlsx`);
   }
 
-  public onSubmit(): void {
+  public onSubmit(frm: FormGroup): void {
+    console.log('接收表單', frm);
     this.handleSubmit(this.dataForm, () => {
       const d = this.dataForm.getRawValue();
       const payload: PodRequest = {
@@ -449,7 +448,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     });
   };
 
-  /** 對話框資料送出 */
+  //#region 對話框資料送出
   public onDialogSubmit(): void {
     const dialog = this.dialogVisible();
     if (!dialog) return;
@@ -479,22 +478,25 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
   /** 開啟對話框 */
   public onOpenDialog(type: 'ecr' | 'tlt'): void {
-    this.logger.debug(`onOpenDialog:`, [type, this.dataForm.value]);
+    console.log('對話框開啟', type, '主表內容', this.dataForm.value);
     this.dialogVisible.set(type);
     this.submitted = false;
   };
 
   /** 對話框顯示狀態變更處理 */
   public onVisibleChange(visible: boolean | 'ecr' | 'tlt'): void {
+    console.log('對話框顯示變更為', visible);
     if (this.dialogVisible()) return void this.dialogVisible.set(false);
     this.dataForm.patchValue({
       sys3800: [],
       sys3900: [],
       sys3A00: [],
     });
+    console.log('清空主表明細', this.dataForm.value);
     this.logger.debug(`onVisibleChange:`, [this.dialogVisible(), visible, this.dataForm.value]);
   }
 
+  //#region 對話框變更事件
   public onSelectionChange(event: (EcrItem | TltItem)[]): void {
     const dialog = this.dialogVisible();
     if (!dialog || this.service.ecrLoading() || this.service.tltLoading()) return;
