@@ -1,9 +1,10 @@
 import { TLS26010Service } from '@service/api/tls/tls26010.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { ValidationService } from './../../../shared/service/validation.service';
 // --Commonly used imports--
 import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild, } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -18,14 +19,15 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
-import { apiOption } from '../../../shared/models/sys/sysb000.model';
+import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 
 export interface tls26010response {
   // TALPORDERM
@@ -86,6 +88,7 @@ export interface talent_list {
     TableEditComponent,
     TranslateModule,
     MenubarComponent,
+    MultiSelectComponent,
     PanelModule,
     FormsModule,
     ReactiveFormsModule,
@@ -93,6 +96,7 @@ export interface talent_list {
     CalendarRangeComponent,
     CommonModule,
     DropdownComponent,
+    DialogComponent,
     RadiobuttonComponent,
     EditorTextComponent,
     ExpandableEditTableComponent,
@@ -111,10 +115,10 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
   dataForm = this.formBuilder.nonNullable.group({
     // TALPORDERM
     id: [{ value: null, disabled: true }], // 主鍵，自動編號
-    pod_no: [''], // 預售編號(readonly)
-    pod_desc: [''], // 預售名稱
-    pod_sdate: [null], // 預售期間-起日
-    pod_edate: [null], // 預售期間-迄日
+    pod_no: ['', [Validators.required]], // 預售編號(readonly)
+    pod_desc: ['', [Validators.required, Validators.maxLength(100)]], // 預售名稱
+    pod_sdate: [null, [Validators.required, this.validationService.dateAfterTodayValidator]], // 預售期間-起日
+    pod_edate: [null, [Validators.required]], // 預售期間-迄日
     pod_status: [''], // 核准狀態(readonly)
     approved_usr_name: [''], // 核准人員(readonly)
     approved_date: [null], // 核准日期核准日期
@@ -138,8 +142,6 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
 
     status: 'new'
   };
-
-  // POS2020 展開式表格的欄位定義
   ecrColumn: EditColumn[] = [
     { field: 'ECR_No', header: '收銀機編號', type: 'input', width: '12rem' },
     { field: 'ECR_Name', header: '收銀機名稱', type: 'input', width: '12rem' }
@@ -156,13 +158,75 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
     };
   }
   //----------------------------------------------------------------
+  // #region 專櫃明細
+  //----------------------------------------------------------------
+  tltData: talent_list[] = [];
+  orgTltData: talent_list[] = []; // ecr_list(備分)
+  selectedTLTItems: talent_list[] = [];
+  tltLoading = false;
+  // 預設新項目模板
+  defaultNewTLT = {
+    id: 0, //新增
+    tlt_no: '',
+    tlt_name: '',
+    status: 'new'
+  };
+  tltColumn: EditColumn[] = [
+    { field: 'tlt_no', header: '專櫃編號', type: 'input', width: '12rem' },
+    { field: 'tlt_name', header: '專櫃名稱', type: 'input', width: '12rem' }
+  ];
+  createDefaultNewTLT() {
+    this.defaultNewTLT = {
+      id: 0, //新增
+      tlt_no: '',
+      tlt_name: '',
+      status: 'new'
+    };
+  }
+  //----------------------------------------------------------------
+  // #region 彈出視窗設定義
+  ecrDialogForm = this.formBuilder.nonNullable.group({
+    sys3800: [[]],
+    sys3900: [[]],
+    sys3A00: [[]]
+  });
 
-  contact_USR_Option: apiOption[] = [];  // 接洽人員代碼/名稱
+  tltDialogForm = this.formBuilder.nonNullable.group({
+    sys3800: [[]],
+    sys3900: [[]],
+    sys3A00: [[]]
+  });
+
+  //是否顯示
+  ecrDialogVisible = false;
+  tltDialogVisible = false;
+
+  ecrDialogLoading = false;
+  tltDialogLoading = false;
+  ecrDialogData = [];
+  tltDialogData = [];
+  ecrDialogSelected = [];
+  tltDialogSelected = [];
+
+  ecrDialogColumn = [];
+  tltDialogColumn = [];
+  //----------------------------------------------------------------
+
+  building_Option: apiOption[] = [];  // 館別
+  floor_Option: apiOption[] = [];  // 樓層
+  area_Option: apiOption[] = [];  // 區域
+
+  pod_status_Option: option[] = [
+    { value: "0", label: '未核准' },
+    { value: "1", label: '已核准' }
+  ]
+
   // ----------------------------------------------------------------
   constructor(
     private validationService: ValidationService,
-    private tls12010Service: Tls12010Service,
-    private tLS26010Service: TLS26010Service) {
+    private tLS26010Service: TLS26010Service,
+    private dropDownListService: DropDownListService,
+  ) {
     super(); // 呼叫父類建構子
   }
 
@@ -197,7 +261,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
       case CRUDStatus.Create:
         if (this.canAdd()) {
           console.log('insert:', JSON.stringify(body, null, 2));
-          console.log('detail', this.ecrData);
+          console.log('ECR detail', this.ecrData);
+          console.log('TLT detail', this.tltData);
           // this.tls12010Service.insertTLS12010(body).pipe(untilDestroyed(this)).subscribe(() => {
           //   this.messageService.successBubble('新增成功');
           //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
@@ -209,7 +274,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
       case CRUDStatus.Edit:
         if (this.canEdit()) {
           console.log('update:', JSON.stringify(body, null, 2));
-          console.log('detail', this.ecrData);
+          console.log('ECR detail', this.ecrData);
+          console.log('TLT detail', this.tltData);
           // this.tls12010Service.updateTLS12010(body).pipe(untilDestroyed(this)).subscribe(() => {
           //   this.messageService.successBubble('更新成功');
           //   this.onCancel(); // 儲存後，會返回列表
@@ -223,14 +289,32 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
   }
   // 讀取dopropdown選項
   loadOptions() {
-    // 查詢 接待人員
-    this.tls12010Service.queryTBLUSER_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
-      this.contact_USR_Option = response.Data.map((item: any) => ({
-        No: item.No, // 接待人員 代碼
-        Name: item.Name, // 接待人員 名稱
+    // 查詢 館別
+    this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
+      this.building_Option = response.Data.map((item: any) => ({
+        No: item.No, // 館別 代碼
+        Name: item.Name, // 館別 名稱
         Label: item.No + '/' + item.Name, // 組合成顯示用的Label
       }));
-      console.log('接洽人員代號:', this.contact_USR_Option);
+      // console.log('館別 代號:', this.building_Option);
+    });
+    // 查詢 樓層
+    this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
+      this.floor_Option = response.Data.map((item: any) => ({
+        No: item.No, // 樓層 代碼
+        Name: item.Name, // 樓層 名稱
+        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+      }));
+      // console.log('樓層 代號:', this.floor_Option);
+    });
+    // 查詢 區域
+    this.dropDownListService.querySYS3A00_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
+      this.area_Option = response.Data.map((item: any) => ({
+        No: item.No, // 樓層 代碼
+        Name: item.Name, // 樓層 名稱
+        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+      }));
+      // console.log('區域 代號:', this.area_Option);
     });
   }
 
@@ -239,17 +323,53 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
     console.log('要求pod_no資料:', pod_no);
     this.tLS26010Service.loadTLS26010Detail({ "pod_no": pod_no }).pipe(untilDestroyed(this)).subscribe((response) => {
       if (response.Status === '0000') {
-        console.log('取得明細資料:', response.Data.ecr_list);
+        console.log('取得明細資料:', response.Data);
         this.ecrData = response.Data.ecr_list as unknown as ecr_list[];
+        this.tltData = response.Data.talent_list as unknown as talent_list[];
         this.orgEcrData = this.ecrData;
-        console.log('取得明細Table:', this.ecrData);
+        this.orgTltData = this.tltData;
+        console.log('取得ECR明細:', this.ecrData);
+        console.log('取得TLT明細:', this.tltData);
+
       } else {
         this.messageService.errorBubble(`讀取失敗: ${response.Message}`);
       }
     });
   }
+
+  // #region 明細dialog
+  dialogVisible(dialogMode: string) {
+    if (dialogMode == 'ecr') {
+      this.tltDialogVisible = false;
+      this.ecrDialogVisible = true;
+    } else {
+      this.ecrDialogVisible = false;
+      this.tltDialogVisible = true;
+    }
+  }
+
+  onDialogECRSubmit(): any {
+    console.log('ecr dialog明細送出');
+  }
+
+  onSelectionECRChange(event: any): any {
+    console.log('ecr dialog選擇變更', event);
+  }
+
+  onDialogTLTSubmit(): any {
+    console.log('tlt dialog明細送出');
+  }
+
+  onSelectionTLTChange(event: any): any {
+    console.log('tlt dialog選擇變更', event);
+  }
+
   // #region 收銀機驗證
   validateECR = (rowData: ecr_list): { isValid: boolean; errorMessage: string } => {
+    return { isValid: true, errorMessage: '' };
+  };
+
+  validateTLT = (rowData: ecr_list): { isValid: boolean; errorMessage: string } => {
     return { isValid: true, errorMessage: '' };
   };
 
@@ -262,6 +382,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
       if (this.orgEcrData) {
         // 重製明細檔
         this.ecrData = this.orgEcrData;
+        this.tltData = this.orgTltData;
         this.messageService.infoBubble('編輯模式重製完成');
       }
     } else {

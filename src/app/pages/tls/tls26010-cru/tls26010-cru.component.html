@@ -35,9 +35,9 @@
           class="col-12 md:col-6 lg:col-4"
           label="核准狀態"
           controlName="pod_status"
-          [options]="contact_USR_Option"
-          optionLabel="Label"
-          optionValue="No"
+          [options]="pod_status_Option"
+          optionLabel="label"
+          optionValue="value"
           [control]="dataForm.controls.pod_status"
           [readonly]="true"
           [submitted]="submitted"
@@ -68,6 +68,8 @@
         [columns]="ecrColumn"
         (selectionChange)="selectedECRItems = $event"
         [selectedItems]="selectedECRItems"
+        [showInsert]="true"
+        (insert)="dialogVisible('ecr')"
         [dataStatusValue]="{
           Original: 'old',
           New: 'new',
@@ -81,6 +83,169 @@
         [loading]="ecrLoading"
       ></app-table-edit>
 
+      <!-- TLT明細檔 -->
+      <app-table-edit
+        title="專櫃"
+        tableKey="tltTable"
+        [data]="tltData"
+        class="col-12"
+        [columns]="tltColumn"
+        (selectionChange)="selectedTLTItems = $event"
+        [selectedItems]="selectedTLTItems"
+        [showInsert]="true"
+        (insert)="dialogVisible('tlt')"
+        [dataStatusValue]="{
+          Original: 'old',
+          New: 'new',
+          Modified: 'modified',
+          Deleted: 'deleted',
+        }"
+        [rowValidate]="validateTLT"
+        [defaultInsertData]="defaultNewTLT"
+        (dataChange)="tltData = $event"
+        dataStatusField="status"
+        [loading]="tltLoading"
+      ></app-table-edit>
+
+      <!-- 收銀機 Dialog選單 -->
+      <app-dialog
+        [visible]="ecrDialogVisible"
+        [header]="'選擇收銀機'"
+        (save)="onDialogECRSubmit()"
+        [height]="'auto'"
+        [loading]="loading"
+      >
+        <form [formGroup]="ecrDialogForm">
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-multi-select
+                label="館別"
+                controlName="sys3800"
+                [options]="building_Option"
+                optionLabel="Name"
+                optionValue="No"
+                appendTo="body"
+                [control]="ecrDialogForm.controls.sys3800"
+                [submitted]="submitted"
+              ></app-multi-select>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-multi-select
+                label="樓層"
+                controlName="sys3900"
+                [options]="floor_Option"
+                optionLabel="Name"
+                optionValue="No"
+                appendTo="body"
+                [control]="ecrDialogForm.controls.sys3900"
+                [submitted]="submitted"
+              ></app-multi-select>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-multi-select
+                label="區域"
+                controlName="sys3A00"
+                [options]="area_Option"
+                optionLabel="Name"
+                optionValue="No"
+                appendTo="body"
+                [control]="ecrDialogForm.controls.sys3A00"
+                [submitted]="submitted"
+              ></app-multi-select>
+            </div>
+
+            <div class="col-12">
+              <app-table
+                #ecrDialogTable
+                [showCheckBox]="true"
+                [showManage]="false"
+                [showDelete]="false"
+                [showReportMode]="false"
+                [rows]="10"
+                [selectedItems]="ecrDialogSelected"
+                (selectionChange)="onSelectionECRChange($event)"
+                [data]="ecrDialogData"
+                [dataKey]="'ECR_No'"
+                [tableKey]="'ecrDialogTable'"
+                [columns]="ecrDialogColumn"
+                [loading]="ecrDialogLoading"
+              ></app-table>
+            </div>
+          </div>
+        </form>
+      </app-dialog>
+
+      <!-- 專櫃 Dialog選單 -->
+      <app-dialog
+        [visible]="tltDialogVisible"
+        [header]="'選擇專櫃'"
+        (save)="onDialogTLTSubmit()"
+        [height]="'auto'"
+        [loading]="loading"
+      >
+        <form [formGroup]="tltDialogForm">
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-multi-select
+                label="館別"
+                controlName="sys3800"
+                [options]="building_Option"
+                optionLabel="Name"
+                optionValue="No"
+                appendTo="body"
+                [control]="tltDialogForm.controls.sys3800"
+                [submitted]="submitted"
+              ></app-multi-select>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-multi-select
+                label="樓層"
+                controlName="sys3900"
+                [options]="floor_Option"
+                optionLabel="Name"
+                optionValue="No"
+                appendTo="body"
+                [control]="tltDialogForm.controls.sys3900"
+                [submitted]="submitted"
+              ></app-multi-select>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-multi-select
+                label="區域"
+                controlName="sys3A00"
+                [options]="area_Option"
+                optionLabel="Name"
+                optionValue="No"
+                appendTo="body"
+                [control]="tltDialogForm.controls.sys3A00"
+                [submitted]="submitted"
+              ></app-multi-select>
+            </div>
+
+            <div class="col-12">
+              <app-table
+                #ecrDialogTable
+                [showCheckBox]="true"
+                [showManage]="false"
+                [showDelete]="false"
+                [showReportMode]="false"
+                [rows]="10"
+                [selectedItems]="tltDialogSelected"
+                (selectionChange)="onSelectionTLTChange($event)"
+                [data]="tltDialogData"
+                [dataKey]="'tlt_no'"
+                [tableKey]="'tltDialogTable'"
+                [columns]="tltDialogColumn"
+                [loading]="tltDialogLoading"
+              ></app-table>
+            </div>
+          </div>
+        </form>
+      </app-dialog>
       <div
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         *ngIf="!isFormReadable"
