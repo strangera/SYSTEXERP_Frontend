@@ -1,25 +1,22 @@
-import { ExcelImportService, ImportExcelColumn } from '@shared/service/excel-import.service';
-import { ExcelColumn, ExcelExportService } from '@shared/service/excel-export.service';
-import { Component, OnInit, signal, ViewChild, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { NgIf } from '@angular/common';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { Component, OnInit, signal, ViewChild, } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Fin21020Service, IFin21020Data, IFin21020Detail } from '@service/api/fin/fin21020.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { IFin21020Data, IFin21020Detail, Fin21020Service } from '@service/api/fin/fin21020.service';
-import { finalize } from 'rxjs';
-// 引入驗證函式
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { ExcelColumn, ExcelExportService } from '@shared/service/excel-export.service';
+import { ExcelImportService, ImportExcelColumn } from '@shared/service/excel-import.service';
 import { FileSelectEvent } from 'primeng/fileupload';
-
-//1.2.1.2 費率對照維護 CRU
+import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 @Component({
   selector: 'app-fin21020-cru',
   templateUrl: './fin21020-cru.component.html',

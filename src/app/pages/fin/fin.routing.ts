@@ -311,11 +311,10 @@ export const finRoutes: Routes = [
   { path: 'fin61020', loadComponent: () => import('./fin61020/fin61020.component').then(m => m.FIN61020Component) },
   { path: 'fin61020cru', loadComponent: () => import('./fin61020-cru/fin61020-cru.component').then(m => m.FIN61020CRUComponent) },
   // 銀行調撥作業
-  // { path: 'fin62010', loadComponent: () => import('./fin62010/fin62010.component').then(m => m.FIN62010Component) },
-  // { path: 'fin62010cru', loadComponent: () => import('./fin62010-cru/fin62010-cru.component').then(m => m.FIN62010CRUComponent) },
+  { path: 'fin62010', loadComponent: () => import('./fin62010/fin62010.component').then(m => m.FIN62010Component) },
+  { path: 'fin62010cru', loadComponent: () => import('./fin62010-cru/fin62010-cru.component').then(m => m.FIN62010CRUComponent) },
   // 銀行資金調撥單
-  // { path: 'fin62020', loadComponent: () => import('./fin62020/fin62020.component').then(m => m.FIN62020Component) },
-  // { path: 'fin62020cru', loadComponent: () => import('./fin62020-cru/fin62020-cru.component').then(m => m.FIN62020CRUComponent) },
+  { path: 'fin62020', loadComponent: () => import('./fin62020/fin62020.component').then(m => m.FIN62020Component) },
   // 銀行調撥傳票拋轉作業
   // { path: 'fin62030', loadComponent: () => import('./fin62030/fin62030.component').then(m => m.FIN62030Component) },
   // { path: 'fin62030cru', loadComponent: () => import('./fin62030-cru/fin62030-cru.component').then(m => m.FIN62030CRUComponent) },

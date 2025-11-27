@@ -262,15 +262,15 @@ export class DropdownApiService {
   }
 
   /** 查詢會計科目設定檔(GLS1005) (只取 公司銀行科目) */
-  queryGls1005_BNK_DepositAcc(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryGls1005_BNK_DepositAcc').pipe(
+  queryGls1005_BNK_DepositAcc(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryGls1005_BNK_DepositAcc', 'No', 'Name').pipe(
       shareReplay(1) // 避免重複查詢;
     );
   }
 
   /** 查詢會計科目設定檔(GLS1005) (只取 應收票據科目) */
-  queryGls1005_BNK_CheckInAcc(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryGls1005_BNK_CheckInAcc').pipe(
+  queryGls1005_BNK_CheckInAcc(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryGls1005_BNK_CheckInAcc', 'No', 'Name').pipe(
       shareReplay(1) // 避免重複查詢;
     );
   }

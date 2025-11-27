@@ -1,262 +1,49 @@
-import { NgIf } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { Fin62010Service } from '@service/api/fin/fin62010.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { InputTextareaComponent } from "@shared/componentkit/input-textarea/input-textarea.component";
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 @Component({
   selector: 'app-fin62010-cru',
   templateUrl: './fin62010-cru.component.html',
-  styleUrl: './fin62010-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [InputNumberComponent, AsyncPipe, MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarComponent, ButtonComponent, NgIf, TranslateModule, InputTextareaComponent]
 })
-export class FIN62010CRUComponent
-
-  implements OnInit {
-  ProgNo = 'FIN72050';
-  formTitle = 'FIN72050';
-  submitted = false;
-  accordionTabCss = 'create-accordionTab';
-  crudstatus: CRUDStatus = CRUDStatus.Create;
-  canAdd() { return true; }
-  canEdit() { return true; }
-  ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '160003';
-    //
-    // ----------------------------------------------------------------
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus;
-      rowdata: any;
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-
-    console.log(this.accordionTabCss);
-  }
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      Accountcode: [],
-      vendorCodeOptions: [],
-      summary: [],
-      Debitamount: [],
-      Creditamount: [],
-      Organizationcode: [],
-      StandingInstructionCode: [],
-      Activitycode: [],
-      Objectnumber: [],
-      ReconciliationKEYvalue: [],
-      usercode: [],
-    });
-  }
-
-  // ----------------------------------------------------------------
+export class FIN62010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    Subpoenanumber: [],
-    Subpoenatype: [],
-    Subpoenadate: [],
-    Subpoenastatus: [],
-    Subpoenasummary: [],
-    Makeupinvoice: [],
-    builder: [],
-    modifyer: [],
-    builddate: [],
-    modifydate: [],
-    uickMenu: [],
-    Companybankcode: [],
-    status: [],
-    usercode: [],
-    Employeename: [],
-    Organizationcode: [],
-    dialnumber: [],
-    creationDate: [],
-    transferdate: [],
-    TCBAC: [],
-    TOCBAC: [],
-    founder: [],
-
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([this.createItem()]),
+    Tran_No: [{ value: '系統自動給號', disabled: true }],
+    CRT_USR_No: [{ value: this.authService.currentUserValue?.user_No, disabled: true }],
+    CRT_USR_Name: [{ value: this.authService.currentUserValue?.user_Name, disabled: true }],
+    CRT_Date: [{ value: new Date(), disabled: true }],
+    Tran_Date: [null],
+    BNK_No_In: [null],
+    BNK_No_Out: [null],
+    Tran_Amt: [0],
+    Fee_Amt: [0],
+    Remark: [null],
   });
-  // Dropdown options
-  founder: any[] = [];
-  TOCBACOptions: any[] = [
+  BNK_NoOptions = this.dropdown.queryGls1005_BNK_DepositAcc();
+  ngOnInit(): void {
+    this.initializePage('FIN62010', this.dataForm);
+  }
 
-
-  ];
-  TCBACOptions: any[] = [
-
-
-  ];
-  status: any[] = [
-    { value: 1, label: '停用' },
-    { value: 2, label: '手開' },
-    { value: 3, label: '電腦' },
-
-  ];
-  Companybankcode: any[] = [
-    { value: 1, label: '110306' },
-
-  ];
-  Activitycode: any[] = [
-    { value: 1, label: '001' },
-    { value: 2, label: '002' },
-    { value: 3, label: '003' },
-    { value: 4, label: '004' },
-    { value: 5, label: '005' },
-    { value: 6, label: '006' },
-    { value: 7, label: '007' },
-    { value: 8, label: '008' },
-    { value: 9, label: '009' },
-    { value: 10, label: '010' },
-  ];
-  StandingInstructionCode: any[] = [];
-  Organizationcode: any[] = [
-    { value: 1, label: '100000' },
-    { value: 2, label: '100100' },
-    { value: 3, label: '101000' },
-    { value: 4, label: '101100' },
-    { value: 5, label: '101200' },
-    { value: 6, label: '101300' },
-    { value: 7, label: '101400' },
-    { value: 8, label: '101500' },
-    { value: 9, label: '101600' },
-    { value: 10, label: '101700' },
-  ];
-  usercode: any[] = [];
-  Accountcode: any[] = [
-    { value: 1, label: '110101' },
-    { value: 2, label: '110102' },
-    { value: 3, label: '110103' },
-    { value: 4, label: '110111' },
-    { value: 5, label: '110112' },
-    { value: 6, label: '110199' },
-    { value: 7, label: '110200' },
-    { value: 8, label: '110201' },
-    { value: 9, label: '110210' },
-    { value: 10, label: '110220' },
-  ];
-  Makeupinvoice: any[] = [
-    { value: 1, label: '是' },
-    { value: 2, label: '否' },
-  ];
-  Subpoenatype: any[] = [
-    { value: 1, label: '現金收入傳票' },
-    { value: 2, label: '現金支出傳票' },
-    { value: 3, label: '轉帳傳票' },
-  ];
-  Subpoenastatus: any[] = [
-    { value: 1, label: '現金收入傳票' },
-    { value: 2, label: '現金支出傳票' },
-    { value: 3, label: '轉帳傳票' },
-  ];
-  vendorCodeOptions: any[] = [
-    { value: 1, label: '00000000-1' },
-    { value: 2, label: '00000000-2' },
-    { value: 3, label: '00000000-4' },
-    { value: 4, label: '00000000-5' },
-    { value: 5, label: '00000000-7' },
-    { value: 6, label: '00000000-8' },
-    { value: 7, label: '00852492-1' },
-    { value: 8, label: '01052878-1' },
-    { value: 9, label: '01508949-1' },
-    { value: 10, label: '01515462-1' },
-  ];
-  // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-  ) {
-  }
-
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
+    private readonly dropdown: DropdownApiService,
+    public readonly fin62010Service: Fin62010Service
+  ) { super(); }
 
   onSubmit(frm: FormGroup) {
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-        }
-        break;
-    }
-
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  } //CRU
-
-  onCancel() {
-    this.router.navigate(['FIN6000/FIN62010']);
+    this.handleSubmit(frm, () => { });
   }
 }
