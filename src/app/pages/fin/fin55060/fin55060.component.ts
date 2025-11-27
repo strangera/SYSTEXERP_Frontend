@@ -88,7 +88,8 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
 
   data: TableRow[] = [];
   totalRecords = 0;
-  btnLoading = false;
+  PDFBtnLoading = false;
+  XLSXBtnLoading = false;
   lastQueryBody: QueryFIN55060Payload | null = null;
 
   columns: Column[] = [
@@ -247,11 +248,11 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
     if ((this.data?.length ?? 0) === 0) return;
     const payload = this.buildExportBody();
     if (!payload) return;
-    this.btnLoading = true;
+    this.PDFBtnLoading = true;
 
     this.fin55060Service
       .exportFIN55060PDF(payload)
-      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+      .pipe(untilDestroyed(this), finalize(() => (this.PDFBtnLoading = false)))
       .subscribe({
         next: (r) => this.handleFileExport(r, '.pdf', '分類帳_四級科目'),
         error: (e) => console.error('Export PDF failed', e),
@@ -262,11 +263,11 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
     if ((this.data?.length ?? 0) === 0) return;
     const payload = this.buildExportBody();
     if (!payload) return;
-    this.btnLoading = true;
+    this.XLSXBtnLoading = true;
 
     this.fin55060Service
       .exportFIN55060Excel(payload)
-      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+      .pipe(untilDestroyed(this), finalize(() => (this.XLSXBtnLoading = false)))
       .subscribe({
         next: (r) => this.handleFileExport(r, '.xlsx', '分類帳_四級科目'),
         error: (e) => console.error('Export Excel failed', e),

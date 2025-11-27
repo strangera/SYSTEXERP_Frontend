@@ -101,7 +101,7 @@
       label="匯出 PDF"
       icon="pi pi-file-pdf"
       (clickEvent)="onExportPDF()"
-      [loading]="btnLoading"
+      [loading]="PDFBtnLoading"
       [disabled]="loading || (data.length || 0) === 0"
     ></app-button>
 
@@ -109,7 +109,7 @@
       label="匯出 Excel"
       icon="pi pi-file-excel"
       (clickEvent)="onExportXLSX()"
-      [loading]="btnLoading"
+      [loading]="XLSXBtnLoading"
       [disabled]="loading || (data.length || 0) === 0"
     ></app-button>
   </div>
