@@ -173,8 +173,15 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
       })
     });
   }
+  // 最後一筆才可以刪除
   isRowSelectable(row: IFin21020Detail, index: number, data: IFin21020Detail[]): boolean {
-    return index === data.length - 2;
+    if (data.filter(item => !item['_isAutoInsertCandidate']).length === 0) {
+      return false;
+    }
+    const lastValidIndex = data.findLastIndex(item => !item['_isAutoInsertCandidate']);
+    const isSelectable = !row['_isAutoInsertCandidate'] && index === lastValidIndex;
+
+    return isSelectable;
   }
   excelColumns: ExcelColumn[] = [
     { field: 'BNK_No', header: '公司銀行科目代號', width: 20 },
@@ -188,10 +195,10 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
     this.excelBtnLoading.set(true);
     try {
       const bnkNo = this.dataForm.get('BNK_No')?.value;
-      const filteredData = this.data.filter((item: any) => !item['_isAutoInsertCandidate']);
+      const filteredData = this.data.filter(item => !item['_isAutoInsertCandidate']);
 
       if (bnkNo && filteredData.length > 0) {
-        const exportData = filteredData.map((item: any) => ({
+        const exportData = filteredData.map(item => ({
           ...item,
           BNK_No: bnkNo,
           Remit_BAmount: item.Remit_BAmount || 0,

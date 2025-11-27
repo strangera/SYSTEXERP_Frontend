@@ -1,10 +1,11 @@
 import { Component, isDevMode, OnInit, } from '@angular/core';
 import { NavigationError, Router, RouterOutlet } from '@angular/router';
-import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
+import { SwUpdate, VersionDetectedEvent, VersionReadyEvent } from '@angular/service-worker';
 import { TranslateService } from '@ngx-translate/core';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { PrimeNGConfig } from 'primeng/api';
 import { ConfirmDialogModule } from "primeng/confirmdialog";
-import { filter } from 'rxjs';
+import { filter, interval } from 'rxjs';
 import { NotificationMessageComponent } from './shared/component/notification-message/notification-message.component';
 
 @Component({
@@ -19,6 +20,7 @@ export class AppComponent implements OnInit {
     private readonly translate: TranslateService,
     private readonly router: Router,
     private readonly swUpdate: SwUpdate,
+    private readonly notificationService: NotificationService
   ) {
     this.translate.setDefaultLang('zh-tw');
     this.translate.use('zh-tw');
@@ -128,21 +130,35 @@ export class AppComponent implements OnInit {
     // 只有在 Service Worker 啟用時才執行 (即非開發模式)
     if (!isDevMode() && this.swUpdate.isEnabled) {
 
-      // 1. 偵聽是否有可用的新版本 (已下載到快取中)
+      // 1. 【修正】偵聽是否有新版本被偵測到 (VERSION_DETECTED)
+      this.swUpdate.versionUpdates.pipe(
+        filter((evt): evt is VersionDetectedEvent => evt.type === 'VERSION_DETECTED')
+      ).subscribe((evt) => {
+        // 這裡 VersionDetectedEvent 只有 version 屬性，沒有 previousVersion
+        console.log(`SW: 偵測到新版本。新版本雜湊/版本號: ${evt.version}。`);
+        // 如果要顯示通知，例如：
+        this.notificationService.infoBubble('新版本正在背景下載，請稍候。', '系統更新中...');
+      });
+
+      // 2. 偵聽是否有可用的新版本 (已下載到快取中) - VERSION_READY
       this.swUpdate.versionUpdates.pipe(
         filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY')
-      ).subscribe(() => {
-        // 提示使用者有新版本，並請求更新
+      ).subscribe((evt) => {
+        // VersionReadyEvent 包含 previousVersion 和 currentVersion (即 version)
+        console.log(`SW: 新版本已準備就緒。新版本: ${evt.currentVersion}。`);
         if (confirm('偵測到系統有更新！是否立即重新整理頁面以使用最新版本？')) {
-          // 啟動新版本並重新載入
           this.swUpdate.activateUpdate().then(() => document.location.reload());
         }
       });
 
-      // 2. 也可以設定檢查間隔 (可選，通常在後台檢查就夠了)
-      // setInterval(() => {
-      //   this.swUpdate.checkForUpdate();
-      // }, 6 * 60 * 60 * 1000); // 例如每 6 小時檢查一次
+      // 3. 設定檢查間隔：每 15 分鐘主動檢查
+      interval(15 * 60 * 1000).subscribe(() => {
+        console.log('SW: 主動檢查是否有新版本...');
+        this.swUpdate.checkForUpdate();
+      });
+
+      // 4. 在 App 啟動時主動檢查一次
+      this.swUpdate.checkForUpdate();
     }
   }
 }
