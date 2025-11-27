@@ -163,7 +163,7 @@ export const finRoutes: Routes = [
   // 支出憑單明細表
   // { path: 'fin29100', loadComponent: () => import('./fin29100/fin29100.component').then(m => m.FIN29100Component) },
   // 應付帳款帳齡分析表
-  // { path: 'fin29110', loadComponent: () => import('./fin29110/fin29110.component').then(m => m.FIN29110Component) },
+  { path: 'fin29110', loadComponent: () => import('./fin29110/fin29110.component').then(m => m.FIN29110Component) },
   // 應付帳款進項發票對應表
   // { path: 'fin29120', loadComponent: () => import('./fin29120/fin29120.component').then(m => m.FIN29120Component) },
   // 收款項目對照會計科目維護
