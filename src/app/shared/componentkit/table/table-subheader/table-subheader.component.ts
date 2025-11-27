@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeHtml, SafeUrl } from '@angular/platform-browser';
+import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { SortMeta } from 'primeng/api';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { FileSelectEvent } from 'primeng/fileupload';
@@ -10,7 +11,6 @@ import { debounceTime, fromEvent } from 'rxjs';
 import { COMMON_IMPORTS } from '../import-table';
 import { TableUtilityService } from '../table-utility.service';
 import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent } from '../table.model';
-import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 
 @Component({
   selector: 'app-table-subheader',
@@ -20,7 +20,7 @@ import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/ba
   styleUrl: './table-subheader.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TableSubheaderComponent extends BasicPrintDataComponent implements OnChanges {
+export class TableSubheaderComponent extends BasicPrintDataComponent implements OnChanges, AfterViewInit {
   /** table 元件 */
   @ViewChild('dt', { static: false }) dt!: Table;
 
@@ -142,9 +142,9 @@ export class TableSubheaderComponent extends BasicPrintDataComponent implements 
   /** table 群組資料 @default '' */
   @Input() groupRowsBy = '';
   // 群組依據欄位名稱
-  @Input() groupRowsByName: string = '';
+  @Input() groupRowsByName = '';
   // 是否顯示群組表頭
-  @Input() showGroupheader: boolean = true;
+  @Input() showGroupheader = true;
   /** 用於緩存已分組的數據 @default new Map() */
   groupedDataCache = new Map();
   /** 是否顯示群組小計 @default false */

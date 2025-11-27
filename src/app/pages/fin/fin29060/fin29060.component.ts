@@ -1,13 +1,20 @@
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
-import { createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
+import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
-import { FIN29060Data, FIN29060Service, QueryFIN29060DetailRequest, QueryFIN29060Request } from '../../../service/api/fin/fin29060.service';
+import { FIN29060Data, FIN29060Service, QueryFIN29060Request } from '../../../service/api/fin/fin29060.service';
+import {
+  FIN55050Detail,
+  FIN55050Service
+} from '../../../service/api/fin/fin55050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
@@ -15,13 +22,18 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { DropDownListService } from './../../../service/utility/dropDownList.service';
+export interface GroupedFIN55050Detail extends FIN55050Detail {
+  AccNo: string;
+  AccCName: string;
+  VouDate: string;
+}
 //1.2.9.6 廠商付款明細表
 @Component({
   selector: 'app-fin29060',
   templateUrl: './fin29060.component.html',
   styleUrl: './fin29060.component.scss',
   standalone: true,
-  imports: [DropdownRangeComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, InputTextComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [ButtonModule, TableSubheaderComponent, DropdownRangeComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, InputTextComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -41,10 +53,12 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
   });
   VendorNoOptions: { label: string; value: string }[] = []; // 廠客代號選項
   AccNoOptions: { label: string; value: string }[] = []; // 科目代號選項
-  selectedItems: FIN29060Data[] = [];
-  totalRecords = 0
   data: FIN29060Data[] = [];
-  columns = [
+  selectedItems: FIN29060Data[] = [];
+  totalRecords = 0;
+  pdfBtnLoading = false;
+  excelBtnLoading = false;
+  columns: Column[] = [
     { field: 'ACP_No', header: '應付帳款編號', visible: true },
     { field: 'VendorNo', header: '廠商編號', visible: true },
     { field: 'VendorName', header: '廠商名稱', visible: true },
@@ -56,7 +70,7 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
     { field: 'PayRefDate', header: '開票/匯款日期', visible: true, format: formatDate },
     { field: 'BalanceAmt', header: '帳款餘額', visible: true, format: formatAmount },
     { field: 'PaymentNo', header: '電匯/開票/單號', visible: true },
-    { field: 'VoucherNo', header: '傳票號碼', visible: true }
+    { field: 'VoucherNo', header: '傳票號碼', visible: true, type: 'detail' }
   ];
 
   // ----------------------------------------------------------------
@@ -67,6 +81,7 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
 
   constructor(
     private dropDownListService: DropDownListService,
+    private fin55050Service: FIN55050Service,
     private fin29060Service: FIN29060Service
   ) {
     super(); // 呼叫父類建構子
@@ -87,6 +102,30 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
       .subscribe(res => this.AccNoOptions = res.Data.map((x: { No: string; Name: string }) => ({ label: `${x.No} - ${x.Name}`, value: x.No })));
 
   }
+  override onDetail(row: FIN29060Data) {
+    const vouNo = row?.VoucherNo;
+    if (!vouNo) {
+      this.messageService?.warnBubble?.('無法開啟，缺少傳票號碼。');
+      return;
+    }
+
+    try {
+      const handoff = {
+        vouNo,
+        fromRoute: window.location.pathname,
+        ts: Date.now(),
+      };
+      localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
+      localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050');
+      console.log('[FIN55050] 已儲存 handoff:', handoff);
+    } catch (err) {
+      console.error('[FIN55050] handoff save failed:', err);
+      this.messageService?.warnBubble?.('寫入交接資料失敗。');
+    }
+
+    window.open('/account/fin/fin55050cru', '_blank', 'noopener');
+  }
+
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       const formValue = frm.value;
@@ -132,61 +171,88 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
         });
     });
   }
+  private buildExportPayload(): QueryFIN29060Request {
+    const raw = this.queryForm.getRawValue();
 
-  override onDetail(rowData: FIN29060Data): void {
-    if (!rowData.VoucherNo) {
-      this.messageService.warnBubble('傳票號碼不存在，無法查詢明細');
+    return {
+      PageSize: raw.pageSize ?? 10,
+      PageIndex: raw.pageIndex ?? 1,
+
+      // 後端 input 內沒有 OrderBy / Offset，我移除（要我可以加進 QueryFIN29060Request）
+      SortBy: raw.SortBy ?? [{ field: 'ACP_No', order: 1 }],
+
+      STO_No: raw.STO_No || '',
+      VEN_No_From: raw.VEN_No_From || '',
+      VEN_No_To: raw.VEN_No_To || '',
+
+      ODM_Date_From: raw.ODM_Date_From
+        ? new Date(raw.ODM_Date_From).toISOString()
+        : undefined,
+
+      ODM_Date_To: raw.ODM_Date_To
+        ? new Date(raw.ODM_Date_To).toISOString()
+        : undefined,
+
+      PayRefDate_From: raw.PayRefDate_From
+        ? new Date(raw.PayRefDate_From).toISOString().split('T')[0]
+        : undefined,
+
+      PayRefDate_To: raw.PayRefDate_To
+        ? new Date(raw.PayRefDate_To).toISOString().split('T')[0]
+        : undefined,
+
+      AccNo_From: raw.AccNo_From || '',
+      AccNo_To: raw.AccNo_To || '',
+      ACP_Desc: raw.ACP_Desc || '',
+
+      ShowUnpaid: raw.ShowUnpaid === true,
+      ShowZeroBalance: raw.ShowZeroBalance === true,
+    };
+  }
+
+
+  onExportExcel() {
+    if (!this.data?.length) {
+      this.messageService.warnBubble('目前沒有資料可匯出');
       return;
     }
 
-    const detailRequest: QueryFIN29060DetailRequest = {
-      VouNo: rowData.VoucherNo
-    };
+    const payload = this.buildExportPayload();
 
-    this.loading = true;
-    this.messageService.blockUi();
-
-    this.fin29060Service
-      .queryFIN29060Detail(detailRequest)
-      .pipe(
-        untilDestroyed(this),
-        finalize(() => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        })
-      )
+    this.excelBtnLoading = true;
+    this.fin29060Service.exportFIN29060_Excel(payload)
+      .pipe(finalize(() => this.excelBtnLoading = false))
       .subscribe({
-        next: (response) => {
-          // 處理 blob 回應 - 通常是下載檔案
-          if (response.body) {
-            const contentDisposition = response.headers.get('content-disposition');
-            let filename = `FIN29060_明細_${rowData.VoucherNo}.pdf`;
-
-            if (contentDisposition) {
-              const filenameMatch = contentDisposition.match(/filename\*?=['"]?(?:UTF-\d['"])?([^;'"\r\n]+)['"]?;?/);
-              if (filenameMatch) {
-                filename = decodeURIComponent(filenameMatch[1]);
-              }
-            }
-
-            const blob = new Blob([response.body], { type: response.headers.get('content-type') || 'application/pdf' });
-            const url = window.URL.createObjectURL(blob);
-
-            // 創建下載連結
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-
-            // 清理
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
-
-            this.messageService.successBubble('明細報表已下載');
-          }
-        },
-
+        next: (r) => this.downloadFile(r, '.xlsx', '廠商付款明細表'),
+        error: () => this.messageService.warnBubble('匯出 Excel 失敗')
       });
   }
+  onExportPDF() {
+    if (!this.data?.length) {
+      this.messageService.warnBubble('目前沒有資料可匯出');
+      return;
+    }
+
+    const payload = this.buildExportPayload();
+
+    this.pdfBtnLoading = true;
+    this.fin29060Service.exportFIN29060_PDF(payload)
+      .pipe(finalize(() => this.pdfBtnLoading = false))
+      .subscribe({
+        next: (r) => this.downloadFile(r, '.pdf', '廠商付款明細表'),
+        error: () => this.messageService.warnBubble('匯出 PDF 失敗')
+      });
+  }
+
+  private downloadFile(resp: HttpResponse<Blob>, ext: string, name: string) {
+    const blob = resp.body!;
+    const fileName = `${name}_${new Date().getTime()}${ext}`;
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
 }

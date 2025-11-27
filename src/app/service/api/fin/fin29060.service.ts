@@ -62,4 +62,10 @@ export class FIN29060Service {
       responseType: 'blob'
     });
   }
+  exportFIN29060_PDF(data: QueryFIN29060Request): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportFIN29060_PDF`, data, {
+      observe: 'response',
+      responseType: 'blob'
+    });
+  }
 }
