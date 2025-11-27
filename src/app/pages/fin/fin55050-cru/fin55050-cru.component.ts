@@ -1,15 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { TranslateModule } from '@ngx-translate/core';
-import { finalize } from 'rxjs';
-import { NgIf } from '@angular/common';
 import { MenuItem } from 'primeng/api';
+import { finalize } from 'rxjs';
 
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, formatAmount } from '@shared/componentkit/table/table.model';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 
 type DetailRow = {
   VouDate?: string | null;
@@ -36,7 +38,13 @@ type VoucherMeta = {
 @Component({
   selector: 'app-fin55050-cru',
   standalone: true,
-  imports: [MenubarComponent, TableComponent, TranslateModule, NgIf],
+  imports: [
+    MenubarComponent,
+    TableComponent,
+    TranslateModule,
+    NgIf,
+    ButtonComponent
+  ],
   templateUrl: './fin55050-cru.component.html'
 })
 export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -148,5 +156,32 @@ export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements 
   back(): void {
     this.router.navigate(['/account/fin/fin55050']);
     // 或：this.router.navigateByUrl('/account/fin/fin55050');
+  }
+
+  // 匯出
+  PDFBtnLoading = false;
+  onExportPDF(): void {
+    if ((this.rows?.length ?? 0) === 0) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
+
+    this.PDFBtnLoading = true;
+    this.fin55050Service.exportFIN55050DetailPDF({
+      VouNo: this.vouNo,
+    })
+      .pipe(untilDestroyed(this), finalize(() => (this.PDFBtnLoading = false)))
+      .subscribe({
+        next: (r) => this.handleFileExport(r, '.pdf', '分類帳'),
+        error: () => this.messageService?.warnBubble?.('匯出 PDF 失敗。'),
+      });
+  }
+
+  private handleFileExport(resp: any, ext: '.pdf' | '.xlsx', baseName: string) {
+    const blob = resp?.body instanceof Blob ? resp.body : resp;
+    const fileName = `${baseName}_${new Date().getTime()}${ext}`;
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
 }

@@ -3,27 +3,29 @@ import { Component, OnInit } from '@angular/core';
 import { finalize } from 'rxjs';
 
 import {
-  FIN55050Service,
+  ExportFIN55050Payload,
   FIN55050Detail,
-  ExportFIN55050Payload
+  FIN55050Service
 } from '../../../service/api/fin/fin55050.service';
 
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
+import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { CheckboxModule } from 'primeng/checkbox';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { FormsModule, ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 
 export interface FIN55050Data {
   AccNo: string;
@@ -55,6 +57,8 @@ export interface GroupedFIN55050Detail extends FIN55050Detail {
     MultiSelectComponent,
     TableSubheaderComponent,
     InputTextRangeComponent,
+    DropdownRangeComponent,
+    DropdownComponent
   ]
 })
 export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> implements OnInit {
@@ -74,26 +78,31 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   })();
 
   /** 匯出 loading 共用旗標 */
-  btnLoading = false;
+  PDFBtnLoading = false;
+  XLSXBtnLoading = false;
 
   /** 記住上一次查詢的 payload（供匯出使用） */
   private lastQueryBody: any | null = null;
 
   queryForm = this.formBuilder.group({
-    DateFrom: [this.yesterday, Validators.required],
-    DateTo: [this.yesterday, Validators.required],
-    // DateFrom: [new Date(2024, 9, 1), Validators.required],
-    // DateTo: [new Date(2024, 9, 1), Validators.required],
+    // DateFrom: [this.yesterday, Validators.required],
+    // DateTo: [this.yesterday, Validators.required],
+    DateFrom: [new Date(2024, 9, 1), Validators.required],
+    DateTo: [new Date(2024, 9, 1), Validators.required],
     OrgIdList: [null],
-    AccNoList: [null],
-    VendorNoList: [null],
+    AccNoFrom: [null],
+    AccNoTo: [null],
+    VendorFrom: [null],
+    VendorTo: [null],
     PTAFrom: [null],
     PTATo: [null],
-    TargetNoList: [null],
+    Target: [null],
+    Project: [null],
     Notes: [null],
-    VouTypeList: [null],
+    VoucherType: [null],
     VouStatusList: [null],
     IsTarget: [null],
+    ReportMode: ['1'],
     ...createPaginationConfig([])
   });
 
@@ -229,7 +238,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
 
     this.dropDownListService.queryPOS2013_DropDownList()
       .pipe(untilDestroyed(this))
-      .subscribe(res => this.VendorNoListOptions = res.Data.map((x: any) => ({ label: `${x.No} - ${x.Name}`, value: x.No })));
+      .subscribe(res => this.VendorNoListOptions = res.Data.map((x: any) => ({ label: `${x.VEN_No} - ${x.Name}`, value: x.VEN_No })));
 
     this.fin55050Service.queryGLS1016_DropDownList()
       .pipe(untilDestroyed(this))
@@ -272,9 +281,9 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
     const payload = this.buildExportBody();
     if (!payload) return;
 
-    this.btnLoading = true;
+    this.PDFBtnLoading = true;
     this.fin55050Service.exportFIN55050PDF(payload)
-      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+      .pipe(untilDestroyed(this), finalize(() => (this.PDFBtnLoading = false)))
       .subscribe({
         next: (r) => this.handleFileExport(r, '.pdf', '分類帳'),
         error: () => this.messageService?.warnBubble?.('匯出 PDF 失敗。'),
@@ -286,9 +295,9 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
     const payload = this.buildExportBody();
     if (!payload) return;
 
-    this.btnLoading = true;
+    this.XLSXBtnLoading = true;
     this.fin55050Service.exportFIN55050Excel(payload)
-      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+      .pipe(untilDestroyed(this), finalize(() => (this.XLSXBtnLoading = false)))
       .subscribe({
         next: (r) => this.handleFileExport(r, '.xlsx', '分類帳'),
         error: () => this.messageService?.warnBubble?.('匯出 Excel 失敗。'),
@@ -311,15 +320,19 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
       DateFrom: from,
       DateTo: to,
       OrgIdList: this.ensureArr(raw?.OrgIdList),
-      AccNoList: this.ensureArr(raw?.AccNoList),
-      VendorNoList: this.ensureArr(raw?.VendorNoList),
+      AccNoFrom: raw?.AccNoFrom ?? '',
+      AccNoTo: raw?.AccNoTo ?? '',
+      VendorFrom: raw?.VendorFrom ?? '',
+      VendorTo: raw?.VendorTo ?? '',
       PTAFrom: raw?.PTAFrom ?? '',
       PTATo: raw?.PTATo ?? '',
-      TargetNoList: this.ensureArr(raw?.TargetNoList),
+      Target: raw?.Target ?? '',
+      Project: raw?.Project ?? '',
       Notes: raw?.Notes ?? '',
-      VouTypeList: this.ensureArr(raw?.VouTypeList),
+      VoucherType: raw?.VoucherType ?? '',
       VouStatusList: this.ensureArr(raw?.VouStatusList),
       IsTarget: raw?.IsTarget ?? '',
+      ReportMode: raw?.ReportMode ?? '',
     };
     return payload;
   }
