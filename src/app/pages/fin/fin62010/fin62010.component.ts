@@ -8,7 +8,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatDate, formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount, formatDate, formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -48,8 +48,8 @@ export class FIN62010Component extends BasicQueryPageComponent<QueryFIN62010Resp
     { field: 'BNK_No_Out', header: '轉出公司銀行科目代號' },
     { field: 'BNK_No_Out_Name', header: '轉出銀行名稱' },
     { field: 'VouNo', header: '傳票號碼' },
-    { field: 'Tran_Amt', header: '金額' },
-    { field: 'Fee_Amt', header: '手續費' },
+    { field: 'Tran_Amt', header: '金額', format: formatAmount },
+    { field: 'Fee_Amt', header: '手續費', format: formatAmount },
     { field: 'Remark', header: '備註' }
   ];
   constructor(

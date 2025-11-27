@@ -24,8 +24,6 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
   // 基本設置
   @Input() dataKey = 'ID';                                                      // table 資料key
   @Input() tableKey: string | undefined = undefined;                            // table 唯一標識 (必填)
-  @Input() apiUrl?: string;                                                     // table API URL (可選)
-  @Input() DataKeyName: string | undefined = undefined;
   @Input() title: string | undefined = undefined;                               // table 標題
   @Input() columns!: Column[];                                                  // table 欄位配置 (必填)
   originalColumns!: Column[];                                                   // table 原始欄位
@@ -142,6 +140,10 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
   // 其他
   @Input() emptyMessage = '查無資料';                // table 無資料時顯示文字
 
+  // 底層匯出
+  @Input() apiUrl?: string;                         // table API URL (可選)
+  @Input() DataKeyName?: string;                    // table 資料key名稱 (可選)
+  @Input() PrintRemark = true;                    // 是否列印備註 (可選)
   constructor(
     private readonly sanitizer: DomSanitizer,
     private readonly tableUtilityService: TableUtilityService

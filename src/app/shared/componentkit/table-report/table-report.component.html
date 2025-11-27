@@ -17,10 +17,11 @@
       [selectedItems]="selectedItems" [tableKey]="tableKey" [showCaption]="showCaption" [showFilter]="showFilter"
       [showReportMode]="showReportMode" [showDelete]="showDelete" [showExcel]="showExcel"
       [showExcelExport]="showExcelExport" [showExcelImport]="showExcelImport" [pageOrientation]="pageOrientation"
-      [pageSizeSetting]="pageSizeSetting" [showCustomExcelImport]="showCustomExcelImport" [DataKeyName]="DataKeyName"
+      [pageSizeSetting]="pageSizeSetting" [showCustomExcelImport]="showCustomExcelImport"
       [exportExcelLoading]="exportExcelLoading" [showPage]="false" (delete)="delete.emit($event)"
       (exportExcel)="exportExcel.emit()" (importExcel)="importExcel.emit($event)" [totalRecords]="dt.totalRecords"
-      [apiUrl]="apiUrl" [customReport]="customReport" (exportEvent)="exportEvent.emit($event)">
+      [apiUrl]="apiUrl" [DataKeyName]="DataKeyName" [PrintRemark]="PrintRemark" [customReport]="customReport"
+      (exportEvent)="exportEvent.emit($event)">
       <header><ng-content select="header"></ng-content></header>
     </app-table-caption>
   </ng-template>

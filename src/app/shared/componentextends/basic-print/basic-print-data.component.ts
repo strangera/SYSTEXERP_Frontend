@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { HttpResponse } from '@angular/common/http';
+import { DatePipe } from '@angular/common';
 import { ChangeDetectorRef, inject, Injectable } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { SystemOptionsService } from '@service/system/sys1000.service';
 import { SystemDataService } from '@service/system/system-data.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
-import { saveAs } from 'file-saver';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { REPORT_TITLES } from '../../componentkit/table/report-titles';
 import { TableService } from '../../componentkit/table/report.service';
@@ -31,6 +31,8 @@ export abstract class BasicPrintDataComponent {
   authService = inject(AuthService);
   messageService = inject(NotificationService);
   systemDataService = inject(SystemDataService);
+  fileExportService = inject(FileExportService);
+  datePipe = inject(DatePipe);
   constructor() {
     this.getProgNo();
   }
@@ -45,17 +47,12 @@ export abstract class BasicPrintDataComponent {
     }
   }
 
-  exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string): void {
-
+  exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string, PrintRemark?: boolean): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`${apiUrl ? apiUrl : `query${ProgNo}`}`);
     const userInfo = this.authService.currentUserValue;
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = (today.getMonth() + 1).toString().padStart(2, '0'); // getMonth() 返回 0-11，所以要 +1
-    const day = today.getDate().toString().padStart(2, '0');
-    const formattedToday = `${year}${month}${day}`;
+    const formattedToday = this.datePipe.transform(new Date(), 'yyyyMMdd');
     const pdfColumns = columns.map(col => {
       const mappingList = SystemOptionsService.getOptions(col.field);
       let exportFormat: any = [];
@@ -83,57 +80,33 @@ export abstract class BasicPrintDataComponent {
       columns: pdfColumns,
       config: {
         ...event,
-        footer_DataType: ProgNo
+        footer_DataType: PrintRemark ? ProgNo : undefined
       },
       file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`,
       data_key_name: DataKeyName
     };
 
-    this.tableService.exportPDF(body).pipe(untilDestroyed(this)).subscribe({
-      next: (response: HttpResponse<Blob>) => {
-        if (response.body) {
-          const contentDisposition = response.headers.get('content-disposition');
-          let filename = `${body.file_name}.pdf`;
-          if (contentDisposition) {
-            const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.pdf)?$|filename="(.+?)(?:\.pdf)?"$/;
-            const matches = contentDisposition.match(filenameRegex);
-            if (matches) {
-              filename = matches[1] || matches[2] || filename;
-              filename = decodeURIComponent(filename);
-            }
-            filename = filename.replace(/["']/g, '');
-          }
-          const blob = new Blob([response.body], { type: 'application/pdf' });
-          saveAs(blob, filename);
-        } else {
-          console.error("Response body is empty!");
-        }
-        this.exportDialog = false;
-      },
-      error: (err: any) => {
-        console.error('Error downloading PDF:', err);
-        this.exportDialog = false;
-      }
-    });
+    const export$ = this.tableService.exportPDF(body)
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this)),
+      '.pdf',
+      (isLoading) => this.exportDialog = isLoading
+    );
   }
   exportExcelDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string): void {
-    const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
+    const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string; // 取得程式編號
     const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
-    const queryState = this.queryState.getQueryState(`${apiUrl ? apiUrl : `query${ProgNo}`}`);
-    const userInfo = this.authService.currentUserValue;
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = (today.getMonth() + 1).toString().padStart(2, '0'); // getMonth() 返回 0-11，所以要 +1
-    const day = today.getDate().toString().padStart(2, '0');
-    const formattedToday = `${year}${month}${day}`;
+    const queryState = this.queryState.getQueryState(`${apiUrl ? apiUrl : `query${ProgNo}`}`); // 取得查詢條件
+    const userInfo = this.authService.currentUserValue;                                      // 取得使用者
+    const formattedToday = this.datePipe.transform(new Date(), 'yyyyMMdd');                   // 格式化日期
     const excelColumns = columns.map(col => {
       const mappingList = SystemOptionsService.getOptions(col.field);
       let exportFormat: any = [];
-      if (col.exportFormat) {
+      if (col.exportFormat) {             // 先檢查是否有 exportFormat
         exportFormat = col.exportFormat;
-      } else if (mappingList.length > 0) {
+      } else if (mappingList.length > 0) {// 如果沒有 exportFormat，再檢查是否有 mappingList
         exportFormat = transformOptionsForExport(mappingList, 'SYS_Code', 'SYS_Name');
-      } else if (isYNField(col.field)) {
+      } else if (isYNField(col.field)) { // 如果還是沒有 mappingList，再檢查是否是 YN 欄位
         exportFormat = [{ 'Y': '是' }, { 'N': '否' }]; // 如果是 YN 欄位，設定固定的格式
       }
       return {
@@ -155,34 +128,9 @@ export abstract class BasicPrintDataComponent {
       file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`,
       data_key_name: DataKeyName
     };
-    this.tableService.exportExcel(body).pipe(untilDestroyed(this)).subscribe({
-      next: (response: HttpResponse<Blob>) => {
-        if (response.body) {
-          const contentDisposition = response.headers.get('content-disposition');
-          let filename = `${body.file_name}.xlsx`; // 副檔名改為 .xlsx
-          if (contentDisposition) {
-            const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.xlsx)?$|filename="(.+?)(?:\.xlsx)?"$/;  //  正則匹配.xlsx
-            const matches = contentDisposition.match(filenameRegex);
-            if (matches) {
-              filename = matches[1] || matches[2] || filename;
-              filename = decodeURIComponent(filename);
-            }
-            filename = filename.replace(/["']/g, '');
-          }
-          const blob = new Blob([response.body], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }); // 正確的 MIME 類型
-          saveAs(blob, filename);
-        } else {
-          console.error("Response body is empty!");
-        }
-        this.exportDialog = false;
-        this.cdr.detectChanges();
-      },
-      error: (err: any) => {
-        console.error('Error downloading Excel:', err);
-        this.exportDialog = false;
-        this.cdr.detectChanges();
-      }
-    });
+    this.tableService.exportExcel(body)
+    const export$ = this.tableService.exportExcel(body)
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.exportDialog = isLoading);
   }
   toggleVisibility(): void {
     this.IsPrint = !this.IsPrint;
@@ -194,9 +142,7 @@ export abstract class BasicPrintDataComponent {
       if (progNo) {
         this.funInfo = this.systemDataService.getUserPermissions(progNo);
         this.tableKey = this.tableKey ? this.tableKey : progNo + 'TableQueryState';
-        // this.cdr.detectChanges(); // 資料更新後觸發變更偵測
       } else {
-        // 如果 progNo 為空，也將 funInfo 重置為安全預設值
         this.funInfo = { PrivilegeBehavior: [] } as unknown as FunsrightInfo;
       }
     });

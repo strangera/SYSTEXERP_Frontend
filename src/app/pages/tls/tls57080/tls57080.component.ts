@@ -46,7 +46,7 @@ export class TLS57080Component extends BasicQueryPageComponent<QueryTLS57080Deta
     StartDate: [new Date('2025/01/01') as Date | null, [Validators.required]],
     EndDate: [new Date('2025/06/09') as Date | null, [Validators.required]],
     PLU_MagNo: ['0800000005599', [Validators.maxLength(20)]],
-    PLU_No: [null, [Validators.maxLength(20)]],
+    PLU_No: [null, [Validators.maxLength(20), Validators.required]],
     HOS_No: ['0001'],
     PLU_Name: [null, [Validators.maxLength(50)]],
     SQLType: [null], // 預設為 1: 售價 2: 單位成本
