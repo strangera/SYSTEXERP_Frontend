@@ -24,10 +24,9 @@ export class TLS26080Service {
   // 儲存資料
   public readonly tltTalentOptions = signal<Option[]>([]);
   public readonly tltTalentChargeOptions = signal<TalentChargeItem[]>([]);
-
-  public readonly tltIdOptions = signal<Option[]>([
-    ...Array.from({ length: 10 }).map((_, i) => ({ value: i + '', label: i + '' })),
-  ]);
+  public readonly tltIdOptions = signal<Option[]>(
+    Array.from({ length: 10 }, (_, i) => ({ value: `${i}`, label: `${i}` }))
+  );
 
   public readonly tltTalentMap = computed(() => {
     return new Map<string, Option>(this.tltTalentOptions().map(item => [item.value, item]));
@@ -146,8 +145,8 @@ export class TLS26080Service {
   public uploadFile(file: FormData): Observable<TLS26080UploadResult> {
     return this.http.post<TLS26080UploadResponse>(`${apiUrl}/TLS0000/TLS2000/uploadTLS26080`, file).pipe(
       take(1),
-      map(res => { if (res.Status === '0000') return res; throw new Error('發生錯誤'); }),
       map(res => {
+        if (res.Status !== '0000') return Object.create(null);
         const { queryTLS26080_DetailResponses, ...rest } = res.Data;
         return {
           ...rest,
