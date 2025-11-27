@@ -59,7 +59,19 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
   pdfBtnLoading = false;
   excelBtnLoading = false;
   columns: Column[] = [
-    { field: 'ACP_No', header: '應付帳款編號', visible: true },
+    {
+      field: 'ACP_No',
+      header: '應付帳款編號',
+      visible: true,
+      htmlFormat: true,
+      format: (value: string) => {
+        // 處理 NULL、undefined 或空字串的情況
+        if (!value || value === 'null' || value === 'undefined') {
+          return '<span style="color: #999;">-</span>';
+        }
+        return `<a href="javascript:void(0)" onclick="window.handleAcpNoClick('${value}')" style="color: #007ad9; text-decoration: underline; cursor: pointer;">${value}</a>`;
+      }
+    },
     { field: 'VendorNo', header: '廠商編號', visible: true },
     { field: 'VendorName', header: '廠商名稱', visible: true },
     { field: 'AccNo', header: '會計科目', visible: true },
@@ -90,6 +102,40 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
   ngOnInit(): void {
     this.initializePage('FIN29060', '/FIN/FIN29060CRU', this.queryForm, (frm) => this.onSubmit(frm));
     this.loadOptions();
+    this.setupGlobalClickHandler();
+  }
+
+  private setupGlobalClickHandler(): void {
+    // 設定全域方法處理 ACP_No 點擊
+    Object.assign(window, {
+      handleAcpNoClick: (acpNo: string) => {
+        this.onAcpNoClick({ ACP_No: acpNo } as FIN29060Data);
+      }
+    });
+  }
+
+  onAcpNoClick(row: FIN29060Data) {
+    const acpNo = row?.ACP_No;
+    if (!acpNo || acpNo === 'null' || acpNo === 'undefined' || acpNo.trim() === '') {
+      this.messageService?.warnBubble?.('無法開啟，缺少應付帳款編號。');
+      return;
+    }
+
+    try {
+      const handoff = {
+        acpNo,
+        fromRoute: window.location.pathname,
+        ts: Date.now(),
+      };
+      localStorage.setItem('FIN24010_CRU_HANDOFF', JSON.stringify(handoff));
+      localStorage.setItem('FIN24010_CRU_PROGNO', 'FIN24010');
+      console.log('[FIN24010] 已儲存 handoff:', handoff);
+    } catch (err) {
+      console.error('[FIN24010] handoff save failed:', err);
+      this.messageService?.warnBubble?.('寫入交接資料失敗。');
+    }
+
+    window.open('/account/fin/fin24010cru', '_blank', 'noopener');
   }
   private loadOptions(): void {
     // 廠客代號
