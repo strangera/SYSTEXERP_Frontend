@@ -10,6 +10,7 @@ import { LocationOptionsService } from '../../../service/api/dropdownservice/loc
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { ContractFlowService } from '../tls13010/services/contract-flow.service';
@@ -53,8 +54,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   currentRowData: any = null;
   currentCapType: string = '';
 
-  // 檢視模式用
-  isViewMode = false;
+  // 檢視模式用 (衍生自 crudstatus)
+  get isViewMode(): boolean {
+    return this.crudstatus === CRUDStatus.Read;
+  }
 
   // 組織table下拉
   orgOptions: any[] = [];
@@ -380,12 +383,15 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   private initializeViewModeFromService(): void {
     const viewModeSub = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
-      this.isViewMode = isViewMode;
+      this.crudstatus = isViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
       // console.log('🔍 Next1 檢視模式狀態更新:', isViewMode);
     });
 
     this.subscriptions.push(viewModeSub);
-    this.isViewMode = this.contractFlowService.isViewMode();
+
+    // 初始化 CRUD 狀態
+    const currentViewMode = this.contractFlowService.isViewMode();
+    this.crudstatus = currentViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
   }
 
   private setupTotalLocationSpace(): void {

@@ -53,25 +53,22 @@ export class RentCalculationService {
       subscriptions.push(rentAheadSubscription);
     }
 
-    // 監聽合約起始日變更(使用 blur 事件模擬)
+    // 監聽合約起始日變更(只做日期驗證,不計算 rent_period)
     const startDateSubscription = formGroup.get('tlt_bdate')?.valueChanges.pipe(
-      debounceTime(500) // 延遲觸發,模擬 blur 效果
+      debounceTime(500)
     ).subscribe(() => {
-      console.log('📅 合約起始日變更,檢查是否需要重新計算');
       this.dateValidationService.validateContractDates(formGroup, messageService);
-      this.calculateRentPeriodIfPossible(formGroup, messageService);
     });
 
     if (startDateSubscription) {
       subscriptions.push(startDateSubscription);
     }
 
-    // 監聽合約迄日變更(使用 blur 事件模擬)
+    // 監聽合約迄日變更(只做日期驗證,不計算 rent_period)
     const endDateSubscription = formGroup.get('tlt_edate')?.valueChanges.pipe(
-      debounceTime(500) // 延遲觸發,模擬 blur 效果
+      debounceTime(500)
     ).subscribe(() => {
-      console.log('📅 合約迄日變更,重新計算租金期數');
-      this.calculateRentPeriodIfPossible(formGroup, messageService);
+      this.dateValidationService.validateContractDates(formGroup, messageService);
     });
 
     if (endDateSubscription) {

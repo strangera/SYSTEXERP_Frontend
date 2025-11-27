@@ -1,48 +1,43 @@
-import { CurrentPageService } from './../../../core/layout/app.menulist/current-page.service';
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule, FormBuilder } from '@angular/forms';
-import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
-import { distinctUntilChanged, map, Observable, Subscription, debounceTime, firstValueFrom, switchMap, of } from 'rxjs';
-import { AuthService } from '@service/system/auth.service';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { ContractFlowService } from '../tls13010/services/contract-flow.service';
-import { Pos2013DropdownOption, TLS13010_DROPDOWN_OPTIONS, TLS13010DropdownService } from '../tls13010/tls13010.dropdown';
-import { BankOptionsService } from '../../../service/api/dropdownservice/bank-option.service';
-import { AutoCompleteOption, AutoCompleteComponent } from '../../../shared/componentkit/app-autocomplete/app-autocomplete.component';
-import { ColumnDef, ExpandableEditTableComponent, SelectorTableColumn } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
-import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
-import { ContractInfo, LocationItem } from '../tls13010/tls13010.model';
-import { DropdownOption } from '../tls13010/tls13010.dropdown';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
 import { NgIf } from '@angular/common';
-import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, NavigationExtras } from '@angular/router';
+import { NegotiatorOptionsService } from '@service/api/dropdownservice/negotiator-options.service';
+import { VendorCategoryOptionsService } from '@service/api/dropdownservice/vendor-category-options.service';
+import { Tls12010Service } from '@service/api/tls/tls12010.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
 import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
-import { VendorCategoryOptionsService } from '@service/api/dropdownservice/vendor-category-options.service';
-import { NegotiatorOptionsService } from '@service/api/dropdownservice/negotiator-options.service';
-import { TLS13010ValidationService } from './validation/tls13010-validation.service';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
+import { InputTextModule } from 'primeng/inputtext';
+import { debounceTime, distinctUntilChanged, firstValueFrom, map, Observable, of, Subscription, switchMap } from 'rxjs';
+import { BankOptionsService } from '../../../service/api/dropdownservice/bank-option.service';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AutoCompleteComponent, AutoCompleteOption } from '../../../shared/componentkit/app-autocomplete/app-autocomplete.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { ColumnDef, ExpandableEditTableComponent, SelectorTableColumn } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { ContractFlowService } from '../tls13010/services/contract-flow.service';
+import { DropdownOption, Pos2013DropdownOption, TLS13010_DROPDOWN_OPTIONS, TLS13010DropdownService } from '../tls13010/tls13010.dropdown';
+import { ContractInfo, LocationItem } from '../tls13010/tls13010.model';
+import { CommissionTypeChangeService } from './services/commission-type-change.service';
+import { TLS13010DataLoaderService } from './services/data-loader.service';
+import { FormStateService } from './services/form-state.service';
+import { LocationDataManagementService } from './services/location-data-management.service';
+import { RentCalculationService } from './services/rent-calculation.service';
+import { TLS13010FormInitService } from './services/tls13010-cru.formInit.service';
 import { DateValidationService } from './validation/date-validation.service';
 import { EmailValidationService } from './validation/email-validation.service';
-import { TLS13010FormInitService } from './services/tls13010-cru.formInit.service';
-import { LocationDataManagementService } from './services/location-data-management.service';
-import { TLS13010DataLoaderService } from './services/data-loader.service';
-import { RentCalculationService } from './services/rent-calculation.service';
-import { CommissionTypeChangeService } from './services/commission-type-change.service';
-import { FormStateService } from './services/form-state.service';
-import { Tls12010Service } from '@service/api/tls/tls12010.service';
-import { SystemDataService } from '@service/system/system-data.service';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { TLS13010ValidationService } from './validation/tls13010-validation.service';
 
 interface CategoryItem {
   id: number;
@@ -77,11 +72,17 @@ interface CategoryItem {
 })
 export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
   // ========== 核心屬性（取代繼承的部分） ==========
-  isFormReadonly = false;
+  // ========== CRUD 狀態管理 (參考 TLS12040) ==========
+  override crudstatus: CRUDStatus = CRUDStatus.Create;
 
-  // ========== 檢視模式管理 ==========
-  isViewMode = false;
-  private viewModeSubscription?: Subscription;
+  // ========== 表單唯讀狀態 (衍生自 crudstatus) ==========
+  get isFormReadonly(): boolean {
+    return this.crudstatus === CRUDStatus.Read;
+  }
+
+  get isViewMode(): boolean {
+    return this.crudstatus === CRUDStatus.Read;
+  }
   // 位置選項資料
   locationWithDetailsOptions: DropdownOption[] = [];
   displayLocationData: LocationItem[] = [];
@@ -402,9 +403,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   ngOnDestroy(): void {
     // 清理訂閱
-    if (this.viewModeSubscription) {
-      this.viewModeSubscription.unsubscribe();
-    }
     this.subscriptions.forEach(sub => sub.unsubscribe());
 
     //  清理 FormStateService
@@ -454,15 +452,16 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
 
   private initializeViewMode(): void {
-    console.log('📝 步驟 2: 初始化檢視模式');
+    console.log('📝 步驟 2: 初始化 CRUD 狀態');
 
-    // 從服務取得檢視模式狀態
-    this.isViewMode = this.contractFlowService.isViewMode();
+    // 從服務取得檢視模式狀態並設定 CRUD 狀態
+    const isViewMode = this.contractFlowService.isViewMode();
+    this.crudstatus = isViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
 
     // 設定檢視模式 UI 監聽
     this.setupViewModeUI();
 
-    console.log(`   檢視模式: ${this.isViewMode ? '是' : '否'}`);
+    console.log(`   CRUD 狀態: ${this.crudstatus}`);
   }
 
   private initializeWorkflow(): void {
@@ -645,11 +644,19 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       return;
     }
 
-    //  關鍵修正：先檢查 session 資料
+    //  🔥 檢視模式策略：優先從 API 載入最新資料（參考 TLS12040）
+    if (this.isViewMode) {
+      console.log('  🔍 檢視模式：無條件從 API 載入最新資料');
+      await this.loadContractDetailAsync(String(queryRowData.talent_id));
+      console.log('   資料載入完成');
+      return;
+    }
+
+    //  編輯模式策略：優先使用 session，避免覆蓋未儲存的修改
     const savedFormData = this.contractFlowService.getStep1Data();
 
     if (savedFormData && this.isSessionDataComplete(savedFormData)) {
-      console.log('   Session 資料完整，使用 session（不打 API）');
+      console.log('   編輯模式：Session 資料完整，使用 session（不打 API）');
       // 使用 session 資料填充表單
       this.loadFromSessionData(savedFormData);
       return;
@@ -765,14 +772,19 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     //  步驟 3: 根據模式決定如何填充（參考 TLS12040）
     if (this.isViewMode || this.isFormReadonly) {
       console.log('    🔒 Readonly 模式填充');
+      console.log('     cleanedData.check_typeList:', cleanedData.check_typeList);
+      console.log('     checkTypeOptions:', this.checkTypeOptions);
       // Readonly 模式：enable → 填充 → disable
       this.dataForm.enable();
       this.dataForm.patchValue(cleanedData, { emitEvent: false });
+      console.log('     填充後 check_typeList 值:', this.dataForm.get('check_typeList')?.value);
       this.dataForm.disable();
     } else {
       console.log('    ✏️ 一般模式填充');
+      console.log('     cleanedData.check_typeList:', cleanedData.check_typeList);
       // 一般模式：直接填充
       this.dataForm.patchValue(cleanedData, { emitEvent: false });
+      console.log('     填充後 check_typeList 值:', this.dataForm.get('check_typeList')?.value);
     }
 
     console.log('     表單資料填充完成');
@@ -1224,7 +1236,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     }
   }
 
-
   /**
    * 統一設定表單欄位的 readonly 狀態
    */
@@ -1234,7 +1245,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.isViewMode,
       this.contractFlowService.isNewContractMode()
     );
-    this.isFormReadonly = this.isViewMode;
   }
 
   // ==========  表單監聽與自動儲存 ==========
@@ -1489,6 +1499,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     };
     if (this.isViewMode) {
       this.contractFlowService.clearViewMode();
+      this.contractFlowService.clearTempData();
       this.router.navigate(['account/tls/tls13010'], extras);
       this.messageService.infoBubble('已退出檢視模式');
       return;
@@ -1970,20 +1981,20 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 如果已經是檢視模式,立即設定
     if (currentViewMode) {
-      this.isViewMode = true;
+      this.crudstatus = CRUDStatus.Read;
       this.handleViewModeChange(true);
     }
 
     // 訂閱後續變更
-    this.viewModeSubscription = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
+    const viewModeSubscription = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
       console.log('🔍 檢視模式變更:', isViewMode);
-      this.isViewMode = isViewMode;
+      this.crudstatus = isViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
       this.handleViewModeChange(isViewMode);
     });
+    this.subscriptions.push(viewModeSubscription);
   }
 
   private handleViewModeChange(isViewMode: boolean): void {
-    this.isFormReadonly = isViewMode;
     this.formTitle = this.formStateService.handleViewModeChange(
       isViewMode,
       this.dataForm,

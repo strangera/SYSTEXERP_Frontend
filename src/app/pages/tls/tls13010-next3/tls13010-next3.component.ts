@@ -6,6 +6,7 @@ import { ActivatedRoute, NavigationExtras } from '@angular/router';
 
 // 基礎組件和服務
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { ContractFlowService } from '../tls13010/services/contract-flow.service';
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
@@ -72,13 +73,15 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   };
 
   // ===== 狀態管理 =====
-  isViewMode = false;
+  // 檢視模式用 (衍生自 crudstatus)
+  get isViewMode(): boolean {
+    return this.crudstatus === CRUDStatus.Read;
+  }
   dataLoaded = false;
   conditionDataLoaded = false;
   showConfirmDialog = false;
 
   // ===== 訂閱管理 =====
-  private viewModeSubscription?: Subscription;
   private subscriptions: Subscription[] = [];
 
   // ===== 表單數據 =====
@@ -198,9 +201,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
     // 清理訂閱
     this.subscriptions.forEach(sub => sub.unsubscribe());
-    if (this.viewModeSubscription) {
-      this.viewModeSubscription.unsubscribe();
-    }
   }
 
   // ===== 初始化方法 =====
@@ -222,14 +222,15 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
     const currentViewMode = this.contractFlowService.isViewMode();
     if (currentViewMode) {
-      this.isViewMode = true;
+      this.crudstatus = CRUDStatus.Read;
       this.applyViewModeSettings(true);
     }
 
-    this.viewModeSubscription = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
-      this.isViewMode = isViewMode;
+    const viewModeSubscription = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
+      this.crudstatus = isViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
       this.applyViewModeSettings(isViewMode);
     });
+    this.subscriptions.push(viewModeSubscription);
   }
 
   private applyViewModeSettings(isViewMode: boolean): void {
