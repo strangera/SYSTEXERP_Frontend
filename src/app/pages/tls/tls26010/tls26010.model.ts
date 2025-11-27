@@ -15,6 +15,10 @@ export interface DependentDataQuery {
 
   tlt_bdate?: string | null; // 需求更新: 專櫃效期之起始日期
   tlt_edate?: string | null; // 需求更新: 專櫃效期之結束日期
+
+  ecr_no?: string | null; // 需求更新: 收銀機號(收銀機號查詢才需要)
+
+  tlt_no?: string | null; // 需求更新: 專櫃編號(收銀機號查詢才需要)
 }
 
 export interface TLS26010Query extends BaseQueryRequest {
@@ -33,7 +37,7 @@ export interface EcrItem {
   building_name?: string;
   building_no?: string;
   ecr_name: string;
-  ecr_no: string;
+  ECR_No: string;
   ecr_type?: string;
   floor_name?: string;
   floor_no?: string;
