@@ -1,29 +1,30 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { finalize } from 'rxjs';
 import { FormGroup, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { HttpResponse } from '@angular/common/http';
+import { finalize } from 'rxjs';
 
 import {
+  ExportFIN55060Payload,
   FIN55060Service,
   QueryFIN55060Payload,
-  ExportFIN55060Payload,
 } from 'src/app/service/api/fin/fin55060.service';
 
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
-import { AccordionModule } from 'primeng/accordion';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
-import { DropDownListService } from 'src/app/service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
+import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { DropDownListService } from 'src/app/service/utility/dropDownList.service';
 
 type ApiGroup = {
   AccNo4: string;
@@ -58,9 +59,10 @@ type TableRow = ApiDetail & {
     FormsModule,
     ReactiveFormsModule,
     CalendarRangeComponent,
+    DropdownComponent,
+    DropdownRangeComponent,
     ButtonComponent,
     TranslateModule,
-    MultiSelectComponent,
     TableSubheaderComponent,
   ],
 })
@@ -74,33 +76,34 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
   queryForm = this.formBuilder.group({
     TXN_BDATE: [this.today, [Validators.required]],
     TXN_EDATE: [this.today, [Validators.required]],
-    org_idList: [null],
-    ProjectNoList: [null],
-    AccNoList: [null],
-    DetailNoList: [null],
+    OrgId: [null],
+    PTAFrom: [null],
+    PTATo: [null],
+    AccNoFrom: [null],
+    AccNoTo: [null],
+    VendorFrom: [null],
+    VendorTo: [null],
     ...createPaginationConfig([]), // pageIndex/pageSize/SortBy
   });
 
   data: TableRow[] = [];
   totalRecords = 0;
-  btnLoading = false;
+  PDFBtnLoading = false;
+  XLSXBtnLoading = false;
   lastQueryBody: QueryFIN55060Payload | null = null;
 
-  /** 和 FIN55050 一樣：用 detail 欄位作為可點擊連結（這裡用 AccNo4） */
   columns: Column[] = [
-    { field: 'AccNo4',     header: '四級科目',       visible: true,  }, // ← 可點
-    // { field: 'AccNo4',     header: '四級科目',       visible: true,  type: 'detail' }, // ← 可點
-    { field: 'AccNo4Name', header: '四級科目名稱',   visible: true },
-
-    { field: 'AccNo',      header: '科目代號',       visible: true },
-    { field: 'AccCName',   header: '科目名稱',       visible: true },
-    { field: 'DetailNo',   header: '廠商代號/名稱',  visible: true },
-    { field: 'ORG_ID',     header: '部門代號',       visible: true },
-    { field: 'Org_Name',   header: '部門名稱',       visible: true },
-    { field: 'ProjectNo',  header: '活動代號',       visible: true },
-    { field: 'Debit_Amt',  header: '借方金額',       visible: true, format: formatAmount },
-    { field: 'Credit_Amt', header: '貸方金額',       visible: true, format: formatAmount },
-    { field: 'Balance',    header: '餘額',           visible: true, format: formatAmount },
+    { field: 'AccNo4', header: '四級科目', visible: true },
+    { field: 'AccNo4Name', header: '四級科目名稱', visible: true },
+    { field: 'AccNo', header: '科目代號', visible: true },
+    { field: 'AccCName', header: '科目名稱', visible: true },
+    { field: 'DetailNo', header: '廠商代號/名稱', visible: true },
+    { field: 'ORG_ID', header: '部門代號', visible: true },
+    { field: 'Org_Name', header: '部門名稱', visible: true },
+    { field: 'ProjectNo', header: '活動代號', visible: true },
+    { field: 'Debit_Amt', header: '借方金額', visible: true, format: formatAmount },
+    { field: 'Credit_Amt', header: '貸方金額', visible: true, format: formatAmount },
+    { field: 'Balance', header: '餘額', visible: true, format: formatAmount },
   ];
 
   org_idListOptions: any[] = [];
@@ -131,16 +134,6 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  private ensureArr(v: any) {
-    return Array.isArray(v) ? v : v == null || v === '' ? [] : [v];
-  }
-
-  private sanitizeSortBy(sortBy: any[] | undefined) {
-    if (!Array.isArray(sortBy)) return [];
-    return sortBy.filter(s => s && typeof s.field === 'string' && !s.field.startsWith('_'));
-  }
-
-  /** 以 AccNo4 群組的資料 -> 展平成平面列，並依 AccNo4 排序，利於群組呈現 */
   private flattenGroupsToRows(groups: ApiGroup[] | null | undefined): TableRow[] {
     if (!Array.isArray(groups)) return [];
     const rows: TableRow[] = [];
@@ -168,20 +161,24 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
     const raw = input ?? this.queryForm.getRawValue();
 
     const from = this.toDateOnly(raw?.TXN_BDATE);
-    const to   = this.toDateOnly(raw?.TXN_EDATE);
+    const to = this.toDateOnly(raw?.TXN_EDATE);
     if (!from || !to) return null;
 
     const body: QueryFIN55060Payload = {
-      TXN_BDATE: from,
-      TXN_EDATE: to,
-      org_idList:    this.ensureArr(raw?.org_idList),
-      ProjectNoList: this.ensureArr(raw?.ProjectNoList),
-      AccNoList:     this.ensureArr(raw?.AccNoList),
-      DetailNoList:  this.ensureArr(raw?.DetailNoList),
-      pageIndex: raw?.pageIndex,
-      pageSize: raw?.pageSize,
-      SortBy: this.sanitizeSortBy(raw?.SortBy),
-    } as any;
+      AccNoFrom: raw?.AccNoFrom || '',
+      AccNoTo: raw?.AccNoTo || '',
+      DateFrom: from,
+      DateTo: to,
+      OrgId: raw?.OrgId || '',
+      Notes: '',
+      VendorFrom: raw?.VendorFrom || '',
+      VendorTo: raw?.VendorTo || '',
+      PTAFrom: raw?.PTAFrom || '',
+      PTATo: raw?.PTATo || '',
+      VouType: '',
+      VouStatus: '',
+      TargetNo: '',
+    };
 
     return body;
   }
@@ -209,10 +206,8 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
     });
   }
 
-  /** lazy 分頁事件（由 app-table-subheader 觸發）—和 FIN55050 一樣的處理方式 */
   override onLazyLoadData(event: any, form: FormGroup) {
     if (!event) return;
-    // FIN55050 風格：直接套用 event 的 pageIndex/pageSize/SortBy 到表單；不觸發 valueChanges
     form.patchValue({
       pageSize: event?.pageSize ?? event?.rows ?? form.value.pageSize,
       pageIndex: event?.pageIndex ?? (event?.first != null
@@ -222,25 +217,29 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
         ? event.multiSortMeta.map((s: any) => ({ field: s.field, order: s.order }))
         : (event?.sortField ? [{ field: event.sortField, order: event.sortOrder }] : [])),
     }, { emitEvent: false });
-
-    // FIN55050 範例也會在 lazy 時立即查詢
-    // （HTML 已呼叫 onSubmit(queryForm)，這裡就不再主動呼叫以免重複）
   }
 
   // ========= 匯出（不含分頁/排序） =========
   private buildExportBody(): ExportFIN55060Payload | null {
     const rawForm = this.queryForm.getRawValue();
-    const from = this.toDateOnly((this.lastQueryBody as any)?.TXN_BDATE ?? rawForm?.TXN_BDATE);
-    const to   = this.toDateOnly((this.lastQueryBody as any)?.TXN_EDATE  ?? rawForm?.TXN_EDATE);
+    const from = this.toDateOnly((this.lastQueryBody as any)?.DateFrom ?? rawForm?.TXN_BDATE);
+    const to = this.toDateOnly((this.lastQueryBody as any)?.DateTo ?? rawForm?.TXN_EDATE);
     if (!from || !to) return null;
 
     const payload: ExportFIN55060Payload = {
-      TXN_BDATE: from,
-      TXN_EDATE: to,
-      org_idList:    this.ensureArr(rawForm?.org_idList ?? (this.lastQueryBody as any)?.org_idList),
-      ProjectNoList: this.ensureArr(rawForm?.ProjectNoList ?? (this.lastQueryBody as any)?.ProjectNoList),
-      AccNoList:     this.ensureArr(rawForm?.AccNoList ?? (this.lastQueryBody as any)?.AccNoList),
-      DetailNoList:  this.ensureArr(rawForm?.DetailNoList ?? (this.lastQueryBody as any)?.DetailNoList),
+      AccNoFrom: rawForm?.AccNoFrom || '',
+      AccNoTo: rawForm?.AccNoTo || '',
+      DateFrom: from,
+      DateTo: to,
+      OrgId: rawForm?.OrgId || '',
+      Notes: '',
+      VendorFrom: rawForm?.VendorFrom || '',
+      VendorTo: rawForm?.VendorTo || '',
+      PTAFrom: rawForm?.PTAFrom || '',
+      PTATo: rawForm?.PTATo || '',
+      VouType: '',
+      VouStatus: '',
+      TargetNo: '',
     };
     return payload;
   }
@@ -249,11 +248,11 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
     if ((this.data?.length ?? 0) === 0) return;
     const payload = this.buildExportBody();
     if (!payload) return;
-    this.btnLoading = true;
+    this.PDFBtnLoading = true;
 
     this.fin55060Service
       .exportFIN55060PDF(payload)
-      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+      .pipe(untilDestroyed(this), finalize(() => (this.PDFBtnLoading = false)))
       .subscribe({
         next: (r) => this.handleFileExport(r, '.pdf', '分類帳_四級科目'),
         error: (e) => console.error('Export PDF failed', e),
@@ -264,11 +263,11 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
     if ((this.data?.length ?? 0) === 0) return;
     const payload = this.buildExportBody();
     if (!payload) return;
-    this.btnLoading = true;
+    this.XLSXBtnLoading = true;
 
     this.fin55060Service
       .exportFIN55060Excel(payload)
-      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+      .pipe(untilDestroyed(this), finalize(() => (this.XLSXBtnLoading = false)))
       .subscribe({
         next: (r) => this.handleFileExport(r, '.xlsx', '分類帳_四級科目'),
         error: (e) => console.error('Export Excel failed', e),
@@ -299,10 +298,8 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
     return def;
   }
 
-  // ========= 點擊 AccNo4（detail）導到 CRU =========
   override onDetail(row: TableRow) {
     if (!row?.AccNo4) return;
-    // 依你們慣例，將整列 row 與目前查詢條件都帶到 CRU
     this.navigateWithState(CRUDStatus.Read, row, this.queryForm.getRawValue());
   }
 
@@ -348,8 +345,8 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
       .pipe(untilDestroyed(this))
       .subscribe(response => {
         this.DetailNoListOptions = response?.Data?.map((item: any) => ({
-          label: `${item.No} - ${item.Name}`,
-          value: item.No,
+          label: `${item.VEN_No} - ${item.Name}`,
+          value: item.VEN_No,
         })) ?? [];
       });
   }

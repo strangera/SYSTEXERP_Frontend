@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { CampaignData, TLS26080Data, TLS26080Detail, TLS26080InsertPayload, TLS26080Query, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
+import { CampaignData, TLS26080Data, TLS26080DetailResult, TLS26080DetailTable, TLS26080InsertPayload, TLS26080Query, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
 import { Option, TalentChargeItem } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -24,10 +24,9 @@ export class TLS26080Service {
   // 儲存資料
   public readonly tltTalentOptions = signal<Option[]>([]);
   public readonly tltTalentChargeOptions = signal<TalentChargeItem[]>([]);
-
-  public readonly tltIdOptions = signal<Option[]>([
-    ...Array.from({ length: 10 }).map((_, i) => ({ value: i + '', label: i + '' })),
-  ]);
+  public readonly tltIdOptions = signal<Option[]>(
+    Array.from({ length: 10 }, (_, i) => ({ value: `${i}`, label: `${i}` }))
+  );
 
   public readonly tltTalentMap = computed(() => {
     return new Map<string, Option>(this.tltTalentOptions().map(item => [item.value, item]));
@@ -111,8 +110,8 @@ export class TLS26080Service {
   };
 
   /** 專櫃活動 */
-  public loadTLS26080Detail(query: string): Observable<BaseQueryResponse<TLS26080Detail>> {
-    return this.http.post<BaseQueryResponse<TLS26080Detail>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080_Detail`, { pod_no: query }).pipe(
+  public loadTLS26080Detail(query: string): Observable<BaseQueryResponse<TLS26080DetailTable>> {
+    return this.http.post<BaseQueryResponse<TLS26080DetailTable>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080_Detail`, { pod_no: query }).pipe(
       take(1),
       tap(res => this.logger.debug(`專櫃活動細節查詢結果:`, [res]))
     );
@@ -143,28 +142,20 @@ export class TLS26080Service {
     );
   }
 
-  public uploadFile(file: FormData): Observable<TLS26080Detail[]> {
+  public uploadFile(file: FormData): Observable<TLS26080UploadResult> {
     return this.http.post<TLS26080UploadResponse>(`${apiUrl}/TLS0000/TLS2000/uploadTLS26080`, file).pipe(
       take(1),
-      tap(res => {
-        const data = res.Data;
-        this.logger.debug(`uploadFile:`, [res]);
-        if (data.Success) {
-          this.messageService.successBubble('上傳成功');
-        } else {
-          this.messageService.errorBubble(data.Errors[0], '上傳失敗');
-        }
-        this.dealErrorFilePath(data);
-        this.logger.debug(`上傳檔案結果:`, [file]);
-      }),
       map(res => {
-        const data = res.Data;
-        if (!data.Success) return [];
-        return data.queryTLS26080_DetailResponses.map(v => (<TLS26080Detail>{
-          ...v,
-          tpy_rate_D16: Number(v.tpy_rate_D16.replace('%', '')).toFixed(2),
-          tpy_rate_D17: Number(v.tpy_rate_D17.replace('%', '')).toFixed(2),
-        }));
+        if (res.Status !== '0000') return Object.create(null);
+        const { queryTLS26080_DetailResponses, ...rest } = res.Data;
+        return {
+          ...rest,
+          queryTLS26080_DetailResponses: queryTLS26080_DetailResponses.map(v => (<TLS26080DetailResult>{
+            ...v,
+            tpy_rate_D16: Number(v.tpy_rate_D16.replace('%', '')).toFixed(2),
+            tpy_rate_D17: Number(v.tpy_rate_D17.replace('%', '')).toFixed(2),
+          })),
+        };
       })
     );
   }
@@ -175,10 +166,9 @@ export class TLS26080Service {
     );
   }
 
-  private dealErrorFilePath(data: TLS26080UploadResult): void {
+  public dealErrorFilePath(data: TLS26080UploadResult): void {
     const path = data.ErrorFilePath;
-    if (!path || data.Success || !data.ErrorCount) return;
-    window.open(`${apiUrl}${path}`, '_blank', 'noopener noreferrer');
+    if (path && !data.Success) window.open(`${apiUrl}${path}`, '_blank', 'noopener noreferrer');
   }
 
   public downloadXLSXExample(): Observable<Blob> {
@@ -215,12 +205,12 @@ export class TLS26080Service {
     ).subscribe();
   }
 
-  public getTLTTalentChargeOptions(): void {
+  public getTLTTalentChargeOptions(talent_id?: null): void {
     if (this.tltTalentOptionsDebounce()) return;
     this.tltTalentOptionsLoading.set(!0);
     this.tltTalentOptionsDebounce.set(!0);
     setTimeout(() => this.tltTalentOptionsDebounce.set(!1));
-    this.dropdown.queryTltTalentCharge({ talent_id: null as unknown as number }).pipe(
+    this.dropdown.queryTltTalentCharge({ talent_id: talent_id as unknown as number }).pipe(
       take(1),
       tap(res => {
         this.tltTalentChargeOptions.set(res ?? []);
@@ -230,7 +220,7 @@ export class TLS26080Service {
     ).subscribe();
   }
 
-  public keyInTLS26080(data: TLS26080Detail, currentTableData: TLS26080Detail[]): Observable<{ success: boolean; data: TLS26080Detail; message?: string; }> {
+  public keyInTLS26080(data: TLS26080DetailTable, currentTableData: TLS26080DetailTable[]): Observable<{ success: boolean; data: TLS26080DetailTable; message?: string; }> {
     return this.http.post<TLS26080UploadResponse>(`${apiUrl}/TLS0000/TLS2000/keyInTLS26080`, {
       queryTLS26080_DetailResponses: currentTableData,
       keyInTLS26080: data,

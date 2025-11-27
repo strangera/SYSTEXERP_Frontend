@@ -16,6 +16,23 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
+// 本期發票月
+const today = new Date();
+let invoiceYear = today.getFullYear();
+let invoiceMonth = today.getMonth() + 1; // JS 月份 0~11
+
+// 如果不是偶數月，就加 1 個月
+if (invoiceMonth % 2 !== 0) {
+  invoiceMonth += 1;
+  if (invoiceMonth > 12) {
+    invoiceMonth = 1;
+    invoiceYear += 1;
+  }
+}
+// 將年月轉成 YYYYMM 字串
+export const invoiceDate = invoiceYear.toString() + invoiceMonth.toString().padStart(2, '0');
+
+
 // 形成媒體申報檔
 @Component({
   selector: 'app-fin14040',
@@ -40,7 +57,7 @@ export class FIN14040Component extends BasicQueryPageComponent<unknown> implemen
   queryForm = this.formBuilder.group({
     Mid: [this.authService.getUserInfo()?.mid ?? null, [Validators.required]], // section抓
     STO_No: [this.authService.getUserInfo()?.SYS_StoreNo ?? null, [Validators.required]], // section抓
-    INV_DeclareYM: [null, Validators.required], //申報年月
+    INV_DeclareYM: [invoiceDate, Validators.required], //申報年月
     Tax_No: [null, Validators.required], //稅籍編號
 
     // ...createPaginationConfig([{ field: 'REP_GUIYM', order: 1 }]), // 分頁和排序參數

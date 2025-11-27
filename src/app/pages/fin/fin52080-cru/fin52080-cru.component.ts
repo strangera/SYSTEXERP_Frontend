@@ -13,7 +13,7 @@ import { ValidationService } from '@shared/service/validation.service';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { finalize, map, tap } from 'rxjs';
+import { finalize, tap } from 'rxjs';
 import { AccDCType, FIN52080Data, FIN52080Query, FIN52080Tree, LedgerMDType, VoucherType } from '../fin52080/fin52080.model';
 
 @Component({
@@ -120,11 +120,12 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
     this.treeLoading.set(!0);
     this.service.getFIN52080Tree().pipe(
       tap(res => this.logger.debug(`init:`, [this.rowdata])),
-      map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
       finalize(() => this.treeLoading.set(!1)),
     ).subscribe({
-      next: res => this.FIN52080Tree.set(res.Data || []),
-      error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+      next: res => {
+        if (res.Status !== '0000') return;
+        this.FIN52080Tree.set(res.Data || []);
+      },
     });
   }
 
@@ -137,10 +138,10 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
       this.tableLoading.set(!0);
       this.service.saveFIN52080(payload).pipe(
         tap(res => this.logger.debug(`onSubmit:`, [payload, res])),
-        map(res => { if (res.Status === '0000') return res; throw new Error('資料儲存失敗'); }),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
-        next: () => {
+        next: res => {
+          if (res.Status !== '0000') return;
           this.onCancel();
           this.messageService.successBubble('資料儲存成功');
         }

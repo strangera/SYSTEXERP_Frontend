@@ -40,6 +40,8 @@ export class TLS26010Service {
   public readonly tableLoading = signal<boolean>(false);
   public readonly approvalStatusLoading = signal<boolean>(false);
 
+  apiUrl: string = environment.ApiUrl + '/TLS0000/TLS2000';
+
   public readonly ecrDataMap = computed(() => {
     return new Map<string, EcrItem>(this.ecrOptions().map(ecr => ([ecr.ECR_No!, ecr])));
   });
@@ -112,7 +114,7 @@ export class TLS26010Service {
   }
 
   /** 取得收銀機號 */
-  public queryECRDropDownList(query: DependentDataQuery & { ecr_type: string; }): void {
+  public loadECRDropDownList(query: DependentDataQuery & { ecr_type: string; }): void {
     this.ecrLoading.set(true);
     this.http.post<BaseQueryResponse<any>>(`${apiUrl}/queryECRDropDownList`, query).pipe(
       take(1),
@@ -130,7 +132,7 @@ export class TLS26010Service {
   }
 
   /** 取得專櫃編號 */
-  public queryTalentDropDownList(query: DependentDataQuery): void {
+  public loadTalentDropDownList(query: DependentDataQuery): void {
     this.tltLoading.set(true);
     this.http.post<BaseQueryResponse<TltItem>>(`${apiUrl}/queryTalentDropDownList`, query).pipe(
       take(1),
@@ -252,5 +254,18 @@ export class TLS26010Service {
         }),
         finalize(() => this.approvalStatusLoading.set(false))
       ).subscribe();
+  }
+
+  //新增的
+  //查ecr dialog
+  queryECRDropDownList(body: any): Observable<any> {
+    {
+      return this.http.post<any>(`${environment.ApiUrl}/queryECRDropDownList`, body);
+    }
+  }
+
+  //查tlt dialog
+  queryTalentDropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryTalentDropDownList`, body);
   }
 }

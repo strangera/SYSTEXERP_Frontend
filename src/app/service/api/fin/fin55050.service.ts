@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Injectable } from '@angular/core';
 import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 // 查詢 Request
@@ -9,15 +9,19 @@ export interface QueryFIN55050Request extends BaseQueryRequest {
   DateFrom: string;
   DateTo: string;
   OrgIdList?: string[];
-  AccNoList?: string[];
-  VendorNoList?: string[];
+  AccNoFrom?: string;
+  AccNoTo?: string;
+  VendorFrom?: string;
+  VendorTo?: string;
   PTAFrom?: string;
   PTATo?: string;
-  TargetNoList?: string[];
+  Target?: string;
+  Project?: string;
   Notes?: string;
-  VouTypeList?: string[];
+  VoucherType?: string;
   VouStatusList?: string[];
-  IsTarget: string;
+  IsTarget?: string;
+  ReportMode?: string;
 }
 
 // 明細 Row
@@ -48,16 +52,21 @@ export interface ExportFIN55050Payload {
   DateFrom: string;
   DateTo: string;
   OrgIdList: string[];
-  AccNoList: string[];
-  VendorNoList: string[];
+  AccNoFrom: string;
+  AccNoTo: string;
+  VendorFrom: string;
+  VendorTo: string;
   PTAFrom: string;
   PTATo: string;
-  TargetNoList: string[];
+  Target: string;
+  Project: string;
   Notes: string;
-  VouTypeList: string[];
+  VoucherType: string;
   VouStatusList: string[];
   IsTarget: string;
+  ReportMode: string;
 }
+
 export interface DropDownResp<T = { No: string; Name: string }[]> {
   Status: string;
   Data: T;
@@ -67,11 +76,12 @@ export interface DropDownResp<T = { No: string; Name: string }[]> {
   TotalCount?: number;
   TotalPage?: number;
 }
+
 @Injectable({ providedIn: 'root' })
 export class FIN55050Service {
   private apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /** 查詢分類帳（回傳含 _Details 的巢狀資料） */
   queryFIN55050(req: QueryFIN55050Request): Observable<BaseQueryResponse<FIN55050Data>> {
@@ -95,7 +105,16 @@ export class FIN55050Service {
       responseType: 'blob' as 'json',
     }) as Observable<HttpResponse<Blob>>;
   }
-  
+
+  /** 匯出明細 PDF */
+  exportFIN55050DetailPDF(body: { VouNo: string }): Observable<HttpResponse<Blob>> {
+    const url = `${this.apiUrl}/exportFIN55050DetailPDF`;
+    return this.http.post(url, body, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+    }) as Observable<HttpResponse<Blob>>;
+  }
+
   /** 對象別下拉 (SubDetailNoOptions) */
   queryGLS1016_DropDownList(): Observable<DropDownResp> {
     const url = `${environment.ApiUrl}/queryGLS1016_DropDownList`;
@@ -107,9 +126,9 @@ export class FIN55050Service {
     const url = `${environment.ApiUrl}/queryGLS1010_DropDownList`;
     return this.http.post<DropDownResp>(url, null);
   }
-queryFIN55050Detail(body: { VouNo: string }): Observable<any> {
-  const url = `${this.apiUrl}/queryFIN55050Detail`.replace('/FIN0000/GLS1000', '/FIN0000/GLS1000'); // 保持同路徑前綴
-  return this.http.post<any>(`${environment.ApiUrl}/FIN0000/GLS1000/queryFIN55050Detail`, body);
-}
+  queryFIN55050Detail(body: { VouNo: string }): Observable<any> {
+    const url = `${this.apiUrl}/queryFIN55050Detail`.replace('/FIN0000/GLS1000', '/FIN0000/GLS1000'); // 保持同路徑前綴
+    return this.http.post<any>(`${environment.ApiUrl}/FIN0000/GLS1000/queryFIN55050Detail`, body);
+  }
 
 }
