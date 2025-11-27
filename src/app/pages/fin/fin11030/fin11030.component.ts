@@ -1,22 +1,22 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, convertDateToYYYYMM, convertYYYYMMToDate, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { APS2001Data, columns } from './fin11030.model';
-import { Fin11030Service } from '../../../service/api/fin/fin11030.service';
-import { finalize } from 'rxjs';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { finalize } from 'rxjs';
+import { Fin11030Service } from '../../../service/api/fin/fin11030.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { ValidationService } from '@shared/service/validation.service';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { Column, convertYYYYMMToDate, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { APS2001Data, columns } from './fin11030.model';
 
 @Component({
   selector: 'app-fin11030',
@@ -28,24 +28,24 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarRangeComponent,
     InputTextComponent,
     InputTextRangeComponent,
     MultiSelectComponent,
     TableComponent,
     TranslateModule,
+    YearMonthComponent
   ],
 })
 //1.1.1.3 銷項品項資料設定
 export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> implements OnInit {
-  queryForm = this.formBuilder.group({
+  queryForm = this.formBuilder.nonNullable.group({
     SAL_GUIYYYYMM_start: [null, [Validators.required]],
     SAL_GUIYYYYMM_end: [null, [Validators.required]],
     SAL_GUITrack: ['', [Validators.maxLength(2)]],
     SAL_GUINo_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]],
     SAL_GUINo_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]],
     SAL_GUIPaper: [null],
-    ...createPaginationConfig([{ field: 'id', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'SAL_GUIYYYYMM', order: 1 }, { field: 'SAL_GUITrack', order: 1 }]), // 分頁和排序參數
   }, { validators: this.validationService.guiNumberRangeValidator('SAL_GUINo_start', 'SAL_GUINo_end') });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   SAL_GUIPaperOptions = getSYS1000Options('SAL_GUIPaper');     // 發票類別選項
@@ -80,20 +80,17 @@ export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> impl
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const body = {
-        ...frm.value,
-        SAL_GUIYYYYMM_end: convertDateToYYYYMM(frm.value.SAL_GUIYYYYMM_end),
-        SAL_GUIYYYYMM_start: convertDateToYYYYMM(frm.value.SAL_GUIYYYYMM_start),
-      }
       this.loading = true;
-      this.fin11030Service.queryFIN11030(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((response) => {
-        this.data = response.Data.map((item: APS2001Data) => ({
-          ...item,
-          SAL_GUIYYYYMM: convertYYYYMMToDate(item.SAL_GUIYYYYMM)
-        }));
-        this.totalRecords = response.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, frm.value);
-      });
+      this.fin11030Service.queryFIN11030(frm.value)
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe((response) => {
+          this.data = response.Data.map((item: APS2001Data) => ({
+            ...item,
+            SAL_GUIYYYYMM: convertYYYYMMToDate(item.SAL_GUIYYYYMM)
+          }));
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        });
     });
   }
 

@@ -1,11 +1,11 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { SortMeta } from 'primeng/api';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../system/auth.service';
-import { LazyLoadEvent } from '@shared/componentkit/table/table.model';
 
-export interface QueryTLS57100Request extends LazyLoadEvent {
+export interface QueryTLS57100Request {
   ReportType: '明細' | '彙總';
   HOS_No?: string[];
   LOGO_No?: string[];
@@ -17,6 +17,9 @@ export interface QueryTLS57100Request extends LazyLoadEvent {
   ODM_Type?: number[];
   Status?: string[];
   ODM_No?: string;
+  pageIndex: number; // 當前頁碼
+  pageSize: number; // 每頁顯示的數量
+  SortBy?: SortMeta[]; // 排序欄位
 }
 
 export interface QueryTLS57100DetailResponse {
@@ -56,8 +59,8 @@ export interface QueryTLS57100SummaryResponse {
 export interface QueryTLS57100ApiResponse {
   DetailData?: QueryTLS57100DetailResponse[];
   SummaryData?: QueryTLS57100SummaryResponse[];
-  SumData?: any;
-  AllData?: any;
+  GrandTotal?: QueryTLS57100DetailResponse;
+  SummaryTotal?: QueryTLS57100SummaryResponse;
 }
 
 @Injectable({
@@ -75,7 +78,8 @@ export class Tls57100Service {
         return {
           Data: data,
           TotalCount: res.TotalCount,
-          Message: res.Message
+          Message: res.Message,
+          GrandTotal: request.ReportType === '明細' ? res.Data.GrandTotal : res.Data.SummaryTotal,
         };
       })
     );

@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ApiResponse } from '../system/auth.service'; // 假設 ApiResponse 介面在此定義
 import { TLS41010Item } from '../../pages/tls/tls41010/tls41010.model';
 // 通用的下拉選單項目介面，用於大部分返回 { No: string, Name: string } 的 API
 export interface IDropdownItem {
@@ -316,6 +316,10 @@ export class DropDownListService {
   queryGLS1005_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryGLS1005_DropDownList`, {});
   }
+  // 查詢 ENG1002 下拉式選單
+  queryENG1002_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/Share/queryENG1002_DropDownList`, {});
+  }
 
   // 查詢會計科目設定檔(GLS1005)下拉式選單 (只取1103科目)
   queryGLS1005For1103_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
@@ -479,6 +483,11 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTBLUSER_DropDownList`, {});
   }
 
+  // 查詢洽談人員資料表下拉選單 (包含停用)
+  queryTBLUSER_AllStatus_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTBLUSER_AllStatus_DropDownList`, {});
+  }
+
   // 查詢POS2002位置代碼資料表下拉選單
   queryPOS2002_Location_DropDownList(params: IPOS2002LocationRequest): Observable<ApiResponse<IPOS2002LocationItem[]>> {
     return this.http.post<ApiResponse<IPOS2002LocationItem[]>>(`${this.apiUrl}/queryPOS2002_Location_DropDownList`, params);
@@ -526,8 +535,6 @@ export class DropDownListService {
     const url = `${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010Func`;
     const body = { KB_Func: [] }; return this.http.post<any>(url, body);
   }
-
-
   // 載入活動清單 (TALPORDERM)
   getActivityOptions(params: TALPORDERMRequest): Observable<ApiResponse<TALPORDERMResponse[]>> {
     return this.http.post<ApiResponse<TALPORDERMResponse[]>>(`${this.apiUrl}/Share/queryTALPORDERM_DropDownList`, params);

@@ -1,23 +1,22 @@
 
-import { Component, OnInit } from '@angular/core';
 import { formatDate } from '@angular/common';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { Component, OnInit } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { TLS12020Service } from '../../../service/api/tls/tls12020.service';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TLS12020Service } from '../../../service/api/tls/tls12020.service';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
-import { yesterday } from '@shared/models/system/query-form.model';
-import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls12020',
@@ -33,22 +32,21 @@ import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-se
     InputTextComponent,
     CalendarRangeComponent,
     TableComponent,
-    MultiSelectComponent
   ],
 })
 export class TLS12020Component extends BasicQueryPageComponent<any> implements OnInit {
   industryCodeOptions: IDropdownItem[] = [];
   queryForm = this.formBuilder.group({
-    location_no: [''],
-    ven_uniform: ['', [Validators.required]], // 原本 vendorUID, 廠商統一編號（必填）
-    VEN_Name: ['', Validators.maxLength(60)], // 原本 ven_name
-    VEN_EngName: ['', Validators.maxLength(60)],
-    building_no: ['', [Validators.required]], // 館別（必填）
+    location_no: [null],
+    ven_uniform: [null], // 原本 vendorUID, 廠商統一編號
+    VEN_Name: [null, Validators.maxLength(60)], // 原本 ven_name
+    VEN_EngName: [null, Validators.maxLength(60)],
+    building_no: [null], // 館別（必填）
     InterviewDateStart: [yesterday], // 原本 contact_Datestart
     InterviewDateEnd: [yesterday],   // 原本 contact_Dateend
-    contact_USR_No: [''],
+    contact_USR_No: [null],
     contact_USR_Name: [this.authService.currentUserValue?.user_No], // 訪談人員
-    willing_level: [''], // 後端要 string，不要 null
+    willing_level: [null], // 後端要 string，不要 null
     ...createPaginationConfig([{ field: 'location_no', order: 1 }]), // 原本是 ECR_LocNo
   });
 
@@ -78,16 +76,20 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
   willinglevelOptions: IDropdownItem[] = [];
   locationOptions: IDropdownItem[] = [];
   buildingNoOptions: IDropdownItem[] = [];
-
   constructor(
     private tls12020Service: TLS12020Service,
-    private locationOptionsService: LocationOptionsService,
     private dropDownListService: DropDownListService
   ) {
     super();
   }
 
   ngOnInit(): void {
+
+    if (history.state?.clearQuery) {
+      this.queryStateService.clearQueryState('TLS12020');
+    }
+
+
     // 串業種 options
     this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       if (res?.Status === '0000') {
@@ -173,28 +175,42 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
           : null,
       };
 
-      this.tls12020Service.queryTLS12020(params).subscribe({
-        next: (res) => {
-          const data = (res.Data ?? []).map((row: { building_no: string; bus_type: string; willing_level: string }) => ({
-            ...row,
-            building_no_name: this.buildingNoOptions.find(opt => opt.value === row.building_no)?.label || row.building_no,
-            bus_type_name: this.industryCodeOptions.find(opt => opt.value === row.bus_type || opt.No === row.bus_type)?.label || row.bus_type,
-            willing_level_name: this.willinglevelOptions.find(opt => opt.No === row.willing_level)?.label || row.willing_level
-          }));
-          this.data = data;
-          this.totalRecords = res.TotalCount ?? 0;
-          this.queryStateService.setQueryState(this.ProgNo, params);
-          this.loading = false;
-          this.selectedItems = [];
-        },
-        error: (err) => {
-          console.error('TLS12020 查詢失敗', err);
-          this.loading = false;
-        }
-      });
+      this.tls12020Service
+        .queryTLS12020(params)
+        .pipe(finalize(() => (this.loading = false)))
+        .subscribe({
+          next: (res) => {
+            const data = (res.Data ?? []).map((row: { building_no: string; bus_type: string; willing_level: string }) => ({
+              ...row,
+              building_no_name: this.buildingNoOptions.find(opt => opt.value === row.building_no)?.label || row.building_no,
+              bus_type_name: this.industryCodeOptions.find(opt => opt.value === row.bus_type || opt.No === row.bus_type)?.label || row.bus_type,
+              willing_level_name: this.willinglevelOptions.find(opt => opt.No === row.willing_level)?.label || row.willing_level
+            }));
+            this.data = data;
+            this.totalRecords = res.TotalCount ?? 0;
+            this.queryStateService.setQueryState(this.ProgNo, params);
+            this.loading = false;
+            this.selectedItems = [];
+          },
+        });
     });
   }
+  override initializePage(
+    progNo: string,
+    cruPage?: string,
+    queryForm?: FormGroup,
+    onSubmit?: (form: FormGroup) => void
+  ) {
+    // 先執行父類初始化（但取消原 onSubmit）
+    super.initializePage(progNo, cruPage, queryForm, undefined);
 
+    // 取出上次查詢條件
+    const query = this.queryStateService.getQueryStateValue(progNo);
+    if (query) {
 
-
+      if (onSubmit) {
+        onSubmit(queryForm!);
+      }
+    }
+  }
 }

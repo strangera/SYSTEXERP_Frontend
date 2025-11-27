@@ -70,6 +70,15 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   dataForm = this.formBuilder.group({});
   showMode: 'common' | 'all' = 'common';
+
+  // 新增：個別群組的顯示模式控制
+  showModeByType: { [key: string]: 'common' | 'all' } = {
+    'A': 'common',
+    'B': 'common',
+    'C': 'common',
+    'D': 'common',
+    'E': 'common'
+  };
   contractInfoColumns: any[] = [];
 
   // 訂閱管理
@@ -100,6 +109,10 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   get isCreateMode(): boolean {
     return this.crudstatus === CRUDStatus.Create;
+  }
+
+  get shouldForceEdit(): boolean {
+    return !this.isReadOnlyMode; // 非檢視模式時允許編輯
   }
 
   get canToEdit(): boolean {
@@ -313,6 +326,14 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       console.log('✅ 使用 workflow 暫存的費用資料');
       this.fareData = next1Data.fareData;
       this.originalFareData = JSON.parse(JSON.stringify(next1Data.fareData)); // 深拷貝
+
+      // 🔥 新增：使用暫存資料時也要確保預設值已套用
+      setTimeout(() => {
+        this.applyDefaultValuesToAllItems();
+        //  新增：無條件同步 org_id
+        this.syncOrgIdFromPrevious();
+      }, 100); // 延遲一下確保 contractInfoData 已載入
+
     } else if (this.currentApplyNo) {
       console.log('📡 暫存無資料，從 API 載入');
       this.loadFareDataFromAPI();
@@ -320,6 +341,58 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       console.warn('⚠️ 沒有 apply_no 也沒有暫存資料');
     }
   }
+
+  // 2. 新增專門的方法，在資料載入完成後一次性套用所有預設值
+  private applyDefaultValuesToAllItems(): void {
+    console.log('🔧 開始為所有項目套用預設值...');
+
+    if (!this.contractInfoData || this.contractInfoData.length === 0) {
+      console.warn('⚠️ 沒有合約資訊，無法套用預設值');
+      return;
+    }
+
+    let updatedCount = 0;
+
+    this.capTypes.forEach(capType => {
+      if (this.originalFareData[capType] && Array.isArray(this.originalFareData[capType])) {
+        this.originalFareData[capType].forEach(item => {
+          // 只對需要預設值的項目進行處理
+          if (this.needsDefaultValues(item)) {
+            this.fareDataService.applyDefaultValues(item, this.contractInfoData);
+            updatedCount++;
+          }
+        });
+      }
+    });
+
+    console.log(` 預設值套用完成，共更新 ${updatedCount} 個項目`);
+
+    // 套用預設值後重新過濾資料
+    this.filterData();
+  }
+
+  /**
+   *  新增：檢查項目是否需要套用預設值
+   */
+  private needsDefaultValues(item: any): boolean {
+    // 檢查關鍵欄位是否為空
+    const keyFields = ['tpy_bdate', 'tpy_edate', 'gui_flag'];
+
+    return keyFields.some(field => {
+      const value = item[field];
+      return value === null || value === undefined || value === '';
+    });
+  }
+  // // 4. 移除編輯時的預設值設定（這個方法可以刪除或簡化）
+  // onFareTableEdit(rowData: any, capType: string): void {
+  //   console.log(`開始編輯 ${capType} 類型扣款資料:`, rowData);
+
+  //   //  移除這行，因為預設值已經在載入時設定完成
+  //   // this.ensureDefaultValues(rowData, capType);
+
+  //   // 只保留必要的工作流程儲存
+  //   this.saveFareDataToWorkflow();
+  // }
 
 
   private loadFareDataWithPriority(): void {
@@ -393,7 +466,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       return false;
     }
 
-    console.log('✅ 暫存資料驗證通過');
+    console.log(' 暫存資料驗證通過');
     return true;
   }
 
@@ -569,7 +642,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.messageService.blockUi();
 
     const queryParams = {
-      apply_no: this.currentApplyNo || '', // 新增模式時為空字串
+      apply_no: this.currentApplyNo || '',
       showAll: true
     };
 
@@ -582,30 +655,30 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
         try {
           if (response?.Data?.FaresByType) {
             this.processAPIData(response.Data.FaresByType);
-            console.log('API 資料處理完成');
 
-            // API 載入成功後，立即儲存到工作流程
-            this.saveFareDataToWorkflow();
+            // 🔥 新增：API 載入完成後立即套用預設值
+            this.applyDefaultValuesToAllItems();
+
+            // 🆕 新增：無條件同步 org_id
+            this.syncOrgIdFromPrevious();
+
           } else {
-            console.log('API 沒有回傳扣款資料，初始化空資料');
-            this.initializeEmptyData();
+            console.warn('API 沒有回傳有效的扣款資料');
+            // this.handleEmptyData();
           }
         } catch (error) {
           console.error('處理 API 資料時發生錯誤:', error);
-          this.messageService.warnBubble('處理扣款資料時發生錯誤');
-          this.initializeEmptyData();
+          this.messageService.warnBubble('資料處理失敗，請重試');
+        } finally {
+          this.loading = false;
+          this.messageService.unblockUi();
         }
-
-        this.loading = false;
-        this.messageService.unblockUi();
-        this.verifyDataIntegrity();
       },
       error: (error) => {
         console.error('載入扣款資料失敗:', error);
-        this.messageService.warnBubble('載入扣款資料失敗，請稍後重試');
+        this.messageService.warnBubble('載入資料失敗，請重試');
         this.loading = false;
         this.messageService.unblockUi();
-        this.initializeEmptyData();
       }
     });
 
@@ -680,15 +753,23 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     console.log('【DEBUG】originalFareData:', this.originalFareData);
     this.initializeDataStructure();
 
-    //  使用資料服務進行過濾
-    this.fareData = this.fareDataService.filterDataByMode(this.originalFareData, this.showMode);
+    // 針對每個群組使用各自的顯示模式進行過濾
+    this.capTypes.forEach(capType => {
+      const groupMode = this.showModeByType[capType];
+      const filteredTypeData = this.fareDataService.filterDataByMode(
+        { [capType]: this.originalFareData[capType] },
+        groupMode
+      );
+      this.fareData[capType] = filteredTypeData[capType] || [];
+    });
 
     console.log('🔍 過濾後結果:', {
-      顯示模式: this.showMode,
+      各群組模式: this.showModeByType,
       各類型數量: Object.keys(this.fareData).reduce((acc, type) => {
         acc[type] = {
           總數: this.fareData[type].length,
-          已勾選: this.fareData[type].filter(item => item.is_selected).length
+          已勾選: this.fareData[type].filter(item => item.is_selected).length,
+          模式: this.showModeByType[type]
         };
         return acc;
       }, {} as any)
@@ -701,16 +782,27 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     const cruBefore = this.flowService.getStepData('cru');
     // console.log('cru locationInfo:', JSON.stringify(cruBefore?.data?.locationInfo || [], null, 2));
 
+    // 🔥 關鍵修復:使用 originalFareData 並包含所有項目(包括 deleted 狀態的)
+    const allFareItems = Object.values(this.originalFareData).flat();
+
     const next1Data = {
       fareData: this.fareData,
-      selectedItems: Object.values(this.fareData).flat().filter(item => item.is_selected),
+      selectedItems: allFareItems,  // 🔥 改為包含所有項目,讓 DataCleaner 處理篩選
       contractInfo: this.contractInfoData
     };
+
+    console.log('💾 儲存的 selectedItems 包含:', {
+      總數: allFareItems.length,
+      已選: allFareItems.filter(item => item.is_selected).length,
+      刪除: allFareItems.filter(item => item._status === 'deleted').length,
+      新增: allFareItems.filter(item => item._status === 'new').length,
+      修改: allFareItems.filter(item => item._status === 'modified').length
+    });
 
     const saveResult = this.flowService.setStepData('next1', next1Data);
 
     if (saveResult) {
-      // console.log('✅ next1 資料儲存成功');
+      // console.log(' next1 資料儲存成功');
       const cruAfter = this.flowService.getStepData('cru');
       // console.log('儲存 next1 後檢查 cru:', JSON.stringify(cruAfter?.data?.locationInfo || [], null, 2));
       if (
@@ -742,6 +834,8 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   hasDataForType(capType: string): boolean {
+    // 檢查過濾後的 fareData 是否有資料
+    // 這樣在常用模式下如果過濾後沒有項目,會顯示提示訊息
     return this.fareData[capType] &&
       Array.isArray(this.fareData[capType]) &&
       this.fareData[capType].length > 0;
@@ -753,13 +847,13 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       .reduce((total, items) => total + (items?.length || 0), 0);
   }
 
-  getTotalSelectedCount(): number {
-    return Object.values(this.originalFareData)
-      .reduce((total, items) => {
-        const selected = items?.filter(item => item.is_selected) || [];
-        return total + selected.length;
-      }, 0);
-  }
+  // getTotalSelectedCount(): number {
+  //   return Object.values(this.originalFareData)
+  //     .reduce((total, items) => {
+  //       const selected = items?.filter(item => item.is_selected) || [];
+  //       return total + selected.length;
+  //     }, 0);
+  // }
 
   // 模式切換
   toggleCommonMode(): void {
@@ -793,9 +887,127 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     return this.showMode === 'common' ? '常用項目模式' : '全部項目模式';
   }
 
+  // ========== 新增：個別群組模式控制方法 ==========
+
+  /**
+   * 切換特定群組的顯示模式
+   */
+  toggleCommonModeByType(capType: string): void {
+    // 直接切換模式，不顯示 loading
+    if (this.showModeByType[capType] === 'common') {
+      this.showModeByType[capType] = 'all';
+    } else {
+      this.showModeByType[capType] = 'common';
+    }
+
+    // 只更新資料，不顯示 loading
+    this.filterData();
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * 全域切換所有群組（顯示 loading）
+   */
+  toggleAllCommonMode(): void {
+    this.loading = true;
+
+    setTimeout(() => {
+      // 判斷當前是否全部都是 common
+      const allCommon = Object.values(this.showModeByType).every(mode => mode === 'common');
+
+      // 如果全部都是 common，切換為 all；否則切換為 common
+      const newMode = allCommon ? 'all' : 'common';
+
+      this.capTypes.forEach(capType => {
+        this.showModeByType[capType] = newMode;
+      });
+
+      this.filterData();
+      this.loading = false;
+    }, 300);
+  }
+
+  /**
+   * 取得全域按鈕文字
+   */
+  getAllCommonModeText(): string {
+    const allCommon = Object.values(this.showModeByType).every(mode => mode === 'common');
+    return allCommon ? '全部展開' : '全部收合';
+  }
+
+  /**
+   * 取得全域顯示狀態
+   */
+  getAllDisplayMode(): string {
+    const commonCount = Object.values(this.showModeByType).filter(mode => mode === 'common').length;
+    const allCount = Object.values(this.showModeByType).filter(mode => mode === 'all').length;
+
+    if (commonCount === 5) return '全部顯示：常用項目';
+    if (allCount === 5) return '全部顯示：完整項目';
+    return `混合模式 (常用:${commonCount} 全部:${allCount})`;
+  }
+
+  /**
+   * 取得特定群組的顯示模式文字
+   */
+  getCurrentDisplayModeByType(capType: string): string {
+    if (this.showModeByType[capType] === 'common') {
+      return '合約項目 + 常用項目 + 已勾選項目';
+    } else {
+      return '全部項目';
+    }
+  }
+
+  /**
+   * 取得特定群組的按鈕文字
+   */
+  getCommonModeTextByType(capType: string): string {
+    return this.showModeByType[capType] === 'common'
+      ? '顯示全部項目'
+      : '顯示常用項目';
+  }
+
+  /**
+   * 判斷按鈕是否為 outlined 模式
+   */
+  isOutlinedMode(capType: string): boolean {
+    return this.showModeByType[capType] !== 'common';
+  }
+
+  /**
+   * 項目選擇變更處理
+   */
+  onItemSelectionChange(capType: string): void {
+    // 選擇變更時可以在這裡處理邏輯
+    console.log(`${capType} 類型選擇變更`);
+  }
+
+  /**
+   * 取得總選中數量
+   */
+  getTotalSelectedCount(): number {
+    return this.capTypes.reduce((total, capType) => {
+      return total + (this.originalFareData[capType]?.filter(item => item.is_selected)?.length || 0);
+    }, 0);
+  }
+
   // 導航方法
   onSubmitNext(): void {
     console.log('🚀 準備前往下一步');
+
+    const currentOrgId = this.getPreviousSelectedOrgId();
+    if (currentOrgId && this.checkIfOrgIdNeedsUpdate(currentOrgId)) {
+      console.log('🔧 提交前最終同步 org_id');
+      this.applyOrgIdToAllItems(currentOrgId);
+    }
+
+    //  新增：驗證已選擇項目都有 org_id
+    const missingOrgItems = this.findItemsWithoutOrgId();
+    if (missingOrgItems.length > 0) {
+      console.error('❌ 仍有項目缺少 org_id:', missingOrgItems);
+      this.messageService.warnBubble('資料設定不完整，請重新載入頁面');
+      return;
+    }
 
     try {
       // 儲存當前資料
@@ -815,12 +1027,33 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
         }
       };
 
-      this.router.navigate(['account/tls/tls12040next2'], navigationExtras);
+      // 根據合約類型決定導航目標
+      const tltTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
+      if (tltTermType === '1') {
+        // 固定租金：跳過 next2 直接到 next3
+        console.log('🔍 合約類型為固定租金(1)，直接跳轉到 next3');
+        this.router.navigate(['account/tls/tls12040next3'], navigationExtras);
+      } else {
+        // 其他類型：正常導航到 next2
+        console.log('🔍 合約類型非固定租金，跳轉到 next2');
+        this.router.navigate(['account/tls/tls12040next2'], navigationExtras);
+      }
 
     } catch (error) {
       console.error('❌ 前往下一步時發生錯誤:', error);
       this.messageService.warnBubble('儲存資料失敗，無法前往下一步');
     }
+  }
+
+  /**
+   * 取得下一步按鈕的標籤文字
+   */
+  getNextStepLabel(): string {
+    const tltTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
+    if (tltTermType === '1') {
+      return '下一步(租金設定)';
+    }
+    return '下一步(抽成設定)';
   }
 
   override onCancel(): void {
@@ -834,7 +1067,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     // 🟢 儲存資料到工作流程
     try {
       this.saveFareDataToWorkflow();
-      console.log('✅ Next1 資料已儲存');
+      console.log(' Next1 資料已儲存');
     } catch (error) {
       console.error('❌ 儲存失敗:', error);
     }
@@ -854,7 +1087,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.router.navigate(['account/tls/tls12040cru'], navigationExtras)
       .then(success => {
         if (success) {
-          console.log('✅ 成功返回 CRU');
+          console.log(' 成功返回 CRU');
         } else {
           console.error('❌ 導航失敗');
         }
@@ -862,22 +1095,37 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   onClearAndExit(): void {
-    console.log('清空並離開');
+    console.log('🚪 清除並離開');
+
+    // 手動清除 SessionStorage
+    const STORAGE_KEY = 'TLS12040_FLOW';
+    sessionStorage.removeItem(STORAGE_KEY);
+
+    // 確認清除
+    const isCleared = !sessionStorage.getItem(STORAGE_KEY);
+    console.log('手動清除結果:', isCleared);
+
+    // 呼叫 service 的清除方法
     this.flowService.clearAll();
-    this.router.navigate(['account/tls/tls12040']);
-    this.messageService.infoBubble('已清空暫存資料並離開');
+
+    // 導航
+    this.router.navigate(['/account/tls/tls12040'])
+      .then(() => {
+        this.messageService.infoBubble('已清除並返回');
+      });
   }
+
+
 
   // 重新載入資料
   reloadData(): void {
-    if (confirm('確定要重新載入資料嗎？未儲存的變更將會遺失。')) {
-      console.log('重新載入資料，當前模式:', this.crudstatus);
+    console.log('🔄 重新載入扣款資料...');
 
-      // 直接重新呼叫 API 載入
-      this.loadFareDataFromAPI();
+    // 清空現有資料
+    this.initializeDataStructure();
 
-      this.messageService.infoBubble('已重新載入資料');
-    }
+    // 重新載入
+    this.loadWorkflowDataWithRetry();
   }
 
   private loadDefaultFareItems(): void {
@@ -1087,7 +1335,17 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.fareData[capType].forEach(displayItem => {
       const originalItem = this.originalFareData[capType].find(item => item.id === displayItem.id);
       if (originalItem) {
+        // 🔥 完整同步所有狀態欄位
         originalItem.is_selected = displayItem.is_selected;
+        originalItem._status = displayItem._status;  // 🔥 關鍵修復:同步 _status
+
+        // 🔥 新增日誌以追蹤刪除狀態
+        if (displayItem._status === 'deleted') {
+          console.log(`🗑️ ${capType} 類型項目 ${displayItem.cap_item} 標記為刪除`, {
+            id: displayItem.id,
+            data_source: displayItem.data_source
+          });
+        }
       }
     });
   }
@@ -1328,7 +1586,23 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   onFieldChange(fieldName: string, newValue: any, rowData: any, capType?: string): void {
-    // console.log(`欄位變更: ${capType}.${fieldName} = ${newValue}`);
+    // 專門處理 checkbox 勾選
+    if (fieldName === 'is_selected') {
+      // 🔥 關鍵修復:先更新項目的選擇狀態(_status)
+      this.fareStatusService.updateItemSelectionStatus(rowData);
+
+      console.log(`🔥 is_selected 變更: ${rowData.cap_item} (${capType})`, {
+        newValue,
+        _status: rowData._status,
+        data_source: rowData.data_source
+      });
+
+      // 然後同步到 originalData
+      this.updateOriginalData(capType || 'A');
+      this.filterData();
+      this.saveFareDataToWorkflow();
+      return;
+    }
 
     // 根據 capType 進行對應的計算處理
     switch (capType) {
@@ -1639,7 +1913,11 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
   onFareTableEdit(rowData: any, capType: string): void {
     console.log(`開始編輯 ${capType} 類型扣款資料:`, rowData);
-    this.ensureDefaultValues(rowData, capType);
+
+    //  移除這行，因為預設值已經在載入時設定完成
+    // this.ensureDefaultValues(rowData, capType);
+
+    // 只保留必要的工作流程儲存
     this.saveFareDataToWorkflow();
   }
 
@@ -1711,17 +1989,173 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     return totalSpace;
   }
 
-  ngOnDestroy(): void {
-    console.log('next1 銷毀前檢查 cru:');
-    const cruBefore = this.flowService.getStepData('cru');
-    console.log('cru locationInfo:', JSON.stringify(cruBefore?.data?.locationInfo || [], null, 2));
+  //  新增方法：自動設定和同步 org_id
+  private async setDefaultOrgId(): Promise<void> {
+    // 確保 orgOptions 已載入
+    if (!this.orgOptions.length) {
+      await this.loadOrgOptionsAsync();
+    }
 
+    // 從前面步驟獲取當前選擇的 org_id
+    const currentSelectedOrgId = this.getPreviousSelectedOrgId();
+
+    if (!currentSelectedOrgId) {
+      console.log('⚠️ 沒有找到選擇的 org_id');
+      return;
+    }
+
+    // 檢查是否需要更新
+    const needsUpdate = this.checkIfOrgIdNeedsUpdate(currentSelectedOrgId);
+
+    if (needsUpdate) {
+      this.applyOrgIdToAllItems(currentSelectedOrgId);
+      console.log('✅ 自動同步 org_id:', currentSelectedOrgId);
+    } else {
+      console.log('✅ org_id 已是最新，無需更新');
+    }
+  }
+
+  //  新增方法：獲取前面步驟選擇的 org_id
+  private getPreviousSelectedOrgId(): string | null {
+    // 從工作流程或 CRU 資料中獲取
+    const cruData = this.flowService.getCruData();
+    return cruData?.org_id || null;
+  }
+
+  //  新增方法：檢查是否需要更新 org_id
+  private checkIfOrgIdNeedsUpdate(currentOrgId: string): boolean {
+    // 檢查所有扣款項目是否都已設定為當前的 org_id
+    let hasIncorrectOrgId = false;
+
+    Object.keys(this.fareData).forEach(capType => {
+      this.fareData[capType].forEach(item => {
+        if (!item.org_id || item.org_id !== currentOrgId) {
+          hasIncorrectOrgId = true;
+        }
+      });
+    });
+
+    return hasIncorrectOrgId;
+  }
+
+  //  新增方法：應用 org_id 到所有項目
+  private applyOrgIdToAllItems(orgId: string): void {
+    let updatedCount = 0;
+
+    // 更新當前顯示的資料
+    Object.keys(this.fareData).forEach(capType => {
+      this.fareData[capType].forEach(item => {
+        if (item.org_id !== orgId) {
+          item.org_id = orgId;
+          // 標記為已修改（如果原本就是 new 就保持 new）
+          if (item._status !== 'new') {
+            item._status = 'modified';
+          }
+          updatedCount++;
+        }
+      });
+    });
+
+    // 同步到原始資料
+    Object.keys(this.originalFareData).forEach(capType => {
+      this.originalFareData[capType].forEach(item => {
+        if (item.org_id !== orgId) {
+          item.org_id = orgId;
+        }
+      });
+    });
+
+    console.log(`🔄 已自動更新 ${updatedCount} 項扣款項目的 org_id`);
+
+    // 儲存到工作流程
     this.saveFareDataToWorkflow();
+  }
 
-    const cruAfter = this.flowService.getStepData('cru');
-    console.log('next1 銷毀後檢查 cru:', JSON.stringify(cruAfter?.data?.locationInfo || [], null, 2));
+  //  新增方法：異步載入 org options
+  private async loadOrgOptionsAsync(): Promise<void> {
+    return new Promise((resolve) => {
+      const subscription = this.locationOptionsService.getOrgOptions().subscribe({
+        next: (options) => {
+          this.orgOptions = options;
 
+          //  強制清除所有快取，確保重新生成欄位定義
+          this.clearColumnCache();
+
+          //  觸發變更檢測
+          this.cdr.detectChanges();
+          resolve();
+        },
+        error: (error) => {
+          console.error('載入組織選項失敗:', error);
+          this.messageService.warnBubble('載入組織選項失敗');
+          this.orgOptions = [];
+          resolve(); // 即使失敗也要 resolve，避免卡住
+        }
+      });
+
+      this.subscriptions.push(subscription);
+    });
+  }
+
+  //  新增方法：檢查缺少 org_id 的項目
+  private findItemsWithoutOrgId(): any[] {
+    const missingItems: any[] = [];
+
+    Object.keys(this.fareData).forEach(capType => {
+      this.fareData[capType].forEach(item => {
+        if (item.is_selected && !item.org_id) {
+          missingItems.push({ item, capType });
+        }
+      });
+    });
+
+    return missingItems;
+  }
+
+  //  新增：簡單直接的 org_id 同步方法
+  private syncOrgIdFromPrevious(): void {
+    // 從前面步驟獲取當前選擇的 org_id
+    const currentSelectedOrgId = this.getPreviousSelectedOrgId();
+
+    if (!currentSelectedOrgId) {
+      console.log('⚠️ 沒有找到選擇的 org_id，跳過同步');
+      return;
+    }
+
+    console.log('🔄 開始同步 org_id:', currentSelectedOrgId);
+
+    let updatedCount = 0;
+
+    // 無條件更新所有項目的 org_id
+    Object.keys(this.fareData).forEach(capType => {
+      this.fareData[capType].forEach(item => {
+        if (item.org_id !== currentSelectedOrgId) {
+          item.org_id = currentSelectedOrgId;
+          // 標記為已修改（如果原本就是 new 就保持 new）
+          if (item._status !== 'new') {
+            item._status = 'modified';
+          }
+          updatedCount++;
+        }
+      });
+    });
+
+    // 同步到原始資料
+    Object.keys(this.originalFareData).forEach(capType => {
+      this.originalFareData[capType].forEach(item => {
+        if (item.org_id !== currentSelectedOrgId) {
+          item.org_id = currentSelectedOrgId;
+        }
+      });
+    });
+
+    console.log(`✅ org_id 同步完成，共更新 ${updatedCount} 個項目`);
+
+    // 儲存到工作流程
+    this.saveFareDataToWorkflow();
+  }
+
+  ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 }
-

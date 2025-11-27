@@ -1,11 +1,11 @@
+import { NgClass, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { CalendarMonthChangeEvent, CalendarYearChangeEvent, CalendarModule } from 'primeng/calendar';
-import { NgIf, NgClass } from '@angular/common';
 import { PrimeTemplate } from 'primeng/api';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
+import { CalendarModule, CalendarMonthChangeEvent, CalendarYearChangeEvent } from 'primeng/calendar';
 import { Subscription } from 'rxjs';
+import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
+import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 
 @Component({
   selector: 'app-calendar',
@@ -98,6 +98,7 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
       return;
     }
 
+    // !!! 一開始說的需求，現在又說不要
     if (this.calendarType === 'timeOne') {
       if (event.target.value.length === 2 && event.data && event.target.value.indexOf(':') === -1) {
         event.target.value = event.target.value + ':';

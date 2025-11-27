@@ -40,9 +40,9 @@
     [footerData]="footerData" [queryFunction]="tls57070Service.queryTLS57070.bind(tls57070Service)" [showDelete]="false"
     [showManage]="false" [groupRowsBy]="queryForm.value.ShowType === 'D' ? 'LOGO_CH_NAME' : undefined"
     [subTotalData]="DetailSumData" [columnGroup]="columnGroup"> -->
-  <app-customFooter-table *ngIf="columns?.length && columns.length > 0" tableKey="tls57070" dataKey="LOGO_No"
-    [data]="data" [columns]="columns" [totalRecords]="totalRecords" [footerData]="footerData" [lazy]="true"
-    [loading]="loading" (lazyLoadData)="onLazyLoadData($event, queryForm)" [showReportMode]="false" [showManage]="false"
+  <app-customFooter-table *ngIf="columns && columns.length > 0" tableKey="tls57070" dataKey="LOGO_No" [data]="data"
+    [columns]="columns" [totalRecords]="totalRecords" [footerData]="footerData" [lazy]="true" [loading]="loading"
+    (lazyLoadData)="onLazyLoadData($event, queryForm)" [showReportMode]="false" [showManage]="false"
     [showDelete]="false" [subTotalData]="DetailSumData" [showTotal]="true" [columnGroup]="columnGroup"
     [groupRowsBy]="queryForm.value.ShowType === 'D' ? 'LOGO_CH_NAME' : ''" [multiSortMeta]="[
       queryForm.value.ShowType === 'M' ?

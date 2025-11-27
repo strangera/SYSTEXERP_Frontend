@@ -1,101 +1,67 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
+
+          <!-- 日期範圍 (DateFrom/DateTo) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateMonthRange"
-              label="日期"
-              controlName="accountsummary"
-              [startControl]="queryForm.controls.SSubpoenadate"
-              [endControl]="queryForm.controls.ESubpoenadate"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range label="日期" calendarType="dateMonthRange" startControlName="DateFrom"
+              endControlName="DateTo" [startControl]="queryForm.controls.DateFrom"
+              [endControl]="queryForm.controls.DateTo" [submitted]="submitted"></app-calendar-range>
           </div>
 
+          <!-- 類別 (Ledger_MD) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="類別"
-              [control]="queryForm.controls.category"
-              [options]="category"
-              [submitted]="submitted"
-            ></app-radiobutton>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="部門"
-              controlName="department"
-              [options]="departmentOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.department"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="活動代碼"
-              controlName="activity"
-              [options]="activity"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.activity"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-radiobutton label="類別" [control]="queryForm.controls.Ledger_MD" [options]="Ledger_MDOptions"
+              [submitted]="submitted"></app-radiobutton>
           </div>
 
+          <!-- 部門 (OrgId) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="帳款餘額為零是否顯示"
-              [control]="queryForm.controls.display"
-              [options]="display"
-              [submitted]="submitted"
-            ></app-radiobutton>
+            <app-dropdown label="部門" controlName="OrgId" [options]="OrgIdOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.OrgId" [submitted]="submitted"></app-dropdown>
           </div>
 
-          <div class="col-12 md:col-4 lg:col-4">
-            <p-checkbox
-              label="列印簽核欄"
-              controlName="Approvalcolumn"
-            ></p-checkbox>
+          <!-- 活動代碼 (ProjectNo) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="活動代碼" controlName="ProjectNo" [options]="ProjectNoOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ProjectNo" [submitted]="submitted"></app-dropdown>
           </div>
+
+          <!-- 是否顯示餘額為零的科目 (ShowZero) -->
+          <div class="col-12 md:col-4 lg:col-4 mt-4">
+            <p-checkbox inputId="ShowZero" label="帳務餘額為零是否顯示" formControlName="ShowZero" [binary]="true" trueValue="1"
+              falseValue="0"></p-checkbox>
+          </div>
+
+          <!-- 是否列印簽核欄 (PrintSign) -->
+          <div class="col-12 md:col-4 lg:col-4 mt-4">
+            <p-checkbox inputId="PrintSign" label="列印簽核欄" formControlName="PrintSign" [binary]="true" [trueValue]="1"
+              [falseValue]="0"></p-checkbox>
+          </div>
+
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+  <div class="flex justify-content-end align-items-center gap-2 p-2">
+    <p-button styleClass="p-2" label="產出損益表PDF" [loading]="btnLoading" icon="pi pi-file" (click)="onExportPDF()"
+      [disabled]="data.length === 0"></p-button>
+    <p-button styleClass="p-2" label="產出損益表XLSX" [loading]="btnLoading" icon="pi pi-file" (click)="onExportExcel()"
+      [disabled]="data.length === 0"></p-button>
   </div>
+  <!-- 假設 FIN55080 沿用 FIN55090 的表格結構 -->
+  <app-table-subheader-grouping [data]="data" [footerData]="footerData">
+  </app-table-subheader-grouping>
 </div>

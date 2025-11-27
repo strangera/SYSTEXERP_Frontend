@@ -51,16 +51,16 @@ export class Tls12040FareValidationService {
     const requiredFieldsMap: { [key: string]: Array<{ field: string, label: string }> } = {
       'A': [
         { field: 'tpy_bdate', label: '起始年月' },
-        { field: 'tpy_type', label: '單位' },
+        // { field: 'tpy_type', label: '單位' },
         { field: 'tpy_unitamt', label: '單價' },
         { field: 'tpy_qty', label: '數量' },
-        { field: 'org_id', label: '組織' },
+        // { field: 'org_id', label: '組織' },
         { field: 'gui_flag', label: '開立發票' }
       ],
       'B': [
         { field: 'tpy_bdate', label: '扣款起始年月' },
         { field: 'tpy_edate', label: '扣款結束年月' },
-        { field: 'tpy_type', label: '單位' },
+        // { field: 'tpy_type', label: '單位' },
         { field: 'tpy_unitamt', label: '單價' },
         { field: 'tpy_qty', label: '數量' },
         { field: 'gui_flag', label: '是否開立發票' },
@@ -72,23 +72,23 @@ export class Tls12040FareValidationService {
         { field: 'tpy_edate', label: '扣款結束年月' },
         { field: 'tpy_totalamt', label: '總金額' },
         { field: 'tpy_amount', label: '每月金額' },
-        { field: 'org_id', label: '組織' },
+        // { field: 'org_id', label: '組織' },
         { field: 'gui_flag', label: '是否開立發票' }
       ],
       'D': [
         { field: 'tpy_bdate', label: '扣款起始年月' },
         { field: 'tpy_edate', label: '扣款結束年月' },
-        { field: 'tpy_type', label: '單位' },
+        // { field: 'tpy_type', label: '單位' },
         { field: 'tpy_rate', label: '比率' },
-        { field: 'org_id', label: '組織' },
+        // { field: 'org_id', label: '組織' },
         { field: 'gui_flag', label: '是否開立發票' }
       ],
       'E': [
         { field: 'tpy_bdate', label: '扣款起始年月' },
         { field: 'tpy_edate', label: '扣款結束年月' },
-        { field: 'tpy_type', label: '單位' },
+        // { field: 'tpy_type', label: '單位' },
         { field: 'tpy_rate', label: '比率' },
-        { field: 'org_id', label: '組織' },
+        // { field: 'org_id', label: '組織' },
         { field: 'gui_flag', label: '是否開立發票' }
       ]
     };

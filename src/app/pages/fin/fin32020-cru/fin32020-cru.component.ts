@@ -1,18 +1,18 @@
-import { Component, OnInit, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { NgFor, NgIf } from '@angular/common';
+import { Component, OnInit, } from '@angular/core';
+import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { PanelModule } from 'primeng/panel';
+import { AuthService } from '../../../service/system/auth.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { ValidationService } from '../../../shared/service/validation.service';
 
 
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -25,7 +25,12 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarComponent, InputTextComponent, NgFor, ButtonComponent, NgIf, TranslateModule]
 })
-export class FIN32020CRUComponent extends BasicCrupageComponent implements OnInit {
+export class FIN32020CRUComponent implements OnInit {
+  ProgNo = '';
+  formTitle = '';
+  submitted = false;
+  crudstatus = '';
+
   //
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
@@ -67,13 +72,13 @@ export class FIN32020CRUComponent extends BasicCrupageComponent implements OnIni
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
         this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
+
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
         this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
+
         this.Edit(state.rowdata);
         break;
       // 讀檔

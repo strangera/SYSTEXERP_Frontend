@@ -1,18 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import { Component, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
-import { Table, TableModule } from 'primeng/table';
-import { finalize, Observable } from 'rxjs';
-import { ImageModule } from 'primeng/image';
-import { DomSanitizer } from '@angular/platform-browser';
-import { ButtonModule } from 'primeng/button';
-import { TooltipModule } from 'primeng/tooltip';
-import { MultiSelectModule } from 'primeng/multiselect';
 import { FormsModule } from '@angular/forms';
-import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
-import { SkeletonModule } from 'primeng/skeleton';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DomSanitizer } from '@angular/platform-browser';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { Tls13070Cag, Tls13070Level, Tls13070Limit, Tls13070Rent, Tls13070Response } from '@service/api/tls/tls13070.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
+import { ButtonModule } from 'primeng/button';
+import { ImageModule } from 'primeng/image';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { SkeletonModule } from 'primeng/skeleton';
+import { Table, TableModule } from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip';
+import { finalize, Observable } from 'rxjs';
 
 export interface FlattenedTls13070Row extends Tls13070Response {
   // 增加索引來識別這是該筆主資料的第幾條子資料
@@ -29,7 +30,6 @@ export interface FlattenedTls13070Row extends Tls13070Response {
   singleRent?: Tls13070Rent;
   globalIndex: number;
 }
-
 @Component({
   selector: 'app-tls13070-table',
   standalone: true,
@@ -50,53 +50,20 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
   private = true;            // 用來判斷是否為第一次載入
   virtualData: any = [];
   isLoading = false;
-  aps1003_A = this.dropdown.queryAps1003({ cap_typeList: ['A'] });
-  aps1003_B = this.dropdown.queryAps1003({ cap_typeList: ['B'] });
-  aps1003_C = this.dropdown.queryAps1003({ cap_typeList: ['C'] });
-  aps1003_D = this.dropdown.queryAps1003({ cap_typeList: ['D'] });
+  @Input() aps1003_A?: Observable<Option[] | null>;
+  @Input() aps1003_B?: Observable<Option[] | null>;
+  @Input() aps1003_C?: Observable<Option[] | null>;
+  @Input() aps1003_D?: Observable<Option[] | null>;
   totalColspan = 0;
+  aLength = 0;
+  bLength = 0;
+  cLength = 0;
+  dLength = 0;
   constructor(
     public readonly sanitizer: DomSanitizer,
-    private readonly dropdown: DropdownApiService,
   ) {
     super();
     this.onScroll = this.onScroll.bind(this);
-    // 訂閱所有動態欄位 Observable，並在資料載入後計算總欄位數
-    let aLength = 0;
-    let bLength = 0;
-    let cLength = 0;
-    let dLength = 0;
-
-    const calculateColspan = () => {
-      // 固定的欄位數
-      // 序號(1) + 招募編號(1) + 更新時間(1) + 位置編號(1) + 廠商名稱(1) + 廠商統編(1) = 6
-      // 店櫃資料 (11) = 11
-      // 租賃條件 (18) = 18
-      // 目標營業額 (1) + 結帳後幾天匯款 (1) + 備註 (1) = 3
-      const fixedCols = 6 + 11 + 18 + 3; // 總固定欄位 = 38
-
-      // 動態欄位數
-      const dynamicCols = aLength + bLength + (cLength * 3) + dLength;
-
-      this.totalColspan = fixedCols + dynamicCols;
-    };
-
-    this.aps1003_A.subscribe(res => {
-      aLength = res?.length ?? 0;
-      calculateColspan();
-    });
-    this.aps1003_B.subscribe(res => {
-      bLength = res?.length ?? 0;
-      calculateColspan();
-    });
-    this.aps1003_C.subscribe(res => {
-      cLength = res?.length ?? 0;
-      calculateColspan();
-    });
-    this.aps1003_D.subscribe(res => {
-      dLength = res?.length ?? 0;
-      calculateColspan();
-    });
   }
   ngOnChanges(changes: SimpleChanges) {
     // 第一次獲取data
@@ -118,7 +85,46 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
     if (changes['lastQueryBody'] && this.lastQueryBody) {
       this.dt.multiSortMeta = this.lastQueryBody?.SortBy;
     }
+    if (changes['aps1003_A'] && this.aps1003_A) {
+      this.aps1003_A.pipe(untilDestroyed(this)).subscribe(res => {
+        this.aLength = res?.length ?? 0;
+        this.calculateColspan();
+      });
+    }
+    if (changes['aps1003_B'] && this.aps1003_B) {
+      this.aps1003_B.pipe(untilDestroyed(this)).subscribe(res => {
+        this.bLength = res?.length ?? 0;
+        this.calculateColspan();
+      });
+    }
+    if (changes['aps1003_C'] && this.aps1003_C) {
+      this.aps1003_C.pipe(untilDestroyed(this)).subscribe(res => {
+        this.cLength = res?.length ?? 0;
+        this.calculateColspan();
+      });
+    }
+    if (changes['aps1003_D'] && this.aps1003_D) {
+      this.aps1003_D.pipe(untilDestroyed(this)).subscribe(res => {
+        this.dLength = res?.length ?? 0;
+        this.calculateColspan();
+      });
+    }
   }
+
+  calculateColspan = () => {
+    // 固定的欄位數
+    // 序號(1) + 招募編號(1) + 更新時間(1) + 位置編號(1) + 廠商名稱(1) + 廠商統編(1) = 6
+    // 店櫃資料 (11) = 11
+    // 租賃條件 (18) = 18
+    // 目標營業額 (1) + 結帳後幾天匯款 (1) + 備註 (1) = 3
+    const fixedCols = 6 + 11 + 18 + 3; // 總固定欄位 = 38
+
+    // 動態欄位數
+    const dynamicCols = this.aLength + this.bLength + (this.cLength * 3) + this.dLength;
+
+    this.totalColspan = fixedCols + dynamicCols;
+  };
+
   trackByFn(index: number, item: any) {
     return this.dataKey && item?.[this.dataKey] || index;
   }

@@ -1,8 +1,8 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 請確認你的 ApiResponse 介面路徑是否正確
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
-import { ApiResponse } from '../../system/auth.service'; // 請確認你的 ApiResponse 介面路徑是否正確
 
 /** 查詢 POS2031 資料表 (queryTLS52040) 的請求介面 */
 export interface IQueryTLS52040Request {
@@ -98,7 +98,7 @@ export interface TLS52040Request {
   SYS_StoreNo?: string; // 門店編號 (系統)
   HOS_No?: string; // 倉庫代碼
   VEN_No?: string; // 廠商代號
-  LOGO_No?: string; // 品牌代碼
+  // LOGO_No?: string; // 品牌代碼
   org_id?: string; // 組織代碼
   RJM_TaxType?: string; // 單據稅別
   RJM_Status?: string; // 退貨驗收狀態 (通常為初始狀態，例如 '0' 已申請)
@@ -117,7 +117,7 @@ export interface TLS52040Request {
 
 /** 取得退貨單資料 (GetPOS2031P) 的請求介面 */
 export interface IGetPOS2031PRequest {
-  LOGO_No?: string | null; // 品牌代碼
+  // LOGO_No?: string | null; // 品牌代碼
   HOS_No?: string | null; // 倉庫代碼
   VEN_No?: string | null; // 廠商代號
 }
@@ -184,7 +184,7 @@ export class Tls52040Service {
   /**
    * 取得退貨單資料 (POS2031P)
    * @param params 查詢條件 (LOGO_No, HOS_No, VEN_No)
-   * @returns 包含 ITLS52020Data 陣列的 API 響應 (假設返回退貨單主檔列表)
+   * @returns 包含 ITLS52040Data 陣列的 API 響應 (假設返回退貨單主檔列表)
    */
   GetPOS2031P(params: IGetPOS2031PRequest): Observable<ApiResponse<any>> {
     return this.http.post<any>(`${this.apiUrl}/GetPOS2031P`, params);
@@ -233,5 +233,29 @@ export class Tls52040Service {
    */
   getLabelTLS52040(params: IGetLabelTLS52040Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/getLabelTLS52040`, params);
+  }
+  /**
+       * 匯出退貨單Excel
+       * @param params 查詢條件 (CRN_No)
+       * @returns API 響應
+       */
+  exportTLS52040(params: { RJM_NoList: string[] }): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportTLS52040`, params,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      });
+  }
+  /**
+   * 匯出退貨單PDF
+   * @param params 查詢條件 (CRN_No)
+   * @returns API 響應
+  */
+  exportTLS52040PDF(params: { RJM_NoList: string[] }): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportTLS52040PDF`, params,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      });
   }
 }

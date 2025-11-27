@@ -11,12 +11,9 @@ const apiUrl = environment.ApiUrl + '/FIN0000/CSH1000';
 @Injectable({ providedIn: 'root' })
 export class FIN71020Service {
 
-  public readonly FIN71020Data = signal<FIN71020Data[]>([]);
-  public readonly UsrNos = signal<FIN71020UsrNo[]>([]);
-  public readonly OrgIds = signal<FIN71020OrgNo[]>([]);
+  public readonly usrNoOptions = signal<FIN71020UsrNo[]>([]);
+  public readonly orgIdOptions = signal<FIN71020OrgNo[]>([]);
 
-
-  public readonly tableLoading = signal<boolean>(!1);
   public readonly usrLoading = signal<boolean>(!1);
   public readonly orgLoading = signal<boolean>(!1);
 
@@ -26,22 +23,17 @@ export class FIN71020Service {
   ) { }
 
   public loadFIN71020(payload: unknown): Observable<BaseQueryResponse<FIN71020Data>> {
-    this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<FIN71020Data>>(`${apiUrl}/queryFIN71020`, payload).pipe(
       take(1),
-      tap(res => this.FIN71020Data.set(res.Data)),
-      tap(() => this.logger.debug('查詢FIN71020結果:', [this.FIN71020Data()])),
-      finalize(() => this.tableLoading.set(!1))
+      tap(res => this.logger.debug('查詢FIN71020結果:', [res])),
     );
   };
 
   public saveFIN71020(payload: FIN71020Insert | FIN71020Update, type: 'insert' | 'update' = 'insert'): Observable<BaseQueryResponse<unknown>> {
-    this.tableLoading.set(!0);
     payload = type === 'insert' ? payload as FIN71020Insert : payload as FIN71020Update;
     return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/${type}`, payload).pipe(
       take(1),
       tap(res => this.logger.debug('FIN71020新增/修改結果:', [res])),
-      finalize(() => this.tableLoading.set(!1)),
     );
   }
 
@@ -49,8 +41,10 @@ export class FIN71020Service {
     this.usrLoading.set(!0);
     this.http.post<BaseQueryResponse<FIN71020UsrNo>>(`${apiUrl}/queryFIN71020KeepUsrNoDropdownList`, {}).pipe(
       take(1),
-      tap(res => this.UsrNos.set(res.Data)),
-      tap(() => this.logger.debug('查詢UsrNo結果:', [this.UsrNos()])),
+      tap(res => {
+        this.usrNoOptions.set(res.Data || []);
+        this.logger.debug('查詢UsrNo結果:', [res]);
+      }),
       finalize(() => this.usrLoading.set(!1)),
     ).subscribe();
   }
@@ -59,8 +53,10 @@ export class FIN71020Service {
     this.orgLoading.set(!0);
     this.http.post<BaseQueryResponse<FIN71020OrgNo>>(`${apiUrl}/queryFIN71020KeepOrgNoDropdownList`, {}).pipe(
       take(1),
-      tap(res => this.OrgIds.set(res.Data)),
-      tap(() => this.logger.debug('查詢OrgNo結果:', [this.OrgIds()])),
+      tap(res => {
+        this.orgIdOptions.set(res.Data || []);
+        this.logger.debug('查詢OrgNo結果:', [res]);
+      }),
       finalize(() => this.orgLoading.set(!1)),
     ).subscribe();
   }

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
 import { FIN52010Data, FIN52010DataResponse, FIN52010UpdatePayload, FIN52010UpdateResult, GLS1005Option } from '@pages/fin/fin52010/fin52010.model';
-import { Option, TblUserOrgidItem } from '@service/utility/dropdown-api.model';
+import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
@@ -20,10 +20,10 @@ export class FIN52010Service {
   public readonly orgUsrLoading = signal<boolean>(!1);
   public readonly gls1005Loading = signal<boolean>(!1);
 
-  public readonly orgUsrList = signal<TblUserOrgidItem[]>([]);
-  public readonly orgList = signal<Option[]>([]);
-  public readonly usrList = signal<Option[]>([]);
-  public readonly gls1005List = signal<GLS1005Option[]>([]);
+  public readonly orgUsrOptions = signal<Option[]>([]);
+  public readonly orgOptions = signal<Option[]>([]);
+  public readonly usrOptions = signal<Option[]>([]);
+  public readonly gls1005Options = signal<GLS1005Option[]>([]);
 
   public readonly billTransferConOptions = signal<Option[]>([
     { value: 'N', label: '否' },
@@ -57,28 +57,28 @@ export class FIN52010Service {
     );
   }
 
-  public getGLS1005DropDownList(): void {
+  public getGLS1005DropDownOptions(): void {
     this.gls1005Loading.set(!0);
     this.dropdownApi.queryGls1005().pipe(
       take(1),
       map(res => res as GLS1005Option[] ?? []),
-      tap(res => this.gls1005List.set(res)),
+      tap(res => this.gls1005Options.set(res)),
       finalize(() => {
         this.gls1005Loading.set(!1);
-        this.logger.debug('查詢GLS1005結果:', [this.gls1005List()]);
+        this.logger.debug('查詢GLS1005結果:', [this.gls1005Options()]);
       }),
     ).subscribe();
   }
 
-  public getTblUsrOrgList(): void {
+  public getTblUsrOrgOptions(): void {
     this.orgUsrLoading.set(!0);
     this.dropdownApi.queryTblUserOrgid().pipe(
       take(1),
       map(res => res ?? []),
-      tap(res => this.orgUsrList.set(res)),
+      tap(res => this.orgUsrOptions.set(res)),
       finalize(() => {
         this.orgUsrLoading.set(!1);
-        this.logger.debug('查詢TblUsrOrgList結果:', [this.orgUsrList()]);
+        this.logger.debug('查詢TblUsrOrgOptions結果:', [this.orgUsrOptions()]);
       }),
     ).subscribe();
   }

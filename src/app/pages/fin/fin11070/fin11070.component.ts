@@ -1,18 +1,18 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { FIN11070Data, FIN11070Service } from '@service/api/fin/fin11070.service';
 import { DatePipe } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { FIN11070Data, FIN11070Service } from '@service/api/fin/fin11070.service';
 import { ValidationService } from '@shared/service/validation.service';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 @Component({
   selector: 'app-fin11070',
@@ -25,14 +25,14 @@ import { ValidationService } from '@shared/service/validation.service';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarComponent,
     TableComponent,
     TranslateModule,
+    YearMonthComponent
   ]
 })
 export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    GUI_YYMM: ['', [Validators.required, this.validationService.evenMonthValidator, this.validationService.maxMonthValidator]],    // 申報年月
+    GUI_YYMM: ['', [Validators.required]],    // 申報年月
     ...createPaginationConfig([])
   });
 
@@ -99,7 +99,7 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
         ...frm.value,
         MID: 0,                    // 固定為0
         SYS_StoreNo: '10',        // 固定為 '10'
-        GUI_YYMM: this.PreviousMonth,  // 申報年月 (YYYYmm格式)
+        GUI_YYMM: frm.value.GUI_YYMM
       };
 
       this.fin11070Service.queryFIN11070(requestData)
@@ -122,7 +122,7 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
     const requestData = {
       MID: 0,
       STO_No: '10',
-      GUI_YYMM: this.PreviousMonth,
+      GUI_YYMM: this.queryForm.value.GUI_YYMM!,
     };
 
     this.fin11070Service.downloadFIN11070(requestData)
@@ -170,7 +170,7 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
     const requestData = {
       MID: 0,
       SYS_StoreNo: '10',
-      GUI_YYMM: this.PreviousMonth,
+      GUI_YYMM: this.queryForm.value.GUI_YYMM!,
     };
 
     this.fin11070Service.insertFIN11070(requestData)
@@ -183,21 +183,5 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
           this.onSubmit(this.queryForm);
         }
       });
-  }
-
-  // 月份減少一個月
-  get PreviousMonth(): string {
-    let currentDate = this.queryForm.value.GUI_YYMM;
-    let yyyyMM = '';
-    if (currentDate) {
-      yyyyMM = this.datePipe.transform(currentDate, 'yyyyMM') ?? '';
-      let year = parseInt(yyyyMM.substring(0, 4));
-      let month = parseInt(yyyyMM.substring(4, 6)) - 1;
-      let date = new Date(year, month, 1);
-      date.setMonth(date.getMonth() - 1);
-      yyyyMM = this.datePipe.transform(date, 'yyyyMM') ?? '';
-    }
-
-    return yyyyMM;
   }
 }

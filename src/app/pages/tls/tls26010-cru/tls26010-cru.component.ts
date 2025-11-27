@@ -1,25 +1,30 @@
 import { NgIf } from '@angular/common';
-import { Component, computed, effect, OnInit, signal, Signal } from '@angular/core';
+import { Component, computed, effect, OnDestroy, OnInit, signal, Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26010Service } from '@service/api/tls/tls26010.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { apiOption } from '@shared/models/sys/sysb000.model';
 import { CRUDStatus, ItemOperationStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { ExcelImportService, ImportExcelColumn } from '@shared/service/excel-import.service';
+import { ValidationService } from '@shared/service/validation.service';
 import { NGXLogger } from 'ngx-logger';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
-import { debounceTime, finalize, pairwise, startWith, Subject, takeUntil, tap } from 'rxjs';
+import { debounceTime, finalize, pairwise, startWith, Subject, take, takeUntil, tap } from 'rxjs';
 import * as XLSX from 'xlsx';
 import { EcrItem, PodRequest, TLS26010Data, TLS26010Detail, TltItem } from '../tls26010/tls26010.model';
 
@@ -28,7 +33,7 @@ import { EcrItem, PodRequest, TLS26010Data, TLS26010Detail, TltItem } from '../t
   selector: 'app-tls26010-cru',
   templateUrl: './tls26010-cru.component.html',
   styleUrl: './tls26010-cru.component.scss',
-  standalone: !0,
+  standalone: true,
   imports: [
     NgIf,
     FileUploadModule,
@@ -38,46 +43,53 @@ import { EcrItem, PodRequest, TLS26010Data, TLS26010Detail, TltItem } from '../t
     ButtonComponent,
     CalendarRangeComponent,
     DialogComponent,
+    DropdownComponent,
     InputTextComponent,
     MenubarComponent,
     MultiSelectComponent,
     TableComponent,
   ]
 })
-export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> implements OnInit {
+export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> implements OnInit, OnDestroy {
   public readonly CRUDStatus = CRUDStatus;
 
   public dataForm = this.formBuilder.nonNullable.group({
-    pod_no: new FormControl<string>('自動給號'), // 預售活動編號
+    pod_no: [{ value: '自動給號', disabled: true }], // 預售活動編號
     pod_desc: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]), // 預售名稱
-    pod_sdate: new FormControl<Date>(new Date(), Validators.required), // 預售期間(起)
+    pod_sdate: new FormControl<Date>(new Date(), [Validators.required, this.validationService.dateAfterTodayValidator()]), // 預售期間(起)
     pod_edate: new FormControl<Date>(this.service.dateE, Validators.required), // 預售期間(迄)
     pod_busdate: new FormControl<Date>(this.service.dateE, Validators.required), // 活動正檔日期
-    pod_status: new FormControl<string>('未核准'), // 核准狀態
+    pod_status: [{ value: '未核准', disabled: true }], // 核准狀態
     ecr_nos: new FormControl<EcrItem[]>([]), // 收銀機清單
     tlt_nos: new FormControl<TltItem[]>([]), // 專櫃清單
     sys3800: new FormControl<string[]>([]), // 館別
     sys3900: new FormControl<string[]>([]), // 樓層
     sys3A00: new FormControl<string[]>([]), // 區域
   });
-  public readonly df = computed(() => this.dataForm.controls);
+  public readonly dialogForm = computed(() => this.dataForm.controls);
 
   public readonly tableData = signal<TLS26010Data[]>([]);
   public readonly tableDetailedData = signal<TLS26010Detail>(Object.create(null));
   public readonly totalRecords = signal(0);
 
   // 變化追蹤
-  private readonly sys3800Signal: Signal<string[] | undefined | null> = toSignal(this.df().sys3800.valueChanges);
-  private readonly sys3900Signal: Signal<string[] | undefined | null> = toSignal(this.df().sys3900.valueChanges);
-  private readonly sys3A00Signal: Signal<string[] | undefined | null> = toSignal(this.df().sys3A00.valueChanges);
-  private readonly ecrNosSignal: Signal<EcrItem[] | undefined | null> = toSignal(this.df().ecr_nos.valueChanges);
-  private readonly tltNosSignal: Signal<TltItem[] | undefined | null> = toSignal(this.df().tlt_nos.valueChanges);
-  private readonly sdateSignal: Signal<Date | undefined | null> = toSignal(this.df().pod_sdate.valueChanges);
-  private readonly edateSignal: Signal<Date | undefined | null> = toSignal(this.df().pod_edate.valueChanges);
+  private readonly sys3800Signal: Signal<string[] | undefined | null> = toSignal(this.dialogForm().sys3800.valueChanges);
+  private readonly sys3900Signal: Signal<string[] | undefined | null> = toSignal(this.dialogForm().sys3900.valueChanges);
+  private readonly sys3A00Signal: Signal<string[] | undefined | null> = toSignal(this.dialogForm().sys3A00.valueChanges);
+  private readonly ecrNosSignal: Signal<EcrItem[] | undefined | null> = toSignal(this.dialogForm().ecr_nos.valueChanges);
+  private readonly tltNosSignal: Signal<TltItem[] | undefined | null> = toSignal(this.dialogForm().tlt_nos.valueChanges);
+  private readonly sdateSignal = toSignal(
+    this.dialogForm().pod_sdate.valueChanges,
+    { initialValue: this.dialogForm().pod_sdate.value }
+  );
+  private readonly edateSignal = toSignal(
+    this.dialogForm().pod_edate.valueChanges,
+    { initialValue: this.dialogForm().pod_edate.value }
+  );
 
   public readonly ecrTableFiltered = signal<EcrItem[]>([]);
   public readonly tltTableFiltered = signal<TltItem[]>([]);
-  public readonly dialogVisible = signal<'ecr' | 'tlt' | false>(!1);
+  public readonly dialogVisible = signal<'ecr' | 'tlt' | false>(false);
   public readonly originalDetailData = signal<TLS26010Detail | undefined>(void 0);
   public dialogSelectedData: (EcrItem | TltItem)[] = [];
 
@@ -98,14 +110,14 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
   /** 核准狀態處理 */
   public readonly podStatusEffect = effect(() => {
-    const raw = this.df().pod_status.value;
+    const raw = this.dialogForm().pod_status.value;
     const statusSet = new Set(['0', '1', '9']);
     if (!raw) {
-      this.df().pod_status.patchValue('未核准');
+      this.dialogForm().pod_status.patchValue('未核准');
       return;
     }
     const mapped = statusSet.has(raw) ? this.service.approvalStatus(raw) : raw;
-    mapped !== raw && this.df().pod_status.patchValue(mapped);
+    mapped !== raw && this.dialogForm().pod_status.patchValue(mapped);
   });
   /** 依賴項檢查 */
   public readonly dependencyEffect = effect(() => {
@@ -142,8 +154,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     const selectedData = incoming.filter(item => pickedSet.has(item[key as keyof typeof item]));
 
     // 型別守衛確保正確的型別分配
-    if (dialog === 'ecr') this.df().ecr_nos.patchValue(selectedData as EcrItem[]);
-    else this.df().tlt_nos.patchValue(selectedData as TltItem[]);
+    if (dialog === 'ecr') this.dialogForm().ecr_nos.patchValue(selectedData as EcrItem[]);
+    else this.dialogForm().tlt_nos.patchValue(selectedData as TltItem[]);
 
     setTimeout(() => this.dialogSelectedData = selectedData, 100);
     this.logger.debug(`dialogDataEffect [${dialog}]:`, [selectedData, this.dataForm.value]);
@@ -157,19 +169,19 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       tlt_nos: detail.talent_list,
     });
     this.originalDetailData.set(detail);
-    this.ecrTableFiltered.set(detail.ecr_list.map(item => ({ ...item, Status: item.Status || ItemOperationStatus.Original })));
-    this.tltTableFiltered.set(detail.talent_list.map(item => ({ ...item, Status: item.Status || ItemOperationStatus.Original })));
+    this.ecrTableFiltered.set(detail.ecr_list.map(item => ({ ...item, Status: item.Status || ItemOperationStatus.Original }))); // 這邊會有 TypeError警告
+    this.tltTableFiltered.set(detail.talent_list.map(item => ({ ...item, Status: item.Status || ItemOperationStatus.Original }))); // 這邊會有 TypeError警告
     this.logger.debug(`TLS26010DetailEffect:`, [this.ecrTableFiltered(), this.tltTableFiltered(), this.dataForm.value]);
     this.TLS26010DetailEffect.destroy(); // 只需執行一次
-  }, { allowSignalWrites: !0 });
+  }, { allowSignalWrites: true });
 
   public readonly dialogData = computed(() =>
     this.dialogVisible() === 'ecr' ? this.service.ecrOptions() :
       this.dialogVisible() === 'tlt' ? this.service.tltOptions() : []
   );
   public readonly dialogColumn = computed(() =>
-    this.dialogVisible() === 'ecr' ? this.columns3 :
-      this.dialogVisible() === 'tlt' ? this.columns4 : []
+    this.dialogVisible() === 'ecr' ? this.ecr_Dialog_Column :
+      this.dialogVisible() === 'tlt' ? this.tlt_Dialog_Column : []
   );
   public readonly dialogDataKey = computed(() =>
     this.dialogVisible() === 'ecr' ? 'ecr_no' :
@@ -202,7 +214,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
   public readonly dialogLoading = computed(() => {
     return this.dialogVisible() === 'ecr' ? this.service.ecrLoading() :
-      this.dialogVisible() === 'tlt' ? this.service.tltLoading() : !1;
+      this.dialogVisible() === 'tlt' ? this.service.tltLoading() : false;
   });
 
   public readonly loadingEffect = effect(() => {
@@ -212,19 +224,19 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       || this.service.tableLoading();
   });
 
-  public readonly columns: Column[] = [
-    { field: 'ecr_no', header: '收銀機號' },
+  public readonly ecr_Column: Column[] = [
+    { field: 'ECR_No', header: '收銀機號' },
     { field: 'ecr_name', header: '收銀機名稱' },
     { field: 'tlt_no', header: '專櫃編號' },
     { field: 'tlt_name', header: '櫃位名稱' },
   ];
 
-  public readonly columns2: Column[] = [
+  public readonly tlt_Column: Column[] = [
     { field: 'tlt_no', header: '專櫃編號' },
     { field: 'tlt_name', header: '櫃位名稱' },
   ];
 
-  private readonly columns3: Column[] = [
+  private readonly ecr_Dialog_Column: Column[] = [
     { field: 'building_name', header: '館別' },
     { field: 'floor_name', header: '樓層' },
     { field: 'area_name', header: '區域' },
@@ -234,48 +246,97 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     { field: 'tlt_name', header: '櫃位名稱' },
   ];
 
-  private readonly columns4: Column[] = [
+  private readonly tlt_Dialog_Column: Column[] = [
     { field: 'building_name', header: '館別' },
     { field: 'floor_name', header: '樓層' },
     { field: 'area_name', header: '區域' },
     { field: 'tlt_no', header: '專櫃編號' },
     { field: 'tlt_name', header: '櫃位名稱' },
   ];
+
+  tlt_no_Option: apiOption[] = []; // 先用假資料測試
+  ecr_no_Option: apiOption[] = [];
 
   constructor(
     public readonly service: TLS26010Service,
     private readonly excelImport: ExcelImportService,
     private readonly logger: NGXLogger,
+    private readonly validationService: ValidationService,
+    private readonly dropDownListService: DropDownListService,
   ) {
     super();
   }
 
   public ngOnInit(): void {
     this.initializePage('TLS26010', this.dataForm);
+    this.loadOptions();
 
     this.dependencyChangeSubject.pipe(
       debounceTime(400),
       takeUntil(this.destroy$),
-      startWith({ dialog: '', payload: {} }),
+      startWith({
+        dialog: 'ecr',
+        payload: {
+          building_nos: [],
+          floor_nos: [],
+          area_nos: [],
+        },
+        date: {
+          pod_sdate: null,
+          pod_edate: null,
+        }
+      }),
       pairwise(),
       tap(([a, b]) => {
         this.logger.debug(`dependency:`, [a, b, this.dataForm.value]);
         if (JSON.stringify(a.payload) === JSON.stringify(b.payload)) return;
-        if (b.dialog === 'ecr') { this.service.loadPreorderECRList({ ...b.payload, ecr_type: '1' }); }
-        else if (b.dialog === 'tlt') { this.service.loadTLTTALENT(b.payload); }
+        if (b.dialog === 'ecr') { this.service.queryECRDropDownList({ ...b.payload, ecr_type: '1' }); }
+        else if (b.dialog === 'tlt') {
+          this.service.queryTalentDropDownList({
+            ...b.payload,
+            tlt_bdate: b.date.pod_sdate?.toISOString().slice(0, 10) ?? null, // 包含時間一起送出
+            tlt_edate: b.date.pod_edate?.toISOString().slice(0, 10) ?? null,
+          });
+        }
       })
     ).subscribe();
+
+    // 2025/11/09 eugene:
+    // 新增時如果變動 上面日期 專櫃資料清掉 tltTableData
+    if (this.crudstatus === CRUDStatus.Create) {
+      this.dataForm.controls.pod_sdate.valueChanges
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          if (this.tltTableFiltered().length > 0) {
+            this.messageService.infoBubble('變更預售期間，專櫃資料已清除，請重新選擇專櫃');
+          }
+          this.tltTableFiltered.set([]);
+        });
+
+      this.dataForm.controls.pod_edate.valueChanges
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => {
+          if (this.tltTableFiltered().length > 0) {
+            this.messageService.infoBubble('變更預售期間，專櫃資料已清除，請重新選擇專櫃');
+          }
+          this.tltTableFiltered.set([]);
+        });
+    }
 
     this.service.loadSYS3800();
     this.service.loadSYS3900();
     this.service.loadSYS3A00();
 
-    // 使用 map + 結構賦值，避免在迴圈中建立暫時物件
-    const ecrInit = this.service.ecrOptions();
-    this.ecrTableFiltered.set(ecrInit.map(({ ecr_no, ecr_name, tlt_no, tlt_name }): EcrItem => (
-      { ecr_no, ecr_name, tlt_no, tlt_name, Status: ItemOperationStatus.Original }
-    )));
-
+    // 2025/11/09 eugene: 
+    // 新增模式時，不要初始化  tltTableFiltered
+    if (this.crudstatus === CRUDStatus.Edit && this.rowdata?.pod_no) {
+      this.service.loadTLS26010Detail({ pod_no: this.rowdata.pod_no })
+        .pipe(take(1))
+        .subscribe(res => {
+          if (!res.Data) return;
+          this.tableDetailedData.set(res.Data);
+        });
+    }
     const tltInit = this.service.tltOptions();
     this.tltTableFiltered.set(tltInit.map((item): TltItem => ({
       tlt_no: item.tlt_no,
@@ -365,17 +426,26 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       };
 
       this.logger.debug(`submit:`, [d, payload]);
+      // eugene:
+      // SA需求更新: 編輯/查看模式用可編輯單筆向下table
+      // 唯一條件是 活動設定時需大於今日
       (this.isFormCreateable ? this.service.insertTLS26010(payload) : this.service.updateTLS26010(payload, this.tableData))
         .pipe(
           tap(() => { if (!this.dialogVisible()) this.isFormCreateable ? this.dataForm.reset() : this.onCancel(); }),
           finalize(() => {
             if (!this.dialogVisible()) return;
-            this.dialogVisible.set(!1);
+            this.dialogVisible.set(false);
             this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
-          })).subscribe({
-            next: () => this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功'),
-            error: () => this.messageService.errorBubble(this.isFormCreateable ? '新增失敗' : '更新失敗'),
-          });
+          }))
+        .subscribe({
+          next: () => {
+            this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功');
+            // <-- API成功後清空 Table
+            this.ecrTableFiltered.set([]);
+            this.tltTableFiltered.set([]);
+          },
+          error: () => this.messageService.errorBubble(this.isFormCreateable ? '新增失敗' : '更新失敗'),
+        });
     });
   };
 
@@ -385,9 +455,9 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     if (!dialog) return;
 
     if (this.crudstatus === CRUDStatus.Create) {
-      this.ecrTableFiltered.set((this.df().ecr_nos.value || []).map(item => <EcrItem>{ ...item, Status: ItemOperationStatus.New }));
-      this.tltTableFiltered.set((this.df().tlt_nos.value || []).map(item => <TltItem>{ ...item, Status: ItemOperationStatus.New }));
-      return void this.onVisibleChange(!1); // 關閉對話框並清除資料;
+      this.ecrTableFiltered.set((this.dialogForm().ecr_nos.value || []).map(item => ({ ...item, Status: ItemOperationStatus.New } as EcrItem)));
+      this.tltTableFiltered.set((this.dialogForm().tlt_nos.value || []).map(item => ({ ...item, Status: ItemOperationStatus.New } as TltItem)));
+      return void this.onVisibleChange(false); // 關閉對話框並清除資料;
     }
 
     if (dialog === 'ecr') {
@@ -404,19 +474,19 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       this.logger.debug(`TLT Dialog Submit:`, [originalData, changedData, this.tltTableData()]);
     }
 
-    this.onVisibleChange(!1); // 關閉對話框並清除資料
+    this.onVisibleChange(false); // 關閉對話框並清除資料
   }
 
   /** 開啟對話框 */
   public onOpenDialog(type: 'ecr' | 'tlt'): void {
     this.logger.debug(`onOpenDialog:`, [type, this.dataForm.value]);
     this.dialogVisible.set(type);
-    this.submitted = !1;
+    this.submitted = false;
   };
 
   /** 對話框顯示狀態變更處理 */
   public onVisibleChange(visible: boolean | 'ecr' | 'tlt'): void {
-    if (this.dialogVisible()) return void this.dialogVisible.set(!1);
+    if (this.dialogVisible()) return void this.dialogVisible.set(false);
     this.dataForm.patchValue({
       sys3800: [],
       sys3900: [],
@@ -428,8 +498,13 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   public onSelectionChange(event: (EcrItem | TltItem)[]): void {
     const dialog = this.dialogVisible();
     if (!dialog || this.service.ecrLoading() || this.service.tltLoading()) return;
-    dialog === 'ecr' && this.df().ecr_nos.patchValue(<EcrItem[]>event);
-    dialog === 'tlt' && this.df().tlt_nos.patchValue(<TltItem[]>event);
+    if (dialog === 'ecr') {
+      this.dialogForm().ecr_nos.patchValue((event as EcrItem[]));
+    } else if (dialog === 'tlt') {
+      this.dialogForm().tlt_nos.patchValue((event as TltItem[]));
+    } else {
+      return;
+    }
     this.logger.debug(`onSelectionChange:`, [dialog, event, this.dataForm.value]);
   }
 
@@ -445,12 +520,12 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   ): T[] => {
     const result = new Map<string, T>([]);
 
-    // 先建索引，避免在新增路徑多次 find，O(1) 取值
+    // 動態 key（ECR_No 或 tlt_no）
+    const key = this.dialogDataKey();
+
+    // 建立 dialogIndex：用動態 key 做索引（確保轉字串）
     const dialogIndex = new Map<string, T>(
-      this.dialogData().map((it: any) => [
-        this.dialogDataKey() === 'ecr_no' ? it.ecr_no : it.tlt_no,
-        it
-      ])
+      this.dialogData().map((it: any) => [String(it[key]), it])
     );
 
     for (const [id, item] of original) {
@@ -467,7 +542,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     for (const [id] of selected) {
       if (!original.has(id) && !result.has(id)) {
         const newItem = dialogIndex.get(id);
-        newItem && result.set(id, { ...(newItem as T), Status: ItemOperationStatus.New });
+        if (newItem) result.set(id, { ...(newItem as T), Status: ItemOperationStatus.New });
       }
     }
 
@@ -479,5 +554,52 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     this.dependencyChangeSubject.complete();
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  //eugene: 新增刪除控制(新增模式全部勾選刪除，編輯維持舊的模式)
+  public readonly isRowSelectableWrapper = (rowData: TLS26010Data) =>
+    this.crudstatus === CRUDStatus.Create ? true : this.service.isRowSelectable(rowData);
+
+  //eugene: 刪除子項目table
+  public onDelete(data: any, tableType: 'ecr' | 'tlt'): void {
+    if (tableType === 'ecr') {
+      // 刪除 ecr Table 對應資料
+      const updatedEcrList = this.ecrTableFiltered().map(item => {
+        if (Array.isArray(data)) {
+          return data.some(d => d.ecr_no === item.ecr_no)
+            ? { ...item, Status: ItemOperationStatus.Deleted }
+            : item;
+        }
+        return item;
+      });
+      this.ecrTableFiltered.set(updatedEcrList);
+    } else if (tableType === 'tlt') {
+      // 刪除 tlt Table 對應資料
+      const updatedTltList = this.tltTableFiltered().map(item => {
+        if (Array.isArray(data)) {
+          return data.some(d => d.tlt_no === item.tlt_no)
+            ? { ...item, Status: ItemOperationStatus.Deleted }
+            : item;
+        }
+        return item;
+      });
+      this.tltTableFiltered.set(updatedTltList);
+    }
+  }
+
+  // eugene: load 下拉選單資料
+  private loadOptions(): void {
+    // 收銀機號 下拉
+    this.dropDownListService.queryPOS1002ECR_TypeDropDownList({ ECR_Type: '1' }).pipe(untilDestroyed(this)).subscribe(res => {
+      this.ecr_no_Option = res.Data.map(item => ({ ...item, Label: `${item.No} - ${item.Name}`, }));
+      console.log('SYS3100_Options', this.ecr_no_Option);
+    })
+
+    // 專櫃編號 下拉
+    this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.tlt_no_Option = res.Data.map(item => ({ ...item, Label: `${item.No} - ${item.Name}`, }));
+      console.log('tlt_no_Option', this.ecr_no_Option);
+    })
+
   }
 }

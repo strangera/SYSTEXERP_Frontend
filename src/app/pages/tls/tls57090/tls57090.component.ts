@@ -1,29 +1,30 @@
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
 import {
-  QueryTLS57090Request,
   QueryTLS57090DetailResponse,
+  QueryTLS57090Request,
   QueryTLS57090SummaryResponse,
   Tls57090Service
 } from '@service/api/tls/tls57090.service';
-import { finalize } from 'rxjs';
-import { AsyncPipe, DatePipe } from '@angular/common';
-import { ButtonModule } from 'primeng/button';
-import { HttpResponse } from '@angular/common/http';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { FileExportService } from '@shared/service/file-export.service';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 @Component({
   selector: 'app-tls57090',
@@ -61,7 +62,7 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
   totalRecords = 0;
   footerTotal?: {
     ODD_ConfirmQty: string, ODD_BuyNet?: string, ODD_BuyTax?: string, ODD_BuyAmt?: string, ODD_SalePrc?: string, ODD_SaleAmt?: string, ODM_TotalBuyNet?: string, ODM_TotalBuyTax?: string, ODM_TotalBuyAmt?: string
-  }
+  } | null;
   documentTypeOptions = [
     { value: 1, label: '進貨單' },
     { value: 2, label: '退貨單' }
@@ -88,7 +89,8 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
     private readonly dropDownListService: DropDownListService,
     private readonly dropdown: DropdownApiService,
     public readonly tls57090Service: Tls57090Service,
-    private datePipe: DatePipe
+    private readonly datePipe: DatePipe,
+    private readonly fileExportService: FileExportService
   ) { super(); }
 
   ngOnInit(): void {
@@ -122,6 +124,7 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
         { field: 'ODM_TotalBuyTax', header: '稅額', visible: true, showSort: true, format: formatAmount },
         { field: 'ODM_TotalBuyAmt', header: '應稅金額', visible: true, showSort: true, format: formatAmount },
       ];
+      this.footerTotal = null;
       this.data = [];
     } else if (displayMode === 2) { // 明細模式
       this.columns = [
@@ -141,8 +144,10 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
         { field: 'ODD_SalePrc', header: '售價', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
         { field: 'ODD_SaleAmt', header: '售價小計', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
       ];
+      this.footerTotal = null;
       this.data = [];
     } else {
+      this.footerTotal = null;
       this.columns = [];
       this.data = [];
     }
@@ -170,14 +175,13 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
 
       this.tls57090Service.queryTLS57090(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         if (response.Data) {
-          console.log('response', response);
           this.totalRecords = response.TotalCount || 0;
           this.footerTotal = response.GrandTotal;
           this.historyRequestBody = requestBody;
           this.data = response.Data;
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
         } else {
           this.data = [];
+          this.footerTotal = null;
           this.totalRecords = 0;
           this.messageService.warnBubble(response.Message || '沒有找到符合條件的資料。');
         }
@@ -190,15 +194,15 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
       this.messageService.warnBubble('請先執行查詢以產生報表。');
       return;
     }
-    this.btnLoading = true;
-    this.tls57090Service.exportTLS57090PDF(this.historyRequestBody).pipe(
-      untilDestroyed(this),
-      finalize(() => this.btnLoading = false)
-    ).subscribe({
-      next: (response: HttpResponse<Blob>) => {
-        this.handleFileExport(response, '.pdf');
-      },
-    });
+
+    const export$ = this.tls57090Service.exportTLS57090PDF(this.historyRequestBody);
+
+    // 呼叫 Service 執行匯出，並將直到銷毀的邏輯加入
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
+      '.pdf',
+      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
+    );
   }
 
   onExportXLSX() {
@@ -206,15 +210,14 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
       this.messageService.warnBubble('請先執行查詢以產生報表。');
       return;
     }
-    this.btnLoading = true;
-    this.tls57090Service.exportTLS57090Excel(this.historyRequestBody).pipe(
-      untilDestroyed(this),
-      finalize(() => this.btnLoading = false)
-    ).subscribe({
-      next: (response: HttpResponse<Blob>) => {
-        this.handleFileExport(response, '.xlsx');
-      },
-    });
+
+    const export$ = this.tls57090Service.exportTLS57090Excel(this.historyRequestBody);
+
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
+      '.xlsx',
+      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
+    );
   }
 
   // 處理檔案匯出的通用邏輯

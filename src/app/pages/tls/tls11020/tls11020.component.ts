@@ -1,43 +1,38 @@
 import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { DeductionService } from '../../../service/basic/deduction.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { TLS11020Service } from '../../../service/api/tls/tls11020.service';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { AccountingaccountService } from '../../../service/basic/accountingaccount.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { Table2Component } from '@shared/componentkit/table2/table2.component';
+import { AccordionModule } from 'primeng/accordion';
+import { TLS11020Service } from '../../../service/api/tls/tls11020.service';
+import { AccountingaccountService } from '../../../service/basic/queryGLS1005.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
-    selector: 'app-tls11020',
-    templateUrl: './tls11020.component.html',
-    styleUrls: ['./tls11020.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        MultiSelectComponent,
-        // TableComponent,
-        TranslateModule,
-        Table2Component,
-    ],
+  selector: 'app-tls11020',
+  templateUrl: './tls11020.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    MultiSelectComponent,
+    TranslateModule,
+    Table2Component,
+  ],
 })
 export class TLS11020Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     CAP_Item: ['', [Validators.maxLength(3)]],
     CAP_Name: ['', [Validators.maxLength(40)]],
+    CAP_BaseRate: ['', [Validators.maxLength(5)]],
     CAP_Type: [[] as string[]],
     CAP_Remark: ['', [Validators.maxLength(160)]],
     ...createPaginationConfig([{ field: 'CAP_Item', order: 1 }]), // 分頁與排序
@@ -45,9 +40,16 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
 
   totalRecords = 0;
   data: any[] = [];
-  
+
   selectedItems: any[] = [];
-  deductionCategoryOptions: any[] = [];
+  deductionCategoryOptions = [
+    { value: 'A', label: '一次扣款' },
+    { value: 'B', label: '每月扣款' },
+    { value: 'C', label: '平均分攤' },
+    { value: 'D', label: '比率分攤' },
+    { value: 'E', label: '活動扣款' },
+    { value: 'Z', label: '其他扣款' },
+  ];
   guiFlagOptions = [
     { label: '開立', value: 'Y' },
     { label: '不開立', value: 'N' },
@@ -64,8 +66,6 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
   ];
   accountOptions: any[] = [];
   constructor(
-    private validationService: ValidationService,
-    private deductionService: DeductionService,
     private tls11020Service: TLS11020Service,
     private accountingaccountService: AccountingaccountService
 
@@ -75,26 +75,23 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
 
   ngOnInit(): void {
     this.initializePage('TLS11020', 'tls/tls11020cru', this.queryForm, (f) => this.onSubmit(f));
-   this.deductionService.getDeductionCategories().subscribe((data) => {
-  this.deductionCategoryOptions = data;
-  const map = data.map((o: any) => ({ [String(o.value)]: String(o.label) }));
-  this.columns = this.columns.map(c =>
-    c.field === 'CAP_Type' ? { ...c, exportFormat: map } : c
-  );
-});
+    const map = this.deductionCategoryOptions.map((o: any) => ({ [String(o.value)]: String(o.label) }));
+    this.columns = this.columns.map(c =>
+      c.field === 'CAP_Type' ? { ...c, exportFormat: map } : c
+    );
     this.accountingaccountService.getOptions().subscribe((data) => {
-  this.accountOptions = (data || []).map(x => ({
-    label: x.Name,
-    formLabel: `${x.No} - ${x.Name}`,
-    value: x.No
-  }));
-  const mapAcc = this.accountOptions.map(o => ({ [String(o.value)]: String(o.label) }));
-  this.columns = this.columns.map(c =>
-    c.field === 'AccNo' && c.header === '會計科目名稱'
-      ? { ...c, exportFormat: mapAcc }
-      : c
-  );
-});
+      this.accountOptions = (data || []).map(x => ({
+        label: x.Name,
+        formLabel: `${x.No} - ${x.Name}`,
+        value: x.No
+      }));
+      const mapAcc = this.accountOptions.map(o => ({ [String(o.value)]: String(o.label) }));
+      this.columns = this.columns.map(c =>
+        c.field === 'AccNo' && c.header === '會計科目名稱'
+          ? { ...c, exportFormat: mapAcc }
+          : c
+      );
+    });
   }
 
   onSubmit(form: FormGroup): void {
@@ -107,6 +104,7 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
       // 將空字串轉為 null（配合後端 char? 欄位處理）
       if (formValue.CAP_Item === '') formValue.CAP_Item = null;
       if (formValue.CAP_Name === '') formValue.CAP_Name = null;
+       if (formValue.CAP_BaseRate === '') formValue.CAP_BaseRate = null;
       if (formValue.CAP_Remark === '') formValue.CAP_Remark = null;
 
 
@@ -118,9 +116,9 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
             this.data = res?.Data || [];
             this.totalRecords = res?.TotalCount || this.data.length;
             this.queryStateService.setQueryState(this.ProgNo, formValue);
-            
+
           } else {
-            
+
           }
         },
         error: () => {
@@ -170,21 +168,21 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
       field: 'AccCName',
       header: '會計科目名稱',
       visible: true,
-      
+
     },
     {
       field: 'GUI_FLAG',
       header: '是否開立發票',
       visible: true,
       format: (value: any) => this.getLabelFromOptions(value, this.guiFlagOptions),
-       exportFormat: this.guiFlagOptions.map(o => ({ [o.value]: o.label })),
+      exportFormat: this.guiFlagOptions.map(o => ({ [o.value]: o.label })),
     },
     {
       field: 'CAP_TaxType',
       header: '課稅別',
       visible: true,
       format: (value: any) => this.getLabelFromOptions(value, this.taxTypeOptions),
-       exportFormat: this.taxTypeOptions.map(o => ({ [o.value]: o.label })),
+      exportFormat: this.taxTypeOptions.map(o => ({ [o.value]: o.label })),
     },
     {
       field: 'IsCommonlyUsed',
@@ -195,7 +193,7 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
     },
     { field: 'Print_Area', header: '扣款項目合約列印區分', visible: true },
     { field: 'CAP_Remark', header: '備註', visible: true },
-    
+
   ];
 
 

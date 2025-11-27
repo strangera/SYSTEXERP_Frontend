@@ -1,17 +1,18 @@
-import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
-import { Garantee_Ticket } from '../../../shared/models/tls/tls000.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
+import { Garantee_Ticket } from '../../../shared/models/tls/tls000.model';
+import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
 
 const yesterday = new Date();
 yesterday.setDate(yesterday.getDate() - 1);
@@ -48,8 +49,8 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
 
     tlt_openflagList: [[]], // 營運狀況 0閉店/撤櫃, 1=營業中, 2=合約結束, 9=核准時合約尚未開始
 
-    contract_subno_start: [''], // 合約附號_起
-    contract_subno_end: [''], // 合約附號_迄
+    contract_subno_start: ['', [Validators.maxLength(4)]], // 合約附號_起(1 >)
+    contract_subno_end: ['', [Validators.maxLength(4)]], // 合約附號_迄(> 9999)
     apply_statusList: [[]], // 申請案件狀態(1=洽談中 2=簽約中  5=已作廢)
 
     tlt_bdate: [null], // 合約期間_起
@@ -63,10 +64,9 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
     // ticket_type_List: [[]], // 保證票型態 "1=準時開業保證票 2=施工保證票 3=契約屆滿"
     // ticket_kind_List: [[]], // 票據種類 非必填但有限制長度 "1=本票 2=支票 3=銀行保證函 9=其他"
 
-    // ...createPaginationConfig([{ field: 'talent_id', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
-
   data: Garantee_Ticket[] = [];// 表格數據和篩選數據
 
   columns: any[] = [// 表格欄位定義
@@ -144,14 +144,15 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
   // 提交查詢：處理表單並呼叫查詢 API
   onSubmit(frm: FormGroup): void {
     const formValue = frm.getRawValue();
-    console.log('保證票彙總request', formValue);
+    console.log('保證票彙總request', JSON.stringify(formValue));
     this.handleSubmit(frm, () => {
       this.tls14030Service.exportTLS14030(formValue).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
-            this.data = Array.isArray(response.Data) ? response.Data : [];
-            this.totalRecords = response.TotalCount ?? this.data.length; // 使用安全寫法
-            this.queryStateService.setQueryState(this.ProgNo, formValue);
+            console.log('保證票彙總response', response);
+            this.data = response.Data || [];
+            this.totalRecords = response.TotalCount || response.Data.length;
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
           }
           this.loading = false;
           this.messageService.unblockUi();
@@ -214,7 +215,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('locationOption:', this.locationOption);
+        // console.log('部門:', this.locationOption);
       });
 
     // 區域下拉
@@ -227,7 +228,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('areaOption:', this.areaOption);
+        // console.log('區域:', this.areaOption);
       });
 
     // 樓層下拉
@@ -240,7 +241,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('floorOption:', this.floorOption);
+        // console.log('樓層:', this.floorOption);
       });
 
     // 大分類下拉
@@ -253,7 +254,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('bus_typeOption:', this.bus_typeOption);
+        // console.log('大分類下拉:', this.bus_typeOption);
       });
 
     // 組織 下拉
@@ -266,7 +267,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('orgOption:', this.orgOption);
+        // console.log('組織:', this.orgOption);
       });
 
     // 專櫃編號 下拉
@@ -278,7 +279,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('專櫃編號:', response.Data);
+        // console.log('專櫃編號:', response.Data);
       });
   }
 }

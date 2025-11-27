@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../system/auth.service';
 
 /**
  * TLS56080 (同業調撥作業) 主檔查詢條件介面

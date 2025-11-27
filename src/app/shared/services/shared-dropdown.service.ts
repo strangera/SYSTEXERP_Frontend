@@ -1,17 +1,16 @@
 import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
-import { SHARED_DROPDOWN_OPTIONS, DropdownOption, Pos2013DropdownOption } from '../constants/business.constants';
-import { environment } from '../../../environments/environment';
+import { catchError, map } from 'rxjs/operators';
+import { DropdownOption, Pos2013DropdownOption, SHARED_DROPDOWN_OPTIONS } from '../constants/business.constants';
 // API 服務注入
-import { Sysb800DropdownService } from '../../service/api/sys/sysb800-dropdown.service';
-import { Sysb900DropdownService } from '../../service/api/sys/sysb900-dropdown.service';
-import { LocationOptionsService } from '../../service/api/dropdownservice/location-options.service';
-import { VendorCategoryOptionsService } from '../../service/api/dropdownservice/vendor-category-options.service';
-import { NegotiatorOptionsService } from '../../service/api/dropdownservice/negotiator-options.service';
+import { HttpClient } from '@angular/common/http';
 import { BankOptionsService } from '@service/api/dropdownservice/bank-option.service';
 import { BussclassDropdownService } from '@service/api/dropdownservice/tltbussclass-options.service';
-import { HttpClient } from '@angular/common/http';
+import { LocationOptionsService } from '../../service/api/dropdownservice/location-options.service';
+import { NegotiatorOptionsService } from '../../service/api/dropdownservice/negotiator-options.service';
+import { VendorCategoryOptionsService } from '../../service/api/dropdownservice/vendor-category-options.service';
+import { Sysb800DropdownService } from '../../service/api/sys/sysb800-dropdown.service';
+import { Sysb900DropdownService } from '../../service/api/sys/sysb900-dropdown.service';
 @Injectable({
   providedIn: 'root'
 })

@@ -1,40 +1,38 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
 import {
-  Validators,
+  FormGroup,
   FormsModule,
   ReactiveFormsModule,
-  FormGroup,
+  Validators,
 } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { finalize, map } from 'rxjs/operators';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import {
-  createPaginationConfig,
-  LazyLoadEvent,
+  LazyLoadEvent
 } from '../../../shared/componentkit/table/table.model';
 
-import { OperationStatusService } from '../../../service/basic/operation-status.service';
-import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
-import { DeductionService } from '../../../service/basic/deduction.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS13030Service } from '../../../service/api/tls/tls13030.service';
+import { DeductionService } from '../../../service/basic/queryAPS1003.service';
+import { BigCategoryCodeService } from '../../../service/basic/queryTLTBUSTYPE.service';
 
 // UI
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { MultiLocationFilterComponent } from '../../../shared/componentkit/multi-location-filter/multi-location-filter.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { MultiLocationFilterComponent } from '../../../shared/componentkit/multi-location-filter/multi-location-filter.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 // ✅ 自動取消訂閱
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { CounterNameService } from '@service/basic/counter-name.service';
+import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 
 @UntilDestroy()
 @Component({
@@ -47,7 +45,6 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    // InputTextComponent,
     MultiSelectComponent,
     MultiLocationFilterComponent,
     CalendarRangeQuickComponent,
@@ -55,6 +52,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
     TableComponent,
     TranslateModule,
     DropdownComponent,
+    CalendarRangeComponent,
   ],
 })
 export class TLS13030Component extends BasicQueryPageComponent<any> {
@@ -114,9 +112,21 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   // ===== 下拉選項 =====
   regionOptions: any[] = [];
   floorOptions: any[] = [];
-  operationStatusOptions: any[] = [];
+  operationStatusOptions = [
+    { value: 0, label: '閉店/撤櫃' },
+    { value: 1, label: '營業中' },
+    { value: 2, label: '合約結束' },
+    { value: 9, label: '核准時合約尚未開始' },
+  ];
   bus_typeOptions: any[] = [];
-  deductionCategoryOptions: any[] = [];
+  deductionCategoryOptions = [
+    { value: 'A', label: '一次扣款' },
+    { value: 'B', label: '每月扣款' },
+    { value: 'C', label: '平均分攤' },
+    { value: 'D', label: '比率分攤' },
+    { value: 'E', label: '活動扣款' },
+    { value: 'Z', label: '其他扣款' },
+  ];
   deductionCodeNameServOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   organizationOptions: any[] = [];
@@ -148,13 +158,14 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     { field: 'down_payment', header: '頭期款', visible: true, format: (v: any) => this.moneyFormat(v), style: 'text-right' },
     { field: 'period_nos', header: '期數', visible: true },
     { field: 'tpy_amount', header: '每期金額', visible: true, format: (v: any) => this.moneyFormat(v), style: 'text-right' },
+ { field: 'down_payment', header: '首期金額', visible: true, format: (v: any) => this.moneyFormat(v), style: 'text-right' },
+    
     { field: 'tpy_rate', header: '比率或元(月利率%)', visible: true, style: 'text-right' },
     { field: 'defSalesAmt', header: '預設營業額', visible: true, format: (v: any) => v ?? 0, style: 'text-right' },
     { field: 'commRate', header: '抽成百分比%', visible: true, format: (v: any) => v ?? 0, style: 'text-right' },
   ];
 
   constructor(
-    private operationStatusService: OperationStatusService,
     private bigCategoryCodeService: BigCategoryCodeService,
     private deductionService: DeductionService,
     private tls11010Service: Tls11010Service,
@@ -169,20 +180,10 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     this.initializePage('TLS13030', '', this.queryForm);
     this.sortMeta = this.defaultSort.map(x => ({ ...x }));
 
-    this.operationStatusService
-      .getOperationStatuses()
-      .pipe(untilDestroyed(this))
-      .subscribe(data => this.operationStatusOptions = data);
-
     this.bigCategoryCodeService
       .getSystemTypes()
       .pipe(untilDestroyed(this))
       .subscribe(data => this.bus_typeOptions = data);
-
-    this.deductionService
-      .getDeductionCategories()
-      .pipe(untilDestroyed(this))
-      .subscribe(data => this.deductionCategoryOptions = data);
 
     this.tls11010Service
       .getBuildingOptions()
@@ -224,16 +225,22 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
       .subscribe(opts => {
         this.organizationOptions = opts;
       });
-          this.counterNameService.getCounters().subscribe(v => this.CounterOptions = (v || []).map((x) => ({
-      label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value,
-    })));
+
+    // 專櫃下拉
+    this.counterNameService.getCounters()
+      .pipe(untilDestroyed(this))
+      .subscribe(v => this.CounterOptions = (v || []).map((x) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })));
   }
 
   // ===== lazy 事件（分頁/排序）=====
   override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
     // 1) 讀 event 的 pageIndex/pageSize
     const evPageIndex = Number.isFinite(event.pageIndex) ? Number(event.pageIndex) : undefined;
-    const evPageSize  = Number.isFinite(event.pageSize)  ? Number(event.pageSize)  : undefined;
+    const evPageSize = Number.isFinite(event.pageSize) ? Number(event.pageSize) : undefined;
 
     // 2) 排序：沿用現有或表單內
     const currSort = JSON.stringify(form.value?.SortBy ?? []);
@@ -305,6 +312,20 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     raw.tlt_floorList = raw.floor_noList;
     raw.area_noList = raw.area_noList;
 
+    // ===== 月份欄位（dateMonthRange）轉成 YYYYMM =====
+    const monthKeys = [
+      'tpy_bdate_start',
+      'tpy_bdate_end',
+      'tpy_edate_start',
+      'tpy_edate_end',
+    ];
+    for (const key of monthKeys) {
+      if (raw[key]) {
+        const yyyymm = this.toYYYYMM(raw[key]);
+        raw[key] = yyyymm;
+      }
+    }
+
     // 產生 payload（含分頁/排序 + 白名單過濾）
     const payload = this.buildPayload({ ...raw });
 
@@ -320,7 +341,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     ).subscribe({
       next: (res) => {
         if (res?.Status === '0000') {
-          const arr = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+          const arr = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : [] as any[]);
           this.data = this.processResultData(arr);
           this.totalRecords = Number(res?.TotalCount ?? this.data.length ?? 0);
           this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
@@ -370,6 +391,24 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     });
 
     return o;
+  }
+
+  // ===== Helper：Date / 字串 → YYYYMM =====
+  private toYYYYMM(value: any): string | null {
+    if (!value) return null;
+
+    // 如果已經是 "YYYYMM" 就直接回傳
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (/^\d{6}$/.test(trimmed)) return trimmed;
+    }
+
+    const d = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(d.getTime())) return null;
+
+    const year = d.getFullYear();
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    return `${year}${month}`;
   }
 
   // ===== 後端回傳資料格式化 =====

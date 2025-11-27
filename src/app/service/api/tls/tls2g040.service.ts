@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ApiResponse } from '@service/system/auth.service';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 

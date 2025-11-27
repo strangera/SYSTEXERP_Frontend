@@ -1,25 +1,23 @@
-import { formatDate } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { TLS2j030Service } from '@service/api/tls/tls2j030.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
-import { NgIf } from '@angular/common';
-import { TLS2j030Service } from '@service/api/tls/tls2j030.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs/operators';
 import { formatAmount } from '@shared/componentkit/table2/table2.model';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { AsyncPipe } from '@angular/common';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs/operators';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
 import { GUI_STATUS_OPTIONS, formatGUIStatus } from './tls2j030.model';
 
 // 2.2.18.3 後台發票換開補登作業
@@ -144,13 +142,10 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
         finalize(() => this.loading = false)
       ).subscribe({
         next: (response) => {
-
-          // 檢查 API 回應狀態
           if (response.Status === '0000') {
             this.data = response.Data || [];
             this.totalRecords = response.TotalCount || 0;
             this.lastQueryBody = req;
-            // 儲存查詢狀態
             this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
           } else {
             // API 回傳錯誤狀態
@@ -166,5 +161,52 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
   }
   override onDetail(row: any) {
     super.onDetail(row);
+  }
+
+  /** 刪除資料 */
+  onDelete(deleteItems: any[]) {
+    if (!deleteItems || deleteItems.length === 0) {
+      this.messageService.warnBubble('請先選擇要刪除的資料', '警告');
+      return;
+    }
+    this.messageService.confirm({
+      header: '確認刪除',
+      message: `確定要刪除選取的 ${deleteItems.length} 筆資料嗎？`,
+      accept: () => {
+        this.executeDelete(deleteItems);
+      }
+    });
+  }
+  private executeDelete(deleteItems: any[]) {
+    const payload = {
+      selectList: deleteItems.map(item => ({
+        CHG_No: item.CHG_No,
+        TXN_Date: item.TXN_Date,
+        ECR_No: item.ECR_No,
+        TXN_No: item.TXN_No,
+        TXN_GUINo: item.TXN_GUINo
+      }))
+    };
+
+    this.loading = true;
+    this.tls2j030Service.deleteTLS2J030(payload)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.loading = false;
+        })
+      )
+      .subscribe({
+        next: (res) => {
+          console.log('Delete API Response:', res);
+          if (res?.Status === '0000') {
+            this.messageService.successBubble(`成功刪除 ${deleteItems.length} 筆資料`, '刪除成功');
+            this.onSubmit(this.queryForm);
+            this.selectedItems = [];
+          } else {
+            this.messageService.errorBubble(`刪除失敗：${res?.Message || '系統錯誤'}`);
+          }
+        },
+      });
   }
 }

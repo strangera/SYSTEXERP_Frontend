@@ -1418,7 +1418,17 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
       }
     };
 
-    this.router.navigate(['account/tls/tls12040next2'], navigationExtras);
+    // 根據合約類型決定返回目標
+    const tltTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
+    if (tltTermType === '1') {
+      // 固定租金：返回 next1（因為 next2 被跳過）
+      console.log('🔍 合約類型為固定租金(1)，返回 next1');
+      this.router.navigate(['account/tls/tls12040next1'], navigationExtras);
+    } else {
+      // 其他類型：正常返回 next2
+      console.log('🔍 合約類型非固定租金，返回 next2');
+      this.router.navigate(['account/tls/tls12040next2'], navigationExtras);
+    }
   }
 
   onClearAndExit(): void {

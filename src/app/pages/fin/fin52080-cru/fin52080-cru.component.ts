@@ -1,4 +1,4 @@
-import { Component, computed, effect, OnInit } from '@angular/core';
+import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -13,7 +13,8 @@ import { ValidationService } from '@shared/service/validation.service';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { AccDCType, FIN52080Data, FIN52080Query, LedgerMDType, VoucherType } from '../fin52080/fin52080.model';
+import { finalize, map, tap } from 'rxjs';
+import { AccDCType, FIN52080Data, FIN52080Query, FIN52080Tree, LedgerMDType, VoucherType } from '../fin52080/fin52080.model';
 
 @Component({
   selector: 'app-fin52080-cru',
@@ -51,7 +52,7 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
    * - rest_value2: 殘值年限
    * - Input_YN: 是否可輸
    */
-  dataForm = this.formBuilder.nonNullable.group({
+  public readonly dataForm = this.formBuilder.nonNullable.group({
     AccNo: new FormControl<string>('', [Validators.required, Validators.minLength(3), Validators.maxLength(8)]),
     AccCname: new FormControl<string>('', [Validators.required, Validators.maxLength(40)]),
     AccEname: new FormControl<string>('', [Validators.maxLength(50)]),
@@ -66,10 +67,15 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
     rest_value2: new FormControl<string>('', [Validators.maxLength(10), this.validationService.numberValidator]),
     Input_YN: new FormControl<'Y' | 'N'>('N', [Validators.required]),
   });
-  public df = computed(() => this.dataForm.controls);
+  public readonly df = computed(() => this.dataForm.controls);
 
   private readonly accNoSignal = toSignal(this.df().AccNo.valueChanges);
   private readonly classNoSignal = toSignal(this.df().ClassNo.valueChanges);
+
+  public readonly FIN52080Tree = signal<FIN52080Tree[]>([]);
+
+  public readonly tableLoading = signal<boolean>(!1);
+  public readonly treeLoading = signal<boolean>(!1);
 
   /** accNo驗證 綁定classNo用 */
   public readonly accNoEffect = effect(() => {
@@ -93,9 +99,9 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
   });
 
   public readonly loadingEffect = effect(() => {
-    this.loading = this.service.tableLoading()
-      || this.service.classNoLoading()
-      || this.service.treeLoading();
+    this.loading = this.tableLoading()
+      || this.treeLoading()
+      || this.service.classNoLoading();
   });
 
   constructor(
@@ -110,9 +116,16 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
     this.initializePage('FIN52080', this.dataForm);
 
     this.service.getClassNos();
-    this.service.getFIN52080Tree();
 
-    this.logger.debug(`init:`, [this.rowdata, this.crudstatus]);
+    this.treeLoading.set(!0);
+    this.service.getFIN52080Tree().pipe(
+      tap(res => this.logger.debug(`init:`, [this.rowdata])),
+      map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
+      finalize(() => this.treeLoading.set(!1)),
+    ).subscribe({
+      next: res => this.FIN52080Tree.set(res.Data || []),
+      error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+    });
   }
 
   public onSubmit(): void {
@@ -121,12 +134,16 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
         ...this.dataForm.getRawValue(),
       };
 
-      this.logger.debug(`onSubmit:`, [payload]);
-
-      this.service.saveFIN52080(payload).subscribe(res => {
-        if (res.Status !== '0000') return this.messageService.errorBubble('資料儲存失敗，請再次檢查欄位');
-        this.messageService.successBubble('資料儲存成功');
-        this.onCancel();
+      this.tableLoading.set(!0);
+      this.service.saveFIN52080(payload).pipe(
+        tap(res => this.logger.debug(`onSubmit:`, [payload, res])),
+        map(res => { if (res.Status === '0000') return res; throw new Error('資料儲存失敗'); }),
+        finalize(() => this.tableLoading.set(!1)),
+      ).subscribe({
+        next: () => {
+          this.onCancel();
+          this.messageService.successBubble('資料儲存成功');
+        }
       });
     });
   }

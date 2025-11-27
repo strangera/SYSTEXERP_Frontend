@@ -1,34 +1,34 @@
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import {
-  Tls2e090Service,
-  Tls2e090QueryBody, // 引入共用的 Request Body 介面
-} from '../../../service/api/tls/tls2e090.service'; // ***Service 修改為 Tls2e090***
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ColumnGroup, ReportColumn } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
+import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { CheckboxModule } from 'primeng/checkbox';
+import { debounceTime, finalize, Observable } from 'rxjs';
+import {
+  Tls2e090QueryBody,
+  Tls2e090Service,
+} from '../../../service/api/tls/tls2e090.service'; // ***Service 修改為 Tls2e090***
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
-import { debounceTime, finalize, Observable } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { getSYS1000Options } from '@service/system/sys1000.service';
-import { AsyncPipe } from '@angular/common';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ColumnGroup, ReportColumn } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
 // 假設您在 tls2e090.model.ts 中定義了 columns1, columns2, columns3
-import { columnGroup, columns1, columns2, columns3 } from './tls2e090.model'; // ***Model 修改為 tls2e090***
-import { SelectButtonModule } from 'primeng/selectbutton';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { ApiResponse } from '@service/system/auth.service';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { columnGroup, columns1, columns2, columns3 } from './tls2e090.model'; // ***Model 修改為 tls2e090***
 
 // 定義報表類型
 type ReportType = '1' | '2' | '3';

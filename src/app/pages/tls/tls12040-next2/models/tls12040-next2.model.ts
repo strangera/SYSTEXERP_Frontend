@@ -102,6 +102,7 @@ export interface YearChargeDetailAPIModel {
  */
 export interface LevelChargeDetailAPIModel {
   id?: number | null;
+  charged_id?: number | null;
   apply_no: string;
   tlt_id: string;
   seq_no: number;

@@ -1,3 +1,4 @@
+import { animate, style, transition, trigger } from '@angular/animations'; // 1. 引入動畫相關函式
 import { TableTypes } from "../table/table.model";
 
 export interface ReportColumn {
@@ -91,6 +92,24 @@ export const formatYN = (value: string): string => {
   return value === 'Y' ? '是' : '否';
 };
 
+// 000,000,000 但 如果非數字 就回傳自己本身
+export const formatAmount2 = (val: number | string | null | undefined): string => {
+  // 1. 檢查是否為 null 或 undefined，如果是，則回傳空字串 ' ' 或您希望顯示的值（例如 '-'）
+  if (val === null || val === undefined || val === '') {
+    return ''; // 或 return '-'; 顯示破折號
+  }
+
+  const num = Number(val);
+
+  // 2. 檢查是否為 NaN (非數字字串)，如果是，則回傳原始值
+  // 這裡需要注意的是，如果原始值是 'abc' 這樣的字串，它會回傳 'abc'
+  if (isNaN(num)) {
+    return String(val);
+  }
+
+  // 3. 如果是有效數字（包括 0），則進行本地化格式化
+  return num.toLocaleString(); // eg. 1,000,000
+};
 /**
  * 將數字格式化為帶有千分位逗號的字串，並控制小數點位數。
  * @param value 要格式化的數字或字串。
@@ -119,3 +138,14 @@ export function formatAmountWithDecimals(value: any, decimals = 2): string {
     useGrouping: true, // 啟用千分位逗號
   }).format(num);
 }
+
+export const expandAnimation =
+  trigger('fadeInOut', [
+    transition(':enter', [
+      style({ opacity: 0, transform: 'translateY(10px)' }),
+      animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+    ]),
+    transition(':leave', [
+      animate('200ms ease-in', style({ opacity: 0, transform: 'translateY(-5px)' }))
+    ])
+  ])

@@ -24,9 +24,8 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="id" [data]="data" [columns]="columns" [showCheckBox]="false" dataKey="id"
-    [multiSortMeta]="[{ field: 'PAY_Name', order: 1 }]" [lazy]="true" [loading]="loading"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="true" [showDelete]="false"
-    [showDetail]="false" [showEdit]="false"
-    [addButton]="addButton" [columns]="columns" [columnGroup]="columnGroup4"></app-table>
+  <app-table tableKey="TLS22040" [data]="data" [columns]="columns" [showCheckBox]="false" dataKey="TXN_Date"
+    [multiSortMeta]="multiSortMeta" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
+    (lazyLoadData)="onLazyLoadData($event, queryForm)" [showManage]="true" [showDelete]="false" [showDetail]="false"
+    [showEdit]="false" [addButton]="addButton" [columnGroup]="columnGroup4"></app-table>
 </div>

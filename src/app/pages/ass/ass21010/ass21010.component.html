@@ -69,7 +69,7 @@
                [columns]="columns"
                [totalRecords]="totalRecords()"
                [multiSortMeta]="this.qf().SortBy.value!"
-               [loading]="service.tableLoading()"
+               [loading]="tableLoading()"
                [customReport]="true"
                (exportEvent)="onExport($event)"
                [exportExcelLoading]="service.exportLoading()"

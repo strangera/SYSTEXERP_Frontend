@@ -1,48 +1,44 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { CommonModule } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import {
-  Validators,
+  FormGroup,
   FormsModule,
   ReactiveFormsModule,
-  FormGroup,
+  Validators,
 } from '@angular/forms';
-import { StatusFlagService } from '../../../service/basic/status-flag.service';
-import { WhetherService } from '../../../service/basic/whether.service';
-import { TXN_SubtypeService } from '../../../service/basic/TXN_Subtype.service';
-import { CarrierTypeService } from '../../../service/basic/carrier-type.service';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { forkJoin } from 'rxjs';
+import { finalize, map, shareReplay } from 'rxjs/operators';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import {
   TLS23010Data,
-  TLS23010Service,
   TLS23010OtherData,
+  TLS23010Service,
 } from '../../../service/api/tls/tls23010.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { CashierService } from '../../../service/basic/cashier.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { CashierService } from '../../../service/basic/queryPOS2001.service';
+import { FloorService } from '../../../service/basic/querySYS3900.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DialogModule } from 'primeng/dialog';
-import { RadioButtonModule } from 'primeng/radiobutton';
-import { TranslateModule } from '@ngx-translate/core';
-import { UntilDestroy } from '@ngneat/until-destroy';
-import { ButtonModule } from 'primeng/button';
-import { HttpResponse } from '@angular/common/http';
-import { CheckboxModule } from 'primeng/checkbox';
-import { CommonModule } from '@angular/common';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { forkJoin } from 'rxjs';
-import { map, finalize, shareReplay } from 'rxjs/operators';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @UntilDestroy()
 // 型態別報表
@@ -149,10 +145,17 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   BUILDING_NO_Options: any[] = [];
   floorOptions: any[] = [];
   OrganizationCodeOptions: any[] = [];
-  TXN_SubtypeOptions: any[] = [];
-  statusFlagOptions: any[] = [];
-  whetherOptions: any[] = [];
-  carrierTypeOptions: any[] = [];
+  statusFlagOptions = [
+    { value: '1', label: '外交官零稅' },
+    { value: '2', label: '事後登錄' },
+    { value: '3', label: '預售' },
+  ];
+  whetherOptions: any[] = [
+    { value: 'Y', label: '是' },
+    { value: 'N', label: '否' },
+    { value: null, label: '全部' },
+  ];
+  carrierTypeOptions = getSYS1000Options('TXN_GUI_CarrType');
   txnStatusOptions: any[] = [
     { value: '1', label: '正常交易' },
     { value: '2', label: '作廢' },
@@ -164,10 +167,6 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private tls23010Service: TLS23010Service,
-    private statusFlagService: StatusFlagService,
-    private whetherService: WhetherService,
-    private TXN_SubtypeSvc: TXN_SubtypeService,
-    private carrierTypeService: CarrierTypeService,
     private tls11010Service: Tls11010Service,
     private floorService: FloorService,
     private counterNameService: CounterNameService,
@@ -186,10 +185,6 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     if (!this.dropdownInit$) {
       this.dropdownInit$ = forkJoin({
         floors: this.floorService.getFloors(),
-        flags: this.statusFlagService.getStatusFlags(),
-        whether: this.whetherService.getWhetherOptions(),
-        subtype: this.TXN_SubtypeSvc.getTXNSubtype(),
-        carriers: this.carrierTypeService.getCarrierType(),
         buildings: this.tls11010Service.getBuildingOptions(),
         orgs: this.tls11010Service.getOrgOptions(),
         counters: this.counterNameService.getCounters(),
@@ -201,10 +196,6 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     this.dropdownInit$.pipe(untilDestroyed(this))
       .subscribe((res) => {
         this.floorOptions = res.floors || [];
-        this.statusFlagOptions = res.flags || [];
-        this.whetherOptions = res.whether || [];
-        this.TXN_SubtypeOptions = res.subtype || [];
-        this.carrierTypeOptions = res.carriers || [];
         this.BUILDING_NO_Options = res.buildings || [];
 
         this.OrganizationCodeOptions = (res.orgs || []).map((x: any) => ({
@@ -223,106 +214,122 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   }
 
   private dropdownInit$?: import('rxjs').Observable<{
-    floors: any[]; flags: any[]; whether: any[]; subtype: any[];
-    carriers: any[]; buildings: any[]; orgs: any[]; counters: any[];
+    floors: any[]; buildings: any[]; orgs: any[]; counters: any[];
     ecrs: any[]; cashiers: any[];
   }>;
 
-  // ========= 查詢（明細 / 彙總） =========
-  onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      const val = this.queryForm.getRawValue() as any;
-      const isSummary = !!this.queryForm.get('showSummary')?.value;
+// ========= 查詢（明細 / 彙總） =========
+onSubmit(frm: FormGroup) {
+  this.handleSubmit(frm, () => {
+    const val = this.queryForm.getRawValue() as any;
+    const isSummary = !!this.queryForm.get('showSummary')?.value;
 
-      const pageSize = 30;
-      const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
-      const sortByArr = (Array.isArray(val?.SortBy) && val.SortBy.length
-        ? val.SortBy
-        : (this.sortMeta.length ? this.sortMeta : this.defaultSort)
-      ).map((s: any) => ({ ...s }));
+    const pageSize = 30;
+    const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
+    const sortByArr = (Array.isArray(val?.SortBy) && val.SortBy.length
+      ? val.SortBy
+      : (this.sortMeta.length ? this.sortMeta : this.defaultSort)
+    ).map((s: any) => ({ ...s }));
 
-      const payload: any = {
-        ...val,
-        TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
-        TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd),
-      };
-      delete payload.showSummary;
+    const payload: any = {
+      ...val,
+      TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
+      TXN_DateEnd: this.toDateOnly(val?.TXN_DateEnd),
+    };
+    delete payload.showSummary;
 
-      if (!isSummary) {
-        Object.assign(payload, { pageSize, pageIndex, SortBy: sortByArr });
-      } else {
-        Object.assign(payload, { SortBy: sortByArr });
-        delete payload.pageIndex;
-        delete payload.pageSize;
-      }
-
-      Object.keys(payload).forEach((k) => {
-        const v = payload[k];
-        if (v === null || v === undefined) delete payload[k];
-        if (Array.isArray(v) && v.length === 0) delete payload[k];
-        if (typeof v === 'string' && v.trim() === '') delete payload[k];
-      });
-
-      this.historyRequestBody = { ...payload };
-      this.loading = true;
-
-      if (isSummary) {
-        this.tls23010Service
-          .queryTLS23010Summary(payload)
-          .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-          .subscribe({
-            next: (resp) => {
-              const dataArr = Array.isArray(resp?.Data) ? resp.Data : [];
-              const head = dataArr[0] ?? {};
-              const details =
-                Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
-                Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
-                [];
-
-              this.summaryData = details.map((row: any) => ({ ...row }));
-              this.data = [];
-              this.totalRecords = this.summaryData.length;
-
-              this.detailTotals = {};
-              this.updatePdfSummary?.();
-              this.queryStateService?.setQueryState?.(this.ProgNo, this.queryForm.value);
-            },
-            error: () => {
-              this.summaryData = [];
-              this.totalRecords = 0;
-            },
-          });
-      } else {
-        this.tls23010Service
-          .queryTLS23010(payload)
-          .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-          .subscribe({
-            next: (resp) => {
-              const queryData = Array.isArray(resp?.Data?.QueryData)
-                ? resp.Data.QueryData
-                : Array.isArray(resp?.Data)
-                  ? resp.Data
-                  : [];
-
-              // 以 TXN_No 作為唯一鍵，這裡不再產生自訂 id
-              this.data = queryData as TLS23010Data[];
-
-              this.detailTotals = this.coerceTotals(resp?.Data?.TotalSummary);
-              this.summaryData = [];
-              this.totalRecords = Number(resp?.TotalCount ?? this.data.length ?? 0);
-
-              this.updatePdfSummary?.();
-              this.queryStateService?.setQueryState?.(this.ProgNo, this.queryForm.value);
-            },
-            error: () => {
-              this.data = [];
-              this.totalRecords = 0;
-              this.pdfSummary = [];
-            },
-          });
-      }
+    Object.keys(payload).forEach((k) => {
+      const v = payload[k];
+      if (v === null || v === undefined) delete payload[k];
+      if (Array.isArray(v) && v.length === 0) delete payload[k];
+      if (typeof v === 'string' && v.trim() === '') delete payload[k];
     });
-  }
+
+    this.loading = true;
+
+    if (!isSummary) {
+      // ===== 明細：後端分頁 + 後端排序 =====
+      Object.assign(payload, { pageSize, pageIndex, SortBy: sortByArr });
+      this.historyRequestBody = { ...payload };
+
+      this.tls23010Service
+        .queryTLS23010(payload)
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe({
+          next: (resp: any) => {
+            const queryData = Array.isArray(resp?.Data?.QueryData)
+              ? resp.Data.QueryData
+              : Array.isArray(resp?.Data)
+                ? resp.Data
+                : [];
+
+            this.data = queryData as TLS23010Data[];
+            this.summaryData = [];
+
+            this.detailTotals = this.coerceTotals(resp?.Data?.TotalSummary);
+            this.totalRecords = Number(resp?.TotalCount ?? this.data.length ?? 0);
+
+            this.updatePdfSummary?.();
+            this.queryStateService?.setQueryState?.(this.ProgNo, this.queryForm.value);
+          },
+          error: () => {
+            this.data = [];
+            this.summaryData = [];
+            this.totalRecords = 0;
+            this.detailTotals = {};
+            this.pdfSummary = [];
+          },
+        });
+
+      return;
+    }
+
+    // ===== 彙總：一次抓回，畫面上用 summaryData 顯示 =====
+    Object.assign(payload, { SortBy: sortByArr });
+    delete payload.pageIndex;
+    delete payload.pageSize;
+
+    this.tls23010Service
+      .queryTLS23010Summary(payload)
+      .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+      .subscribe({
+        next: (resp: any) => {
+          const dataArr = Array.isArray(resp?.Data) ? resp.Data : [];
+          const head = dataArr[0] ?? {};
+
+          const details =
+            Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
+            Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
+            [];
+
+          this.summaryData = details.map((row: any) => ({ ...row }));
+          this.data = [];
+          this.totalRecords = this.summaryData.length;
+
+          // 這個只給匯出 / 其它 API 用，不影響 TableReport 自己的查詢
+          const summaryPageSize = this.summaryData.length || 30;
+          this.historyRequestBody = {
+            ...payload,
+            pageIndex: 1,
+            pageSize: summaryPageSize,
+          };
+
+          this.detailTotals = {};
+          this.updatePdfSummary?.();
+          this.queryStateService?.setQueryState?.(this.ProgNo, this.queryForm.value);
+        },
+        error: () => {
+          this.summaryData = [];
+          this.data = [];
+          this.totalRecords = 0;
+          this.detailTotals = {};
+          this.pdfSummary = [];
+        },
+      });
+  });
+}
+
+
 
   onToggleSummary() {
     this.queryForm.patchValue({ pageIndex: 1, pageSize: 30 }, { emitEvent: false });
@@ -334,7 +341,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     this.tls23010Service.queryTLS23010({
       ...body,
       TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
-      TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
+      TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
     }).pipe(
       map((res: any) => ({
         Data: Array.isArray(res?.Data?.QueryData)
@@ -345,26 +352,36 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
       }))
     );
 
-  // ========= 提供給 <app-table-report> 的查詢封裝（彙總，切 30 筆分頁） =========
-  public queryTLS23010SummaryForReport = (body: any) =>
-    this.tls23010Service.queryTLS23010Summary({
-      ...body,
-      TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
-      TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
-    }).pipe(
-      map((resp: any) => {
-        const dataArr = Array.isArray(resp?.Data) ? resp.Data : [];
-        const head = dataArr[0] ?? {};
-        const all =
-          Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
-          Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
-          [];
-        const pageIndex = Number(body?.pageIndex ?? 1);
-        const pageSize = Number(body?.pageSize ?? 30);
-        const slice = all.slice((pageIndex - 1) * pageSize, pageIndex * pageSize);
-        return { Data: slice, TotalCount: all.length, GrandTotal: null };
-      })
-    );
+// ========= 提供給 <app-table-report> 的查詢封裝（彙總） =========
+public queryTLS23010SummaryForReport = (body: any) =>
+  this.tls23010Service.queryTLS23010Summary({
+    ...body,
+    TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+    TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
+  }).pipe(
+    map((resp: any) => {
+      const dataArr = Array.isArray(resp?.Data) ? resp.Data : [];
+      const head = dataArr[0] ?? {};
+
+      const all =
+        Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
+        Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
+        [];
+
+      // 不在這裡做排序、也不自行切分頁
+      // 排序交給後端依 body.SortBy 處理
+      // 分頁交給 TableReport 透過 pageIndex / pageSize 控制
+
+      return {
+        Data: all,
+        TotalCount: all.length,
+        GrandTotal: null,
+      };
+    })
+  );
+
+
+
 
   // ========= 展開列：載入明細 =========
   loadDetails = (row: TLS23010Data) => {
@@ -697,9 +714,9 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     { field: 'GUIBegNo', header: '發票起始號碼', visible: true },
     { field: 'GUIEndNo', header: '發票結束號碼', visible: true },
 
-    { field: 'TXN_TotGUI', header: '發票金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true},
-    { field: 'TXN_TotSaleAmt', header: '銷售金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true},
-    { field: 'TXN_TotOver', header: '溢收金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true},
+    { field: 'TXN_TotGUI', header: '發票金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_TotSaleAmt', header: '銷售金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_TotOver', header: '溢收金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
 
     { field: 'TXN_VIP', header: '外交官零稅', visible: true, format: this.nyToYesNo },
     { field: 'TXN_Mode', header: '事後登錄', visible: true, format: this.pToYesNoSafe, noTotal: true },
@@ -717,9 +734,9 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     { field: 'ORG_TXN_No', header: '原交易序號', visible: true, style: 'text-right' },
 
     { field: 'TXN_PkngUID', header: '停車車牌', visible: true },
-    { field: 'TXN_MemID', header: '會員卡號', visible: true },
+    { field: 'TXN_MemCard', header: '會員卡號', visible: true },
 
-    { field: 'TXN_TotDisc', header: '折扣/讓金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true},
+    { field: 'TXN_TotDisc', header: '折扣/讓金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
 
     { field: 'GUILoveStatus', header: '捐贈狀態', visible: true, format: this.nyToYesNo },
     { field: 'TXN_GUILoveCode', header: '捐贈社福團體代碼', visible: true },
@@ -735,7 +752,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     { field: 'CRD_No', header: '號碼', visible: true },
     { field: 'TERM_No', header: '分期期數', visible: true, style: 'text-right' },
 
-    { field: 'TXN_PayAmt', header: '金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true},
+    { field: 'TXN_PayAmt', header: '金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
   ];
 
   detailcolumns = [

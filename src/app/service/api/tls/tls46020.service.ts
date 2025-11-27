@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../system/auth.service';
 
 // 查詢用參數
 export interface TLS46020QueryParams {

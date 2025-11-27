@@ -1,54 +1,83 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <p-fileUpload id="customButton" #fileUpload mode="basic" chooseIcon="pi pi-upload" accept=".xls"
-      (onSelect)="onFileUpload($event);fileUpload.clear()" [auto]="true" chooseLabel="匯入EXCEL" />
-    <!-- <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button> -->
+    <p-fileUpload
+      id="customButton"
+      #fileUpload
+      mode="basic"
+      chooseIcon="pi pi-upload"
+      accept=".xls"
+      (onSelect)="onFileUpload($event); fileUpload.clear()"
+      [auto]="true"
+      chooseLabel="匯入EXCEL"
+    />
+    <app-button
+      btnType="create"
+      (click)="onCreate()"
+      label="{{ 'create' | translate }}"
+    ></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateMonthOne"
+            <app-calendar
+              calendarType="dateMonthOne"
               label="結算年月"
               controlName="ENG_YYMM"
               [control]="queryForm.controls.ENG_YYMM"
-              [submitted]="submitted">
-            </app-calendar>
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="能源類型"
+            <app-multi-select
+              label="能源類型"
               controlName="EngTypes"
               [options]="ENG_Type_Option"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.EngTypes"
-              [submitted]="submitted"></app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="錶號"
+            <app-dropdown
+              label="錶號"
               controlName="ENG_MeterNo"
               [options]="ENG_MeterNo_Option"
               optionLabel="Name"
               optionValue="No"
               [control]="queryForm.controls.ENG_MeterNo"
-              [submitted]="submitted"></app-dropdown>
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="結算狀態"
+            <app-dropdown
+              label="結算狀態"
               controlName="ENG_Status"
               [options]="ENG_Status_Option"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.ENG_Status"
-              [submitted]="submitted"></app-dropdown>
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -59,20 +88,26 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table [showCheckBox]="true"
+    <app-table
+      [showCheckBox]="true"
       [data]="data"
       [dataKey]="'ID'"
       [tableKey]="'ASS21030'"
       [columns]="columns"
       [totalRecords]="totalRecords"
-      [showManage]="false"
-      [showCheckBox]="false"
+      [showManage]="true"
+      [showCheckBox]="true"
+      [showEdit]="false"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
       [lazy]="true"
       [loading]="loading"
-      [multiSortMeta]="[{ field: 'ENG_Type', order: 1 },{ field: 'ENG_MeterNo', order: 2 }]"
+      [multiSortMeta]="[
+        { field: 'ENG_Type', order: 1 },
+        { field: 'ENG_MeterNo', order: 2 },
+      ]"
       (edit)="onEdit($event)"
       (delete)="onDelete($event)"
-      (detail)="onDetail($event)"></app-table>
+      (detail)="onDetail($event)"
+    ></app-table>
   </div>
 </div>

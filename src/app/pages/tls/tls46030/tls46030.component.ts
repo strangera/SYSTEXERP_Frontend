@@ -1,21 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { TranslateModule } from '@ngx-translate/core';
+import { Tls46030Service } from '@service/api/tls/tls46030.service';
+import { ECRNoService } from '@service/basic/queryPOS1002.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { Column, formatDate } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { ECRNoService } from '@service/basic/ECRNo.service';
-import { Column, formatDate } from '@shared/componentkit/table/table.model';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { Tls46030Service } from '@service/api/tls/tls46030.service';
+import { ValidationService } from '../../../shared/service/validation.service';
 // 2.4.6.4  收銀機異動排程維護
 @Component({
   selector: 'app-tls46030',
@@ -37,7 +37,7 @@ export class TLS46030Component extends BasicQueryPageComponent<any> implements O
     ECR_FLD_ID: [''], // 異動類型
     ...createPaginationConfig([{ field: 'ECR_SchNo', order: 1 }]),
   });
-selectedItems: any[] = [];
+  selectedItems: any[] = [];
   data: any[] = [];
   totalRecords = 0;
   ECRNoOptions: any[] = [];

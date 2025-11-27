@@ -11,6 +11,7 @@ export class ValidationService {
   getValidatorErrorMessage(validatorName: string, validatorValue?: any) {
     const config: any = {
       required: '必填',
+      pattern: '格式錯誤，請重新輸入。',
       invalidNumber: '只能輸入數字',
       email: '「電子郵件」，格式錯誤，請重新輸入。',
       invalidCreditCard: 'Is invalid credit card number',
@@ -51,6 +52,7 @@ export class ValidationService {
       min: `最小值為${validatorValue.min}`,
       textRange: '起號不可大於迄號',
       invalidGuiVehicle: '格式錯誤：需以「/」為開頭，長度8碼，且第2碼後只能包含半形英數字+-.等符號',
+      dateNotAfterToday: '日期必須大於等於今日',
     };
     return config[validatorName];
   }
@@ -327,6 +329,20 @@ export class ValidationService {
     }
 
     return null;
+  }
+
+  //起始日期必須大於等於今日
+  dateAfterTodayValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const value = control.value;
+      if (!value) return null; // 空值交給 required 判斷
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // 只比日期，不比時間
+      const controlDate = new Date(value);
+      controlDate.setHours(0, 0, 0, 0);
+
+      return controlDate >= today ? null : { dateNotAfterToday: true };
+    };
   }
 
   // optionalMultipleOfFiftyValidator：非必填，但若有填值，必須是 50 的倍數

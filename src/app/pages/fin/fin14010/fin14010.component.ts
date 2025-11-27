@@ -1,20 +1,20 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, convertDateToYYYYMM, convertYYYYMMToDate, createPaginationConfig, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { ValidationService } from '@shared/service/validation.service';
-import { Fin14010Service } from '@service/api/fin/fin14010.service';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Fin14010Service } from '@service/api/fin/fin14010.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { option } from '@shared/models/sys/sysb000.model';
+import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, convertYYYYMMToDate, createPaginationConfig, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 /** TDS1002 營業人銷售額與稅額申報書檔 */
 export interface TDS1002 {
@@ -251,115 +251,112 @@ export interface TDS1002 {
 
 //1.1.4.1 申報書維護
 @Component({
-    selector: 'app-fin14010',
-    templateUrl: './fin14010.component.html',
-    styleUrl: './fin14010.component.scss',
-    standalone: true,
-    imports: [
-      MenubarComponent,
-      ButtonComponent,
-      AccordionModule,
-      FormsModule,
-      ReactiveFormsModule,
-      CalendarRangeComponent,
-      CalendarComponent,
-      InputTextComponent,
-      InputTextRangeComponent,
-      TableComponent,
-      TranslateModule
-    ]
+  selector: 'app-fin14010',
+  templateUrl: './fin14010.component.html',
+  styleUrl: './fin14010.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeComponent,
+    CalendarComponent,
+    InputTextComponent,
+    InputTextRangeComponent,
+    TableComponent,
+    TranslateModule,
+    YearMonthComponent
+  ]
 })
 export class FIN14010Component extends BasicQueryPageComponent<TDS1002> implements OnInit {
   queryForm = this.formBuilder.group({
-      // TDS1002 營業人銷售額與稅額申報書檔 參考11020
-      REP_GUIYM: [null, [Validators.required]], // 資料所屬年月
-      ...createPaginationConfig([{ field: 'REP_GUIYM', order: 1 }]), // 分頁和排序參數
-    });
+    // TDS1002 營業人銷售額與稅額申報書檔 參考11020
+    REP_GUIYM: [null, [Validators.required]], // 申報年月
+    ...createPaginationConfig([{ field: 'REP_GUIYM', order: 1 }]), // 分頁和排序參數
+  });
 
-    totalRecords = 0;// 分頁和排序參數 // 排序需要
-    data: TDS1002[] = [];
-    selectedRows: TDS1002[] = [];// 多選項目
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
+  data: TDS1002[] = [];
+  selectedRows: TDS1002[] = [];// 多選項目
 
 
-    REP_DataType_Option: option[] = [
-      {value: '1', label: '一般稅額計算之專營應稅'},
-      {value: '3', label: '一般稅額計算兼營免稅、特種稅額計算'},
-      {value: '4', label: '專營特種稅額計算'},
-    ];
+  REP_DataType_Option: option[] = [
+    { value: '1', label: '一般稅額計算之專營應稅' },
+    { value: '3', label: '一般稅額計算兼營免稅、特種稅額計算' },
+    { value: '4', label: '專營特種稅額計算' },
+  ];
 
-      
-    columns: Column[] = [ //先放可視範圍內的
-      {
-        field: 'REP_DataType', header: '資料別', visible: true, // 資料別
-        format: (value: string) =>
-          this.REP_DataType_Option.find((option) => option.value === value)?.label ||
-          value
-      },
-      { field: 'REP_GUIYM', header: '資料所屬年月', visible: true, format: formatYYYYMM }, // 資料所屬年月
-      
-      { field: 'REP_PurBuyExternal', header: '購買國外勞務給付額', visible: true }, // 購買國外勞務給付額
-      { field: 'REP_PurImportNoTax', header: '進口免稅貨物', visible: true }, // 進口免稅貨物
-      { field: 'REP_PurcTotalSaleAmt', header: '固定資產', visible: true }, // 固定資產
-      { field: 'REP_PurfTotalSaleAmt', header: '進貨及費用', visible: true }, // 進貨及費用
-      { field: 'REP_TaxSum08', header: '上期(月)累積留抵稅額', visible: true }, // 上期(月)累積留抵稅額
-      { field: 'REP_TaxSum13', header: '得退稅限額合計', visible: true }, // 得退稅限額合計
 
-      { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
-      { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
-      { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
-      { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
-      { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
-      { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
-    ];
+  columns: Column[] = [ //先放可視範圍內的
+    {
+      field: 'REP_DataType', header: '申報種類', visible: true, // 申報種類
+      format: (value: string) =>
+        this.REP_DataType_Option.find((option) => option.value === value)?.label ||
+        value
+    },
+    { field: 'REP_GUIYM', header: '申報年月', visible: true, format: formatYYYYMM }, // 申報年月
 
-    constructor(
-      private fin14010Service: Fin14010Service,
-    ) {
-      super(); // 呼叫父類建構子
-    }
-  
-    ngOnInit(): void {
-      this.initializePage('FIN14010', '/FIN/FIN14010cru', this.queryForm, (form) => this.onSubmit(form));
-    }
-  
-    onSubmit(frm: FormGroup) {
-      this.handleSubmit(frm, () => {
-        const body = {
-          ...frm.value,
-          REP_GUIYM: convertDateToYYYYMM(frm.value.REP_GUIYM),
-        }
+    { field: 'REP_PurBuyExternal', header: '購買國外勞務給付額', visible: true }, // 購買國外勞務給付額
+    { field: 'REP_PurImportNoTax', header: '進口免稅貨物', visible: true }, // 進口免稅貨物
+    { field: 'REP_PurcTotalSaleAmt', header: '進貨總金額之固定資產', visible: true }, // 進貨總金額之固定資產
+    { field: 'REP_PurfTotalSaleAmt', header: '進貨總金額之進貨及費用', visible: true }, // 進貨總金額之進貨及費用
+    { field: 'REP_TaxSum08', header: '上期月累積留抵稅額', visible: true }, // 上期月累積留抵稅額
+    { field: 'REP_TaxSum13', header: '專案退稅金額調整金額', visible: true }, // 專案退稅金額調整金額
 
-        console.log('申報request', JSON.stringify(body, null, 2));
-        // 測試可用2024/08
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
+    { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
+    { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
+    { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
+    { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
+  ];
 
-        this.fin14010Service.queryFIN14010(body).pipe(untilDestroyed(this)).subscribe({
-          next: (response) => {
-            this.data = response.Data.map((item: TDS1002) => ({
-              ...item,
-              REP_GUIYM: convertYYYYMMToDate(item.REP_GUIYM)
-            }));
-            console.log('申報response', this.data);
-            this.totalRecords = response.TotalCount;
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
-            this.loading = false;
-          },
-          error: () => { this.loading = false; },
-        });
+  constructor(
+    private fin14010Service: Fin14010Service,
+  ) {
+    super(); // 呼叫父類建構子
+  }
+
+  ngOnInit(): void {
+    this.initializePage('FIN14010', '/FIN/FIN14010cru', this.queryForm, (form) => this.onSubmit(form));
+  }
+
+  onSubmit(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const body = frm.getRawValue();
+      console.log('申報request', JSON.stringify(body, null, 2));
+      // 測試可用2024/08
+
+      this.fin14010Service.queryFIN14010(body).pipe(untilDestroyed(this)).subscribe({
+        next: (response) => {
+          this.data = response.Data.map((item: TDS1002) => ({
+            ...item,
+            REP_GUIYM: convertYYYYMMToDate(item.REP_GUIYM)
+          }));
+          console.log('申報response', this.data);
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          this.loading = false;
+        },
+        error: () => { this.loading = false; },
       });
-    }
-    // onDelete(selectedRows: TDS1002[]) {
-    //   const ids = selectedRows.map(row => row.id);
-      // this.fin14010Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
-      //   next: () => {
-      //     this.onSubmit(this.queryForm);
-      //     this.selectedRows = [];
-      //   },
-      //   error: () => { this.loading = false; },
-      // });
-    // }
-  
-    isRowSelectable(row: TDS1002) {
-      // return row.CanDel;
-      return true
-    }
+    });
+  }
+  // onDelete(selectedRows: TDS1002[]) {
+  //   const ids = selectedRows.map(row => row.id);
+  // this.fin14010Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
+  //   next: () => {
+  //     this.onSubmit(this.queryForm);
+  //     this.selectedRows = [];
+  //   },
+  //   error: () => { this.loading = false; },
+  // });
+  // }
+
+  isRowSelectable(row: TDS1002) {
+    // return row.CanDel;
+    return true
+  }
 }

@@ -1,21 +1,18 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { VendorService } from '../../../service/basic/vendor.service';
-import { PaperTypeService } from '../../../service/basic/paper-type.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { ValidationService } from '../../../shared/service/validation.service';
 //
 
 //3.1.4.1  進貨發票建檔作業
@@ -94,11 +91,7 @@ export class ASS14010Component extends BasicQpageComponent implements OnInit {
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
     private validationService: ValidationService,
-    //
-    private vendorService: VendorService,
-    private paperTypeService: PaperTypeService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -107,17 +100,6 @@ export class ASS14010Component extends BasicQpageComponent implements OnInit {
     // 初始化
     this.ProgNo = '310028';
     this.cruPage = '/ASS1000/ASS14010CRU';
-    //
-
-    //
-    this.vendorService.getVendors().subscribe(data => {
-      this.supplierCodeOptions = data;
-    });
-    //
-    this.paperTypeService.getSystemTypes().subscribe(data => {
-      this.requestTypeOptions = data;
-    });
-    // ----------------------------------------------------------------
   }
 
   // ----------------------------------------------------------------

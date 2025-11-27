@@ -3,7 +3,7 @@
     {{ title }}
   </span>
 </p-divider>
-<p-table #dt [value]="data" [columns]="columns" [(selection)]="selectedItems"
+<p-table #dt [value]="_tableData" [columns]="columns" [(selection)]="selectedItems"
   [selectionMode]="showCheckBox ? 'multiple' : undefined" sortMode="multiple" [dataKey]="dataKey"
   [rowTrackBy]="trackByRow" [resizableColumns]="true" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
   (onRowReorder)="onRowReorder($event); rowReorderData.emit($event)" [multiSortMeta]="multiSortMeta"
@@ -36,11 +36,12 @@
   <ng-template pTemplate="header" let-columns>
     <ng-container *ngIf="columnGroup && columnGroup.length > 0">
       <tr>
-        <th *ngIf="data.length && showReorder" rowspan="2" class="w-1rem text-center"></th>
-        <th [attr.colspan]="data.length === 1 && canInsert ? disabled ? 1: 2 : 1" rowspan="2"
-          class="w-1rem text-center">序號
+        <th *ngIf="_tableData.length && showReorder" rowspan="2" class="w-1rem text-center"></th>
+        <!-- 序號變成變數名稱 -->
+        <th [attr.colspan]="_tableData.length === 1 && canInsert ? disabled ? 1: 2 : 1" rowspan="2"
+          class="w-1rem text-center">{{ serialName }}
         </th>
-        <th *ngIf="showCheckBox && !disabled && data.length && !data[0]._isAutoInsertCandidate" rowspan="2"
+        <th *ngIf="showCheckBox && !disabled && _tableData.length && !_tableData[0]._isAutoInsertCandidate" rowspan="2"
           class="w-1rem text-center">
           <p-tableHeaderCheckbox [disabled]="disabled" />
         </th>
@@ -73,10 +74,15 @@
     <!-- 非群組表頭 -->
     <ng-container *ngIf="!columnGroup?.length">
       <tr>
-        <th *ngIf="data.length && showReorder" class="w-1rem text-center"></th>
-        <th [attr.colspan]="data.length === 1 && canInsert ? disabled ? 1: 2 : 1" class="w-1rem text-center">序號
+        <th *ngIf="_tableData.length && showReorder" class="w-1rem text-center"></th>
+
+        <th [attr.colspan]="
+        (canInsert && !disabled && _tableData.length > 0 && _tableData[_tableData.length - 1]._isAutoInsertCandidate && !showCheckBox) ? 2 : 1
+    " class="w-1rem text-center">{{ serialName }}
         </th>
-        <th *ngIf="showCheckBox && !disabled && data.length && !data[0]._isAutoInsertCandidate"
+
+        <th
+          *ngIf="showCheckBox && !disabled && _tableData.length > (canInsert && _tableData[_tableData.length - 1]?._isAutoInsertCandidate ? 1 : 0)"
           class="w-1rem text-center">
           <p-tableHeaderCheckbox [disabled]="disabled" />
         </th>
@@ -89,13 +95,13 @@
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
     <tr [attr.data-key]="rowData[dataKey]" [pSelectableRowIndex]="rowIndex"
-      [pSelectableRowDisabled]="!isRowSelectable(rowData,rowIndex,data) || disabled" [pSelectableRow]="rowData"
+      [pSelectableRowDisabled]="!isRowSelectable(rowData,rowIndex,_tableData) || disabled" [pSelectableRow]="rowData"
       [pReorderableRow]="!rowData._isAutoInsertCandidate ? rowIndex : -1" [ngClass]="{
-        'invalid-row': rowData._rowValidationError?.isValid === false && !rowData._isAutoInsertCandidate,
+        'invalid-row': hasRowError(rowData),
         'insert-row': rowData._isAutoInsertCandidate ,
       }">
       <td *ngIf="data.length && showReorder" class="w-1rem text-center">
-        <span *ngIf="!rowData._isAutoInsertCandidate && data.length > 1" class="pi pi-bars w-1rem text-center"
+        <span *ngIf="!rowData._isAutoInsertCandidate && _tableData.length > 0" class="pi pi-bars w-1rem text-center"
           pReorderableRowHandle></span>
         <span *ngIf="rowData._isAutoInsertCandidate && !disabled" class="pi pi-plus w-1rem text-center" [ngClass]="{
             'text-blue-500': rowData._isAutoInsertCandidate
@@ -114,10 +120,10 @@
       </td>
       <td *ngIf="showCheckBox && !disabled && !rowData._isAutoInsertCandidate" class="w-1rem text-center">
         <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
-          [value]="rowData" [disabled]="!isRowSelectable(rowData,rowIndex,data) || disabled" />
+          [value]="rowData" [disabled]="!isRowSelectable(rowData,rowIndex,_tableData) || disabled" />
       </td>
-      <td *ngFor="let col of columns" class="text-center" (click)="col.type ? $event.stopPropagation() : null"
-        (keydown)="$event.stopPropagation()" [style]="{'width':col.width, 'text-align': col.textAlign}">
+      <td *ngFor="let col of columns" (click)="col.type ? $event.stopPropagation() : null"
+        (keydown)="$event.stopPropagation()" [style]="{'width':col.width, 'text-align': col.textAlign || 'center'}">
         <ng-container [ngSwitch]="col.type">
           <p-iconField iconPosition="right">
             <input *ngSwitchCase="'input'" pInputText class="min-w-max" [placeholder]="'請輸入' + col.header"
@@ -126,7 +132,7 @@
               (ngModelChange)="onValueChange(rowData,$event, col, index)" [maxlength]="col.maxLength"
               [style]="{'width': col.width, 'text-align': col.textAlign,'min-width':'-webkit-fill-available'}"
               [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
-              (blur)="onValueChange(rowData,rowData[col.field], col, index)"
+              (blur)="col.onBlur?.(rowData, rowData[col.field], col, index);onValueChange(rowData,rowData[col.field], col, index)"
               [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }" />
             <p-inputNumber *ngSwitchCase="'inputNumber'" class="min-w-max w-full" mode="decimal"
               [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
@@ -234,7 +240,7 @@
   </ng-template>
   <ng-template pTemplate="summary">
     <div class="flex align-items-center justify-content-end p-2">
-      總筆數: {{ data.length - (canInsert ? 1 : 0) }} 筆
+      總筆數: {{ _tableData.length - (canInsert && _tableData.length > 0 ? 1 : 0) }} 筆
     </div>
   </ng-template>
   <ng-template pTemplate="emptymessage">
@@ -249,4 +255,6 @@
     </tr>
   </ng-template>
 </p-table>
-<span *ngIf="tableDataEmpty" class="block w-full text-right text-red-500">{{ errorMessage }}</span>
+<span *ngIf="tableDataEmpty" class="block w-full text-right text-red-500">
+  {{ errorMessage ? errorMessage : validateOnlySelected ? '請至少選擇一筆資料' : '至少輸入一筆資料' }}
+</span>

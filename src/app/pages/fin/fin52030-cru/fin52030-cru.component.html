@@ -83,10 +83,11 @@
                         (fieldChange)="onFieldChange($event)"
                         (delete)="onDelete($event)"
                         (rowReorderData)="onRowReorder($event)"
+                        [disabled]="isFormReadable"
                         [data]="tableData()"
                         [defaultInsertData]="defaultNewRow()"
                         [footerData]="footerData()"
-                        [loading]="service.tableLoading()"
+                        [loading]="tableLoading()"
                         [tableKey]="'FIN52030_detail'"
                         [columns]="columns()"></app-table-edit>
       </p-panel>

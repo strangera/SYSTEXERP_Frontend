@@ -1,26 +1,28 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
-import { finalize } from 'rxjs';
-import { ITLS52030Data, Tls52030Service } from '../../../service/api/tls/tls52030.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
-import { FieldsConfig, DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Button } from 'primeng/button';
-import { TooltipModule } from 'primeng/tooltip';
 import { AsyncPipe, NgStyle } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { FileExportService } from '@shared/service/file-export.service';
+import { AccordionModule } from 'primeng/accordion';
+import { Button } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
+import { finalize, Observable } from 'rxjs';
+import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
+import { ITLS52030Data, Tls52030Service } from '../../../service/api/tls/tls52030.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
 
 export const enum POStatus {
   已確認 = '1',
@@ -82,9 +84,10 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   selectedItems: ITLS52030Data[] = [];
   columns: Column[] = [
     { field: 'ODM_No', header: '進貨驗收編號', visible: true },
-    { field: 'VEN_No', header: '廠商編號', visible: true },
-    { field: 'LOGO_No', header: '品牌代碼', visible: true },
-    { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
+    { field: 'VEN_No', header: '廠商編號', visible: true }, // 廠商代號
+    { field: 'VEN_Name', header: '廠商名稱', visible: true }, // 廠商名稱
+    { field: 'LOGO_No', header: '品牌代碼', visible: true }, // 品牌代碼
+    { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true }, // 品牌名稱
     { field: 'HOS_No', header: '倉庫代碼', visible: true },
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true },
     // { field: 'org_id', header: '組織代碼/組織名稱', visible: true },
@@ -143,7 +146,8 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   constructor(
     private readonly tls52010Service: Tls52010Service,
     private readonly tls52030Service: Tls52030Service,
-    private readonly dropdown: DropdownApiService
+    private readonly dropdown: DropdownApiService,
+    private readonly fileExportService: FileExportService
   ) { super(); }
 
   ngOnInit(): void {
@@ -226,7 +230,27 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   get selectedCount() {
     return this.selectedItems.length;
   }
-  print(rowData: ITLS52030Data[]) {
-    console.log('列印多筆事件:', rowData); // TODO: 還沒出API
+  printLoading = false;
+  print(rowData: ITLS52030Data[], type: 'pdf' | 'excel') {
+    const params = { ODM_NoList: rowData.map(item => item.ODM_No) };
+    let export$: Observable<HttpResponse<Blob>>;
+    // 2. 決定要呼叫哪個 API 服務方法
+    switch (type) {
+      case 'pdf':
+        export$ = this.tls52030Service.exportTLS52030PDF(params);
+        break;
+      case 'excel':
+        export$ = this.tls52030Service.exportTLS52030(params);
+        break;
+      default:
+        return;
+    }
+    // 3. 呼叫通用服務執行匯出流程
+    this.printLoading = true
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this), finalize(() => { this.printLoading = false; this.selectedItems = [] })),
+      '.' + type,
+      (isLoading) => this.btnLoading = isLoading
+    );
   }
 }

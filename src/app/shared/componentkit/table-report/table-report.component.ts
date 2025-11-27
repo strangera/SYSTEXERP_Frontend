@@ -1,42 +1,31 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { NgClass, NgFor, NgIf, NgStyle } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { Table, TableColumnReorderEvent, TableModule, TableSelectAllChangeEvent } from 'primeng/table';
-import { finalize, Observable } from 'rxjs';
-import { AddButton, ReportColumn, ColumnGroup } from './table-report.model';
-import { TableReportUtilityService } from './table-report-utility.service';
-import { ImageModule } from 'primeng/image';
-import { DomSanitizer } from '@angular/platform-browser';
-import { ButtonModule } from 'primeng/button';
-import { TooltipModule } from 'primeng/tooltip';
-import { MultiSelectModule } from 'primeng/multiselect';
 import { FormsModule } from '@angular/forms';
-import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
-import { TableCaptionComponent } from '../table/table-caption/table-caption.component';
-import { FileSelectEvent } from 'primeng/fileupload';
+import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
-import { SkeletonModule } from 'primeng/skeleton';
-import { TableExpansionComponent } from '../table/table-expansion/table-expansion.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { trigger, style, transition, animate } from '@angular/animations'; // 1. 引入動畫相關函式
+import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
+import { ButtonModule } from 'primeng/button';
+import { FileSelectEvent } from 'primeng/fileupload';
+import { ImageModule } from 'primeng/image';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { SkeletonModule } from 'primeng/skeleton';
+import { Table, TableColumnReorderEvent, TableModule, TableSelectAllChangeEvent } from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip';
+import { finalize, Observable } from 'rxjs';
+import { TableCaptionComponent } from '../table/table-caption/table-caption.component';
+import { TableExpansionComponent } from '../table/table-expansion/table-expansion.component';
+import { TableReportUtilityService } from './table-report-utility.service';
+import { AddButton, ColumnGroup, expandAnimation, ReportColumn } from './table-report.model';
 @Component({
   selector: 'app-table-report',
   standalone: true,
-  imports: [TableExpansionComponent, SkeletonModule, TableModule, NgFor, NgIf, NgClass, NgStyle, ImageModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule, TableCaptionComponent],
+  imports: [TableExpansionComponent, SkeletonModule, TableModule, CommonModule, ImageModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule, TableCaptionComponent],
   templateUrl: './table-report.component.html',
   styleUrls: ['./table-report.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  animations: [
-    trigger('fadeInOut', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(10px)' }),
-        animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-      ]),
-      transition(':leave', [
-        animate('200ms ease-in', style({ opacity: 0, transform: 'translateY(-5px)' }))
-      ])
-    ])
-  ]
+  animations: [expandAnimation]
 })
 export class TableReportComponent extends BasicPrintDataComponent implements OnChanges {
   @ViewChild('dt') public dt!: Table;
@@ -53,6 +42,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() loading = false;
   public _loading = false;
   @Input() apiUrl: string | undefined = undefined;
+  @Input() DataKeyName: string | undefined = undefined;
   @Input() showReorder = true;
   // Checkbox 相關
   @Input() showCheckBox = false;
@@ -118,21 +108,18 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   ngOnChanges(changes: SimpleChanges) {
     if (changes['data']) {
       this.isAllSelected = false;
-      // 取得 pageSize，若 lastQueryBody 或其 pageSize 不存在，則預設為 30
-      const pageSize = this.lastQueryBody?.pageSize || 30;
+      this.selectedItems = [];
+      this.virtualData = [];
+      this.groupTotals = {};
+      this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
 
       if (this.data.length !== 0) {
-        this.virtualData = [];
         if (this.dt) {
           this.dt.virtualScroll = false;
-          this.dt.scrollHeight = '450px';
         }
-        this.groupTotals = {}; // 清空小計，因為這是新的一組資料
-        this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
         this.cdr.detectChanges();
-
-        // 判斷是否開啟虛擬滾動：將 30 改為 pageSize
-        if (this.data.length < pageSize) {
+        // 判斷是否需要進行虛擬滾動，如果資料小於 pageSize 則不進行
+        if (this.data.length < (this.lastQueryBody?.pageSize || 30)) {
           this.virtualData = this.data;
           this.dt.virtualScroll = false;
           this.dt.scrollHeight = '450px';
@@ -143,11 +130,6 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
           this.cdr.detectChanges();
           this.virtualData = this.data;
         }
-        this.selectedItems = [];
-      } else {
-        this.virtualData = [];
-        this.groupTotals = {}; // 清空小計，因為這是新的一組資料
-        this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
       }
     }
   }
@@ -155,14 +137,10 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (this._loading || !this.queryFunction || !this.lastQueryBody || this.data.length >= this.totalRecords) {
       return; // 如果正在載入、沒有查詢函式、沒有查詢條件或已載入全部資料，則退出
     }
-    // 取得 pageSize，若 lastQueryBody 或其 pageSize 不存在，則預設為 30
-    const pageSize = this.lastQueryBody?.pageSize || 30;
-
     const body = {
       ...this.lastQueryBody,
-      // pageIndex 計算：將 30 改為 pageSize
-      pageIndex: Math.floor(this.data.length / pageSize) + 1,
-      pageSize: pageSize, // 使用 pageSize 變數
+      pageIndex: Math.floor(this.data.length / (this.lastQueryBody?.pageSize || 30)) + 1,
+      pageSize: this.lastQueryBody?.pageSize || 30, // 使用 pageSize 變數
     };
     this._loading = true;
     this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => this._loading = false)).subscribe(res => {
@@ -173,7 +151,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         this.data = [...this.data, ...res.Data];
         this.dataChange.emit(this.data);
         this.virtualData = this.data;
-        this.totalRecords = res.TotalCount || 0;
+        this.totalRecords = res.TotalCount || this.data.length;
       }
     });
   }
@@ -196,9 +174,10 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       ...this.lastQueryBody,
       pageIndex: 1, // 重新排序時，總是從第一頁開始
       pageSize: pageSize, // 使用 pageSize 變數
-      SortBy: this.dt.multiSortMeta // 這裡現在只包含最新的單一排序
+      SortBy: this.dt.multiSortMeta ?? undefined // 這裡現在只包含最新的單一排序
     };
-    this.queryFunction(body).pipe(untilDestroyed(this)).subscribe(res => {
+    this.loading = true;
+    this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
       if (res && res.Data && res.Data.length > 0) {
         this.virtualData = [];
         this.dt.virtualScroll = false;
@@ -310,24 +289,14 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         return col.format ? col.format(subtotal) : subtotal;
       }
     }
-
     const groupKey = rowData[this.groupRowsBy];
     const field = col.field;
-
     // 2. 從預先計算的結果中獲取總計
     const total = this.groupTotals[groupKey]?.[field] ?? 0;
-
     // 3. 應用格式化
     return col.format ? col.format(total) : total;
   }
-  // 切換行展開
-  toggleRowExpansion(rowData: any) {
-    this.tableUtility.toggleRowExpansionLogic(rowData, this.dataKey ?? 'id', this.expansionDataKey, this.expansionLoadFn, this.expandedRows, this);
-  }
-  /**
- * 對新載入的資料進行增量計算，並更新 groupTotals。
- * @param newData 這次 API 呼叫新載入的資料陣列。
- */
+  // 對新載入的資料進行增量計算，並更新 groupTotals。
   updateGroupTotals(newData: any[]): void {
     if (!this.groupRowsBy || !this.columns.some(col => col.isSubTotal)) {
       return;

@@ -28,5 +28,17 @@ export class TLS2j030Service {
       ECR_IP: ip
     });
   }
+  queryTLS2J030TXN_GUI(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS2J030TXN_GUI`, data);
+  }
+  getNextGUINo(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/getNextGUINo`, data);
+  }
+  insertTLS2J030(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/insertTLS2J030`, data);
+  }
+  deleteTLS2J030(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deleteTLS2J030`, data);
+  }
 }
 

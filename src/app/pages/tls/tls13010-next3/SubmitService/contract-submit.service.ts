@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Router } from '@angular/router';
+import { NavigationExtras, Router } from '@angular/router';
 import { ContractFlowService } from '@pages/tls/tls13010/services/contract-flow.service';
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -239,16 +239,23 @@ export class ContractSubmitService {
       // Next2 提交後的導航邏輯
       const commissionType = this.contractFlowService.getCurrentCommissionType();
 
+      const extras: NavigationExtras = {
+        state: { fromRoute: this.router.url }
+      };
+
       if (commissionType === '3') {
         // 一般抽成直接回列表
-        this.router.navigate(['account/tls/tls13010']);
+        this.router.navigate(['account/tls/tls13010'], extras);
       } else {
         // 其他類型前往 next3
-        this.router.navigate(['account/tls/tls13010next3']);
+        this.router.navigate(['account/tls/tls13010next3'], extras);
       }
     } else {
       // Next3 提交後直接回列表
-      this.router.navigate(['account/tls/tls13010']);
+      const extras: NavigationExtras = {
+        state: { fromRoute: this.router.url }
+      };
+      this.router.navigate(['account/tls/tls13010'], extras);
     }
   }
 

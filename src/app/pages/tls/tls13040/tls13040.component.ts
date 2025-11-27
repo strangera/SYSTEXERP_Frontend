@@ -1,37 +1,33 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 
 // options services
-import { RegionService } from '../../../service/basic/region-code.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { OperationStatusService } from '../../../service/basic/operation-status.service';
-import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
-import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
-import { CommissionTypeService } from '../../../service/basic/commission-type.service';
-import { DiscountService } from '../../../service/basic/discount.service';
-import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { FloorService } from '../../../service/basic/querySYS3900.service';
+import { RegionService } from '../../../service/basic/querySYS3A00.service';
+import { BigCategoryCodeService } from '../../../service/basic/queryTLTBUSTYPE.service';
 
 // api service
 import { TLS13040Service } from '../../../service/api/tls/tls13040.service';
 
 // UI
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { MultiLocationFilterComponent } from '../../../shared/componentkit/multi-location-filter/multi-location-filter.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiLocationFilterComponent } from '../../../shared/componentkit/multi-location-filter/multi-location-filter.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 // untilDestroyed
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 
 @UntilDestroy()
 @Component({
@@ -105,10 +101,39 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
   floorOptions: any[] = [];
   regionOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
-  operationStatusOptions: any[] = [];
-  commissionTypeOptions: any[] = [];
-  DeductionbigCategoryOptions: any[] = [];
-  discountOptions: any[] = [];
+  operationStatusOptions = [
+    { value: 0, label: '閉店/撤櫃' },
+    { value: 1, label: '營業中' },
+    { value: 2, label: '合約結束' },
+    { value: 9, label: '核准時合約尚未開始' },
+  ];
+  commissionTypeOptions = getSYS1000Options('tlt_term_type');
+  DeductionbigCategoryOptions = [
+    { value: 0, label: '類別0' },
+    { value: 1, label: '類別1' },
+    { value: 2, label: '類別2' },
+    { value: 3, label: '類別3' },
+    { value: 4, label: '類別4' },
+    { value: 5, label: '類別5' },
+    { value: 6, label: '類別6' },
+    { value: 7, label: '類別7' },
+    { value: 8, label: '類別8' },
+    { value: 9, label: '類別9' },
+  ];
+  discountOptions = [
+    { value: '000', label: '正品' },
+    { value: '095', label: '95折' },
+    { value: '090', label: '90折' },
+    { value: '085', label: '85折' },
+    { value: '080', label: '80折' },
+    { value: '075', label: '75折' },
+    { value: '070', label: '70折' },
+    { value: '065', label: '65折' },
+    { value: '060', label: '60折' },
+    { value: '055', label: '55折' },
+    { value: '050', label: '50折' },
+    { value: '999', label: '特價' },
+  ];
   organizationOptions: any[] = [];
   bus_typeOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
@@ -135,7 +160,7 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     { field: 'bus_class', header: '中分類編號', visible: true },
     { field: 'bus_class_name', header: '中分類名稱', visible: true },
     { field: 'bus_sclass', header: '小分類編號', visible: true },
-     { field: 'bus_sclass_name', header: '小分類名稱', visible: true },
+    { field: 'bus_sclass_name', header: '小分類名稱', visible: true },
 
     { field: 'tlt_bdate', header: '合約起始日期', visible: true },
     { field: 'tlt_edate', header: '合約終止日期', visible: true },
@@ -171,11 +196,6 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     private TLS13040Service: TLS13040Service,
     private RegionService: RegionService,
     private floorService: FloorService,
-    private operationStatusService: OperationStatusService,
-    private businessTypeCodeService: BusinessTypeCodeService,
-    private DeductionbigCategoryService: DeductionbigCategoryService,
-    private commissionTypeService: CommissionTypeService,
-    private discountService: DiscountService,
     private bigCategoryCodeService: BigCategoryCodeService,
     private tls11010Service: Tls11010Service,
   ) {
@@ -201,25 +221,10 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
       .pipe(untilDestroyed(this))
       .subscribe(data => this.regionOptions = data);
 
-    this.operationStatusService.getOperationStatuses()
-      .pipe(untilDestroyed(this))
-      .subscribe(data => this.operationStatusOptions = data);
-
-    this.businessTypeCodeService.getBusinessTypeCodes()
-      .pipe(untilDestroyed(this))
-      .subscribe(data => this.businessTypeCodeOptions = data);
-
-    this.DeductionbigCategoryService.getLocalDeductionCategories()
-      .pipe(untilDestroyed(this))
-      .subscribe(data => this.DeductionbigCategoryOptions = data);
-
-    this.commissionTypeService.getCommissionTypes()
-      .pipe(untilDestroyed(this))
-      .subscribe(data => this.commissionTypeOptions = data);
-
-    this.discountService.getLocalDiscountOptions()
-      .pipe(untilDestroyed(this))
-      .subscribe(data => this.discountOptions = data);
+    // TODO: 請改打API
+    // this.businessTypeCodeService.getBusinessTypeCodes()
+    //   .pipe(untilDestroyed(this))
+    //   .subscribe(data => this.businessTypeCodeOptions = data);
 
     this.tls11010Service.getBuildingOptions()
       .pipe(untilDestroyed(this))

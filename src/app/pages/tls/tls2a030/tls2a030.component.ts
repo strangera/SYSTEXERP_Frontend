@@ -1,22 +1,23 @@
-import { formatAmount } from 'src/app/shared/componentkit/table/table.model';
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { TLS2A030Service } from '../../../service/api/tls/tls2a030.service';
-import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
-import { HttpClient } from '@angular/common/http';
-import { yesterday } from '@shared/models/system/query-form.model';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
+import { formatAmount } from 'src/app/shared/componentkit/table/table.model';
+import { TLS2A030Service } from '../../../service/api/tls/tls2a030.service';
+import { TLS2C050Service } from '../../../service/api/tls/tls2c050.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { Column, createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 
 
 interface SalesRecord {
@@ -43,7 +44,6 @@ interface SalesRecord {
     CalendarRangeQuickComponent,
     DropdownRangeComponent,
     ButtonComponent,
-    TableComponent,
     TranslateModule,
     ButtonModule
   ]
@@ -65,11 +65,12 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
   selectedItems: SalesRecord[] = [];
   ECRNoOptions: any[] = [];
   btnLoading2 = false;
+  closeDate = ''; // 最後關帳日期
 
   // 緩存完整資料，避免重複 API 呼叫
   private cachedFullData: any[] = [];
   private cachedFooterData: any[] = [];
-  private lastQueryParams: string = '';
+  private lastQueryParams = '';
   // 表格欄位
 
   columns: Column[] = [
@@ -101,10 +102,10 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
   ];
 
   constructor(
-    private locationOptionsService: LocationOptionsService,
     private ECRNoService: ECRNoService,
     private tls2a030Service: TLS2A030Service,
-    private http: HttpClient
+    private tls2c050Service: TLS2C050Service,
+    private readonly datePipe: DatePipe
   ) {
     super();
   }
@@ -115,6 +116,18 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
     this.ECRNoService.getECRNo().subscribe((data) => {
       this.ECRNoOptions = data;
     });
+
+    // 取得最後關帳日期
+    this.tls2c050Service.getTLS2C050Date()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (response) => {
+          this.closeDate = response?.Data?.CLS_DATE || '';
+        },
+        error: () => {
+          this.closeDate = '';
+        }
+      });
   }
 
   onExportExcel(): void {
@@ -201,6 +214,121 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
     this.footerData = [...this.cachedFooterData];
     this.totalRecords = this.cachedFullData.length;
   }
+  private buildLockBody() {
+    const raw = this.queryForm.getRawValue();
+
+    return {
+      PageSize: 0,
+      PageIndex: 0,
+      OrderBy: '',
+      Offset: 0,
+      SortBy: [
+        {
+          field: '',
+          order: 0
+        }
+      ],
+      SaleDateStart: this.datePipe.transform(raw.SaleDateStart, 'yyyy-MM-dd') ?? null,
+      SaleDateEnd: this.datePipe.transform(raw.SaleDateEnd, 'yyyy-MM-dd') ?? null,
+      ECR_No_Start: raw.ECR_No_Start?.trim() ?? '',
+      ECR_No_End: raw.ECR_No_End?.trim() ?? '',
+      isPrint: ''
+    };
+  }
+  onLock(): void {
+    const raw = this.queryForm.getRawValue();
+
+    // 檢查銷售日期起迄是否為同一天
+    if (!raw.SaleDateStart || !raw.SaleDateEnd) {
+      this.messageService.warnBubble('請先選擇銷售日期');
+      return;
+    }
+
+    const startDate = raw.SaleDateStart instanceof Date
+      ? raw.SaleDateStart.toDateString()
+      : new Date(raw.SaleDateStart).toDateString();
+    const endDate = raw.SaleDateEnd instanceof Date
+      ? raw.SaleDateEnd.toDateString()
+      : new Date(raw.SaleDateEnd).toDateString();
+
+    if (startDate !== endDate) {
+      this.messageService.warnBubble('銷售日期起迄必須為同一天才能執行鎖定操作');
+      return;
+    }
+
+    // 檢查是否小於等於最後關帳日期
+    if (this.closeDate) {
+      const selectedDate = new Date(raw.SaleDateStart instanceof Date ? raw.SaleDateStart : raw.SaleDateStart!);
+      const lastCloseDate = new Date(this.closeDate);
+
+      if (selectedDate <= lastCloseDate) {
+        this.messageService.warnBubble('已關帳，無法進行調整。');
+        return;
+      }
+    }
+
+    const body = this.buildLockBody();
+    this.loading = true;
+
+    this.tls2a030Service.lockTLS2A030(body)
+      .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+      .subscribe({
+        next: () => {
+          this.messageService.successBubble('鎖定成功');
+          this.onSubmit(this.queryForm); // 重新查詢
+          this.loading = false;
+        },
+
+      });
+  }
+
+  onUnLock(): void {
+    const raw = this.queryForm.getRawValue();
+
+    // 檢查銷售日期起迄是否為同一天
+    if (!raw.SaleDateStart || !raw.SaleDateEnd) {
+      this.messageService.warnBubble('請先選擇銷售日期');
+      return;
+    }
+
+    const startDate = raw.SaleDateStart instanceof Date
+      ? raw.SaleDateStart.toDateString()
+      : new Date(raw.SaleDateStart).toDateString();
+    const endDate = raw.SaleDateEnd instanceof Date
+      ? raw.SaleDateEnd.toDateString()
+      : new Date(raw.SaleDateEnd).toDateString();
+
+    if (startDate !== endDate) {
+      this.messageService.warnBubble('銷售日期起迄必須為同一天才能執行反鎖定操作');
+      return;
+    }
+
+    // 檢查是否小於等於最後關帳日期
+    if (this.closeDate) {
+      const selectedDate = new Date(raw.SaleDateStart instanceof Date ? raw.SaleDateStart : raw.SaleDateStart!);
+      const lastCloseDate = new Date(this.closeDate);
+
+      if (selectedDate <= lastCloseDate) {
+        this.messageService.warnBubble('已關帳，無法進行調整。');
+        return;
+      }
+    }
+
+    const body = this.buildLockBody();
+    this.loading = true;
+
+    this.tls2a030Service.UnLockTLS2A030(body)
+      .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+      .subscribe({
+        next: () => {
+          this.messageService.successBubble('反鎖定成功');
+          this.onSubmit(this.queryForm); // 重新查詢
+          this.loading = false;
+        },
+
+      });
+  }
+
   onSubmit(form: FormGroup): void {
     this.data = [];
     this.footerData = [];

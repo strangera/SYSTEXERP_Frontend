@@ -1,27 +1,26 @@
-import { Component, OnInit } from '@angular/core';
-import { FIN13070Data, FIN13070QueryRequest, FIN13070Service, FIN13070UpdateRequest } from '../../../service/api/fin/fin13070.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { ECRNoService } from '@service/basic/ECRNo.service';
 import { DatePipe } from '@angular/common';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { ECRNoService } from '@service/basic/queryPOS1002.service';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { FIN13070Data, FIN13070Service, FIN13070UpdateRequest } from '../../../service/api/fin/fin13070.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-fin13070',
   templateUrl: './fin13070.component.html',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent,  InputTextRangeComponent, ButtonComponent, TableComponent, TranslateModule, MultiSelectComponent]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextRangeComponent, ButtonComponent, TableComponent, TranslateModule, MultiSelectComponent]
 })
 export class FIN13070Component extends BasicQueryPageComponent<FIN13070Data> implements OnInit {
   queryForm = this.formBuilder.group({

@@ -2,8 +2,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { NotificationService } from '../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../service/system/auth.service';
+import { NotificationService } from '../../shared/component/notification-message/notification.service';
 
 @Injectable({
   providedIn: 'root'

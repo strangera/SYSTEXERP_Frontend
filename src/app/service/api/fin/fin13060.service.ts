@@ -2,20 +2,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { tap, Observable, catchError } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { DropDownItem } from './fin13050.service';
-
-export interface ApiResponse<T> {
-  Status?: string;
-  Data: T;
-  Error?: { Code?: string; Message?: string; Details?: string };
-  Meta?: any;
-  Message?: string;
-  TotalCount?: number;
-  TotalPage?: number;
-}
 
 export type QueryResponse<T> = ApiResponse<T[]>;
 
@@ -25,9 +16,9 @@ export class FIN13060Service {
 
   constructor(
     private http: HttpClient,
-    
-  ) {}
-// 將任何可被 new Date() 解析的值，轉成 yyyy/MM/dd；無法解析就原樣回傳字串
+
+  ) { }
+  // 將任何可被 new Date() 解析的值，轉成 yyyy/MM/dd；無法解析就原樣回傳字串
 
 
   // 查詢
@@ -36,7 +27,7 @@ export class FIN13060Service {
       .post<QueryResponse<any>>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13060`, query)
       .pipe(
         tap((res) => console.log('查詢結果:', res)),
-       
+
       );
   }
 
@@ -46,7 +37,7 @@ export class FIN13060Service {
       .post<ApiResponse<number>>(`${this.apiUrl}/FIN0000/INV1000/insertFIN13060`, data)
       .pipe(
         tap((res) => console.log('新增結果:', res)),
-        
+
       );
   }
 
@@ -56,7 +47,7 @@ export class FIN13060Service {
       .post<ApiResponse<number>>(`${this.apiUrl}/FIN0000/INV1000/updateFIN13060`, data)
       .pipe(
         tap((res) => console.log('更新結果:', res)),
-      
+
       );
   }
 
@@ -66,7 +57,7 @@ export class FIN13060Service {
       .post<QueryResponse<any>>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13060Detail`, param)
       .pipe(
         tap((res) => console.log('明細查詢結果:', res)),
-        
+
       );
   }
 
@@ -76,7 +67,7 @@ export class FIN13060Service {
       .post<QueryResponse<any>>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13060Correspond`, param)
       .pipe(
         tap((res) => console.log('對應查詢結果:', res)),
-       
+
       );
   }
   queryAPS2002DropDownList(): Observable<ApiResponse<DropDownItem[]>> {
@@ -89,7 +80,7 @@ export class FIN13060Service {
         // catchError(err => this.errorHandler.handle(err))
       );
   }
- /** 🔹刪除：以 id 陣列呼叫 API */
+  /** 🔹刪除：以 id 陣列呼叫 API */
   deleteFIN13060(idList: number[]): Observable<ApiResponse<number>> {
     const payload = { idList };
     return this.http

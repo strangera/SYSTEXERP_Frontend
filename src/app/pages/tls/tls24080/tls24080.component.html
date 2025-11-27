@@ -52,6 +52,6 @@
   <app-table-report apiUrl="queryTLS24080" tableKey="tls24080" dataKey="ID" [data]="data" [columns]="columns"
     [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody" [showDelete]="false"
     [queryFunction]="tls24080Service.queryTLS24080.bind(this.tls24080Service)" [showManage]="false" [showManage]="false"
-    [loading]="loading">
+    [loading]="loading" [DataKeyName]="DataKeyName">
   </app-table-report>
 </div>

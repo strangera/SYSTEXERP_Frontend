@@ -1,31 +1,19 @@
-import { LocationService } from './../../../service/basic/location.service';
-import { TaxableService } from './../../../service/basic/taxable.service';
-import { VendorService } from './../../../service/basic/vendor.service';
-import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { PaperStatusService } from '../../../service/basic/paper-status.service';
-import { ItemCodeService } from '../../../service/basic/item-code.service';
-import { AssetStatusService } from '../../../service/basic/asset-status.service';
-import { AssetsTypeService } from '../../../service/basic/assets-type.service';
-import { NeedPayTicketService } from '../../../service/basic/need-pay-ticket.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { NgIf } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
+import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 //3.1.3.1 資產維護作業 CRU
 @Component({
@@ -35,7 +23,12 @@ import { NgIf } from '@angular/common';
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class ASS13010CRUComponent extends BasicCrupageComponent implements OnInit {
+export class ASS13010CRUComponent implements OnInit {
+  ProgNo = '';
+  formTitle = '';
+  submitted = false;
+  crudstatus = '';
+
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // ----------------------------------------------------------------
@@ -112,17 +105,6 @@ export class ASS13010CRUComponent extends BasicCrupageComponent implements OnIni
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private validationService: ValidationService,
-    //
-    private itemCodeService: ItemCodeService,
-    private assetStatusService: AssetStatusService,
-    private assetsTypeService: AssetsTypeService,
-    private vendorService: VendorService,
-    private needPayTicketService: NeedPayTicketService,
-    private userCodeService: UserCodeService,
-    private locationService: LocationService,
   ) {
     super();  // 呼叫父類建構子
   }
@@ -132,34 +114,6 @@ export class ASS13010CRUComponent extends BasicCrupageComponent implements OnIni
     this.ProgNo = '310016';
     //
 
-    //
-    this.itemCodeService.getSystemTypes().subscribe(data => {
-      this.itemCodeOptions = data;
-    });
-    //
-    this.assetStatusService.getAssetStatus().subscribe(data => {
-      this.assetsStatusOptions = data;
-    });
-    //
-    this.assetsTypeService.getAssetsTypes().subscribe(data => {
-      this.assetsTypeOptions = data;
-    });
-    //
-    this.vendorService.getVendors().subscribe(data => {
-      this.supplierCodeOptions = data;
-    });
-    //
-    this.needPayTicketService.getNeedPayTickets().subscribe(data => {
-      this.depreciationOptions = data;
-    });
-    //
-    this.userCodeService.getUserCode().subscribe(data => {
-      this.applicantCodeOptions = data;
-    });
-    //
-    this.locationService.getLocations().subscribe(data => {
-      this.locationCodeOptions = data;
-    });
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus,
@@ -172,14 +126,14 @@ export class ASS13010CRUComponent extends BasicCrupageComponent implements OnIni
         this.formTitle = 'create-conditions';
         this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
+
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
         this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
+
         this.Edit(state.rowdata);
         break;
       // 讀檔

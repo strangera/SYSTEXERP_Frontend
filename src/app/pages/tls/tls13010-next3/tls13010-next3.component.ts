@@ -1357,7 +1357,10 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     this.contractFlowService.onSubmitSuccess();
 
     setTimeout(() => {
-      this.router.navigate(['account/tls/tls13010']);
+      const extras: NavigationExtras = {
+        state: { fromRoute: this.router.url }
+      };
+      this.router.navigate(['account/tls/tls13010'], extras);
     }, 3000);
   }
 

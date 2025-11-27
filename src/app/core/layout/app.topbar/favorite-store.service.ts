@@ -1,10 +1,10 @@
-import { Injectable, inject, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
-import { FavoriteService } from '@service/system/favorite.service'; // 您的 Favorites HTTP Service
 import { AuthService } from '@service/system/auth.service';
+import { FavoriteService } from '@service/system/favorite.service'; // 您的 Favorites HTTP Service
 import { SystemDataService } from '@service/system/system-data.service';
 import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
-import { Observable, EMPTY, catchError, map, switchMap, tap, throwError, take } from 'rxjs'; // 導入 take
+import { EMPTY, Observable, catchError, map, switchMap, take, tap } from 'rxjs'; // 導入 take
 
 // 假設您的 Favorite 介面已拉出
 interface FavoriteBody {
@@ -37,6 +37,11 @@ export class FavoriteStoreService {
     toObservable(this.userNo).subscribe(userNo => {
       if (!userNo) {
         this.favorites.set([]); // 登出時清空狀態
+        this.favoriteService.clearLocalFavorites(); // 最佳實踐：同時清除 SessionStorage
+      } else {
+        // 【新增/修正】一旦使用者登入，就應該立即觸發載入
+        // 確保 Store 狀態在登入後盡快更新
+        this.fetchFavorites().subscribe();
       }
     });
   }
@@ -47,34 +52,35 @@ export class FavoriteStoreService {
   public fetchFavorites(): Observable<void> {
     const userNo = this.userNo();
     if (!userNo) {
-      this.favorites.set([]); // 如果沒有使用者，清空並返回
+      this.favorites.set([]);
       return EMPTY;
     }
 
-    // 透過 funRightsInfo.pipe(take(1)) 確保在呼叫 API 時取得最新的功能權限資料
+    // 【優化】這裡的邏輯是正確的：等待菜單/權限資料準備好 (take(1))，然後才去載入最愛。
     return this.funRightsInfo.pipe(
       take(1), // 只取最新的菜單/權限資料
       switchMap(funRights => {
+        // **修正點：如果菜單還沒載入，不應該返回 EMPTY，而是返回一個非錯誤的完成信號，或者等待。**
+        // 由於您使用 BehaviorSubject，如果菜單是空的，表示還未從 API 載入，我們應該停止後續的 API 呼叫。
         if (funRights.length === 0) {
-          // 如果菜單資料還沒載入，可能需要等待，但為了避免無限等待，這裡先返回 EMPTY
-          // 實際應用中，如果菜單是透過一個 Resolver 載入，這裡應該會立即有值
-          return EMPTY;
+          // 判斷 BehaviorSubject 的當前值是否為初始值，如果是，則表示尚未載入
+          console.warn('FavoriteStoreService: Menu data not available, stop loading favorites.');
+          return EMPTY; // 返回 EMPTY 讓流程終止，但不會報錯
         }
         // 使用當前最新的 userNo 和 funRights 呼叫載入方法
         return this.loadFavorites(funRights);
       }),
       catchError(error => {
         console.error('Failed to fetch favorites in store:', error);
-        return EMPTY;
+        return EMPTY; // 錯誤時返回 EMPTY 讓外部訂閱完成，不中斷應用
       })
     );
   }
 
   private loadFavorites(funRights: FunsrightInfo[]): Observable<void> {
-    // ... (載入邏輯不變，它依賴外部傳入的 userNo 和 funRights)
     return this.favoriteService.getFavorites().pipe(
       tap(response => {
-        if (response.Status === '0000' && response.Data) {
+        if (response.Status === '0000') {
           const favoritesWithDetails: FunsrightInfo[] = [];
           response.Data.forEach((fav: any) => { // 假設 response.Data 是原始 Favorite 結構
             const matchingFunRight = funRights.find(item => item.prog_No === fav.PROG_No);
@@ -87,13 +93,14 @@ export class FavoriteStoreService {
             path: `/account/${item.prog_No.slice(0, 3).toLowerCase()}/${item.prog_No.toLowerCase()}`,
           })));
         } else {
-          this.favorites.set([]);
+          console.warn(`Favorite API 業務錯誤: ${response.Message}. 保留當前最愛狀態。`);
         }
       }),
       map(() => void 0), // 轉換為 void
       catchError(error => {
-        console.error('Error fetching favorites:', error);
-        return throwError(() => error);
+        console.error('Error fetching favorites in loadFavorites:', error);
+        // 【重要修正】這裡應返回 EMPTY 而非 throwError，避免外部流程中斷。
+        return EMPTY;
       })
     );
   }

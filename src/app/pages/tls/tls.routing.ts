@@ -55,7 +55,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls12040next2', loadComponent: () => import('./tls12040-next2/tls12040-next2.component').then(m => m.TLS12040Next2Component) },
   // 專櫃要約書維護 next3
   { path: 'tls12040next3', loadComponent: () => import('./tls12040-next3/tls12040-next3.component').then(m => m.TLS12040Next3Component) },
-
+  // 專櫃訪談紀錄追蹤表 CRU
+  { path: 'tls12070cru', loadComponent: () => import('./tls12070-cru/tls12070-cru.component').then(m => m.Tls12070CRUComponent) },
   // 專櫃契約書維護 CRU
   { path: 'tls13010cru', loadComponent: () => import('./tls13010-cru/tls13010-cru.component').then(m => m.TLS13010CRUComponent) },
   // 專櫃契約代扣款報表 CRU
@@ -258,30 +259,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls21050cru', loadComponent: () => import('./tls21050-cru/tls21050-cru.component').then(m => m.TLS21050CRUComponent) },
   //電子發票上送筆數檢核表 CRU
   { path: 'tls22040cru', loadComponent: () => import('./tls22040-cru/tls22040-cru.component').then(m => m.TLS22040CRUComponent) },
-  // 折扣別報表
-  { path: 'tls23020cru', loadComponent: () => import('./tls23020-cru/tls23020-cru.component').then(m => m.TLS23020CRUComponent) },
-  // 付款別報表
-  { path: 'tls23030cru', loadComponent: () => import('./tls23030-cru/tls23030-cru.component').then(m => m.TLS23030CRUComponent) },
-  // 發票報表
-  { path: 'tls23040cru', loadComponent: () => import('./tls23040-cru/tls23040-cru.component').then(m => m.TLS23040CRUComponent) },
-  // 收銀機日報表
-  { path: 'tls23050cru', loadComponent: () => import('./tls23050-cru/tls23050-cru.component').then(m => m.TLS23050CRUComponent) },
-  // 收銀機區間報表
-  { path: 'tls23060cru', loadComponent: () => import('./tls23060-cru/tls23060-cru.component').then(m => m.TLS23060CRUComponent) },
-  // 專櫃收銀機日報表
-  { path: 'tls23070cru', loadComponent: () => import('./tls23070-cru/tls23070-cru.component').then(m => m.TLS23070CRUComponent) },
-  // 支付工具資料收報表
-  { path: 'tls23080cru', loadComponent: () => import('./tls23080-cru/tls23080-cru.component').then(m => m.TLS23080CRUComponent) },
-  // 信用卡明細報表
-  { path: 'tls23090cru', loadComponent: () => import('./tls23090-cru/tls23090-cru.component').then(m => m.TLS23090CRUComponent) },
-  // 付款別明細報表
-  { path: 'tls23100cru', loadComponent: () => import('./tls23100-cru/tls23100-cru.component').then(m => m.TLS23100CRUComponent) },
-  // 折扣別明細報表
-  { path: 'tls23110cru', loadComponent: () => import('./tls23110-cru/tls23110-cru.component').then(m => m.TLS23110CRUComponent) },
   // 專櫃日對帳單
   { path: 'tls23120cru', loadComponent: () => import('./tls23120-cru/tls23120-cru.component').then(m => m.TLS23120CRUComponent) },
-  // 信用卡銷退日報表
-  { path: 'tls23130cru', loadComponent: () => import('./tls23130-cru/tls23130-cru.component').then(m => m.TLS23130CRUComponent) },
   // 有價券查詢報表
   { path: 'tls23140cru', loadComponent: () => import('./tls23140-cru/tls23140-cru.component').then(m => m.TLS23140CRUComponent) },
   // 交易補登作業 CRU
@@ -436,8 +415,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls43020', loadComponent: () => import('./tls43020/tls43020.component').then(m => m.TLS43020Component) },
   // 訊息群組維護作業
   { path: 'tls43040', loadComponent: () => import('./tls43040/tls43040.component').then(m => m.TLS43040Component) },
-  // 訊息狀態查詢作業
-  { path: 'tls43050', loadComponent: () => import('./tls43050/tls43050.component').then(m => m.TLS43050Component) },
   // POS即時連線監看
   { path: 'tls44010', loadComponent: () => import('./tls44010/tls44010.component').then(m => m.TLS44010Component) },
   // EDC即時連線監看
@@ -448,6 +425,7 @@ export const tlsRoutes: Routes = [
   { path: 'tls46010', loadComponent: () => import('./tls46010/tls46010.component').then(m => m.TLS46010Component) },
   // POS環境變數維護作業
   { path: 'tls46020', loadComponent: () => import('./tls46020/tls46020.component').then(m => m.TLS46020Component) },
+  // 收銀機異動排程維護
   { path: 'tls46030', loadComponent: () => import('./tls46030/tls46030.component').then(m => m.TLS46030Component) },
   // 設定檔群組維護
   { path: 'tls46040', loadComponent: () => import('./tls46040/tls46040.component').then(m => m.TLS46040Component) },
@@ -475,12 +453,11 @@ export const tlsRoutes: Routes = [
   { path: 'tls43020cru', loadComponent: () => import('./tls43020-cru/tls43020-cru.component').then(m => m.TLS43020CRUComponent) },
   // 訊息群組維護作業 CRU
   { path: 'tls43040cru', loadComponent: () => import('./tls43040-cru/tls43040-cru.component').then(m => m.TLS43040CRUComponent) },
-  // 訊息狀態查詢作業 CRU
-  { path: 'tls43050cru', loadComponent: () => import('./tls43050-cru/tls43050-cru.component').then(m => m.TLS43050CRUComponent) },
   // 網路位置設定 CRU
   { path: 'tls46010cru', loadComponent: () => import('./tls46010-cru/tls46010-cru.component').then(m => m.TLS46010CRUComponent) },
   // POS環境變數維護作業 CRU
   { path: 'tls46020cru', loadComponent: () => import('./tls46020-cru/tls46020-cru.component').then(m => m.TLS46020CRUComponent) },
+  // 收銀機異動排程維護
   { path: 'tls46030cru', loadComponent: () => import('./tls46030-cru/tls46030-cru.component').then(m => m.TLS46030CRUComponent) },
   // 設定檔群組維護 CRU
   { path: 'tls46040cru', loadComponent: () => import('./tls46040-cru/tls46040-cru.component').then(m => m.TLS46040CRUComponent) },

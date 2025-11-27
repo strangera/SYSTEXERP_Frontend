@@ -1,30 +1,31 @@
 // src/app/pages/base/sso-dashboard/sso-dashboard.component.ts
-import { Component, OnInit, OnDestroy } from '@angular/core'; // 新增 OnDestroy
-import { LayoutService } from '../../../core/layout/layout.service';
-import { ApiResponse, AuthService } from '../../../service/system/auth.service';
-import { UserInfo } from '../../../shared/models/system/userInfo';
-import { concatMap, finalize, Subscription, throwError } from 'rxjs'; // 引入 tap
-import { MenuItem, PrimeTemplate } from 'primeng/api';
-import { Router, RouterLink } from '@angular/router';
+import { AsyncPipe, NgClass, NgFor, NgIf, NgStyle } from '@angular/common';
+import { Component, OnDestroy, OnInit } from '@angular/core'; // 新增 OnDestroy
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ApiItem, SsoDashboardService } from './sso-dashboard.service';
-import { EncryptionService } from '../../../shared/service/encryption.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { NgIf, NgClass, NgStyle, NgFor, AsyncPipe } from '@angular/common';
-import { TooltipModule } from 'primeng/tooltip';
-import { MenuModule } from 'primeng/menu';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { CardModule } from 'primeng/card';
-import { Button } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
-import { PasswordModule } from 'primeng/password';
-import { DividerModule } from 'primeng/divider';
-import { TranslateModule } from '@ngx-translate/core';
+import { Router, RouterLink } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import type { OuterTokenResponse } from '../../../service/system/auth.service';
+import { TranslateModule } from '@ngx-translate/core';
 import { SystemDataService } from '@service/system/system-data.service';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { MenuItem, PrimeTemplate } from 'primeng/api';
+import { Button } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { DialogModule } from 'primeng/dialog';
+import { DividerModule } from 'primeng/divider';
+import { MenuModule } from 'primeng/menu';
+import { PasswordModule } from 'primeng/password';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { TooltipModule } from 'primeng/tooltip';
+import { concatMap, finalize, Subscription, throwError } from 'rxjs'; // 引入 tap
+import { LayoutService } from '../../../core/layout/layout.service';
+import type { OuterTokenResponse } from '../../../service/system/auth.service';
+import { AuthService } from '../../../service/system/auth.service';
+import { UserCodeService } from '../../../service/system/user-code.service';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { UserInfo } from '../../../shared/models/system/userInfo';
+import { EncryptionService } from '../../../shared/service/encryption.service';
+import { ValidationService } from '../../../shared/service/validation.service';
+import { ApiItem, SsoDashboardService } from './sso-dashboard.service';
 
 @UntilDestroy()
 @Component({

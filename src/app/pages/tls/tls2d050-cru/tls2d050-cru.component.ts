@@ -1,30 +1,31 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { ValidationService } from '../../../shared/service/validation.service';
+
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 //-----
-import { AnnouncementUserService } from '../../../service/basic/announcement-user.service';
-import { TicketCategoryService } from './../../../service/basic/ticket-category.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { NgIf } from '@angular/common';
+import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 // 2.2.13.5 部門使用券類設定作業CRU
 @Component({
-    selector: 'app-tls2d050-cru',
-    templateUrl: './tls2d050-cru.component.html',
-    styleUrl: './tls2d050-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-tls2d050-cru',
+  templateUrl: './tls2d050-cru.component.html',
+  styleUrl: './tls2d050-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class TLS2D050CRUComponent extends BasicCrupageComponent implements OnInit {
+export class TLS2D050CRUComponent implements OnInit {
+  ProgNo = '';
+  formTitle = '';
+  submitted = false;
+  crudstatus = '';
+
   departmentOptions: any[] = [];
   couponOptions: any[] = [];
   // ----------------------------------------------------------------
@@ -41,30 +42,14 @@ export class TLS2D050CRUComponent extends BasicCrupageComponent implements OnIni
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
     private translate: TranslateService,
-    //
-    private validationService: ValidationService,
-    private announcementUserService: AnnouncementUserService,
-    private ticketCategoryService: TicketCategoryService,
   ) {
-    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
     // 初始化
     this.ProgNo = '220067';
     //
-    // ----------------------------------------------------------------
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.announcementUserService.getSystemTypes().subscribe(data => {
-      this.departmentOptions = data;
-    });
-    //
-    this.ticketCategoryService.getSystemTypes().subscribe(data => {
-      this.couponOptions = data;
-    });
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus,
@@ -76,13 +61,13 @@ export class TLS2D050CRUComponent extends BasicCrupageComponent implements OnIni
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
         this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
+
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
         this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
+
         this.Edit(state.rowdata);
         break;
       // 讀檔
@@ -146,16 +131,12 @@ export class TLS2D050CRUComponent extends BasicCrupageComponent implements OnIni
 
     switch (this.crudstatus) {
       case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
+        // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
+        this.messageService.successBubble(this.translate.instant('success_message'));
         break;
       case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
+        // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
+        this.messageService.successBubble(this.translate.instant('updated-successfully'));
         break;
     }
 

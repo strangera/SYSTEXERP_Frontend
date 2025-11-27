@@ -12,6 +12,9 @@ export interface DependentDataQuery {
   building_nos?: string[] | null;
   floor_nos?: string[] | null;
   area_nos?: string[] | null;
+
+  tlt_bdate?: string | null; // 需求更新: 專櫃效期之起始日期
+  tlt_edate?: string | null; // 需求更新: 專櫃效期之結束日期
 }
 
 export interface TLS26010Query extends BaseQueryRequest {
@@ -88,12 +91,12 @@ export interface TLS26010Data {
   pod_no: string;
   pod_sdate: Date;
   pod_status: '0' | '1' | '9';
-  ecr_nos: string[];
+  ecr_list: string[];
   area_no?: string;
   build_no?: string;
   floor_no?: string;
   talent_id?: number;
-  tlt_nos: string[];
+  talent_list: string[];
 }
 
 export interface TLS26010DetailResponse extends Omit<BaseQueryResponse<TLS26010Detail>, 'Data'> {

@@ -1,34 +1,31 @@
+import { NgStyle } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
-import { Column, formatDate, formatDateToYYYYMMDD } from '@shared/componentkit/table/table.model';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownModule } from 'primeng/dropdown';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { ECRNoService } from '@service/basic/ECRNo.service';
-import { WhetherService } from '@service/basic/whether.service';
-import { DisplayService } from '@service/basic/display.service';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { HttpClient } from '@angular/common/http';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
-import { yesterday } from '@shared/models/system/query-form.model';
+import { TranslateModule } from '@ngx-translate/core';
 import { Tls2a040Service } from '@service/api/tls/tls2a040.service';
-import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
-import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
+import { ECRNoService } from '@service/basic/queryPOS1002.service';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { Button } from 'primeng/button';
-import { NgStyle } from '@angular/common';
-import JSZip from 'jszip';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, formatDate, formatDateToYYYYMMDD } from '@shared/componentkit/table/table.model';
+import { yesterday } from '@shared/models/system/query-form.model';
 import saveAs from 'file-saver';
+import JSZip from 'jszip';
+import { AccordionModule } from 'primeng/accordion';
+import { Button } from 'primeng/button';
+import { DropdownModule } from 'primeng/dropdown';
+import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 
 export interface FileItem {
   fileData: string; // Base64 字串
@@ -79,7 +76,6 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
 
   data: any[] = [];
   totalRecords = 0;
-  listZeroDifferenceOptions: any[] = [];
   columns: Column[] = [
     { field: 'TXN_Date', header: '銷售日期', format: formatDate },
     { field: 'ECR_No', header: '收銀機號' },
@@ -109,10 +105,7 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private locationOptionsService: LocationOptionsService,
     private ECRNoService: ECRNoService,
-    private whetherService: WhetherService,
-    private displayService: DisplayService,
     private dropDownListService: DropDownListService,
-    private http: HttpClient,
     private tls2a040Service: Tls2a040Service
   ) {
     super();
@@ -120,10 +113,6 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS2A040', '/TLS/TLS2A040cru', this.queryForm, (form) => this.onSubmit(form));
-
-    this.whetherService.getWhetherOptions().subscribe((data) => {
-      this.listZeroDifferenceOptions = data;
-    });
 
     this.ECRNoService.getECRNo().subscribe((data) => {
       this.ECRNoOptions = data;

@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, computed, effect, signal, viewChild } from '@angular/core';
+import { Component, computed, effect, OnInit, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -13,15 +13,15 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { Column, FieldChangeEvent, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { Column, FieldChangeEvent } from '@shared/componentkit/table/table.model';
+import { validateRequired } from '@shared/componentkit/table/validate-field.model';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
 import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
-import { tap } from 'rxjs';
+import { finalize, map, tap } from 'rxjs';
 import * as XLSX from 'xlsx';
-import { CampaignData, TLS26080Data, TLS26080Detail, TLS2608InsertPayload } from '../tls26080/tls26080.model';
+import { CampaignData, TLS26080Data, TLS26080Detail, TLS26080InsertPayload } from '../tls26080/tls26080.model';
 
 @Component({
   selector: 'app-tls26080-cru',
@@ -45,10 +45,12 @@ import { CampaignData, TLS26080Data, TLS26080Detail, TLS2608InsertPayload } from
 })
 export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> implements OnInit {
 
+  public readonly dt = viewChild.required<TableEditComponent>('dt');
+
   public readonly fileUpload = viewChild.required<FileUpload>('fileUpload');
 
   public readonly dataForm = this.formBuilder.nonNullable.group({
-    pod_no: new FormControl<string>('自動給號', [Validators.maxLength(10)]), // 活動單號
+    pod_no: new FormControl<string | void>(void 0, [Validators.maxLength(10)]), // 活動單號
     pod_desc: new FormControl<string | void>(void 0, [Validators.required]), // 活動名稱
     pod_sdate: new FormControl<Date>(this.service.dateS, [Validators.required]), // 起始日期(起)
     pod_edate: new FormControl<Date>(this.service.dateE, [Validators.required]), // 起始日期(迄)
@@ -57,39 +59,105 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   });
   public readonly df = computed(() => this.dataForm.controls);
 
+  private readonly podDescSignal = toSignal(this.df().pod_desc.valueChanges);
+  private readonly podSdateSignal = toSignal(this.df().pod_sdate.valueChanges);
+  private readonly podEdateSignal = toSignal(this.df().pod_edate.valueChanges);
+  private readonly podBusdateSignal = toSignal(this.df().pod_busdate.valueChanges);
+
   public readonly tls26080Data = signal<TLS26080Data[]>([]);
   public readonly tableData = signal<TLS26080Detail[]>([]);
   public readonly totalRecords = signal(0);
   public readonly campaignData = signal<CampaignData[]>([]);
+
+  public readonly isSubmitDisabled = signal<boolean>(!0);
+
+  // 頁面專屬 Loading 狀態
+  public readonly tableLoading = signal<boolean>(!1);
+  public readonly uploadLoading = signal<boolean>(!1);
+  public readonly downloadLoading = signal<boolean>(!1);
+  public readonly campaignLoading = signal<boolean>(!1);
 
   public readonly calcDateType = [
     { label: '活動起始日至截止日', value: 'Y' },
     { label: '正檔日至截止日', value: 'N' }
   ];
 
-  private readonly fileSignal = signal<FormData>(Object.create(null));
-  private readonly podDescSignal = toSignal(this.df().pod_desc.valueChanges);
+  public readonly getPodNo = computed(() => {
+    return this.rowdata?.pod_no || void 0;
+  });
 
+  public readonly initEffect = effect(() => {
+    if (this.isFormCreateable) return this.initEffect.destroy();
+    const id = this.getPodNo();
+    if (!id) return;
+
+    this.tableLoading.set(!0);
+    this.service.loadTLS26080Detail(id).pipe(
+      tap(res => this.logger.debug(`load:`, [this.rowdata, res])),
+      map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
+      finalize(() => this.tableLoading.set(!1)),
+    ).subscribe({
+      next: res => {
+        const data = res.Data;
+        this.tableData.set(data.map(v => ({
+          ...v,
+          tpy_rate_D16: Number(v.tpy_rate_D16),
+          tpy_rate_D17: Number(v.tpy_rate_D17),
+        })));
+        this.totalRecords.set(res.TotalCount || 0);
+      },
+      error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+    });
+  }, { allowSignalWrites: !0 });
+
+  /** 驗證表單和表格資料是否完整 */
+  public readonly validatorEffect = effect(() => {
+    const sdate = this.podSdateSignal();
+    const edate = this.podEdateSignal();
+    const busdate = this.podBusdateSignal();
+    const data = this.tableData();
+    this.logger.debug(`validatorEffect:`, [data]);
+
+    // 表單必填欄位
+    if (!sdate || !edate || !busdate) return this.isSubmitDisabled.set(!0);
+
+    // 活動起迄日期必須正確
+    if (sdate! > edate!) return this.isSubmitDisabled.set(!0);
+
+    // 活動正檔日期必須在活動起迄日期之間
+    if (busdate! < sdate! || busdate! >= edate!) return this.isSubmitDisabled.set(!0);
+
+    // 取得有效的表格資料（排除自動新增的候選行）
+    const validTableData = data?.filter(item => !item._isAutoInsertCandidate) || [];
+
+    // 至少要有一筆專櫃資料
+    if (!validTableData.length) return this.isSubmitDisabled.set(!0);
+
+    // 驗證表格資料的必填欄位和數值範圍
+    this.isSubmitDisabled.set(validTableData.some(item => {
+      if (!item.talent_id || !item.calc_date_type) return !0;
+
+      // 檢查 tpy_rate_D16 和 tpy_rate_D17 是否有值
+      if (item.tpy_rate_D16 === void 0 || item.tpy_rate_D16 === null || item.tpy_rate_D16 === '') return !0;
+      if (item.tpy_rate_D17 === void 0 || item.tpy_rate_D17 === null || item.tpy_rate_D17 === '') return !0;
+
+      const rate_D16 = Number(item.tpy_rate_D16);
+      const rate_D17 = Number(item.tpy_rate_D17);
+      if (isNaN(rate_D16) || isNaN(rate_D17)) return !0;
+
+      const basisPoint_D16 = Math.round(rate_D16 * 100);
+      const basisPoint_D17 = Math.round(rate_D17 * 100);
+      if (basisPoint_D16 < 0 || basisPoint_D16 > 1e4 || basisPoint_D17 < 0 || basisPoint_D17 > 1e4) return !0;
+
+      return !1;
+    }));
+  }, { allowSignalWrites: !0 });
+
+  /** 根據選擇的活動名稱取得活動資料 */
   private readonly selectedCampaign = computed(() => {
     const podDesc = this.podDescSignal();
     return this.campaignData().find(d => d.CampaignId === podDesc);
   });
-
-  public readonly fileUploadEffect = effect(() => {
-    const file = this.fileSignal();
-    if (!file) return;
-    this.service.uploadFile(file, this.tableData);
-    this.logger.debug(`fileUploadEffect:`, [file]);
-  }, { allowSignalWrites: !0 });
-
-  /** 抓取全部podNos */
-  public readonly podNosEffect = effect(() => {
-    const data = this.tableData();
-    if (!data?.length) return;
-    this.podNos.clear();
-    for (const item of data) this.podNos.add(item.pod_no);
-    this.logger.debug(`podNos:`, [data, Array.from(this.podNos)]);
-  }, { allowSignalWrites: !0 });
 
   /** 根據選擇的活動名稱更新表單 */
   public readonly campaignEffect = effect(() => {
@@ -101,15 +169,12 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       pod_edate: new Date(this.selectedCampaign()!.EndTime),
     });
     this.logger.debug(`campaignEffect:`, [this.selectedCampaign(), podDesc]);
-  }, { allowSignalWrites: !0 });
+  });
 
-  public readonly loadingEffect = effect(() => {
-    this.loading = this.service.tableLoading()
-      || this.service.approvalStatusLoading()
-      || this.service.campaignLoading()
-      || this.service.capItemsLoading()
-      || this.service.fileUploadLoading()
-      || this.service.exampleDownLoading();
+  public readonly podNo = effect(() => {
+    const data = this.campaignData();
+    if (!data || data.length === 0) return;
+    this.df().pod_no.patchValue(this.selectedCampaign()?.CampaignId);
   });
 
   // 環友資料表
@@ -122,7 +187,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     { field: 'Remark', header: '活動備註' },
   ];
 
-  public readonly defaultInsertData = {
+  public readonly defaultInsertData: Partial<TLS26080Detail> = {
     pod_status: ApprovalStatus.未核准,
   };
 
@@ -131,34 +196,28 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     {
       field: 'talent_id',
       header: '專櫃編號',
-      type: 'inputNumber',
-      // type: this.isFormReadable ? void 0 : 'dropdown',
-      // showClear: !1,
-      // options: this.service.tltTalentOptions(),
-      // optionLabel: 'value',
-      // optionValue: 'value',
-      // templateLabel: 'templateLabel',
-    },
-    {
-      field: 'tlt_name',
-      header: '櫃位名稱',
-      type: 'input',
+      type: this.isFormReadable ? void 0 : 'dropdown',
+      showClear: !1,
+      options: this.service.tltTalentOptions(),
+      optionLabel: 'Name',
+      optionValue: 'No',
+      templateLabel: 'label',
+      validate: [validateRequired],
+      format: v => this.service.tltTalentMap().get(v)?.label ?? v,
     },
     {
       field: 'tlt_id',
       header: '抽成類別',
-      type: 'inputNumber',
-      // type: this.isFormReadable ? void 0 : 'dropdown',
-      // options: (rowData: TLS26080Detail) => this.service.tltTalentChargeMap.get(rowData.talent_id as string) || [],
-      // showClear: !1,
-      // optionLabel: 'value',
-      // optionValue: 'value',
-      // templateLabel: 'templateLabel',
-    },
-    {
-      field: 'tlt_id_desc',
-      header: '抽成類別名稱',
-      type: 'input',
+      type: this.isFormReadable ? void 0 : 'dropdown',
+      showClear: !1,
+      options: this.service.tltIdOptions(),
+      optionLabel: 'label',
+      optionValue: 'value',
+      validate: [validateRequired],
+      // options: this.service.tltTalentChargeOptions(),
+      // optionLabel: 'tlt_id_desc',
+      // optionValue: 'tlt_id',
+      // format: (v, i, r) => this.service.tltTalentChargeMap().get(r.talent_id)?.tlt_id_desc ?? v,
     },
     {
       field: 'calc_date_type',
@@ -168,44 +227,55 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       options: this.calcDateType,
       optionLabel: 'label',
       optionValue: 'value',
+      validate: [validateRequired],
       format: v => v === 'Y' ? '活動起始日至截止日' : '正檔日至截止日',
     },
     {
       field: 'tpy_rate_D16',
       header: 'D16',
       groupField: 'groupField1',
-      type: 'percent',
-      validate: [this.numVal],
+      type: this.isFormReadable ? void 0 : 'percent',
+      validate: [this.numVal, validateRequired],
       maxFractionDigits: 2,
+      format: v => this.isFormReadable ? String(v) + '%' : v,
     },
     {
       field: 'tpy_rate_D17',
       header: 'D17',
       groupField: 'groupField1',
-      type: 'percent',
-      validate: [this.numVal],
+      type: this.isFormReadable ? void 0 : 'percent',
+      validate: [this.numVal, validateRequired],
       maxFractionDigits: 2,
+      format: v => this.isFormReadable ? String(v) + '%' : v,
     },
-    { field: 'tpy_rate_3', header: 'D16', groupField: 'groupField2', },
-    { field: 'tpy_rate_4', header: 'D17', groupField: 'groupField2', },
+    {
+      field: 'tpy_rate_3',
+      header: 'D16',
+      groupField: 'groupField2',
+    },
+    {
+      field: 'tpy_rate_4',
+      header: 'D17',
+      groupField: 'groupField2',
+    },
     { field: 'pod_status', header: '審核狀態', format: this.service.approvalStatus },
     { field: 'approved_usr_name', header: '審核人員' },
     { field: 'approved_date', header: '審核日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
   ]);
 
-  public readonly counterColumnsGroup: Column[] = [
+  public readonly counterColumnsGroup = computed<Column[]>(() => [
     { field: 'groupField1', header: '匯入分攤' },
     { field: 'groupField2', header: '合約建檔' },
-  ];
+  ]);
 
-  // 扣款項目資料表
-  // deductionColumns: Column[] = [
-  //   { field: 'itemCode', header: '扣款項目編號' },
-  //   { field: 'itemName', header: '扣款項目名稱' },
-  //   { field: 'amountOrRate', header: '金額/比率' }
-  // ];
-
-  private podNos = new Set<string>();
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.tableLoading()
+      || this.uploadLoading()
+      || this.downloadLoading()
+      || this.campaignLoading()
+      || this.service.capItemsLoading()
+      || this.service.tltTalentOptionsLoading();
+  });
 
   constructor(
     public readonly service: TLS26080Service,
@@ -217,133 +287,140 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public ngOnInit(): void {
     this.initializePage('TLS26080', this.dataForm);
-    const podNo = this.rowdata?.pod_no || '';
-    if (!this.isFormCreateable) {
-      this.service.loadTLS26080({ pod_no: podNo }).pipe(
-        tap(res => this.tls26080Data.set(res.Data)),
-      ).subscribe();
-      this.service.loadTLS26080Detail(podNo).pipe(
-        tap(res => {
-          this.tableData.set(res.Data);
-          this.totalRecords.set(res.TotalCount || 0);
-        }),
-      ).subscribe();
-    };
 
+    // this.service.getTLTTalentChargeOptions();
+    this.service.getTLTTalentOptions();
     this.service.loadAPS1003(['E']);
+
+    this.campaignLoading.set(!0);
     this.service.loadCampaignData().pipe(
-      tap(res => this.campaignData.set(res.Data)),
-    ).subscribe();
+      tap(res => this.logger.debug(`loadCampaignData:`, [res])),
+      map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
+      finalize(() => this.campaignLoading.set(!1))
+    ).subscribe({
+      next: res => this.campaignData.set(res.Data),
+      error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+    });
   }
 
-  public onInsert(event: RowEditSaveEvent): void {
-    const d = event.newData as TLS26080Detail;
-    const payload: TLS26080Detail = {
-      ...d,
-      tlt_id: String(d.tlt_id),
-      tlt_no: String(d.talent_id),
-      pod_status: '0',
-      cap_item_D16: 'D16',
-      cap_item_D17: 'D17',
-      tpy_rate_D16: String(d.tpy_rate_D16),
-      tpy_rate_D17: String(d.tpy_rate_D17),
-    };
-    this.service.keyInTLS26080(payload, this.tableData);
-    this.logger.debug(`onInsert:`, [d, event]);
-  }
-
-  // 表單提交
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      const d = Object.fromEntries(
-        Object.entries(this.df())
-          .map(([k, v]) => [k, v.value])
-          .filter(([_, v]) => v !== null && v !== void 0 && v !== '')
-      ) as Partial<TLS2608InsertPayload>;
+      this.tableLoading.set(!0);
+      if (!this.dt().validateAndShowErrors()) return void this.tableLoading.set(!1);
 
-      const payload = <TLS2608InsertPayload>{
+      const d = this.dataForm.getRawValue();
+      const validTableData = this.tableData().filter(item => !item._isAutoInsertCandidate);
+      if (!validTableData.length) {
+        this.tableLoading.set(!1);
+        return void this.messageService.errorBubble('請至少新增一筆專櫃資料');
+      }
+
+      /**
+       * pod_sdate, pod_edate, pod_busdate 這三個後端要求ISO格式
+       *
+       * 但是interceptor會把Date拿掉尾端的Z，變成"yyyy-MM-ddTHH:mm:ss.sss"
+       *
+       * 導致日期範圍無法判斷
+       */
+      const payload: TLS26080InsertPayload = {
         ...d,
-        TALPORDERD_VOUCHERDetails: this.tableData().map(item => ({
-          ...item,
+        pod_no: d.pod_no ?? '',
+        pod_type: '2',
+        pod_desc: this.selectedCampaign()?.CampaignName ?? d.pod_desc ?? '',
+        pod_sdate: d.pod_sdate!,
+        pod_edate: d.pod_edate!,
+        pod_busdate: d.pod_busdate!,
+        TALPORDERD_VOUCHERDetails: validTableData.map(item => ({
           pod_no: d.pod_no!,
-          pod_type: d.pod_type!,
+          talent_id: Number(item.talent_id) ?? null,
+          tlt_id: String(item.tlt_id),
+          tlt_no: this.service.tltTalentMap().get(String(item.talent_id))?.['No'] ?? '',
+          tlt_name: this.service.tltTalentMap().get(String(item.talent_id))?.['Name'] ?? '',
+          calc_date_type: String(item.calc_date_type ?? 'Y'),
+          cap_item_D16: 'D16',
+          cap_item_D17: 'D17',
+          tpy_rate_D16: item.tpy_rate_D16!,
+          tpy_rate_D17: item.tpy_rate_D17!,
+          pod_status: String(item.pod_status ?? '0'),
         })),
       };
 
       this.service.insertTLS26080(payload).pipe(
-        tap(() => this.dataForm.reset()),
+        tap(res => this.logger.debug(`onSubmit:`, [d, payload, res])),
+        map(res => { if (res.Status === '0000') return res; throw new Error(res.Message || '新增失敗'); }),
+        finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
-        next: () => { this.messageService.successBubble('新增成功'); this.onCancel(); },
-        error: () => this.messageService.errorBubble('新增失敗'),
+        next: () => {
+          this.onCancel();
+          this.messageService.successBubble('新增成功');
+        },
+        error: err => this.messageService.errorBubble(err.message || '新增失敗'),
       });
     });
   }
 
-  public onFieldChange(event: FieldChangeEvent<TLS26080Detail>): void {
-    this.logger.debug(`onFieldChange:`, [event]);
-    const { field, value, index, rowData } = event;
-    const isIndex = Number.isInteger(index) && index !== -1;
+  private numVal(value: string | number): { isValid: boolean; errorMessage: string[]; } {
+    const normalized = typeof value === 'number' ? value.toString() : `${value ?? ''}`.trim().replace(/%$/, '');
+    if (normalized === '') return { isValid: !1, errorMessage: ['請輸入有效的數字'] };
 
-    if (field === 'talent_id') {
-      const valueStr = String(value);
-      if (!valueStr?.length) return;
-      const selected = this.service.tltTalentMap().get(valueStr);
-      this.service.getTLTTalentChargeOptions(valueStr);
+    const decimalPart = normalized.split('.')[1];
+    if (decimalPart && decimalPart.length > 2) return { isValid: !1, errorMessage: ['請輸入最多兩位小數的數字'] };
 
-      this.tableData.update((current: TLS26080Detail[]) => {
-        if (!isIndex) return current;
-        const data = [...current];
-        let rowD = data[index!];
+    const num = Number(normalized);
+    if (isNaN(num) || !isFinite(num)) return { isValid: !1, errorMessage: ['請輸入有效的數字'] };
 
-        rowD = {
-          ...rowD,
-          talent_id: rowData.talent_id,
-          tlt_name: selected || '',
-        };
-        return data;
-      });
-    }
+    const bp = Math.round(num * 100);
+    if (bp < 0 || bp > 1e4) return { isValid: !1, errorMessage: ['請輸入 0 到 100 之間的數字'] };
 
-    if (field === 'tlt_id') {
-      const valueStr = String(value);
-      if (!valueStr?.length) return;
-      const selected = this.service.tltTalentChargeMap.get(rowData.talent_id as string);
-      this.tableData.update((current: TLS26080Detail[]) => {
-        if (!isIndex) return current;
-        const data = [...current];
-        let rowD = data[index!];
-
-        rowD = {
-          ...rowD,
-          tlt_id: rowData.tlt_id,
-          tlt_id_desc: selected?.find(item => item.value === valueStr)?.label || '',
-        };
-        return data;
-      });
-    }
+    return { isValid: !0, errorMessage: [] };
   }
 
-  private numVal(value: string): { isValid: boolean; errorMessage: string[]; } {
-    const num = Number(value);
-    if (isNaN(num) || !isFinite(num)) return { isValid: !1, errorMessage: ['請輸入有效的數字'] };
-    if (num < 0 || num > 100) return { isValid: !1, errorMessage: ['請輸入有效的數字'] };
-    return { isValid: !0, errorMessage: [] };
+  public onFieldChange(event: FieldChangeEvent): void {
+    this.logger.debug(`onFieldChange:`, [event]);
+
+    if (event.field === 'talent_id') {
+      this.service.tltTalentMap().get(event.value);
+    }
   }
 
   public async handleUpload(event: FileUploadHandlerEvent): Promise<void> {
     const formData = new FormData();
+    if (!formData) return;
     formData.append('file', event.files[0]);
-    this.fileSignal.set(formData);
+
+    this.uploadLoading.set(!0);
+    this.service.uploadFile(formData).pipe(
+      tap(res => this.logger.debug(`uploadFile:`, [res])),
+      finalize(() => this.uploadLoading.set(!1))
+    ).subscribe({
+      next: data => {
+        this.tableData.set(data.map(item => ({
+          ...item,
+          tpy_rate_D16: Number(item.tpy_rate_D16),
+          tpy_rate_D17: Number(item.tpy_rate_D17),
+        })));
+        this.messageService.successBubble('上傳成功');
+      },
+      error: err => this.messageService.errorBubble(err.message || '上傳失敗'),
+    });
+
     this.fileUpload().clear();
+    this.logger.debug(`fileUploadEffect:`, [formData]);
   }
 
   public onExportExcelTemplate(): void {
-    /** 手動控制 local 生成或從 api 下載 */
     const exampleByApi = !0;
     const headerRow1 = ['專櫃編號', '櫃位名稱', '抽成類別', '抽成類別名稱', '正檔起日計算', '匯入分攤', null, '合約建檔'];
     const headerRow2 = [null, null, null, null, null, 'D16', 'D17', 'D16', 'D17'];
-    const example = ['000064', 'gozo', '0', '少女裝', 'Y', '1.00%', '50.00%'];
-    if (exampleByApi) return void this.service.downloadXLSXExample();
+    const example = ['000064', 'gozo', '0', '少女裝', 'Y', '1', '5'];
+
+    if (exampleByApi) {
+      this.downloadLoading.set(!0);
+      this.service.downloadXLSXExample().pipe(
+        finalize(() => this.downloadLoading.set(!1))
+      ).subscribe();
+      return;
+    }
 
     // 生成工作表
     const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet([headerRow1, headerRow2, example]);

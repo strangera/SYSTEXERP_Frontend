@@ -1,9 +1,9 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { SortMeta } from 'primeng/api';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../system/auth.service';
-import { SortMeta } from 'primeng/api';
 
 const API_URL = `${environment.ApiUrl}/SYS0000/BAS1000`;
 export interface UpdateStatusSYSB200Request {
@@ -75,7 +75,7 @@ export class Sysb200Service {
   updateSYSB200(data: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${API_URL}/updateSYSB200`, data);
   }
-updateStatusSYSB200(body: UpdateStatusSYSB200Request): Observable<ApiResponse<any>> {
+  updateStatusSYSB200(body: UpdateStatusSYSB200Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${API_URL}/updateStatusSYSB200`, body);
   }
 }

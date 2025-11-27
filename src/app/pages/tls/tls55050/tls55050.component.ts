@@ -1,19 +1,16 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { VendorService } from '../../../service/basic/vendor.service';
 // Shared
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
 
 @Component({
   selector: 'app-tls55050',
@@ -57,12 +54,11 @@ export class TLS55050Component {
     private router: Router,
     private formBuilder: FormBuilder,
     private notificationService: NotificationService,
-    private authService: AuthService,
   ) { }
 
   ngOnInit(): void {
     // Initialize dropdown options
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    //
 
   }
 

@@ -1,14 +1,10 @@
-import { WhetherService } from './../../../service/basic/whether.service';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { VendorService } from '../../../service/basic/vendor.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -79,11 +75,7 @@ export class FIN24020Component extends BasicQpageComponent implements OnInit {
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
     private validationService: ValidationService,
-    //
-    private vendorService: VendorService,
-    private whetherService: WhetherService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -94,20 +86,6 @@ export class FIN24020Component extends BasicQpageComponent implements OnInit {
     this.cruPage = '/FIN2000/FIN24020CRU';
     //
     // ----------------------------------------------------------------
-    //
-    this.vendorService.getVendors().subscribe(data => {
-      this.factoryIDOptions = data;
-    });
-    //
-    this.whetherService.getWhetherOptions().subscribe(data => {
-      this.whetherOptions = data;
-
-      // 全選填入
-      // let allSystemValues = this.whetherOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   generatePayout: allSystemValues
-      // });
-    });
     // ----------------------------------------------------------------
   }
 

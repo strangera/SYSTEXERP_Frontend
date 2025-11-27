@@ -1,28 +1,17 @@
-import { UserCodeService } from './../../../service/basic/user-code.service';
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
+
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { NavigationExtras } from '@angular/router';
 // Services
-import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
 // Shared
-import { VendorService } from '../../../service/basic/vendor.service';
-import { CounterCodeService } from '../../../service/basic/counter-code.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
-import { DeductionItemService } from '../../../service/basic/deduction-item.service';
-import { OrganizationNumberService } from './../../../service/basic/organization-number.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { NgFor, NgIf } from '@angular/common';
+import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -41,56 +30,21 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
     CalendarComponent,
     InputTextComponent,
     NgFor,
-
-
     ButtonComponent,
     NgIf,
     TranslateModule,
   ],
 })
 export class FIN72010CRUComponent
-  extends BasicCrupageComponent
+
   implements OnInit {
+
+  ProgNo = 'FIN72050';
+  formTitle = 'FIN72050';
+  submitted = false;
+  accordionTabCss = 'create-accordionTab';
+  crudstatus: CRUDStatus = CRUDStatus.Create;
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '170003';
-    //
-    // ----------------------------------------------------------------
-    this.userCodeService
-      .getUserCode()
-      .subscribe((data) => (this.founder = data));
-    this.IfdisplayService.getOptions().subscribe(
-      (data) => (this.displayOptions = data)
-    );
-    this.IfdisplayService.getOptions().subscribe(
-      (data) => (this.displayOptions2 = data)
-    );
-    this.vendorService.getVendors().subscribe((data) => {
-      this.vendorOptions = data;
-    });
-    this.userCodeService
-      .getUserCode()
-      .subscribe((data) => (this.usercode = data));
-    this.counterCodeService.getCounterCodes().subscribe((data) => {
-      this.counterCodeOptions = data;
-    });
-
-    this.violationCategoryService.getViolationCategories().subscribe((data) => {
-      this.violationCategoryOptions = data;
-    });
-
-    this.floorService.getFloors().subscribe((data) => {
-      this.floorOptions = data;
-    });
-
-    this.deductionItemService.getDeductionItems().subscribe((data) => {
-      this.deductionItemOptions = data;
-    });
-    this.OrganizationNumberService.getOrganizationNumbers().subscribe(
-      (data) => {
-        this.organizationNumberOptions = data;
-      }
-    );
 
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
@@ -104,14 +58,14 @@ export class FIN72010CRUComponent
         this.formTitle = 'create-conditions';
         this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
+
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
         this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
+
         this.Edit(state.rowdata);
         break;
       // 讀檔
@@ -122,7 +76,6 @@ export class FIN72010CRUComponent
         break;
     }
 
-    console.log(this.accordionTabCss);
   }
   createItem(): FormGroup {
     return this.formBuilder.group({
@@ -393,19 +346,7 @@ export class FIN72010CRUComponent
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private IfdisplayService: IfdisplayService,
-    private vendorService: VendorService,
-    private userCodeService: UserCodeService,
-    private counterCodeService: CounterCodeService, // 專櫃編號 service
-    private violationCategoryService: ViolationCategoryService, // 違規類別編號 service
-    private floorService: FloorService, // 樓層 service
-    private deductionItemService: DeductionItemService, // 扣款項目 service
-    private OrganizationNumberService: OrganizationNumberService
   ) {
-    super(); // 呼叫父類建構子
   }
 
   // ----------------------------------------------------------------
@@ -436,38 +377,6 @@ export class FIN72010CRUComponent
   }
 
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(
-        this.translate.instant('form_error_message')
-      );
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(
-            this.translate.instant('success_message')
-          );
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(
-            this.translate.instant('updated-successfully')
-          );
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
   }
 
   submitForm(frm: FormGroup) {

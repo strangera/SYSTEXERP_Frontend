@@ -1,40 +1,32 @@
-import { FloorService } from './../../../service/basic/floor.service';
-import { SubpoenaStatusService } from './../../../service/basic/subpoena-status.service';
-import { TaxableService } from './../../../service/basic/taxable.service';
-import { PaperTypeService } from './../../../service/basic/paper-type.service';
-import { CounterCodeService } from './../../../service/basic/counter-code.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
+import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
-import { ValidationService } from '../../../shared/service/validation.service';
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { CheckboxModule } from 'primeng/checkbox';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { CheckboxModule } from 'primeng/checkbox';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.15.1 廠商發票請款登入暨維護作業
 @Component({
-    selector: 'app-tls2f010',
-    templateUrl: './tls2f010.component.html',
-    styleUrl: './tls2f010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, MultiSelectComponent, InputNumberComponent, CalendarRangeComponent, InputTextComponent, InputNumberRangeComponent, CheckboxModule, TableComponent, TranslateModule]
+  selector: 'app-tls2f010',
+  templateUrl: './tls2f010.component.html',
+  styleUrl: './tls2f010.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, MultiSelectComponent, InputNumberComponent, CalendarRangeComponent, InputTextComponent, InputNumberRangeComponent, CheckboxModule, TableComponent, TranslateModule]
 })
 export class TLS2F010Component {
   ProgNo: string = '220080';
@@ -49,7 +41,7 @@ export class TLS2F010Component {
     checkoutoOnedatemm: [], // 結帳年月
     counterID: [], // 專櫃編號
     paperType: [[] as number[]], // 單據種類
-    invoiceNumber: [, [this.validationService.numberValidator, Validators.maxLength(10)]], // 發票/收據號碼
+    invoiceNumber: [, [Validators.maxLength(10)]], // 發票/收據號碼
     invoiceStartdate: [], // 單據日期
     invoiceEnddate: [], // 單據日期
     checkoutMethod: ['', [Validators.maxLength(2)]], // 結帳方式
@@ -58,12 +50,12 @@ export class TLS2F010Component {
     declareOnedatemm: [], // 申報年月
     uID: ['', [Validators.maxLength(8)]], // 廠商統一編號
     taxType: [[] as number[]], // 課稅別
-    startserialinvoice: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 發票總額
-    endserialinvoice: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 發票總額
-    startserialnonTax: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 未稅金額
-    endserialnonTax: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 未稅金額
-    startserialTax: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 稅額
-    endserialTax: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 稅額
+    startserialinvoice: [, [Validators.max(99999999)]], // 發票總額
+    endserialinvoice: [, [Validators.max(99999999)]], // 發票總額
+    startserialnonTax: [, [Validators.max(99999999)]], // 未稅金額
+    endserialnonTax: [, [Validators.max(99999999)]], // 未稅金額
+    startserialTax: [, [Validators.max(99999999)]], // 稅額
+    endserialTax: [, [Validators.max(99999999)]], // 稅額
     format: ['', [Validators.maxLength(2)]], // 格式
     status: [[] as number[]], // 狀況
     transferStartdate: [], // 傳送日期
@@ -118,55 +110,10 @@ export class TLS2F010Component {
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private counterCodeService: CounterCodeService,
-    private paperTypeService: PaperTypeService,
-    private taxableService: TaxableService,
-    private subpoenaStatusService: SubpoenaStatusService,
-    private floorService: FloorService,
   ) {
   }
 
   ngOnInit(): void {
-    //
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.counterCodeService.getCounterCodes().subscribe(data => {
-      this.counterIDOptions = data;
-    });
-    //
-    this.floorService.getFloors().subscribe(data => {
-      this.floorOptions = data;
-    });
-    //
-    this.paperTypeService.getSystemTypes().subscribe(data => {
-      this.paperTypeOptions = data;
-      // 全選填入
-      // let allSystemValues = this.paperTypeOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   paperType: allSystemValues
-      // });
-    });
-    //
-    this.taxableService.getSystemTypes().subscribe(data => {
-      this.taxTypeOptions = data;
-      // 全選填入
-      // let allSystemValues = this.taxTypeOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   taxType: allSystemValues
-      // });
-    });
-    //
-    this.subpoenaStatusService.getSystemTypes().subscribe(data => {
-      this.statusOptions = data;
-      // 全選填入
-      // let allSystemValues = this.statusOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   status: allSystemValues
-      // });
-    });
   }
 
   canQuery(): boolean {
@@ -185,7 +132,6 @@ export class TLS2F010Component {
     console.log(frm.value);
     this.submitted = true;
     this.loading = true;
-    this.messageService.blockUi();
 
     if (frm.valid && this.canQuery()) {
       // 提交邏輯
@@ -197,7 +143,6 @@ export class TLS2F010Component {
     }
 
     this.loading = false;
-    this.messageService.unblockUi();
   }
 
   onSubmitQuery(frm: FormGroup) {

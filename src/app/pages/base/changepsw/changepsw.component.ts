@@ -1,18 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenuItem } from 'primeng/api';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { EncryptionService } from '../../../shared/service/encryption.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { PasswordComponent } from './password/password.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { MenuItem } from 'primeng/api';
+import { AuthService } from '../../../service/system/auth.service';
+import { UserCodeService } from '../../../service/system/user-code.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { EncryptionService } from '../../../shared/service/encryption.service';
+import { ValidationService } from '../../../shared/service/validation.service';
+import { PasswordComponent } from './password/password.component';
 
 export interface UserInfo {
   AccessToken: string;

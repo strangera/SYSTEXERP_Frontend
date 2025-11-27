@@ -1,28 +1,20 @@
-import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
+import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
+
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 //
-import { ValidationService } from '../../../shared/service/validation.service';
-import { VendorService } from '../../../service/basic/vendor.service';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { PaperStatusService } from '../../../service/basic/paper-status.service';
-import { ItemCodeService } from '../../../service/basic/item-code.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { NgIf } from '@angular/common';
 import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
 //3.1.2.4 採購單審核作業 CRU
 @Component({
@@ -32,7 +24,12 @@ import { NgIf } from '@angular/common';
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, EditorTextComponent, InputNumberComponent, MultiSelectComponent, DropdownComponent, CalendarComponent, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class ASS12040CRUComponent extends BasicCrupageComponent implements OnInit {
+export class ASS12040CRUComponent implements OnInit {
+  ProgNo = '';
+  formTitle = '';
+  submitted = false;
+  crudstatus = '';
+
   applicantCodeOptions: any[] = [];
   itemCodeOptions: any[] = [];
   organizationNumberOptions: any[] = [];
@@ -72,16 +69,6 @@ export class ASS12040CRUComponent extends BasicCrupageComponent implements OnIni
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private validationService: ValidationService,
-    //
-    private itemCodeService: ItemCodeService,
-    private organizationNumberService: OrganizationNumberService,
-    private vendorService: VendorService,
-    private paperStatusService: PaperStatusService,
-    private userCodeService: UserCodeService,
   ) {
     super();  // 呼叫父類建構子
   }
@@ -92,26 +79,6 @@ export class ASS12040CRUComponent extends BasicCrupageComponent implements OnIni
     //
 
     //
-    this.userCodeService.getUserCode().subscribe(data => {
-      this.applicantCodeOptions = data;
-    });
-    //
-    this.itemCodeService.getSystemTypes().subscribe(data => {
-      this.itemCodeOptions = data;
-    });
-    //
-    this.organizationNumberService.getOrganizationNumbers().subscribe(data => {
-      this.organizationNumberOptions = data;
-    });
-    //
-    this.vendorService.getVendors().subscribe(data => {
-      this.supplierCodeOptions = data;
-    });
-    //
-    this.paperStatusService.getSystemTypes().subscribe(data => {
-      this.paperStatusOptions = data;
-    });
-    // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus,
       rowdata: any,
@@ -123,14 +90,14 @@ export class ASS12040CRUComponent extends BasicCrupageComponent implements OnIni
         this.formTitle = 'create-conditions';
         this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
+
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
         this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
+
         this.Edit(state.rowdata);
         break;
       // 讀檔
@@ -176,12 +143,9 @@ export class ASS12040CRUComponent extends BasicCrupageComponent implements OnIni
   }
 
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
     this.submitted = true;
 
     if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
       return;
     }
 
@@ -189,18 +153,15 @@ export class ASS12040CRUComponent extends BasicCrupageComponent implements OnIni
       case CRUDStatus.Create:
         if (this.canAdd()) {
           // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
         }
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
           // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
         }
         break;
     }
 
-    this.messageService.unblockUi();
     this.submitted = false;
   }
 

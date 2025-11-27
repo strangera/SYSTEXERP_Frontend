@@ -1,22 +1,23 @@
+import { CommonModule, JsonPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, convertDateToYYYYMM } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { DomSanitizer } from '@angular/platform-browser';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { apiOption } from '@shared/models/sys/sysb000.model';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { Fin14030Service } from '@service/api/fin/fin14030.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { apiOption } from '@shared/models/sys/sysb000.model';
+import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
-import { CommonModule, JsonPipe } from '@angular/common';
-import { Fin14030Service } from '@service/api/fin/fin14030.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { environment } from 'src/environments/environment';
-import { DomSanitizer } from '@angular/platform-browser';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, convertDateToYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 //1.1.4.3 形成申報書
 @Component({
@@ -37,7 +38,8 @@ import { DomSanitizer } from '@angular/platform-browser';
     CommonModule,
     DropdownComponent,
     TableComponent,
-    TranslateModule]
+    TranslateModule,
+    YearMonthComponent]
 })
 export class FIN14030Component extends BasicQueryPageComponent<unknown> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -84,8 +86,8 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
       }).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           const taxNos = response.Data?.TDS1003STO_TaxNos ?? [];
-          this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string }) => ({
-            Label: item.STO_TaxNo + "/" + item.STO_TaxName,
+          this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string; REP_BegGUIYM: string; REP_EndGUIYM: string }) => ({
+            Label: item.STO_TaxNo + "/" + item.STO_TaxName + "/" + item.REP_BegGUIYM + "~" + item.REP_EndGUIYM,
             No: item.STO_TaxNo
           }));
           console.log('稅籍編號 options', this.REP_TaxNo_Options);
@@ -101,7 +103,6 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
       const body = {
         ...frm.value,
         Mid: Number(frm.value.Mid),
-        REP_GUIYM: convertDateToYYYYMM(frm.value.REP_GUIYM),
       }
       // 可以用 202406 , 703902231 測試
 
@@ -113,7 +114,6 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
       // 這裡彈窗顯示
       this.dialogData = body;
       this.auditMode = '審核';   // 或者根據狀態切換 '反審核'
-      this.showDialog = true;
 
       this.fin14030Service.printFIN14030(body).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
@@ -130,10 +130,14 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
 
             // ⬇️ 用 sanitizer 包裝
             this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(rawUrl);
+            this.showDialog = true;
             this.loading = false;
           }
         },
-        error: () => { this.loading = false; },
+        error: () => {
+          this.showDialog = false;
+          this.loading = false;
+        },
       });
     });
   }

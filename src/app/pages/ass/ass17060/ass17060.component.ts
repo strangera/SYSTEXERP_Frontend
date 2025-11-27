@@ -4,21 +4,15 @@ import { NavigationExtras, Router } from '@angular/router';
 // Services
 
 // Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { BigCategoryService } from '../../../service/basic/big-category.service';
-import { MidCategoryService } from '../../../service/basic/mid-category.service';
-import { SmallCategoryService } from '../../../service/basic/small-category.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 @Component({
   selector: 'app-ass17060',
@@ -146,12 +140,7 @@ export class ASS17060Component extends BasicQpageComponent implements OnInit {
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-    private authService: AuthService,
-    private bigCategoryService: BigCategoryService,
-    private midCategoryService: MidCategoryService,
-    private smallCategoryService: SmallCategoryService,
-    private organizationNumberService: OrganizationNumberService,
+
   ) {
     super(); // 呼叫父類建構子
   }
@@ -159,9 +148,6 @@ export class ASS17060Component extends BasicQpageComponent implements OnInit {
   ngOnInit(): void {
     this.ProgNo = '310054';
     // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.organizationNumberService.getOrganizationNumbers()
-      .subscribe((data) => (this.Departmentcode = data));
   }
 
   onSubmit(frm: FormGroup) {

@@ -1,15 +1,10 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { DisplayModeService } from '../../../service/basic/display-mode.service';
-import { WarehouseService } from '../../../service/basic/warehouse.service';
-import { BrandCodeService } from '../../../service/basic/brand-code.service';
 // Shared
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
+import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -72,18 +67,9 @@ export class TLS57120Component {
     private router: Router,
     private formBuilder: FormBuilder,
     private notificationService: NotificationService,
-    private displayModeService: DisplayModeService,
-    private warehouseService: WarehouseService,
-    private brandCodeService: BrandCodeService,
-    private authService: AuthService,
   ) { }
 
   ngOnInit(): void {
-    // Initialize dropdown options
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.displayModeService.getDisplayModes().subscribe((data) => (this.displayModeOptions = data));
-    this.warehouseService.getWarehouseOptions().subscribe((data) => (this.warehouseOptions = data));
-    this.brandCodeService.getSystemTypes().subscribe((data) => (this.brandCodeOptions = data));
   }
 
   canQuery(): boolean {

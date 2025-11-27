@@ -8,16 +8,26 @@ import { environment } from '../../../../environments/environment';
 })
 export class Tls12070Service {
   // 專櫃訪談紀錄追蹤表
-    apiUrl: string = environment.ApiUrl + '/TLS0000/TLS1000';
-    constructor(private http: HttpClient) {}
+  apiUrl: string = environment.ApiUrl + '/TLS0000/TLS1000';
+  constructor(private http: HttpClient) { }
 
   //  查詢 Customer_interview資料表
   queryTLS12070(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS12070`, body);
   }
 
+  // 查詢 意願報表 Detail
+  queryTLS12070_Detail(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS12070_Detail`, body);
+  }
+
   // 查詢 意願報表 toSumary
   queryTLS12070_Summary(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS12070_Summary`, body);
+  }
+
+  // 查詢 Customer_interview 數量簡表
+  queryTLS12070_Count(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS12070_Count`, body);
   }
 }

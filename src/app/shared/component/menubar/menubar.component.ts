@@ -1,14 +1,14 @@
-import { SystemDataService } from './../../../service/system/system-data.service';
-import { ChangeDetectionStrategy, Component, Input, OnInit, inject, computed,ChangeDetectorRef } from '@angular/core';
-import { MenuItem, PrimeTemplate } from 'primeng/api';
-import { FunsrightInfo } from '../../models/system/funsrightInfo';
-import { NotificationService } from '../notification-message/notification.service';
-import { BreadcrumbModule } from 'primeng/breadcrumb';
-import { RouterLink } from '@angular/router';
 import { NgClass, NgIf } from '@angular/common';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { MenuItem, PrimeTemplate } from 'primeng/api';
+import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { tap } from 'rxjs';
 import { FavoriteStoreService } from 'src/app/core/layout/app.topbar/favorite-store.service';
+import { FunsrightInfo } from '../../models/system/funsrightInfo';
+import { NotificationService } from '../notification-message/notification.service';
+import { SystemDataService } from './../../../service/system/system-data.service';
 
 // 移除不再需要的 Favorite 介面定義
 
@@ -53,14 +53,15 @@ export class MenubarComponent implements OnInit {
 
   noProgNo = false;
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(private cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
     if (this.customBreadcrumbItems.length > 0) { return; }
     this.breadcrumbItems = [];
+    this.favoriteStore.fetchFavorites().pipe(untilDestroyed(this)).subscribe();
     // 訂閱菜單更新，建立麵包屑
     this.systemDataService.menuUpdated.pipe(untilDestroyed(this)).subscribe((newData: FunsrightInfo[]) => {
-    
+
       this.funRightsInfo = [...newData];
       this.menu = [];
       this.breadcrumbItems = [];
@@ -103,8 +104,22 @@ export class MenubarComponent implements OnInit {
    */
   toggleFavorite() {
     const favorites = this.favoriteStore.favorites();
-    const isCurrentlyFavorite = this.isFavorite(); // 讀取 computed signal 的值
+    const isCurrentlyFavorite = this.isFavorite();
     const progNo = this.ProgNo;
+
+    // 【重要檢查】在執行任何操作前，檢查 Store 裡的最愛清單是否可能為空。
+    // 假設您的系統至少需要載入一次 API 才能有正確的 favorites 狀態。
+    // 如果是新增操作，且 favorites 為空，且菜單也未載入，則可能是狀態未同步。
+    if (this.funRightsInfo.length === 0) {
+      this.messageService.warnBubble('請稍候', '系統選單資料尚未載入，請稍候再試。');
+      this.favoriteStore.fetchFavorites().subscribe(); // 再次觸發載入
+      return;
+    }
+
+    // 【次要檢查】如果最愛清單是空的，且不是要新增，則直接返回。
+    // if (!isCurrentlyFavorite && favorites.length === 0) {
+    //     // 如果是空的，且我們要新增，則繼續執行。
+    // }
 
     let newFavorites: FunsrightInfo[];
 
@@ -129,7 +144,7 @@ export class MenubarComponent implements OnInit {
       }
 
       // 添加到列表末尾
-      newFavorites = [...favorites, itemToAdd];
+      newFavorites = [...favorites, itemToAdd]; // <--- 這裡的 favorites 依賴於 Store 已經載入成功
 
       this.favoriteStore.updateFavoritesOrder(newFavorites).pipe(
         tap(() => this.messageService.successBubble('我的最愛', '已成功新增最愛項目。'))

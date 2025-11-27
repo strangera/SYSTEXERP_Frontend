@@ -1,4 +1,5 @@
-import { BaseQueryRequest, BaseQueryResponse } from "@shared/models/api/base-api.interface";
+import { EditColumnExtend } from '@shared/componentkit/table-edit/table-edit.model';
+import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 
 export interface TLS26080Data {
   act_no: string;              // 活動編號
@@ -24,11 +25,13 @@ export interface TLS26080Data {
   upd_usr_no: string;          // 變更人員編號
 }
 
-export interface TLS26080Detail {
-  id: number;
+export type TLS26080Detail = EditColumnExtend & TLS26080DetailPayload;
+
+export interface TLS26080DetailPayload {
+  id?: number;
   talent_id: number | string;
   tlt_id: string;
-  tlt_id_desc: string;
+  tlt_id_desc?: string;
   tlt_no: string;
   tlt_name: string;
   calc_date_type: string;
@@ -36,15 +39,15 @@ export interface TLS26080Detail {
   tpy_rate_D16: string | number; // '100%' or 0~100
   cap_item_D17: string; // 'D17'
   tpy_rate_D17: string | number; // '100%' or 0~100
-  cap_item_3: string; // 'D16'
-  tpy_rate_3: string | number; // '100%' or 0~100
-  cap_item_4: string; // 'D17'
-  tpy_rate_4: string | number; // '100%' or 0~100
+  cap_item_3?: string; // 'D16'
+  tpy_rate_3?: string | number; // '100%' or 0~100
+  cap_item_4?: string; // 'D17'
+  tpy_rate_4?: string | number; // '100%' or 0~100
   pod_no: string;
   pod_status: string;
-  approved_userno: string;
-  approved_usr_name: string;
-  approved_date: string;
+  approved_userno?: string;
+  approved_usr_name?: string;
+  approved_date?: string;
 }
 
 export interface TLS26080DetailResult {
@@ -67,25 +70,25 @@ export interface TLS26080DetailResult {
   tpy_rate_D17: string;              // D17 費用比率 (含'%')
 }
 
-export interface TLS2608InsertPayload {
+export interface TLS26080InsertPayload {
   pod_no: string;             // 活動申請編號
   pod_type: string;           // 活動類型
   pod_desc: string;           // 活動名稱
   pod_sdate: Date;            // 活動起始日期
   pod_edate: Date;            // 活動終止日期
   pod_busdate: Date;          // 活動正檔日期
-  pod_back_sdate?: Date;      // 兌回起始日期
-  pod_back_edate?: Date;      // 兌回結束日期
-  TALPORDERD_VOUCHERDetails: TLS26080Detail[]; // 活動專櫃資料
+  pod_back_sdate?: string;      // 兌回起始日期
+  pod_back_edate?: string;      // 兌回結束日期
+  TALPORDERD_VOUCHERDetails: TLS26080DetailPayload[]; // 活動專櫃資料
 }
 
 export interface TLS26080Query extends BaseQueryRequest {
-  pod_no?: string;            // 活動申請編號
-  pod_desc?: string;          // 活動名稱
-  pod_sdate_start?: Date;     // 活動日期 (起)
-  pod_sdate_end?: Date;       // 活動日期 (迄)
-  pod_busdate?: Date;         // 活動正檔日期
-  cap_itemList?: string[];    // 活動項目列表
+  POD_No?: string;            // 活動申請編號
+  POD_Desc?: string;          // 活動名稱
+  POD_SDate_start?: Date;     // 活動日期 (起)
+  POD_SDate_end?: Date;       // 活動日期 (迄)
+  POD_BusDate?: Date;         // 活動正檔日期
+  CAP_ItemList?: string[];    // 活動項目列表
 }
 
 export interface TLS26080UploadResult {

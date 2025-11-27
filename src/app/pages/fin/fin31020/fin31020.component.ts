@@ -1,21 +1,18 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-//
+import { FIN31020Data, FIN31020Service, QueryFIN31020Request } from './../../../service/api/fin/fin31020.service';
+import { DropDownListService } from './../../../service/utility/dropDownList.service';
 
 //1.3.1.2 應收調整科目設定維護
 @Component({
@@ -23,105 +20,88 @@ import { TranslateModule } from '@ngx-translate/core';
   templateUrl: './fin31020.component.html',
   styleUrl: './fin31020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
+  imports: [DropdownComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, TableComponent, InputTextComponent, TranslateModule]
 })
-export class FIN31020Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    adjustID: [, [Validators.maxLength(8)]], // 調整科目代號
-    minus: [[] as number[]], // 加減項
-    remark: ['', [Validators.maxLength(30)]], // 備註
+export class FIN31020Component extends BasicQueryPageComponent<FIN31020Data> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    CAR_AccNo: [""],
+    CAR_Type: ['1'],
+    Remark: ["", Validators.maxLength(100)],
+    ...createPaginationConfig([{ field: 'CAR_AccNo', order: 1 }]),
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
+  AccNoOptions: { label: string; value: string }[] = []; // 科目代號選項
+  selectedItems: FIN31020Data[] = [];
+  totalRecords = 0
+  data: FIN31020Data[] = [];
   columns: any[] = [
-    { field: 'col1', header: '調整科目代號', visible: true },
-    { field: 'col2', header: '加減項', visible: true },
-    { field: 'col3', header: '備註', visible: true },
-    // 其他欄位
+    { field: 'CAR_AccNo', header: '調整科目代號', visible: true },
+    { field: 'CAR_Type_Label', header: '加減項', visible: true },
+    { field: 'Remark', header: '備註', visible: true },
+    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
+    { field: 'CRT_USR_No', header: '建立人員代號', visible: true },
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
+    { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDate },
+    { field: 'UPD_USR_No', header: '變更人員代號', visible: true },
+    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
   ];
-  // ----------------------------------------------------------------
-  minusOption: any[] = [
-    { value: 1, label: '加項' },
-    { value: 2, label: '減項' },
+  minusOption = [
+    { value: '1', label: '加項' },
+    { value: '2', label: '減項' },
   ];
-
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
+    private dropDownListService: DropDownListService,
+    private fin31020Service: FIN31020Service
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '130002';
-    this.cruPage = '/FIN3000/FIN31020CRU';
-    //
-    // ----------------------------------------------------------------
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('FIN31020', '/FIN/FIN31020CRU', this.queryForm, (frm) => this.onSubmit(frm));
+    this.loadOptions();
   }
+  private loadOptions(): void {
+    // 科目代號
+    this.dropDownListService.queryGLS1005_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => this.AccNoOptions = res.Data.map((x: { No: string; Name: string }) => ({ label: `${x.No} - ${x.Name}`, value: x.No })));
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
   }
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const formValue = frm.value;
+      this.loading = true;
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
+      const requestData: QueryFIN31020Request = {
+        PageSize: formValue.PageSize || 10,
+        PageIndex: formValue.PageIndex || 1,
+        SortBy: formValue.SortBy || [{ field: 'CAR_AccNo', order: 1 }],
+        CAR_AccNo: formValue.CAR_AccNo || '',
+        CAR_Type: formValue.CAR_Type?.toString() || '',
+        Remark: formValue.Remark || ''
+      };
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+      this.fin31020Service
+        .queryFIN31020(requestData)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => {
+            this.loading = false;
+          })
+        )
+        .subscribe({
+          next: (response) => {
+            if (response && response.Data) {
+              this.data = response.Data.map(item => ({
+                ...item,
+                CAR_Type_Label: this.minusOption.find(option => option.value === item.CAR_Type.toString())?.label || ''
+              }));
+              this.totalRecords = response.TotalCount || 0;
+            } else {
+              this.data = [];
+              this.totalRecords = 0;
+            }
+          },
+        });
+    });
   }
 }

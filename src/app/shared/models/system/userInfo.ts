@@ -1,3 +1,9 @@
+export interface userLogin {
+  code?: string;
+  password?: string;
+  client_ip?: string;
+}
+
 export interface UserInfo {
   AccessToken: string;        // Token
   SYS_StoreNo: string;        // 分店編號
@@ -9,6 +15,5 @@ export interface UserInfo {
   user_email: string;         // 使用者 電子郵件
   client_ip: string;          // 使用者 IP 地址
   STR_Uniform: string;        // 統一編號
-
   CompNo: string;             // 公司編號
 }

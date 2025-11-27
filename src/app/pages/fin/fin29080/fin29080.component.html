@@ -1,53 +1,53 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2 align-items-center">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
+          <!-- 立帳日期(起訖) - 必填 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="查詢日期"
-              [startControl]="queryForm.controls.startSearchDate"
-              [endControl]="queryForm.controls.endSearchDate"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="立帳日期" [startControl]="queryForm.controls.ACP_Date_From"
+              [endControl]="queryForm.controls.ACP_Date_To" [submitted]="submitted">
+            </app-calendar-range>
+          </div>
+
+          <!-- 預計付款日(起訖) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateRange" label="預計付款日"
+              [startControl]="queryForm.controls.ACP_ExpectPayDate_From"
+              [endControl]="queryForm.controls.ACP_ExpectPayDate_To" [submitted]="submitted">
+            </app-calendar-range>
           </div>
         </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
-  <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+  <!-- 右上角工具列：匯出 PDF & Excel -->
+  <div class="flex justify-content-end gap-2 mb-2">
+    <app-button label="匯出 PDF" icon="pi pi-file-pdf" (click)="onExportPDF(queryForm)" [loading]="exportPDFbtnLoading"
+      [disabled]="loading || (data.length || 0) === 0">
+    </app-button>
+
+    <app-button label="匯出 Excel" icon="pi pi-file-excel" (click)="onExportExcel(queryForm)"
+      [loading]="exportExcelbtnLoading" [disabled]="loading || (data.length || 0) === 0">
+    </app-button>
   </div>
+
+  <app-table tableKey="FIN29080" dataKey="ExpectedPayDate" [data]="data" [columns]="columns" [showCheckBox]="false"
+    [showDelete]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [multiSortMeta]="[]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading" [showManage]="false" [showReportMode]="false">
+  </app-table>
 </div>

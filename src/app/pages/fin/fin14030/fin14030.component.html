@@ -5,10 +5,11 @@
 <p-accordion>
   <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true">
     <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
-      <div class="grid p-fluid">
+      <div class="grid p-fluid gap-2">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateMonthOne" label="申報年月" [control]="queryForm.controls.REP_GUIYM"
-            [submitted]="submitted" />
+          <!-- 申報年月 -->
+          <app-year-month label="申報年月" [control]="queryForm.controls.REP_GUIYM" [evenMonth]="true"
+            [submitted]="submitted"></app-year-month>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="稅籍編號" controlName="REP_TaxNo" [options]="REP_TaxNo_Options" optionLabel="Label"

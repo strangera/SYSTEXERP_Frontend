@@ -1,9 +1,9 @@
-import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { SortMeta } from 'primeng/api';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { SortMeta } from 'primeng/api';
-import { ApiResponse } from '@service/system/auth.service';
 
 export interface Tls57130Request {
   PageSize?: number;

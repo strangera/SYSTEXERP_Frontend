@@ -2,19 +2,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, tap, catchError, map } from 'rxjs';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { map, Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
-
-export interface ApiResponse<T> {
-  Status: string;
-  Data: T;
-  Error?: { Code?: string; Message?: string; Details?: string };
-  Meta?: { Timestamp?: string; RequestId?: string };
-  Message?: string;
-  TotalCount?: number;
-  TotalPage?: number;
-}
 
 export interface DropDownItem {
   No: string;
@@ -182,27 +173,28 @@ export class FIN13050Service {
       );
   }
   queryVendorNoOptions(keyword = ''): Observable<VendorNoOption[]> {
-  return this.queryVendorList(keyword ? { keyword } : {})
-    .pipe(
-      map(res => {
-        const list = Array.isArray(res?.Data) ? res.Data : [];
-        const seen = new Set<string>();
-        const options: VendorNoOption[] = [];
-        for (const v of list) {
-          const no = (v.VEN_No ?? '').toString().trim();
-          const name = (v.VEN_Name ?? '').toString().trim();
-          const uni = (v.VEN_Uniform ?? '').toString().trim();
-          if (!no || seen.has(no)) continue;
-          seen.add(no);
-          options.push({
-            label: name ? `${no} ${name}` : no,
-            value: no,
-            venName: name,
-            venUniform: uni,
-          });
-        }
-        options.sort((a, b) => a.label.localeCompare(b.label));
-        return options;
-      })
-    );}
+    return this.queryVendorList(keyword ? { keyword } : {})
+      .pipe(
+        map(res => {
+          const list = Array.isArray(res?.Data) ? res.Data : [];
+          const seen = new Set<string>();
+          const options: VendorNoOption[] = [];
+          for (const v of list) {
+            const no = (v.VEN_No ?? '').toString().trim();
+            const name = (v.VEN_Name ?? '').toString().trim();
+            const uni = (v.VEN_Uniform ?? '').toString().trim();
+            if (!no || seen.has(no)) continue;
+            seen.add(no);
+            options.push({
+              label: name ? `${no} ${name}` : no,
+              value: no,
+              venName: name,
+              venUniform: uni,
+            });
+          }
+          options.sort((a, b) => a.label.localeCompare(b.label));
+          return options;
+        })
+      );
+  }
 }

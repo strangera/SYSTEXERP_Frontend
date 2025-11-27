@@ -1,19 +1,15 @@
-import { FloorService } from './../../../service/basic/floor.service';
+import { NgFor, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { NgFor, NgIf } from '@angular/common';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
@@ -28,16 +24,13 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, NgFor, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class ASS22020CRUComponent
-  extends BasicCrupageComponent
+
   implements OnInit {
   ngOnInit(): void {
     // 網站導覽設定
     this.ProgNo = '320008';
 
     // 下拉選單--------------------------------------------------------
-    //  this.userCodeService.getUserCode().subscribe((data) => (this.Applicantcode = data));
-    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => (this.Departmentcode = data));
-    this.floorService.getFloors().subscribe((data) => (this.floor = data));
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus;
@@ -50,14 +43,14 @@ export class ASS22020CRUComponent
         this.formTitle = 'create-conditions';
         this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
+
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
         this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
+
         this.Edit(state.rowdata);
         break;
       // 讀檔
@@ -159,11 +152,6 @@ export class ASS22020CRUComponent
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private userCodeService: UserCodeService,
-    private organizationNumberService: OrganizationNumberService,
-    private floorService: FloorService,
 
   ) {
     super(); // 呼叫父類建構子

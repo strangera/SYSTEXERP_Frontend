@@ -1,27 +1,20 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NavigationExtras, Router } from '@angular/router';
 // Services
-import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
-import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
-import { FlippingstateService } from './../../../service/basic/flippingstate.service';
 // Shared
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { VendorService } from '../../../service/basic/vendor.service';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { AccountingaccountService } from '../../../service/basic/accountingaccount.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 @Component({
   selector: 'app-fin51010',
@@ -122,13 +115,6 @@ export class FIN51010Component extends BasicQpageComponent implements OnInit {
     private router: Router,
     private formBuilder: FormBuilder,
     private notificationService: NotificationService,
-    private authService: AuthService,
-    private IfdisplayService: IfdisplayService,
-    private AnalysisdateCService: AnalysisdateCService,
-    private vendorService: VendorService,
-    private flippingstateService: FlippingstateService,
-    private organizationNumberService: OrganizationNumberService,
-    private accountingaccountService: AccountingaccountService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -136,27 +122,6 @@ export class FIN51010Component extends BasicQpageComponent implements OnInit {
   ngOnInit(): void {
     this.ProgNo = '150001';
     // Initialize dropdown options
-
-    this.IfdisplayService.getOptions().subscribe(
-      (data) => (this.displayOptions2 = data)
-    );
-    this.AnalysisdateCService.getOptions().subscribe(
-      (data) => (this.AnalysisdateCOptions = data)
-    );
-    this.vendorService.getVendors().subscribe((data) => {
-      this.vendorOptions = data;
-    });
-    this.flippingstateService.getOptions().subscribe((data) => {
-      this.FlippingstateOptions = data;
-    });
-    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {
-      this.departmentOptions = data;
-    });
-    this.accountingaccountService.getOptions().subscribe((data) => {
-      this.accountingaccountOptions = data;
-    });
-
-
   }
 
   onSubmit(frm: FormGroup) {

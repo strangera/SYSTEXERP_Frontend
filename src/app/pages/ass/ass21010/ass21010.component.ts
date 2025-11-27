@@ -13,7 +13,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { tap } from 'rxjs';
+import { finalize, map, tap } from 'rxjs';
 import { ASS2100ENGMeterType, ASS21010Data, ASS21010Payload, EngType } from './ass21010.model';
 
 @Component({
@@ -37,7 +37,7 @@ import { ASS2100ENGMeterType, ASS21010Data, ASS21010Payload, EngType } from './a
 
 export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> implements OnInit {
 
-  public queryForm = this.formBuilder.group({
+  public readonly queryForm = this.formBuilder.group({
     ENG_Type: new FormControl<EngType[] | void>(void 0),
     ENG_MeterNo: new FormControl<string | void>(void 0),
     Location_No: new FormControl<string | void>(void 0),
@@ -52,9 +52,12 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
   public readonly tableData = signal<ASS21010Data[]>([]);
   public readonly totalRecords = signal<number>(0);
 
+  public readonly tableLoading = signal<boolean>(!1);
+
   public readonly usrData = computed(() => ({
     SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
     Mid: Number(this.authService.currentUserValue!.mid),
+    user_No: this.authService.currentUserValue!.user_No,
   }));
 
   public readonly filteredMeterNo = signal<ASS2100ENGMeterType[]>([]);
@@ -78,7 +81,7 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
   }, { allowSignalWrites: !0 });
 
   public readonly loadingEffect = effect(() => {
-    this.loading = this.service.tableLoading()
+    this.loading = this.tableLoading()
       || this.service.engMeterNoLoading()
       || this.service.locationLoading()
       || this.service.exportLoading();
@@ -125,53 +128,53 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
         return acc;
       }, {}) as unknown as ASS21010Payload;
 
-      this.logger.debug(`onSubmit:`, [raw]);
-      this.service.loadASS21010(payload).pipe(
-        tap(response => {
-          this.tableData.set(response.Data.Data);
-          this.totalRecords.set(response.Data.TotalCount || 0);
-        })
-      ).subscribe();
+      this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.service.loadASS21010(payload).pipe(
+        tap(res => this.logger.debug(`onSubmit:`, [raw, payload, res])),
+        map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
+        finalize(() => this.tableLoading.set(!1)),
+      ).subscribe({
+        next: res => {
+          this.tableData.set(res.Data.Data);
+          this.totalRecords.set(res.Data.TotalCount || 0);
+        },
+        error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+      });
     });
   }
 
   public onDelete(data: ASS21010Data[]): void {
-    this.logger.debug(`Deleting ASS21010:`, [data, this.user, this.queryForm.getRawValue(), this.authService.currentUserValue]);
-    for (const d of data) {
-      this.service.deleteASS21010({ ...d, ...this.usrData() })
-        .pipe(
-          tap(() => this.tableData.update(v =>
-            v.filter(d => data.some(item => d.ID !== item.ID)))),
-        ).subscribe({
-          next: () => this.messageService.successBubble('刪除成功'),
-          error: () => this.messageService.errorBubble('刪除失敗')
-        });
+    this.logger.debug(`Deleting ASS21010:`, [data, this.user, this.queryForm.getRawValue(), this.usrData()]);
+    this.tableLoading.set(!0);
+    for (let i = 0; i < data.length; i++) {
+      this.service.deleteASS21010({ ...data[i], ...this.usrData() }).pipe(
+        map(res => { if (res.Status === '0000') return res; throw new Error('刪除失敗'); }),
+      ).subscribe({
+        next: () => {
+          this.tableData.update(table =>
+            table.filter(value => data.some(item => value.ID !== item.ID)));
+          this.messageService.successBubble('刪除成功');
+        },
+        error: err => this.messageService.errorBubble(err.message || '刪除失敗'),
+      });
+      if (i === data.length - 1) this.onSubmit();
     }
-    this.service.loadASS21010(<ASS21010Payload>{
-      ...this.queryForm.getRawValue(),
-      ...this.usrData(),
-    });
   }
 
   public onExport(type: string): void {
-    const Conditions: any = this.queryForm.getRawValue();
-    Conditions.Mid = Number(this.authService.currentUserValue?.mid);
-    Conditions.SYS_StoreNo = this.authService.currentUserValue?.SYS_StoreNo;
+    const Conditions = {
+      ...this.queryForm.getRawValue(),
+      SYS_StoreNo: this.usrData().SYS_StoreNo,
+      Mid: this.usrData().Mid,
+    };
 
-    const timeFormat = new Date().toLocaleString('sv-SE', {
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).replace(/[-\s:]/g, '-');
+    const timeFormat = new Date().toISOString().slice(0, 16).replace(/[-T:]/g, '-');
 
     const payload = {
       report_title: '能源錶號基本維護',
       // report_title: this.currentPageService.currentPageProgNoSubject.value,
-      file_name: `${this.authService.getUserInfo()?.user_No}-32110-${timeFormat}`,
+      file_name: `${this.usrData().user_No}-32110-${timeFormat}`,
       columns: this.columns.map(c => (c.visible = !0) && c),
       query_condition: { ServiceName: 'QueryASS21010', Conditions },
       config: {

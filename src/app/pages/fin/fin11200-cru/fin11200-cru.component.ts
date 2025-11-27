@@ -1,22 +1,23 @@
-import { Component, OnInit } from '@angular/core';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { monthOptions, POS1002, Pos1018 } from '../fin11200/fin11200.model';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { Column } from '../../../shared/componentkit/table/table.model';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { Fin11200Service } from '../../../service/api/fin/fin11200.service';
-import { finalize } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { NgIf } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
+import { Fin11200Service } from '../../../service/api/fin/fin11200.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
+import { ValidationService } from '../../../shared/service/validation.service';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { monthOptions, POS1002, Pos1018 } from '../fin11200/fin11200.model';
 
 @Component({
   selector: 'app-fin11200-cru',
@@ -34,11 +35,12 @@ import { TranslateModule } from '@ngx-translate/core';
     DialogComponent,
     InputTextComponent,
     TranslateModule,
+    YearMonthComponent
   ],
 })
 export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> implements OnInit {
   dataForm = this.formBuilder.group({
-    GUI_YYMM: [null, [Validators.required, this.validationService.oddMonthValidator, this.validationService.minMonthValidator]], // 發票年月
+    GUI_YYMM: [null, [Validators.required]], // 發票年月
   });
   monthOptions = monthOptions;
   minDate?: Date;
@@ -92,13 +94,11 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
         this.loading = false;
         return this.messageService.errorBubble('請選擇收銀機');
       }
-      const guiYymmDate: Date = frm.value.GUI_YYMM;
-      const formattedGuiYymm = this.formatDateToYYYYMM(guiYymmDate);
-      if (!formattedGuiYymm) { return; }
+      if (!frm.value.GUI_YYMM) { return; }
       this.loading = true;
       const body = {
         NumberDetails: this.data.map(item => ({
-          GUI_YYMM: formattedGuiYymm,
+          GUI_YYMM: frm.value.GUI_YYMM,
           ECR_No: item.ECR_No
         })),
       };

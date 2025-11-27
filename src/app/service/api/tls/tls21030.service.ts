@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 請確認你的 ApiResponse 介面路徑是否正確
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
-import { ApiResponse } from '../../system/auth.service'; // 請確認你的 ApiResponse 介面路徑是否正確
 
 // 針對 queryTLS21030 的請求介面
 export interface TLS21030QueryRequest {

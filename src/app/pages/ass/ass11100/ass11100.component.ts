@@ -1,22 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 //
 
 //3.1.1.10 倉別設定作業
@@ -89,13 +83,7 @@ export class ASS11100Component extends BasicQpageComponent implements OnInit {
 
   //
   constructor(
-    private router: Router,
     private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private organizationNumberService: OrganizationNumberService
   ) {
     super(); // 呼叫父類建構子
   }
@@ -104,33 +92,11 @@ export class ASS11100Component extends BasicQpageComponent implements OnInit {
     // 初始化
     this.ProgNo = '310010';
     this.cruPage = '/ASS1000/ASS11100CRU';
-    //
-
-    //
-    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {
-      this.organizationNumberOptions = data;
-    });
-    // ----------------------------------------------------------------
   }
 
   // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
   }
 
   onSubmitQuery(frm: FormGroup) {
@@ -144,17 +110,14 @@ export class ASS11100Component extends BasicQpageComponent implements OnInit {
   // ----------------------------------------------------------------
   onCreate() {
     if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
     }
   }
 
   onEdit(data: any) {
     if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
     }
   }
 
   onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
   }
 }

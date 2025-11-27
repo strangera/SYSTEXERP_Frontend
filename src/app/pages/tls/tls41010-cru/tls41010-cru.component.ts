@@ -1,23 +1,23 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
-import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
-import { TLS41010Data, TLS41010Item } from '../tls41010/tls41010.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { AccordionModule } from 'primeng/accordion';
+import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
+import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TLS41010Data, TLS41010Item } from '../tls41010/tls41010.model';
 
 @Component({
   selector: 'app-tls41010-cru',

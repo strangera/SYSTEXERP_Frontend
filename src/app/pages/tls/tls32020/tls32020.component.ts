@@ -1,36 +1,32 @@
+import { AsyncPipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { DatePipe, NgIf } from '@angular/common';
-import { finalize } from 'rxjs';
-import { TLS32020Service, TLS32020Data, TLS32020QueryRequest } from '../../../service/api/tls/tls32020.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { AccordionModule } from 'primeng/accordion';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
-import { BusinessTypeCodeService } from '@service/basic/business-type-code-service.service';
-import { CommissionTypeService } from '@service/basic/commission-type.service';
-import { OrganizationNumberService } from '@service/basic/organization-number.service';
-import { CooperationMethodService } from '@service/basic/cooperation-method.service';
-import { FloorService } from '@service/basic/floor.service';
-import { RegionService } from '@service/basic/region-code.service';
-import { CounterCodeService } from '@service/basic/counter-code.service';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { Tls11010Service } from '@service/api/tls/tls11010.service';
+import { FloorService } from '@service/basic/querySYS3900.service';
+import { RegionService } from '@service/basic/querySYS3A00.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { TLS32020Data, TLS32020Service } from '../../../service/api/tls/tls32020.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls32020',
   templateUrl: './tls32020.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent]
+  imports: [AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent]
 })
 export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -75,9 +71,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   regionOptions: any[] = [];
   floorOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
-  commissionTypeOptions: any[] = [];
-  operationsOptions: any[] = [];
-  counterCodeOptions: any[] = [];
+  commissionTypeOptions = getSYS1000Options('tlt_term_type');
+  operationsOptions = getSYS1000Options('store_way');
+  counterCodeOptions = this.dropdown.queryTltTalent();
   taxOptions: any[] = [
     { value: true, label: '含稅' },
     { value: false, label: '未稅' }
@@ -99,16 +95,10 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   //#endregion
 
   constructor(
+    private readonly dropdown: DropdownApiService,
     private tls32020Service: TLS32020Service,
-    private validationService: ValidationService,
-    private datePipe: DatePipe,
-    private businessTypeCodeService: BusinessTypeCodeService,
-    private organizationNumberService: OrganizationNumberService,
-    private commissionTypeService: CommissionTypeService,
-    private cooperationMethodService: CooperationMethodService,
     private floorService: FloorService,
     private regionService: RegionService,
-    private counterCodeService: CounterCodeService,
     private tls11010Service: Tls11010Service,
   ) {
     super();
@@ -146,41 +136,22 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
         value: typeof item.value === 'number' ? item.value.toString() : item.value
       }));
     });
+    // TODO: 請改打API
     // 大分類/中分類下拉選項
-    this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
-      this.businessTypeCodeOptions = data.map(item => ({
-        ...item,
-        value: typeof item.value === 'number' ? item.value.toString() : item.value
-      }));
-    });
-    // 櫃別下拉選項
-    this.cooperationMethodService.getCooperationMethods().subscribe(data => {
-      this.operationsOptions = data.map(item => ({
-        ...item,
-        value: typeof item.value === 'number' ? item.value.toString() : item.value
-      }));
-    });
-    // 抽成別下拉選項
-    this.commissionTypeService.getCommissionTypes().subscribe((data) => {
-      this.commissionTypeOptions = data.map(item => ({
-        ...item,
-        value: typeof item.value === 'number' ? item.value.toString() : item.value
-      }));
-    });
+    // this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
+    //   this.businessTypeCodeOptions = data.map(item => ({
+    //     ...item,
+    //     value: typeof item.value === 'number' ? item.value.toString() : item.value
+    //   }));
+    // });
+    //TODO 請呼叫API 不要呼叫寫死的
     // 組織代號下拉選項
-    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {
-      this.organizationOptions = data.map(item => ({
-        ...item,
-        value: typeof item.value === 'number' ? item.value.toString() : item.value
-      }));
-    });
-    // 專櫃編號下拉選項
-    this.counterCodeService.getCounterCodes().subscribe((data) => {
-      this.counterCodeOptions = data.map(item => ({
-        ...item,
-        value: typeof item.value === 'number' ? item.value.toString() : item.value
-      }));
-    });
+    // this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {
+    //   this.organizationOptions = data.map(item => ({
+    //     ...item,
+    //     value: typeof item.value === 'number' ? item.value.toString() : item.value
+    //   }));
+    // });
     //館別下拉
     this.tls11010Service
       .getBuildingOptions()

@@ -1,25 +1,26 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Tls12060Service } from '@service/api/tls/tls12060.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { ReportTableGroupComponent } from '@shared/componentkit/report-table-group/report-table-group.component';
+import { createPaginationConfig, formatDateTime } from '@shared/componentkit/table2/table2.model';
+import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, formatDate } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { Tls12060Service } from '@service/api/tls/tls12060.service';
-import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
-import { createPaginationConfig, formatDateTime } from '@shared/componentkit/table2/table2.model';
-import { ReportTableGroupComponent } from '@shared/componentkit/report-table-group/report-table-group.component';
-import { untilDestroyed } from '@ngneat/until-destroy';
 
 export interface response10260 {
   "id": number,
@@ -111,7 +112,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
     { field: 'contact_person', header: '洽談者', visible: true },
     { field: 'contact_date', header: '洽談日', visible: true, format: formatDate },
     { field: 'vendor_name', header: '統編/廠商', visible: true },
-    { field: 'bus_type', header: '大分類', visible: true },
+    { field: 'bus_type', header: '大分類代碼', visible: true },
     { field: 'bus_type_name', header: '大分類名稱', visible: true },
     { field: 'location', header: '位置編號', visible: true },
     { field: 'contact_type', header: '合約種類', visible: true },
@@ -124,7 +125,9 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
   selectedItems: response10260[] = [];// 多選項目
 
   // ----------------------------------------------------------------
-  constructor(private tls12060Service: Tls12060Service) {
+  constructor(
+    private tls12060Service: Tls12060Service,
+    private dropDownListService: DropDownListService) {
     super();
   }
 
@@ -158,14 +161,14 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       });
     });
   }
-  
+
   isRowSelectable(): boolean {
     return false;
   }
 
   loadOptions() {
-    // 查 接待人員
-    this.tls12060Service.queryTBLUSER_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
+    // 查 接待人員(包含狀態停用)
+    this.dropDownListService.queryTBLUSER_AllStatus_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
       this.contact_USR_Option = response.Data.map((item: any) => ({
         No: item.No, // 接待人員 代碼
         Name: item.Name, // 接待人員 名稱
@@ -173,6 +176,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       }));
       console.log('接待人員代號:', this.contact_USR_Option);
     });
+
     // 查 大分類(專櫃)
     this.tls12060Service.queryTLTBUSTYPE_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.bus_type_Option = response.Data.map((item: any) => ({

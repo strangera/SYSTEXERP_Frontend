@@ -1,245 +1,152 @@
-import { ViolationStatusService } from './../../../service/basic/violation-status.service';
-import { NeedPayTicketService } from './../../../service/basic/need-pay-ticket.service';
-import { VendorService } from './../../../service/basic/vendor.service';
-import { WhetherService } from './../../../service/basic/whether.service';
-import { BankAccountCodeService } from './../../../service/basic/bank-account-code.service';
-import { PaymentMethodService } from './../../../service/basic/payment-method.service';
-import { OrganizationNumberService } from './../../../service/basic/organization-number.service';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-//
+import { Fin24010Service, QueryFIN24010Request, QueryFIN24010Response } from '@service/api/fin/fin24010.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
-//1.2.4.1 應付帳款維護
 @Component({
-    selector: 'app-fin24010',
-    templateUrl: './fin24010.component.html',
-    styleUrl: './fin24010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, MultiSelectComponent, InputTextComponent, CalendarRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-fin24010',
+  templateUrl: './fin24010.component.html',
+  standalone: true,
+  imports: [AsyncPipe, CalendarRangeQuickComponent, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, InputTextComponent, ButtonComponent, TranslateModule]
 })
-export class FIN24010Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    shouldPayID: [, [Validators.maxLength(14)]], // 應付ID
-    organizationCode: [], // 組織代號
-    accountYm: [], // 帳款年月
-    accountCash: [, [Validators.maxLength(2)]], // 帳款帳次
-    startShouldPay: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 應付金額
-    endShouldPay: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 應付金額
-    startChargeback: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 沖帳金額
-    endChargeback: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 沖帳金額
-    startShouldPayBalance: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 應付帳款餘額
-    endShouldPayBalance: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 應付帳款餘額
-    startRetainer: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 保留款金額
-    endRetainer: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 保留款金額
-    startRefundRetainer: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 退保留款金額
-    endRefundRetainer: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 退保留款金額
-    paymentMethod: [[] as number[]], // 付款方式
-    transferBankAccount: [], // 匯款銀行代號
-    bankAccount: [, [Validators.maxLength(20)]], // 銀行帳號
-    bankAccountName: ['', [Validators.maxLength(64)]], // 帳戶名稱
-    ticketTransfer: [[] as number[]], // 票據禁止背書轉讓
-    ticketTitle: [, [Validators.maxLength(20)]], // 票據抬頭
-    startExpectPayDate: [], // 預計付款日
-    endExpectPayfDate: [], // 預計付款日
-    startEstablishDate: [], // 立帳日期
-    endEstablishfDate: [], // 立帳日期
-    factoryID: [], // 廠客代號
-    uId: [, [Validators.maxLength(10)]], // 統一編號
-    accountingCode: [], // 會計科目代號
-    accountSource: [, [Validators.maxLength(20)]], // 帳款來源單號
-    summary: ['', [Validators.maxLength(160)]], // 摘要
-    summonsNumber: [, [Validators.maxLength(11)]], // 傳票號碼
-    subpoenaStatus: [[] as number[]], // 傳票狀態
-    status: [[] as number[]], // 狀態
-    whetherDiscount: [[] as number[]], // 是否貼現
-    objectNumber: [], // 對象別編號
-    keyValue: [, [Validators.maxLength(30)]], // 對帳KEY值
+export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Response> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    ACP_No: [null, [Validators.maxLength(14)]], // 應付帳款編號 (varchar(14))
+    Org_Id: [null, [Validators.maxLength(20)]], // 組織代碼 (varchar(20))
+    ACP_YYYYMM: [null, [Validators.required, Validators.maxLength(6)]], // 應付帳款年月 (varchar(6), 必填)
+    ACP_TermNo: [null, [Validators.max(99)]], // 帳款帳次 (numeric(2))
+    AcpAmt_From: [null, [Validators.max(9999999999)]], // 應付金額起 (NUMERIC(14,4))
+    AcpAmt_To: [null, [Validators.max(9999999999)]], // 應付金額迄 (NUMERIC(14,4))
+    PtaAmt_From: [null, [Validators.max(9999999999)]], // 沖帳金額起 (NUMERIC(14,4))
+    PtaAmt_To: [null, [Validators.max(9999999999)]], // 沖帳金額迄 (NUMERIC(14,4))
+    BalAmt_From: [null, [Validators.max(9999999999)]], // 應付餘額起 (NUMERIC(14,4))
+    BalAmt_To: [null, [Validators.max(9999999999)]], // 應付餘額迄 (NUMERIC(14,4))
+    Reserve_From: [null, [Validators.max(9999999999)]], // 保留款金額起 (NUMERIC(14,4))
+    Reserve_To: [null, [Validators.max(9999999999)]], // 保留款金額迄 (NUMERIC(14,4))
+    PayType: [null], // 付款方式 (char(1))
+    VEN_BNK_No_Param: [null], // 匯款銀行代號 (varchar(5))
+    BankAccountNo: [null, [Validators.maxLength(50)]], // 銀行帳號 (varchar(50))
+    AccountName: [null, [Validators.maxLength(80)]], // 帳戶名稱 (nvarchar(80))
+    CTRLYN: [null], // 票據禁止背書轉讓 (char(1))
+    CheckTitle: [null, [Validators.maxLength(100)]], // 票據抬頭 (nvarchar(100))
+    ExpectPayDate_From: [null], // 預計付款日起 (DATE)
+    ExpectPayDate_To: [null], // 預計付款日迄 (DATE)
+    ACP_Date_From: [null], // 立帳日期起 (DATE)
+    ACP_Date_To: [null], // 立帳日期迄 (DATE)
+    VEN_No_Param: [null], // 廠商編號 (varchar(16))
+    VEN_Uniform_Param: [null, [Validators.maxLength(16)]], // 統一編號 (varchar(16))
+    AccNo_Param: [null], // 會計科目代號 (VARCHAR(14))
+    ACP_SourceNo_Param: [null, [Validators.maxLength(20)]], // 帳款來源單號 (VARCHAR(20))
+    NoteDesc_Param: [null, [Validators.maxLength(160)]], // 摘要 (NVARCHAR(160))
+    VouNo_Param: [null, [Validators.maxLength(12)]], // 傳票號碼 (VARCHAR(12))
+    VouStatus: [null], // 傳票狀態
+    ACP_Status_Param: [null], // 應付狀態 (VARCHAR(1))
+    SubDetailNo_Param: [null], // 對象別編號 (VARCHAR(30))
+    HasUnpaid: [null], // 是否有未付款
+    CheckChangedUser: [null], // 異動帳號檢核
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+  data: QueryFIN24010Response[] = [];
+  lastQueryBody: QueryFIN24010Request | null = null;
+  totalRecords = 0;
+  columns: ReportColumn[] = [
+    { field: 'ACP_No', header: '應付帳款編號' }, // (單據別+YYYYMMDD+XXXX)
+    { field: 'org_id', header: '組織代碼' }, // (SYS3100)
+    { field: 'ACP_YYYYMM', header: '應付帳款年月' },
+    { field: 'acp_termno', header: '帳款帳次' },
+    { field: 'ACP_Date', header: '立帳日期' },
+    { field: 'VEN_No', header: '廠商編號' },
+    { field: 'VEN_Name', header: '廠商名稱' },
+    { field: 'VEN_Uniform', header: '廠商統一編號/身份證字號' },
+    { field: 'AccNo', header: '會計科目' },
+    { field: 'ACP_SourceNo', header: '帳款來源單號' },
+    { field: 'ACP_Amt', header: '應付金額' },
+    { field: 'PTA_Amt', header: '沖帳金額' },
+    { field: 'ACP_Balance', header: '應付餘額' }, // (ACP_Amt - PTA_Amt)
+    { field: 'ACP_ReserveAmt', header: '保留金額' },
+    { field: 'VEN_PayType', header: '付款方式' }, // (1:電匯,2:開票,3:現金)
+    { field: 'VEN_BNK_No', header: '匯款銀行代碼' },
+    { field: 'VEN_BNK_BranchNo', header: '匯款銀行分行代碼' },
+    { field: 'VEN_BankAccountNo', header: '匯款帳號' },
+    { field: 'VEN_AccountName', header: '匯款帳戶名稱' },
+    { field: 'ACP_ExpectPayDate', header: '預計付款日期' },
+    { field: 'VEN_CheckTitle', header: '支票抬頭' },
+    { field: 'VEN_CTRLYN', header: '是否禁止背書轉讓' }, // (Y是 N否)
+    { field: 'Bank_Name', header: '銀行名稱' },
+    { field: 'Bank_BranchName', header: '銀行分行名稱' },
+    { field: 'Bank_AccName', header: '公司銀行帳戶名稱' },
+    { field: 'VouNo', header: '傳票編號' },
+    { field: 'Vou_PostFlag', header: '傳票過帳旗標' }, // (0=未過帳 1=已製票 3=已過帳)
+    { field: 'Vou_PostFlagName', header: '傳票過帳狀態中文說明' },
+    { field: 'ACP_Status', header: '應付帳款狀態' }, // (0=作廢 2=建立)
+    { field: 'SubDetailNo', header: '對象編號' },
+    { field: 'CRT_Date', header: '建立日期' },
+    { field: 'CRT_USR_No', header: '建立人員' },
+    { field: 'CRT_USR_Name', header: '建立人員姓名' },
+    { field: 'UPD_Date', header: '變更日期' },
+    { field: 'UPD_USR_No', header: '變更人員' },
+    { field: 'UPD_USR_Name', header: '變更人員姓名' },
+    { field: 'POS_VEN_BNK_No', header: 'POS2013 廠商銀行代碼' },
+    { field: 'POS_VEN_BankAccountNo', header: 'POS2013 廠商銀行帳號' },
+    { field: 'POS_VEN_AccountName', header: 'POS2013 廠商帳戶名稱' },
+    { field: 'Diff_BNK_No', header: '銀行代碼是否不同' }, // (Y/N)
+    { field: 'Diff_BankAccountNo', header: '銀行帳號是否不同' }, // (Y/N)
+    { field: 'Diff_AccountName', header: '帳戶名稱是否不同' }, // (Y/N)
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '應付ID', visible: true },
-    { field: 'col2', header: '帳款年月', visible: true },
-    { field: 'col3', header: '應付金額', visible: true },
-    { field: 'col4', header: '沖帳金額', visible: true },
-    { field: 'col5', header: '應付帳款餘額', visible: true },
-    { field: 'col6', header: '付款方式', visible: true },
-    { field: 'col7', header: '立帳日期', visible: true },
-    { field: 'col8', header: '預計付款日', visible: true },
-    { field: 'col9', header: '廠客代號', visible: true },
-    { field: 'col10', header: '摘要', visible: true },
-    { field: 'col11', header: '傳票號碼', visible: true },
-    { field: 'col12', header: '傳票狀態', visible: true },
-    { field: 'col13', header: '狀態', visible: true },
-    { field: 'col14', header: '是否貼現', visible: true },
-    { field: 'col15', header: '貼現日期', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  organizationCodeOptions: any[] = [];
-  paymentMethodOptions: any[] = [];
-  bankAccountOptions: any[] = [];
-  whetherOptions: any[] = [];
-  factoryIDOptions: any[] = [];
-  accountingCodeOptions: any[] = [];
-  statusOptions: any[] = [];
-  subpoenaTypeOptions: any[] = [
-    { value: 0, label: '作廢' },
-    { value: 1, label: '建立' },
-    { value: 2, label: '確認' },
-    { value: 3, label: '轉帳' },
-  ];
-  objectNumberOptions: any[] = [
-    { value: 0, label: '68919301/嘉南紡織股份有限公司' },
-    { value: 1, label: '73251209/統一企業股份有限公司' },
-    { value: 2, label: '96978370/統正開發股份有限公司' },
-  ];
+
+  // 下拉選單/多選列表的 Options 宣告 (必須與 HTML 中的 options 屬性對應)
+  Org_IdOptions = this.dropDown.querySys3100(); // 組織代碼
+  PayTypeOptions = [{ label: '電匯', value: '1' }, { label: '開票', value: '2' }, { label: '現金', value: '3' }] // 付款方式 1:電匯,2:開票,3:現金
+  VEN_BNK_No_ParamOptions = this.dropDown.queryAps1001NoBranch(); // 匯款銀行代號
+  CTRLYNOptions = [{ label: '是', value: 'Y' }, { label: '否', value: 'N' }]; // 票據禁止背書轉讓 (Y/N)
+  VEN_No_ParamOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商代號
+  AccNo_ParamOptions = this.dropDown.queryGls1005(); // 會計科目代號
+  VouStatusOptions = getSYS1000Options('VOU_Status'); // 傳票狀態
+  ACP_Status_ParamOptions = getSYS1000Options('ACP_Status'); // 應付狀態
+  SubDetailNo_ParamOptions = this.dropDown.queryGLS1016();  // 對象別編號
+  HasUnpaidOptions = [{ label: '是', value: 'Y' }, { label: '否', value: null }]; // 是否有未付款 (Y/N)
+  CheckChangedUserOptions = [{ label: '是', value: 'Y' }, { label: '否', value: null }]; // 異動帳號檢核
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private organizationNumberService: OrganizationNumberService,
-    private paymentMethodService: PaymentMethodService,
-    private bankAccountCodeService: BankAccountCodeService,
-    private whetherService: WhetherService,
-    private vendorService: VendorService,
-    private needPayTicketService: NeedPayTicketService,
-    private violationStatusService: ViolationStatusService,
+    public readonly fin24010Service: Fin24010Service,
+    private readonly dropDown: DropdownApiService,
+    private readonly datePipe: DatePipe
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '120014';
-    this.cruPage = '/FIN2000/FIN24010CRU';
-    //
-    // ----------------------------------------------------------------
-    //
-    this.organizationNumberService.getOrganizationNumbers().subscribe(data => {
-      this.organizationCodeOptions = data;
-    });
-    //
-    this.paymentMethodService.getSystemTypes().subscribe(data => {
-      this.paymentMethodOptions = data;
-      // 全選填入
-      // let allSystemValues = this.paymentMethodOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   paymentMethod: allSystemValues
-      // });
-    });
-    //
-    this.whetherService.getWhetherOptions().subscribe(data => {
-      this.whetherOptions = data;
-      // 全選填入
-      // let allSystemValues = this.whetherOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   ticketTransfer: allSystemValues
-      // });
-    });
-    //
-    this.violationStatusService.getViolationStatuses().subscribe(data => {
-      this.statusOptions = data;
-      // 全選填入
-      // let allSystemValues = this.statusOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   status: allSystemValues
-      // });
-    });
-    //
-    this.bankAccountCodeService.getSystemTypes().subscribe(data => {
-      this.bankAccountOptions = data;
-    });
-    //
-    this.vendorService.getVendors().subscribe(data => {
-      this.factoryIDOptions = data;
-    });
-    //
-    this.needPayTicketService.getNeedPayTickets().subscribe(data => {
-      this.accountingCodeOptions = data;
-    });
-    // ----------------------------------------------------------------
+    this.initializePage('FIN24010', 'fin/fin24010cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+    this.handleSubmit(frm, () => {
+      const body = {
+        ...frm.value,
+        ACP_YYYYMM: this.datePipe.transform(frm.value.ACP_YYYYMM, 'yyyyMM'),
+      }
+      this.fin24010Service.queryFIN24010(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
+        this.data = response.Data;
+        this.totalRecords = response.TotalCount;
+        this.lastQueryBody = body;
+      });
+    });
   }
 }

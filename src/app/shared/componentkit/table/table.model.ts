@@ -13,6 +13,7 @@ export interface Column<T = Record<string, any>> {
   showSort?: boolean;
   sortField?: string; // 排序欄位(預設為 field)
   htmlFormat?: boolean; // 是否為 HTML 格式 (適用於顯示特殊符號或樣式)
+  style?: string;
 
   disabled?: (value: any) => boolean;  // 是否禁用 (是否為禁用欄位)
 
@@ -352,7 +353,7 @@ export type TableTypes =
 
 /** 可以用來做轉換的 Map */
 export const Maps = {
-  'YN': new Map<string, string>([
+  'YN': new Map<'Y' | 'N', '是' | '否'>([
     ['Y', '是'],
     ['N', '否'],
   ]),

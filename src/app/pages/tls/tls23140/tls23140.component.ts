@@ -1,24 +1,20 @@
 import { Component } from '@angular/core';
 import {
-  FormGroup,
-  Validators,
   FormsModule,
   ReactiveFormsModule,
+  Validators
 } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { TLS23140Service } from '../../../service/api/tls/tls23140.service';
-import { TransactionMachineService } from '../../../service/basic/transaction-machine.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 @Component({
   selector: 'app-tls23140',
   templateUrl: './tls23140.component.html',
@@ -74,15 +70,12 @@ export class TLS23140Component extends BasicQueryPageComponent<any> {
     },
   ];
 
-  transactionMachineOptions: any[] = [];
   ECRNoOptions: any[] = [];
   CounterOptions: any[] = []; // 專櫃選項
 
   constructor(
-    private tls23140Service: TLS23140Service,
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
-    private transactionMachineService: TransactionMachineService,
   ) {
     super();
   }
@@ -90,11 +83,6 @@ export class TLS23140Component extends BasicQueryPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('TLS23140', '', this.queryForm);
 
-    this.transactionMachineService
-      .getTransactionMachines()
-      .subscribe((data) => {
-        this.transactionMachineOptions = data;
-      });
     this.ECRNoService.getECRNo().subscribe((res) => {
       this.ECRNoOptions =
         res?.map((x: any) => ({

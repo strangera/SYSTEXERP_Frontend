@@ -1,49 +1,41 @@
+import { CommonModule } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component } from '@angular/core';
 import {
-  Validators,
+  FormGroup,
   FormsModule,
   ReactiveFormsModule,
-  FormGroup,
+  Validators,
 } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { TaxableService } from '../../../service/basic/taxable.service';
-import { DiscountService } from '../../../service/basic/discount.service';
-import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
-import { WhetherService } from '../../../service/basic/whether.service';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { debounceTime, finalize, map } from 'rxjs/operators';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23020Service } from '../../../service/api/tls/tls23020.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { FloorService } from '../../../service/basic/querySYS3900.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import {
   createPaginationConfig,
   LazyLoadEvent,
 } from '../../../shared/componentkit/table/table.model';
-import { CommissionTypeService } from '../../../service/basic/commission-type.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { TxnStatusService } from '../../../service/basic/txn-status.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { finalize, map, debounceTime } from 'rxjs/operators';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DialogModule } from 'primeng/dialog';
-import { RadioButtonModule } from 'primeng/radiobutton';
-import { TranslateModule } from '@ngx-translate/core';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { CommonModule } from '@angular/common';
-import { ButtonModule } from 'primeng/button';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { HttpResponse } from '@angular/common/http';
-import { Table2Component } from '@shared/componentkit/table2/table2.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ValidationService } from '../../../shared/service/validation.service';
 
 @UntilDestroy()
 @Component({
@@ -92,8 +84,6 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     { field: 'ECR_No', order: 1 },
     { field: 'TXN_No', order: 1 },
   ];
-  private lastQuerySig: string | null = null;
-  private lazyTimer: any = null;
 
   // 後端是否接收分頁/排序（提供 OrderBy & SortBy）
   readonly yesterday: Date = (() => {
@@ -144,37 +134,63 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     { value: '1', label: '應稅' },
   ];
 
-  discountOptions: any[] = [];
-  deductionbigCategoryOptions: any[] = [];
+  discountOptions = [
+    { value: '000', label: '正品' },
+    { value: '095', label: '95折' },
+    { value: '090', label: '90折' },
+    { value: '085', label: '85折' },
+    { value: '080', label: '80折' },
+    { value: '075', label: '75折' },
+    { value: '070', label: '70折' },
+    { value: '065', label: '65折' },
+    { value: '060', label: '60折' },
+    { value: '055', label: '55折' },
+    { value: '050', label: '50折' },
+    { value: '999', label: '特價' },
+  ];
+  deductionbigCategoryOptions = [
+    { value: 0, label: '類別0' },
+    { value: 1, label: '類別1' },
+    { value: 2, label: '類別2' },
+    { value: 3, label: '類別3' },
+    { value: 4, label: '類別4' },
+    { value: 5, label: '類別5' },
+    { value: 6, label: '類別6' },
+    { value: 7, label: '類別7' },
+    { value: 8, label: '類別8' },
+    { value: 9, label: '類別9' },
+  ];
   floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
-  commissionTypeOptions: any[] = [];
-  whetherOptions: any[] = [];
-  txnStatusOptions: any[] = [];
+  commissionTypeOptions = getSYS1000Options('tlt_term_type');
+  whetherOptions: any[] = [
+    { value: 'Y', label: '是' },
+    { value: 'N', label: '否' },
+    { value: null, label: '全部' },
+  ];
+  txnStatusOptions = [
+    { value: 'N', label: '正常交易' },
+    { value: 'C', label: '交易取消' },
+    { value: 'D', label: '發票作廢' },
+    { value: 'E', label: '隔日發票作廢' },
+  ];
   OrganizationCodeOptions: any[] = [];
   ECRNoOptions: any[] = [];
   CounterOptions: any[] = [];
 
   constructor(
     private tls23020Service: TLS23020Service,
-    private discountService: DiscountService,
     private floorService: FloorService,
-    private deductionbigCategoryService: DeductionbigCategoryService,
-    private commissionTypeService: CommissionTypeService,
     private tls11010Service: Tls11010Service,
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
-    private whetherService: WhetherService,
-    private txnStatusService: TxnStatusService,
     private validationService: ValidationService,
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23020', 'tls/tls23020cru', this.queryForm, (form) =>
-      this.onSubmit(form),
-    );
+    this.initializePage('TLS23020');
     this.queryForm.patchValue({ pageSize: 30 }, { emitEvent: false });
     this.queryForm.patchValue(
       { SortBy: this.defaultSort },
@@ -220,26 +236,6 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       .pipe(untilDestroyed(this))
       .subscribe((res) => (this.BUILDING_NO_Options = res));
 
-    this.discountService
-      .getLocalDiscountOptions()
-      .pipe(untilDestroyed(this))
-      .subscribe((data) => (this.discountOptions = data));
-
-    this.deductionbigCategoryService
-      .getLocalDeductionCategories()
-      .pipe(untilDestroyed(this))
-      .subscribe((data) => (this.deductionbigCategoryOptions = data));
-
-    this.whetherService
-      .getWhetherOptions()
-      .pipe(untilDestroyed(this))
-      .subscribe((data) => (this.whetherOptions = data));
-
-    this.txnStatusService
-      .getTxnStatusOptions()
-      .pipe(untilDestroyed(this))
-      .subscribe((data) => (this.txnStatusOptions = data));
-
     this.floorService
       .getFloors()
       .pipe(untilDestroyed(this))
@@ -250,17 +246,6 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       .pipe(untilDestroyed(this))
       .subscribe((res) => {
         this.OrganizationCodeOptions = (res ?? []).map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        }));
-      });
-
-    this.commissionTypeService
-      .getCommissionTypes()
-      .pipe(untilDestroyed(this))
-      .subscribe((res) => {
-        this.commissionTypeOptions = (res ?? []).map((x: any) => ({
           label: x.label,
           formLabel: `${x.value} - ${x.label}`,
           value: x.value,
@@ -411,19 +396,19 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     return dedup;
   }
 
-public queryTLS23020ForReport = (body: any) =>
-  this.tls23020Service
-    .queryTLS23020({
-      ...(body || {}),
-      // ✅ 確保 DateOnly
-      TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
-      TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
-      // ✅ 後端可吃的排序
-      SortBy: this.toBackendSort(body?.SortBy),
-      pageIndex: body?.pageIndex ?? 1,
-      pageSize: body?.pageSize ?? 30,
-    })
-    .pipe(
+  public queryTLS23020ForReport = (body: any) =>
+    this.tls23020Service
+      .queryTLS23020({
+        ...(body || {}),
+        // ✅ 確保 DateOnly
+        TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+        TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
+        // ✅ 後端可吃的排序
+        SortBy: this.toBackendSort(body?.SortBy),
+        pageIndex: body?.pageIndex ?? 1,
+        pageSize: body?.pageSize ?? 30,
+      })
+      .pipe(
         map((res: any) => {
           // 兼容 Data 可能為物件或陣列
           const wrappers = Array.isArray(res?.Data)
@@ -688,54 +673,54 @@ public queryTLS23020ForReport = (body: any) =>
   }
 
   /** 組查詢 payload（含排序＆分頁鍵） */
-/** 組查詢 payload（含排序＆分頁鍵） */
-private buildPayload(val: any) {
-  // ✅ 用 DateOnly（yyyy-MM-dd）
-  const toDateOnly = (x: any) => this.toDateOnly(x);
+  /** 組查詢 payload（含排序＆分頁鍵） */
+  private buildPayload(val: any) {
+    // ✅ 用 DateOnly（yyyy-MM-dd）
+    const toDateOnly = (x: any) => this.toDateOnly(x);
 
-  const asStrArr = (x: any) =>
-    Array.isArray(x) ? x.map(String) : x == null || x === '' ? undefined : [String(x)];
-  const asNum = (x: any) =>
-    x == null || x === '' || isNaN(Number(x)) ? undefined : Number(x);
+    const asStrArr = (x: any) =>
+      Array.isArray(x) ? x.map(String) : x == null || x === '' ? undefined : [String(x)];
+    const asNum = (x: any) =>
+      x == null || x === '' || isNaN(Number(x)) ? undefined : Number(x);
 
-  const o: any = {
-    // ⬇⬇⬇ 這兩行改成 DateOnly
-    TXN_DateStart: toDateOnly(val?.TXN_DateStart),
-    TXN_DateEnd:   toDateOnly(val?.TXN_DateEnd),
+    const o: any = {
+      // ⬇⬇⬇ 這兩行改成 DateOnly
+      TXN_DateStart: toDateOnly(val?.TXN_DateStart),
+      TXN_DateEnd: toDateOnly(val?.TXN_DateEnd),
 
-    ECR_No: asStrArr(val?.ECR_No),
-    TXN_No_Start: asNum(val?.TXN_No_Start),
-    TXN_No_End: asNum(val?.TXN_No_End),
-    TLT_No: asStrArr(val?.TLT_No),
-    TXN_GUINo: (val?.TXN_GUINo ?? '').toString().trim() || undefined,
-    TXN_SaleAmt_Start: asNum(val?.TXN_SaleAmt_Start),
-    TXN_SaleAmt_End: asNum(val?.TXN_SaleAmt_End),
-    PLU_TaxType: val?.PLU_TaxType == null || val?.PLU_TaxType === '' ? undefined : String(val.PLU_TaxType),
-    TXN_DiscCode: asStrArr(val?.TXN_DiscCode),
-    PRM_TXN_DiscCode: asStrArr(val?.PRM_TXN_DiscCode),
-    tlt_id: asStrArr(val?.tlt_id),
-    PLU_MagNo: (val?.PLU_MagNo ?? '').toString().trim() || undefined,
-    IsNoPLU_No: !!val?.IsNoPLU_No,
-    rece_yn: val?.rece_yn == null || val?.rece_yn === '' ? undefined : String(val.rece_yn),
-    cash_yn: val?.cash_yn == null || val?.cash_yn === '' ? undefined : String(val.cash_yn),
-    tlt_building: asStrArr(val?.tlt_building),
-    tlt_floor: asStrArr(val?.tlt_floor),
-    org_id: asStrArr(val?.org_id),
-  };
+      ECR_No: asStrArr(val?.ECR_No),
+      TXN_No_Start: asNum(val?.TXN_No_Start),
+      TXN_No_End: asNum(val?.TXN_No_End),
+      TLT_No: asStrArr(val?.TLT_No),
+      TXN_GUINo: (val?.TXN_GUINo ?? '').toString().trim() || undefined,
+      TXN_SaleAmt_Start: asNum(val?.TXN_SaleAmt_Start),
+      TXN_SaleAmt_End: asNum(val?.TXN_SaleAmt_End),
+      PLU_TaxType: val?.PLU_TaxType == null || val?.PLU_TaxType === '' ? undefined : String(val.PLU_TaxType),
+      TXN_DiscCode: asStrArr(val?.TXN_DiscCode),
+      PRM_TXN_DiscCode: asStrArr(val?.PRM_TXN_DiscCode),
+      tlt_id: asStrArr(val?.tlt_id),
+      PLU_MagNo: (val?.PLU_MagNo ?? '').toString().trim() || undefined,
+      IsNoPLU_No: !!val?.IsNoPLU_No,
+      rece_yn: val?.rece_yn == null || val?.rece_yn === '' ? undefined : String(val.rece_yn),
+      cash_yn: val?.cash_yn == null || val?.cash_yn === '' ? undefined : String(val.cash_yn),
+      tlt_building: asStrArr(val?.tlt_building),
+      tlt_floor: asStrArr(val?.tlt_floor),
+      org_id: asStrArr(val?.org_id),
+    };
 
-  if (this.includePagingAndSorting) {
-    o.pageIndex = val?.pageIndex ?? 1;
-    o.pageSize  = val?.pageSize ?? 30;
-    o.SortBy    = Array.isArray(val?.SortBy) ? val.SortBy : undefined;
+    if (this.includePagingAndSorting) {
+      o.pageIndex = val?.pageIndex ?? 1;
+      o.pageSize = val?.pageSize ?? 30;
+      o.SortBy = Array.isArray(val?.SortBy) ? val.SortBy : undefined;
+    }
+
+    Object.keys(o).forEach((k) => {
+      const v = o[k];
+      if (v === undefined || v === '') delete o[k];
+      if (Array.isArray(v) && v.length === 0) delete o[k];
+    });
+    return o;
   }
-
-  Object.keys(o).forEach((k) => {
-    const v = o[k];
-    if (v === undefined || v === '') delete o[k];
-    if (Array.isArray(v) && v.length === 0) delete o[k];
-  });
-  return o;
-}
 
   /** 將日期控制項轉成後端要的 yyyy-MM-ddTHH:mm:ss（本地時間、去時區偏移） */
   private toIso(val: any): string | undefined {
@@ -748,13 +733,13 @@ private buildPayload(val: any) {
   }
 
   // ===== 小工具 =====
-public queryTLS23020SummaryForReport = (body: any) =>
-  this.tls23020Service.queryTLS23020Summary({
-    ...(body || {}),
-    // ✅ 確保 DateOnly
-    TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
-    TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
-  }).pipe(
+  public queryTLS23020SummaryForReport = (body: any) =>
+    this.tls23020Service.queryTLS23020Summary({
+      ...(body || {}),
+      // ✅ 確保 DateOnly
+      TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+      TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
+    }).pipe(
       map((res: any) => {
         // 後端回來的是 Data.QueryData（依你現有程式）
         const arr = Array.isArray(res?.Data?.QueryData)
@@ -883,7 +868,7 @@ public queryTLS23020SummaryForReport = (body: any) =>
       isTotal: true,
       isSubTotal: true,
     },
- { field: 'tlt_id', header: '抽成別代號', visible: true },
+    { field: 'tlt_id', header: '抽成別代號', visible: true },
     { field: 'tlt_id_desc', header: '商品抽成類別', visible: true },
     { field: 'PRM_TXN_DiscName', header: '原折扣', visible: true },
     { field: 'TXN_DiscName', header: '歸屬折扣名稱', visible: true },
@@ -1130,14 +1115,14 @@ public queryTLS23020SummaryForReport = (body: any) =>
     return [{ field: groupField, order }, ...rest];
   }
   // 1) 新增這個工具函式（放在 component 裡即可）
-private toDateOnly(x: any): string | undefined {
-  if (!x) return undefined;
-  const d = typeof x === 'string' ? new Date(x) : (x as Date);
-  if (isNaN(d.getTime())) return undefined;
-  // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
+  private toDateOnly(x: any): string | undefined {
+    if (!x) return undefined;
+    const d = typeof x === 'string' ? new Date(x) : (x as Date);
+    if (isNaN(d.getTime())) return undefined;
+    // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
 }

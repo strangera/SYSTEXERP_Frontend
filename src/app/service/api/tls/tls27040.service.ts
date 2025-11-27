@@ -1,8 +1,8 @@
-import { HttpClient,HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ApiResponse } from '@service/system/auth.service';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { SortMeta } from 'primeng/api';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 export interface QueryTLS27040Request {
@@ -65,6 +65,7 @@ export interface TLS27040Data {
   BatCloseDate: string; // 聯合(NCML) 使用
   tableName: string; // 新增，用於標識資料來源表
   isClose: string; // 已關帳=Y,未關帳=N Y時不可編輯
+  Check_Status: string;
 }
 
 export interface TotalData {
@@ -200,7 +201,21 @@ export class TLS27040Service {
    * 查詢 實收信用卡調整作業 (統一查詢)
    */
   queryTLS27040(body: QueryTLS27040Request): Observable<ApiResponse<TLS27040Data[], TotalData[]>> {
-    return this.http.post<ApiResponse<TLS27040Data[], TotalData[]>>(`${this.apiUrl}/queryTLS27040`, body);
+    return this.http.post<ApiResponse<TLS27040Data[], TotalData[]>>(`${this.apiUrl}/queryTLS27040`, body).pipe(
+      map(res => {
+        // 處理 Data 陣列，添加 dataKey
+        const mappedData = res.Data.length > 0 ? res.Data.map(item => ({
+          ...item,
+          dataKey: item.ID + item.tableName
+        })) : [];
+
+        // 返回新的響應對象，使用處理過的 Data
+        return {
+          ...res,
+          Data: mappedData // 將處理過的 Data 重新賦值
+        } as ApiResponse<TLS27040Data[], TotalData[]>; // 使用斷言確保類型匹配
+      })
+    );
   }
 
   // --- 新增 API (保持不變) ---

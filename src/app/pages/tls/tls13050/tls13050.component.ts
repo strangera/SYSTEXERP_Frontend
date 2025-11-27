@@ -55,8 +55,8 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
   columns: any[] = [
     { field: 'apply_no', header: '專櫃招募編號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_building', header: '館別', visible: true },
-    { field: 'FloorText', header: '樓層', visible: true },
+    { field: 'tlt_building', header: '館別', visible: true, format: (value: string) => this.getBuildingName(value) },
+    { field: 'FloorText', header: '樓層', visible: true, format: (value: string) => this.getFloorName(value) },
     { field: 'org_name', header: '組織名稱', visible: true },
     { field: 'LocationText', header: '位置編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
@@ -111,6 +111,21 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
         }));
       });
   }
+
+  getBuildingName(buildingNo: string): string {
+    if (!buildingNo) return '';
+    const building = this.buildingNoOptions.find(opt => opt.No === buildingNo || opt.value === buildingNo);
+    return building ? building.Name : buildingNo;
+  }
+
+  getFloorName(floorText: string): string {
+    if (!floorText) return '';
+    if (floorText.includes('/')) {
+      return floorText.split('/')[1];
+    }
+    return floorText;
+  }
+
   onSubmit(form: any): void {
     this.handleSubmit(form, () => {
       const formValue = form.getRawValue();

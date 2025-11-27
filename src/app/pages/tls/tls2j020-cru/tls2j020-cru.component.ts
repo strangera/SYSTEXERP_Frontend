@@ -1,24 +1,24 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { NgIf } from '@angular/common';
-import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { TranslateModule } from '@ngx-translate/core';
 import { TLS2J020Service } from '@service/api/tls/tls2j020.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 @Component({
   selector: 'app-tls2j020-cru',
   templateUrl: './tls2j020-cru.component.html',
-  styleUrls: ['./tls2j020-cru.component.scss'],
   standalone: true,
   imports: [
     TableEditComponent,
@@ -33,81 +33,74 @@ import { finalize } from 'rxjs';
   ]
 })
 export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements OnInit {
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   dataForm = this.formBuilder.nonNullable.group({
-    bus_type: [''],
+    bus_type: [null, [Validators.required]],
   });
-  mode: CRUDStatus = CRUDStatus.Create; // 新增 or 編輯模式
-  override formTitle = '';
   busTypeOptions: any[] = [];
+  editCHGItemOptions: any[] = []; // 編輯模式下的品項名稱選項
+  Item_TaxTypeOptions = [{ label: '免稅', value: '0' }, { label: '應稅', value: '1' }];
   data: any[] = [];
   selectedItems: any[] = [];
   totalRecords = 0;
   createColumns: EditColumn[] = [
-    { field: 'CHG_ItemName', header: '品項名稱', type: 'input', width: '200px', disabled: () => true },
+    {
+      field: 'CHG_ItemName', header: '品項名稱', type: 'input', disabled: () => true, width: '100%',
+      validate: [validateRequired]
+    },
     {
       field: 'Item_TaxType', header: '稅別', type: 'dropdown', width: '150px',
-      options: [
-        { label: '免稅', value: '0' },
-        { label: '應稅', value: '1' }
-      ],
+      options: this.Item_TaxTypeOptions,
       optionLabel: 'label',
       optionValue: 'value',
-      showClear: false
+      showClear: false,
+      validate: [validateRequired]
     },
   ];
   /**  編輯 */
   editColumns: EditColumn[] = [
+    { field: 'bus_type_label', header: '大分類代碼/名稱', width: '200px', },
     {
-      field: 'bus_type',
-      header: '大分類代碼',
+      field: 'CHG_ItemName',
+      header: '品項名稱',
       type: 'dropdown',
-      width: '200px',
-      options: () => this.busTypeOptions,
-      optionLabel: 'Name',
-      optionValue: 'No',
-      showClear: false
+      width: '100%',
+      options: () => this.editCHGItemOptions,
+      optionLabel: 'CHG_ItemName',
+      optionValue: 'CHG_ItemName',
+      showClear: false,
+      validate: [validateRequired]
     },
-    { field: 'CHG_ItemName', header: '品項名稱', type: 'input', width: '250px' },
     {
-      field: 'Item_TaxType', header: '稅別', type: 'dropdown', width: '150px',
-      options: [
-        { label: '免稅', value: '0' },
-        { label: '應稅', value: '1' }
-      ],
-      optionLabel: 'label',
-      optionValue: 'value',
-      showClear: false
-    },
-  ];
-
-  /**  查看 */
-  readColumns: EditColumn[] = [
-    { field: 'bus_type', header: '大分類代碼', type: 'input', width: '100px', disabled: () => true },
-    { field: 'bus_type_name', header: '大分類名稱', type: 'input', width: '120px', disabled: () => true },
-    { field: 'CHG_ItemName', header: '品項名稱', type: 'input', width: '250px', disabled: () => true },
-    {
-      field: 'Item_TaxType', header: '稅別', type: 'dropdown', width: '150px',
-      options: [
-        { label: '免稅', value: '0' },
-        { label: '應稅', value: '1' }
-      ],
+      field: 'Item_TaxType', header: '稅別', type: 'dropdown',
+      options: this.Item_TaxTypeOptions,
+      width: '100%',
       optionLabel: 'label',
       optionValue: 'value',
       showClear: false,
-      disabled: () => true
+      validate: [validateRequired]
     },
+  ];
+  /**  查看 */
+  readColumns: EditColumn[] = [
+    { field: 'bus_type', header: '大分類代碼' },
+    { field: 'bus_type_name', header: '大分類名稱' },
+    { field: 'CHG_ItemName', header: '品項名稱' },
+    { field: 'Item_TaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : '應稅' },
   ];
 
   /**  動態決定顯示哪組欄位 */
   get columns(): EditColumn[] {
-    if (this.mode === CRUDStatus.Create) {
-      return this.createColumns;
-    } else if (this.mode === CRUDStatus.Edit) {
-      return this.editColumns;
-    } else if (this.mode === CRUDStatus.Read) {
-      return this.readColumns;
+    switch (this.crudstatus) {
+      case CRUDStatus.Create:
+        return this.createColumns;
+      case CRUDStatus.Edit:
+        return this.editColumns;
+      case CRUDStatus.Read:
+        return this.readColumns;
+      default:
+        return [];
     }
-    return this.editColumns;
   }
 
   constructor(
@@ -118,211 +111,72 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   ngOnInit(): void {
-    // 取得狀態與資料
-    const state = history.state;
-    this.mode = state.crudstatus;
-    const rowData = state.rowdata;
-    // 初始化頁面
     this.initializePage('TLS2J020', this.dataForm);
-    // 下拉選項
-    this.loadOptions();
-    if (this.mode === CRUDStatus.Edit && rowData) {
-      this.formTitle = '編輯大分類換開品項';
-      this.dataForm.patchValue({
-        bus_type: rowData.bus_type
-      });
-      this.data = [{
-        id: rowData.id,
-        ID: rowData.id, // 保持相容性
-        tds1009_id: rowData.tds1009_id || 0,
-        bus_type: rowData.bus_type,
-        bus_type_name: rowData.bus_type_name,
-        CHG_ItemName: rowData.CHG_ItemName,
-        Item_TaxType: rowData.Item_TaxType,
-        Item_TaxType_Desc: rowData.Item_TaxType_Desc,
-        LastModifiedDate: rowData.LastModifiedDate
-      }];
-    } else if (this.mode === CRUDStatus.Read && rowData) {
-      this.formTitle = '查看大分類換開品項';
-      this.dataForm.patchValue({
-        bus_type: rowData.bus_type
-      });
-      this.data = [{
-        id: rowData.id,
-        ID: rowData.id,
-        tds1009_id: rowData.tds1009_id || 0,
-        bus_type: rowData.bus_type,
-        bus_type_name: rowData.bus_type_name,
-        CHG_ItemName: rowData.CHG_ItemName,
-        Item_TaxType: rowData.Item_TaxType,
-        Item_TaxType_Desc: rowData.Item_TaxType_Desc,
-        LastModifiedDate: rowData.LastModifiedDate
-      }];
-    } else {
+    this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.busTypeOptions = res.Data.map(item => ({ Name: `${item.No}-${item.Name}`, No: item.No }));
+    });
+    if (this.isFormCreateable) {
       this.formTitle = '新增大分類換開品項';
-      this.dataForm.reset();
-      this.data = [];
+      this.tls2j020Service.queryTLS2J020_add({}).subscribe(res => this.data = res.Data);
+    }
+    else if (this.isFormEditable && this.rowdata) {
+      this.formTitle = '編輯大分類換開品項';
+      this.patchData(this.rowdata);
+    }
+    else if (this.isFormReadable && this.rowdata) {
+      this.formTitle = '查看大分類換開品項';
+      this.patchData(this.rowdata);
     }
   }
-
-  loadOptions() {
-    this.dropDownListService.queryTLTBUSTYPE_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        this.busTypeOptions = response.Data.map((item: any) => ({
-          Name: `${item.No}-${item.Name}`,
-          No: item.No
-        }));
-      });
+  patchData(rowData: any) {
+    this.tls2j020Service.dropdownTLS2J020editCHG_ItemName({ ID: rowData.TDS1009_id }).pipe(untilDestroyed(this)).subscribe(res => {
+      this.editCHGItemOptions = res.Data;
+      this.data = [{ ...rowData, bus_type_label: rowData.bus_type + '-' + rowData.bus_type_name, }];
+    });
   }
-
   /** 查詢*/
   onSubmit(form: FormGroup) {
     this.handleSubmit(form, () => {
-      const v = form.value;
-      if (this.mode === CRUDStatus.Create) {
-        // 新增
-        if (!v.bus_type) {
-          this.messageService.errorBubble('請選擇大分類', '缺少必要資料');
-          return;
-        }
-        if (!this.data || this.data.length === 0) {
-          this.messageService.errorBubble('請先查詢品項資料', '缺少明細資料');
-          return;
-        }
-        this.insertData(v.bus_type);
-      } else if (this.mode === CRUDStatus.Edit) {
-        // 編輯模式執行更新邏輯
-        this.updateData();
-      } else if (this.mode === CRUDStatus.Read) {
-        // 詳細查看模式：不執行任何操作
+      const valid = this.tableEditComponent.validateAndShowErrors();
+      if (!valid) {
+        this.loading = false;
         return;
+      };
+      const v = form.value;
+      if (this.isFormCreateable) {
+        this.insertData(v.bus_type);
+      } else if (this.isFormEditable) {
+        this.updateData();
       }
     });
   }
 
-  /** 查詢指定大分類的品項資料 */
-  queryItems(busType: string) {
-    const payload = {
-      bus_type: [busType],
-      CHG_ItemName: null,
-      Item_TaxType: null
-    };
-    this.loading = true;
-    this.tls2j020Service
-      .queryTLS2J020(payload)
-      .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
-      .subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            this.data = res.Data || [];
-            this.totalRecords = res.TotalCount || this.data.length;
-          } else {
-            this.messageService.errorBubble(res.Message || '查詢失敗');
-            this.data = [];
-            this.totalRecords = 0;
-          }
-        },
-      });
-  }
-
-  /** 查詢按鈕點擊事件 */
-  onQuery() {
-    const busType = this.dataForm.get('bus_type')?.value;
-    if (!busType) {
-      this.messageService.errorBubble('請先選擇大分類', '缺少必要條件');
-      return;
-    }
-    this.queryItems(busType);
-  }
-
   /** 新增資料 */
   insertData(busType: string) {
-    // 只使用被選中的資料，並過濾掉空的資料行
-    const selectedValidData = this.selectedItems.filter(item =>
-      item.CHG_ItemName && item.CHG_ItemName.trim() !== '' &&
-      item.Item_TaxType && item.Item_TaxType.trim() !== ''
-    );
-    if (selectedValidData.length === 0) {
-      this.messageService.errorBubble('請選擇至少一筆完整的資料', '沒有選中的有效資料');
-      return;
-    }
-
-    // 符合後端新的 API 格式
     const requestBody = {
       bus_type: busType,
-      TLS2J020_Detail: selectedValidData.map(item => ({
-        ID: item.ID || 0,
-        tds1009_id: item.tds1009_id || 0,
-        CHG_ItemName: item.CHG_ItemName ? item.CHG_ItemName.trim() : '',
-        Item_TaxType: item.Item_TaxType ? item.Item_TaxType.trim() : ''
-      }))
+      TLS2J020_Detail: this.selectedItems
     };
     this.loading = true;
-    this.tls2j020Service
-      .insertTLS2J020(requestBody)
-      .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
-      .subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            this.messageService.successBubble('新增成功');
-            this.onCancel();
-          } else {
-            this.messageService.errorBubble(res.Message || '新增失敗');
-          }
-        },
-
-      });
+    this.tls2j020Service.insertTLS2J020(requestBody).pipe(finalize(() => (this.loading = false)), untilDestroyed(this)).subscribe(res => {
+      this.messageService.successBubble('新增成功');
+      this.onCancel();
+    });
   }
 
   /** 更新資料 */
   updateData() {
-    // 編輯模式：直接使用 table-edit 中的資料（通常只有一筆）
-    if (!this.data || this.data.length === 0) {
-      this.messageService.errorBubble('沒有可更新的資料');
-      return;
-    }
     const updateItem = this.data[0]; // 編輯模式通常只有一筆資料
-
-    // 驗證必要欄位
-    if (!updateItem.CHG_ItemName || updateItem.CHG_ItemName.trim() === '') {
-      this.messageService.errorBubble('品項名稱不能為空');
-      return;
-    }
-    if (!updateItem.Item_TaxType || updateItem.Item_TaxType.trim() === '') {
-      this.messageService.errorBubble('稅別不能為空');
-      return;
-    }
-
-    // 準備更新 API 的資料格式 - 符合後端要求
     const requestBody = {
       id: updateItem.id || updateItem.ID || 0,
-      tds1009_id: updateItem.tds1009_id || 0,
-      bus_type: this.dataForm.get('bus_type')?.value || updateItem.bus_type || '',
+      tds1009_id: updateItem.TDS1009_id || 0,
+      bus_type: updateItem.bus_type_code || this.dataForm.get('bus_type')?.value || '', // 使用原始代碼
       CHG_ItemName: updateItem.CHG_ItemName.trim(),  // 使用後端期望的 Pascal Case
       Item_TaxType: updateItem.Item_TaxType.trim(),  // 使用後端期望的 Pascal Case
-      upd_date: new Date().toISOString(),
-      upd_usr_no: this.authService.currentUserValue?.user_No || '',
-      upd_usr_name: this.authService.currentUserValue?.user_Name || ''
     };
-
-    this.loading = true;
-    this.tls2j020Service
-      .updateTLS2J020(requestBody)
-      .pipe(
-        untilDestroyed(this),
-        finalize(() => this.loading = false)
-      )
-      .subscribe({
-        next: (res: any) => {
-          if (res.Status === '0000') {
-            this.messageService.successBubble('更新成功');
-            this.onCancel();
-          } else {
-            this.messageService.errorBubble(res.Message || '更新失敗');
-          }
-        },
-      });
+    this.tls2j020Service.updateTLS2J020(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+      this.messageService.successBubble('更新成功');
+      this.onCancel();
+    });
   }
-
 }

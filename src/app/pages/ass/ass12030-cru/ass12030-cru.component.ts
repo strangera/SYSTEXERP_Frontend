@@ -1,25 +1,18 @@
-import { TaxableService } from './../../../service/basic/taxable.service';
-import { VendorService } from './../../../service/basic/vendor.service';
-import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { PaperStatusService } from '../../../service/basic/paper-status.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { NgFor, NgIf } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
+import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 
 
@@ -31,7 +24,12 @@ import { NgFor, NgIf } from '@angular/common';
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, EditorTextComponent, DropdownComponent, CalendarComponent, InputNumberComponent, NgFor, NgIf, TranslateModule]
 })
-export class ASS12030CRUComponent extends BasicCrupageComponent implements OnInit {
+export class ASS12030CRUComponent implements OnInit {
+  ProgNo = '';
+  formTitle = '';
+  submitted = false;
+  crudstatus = '';
+
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // ----------------------------------------------------------------
@@ -78,15 +76,6 @@ export class ASS12030CRUComponent extends BasicCrupageComponent implements OnIni
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private validationService: ValidationService,
-    //
-    private userCodeService: UserCodeService,
-    private organizationNumberService: OrganizationNumberService,
-    private vendorService: VendorService,
-    private paperStatusService: PaperStatusService,
-    private taxableService: TaxableService,
   ) {
     super();  // 呼叫父類建構子
   }
@@ -95,28 +84,6 @@ export class ASS12030CRUComponent extends BasicCrupageComponent implements OnIni
     // 初始化
     this.ProgNo = '310013';
     //
-
-    //
-    this.userCodeService.getUserCode().subscribe(data => {
-      this.applicantCodeOptions = data;
-    });
-    //
-    this.organizationNumberService.getOrganizationNumbers().subscribe(data => {
-      this.organizationNumberOptions = data;
-    });
-    //
-    this.vendorService.getVendors().subscribe(data => {
-      this.supplierCodeOptions = data;
-    });
-    //
-    this.paperStatusService.getSystemTypes().subscribe(data => {
-      this.paperStatusOptions = data;
-    });
-    //
-    this.taxableService.getSystemTypes().subscribe(data => {
-      this.taxTypeOptions = data;
-    });
-    // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus,
       rowdata: any,
@@ -128,14 +95,14 @@ export class ASS12030CRUComponent extends BasicCrupageComponent implements OnIni
         this.formTitle = 'create-conditions';
         this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
+
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
         this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
+
         this.Edit(state.rowdata);
         break;
       // 讀檔
@@ -164,11 +131,11 @@ export class ASS12030CRUComponent extends BasicCrupageComponent implements OnIni
       queryCode: [, [Validators.required]], // 詢價單號
       taxType: [, [Validators.required]], // 稅別
 
-      queryNumber: [, [this.validationService.numberValidator, Validators.required, Validators.maxLength(5)]], // 詢價數量
-      number: [, [this.validationService.numberValidator, Validators.required, Validators.maxLength(5)]], // 數量
-      singlePrice: [, [this.validationService.numberValidator, Validators.required]], // 單價(未稅)
-      purchasePrice: [, [this.validationService.numberValidator, Validators.required]], // 最近採購單價
-      totalPrice: [, [this.validationService.numberValidator, Validators.required]], // 總金額
+      queryNumber: [, [, Validators.required, Validators.maxLength(5)]], // 詢價數量
+      number: [, [, Validators.required, Validators.maxLength(5)]], // 數量
+      singlePrice: [, [, Validators.required]], // 單價(未稅)
+      purchasePrice: [, [, Validators.required]], // 最近採購單價
+      totalPrice: [, [, Validators.required]], // 總金額
 
       storage: [, [Validators.required]], // 倉別
       department: [, [Validators.required]], // 委託部門
@@ -197,7 +164,6 @@ export class ASS12030CRUComponent extends BasicCrupageComponent implements OnIni
     this.submitted = true;
 
     if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
       this.messageService.unblockUi();
       return;
     }
@@ -206,13 +172,11 @@ export class ASS12030CRUComponent extends BasicCrupageComponent implements OnIni
       case CRUDStatus.Create:
         if (this.canAdd()) {
           // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
         }
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
           // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
         }
         break;
     }

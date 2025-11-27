@@ -1,9 +1,9 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 請確認你的 ApiResponse 介面路徑是否正確
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
-import { ApiResponse } from '../../system/auth.service'; // 請確認你的 ApiResponse 介面路徑是否正確
-import { POS2004Item } from '../../utility/dropDownList.service';
+import { IDropdownItem, POS2004Item } from '../../utility/dropDownList.service';
 
 export interface TLS24010Request {
   TXN_GUIPaper: string; // 補登類別
@@ -239,28 +239,52 @@ export interface ExportTLS24010PDFResponse {
   TXN_No: number
 }
 
+export interface TltInfo {
+  No: string;
+  Name: string;
+  store_way: string;
+  talent_id: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class Tls24010Service {
   private apiUrl: string = environment.ApiUrl + '/TLS0000/TLS2000';
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+  ) { }
 
   /**
    * 查詢 POS2006 資料表
    * @param params 查詢條件
    * @returns 包含 ITLS24010Data 陣列的 API 響應
    */
-  queryTLS24010(params: TLS24010Request): Observable<ApiResponse<TLS24010Data[]>> {
+  queryTLS24010(params: TLS24010Request, tltOptions: IDropdownItem[]): Observable<ApiResponse<TLS24010Data[]>> {
+
+    // 建立一個 Map 方便查找，以 No (TLT_No) 作為鍵
+    const tltMap = new Map(tltOptions.map(tlt => [tlt.No, tlt]));
+
     return this.http.post<ApiResponse<TLS24010Data[]>>(`${this.apiUrl}/queryTLS24010`, params)
       .pipe(
         map(res => {
           if (res.Data) {
-            res.Data = res.Data.map(item => ({
-              ...item,
-              TXN_No: item.TXN_No.toString(),
-            }));
+            res.Data = res.Data.map(item => {
+              const newItem: TLS24010Data = {
+                ...item,
+                TXN_No: item.TXN_No.toString(),
+              };
+
+              // 查找並賦值 store_way 和 talent_id
+              const data = tltMap.get(newItem.TLT_No);
+              if (data?.store_way && data?.talent_id) {
+                newItem.store_way = data.store_way;
+                newItem.talent_id = data.talent_id;
+              }
+
+              return newItem;
+            });
           }
           return res;
         })

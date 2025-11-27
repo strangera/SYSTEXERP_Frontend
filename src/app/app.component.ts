@@ -1,12 +1,11 @@
-import { Component, OnInit, } from '@angular/core';
-import { PrimeNGConfig } from 'primeng/api';
-import { TranslateService } from '@ngx-translate/core';
+import { Component, isDevMode, OnInit, } from '@angular/core';
 import { NavigationError, Router, RouterOutlet } from '@angular/router';
-import { NotificationMessageComponent } from './shared/component/notification-message/notification-message.component';
+import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
+import { TranslateService } from '@ngx-translate/core';
+import { PrimeNGConfig } from 'primeng/api';
 import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { filter } from 'rxjs';
-import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
-import { isDevMode } from '@angular/core';
+import { NotificationMessageComponent } from './shared/component/notification-message/notification-message.component';
 
 @Component({
   selector: 'app-root',

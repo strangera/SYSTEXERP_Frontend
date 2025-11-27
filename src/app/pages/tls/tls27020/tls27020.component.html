@@ -30,5 +30,6 @@
   <app-table dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)" [editDisabled]="editDisabled"
     (detail)="onDetail($event)" [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }]" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showDelete]="false"></app-table>
+    [isRowSelectable]="isRowSelectable" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    (delete)="onDelete($event)" [showCheckBox]="true"></app-table>
 </div>

@@ -1,135 +1,154 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { VendorService } from '../../../service/basic/vendor.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-//
+import { FIN29070Data, FIN29070Service } from '@service/api/fin/fin29070.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
-//1.2.9.7 廠商應付對科目明細表
 @Component({
-    selector: 'app-fin29070',
-    templateUrl: './fin29070.component.html',
-    styleUrl: './fin29070.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, ButtonComponent, TranslateModule]
+  selector: 'app-fin29070',
+  templateUrl: './fin29070.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    CalendarRangeComponent,
+    InputTextComponent,
+    TableComponent,
+    DropdownRangeComponent
+  ]
 })
-export class FIN29070Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    factoryID: [, [Validators.required]], // 廠商代號
-    startBillDate: [, [Validators.required]], //立帳日期
-    endBillDate: [, [Validators.required]], //立帳日期
-  });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '廠商代號', visible: true },
-    { field: 'col2', header: '廠商名稱	', visible: true },
-    { field: 'col3', header: '應付帳款單號', visible: true },
-    { field: 'col4', header: '科目代號', visible: true },
-    { field: 'col5', header: '摘要', visible: true },
-    { field: 'col6', header: '立帳日期', visible: true },
-    { field: 'col7', header: '立帳金額', visible: true },
-    { field: 'col8', header: '電匯/開票/單號', visible: true },
-    { field: 'col9', header: '開票/匯款日期', visible: true },
-    { field: 'col10', header: '傳票號碼', visible: true },
-    { field: 'col11', header: '付款金額', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  factoryIDOptions: any[] = [];
-
+export class FIN29070Component extends BasicQueryPageComponent<FIN29070Data> implements OnInit {
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private vendorService: VendorService,
+    private fin29070Service: FIN29070Service,
+    private dropDownListService: DropDownListService
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
+
+  queryForm = this.formBuilder.group({
+    VEN_No_From: [null, Validators.required],                       // 廠商代號(起)
+    VEN_No_To: [null, Validators.required],                         // 廠商代號(迄)
+    ODM_Date_From: [null, Validators.required], // 立帳日期(起) - 必填
+    ODM_Date_To: [null, Validators.required],   // 立帳日期(迄) - 必填
+    ...createPaginationConfig([{ field: 'VendorNo', order: 1 }])
+  });
+
+  data: FIN29070Data[] = [];
+  selectedItems: FIN29070Data[] = [];
+  totalRecords = 0;
+  exportPDFbtnLoading = false;
+  exportExcelbtnLoading = false;
+  vendorOptions: any[] = [];
+
+  columns: Column[] = [
+    { field: 'VendorNo', header: '廠商代號', visible: true },
+    { field: 'PostingDate', header: '立帳日期', visible: true, format: formatDate },
+    { field: 'APAccountNo', header: '應付科目', visible: true },
+    { field: 'VoucherNo', header: '對應傳票號碼', visible: true },
+    { field: 'CompanyNo', header: '組織代號', visible: true },
+    { field: 'RelatedAccNo', header: '對應科目代號', visible: true },
+    { field: 'Description', header: '摘要', visible: true },
+    { field: 'Amount', header: '金額', visible: true, format: formatAmount },
+  ];
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '120030';
-    this.cruPage = '/FIN2000/FIN29070CRU';
-    //
-    // ----------------------------------------------------------------
-    //
-    this.vendorService.getVendors().subscribe(data => {
-      this.factoryIDOptions = data;
+    this.initializePage('FIN29070', 'account/fin/fin29070cru', this.queryForm, (form) => this.onSubmit(form));
+    // 載入廠商下拉選單
+    this.dropDownListService.queryPOS2013_DropDownList()
+      .pipe(untilDestroyed(this)).subscribe(res =>
+        this.vendorOptions = res.Data.map((x: any) => ({ label: `${x.VEN_No} - ${x.Name}`, value: x.VEN_No })));
+  }
+
+  onSubmit(form: FormGroup) {
+    const formValue = form.getRawValue();
+    this.handleSubmit(form, () => {
+      this.fin29070Service.queryFIN29070(this.buildQueryPayload(formValue))
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe((response) => {
+          this.data = response.Data ?? [];
+          this.totalRecords = response.TotalCount ?? this.data.length;
+          this.queryStateService.setQueryState(this.ProgNo, formValue);
+        });
     });
-    // ----------------------------------------------------------------
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+  // ========= 匯出 =========
+  onExportPDF(form: FormGroup) {
+    const formValue = form.getRawValue();
+    if (!formValue.ODM_Date_From || !formValue.ODM_Date_To) {
+      this.messageService?.warnBubble?.('請輸入立帳日期（起訖）');
+      return;
     }
 
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.exportPDFbtnLoading = true;
+    this.fin29070Service.exportFIN29070PDF(this.buildQueryPayload(formValue))
+      .pipe(untilDestroyed(this), finalize(() => (this.exportPDFbtnLoading = false)))
+      .subscribe({
+        next: (r) => this.handleFileExport(r, '.pdf', '廠商應付對應科目明細表'),
+        error: () => this.messageService?.warnBubble?.('匯出 PDF 失敗。'),
+      });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
+  onExportExcel(form: FormGroup) {
+    const formValue = form.getRawValue();
+    if (!formValue.ODM_Date_From || !formValue.ODM_Date_To) {
+      this.messageService?.warnBubble?.('請輸入立帳日期（起訖）');
+      return;
     }
+
+    this.exportExcelbtnLoading = true;
+    this.fin29070Service.exportFIN29070Excel(this.buildQueryPayload(formValue))
+      .pipe(untilDestroyed(this), finalize(() => (this.exportExcelbtnLoading = false)))
+      .subscribe({
+        next: (r) => this.handleFileExport(r, '.xlsx', '廠商應付對應科目明細表'),
+        error: () => this.messageService?.warnBubble?.('匯出 Excel 失敗。'),
+      });
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
+  /** 產生查詢 payload */
+  private buildQueryPayload(formValue: any): any {
+    return {
+      ...formValue,
+      ODM_Date_From: this.toDateOnly(formValue.ODM_Date_From),
+      ODM_Date_To: this.toDateOnly(formValue.ODM_Date_To),
+    };
   }
 
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+  // ========= 本地工具 =========
+  private toDateOnly(d: any): string | null {
+    if (!d) return null;
+    const dt = (d instanceof Date) ? d : new Date(d);
+    if (isNaN(dt.getTime())) return null;
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const da = String(dt.getDate()).padStart(2, '0');
+    return `${y}-${m}-${da}`;
+  }
+
+  private handleFileExport(resp: any, ext: '.pdf' | '.xlsx', baseName: string) {
+    const blob = resp?.body instanceof Blob ? resp.body : resp;
+    const fileName = `${baseName}_${new Date().getTime()}${ext}`;
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
 }

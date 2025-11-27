@@ -1,26 +1,36 @@
+import { DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { ValidationService } from '@shared/service/validation.service';
+import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
 import { FIN11010Data, FIN11010InsertRequest, FIN11010Service, FIN11010UpdateRequest } from '../../../service/api/fin/fin11010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownOption } from '../../../shared/models/api/base-api.interface';
-import { DatePipe, NgIf } from '@angular/common';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { finalize } from 'rxjs';
-import { ValidationService } from '@shared/service/validation.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 @Component({
   selector: 'app-fin11010-cru',
   templateUrl: './fin11010-cru.component.html',
   styleUrl: './fin11010-cru.component.scss',
   standalone: true,
-  imports: [NgIf, MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarComponent]
+  imports: [
+    NgIf,
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    YearMonthComponent
+  ]
 })
 export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
@@ -130,15 +140,10 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
       this.fin11010Service.getFIN11010PreviousData().subscribe(res => {
         // 填入資料，指定狀態與申報年月起
         if (res) {
-          this.dataForm.patchValue({
-            ...res.Data,
-            REP_BegGUIYM: res.Data.REP_BegGUIYM ? `${res.Data.REP_BegGUIYM.substring(0, 4)}/${res.Data.REP_BegGUIYM.substring(4, 6)}` : '',
-            REP_EndGUIYM: res.Data.REP_EndGUIYM ? `${res.Data.REP_EndGUIYM.substring(0, 4)}/${res.Data.REP_EndGUIYM.substring(4, 6)}` : ''
-          });
+          this.dataForm.patchValue(res.Data);
         }
       });
     }
-    this.setFieldFormat();
     this.setReadOnlyFields();
   }
 
@@ -166,7 +171,7 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
               STO_ApplyTEL_ext: formValue.STO_ApplyTEL_ext,
               STO_AreaCode: formValue.STO_AreaCode,
               STO_ApplyID: formValue.STO_ApplyID,
-              REP_BegGUIYM: this.datePipe.transform(formValue.REP_BegGUIYM, 'yyyyMM') ?? '',
+              REP_BegGUIYM: formValue.REP_BegGUIYM,
             };
             this.fin11010Service.insertFIN11010(rb)
               .pipe(untilDestroyed(this), finalize(() => this.loading = false))
@@ -196,7 +201,7 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
               STO_ApplyTEL_ext: formValue.STO_ApplyTEL_ext,
               STO_AreaCode: formValue.STO_AreaCode,
               STO_ApplyID: formValue.STO_ApplyID,
-              REP_BegGUIYM: this.datePipe.transform(formValue.REP_BegGUIYM, 'yyyyMM') ?? '',
+              REP_BegGUIYM: formValue.REP_BegGUIYM,
             };
             this.fin11010Service.updateFIN11010(rb)
               .pipe(untilDestroyed(this), finalize(() => this.loading = false))
@@ -218,23 +223,5 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
     this.dataForm.get('STO_TaxNo')?.disable();
     this.dataForm.get('REP_OrgCode')?.disable();
     this.dataForm.get('STO_ApplyFlag')?.disable();
-  }
-
-  setFieldFormat() {
-    const formatDateField = (fieldName: string) => {
-      const reg = /^(19|20)\d{2}(0[1-9]|1[0-2])$/;
-      const value = this.dataForm.get(fieldName)?.value ?? '';
-
-      if (reg.test(value)) {
-        const year = value.substring(0, 4);
-        const month = value.substring(4, 6);
-        this.dataForm.get(fieldName)?.setValue(`${year}/${month}`);
-      } else {
-        this.dataForm.get(fieldName)?.setValue('');
-      }
-    };
-
-    formatDateField('REP_BegGUIYM');
-    formatDateField('REP_EndGUIYM');
   }
 }

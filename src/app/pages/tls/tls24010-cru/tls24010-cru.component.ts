@@ -1,37 +1,37 @@
-import { InputTextComponent } from './../../../shared/componentkit/input-text/input-text.component';
+import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { POS5007Data, POS5008Data, TLS24010Data, Tls24010Service } from '../../../service/api/tls/tls24010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { InputTextareaComponent } from "../../../shared/componentkit/input-textarea/input-textarea.component";
-import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { DropDownListService, IDropdownItem, POS2004Item } from '../../../service/utility/dropDownList.service';
-import { ValidationService } from '../../../shared/service/validation.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { guiVehicleValidator, STORE_WAY, TLS24010_EDIT_TYPE, TXN_GUI_CarrTypeOptions, txnStatusOptions } from './tls24010-cru.model';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { formatTimeToHHMMSS } from '@shared/componentkit/table/table.model';
 import { DividerModule } from 'primeng/divider';
-import { TableModule } from 'primeng/table';
+import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
-import { DropdownModule } from 'primeng/dropdown';
-import { Tls24010Pos5008Component } from './tls24010-pos5008/tls24010-pos5008.component';
-import { Tls24010Pos5007Component } from './tls24010-pos5007/tls24010-pos5007.component';
+import { PanelModule } from 'primeng/panel';
+import { TableModule } from 'primeng/table';
 import { finalize, tap } from 'rxjs';
-import { formatTimeToHHMMSS } from '@shared/componentkit/table/table.model';
+import { POS5007Data, POS5008Data, TLS24010Data, Tls24010Service } from '../../../service/api/tls/tls24010.service';
+import { DropDownListService, IDropdownItem, POS2004Item } from '../../../service/utility/dropDownList.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextareaComponent } from "../../../shared/componentkit/input-textarea/input-textarea.component";
+import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton-yn/radiobutton-yn.component';
+import { ValidationService } from '../../../shared/service/validation.service';
+import { FIX_TYPE, FIX_TYPE_LABEL } from '../tls24010/tls24010.model';
+import { InputTextComponent } from './../../../shared/componentkit/input-text/input-text.component';
+import { guiVehicleValidator, STORE_WAY, TLS24010_EDIT_TYPE, TXN_GUI_CarrTypeOptions, txnStatusOptions } from './tls24010-cru.model';
+import { Tls24010DiscodeComponent } from './tls24010-discode/tls24010-discode.component';
 import { Tls24010PaynoComponent } from './tls24010-payno/tls24010-payno.component';
+import { Tls24010Pos5007Component } from './tls24010-pos5007/tls24010-pos5007.component';
+import { Tls24010Pos5008Component } from './tls24010-pos5008/tls24010-pos5008.component';
 import { Tls24010TltidComponent } from './tls24010-tltid/tls24010-tltid.component';
 import { Tls24010TltnoComponent } from './tls24010-tltno/tls24010-tltno.component';
-import { FIX_TYPE, FIX_TYPE_LABEL } from '../tls24010/tls24010.model';
-import { Tls24010DiscodeComponent } from './tls24010-discode/tls24010-discode.component';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 @Component({
   selector: 'app-tls24010-cru',
   templateUrl: './tls24010-cru.component.html',
@@ -116,6 +116,9 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   ngOnInit(): void {
     this.initializePage('TLS24010', this.dataForm);
     const rowDataTyped = this.rowdata as TLS24010Data;
+    const queryData = this.queryData;
+    console.log(rowDataTyped);
+    console.log(queryData);
     this.TXN_GUIPaper = rowDataTyped.TXN_GUIPaper ?? this.queryData.TXN_GUIPaper;
     this.TLT_Name = rowDataTyped.TLT_Name;
     this.store_way = rowDataTyped.store_way;
@@ -261,6 +264,29 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       // === 開始支付邏輯卡控 ===
       // 1. 計算銷售總金額 (TXN_SaleAmt 總計)
       const totalSaleAmt = pos5007Data.reduce((sum, item) => sum + (Number(item.TXN_SaleAmt) || 0), 0);
+
+      // ==========================================================
+      // 【新增邏輯：檢查銷售總金額是否超過最大位數限制 (10 位)】
+      // ==========================================================
+      const MAX_SALE_AMT_INTEGER_DIGITS = 10;
+      // 步驟 A: 取得總金額的絕對值
+      const absoluteTotalSaleAmt = Math.abs(totalSaleAmt);
+
+      // 步驟 B: 檢查整數部分的長度
+      // 1. 取整數部分 Math.floor(absoluteTotalSaleAmt)
+      // 2. 轉換為字串 .toString()
+      // 3. 取得長度 .length
+      const integerLength = Math.floor(absoluteTotalSaleAmt).toString().length;
+
+      if (integerLength > MAX_SALE_AMT_INTEGER_DIGITS) {
+        this.loading = false; // 發生錯誤時解除 loading
+        return this.messageService.errorBubble(
+          `銷售總金額 ( ${totalSaleAmt} ) 超過系統允許的最大值 (${MAX_SALE_AMT_INTEGER_DIGITS} 位數)。`,
+          '金額超出限制'
+        );
+      }
+
+      // ==========================================================
       // 2. 計算支付總金額 (TXN_PayAmt 總計)
       const totalPayAmt = pos5008Data.reduce((sum, item) => sum + (Number(item.TXN_PayAmt) || 0), 0);
       // 溢收
@@ -328,7 +354,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
                   PLU_No: item.PLU_MagNo.PLU_No,
                   TXN_Qty: item.TXN_Qty,
                   PLU_SalePrc: item.PLU_SalePrc,
-                  TXN_Disc: item.TXN_Disc,
+                  TXN_Disc: item.TXN_Disc || 0,
                   TXN_SaleAmt: item.TXN_SaleAmt,
                   tlt_id: item.tlt_id,
                   PLU_TaxType: item.PLU_TaxType,
@@ -401,6 +427,15 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
             this.messageService.errorBubble(
               '無效的「商品編號/專過編號」或 資料尚未異動',
               '無法修正' // Header 訊息
+            );
+            this.loading = false; // 確保 loading 狀態被關閉
+            return; // 阻止執行後續的 API 呼叫
+          }
+          // 如果沒資料的話就條出錯誤訊息
+          if (!updatePOS5007List.length) {
+            this.messageService.errorBubble(
+              '無「專櫃編號修正」資料，無法修正',
+              '專櫃編號修正失敗' // Header 訊息
             );
             this.loading = false; // 確保 loading 狀態被關閉
             return; // 阻止執行後續的 API 呼叫

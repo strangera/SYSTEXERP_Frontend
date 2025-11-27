@@ -10,7 +10,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { tap } from 'rxjs';
+import { finalize, map, tap } from 'rxjs';
 import { TLS21020Data, TLS21020UpdateQuery } from '../tls21020/tls21020.model';
 
 @Component({
@@ -30,7 +30,8 @@ import { TLS21020Data, TLS21020UpdateQuery } from '../tls21020/tls21020.model';
   ],
 })
 export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> implements OnInit {
-  public dataForm = this.formBuilder.nonNullable.group({
+
+  public readonly dataForm = this.formBuilder.nonNullable.group({
     ENTRY_TYPE: new FormControl<string | void>(void 0),
   });
   public readonly df = computed(() => this.dataForm.controls);
@@ -38,16 +39,10 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
 
   public readonly tableData = signal<TLS21020Data[]>([]);
   public readonly selectedItems = signal<TLS21020Data[]>([]);
+  public readonly totalRecords = signal(0);
 
   private readonly AccDCMap = new Map<string, string>([['D', '借'], ['C', '貸']]);
   private readonly ABATYN = (v: any) => v?.ABAT_YN === 'N';
-
-  public readonly loadingEffect = effect(() => {
-    this.loading = this.service.tableLoading()
-      || this.service.gls1005Loading()
-      || this.service.pos2013Loading()
-      || this.service.orgIdLoading();
-  });
 
   public readonly columns: EditColumn[] = [
     {
@@ -131,6 +126,15 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
     ABAT_YN: 'N',
   };
 
+  public readonly tableLoading = signal<boolean>(!1);
+
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.tableLoading()
+      || this.service.gls1005Loading()
+      || this.service.pos2013Loading()
+      || this.service.orgIdLoading();
+  });
+
   constructor(
     public readonly service: TLS21020Service,
     private readonly logger: NGXLogger,
@@ -141,17 +145,21 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
   ngOnInit(): void {
     this.initializePage('TLS21020', this.dataForm);
     this.rowdata && (this.rowdata.ENTRY_TYPE = this.rowdata.ENTRY_TYPE.trim());
+    this.tableLoading.set(!0);
 
     this.service.getGLS1005s();
     this.service.getPOS2013s('1');
     this.service.getOrgIDs();
     this.service.queryTLS21020({ ENTRY_TYPE: this.rowdata?.ENTRY_TYPE! }).pipe(
-      tap(res => this.tableData.set(res.Data ?? []))
-    ).subscribe();
-
-    // this.service.queryTLS21020_GLS1005({ AccDC: this.rowdata?.AccDC! });
-
-    this.logger.debug(`init:`, [this.rowdata]);
+      tap(res => this.logger.debug(`queryTLS21020:`, [this.rowdata, res])),
+      map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
+      finalize(() => this.tableLoading.set(!1))
+    ).subscribe({
+      next: res => {
+        this.tableData.set(res.Data ?? []);
+        this.totalRecords.set(res.TotalCount || 0);
+      }
+    });
   }
 
   onSubmit(): void {
@@ -168,10 +176,15 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
         )) as TLS21020UpdateQuery;
       });
       this.logger.debug(`onSubmit:`, [data, payload]);
+      this.tableLoading.set(!0);
       this.service.updateTLS21020(payload).pipe(
-        tap(({ Status }) => Status === '0000' && this.onCancel())
+        map(res => { if (res.Status === '0000') return res; throw new Error('更新失敗'); }),
+        finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
-        next: () => this.messageService.successBubble('更新成功'),
+        next: () => {
+          this.onCancel();
+          this.messageService.successBubble('更新成功');
+        },
         error: () => this.messageService.errorBubble('更新失敗'),
       });
     });

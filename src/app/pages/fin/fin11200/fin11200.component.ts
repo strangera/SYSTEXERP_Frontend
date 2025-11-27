@@ -1,26 +1,24 @@
+import { DatePipe, NgStyle } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { finalize } from 'rxjs';
-import { Fin11200Service } from '../../../service/api/fin/fin11200.service';
-import { columns, monthOptions, Pos1018 } from './fin11200.model';
-import { AddButton, convertDateToYYYYMM, Column, convertYYYYMMToDate } from '../../../shared/componentkit/table/table.model';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { createPaginationConfig } from '@shared/componentkit/table2/table2.model';
 import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Button, ButtonDirective } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
-import { NgStyle } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { createPaginationConfig } from '@shared/componentkit/table2/table2.model';
-import { getCurrentPeriodCode } from '@shared/models/system/query-form.model';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { finalize } from 'rxjs';
+import { Fin11200Service } from '../../../service/api/fin/fin11200.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { AddButton, Column, convertDateToYYYYMM, convertYYYYMMToDate } from '../../../shared/componentkit/table/table.model';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { columns, monthOptions, Pos1018 } from './fin11200.model';
 
 @Component({
   selector: 'app-fin11200',
@@ -32,8 +30,6 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarComponent,
-    DropdownComponent,
     MultiSelectComponent,
     TableComponent,
     Button,
@@ -41,17 +37,17 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
     ButtonDirective,
     NgStyle,
     TranslateModule,
+    YearMonthComponent
   ],
 })
 
 //FIN11100電子發票配號作業
 export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implements OnInit {
   queryForm = this.formBuilder.group({
-    GUI_YY: [new Date(), [Validators.required]], // 發票年月
-    GUI_MM: [getCurrentPeriodCode, [Validators.required]], // 發票年月
+    GUI_YYMM: ['', Validators.required], // 發票年月
     ECR_NoList: [null], // 收銀機號
     GUI_StatusList: [null], // 發票狀態
-    ...createPaginationConfig([{ field: 'ID', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'GUI_YYMM', order: 1 }, { field: 'GUI_TRACK', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
   monthOptions = monthOptions;
@@ -72,7 +68,8 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
 
   constructor(
     private fin11200Service: Fin11200Service,
-    private eCRNoService: ECRNoService
+    private eCRNoService: ECRNoService,
+    private datePipe: DatePipe
   ) {
     super(); // 呼叫父類建構子
   }
@@ -80,13 +77,20 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
   ngOnInit(): void {
     this.initializePage('FIN11200', '/FIN/FIN11200cru', this.queryForm, (form) => this.onSubmit(form));
     this.eCRNoService.getECRNo().pipe(untilDestroyed(this)).subscribe(data => this.POS_NOSOptions = data.map((item: { value: string; label: string; }) => ({ ...item, label: `${item.value} - ${item.label}` })));
+    // 設定GUI_YYMM預設值
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11
+    if (currentMonth % 2 === 0) {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+    }
+    this.queryForm.get('GUI_YYMM')?.setValue(
+      this.datePipe.transform((currentDate), 'yyyyMM'));
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const body = {
         ...frm.value,
-        GUI_YYMM: this.convertDateToYYYYMM2(frm),
-        ECR_NoList: frm.get('ECR_No')?.value
+        ECR_NoList: frm.get('ECR_NoList')?.value
       }
       this.fin11200Service.queryFIN11200(body).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe((response) => {
         this.data = response.Data.map((item: Pos1018) => ({
@@ -97,14 +101,6 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
-  }
-  private convertDateToYYYYMM2(frm: FormGroup): string {
-    const yyDate: Date = frm.get('GUI_YY')?.value;
-    const mmRaw = frm.get('GUI_MM')?.value;
-    const year = yyDate instanceof Date ? yyDate.getFullYear().toString() : '';
-    const monthNum = Number(mmRaw);
-    const month = !isNaN(monthNum) ? monthNum.toString().padStart(2, '0') : '';
-    return year + month;
   }
   manageLoading = false;
   onStop(rowData: Pos1018) {

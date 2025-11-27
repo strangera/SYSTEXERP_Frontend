@@ -53,7 +53,7 @@
         <app-dropdown class="col-12 md:col-6 lg:col-4"
                       label="三碼代號"
                       controlName="ClassNo"
-                      [options]="service.classNoOption()"
+                      [options]="service.classNoOptions()"
                       optionLabel="ClassCName"
                       optionValue="ClassNo"
                       [showClear]="false"
@@ -113,10 +113,10 @@
       </div>
       @if (!isFormReadable) {
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        @if (service.treeLoading()) {
+        @if (treeLoading()) {
         <p-progressSpinner></p-progressSpinner>
         } @else {
-        <app-tree-dropdown [members]="service.FIN52080Tree()"
+        <app-tree-dropdown [members]="FIN52080Tree()"
                            [Columns]="service.TreeElements.treeColumn"
                            [LeaveColumnLabel]="service.TreeElements.LeaveLabel"
                            (confirmSelected)="onLevelSelected($event)"

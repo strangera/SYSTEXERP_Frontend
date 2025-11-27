@@ -1,8 +1,8 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 請確認你的 ApiResponse 介面路徑是否正確
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
-import { ApiResponse } from '../../system/auth.service'; // 請確認你的 ApiResponse 介面路徑是否正確
 
 /** 查詢 POS2018 資料表 (queryTLS52030) 的請求介面 */
 export interface IQueryTLS52030Request {
@@ -96,7 +96,7 @@ export interface ITLS52030Request {
   ODM_No?: string; // 進貨單號
   SYS_StoreNo: string; // 公司編號/店號
   VEN_No: string; // 廠商代號
-  LOGO_No: string; // 品牌代碼
+  // LOGO_No: string; // 品牌代碼
   HOS_No: string; // 倉庫代碼
   org_id: string | null; // 組織代碼/組織名稱
   ODM_Date: string | Date; // 申請日期
@@ -116,7 +116,7 @@ export interface ITLS52030Request {
 
 /** 取得採購單資料 (GetPOS2016) 的請求介面 */
 export interface IGetPOS2016Request {
-  LOGO_No?: string | null; // 品牌代碼
+  // LOGO_No?: string | null; // 品牌代碼
   HOS_No?: string | null; // 倉庫代碼
   VEN_No?: string | null; // 廠商代號
 }
@@ -248,5 +248,29 @@ export class Tls52030Service {
    */
   updateStatusTLS52030(data: IUpdateTLS52030StatusRequest): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateStatusTLS52030`, data);
+  }
+  /**
+     * 匯出採購單
+     * @param params 查詢條件 (PO_No)
+     * @returns API 響應
+     */
+  exportTLS52030(params: { ODM_NoList: string[] }): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportTLS52030`, params,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      });
+  }
+  /**
+   * 匯出採購單PDF
+   * @param params 查詢條件 (PO_No)
+   * @returns API 響應
+  */
+  exportTLS52030PDF(params: { ODM_NoList: string[] }): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportTLS52030PDF`, params,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      });
   }
 }

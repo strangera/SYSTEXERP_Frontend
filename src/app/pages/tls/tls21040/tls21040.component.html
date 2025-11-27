@@ -30,7 +30,8 @@
 <div class="card">
   <app-table dataKey="CRD_BinCode" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [multiSortMeta]="[{ field: 'id', order: 1 }]" [totalRecords]="totalRecords" [showCheckBox]="true"
-    (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [isRowSelectable]="isRowSelectable"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showExcel]="true" [showExcelExport]="false" (importExcel)="onImportExcel($event)"></app-table>
+    (delete)="onDelete($event)" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
+    [isRowSelectable]="isRowSelectable" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [lazy]="true" [loading]="loading" [showExcel]="true" [showExcelExport]="false"
+    (importExcel)="onImportExcel($event)"></app-table>
 </div>

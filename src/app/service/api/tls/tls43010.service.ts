@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { environment } from 'src/environments/environment';
-import { ApiResponse } from './tls23030.service';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 export interface QueryTls43010Request {
   NOT_No: string,
@@ -72,8 +72,8 @@ export class Tls43010Service {
     * @param body 統一的查詢請求物件 (QueryTls43010Request)
     * @returns 包含 QueryTls43010ApiResponse 結構的 API 回傳結果
     */
-  queryTLS43010(body: QueryTls43010Request): Observable<ApiResponse<QueryTls43010Response>> {
-    return this.http.post<ApiResponse<QueryTls43010Response>>(`${this.apiUrl}/queryTLS43010`, body);
+  queryTLS43010(body: QueryTls43010Request): Observable<ApiResponse<QueryTls43010Response[]>> {
+    return this.http.post<ApiResponse<QueryTls43010Response[]>>(`${this.apiUrl}/queryTLS43010`, body);
   }
 
   deleteTLS43010(idList: number[]): Observable<ApiResponse<number>> {

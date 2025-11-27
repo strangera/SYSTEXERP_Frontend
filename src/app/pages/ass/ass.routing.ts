@@ -33,8 +33,6 @@ export const assRoutes: Routes = [
   // { path: 'ass13010cru', loadComponent: () => import('./ass13010-cru/ass13010-cru.component').then(m => m.ASS13010CRUComponent) },
   // { path: 'ass13020', loadComponent: () => import('./ass13020/ass13020.component').then(m => m.ASS13020Component) }, // 資產轉入
   // { path: 'ass13020cru', loadComponent: () => import('./ass13020-cru/ass13020-cru.component').then(m => m.ASS13020CRUComponent) },
-  // { path: 'ass13030', loadComponent: () => import('./ass13030/ass13030.component').then(m => m.ASS13030Component) }, // 資產報廢作業
-  // { path: 'ass13030cru', loadComponent: () => import('./ass13030-cru/ass13030-cru.component').then(m => m.ASS13030CRUComponent) },
   // { path: 'ass13040', loadComponent: () => import('./ass13040/ass13040.component').then(m => m.ASS13040Component) }, // 批次報廢作業
   // { path: 'ass13040cru', loadComponent: () => import('./ass13040-cru/ass13040-cru.component').then(m => m.ASS13040CRUComponent) },
   // { path: 'ass13050', loadComponent: () => import('./ass13050/ass13050.component').then(m => m.ASS13050Component) }, // 移轉交接表
@@ -104,7 +102,6 @@ export const assRoutes: Routes = [
   { path: 'ass21030', loadComponent: () => import('./ass21030/ass21030.component').then(m => m.ASS21030Component) }, // 能源使用狀況作業-能源抄表作業
   { path: 'ass21030cru', loadComponent: () => import('./ass21030-cru/ass21030-cru.component').then(m => m.ASS21030CRUComponent) },
   { path: 'ass21040', loadComponent: () => import('./ass21040/ass21040.component').then(m => m.ASS21040Component) }, // 基本資料設定-電錶攤提設定
-  { path: 'ass21040cru', loadComponent: () => import('./ass21040-cru/ass21040-cru.component').then(m => m.ASS21040CRUComponent) },
   { path: 'ass21050', loadComponent: () => import('./ass21050/ass21050.component').then(m => m.ASS21050Component) }, // 基本資料設定-瓦斯錶攤提設定
   { path: 'ass21050cru', loadComponent: () => import('./ass21050-cru/ass21050-cru.component').then(m => m.ASS21050CRUComponent) },
   // { path: 'ass21060', loadComponent: () => import('./ass21060/ass21060.component').then(m => m.ASS21060Component) }, // 基本資料設定-能源單價設定

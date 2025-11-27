@@ -84,8 +84,8 @@
   </app-report-table-group>
 </div> -->
 <div class="card">
-  <app-table tableKey="TLS14040" dataKey="field" [data]="data" [columns]="columns" [showManage]="false"
-    [showCheckBox]="false"
+  <app-table apiUrl="exportTLS14030" tableKey="TLS14040" dataKey="field" [data]="data" [columns]="columns"
+    [showManage]="false" [showCheckBox]="false"
     [multiSortMeta]="[{ field: 'open_fees', order: 1 },{ field: 'construct_fees', order: 1 },{ field: 'expiration_fees', order: 1 }]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
     [loading]="loading">

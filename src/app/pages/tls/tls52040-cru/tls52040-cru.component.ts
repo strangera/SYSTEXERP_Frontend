@@ -1,28 +1,28 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Column, createPaginationConfig, formatAmount, formatDate, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { debounceTime, finalize, withLatestFrom } from 'rxjs';
-import { TLS52040Request, ITLS52040Data, ITLS52040Detail, Tls52040Service } from '../../../service/api/tls/tls52040.service';
-import { validateMinNumber } from '../../../shared/componentkit/table/validate-field.model';
-import { POStatus } from '../tls52040/tls52040.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { AsyncPipe, NgIf } from '@angular/common';
-import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { getSYS1000 } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
+import { ITLS52040Data, ITLS52040Detail, TLS52040Request, Tls52040Service } from '../../../service/api/tls/tls52040.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatAmount, formatDate, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
+import { validateMinNumber } from '../../../shared/componentkit/table/validate-field.model';
+import { POStatus } from '../tls52040/tls52040.component';
 @Component({
   selector: 'app-tls52040-cru',
   templateUrl: './tls52040-cru.component.html',
@@ -50,7 +50,7 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
   dataForm = this.formBuilder.nonNullable.group({
     RJM_No: [{ value: '系統自動產生', disabled: true }], // 退貨驗收單號
     VEN_No: [null as string | null, [Validators.required]], // 廠商編號
-    LOGO_No: [null as string | null, [Validators.required]], // 品牌代碼 (與 POS2016.LOGO_No 對應)
+    // LOGO_No: [null as string | null, [Validators.required]], // 品牌代碼 (與 POS2016.LOGO_No 對應)
     HOS_No: [null as string | null, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
     RJM_TotalBuyNet: [{ value: 0, disabled: true }], // 進貨驗收金額
     RJM_TotalBuyTax: [{ value: 0, disabled: true }], // 稅額
@@ -58,7 +58,7 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
     RJM_TotalSaleAmt: [{ value: 0, disabled: true }], // 售價總計
     APPLY_USR_No: [{ value: this.user?.user_No, disabled: true }], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
     APPLY_USR_Name: [{ value: this.user?.user_Name, disabled: true }], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
-    APPLY_Date: [{ value: new Date(), disabled: true }], // 申請日期
+    APPLY_Date: [new Date(), [Validators.required]], // 申請日期
     RJM_Remark: [null as string | null, [Validators.maxLength(200)]],// 進貨驗收單說明
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
   });
@@ -122,7 +122,8 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
     this.initializePage('TLS52040', this.dataForm);
     if (this.isFormEditable) {
       this.dataForm.controls.VEN_No.disable();
-      this.dataForm.controls.LOGO_No.disable();
+      this.dataForm.controls.HOS_No.disable();
+      // this.dataForm.controls.LOGO_No.disable();
     }
     this.loadDropdownOptions();
     if (!this.isFormCreateable) {
@@ -137,18 +138,18 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
       const resetFormData = () => { this.data = []; this.selectedItems = []; this.dialogData = []; this.calculateTotals(); };
       this.dataForm.controls.VEN_No.valueChanges.pipe(untilDestroyed(this)).subscribe(() => resetFormData());
       this.dataForm.controls.HOS_No.valueChanges.pipe(untilDestroyed(this)).subscribe(() => resetFormData());
-      this.warehouseOptions.pipe(untilDestroyed(this)).subscribe(warehouseOpts => {
-        this.dataForm.controls.LOGO_No.valueChanges.pipe(withLatestFrom(this.brandOptions), debounceTime(300), untilDestroyed(this)).subscribe(([logoNo, brandOpts]) => {
-          const selectedBrand = brandOpts?.find(opt => opt.value === logoNo);
-          const suggestedHOSNo = selectedBrand ? selectedBrand['No'] : null;
-          let finalHOSNo: string | null = null;
-          if (suggestedHOSNo && warehouseOpts?.some(opt => opt['No'] === suggestedHOSNo)) {
-            finalHOSNo = suggestedHOSNo;
-          }
-          this.dataForm.controls.HOS_No.setValue(finalHOSNo, { emitEvent: false });
-          resetFormData();
-        });
-      });
+      // this.warehouseOptions.pipe(untilDestroyed(this)).subscribe(warehouseOpts => {
+      //   this.dataForm.controls.LOGO_No.valueChanges.pipe(withLatestFrom(this.brandOptions), debounceTime(300), untilDestroyed(this)).subscribe(([logoNo, brandOpts]) => {
+      //     const selectedBrand = brandOpts?.find(opt => opt.value === logoNo);
+      //     const suggestedHOSNo = selectedBrand ? selectedBrand['No'] : null;
+      //     let finalHOSNo: string | null = null;
+      //     if (suggestedHOSNo && warehouseOpts?.some(opt => opt['No'] === suggestedHOSNo)) {
+      //       finalHOSNo = suggestedHOSNo;
+      //     }
+      //     this.dataForm.controls.HOS_No.setValue(finalHOSNo, { emitEvent: false });
+      //     resetFormData();
+      //   });
+      // });
     }
   }
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent
@@ -198,7 +199,7 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
         RJM_No: formData.RJM_No,
         SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
         VEN_No: formData.VEN_No,
-        LOGO_No: formData.LOGO_No,
+        // LOGO_No: formData.LOGO_No,
         HOS_No: formData.HOS_No,
         org_id: this.rowdata?.org_id,
         APPLY_Date: formData.APPLY_Date,
@@ -241,8 +242,10 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
   selectedItemsDialog: ITLS52040Detail[] = [];
   dialogColumns: Column[] = [
     { field: 'CRN_No', header: '退貨單編號' },
+    { field: 'APPLY_USR_Name', header: '申請人' },
     { field: 'APPLY_Date', header: '申請日期', format: formatDate },
     { field: 'APRV_Date', header: '審核日期', format: formatDate },
+    { field: 'VEN_No', header: '廠商編號' },
   ]
   onShowDialog() {
     this.dialogVisible = true
@@ -268,7 +271,7 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
         ...this.data,
         ...response.Data.Data.map((item: ITLS52040Detail) => ({
           ...item,
-          RJD_ConfirmQty: 1,
+          RJD_ConfirmQty: (item.CRN_SubQty || 0) - (item.RJD_ConfirmQty_Finished || 0),
           RJD_BuyPrc: item.RJD_BuyNet,
           RJD_BuyNet: 0,
         }))

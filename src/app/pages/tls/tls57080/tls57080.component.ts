@@ -1,170 +1,184 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { WarehouseService } from '../../../service/basic/warehouse.service';
-import { ManagementIDService } from '../../../service/basic/management-id.service';
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
+import { QueryTLS57080DetailsApiResponse, QueryTLS57080Request, Tls57080Service } from '@service/api/tls/tls57080.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { FileExportService } from '@shared/service/file-export.service';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize, Observable } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 @Component({
   selector: 'app-tls57080',
   templateUrl: './tls57080.component.html',
-  styleUrls: ['./tls57080.component.scss'],
   standalone: true,
   imports: [
+    AsyncPipe,
     MenubarComponent,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    DropdownComponent,
-    CalendarComponent,
     InputTextComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
+    ButtonModule,
     TranslateModule,
+    CalendarRangeQuickComponent,
+    DropdownComponent,
+    DropdownTableComponent
   ],
 })
-export class TLS57080Component {
-  ProgNo: string = '250047';
-  funInfo?: FunsrightInfo;
-
-
-
-  loading: boolean = false;
-  submitted: boolean = false;
-
-  queryForm = this.formBuilder.group({
-    warehouseCode: [],
-    initialDate: [],
-    managementCode: [],
-    productName: [],
-    vendorCode: [],
+export class TLS57080Component extends BasicQueryPageComponent<QueryTLS57080DetailsApiResponse> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    StartDate: [new Date('2025/01/01') as Date | null, [Validators.required]],
+    EndDate: [new Date('2025/06/09') as Date | null, [Validators.required]],
+    PLU_MagNo: ['0800000005599', [Validators.maxLength(20)]],
+    PLU_No: [null, [Validators.maxLength(20)]],
+    HOS_No: ['0001'],
+    PLU_Name: [null, [Validators.maxLength(50)]],
+    SQLType: [null], // 預設為 1: 售價 2: 單位成本
+    pageIndex: [1],
+    pageSize: [30],
   });
-
-  // Dropdown options
-  warehouseOptions: any[] = [];
-  managementIDOptions: any[] = [];
-
-  // Table data
-  data: any[] = [
-
-    // Other data
+  HOS_NoOptions = this.dropdown.queryPos2034();
+  data: QueryTLS57080DetailsApiResponse[] = [];
+  totalRecords = 0;
+  historyRequestBody: QueryTLS57080Request | null = null;
+  columns: ReportColumn[] = [
+    { field: 'Date', header: '日期' },
+    { field: 'nos', header: '單號' },
+    { field: 'VEN_NO', header: '廠商編號' },
+    { field: 'HOS_NO', header: '倉別' },
+    { field: 'Trntype', header: '作業' },
+    { field: 'qty', header: '異動量' },
+    { field: 'StockQty', header: '庫存量' },
+    { field: 'GUINO', header: '發票號碼' },
+    { field: 'PLU_NO', header: '國際條碼' },
+    { field: 'PLU_Name', header: '品牌' },
+    { field: 'TRN_BuyPrc', header: '進單價(未稅)', format: (v) => formatAmountWithDecimals(v, 2) },
+    { field: 'TRN_SalePrc', header: '售單價(含稅)', format: (v) => formatAmountWithDecimals(v, 2) },
+    { field: 'TRN_BuyAmt', header: '期初成本', format: (v) => formatAmountWithDecimals(v, 2) },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'date', header: '日期', visible: true },
-    { field: 'order', header: '單號', visible: true },
-    { field: 'vendorCode', header: '廠商編號', visible: true },
-    { field: 'warehouse', header: '倉別', visible: true },
-    { field: 'operation', header: '作業', visible: true },
-    { field: 'quantityChange', header: '異動量', visible: true },
-    { field: 'stockQuantity', header: '庫存量', visible: true },
-    { field: 'batchNumber', header: '批號', visible: true },
-    { field: 'unit', header: '單價', visible: true },
-    { field: 'amount', header: '金額', visible: true },
-  ];
-
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-    private warehouseService: WarehouseService,
-    private managementIDService: ManagementIDService,
-    private authService: AuthService,
-  ) { }
+    public readonly tls57080Service: Tls57080Service,
+    private readonly tls52010Service: Tls52010Service,
+    private readonly dropdown: DropdownApiService,
+    private readonly datePipe: DatePipe,
+    private readonly fileExportService: FileExportService
+  ) { super(); }
 
   ngOnInit(): void {
-    // Initialize dropdown options
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.warehouseService.getWarehouseOptions().subscribe((data) => (this.warehouseOptions = data));
-    this.managementIDService.getSystemTypes().subscribe((data) => (this.managementIDOptions = data));
-  }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
+    this.initializePage('TLS57080');
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
+    const body = {
+      ...frm.value,
+      StartDate: this.datePipe.transform(frm.value.StartDate, 'yyyy-MM-dd'),
+      EndDate: this.datePipe.transform(frm.value.EndDate, 'yyyy-MM-dd'),
     }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
+    this.handleSubmit(frm, () => {
+      this.tls57080Service.queryTLS57080(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+        this.data = res.Data[0].Details;
+        this.totalRecords = res.Data[0].Details.length;
+        this.historyRequestBody = body;
+      })
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
+  btnLoading = false;
+  onExportPDF() {
+    if (!this.historyRequestBody) {
+      return;
     }
-  }
+    // 確保使用 historyRequestBody
+    const export$: Observable<any> = this.tls57080Service.exportTLS57080PDF(this.historyRequestBody);
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
+    // 使用 fileExportService 統一處理檔案下載和 loading 狀態
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)), // 傳遞 Observable 並加入銷毀處理
+      '.' + 'pdf',        // 傳遞檔案副檔名
+      (isLoading: boolean) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
+    );
+
+  }
+  onExportXLSX() {
+    if (!this.historyRequestBody) {
+      return;
     }
-  }
+    // 確保使用 historyRequestBody
+    const export$: Observable<any> = this.tls57080Service.exportTLS57080(this.historyRequestBody);
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
+    // 使用 fileExportService 統一處理檔案下載和 loading 狀態
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)), // 傳遞 Observable 並加入銷毀處理
+      '.' + 'pdf',        // 傳遞檔案副檔名
+      (isLoading: boolean) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
+    );
+
+  }
+  // 管理編號
+  opLoading = false;
+  opForm = this.formBuilder.group({
+    queryNo: ['', [Validators.maxLength(20)]], // 管理編號
+    PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
+    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
+  });
+  suggestions: IQueryPOS2004DetailResponse[] = [];
+  fieldsConfig: FieldsConfig[] = [
+    { field: 'PLU_MagNo', header: '管理編號', mainDataField: true },
+  ];
+  opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
+  opColumns: Column[] = [
+    { field: 'PLU_MagNo', header: '商品管理編號' },
+    { field: 'PLU_No', header: '國際條碼' },
+    { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
+    { field: 'PLU_Name', header: '商品名稱' },
+  ];
+  opTotalRecords = 0;
+  onAutoCompleteInputChange(event: any) {
+    const body = {
+      ...event,
+      VEN_No: '',
+      LOGO_No: '',
+      queryNo: event.PLU_MagNo || '',
+      pageSize: 30,
+      pageIndex: 1,
+      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
+    }
+    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.suggestions = [...results.Data.map(item => ({
+        ...item,
+        label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo,
+      }))];
+    });
+  }
+  onformValueChanged(event: IQueryPOS2004DetailRequest) {
+    this.opLoading = true;
+    const body = {
+      queryNo: event.queryNo || '',
+      PLU_Name: event.PLU_Name || '',
+      VEN_No: '',
+      LOGO_No: '',
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.opData = [...results.Data]; // 更新data資料
+      this.opTotalRecords = results.TotalCount;
+      this.opLoading = false;
+    });
   }
 }

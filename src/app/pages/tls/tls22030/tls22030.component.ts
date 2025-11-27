@@ -1,13 +1,12 @@
-import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { Tls22030Service } from '../../../service/api/tls/tls22030.service';
-import { DisplayService } from '../../../service/basic/display.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -17,8 +16,6 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { WhetherService } from './../../../service/basic/whether.service';
-import { ButtonModule } from 'primeng/button';
 
 const yesterday = new Date();
 yesterday.setDate(yesterday.getDate() - 1);
@@ -67,27 +64,19 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
     },
   ];
   btnLoading = false;
-  listZeroDifferenceOptions: any[] = [];
   displayConditionOptions: any[] = [];
   tlt_no?: string;
 
   constructor(
     private ECRNoService: ECRNoService,
-    private whetherService: WhetherService,
-    private displayService: DisplayService,
     private tls22030Service: Tls22030Service,
     private dropDownListService: DropDownListService,
-    private service: Tls22030Service,
-    private http: HttpClient,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS22030', '/TLS/TLS22030cru', this.queryForm);
-    this.whetherService.getWhetherOptions().subscribe((data) => {
-      this.listZeroDifferenceOptions = data;
-    });
 
     this.ECRNoService.getECRNo().subscribe((data) => {
       this.ECRNoOptions = data;

@@ -4,22 +4,22 @@ import { NavigationExtras, Router } from '@angular/router';
 // Services
 
 // Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
 import { BigCategoryService } from '../../../service/basic/big-category.service';
 import { MidCategoryService } from '../../../service/basic/mid-category.service';
 import { SmallCategoryService } from '../../../service/basic/small-category.service';
+import { AuthService } from '../../../service/system/auth.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 @Component({
   selector: 'app-ass16020',
@@ -190,7 +190,7 @@ export class ASS16020Component extends BasicQpageComponent implements OnInit {
   ngOnInit(): void {
     this.ProgNo = '310041';
     // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     // this.bigCategoryService
     //   .getCategories()
     //   .subscribe((data) => (this.bigCategoryOptions = data));

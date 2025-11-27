@@ -1,40 +1,36 @@
+import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { DatePipe, NgIf } from '@angular/common';
-import { finalize } from 'rxjs';
-import { TLS32040Service, TLS32040Data, TLS32040QueryRequest } from '../../../service/api/tls/tls32040.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { AccordionModule } from 'primeng/accordion';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
-import { BusinessTypeCodeService } from '@service/basic/business-type-code-service.service';
-import { CommissionTypeService } from '@service/basic/commission-type.service';
-import { OrganizationNumberService } from '@service/basic/organization-number.service';
-import { CooperationMethodService } from '@service/basic/cooperation-method.service';
-import { FloorService } from '@service/basic/floor.service';
-import { RegionService } from '@service/basic/region-code.service';
-import { CounterCodeService } from '@service/basic/counter-code.service';
+import { Tls11010Service } from '@service/api/tls/tls11010.service';
+import { FloorService } from '@service/basic/querySYS3900.service';
+import { RegionService } from '@service/basic/querySYS3A00.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { Tls11010Service } from '@service/api/tls/tls11010.service';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { TLS32040Data, TLS32040Service } from '../../../service/api/tls/tls32040.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls32040',
   templateUrl: './tls32040.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, CalendarComponent, InputNumberComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent, CustomFooterTableComponent]
+  imports: [AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, CalendarComponent, InputNumberComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent, CustomFooterTableComponent]
 })
 export class TLS32040Component extends BasicQueryPageComponent<TLS32040Data> implements OnInit {
   readonly today: Date = (() => {
@@ -106,14 +102,15 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Data> imp
   regionOptions: any[] = [];
   floorOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
-  commissionTypeOptions: any[] = [];
+  commissionTypeOptions = getSYS1000Options('tlt_term_type');
   typeOptions: any[] = [];
-  counterCodeOptions: any[] = [];
+  counterCodeOptions = this.dropdown.queryTltTalent();
   taxOptions: any[] = [
     { value: true, label: '含稅' },
     { value: false, label: '未稅' }
   ];
-  operationsOptions: any[] = [];
+  operationsOptions = getSYS1000Options('store_way');
+
   reportTypeOptions: any[] = [
     { value: '1', label: '日營業報表' },
     { value: '2', label: '週營業報表' },
@@ -140,16 +137,11 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Data> imp
   //#endregion
 
   constructor(
+    private readonly dropdown: DropdownApiService,
     private tls32040Service: TLS32040Service,
-    private validationService: ValidationService,
     private datePipe: DatePipe,
-    private businessTypeCodeService: BusinessTypeCodeService,
-    private organizationNumberService: OrganizationNumberService,
-    private commissionTypeService: CommissionTypeService,
-    private cooperationMethodService: CooperationMethodService,
     private floorService: FloorService,
     private regionService: RegionService,
-    private counterCodeService: CounterCodeService,
     private tls11010Service: Tls11010Service,
   ) {
     super();
@@ -189,45 +181,23 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Data> imp
       }));
     });
     // 大分類/中分類下拉選項
+    // TODO: 請改打API
     // TODO: service是寫死的
-    this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
-      this.businessTypeCodeOptions = data.map(item => ({
-        ...item,
-        value: typeof item.value === 'number' ? item.value.toString() : item.value
-      }));
-    });
-    // 櫃別下拉選項
-    // TODO: service是寫死的
-    this.cooperationMethodService.getCooperationMethods().subscribe(data => {
-      this.operationsOptions = data.map(item => ({
-        ...item,
-        value: typeof item.value === 'number' ? item.value.toString() : item.value
-      }));
-    });
-    // 抽成別下拉選項
-    // TODO: service是寫死的
-    this.commissionTypeService.getCommissionTypes().subscribe((data) => {
-      this.commissionTypeOptions = data.map(item => ({
-        ...item,
-        value: typeof item.value === 'number' ? item.value.toString() : item.value
-      }));
-    });
+    // this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
+    //   this.businessTypeCodeOptions = data.map(item => ({
+    //     ...item,
+    //     value: typeof item.value === 'number' ? item.value.toString() : item.value
+    //   }));
+    // });
     // 組織代號下拉選項
+    //TODO 請呼叫API 不要呼叫寫死的
     // TODO: service是寫死的
-    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {
-      this.organizationOptions = data.map(item => ({
-        ...item,
-        value: typeof item.value === 'number' ? item.value.toString() : item.value
-      }));
-    });
-    // 專櫃編號下拉選項
-    // TODO: service是寫死的
-    this.counterCodeService.getCounterCodes().subscribe((data) => {
-      this.counterCodeOptions = data.map(item => ({
-        ...item,
-        value: typeof item.value === 'number' ? item.value.toString() : item.value
-      }));
-    });
+    // this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {
+    //   this.organizationOptions = data.map(item => ({
+    //     ...item,
+    //     value: typeof item.value === 'number' ? item.value.toString() : item.value
+    //   }));
+    // });
     // 加載館別選項
     this.tls11010Service.getBuildingOptions().subscribe((data) => {
       this.buildingOptions = data;

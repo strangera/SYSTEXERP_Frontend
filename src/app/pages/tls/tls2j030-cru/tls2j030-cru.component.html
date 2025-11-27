@@ -18,25 +18,27 @@
 
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="clear" [form]="dataForm"></app-button>
-        <app-button btnType="query" [loading]="loading"></app-button>
+        <app-button btnType="query" [loading]="queryLoading" (click)="querySourceInvoice()"></app-button>
       </div>
 
       <!-- 來源發票 table -->
       <app-table title="來源發票" tableKey="TLSD010Detail" [data]="data" class="col-12" [columns]="columnsnatural"
-        (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" dataStatusField="status"
-        [loading]="loading">
+        [showCaption]="false" [showManage]="false" (selectionChange)="selectedItems = $event"
+        [selectedItems]="selectedItems" dataStatusField="status" [loading]="queryLoading">
       </app-table>
 
       <!-- 編輯兩個 table-edit -->
       <div class="card">
-        <app-table-edit title="換開發票" tableKey="TLSD010Detail" class="col-12" [data]="data" [columns]="columnschange"
-          (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" dataStatusField="status"
-          [loading]="loading" [tableRequired]="true">
+        <app-table-edit title="換開發票" tableKey="ChangeEdit" class="col-12" [data]="changeEditData"
+          [columns]="columnschange" dataStatusField="status" [loading]="editLoading" [tableRequired]="true"
+          [showDelete]="false" [showInsert]="false" (dataChange)="onChangeEditDataChange($event)" [canInsert]="false"
+          [showCheckBox]="false">
         </app-table-edit>
 
-        <app-table-edit title="商品明細" tableKey="TLSD010Detail" class="col-12" [data]="data" [columns]="columnsdetail"
-          (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" dataStatusField="status"
-          [loading]="loading" [tableRequired]="true">
+        <app-table-edit title="商品明細" tableKey="DetailEdit" class="col-12" [data]="detailEditData"
+          [columns]="columnsdetail" dataStatusField="status" [loading]="editLoading" [tableRequired]="true"
+          [showDelete]="true" [showInsert]="true" (dataChange)="detailEditData = $event" [canInsert]="true"
+          [showCheckBox]="true">
         </app-table-edit>
 
         <!-- 按鈕 -->
@@ -50,16 +52,19 @@
     <!-- ======= 查看模式：三個純 app-table ======= -->
     <ng-container *ngIf="isViewMode" class="mt-0">
 
-      <app-table title="來源發票" tableKey="TLS2J030Detail_Natural" class="col-12" [data]="detailNaturalData" dataKey="ID" [showManage]="false"[showDelete]="false"[showCaption]="false"
-        [columns]="columnsNaturalView" [loading]="loading">
+      <app-table title="來源發票" tableKey="TLS2J030Detail_Natural" class="col-12" [data]="detailNaturalData" dataKey="ID"
+        [showManage]="false" [showDelete]="false" [showCaption]="false" [columns]="columnsNaturalView"
+        [loading]="loading">
       </app-table>
 
-      <app-table title="換開發票" tableKey="TLS2J030Detail_Change" class="col-12" [data]="detailChangeData" dataKey="ID" [showManage]="false"[showDelete]="false"[showCaption]="false"
-        [columns]="columnsChangeView" [loading]="loading">
+      <app-table title="換開發票" tableKey="TLS2J030Detail_Change" class="col-12" [data]="detailChangeData" dataKey="ID"
+        [showManage]="false" [showDelete]="false" [showCaption]="false" [columns]="columnsChangeView"
+        [loading]="loading">
       </app-table>
 
-      <app-table title="換開發票明細" tableKey="TLS2J030Detail_Item" class="col-12" [data]="detailItemData" dataKey="ID" [showManage]="false"[showDelete]="false"[showCaption]="false"
-        [columns]="columnsDetailView" [loading]="loading">
+      <app-table title="換開發票明細" tableKey="TLS2J030Detail_Item" class="col-12" [data]="detailItemData" dataKey="ID"
+        [showManage]="false" [showDelete]="false" [showCaption]="false" [columns]="columnsDetailView"
+        [loading]="loading">
       </app-table>
 
     </ng-container>

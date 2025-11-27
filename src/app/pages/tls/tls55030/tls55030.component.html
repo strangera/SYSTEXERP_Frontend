@@ -25,23 +25,23 @@
           <app-calendar calendarType="dateMonthOne" class="col-12 md:col-6 lg:col-4" label="申報年月"
             controlName="PUR_RepYYYYMM" [control]="queryForm.controls.PUR_RepYYYYMM" [submitted]="submitted" />
           <!-- 廠商統一編號 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="廠商統一編號" controlName="PUR_VenUniform"
-            [control]="queryForm.controls.PUR_VenUniform" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="廠商統一編號" controlName="VEN_Uniform"
+            [control]="queryForm.controls.VEN_Uniform" [submitted]="submitted"></app-input-text>
           <!-- 課稅別 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="課稅別" controlName="PUR_TaxType"
             [options]="PUR_TaxTypeOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.PUR_TaxType" [submitted]="submitted"></app-dropdown>
           <!-- 發票總額 -->
           <app-input-number-range class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="發票總額"
-            [startControl]="queryForm.controls.amountFrom" [endControl]="queryForm.controls.amountTo"
+            [startControl]="queryForm.controls.GUI_Amt_Start" [endControl]="queryForm.controls.GUI_Amt_End"
             [submitted]="submitted"></app-input-number-range>
           <!-- 未稅金額 -->
           <app-input-number-range class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="折讓未稅金額"
-            [startControl]="queryForm.controls.unTaxAmountFrom" [endControl]="queryForm.controls.unTaxAmountTo"
+            [startControl]="queryForm.controls.Rebate_Net_Start" [endControl]="queryForm.controls.Rebate_Net_End"
             [submitted]="submitted"></app-input-number-range>
           <!-- 稅額 -->
           <app-input-number-range class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="折讓稅額"
-            [startControl]="queryForm.controls.taxAmountFrom" [endControl]="queryForm.controls.taxAmountTo"
+            [startControl]="queryForm.controls.Rebate_Tax_Start" [endControl]="queryForm.controls.Rebate_Tax_End"
             [submitted]="submitted"></app-input-number-range>
           <!-- 格式 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="格式" controlName="PUR_VoucherType"
@@ -52,9 +52,9 @@
             [options]="DIS_StatusOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.DIS_Status" [submitted]="submitted" />
           <!-- 建立者 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="建立者" controlName="CRT_USR_No"
+          <!-- <app-dropdown class="col-12 md:col-6 lg:col-4" label="建立者" controlName="CRT_USR_No"
             [control]="queryForm.controls.CRT_USR_No" [options]="tblUserOptions | async" optionLabel="label"
-            optionValue="value" [submitted]="submitted"></app-dropdown>
+            optionValue="value" [submitted]="submitted"></app-dropdown> -->
           <!-- 折讓維護單號 -->
           <app-input-text class="col-12 md:col-6 lg:col-4" label="折讓維護單號" controlName="DIS_No"
             [control]="queryForm.controls.DIS_No" [submitted]="submitted"></app-input-text>
@@ -69,7 +69,8 @@
 </div>
 <div class="card">
   <app-table-report dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody"
-    [queryFunction]="tls55030Service.queryTLS55030.bind(tls55030Service)" [loading]="loading" [showDelete]="false">
+    [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody" (delete)="onDelete($event)" [showCheckBox]="true"
+    [queryFunction]="tls55030Service.queryTLS55030.bind(tls55030Service)" [loading]="loading"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event">
   </app-table-report>
 </div>

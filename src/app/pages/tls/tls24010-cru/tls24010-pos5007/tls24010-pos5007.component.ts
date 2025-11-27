@@ -2,15 +2,15 @@ import { DecimalPipe, NgIf } from '@angular/common';
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
-import { DropDownListService, IDropdownItem, POS2004Item, TltTalentChargeData } from '../../../../service/utility/dropDownList.service';
 import { POS5007Data } from '../../../../service/api/tls/tls24010.service';
-import { ButtonModule } from 'primeng/button';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { DropDownListService, IDropdownItem, POS2004Item, TltTalentChargeData } from '../../../../service/utility/dropDownList.service';
 import { STORE_WAY } from '../tls24010-cru.model';
 @UntilDestroy()
 @Component({
@@ -48,6 +48,10 @@ export class Tls24010Pos5007Component implements OnChanges {
   POS2004Options: POS2004Item[] = []; //下拉選單 商品資料
   tlt_idOptions: TltTalentChargeData[] = []; //下拉選單 類別
   TLT_NoOptions: IDropdownItem[] = [];
+  taxTypeOptions: { label: string, value: string }[] = [
+    { label: '應稅', value: '1' },
+    { label: '免稅', value: '0' }
+  ];
   trackByRow = (index: number, item: POS5007Data) => { return item?.id || index; }
   constructor(
     private readonly dropDownListService: DropDownListService,
@@ -187,14 +191,5 @@ export class Tls24010Pos5007Component implements OnChanges {
   getTXN_SaleAmtLength(row: POS5007Data): number {
     const amt = row.TXN_SaleAmt ?? 0;
     return Math.floor(Math.abs(amt)).toString().length;
-  }
-
-  getAllowedMaxLength(row: POS5007Data, field: 'TXN_Qty' | 'PLU_SalePrc' | 'TXN_Disc'): number {
-    const MAX_TOTAL_LENGTH = 10;
-    const currentAmtLength = this.getTXN_SaleAmtLength(row);
-    // 你可以用最簡單方式先全部統一扣掉目前長度
-    const remain = MAX_TOTAL_LENGTH - currentAmtLength;
-    // 最小設定為 1，不然會出現 maxlength 為 0 導致無法輸入
-    return Math.max(remain, 1);
   }
 }

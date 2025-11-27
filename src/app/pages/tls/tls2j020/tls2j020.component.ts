@@ -1,38 +1,35 @@
 
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { TLS2J020Service } from '@service/api/tls/tls2j020.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { TLS2J020Service } from '@service/api/tls/tls2j020.service';
-import { finalize, Observable } from 'rxjs';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize, Observable } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 // 2.2.18.2 大分類換開品項維護作業
 @Component({
   selector: 'app-tls2j020',
   templateUrl: './tls2j020.component.html',
-  styleUrl: './tls2j020.component.scss',
   standalone: true,
-  imports: [DropdownComponent, MultiSelectComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TableReportComponent, TranslateModule]
+  imports: [MultiSelectComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TableReportComponent, TranslateModule]
 })
 export class TLS2J020Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     CHG_ItemName: ['', [Validators.maxLength(10)]],
     bus_type: [[]],
     Item_TaxType: [['1']],
-    ...createPaginationConfig([{ field: 'id', order: 1 }]),
+    pageSize: [30],
+    pageIndex: [1],
   });
 
   selectedItems: any[] = [];
@@ -45,19 +42,21 @@ export class TLS2J020Component extends BasicQueryPageComponent<any> implements O
     { label: '應稅', value: '1' }
   ];
   columns: ReportColumn[] = [
-    { field: 'id', header: 'ID', visible: false },
+    { field: 'id', header: 'ID', visible: false, showSort: true },
     {
       field: 'bus_type',
-      header: '大分類',
+      header: '大分類代碼',
       visible: true,
-      format: (value: any, index?: number, rowData?: any) => {
-        return rowData?.bus_type && rowData?.bus_type_name
-          ? `${rowData.bus_type}-${rowData.bus_type_name}`
-          : value || '';
-      }
+      showSort: true,
     },
-    { field: 'CHG_ItemName', header: '品項名稱', visible: true },
-    { field: 'Item_TaxType_Desc', header: '稅別', visible: true },
+    {
+      field: 'bus_type_name',
+      header: '大分類名稱',
+      visible: true,
+      showSort: true,
+    },
+    { field: 'CHG_ItemName', header: '品項名稱', visible: true, showSort: true },
+    { field: 'Item_TaxType_Desc', header: '稅別', visible: true, showSort: true },
     // 其他欄位
   ];
 
@@ -93,17 +92,12 @@ export class TLS2J020Component extends BasicQueryPageComponent<any> implements O
         bus_type: v.bus_type?.length ? v.bus_type : [],
         CHG_ItemName: v.CHG_ItemName?.trim() || '',
         Item_TaxType: v.Item_TaxType?.length ? v.Item_TaxType : [],
-        pageSize: 30,
-        pageIndex: 1,
+        pageSize: v.pageSize || 30,
+        pageIndex: v.pageIndex || 1,
+        SortBy: v.SortBy || [{ field: 'id', order: 1 }],
       };
 
-      this.lastQueryBody = {
-        bus_type: v.bus_type?.length ? v.bus_type : [],
-        CHG_ItemName: v.CHG_ItemName?.trim() || '',
-        Item_TaxType: v.Item_TaxType?.length ? v.Item_TaxType : [],
-        pageSize: 30,
-        pageIndex: 1,
-      };
+      this.lastQueryBody = payload;
 
       this.loading = true;
       this.tls2j020Service

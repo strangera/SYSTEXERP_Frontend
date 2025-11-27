@@ -1,31 +1,31 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, OnInit, EventEmitter, Output } from '@angular/core';
+import { NgIf } from '@angular/common';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import {
+  FormControl,
   FormGroup,
-  Validators,
   FormsModule,
   ReactiveFormsModule,
-  FormControl,
+  Validators,
 } from '@angular/forms';
-import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 import { FIN13060Service } from '../../../service/api/fin/fin13060.service';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { FIN13050Service } from '@service/api/fin/fin13050.service';
 import { CalenderoneComponent } from '@shared/componentkit/calenderone/calenderone.component';
 import { ValidationService } from '@shared/service/validation.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { PanelModule } from 'primeng/panel';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 /** 依 updateFIN13060Request（後端為主）的 Typed Form */
 interface Fin13060CruForm {
@@ -83,8 +83,7 @@ interface Fin13060CruForm {
 })
 export class FIN13060CRUComponent
   extends BasicCruPageComponent<any>
-  implements OnInit
-{
+  implements OnInit {
   @Output() fieldChange = new EventEmitter<any>();
 
   // 下拉選項

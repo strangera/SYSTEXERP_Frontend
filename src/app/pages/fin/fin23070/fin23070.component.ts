@@ -1,23 +1,21 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 // Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { VendorService } from '../../../service/basic/vendor.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { ValidationService } from '../../../shared/service/validation.service';
 //
 
 //1.2.3.7 暫付款核銷報表
@@ -88,10 +86,7 @@ export class FIN23070Component extends BasicQpageComponent implements OnInit {
     private router: Router,
     private formBuilder: FormBuilder,
     private messageService: NotificationService,
-    private authService: AuthService,
     private validationService: ValidationService,
-    //
-    private vendorService: VendorService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -102,11 +97,7 @@ export class FIN23070Component extends BasicQpageComponent implements OnInit {
     this.cruPage = '/FIN2000/FIN23070CRU';
     //
     // ----------------------------------------------------------------
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     //
-    this.vendorService.getVendors().subscribe(data => {
-      this.requsetEmployeeOptions = data;
-    });
     //
     // ----------------------------------------------------------------
   }

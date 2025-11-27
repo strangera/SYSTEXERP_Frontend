@@ -1,28 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpResponse } from '@angular/common/http';
+import { Component } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize, map } from 'rxjs/operators';
 
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig} from '../../../shared/componentkit/table/table.model';
-
-import { WhetherService } from '../../../service/basic/whether.service';
-import { TLS23080Service } from '../../../service/api/tls/tls23080.service';
-import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { TLS23080Service } from '../../../service/api/tls/tls23080.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { FloorService } from '../../../service/basic/querySYS3900.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { ButtonModule } from 'primeng/button';
 
 import { CommonModule } from '@angular/common';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -60,7 +58,11 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
   private grandTotal: Record<string, number> = {};
 
   // 下拉來源
-  WhetherOptions: any[] = [];
+  WhetherOptions: any[] = [
+    { value: 'Y', label: '是' },
+    { value: 'N', label: '否' },
+    { value: null, label: '全部' },
+  ];
   floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   OrganizationCodeOptions: any[] = [];
@@ -77,18 +79,18 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
 
     // 聯信
     UnionGeneral: 'TotalUnionGeneral',
-    UnionAE:      'TotalUnionAE',
-    UnionDiner:   'TotalUnionDiner',
+    UnionAE: 'TotalUnionAE',
+    UnionDiner: 'TotalUnionDiner',
 
     // 中信
     CTBCGeneral: 'TotalCTBCGeneral',
-    CTBCAE:      'TotalCTBCAE',
-    CTBCDiner:   'TotalCTBCDiner',
+    CTBCAE: 'TotalCTBCAE',
+    CTBCDiner: 'TotalCTBCDiner',
 
     // 中信-停車場
     CTBCParkingGeneral: 'TotalCTBCParkingGeneral',
-    CTBCParkingAE:      'TotalCTBCParkingAE',
-    CTBCParkingDiner:   'TotalCTBCParkingDiner',
+    CTBCParkingAE: 'TotalCTBCParkingAE',
+    CTBCParkingDiner: 'TotalCTBCParkingDiner',
 
     // 其他支付
     ACT_PayAmt52: 'TotalPayAmt52',
@@ -133,17 +135,16 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
 
   queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday, [Validators.required]],
-    TXN_DateEnd:   [this.yesterday, [Validators.required]],
-    tlt_openflag:  ['N'],
-    ECR_No:        [],
-    tlt_building:  [],
-    tlt_floor:     [],
-    org_id:        [],
+    TXN_DateEnd: [this.yesterday, [Validators.required]],
+    tlt_openflag: ['N'],
+    ECR_No: [],
+    tlt_building: [],
+    tlt_floor: [],
+    org_id: [],
     ...createPaginationConfig(this.defaultSort),
   });
 
   constructor(
-    private whetherService: WhetherService,
     private tls23080Service: TLS23080Service,
     private floorService: FloorService,
     private ECRNoService: ECRNoService,
@@ -155,11 +156,6 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
 
   ngOnInit(): void {
     this.initializePage('TLS23080', 'tls/tls23080', this.queryForm, (form) => this.onSubmit(form));
-
-    // 下拉選單
-    this.whetherService.getWhetherOptions().subscribe(data => {
-      this.WhetherOptions = (data || []).filter((opt: any) => opt.value !== null);
-    });
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
     this.tls11010Service.getOrgOptions().subscribe(res => {
@@ -185,16 +181,16 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
       const val = this.queryForm.getRawValue() as any;
 
       const payload: any = {
-TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
-TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd),
-        tlt_openflag:  val?.tlt_openflag ?? undefined,
-        ECR_No:        Array.isArray(val?.ECR_No) && val.ECR_No.length ? val.ECR_No : undefined,
-        tlt_building:  Array.isArray(val?.tlt_building) && val.tlt_building.length ? val.tlt_building : undefined,
-        tlt_floor:     Array.isArray(val?.tlt_floor) && val.tlt_floor.length ? val.tlt_floor : undefined,
-        org_id:        Array.isArray(val?.org_id) && val.org_id.length ? val.org_id : undefined,
-        pageIndex:     Number(val?.pageIndex) || 1,
-        pageSize:      30, // ✅ 固定 30
-        SortBy:        Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort,
+        TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
+        TXN_DateEnd: this.toDateOnly(val?.TXN_DateEnd),
+        tlt_openflag: val?.tlt_openflag ?? undefined,
+        ECR_No: Array.isArray(val?.ECR_No) && val.ECR_No.length ? val.ECR_No : undefined,
+        tlt_building: Array.isArray(val?.tlt_building) && val.tlt_building.length ? val.tlt_building : undefined,
+        tlt_floor: Array.isArray(val?.tlt_floor) && val.tlt_floor.length ? val.tlt_floor : undefined,
+        org_id: Array.isArray(val?.org_id) && val.org_id.length ? val.org_id : undefined,
+        pageIndex: Number(val?.pageIndex) || 1,
+        pageSize: 30, // ✅ 固定 30
+        SortBy: Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort,
       };
 
       // 提供給 app-table-report 的 lastQueryBody
@@ -219,7 +215,23 @@ TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd),
 
           this.data = rows;
           this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+          // ★ 調整 historyRequestBody.pageSize
+          // 如果全部資料一次就拿完（totalRecords <= rows.length），
+          // 就把 pageSize 設成實際資料筆數，讓 TableReport 的 onSort 判斷通過
+          const rawPageSize = this.historyRequestBody?.pageSize || 30;
+          const effectivePageSize =
+            this.totalRecords <= rows.length
+              ? (rows.length || rawPageSize)   // 至少是 1
+              : rawPageSize;                   // 多頁情況維持原本 pageSize（30）
+
+          this.historyRequestBody = {
+            ...this.historyRequestBody,
+            pageSize: effectivePageSize,
+            pageIndex: 1,
+          };
         },
+
         error: () => {
           this.data = [];
           this.totalRecords = 0;
@@ -230,29 +242,29 @@ TXN_DateEnd:   this.toDateOnly(val?.TXN_DateEnd),
   }
 
   // ✅ 提供給 app-table-report 的查詢函式 — 固定 pageSize=30，並帶回 GrandTotal
-public queryTLS23080ForReport = (body: any) =>
-  this.tls23080Service
-    .queryTLS23080({
-      ...(body || {}),
-      pageSize: 30,
-      // ★ 強制 DateOnly（若 body 沒有就抓表單值）
-      TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
-      TXN_DateEnd:   this.toDateOnly(body?.TXN_DateEnd   ?? this.queryForm.value?.TXN_DateEnd),
-    })
-    .pipe(
-      map((res: any) => {
-        const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
-        const rows = this.extractRows(wrappers);
-        const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
-
-        // GrandTotal
-        const first = wrappers[0] ?? {};
-        const grand = this.mapTotalsFromWrapper(first);
-        this.grandTotal = { ...grand };
-
-        return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+  public queryTLS23080ForReport = (body: any) =>
+    this.tls23080Service
+      .queryTLS23080({
+        ...(body || {}),
+        pageSize: 30,
+        // ★ 強制 DateOnly（若 body 沒有就抓表單值）
+        TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+        TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
       })
-    );
+      .pipe(
+        map((res: any) => {
+          const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+          const rows = this.extractRows(wrappers);
+          const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+          // GrandTotal
+          const first = wrappers[0] ?? {};
+          const grand = this.mapTotalsFromWrapper(first);
+          this.grandTotal = { ...grand };
+
+          return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+        })
+      );
 
 
   // ========= 匯出 =========
@@ -342,7 +354,7 @@ public queryTLS23080ForReport = (body: any) =>
   onViewTLS23080(row: any) {
     const dateOnly = this.toDateOnly(row?.TXN_Date);
     this.router.navigate(['/account/tls/tls23080cru'], {
-      state: { criteria: { TXN_Date: dateOnly  } }
+      state: { criteria: { TXN_Date: dateOnly } }
     });
   }
 
@@ -401,62 +413,62 @@ public queryTLS23080ForReport = (body: any) =>
     { field: 'ACT_PayAmt10', header: '現金', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
     // 聯信（41/42/12）
-    { field: 'UnionGeneral', header: '聯信(一般)',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'UnionAE',      header: '聯信(AE)',     visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'UnionDiner',   header: '聯信(Diners)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'UnionGeneral', header: '聯信(一般)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'UnionAE', header: '聯信(AE)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'UnionDiner', header: '聯信(Diners)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
     // 中信（43/44/14）
-    { field: 'CTBCGeneral', header: '中信(一般)',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'CTBCAE',      header: '中信(AE)',     visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'CTBCDiner',   header: '中信(Diners)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'CTBCGeneral', header: '中信(一般)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'CTBCAE', header: '中信(AE)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'CTBCDiner', header: '中信(Diners)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
     // 中信-停車場（81）
-    { field: 'CTBCParkingGeneral', header: '中信-停車場(一般)',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'CTBCParkingAE',      header: '中信-停車場(AE)',     visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'CTBCParkingDiner',   header: '中信-停車場(Diners)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'CTBCParkingGeneral', header: '中信-停車場(一般)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'CTBCParkingAE', header: '中信-停車場(AE)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'CTBCParkingDiner', header: '中信-停車場(Diners)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
     // 其他付款別
-    { field: 'ACT_PayAmt52', header: '一卡通',                 visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt82', header: '一卡通-停車場',          visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt20', header: '禮券',                   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt62', header: '商品提貨單',             visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt77', header: '感熱紙抵用券',           visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt71', header: '商品抵用券',             visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt30', header: '貴賓提貨單(應收帳款)',   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt73', header: '外來禮券(抵用券)',       visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt72', header: '外來提貨單(抵用券)',     visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt74', header: '活動券(自營)',           visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt75', header: '折價券',                 visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt76', header: '現抵',                   visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt24', header: '禮券餘代卡',             visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt25', header: '提貨單餘代卡',           visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt07', header: '會員折抵',               visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt55', header: 'LINE Pay',               visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt83', header: 'LINE Pay-停車場',        visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt78', header: 'APP抵用券',              visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt79', header: 'APP提貨單',              visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt21', header: 'APP禮券',                visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt53', header: '悠遊卡',                 visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt52', header: '一卡通', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt82', header: '一卡通-停車場', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt20', header: '禮券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt62', header: '商品提貨單', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt77', header: '感熱紙抵用券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt71', header: '商品抵用券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt30', header: '貴賓提貨單(應收帳款)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt73', header: '外來禮券(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt72', header: '外來提貨單(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt74', header: '活動券(自營)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt75', header: '折價券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt76', header: '現抵', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt24', header: '禮券餘代卡', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt25', header: '提貨單餘代卡', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt07', header: '會員折抵', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt55', header: 'LINE Pay', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt83', header: 'LINE Pay-停車場', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt78', header: 'APP抵用券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt79', header: 'APP提貨單', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt21', header: 'APP禮券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt53', header: '悠遊卡', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'ACT_PayAmt56', header: '一卡通錢包 iPASS MONEY', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt57', header: '台灣Pay',                visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt58', header: '南紡錢包',               visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt59', header: '即享券',                 visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt60', header: '喜客券',                 visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt22', header: '外來提貨單-高夢',        visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ACT_PayAmt23', header: '外來禮券-高夢',          visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt57', header: '台灣Pay', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt58', header: '南紡錢包', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt59', header: '即享券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt60', header: '喜客券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt22', header: '外來提貨單-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'ACT_PayAmt23', header: '外來禮券-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
     // 總金額
     { field: 'Tot_ACT_PayAmt', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
   ];
   // 1) 新增這個工具函式（放在 component 裡即可）
-private toDateOnly(x: any): string | undefined {
-  if (!x) return undefined;
-  const d = typeof x === 'string' ? new Date(x) : (x as Date);
-  if (isNaN(d.getTime())) return undefined;
-  // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
+  private toDateOnly(x: any): string | undefined {
+    if (!x) return undefined;
+    const d = typeof x === 'string' ? new Date(x) : (x as Date);
+    if (isNaN(d.getTime())) return undefined;
+    // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
 }

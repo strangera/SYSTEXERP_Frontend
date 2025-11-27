@@ -1,0 +1,84 @@
+{
+  "files.exclude": {
+    // "**/*.spec.*": true,
+    // "eslint.config.js": true,
+    // ".editorconfig": true,
+    // ".angulardoc.json": true,
+    // ".prettierrc": true,
+    // "package-lock.json": true,
+    // "deploy_TSRD_前端.bat": true,
+    // "deploy_TSRDdev_前端.bat": true,
+    // ".gitignore": true,
+    // "node_modules/": true,
+    // ".github/": true,
+    // ".angular/": true,
+    // "dist/": true,
+    // "CLAUDE.md": true,
+    // "README.md": true,
+    // "src/favicon.ico": true,
+    // "src/index.html": true,
+    // "src/main.ts": true,
+    // "src/web.config": true,
+    // "tsconfig.app.json": true,
+    // "tsconfig.spec.json": true,
+    // "tsconfig.json": true,
+    // "src/app/guards": true,
+    // "src/app/interceptors": true,
+    // "src/app/layout": true,
+    // "src/app/service/basic": true,
+    // "src/app/utils": true,
+    // "src/app/shared/component": true,
+    // "src/app/shared/componentextends": true,
+    // "src/app/shared/models": true,
+    // "src/app/shared/componentkit/file-upload": true,
+    // "src/app/pages/ass": true,
+    // "src/app/pages/cpm": true,
+    // "instructions.md": true,
+    // ".eslintrc.json": true,
+    // "src/app/shared/componentextends/basic-print/basic-print-data2.component.ts": true,
+    // "src/app/shared/componentkit/table2": true,
+    // "src/app/shared/componentkit/smart-data-table": true,
+    // "src/app/shared/componentkit/selector-panel": true,
+    // "src/app/shared/componentkit/app-dynamic-table": true,
+    // "src/app/shared/componentkit/button-dynamicallyadd": true,
+    // "src/app/shared/componentkit/button-dynamicallydelete": true,
+    // "src/app/shared/componentkit/expandable-edit-table": true,
+    // "src/app/shared/componentkit/multi-location-filter": true,
+    // "src/app/shared/componentkit/query-year-month": true,
+    // "src/app/shared/componentkit/report-table-group": true,
+    // "src/app/shared/componentkit/tree-dropdown": true,
+    // "src/app/shared/componentkit/tree-dropdown-nest": true,
+    // "src/app/shared/componentkit/app-autocomplete": true,
+    // "src/app/shared/componentkit/custom-footer-table": true,
+    // "src/environments/environment.prod.ts": true,
+    // "src/environments/environment.staging.ts": true,
+    // "src/environments/tls2-b010-table": true
+  },
+  // "html.format.wrapAttributes": "auto",
+  "editor.formatOnSave": true, // 設置自動格式化
+  "editor.defaultFormatter": "esbenp.prettier-vscode", // 使用 Prettier 格式化
+  "prettier.singleQuote": true, // 使用單引號
+  "prettier.printWidth": 80, // 設定每行最大字符數
+  "prettier.tabWidth": 2, // 設定縮排寬度
+  "prettier.useTabs": false,
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  // 設置 Live Server 的網站根目錄
+  "liveServer.settings.root": "dist/tsrderp-frontend/browser",
+  // 可選：當檔案儲存時是否自動重新載入
+  "liveServer.settings.reloadBrowserWhenSaved": true,
+  "sonarlint.connectedMode.project": {
+    "connectionId": "http-127-0-0-1-9000-",
+    "projectKey": "TSRDERP"
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "editor.bracketPairColorization.enabled": true,
+  "javascript.suggest.paths": true,
+  "typescript.suggest.paths": true,
+  "html.suggest.paths": true,
+  "typescript.referencesCodeLens.enabled": true,
+}

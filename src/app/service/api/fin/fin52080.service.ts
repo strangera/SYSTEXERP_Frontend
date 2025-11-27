@@ -12,18 +12,13 @@ const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
 @Injectable({ providedIn: 'root' })
 export class FIN52080Service {
 
-  public readonly FIN52080Data = signal<FIN52080Data[]>([]);
-  public readonly classNoOption = signal<FIN52080ClassNo[]>([]);
-  public readonly FIN52080Tree = signal<FIN52080Tree[]>([]);
+  public readonly classNoOptions = signal<FIN52080ClassNo[]>([]);
 
-
-  public tableLoading = signal<boolean>(!1);
-  public classNoLoading = signal<boolean>(!1);
-  public treeLoading = signal<boolean>(!1);
+  public readonly classNoLoading = signal<boolean>(!1);
 
   public accNoFilter = /^\d{1,8}$/;
 
-  public readonly classNoMap = computed(() => new Map(this.classNoOption().map(item => [item.ClassNo, item.ClassCName])));
+  public readonly classNoMap = computed(() => new Map(this.classNoOptions().map(item => [item.ClassNo, item.ClassCName])));
 
   /** 借/貸 */
   public readonly accDCOption: apiOption[] = [
@@ -82,12 +77,9 @@ export class FIN52080Service {
   ) { }
 
   public loadFIN52080(payload: FIN52080Query): Observable<BaseQueryResponse<FIN52080Data>> {
-    this.tableLoading.set(!0);
     return this.http.post<BaseQueryResponse<FIN52080Data>>(`${apiUrl}/queryFIN52080`, payload).pipe(
       take(1),
-      tap(res => this.FIN52080Data.set(res.Data)),
-      tap(() => this.logger.debug('查詢FIN52080結果:', [this.FIN52080Data()])),
-      finalize(() => this.tableLoading.set(!1))
+      tap(res => this.logger.debug('查詢FIN52080結果:', [res])),
     );
   };
 
@@ -95,33 +87,29 @@ export class FIN52080Service {
     this.classNoLoading.set(!0);
     this.http.post<BaseQueryResponse<FIN52080ClassNo>>(`${apiUrl}/queryClassNoDropdown`, {}).pipe(
       take(1),
-      tap(res => this.classNoOption.set(res.Data)),
-      tap(() => this.logger.debug('查詢ClassNo結果:', [this.classNoOption(), this.classNoMap()])),
+      tap(res => {
+        this.classNoOptions.set(res.Data);
+        this.logger.debug('查詢ClassNo結果:', [res]);
+      }),
       finalize(() => this.classNoLoading.set(!1))
     ).subscribe();
   };
 
-  public getFIN52080Tree(): void {
-    this.treeLoading.set(!0);
-    this.http.post<BaseQueryResponse<FIN52080Tree>>(`${apiUrl}/queryFIN52080_tree_DropDownList`, {}).pipe(
+  public getFIN52080Tree(): Observable<BaseQueryResponse<FIN52080Tree>> {
+    return this.http.post<BaseQueryResponse<FIN52080Tree>>(`${apiUrl}/queryFIN52080_tree_DropDownList`, {}).pipe(
       take(1),
-      tap(res => this.FIN52080Tree.set(res.Data)),
-      tap(() => this.treeLoading.set(!1)),
-      tap(() => this.logger.debug('查詢ClassNo樹狀結構結果:', [this.FIN52080Tree()])),
-      finalize(() => this.treeLoading.set(!1))
-    ).subscribe();
+      tap(res => this.logger.debug('查詢ClassNo樹狀結構結果:', [res])),
+    );
   }
 
   /** 存檔 (目前暫無update) */
   public saveFIN52080(payload: FIN52080Query, action: 'insert' | 'update' = 'insert'): Observable<BaseQueryResponse<unknown>> {
-    this.tableLoading.set(!0);
     const suffix = action === 'insert' ? 'insertFIN52080' : 'updateFIN52080';
     const logLabel = action === 'insert' ? '插入FIN52080結果:' : '更新FIN52080結果:';
 
     return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/${suffix}`, payload).pipe(
       take(1),
       tap(res => this.logger.debug(logLabel, [res])),
-      finalize(() => this.tableLoading.set(!1))
     );
   };
 }

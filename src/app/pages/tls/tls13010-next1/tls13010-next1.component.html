@@ -4,7 +4,7 @@
     <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
     <app-button
       btnType="create"
-      label="下一步(抽成設定)"
+      [label]="getNextStepLabel()"
       (click)="onSubmitNext()"
     ></app-button>
     <app-button btnType="back" (click)="onClearAndExit()"></app-button>
@@ -79,7 +79,7 @@
       </div>
 
       <!-- 動態生成各類型扣款表格 -->
-      <div *ngFor="let capType of capTypes" [hidden]="!hasDataForType(capType)">
+      <div *ngFor="let capType of capTypes">
         <p-accordion>
           <p-accordionTab [header]="getCapTypeName(capType)" [selected]="true">
             <!-- 每個群組獨立的模式控制按鈕 -->
@@ -97,13 +97,24 @@
               </div>
             </div>
 
-            <!-- 無資料顯示 -->
-
+            <!-- 無資料顯示 - 區分「完全沒資料」和「常用模式下沒資料」 -->
             <div
               *ngIf="!hasDataForType(capType)"
-              class="text-center p-4 bg-gray-50 border-round"
+              class="text-center p-4 bg-yellow-50 border-round border-1 border-yellow-200"
             >
-              <i class="pi pi-inbox text-3xl text-gray-400 mb-2"></i>
+              <i class="pi pi-info-circle text-3xl text-yellow-600 mb-2"></i>
+              <p class="text-gray-700 font-semibold mb-2">
+                {{ getCapTypeName(capType) }}：常用項目未設定
+              </p>
+              <p class="text-gray-600 text-sm mb-3">
+                目前「常用項目」模式下沒有可顯示的資料
+              </p>
+              <app-button
+                label="顯示全部項目"
+                icon="pi pi-eye"
+                styleClass="p-button-sm p-button-warning"
+                (click)="toggleCommonModeByType(capType)"
+              ></app-button>
             </div>
 
             <!-- 使用 expandable-edit-table 組件 -->
@@ -175,7 +186,7 @@
         ></app-button>
         <app-button
           btnType="create"
-          label="下一步(抽成設定)"
+          [label]="getNextStepLabel()"
           (click)="onSubmitNext()"
           [disabled]="getTotalSelectedCount() === 0"
         ></app-button>

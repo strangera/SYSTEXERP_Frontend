@@ -169,9 +169,15 @@ class CruDataCleaner implements TLS12040DataCleaner {
 
 class Next1DataCleaner implements TLS12040DataCleaner {
   clean(data: any) {
+    // 🔥 關鍵修復:不要過濾掉 deleted 狀態的項目
+    // 保留所有項目:已選 + 刪除狀態的項目
+    const selectedItems = (data.selectedItems || []).filter((item: any) =>
+      item.is_selected || item._status === 'deleted'
+    );
+
     return {
       fareData: data.fareData || {},
-      selectedItems: (data.selectedItems || []).filter((item: any) => item.is_selected),
+      selectedItems: selectedItems,
       contractInfo: data.contractInfo || null
     };
   }
@@ -663,6 +669,35 @@ export class TLS12040FlowService {
       this.processCommissionDetails(commission, discountSettings, annualSettings, levelSettings);
     });
 
+    // 🔥 最終檢查：輸出完整的 levelSettings 以便追蹤
+    console.log('📤 最終 levelSettings 資料:', {
+      toInsert: levelSettings.toInsert.map((item: { id: unknown; charged_id: unknown; cag_barcode: unknown; tlt_id: unknown }) => ({
+        id: item.id,
+        charged_id: item.charged_id,
+        cag_barcode: item.cag_barcode,
+        tlt_id: item.tlt_id
+      })),
+      toUpdate: levelSettings.toUpdate.map((item: { id: unknown; charged_id: unknown; cag_barcode: unknown }) => ({
+        id: item.id,
+        charged_id: item.charged_id,
+        cag_barcode: item.cag_barcode
+      })),
+      toDelete: levelSettings.toDelete
+    });
+
+    console.log('📤 最終 discountSettings 資料:', {
+      toInsert: discountSettings.toInsert.map((item: { id: unknown; cag_barcode: unknown; tlt_id: unknown }) => ({
+        id: item.id,
+        cag_barcode: item.cag_barcode,
+        tlt_id: item.tlt_id
+      })),
+      toUpdate: discountSettings.toUpdate.map((item: { id: unknown; cag_barcode: unknown }) => ({
+        id: item.id,
+        cag_barcode: item.cag_barcode
+      })),
+      toDelete: discountSettings.toDelete
+    });
+
     return { masters, discountSettings, annualSettings, levelSettings };
   }
 
@@ -677,6 +712,15 @@ export class TLS12040FlowService {
   ): void {
     // 處理折扣設定明細
     commission.ChargeDetails?.forEach((detail: any) => {
+      // 🔥 修正：優先檢查 _status = 'deleted'
+      if (detail._status === 'deleted') {
+        if (this.hasValidId(detail.id)) {
+          discountSettings.toDelete.push({ id: Number(detail.id) } as any);
+        }
+        return;
+      }
+
+      // 檢查 is_selected（向後相容）
       if (!detail.is_selected && this.hasValidId(detail.id)) {
         discountSettings.toDelete.push({ id: Number(detail.id) } as any);
         return;
@@ -696,9 +740,15 @@ export class TLS12040FlowService {
       };
 
       switch (detail._status) {
-        case 'new':
-          discountSettings.toInsert.push(cleanDetail);
+        case 'new': {
+          // 🔥 新增項目：保留臨時 id (可能是 temp_ 開頭)，用於關聯 level
+          const newDetail = {
+            ...cleanDetail,
+            id: detail.id  // 保留原始 id（包括臨時 id）
+          };
+          discountSettings.toInsert.push(newDetail);
           break;
+        }
         case 'modified':
           discountSettings.toUpdate.push(cleanDetail);
           break;
@@ -738,18 +788,28 @@ export class TLS12040FlowService {
 
     // 處理層級抽成明細
     commission.LevelChargeDetails?.forEach((detail: any, index: number) => {
+      console.log(`🔍 處理 Level 項目 [${index}]:`, {
+        id: detail.id,
+        charged_id: detail.charged_id,
+        cag_barcode: detail.cag_barcode,
+        is_selected: detail.is_selected,
+        _status: detail._status
+      });
+
       if (!detail.is_selected && this.hasValidId(detail.id)) {
         levelSettings.toDelete.push({ id: Number(detail.id) });
         return;
       }
 
       if (!detail.is_selected && !this.hasValidId(detail.id)) {
+        console.log(`  ⏩ 跳過未勾選且無有效ID的項目`);
         return;
       }
 
       const cleanLevel = {
         ...(this.hasValidId(detail.id) ? { id: Number(detail.id) } : {}),
         tlt_id: commission.tlt_id || '',
+        charged_id: String(detail.charged_id || ''),  // 🔥 明確轉換為字串
         seq_no: index + 1,
         cag_barcode: detail.cag_barcode || '',
         level_bmount: this.parseNumber(detail.level_bmount) || 0,
@@ -757,13 +817,41 @@ export class TLS12040FlowService {
         level_charge_rate: this.parseNumber(detail.level_charge_rate) || 0
       };
 
+      console.log(`  📦 cleanLevel 建立完成:`, {
+        id: cleanLevel.id,
+        charged_id: cleanLevel.charged_id,
+        cag_barcode: cleanLevel.cag_barcode
+      });
+
       switch (detail._status) {
-        case 'new':
-          levelSettings.toInsert.push(cleanLevel);
+        case 'new': {
+          // 🔥 新增項目：必須包含 charged_id 來關聯對應的 discount
+          const newLevel = {
+            ...cleanLevel,
+            charged_id: String(detail.charged_id || '')  // 🔥 保留 charged_id（明確轉為字串）
+          };
+          console.log(`  ✅ 加入 toInsert:`, {
+            id: newLevel.id,
+            charged_id: newLevel.charged_id,
+            cag_barcode: newLevel.cag_barcode
+          });
+          levelSettings.toInsert.push(newLevel);
           break;
-        case 'modified':
-          levelSettings.toUpdate.push(cleanLevel);
+        }
+        case 'modified': {
+          // 🔥 修改項目：也需要保留 charged_id
+          const modifiedLevel = {
+            ...cleanLevel,
+            charged_id: String(detail.charged_id || '')  // 🔥 明確轉為字串
+          };
+          console.log(`  ✅ 加入 toUpdate:`, {
+            id: modifiedLevel.id,
+            charged_id: modifiedLevel.charged_id,
+            cag_barcode: modifiedLevel.cag_barcode
+          });
+          levelSettings.toUpdate.push(modifiedLevel);
           break;
+        }
         case 'deleted':
           if (this.hasValidId(detail.id)) {
             levelSettings.toDelete.push({ id: Number(detail.id) });

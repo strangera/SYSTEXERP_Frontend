@@ -26,6 +26,7 @@ export interface TLS2A010Query {
   Building_No?: string;
 }
 
+
 export const defaultColumns = [
   { header: '總計', field: 'group_name', hidden: true },
   { header: '收銀機代號', field: 'ECR_No' },
@@ -33,6 +34,7 @@ export const defaultColumns = [
   { header: '櫃位名稱', field: 'tlt_name' },
   { header: '系統帳', field: 'BOOK_PayAmt', isTotal: true, format: formatAmount },
   { header: '實收帳', field: 'ACT_PayAmt', isTotal: true, format: formatAmount },
+  { header: '調整後實收帳', field: 'MOD_PayAmt', isTotal: true, format: formatAmount },
   { header: '系統/實收帳差異', field: 'OVER_PayAmt', isTotal: true, format: formatAmount },
   {
     header: '審核狀態',
@@ -76,6 +78,10 @@ export const creditCardColumns: Column[] = [
   { header: 'DINER', field: 'ACT_PayAmt3', groupField: 'ACT', isTotal: true, format: formatAmount },
   { header: '總金額', field: 'ACT_PayAmt', isTotal: true, format: formatAmount },
 
+  { header: '信用卡', field: 'MOD_PayAmt1', groupField: 'MOD', isTotal: true, format: formatAmount },
+  { header: 'AE', field: 'MOD_PayAmt2', groupField: 'MOD', isTotal: true, format: formatAmount },
+  { header: 'DINER', field: 'MOD_PayAmt3', groupField: 'MOD', isTotal: true, format: formatAmount },
+  { header: '總金額', field: 'MOD_PayAmt', isTotal: true, format: formatAmount },
 
   { header: '信用卡', field: 'OVER_PayAmt1', groupField: 'OVER', isTotal: true, format: formatAmount },
   { header: 'AE', field: 'OVER_PayAmt2', groupField: 'OVER', isTotal: true, format: formatAmount },
@@ -109,5 +115,6 @@ export const creditCardColumns: Column[] = [
 export const creditCardGroup: ColumnGroup[] = [
   { field: 'BOOK', header: '系統帳' },
   { field: 'ACT', header: '實收帳' },
+  { field: 'MOD', header: '調整後實收帳' },
   { field: 'OVER', header: '實收帳 - 系統帳' },
 ];

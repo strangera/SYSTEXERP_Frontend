@@ -1,8 +1,8 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 請確認你的 ApiResponse 介面路徑是否正確
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
-import { ApiResponse } from '../../system/auth.service'; // 請確認你的 ApiResponse 介面路徑是否正確
 /** 查詢 POS2031P 資料表 (queryTLS52020) 的請求介面 */
 export interface IQueryTLS52020Request {
   CRN_No?: string; // 退貨單編號
@@ -83,6 +83,7 @@ export interface IPOS2004DetailData {
   PLU_StockTaxType: string; // 進貨稅別 (0免稅, 1應稅)
   PLU_SalePrc_UNI: number; // 未稅進價
   PLU_SalePrc: number; // 含稅售價
+  _TABLE_KEY?: string;
 }
 /** 新增更新 請求 */
 export interface TLS52020Request {
@@ -117,6 +118,7 @@ export interface TLS52020Detail {
   PLU_No: string,
   PLU_Name: string,
   PLU_Unit: string,
+  UNIT_NAME?: string,
   PLU_BoxQty: number,
   PLU_StockTaxType: string,
   PLU_TaxType?: string,
@@ -125,10 +127,11 @@ export interface TLS52020Detail {
   CRN_BuyNet?: number,
   CRN_BuyTax?: number,
   CRN_BuyAmt?: number,
-  CRN_SalePrc: number,
+  CRN_SalePrc?: number,
   CRN_SaleTax?: number,
   CRN_SaleAmt?: number,
   CRN_Remark: string,
+  _TABLE_KEY?: string
 }
 /** POS2032P 資料表 (queryPOS2032P) 的單筆響應資料介面 */
 export interface IPOS2032PData {
@@ -234,5 +237,29 @@ export class Tls52020Service {
    */
   updateTLS52020(data: TLS52020Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateTLS52020`, data);
+  }
+  /**
+       * 匯出退貨單Excel
+       * @param params 查詢條件 (CRN_No)
+       * @returns API 響應
+       */
+  exportTLS52020(params: { CRN_NoList: string[] }): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportTLS52020`, params,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      });
+  }
+  /**
+   * 匯出退貨單PDF
+   * @param params 查詢條件 (CRN_No)
+   * @returns API 響應
+  */
+  exportTLS52020PDF(params: { CRN_NoList: string[] }): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportTLS52020PDF`, params,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      });
   }
 }

@@ -1,38 +1,39 @@
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import {
-  Validators,
+  FormGroup,
   FormsModule,
   ReactiveFormsModule,
-  FormGroup,
+  Validators,
 } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { TableModule } from 'primeng/table';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
-import { ButtonModule } from 'primeng/button';
+import { FIN15110Service } from '@service/api/fin/fin15110.service';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import {
-  createPaginationConfig,
   Column,
+  createPaginationConfig,
   formatAmount,
 } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { CalendarModule } from 'primeng/calendar';
+import { DropdownModule } from 'primeng/dropdown';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
+import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
-import { DatePipe } from '@angular/common';
-import { FIN15110Service } from '@service/api/fin/fin15110.service';
 import { environment } from 'src/environments/environment';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import {
   DropDownListService,
   IDropdownItem,
 } from './../../../service/utility/dropDownList.service';
-import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 
 @Component({
   selector: 'app-fin15110',
@@ -56,7 +57,8 @@ import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/drop
     CustomFooterTableComponent,
     DatePipe,
     MultiSelectComponent,
-    DropdownRangeComponent
+    DropdownRangeComponent,
+    DropdownComponent
   ],
 })
 export class FIN15110Component
@@ -69,6 +71,7 @@ export class FIN15110Component
     ECR_No_S: [''],
     ECR_No_E: [''],
     DataType: [['1', '2'] as string[]],
+    displayMode: ['1'],
     ...createPaginationConfig([{ field: 'Ecr_No', order: 1 }]),
   });
 
@@ -87,55 +90,156 @@ export class FIN15110Component
     { label: '開立', value: '1' },
     { label: '作廢', value: '2' },
   ];
-
-  /** 表格欄位設定 */
-  columns: Column[] = [
-    { field: 'Ecr_No', header: '收銀機號', visible: true, showSort: true },
-    { field: 'TXN_Date', header: '發票日期', visible: true, showSort: true },
-    { field: 'TXN_GUINo', header: '發票號碼', visible: true, showSort: true },
-    { field: 'TXN_Uniform', header: '統一編號', visible: true, showSort: true },
-    {
-      field: 'TXN_SaleAmt',
-      header: '銷售金額',
-      visible: true,
-      showSort: true,
-      format: formatAmount,
-      isTotal: true,
-    },
-    {
-      field: 'TXN_SaleTax',
-      header: '應稅銷售金額',
-      visible: true,
-      showSort: true,
-      format: formatAmount,
-      isTotal: true,
-    },
-    {
-      field: 'TXN_SaleNoTax',
-      header: '免稅銷售金額',
-      visible: true,
-      showSort: true,
-      format: formatAmount,
-      isTotal: true,
-    },
-    {
-      field: 'TXN_Net',
-      header: '未稅銷售金額',
-      visible: true,
-      showSort: true,
-      format: formatAmount,
-      isTotal: true,
-    },
-    {
-      field: 'TXN_Tax',
-      header: '稅額',
-      visible: true,
-      showSort: true,
-      format: formatAmount,
-      isTotal: true,
-    },
-    { field: 'TXN_VoidDT', header: '發票作廢日期', visible: true, showSort: true },
+  displayModeOptions = [
+    { value: '1', label: '二電發票表' },
+    { value: '2', label: '發票報表依機台加總' },
+    { value: '3', label: '發票報表依機台明細' },
+    { value: '4', label: '跨日作廢發票報表' },
+    { value: '5', label: '跨期作廢發票報表' },
   ];
+  /** 表格欄位設定 */
+  columns: Column[] = [];
+
+  /** 不同 ReportType 的欄位配置 */
+  private getColumnsByReportType(reportType: string): Column[] {
+    const baseColumns = {
+      No: { field: 'No', header: '序號', visible: false, showSort: true },
+      DataType: { field: 'DataType', header: '資料種類', visible: true, showSort: true },
+      StoreNo: { field: 'StoreNo', header: '店號', visible: true, showSort: true },
+      Ecr_No: { field: 'Ecr_No', header: '收銀機號', visible: true, showSort: true },
+      TXN_Date: { field: 'TXN_Date', header: '發票日期', visible: true, showSort: true },
+      INV_YM: { field: 'INV_YM', header: '發票年月', visible: true, showSort: true },
+      TXN_GUINo: { field: 'TXN_GUINo', header: '發票號碼', visible: true, showSort: true },
+      TXN_Uniform: { field: 'TXN_Uniform', header: '統一編號', visible: true, showSort: true },
+      TXN_SaleAmt: {
+        field: 'TXN_SaleAmt',
+        header: '銷售金額',
+        visible: true,
+        showSort: true,
+        format: formatAmount,
+        isTotal: true,
+      },
+      TXN_SaleTax: {
+        field: 'TXN_SaleTax',
+        header: '應稅銷售金額',
+        visible: true,
+        showSort: true,
+        format: formatAmount,
+        isTotal: true,
+      },
+      TXN_SaleNoTax: {
+        field: 'TXN_SaleNoTax',
+        header: '免稅銷售金額',
+        visible: true,
+        showSort: true,
+        format: formatAmount,
+        isTotal: true,
+      },
+      TXN_SaleZeroTax: {
+        field: 'TXN_SaleZeroTax',
+        header: '零稅率銷售金額',
+        visible: true,
+        showSort: true,
+        format: formatAmount,
+        isTotal: true,
+      },
+      TXN_Net: {
+        field: 'TXN_Net',
+        header: '未稅銷售金額',
+        visible: true,
+        showSort: true,
+        format: formatAmount,
+        isTotal: true,
+      },
+      TXN_Tax: {
+        field: 'TXN_Tax',
+        header: '稅額',
+        visible: true,
+        showSort: true,
+        format: formatAmount,
+        isTotal: true,
+      },
+      TXN_VoidDT: { field: 'TXN_VoidDT', header: '發票作廢日期', visible: true, showSort: true },
+      INVStatus: { field: 'INVStatus', header: '發票狀態', visible: true, showSort: true },
+      GUIType: { field: 'GUIType', header: '發票類型', visible: true, showSort: true },
+      PLU_TaxType: { field: 'PLU_TaxType', header: '稅別', visible: true, showSort: true },
+    };
+
+    switch (reportType) {
+      case '1': // 二電發票明細報表
+        return [
+          baseColumns.Ecr_No,
+          baseColumns.TXN_Date,
+          baseColumns.INV_YM,
+          baseColumns.TXN_GUINo,
+          baseColumns.TXN_Uniform,
+          baseColumns.TXN_SaleAmt,
+          baseColumns.TXN_SaleTax,
+          baseColumns.TXN_SaleNoTax,
+          baseColumns.TXN_SaleZeroTax,
+          baseColumns.TXN_Net,
+          baseColumns.TXN_Tax,
+          baseColumns.TXN_VoidDT,
+        ];
+
+      case '2': // 發票報表一機台加總
+        return [
+
+          baseColumns.Ecr_No,
+          baseColumns.TXN_Date,
+          baseColumns.TXN_SaleTax,
+          baseColumns.TXN_SaleNoTax,
+          baseColumns.TXN_SaleZeroTax,
+        ];
+
+      case '3': // 發票報表一機台明細
+        return [
+
+          baseColumns.Ecr_No,
+          baseColumns.TXN_Date,
+          baseColumns.INV_YM,
+          baseColumns.TXN_GUINo,
+          baseColumns.TXN_SaleAmt,
+          baseColumns.TXN_SaleTax,
+          baseColumns.TXN_SaleNoTax,
+          baseColumns.INVStatus,
+        ];
+
+      case '4': // 作廢發票報表
+        return [
+
+          baseColumns.Ecr_No,
+          baseColumns.TXN_Date,
+          baseColumns.TXN_VoidDT,
+          baseColumns.INV_YM,
+          baseColumns.TXN_GUINo,
+          baseColumns.TXN_Uniform,
+          baseColumns.TXN_SaleAmt,
+          baseColumns.TXN_SaleTax,
+          baseColumns.TXN_SaleNoTax,
+          baseColumns.TXN_Net,
+          baseColumns.TXN_Tax,
+        ];
+
+
+      case '5': // 對帳格式
+        return [
+
+          baseColumns.Ecr_No,
+          baseColumns.TXN_Date,
+          baseColumns.TXN_GUINo,
+          baseColumns.GUIType,
+          baseColumns.PLU_TaxType,
+          baseColumns.TXN_SaleAmt,
+          baseColumns.TXN_Tax,
+          baseColumns.TXN_Net,
+        ];
+
+      default:
+        // 預設使用 ReportType 1 的欄位
+        return this.getColumnsByReportType('1');
+    }
+  }
 
 
   constructor(
@@ -158,6 +262,80 @@ export class FIN15110Component
       .queryPOS1002_DropDownList()
       .subscribe((data) => (this.ECRNoOptions = data.Data));
 
+    // 初始化預設欄位配置
+    this.columns = this.getColumnsByReportType(this.queryForm.value.displayMode || '1');
+
+    this.setupDisplayModeWatcher();
+  }
+
+  /** 監聽報表類型變化，自動調整日期範圍 */
+  private setupDisplayModeWatcher(): void {
+    this.queryForm.get('displayMode')?.valueChanges.subscribe(value => {
+      if (value === '2' || value === '3') {
+        // 發票報表一機台加總/明細：日期起訖需要自動變為一樣，依起為主
+        const startDate = this.queryForm.get('TXN_DT_S')?.value;
+        if (startDate) {
+          this.queryForm.patchValue({
+            TXN_DT_E: startDate
+          }, { emitEvent: false });
+        }
+      }
+    });
+  }  /** 根據 ReportType 設置 footerData */
+  private setFooterDataByReportType(data: any, reportType: string): void {
+    switch (reportType) {
+      case '1': // 二電發票明細報表
+        this.footerData = [
+          {
+            TXN_SaleAmt: data.TotalTXN_SaleAmt,
+            TXN_SaleTax: data.TotalTXN_SaleTax,
+            TXN_SaleNoTax: data.TotalTXN_SaleNoTax,
+            TXN_Net: data.TotalNet,
+            TXN_Tax: data.TotalTax,
+          },
+        ];
+        break;
+      case '2': // 發票報表一機台加總
+      case '3': // 發票報表一機台明細
+        this.footerData = [
+          {
+            TXN_SaleAmt: data.TotalTXN_SaleAmt,
+            TXN_SaleTax: data.TotalTXN_SaleTax,
+            TXN_SaleNoTax: data.TotalTXN_SaleNoTax,
+          },
+        ];
+        break;
+      case '4': // 作廢發票報表
+        this.footerData = [
+          {
+            TXN_SaleAmt: data.TotalTXN_SaleAmt,
+            TXN_SaleTax: data.TotalTXN_SaleTax,
+            TXN_SaleNoTax: data.TotalTXN_SaleNoTax,
+            TXN_Net: data.TotalNet,
+            TXN_Tax: data.TotalTax,
+          },
+        ];
+        break;
+      case '5': // 對帳格式
+        this.footerData = [
+          {
+            TXN_SaleAmt: data.TotalTXN_SaleAmt,
+            TXN_Net: data.TotalNet,
+            TXN_Tax: data.TotalTax,
+          },
+        ];
+        break;
+      default:
+        this.footerData = [
+          {
+            TXN_SaleAmt: data.TotalTXN_SaleAmt,
+            TXN_SaleTax: data.TotalTXN_SaleTax,
+            TXN_SaleNoTax: data.TotalTXN_SaleNoTax,
+            TXN_Net: data.TotalNet,
+            TXN_Tax: data.TotalTax,
+          },
+        ];
+    }
   }
 
   /** 查詢 */
@@ -167,6 +345,9 @@ export class FIN15110Component
     this.handleSubmit(frm, () => {
       this.loading = true;
       const v = frm.value;
+
+      // 在查詢時更新表格欄位配置
+      this.columns = this.getColumnsByReportType(v.displayMode || '1');
       const payload = {
         PageSize: v.pageSize || 20,
         PageIndex: v.pageIndex ?? 1,
@@ -178,6 +359,7 @@ export class FIN15110Component
         DataType: v.DataType || [],
         ECR_No_S: v.ECR_No_S || '',
         ECR_No_E: v.ECR_No_E || '',
+        ReportType: v.displayMode || '1', // 根據選擇的報表格式添加 ReportType 參數
       };
 
       this.fin15110Service
@@ -191,15 +373,9 @@ export class FIN15110Component
 
               this.data = d.FIN15110s ?? [];
               this.totalRecords = d.TotalCount ?? this.data.length;
-              this.footerData = [
-                {
-                  TXN_SaleAmt: d.TotalTXN_SaleAmt,
-                  TXN_SaleTax: d.TotalTXN_SaleTax,
-                  TXN_SaleNoTax: d.TotalTXN_SaleNoTax,
-                  TXN_Net: d.TotalNet,
-                  TXN_Tax: d.TotalTax,
-                },
-              ];
+
+              // 根據 ReportType 設置不同的 footerData
+              this.setFooterDataByReportType(d, v.displayMode);
             } else {
               this.data = [];
               this.footerData = [];
@@ -240,21 +416,37 @@ export class FIN15110Component
     else this.btnLoading = true;
 
     const v = this.queryForm.value;
+    const reportType = v.displayMode || '1';
+
+    // ReportType "2" 需要確保日期為同一天
+    const startDate = v.TXN_DT_S;
+    let endDate = v.TXN_DT_E;
+
+    if (reportType === '2' || reportType === '3') {
+      // 發票報表一機台加總/明細需要同一天的日期
+      endDate = startDate;
+    }
+
+    // ReportType "2" 可能需要不同的參數配置
+    const isMerge = reportType === '2' ? false : true;
+
     const payload = {
       PageSize: 0,
       PageIndex: 0,
       OrderBy: '',
       Offset: 0,
-      SortBy: [],
-      TXN_DT_S: this.datePipe.transform(v.TXN_DT_S, 'yyyy-MM-dd'),
-      TXN_DT_E: this.datePipe.transform(v.TXN_DT_E, 'yyyy-MM-dd'),
+      SortBy: v.SortBy ?? [],
+      TXN_DT_S: this.datePipe.transform(startDate, 'yyyy-MM-dd'),
+      TXN_DT_E: this.datePipe.transform(endDate, 'yyyy-MM-dd'),
       DataType: v.DataType || [],
       ECR_No_S: v.ECR_No_S || '',
       ECR_No_E: v.ECR_No_E || '',
+      ReportType: reportType, // 添加報表類型參數
+      IsMerge: isMerge, // ReportType "2" 使用 false，其他使用 true
       IsExcel: isExcel,
     };
 
-    console.log('匯出 payload:', payload);
+    console.log('匯出 payload (ReportType: ' + reportType + '):', payload);
 
     this.fin15110Service
       .printFIN15110(payload)

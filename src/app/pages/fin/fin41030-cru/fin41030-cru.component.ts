@@ -1,16 +1,16 @@
-import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { NgIf } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { PanelModule } from 'primeng/panel';
+import { AuthService } from '../../../service/system/auth.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 @Component({
   selector: 'app-fin41030-cru',
@@ -19,7 +19,14 @@ import { NgIf } from '@angular/common';
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class FIN41030CRUComponent extends BasicCrupageComponent implements OnInit {
+export class FIN41030CRUComponent implements OnInit {
+  ProgNo = '';
+  formTitle = '';
+  submitted = false;
+  crudstatus = '';
+  accordionTabCss = '';
+  canEdit() { return false; }
+  canAdd() { return false; }
 
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
@@ -42,7 +49,6 @@ export class FIN41030CRUComponent extends BasicCrupageComponent implements OnIni
     private authService: AuthService,
     private translate: TranslateService,
   ) {
-    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -63,14 +69,14 @@ export class FIN41030CRUComponent extends BasicCrupageComponent implements OnIni
         this.formTitle = 'create-conditions';
         this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
+
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
         this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
+
         this.Edit(state.rowdata);
         break;
       // 讀檔

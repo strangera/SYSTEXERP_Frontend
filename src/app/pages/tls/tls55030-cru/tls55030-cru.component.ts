@@ -1,33 +1,33 @@
-import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
+import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { IInvoiceDetail, IInvoiceDetailByDisNo, IReturnDetailByDisNoData, IReturnDetailData, ReturnNotRebateQueryBody, Tls55030ListData, Tls55030Service } from '@service/api/tls/tls55030.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { ButtonModule } from 'primeng/button';
+import { DividerModule } from "primeng/divider";
 import { PanelModule } from 'primeng/panel';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { combineLatest, finalize, map, startWith } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { IInvoiceDetail, IReturnDetailData, ReturnNotRebateQueryBody, Tls55030ListData, Tls55030Service } from '@service/api/tls/tls55030.service';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { getSYS1000Options } from '@service/system/sys1000.service';
-import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
-import { TLS55030DialogComponent } from './tls55030-dialog.component'; // 引入新的 Dialog 子元件
+import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 import { columns, columns2 } from './tls55030-cru.model';
-import { ButtonModule } from 'primeng/button';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { combineLatest, finalize, startWith } from 'rxjs';
-import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
-import { Option } from '@service/utility/dropdown-api.model';
-import { RadioButtonModule } from 'primeng/radiobutton';
-import { DividerModule } from "primeng/divider";
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { TLS55030DialogComponent } from './tls55030-dialog.component'; // 引入新的 Dialog 子元件
 
 // =================================================================================
 // 應用層計算欄位擴展介面 (繼承自 IInvoiceDetail，確保類型安全)
@@ -37,6 +37,7 @@ export interface IRebateDetailForCRU extends IInvoiceDetail {
   Rebate_Amt_New?: number; // 新增/輸入的折讓金額
   Rebate_Net?: number;    // 計算後的折讓淨額
   Rebate_Tax?: number;    // 計算後的折讓稅額
+  Rebate_Name: string | null;    // 新增/輸入的折讓名稱
 }
 
 
@@ -56,6 +57,7 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
   @ViewChild('dialogs') dialogComponent!: TLS55030DialogComponent;
 
   dataForm = this.formBuilder.group({
+    DIS_No: [{ value: '', disabled: true }],
     ACP_YYYYMM: [new Date('2025-01'), [Validators.required]],
     VEN_No: ['84445301-1', [Validators.required]],
     DIS_EntryType: ['1', [Validators.required]],
@@ -75,7 +77,7 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
   DIS_EntryTypeOptions = getSYS1000Options('DIS_EntryType');
   VEN_NoOptions = this.dropdown.queryPos2013({ VEN_Flag: '' })
   HOS_NoOptions = this.dropdown.queryPos2034();
-  // <-- 新增屬性：用於儲存選中廠商的統一編號 (No, 即 API 所需的 VEN_No 參數)
+  // 新增屬性：用於儲存選中廠商的統一編號 (No, 即 API 所需的 VEN_No 參數)
   venUniformNo: string | null = null;
   // 退貨明細 =======================================================
   data2: IReturnDetailData[] = [];
@@ -106,9 +108,58 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
     this.initializePage('TLS55030', this.dataForm);
     this.setupVendorUniformNoListener();
     this.setupRebateNameValidator();
+    if (!this.isFormCreateable) {
+      this.loadDetailData();
+    }
   }
+  // 在非新增模式下 (編輯/查詢)，根據 DIS_No 載入發票/退貨明細資料。
+  loadDetailData(): void {
+    const disNo = this.rowdata?.DIS_No; // 假設 DIS_No 是從路由傳入，並儲存在 this.paramBody.id 中
+    const venNo = this.dataForm.controls.VEN_No.value; // 假設主單資訊已經載入或可取得
+    if (!disNo || !venNo) { return; }
+    this.loading = true;
+    // 1. 查詢發票/收據明細 (Rebate Detail)
+    const loadRebate$ = this.tls55030Service.queryTLS55030RebateDetailByDisNo({ DIS_No: disNo }).pipe(map(res => {
+      const rebateDetails: IInvoiceDetailByDisNo[] = res.Data || [];
+      const convertedData: IRebateDetailForCRU[] = rebateDetails.map(item => ({
+        ...item,
+        Rebate_Amt: item.Rebate_Amt_Existed, // 將已折讓金額視為本次輸入
+        Rebate_Amt_New: item.Rebate_Amt, // 先給0
+        Rebate_Net: item.Rebate_Net, // 需從 Rebate_Amt 計算或後端提供
+        Rebate_Tax: item.Rebate_Tax,  // 需從 Rebate_Amt 計算或後端提供
+      }));
+      this.data = convertedData;
 
-  // <-- 新增方法：監聽 VEN_No 變化並找出對應的廠商統一編號 (No)
+      if (!this.isFormCreateable) {
+        if (this.dataForm.get('DIS_EntryType')?.value !== '1') {
+          this.dataForm.get('Rebate_Name')?.setValue(convertedData[0].Rebate_Name);
+        }
+      }
+      this.updateInvoiceSummaryAndFormState(); // 彙總金額並更新表單狀態
+    })
+    );
+    // 2. 查詢退貨明細 (Return Detail)
+    const loadReturn$ = this.tls55030Service.queryTLS55030ReturnDetailByDisNo({ DIS_No: disNo }).pipe(
+      map(res => {
+        const returnDetails: IReturnDetailByDisNoData[] = res.Data || [];
+        const convertedData: IReturnDetailData[] = returnDetails.map(item => ({
+          id: item.id,
+          RJM_No: item.RJM_No,
+          APRV_Date: item.APRV_Date,
+          HOS_NAME: item.HOS_NAME,
+          RJM_TotalBuyNet: Number(item.Rebate_Net), // 這裡用 Rebate_Net 暫時對應 RJM_TotalBuyNet
+          RJM_TotalBuyTax: Number(item.Rebate_Tax), // 這裡用 Rebate_Tax 暫時對應 RJM_TotalBuyTax
+          RJM_TotalBuyAmt: Number(item.Rebate_Amt), // 這裡用 Rebate_Amt 暫時對應 RJM_TotalBuyAmt
+        }));
+        this.data2 = convertedData;
+        this.updateReturnSummaryAmounts(); // 彙總退貨金額並更新表單狀態
+      })
+    );
+    combineLatest([loadRebate$, loadReturn$]).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(() => {
+      this.messageService.successBubble('資料載入成功');
+    });
+  }
+  // 監聽 VEN_No 變化並找出對應的廠商統一編號 (No)
   setupVendorUniformNoListener(): void {
     // 監聽廠商編號變動，並結合廠商下拉選單資料，找出對應的 Uniform No (No)
     combineLatest([
@@ -173,6 +224,8 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
       Rebate_Tax: 0
     }));
     this.data = [...this.data, ...newItems];
+    console.log(this.data);
+
     this.selectedItems = [];
 
     // 統一呼叫新的方法
@@ -196,6 +249,9 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
       this.dataForm.controls.totalRebateAmount.disable();
       this.dataForm.controls.balanceAmount.disable();
       this.dataForm.controls.Rebate_Amt.disable();
+      if (this.isFormReadable) {
+        this.dataForm.controls.Rebate_Name.enable();
+      }
     }
   }
   // 彙總發票/折讓單明細相關欄位並處理主表單狀態
@@ -259,10 +315,12 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
         }
       }
       const paramBody = {
+        DIS_No: this.isFormCreateable ? undefined : formValue.DIS_No,
         ACP_YYYYMM: this.datePipe.transform(formValue.ACP_YYYYMM, 'yyyyMM') || '',
         VEN_No: formValue.VEN_No,
         DIS_EntryType: formValue.DIS_EntryType,
         rebateDetails: this.data.map(item => ({
+          id: item.id || 0,
           PUR_GUINo: item.PUR_GUINo,
           PUR_GUIDate: item.PUR_GUIDate,
           TABTYPE: item.TABTYPE,
@@ -276,16 +334,14 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
           Rebate_Tax: item.Rebate_Tax || 0,
           Rebate_Name: formValue.DIS_EntryType === '1' ? '退貨' : formValue.Rebate_Name || '',
         })),
-        // ... (後續的 returnDetails 和 switch 邏輯不變)
         returnDetails: this.data2.map(item => ({
+          id: item.id || 0,
           EVENT_ID: item.RJM_No,
           Rebate_Amt: item.RJM_TotalBuyAmt,
           Rebate_Net: item.RJM_TotalBuyNet,
           Rebate_Tax: item.RJM_TotalBuyTax
         }))
       }
-
-      // ... (switch 邏輯不變)
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           this.tls55030Service.insertTLS55030(paramBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
@@ -297,6 +353,10 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
           });
           break;
         case CRUDStatus.Edit:
+          this.tls55030Service.updateTLS55030(paramBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+            this.messageService.successBubble(res.Message || '修改成功');
+            this.onCancel();
+          });
           break;
         default:
           return;

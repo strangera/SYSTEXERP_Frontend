@@ -1,33 +1,18 @@
-import { OrganizationNumberService } from './../../../service/basic/organization-number.service';
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// 權限相關
-import {
-  FunsrightInfo,
-  PermissionsInfo,
-} from '../../../shared/models/system/funsrightInfo';
-// 共用服務
-import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { CounterCodeService } from '../../../service/basic/counter-code.service';
-import { ViolationCategoryService } from '../../../service/basic/violation-category.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { ViolationStatusService } from '../../../service/basic/violation-status.service';
-import { DeductionItemService } from '../../../service/basic/deduction-item.service';
-import { WhetherService } from '../../../service/basic/whether.service';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { NgIf } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NavigationExtras, Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 const now = new Date();
 
@@ -38,12 +23,12 @@ const now = new Date();
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputNumberComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class TLS25030CRUComponent extends BasicCrupageComponent implements OnInit {
+export class TLS25030CRUComponent implements OnInit {
+  ProgNo = '';
+  formTitle = '';
+  submitted = false;
+  crudstatus = '';
 
-
-
-  // 查詢表單
-  loading: boolean = false;
   // submitted: boolean = false;
   dataForm = this.formBuilder.group({
     counterCode: [],  // 專櫃編號
@@ -79,48 +64,12 @@ export class TLS25030CRUComponent extends BasicCrupageComponent implements OnIni
   constructor(
     private router: Router,
     private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private counterCodeService: CounterCodeService,  // 專櫃編號 service
-    private violationCategoryService: ViolationCategoryService,  // 違規類別編號 service
-    private floorService: FloorService,  // 樓層 service
-    private violationStatusService: ViolationStatusService,  // 狀態 service
-    private deductionItemService: DeductionItemService,  // 扣款項目 service
-    private OrganizationNumberService: OrganizationNumberService,
-    private whetherService: WhetherService,
   ) {
-    super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
 
     this.ProgNo = '220034';
-
-    this.counterCodeService.getCounterCodes().subscribe((data) => {
-      this.counterCodeOptions = data;
-    });
-
-    this.violationCategoryService.getViolationCategories().subscribe((data) => {
-      this.violationCategoryOptions = data;
-    });
-
-    this.whetherService.getWhetherOptions().subscribe((data) => {
-      this.whetherOptions = data;
-    });
-    this.floorService.getFloors().subscribe((data) => {
-      this.floorOptions = data;
-    });
-
-    this.violationStatusService.getViolationStatuses().subscribe((data) => {
-      this.statusOptions = data;
-    });
-
-    this.deductionItemService.getDeductionItems().subscribe((data) => {
-      this.deductionItemOptions = data;
-    });
-    this.OrganizationNumberService.getOrganizationNumbers().subscribe((data) => {
-      this.organizationNumberOptions = data;
-    });
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus,
       rowdata: any,
@@ -131,13 +80,13 @@ export class TLS25030CRUComponent extends BasicCrupageComponent implements OnIni
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
         this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
+
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
         this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
+
         this.Edit(state.rowdata);
         break;
       // 讀檔
@@ -173,15 +122,10 @@ export class TLS25030CRUComponent extends BasicCrupageComponent implements OnIni
   onSubmit(frm: FormGroup) {
     console.log(frm.value);
     this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
 
     if (frm.valid && this.canQuery()) {
       // 提交邏輯
     }
-
-    this.loading = false;
-    this.messageService.unblockUi();
   }
 
   onSubmitQuery(frm: FormGroup) {
@@ -190,7 +134,7 @@ export class TLS25030CRUComponent extends BasicCrupageComponent implements OnIni
   }
 
   onCreate() {
-    if (this.canAdd()) {
+    if (true) {
       let extras: NavigationExtras = {
         state: {
           crudstatus: 'Create',
@@ -203,7 +147,7 @@ export class TLS25030CRUComponent extends BasicCrupageComponent implements OnIni
   }
 
   onEdit(data: any) {
-    if (this.canEdit()) {
+    if (true) {
       let extras: NavigationExtras = {
         state: {
           crudstatus: 'Edit',

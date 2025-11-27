@@ -27,14 +27,6 @@ export interface TLS2B030Row {
   PPay_Dif_sum: number;
 }
 
-export interface ApiResponse<T> {
-  Status: string;        // '0000' 表成功
-  Message?: string;
-  Data: T;
-  TotalCount?: number;
-  TotalPage?: number;
-}
-
 export interface PayTypeItem {
   No: string;   // 例如 "10"
   Name: string; // 例如 "現金"

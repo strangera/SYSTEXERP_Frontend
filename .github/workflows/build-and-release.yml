@@ -122,11 +122,35 @@ jobs:
         console.log('✅ Staging configuration added');
         "
     
-    # 建置生產環境 (無DEV後綴)
-    - name: Build Production Environment
+    # 🔥 建置生產環境 + 強制 Service Worker 更新
+    - name: Build Production Environment (Force Update)
       run: |
         echo "=== Building Production (無DEV後綴) ==="
-        npx ng build --configuration production --base-href /TSRDWEB/
+        npx ng build --configuration production \
+          --base-href /TSRDWEB/ \
+          --output-hashing=all
+        
+        echo "=== 強制更新 index.html（確保 Service Worker 偵測到變更）==="
+        
+        # 找到 index.html（在 dist 原始目錄）
+        INDEX_FILE=$(find dist -name index.html -type f | head -1)
+        
+        if [ -z "$INDEX_FILE" ]; then
+          echo "❌ 找不到 index.html"
+          exit 1
+        fi
+        
+        # 產生唯一的建置資訊（台灣時間）
+        BUILD_TIME=$(TZ=Asia/Taipei date '+%Y/%m/%d %H:%M:%S')
+        TAG_NAME=${GITHUB_REF##*/}
+        
+        # 在 </head> 前插入註解（改變 index.html 內容 → 觸發 SW 更新）
+        sed -i "s#</head>#  <!-- Build: $BUILD_TIME - Tag: $TAG_NAME -->\n</head>#" "$INDEX_FILE"
+        
+        echo "✅ 已注入建置資訊到 index.html"
+        echo "   檔案：$INDEX_FILE"
+        echo "   時間：$BUILD_TIME"
+        echo "   標籤：$TAG_NAME"
       env:
         NODE_OPTIONS: "--max_old_space_size=4096"
         TZ: Asia/Taipei
@@ -145,11 +169,32 @@ jobs:
         find dist-production -type f | head -10
         echo "Total files: $(find dist-production -type f | wc -l)"
     
-    # 建置測試環境 (有DEV後綴)
-    - name: Build Staging Environment
+    # 🔥 建置測試環境 + 強制 Service Worker 更新
+    - name: Build Staging Environment (Force Update)
       run: |
         echo "=== Building Staging (有DEV後綴) ==="
-        npx ng build --configuration staging --base-href /tsrdwebdev/
+        npx ng build --configuration staging \
+          --base-href /tsrdwebdev/ \
+          --output-hashing=all
+        
+        echo "=== 強制更新 index.html（確保 Service Worker 偵測到變更）==="
+        
+        # 找到 index.html
+        INDEX_FILE=$(find dist -name index.html -type f | head -1)
+        
+        if [ -z "$INDEX_FILE" ]; then
+          echo "❌ 找不到 index.html"
+          exit 1
+        fi
+        
+        # 產生唯一的建置資訊
+        BUILD_TIME=$(TZ=Asia/Taipei date '+%Y/%m/%d %H:%M:%S')
+        TAG_NAME=${GITHUB_REF##*/}
+        
+        # 注入建置資訊
+        sed -i "s#</head>#  <!-- Build: $BUILD_TIME - Tag: $TAG_NAME - STAGING -->\n</head>#" "$INDEX_FILE"
+        
+        echo "✅ 已注入建置資訊到 index.html (STAGING)"
       env:
         NODE_OPTIONS: "--max_old_space_size=4096"
         TZ: Asia/Taipei

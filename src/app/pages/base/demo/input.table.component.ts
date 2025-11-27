@@ -5,7 +5,6 @@ import { ExampleInputComponent } from './example-input/example-input.component';
 import { ExampleDropdownComponent } from './example-dropdown/example-dropdown.component';
 import { ExampleCalendarComponent } from './example-calendar/example-calendar.component';
 import { ExampleTableComponent } from './example-table/example-table.component';
-import { ExampleTableBruceComponent } from './example-table-bruce/example-table-bruce.component';
 import { ExampleUploadComponent } from './example-upload/example-upload.component';
 import { ExampleAutocompleteComponent } from './example-autocomplete/example-autocomplete.component';
 import { ExampleMultiComponent } from './example-multi/example-multi.component';
@@ -32,7 +31,6 @@ export class InputTableComponent implements AfterViewInit {
     { title: '單選', component: ExampleDropdownComponent, class: 'text-900' },
     { title: '多選', component: ExampleMultiComponent, class: 'text-900' },
     { title: '日曆', component: ExampleCalendarComponent, class: 'text-900' },
-    { title: '表格(Bruce)', component: ExampleTableBruceComponent, class: 'text-900' },
     { title: '上傳相關', component: ExampleUploadComponent, class: 'text-900' },
     { title: '自動填入', component: ExampleAutocompleteComponent, class: 'text-900' },
     { title: 'HTML編輯器', component: EditorTextComponent, class: 'text-900' },

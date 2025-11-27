@@ -1,14 +1,14 @@
+import { DatePipe } from '@angular/common';
 import { Component, Host, Input, OnChanges, Optional, SimpleChanges } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { POS2004ForUpdateResponse, POS5007Data, Tls24010Service } from '@service/api/tls/tls24010.service';
+import { getSYS1000 } from '@service/system/sys1000.service';
+import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, formatAmount } from '@shared/componentkit/table/table.model';
-import { STORE_WAY } from '../tls24010-cru.model';
 import { AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { TLS24010CRUComponent } from '../tls24010-cru.component';
-import { IDropdownItem } from '@service/utility/dropDownList.service';
-import { DatePipe } from '@angular/common';
-import { getSYS1000 } from '@service/system/sys1000.service';
+import { STORE_WAY } from '../tls24010-cru.model';
 
 @UntilDestroy()
 @Component({
@@ -77,7 +77,7 @@ export class Tls24010TltnoComponent implements OnChanges {
   filterPLU_MagNo(event: { rowData: POS5007Data, value: string }): void {
     const query = event.value.toLowerCase();
     const TXN_Date = this.datePipe.transform(this.TXN_Date, 'yyyy-MM-dd');
-    if (!TXN_Date || !query || !this.store_way || !this.TXN_Date || !this.TLT_No || query.length < 5) {
+    if (!TXN_Date || !query || !this.store_way || !this.TXN_Date || !this.TLT_No || query.length < 1) {
       return;
     }
     const body = {
@@ -92,8 +92,23 @@ export class Tls24010TltnoComponent implements OnChanges {
           `${item.PLU_MagNo} - ${item.PLU_No} - ${item.PLU_OrgPLUNo} - ${item.PLU_Name}` :
           `${item.TLT_No} - ${item.TLT_Name}`
       }));
-      this.POS2004Options = this.POS2004Options.filter(item => !this.tltIdData.find(data => data.tlt_id === item.tlt_id));
-      this.columns = [{ ...this.columns[0], options: this.POS2004Options }, ...this.columns.slice(1)];
+      let pos2004Option: POS2004ForUpdateResponse[];
+
+      if (this.store_way === STORE_WAY.自營) {
+        // 🌟 自營模式：根據 PLU_MagNo 篩選，避免重複選取相同商品
+        pos2004Option = this.POS2004Options.filter(item =>
+          !this.tltIdData.find(data => data.PLU_MagNo === item.PLU_MagNo)
+        );
+      } else if (this.store_way === STORE_WAY.專櫃) {
+        // 🌟 專櫃模式：根據 talent_id 篩選，避免重複選取相同專櫃
+        pos2004Option = this.POS2004Options.filter(item =>
+          !this.tltIdData.find(data => data.Talent_ID === item.talent_id)
+        );
+      } else {
+        pos2004Option = this.POS2004Options;
+      }
+
+      this.columns = [{ ...this.columns[0], options: pos2004Option }, ...this.columns.slice(1)];
     });
   }
   onFieldChange(event: { rowData: POS5007Data, field: string, value: AutoCompleteSelectEvent, index?: number }): void {

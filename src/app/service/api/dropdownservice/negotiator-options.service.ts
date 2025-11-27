@@ -1,9 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ErrorHandlerService } from '../../../core/services/error-handler.service';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { map, Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '@service/system/auth.service';
 
 export interface POS1006Item {
   No: string;
@@ -20,7 +19,6 @@ export class NegotiatorOptionsService {
 
   constructor(
     private http: HttpClient,
-    private errorHandler: ErrorHandlerService
   ) { }
 
   // 洽談者

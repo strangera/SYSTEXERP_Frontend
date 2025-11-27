@@ -1,18 +1,18 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import {
-  Observable,
   BehaviorSubject,
-  throwError,
   catchError,
-  tap,
+  Observable,
   shareReplay,
+  tap,
+  throwError,
 } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
 // 假設您的介面檔案已修正
 import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
-import { ApiResponse } from './auth.service';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 
 @Injectable({
   providedIn: 'root'

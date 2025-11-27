@@ -1,6 +1,6 @@
 
 import { DatePipe } from '@angular/common';
-import { Component, computed, effect, OnInit, Signal, signal } from '@angular/core';
+import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26080Service } from '@service/api/tls/tls26080.service';
@@ -13,8 +13,9 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
+import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { tap } from 'rxjs';
+import { finalize, map, tap } from 'rxjs';
 import { TLS26080Data, TLS26080Query } from './tls26080.model';
 
 @Component({
@@ -37,7 +38,7 @@ import { TLS26080Data, TLS26080Query } from './tls26080.model';
 })
 export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> implements OnInit {
 
-  public queryForm = this.formBuilder.group({
+  public readonly queryForm = this.formBuilder.group({
     pod_no: new FormControl<string | undefined>(undefined, [Validators.maxLength(10)]), // 活動單號
     pod_desc: new FormControl<string | undefined>(undefined, [Validators.maxLength(100)]), // 活動名稱
     pod_status: new FormControl<ApprovalStatus>(ApprovalStatus.未核准), // 核准狀態
@@ -67,37 +68,32 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     return hasCanDeleteFlag || isPending;
   };
 
-  private payload = computed((): TLS26080Query => {
-    const { org_id, ...rest } = this.qf();
-    return Object.fromEntries(Object.entries(rest)
-      .map(([k, v]) => [k, v.value])
-      .filter(([_, v]) => v !== null && v !== void 0 && v !== '')
-    );
-  });
-
-  public readonly loadingEffect = effect(() => {
-    this.loading = this.service.tableLoading()
-      || this.service.campaignLoading()
-      || this.service.capItemsLoading()
-      || this.service.fileUploadLoading()
-      || this.service.exampleDownLoading()
-      || this.service.approvalStatusLoading();
-  });
-
   public readonly columns: (Omit<Column, 'field'> & { field: keyof TLS26080Data; })[] = [
     { field: 'pod_no', header: '活動編號' },
     { field: 'pod_desc', header: '活動名稱' },
-    { field: 'pod_sdate', header: '活動起始日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'pod_edate', header: '活動終止日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'pod_busdate', header: '活動正檔日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'pod_edate', header: '兌回起始日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'pod_edate', header: '兌回終止日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'pod_sdate', header: '活動起始日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
+    { field: 'pod_edate', header: '活動終止日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
+    { field: 'pod_busdate', header: '活動正檔日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
+    { field: 'pod_edate', header: '兌回起始日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
+    { field: 'pod_edate', header: '兌回終止日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
     { field: 'pod_status', header: '狀態', format: this.service.approvalStatus.bind(this) },
   ];
+
+  public readonly tableLoading = signal<boolean>(!1);
+  public readonly deleteLoading = signal<boolean>(!1);
+
+  public readonly loadingEffect = effect(() => {
+    this.loading = this.tableLoading()
+      || this.deleteLoading()
+      || this.service.capItemsLoading()
+      || this.service.tltTalentOptionsLoading()
+      || this.service.tltTalentChargeOptionsLoading();
+  });
 
   constructor(
     public readonly service: TLS26080Service,
     private readonly datePipe: DatePipe,
+    private logger: NGXLogger,
   ) {
     super();
   }
@@ -110,21 +106,45 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      this.service.loadTLS26080(this.payload()).pipe(
-        tap(res => {
-          this.tableData.set(res.Data);
-          this.totalRecords.set(res.TotalCount || 0);
-        }),
-      ).subscribe();
+      this.tableLoading.set(!0);
+
+      const raw = this.queryForm.getRawValue();
+      const payload = <TLS26080Query>{
+        SortBy: raw.SortBy,
+        PageSize: raw.pageSize,
+        PageIndex: raw.pageIndex,
+        POD_No: raw.pod_no,
+        POD_Desc: raw.pod_desc,
+        POD_SDate_start: raw.pod_sdate,
+        POD_SDate_end: raw.pod_edate,
+        POD_BusDate: raw.pod_busdate,
+      };
+
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.service.loadTLS26080(payload).pipe(
+        tap(res => this.logger.debug(`onSubmit:`, [raw, payload, res])),
+        map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
+        finalize(() => this.tableLoading.set(!1))
+      ).subscribe({
+        next: res => {
+          this.tableData.set(res.Data || []);
+          this.totalRecords.set(res.TotalCount || 0);
+        },
+        error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+      });
     });
   }
 
   public onDelete(event: TLS26080Data[]): void {
-    this.service.deleteTLS26080(event.map(v => String(v.id))).pipe()
-      .subscribe({
-        next: () => this.messageService.successBubble('刪除成功'),
-        error: () => this.messageService.errorBubble('刪除失敗')
-      });
+    this.deleteLoading.set(!0);
+    this.service.deleteTLS26080(event.map(v => String(v.id))).pipe(
+      finalize(() => this.deleteLoading.set(!1))
+    ).subscribe({
+      next: () => {
+        this.messageService.successBubble('刪除成功');
+        this.onSubmit(); // 重新查詢
+      },
+      error: () => this.messageService.errorBubble('刪除失敗')
+    });
   }
 }
