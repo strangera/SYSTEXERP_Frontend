@@ -36,6 +36,7 @@ export interface ENG2001 {
   UsageAmount: number; // 用量
   ENG_Date: Date; // 本次抄錶日
   ENG_ImpFileName?: string; // 匯入檔案名稱
+
   ENG_Remark?: string; // 備註
 
   CRT_Date: string; // 建立日期 (ISO 字串格式: YYYY-MM-DD)
