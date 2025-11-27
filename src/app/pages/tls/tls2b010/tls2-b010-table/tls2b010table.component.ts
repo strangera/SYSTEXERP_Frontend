@@ -343,7 +343,10 @@ export class tls2b010tableComponent
   }
   /** 給右上角頁碼下拉用 */
   goToPage(pageNumber: number) {
-    const newFirst = (pageNumber - 1) * this.rows;
+    // ✅ 改成用 groupPageSize，而不是 rows
+    const unit = this.groupPageSize && this.groupPageSize > 0 ? this.groupPageSize : this.rows;
+    const newFirst = (pageNumber - 1) * unit;
+
     if (this.first === newFirst && this.selectedPage === pageNumber) return;
 
     this.first = newFirst;
@@ -351,6 +354,7 @@ export class tls2b010tableComponent
 
     if (!this.lazy) this.rebuildPageGroupMeta();
   }
+
 
   onPageChange(event: TablePageEvent) {
     this.first = event.first;
@@ -368,9 +372,11 @@ export class tls2b010tableComponent
     if (this._skipFirstLazy && !force) { this._skipFirstLazy = false; return; }
     if (force) { this._skipFirstLazy = false; }
 
-
-    const pageSize = event.rows && event.rows > 0 ? event.rows : this.rows;
-    const pageIndex = (event.first ?? 0) / pageSize + 1;
+    // ✅ pageSize 統一用 groupPageSize（你要的一頁 20 筆），沒有才退回 event.rows / rows
+    const pageSize =
+      (this.groupPageSize && this.groupPageSize > 0)
+        ? this.groupPageSize
+        : (event.rows && event.rows > 0 ? event.rows : (this.rows || 20));
 
     const sortRaw = event.multiSortMeta ?? (event as any).multisortmeta ??
       (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
@@ -378,14 +384,17 @@ export class tls2b010tableComponent
     const sort = this.ensureGroupFirst(normalized);
     const sortSig = JSON.stringify(sort);
 
-    // 判斷這次 onLazyLoad 是否真的是「使用者點了排序」
     const userSorted = !!(event.sortField || (Array.isArray(event.multiSortMeta) && event.multiSortMeta.length));
+
+    // ✅ pageIndex 直接吃「現在選到第幾頁」，不要再用 first / pageSize + 1
+    const pageIndex = this.selectedPage ?? 1;
 
     if (!this.lastSortSig) {
       this.lastSortSig = sortSig;
     } else if (sortSig !== this.lastSortSig) {
       this.lastSortSig = sortSig;
 
+      // 若使用者改排序，強制回第 1 頁
       if (userSorted && pageIndex !== 1) {
         this.first = 0;
         this.selectedPage = 1;
@@ -393,7 +402,7 @@ export class tls2b010tableComponent
       }
     }
 
-    this.selectedPage = pageIndex;
+    // 這裡 selectedPage 已經由 goToPage / onPageChange 維護，不要再覆寫
     this.queryState.setQueryState(this.tableKey + 'Sort', sort);
 
     const payload: LazyLoadEvent = { pageIndex, pageSize, SortBy: sort };
@@ -404,6 +413,7 @@ export class tls2b010tableComponent
 
     this.lazyLoadData.emit(payload);
   }
+
 
   /* ======================= 群組 / RowSpan ======================= */
 

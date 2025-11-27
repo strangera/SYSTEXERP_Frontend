@@ -215,7 +215,23 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
 
           this.data = rows;
           this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+          // ★ 調整 historyRequestBody.pageSize
+          // 如果全部資料一次就拿完（totalRecords <= rows.length），
+          // 就把 pageSize 設成實際資料筆數，讓 TableReport 的 onSort 判斷通過
+          const rawPageSize = this.historyRequestBody?.pageSize || 30;
+          const effectivePageSize =
+            this.totalRecords <= rows.length
+              ? (rows.length || rawPageSize)   // 至少是 1
+              : rawPageSize;                   // 多頁情況維持原本 pageSize（30）
+
+          this.historyRequestBody = {
+            ...this.historyRequestBody,
+            pageSize: effectivePageSize,
+            pageIndex: 1,
+          };
         },
+
         error: () => {
           this.data = [];
           this.totalRecords = 0;

@@ -64,6 +64,7 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     IsCommonlyUsed: ['Y', [Validators.required]],
     // ✅ 合約列印區分
     Print_Area: ['', [Validators.maxLength(10)]],
+    CAP_BaseRate: ['', [Validators.maxLength(5)]],
     CAP_Remark: ['', [Validators.maxLength(160)]],
   });
 
@@ -170,7 +171,9 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
       CAP_TaxType: '1',
       IsCommonlyUsed: 'Y',
       Print_Area: '',
+      CAP_BaseRate: '',
     });
     this.dataForm.markAsPristine();
   }
 }
+

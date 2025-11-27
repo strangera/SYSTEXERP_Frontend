@@ -32,6 +32,7 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     CAP_Item: ['', [Validators.maxLength(3)]],
     CAP_Name: ['', [Validators.maxLength(40)]],
+    CAP_BaseRate: ['', [Validators.maxLength(5)]],
     CAP_Type: [[] as string[]],
     CAP_Remark: ['', [Validators.maxLength(160)]],
     ...createPaginationConfig([{ field: 'CAP_Item', order: 1 }]), // 分頁與排序
@@ -103,6 +104,7 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
       // 將空字串轉為 null（配合後端 char? 欄位處理）
       if (formValue.CAP_Item === '') formValue.CAP_Item = null;
       if (formValue.CAP_Name === '') formValue.CAP_Name = null;
+       if (formValue.CAP_BaseRate === '') formValue.CAP_BaseRate = null;
       if (formValue.CAP_Remark === '') formValue.CAP_Remark = null;
 
 

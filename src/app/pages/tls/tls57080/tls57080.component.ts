@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
-import { QueryTLS57080ApiResponse, QueryTLS57080Request, Tls57080Service } from '@service/api/tls/tls57080.service';
+import { QueryTLS57080DetailsApiResponse, QueryTLS57080Request, Tls57080Service } from '@service/api/tls/tls57080.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -41,20 +41,20 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     DropdownTableComponent
   ],
 })
-export class TLS57080Component extends BasicQueryPageComponent<QueryTLS57080ApiResponse> implements OnInit {
+export class TLS57080Component extends BasicQueryPageComponent<QueryTLS57080DetailsApiResponse> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    StartDate: [null as Date | null, [Validators.required]],
-    EndDate: [null as Date | null, [Validators.required]],
-    PLU_MagNo: [null, [Validators.maxLength(20)]],
-    PLU_No: [null, [Validators.required, Validators.maxLength(20)]],
-    HOS_No: [null],
+    StartDate: [new Date('2025/01/01') as Date | null, [Validators.required]],
+    EndDate: [new Date('2025/06/09') as Date | null, [Validators.required]],
+    PLU_MagNo: ['0800000005599', [Validators.maxLength(20)]],
+    PLU_No: [null, [Validators.maxLength(20)]],
+    HOS_No: ['0001'],
     PLU_Name: [null, [Validators.maxLength(50)]],
     SQLType: [null], // 預設為 1: 售價 2: 單位成本
     pageIndex: [1],
     pageSize: [30],
   });
   HOS_NoOptions = this.dropdown.queryPos2034();
-  data: QueryTLS57080ApiResponse[] = [];
+  data: QueryTLS57080DetailsApiResponse[] = [];
   totalRecords = 0;
   historyRequestBody: QueryTLS57080Request | null = null;
   columns: ReportColumn[] = [
@@ -93,8 +93,8 @@ export class TLS57080Component extends BasicQueryPageComponent<QueryTLS57080ApiR
     }
     this.handleSubmit(frm, () => {
       this.tls57080Service.queryTLS57080(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-        this.data = res.Data;
-        this.totalRecords = res.TotalCount;
+        this.data = res.Data[0].Details;
+        this.totalRecords = res.Data[0].Details.length;
         this.historyRequestBody = body;
       })
     });

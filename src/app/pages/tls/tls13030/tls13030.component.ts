@@ -158,6 +158,8 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     { field: 'down_payment', header: '頭期款', visible: true, format: (v: any) => this.moneyFormat(v), style: 'text-right' },
     { field: 'period_nos', header: '期數', visible: true },
     { field: 'tpy_amount', header: '每期金額', visible: true, format: (v: any) => this.moneyFormat(v), style: 'text-right' },
+ { field: 'down_payment', header: '首期金額', visible: true, format: (v: any) => this.moneyFormat(v), style: 'text-right' },
+    
     { field: 'tpy_rate', header: '比率或元(月利率%)', visible: true, style: 'text-right' },
     { field: 'defSalesAmt', header: '預設營業額', visible: true, format: (v: any) => v ?? 0, style: 'text-right' },
     { field: 'commRate', header: '抽成百分比%', visible: true, format: (v: any) => v ?? 0, style: 'text-right' },

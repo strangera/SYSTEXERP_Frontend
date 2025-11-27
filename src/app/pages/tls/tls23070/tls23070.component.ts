@@ -281,40 +281,37 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     return this.loadDialogPage(body);
   };
 
-  /** 明細載入共用：打 /queryTLS23070Detail，整理成 table-report 需要的格式 */
-  /** 明細載入共用：打 /queryTLS23070Detail，整理成 table-report 需要的格式 */
-  private loadDialogPage(body: any) {
-    this.dialogLoading = true;
+private loadDialogPage(body: any) {
+  this.dialogLoading = true;
 
-    return this.tls23070Service.queryTLS23070Detail(body).pipe(
-      finalize(() => (this.dialogLoading = false)),
-      map((res: any) => {
-        const data = res?.Data ?? {};
-        const dateSubs = Array.isArray(data?.dateSubsTotals) ? data.dateSubsTotals : [];
+  return this.tls23070Service.queryTLS23070Detail(body).pipe(
+    finalize(() => (this.dialogLoading = false)),
+    map((res: any) => {
+      const data = res?.Data ?? {};
+      const dateSubs = Array.isArray(data?.dateSubsTotals) ? data.dateSubsTotals : [];
 
-        const rows = this.buildDetailRowsFromDateSubsTotals(dateSubs);
-        const totalCount = typeof res?.TotalCount === 'number'
-          ? res.TotalCount
-          : rows.length;
+      const rows = this.buildDetailRowsFromDateSubsTotals(dateSubs);
 
-        const grand = this.buildTotalsFromRows(rows);
+      // ✅ 明細總筆數一律用實際列數
+      const totalCount = rows.length;
 
-        // 更新明細狀態
-        this.dialogData = rows;
-        this.dialogTotalRecords = totalCount;
-        this.dialogFooterData = grand;
+      const grand = this.buildTotalsFromRows(rows);
 
-        // ✅ 這裡只保留 body，不去動 pageSize
-        this.dialogHistoryRequestBody = { ...body };
+      // 更新明細狀態
+      this.dialogData = rows;
+      this.dialogTotalRecords = totalCount;
+      this.dialogFooterData = grand;
 
-        return {
-          Data: rows,
-          TotalCount: totalCount,
-          GrandTotal: grand,
-        };
-      })
-    );
-  }
+      this.dialogHistoryRequestBody = { ...body };
+
+      return {
+        Data: rows,
+        TotalCount: totalCount,
+        GrandTotal: grand,
+      };
+    })
+  );
+}
 
 
 

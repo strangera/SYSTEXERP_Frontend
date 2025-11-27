@@ -62,7 +62,15 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> implements O
     d.setDate(d.getDate() - 1);
     return d;
   })();
+  /** ★ 後端「明細表」Totals 承接容器（提供給 footer 總計列） */
+  detailTotals: { BOOK_PayAmt: number; ACT_PayAmt: number; OVER_PayAmt: number } = {
+    BOOK_PayAmt: 0,
+    ACT_PayAmt: 0,
+    OVER_PayAmt: 0,
+  };
 
+  /** 進頁面 initializePage 會先呼叫一次 onSubmit，用這個把第一次擋掉 */
+  private skipFirstSubmit = true;
   ECRNoOptions: any[] = [];
   CounterOptions: any[] = [];
   data: any[] = [];
@@ -95,15 +103,9 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> implements O
   printedAt = '';
   simpleData: any[] = [];
 
-  /** ★ 後端「明細表」Totals 承接容器（提供給 footer 總計列） */
-  detailTotals: { BOOK_PayAmt: number; ACT_PayAmt: number; OVER_PayAmt: number } = {
-    BOOK_PayAmt: 0,
-    ACT_PayAmt: 0,
-    OVER_PayAmt: 0,
-  };
-
   queryForm = this.formBuilder.group({
     TXN_Date: [this.yesterday, [Validators.required]],
+    // TXN_Date: [new Date('2025-08-01'), [Validators.required]],
     ECR_No_List: [[]],
     TLT_No_List: [[]],
     tlt_building: [null],
@@ -161,13 +163,47 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> implements O
     this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
     this.tls11010Service.getBuildingOptions().subscribe((res) => (this.BUILDING_NO_Options = res));
 
-    this.queryForm.get('reimbursementType')?.valueChanges.subscribe(() => {
-      this.updateColumnVisibility(this.queryForm.get('reimbursementType')?.value ?? []);
-    });
+  this.queryForm.get('reimbursementType')?.valueChanges.subscribe((val) => {
+  if (this.queryForm.get('reporttype')?.value === 1) {
+    this.updateColumnVisibility(val ?? []);
+  }
+});
     this.updateColumnVisibility(this.queryForm.get('reimbursementType')?.value || []);
+
+    // 🔹 監聽「報表格式」切換：明細表 ↔ 簡表 時先清空 table
+this.queryForm.get('reporttype')?.valueChanges.subscribe((val) => {
+  this.onReportTypeChange(val ?? 1);  // 如果是 null，就當成 1
+});
 
     this.printedAt = this.datePipe.transform(new Date(), 'yyyy/MM/dd HH:mm') || '';
     this.refreshCloseDate();
+  }
+  // 報表格式切換時（1: 明細表, 2: 簡表）先清空資料與總計
+  onReportTypeChange(reporttype: number): void {
+    // 清空兩個 table 的資料來源
+    this.data = [];
+    this.simpleData = [];
+
+    // 重置總筆數
+    this.totalRecords = 0;
+
+    // 重置明細表總計
+    this.detailTotals = {
+      BOOK_PayAmt: 0,
+      ACT_PayAmt: 0,
+      OVER_PayAmt: 0,
+    };
+
+    // 簡表 lazy key 也重置，避免之後第一次排序被當成重複而 skip
+    if (reporttype === 2) {
+      this.lastSimpleLazyKey = null;
+    }
+
+    // 如果你希望切換時欄位可見性也重新套一次（只影響明細表）
+    if (reporttype === 1) {
+      const selected = this.queryForm.get('reimbursementType')?.value || [];
+      this.updateColumnVisibility(selected);
+    }
   }
 
   updateColumnVisibility(selectedValues: number[]) {
@@ -196,12 +232,19 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> implements O
   }
 
   onSubmit(form: FormGroup): void {
+    // ★ 第一次（通常是 initializePage 在 ngOnInit 叫的）直接略過，不打 API
+    if (this.skipFirstSubmit) {
+      this.skipFirstSubmit = false;
+      return;
+    }
+
     this.submitted = true;
 
     if (form.invalid) {
       this.messageService.warnBubble('請完整填寫查詢條件');
       return;
     }
+
 
     // 組 payload（含 TXN_Date -> yyyy-MM-dd）
     const payload: any = { ...form.value };
@@ -238,13 +281,18 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> implements O
 
     const reporttype = form.controls['reporttype'].value; // 1=明細, 2=簡表
     payload.TXN_Date = this.toDateOnly(payload.TXN_Date);
-    // 🔧 簡表：移除/改寫 SortBy，避免 TXN_Date 觸發 sql_variant -> datetime 轉型
+       // 🔧 簡表：只把 TXN_Date 從 SortBy 拿掉，保留使用者點的欄位跟 order（含 -1）
     if (reporttype === 2) {
-      const safeSort: any[] = [
-        { field: 'ECR_No', order: 1 },
-        { field: 'TLT_NO', order: 1 },
-      ];
-      payload.SortBy = safeSort; // 直接覆蓋；或乾脆不送 SortBy
+      const currentSort = (payload.SortBy || []).filter(
+        (s: any) => s?.field && s.field !== 'TXN_Date'
+      );
+
+      payload.SortBy = currentSort.length > 0
+        ? currentSort
+        : [
+            { field: 'ECR_No', order: 1 },
+            { field: 'TLT_NO', order: 1 },
+          ];
     }
 
     const apiCall =
@@ -283,7 +331,7 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> implements O
 
             // 綁到通用資料來源 + 切換欄位組
             this.data = this.simpleData;
-            this.columns = this.simplecolumns;
+            // this.columns = this.simplecolumns;
 
             // 總筆數
             this.totalRecords =
@@ -320,6 +368,7 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> implements O
         },
       });
   }
+  private lastSimpleLazyKey: string | null = null;
   handleLazyLoad(
     e: { pageIndex: number; pageSize: number; SortBy: any[] },
     form: FormGroup
@@ -328,7 +377,7 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> implements O
 
     let sortBy = e.SortBy || [];
     if (reporttype === 2) {
-      // 🔧 簡表：過濾或改寫排序，避免 TXN_Date
+      // 🔧 簡表：過濾掉 TXN_Date，避免 sql_variant 轉 datetime
       sortBy = sortBy.filter(s => s?.field && s.field !== 'TXN_Date');
       if (sortBy.length === 0) {
         sortBy = [
@@ -336,6 +385,16 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> implements O
           { field: 'TLT_NO', order: 1 },
         ];
       }
+
+      // 🔐 去重：同一組 pageIndex/pageSize/SortBy 已經處理過，就不再打 API
+      const keyObj = { pageIndex: e.pageIndex, pageSize: e.pageSize, SortBy: sortBy };
+      const key = JSON.stringify(keyObj);
+
+      if (this.lastSimpleLazyKey === key) {
+        // console.log('skip duplicate simple lazy load', keyObj);
+        return;
+      }
+      this.lastSimpleLazyKey = key;
     }
 
     form.patchValue(
@@ -345,6 +404,7 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> implements O
 
     this.onSubmit(form);
   }
+
 
 
   get formattedTXNDate(): string {

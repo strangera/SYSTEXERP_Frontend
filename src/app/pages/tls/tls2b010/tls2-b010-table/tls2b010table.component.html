@@ -16,7 +16,7 @@
                 + ' table-font-md'" currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})"
   (selectionChange)="onSelectionChange($event)" (onRowSelect)="select.emit($event)"
   (onRowUnselect)="unSelect.emit($event)" [rowSelectable]="rowSelectableWrapper"
-  [loading]="loading && data.length === 0" paginatorDropdownAppendTo="body" editMode="row">
+   [loading]="loading" paginatorDropdownAppendTo="body" editMode="row">
 
   <!-- ===== Caption / 工具列 ===== -->
   <ng-template pTemplate="caption">
@@ -76,7 +76,7 @@
           </p-button>
         </div>
 
-        <p-dropdown *ngIf="showPage && IsPrint && dt.totalRecords > 0" [options]="pages"  [(ngModel)]="selectedPage" 
+        <p-dropdown *ngIf="showPage && IsPrint && dt.totalRecords > 0" [options]="pages" [(ngModel)]="selectedPage"
           optionValue="value" (onChange)="goToPage($event.value)" appendTo="body" [virtualScroll]="true"
           [virtualScrollItemSize]="40" [filter]="true" [style]="{ minWidth: '10rem' }" />
       </div>

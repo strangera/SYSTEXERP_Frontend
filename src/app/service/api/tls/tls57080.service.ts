@@ -12,8 +12,11 @@ export interface QueryTLS57080Request {
   HOS_No: string,
   PLU_Name: string
 }
-
 export interface QueryTLS57080ApiResponse {
+  Details: QueryTLS57080DetailsApiResponse[]
+  PLU_NO: string,
+}
+export interface QueryTLS57080DetailsApiResponse {
   Date: string,
   nos: string,
   VEN_NO: string,
