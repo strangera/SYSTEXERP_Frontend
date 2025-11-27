@@ -3,21 +3,12 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { ValidationService } from './../../../shared/service/validation.service';
 // --Commonly used imports--
 import { CommonModule, DatePipe, NgFor, NgIf } from '@angular/common';
-import { Component, OnInit, ViewChild, } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
-import { PanelModule } from 'primeng/panel';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-
-
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { EcrItem, TltItem } from '@pages/tls/tls26010/tls26010.model';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
@@ -25,62 +16,45 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
+import { PanelModule } from 'primeng/panel';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
 import { ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+
+// 擴展 EcrItem 加上 id 和 status
+export interface EcrItemWithStatus extends EcrItem {
+  id?: number;
+  ECR_Name?: string;
+  status?: 'original' | 'new' | 'modify' | 'delete' | 'deleted';
+}
+
+// 擴展 TltItem 加上 id 和 status
+export interface TltItemWithStatus extends TltItem {
+  id?: number;
+  status?: 'original' | 'new' | 'modify' | 'delete' | 'deleted';
+}
 
 export interface tls26010response {
-  // TALPORDERM
-  id: number; // 主鍵，自動編號
-
-  pod_no: string; // 預售編號(readonly)
-  pod_desc: string; // 預售名稱
-  pod_sdate: Date; // 預售期間-起日
-  pod_edate: Date; // 預售期間-迄日
-  pod_status: string; // 核准狀態(readonly)
-  approved_usr_name?: string; // 核准人員(readonly)
-  approved_date?: Date; // 核准日期
+  id: number;
+  pod_no: string;
+  pod_desc: string;
+  pod_sdate: Date;
+  pod_edate: Date;
+  pod_status: string;
+  approved_usr_name?: string;
+  approved_date?: Date;
   CanDelete?: number;
   CanEdit?: number;
-}
-
-// 明細檔
-export interface tls26010response {
-  pod_info: pod_info;
-  ecr_list: ecr_list[];
-  talent_list: talent_list[];
-  status: string; // 狀態 (原始: 'orginal', 新增: 'new', 編輯: 'modified', 刪除: 'deleted')
-}
-
-export interface pod_info {
-  id: number;
-  mid: number;
-  pod_no: string,
-  pod_desc: string,
-  pod_sdate: Date,
-  pod_edate: Date,
-  pod_status: string; // 狀態 (原始: 'orginal', 新增: 'new', 編輯: 'modified', 刪除: 'deleted')
-}
-
-export interface ecr_list {
-  id: number,
-  ECR_No: string,
-  ECR_Name: string,
-  tlt_no: string | null,
-  tlt_name: string | null
-  status?: string  // 加上可選屬性
-}
-
-export interface talent_list {
-  id: number, // 本作業資料處理的
-  talent_id: number, // api進來讀取的
-  tlt_no: string,
-  tlt_name: string,
-  tlt_bdate: Date,
-  tlt_edate: Date,
-  status?: string  // 加上可選屬性
 }
 
 // 預購活動檔期設定
@@ -113,127 +87,131 @@ export interface talent_list {
     ButtonComponent,
     NgIf
   ]
-
 })
 export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response> implements OnInit {
   @ViewChild('ecrTable') ecrTable!: ExpandableEditTableComponent;
+
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    // TALPORDERM
-    id: [{ value: null, disabled: true }], // 主鍵，自動編號
-    pod_no: ['', [Validators.required]], // 預售編號(readonly)
-    pod_desc: ['', [Validators.required, Validators.maxLength(100)]], // 預售名稱
-    pod_sdate: [null, [Validators.required, this.validationService.dateAfterTodayValidator()]], // 預售期間-起日
-    pod_edate: [null, [Validators.required]], // 預售期間-迄日
-    pod_status: [''], // 核准狀態(readonly)
-    approved_usr_name: [''], // 核准人員(readonly)
-    approved_date: [null], // 核准日期核准日期
-    CanDelete: [],
-    CanEdit: []
+    id: [{ value: null as number | null, disabled: true }],
+    pod_no: ['', [Validators.required]],
+    pod_desc: ['', [Validators.required, Validators.maxLength(100)]],
+    pod_sdate: [null as Date | null, [Validators.required, this.validationService.dateAfterTodayValidator()]],
+    pod_edate: [null as Date | null, [Validators.required]],
+    pod_status: [''],
+    approved_usr_name: [''],
+    approved_date: [null as Date | null],
+    CanDelete: [null as number | null],
+    CanEdit: [null as number | null]
   });
 
   // #region 收銀機明細
-  //----------------------------------------------------------------
-  ecrData: ecr_list[] = [];
-  orgEcrData: ecr_list[] = []; // ecr_list(備分)
-  selectedECRItems: ecr_list[] = [];
+  ecrData: EcrItemWithStatus[] = [];
+  orgEcrData: EcrItemWithStatus[] = [];
+  selectedECRItems: EcrItemWithStatus[] = [];
   ecrLoading = false;
-  // 預設新項目模板
-  defaultNewECR = {
-    id: 0, //新增
+
+  defaultNewECR: EcrItemWithStatus = {
+    id: undefined,
     ECR_No: '',
     ECR_Name: '',
+    ecr_name: '',
     tlt_no: '',
     tlt_name: '',
-
     status: 'new'
   };
+
   ecrColumn: EditColumn[] = [
     { field: 'ECR_No', header: '收銀機編號', type: 'input', width: '12rem', disabled: () => true },
     { field: 'ECR_Name', header: '收銀機名稱', type: 'input', width: '12rem', disabled: () => true }
   ];
+
   createDefaultNewECR() {
     this.defaultNewECR = {
-      id: 0, //新增
+      id: undefined,
       ECR_No: '',
       ECR_Name: '',
+      ecr_name: '',
       tlt_no: '',
       tlt_name: '',
-
       status: 'new'
     };
   }
-  //----------------------------------------------------------------
+
   // #region 專櫃明細
-  //----------------------------------------------------------------
-  tltData: talent_list[] = [];
-  orgTltData: talent_list[] = []; // ecr_list(備分)
-  selectedTLTItems: talent_list[] = [];
+  tltData: TltItemWithStatus[] = [];
+  orgTltData: TltItemWithStatus[] = [];
+  selectedTLTItems: TltItemWithStatus[] = [];
   tltLoading = false;
-  // 預設新項目模板
-  defaultNewTLT = {
-    id: 0, //新增
+
+  defaultNewTLT: TltItemWithStatus = {
+    id: undefined,
     tlt_no: '',
     tlt_name: '',
     status: 'new'
   };
+
   tltColumn: EditColumn[] = [
     { field: 'tlt_no', header: '專櫃編號', type: 'input', width: '12rem', disabled: () => true },
     { field: 'tlt_name', header: '專櫃名稱', type: 'input', width: '12rem', disabled: () => true }
   ];
+
   createDefaultNewTLT() {
     this.defaultNewTLT = {
-      id: 0, //新增
+      id: undefined,
       tlt_no: '',
       tlt_name: '',
       status: 'new'
     };
   }
-  //----------------------------------------------------------------
-  // #region 彈出視窗設定義
+
+  // #region 彈出視窗設定
   ecrDialogForm = this.formBuilder.nonNullable.group({
-    sys3800: [''], // 館別(單選)
-    sys3900: [''], // 樓層(單選)
-    sys3A00: ['']  // 區域(單選)
+    sys3800: [''],
+    sys3900: [''],
+    sys3A00: [''],
+    ecr_no: [''],
+    tlt_no: ['']
   });
 
   tltDialogForm = this.formBuilder.nonNullable.group({
-    sys3800: [[]], // 館別(多選)
-    sys3900: [[]], // 樓層(多選)
-    sys3A00: [[]]  // 區域(多選)
+    sys3800: [[] as string[]],
+    sys3900: [[] as string[]],
+    sys3A00: [[] as string[]],
+    tlt_no: [''],
+    tlt_name: ['']
   });
 
-  //是否顯示
   ecrDialogVisible = false;
   tltDialogVisible = false;
 
   ecrDialogLoading = false;
   tltDialogLoading = false;
-  ecrDialogData: ecr_list[] = [];
-  tltDialogData: talent_list[] = [];
-  ecrDialogSelected: ecr_list[] = [];
-  tltDialogSelected: talent_list[] = [];
+  ecrDialogData: EcrItemWithStatus[] = [];
+  tltDialogData: TltItemWithStatus[] = [];
+  ecrDialogSelected: EcrItemWithStatus[] = [];
+  tltDialogSelected: TltItemWithStatus[] = [];
 
   ecrDialogColumn: Column[] = [
-    { field: 'ecr_no', header: '收銀機號', visible: true },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'ecr_name', header: '收銀機名稱', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
   ];
+
   tltDialogColumn: Column[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
   ];
-  //----------------------------------------------------------------
 
-  building_Option: apiOption[] = [];  // 館別
-  floor_Option: apiOption[] = [];  // 樓層
-  area_Option: apiOption[] = [];  // 區域
+  building_Option: apiOption[] = [];
+  floor_Option: apiOption[] = [];
+  area_Option: apiOption[] = [];
 
   pod_status_Option: option[] = [
     { value: "0", label: '未核准' },
     { value: "1", label: '已核准' }
-  ]
+  ];
 
   // ----------------------------------------------------------------
   constructor(
@@ -241,8 +219,10 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
     private tLS26010Service: TLS26010Service,
     private dropDownListService: DropDownListService,
     private datePipe: DatePipe,
+    private http: HttpClient,
+    private cdr: ChangeDetectorRef,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
@@ -257,11 +237,9 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
         console.warn('無法讀取明細資料');
     }
 
-    // DialogForm變更重打API
     this.setupAutoReloadForECR();
     this.setupAutoReloadForTLT();
 
-    // 主表日期變更也重新打api
     this.dataForm.get('pod_sdate')?.valueChanges
       .pipe(debounceTime(300))
       .subscribe(() => {
@@ -281,87 +259,221 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
 
     if (this.dataForm.invalid) {
       this.messageService.unblockUi();
+      this.messageService.errorBubble('請填寫必填欄位');
       return;
     }
 
     const formValue = frm.getRawValue();
-    const body = {
-      ...formValue,
-      // Detail: processedDetail, // 將明細資料加入請求體
-    }
+
     switch (this.crudstatus) {
       case CRUDStatus.Create:
         if (this.canAdd()) {
-          console.log('insert:', JSON.stringify(body, null, 2));
-          console.log('ECR detail', this.ecrData);
-          console.log('TLT detail', this.tltData);
-          // this.tls12010Service.insertTLS12010(body).pipe(untilDestroyed(this)).subscribe(() => {
-          //   this.messageService.successBubble('新增成功');
-          //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-          //   this.dataForm.reset(); // 重置表單
-          //   this.potentialDetail = []; // 清除明細
-          // });
+          const insertBody = {
+            pod_info: {
+              pod_desc: formValue.pod_desc,
+              pod_sdate: formValue.pod_sdate,
+              pod_edate: formValue.pod_edate
+            },
+            ecr_list: this.ecrData
+              .filter(item => item.status !== 'delete' && item.status !== 'deleted')
+              .map(item => ({
+                ECR_No: item.ECR_No!,
+                ecr_name: item.ecr_name || item.ECR_Name || '',
+                tlt_no: item.tlt_no!,
+                tlt_name: item.tlt_name || ''
+              })),
+            talent_list: this.tltData
+              .filter(item => item.status !== 'delete' && item.status !== 'deleted')
+              .map(item => ({
+                tlt_no: item.tlt_no!,
+                tlt_name: item.tlt_name || ''
+              }))
+          };
+
+          console.log('新增請求:', JSON.stringify(insertBody, null, 2));
+
+          this.tLS26010Service.insertTLS26010(insertBody).pipe(untilDestroyed(this)).subscribe({
+            next: (response) => {
+              this.messageService.unblockUi();
+              if (response.Status === '0000') {
+                this.messageService.successBubble('新增成功');
+                this.onCancel();
+              } else {
+                this.messageService.errorBubble(`新增失敗: ${response.Message}`);
+              }
+              this.submitted = false;
+            },
+            error: (error) => {
+              this.messageService.unblockUi();
+              this.messageService.errorBubble(`新增發生錯誤: ${error.message}`);
+              this.submitted = false;
+            }
+          });
+        } else {
+          this.messageService.unblockUi();
+          this.submitted = false;
         }
         break;
+
       case CRUDStatus.Edit:
         if (this.canEdit()) {
-          console.log('update:', JSON.stringify(body, null, 2));
-          console.log('ECR detail', this.ecrData);
-          console.log('TLT detail', this.tltData);
-          // this.tls12010Service.updateTLS12010(body).pipe(untilDestroyed(this)).subscribe(() => {
-          //   this.messageService.successBubble('更新成功');
-          //   this.onCancel(); // 儲存後，會返回列表
-          // });
+          const updateBody = {
+            pod_info: {
+              id: formValue.id,
+              pod_no: formValue.pod_no,
+              pod_desc: formValue.pod_desc,
+              pod_sdate: formValue.pod_sdate,
+              pod_edate: formValue.pod_edate,
+              pod_status: formValue.pod_status
+            },
+            ecr_list: this.processEcrListForUpdate(),
+            talent_list: this.processTltListForUpdate()
+          };
+
+          console.log('更新請求:', JSON.stringify(updateBody, null, 2));
+
+          this.http.post<{ Status: string; Message: string }>(`${this.tLS26010Service.apiUrl}/updateTLS26010`, updateBody)
+            .pipe(untilDestroyed(this))
+            .subscribe({
+              next: (response) => {
+                this.messageService.unblockUi();
+                if (response.Status === '0000') {
+                  this.messageService.successBubble('更新成功');
+                  this.onCancel();
+                } else {
+                  this.messageService.errorBubble(`更新失敗: ${response.Message}`);
+                }
+                this.submitted = false;
+              },
+              error: (error) => {
+                this.messageService.unblockUi();
+                this.messageService.errorBubble(`更新發生錯誤: ${error.message}`);
+                this.submitted = false;
+              }
+            });
+        } else {
+          this.messageService.unblockUi();
+          this.submitted = false;
         }
         break;
+
+      default:
+        this.messageService.unblockUi();
+        this.submitted = false;
+        break;
     }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
   }
-  // 讀取dopropdown選項
+
+  private processEcrListForUpdate() {
+    return this.ecrData.map(item => {
+      let status = 'original';
+      if (item.status === 'new') {
+        status = 'new';
+      } else if (item.status === 'delete' || item.status === 'deleted') {
+        status = 'delete';
+      } else if (item.status === 'modify') {
+        status = 'modify';
+      }
+
+      return {
+        id: item.id ?? null,
+        ECR_No: item.ECR_No!,
+        tlt_no: item.tlt_no!,
+        Status: status
+      };
+    });
+  }
+
+  private processTltListForUpdate() {
+    return this.tltData.map(item => {
+      let status = 'original';
+      if (item.status === 'new') {
+        status = 'new';
+      } else if (item.status === 'delete' || item.status === 'deleted') {
+        status = 'delete';
+      } else if (item.status === 'modify') {
+        status = 'modify';
+      }
+
+      return {
+        id: item.id ?? null,
+        tlt_no: item.tlt_no!,
+        Status: status
+      };
+    });
+  }
+
   loadOptions() {
-    // 查詢 館別
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
-      this.building_Option = response.Data.map((item: any) => ({
-        No: item.No, // 館別 代碼
-        Name: item.Name, // 館別 名稱
-        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+      this.building_Option = response.Data.map((item: { No: string; Name: string }) => ({
+        No: item.No,
+        Name: item.Name,
+        Label: item.No + '/' + item.Name,
       }));
-      // console.log('館別 代號:', this.building_Option);
     });
-    // 查詢 樓層
+
     this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
-      this.floor_Option = response.Data.map((item: any) => ({
-        No: item.No, // 樓層 代碼
-        Name: item.Name, // 樓層 名稱
-        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+      this.floor_Option = response.Data.map((item: { No: string; Name: string }) => ({
+        No: item.No,
+        Name: item.Name,
+        Label: item.No + '/' + item.Name,
       }));
-      // console.log('樓層 代號:', this.floor_Option);
     });
-    // 查詢 區域
+
     this.dropDownListService.querySYS3A00_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
-      this.area_Option = response.Data.map((item: any) => ({
-        No: item.No, // 樓層 代碼
-        Name: item.Name, // 樓層 名稱
-        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+      this.area_Option = response.Data.map((item: { No: string; Name: string }) => ({
+        No: item.No,
+        Name: item.Name,
+        Label: item.No + '/' + item.Name,
       }));
-      // console.log('區域 代號:', this.area_Option);
     });
   }
 
-  // 讀取明細資料
   async loadDetailData(pod_no: string): Promise<void> {
     console.log('要求pod_no資料:', pod_no);
     this.tLS26010Service.loadTLS26010Detail({ "pod_no": pod_no }).pipe(untilDestroyed(this)).subscribe((response) => {
       if (response.Status === '0000') {
         console.log('取得明細資料:', response.Data);
-        this.ecrData = response.Data.ecr_list as unknown as ecr_list[];
-        this.tltData = response.Data.talent_list as unknown as talent_list[];
-        this.orgEcrData = this.ecrData;
-        this.orgTltData = this.tltData;
-        this.ecrDialogSelected = this.ecrData; // 明細Dialog勾選項目
-        this.tltDialogSelected = this.tltData;
+
+        this.ecrData = (response.Data.ecr_list || []).map((item: EcrItem & { id?: number; ECR_Name?: string }) => ({
+          id: item.id,
+          ECR_No: item.ECR_No,
+          ECR_Name: item.ECR_Name || '',
+          ecr_name: item.ecr_name || item.ECR_Name || '',
+          tlt_no: item.tlt_no,
+          tlt_name: item.tlt_name,
+          status: 'original' as const
+        }));
+
+        console.log('📊 主畫面 ecrData 載入完成:', this.ecrData);
+        console.log('📊 ecrData 的 ECR_No:', this.ecrData.map(d => d.ECR_No));
+        console.log('📊 ecrData 的 id:', this.ecrData.map(d => d.id));
+
+        // 檢查 ECR_No 是否有重複或空值
+        const mainEcrNos = this.ecrData.map(d => d.ECR_No);
+        const uniqueMainEcrNos = new Set(mainEcrNos);
+        console.log('⚠️ 主畫面 ECR_No 數量:', mainEcrNos.length, '唯一數量:', uniqueMainEcrNos.size);
+        if (mainEcrNos.length !== uniqueMainEcrNos.size) {
+          console.error('❌ 主畫面發現重複的 ECR_No！', mainEcrNos);
+        }
+        if (mainEcrNos.some(no => !no)) {
+          console.error('❌ 主畫面有空的 ECR_No！', mainEcrNos);
+        }
+
+        this.tltData = (response.Data.talent_list || []).map((item: TltItem & { id?: number }) => ({
+          id: item.id,
+          talent_id: item.id || item.talent_id,
+          tlt_no: item.tlt_no,
+          tlt_name: item.tlt_name,
+          status: 'original' as const
+        }));
+
+        this.orgEcrData = JSON.parse(JSON.stringify(this.ecrData));
+        this.orgTltData = JSON.parse(JSON.stringify(this.tltData));
+
+        this.ecrDialogSelected = [...this.ecrData];
+        this.tltDialogSelected = [...this.tltData];
+
         console.log('取得ECR明細:', this.ecrData);
         console.log('取得TLT明細:', this.tltData);
 
@@ -371,104 +483,123 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
     });
   }
 
-  // #region 明細dialog
   dialogVisible(dialogMode: string) {
     if (dialogMode == 'ecr') {
       this.ecrDialogVisible = true;
       this.tltDialogVisible = false;
-
-      this.loadECRDialogData(); // 讀取ECR Dialog
-      // 打開時就把主表已存在的明細同步給 dialog 選項
-      this.tltDialogSelected = [...this.tltData];
+      this.loadECRDialogData();
     } else {
       this.ecrDialogVisible = false;
       this.tltDialogVisible = true;
-
-      this.loadTLTDialogData(); // 讀取TLT Dialog
+      this.loadTLTDialogData();
     }
   }
 
-  // #region 收銀機明細
-
-  onDialogECRSubmit(): any {
+  onDialogECRSubmit(): void {
     console.log('舊的ECR ecrData', this.ecrData);
-    const added: any = [];
+    const added: EcrItemWithStatus[] = [];
 
     this.ecrDialogSelected.forEach(item => {
-      const exists = this.ecrData.find(d => d.ECR_No === item.ECR_No);
+      const exists = this.ecrData.find(d =>
+        d.ECR_No === item.ECR_No &&
+        d.status !== 'delete' &&
+        d.status !== 'deleted'
+      );
       if (!exists) {
         added.push({
-          id: 0,
+          id: undefined,
           ECR_No: item.ECR_No,
           ECR_Name: item.ECR_Name,
+          ecr_name: item.ecr_name,
           tlt_no: item.tlt_no,
           tlt_name: item.tlt_name,
-          status: item.status ?? 'new'
+          status: 'new'
         });
       }
     });
 
-    // 重要：重新 assign 才會觸發 OnPush / Change Detection
-    this.ecrData = [...this.ecrData, ...added];
+    this.ecrData = [...this.ecrData.filter(item => item.status !== 'delete' && item.status !== 'deleted'), ...added];
 
     console.log('新的ECR ecrData', this.ecrData);
 
     this.ecrDialogVisible = false;
   }
 
-  onSelectionECRChange(event: ecr_list[]): void {
-    // 把新的選項加入舊陣列，避免覆蓋掉之前已勾選的
-    this.ecrDialogSelected = [
-      ...this.ecrDialogSelected.filter(item => !event.some(e => e.ECR_No === item.ECR_No)),
-      ...event
-    ];
+  private isLoadingEcrDialog = false;
 
-    console.log('ecr dialog選擇變更', this.ecrDialogSelected);
+  onSelectionECRChange(event: EcrItemWithStatus[]): void {
+    console.log('🔔 onSelectionECRChange 被觸發');
+    console.log('  - isLoadingEcrDialog:', this.isLoadingEcrDialog);
+    console.log('  - event.length:', event.length);
+    console.log('  - event:', event);
+    console.log('  - event 的 ECR_No:', event.map(d => d.ECR_No));
+
+    // 如果正在載入 Dialog 資料，忽略自動觸發的空陣列事件
+    if (this.isLoadingEcrDialog && event.length === 0) {
+      console.log('⚠️ 忽略 ECR Dialog 初始化時的空選擇事件');
+      return;
+    }
+
+    // 檢查 event 中是否有重複的 ECR_No
+    const eventEcrNos = event.map(d => d.ECR_No);
+    const uniqueEventEcrNos = new Set(eventEcrNos);
+    if (eventEcrNos.length !== uniqueEventEcrNos.size) {
+      console.error('❌ event 中有重複的 ECR_No！', eventEcrNos);
+    }
+
+    this.ecrDialogSelected = event;
+    console.log('✅ ecr dialog選擇變更', this.ecrDialogSelected);
+    console.log('✅ 選擇的 ECR_No:', this.ecrDialogSelected.map(d => d.ECR_No));
   }
 
-  // #region 專櫃明細
-
-  onDialogTLTSubmit(): any {
-    console.log('舊的TLT ecrData', this.tltData);
-    const added: any = [];
+  onDialogTLTSubmit(): void {
+    console.log('舊的TLT tltData', this.tltData);
+    const added: TltItemWithStatus[] = [];
 
     this.tltDialogSelected.forEach(item => {
-      const exists = this.tltData.find(d => d.tlt_no === item.tlt_no);
+      const exists = this.tltData.find(d =>
+        d.tlt_no === item.tlt_no &&
+        d.status !== 'delete' &&
+        d.status !== 'deleted'
+      );
       if (!exists) {
         added.push({
-          id: 0,
+          id: undefined,
           tlt_no: item.tlt_no,
           tlt_name: item.tlt_name,
-          status: item.status ?? 'new'
+          talent_id: item.talent_id,
+          status: 'new'
         });
       }
     });
 
-    this.tltData = [...this.tltData, ...added];
+    this.tltData = [...this.tltData.filter(item => item.status !== 'delete' && item.status !== 'deleted'), ...added];
     console.log('新的 tltData', this.tltData);
 
     this.tltDialogVisible = false;
   }
 
-  onSelectionTLTChange(event: any[]): void {
-    // 把新的選項加入舊陣列，避免覆蓋掉之前已勾選的
-    this.tltDialogSelected = [
-      ...this.tltDialogSelected.filter(item => !event.some(e => e.tlt_no === item.tlt_no)),
-      ...event
-    ];
+  private isLoadingTltDialog = false;
 
+  onSelectionTLTChange(event: TltItemWithStatus[]): void {
+    // 如果正在載入 Dialog 資料，忽略自動觸發的空陣列事件
+    if (this.isLoadingTltDialog && event.length === 0) {
+      console.log('⚠️ 忽略 TLT Dialog 初始化時的空選擇事件');
+      return;
+    }
+    this.tltDialogSelected = event;
     console.log('tlt dialog選擇變更', this.tltDialogSelected);
   }
 
-  // #region 刷新Dialog API
   private setupAutoReloadForECR(): void {
     this.ecrDialogForm.valueChanges
       .pipe(
-        debounceTime(300),           // 避免連續觸發
-        distinctUntilChanged()       // 避免同樣值重複觸發
+        debounceTime(300),
+        distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)),
+        untilDestroyed(this)
       )
       .subscribe(() => {
-        if (this.ecrDialogVisible) { // 只有 dialog 開啟時才打 API
+        if (this.ecrDialogVisible) {
           this.loadECRDialogData();
         }
       });
@@ -478,10 +609,11 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
     this.tltDialogForm.valueChanges
       .pipe(
         debounceTime(300),
-        distinctUntilChanged()
+        distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr)),
+        untilDestroyed(this)
       )
       .subscribe(() => {
-        if (this.tltDialogVisible) { // Dialog 開啟才打
+        if (this.tltDialogVisible) {
           this.loadTLTDialogData();
         }
       });
@@ -489,43 +621,118 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
 
   loadECRDialogData(): void {
     this.ecrDialogLoading = true;
+    this.isLoadingEcrDialog = true; // 設定旗標
 
     const req = {
       building_no: this.ecrDialogForm.value.sys3800,
       floor_no: this.ecrDialogForm.value.sys3900,
       area_no: this.ecrDialogForm.value.sys3A00,
       ecr_type: '1',
-      ecr_no: '',
-      tlt_no: '',
+      ecr_no: this.ecrDialogForm.value.ecr_no || null,
+      tlt_no: this.ecrDialogForm.value.tlt_no || null,
     };
 
-    // 預設進來資料全打
     console.log('收銀機 Dialog request', req);
     this.tLS26010Service.queryECRDropDownList(req)
       .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        console.log('取得 ECR Dialog:', response);
-        this.ecrDialogData = response.Data.map((item: any) => ({
-          ...item,
-          ECR_No: item.ecr_no,
-          ECR_Name: item.ecr_name
-        }));
-        console.log('Dialog 已勾選項目：', this.ecrDialogSelected);
+      .subscribe({
+        next: (response) => {
+          console.log('取得 ECR Dialog 完整回應:', response);
+          console.log('response.Data 內容:', response.Data);
+          if (response.Status === '0000' && response.Data && response.Data.length > 0) {
+            console.log('第一筆資料範例:', response.Data[0]);
+            this.ecrDialogData = response.Data.map((item: EcrItem & { ecr_no?: string; ECR_Name?: string }) => {
+              const mapped = {
+                ...item,
+                ECR_No: item.ecr_no || item.ECR_No || '',
+                ECR_Name: item.ECR_Name || item.ecr_name || '',
+                ecr_name: item.ecr_name || item.ECR_Name || '',
+                tlt_no: item.tlt_no || '',
+                tlt_name: item.tlt_name || ''
+              };
+              return mapped;
+            });
+            console.log('取得 ECR選單表 (已 mapping):', this.ecrDialogData);
+            console.log('ECR選單表第一筆:', this.ecrDialogData[0]);
 
-        console.log('取得 ECR選單表:', this.ecrDialogData);
-        this.ecrDialogLoading = false;
+            // 檢查 ECR_No 是否有重複
+            const ecrNos = this.ecrDialogData.map(d => d.ECR_No);
+            const uniqueEcrNos = new Set(ecrNos);
+            console.log('⚠️ ECR_No 數量:', ecrNos.length, '唯一數量:', uniqueEcrNos.size);
+            if (ecrNos.length !== uniqueEcrNos.size) {
+              console.error('❌ 發現重複的 ECR_No！', ecrNos);
+            }
+
+            // 設定已選擇的項目：從 ecrData 中找出對應的 Dialog 資料項目
+            // 使用 setTimeout 確保 table 的 ngOnChanges 執行完畢後再設定選擇項目
+            // 延遲 200ms 確保 table 已經初始化並清空選擇
+            setTimeout(() => {
+              console.log('=== 開始比對 ECR ===');
+              console.log('ecrData:', this.ecrData);
+              console.log('ecrDialogData:', this.ecrDialogData);
+
+              // 建立 ECR_No 的 Set 以加快查找速度
+              const existingEcrNos = new Set(
+                this.ecrData
+                  .filter(item => item.status !== 'delete' && item.status !== 'deleted')
+                  .map(item => item.ECR_No)
+              );
+
+              console.log('existingEcrNos Set:', existingEcrNos);
+
+              // 使用 ecrDialogData 中的確切物件參考
+              this.ecrDialogSelected = this.ecrDialogData.filter(dialogItem => {
+                const isSelected = existingEcrNos.has(dialogItem.ECR_No);
+                if (isSelected) {
+                  console.log(`✓ 找到匹配: dialogItem.ECR_No="${dialogItem.ECR_No}"`);
+                }
+                return isSelected;
+              });
+
+              console.log('已選擇的 ECR 項目:', this.ecrDialogSelected);
+              console.log('已選擇的 ECR_No:', this.ecrDialogSelected.map(d => d.ECR_No));
+              console.log('ecrDialogSelected 物件引用檢查:', this.ecrDialogSelected.map(d => ({
+                ECR_No: d.ECR_No,
+                sameRef: this.ecrDialogData.includes(d)
+              })));
+
+              // 手動觸發變更檢測
+              this.cdr.detectChanges();
+
+              // 重置旗標，允許後續的選擇變更
+              setTimeout(() => {
+                this.isLoadingEcrDialog = false;
+                console.log('✅ ECR Dialog 載入完成，已重置旗標');
+              }, 100);
+            }, 200);  // 延遲 200ms，確保 table 的 ngOnChanges 執行完畢
+          } else {
+            this.ecrDialogData = [];
+            this.isLoadingEcrDialog = false;
+            console.warn('查詢收銀機資料失敗或無資料:', response.Message || '無資料');
+          }
+          this.ecrDialogLoading = false;
+        },
+        error: (error) => {
+          console.error('查詢收銀機資料發生錯誤:', error);
+          this.messageService.errorBubble('查詢收銀機資料失敗');
+          this.ecrDialogData = [];
+          this.ecrDialogLoading = false;
+          this.isLoadingEcrDialog = false;
+        }
       });
   }
 
   loadTLTDialogData(): void {
     this.tltDialogLoading = true;
+    this.isLoadingTltDialog = true; // 設定旗標
 
-    const sData = this.dataForm.get('pod_sdate')?.value; //主表 起始日期
-    const eDate = this.dataForm.get('pod_edate')?.value; //主表 終止日期
+    const sData = this.dataForm.get('pod_sdate')?.value;
+    const eDate = this.dataForm.get('pod_edate')?.value;
 
-    if (!sData) {   //沒輸入起始日期就不處理
+    if (!sData) {
       this.messageService.errorBubble('請先輸入起始日期')
       this.tltDialogLoading = false;
+      this.isLoadingTltDialog = false;
       return;
     }
 
@@ -534,35 +741,94 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
       floor_nos: this.tltDialogForm.value.sys3900,
       area_nos: this.tltDialogForm.value.sys3A00,
       tlt_openflag: '',
-      tlt_no: '',
-      tlt_name: '',
+      tlt_no: this.tltDialogForm.value.tlt_no || null,
+      tlt_name: this.tltDialogForm.value.tlt_name || null,
       ven_no: '',
       tlt_bdate: this.datePipe.transform(sData, 'yyyy-MM-dd'),
-      tlt_edate: this.datePipe.transform(eDate, 'yyyy-MM-dd') ?? null, // 沒有輸入就傳null
+      tlt_edate: this.datePipe.transform(eDate, 'yyyy-MM-dd') ?? null,
     };
 
     console.log('專櫃 Dialog request', req);
     this.tLS26010Service.queryTalentDropDownList(req)
       .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        // console.log('取得 TLT Dialog:', response);
-        this.tltDialogData = response.Data.map((item: talent_list) => ({
-          ...item,
-          id: item.talent_id  // 將原本的 talent_id 當作新的 id
-        }));
-        console.log('取得 TLT選單表:', this.tltDialogData);
-        this.tltDialogLoading = false;
+      .subscribe({
+        next: (response) => {
+          if (response.Status === '0000' && response.Data) {
+            this.tltDialogData = response.Data.map((item: TltItem) => ({
+              ...item,
+              id: item.talent_id
+            }));
+            console.log('取得 TLT選單表:', this.tltDialogData);
+
+            // 設定已選擇的項目：從 tltData 中找出對應的 Dialog 資料項目
+            // 使用 setTimeout 確保 table 的 ngOnChanges 執行完畢後再設定選擇項目
+            // 延遲 200ms 確保 table 已經初始化並清空選擇
+            setTimeout(() => {
+              console.log('=== 開始比對 TLT ===');
+              console.log('tltData:', this.tltData);
+              console.log('tltDialogData:', this.tltDialogData);
+
+              // 建立 tlt_no 的 Set 以加快查找速度
+              const existingTltNos = new Set(
+                this.tltData
+                  .filter(item => item.status !== 'delete' && item.status !== 'deleted')
+                  .map(item => item.tlt_no)
+              );
+
+              console.log('existingTltNos Set:', existingTltNos);
+
+              // 使用 tltDialogData 中的確切物件參考
+              this.tltDialogSelected = this.tltDialogData.filter(dialogItem => {
+                const isSelected = existingTltNos.has(dialogItem.tlt_no);
+                if (isSelected) {
+                  console.log(`✓ 找到匹配: dialogItem.tlt_no="${dialogItem.tlt_no}"`);
+                }
+                return isSelected;
+              });
+
+              console.log('已選擇的 TLT 項目:', this.tltDialogSelected);
+              console.log('已選擇的 tlt_no:', this.tltDialogSelected.map(d => d.tlt_no));
+              console.log('tltDialogSelected 物件引用檢查:', this.tltDialogSelected.map(d => ({
+                tlt_no: d.tlt_no,
+                sameRef: this.tltDialogData.includes(d)
+              })));
+
+              // 手動觸發變更檢測
+              this.cdr.detectChanges();
+
+              // 重置旗標，允許後續的選擇變更
+              setTimeout(() => {
+                this.isLoadingTltDialog = false;
+                console.log('✅ TLT Dialog 載入完成，已重置旗標');
+              }, 100);
+            }, 200);  // 延遲 200ms，確保 table 的 ngOnChanges 執行完畢
+          } else {
+            this.tltDialogData = [];
+            this.isLoadingTltDialog = false;
+            console.warn('查詢專櫃資料失敗或無資料:', response.Message);
+          }
+          this.tltDialogLoading = false;
+        },
+        error: (error) => {
+          console.error('查詢專櫃資料發生錯誤:', error);
+          this.messageService.errorBubble('查詢專櫃資料失敗');
+          this.tltDialogData = [];
+          this.tltDialogLoading = false;
+          this.isLoadingTltDialog = false;
+        }
       });
   }
 
-  // #region 收銀機驗證
-  validateECR = (rowData: ecr_list): { isValid: boolean; errorMessage: string } => {
+  validateECR = (rowData: EcrItemWithStatus): { isValid: boolean; errorMessage: string } => {
     if (!rowData.ECR_No) {
       return { isValid: false, errorMessage: '收銀機編號不可為空' };
     }
-    // 檢查 ECR_No 是否在現有明細中重複（排除自己）
+
     const duplicate = this.ecrData.some(
-      item => item.ECR_No === rowData.ECR_No && item !== rowData && item.status !== 'deleted'
+      item => item.ECR_No === rowData.ECR_No &&
+        item !== rowData &&
+        item.status !== 'deleted' &&
+        item.status !== 'delete'
     );
 
     if (duplicate) {
@@ -572,14 +838,16 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
     return { isValid: true, errorMessage: '' };
   };
 
-  validateTLT = (rowData: talent_list): { isValid: boolean; errorMessage: string } => {
+  validateTLT = (rowData: TltItemWithStatus): { isValid: boolean; errorMessage: string } => {
     if (!rowData.tlt_no) {
       return { isValid: false, errorMessage: '專櫃編號不可為空' };
     }
 
-    // 檢查 tlt_no 是否在現有明細中重複（排除自己）
     const duplicate = this.tltData.some(
-      item => item.tlt_no === rowData.tlt_no && item !== rowData && item.status !== 'deleted'
+      item => item.tlt_no === rowData.tlt_no &&
+        item !== rowData &&
+        item.status !== 'deleted' &&
+        item.status !== 'delete'
     );
 
     if (duplicate) {
@@ -588,16 +856,15 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
     return { isValid: true, errorMessage: '' };
   };
 
-  // #region 明細重製
   reset26010() {
-    // 將明細檔重新刷新
     if (this.crudstatus == CRUDStatus.Create) {
       this.ecrData = [];
+      this.tltData = [];
+      this.messageService.infoBubble('新增模式重製完成');
     } else if (this.crudstatus == CRUDStatus.Edit) {
-      if (this.orgEcrData) {
-        // 重製明細檔
-        this.ecrData = this.orgEcrData;
-        this.tltData = this.orgTltData;
+      if (this.orgEcrData && this.orgTltData) {
+        this.ecrData = JSON.parse(JSON.stringify(this.orgEcrData));
+        this.tltData = JSON.parse(JSON.stringify(this.orgTltData));
         this.messageService.infoBubble('編輯模式重製完成');
       }
     } else {
