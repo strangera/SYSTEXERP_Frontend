@@ -3,12 +3,12 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Fin62010Service } from '@service/api/fin/fin62010.service';
+import { Fin62010Service, QueryFIN62010Request, QueryFIN62010Response } from '@service/api/fin/fin62010.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatDate, formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -21,8 +21,8 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
   standalone: true,
   imports: [AsyncPipe, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeQuickComponent, DropdownComponent, TranslateModule]
 })
-export class FIN62010Component extends BasicQueryPageComponent<any> implements OnInit {
-  queryForm = this.formBuilder.group({
+export class FIN62010Component extends BasicQueryPageComponent<QueryFIN62010Response> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
     Tran_No: [null, [Validators.maxLength(13)]],
     Tran_Date_Start: [null],
     Tran_Date_End: [null],
@@ -30,18 +30,23 @@ export class FIN62010Component extends BasicQueryPageComponent<any> implements O
     CRT_Date_End: [null],
     BNK_No_In: [null],
     BNK_No_Out: [null],
+    pageSize: [30],
+    pageIndex: [1],
+    SortBy: [[{ field: 'Tran_No', order: -1 }]],
   });
   BNK_NoOptions = this.dropdown.queryGls1005_BNK_DepositAcc();
-  data: any[] = [];
-  selectedItems: any[] = [];
-  lastQueryBody: any;
+  data: QueryFIN62010Response[] = [];
+  selectedItems: QueryFIN62010Response[] = [];
+  lastQueryBody: QueryFIN62010Request | null = null;
   totalRecords = 0;
   columns: ReportColumn[] = [
     { field: 'Tran_No', header: '調撥單號' },
-    { field: 'CRT_Date', header: '建立日期' },
-    { field: 'Tran_Date', header: '轉帳日期' },
+    { field: 'CRT_Date', header: '建立日期', format: formatDateTime },
+    { field: 'Tran_Date', header: '轉帳日期', format: formatDate },
     { field: 'BNK_No_In', header: '轉入公司銀行科目代號' },
+    { field: 'BNK_No_In_Name', header: '轉入銀行名稱' },
     { field: 'BNK_No_Out', header: '轉出公司銀行科目代號' },
+    { field: 'BNK_No_Out_Name', header: '轉出銀行名稱' },
     { field: 'VouNo', header: '傳票號碼' },
     { field: 'Tran_Amt', header: '金額' },
     { field: 'Fee_Amt', header: '手續費' },
@@ -60,22 +65,27 @@ export class FIN62010Component extends BasicQueryPageComponent<any> implements O
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.fin62010Service.queryFIN62010(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-        // this.data = res.Data;
-        // this.totalRecords = res.TotalCount;
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount;
         this.lastQueryBody = frm.value;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       })
     });
   }
-  onDelete(selectedRows: any[]) {
-    // const idList = selectedRows.map(row => row.ID);
-    // this.fin62010Service.deleteFIN62010({ idList }).pipe(untilDestroyed(this)).subscribe(res => {
-    //   this.onSubmit(this.queryForm);
-    //   this.selectedRows = [];
-    //   this.messageService.successBubble(res.Message);
-    // });
+  onDelete(selectedRows: QueryFIN62010Response[]) {
+    const idList = selectedRows.map(row => row.ID);
+    this.loading = true;
+    this.fin62010Service.deleteFIN62010({ IdList: idList }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+      this.onSubmit(this.queryForm);
+      this.selectedItems = [];
+      this.messageService.successBubble(res.Message);
+    });
   }
-  isRowSelectable(row: any) {
+  isRowSelectable(row: QueryFIN62010Response): boolean {
     return row.Tran_Status !== '2';
+  }
+
+  editDisabled(rowdata: QueryFIN62010Response): boolean {
+    return rowdata.Tran_Status === '2';
   }
 }

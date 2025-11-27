@@ -34,7 +34,7 @@
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number label="金額" controlName="Tran_Amt" [control]="dataForm.controls.Tran_Amt"
-            [submitted]="submitted">
+            [submitted]="submitted" (blurEvent)="onTran_AmtBlur()">
           </app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
