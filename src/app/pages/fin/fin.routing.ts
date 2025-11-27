@@ -161,7 +161,7 @@ export const finRoutes: Routes = [
   // 貼現三聯式發票列印
   // { path: 'fin29090', loadComponent: () => import('./fin29090/fin29090.component').then(m => m.FIN29090Component) },
   // 支出憑單明細表
-  // { path: 'fin29100', loadComponent: () => import('./fin29100/fin29100.component').then(m => m.FIN29100Component) },
+  { path: 'fin29100', loadComponent: () => import('./fin29100/fin29100.component').then(m => m.FIN29100Component) },
   // 應付帳款帳齡分析表
   // { path: 'fin29110', loadComponent: () => import('./fin29110/fin29110.component').then(m => m.FIN29110Component) },
   // 應付帳款進項發票對應表
