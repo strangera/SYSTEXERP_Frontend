@@ -2,7 +2,7 @@ import { TLS26010Service } from '@service/api/tls/tls26010.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { ValidationService } from './../../../shared/service/validation.service';
 // --Commonly used imports--
-import { CommonModule, NgFor, NgIf } from '@angular/common';
+import { CommonModule, DatePipe, NgFor, NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -24,6 +24,7 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column } from '@shared/componentkit/table/table.model';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
@@ -72,9 +73,14 @@ export interface ecr_list {
 }
 
 export interface talent_list {
-  id: number,
+  id: number, // 本作業資料處理的
+  talent_id: number, // api進來讀取的
   tlt_no: string,
-  tlt_name: string
+  tlt_name: string,
+  tlt_bdate: Date,
+
+  tlt_edate: Date,
+
 }
 
 // 預購活動檔期設定
@@ -203,13 +209,19 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
 
   ecrDialogLoading = false;
   tltDialogLoading = false;
-  ecrDialogData = [];
-  tltDialogData = [];
-  ecrDialogSelected = [];
-  tltDialogSelected = [];
+  ecrDialogData: ecr_list[] = [];
+  tltDialogData: talent_list[] = [];
+  ecrDialogSelected: ecr_list[] = [];
+  tltDialogSelected: talent_list[] = [];
 
-  ecrDialogColumn = [];
-  tltDialogColumn = [];
+  ecrDialogColumn: Column[] = [
+    { field: 'ecr_no', header: '收銀機號', visible: true },
+    { field: 'ecr_name', header: '收銀機名稱', visible: true },
+  ];
+  tltDialogColumn: Column[] = [
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+  ];
   //----------------------------------------------------------------
 
   building_Option: apiOption[] = [];  // 館別
@@ -226,6 +238,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
     private validationService: ValidationService,
     private tLS26010Service: TLS26010Service,
     private dropDownListService: DropDownListService,
+    private datePipe: DatePipe,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -342,9 +355,13 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
     if (dialogMode == 'ecr') {
       this.tltDialogVisible = false;
       this.ecrDialogVisible = true;
+
+      this.loadECRDialogData(); // 讀取ECR Dialog
     } else {
       this.ecrDialogVisible = false;
       this.tltDialogVisible = true;
+
+      this.loadTLTDialogData(); // 讀取TLT Dialog
     }
   }
 
@@ -362,6 +379,78 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
 
   onSelectionTLTChange(event: any): any {
     console.log('tlt dialog選擇變更', event);
+  }
+
+  // ================= ECR dialog API ====================
+  loadECRDialogData(): void {
+    this.ecrDialogLoading = true;
+    const req = {
+      building_no: '',
+      floor_no: '',
+      area_no: '',
+      ecr_type: '1',
+      ecr_no: '',
+      tlt_no: '',
+    };
+
+    // 預設進來資料全打
+    console.log('收銀機 Dialog request', req);
+    this.tLS26010Service.queryECRDropDownList(req)
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        console.log('取得 ECR Dialog:', response);
+        this.ecrDialogData = response.Data.map((item: any) => ({
+          ...item,
+          ECR_No: item.ecr_no,
+          ECR_Name: item.ecr_name
+        }));
+
+        console.log('取得 ECR選單表:', this.ecrDialogData);
+        this.ecrDialogLoading = false;
+      });
+  }
+
+
+  // ================= TLT dialog API ====================
+
+  loadTLTDialogData(): void {
+    this.tltDialogLoading = true;
+
+    const sData = this.dataForm.get('pod_sdate')?.value; //主表 起始日期
+    const eDate = this.dataForm.get('pod_edate')?.value; //主表 終止日期
+
+    if (!sData) {   //沒輸入起始日期就不處理
+      this.messageService.errorBubble('請先輸入起始日期')
+      this.tltDialogLoading = false;
+      return;
+    }
+
+    const req = {
+      building_nos: this.tltDialogForm.value.sys3800,
+      floor_nos: this.tltDialogForm.value.sys3900,
+      area_nos: this.tltDialogForm.value.sys3A00,
+      tlt_openflag: '',
+      tlt_no: '',
+      tlt_name: '',
+      ven_no: '',
+      tlt_bdate: this.datePipe.transform(sData, 'yyyy-MM-dd'),
+      tlt_edate: this.datePipe.transform(eDate, 'yyyy-MM-dd') ?? null, // 沒有輸入就傳null
+    };
+
+    console.log('專櫃 Dialog request', req);
+    this.tLS26010Service.queryTalentDropDownList(req)
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        // console.log('取得 TLT Dialog:', response);
+
+        this.tltDialogData = response.Data.map((item: talent_list) => ({
+          ...item,
+          id: item.talent_id  // 將原本的 talent_id 當作新的 id
+        }));
+
+        console.log('取得 TLT選單表:', this.tltDialogData);
+        this.tltDialogLoading = false;
+      });
   }
 
   // #region 收銀機驗證
