@@ -1,28 +1,28 @@
+import { CommonModule, NgClass, NgFor } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { Validators, FormsModule, ReactiveFormsModule, FormGroup, FormBuilder, FormControl } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { NgClass, NgFor, CommonModule } from '@angular/common';
-import { SelectButtonModule } from 'primeng/selectbutton';
-import { DropdownModule } from 'primeng/dropdown';
-import { TabViewModule } from 'primeng/tabview';
-import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
-import { ColorPickerModule } from 'primeng/colorpicker';
-import { Tls42010Service } from '../../../service/api/tls/tls42010.service';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
+import { ColorPickerModule } from 'primeng/colorpicker';
+import { DialogModule } from 'primeng/dialog';
+import { DropdownModule } from 'primeng/dropdown';
+import { PanelModule } from 'primeng/panel';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { TabViewModule } from 'primeng/tabview';
 import { finalize } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { Tls42010Service } from '../../../service/api/tls/tls42010.service';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 export interface KeyItem {
   code: string;
@@ -418,6 +418,38 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       }
     });
   }
+
+  deletePage() {
+    if (this.pages.length <= 1) {
+      this.messageService.warnBubble('至少需要保留一頁');
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: `確定要刪除第 ${this.activeIndex + 1} 頁嗎？此操作無法復原。`,
+      header: '刪除確認',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        // 刪除當前頁
+        this.pages.splice(this.activeIndex, 1);
+
+        // 調整活動頁面索引
+        if (this.activeIndex >= this.pages.length) {
+          this.activeIndex = this.pages.length - 1;
+        }
+
+        this.dataForm.controls.activePage.setValue(this.activeIndex);
+
+        // 選擇新活動頁面的第一個按鍵
+        const currentPage = this.pages[this.activeIndex];
+        if (currentPage?.length) {
+          this.selectKey(currentPage[0]);
+        }
+
+        this.messageService.successBubble('頁面已刪除');
+      }
+    });
+  }
   private applyDetail(detailList: any[]) {
     if (!detailList?.length) return;
 
@@ -649,16 +681,16 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
           POS1004Disc: detailList, // 後端對應 insert
         };
         this.tls42010Service
-        .insertTLS42010M(payload)
-        .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
-        .subscribe({
-          next: (res) => {
-            this.messageService.successBubble(res.Message);
-            this.loading = false;
-          },
-          complete: () => {this.onCancel();},
-          error: () => (this.loading = false),
-        });
+          .insertTLS42010M(payload)
+          .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
+          .subscribe({
+            next: (res) => {
+              this.messageService.successBubble(res.Message);
+              this.loading = false;
+            },
+            complete: () => { this.onCancel(); },
+            error: () => (this.loading = false),
+          });
       } else {
         const payload = {
           ID: this.rowdata?.ID ?? 0,
@@ -676,7 +708,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
               this.messageService.successBubble(res.Message);
               this.loading = false;
             },
-            complete: () => {this.onCancel();},
+            complete: () => { this.onCancel(); },
             error: () => (this.loading = false),
           });
       }
