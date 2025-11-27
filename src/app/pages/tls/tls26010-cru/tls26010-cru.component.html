@@ -118,7 +118,7 @@
         <form [formGroup]="ecrDialogForm">
           <div class="grid p-fluid">
             <div class="col-12 md:col-6 lg:col-4">
-              <app-multi-select
+              <app-dropdown
                 label="館別"
                 controlName="sys3800"
                 [options]="building_Option"
@@ -127,11 +127,11 @@
                 appendTo="body"
                 [control]="ecrDialogForm.controls.sys3800"
                 [submitted]="submitted"
-              ></app-multi-select>
+              ></app-dropdown>
             </div>
 
             <div class="col-12 md:col-6 lg:col-4">
-              <app-multi-select
+              <app-dropdown
                 label="樓層"
                 controlName="sys3900"
                 [options]="floor_Option"
@@ -140,11 +140,11 @@
                 appendTo="body"
                 [control]="ecrDialogForm.controls.sys3900"
                 [submitted]="submitted"
-              ></app-multi-select>
+              ></app-dropdown>
             </div>
 
             <div class="col-12 md:col-6 lg:col-4">
-              <app-multi-select
+              <app-dropdown
                 label="區域"
                 controlName="sys3A00"
                 [options]="area_Option"
@@ -153,7 +153,7 @@
                 appendTo="body"
                 [control]="ecrDialogForm.controls.sys3A00"
                 [submitted]="submitted"
-              ></app-multi-select>
+              ></app-dropdown>
             </div>
 
             <div class="col-12">
