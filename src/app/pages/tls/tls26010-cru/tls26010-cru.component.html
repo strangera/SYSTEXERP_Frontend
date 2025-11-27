@@ -69,6 +69,7 @@
         (selectionChange)="selectedECRItems = $event"
         [selectedItems]="selectedECRItems"
         [showInsert]="true"
+        [showDelete]="false"
         (insert)="dialogVisible('ecr')"
         [dataStatusValue]="{
           Original: 'old',
@@ -93,6 +94,7 @@
         (selectionChange)="selectedTLTItems = $event"
         [selectedItems]="selectedTLTItems"
         [showInsert]="true"
+        [showDelete]="false"
         (insert)="dialogVisible('tlt')"
         [dataStatusValue]="{
           Original: 'old',
