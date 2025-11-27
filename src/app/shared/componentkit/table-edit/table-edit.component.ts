@@ -56,7 +56,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   @ViewChild('dt', { static: false }) dt!: Table;     // table 元件
   @ViewChild('fileUpload') fileUpload!: FileUpload; // 檔案上傳 元件
   // 基本設置
-  dataKey = '_TABLE_KEY';                 // table 資料key
+  @Input() dataKey = '_TABLE_KEY';                 // table 資料key
   @Input() tableKey: string | undefined = undefined;   // table 唯一標識 (必填)
   @Input() title: string | undefined = undefined;     // table 標題
   @Input() tableRequired = false;             // table 是否為必填
@@ -89,7 +89,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   @Output() exportExcel = new EventEmitter<any>(); // 匯出 Excel 事件
   @Input() exportExcelLoading = false;       // 匯出 Excel loading
   @Output() importExcel = new EventEmitter<FileSelectEvent>(); // 匯入 Excel 事件
-  // 禁止新增
+  // 禁止新增 下方列的新增
   @Input() canInsert = true;
   @Output() delete = new EventEmitter<any>(); // 刪除事件
   // rowEdit 相關
@@ -134,7 +134,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
         // 初始化狀態和 UUID (與您原來的邏輯相同)
         if (item[this.dataStatusField] === undefined) {
           item[this.dataStatusField] = this.dataStatusValue.Original;
-          item[this.dataKey] = `temp-${uuidv4()}`;
+          item[this.dataKey] = item[this.dataKey] ?? `temp-${uuidv4()}`;
         }
         this.calculateRow(item);
         if (this.rowValidate) {

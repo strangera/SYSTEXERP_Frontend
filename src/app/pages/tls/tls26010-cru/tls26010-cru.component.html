@@ -57,12 +57,14 @@
           controlName="approved_date"
           [control]="dataForm.controls.approved_date"
           [submitted]="submitted"
+          [readonly]="true"
         ></app-calendar>
       </div>
       <!-- ECR明細檔 -->
       <app-table-edit
         title="收銀機"
         tableKey="ecrTable"
+        [dataKey]="'id'"
         [data]="ecrData"
         class="col-12"
         [columns]="ecrColumn"
@@ -70,6 +72,7 @@
         [selectedItems]="selectedECRItems"
         [showInsert]="true"
         [showDelete]="false"
+        [canInsert]="false"
         (insert)="dialogVisible('ecr')"
         [dataStatusValue]="{
           Original: 'old',
@@ -88,6 +91,7 @@
       <app-table-edit
         title="專櫃"
         tableKey="tltTable"
+        [dataKey]="'id'"
         [data]="tltData"
         class="col-12"
         [columns]="tltColumn"
@@ -95,9 +99,10 @@
         [selectedItems]="selectedTLTItems"
         [showInsert]="true"
         [showDelete]="false"
+        [canInsert]="false"
         (insert)="dialogVisible('tlt')"
         [dataStatusValue]="{
-          Original: 'old',
+          Original: 'original',
           New: 'new',
           Modified: 'modified',
           Deleted: 'deleted',
@@ -112,6 +117,7 @@
       <!-- 收銀機 Dialog選單 -->
       <app-dialog
         [visible]="ecrDialogVisible"
+        (visibleChange)="ecrDialogVisible = $event"
         [header]="'選擇收銀機'"
         (save)="onDialogECRSubmit()"
         [height]="'auto'"
@@ -158,6 +164,24 @@
               ></app-dropdown>
             </div>
 
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="收銀機號"
+                controlName="ecr_no"
+                [control]="ecrDialogForm.controls.ecr_no"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="專櫃編號"
+                controlName="tlt_no"
+                [control]="ecrDialogForm.controls.tlt_no"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+
             <div class="col-12">
               <app-table
                 #ecrDialogTable
@@ -182,6 +206,7 @@
       <!-- 專櫃 Dialog選單 -->
       <app-dialog
         [visible]="tltDialogVisible"
+        (visibleChange)="tltDialogVisible = $event"
         [header]="'選擇專櫃'"
         (save)="onDialogTLTSubmit()"
         [height]="'auto'"
@@ -226,6 +251,24 @@
                 [control]="tltDialogForm.controls.sys3A00"
                 [submitted]="submitted"
               ></app-multi-select>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="專櫃編號"
+                controlName="tlt_no"
+                [control]="tltDialogForm.controls.tlt_no"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="專櫃名稱"
+                controlName="tlt_name"
+                [control]="tltDialogForm.controls.tlt_name"
+                [submitted]="submitted"
+              ></app-input-text>
             </div>
 
             <div class="col-12">
