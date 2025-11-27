@@ -170,13 +170,11 @@ export class FIN15110Component
         return [
           baseColumns.Ecr_No,
           baseColumns.TXN_Date,
-          baseColumns.INV_YM,
           baseColumns.TXN_GUINo,
           baseColumns.TXN_Uniform,
           baseColumns.TXN_SaleAmt,
           baseColumns.TXN_SaleTax,
           baseColumns.TXN_SaleNoTax,
-          baseColumns.TXN_SaleZeroTax,
           baseColumns.TXN_Net,
           baseColumns.TXN_Tax,
           baseColumns.TXN_VoidDT,
@@ -197,42 +195,95 @@ export class FIN15110Component
 
           baseColumns.Ecr_No,
           baseColumns.TXN_Date,
-          baseColumns.INV_YM,
           baseColumns.TXN_GUINo,
           baseColumns.TXN_SaleAmt,
           baseColumns.TXN_SaleTax,
           baseColumns.TXN_SaleNoTax,
+          baseColumns.TXN_SaleZeroTax,
           baseColumns.INVStatus,
         ];
 
       case '4': // 作廢發票報表
         return [
-
-          baseColumns.Ecr_No,
-          baseColumns.TXN_Date,
-          baseColumns.TXN_VoidDT,
-          baseColumns.INV_YM,
-          baseColumns.TXN_GUINo,
-          baseColumns.TXN_Uniform,
-          baseColumns.TXN_SaleAmt,
-          baseColumns.TXN_SaleTax,
-          baseColumns.TXN_SaleNoTax,
-          baseColumns.TXN_Net,
-          baseColumns.TXN_Tax,
+          { field: 'TXN_VoidDT', header: '跨日作廢日期', visible: true, showSort: true },
+          { field: 'TXN_Date', header: '原始交易日期', visible: true, showSort: true },
+          { field: 'Ecr_No', header: '收銀機號', visible: true, showSort: true },
+          { field: 'TXN_GUINo', header: '發票號碼', visible: true, showSort: true },
+          { field: 'TXN_Uniform', header: '統一編號', visible: true, showSort: true },
+          {
+            field: 'TXN_SaleAmt',
+            header: '銷售金額',
+            visible: true,
+            showSort: true,
+            format: formatAmount,
+            isTotal: true
+          },
+          {
+            field: 'TXN_SaleTax',
+            header: '應稅銷售金額',
+            visible: true,
+            showSort: true,
+            format: formatAmount,
+            isTotal: true
+          },
+          {
+            field: 'TXN_SaleNoTax',
+            header: '免稅銷售金額',
+            visible: true,
+            showSort: true,
+            format: formatAmount,
+            isTotal: true
+          },
+          {
+            field: 'TXN_Net',
+            header: '未稅銷售金額',
+            visible: true,
+            showSort: true,
+            format: formatAmount,
+            isTotal: true
+          },
+          {
+            field: 'TXN_Tax',
+            header: '稅額',
+            visible: true,
+            showSort: true,
+            format: formatAmount,
+            isTotal: true
+          },
         ];
 
 
       case '5': // 對帳格式
         return [
-
-          baseColumns.Ecr_No,
-          baseColumns.TXN_Date,
-          baseColumns.TXN_GUINo,
-          baseColumns.GUIType,
-          baseColumns.PLU_TaxType,
-          baseColumns.TXN_SaleAmt,
-          baseColumns.TXN_Tax,
-          baseColumns.TXN_Net,
+          { field: 'TXN_Date', header: '退出/折讓日期', visible: true, showSort: true },
+          { field: 'Ecr_No', header: '收銀機號', visible: true, showSort: true },
+          { field: 'TXN_GUINo', header: '發票號碼', visible: true, showSort: true },
+          { field: 'GUIType', header: '發票格式', visible: true, showSort: true },
+          { field: 'PLU_TaxType', header: '課稅別', visible: true, showSort: true },
+          {
+            field: 'TXN_Net',
+            header: '退出折讓金額',
+            visible: true,
+            showSort: true,
+            format: formatAmount,
+            isTotal: true
+          },
+          {
+            field: 'TXN_Tax',
+            header: '退出折讓稅額',
+            visible: true,
+            showSort: true,
+            format: formatAmount,
+            isTotal: true
+          },
+          {
+            field: 'TXN_SaleAmt',
+            header: '合計',
+            visible: true,
+            showSort: true,
+            format: formatAmount,
+            isTotal: true
+          },
         ];
 
       default:

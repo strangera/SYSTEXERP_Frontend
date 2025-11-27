@@ -34,9 +34,11 @@
         <!-- 左：鍵盤設定明細 -->
         <div class="col-12 md:col-8">
           <p-panel header="鍵盤設定明細">
-            <div class="flex justify-content-end mb-2">
+            <div class="flex justify-content-end gap-2 mb-2">
               <app-button label="新增頁數" btnType="create" (click)="addPage()" class="btn-small"
                 icon="pi pi-plus"></app-button>
+              <app-button label="刪除頁數" btnType="delete" (click)="deletePage()" class="btn-small"
+                icon="pi pi-minus"></app-button>
             </div>
             <p-tabView [activeIndex]="activeIndex" (activeIndexChange)="onPageChange($event)" class="kb-tabview">
               <p-tabPanel *ngFor="let page of pages; index as i" [header]="(i + 1).toString()">
