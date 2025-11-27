@@ -21,7 +21,7 @@ import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fi
 import { PanelModule } from 'primeng/panel';
 import { finalize, map, tap } from 'rxjs';
 import * as XLSX from 'xlsx';
-import { CampaignData, TLS26080Data, TLS26080Detail, TLS26080InsertPayload } from '../tls26080/tls26080.model';
+import { CampaignData, TLS26080Data, TLS26080EditTable, TLS26080InsertPayload } from '../tls26080/tls26080.model';
 
 @Component({
   selector: 'app-tls26080-cru',
@@ -65,7 +65,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   private readonly podBusdateSignal = toSignal(this.df().pod_busdate.valueChanges);
 
   public readonly tls26080Data = signal<TLS26080Data[]>([]);
-  public readonly tableData = signal<TLS26080Detail[]>([]);
+  public readonly tableData = signal<TLS26080EditTable[]>([]);
   public readonly totalRecords = signal(0);
   public readonly campaignData = signal<CampaignData[]>([]);
 
@@ -135,11 +135,11 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
     // 驗證表格資料的必填欄位和數值範圍
     this.isSubmitDisabled.set(validTableData.some(item => {
-      if (!item.talent_id || !item.calc_date_type) return !0;
+      if (!item.tlt_no || !item.calc_date_type) return !0;
 
       // 檢查 tpy_rate_D16 和 tpy_rate_D17 是否有值
-      if (item.tpy_rate_D16 === void 0 || item.tpy_rate_D16 === null || item.tpy_rate_D16 === '') return !0;
-      if (item.tpy_rate_D17 === void 0 || item.tpy_rate_D17 === null || item.tpy_rate_D17 === '') return !0;
+      if (item.tpy_rate_D16 === void 0 || item.tpy_rate_D16 === null) return !0;
+      if (item.tpy_rate_D17 === void 0 || item.tpy_rate_D17 === null) return !0;
 
       const rate_D16 = Number(item.tpy_rate_D16);
       const rate_D17 = Number(item.tpy_rate_D17);
@@ -187,14 +187,14 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     { field: 'Remark', header: '活動備註' },
   ];
 
-  public readonly defaultInsertData: Partial<TLS26080Detail> = {
+  public readonly defaultInsertData: Partial<TLS26080EditTable> = {
     pod_status: ApprovalStatus.未核准,
   };
 
   // 專櫃資料表
   public readonly counterColumns = computed<EditColumn[]>(() => [
     {
-      field: 'talent_id',
+      field: 'tlt_no',
       header: '專櫃編號',
       type: this.isFormReadable ? void 0 : 'dropdown',
       showClear: !1,
@@ -332,16 +332,16 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         pod_busdate: d.pod_busdate!,
         TALPORDERD_VOUCHERDetails: validTableData.map(item => ({
           pod_no: d.pod_no!,
-          talent_id: Number(item.talent_id) ?? null,
+          talent_id: item.talent_id,
           tlt_id: String(item.tlt_id),
           tlt_no: this.service.tltTalentMap().get(String(item.talent_id))?.['No'] ?? '',
           tlt_name: this.service.tltTalentMap().get(String(item.talent_id))?.['Name'] ?? '',
-          calc_date_type: String(item.calc_date_type ?? 'Y'),
+          calc_date_type: item.calc_date_type ?? 'Y',
           cap_item_D16: 'D16',
           cap_item_D17: 'D17',
           tpy_rate_D16: item.tpy_rate_D16!,
           tpy_rate_D17: item.tpy_rate_D17!,
-          pod_status: String(item.pod_status ?? '0'),
+          pod_status: item.pod_status ?? '0',
         })),
       };
 
@@ -378,24 +378,32 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public onFieldChange(event: FieldChangeEvent): void {
     this.logger.debug(`onFieldChange:`, [event]);
 
-    if (event.field === 'talent_id') {
+    if (event.field === 'tlt_no') {
       this.service.tltTalentMap().get(event.value);
     }
   }
 
   public async handleUpload(event: FileUploadHandlerEvent): Promise<void> {
     const formData = new FormData();
-    if (!formData) return;
     formData.append('file', event.files[0]);
+    this.logger.debug(`handleUpload:`, [event]);
 
     this.uploadLoading.set(!0);
     this.service.uploadFile(formData).pipe(
-      tap(res => this.logger.debug(`uploadFile:`, [res])),
+      tap(res => this.logger.debug(`uploadFile:`, [event, res])),
+      map(res => {
+        if (res.Success) return res;
+        this.service.dealErrorFilePath(res);
+        throw new Error('上傳失敗 發生錯誤');
+      }),
       finalize(() => this.uploadLoading.set(!1))
     ).subscribe({
-      next: data => {
+      next: res => {
+        const data = res.queryTLS26080_DetailResponses;
+
         this.tableData.set(data.map(item => ({
           ...item,
+          pod_no: item.pod_no ?? this.getPodNo()!,
           tpy_rate_D16: Number(item.tpy_rate_D16),
           tpy_rate_D17: Number(item.tpy_rate_D17),
         })));
@@ -405,7 +413,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     });
 
     this.fileUpload().clear();
-    this.logger.debug(`fileUploadEffect:`, [formData]);
   }
 
   public onExportExcelTemplate(): void {
