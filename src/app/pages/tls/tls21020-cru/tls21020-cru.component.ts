@@ -10,7 +10,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { finalize, map, tap } from 'rxjs';
+import { finalize, tap } from 'rxjs';
 import { TLS21020Data, TLS21020UpdateQuery } from '../tls21020/tls21020.model';
 
 @Component({
@@ -152,10 +152,10 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
     this.service.getOrgIDs();
     this.service.queryTLS21020({ ENTRY_TYPE: this.rowdata?.ENTRY_TYPE! }).pipe(
       tap(res => this.logger.debug(`queryTLS21020:`, [this.rowdata, res])),
-      map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
       finalize(() => this.tableLoading.set(!1))
     ).subscribe({
       next: res => {
+        if (res.Status !== '0000') return;
         this.tableData.set(res.Data ?? []);
         this.totalRecords.set(res.TotalCount || 0);
       }
@@ -178,14 +178,13 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
       this.logger.debug(`onSubmit:`, [data, payload]);
       this.tableLoading.set(!0);
       this.service.updateTLS21020(payload).pipe(
-        map(res => { if (res.Status === '0000') return res; throw new Error('更新失敗'); }),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
-        next: () => {
+        next: res => {
+          if (res.Status !== '0000') return;
           this.onCancel();
           this.messageService.successBubble('更新成功');
         },
-        error: () => this.messageService.errorBubble('更新失敗'),
       });
     });
   }

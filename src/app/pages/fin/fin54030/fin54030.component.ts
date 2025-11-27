@@ -9,7 +9,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, map, tap } from 'rxjs';
+import { finalize, tap } from 'rxjs';
 import { FIN54030Data } from './fin54030.model';
 
 @Component({
@@ -73,11 +73,12 @@ export class FIN54030Component extends BasicQueryPageComponent<FIN54030Data> imp
     this.tableLoading.set(!0);
     this.service.loadFIN54030().pipe(
       tap(res => this.logger.debug(`init:`, [res])),
-      map(res => { if (res.Status === '0000') return res.Data; else throw new Error(res.Message || '查詢失敗'); }),
       finalize(() => this.tableLoading.set(!1)),
     ).subscribe({
-      next: res => this.tableData.set(res || Object.create(null)),
-      error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+      next: res => {
+        if (res.Status !== '0000') return;
+        this.tableData.set(res.Data || Object.create(null));
+      },
     });
   }
 
@@ -90,11 +91,12 @@ export class FIN54030Component extends BasicQueryPageComponent<FIN54030Data> imp
         ? (() => { this.messageService.errorBubble('已建立傳票大於0，不允許關帳'); this.tableLoading.set(!1); })()
         : this.service.closeFIN54030(this.qf().TargetYM.value!, '1').pipe(
           tap(res => this.logger.debug(`onSubmit:`, [res])),
-          map(res => { if (res.Status === '0000') return res; throw new Error('儲存失敗'); }),
           finalize(() => this.tableLoading.set(!1)),
         ).subscribe({
-          next: () => this.messageService.successBubble('儲存成功'),
-          error: err => this.messageService.errorBubble(err.message || '儲存失敗'),
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.messageService.successBubble('儲存成功');
+          },
         });
     });
   }

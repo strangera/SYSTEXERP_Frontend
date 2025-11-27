@@ -94,10 +94,10 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     this.tableLoading.set(!0);
     this.service.loadTLS26080Detail(id).pipe(
       tap(res => this.logger.debug(`load:`, [this.rowdata, res])),
-      map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
       finalize(() => this.tableLoading.set(!1)),
     ).subscribe({
       next: res => {
+        if (res.Status !== '0000') return;
         const data = res.Data;
         this.tableData.set(data.map(v => ({
           ...v,
@@ -106,7 +106,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         })));
         this.totalRecords.set(res.TotalCount || 0);
       },
-      error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
     });
   }, { allowSignalWrites: !0 });
 
@@ -295,11 +294,12 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     this.campaignLoading.set(!0);
     this.service.loadCampaignData().pipe(
       tap(res => this.logger.debug(`loadCampaignData:`, [res])),
-      map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
       finalize(() => this.campaignLoading.set(!1))
     ).subscribe({
-      next: res => this.campaignData.set(res.Data),
-      error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+      next: res => {
+        if (res.Status !== '0000') return;
+        this.campaignData.set(res.Data);
+      },
     });
   }
 
@@ -333,9 +333,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         TALPORDERD_VOUCHERDetails: validTableData.map(item => ({
           pod_no: d.pod_no!,
           talent_id: item.talent_id,
-          tlt_id: String(item.tlt_id),
-          tlt_no: this.service.tltTalentMap().get(String(item.talent_id))?.['No'] ?? '',
-          tlt_name: this.service.tltTalentMap().get(String(item.talent_id))?.['Name'] ?? '',
+          tlt_id: item.tlt_id,
+          tlt_no: this.service.tltTalentMap().get(item.tlt_no)?.['No'] ?? '',
+          tlt_name: this.service.tltTalentMap().get(item.tlt_no)?.['Name'] ?? '',
           calc_date_type: item.calc_date_type ?? 'Y',
           cap_item_D16: 'D16',
           cap_item_D17: 'D17',
@@ -347,14 +347,13 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
       this.service.insertTLS26080(payload).pipe(
         tap(res => this.logger.debug(`onSubmit:`, [d, payload, res])),
-        map(res => { if (res.Status === '0000') return res; throw new Error(res.Message || '新增失敗'); }),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
-        next: () => {
+        next: res => {
+          if (res.Status !== '0000') return;
           this.onCancel();
           this.messageService.successBubble('新增成功');
         },
-        error: err => this.messageService.errorBubble(err.message || '新增失敗'),
       });
     });
   }

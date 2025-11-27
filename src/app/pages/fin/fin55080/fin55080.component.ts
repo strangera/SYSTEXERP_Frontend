@@ -106,9 +106,8 @@ export class FIN55080Component extends BasicQueryPageComponent<QueryFIN55080Resp
         this.data = listData.map((item: QueryFIN55080Response) => ({
           ...item,
           // 將科目代碼和名稱合併
-          STYPE_NAME: (item.STYPE_ID || '') + ' ' + item.STYPE_NAME,
-          STYPE_AMT: item.STYPE_ID ? (item.STYPE_AMT ?? null) : '',
-          SUM_LTYPE_AMT: item.STYPE_ID ? '' : (item.SUM_LTYPE_AMT ?? null),
+          STYPE_NAME: (item.STYPE_ID || '') + ' ' + item.STYPE_NAME, // TODO:我前端自己改位置，但其實要SP改
+          STYPE_AMT: item.STYPE_ID ? (item.STYPE_AMT ?? null) : '', // TODO:我前端自己改位置，但其實要SP改
         }));
 
         this.totalRecords = response.TotalCount - 1;
@@ -116,6 +115,8 @@ export class FIN55080Component extends BasicQueryPageComponent<QueryFIN55080Resp
         // 總計行放進 footerData，並清空 STYPE_AMT (因為它是總計行的標題)
         this.footerData = {
           ...footerItem,
+          STYPE_AMT: null,
+          SUM_LTYPE_AMT: footerItem.STYPE_AMT ?? null, // TODO:我前端自己改位置，但其實要SP改
         } as QueryFIN55080Response;
 
         // 儲存最新的查詢參數用於匯出

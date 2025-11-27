@@ -23,7 +23,7 @@ import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
-import { concatMap, finalize, map, Observable, tap } from 'rxjs';
+import { concatMap, finalize, Observable, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailData, FIN52030Payload } from '../fin52030/fin52030.model';
 import { FIN53010Data, FIN53010DetailTable, FIN53010InsertResult, FIN53010UpdateResult, QueryFIN53010Detail } from '../fin53010/fin53010.model';
 
@@ -290,14 +290,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     if (!this.isFormCreateable) {
       this.tableLoading.set(!0);
       this.service.loadFIN53010Detail(this.rowdata!.id).pipe(
-        map(res => { if (res.Status === '0000') return res; throw new Error('載入傳票明細失敗'); }),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
         next: res => {
+          if (res.Status !== '0000') return;
           this.fin53010DetailData.set(res.Data);
           this.totalRecords.set(res.TotalCount);
         },
-        error: err => this.messageService.errorBubble(err.message || '載入傳票明細失敗'),
       });
     }
   }
@@ -329,14 +328,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
       request.pipe(
         tap(res => this.logger.debug(`onSubmit:`, [payload, res])),
-        map(res => { if (res.Status === '0000') return res; throw new Error(this.isFormCreateable ? '新增失敗' : '更新失敗'); }),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
-        next: () => {
+        next: res => {
+          if (res.Status !== '0000') return;
           this.onCancel();
           this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功');
         },
-        error: err => this.messageService.errorBubble(err.message || (this.isFormCreateable ? '新增失敗' : '更新失敗')),
       });
     });
   }
@@ -424,14 +422,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.tableLoading.set(!0);
     this.service.deleteFIN53010Data(ids).pipe(
       tap(res => this.logger.debug(`onDelete:`, [ids, res])),
-      map(res => { if (res.Status === '0000') return res; throw new Error('刪除失敗'); }),
       concatMap(() => this.service.loadFIN53010Detail(this.rowdata!.id)),
       tap(res => this.logger.debug(`reload after delete:`, [res])),
-      map(res => { if (res.Status === '0000') return res; throw new Error('載入傳票明細失敗'); }),
       finalize(() => this.tableLoading.set(!1)),
     ).subscribe({
-      next: () => this.messageService.successBubble('刪除成功'),
-      error: err => this.messageService.errorBubble(err.message || '刪除失敗')
+      next: res => {
+        if (res.Status !== '0000') return;
+        this.messageService.successBubble('刪除成功');
+      },
     });
   }
 
@@ -475,13 +473,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.tableLoading.set(!0);
     this.service.getFin52030Detail(this.selectedDetail()[0]?.TempNo, this.df().CompNo.value!, Number(this.user.mid)).pipe(
       tap(res => this.logger.debug(`onApplyTemplate:`, [res])),
-      map(res => { if (res.Status === '0000') return res; throw new Error(res.Message || '取得常用傳票明細失敗'); }),
       finalize(() => {
         this.tableLoading.set(!1);
         this.displayDialog.set(!1);
       }),
     ).subscribe({
       next: res => {
+        if (res.Status !== '0000') return;
         const data = res.Data;
         this.dataForm.patchValue({
           VouType: data.VouType,
@@ -505,7 +503,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           index: v.index,
         })));
       },
-      error: err => this.messageService.errorBubble(err.message || '取得常用傳票明細失敗'),
     });
   }
 
