@@ -16,6 +16,22 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { Column, convertYYYYMMToDate, createPaginationConfig, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
+// 本期發票月
+const today = new Date();
+let invoiceYear = today.getFullYear();
+let invoiceMonth = today.getMonth() + 1; // JS 月份 0~11
+
+// 如果不是偶數月，就加 1 個月
+if (invoiceMonth % 2 !== 0) {
+  invoiceMonth += 1;
+  if (invoiceMonth > 12) {
+    invoiceMonth = 1;
+    invoiceYear += 1;
+  }
+}
+// 將年月轉成 YYYYMM 字串
+export const invoiceDate = invoiceYear.toString() + invoiceMonth.toString().padStart(2, '0');
+
 /** TDS1002 營業人銷售額與稅額申報書檔 */
 export interface TDS1002 {
   id: number;
@@ -273,7 +289,7 @@ export interface TDS1002 {
 export class FIN14010Component extends BasicQueryPageComponent<TDS1002> implements OnInit {
   queryForm = this.formBuilder.group({
     // TDS1002 營業人銷售額與稅額申報書檔 參考11020
-    REP_GUIYM: [null, [Validators.required]], // 申報年月
+    REP_GUIYM: [invoiceDate, [Validators.required]], // 申報年月
     ...createPaginationConfig([{ field: 'REP_GUIYM', order: 1 }]), // 分頁和排序參數
   });
 
