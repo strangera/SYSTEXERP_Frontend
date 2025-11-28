@@ -13,7 +13,16 @@ import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { environment } from '../../../../environments/environment';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+// 可以順便抽一個型別
+type StoTaxNoOption = {
+  label: string;
+  value: string;
+  REP_BegGUIYM?: string;
+  REP_EndGUIYM?: string;
+  STO_No?: string;
+  STO_Status?: string;
+};
 @Component({
   selector: 'app-fin15080',
   templateUrl: './fin15080.component.html',
@@ -24,17 +33,25 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarComponent,
+    // CalendarComponent,
     ButtonComponent,
     TranslateModule,
     MultiSelectComponent,
     TableModule,
     ButtonModule,
+    YearMonthComponent
   ],
 })
 export class FIN15080Component extends BasicQueryPageComponent<any> {
   // 給 <app-multi-select> 的 options
-  stoTaxNoOptions: Array<{ label: string; value: string }> = [];
+  stoTaxNoOptions: Array<{
+  label: string;
+  value: string;
+  REP_BegGUIYM?: string;
+  REP_EndGUIYM?: string;
+  STO_No?: string;
+  STO_Status?: string;
+}> = [];
 
   queryForm = this.formBuilder.group({
     DeclareYM: [null, Validators.required],     // 申報年月
@@ -49,23 +66,37 @@ export class FIN15080Component extends BasicQueryPageComponent<any> {
     this.initializePage('FIN15080', '/fin/fin15080cru', this.queryForm, () => this.onSubmit());
     this.loadStoTaxNoOptions(); // 載入稅籍選單
   }
+ 
 
   /** 載入稅籍下拉 */
-  private loadStoTaxNoOptions(): void {
-    const { mid, SYS_StoreNo } = this.getUserInfoFromLocal();
+private loadStoTaxNoOptions(): void {
+  const { mid, SYS_StoreNo } = this.getUserInfoFromLocal();
 
-    // 讓 <app-multi-select> 顯示 loading：傳 null 進去（依你元件 setter 寫法）
-    this.stoTaxNoOptions = null as any;
+  // 讓 <app-multi-select> 顯示 loading：傳 null 進去（依你元件 setter 寫法）
+  this.stoTaxNoOptions = null as any;
 
-    this.fin15080Service.getStoTaxNoOptions({ mid, STO_No: SYS_StoreNo }).subscribe({
-      next: (opts) => (this.stoTaxNoOptions = opts ?? []),
-      error: (err) => {
-        console.error('取得稅籍下拉失敗：', err);
-        this.stoTaxNoOptions = [];
-        this.messageService.errorBubble('稅籍清單取得失敗');
-      },
-    });
-  }
+
+  this.fin15080Service.getStoTaxNoOptions({ mid, STO_No: SYS_StoreNo }).subscribe({
+    next: (opts) => {
+      this.stoTaxNoOptions = opts ?? [];
+
+      // ✅ 找出 STO_Status === '1' 的稅籍
+      const active = this.stoTaxNoOptions.find(x => x.STO_Status === '1');
+
+      if (active) {
+        // MultiSelect 是多選 → 設成陣列
+        this.queryForm.patchValue({
+         Business_ID: [active.value] as any,
+        });
+      }
+    },
+    error: (err) => {
+      console.error('取得稅籍下拉失敗：', err);
+      this.stoTaxNoOptions = [];
+      this.messageService.errorBubble('稅籍清單取得失敗');
+    },
+  });
+}
 
   onSubmit(): void {
     this.submitted = true;

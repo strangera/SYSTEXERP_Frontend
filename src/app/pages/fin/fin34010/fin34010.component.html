@@ -12,56 +12,56 @@
 
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 廠客代號 -->
+          <!-- 客戶/廠商代號 (VEN_No) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
-              label="廠客代號"
-              [startControl]="queryForm.controls.startFactoryID"
-              [endControl]="queryForm.controls.endFactoryID"
+            <app-input-text
+              label="客戶代號"
+              [control]="queryForm.controls.VEN_No"
               [submitted]="submitted">
-            </app-input-text-range>
+            </app-input-text>
           </div>
 
-          <!-- 立帳日期區間 -->
+          <!-- 立帳日期區間 (ARSDateFrom / ARSDateTo) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               label="立帳日期"
-              [startControl]="queryForm.controls.startEstablishDate"
-              [endControl]="queryForm.controls.endEstablishfDate"
+              [startControl]="queryForm.controls.ARSDateFrom"
+              [endControl]="queryForm.controls.ARSDateTo"
               [submitted]="submitted">
             </app-calendar-range>
           </div>
 
-          <!-- 科目代號 -->
+          <!-- 科目代號 (AccNo) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
+            <app-input-text
               label="科目代號"
-              [startControl]="queryForm.controls.startSubjectID"
-              [endControl]="queryForm.controls.endSubjectID"
+              [control]="queryForm.controls.AccNo"
               [submitted]="submitted">
-            </app-input-text-range>
+            </app-input-text>
           </div>
         </div>
 
         <hr />
 
         <div class="grid p-fluid">
+          <!-- 應收金額是否顯示 (ShowArsAmt) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
-              label="應付金額是否顯示"
-              groupname="display"
-              [control]="queryForm.controls.display"
-              [options]="showUpOptions"
+              label="應收金額是否顯示"
+              groupname="ShowArsAmt"
+              [control]="queryForm.controls.ShowArsAmt"
+              [options]="showFlagOptions"
               [submitted]="submitted">
             </app-radiobutton>
           </div>
 
+          <!-- 帳款餘額為零是否顯示 (ShowZeroAmt) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               label="帳款餘額為零是否顯示"
-              groupname="showUp"
-              [control]="queryForm.controls.showUp"
-              [options]="showUpOptions"
+              groupname="ShowZeroAmt"
+              [control]="queryForm.controls.ShowZeroAmt"
+              [options]="showFlagOptions"
               [submitted]="submitted">
             </app-radiobutton>
           </div>
@@ -108,11 +108,20 @@
       <div class="flex justify-content-end gap-2">
         <p-button
           styleClass="p-2"
-          label="匯出應收帳款明細表 Excel"
+          label="匯出 Excel"
           icon="pi pi-file-excel"
-          [loading]="btnExportLoading"
+          [loading]="btnExportExcelLoading"
           (click)="downloadFIN34010Excel()"
-          [disabled]="btnExportLoading">
+          [disabled]="btnExportExcelLoading || btnExportPdfLoading">
+        </p-button>
+
+        <p-button
+          styleClass="p-2"
+          label="匯出 PDF"
+          icon="pi pi-file-pdf"
+          [loading]="btnExportPdfLoading"
+          (click)="downloadFIN34010PDF()"
+          [disabled]="btnExportPdfLoading || btnExportExcelLoading">
         </p-button>
       </div>
     </header>
