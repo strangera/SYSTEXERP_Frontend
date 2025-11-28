@@ -12,15 +12,12 @@
     >
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              controlName="DeclareYM"
-              calendarType="dateMonthOne"
-              label="申報年月"
-              [control]="queryForm.controls.DeclareYM"
-              [submitted]="submitted"
-            ></app-calendar>
-          </div>
+    
+                  <div class="col-12 md:col-6 lg:col-4">
+          <!-- 申報年月 -->
+          <app-year-month label="申報年月" [control]="queryForm.controls.DeclareYM" [evenMonth]="true"
+            [submitted]="submitted"></app-year-month>
+        </div>
        
         <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select

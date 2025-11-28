@@ -26,7 +26,14 @@ export class FIN15080Service {
    * 這裡直接把 STO_TaxName → label、STO_TaxNo → value 對應好
    */
 getStoTaxNoOptions(req: { mid: number; STO_No: string }): Observable<
-  Array<{ label: string; value: string; REP_BegGUIYM?: string; REP_EndGUIYM?: string; STO_No?: string }>
+   Array<{
+    label: string;
+    value: string;
+    REP_BegGUIYM?: string;
+    REP_EndGUIYM?: string;
+    STO_No?: string;
+    STO_Status?: string;   // ⬅️ 新增
+  }>
 > {
   const url = `${environment.ApiUrl}/Share/queryTDS1003_STO_TaxNo_DropDownList`;
   return this.http.post<any>(url, req).pipe(
@@ -39,6 +46,8 @@ getStoTaxNoOptions(req: { mid: number; STO_No: string }): Observable<
         REP_BegGUIYM: x?.REP_BegGUIYM ?? '',
         REP_EndGUIYM: x?.REP_EndGUIYM ?? '',
         STO_No: x?.STO_No ?? '',
+        STO_Status: x?.STO_Status ?? '', // ⬅️ 把狀態一起存起來
+        
       }));
     })
   );
