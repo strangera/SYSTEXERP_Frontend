@@ -7,17 +7,18 @@ export interface EditColumn {
   format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
   disabled?: (value: any, index?: number, rowData?: any) => boolean;  // 是否禁用 (是否為禁用欄位)
   validate?: ((value: any, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[]; })[];
-  type?: 'input' | 'inputNumber' | 'percent' | 'dropdown' | 'date' | 'template'; // 欄位類型
+  type?: 'input' | 'inputNumber' | 'dropdown' | 'date' | 'template'; // 欄位類型
   groupField?: string;
   width?: string;
   textAlign?: 'left' | 'right' | 'center' | 'justify' | 'match-parent' | 'initial' | 'inherit' | 'unset' | 'revert' | 'revert-layer' | 'unset';
   // inputNumber
   min?: number; // 最小值
   max?: number; // 最大值
-  minLength?: number;
-  maxLength?: number;
+  minLength?: string | number | null;
+  maxLength?: string | number | null;
   minFractionDigits?: number;
   maxFractionDigits?: number;
+  suffix?: string;
   // dropdown
   options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
   optionLabel?: string; // 下拉選單 optionLabel
