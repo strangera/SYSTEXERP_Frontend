@@ -271,11 +271,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 狀態欄位
     tlt_openflag: [''],
-    cap_saletype1: [''],
-    cap_saletype2: [''],
-    cap_saletype3: [''],
-    cap_saletype4: [''],
-    cap_saletype5: [''],
+    cap_saletype1: ['N'],
+    cap_saletype2: ['N'],
+    cap_saletype3: ['N'],
+    cap_saletype4: ['N'],
+    cap_saletype5: ['N'],
 
     open_deposit: [''],
     open_fees: [0], //準時開業保證金
@@ -925,6 +925,13 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       total_amt_unit: data.total_amt_unit || '',
       total_amt_vendor_unit: data.total_amt_vendor_unit || '',
 
+      // 參加資訊 (checkbox 欄位)
+      cap_saletype1: data.cap_saletype1 || 'N',
+      cap_saletype2: data.cap_saletype2 || 'N',
+      cap_saletype3: data.cap_saletype3 || 'N',
+      cap_saletype4: data.cap_saletype4 || 'N',
+      cap_saletype5: data.cap_saletype5 || 'N',
+
       // 其他欄位
       check_typeList: data.check_type && typeof data.check_type === 'string'
         ? data.check_type.split(',').map((s: string) => s.trim()).filter((s: string) => s)
@@ -1076,11 +1083,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       contact_Date: formatDate(detailData.contact_Date),
       tlt_contract_bdate: formatDate(detailData.tlt_contract_bdate),
       tlt_contract_edate: formatDate(detailData.tlt_contract_edate),
-      cap_saletype1: detailData.cap_saletype1 || '',
-      cap_saletype2: detailData.cap_saletype2 || '',
-      cap_saletype3: detailData.cap_saletype3 || '',
-      cap_saletype4: detailData.cap_saletype4 || '',
-      cap_saletype5: detailData.cap_saletype5 || '',
+      cap_saletype1: detailData.cap_saletype1 || 'N',
+      cap_saletype2: detailData.cap_saletype2 || 'N',
+      cap_saletype3: detailData.cap_saletype3 || 'N',
+      cap_saletype4: detailData.cap_saletype4 || 'N',
+      cap_saletype5: detailData.cap_saletype5 || 'N',
       bus_type: detailData.bus_type || '',
       bus_class: detailData.bus_class || '',
       bus_sclass: detailData.bus_sclass || '',
