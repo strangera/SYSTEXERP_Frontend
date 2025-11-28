@@ -12,6 +12,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatDate } from '@shared/componentkit/table/table.model';
 import { formatAmount } from '@shared/componentkit/table2/table2.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -52,12 +53,12 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
   GUI_STATS_Options = GUI_STATUS_OPTIONS;
   columns: ReportColumn[] = [
     { field: 'CHG_No', header: '換開編號', visible: true },
-    { field: 'TXN_Date', header: '換開日期', visible: true, format: formatDateToYYYY_MM_DD },
+    { field: 'TXN_Date', header: '換開日期', visible: true, format: formatDate },
     // { field: 'TXN_Date', header: '來源發票日期', visible: true, format: formatDateToYYYY_MM_DD },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true },
-    { field: 'TXN_GUINo', header: '來源發票號碼', visible: true },
-    { field: 'TXN_SaleAmt', header: '來源發票金額', visible: true, format: formatAmount },
+    { field: 'TXN_GUINo', header: '發票號碼', visible: true },
+    { field: 'TXN_SaleAmt', header: '銷售金額', visible: true, format: formatAmount },
     { field: 'TXN_Net', header: '未稅金額', visible: true, format: formatAmount },
     { field: 'TXN_SaleNoTax', header: '免稅金額', visible: true, format: formatAmount },
     { field: 'TXN_Tax', header: '稅額', visible: true, format: formatAmount },
@@ -67,8 +68,8 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
       visible: true,
       format: (value) => this.formatStatus(value)
     },
-    { field: 'GUI_CancelDate', header: '刪除日期', visible: true, format: formatDateToYYYY_MM_DD },
-    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateToYYYY_MM_DD },
+    { field: 'GUI_CancelDate', header: '刪除日期', visible: true, format: formatDate },
+    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
     { field: 'CRT_USR_No', header: '建立人員編號', visible: true },
     { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
     { field: 'UPD_Date', header: '變更日期', visible: true },
