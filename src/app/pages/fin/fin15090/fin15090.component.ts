@@ -5,7 +5,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { FIN15090Service } from '@service/api/fin/fin15090.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { option } from '@shared/models/sys/sysb000.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -14,7 +13,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, convertDateToYYYYMM, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { Column, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 // 本期發票月
 const today = new Date();
@@ -33,6 +32,11 @@ if (invoiceMonth % 2 !== 0) {
 // 將年月轉成 YYYYMM 字串
 export const invoiceDate = invoiceYear.toString() + invoiceMonth.toString().padStart(2, '0');
 
+interface REP_TaxNo_list {
+  No: string,
+  Lable: string,
+  STO_Status: string, // 使否為使用中
+}
 
 /** TDS1002 營業人銷售額與稅額申報書檔 */
 export interface TDS1002 {
@@ -303,7 +307,7 @@ export class FIN15090Component extends BasicQueryPageComponent<TDS1002> implemen
   data: TDS1002[] = [];
   selectedRows: TDS1002[] = [];
 
-  REP_TaxNo_Options: option[] = []; //稅籍編號 選項
+  REP_TaxNo_Options: REP_TaxNo_list[] = []; //稅籍編號 選項
 
   columns: Column[] = [ //先放可視範圍內的
     { field: 'REP_GUIYM', header: '資料所屬年月', visible: true, format: formatYYYYMM }, // 資料所屬年月
@@ -339,7 +343,6 @@ export class FIN15090Component extends BasicQueryPageComponent<TDS1002> implemen
     this.handleSubmit(frm, () => {
       const body = {
         ...frm.value,
-        REP_GUIYM: convertDateToYYYYMM(frm.value.REP_GUIYM),
       }
 
       console.log('營業人媒體檔案遞送單 request', body);
@@ -381,13 +384,27 @@ export class FIN15090Component extends BasicQueryPageComponent<TDS1002> implemen
         next: (response) => {
           console.log('response.Data', response.Data);
 
+          const taxNos = response.Data?.TDS1003STO_TaxNos ?? [];
           // 根據實際回傳陣列改寫
-          this.REP_TaxNo_Options = response.Data.TDS1003STO_TaxNos.map((item: any) => ({
-            label: item.STO_TaxNo + ' ' + item.STO_TaxName,
-            value: item.STO_TaxNo
+          this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string; REP_BegGUIYM: string; REP_EndGUIYM: string; STO_Status: string }) => ({
+            Label: item.STO_TaxNo + "/" + item.STO_TaxName + "/" + item.REP_BegGUIYM + "~" + item.REP_EndGUIYM,
+            No: item.STO_TaxNo,
+            STO_Status: item.STO_Status
           }));
 
-          console.log('稅籍編號選項.Data', this.REP_TaxNo_Options);
+          console.log('稅籍編號選項.Data', response);
+
+          // 找出 STO_Status === '1' 的稅籍
+          const active = this.REP_TaxNo_Options.find(x => x.STO_Status === '1');
+
+          if (active) { //如果有使用中的設定為稅及編號預設值
+            console.log('當期使用中的稅籍編號', active);
+            this.queryForm.patchValue({
+              REP_TaxNo: active.No as any,
+            });
+          } else {
+            console.log('當期無使用中的稅籍編號', active);
+          }
         },
         error: () => { this.loading = false; },
       });

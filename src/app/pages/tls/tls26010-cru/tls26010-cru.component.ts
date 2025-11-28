@@ -16,8 +16,11 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
+import { ExcelImportService, ImportExcelColumn } from '@shared/service/excel-import.service';
+import { FileSelectEvent } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
+import * as XLSX from 'xlsx';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -96,7 +99,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
     id: [{ value: null as number | null, disabled: true }],
     pod_no: ['', [Validators.required]],
     pod_desc: ['', [Validators.required, Validators.maxLength(100)]],
-    pod_sdate: [null as Date | null, [Validators.required, this.validationService.dateAfterTodayValidator()]],
+    pod_sdate: [null as Date | null, [Validators.required]],
     pod_edate: [null as Date | null, [Validators.required]],
     pod_status: [''],
     approved_usr_name: [''],
@@ -229,6 +232,15 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
     this.initializePage('TLS26010', this.dataForm);
     this.loadOptions();
 
+    // 只在新增模式時套用日期必須大於等於今日的驗證器
+    if (this.crudstatus === CRUDStatus.Create) {
+      this.dataForm.get('pod_sdate')?.setValidators([
+        Validators.required,
+        this.validationService.dateAfterTodayValidator()
+      ]);
+      this.dataForm.get('pod_sdate')?.updateValueAndValidity();
+    }
+
     const pod_no = this.dataForm.get('pod_no')?.value;
     if (pod_no) {
       this.loadDetailData(pod_no);
@@ -317,6 +329,9 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
 
       case CRUDStatus.Edit:
         if (this.canEdit()) {
+          console.log('🔍 送出前的 ecrData:', this.ecrData);
+          console.log('🔍 送出前的 tltData:', this.tltData);
+
           const updateBody = {
             pod_info: {
               id: formValue.id,
@@ -330,6 +345,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
             talent_list: this.processTltListForUpdate()
           };
 
+          console.log('🔍 處理後的 ecr_list:', updateBody.ecr_list);
+          console.log('🔍 處理後的 talent_list:', updateBody.talent_list);
           console.log('更新請求:', JSON.stringify(updateBody, null, 2));
 
           this.http.post<{ Status: string; Message: string }>(`${this.tLS26010Service.apiUrl}/updateTLS26010`, updateBody)
@@ -365,42 +382,58 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
   }
 
   private processEcrListForUpdate() {
-    return this.ecrData.map(item => {
-      let status = 'original';
-      if (item.status === 'new') {
-        status = 'new';
-      } else if (item.status === 'delete' || item.status === 'deleted') {
-        status = 'delete';
-      } else if (item.status === 'modify') {
-        status = 'modify';
-      }
+    return this.ecrData
+      .filter(item => {
+        // 如果是刪除狀態但沒有 id,直接過濾掉(不傳給後端)
+        if ((item.status === 'delete' || item.status === 'deleted') && !item.id) {
+          return false;
+        }
+        return true;
+      })
+      .map(item => {
+        let status = 'original';
+        if (item.status === 'new') {
+          status = 'new';
+        } else if (item.status === 'delete' || item.status === 'deleted') {
+          status = 'delete';
+        } else if (item.status === 'modify') {
+          status = 'modify';
+        }
 
-      return {
-        id: item.id ?? null,
-        ECR_No: item.ECR_No!,
-        tlt_no: item.tlt_no!,
-        Status: status
-      };
-    });
+        return {
+          id: item.id ?? null,
+          ECR_No: item.ECR_No!,
+          tlt_no: item.tlt_no!,
+          Status: status
+        };
+      });
   }
 
   private processTltListForUpdate() {
-    return this.tltData.map(item => {
-      let status = 'original';
-      if (item.status === 'new') {
-        status = 'new';
-      } else if (item.status === 'delete' || item.status === 'deleted') {
-        status = 'delete';
-      } else if (item.status === 'modify') {
-        status = 'modify';
-      }
+    return this.tltData
+      .filter(item => {
+        // 如果是刪除狀態但沒有 id,直接過濾掉(不傳給後端)
+        if ((item.status === 'delete' || item.status === 'deleted') && !item.id) {
+          return false;
+        }
+        return true;
+      })
+      .map(item => {
+        let status = 'original';
+        if (item.status === 'new') {
+          status = 'new';
+        } else if (item.status === 'delete' || item.status === 'deleted') {
+          status = 'delete';
+        } else if (item.status === 'modify') {
+          status = 'modify';
+        }
 
-      return {
-        id: item.id ?? null,
-        tlt_no: item.tlt_no!,
-        Status: status
-      };
-    });
+        return {
+          id: item.id ?? null,
+          tlt_no: item.tlt_no!,
+          Status: status
+        };
+      });
   }
 
   loadOptions() {
@@ -496,8 +529,17 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
   }
 
   onDialogECRSubmit(): void {
-    console.log('舊的ECR ecrData', this.ecrData);
+    console.log('=== onDialogECRSubmit 開始 ===');
+    console.log('🔍 舊的 ecrData:', this.ecrData);
+    console.log('🔍 舊的 ecrData 長度:', this.ecrData.length);
+    console.log('🔍 舊的 ecrData 詳細狀態:', this.ecrData.map(d => ({
+      id: d.id,
+      ECR_No: d.ECR_No,
+      status: d.status
+    })));
+
     const added: EcrItemWithStatus[] = [];
+    const invalidEcrs: string[] = [];
 
     this.ecrDialogSelected.forEach(item => {
       const exists = this.ecrData.find(d =>
@@ -506,22 +548,45 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
         d.status !== 'deleted'
       );
       if (!exists) {
-        added.push({
-          id: undefined,
-          ECR_No: item.ECR_No,
-          ECR_Name: item.ECR_Name,
-          ecr_name: item.ecr_name,
-          tlt_no: item.tlt_no,
-          tlt_name: item.tlt_name,
-          status: 'new'
-        });
+        // 檢查是否有 tlt_no
+        if (!item.tlt_no || item.tlt_no.trim() === '') {
+          invalidEcrs.push(item.ECR_No || '');
+        } else {
+          added.push({
+            id: undefined,
+            ECR_No: item.ECR_No,
+            ECR_Name: item.ECR_Name,
+            ecr_name: item.ecr_name,
+            tlt_no: item.tlt_no,
+            tlt_name: item.tlt_name,
+            status: 'new'
+          });
+        }
       }
     });
 
-    this.ecrData = [...this.ecrData.filter(item => item.status !== 'delete' && item.status !== 'deleted'), ...added];
+    console.log('🔍 要新增的項目:', added);
+    console.log('🔍 要新增的項目數量:', added.length);
 
-    console.log('新的ECR ecrData', this.ecrData);
+    // 如果有無效的 ECR,顯示錯誤訊息
+    if (invalidEcrs.length > 0) {
+      this.messageService.errorBubble(`以下收銀機沒有關聯專櫃,無法新增: ${invalidEcrs.join(', ')}`);
+      return;
+    }
 
+    // 保留所有資料(包括已刪除的),只新增不存在的項目
+    console.log('🔍 合併前 ecrData 長度:', this.ecrData.length);
+    this.ecrData = [...this.ecrData, ...added];
+    console.log('🔍 合併後 ecrData 長度:', this.ecrData.length);
+
+    console.log('🔍 新的 ecrData:', this.ecrData);
+    console.log('🔍 新的 ecrData 詳細狀態:', this.ecrData.map(d => ({
+      id: d.id,
+      ECR_No: d.ECR_No,
+      status: d.status
+    })));
+
+    console.log('=== onDialogECRSubmit 結束 ===');
     this.ecrDialogVisible = false;
   }
 
@@ -573,7 +638,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
       }
     });
 
-    this.tltData = [...this.tltData.filter(item => item.status !== 'delete' && item.status !== 'deleted'), ...added];
+    // 保留所有資料(包括已刪除的),只新增不存在的項目
+    this.tltData = [...this.tltData, ...added];
     console.log('新的 tltData', this.tltData);
 
     this.tltDialogVisible = false;
@@ -856,6 +922,30 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
     return { isValid: true, errorMessage: '' };
   };
 
+  // 處理 ECR 資料變更事件
+  onEcrDataChange(data: EcrItemWithStatus[]): void {
+    console.log('📥 onEcrDataChange 接收到資料:', data);
+    console.log('📥 接收到的資料長度:', data.length);
+    console.log('📥 接收到的資料狀態:', data.map(d => ({
+      id: d.id,
+      ECR_No: d.ECR_No,
+      status: d.status
+    })));
+    this.ecrData = data;
+  }
+
+  // 處理 TLT 資料變更事件
+  onTltDataChange(data: TltItemWithStatus[]): void {
+    console.log('📥 onTltDataChange 接收到資料:', data);
+    console.log('📥 接收到的資料長度:', data.length);
+    console.log('📥 接收到的資料狀態:', data.map(d => ({
+      id: d.id,
+      tlt_no: d.tlt_no,
+      status: d.status
+    })));
+    this.tltData = data;
+  }
+
   reset26010() {
     if (this.crudstatus == CRUDStatus.Create) {
       this.ecrData = [];
@@ -869,6 +959,159 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
       }
     } else {
       console.log('查看模式無須重製');
+    }
+  }
+
+  /**
+   * 匯出專櫃 Excel 範例檔案
+   */
+  onExportTltExcel(): void {
+    // 建立工作簿
+    const wb = XLSX.utils.book_new();
+
+    // 建立工作表 - 標題列 + 範例資料列（引導使用者）
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['專櫃編號', '專櫃名稱'],
+      ['002425', '範例專櫃名稱']  // 範例資料，引導使用者填寫
+    ]);
+
+    // 設定欄寬
+    ws['!cols'] = [
+      { wch: 15 }, // 專櫃編號
+      { wch: 30 }  // 專櫃名稱
+    ];
+
+    // 🔑 關鍵：設定儲存格格式為文字格式（避免數字前導零被移除）
+    // 設定 A 欄（專櫃編號）為文字格式
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+
+    // 從第 2 列開始（跳過標題列）設定為文字格式
+    for (let row = 1; row <= range.e.r + 100; row++) { // 預設支援到 100 列
+      const cellAddress = XLSX.utils.encode_cell({ r: row, c: 0 }); // A 欄（專櫃編號）
+
+      // 如果儲存格不存在，建立一個空的儲存格
+      if (!ws[cellAddress]) {
+        ws[cellAddress] = { t: 's', v: '' };
+      }
+
+      // 設定為文字格式（type = 's' 表示 string）
+      ws[cellAddress].t = 's';
+
+      // 設定儲存格樣式（文字格式的數字格式碼是 '@'）
+      if (!ws[cellAddress].z) {
+        ws[cellAddress].z = '@';
+      }
+    }
+
+    console.log('📤 匯出專櫃 Excel 範本:', [wb, ws]);
+
+    // 將工作表加入工作簿
+    XLSX.utils.book_append_sheet(wb, ws, '專櫃範本');
+
+    // 生成並下載檔案
+    XLSX.writeFile(wb, `專櫃範本_${new Date().toISOString().split('T')[0]}.xlsx`);
+    // this.messageService.successBubble('範本檔案已下載（專櫃編號已設為文字格式）');
+  }
+
+  /**
+   * 匯入專櫃 Excel
+   * @param event 檔案選擇事件
+   */
+  async onImportTltExcel(event: FileSelectEvent): Promise<void> {
+    try {
+      const file = event.files?.[0];
+      if (!file) {
+        return;
+      }
+
+      // 定義匯入欄位
+      const importExcelColumn: ImportExcelColumn[] = [
+        { field: 'tlt_no', header: '專櫃編號', type: 'string' },
+        { field: 'tlt_name', header: '專櫃名稱', type: 'string' }
+      ];
+
+      // 使用 ExcelImportService 讀取檔案
+      const excelImportService = new ExcelImportService(this.messageService);
+      const rawData = await excelImportService.importExcel(file, importExcelColumn);
+
+      // 將中文標題映射到欄位名稱
+      const data: TltItemWithStatus[] = rawData.map((item: Record<string, string | number | undefined>) => ({
+        id: undefined,
+        tlt_no: (item['專櫃編號'] || item['tlt_no'] || '').toString().trim(),
+        tlt_name: (item['專櫃名稱'] || item['tlt_name'] || '').toString().trim(),
+        status: 'new' as const
+      }));
+
+      // 過濾掉空資料
+      const validData = data.filter(item => item.tlt_no && item.tlt_name);
+
+      if (!validData.length) {
+        this.messageService.errorBubble('匯入檔案沒有有效資料');
+        return;
+      }
+
+      // 建立現有專櫃編號的集合（用於檢查重複）
+      const existingTltNos = new Set(
+        this.tltData
+          .filter(item => item.status !== 'deleted') // 排除已刪除的
+          .map(item => item.tlt_no?.trim())
+          .filter(no => no) // 排除空值
+      );
+
+      console.log('📥 現有專櫃編號:', Array.from(existingTltNos));
+
+      // 過濾掉重複的專櫃編號
+      const newItems: TltItemWithStatus[] = [];
+      const duplicateItems: string[] = [];
+
+      for (const item of validData) {
+        const tltNo = item.tlt_no?.trim();
+        if (!tltNo) {
+          continue;
+        }
+
+        // 檢查是否重複
+        if (existingTltNos.has(tltNo)) {
+          duplicateItems.push(tltNo);
+          console.log(`⚠️ 重複的專櫃編號: ${tltNo}`);
+        } else {
+          newItems.push(item);
+          existingTltNos.add(tltNo); // 加入集合，避免同一批匯入中有重複
+        }
+      }
+
+      // 顯示重複訊息
+      if (duplicateItems.length > 0) {
+        const duplicateMsg = duplicateItems.length > 5
+          ? `${duplicateItems.slice(0, 5).join(', ')} 等 ${duplicateItems.length} 筆`
+          : duplicateItems.join(', ');
+        this.messageService.warnBubble(`以下專櫃編號重複，已自動略過：${duplicateMsg}`);
+      }
+
+      // 如果沒有新資料
+      if (newItems.length === 0) {
+        this.messageService.errorBubble('所有匯入資料都重複，沒有新增任何資料');
+        return;
+      }
+
+      // 將新資料加入到現有資料中
+      this.tltData = [...this.tltData, ...newItems];
+
+      console.log('📥 匯入專櫃成功:', {
+        total: validData.length,
+        new: newItems.length,
+        duplicate: duplicateItems.length,
+        currentData: this.tltData
+      });
+
+      this.messageService.successBubble(
+        `匯入成功！新增 ${newItems.length} 筆資料` +
+        (duplicateItems.length > 0 ? `，略過 ${duplicateItems.length} 筆重複資料` : '')
+      );
+
+    } catch (error) {
+      console.error('Excel 匯入錯誤:', error);
+      this.messageService.errorBubble('Excel 檔案讀取失敗，請檢查檔案格式');
     }
   }
 }
