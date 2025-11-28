@@ -96,7 +96,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
     id: [{ value: null as number | null, disabled: true }],
     pod_no: ['', [Validators.required]],
     pod_desc: ['', [Validators.required, Validators.maxLength(100)]],
-    pod_sdate: [null as Date | null, [Validators.required, this.validationService.dateAfterTodayValidator()]],
+    pod_sdate: [null as Date | null, [Validators.required]],
     pod_edate: [null as Date | null, [Validators.required]],
     pod_status: [''],
     approved_usr_name: [''],
@@ -229,6 +229,15 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
     this.initializePage('TLS26010', this.dataForm);
     this.loadOptions();
 
+    // 只在新增模式時套用日期必須大於等於今日的驗證器
+    if (this.crudstatus === CRUDStatus.Create) {
+      this.dataForm.get('pod_sdate')?.setValidators([
+        Validators.required,
+        this.validationService.dateAfterTodayValidator()
+      ]);
+      this.dataForm.get('pod_sdate')?.updateValueAndValidity();
+    }
+
     const pod_no = this.dataForm.get('pod_no')?.value;
     if (pod_no) {
       this.loadDetailData(pod_no);
@@ -317,6 +326,9 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
 
       case CRUDStatus.Edit:
         if (this.canEdit()) {
+          console.log('🔍 送出前的 ecrData:', this.ecrData);
+          console.log('🔍 送出前的 tltData:', this.tltData);
+
           const updateBody = {
             pod_info: {
               id: formValue.id,
@@ -330,6 +342,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
             talent_list: this.processTltListForUpdate()
           };
 
+          console.log('🔍 處理後的 ecr_list:', updateBody.ecr_list);
+          console.log('🔍 處理後的 talent_list:', updateBody.talent_list);
           console.log('更新請求:', JSON.stringify(updateBody, null, 2));
 
           this.http.post<{ Status: string; Message: string }>(`${this.tLS26010Service.apiUrl}/updateTLS26010`, updateBody)
@@ -365,42 +379,58 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
   }
 
   private processEcrListForUpdate() {
-    return this.ecrData.map(item => {
-      let status = 'original';
-      if (item.status === 'new') {
-        status = 'new';
-      } else if (item.status === 'delete' || item.status === 'deleted') {
-        status = 'delete';
-      } else if (item.status === 'modify') {
-        status = 'modify';
-      }
+    return this.ecrData
+      .filter(item => {
+        // 如果是刪除狀態但沒有 id,直接過濾掉(不傳給後端)
+        if ((item.status === 'delete' || item.status === 'deleted') && !item.id) {
+          return false;
+        }
+        return true;
+      })
+      .map(item => {
+        let status = 'original';
+        if (item.status === 'new') {
+          status = 'new';
+        } else if (item.status === 'delete' || item.status === 'deleted') {
+          status = 'delete';
+        } else if (item.status === 'modify') {
+          status = 'modify';
+        }
 
-      return {
-        id: item.id ?? null,
-        ECR_No: item.ECR_No!,
-        tlt_no: item.tlt_no!,
-        Status: status
-      };
-    });
+        return {
+          id: item.id ?? null,
+          ECR_No: item.ECR_No!,
+          tlt_no: item.tlt_no!,
+          Status: status
+        };
+      });
   }
 
   private processTltListForUpdate() {
-    return this.tltData.map(item => {
-      let status = 'original';
-      if (item.status === 'new') {
-        status = 'new';
-      } else if (item.status === 'delete' || item.status === 'deleted') {
-        status = 'delete';
-      } else if (item.status === 'modify') {
-        status = 'modify';
-      }
+    return this.tltData
+      .filter(item => {
+        // 如果是刪除狀態但沒有 id,直接過濾掉(不傳給後端)
+        if ((item.status === 'delete' || item.status === 'deleted') && !item.id) {
+          return false;
+        }
+        return true;
+      })
+      .map(item => {
+        let status = 'original';
+        if (item.status === 'new') {
+          status = 'new';
+        } else if (item.status === 'delete' || item.status === 'deleted') {
+          status = 'delete';
+        } else if (item.status === 'modify') {
+          status = 'modify';
+        }
 
-      return {
-        id: item.id ?? null,
-        tlt_no: item.tlt_no!,
-        Status: status
-      };
-    });
+        return {
+          id: item.id ?? null,
+          tlt_no: item.tlt_no!,
+          Status: status
+        };
+      });
   }
 
   loadOptions() {
@@ -496,8 +526,17 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
   }
 
   onDialogECRSubmit(): void {
-    console.log('舊的ECR ecrData', this.ecrData);
+    console.log('=== onDialogECRSubmit 開始 ===');
+    console.log('🔍 舊的 ecrData:', this.ecrData);
+    console.log('🔍 舊的 ecrData 長度:', this.ecrData.length);
+    console.log('🔍 舊的 ecrData 詳細狀態:', this.ecrData.map(d => ({
+      id: d.id,
+      ECR_No: d.ECR_No,
+      status: d.status
+    })));
+
     const added: EcrItemWithStatus[] = [];
+    const invalidEcrs: string[] = [];
 
     this.ecrDialogSelected.forEach(item => {
       const exists = this.ecrData.find(d =>
@@ -506,22 +545,45 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
         d.status !== 'deleted'
       );
       if (!exists) {
-        added.push({
-          id: undefined,
-          ECR_No: item.ECR_No,
-          ECR_Name: item.ECR_Name,
-          ecr_name: item.ecr_name,
-          tlt_no: item.tlt_no,
-          tlt_name: item.tlt_name,
-          status: 'new'
-        });
+        // 檢查是否有 tlt_no
+        if (!item.tlt_no || item.tlt_no.trim() === '') {
+          invalidEcrs.push(item.ECR_No || '');
+        } else {
+          added.push({
+            id: undefined,
+            ECR_No: item.ECR_No,
+            ECR_Name: item.ECR_Name,
+            ecr_name: item.ecr_name,
+            tlt_no: item.tlt_no,
+            tlt_name: item.tlt_name,
+            status: 'new'
+          });
+        }
       }
     });
 
-    this.ecrData = [...this.ecrData.filter(item => item.status !== 'delete' && item.status !== 'deleted'), ...added];
+    console.log('🔍 要新增的項目:', added);
+    console.log('🔍 要新增的項目數量:', added.length);
 
-    console.log('新的ECR ecrData', this.ecrData);
+    // 如果有無效的 ECR,顯示錯誤訊息
+    if (invalidEcrs.length > 0) {
+      this.messageService.errorBubble(`以下收銀機沒有關聯專櫃,無法新增: ${invalidEcrs.join(', ')}`);
+      return;
+    }
 
+    // 保留所有資料(包括已刪除的),只新增不存在的項目
+    console.log('🔍 合併前 ecrData 長度:', this.ecrData.length);
+    this.ecrData = [...this.ecrData, ...added];
+    console.log('🔍 合併後 ecrData 長度:', this.ecrData.length);
+
+    console.log('🔍 新的 ecrData:', this.ecrData);
+    console.log('🔍 新的 ecrData 詳細狀態:', this.ecrData.map(d => ({
+      id: d.id,
+      ECR_No: d.ECR_No,
+      status: d.status
+    })));
+
+    console.log('=== onDialogECRSubmit 結束 ===');
     this.ecrDialogVisible = false;
   }
 
@@ -573,7 +635,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
       }
     });
 
-    this.tltData = [...this.tltData.filter(item => item.status !== 'delete' && item.status !== 'deleted'), ...added];
+    // 保留所有資料(包括已刪除的),只新增不存在的項目
+    this.tltData = [...this.tltData, ...added];
     console.log('新的 tltData', this.tltData);
 
     this.tltDialogVisible = false;
@@ -855,6 +918,30 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
     }
     return { isValid: true, errorMessage: '' };
   };
+
+  // 處理 ECR 資料變更事件
+  onEcrDataChange(data: EcrItemWithStatus[]): void {
+    console.log('📥 onEcrDataChange 接收到資料:', data);
+    console.log('📥 接收到的資料長度:', data.length);
+    console.log('📥 接收到的資料狀態:', data.map(d => ({
+      id: d.id,
+      ECR_No: d.ECR_No,
+      status: d.status
+    })));
+    this.ecrData = data;
+  }
+
+  // 處理 TLT 資料變更事件
+  onTltDataChange(data: TltItemWithStatus[]): void {
+    console.log('📥 onTltDataChange 接收到資料:', data);
+    console.log('📥 接收到的資料長度:', data.length);
+    console.log('📥 接收到的資料狀態:', data.map(d => ({
+      id: d.id,
+      tlt_no: d.tlt_no,
+      status: d.status
+    })));
+    this.tltData = data;
+  }
 
   reset26010() {
     if (this.crudstatus == CRUDStatus.Create) {

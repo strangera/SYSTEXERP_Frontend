@@ -71,7 +71,7 @@
         (selectionChange)="selectedECRItems = $event"
         [selectedItems]="selectedECRItems"
         [showInsert]="true"
-        [showDelete]="false"
+        [showDelete]="true"
         [canInsert]="false"
         (insert)="dialogVisible('ecr')"
         [dataStatusValue]="{
@@ -85,6 +85,7 @@
         (dataChange)="ecrData = $event"
         dataStatusField="status"
         [loading]="ecrLoading"
+        [keepDeletedData]="true"
       ></app-table-edit>
 
       <!-- TLT明細檔 -->
@@ -98,7 +99,7 @@
         (selectionChange)="selectedTLTItems = $event"
         [selectedItems]="selectedTLTItems"
         [showInsert]="true"
-        [showDelete]="false"
+        [showDelete]="true"
         [canInsert]="false"
         (insert)="dialogVisible('tlt')"
         [dataStatusValue]="{
