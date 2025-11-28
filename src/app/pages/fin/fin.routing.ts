@@ -126,8 +126,8 @@ export const finRoutes: Routes = [
   // { path: 'fin25020', loadComponent: () => import('./fin25020/fin25020.component').then(m => m.FIN25020Component) },
   // { path: 'fin25020cru', loadComponent: () => import('./fin25020-cru/fin25020-cru.component').then(m => m.FIN25020CRUComponent) },
   // 匯款銀行
-  // { path: 'fin26010', loadComponent: () => import('./fin26010/fin26010.component').then(m => m.FIN26010Component) },
-  // { path: 'fin26010cru', loadComponent: () => import('./fin26010-cru/fin26010-cru.component').then(m => m.FIN26010CRUComponent) },
+  { path: 'fin26010', loadComponent: () => import('./fin26010/fin26010.component').then(m => m.FIN26010Component) },
+  { path: 'fin26010cru', loadComponent: () => import('./fin26010-cru/fin26010-cru.component').then(m => m.FIN26010CRUComponent) },
   // 產生開票付款資料
   // { path: 'fin27010', loadComponent: () => import('./fin27010/fin27010.component').then(m => m.FIN27010Component) },
   // { path: 'fin27010cru', loadComponent: () => import('./fin27010-cru/fin27010-cru.component').then(m => m.FIN27010CRUComponent) },
