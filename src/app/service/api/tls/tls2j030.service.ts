@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -20,7 +20,7 @@ export class TLS2j030Service {
   queryTLS2J030Detail2(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS2J030Detail2`, data);
   }
-   queryTLS2J030Detail3(data: any): Observable<any> {
+  queryTLS2J030Detail3(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS2J030Detail3`, data);
   }
   queryEcrNo(ip: string) {
@@ -31,14 +31,14 @@ export class TLS2j030Service {
   queryTLS2J030TXN_GUI(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS2J030TXN_GUI`, data);
   }
-  getNextGUINo(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/getNextGUINo`, data);
-  }
   insertTLS2J030(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/insertTLS2J030`, data);
   }
   deleteTLS2J030(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteTLS2J030`, data);
+  }
+  exportTLS2J030PDF(data: any): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS2J030PDF`, data, { responseType: 'blob' });
   }
 }
 
