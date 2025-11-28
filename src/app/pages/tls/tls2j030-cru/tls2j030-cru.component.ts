@@ -1,16 +1,19 @@
 
 
 import { NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AfterViewInit, Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS2j030Service } from '@service/api/tls/tls2j030.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { DropdownModule } from 'primeng/dropdown';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -32,10 +35,11 @@ import { DropDownListService } from './../../../service/utility/dropDownList.ser
   standalone: true,
   imports: [
     TableEditComponent, MenubarComponent, NgIf,
-    PanelModule, ReactiveFormsModule, ButtonComponent, TranslateModule, InputTextComponent, TableComponent
+    PanelModule, ReactiveFormsModule, FormsModule, ButtonComponent, TranslateModule, InputTextComponent, TableComponent,
+    DialogComponent, DropdownModule
   ],
 })
-export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> implements OnInit {
+export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> implements OnInit, AfterViewInit {
   /** 表單定義 */
   dataForm = this.formBuilder.nonNullable.group({
     TXN_GUIBegNo: ['', [Validators.maxLength(10)]],
@@ -57,9 +61,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   // 儲存查詢到的 ECR_No
   currentEcrNo = '';
 
-  // 防止重複調用 getNextGUINo 的標記
-  private isGettingGUINo = false;
-  private lastProcessedDate = '';
+
   // 使用 model 檔案中的欄位定義
   columnsnatural = COLUMNS_NATURAL_EDIT;
   columnsNaturalView = COLUMNS_NATURAL_VIEW;
@@ -70,16 +72,40 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   isViewMode = false;
   queryLoading = false;  // 專門用於查詢來源發票的 loading
   editLoading = false;   // 專門用於 table-edit 的 loading
+
+  // 項目名稱選擇相關
+  showItemDialog = false;
+  itemDialogLoading = false;
+  selectedBusType = '';
+  selectedItemName = '';
+  currentEditingRow: TLS2J030Data | null = null;
+
+  // 下拉選項
+  busTypeOptions: { label: string; value: string; data?: unknown }[] = [];
+  itemNameOptions: { label: string; value: string }[] = [];
+
+  // ViewChild 取得模板
+  @ViewChild('itemNameTemplate')
+  itemNameTemplate!: TemplateRef<any>;
+  @ViewChild('detailEdit') tableDetailEdit!: TableEditComponent;
+  ngAfterViewInit() {
+    const col = this.columnsdetail.find(c => c.field === 'INV_ItemName');
+    if (col) col.templateRef = this.itemNameTemplate;
+  }
+
+
   constructor(
-    private dropDownListService: DropDownListService,
     private route: ActivatedRoute,
     public readonly tls2j030Service: TLS2j030Service,
+    private dropDownListService: DropDownListService,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS2J030', this.dataForm);
+    this.loadItemOptions(); // 載入項目選項
+
     const nav = this.router.getCurrentNavigation();
     const routeRow = nav?.extras?.state?.['rowdata'] as TLS2J030Data;
     const row = this.rowdata || routeRow;
@@ -97,6 +123,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     }
 
   }
+
 
   /**
    * 初始化 ECR_No - 可以從設定檔或預設值取得
@@ -143,19 +170,19 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       });
   }
   initializeEditData() {
-    this.isGettingGUINo = false;
-    this.lastProcessedDate = '';
-
     const guiDingType = this.determineGUIDingType();
 
-    // 取得今日 yyyy-MM-dd
+    // 取得今日日期 - p-calendar 需要 Date 物件
     const today = new Date();
-    const todayStr = today.toISOString().substring(0, 10);
+    // 建立當地時間的今天日期 (避免時區問題)
+    const todayLocal = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    console.log('Setting TXN_Date to Date object:', todayLocal); // Debug log
 
     this.changeEditData = [{
       _TABLE_KEY: `change_${Date.now()}`,
       status: 'insert',
-      TXN_Date: todayStr,          // 直接把日期塞進資料
+      TXN_Date: todayLocal as unknown as string,          // 使用 Date 物件讓 p-calendar 能正確顯示
       TXN_GUIPaper: 'E',           // 預設電子發票
       PLU_TaxType: '1',            // 預設應稅
       INV_NoneTax: '0',            // 預設正常
@@ -168,11 +195,14 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       INV_ItemName: '',
       INV_Qty: 0,
       INV_SaleAmt: 0,
-    }]
-    // 進新增頁就自動取發票號碼
-    if (this.currentEcrNo) {
-      this.getNextGUINo(todayStr);
-    }
+      _isAutoInsertCandidate: true
+    }];
+
+    // 強制觸發變更檢測，確保日期控制項能正確顯示預設值
+    setTimeout(() => {
+      this.changeEditData = [...this.changeEditData];
+      console.log('After timeout, changeEditData:', this.changeEditData);
+    }, 100);
   }
 
 
@@ -261,95 +291,20 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       });
   }
 
-  /**
-   * 取得下一個發票號碼
-   * @param selectedDate 使用者選擇的日期
-   */
-  private getNextGUINo(selectedDate: string) {
-    if (!selectedDate) {
-      return;
-    }
-
-    // 防止重複調用：檢查是否正在調用 API 或日期沒有變更
-    if (this.isGettingGUINo) {
-      return;
-    }
-
-    if (this.lastProcessedDate === selectedDate) {
-      return;
-    }
-
-    // 將使用者選擇的日期轉換為 YYYYMM 格式（偶數月轉為前一月）
-    const guiYYMM = this.formatDateToYYYYMM(selectedDate);
-
-    // 準備 API 參數
-    const payload = {
-      GUI_YYMM: guiYYMM,
-      ECR_No: this.currentEcrNo
-    };
-
-    // 設定標記防止重複調用
-    this.isGettingGUINo = true;
-    this.lastProcessedDate = selectedDate;
-    this.editLoading = true;
-    this.tls2j030Service.getNextGUINo(payload)
-      .pipe(
-        untilDestroyed(this),
-        finalize(() => {
-          this.editLoading = false;
-          this.isGettingGUINo = false; // 重設標記，允許下次調用
-        })
-      )
-      .subscribe({
-        next: (res) => {
-          if (res?.Status === '0000') {
-            let nextGUINo = '';
-            let guiDingType = '';
-
-            // 根據實際後端回應格式解析資料
-            if (res.Data) {
-              nextGUINo = res.Data.TXN_GUINo || res.Data.NextGUINo || res.Data.TXN_GUINO || res.Data.GUINo || res.Data;
-              guiDingType = res.Data.GUI_DingType || '';
-            } else {
-              nextGUINo = res.TXN_GUINo || res.NextGUINo || res.TXN_GUINO || res.GUINo;
-              guiDingType = res.GUI_DingType || '';
-            }
-
-            if (nextGUINo && typeof nextGUINo === 'string') {
-              // 更新 changeEditData 中的發票號碼和丁種發票設定
-              if (this.changeEditData.length > 0) {
-                this.changeEditData[0] = {
-                  ...this.changeEditData[0],
-                  TXN_GUINo: nextGUINo,  // 使用新的屬性名稱 TXN_GUINo
-                  GUI_DingType: guiDingType || this.changeEditData[0].GUI_DingType || 'N' // 使用後端回傳值，否則保持原值或預設為 'N'
-                };
-                // 觸發資料更新
-                this.changeEditData = [...this.changeEditData];
-              }
-
-              const dingTypeText = guiDingType === 'Y' ? '(丁種發票)' : '(非丁種發票)';
-              this.messageService.successBubble(`已自動取得發票號碼：${nextGUINo} ${dingTypeText}`);
-            } else {
-              this.messageService.errorBubble('發票號碼格式錯誤');
-            }
-          } else {
-            // 處理 API 錯誤回應
-            const message = res?.Message || res?.Msg || '取得發票號碼失敗';
-
-            // 根據不同的錯誤狀態給予適當的訊息
-            if (res?.Status === '9999') {
-              this.messageService.errorBubble(`系統錯誤：${message}。請檢查發票期別(${payload.GUI_YYMM}) 和 ECR_No(${payload.ECR_No}) 參數。`);
-            } else {
-              this.messageService.errorBubble(`取得發票號碼失敗：${message}`);
-            }
-          }
-        },
-      });
-  }
-
   onChangeEditDataChange(data: any[]) {
     this.changeEditData = data;
-    // 日期 now disabled，不需要再處理
+
+    // 檢查換開發票的銷售金額是否與商品明細總計一致
+    if (data.length > 0 && this.detailEditData.length > 0) {
+      const detailTotal = this.detailEditData.reduce((sum, item) => sum + (Number(item.INV_SaleAmt) || 0), 0);
+      const changeTotal = Number(data[0]?.TXN_SaleAmt) || 0;
+
+      if (changeTotal !== 0 && Math.abs(detailTotal - changeTotal) > 0.01) {
+        this.messageService.warnBubble(
+          `提醒：換開發票銷售金額 (${changeTotal.toFixed(2)}) 與商品明細總計 (${detailTotal.toFixed(2)}) 不一致`
+        );
+      }
+    }
   }
 
   /** 查詢來源發票 */
@@ -401,18 +356,53 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
         }
       });
   }
+  onDetailEditDataChange(data: any[]) {
+    this.detailEditData = data;
+
+    const total = data.reduce((sum, item) => sum + (Number(item.INV_SaleAmt) || 0), 0);
+
+    if (this.changeEditData.length > 0) {
+      const row = this.changeEditData[0] as any;
+      const currentSaleAmt = Number(row.TXN_SaleAmt) || 0;
+
+      // 檢查金額是否一致，如果不一致則顯示警告
+      if (currentSaleAmt !== 0 && Math.abs(currentSaleAmt - total) > 0.01) {
+        this.messageService.warnBubble(
+          `注意：商品明細金額總計 (${total.toFixed(2)}) 與換開發票銷售金額 (${currentSaleAmt.toFixed(2)}) 不一致，已自動調整為明細總計`
+        );
+      }
+
+      row.TXN_SaleAmt = total;
+
+      // 逐欄位觸發 calculate
+      for (const col of this.columnschange) {
+        if (col.calculate) {
+          const val = row[col.field];
+          const result = col.calculate(row, val);
+          Object.assign(row, result);
+        }
+      }
+
+      this.changeEditData = [...this.changeEditData];
+    }
+  }
+
 
 
 
   /** 格式化新增資料 */
   private formatInsertData() {
+    console.log('formatInsertData - changeEditData:', this.changeEditData);
+    console.log('formatInsertData - detailEditData:', this.detailEditData);
+    console.log('formatInsertData - sourceData:', this.data);
+
     // POS2100List: 來源發票資料
     const pos2100List = this.data.map(item => {
       const sourceItem = item as unknown as Record<string, unknown>;
       const txnNo = (sourceItem['TXN_No'] as number) || 0;
       return {
         TXN_Date: (sourceItem['TXN_Date'] as string) || new Date().toISOString().split('T')[0],
-        ECR_No: (sourceItem['ECR_No'] as string) || '',
+        ECR_No: (sourceItem['ECR_No'] as string) || this.currentEcrNo,
         TXN_No: this.formatTxnNo(txnNo),
         TXN_GUIBegNo: (sourceItem['TXN_GUIBegNo'] as string) || '',
         TXN_GUIEndNo: (sourceItem['TXN_GUIEndNo'] as string) || '',
@@ -425,12 +415,11 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     });
 
     // POS2101List: 換開發票資料
-    const sourceEcrNo = (this.data[0] as unknown as Record<string, unknown>)?.['ECR_No'] as string || '';
+    const sourceEcrNo = (this.data[0] as unknown as Record<string, unknown>)?.['ECR_No'] as string || this.currentEcrNo;
     const pos2101List = this.changeEditData.map(item => ({
-      TXN_Date: new Date().toISOString(),
+      TXN_Date: item.TXN_Date ? new Date(item.TXN_Date as string).toISOString() : new Date().toISOString(),
       ECR_No: sourceEcrNo, // 使用來源發票的 ECR_No
       TXN_GUIPaper: item.TXN_GUIPaper || '',
-      TXN_GUINo: item.TXN_GUINo || '',
       PLU_TaxType: item.PLU_TaxType || '',
       TXN_SaleTax: item.TXN_SaleTax || 0,
       TXN_SaleNoTax: item.TXN_SaleNoTax || 0,
@@ -440,23 +429,24 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       TXN_Uniform: item.TXN_Uniform || '',
       INV_NoneTax: item.INV_NoneTax || '',
       BusTaxExmpCard: item.BusTaxExmpCard || '',
-      GUI_DingType: item.GUI_DingType || '',
-      TXN_GUIRemark: item.TXN_GUIRemark || '',
       TXN_Notes: item.TXN_Notes || ''
     }));
 
     // POS21011List: 商品明細資料
     const pos21011List = this.detailEditData.map(item => ({
       INV_ItemName: item.INV_ItemName || '',
-      INV_SaleAmt: item.INV_SaleAmt || 0,
+      TXN_SaleAmt: item.INV_SaleAmt || 0, // 注意：後端期望的是 TXN_SaleAmt
       INV_Qty: item.INV_Qty || 0
     }));
 
-    return {
+    const payload = {
       POS2100List: pos2100List,
       POS2101List: pos2101List,
       POS21011List: pos21011List
     };
+
+    console.log('Final payload to be sent:', JSON.stringify(payload, null, 2));
+    return payload;
   }
 
   /** 送出 */
@@ -486,6 +476,18 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       return;
     }
 
+    // 驗證商品明細金額總計與換開發票銷售金額是否一致
+    const detailTotal = this.detailEditData.reduce((sum, item) => sum + (Number(item.INV_SaleAmt) || 0), 0);
+    const changeTotal = Number(this.changeEditData[0]?.TXN_SaleAmt) || 0;
+
+    if (Math.abs(detailTotal - changeTotal) > 0.01) {
+      this.loading = false;
+      this.messageService.errorBubble(
+        `商品明細金額總計 (${detailTotal.toFixed(2)}) 與換開發票銷售金額 (${changeTotal.toFixed(2)}) 不一致，請檢查資料`
+      );
+      return;
+    }
+
     const payload = this.formatInsertData();
 
     this.tls2j030Service.insertTLS2J030(payload)
@@ -495,9 +497,14 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       )
       .subscribe({
         next: (res) => {
-          if (res?.Status === '0000') {
-            this.messageService.successBubble('新增成功');
+          console.log('insertTLS2J030 response:', res);
+          if (res?.Status === '0001' || res?.Message === '成功') {
+            this.messageService.successBubble(`新增成功 (處理了 ${res?.Data || 0} 筆資料)`);
             this.resetForm();
+
+            setTimeout(() => {
+              this.router.navigate(['/tls/tls2j030']);
+            }, 1500);
           } else {
             this.messageService.errorBubble(res?.Message || '新增失敗');
           }
@@ -554,5 +561,197 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       };
     }
     return data;
+  }
+
+  /**
+   * 載入項目選項資料
+   */
+  loadItemOptions(): void {
+    this.dropDownListService.queryTDS1010_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (response) => {
+          console.log('loadItemOptions response:', response);
+          if (response?.Data) {
+            // 建立 bus_type + bus_type_name 的唯一組合選項
+            const uniqueBusTypes = response.Data.reduce((acc, item) => {
+              const key = `${item.bus_type}_${item.bus_type_name}`;
+              if (!acc.find(existing => existing.value === key)) {
+                acc.push({
+                  label: `${item.bus_type} - ${item.bus_type_name}`,
+                  value: key,
+                  data: item
+                });
+              }
+              return acc;
+            }, [] as { label: string; value: string; data: unknown }[]);
+
+            console.log('Generated busTypeOptions:', uniqueBusTypes);
+            this.busTypeOptions = uniqueBusTypes;
+          }
+        },
+        error: (error) => {
+          console.error('載入項目選項失敗:', error);
+          this.messageService.errorBubble('載入項目選項失敗');
+        }
+      });
+  }
+
+  /**
+   * 當 bus_type 變更時載入對應的 bus_type_name
+   */
+  onBusTypeChange(event: { value: string }): void {
+    const busTypeKey = event.value;
+    console.log('onBusTypeChange called with busTypeKey:', busTypeKey);
+    this.selectedBusType = busTypeKey;
+    this.selectedItemName = '';
+    this.itemNameOptions = [];
+
+    if (!busTypeKey) return;
+
+    // 從 busTypeKey 中解析出 bus_type 和 bus_type_name
+    const [busType, busTypeName] = busTypeKey.split('_');
+    console.log('Parsed busType:', busType, 'busTypeName:', busTypeName);
+
+    this.dropDownListService.queryTDS1010_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (response) => {
+          if (response?.Data) {
+            // 篩選對應 bus_type 和 bus_type_name 的 CHG_ItemName_List
+            const filteredItems = response.Data.filter(item =>
+              item.bus_type === busType && item.bus_type_name === busTypeName
+            );
+            console.log('Filtered items:', filteredItems); if (filteredItems.length > 0 && filteredItems[0].CHG_ItemName_List) {
+              const itemList = filteredItems[0].CHG_ItemName_List;
+              let itemNames: string[] = [];
+
+              console.log('CHG_ItemName_List original:', itemList);
+              console.log('CHG_ItemName_List type:', typeof itemList);
+
+              // 處理字串格式的 CHG_ItemName_List (用分號分隔)
+              if (typeof itemList === 'string') {
+                itemNames = itemList.split(';').filter(item => item.trim() !== '');
+              } else if (Array.isArray(itemList)) {
+                itemNames = itemList;
+              }
+
+              console.log('Processed itemNames:', itemNames);
+
+              this.itemNameOptions = itemNames.map((itemName: string) => ({
+                label: itemName.trim(),
+                value: itemName.trim()
+              }));
+
+              console.log('Final itemNameOptions:', this.itemNameOptions);
+            } else {
+              console.log('No CHG_ItemName_List found, filteredItems:', filteredItems);
+            }
+          }
+        },
+        error: (error) => {
+          console.error('載入品項名稱失敗:', error);
+          this.messageService.errorBubble('載入品項名稱失敗');
+        }
+      });
+  }
+
+  /**
+   * 當 bus_type_name 變更時載入對應的 CHG_ItemName_List
+   */
+
+
+  /**
+   * 開啟項目選擇對話框
+   */
+  openItemDialog(rowData: TLS2J030Data): void {
+    console.log('openItemDialog called with:', rowData);
+    if (!rowData._TABLE_KEY) {
+      rowData._TABLE_KEY = 'detail_' + Date.now() + '_' + Math.random();
+    }
+    this.currentEditingRow = rowData;
+    this.selectedBusType = '';
+    this.selectedItemName = '';
+    this.itemNameOptions = [];
+    this.showItemDialog = true;
+
+    console.log('showItemDialog set to:', this.showItemDialog);
+  }
+
+
+  /**
+   * 確認選擇項目名稱
+   */
+  confirmItemSelection(): void {
+    if (this.currentEditingRow && this.selectedItemName) {
+
+      const key = this.currentEditingRow._TABLE_KEY;
+      const idx = this.detailEditData.findIndex(r => r._TABLE_KEY === key);
+
+      if (idx !== -1) {
+        const row = this.detailEditData[idx];
+
+        // ① 寫入值
+        row.INV_ItemName = this.selectedItemName;
+
+        // ② 標示為已輸入（讓 table-edit 自動新增下一筆）
+        row._isAutoInsertCandidate = false;
+
+        // ③ 觸發共通元件更新
+        this.tableDetailEdit?.onValueChange(
+          row,
+          this.selectedItemName,
+          { field: 'INV_ItemName', header: '項目名稱' } as any,
+          idx
+        );
+
+        // ④ 新增下一筆空白列
+        this.tableDetailEdit.insertRow();
+
+        // ⑤ 更新
+        this.detailEditData = [...this.detailEditData];
+      }
+    }
+
+    this.resetDialogData();
+    this.showItemDialog = false;
+  }
+
+
+  /**
+   * 取消項目選擇
+   */
+  cancelItemSelection(): void {
+    this.showItemDialog = false;
+    this.resetDialogData();
+  }
+
+  /**
+   * 重置對話框資料
+   */
+  private resetDialogData(): void {
+    this.currentEditingRow = null;
+    this.selectedBusType = '';
+    this.selectedItemName = '';
+    this.itemNameOptions = [];
+  }
+
+  // 模板選擇相關方法（用於 OverlayPanel）
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  cancelTemplateSelection(_rowData?: unknown, _overlayPanel?: unknown): void {
+    // 清空選擇
+    this.selectedBusType = '';
+    this.selectedItemName = '';
+    this.itemNameOptions = [];
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  confirmTemplateSelection(_rowData?: unknown, _overlayPanel?: unknown): void {
+    if (this.selectedItemName && this.currentEditingRow) {
+      // 將選中的項目名稱設定到當前編輯行
+      this.currentEditingRow.INV_ItemName = this.selectedItemName;
+      // 觸發資料更新
+      this.detailEditData = [...this.detailEditData];
+    }
   }
 }

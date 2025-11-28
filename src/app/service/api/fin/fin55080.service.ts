@@ -26,7 +26,7 @@ export interface QueryFIN55080Response {
   MTYPE_NAME: string | null; // 中類別名稱
   STYPE_ID: string | null; // 科目代碼
   STYPE_NAME: string | null; // 科目名稱
-  STYPE_AMT: number | string; // 損益表金額 (對應當期或累計單一數字)
+  STYPE_AMT: number | string | null; // 損益表金額 (對應當期或累計單一數字)
   SUM_LTYPE_AMT: number | string | null; // 類別總計金額
   Percent_LTYPE: number | string | null; // 佔類別總計百分比 (%)
   Sign_Line1: string | null;

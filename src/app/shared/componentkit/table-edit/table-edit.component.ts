@@ -56,7 +56,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   @ViewChild('dt', { static: false }) dt!: Table;     // table 元件
   @ViewChild('fileUpload') fileUpload!: FileUpload; // 檔案上傳 元件
   // 基本設置
-  dataKey = '_TABLE_KEY';                 // table 資料key
+  @Input() dataKey = '_TABLE_KEY';                 // table 資料key
   @Input() tableKey: string | undefined = undefined;   // table 唯一標識 (必填)
   @Input() title: string | undefined = undefined;     // table 標題
   @Input() tableRequired = false;             // table 是否為必填
@@ -64,6 +64,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   @Input() columns!: EditColumn[];            // table 欄位配置 (必填)
   @Input() data: any[] = [];               // table 資料 (必填)
   public _tableData: any[] = [];             // 內部用於表格顯示的資料 (包含新增行)
+  private _fullData: any[] = [];             // 完整資料(包含 deleted 狀態的資料)
   @Output() dataChange = new EventEmitter<any[]>();    // table 資料改變 (事件)
   @Input() loading = false;                // 是否顯示 loading
   @Input() disabled = false;               // 是否禁用 table
@@ -89,7 +90,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   @Output() exportExcel = new EventEmitter<any>(); // 匯出 Excel 事件
   @Input() exportExcelLoading = false;       // 匯出 Excel loading
   @Output() importExcel = new EventEmitter<FileSelectEvent>(); // 匯入 Excel 事件
-  // 禁止新增
+  // 禁止新增 下方列的新增
   @Input() canInsert = true;
   @Output() delete = new EventEmitter<any>(); // 刪除事件
   // rowEdit 相關
@@ -103,6 +104,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     Modified: 'modified',
     Deleted: 'deleted'
   };
+  @Input() keepDeletedData = false;       // 是否保留 Deleted 狀態的資料 (預設不保留)
   // 驗證相關
   @Input() rowValidate: ((rowData: any, index?: number) => { isValid: boolean, errorMessage: string; }) | undefined = undefined;
   @Output() fieldChange = new EventEmitter<FieldChangeEvent>(); // input 變更事件
@@ -123,18 +125,38 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   // ... (ngOnChanges 和其他方法保持不變，直到 validateAndShowErrors)
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
-      // 1. 將外部傳入的資料深拷貝，作為內部顯示的起點
-      //  確保只有來自父層的資料才進入此處
-      if (changes['data'].currentValue === this._tableData) {
-        // 這是由 dataChange 事件觸發的回流，不需要再次處理
-        return;
-      }
-      // 2. 複製一份，確保不修改父層傳入的原始陣列
-      this._tableData = this.data.filter(item => item != null).map((item: any, index) => {
+      console.log('🔧 ngOnChanges 被觸發');
+      console.log('🔧 data change - previous:', changes['data'].previousValue);
+      console.log('🔧 data change - current:', changes['data'].currentValue);
+      console.log('🔧 data change - isFirstChange:', changes['data'].firstChange);
+      console.log('🔧 傳入的 data:', this.data);
+      console.log('🔧 傳入的 data 長度:', this.data?.length);
+      console.log('🔧 傳入的 data 狀態:', this.data?.map((item: any) => ({
+        key: item[this.dataKey],
+        status: item[this.dataStatusField]
+      })));
+      console.log('🔧 keepDeletedData:', this.keepDeletedData);
+      console.log('🔧 舊的 _fullData:', this._fullData);
+      console.log('🔧 舊的 _fullData 長度:', this._fullData?.length);
+      console.log('🔧 舊的 _fullData 狀態:', this._fullData?.map((item: any) => ({
+        key: item[this.dataKey],
+        status: item[this.dataStatusField]
+      })));
+
+      // 2. 如果 keepDeletedData 為 true,保留舊的 deleted 資料
+      const existingDeletedItems = this.keepDeletedData
+        ? this._fullData.filter(item => item[this.dataStatusField] === this.dataStatusValue.Deleted)
+        : [];
+
+      console.log('🔧 保留的 deleted 資料:', existingDeletedItems);
+      console.log('🔧 保留的 deleted 資料長度:', existingDeletedItems?.length);
+
+      // 3. 複製一份完整資料(包含所有狀態)
+      this._fullData = this.data.filter(item => item != null).map((item: any, index) => {
         // 初始化狀態和 UUID (與您原來的邏輯相同)
         if (item[this.dataStatusField] === undefined) {
           item[this.dataStatusField] = this.dataStatusValue.Original;
-          item[this.dataKey] = `temp-${uuidv4()}`;
+          item[this.dataKey] = item[this.dataKey] ?? `temp-${uuidv4()}`;
         }
         this.calculateRow(item);
         if (this.rowValidate) {
@@ -142,7 +164,38 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
         }
         return item;
       });
-      // 3. 如果內部資料中沒有新增行，則插入
+
+      console.log('🔧 新建立的 _fullData:', this._fullData);
+
+      // 4. 合併舊的 deleted 資料 (避免重複)
+      if (existingDeletedItems.length > 0) {
+        // 建立現有項目的 Set，使用更可靠的比對方式
+        const existingKeys = new Set(
+          this._fullData
+            .map(item => item[this.dataKey])
+            .filter(key => key !== undefined && key !== null && key !== '')
+        );
+
+        // 只恢復那些確實不存在於新資料中的 deleted 項目
+        const deletedToRestore = existingDeletedItems.filter(item => {
+          const itemKey = item[this.dataKey];
+          // 如果項目有有效的 dataKey，檢查是否已存在
+          if (itemKey !== undefined && itemKey !== null && itemKey !== '') {
+            return !existingKeys.has(itemKey);
+          }
+          // 如果項目沒有有效的 dataKey (例如 id=undefined 的新增項目被刪除)
+          // 這種情況通常是 status='new' 的項目被刪除，不需要恢復
+          return false;
+        });
+
+        console.log('🔧 要恢復的 deleted 資料:', deletedToRestore);
+        this._fullData = [...this._fullData, ...deletedToRestore];
+        console.log('🔧 合併後的 _fullData:', this._fullData);
+      }
+
+      // 5. 顯示用資料:過濾掉 deleted 狀態
+      this._tableData = this._fullData.filter(item => item[this.dataStatusField] !== this.dataStatusValue.Deleted);
+      // 6. 如果內部資料中沒有新增行，則插入
       if (!this._tableData.some(item => item['_isAutoInsertCandidate']) && this.canInsert) {
         this.insertRow();
       }
@@ -275,10 +328,23 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     // 觸發 fieldChange 事件，無論驗證是否通過
     this.fieldChange.emit({ rowData, field: col.field, value, index });
 
+    // 同步更新 _fullData 中的對應資料
+    const fullDataIndex = this._fullData.findIndex(item => item[this.dataKey] === rowData[this.dataKey]);
+    if (fullDataIndex !== -1) {
+      this._fullData[fullDataIndex] = rowData;
+    }
+
     // 由於數據綁定和驗證已經更新了 `this._tableData` 中的物件，現在發送 `dataChange`
-    // 【關鍵】：發射給父層的是經過過濾的乾淨資料！
-    const cleanData = this._tableData.filter(item => item[this.dataStatusField] !== this.dataStatusValue.Deleted && !item._isAutoInsertCandidate);
-    this.dataChange.emit(cleanData); // 這樣父層的 data 就不包含新增行了！
+    // 【關鍵】：根據 keepDeletedData 決定是否包含 Deleted 資料
+    let cleanData: any[];
+    if (this.keepDeletedData) {
+      // 保留 Deleted 資料，從 _fullData 取得
+      cleanData = this._fullData.filter(item => !item._isAutoInsertCandidate);
+    } else {
+      // 預設行為：過濾掉 Deleted 狀態的資料，從 _tableData 取得
+      cleanData = this._tableData.filter(item => !item._isAutoInsertCandidate);
+    }
+    this.dataChange.emit(cleanData);
   }
   onDropdownHide(rowData: any, col: any) {
     const currentValue = rowData[col.field];
@@ -308,27 +374,39 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   deleteRow(selectedItems: any) {
     if (this.disabled) { return; }
     const itemsToDelete = new Set(selectedItems.map((item: any) => item[this.dataKey])); // 取得所有要刪除的 ID
-    const updatedData = this.data.map(item => {
+
+    // 更新完整資料 (_fullData)
+    this._fullData = this._fullData.map(item => {
       if (itemsToDelete.has(item[this.dataKey])) {
         // 刪除時資料若為Original要將資料狀態改為Deleted
-        if (item[this.dataStatusField] === this.dataStatusValue.Original) {
+        if (item[this.dataStatusField] === this.dataStatusValue.Original || item[this.dataStatusField] === this.dataStatusValue.Modified) {
           return { ...item, [this.dataStatusField]: this.dataStatusValue.Deleted };
         }
         return null; // 刪除時資料若為New 直接刪除
       }
       return item;
     }).filter(item => item !== null);
-    // 更新內部顯示資料
-    this._tableData = updatedData.filter(item => item[this.dataStatusField] !== this.dataStatusValue.Deleted);
-    this.delete.emit(updatedData);
+
+    // 更新內部顯示資料 (只在畫面上隱藏 Deleted 資料)
+    this._tableData = this._fullData.filter(item => item[this.dataStatusField] !== this.dataStatusValue.Deleted);
+
+    this.delete.emit(this._fullData);
     this.selectedItems = [];
+
     // 2. 【關鍵檢查點 A】: 刪除後，如果內部資料為空，插入一筆新增行
     if (this._tableData.length === 0 && this.canInsert) {
       this.insertRow(); // *** 這裡會將新增行加入 this._tableData ***
     }
-    // 3. 【關鍵】：發射乾淨的資料給父層
-    //  注意：這裡發射的陣列應該是空陣列，因為 this._tableData 現在只包含新增行。
-    const cleanData = this._tableData.filter(item => !item._isAutoInsertCandidate);
+
+    // 3. 【關鍵】：發射資料給父層 (根據 keepDeletedData 參數決定是否保留 Deleted)
+    let cleanData: any[];
+    if (this.keepDeletedData) {
+      // 保留 Deleted 資料，從 _fullData 取得
+      cleanData = this._fullData.filter(item => !item._isAutoInsertCandidate);
+    } else {
+      // 預設行為：過濾掉 Deleted 狀態的資料，從 _tableData 取得
+      cleanData = this._tableData.filter(item => !item._isAutoInsertCandidate);
+    }
     this.dataChange.emit(cleanData);
   }
   // ... (validateAllRows 保持不變)

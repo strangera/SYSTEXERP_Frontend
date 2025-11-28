@@ -1,20 +1,42 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, convertDateToYYYYMM, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { ValidationService } from '@shared/service/validation.service';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { FIN15090Service } from '@service/api/fin/fin15090.service';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { option } from '@shared/models/sys/sysb000.model';
+import { TranslateModule } from '@ngx-translate/core';
+import { FIN15090Service } from '@service/api/fin/fin15090.service';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { ValidationService } from '@shared/service/validation.service';
+import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+// 本期發票月
+const today = new Date();
+let invoiceYear = today.getFullYear();
+let invoiceMonth = today.getMonth() + 1; // JS 月份 0~11
+
+// 如果不是偶數月，就加 1 個月
+if (invoiceMonth % 2 !== 0) {
+  invoiceMonth += 1;
+  if (invoiceMonth > 12) {
+    invoiceMonth = 1;
+    invoiceYear += 1;
+  }
+}
+
+// 將年月轉成 YYYYMM 字串
+export const invoiceDate = invoiceYear.toString() + invoiceMonth.toString().padStart(2, '0');
+
+interface REP_TaxNo_list {
+  No: string,
+  Lable: string,
+  STO_Status: string, // 使否為使用中
+}
 
 /** TDS1002 營業人銷售額與稅額申報書檔 */
 export interface TDS1002 {
@@ -256,120 +278,142 @@ export interface TDS1002 {
   styleUrls: ['./fin15090.component.scss'],
   standalone: true,
   imports: [
-      MenubarComponent,
-      ButtonComponent,
-      AccordionModule,
-      FormsModule,
-      ReactiveFormsModule,
-      CalendarComponent,
-      DropdownComponent,
-      InputTextComponent,
-      InputTextRangeComponent,
-      TableComponent,
-      TranslateModule]
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarComponent,
+    DropdownComponent,
+    InputTextComponent,
+    InputTextRangeComponent,
+    TableComponent,
+    TranslateModule,
+    YearMonthComponent,
+  ]
 })
 // 營業人媒體檔案遞送單
 export class FIN15090Component extends BasicQueryPageComponent<TDS1002> implements OnInit {
   queryForm = this.formBuilder.group({
-          Mid: [this.authService.getUserInfo()?.mid ?? null, [Validators.required]], //  section抓
-          STO_No: [this.authService.getUserInfo()?.SYS_StoreNo ?? null, [Validators.required]], // section抓
-          REP_GUIYM: ['', [Validators.required, Validators.maxLength(6)]], // 發票年月
-          REP_TaxNo: ['', [Validators.required, Validators.maxLength(10)]], // 稅籍編號
-          
-          // ...createPaginationConfig([{ field: 'REP_GUIYM', order: 1 }]), // 分頁和排序參數
-        });
-    
-        totalRecords = 0;// 分頁和排序參數 // 排序需要
-        data: TDS1002[] = [];
-        selectedRows: TDS1002[] = [];
+    Mid: [this.authService.getUserInfo()?.mid ?? null, [Validators.required]], //  section抓
+    STO_No: [this.authService.getUserInfo()?.SYS_StoreNo ?? null, [Validators.required]], // section抓
+    REP_GUIYM: [invoiceDate, [Validators.required, Validators.maxLength(6)]], // 發票年月
+    REP_TaxNo: ['', [Validators.required, Validators.maxLength(10)]], // 稅籍編號
 
-        REP_TaxNo_Options: option[] = []; //稅籍編號 選項
-          
-        columns: Column[] = [ //先放可視範圍內的
-          { field: 'REP_GUIYM', header: '資料所屬年月', visible: true, format: formatYYYYMM }, // 資料所屬年月
-          { field: 'REP_OrgCode', header: '總繳代號', visible: true }, // 總繳代號 ---會有不同的申報書種類
-          { field: 'REP_PurAmt_fSum', header: '進貨及費用金額合計', visible: true }, // 進貨及費用金額合計
-          { field: 'REP_PurAmt_cSum', header: '固定資產金額合計', visible: true }, // 固定資產金額合計
-          { field: 'REP_PurImportNoTax', header: '進口免稅貨物', visible: true }, // 進口免稅貨物
-          { field: 'REP_PurBuyExternal', header: '購買國外勞務給付額', visible: true }, // 購買國外勞務給付額
-          { field: 'REP_TaxSum08', header: '上期(月)累積留抵稅額', visible: true }, // 上期(月)累積留抵稅額
-          { field: 'REP_TaxSum13', header: '得退稅限額合計', visible: true }, // 得退稅限額合計
-    
-          { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
-          { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
-          { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
-          { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
-          { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
-          { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
-        ];
-    
-        constructor(
-          private fin15090Service: FIN15090Service,
-          private validationService: ValidationService
-        ) {
-          super(); // 呼叫父類建構子
-        }
-      
-        ngOnInit(): void {
-          this.initializePage('FIN15090', '/FIN/FIN15090cru', this.queryForm, (form) => this.onSubmit(form));
-          this.loadOption();
-        }
-      
-        onSubmit(frm: FormGroup) {
-          this.handleSubmit(frm, () => {
-            const body = {
-              ...frm.value,
-              REP_GUIYM: convertDateToYYYYMM(frm.value.REP_GUIYM),
-            }
-    
-            console.log('營業人媒體檔案遞送單 request', body);
-    
-            this.fin15090Service.PrintFIN15090(body).pipe(untilDestroyed(this)).subscribe({
-              next: (response) => {
-                this.data = response.Data;
-                console.log('營業人媒體檔案遞送單 response', response);
-                this.totalRecords = response.TotalCount;
-                this.queryStateService.setQueryState(this.ProgNo, frm.value);
-                this.loading = false;
-              },
-              error: () => { this.loading = false; },
+    // ...createPaginationConfig([{ field: 'REP_GUIYM', order: 1 }]), // 分頁和排序參數
+  });
+
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
+  data: TDS1002[] = [];
+  selectedRows: TDS1002[] = [];
+
+  REP_TaxNo_Options: REP_TaxNo_list[] = []; //稅籍編號 選項
+
+  columns: Column[] = [ //先放可視範圍內的
+    { field: 'REP_GUIYM', header: '資料所屬年月', visible: true, format: formatYYYYMM }, // 資料所屬年月
+    { field: 'REP_OrgCode', header: '總繳代號', visible: true }, // 總繳代號 ---會有不同的申報書種類
+    { field: 'REP_PurAmt_fSum', header: '進貨及費用金額合計', visible: true }, // 進貨及費用金額合計
+    { field: 'REP_PurAmt_cSum', header: '固定資產金額合計', visible: true }, // 固定資產金額合計
+    { field: 'REP_PurImportNoTax', header: '進口免稅貨物', visible: true }, // 進口免稅貨物
+    { field: 'REP_PurBuyExternal', header: '購買國外勞務給付額', visible: true }, // 購買國外勞務給付額
+    { field: 'REP_TaxSum08', header: '上期(月)累積留抵稅額', visible: true }, // 上期(月)累積留抵稅額
+    { field: 'REP_TaxSum13', header: '得退稅限額合計', visible: true }, // 得退稅限額合計
+
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
+    { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
+    { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
+    { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
+    { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
+  ];
+
+  constructor(
+    private fin15090Service: FIN15090Service,
+    private validationService: ValidationService
+  ) {
+    super(); // 呼叫父類建構子
+  }
+
+  ngOnInit(): void {
+    this.initializePage('FIN15090', '/FIN/FIN15090cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOption();
+  }
+
+  onSubmit(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const body = {
+        ...frm.value,
+      }
+
+      console.log('營業人媒體檔案遞送單 request', body);
+
+      this.fin15090Service.PrintFIN15090(body).pipe(untilDestroyed(this)).subscribe({
+        next: (response) => {
+          this.data = response.Data;
+          console.log('營業人媒體檔案遞送單 response', response);
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          this.loading = false;
+        },
+        error: () => { this.loading = false; },
+      });
+    });
+  }
+  onDelete(selectedRows: TDS1002[]) {
+    const ids = selectedRows.map(row => row.id);
+    // this.fin14010Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
+    //   next: () => {
+    //     this.onSubmit(this.queryForm);
+    //     this.selectedRows = [];
+    //   },
+    //   error: () => { this.loading = false; },
+    // });
+  }
+
+  isRowSelectable(row: TDS1002) {
+    // return row.CanDel;
+    return true
+  }
+
+  loadOption() {
+    this.fin15090Service.queryTDS1003_STO_TaxNo_DropDownList({
+      mid: this.authService.getUserInfo()?.mid ?? null,
+      STO_No: this.authService.getUserInfo()?.SYS_StoreNo ?? null,
+    }).pipe(untilDestroyed(this))
+      .subscribe({
+        next: (response) => {
+          console.log('response.Data', response.Data);
+
+          const taxNos = response.Data?.TDS1003STO_TaxNos ?? [];
+          // 根據實際回傳陣列改寫
+          this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string; REP_BegGUIYM: string; REP_EndGUIYM: string; STO_Status: string }) => ({
+            Label: item.STO_TaxNo + "/" + item.STO_TaxName + "/" + item.REP_BegGUIYM + "~" + item.REP_EndGUIYM,
+            No: item.STO_TaxNo,
+            STO_Status: item.STO_Status
+          }));
+
+          console.log('稅籍編號選項.Data', response);
+
+          // 找出 STO_Status === '1' 的稅籍
+          const active = this.REP_TaxNo_Options.find(x => x.STO_Status === '1');
+
+          // 排序：使用中(1) 的排在未使用中(2) 前面，但保持其他順序
+          this.REP_TaxNo_Options.sort((a, b) => {
+            if (a.STO_Status === '1' && b.STO_Status !== '1') return -1;
+            if (a.STO_Status !== '1' && b.STO_Status === '1') return 1;
+            return 0; // 都一樣就保持原順序
+          });
+
+          if (active) { //如果有使用中的設定為稅及編號預設值
+            console.log('當期使用中的稅籍編號', active);
+            this.queryForm.patchValue({
+              REP_TaxNo: active.No as any,
             });
-          });
-        }
-        onDelete(selectedRows: TDS1002[]) {
-          const ids = selectedRows.map(row => row.id);
-          // this.fin14010Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
-          //   next: () => {
-          //     this.onSubmit(this.queryForm);
-          //     this.selectedRows = [];
-          //   },
-          //   error: () => { this.loading = false; },
-          // });
-        }
-      
-        isRowSelectable(row: TDS1002) {
-          // return row.CanDel;
-          return true
-        }
-
-        loadOption() {
-          this.fin15090Service.queryTDS1003_STO_TaxNo_DropDownList({
-            mid: this.authService.getUserInfo()?.mid ?? null,
-            STO_No: this.authService.getUserInfo()?.SYS_StoreNo ?? null,
-          }).pipe(untilDestroyed(this))
-            .subscribe({
-            next: (response) => {
-              console.log('response.Data', response.Data);
-
-              // 根據實際回傳陣列改寫
-              this.REP_TaxNo_Options = response.Data.TDS1003STO_TaxNos.map((item: any) => ({
-                label: item.STO_TaxNo + ' ' + item.STO_TaxName,
-                value: item.STO_TaxNo
-              }));
-
-              console.log('稅籍編號選項.Data', this.REP_TaxNo_Options);
-            },
-            error: () => { this.loading = false; },
-          });
-        }
+          } else {
+            console.log('當期無使用中的稅籍編號', active);
+          }
+        },
+        error: () => { this.loading = false; },
+      });
+  }
 }

@@ -40,8 +40,10 @@ export class TLS26010Service {
   public readonly tableLoading = signal<boolean>(false);
   public readonly approvalStatusLoading = signal<boolean>(false);
 
+  apiUrl: string = environment.ApiUrl + '/TLS0000/TLS2000';
+
   public readonly ecrDataMap = computed(() => {
-    return new Map<string, EcrItem>(this.ecrOptions().map(ecr => ([ecr.ecr_no!, ecr])));
+    return new Map<string, EcrItem>(this.ecrOptions().map(ecr => ([ecr.ECR_No!, ecr])));
   });
 
   public readonly tltDataMap = computed(() => {
@@ -112,13 +114,14 @@ export class TLS26010Service {
   }
 
   /** 取得收銀機號 */
-  public queryECRDropDownList(query: DependentDataQuery & { ecr_type: string; }): void {
+  public loadECRDropDownList(query: DependentDataQuery & { ecr_type: string; }): void {
     this.ecrLoading.set(true);
     this.http.post<BaseQueryResponse<any>>(`${apiUrl}/queryECRDropDownList`, query).pipe(
       take(1),
       tap(res => {
         const mapped = (res.Data ?? []).map(item => ({
           ...item,
+          ECR_No: item.ecr_no, // tls26010的組成都是吃ECR_No，這邊先進行轉換
         }));
         this.ecrOptions.set(mapped);
         console.log('收銀機號查詢 request 💡:', query);
@@ -129,7 +132,7 @@ export class TLS26010Service {
   }
 
   /** 取得專櫃編號 */
-  public queryTalentDropDownList(query: DependentDataQuery): void {
+  public loadTalentDropDownList(query: DependentDataQuery): void {
     this.tltLoading.set(true);
     this.http.post<BaseQueryResponse<TltItem>>(`${apiUrl}/queryTalentDropDownList`, query).pipe(
       take(1),
@@ -200,7 +203,7 @@ export class TLS26010Service {
                   ? ApprovalStatus.未核准
                   : ApprovalStatus.已核准,
                 talent_list: data.talent_list.map(t => t.tlt_no!),
-                ecr_list: data.ecr_list.map(e => e.ecr_no!),
+                ecr_list: data.ecr_list.map(e => e.ECR_No!),
               };
               currentData[index] = updatedData;
             }
@@ -251,5 +254,18 @@ export class TLS26010Service {
         }),
         finalize(() => this.approvalStatusLoading.set(false))
       ).subscribe();
+  }
+
+  //新增的
+  //查ecr dialog
+  queryECRDropDownList(body: any): Observable<any> {
+    {
+      return this.http.post<any>(`${environment.ApiUrl}/queryECRDropDownList`, body);
+    }
+  }
+
+  //查tlt dialog
+  queryTalentDropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryTalentDropDownList`, body);
   }
 }

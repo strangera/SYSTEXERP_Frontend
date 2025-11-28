@@ -73,8 +73,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls13010next2', loadComponent: () => import('./tls13010-next2/tls13010-next2.component').then(m => m.TLS13010Next2Component) },
   // 專櫃契約書維護 NEXT3
   { path: 'tls13010next3', loadComponent: () => import('./tls13010-next3/tls13010-next3.component').then(m => m.Tls13010Next3Component) },
-  // 傳票項目之會計科目設定作業
-  // { path: 'tls21010', loadComponent: () => import('./tls21010/tls21010.component').then(m => m.TLS21010Component) },
   // 傳票項目之會計科目設定作業_NEW
   { path: 'tls21020', loadComponent: () => import('./tls21020/tls21020.component').then(m => m.TLS21020Component) },
   // 對帳單備註維護作業
@@ -117,8 +115,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls23120', loadComponent: () => import('./tls23120/tls23120.component').then(m => m.TLS23120Component) },
   // 信用卡銷貨月報表
   { path: 'tls23130', loadComponent: () => import('./tls23130/tls23130.component').then(m => m.TLS23130Component) },
-  // !!!如果沒這隻的話記得刪 有價券查詢報表
-  { path: 'tls23140', loadComponent: () => import('./tls23140/tls23140.component').then(m => m.TLS23140Component) },
   // 交易補登作業
   { path: 'tls24010', loadComponent: () => import('./tls24010/tls24010.component').then(m => m.TLS24010Component) },
   // 交易資料修正報表
@@ -247,8 +243,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls2k050', loadComponent: () => import('./tls2k050/tls2k050.component').then(m => m.TLS2K050Component) },
   // 餘代卡查詢報表
   { path: 'tls2k060', loadComponent: () => import('./tls2k060/tls2k060.component').then(m => m.TLS2K060Component) },
-  // 傳票項目之會計科目設定作業 CRU
-  // { path: 'tls21010cru', loadComponent: () => import('./tls21010-cru/tls21010-cru.component').then(m => m.TLS21010CRUComponent) },
   // 傳票項目之會計科目設定作業_NEW CRU
   { path: 'tls21020cru', loadComponent: () => import('./tls21020-cru/tls21020-cru.component').then(m => m.TLS21020CRUComponent) },
   // 對帳單備註維護作業 CRU
@@ -261,8 +255,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls22040cru', loadComponent: () => import('./tls22040-cru/tls22040-cru.component').then(m => m.TLS22040CRUComponent) },
   // 專櫃日對帳單
   { path: 'tls23120cru', loadComponent: () => import('./tls23120-cru/tls23120-cru.component').then(m => m.TLS23120CRUComponent) },
-  // 有價券查詢報表
-  { path: 'tls23140cru', loadComponent: () => import('./tls23140-cru/tls23140-cru.component').then(m => m.TLS23140CRUComponent) },
   // 交易補登作業 CRU
   { path: 'tls24010cru', loadComponent: () => import('./tls24010-cru/tls24010-cru.component').then(m => m.TLS24010CRUComponent) },
   // 商場違規扣款維護作業 CRU
@@ -620,5 +612,4 @@ export const tlsRoutes: Routes = [
   { path: 'tls26060', loadComponent: () => import('./tls26060/tls26060.component').then(m => m.TLS26060Component) },
   // 各櫃預售業績總表
   { path: 'tls26070', loadComponent: () => import('./tls26070/tls26070.component').then(m => m.TLS26070Component) },
-
 ];

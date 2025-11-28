@@ -15,7 +15,7 @@ import { ValidationService } from '@shared/service/validation.service';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { finalize, map, tap } from 'rxjs';
+import { finalize, tap } from 'rxjs';
 import { AccDCType, FIN52080Data, FIN52080Query, FIN52080Tree, LedgerMDType, VoucherType } from './fin52080.model';
 
 @Component({
@@ -172,12 +172,13 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
 
     this.treeLoading.set(!0);
     this.service.getFIN52080Tree().pipe(
-      tap(res => this.logger.debug(`init:`, [])),
-      map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
+      tap(res => this.logger.debug(`init:`, [res])),
       finalize(() => this.treeLoading.set(!1)),
     ).subscribe({
-      next: res => this.FIN52080Tree.set(res.Data || []),
-      error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+      next: res => {
+        if (res.Status !== '0000') return;
+        this.FIN52080Tree.set(res.Data || []);
+      },
     });
 
     this.logger.debug(`init:`, [this.service.classNoOptions(), this.service.classNoMap()]);
@@ -206,11 +207,12 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       this.service.loadFIN52080(payload).pipe(
         tap(res => this.logger.debug(`onSubmit:`, [payload, res])),
-        map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
-        next: res => this.tableData.set(res.Data || []),
-        error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+        next: res => {
+          if (res.Status !== '0000') return;
+          this.tableData.set(res.Data || []);
+        },
       });
 
     });

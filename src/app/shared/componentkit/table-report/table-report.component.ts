@@ -18,6 +18,7 @@ import { TableCaptionComponent } from '../table/table-caption/table-caption.comp
 import { TableExpansionComponent } from '../table/table-expansion/table-expansion.component';
 import { TableReportUtilityService } from './table-report-utility.service';
 import { AddButton, ColumnGroup, expandAnimation, ReportColumn } from './table-report.model';
+
 @Component({
   selector: 'app-table-report',
   standalone: true,
@@ -29,20 +30,18 @@ import { AddButton, ColumnGroup, expandAnimation, ReportColumn } from './table-r
 })
 export class TableReportComponent extends BasicPrintDataComponent implements OnChanges {
   @ViewChild('dt') public dt!: Table;
-  @Input({ required: true }) lastQueryBody?: any;              // 用來儲存上一次的查詢條件
-  @Input({ required: true }) totalRecords = 0;                // 用來儲存總筆數
-  @Input({ required: true }) data: any[] = [];                // 用來儲存查詢結果
-  @Input({ required: true }) columns: ReportColumn[] = [];               // 用來儲存查詢結果
+  @Input({ required: true }) lastQueryBody?: any;       // 用來儲存上一次的查詢條件
+  @Input({ required: true }) totalRecords = 0;        // 用來儲存總筆數
+  @Input({ required: true }) data: any[] = [];        // 用來儲存查詢結果
+  @Input({ required: true }) columns: ReportColumn[] = [];        // 用來儲存查詢結果
   @Input({ required: true }) queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
   virtualData: any = [];
-  @Input() dataKey: string | undefined;                 // 用來儲存查詢結果
-  selectedColumns: ReportColumn[] = [];         // 用來儲存查詢結果
+  @Input() dataKey: string | undefined;         // 用來儲存查詢結果
+  selectedColumns: ReportColumn[] = [];     // 用來儲存查詢結果
   // tableKey預設給路由名稱
   @Input() tableKey = this.route.snapshot.url[this.route.snapshot.url.length - 1].path;
   @Input() loading = false;
   public _loading = false;
-  @Input() apiUrl: string | undefined = undefined;
-  @Input() DataKeyName: string | undefined = undefined;
   @Input() showReorder = true;
   // Checkbox 相關
   @Input() showCheckBox = false;
@@ -51,45 +50,45 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Output() selectAllChange = new EventEmitter<boolean>();
   @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true;
   rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => { return this.isRowSelectable(data) };
-  @Input() isAllSelected = false;                     // 是否全選
-  @Output() dataChange = new EventEmitter<any[]>();   // 用來儲存查詢結果
+  @Input() isAllSelected = false;           // 是否全選
+  @Output() dataChange = new EventEmitter<any[]>();  // 用來儲存查詢結果
   // Header 相關
-  @Input() showCaption = true;                        // 是否顯示 Caption
-  @Input() showSort = true;                           // 是否顯示 排序
+  @Input() showCaption = true;            // 是否顯示 Caption
+  @Input() showSort = true;              // 是否顯示 排序
   // Header(左) 相關
-  @Input() showFilter = true;           // 是否顯示 Filter
-  @Input() showReportMode = true;       // 是否顯示 匯出按鈕
-  @Input() customReport = false;        // 是否自訂報表
+  @Input() showFilter = true;      // 是否顯示 Filter
+  @Input() showReportMode = true;    // 是否顯示 匯出按鈕
+  @Input() customReport = false;    // 是否自訂報表
   @Input() pageOrientation: string | null = 'Landscape'; // PDF橫式
   @Input() pageSizeSetting: string | null = 'A4'; // PDF A4
   @Output() exportEvent = new EventEmitter<string>(); // 自訂報表 事件
   @Output() delete = new EventEmitter<any>(); // 刪除事件
-  @Input() showDelete = true;          // 是否顯示刪除按鈕
+  @Input() showDelete = true;     // 是否顯示刪除按鈕
   // Header(右) 相關
-  @Input() showExcel = false;           // 是否顯示 匯出Excel
-  @Input() showExcelExport = true;         // 是否顯示 匯出Excel按鈕
-  @Input() showExcelImport = true;         // 是否顯示 匯入Excel按鈕
-  @Input() showCustomExcelImport = false;     // 是否顯示 自訂匯入Excel按鈕
+  @Input() showExcel = false;      // 是否顯示 匯出Excel
+  @Input() showExcelExport = true;     // 是否顯示 匯出Excel按鈕
+  @Input() showExcelImport = true;     // 是否顯示 匯入Excel按鈕
+  @Input() showCustomExcelImport = false;   // 是否顯示 自訂匯入Excel按鈕
   @Output() exportExcel = new EventEmitter<any>(); // 匯出 Excel 事件
-  @Input() exportExcelLoading = false;       // 匯出 Excel loading
+  @Input() exportExcelLoading = false;    // 匯出 Excel loading
   @Output() importExcel = new EventEmitter<FileSelectEvent>(); // 匯入 Excel 事件
   // 欄位群組
-  @Input() columnGroup?: ColumnGroup[];                     // table 群組欄位
+  @Input() columnGroup?: ColumnGroup[];           // table 群組欄位
   // 管理 欄位
-  @Input() showManage = true;        // 是否顯示 管理欄位
-  @Input() showDetail = true;        // 是否顯示 管理欄位(明細按鈕)
+  @Input() showManage = true;    // 是否顯示 管理欄位
+  @Input() showDetail = true;    // 是否顯示 管理欄位(明細按鈕)
   @Output() detail = new EventEmitter<any>();// 明細事件
-  @Input() showEdit = true;         // 是否顯示 管理欄位(編輯按鈕)
+  @Input() showEdit = true;     // 是否顯示 管理欄位(編輯按鈕)
   @Input() editDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
   @Output() edit = new EventEmitter<any>(); // 編輯事件
-  @Input() addButton: AddButton[] = [];   // 自定義 管理按鈕
-  @Input() buttonsLoading = false;      // 按鈕們 loading
-  @Input() footerData: any;         // (總計)頁尾資料
-  @Input() footerPercentData: any;         // (百分比)頁尾資料
-  @Input() groupRowsBy?: string;       // (小計)群組欄位
+  @Input() addButton: AddButton[] = [];  // 自定義 管理按鈕
+  @Input() buttonsLoading = false;   // 按鈕們 loading
+  @Input() footerData: any;     // (總計)頁尾資料
+  @Input() footerPercentData: any;     // (百分比)頁尾資料
+  @Input() groupRowsBy?: string;    // (小計)群組欄位
   groupTotals: Record<string, Record<string, number>> = {}; // 用於儲存每個群組的總計
-  @Input() subTotalData: any;        // (小計)頁尾資料
-  @Output() selectButton = new EventEmitter<any>();       // 選擇 按鈕事件
+  @Input() subTotalData: any;    // (小計)頁尾資料
+  @Output() selectButton = new EventEmitter<any>();    // 選擇 按鈕事件
   // expansion 收合展開
   @Input() expansionColumns: ReportColumn[] = [];
   @Input() expansionDataKey = 'details';
@@ -97,6 +96,10 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() expansionLoadFn?: (rowData: any) => Observable<any>;
   expandedRows: Record<string, boolean> = {};
 
+  // 底層匯出
+  @Input() apiUrl?: string;                         // table API URL (可選)
+  @Input() DataKeyName?: string;                    // table 資料key名稱 (可選)
+  @Input() PrintRemark = true;                    // 是否列印備註 (可選)
   constructor(
     public readonly tableUtility: TableReportUtilityService,
     public readonly sanitizer: DomSanitizer,
@@ -276,41 +279,100 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     }
     return this.tableUtility.isGroupLastRow(rowData, rowIndex, this.groupRowsBy, this.data);
   }
+
   getGroupSubtotal(rowData: any, col: ReportColumn): any {
     if (!this.groupRowsBy || !col.isSubTotal) {
-      return ''; // 1. 基本檢查
+      return '';
     }
+
+    // 獲取用於分組的原始值
+    const rawGroupValue = rowData[this.groupRowsBy];
+
+    // 獲取用於分組的欄位定義
+    const groupColumn = this.columns.find(c => c.field === this.groupRowsBy);
+    const useFormatterForGroupKey = groupColumn && groupColumn.format;
+
+    let matchKey: string;
+
+    // ** 1. 生成用於匹配的格式化群組鍵 **
+    if (useFormatterForGroupKey) {
+      // 使用欄位定義中的 format 函式來產生匹配鍵
+      matchKey = String(groupColumn!.format!(rawGroupValue) ?? '').trim() || 'UNKNOWN_GROUP';
+    } else {
+      // 退回到安全轉換
+      matchKey = String(rawGroupValue ?? '').trim() || 'UNKNOWN_GROUP';
+    }
+
+    // ** 2. 優先查找外部傳入的 subTotalData **
     if (this.subTotalData && this.subTotalData.length > 0 && this.groupRowsBy) {
-      const groupKey = rowData[this.groupRowsBy];
-      const field = col.field;
-      const subtotalRow = this.subTotalData.find((item: any) => item[this.groupRowsBy as string] === groupKey);
+      // 假設 subTotalData 中的分組欄位 (item[this.groupRowsBy]) 也是原始值
+      // 為了確保匹配，我們需要對 subTotalData 中的分組欄位進行相同的格式化
+      const subtotalRow = this.subTotalData.find((item: any) => {
+        const itemRawValue = item[this.groupRowsBy!];
+        let itemMatchKey: string;
+
+        if (useFormatterForGroupKey) {
+          itemMatchKey = String(groupColumn!.format!(itemRawValue) ?? '').trim() || 'UNKNOWN_GROUP';
+        } else {
+          itemMatchKey = String(itemRawValue ?? '').trim() || 'UNKNOWN_GROUP';
+        }
+        // 使用格式化後的鍵進行比對
+        return itemMatchKey === matchKey;
+      });
+
       if (subtotalRow) {
-        const subtotal = subtotalRow[field] ?? 0; // 使用 ?? 避免 undefined
+        const subtotal = subtotalRow[col.field] ?? 0;
+        // 對小計值應用格式化
         return col.format ? col.format(subtotal) : subtotal;
       }
     }
-    const groupKey = rowData[this.groupRowsBy];
-    const field = col.field;
-    // 2. 從預先計算的結果中獲取總計
-    const total = this.groupTotals[groupKey]?.[field] ?? 0;
-    // 3. 應用格式化
+
+    // ** 3. 回退到前端計算的 groupTotals **
+    const total = this.groupTotals[matchKey]?.[col.field] ?? 0;
+    // 對小計值應用格式化
     return col.format ? col.format(total) : total;
   }
+
   // 對新載入的資料進行增量計算，並更新 groupTotals。
   updateGroupTotals(newData: any[]): void {
     if (!this.groupRowsBy || !this.columns.some(col => col.isSubTotal)) {
       return;
     }
+
+    // 1. 找出作為分組依據的欄位定義
+    const groupColumn = this.columns.find(col => col.field === this.groupRowsBy);
+    // 檢查分組欄位是否存在且具有 format 函式
+    const useFormatterForGroupKey = groupColumn && groupColumn.format;
+
     newData.forEach(row => {
-      const groupKey = (row[this.groupRowsBy!] as string)?.trim() ?? 'UNKNOWN_GROUP'; // 進行 trim 處理
-      if (groupKey === undefined) return;
+      const rawValue = row[this.groupRowsBy!];
+      let groupKey: string;
+
+      if (useFormatterForGroupKey) {
+        // 【已修正】使用欄位定義中的 format 函式來產生分組鍵
+        groupKey = String(groupColumn!.format!(rawValue) ?? '').trim() || 'UNKNOWN_GROUP';
+      } else {
+        // 【已修正】如果沒有 format 函式或找不到欄位定義，退回到安全轉換
+        groupKey = String(rawValue ?? '').trim() || 'UNKNOWN_GROUP';
+      }
+
+      // 如果 groupKey 為 'UNKNOWN_GROUP' 且原始值為 undefined/null，可以選擇跳過
+      if (groupKey === 'UNKNOWN_GROUP' && (rawValue === undefined || rawValue === null)) {
+        return;
+      }
+
+      // 初始化該群組的總計物件
       if (!this.groupTotals[groupKey]) {
         this.groupTotals[groupKey] = {};
       }
+
+      // 進行增量加總
       this.columns.forEach(col => {
         if (col.isSubTotal) {
           const field = col.field;
+          // 確保值是數字，如果不是則為 0
           const value = Number(row[field]) || 0;
+
           // 增量加總
           this.groupTotals[groupKey][field] = (this.groupTotals[groupKey][field] || 0) + value;
         }

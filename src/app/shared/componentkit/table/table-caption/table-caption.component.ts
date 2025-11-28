@@ -11,7 +11,6 @@ import { MultiSelectChangeEvent, MultiSelectModule } from 'primeng/multiselect';
 import { TooltipModule } from 'primeng/tooltip';
 import { Observable } from 'rxjs';
 import { TableExportComponent } from '../table-export/table-export.component';
-import { TableUtilityService } from '../table-utility.service';
 import { Column } from '../table.model';
 import { toggleButtons } from './table-caption.model';
 
@@ -48,8 +47,6 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
   @Input() selectedItems: any = [];                 // table 已勾選資料
   @Input() tableKey: string | undefined = undefined;// table 唯一標識 (必填)
   @Input() expansionColumns: Column[] = [];  // 收合展開 欄位配置(expansion必需配置)
-  @Input() apiUrl?: string;                         // table API URL (可選)
-  @Input() DataKeyName?: string;                    // table 資料key名稱 (可選)
   @Input() disabled = false;                        // table 是否禁用
   // Header 相關
   @Input() showCaption = true;                // 是否顯示 Caption
@@ -88,9 +85,13 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
   @Input() totalRecords = 0;                                 // 記錄總數
   @Input() rows = 10;                                         // 每頁顯示的行數
   @Input() first = 0;                                        // 當前表格的起始索引
+  // 底層匯出
+  @Input() apiUrl?: string;                         // table API URL (可選)
+  @Input() DataKeyName?: string;                    // table 資料key名稱 (可選)
+  @Input() PrintRemark = true;                    // 是否列印備註 (可選)
+
   constructor(
     private readonly queryStateService: QueryStateService,
-    private readonly tableUtilityService: TableUtilityService
   ) { super(); }
 
   // 當 data 發生變化時，重置分頁與頁碼

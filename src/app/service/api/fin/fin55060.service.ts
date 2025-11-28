@@ -1,25 +1,39 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 export interface QueryFIN55060Payload {
-  TXN_BDATE: string;       // yyyy-MM-dd
-  TXN_EDATE: string;       // yyyy-MM-dd
-  org_idList: string[];
-  ProjectNoList: string[];
-  AccNoList: string[];
-  DetailNoList: string[];
+  AccNoFrom: string;
+  AccNoTo: string;
+  DateFrom: string;       // yyyy-MM-dd
+  DateTo: string;         // yyyy-MM-dd
+  OrgId: string;
+  Notes: string;
+  VendorFrom: string;
+  VendorTo: string;
+  PTAFrom: string;
+  PTATo: string;
+  VouType: string;
+  VouStatus: string;
+  TargetNo: string;
 }
 
 export interface ExportFIN55060Payload {
-  TXN_BDATE: string;       // yyyy-MM-dd
-  TXN_EDATE: string;       // yyyy-MM-dd
-  org_idList: string[];
-  ProjectNoList: string[];
-  AccNoList: string[];
-  DetailNoList: string[];
+  AccNoFrom: string;
+  AccNoTo: string;
+  DateFrom: string;       // yyyy-MM-dd
+  DateTo: string;         // yyyy-MM-dd
+  OrgId: string;
+  Notes: string;
+  VendorFrom: string;
+  VendorTo: string;
+  PTAFrom: string;
+  PTATo: string;
+  VouType: string;
+  VouStatus: string;
+  TargetNo: string;
 }
 
 export interface FIN55060DetailRow {
@@ -38,7 +52,7 @@ export interface FIN55060DetailRow {
 export class FIN55060Service {
   private baseApi = environment.ApiUrl + '/FIN0000/GLS1000';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /** 查詢（回傳 AccNo4 群組 + _Details） */
   queryFIN55060(body: QueryFIN55060Payload): Observable<any> {
@@ -46,7 +60,7 @@ export class FIN55060Service {
     return this.http.post<any>(url, body);
   }
 
-  /** 匯出 PDF（等後端 API ready 直接可用） */
+  /** 匯出 PDF */
   exportFIN55060PDF(body: ExportFIN55060Payload): Observable<HttpResponse<Blob>> {
     const url = `${this.baseApi}/exportFIN55060PDF`;
     return this.http.post(url, body, {
@@ -55,7 +69,7 @@ export class FIN55060Service {
     });
   }
 
-  /** 匯出 Excel（等後端 API ready 直接可用） */
+  /** 匯出 Excel */
   exportFIN55060Excel(body: ExportFIN55060Payload): Observable<HttpResponse<Blob>> {
     const url = `${this.baseApi}/exportFIN55060`;
     return this.http.post(url, body, {

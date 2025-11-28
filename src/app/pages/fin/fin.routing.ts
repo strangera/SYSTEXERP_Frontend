@@ -126,8 +126,8 @@ export const finRoutes: Routes = [
   // { path: 'fin25020', loadComponent: () => import('./fin25020/fin25020.component').then(m => m.FIN25020Component) },
   // { path: 'fin25020cru', loadComponent: () => import('./fin25020-cru/fin25020-cru.component').then(m => m.FIN25020CRUComponent) },
   // 匯款銀行
-  // { path: 'fin26010', loadComponent: () => import('./fin26010/fin26010.component').then(m => m.FIN26010Component) },
-  // { path: 'fin26010cru', loadComponent: () => import('./fin26010-cru/fin26010-cru.component').then(m => m.FIN26010CRUComponent) },
+  { path: 'fin26010', loadComponent: () => import('./fin26010/fin26010.component').then(m => m.FIN26010Component) },
+  { path: 'fin26010cru', loadComponent: () => import('./fin26010-cru/fin26010-cru.component').then(m => m.FIN26010CRUComponent) },
   // 產生開票付款資料
   // { path: 'fin27010', loadComponent: () => import('./fin27010/fin27010.component').then(m => m.FIN27010Component) },
   // { path: 'fin27010cru', loadComponent: () => import('./fin27010-cru/fin27010-cru.component').then(m => m.FIN27010CRUComponent) },
@@ -161,9 +161,9 @@ export const finRoutes: Routes = [
   // 貼現三聯式發票列印
   // { path: 'fin29090', loadComponent: () => import('./fin29090/fin29090.component').then(m => m.FIN29090Component) },
   // 支出憑單明細表
-  // { path: 'fin29100', loadComponent: () => import('./fin29100/fin29100.component').then(m => m.FIN29100Component) },
+  { path: 'fin29100', loadComponent: () => import('./fin29100/fin29100.component').then(m => m.FIN29100Component) },
   // 應付帳款帳齡分析表
-  // { path: 'fin29110', loadComponent: () => import('./fin29110/fin29110.component').then(m => m.FIN29110Component) },
+  { path: 'fin29110', loadComponent: () => import('./fin29110/fin29110.component').then(m => m.FIN29110Component) },
   // 應付帳款進項發票對應表
   // { path: 'fin29120', loadComponent: () => import('./fin29120/fin29120.component').then(m => m.FIN29120Component) },
   // 收款項目對照會計科目維護
@@ -185,7 +185,7 @@ export const finRoutes: Routes = [
   // { path: 'fin33010', loadComponent: () => import('./fin33010/fin33010.component').then(m => m.FIN33010Component) },
   // { path: 'fin33010cru', loadComponent: () => import('./fin33010-cru/fin33010-cru.component').then(m => m.FIN33010CRUComponent) },
   // 應收帳款明細表
-  // { path: 'fin34010', loadComponent: () => import('./fin34010/fin34010.component').then(m => m.FIN34010Component) },
+  { path: 'fin34010', loadComponent: () => import('./fin34010/fin34010.component').then(m => m.FIN34010Component) },
   // 客戶收款明細表
   // { path: 'fin34020', loadComponent: () => import('./fin34020/fin34020.component').then(m => m.FIN34020Component) },
   // 廠客收/付款彙總表
@@ -311,11 +311,10 @@ export const finRoutes: Routes = [
   { path: 'fin61020', loadComponent: () => import('./fin61020/fin61020.component').then(m => m.FIN61020Component) },
   { path: 'fin61020cru', loadComponent: () => import('./fin61020-cru/fin61020-cru.component').then(m => m.FIN61020CRUComponent) },
   // 銀行調撥作業
-  // { path: 'fin62010', loadComponent: () => import('./fin62010/fin62010.component').then(m => m.FIN62010Component) },
-  // { path: 'fin62010cru', loadComponent: () => import('./fin62010-cru/fin62010-cru.component').then(m => m.FIN62010CRUComponent) },
+  { path: 'fin62010', loadComponent: () => import('./fin62010/fin62010.component').then(m => m.FIN62010Component) },
+  { path: 'fin62010cru', loadComponent: () => import('./fin62010-cru/fin62010-cru.component').then(m => m.FIN62010CRUComponent) },
   // 銀行資金調撥單
-  // { path: 'fin62020', loadComponent: () => import('./fin62020/fin62020.component').then(m => m.FIN62020Component) },
-  // { path: 'fin62020cru', loadComponent: () => import('./fin62020-cru/fin62020-cru.component').then(m => m.FIN62020CRUComponent) },
+  { path: 'fin62020', loadComponent: () => import('./fin62020/fin62020.component').then(m => m.FIN62020Component) },
   // 銀行調撥傳票拋轉作業
   // { path: 'fin62030', loadComponent: () => import('./fin62030/fin62030.component').then(m => m.FIN62030Component) },
   // { path: 'fin62030cru', loadComponent: () => import('./fin62030-cru/fin62030-cru.component').then(m => m.FIN62030CRUComponent) },

@@ -74,7 +74,7 @@
     <!-- 非群組表頭 -->
     <ng-container *ngIf="!columnGroup?.length">
       <tr>
-        <th *ngIf="_tableData.length && showReorder" class="w-1rem text-center"></th>
+        <th *ngIf="_tableData.length && showReorder" rowspan="2" class="w-1rem text-center"></th>
 
         <th [attr.colspan]="
         (canInsert && !disabled && _tableData.length > 0 && _tableData[_tableData.length - 1]._isAutoInsertCandidate && !showCheckBox) ? 2 : 1
@@ -100,14 +100,15 @@
         'invalid-row': hasRowError(rowData),
         'insert-row': rowData._isAutoInsertCandidate ,
       }">
-      <td *ngIf="data.length && showReorder" class="w-1rem text-center">
+      <td *ngIf="_tableData.length && showReorder" class="w-1rem text-center">
         <span *ngIf="!rowData._isAutoInsertCandidate && _tableData.length > 0" class="pi pi-bars w-1rem text-center"
           pReorderableRowHandle></span>
         <span *ngIf="rowData._isAutoInsertCandidate && !disabled" class="pi pi-plus w-1rem text-center" [ngClass]="{
             'text-blue-500': rowData._isAutoInsertCandidate
           }"></span>
       </td>
-      <td class="text-center w-1rem" [attr.colspan]="rowData._isAutoInsertCandidate ? 2 : 1"
+      <td class="text-center w-1rem"
+        [attr.colspan]="rowData._isAutoInsertCandidate && data.length && showCheckBox ? 2 : rowData._isAutoInsertCandidate ? 1 : 1"
         [pTooltip]="rowData._rowValidationError?.errorMessage ? rowData._rowValidationError.errorMessage : ''"
         tooltipPosition="bottom">
         <span [ngClass]="{

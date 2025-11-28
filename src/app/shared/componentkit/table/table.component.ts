@@ -29,10 +29,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() dataKey = 'ID';
   /** table 唯一標識 (必填) @default undefined */
   @Input() tableKey: string | undefined = undefined;
-  /** table API URL (可選) */
-  @Input() apiUrl?: string;
-  /** table 資料名稱 (可選) */
-  @Input() DataKeyName: string | undefined = undefined;
   /** table 標題 @default undefined */
   @Input() title: string | undefined = undefined;
   /** table 欄位配置 (必填) */
@@ -269,6 +265,11 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 其他
   /** table 無資料時顯示文字 @default '查無資料' */
   @Input() emptyMessage = '查無資料';
+
+  // 底層匯出
+  @Input() apiUrl?: string;                         // table API URL (可選)
+  @Input() DataKeyName?: string;                    // table 資料key名稱 (可選)
+  @Input() PrintRemark = true;                    // 是否列印備註 (可選)
 
   constructor(
     private readonly sanitizer: DomSanitizer,
