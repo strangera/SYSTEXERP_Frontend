@@ -1251,11 +1251,18 @@ export class ContractFlowService {
 
   /**
    * 修正：套用載入的資料（包含版本號）
+   * 🔥 修正：同時恢復 isViewModeSubject
    */
   private applyLoadedData(data: any): void {
     try {
       this.contractData = data.contractData;
       this.workflowStatusSubject.next(data.workflowStatus);
+
+      // 🔥 關鍵修復：從 metadata 恢復檢視模式狀態
+      if (this.contractData?.metadata?._isViewMode !== undefined) {
+        this.isViewModeSubject.next(this.contractData.metadata._isViewMode);
+        console.log('🔍 從 sessionStorage 恢復檢視模式:', this.contractData.metadata._isViewMode);
+      }
     } catch (error) {
       console.error('❌ 套用載入資料失敗:', error);
     }
