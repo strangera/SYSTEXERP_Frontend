@@ -160,12 +160,12 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
         }
       });
 
-    // 重新讀取類別資料
-    if (this.queryConditions) {
-      this.queryTLS31080Detail(); // 查詢單時段之資料
-    } else {
-      this.messageService.errorBubble('請返回查詢頁重新操作');
-    }
+    // // 重新讀取類別資料
+    // if (this.queryConditions) {
+    //   this.queryTLS31080Detail(); // 查詢單時段之資料
+    // } else {
+    //   this.messageService.errorBubble('請返回查詢頁重新操作');
+    // }
   }
 
   onClearForm() {

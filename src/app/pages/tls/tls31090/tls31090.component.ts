@@ -85,8 +85,11 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
   data: TLS31090Response[] = [];
   historyRequestBody: TLS31090Request | null = null; //歷史查詢條件
 
+  btnPDFLoading = false;
+  btnExcelLoading = false;
+
   columns: Column[] = [
-    { field: 'BusTypeName', header: '業種名稱', visible: true },
+    { field: 'BusTypeName', header: '大分類名稱', visible: true },
     { field: 'TimeType', header: '時段類型', visible: true }, // (營業實績 / 交易筆數 / 營業實績佔比)
 
     { field: 'H08', header: '08時段', visible: true },
@@ -241,7 +244,6 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
       })
     })
   }
-  btnLoading = false;
   onReport(frm: FormGroup, isExcel: boolean) {
     console.log('匯出Excel');
     const raw = frm.getRawValue();
@@ -268,7 +270,7 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
 
     if (isExcel) {
       console.log('匯出Excel');
-      this.btnLoading = true;
+      this.btnExcelLoading = true;
       this.tls31090Service.exportTLS31090(formValue).subscribe(blob => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -276,11 +278,11 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
         a.download = '時段之大分類之營業報表.xlsx';
         a.click();
         window.URL.revokeObjectURL(url);
-        this.btnLoading = false;
+        this.btnExcelLoading = false;
       });
     } else {
       console.log('匯出PDF');
-      this.btnLoading = true;
+      this.btnPDFLoading = true;
       this.tls31090Service.exportTLS31090PDF(formValue).subscribe(blob => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -288,7 +290,7 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
         a.download = '時段之大分類之營業報表.pdf';
         a.click();
         window.URL.revokeObjectURL(url);
-        this.btnLoading = false;
+        this.btnPDFLoading = false;
       });
     }
   }

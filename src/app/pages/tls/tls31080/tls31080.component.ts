@@ -85,6 +85,9 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
   data: TLS31080Response[] = [];
   historyRequestBody: TLS31080Request | null = null; //歷史查詢條件
 
+  btnPDFLoading = false;
+  btnExcelLoading = false;
+
   columns: Column[] = [
     { field: 'floor_desc', header: '樓層名稱', visible: true },
     { field: 'TimeType', header: '時段類型', visible: true }, // (營業實績 / 交易筆數 / 營業實績佔比)
@@ -239,7 +242,6 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
       })
     })
   }
-  btnLoading = false;
   onReport(frm: FormGroup, isExcel: boolean) {
     console.log('匯出Excel');
     const raw = frm.getRawValue();
@@ -266,7 +268,7 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
 
     if (isExcel) {
       console.log('匯出Excel');
-      this.btnLoading = true;
+      this.btnExcelLoading = true;
       this.tls31080Service.exportTLS31080(formValue).subscribe(blob => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -274,11 +276,11 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
         a.download = '各時段之營業報表.xlsx';
         a.click();
         window.URL.revokeObjectURL(url);
-        this.btnLoading = false;
+        this.btnExcelLoading = false;
       });
     } else {
       console.log('匯出PDF');
-      this.btnLoading = true;
+      this.btnPDFLoading = true;
       this.tls31080Service.exportTLS31080PDF(formValue).subscribe(blob => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -286,7 +288,7 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
         a.download = '各時段之營業報表.pdf';
         a.click();
         window.URL.revokeObjectURL(url);
-        this.btnLoading = false;
+        this.btnPDFLoading = false;
       });
     }
   }

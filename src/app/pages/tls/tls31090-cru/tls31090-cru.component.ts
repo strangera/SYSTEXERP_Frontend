@@ -144,14 +144,20 @@ export class Tls31090CRUComponent extends BasicCruPageComponent<TLS31090Response
     console.log('查詢頁request條件', this.queryConditions);
     console.log('查詢頁response點選項目', this.dataForm.value);
 
-    // 讀取樓層選單
-    this.dropDownListService.querySYS3900_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        this.tlt_floor_Option = res.Data;
-        console.log('樓層選單', this.tlt_floor_Option);
+    // // 讀取大分類選單
+    // this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
+    //   this.bus_type_Option = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
+    // });
+    // console.log('大分類選單', this.bus_type_Option);
 
-        // 在這裡才呼叫查詢 (因為樓層選單已經準備好了)
+    // 讀取大分類選單
+    this.dropDownListService.queryTLTBUSTYPE_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.bus_type_Option = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
+        console.log('大分類選單', this.bus_type_Option);
+
+        // 在這裡才呼叫查詢 (因為大分類選單已經準備好了)
         if (this.queryConditions) {
           this.queryTLS31090Detail();
         } else {
@@ -159,12 +165,12 @@ export class Tls31090CRUComponent extends BasicCruPageComponent<TLS31090Response
         }
       });
 
-    // 重新讀取類別資料
-    if (this.queryConditions) {
-      this.queryTLS31090Detail(); // 查詢單時段之資料
-    } else {
-      this.messageService.errorBubble('請返回查詢頁重新操作');
-    }
+    // // 重新讀取類別資料
+    // if (this.queryConditions) {
+    //   this.queryTLS31090Detail(); // 查詢時段之業種之資料
+    // } else {
+    //   this.messageService.errorBubble('請返回查詢頁重新操作');
+    // }
   }
 
   onClearForm() {
@@ -177,12 +183,13 @@ export class Tls31090CRUComponent extends BasicCruPageComponent<TLS31090Response
 
   queryTLS31090Detail() {
     this.loading = true;
-
-    // 取大分類描述，確保是 string
-    const CatLNosDesc = this.dataForm.get('CatLNosDesc')?.value ?? '';
+    // 取大分類描述，確保是 string(用名字去找對應的大分類代號)
+    const CatLNosDesc = this.dataForm.get('BusTypeName')?.value ?? '';
 
     // 使用者可能沒選，就會 matched = undefined
-    const matched = this.tlt_floor_Option.find(x => x.Name === CatLNosDesc);
+    const matched = this.bus_type_Option.find(x => x.Name === CatLNosDesc);
+
+    console.log('配對項目', matched);
 
     const CatLNosValue = matched?.No ?? '';
 

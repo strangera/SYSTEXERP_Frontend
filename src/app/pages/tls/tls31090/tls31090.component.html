@@ -206,20 +206,20 @@
         <p-button
           styleClass="p-2"
           label="時段之大分類營業報表.PDF"
-          [loading]="btnLoading"
+          [loading]="btnPDFLoading"
           icon="pi pi-file"
           (click)="onReport(queryForm, false)"
           [disabled]="data.length === 0"
-          [loading]="btnLoading"
+          [loading]="btnPDFLoading"
         ></p-button>
         <p-button
           styleClass="p-2"
           label="時段之大分類營業報表.XLSX"
-          [loading]="btnLoading"
+          [loading]="btnExcelLoading"
           icon="pi pi-file"
           (click)="onReport(queryForm, true)"
           [disabled]="data.length === 0"
-          [loading]="btnLoading"
+          [loading]="btnExcelLoading"
         ></p-button>
       </div>
     </header>
