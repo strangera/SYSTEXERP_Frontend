@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeHtml, SafeUrl } from '@angular/platform-browser';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { SortMeta } from 'primeng/api';
@@ -15,12 +16,14 @@ import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent } from 
 @Component({
   selector: 'app-table-subheader',
   standalone: true,
-  imports: [COMMON_IMPORTS],
+  imports: [CommonModule, ...COMMON_IMPORTS],
   templateUrl: './table-subheader.component.html',
   styleUrl: './table-subheader.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TableSubheaderComponent extends BasicPrintDataComponent implements OnChanges, AfterViewInit {
+  /** 自訂群組表頭顯示 template */
+  @Input() groupHeaderTemplate?: TemplateRef<any>;
   /** table 元件 */
   @ViewChild('dt', { static: false }) dt!: Table;
 

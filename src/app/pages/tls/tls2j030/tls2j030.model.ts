@@ -1,6 +1,7 @@
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
-import { Column, formatAmount, formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+
 /**
  * TLS2J030 後台發票換開補登作業 - 欄位定義
  */
@@ -258,14 +259,14 @@ export const COLUMNS_NATURAL_EDIT: EditColumn[] = [
 /** 查看模式用的來源發票欄位（用於 app-table） */
 export const COLUMNS_NATURAL_VIEW: Column[] = [
   { field: 'CHG_No', header: '換開編號', visible: true },
-  { field: 'GUI_InputDate', header: '換開日期', visible: true, format: formatDateToYYYY_MM_DD },
-  { field: 'TXN_Date', header: '來源發票日期', visible: true, format: formatDateToYYYY_MM_DD },
+  { field: 'GUI_InputDate', header: '換開日期', visible: true, format: formatDate },
+  { field: 'TXN_Date', header: '來源發票日期', visible: true, format: formatDate },
   { field: 'ECR_No', header: '收銀機號', visible: true },
   { field: 'TXN_No', header: '交易序號', visible: true },
   { field: 'TXN_GUIBegNo', header: '來源發票號碼', visible: true },
   { field: 'TXN_TotGui', header: '來源發票發票金額', visible: true, format: formatAmount },
   { field: 'GUI_Status', header: '換開狀態', visible: true, format: formatGUIStatus },
-  { field: 'GUI_CancelDate', header: '刪除日期', visible: true, format: formatDateToYYYY_MM_DD },
+  { field: 'GUI_CancelDate', header: '刪除日期', visible: true, format: formatDate },
 ];
 
 // ===== 換開發票欄位定義 =====
@@ -306,7 +307,7 @@ export const COLUMNS_CHANGE_EDIT: EditColumn[] = [
 
 /** 查看模式用的換開發票欄位（用於 app-table） */
 export const COLUMNS_CHANGE_VIEW: Column[] = [
-  { field: 'TXN_Date', header: '發票日期', visible: true, format: formatDateToYYYY_MM_DD },
+  { field: 'TXN_Date', header: '發票日期', visible: true, format: formatDate },
   { field: 'TXN_GUIPaper', header: '發票聯式', visible: true, format: formatGUIPaper },
   { field: 'TXN_GUINo', header: '發票號碼', visible: true },
   { field: 'PLU_TaxType', header: '稅別', visible: true, format: formatPLUTaxType },
