@@ -75,7 +75,7 @@
         [canInsert]="false"
         (insert)="dialogVisible('ecr')"
         [dataStatusValue]="{
-          Original: 'old',
+          Original: 'original',
           New: 'new',
           Modified: 'modified',
           Deleted: 'deleted',
@@ -113,6 +113,12 @@
         (dataChange)="tltData = $event"
         dataStatusField="status"
         [loading]="tltLoading"
+        [keepDeletedData]="true"
+        [showExcel]="!isFormReadable"
+        [showExcelExport]="true"
+        [showExcelImport]="true"
+        (exportExcel)="onExportTltExcel()"
+        (importExcel)="onImportTltExcel($event)"
       ></app-table-edit>
 
       <!-- 收銀機 Dialog選單 -->
