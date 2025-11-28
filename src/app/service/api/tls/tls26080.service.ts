@@ -48,6 +48,7 @@ export class TLS26080Service {
   public podTypeItems = [
     { value: '1', label: '預售' },
     { value: '2', label: '滿千送百' },
+    { value: '3', label: '滿千送百兌回' },
     { value: '8', label: '期間開放折扣' },
   ];
   public podStatusItems = [
