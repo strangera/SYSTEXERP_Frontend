@@ -29,6 +29,7 @@ export interface IDropdownItem {
   bus_type?: string;
   bus_type_name?: string;
   PAY_OverPay?: string;
+  CHG_ItemName_List?: string;
 }
 
 export interface TLTTALENT_TLT_SPACE extends IDropdownItem {
@@ -568,5 +569,9 @@ export class DropDownListService {
   // 能源下拉選單
   queryTLTTALENT_TLT_SPACE(params: { TltNo: string }): Observable<ApiResponse<TLTTALENT_TLT_SPACE[]>> {
     return this.http.post<ApiResponse<TLTTALENT_TLT_SPACE[]>>(`${this.apiUrl}/queryTLTTALENT_TLT_SPACE_DropDownList`, params);
+  }
+  // 查詢 TDS1010 下拉選單
+  queryTDS1010_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTDS1010_DropDown`, {});
   }
 }

@@ -34,12 +34,20 @@
           [showDelete]="false" [showInsert]="false" (dataChange)="onChangeEditDataChange($event)" [canInsert]="false"
           [showCheckBox]="false">
         </app-table-edit>
-
-        <app-table-edit title="商品明細" tableKey="DetailEdit" class="col-12" [data]="detailEditData"
+        <app-table-edit #detailEdit title="商品明細" tableKey="DetailEdit" class="col-12" [(data)]="detailEditData"
           [columns]="columnsdetail" dataStatusField="status" [loading]="editLoading" [tableRequired]="true"
-          [showDelete]="true" [showInsert]="true" (dataChange)="detailEditData = $event" [canInsert]="true"
-          [showCheckBox]="true">
+          [showDelete]="true" [showInsert]="true" [canInsert]="true" [showCheckBox]="true"
+          (dataChange)="onDetailEditDataChange($event)">
+
+          <!-- template 放這裡 -->
+          <ng-template #itemNameTemplate let-rowData let-col="col">
+            <div class="p-2 cursor-pointer text-primary" (click)="openItemDialog(rowData)">
+              {{ rowData?.INV_ItemName || '請選擇項目名稱' }}
+            </div>
+          </ng-template>
+
         </app-table-edit>
+
 
         <!-- 按鈕 -->
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -71,3 +79,26 @@
 
   </p-panel>
 </div>
+
+<app-dialog [(visible)]="showItemDialog" header="選擇項目名稱" [disable]="!selectedItemName" [loading]="itemDialogLoading"
+  (save)="confirmItemSelection()">
+
+  <div class="grid p-fluid gap-3">
+    <div class="col-12">
+      <span class="block text-900 font-medium mb-2">大分類代碼</span>
+      <p-dropdown [options]="busTypeOptions" optionLabel="label" optionValue="value" [(ngModel)]="selectedBusType"
+        [ngModelOptions]="{ standalone: true }" placeholder="請選擇大分類代碼" (onChange)="onBusTypeChange($event)"
+        appendTo="body" class="w-full">
+      </p-dropdown>
+    </div>
+
+    <div class="col-12">
+      <span class="block text-900 font-medium mb-2">品項名稱</span>
+      <p-dropdown [options]="itemNameOptions" optionLabel="label" optionValue="value" [(ngModel)]="selectedItemName"
+        [ngModelOptions]="{ standalone: true }" placeholder="請先選擇大分類代碼" [disabled]="!selectedBusType" appendTo="body"
+        class="w-full">
+      </p-dropdown>
+    </div>
+  </div>
+
+</app-dialog>

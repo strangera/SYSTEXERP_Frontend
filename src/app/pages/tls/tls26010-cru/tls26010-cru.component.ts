@@ -16,8 +16,11 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
+import { ExcelImportService, ImportExcelColumn } from '@shared/service/excel-import.service';
+import { FileSelectEvent } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
+import * as XLSX from 'xlsx';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -956,6 +959,159 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
       }
     } else {
       console.log('查看模式無須重製');
+    }
+  }
+
+  /**
+   * 匯出專櫃 Excel 範例檔案
+   */
+  onExportTltExcel(): void {
+    // 建立工作簿
+    const wb = XLSX.utils.book_new();
+
+    // 建立工作表 - 標題列 + 範例資料列（引導使用者）
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['專櫃編號', '專櫃名稱'],
+      ['002425', '範例專櫃名稱']  // 範例資料，引導使用者填寫
+    ]);
+
+    // 設定欄寬
+    ws['!cols'] = [
+      { wch: 15 }, // 專櫃編號
+      { wch: 30 }  // 專櫃名稱
+    ];
+
+    // 🔑 關鍵：設定儲存格格式為文字格式（避免數字前導零被移除）
+    // 設定 A 欄（專櫃編號）為文字格式
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+
+    // 從第 2 列開始（跳過標題列）設定為文字格式
+    for (let row = 1; row <= range.e.r + 100; row++) { // 預設支援到 100 列
+      const cellAddress = XLSX.utils.encode_cell({ r: row, c: 0 }); // A 欄（專櫃編號）
+
+      // 如果儲存格不存在，建立一個空的儲存格
+      if (!ws[cellAddress]) {
+        ws[cellAddress] = { t: 's', v: '' };
+      }
+
+      // 設定為文字格式（type = 's' 表示 string）
+      ws[cellAddress].t = 's';
+
+      // 設定儲存格樣式（文字格式的數字格式碼是 '@'）
+      if (!ws[cellAddress].z) {
+        ws[cellAddress].z = '@';
+      }
+    }
+
+    console.log('📤 匯出專櫃 Excel 範本:', [wb, ws]);
+
+    // 將工作表加入工作簿
+    XLSX.utils.book_append_sheet(wb, ws, '專櫃範本');
+
+    // 生成並下載檔案
+    XLSX.writeFile(wb, `專櫃範本_${new Date().toISOString().split('T')[0]}.xlsx`);
+    // this.messageService.successBubble('範本檔案已下載（專櫃編號已設為文字格式）');
+  }
+
+  /**
+   * 匯入專櫃 Excel
+   * @param event 檔案選擇事件
+   */
+  async onImportTltExcel(event: FileSelectEvent): Promise<void> {
+    try {
+      const file = event.files?.[0];
+      if (!file) {
+        return;
+      }
+
+      // 定義匯入欄位
+      const importExcelColumn: ImportExcelColumn[] = [
+        { field: 'tlt_no', header: '專櫃編號', type: 'string' },
+        { field: 'tlt_name', header: '專櫃名稱', type: 'string' }
+      ];
+
+      // 使用 ExcelImportService 讀取檔案
+      const excelImportService = new ExcelImportService(this.messageService);
+      const rawData = await excelImportService.importExcel(file, importExcelColumn);
+
+      // 將中文標題映射到欄位名稱
+      const data: TltItemWithStatus[] = rawData.map((item: Record<string, string | number | undefined>) => ({
+        id: undefined,
+        tlt_no: (item['專櫃編號'] || item['tlt_no'] || '').toString().trim(),
+        tlt_name: (item['專櫃名稱'] || item['tlt_name'] || '').toString().trim(),
+        status: 'new' as const
+      }));
+
+      // 過濾掉空資料
+      const validData = data.filter(item => item.tlt_no && item.tlt_name);
+
+      if (!validData.length) {
+        this.messageService.errorBubble('匯入檔案沒有有效資料');
+        return;
+      }
+
+      // 建立現有專櫃編號的集合（用於檢查重複）
+      const existingTltNos = new Set(
+        this.tltData
+          .filter(item => item.status !== 'deleted') // 排除已刪除的
+          .map(item => item.tlt_no?.trim())
+          .filter(no => no) // 排除空值
+      );
+
+      console.log('📥 現有專櫃編號:', Array.from(existingTltNos));
+
+      // 過濾掉重複的專櫃編號
+      const newItems: TltItemWithStatus[] = [];
+      const duplicateItems: string[] = [];
+
+      for (const item of validData) {
+        const tltNo = item.tlt_no?.trim();
+        if (!tltNo) {
+          continue;
+        }
+
+        // 檢查是否重複
+        if (existingTltNos.has(tltNo)) {
+          duplicateItems.push(tltNo);
+          console.log(`⚠️ 重複的專櫃編號: ${tltNo}`);
+        } else {
+          newItems.push(item);
+          existingTltNos.add(tltNo); // 加入集合，避免同一批匯入中有重複
+        }
+      }
+
+      // 顯示重複訊息
+      if (duplicateItems.length > 0) {
+        const duplicateMsg = duplicateItems.length > 5
+          ? `${duplicateItems.slice(0, 5).join(', ')} 等 ${duplicateItems.length} 筆`
+          : duplicateItems.join(', ');
+        this.messageService.warnBubble(`以下專櫃編號重複，已自動略過：${duplicateMsg}`);
+      }
+
+      // 如果沒有新資料
+      if (newItems.length === 0) {
+        this.messageService.errorBubble('所有匯入資料都重複，沒有新增任何資料');
+        return;
+      }
+
+      // 將新資料加入到現有資料中
+      this.tltData = [...this.tltData, ...newItems];
+
+      console.log('📥 匯入專櫃成功:', {
+        total: validData.length,
+        new: newItems.length,
+        duplicate: duplicateItems.length,
+        currentData: this.tltData
+      });
+
+      this.messageService.successBubble(
+        `匯入成功！新增 ${newItems.length} 筆資料` +
+        (duplicateItems.length > 0 ? `，略過 ${duplicateItems.length} 筆重複資料` : '')
+      );
+
+    } catch (error) {
+      console.error('Excel 匯入錯誤:', error);
+      this.messageService.errorBubble('Excel 檔案讀取失敗，請檢查檔案格式');
     }
   }
 }
