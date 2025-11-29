@@ -22,7 +22,7 @@ import { TLS26010Data, TLS26010Query } from './tls26010.model';
   selector: 'app-tls26010',
   templateUrl: './tls26010.component.html',
   styleUrls: ['./tls26010.component.scss'],
-  standalone: !0,
+  standalone: true,
   imports: [
     AccordionModule,
     FormsModule,
@@ -135,16 +135,24 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     const area_nos = Array.isArray(sys3A00Value) ? sys3A00Value.filter((val): val is string => val != null) : [];
 
     this.logger.debug(`dependentDataEffect:`, [building_nos, floor_nos, area_nos]);
-    if (!building_nos?.length && !floor_nos?.length && !area_nos?.length) return;
+
     untracked(() => {
-      this.service.queryECRDropDownList({ building_nos, floor_nos, area_nos, ecr_type: '2' });
-      this.service.queryTalentDropDownList({ building_nos, floor_nos, area_nos });
+      // 如果三個都沒有選擇，不打 API
+      if (!building_nos?.length && !floor_nos?.length && !area_nos?.length) {
+        return;
+      }
+
+      // 收銀機號：只要有任一條件就可以查詢
+      this.service.loadECRDropDownList({ building_nos, floor_nos, area_nos, ecr_type: '2' });
+
+      // 專櫃名稱：只要有任一條件就可以查詢
+      this.service.loadTalentDropDownList({ building_nos, floor_nos, area_nos });
     });
   }, { allowSignalWrites: !0 });
 
   private readonly queryTLS26010 = computed<TLS26010Query>(() => {
     const { pageIndex, pageSize, SortBy, ...rest } = this.queryForm.getRawValue();
-    const raw = <TLS26010Query>{
+    const raw = {
       ECR_No: this.ecrsignal(),
       tlt_nos: this.tltsignal(),
       tlt_no: '',
@@ -153,7 +161,7 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
       pod_edate_S: this.edateSSignal()?.toISOString(),
       pod_edate_E: this.edateESignal()?.toISOString(),
       pageIndex, pageSize, SortBy,
-    };
+    } as TLS26010Query;
 
     const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
       v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
@@ -194,12 +202,12 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
   public ngOnInit(): void {
     this.initializePage('TLS26010', '/TLS/TLS26010CRU', this.queryForm, this.onSubmit.bind(this));
 
-    // 只載入館別和樓層及區域的下拉選單資料
+    // 載入所有下拉選單資料
     this.service.loadSYS3800();
     this.service.loadSYS3900();
     this.service.loadSYS3A00();
-
-    this.service.queryECRDropDownList({ ecr_type: '2' });
+    this.service.loadECRDropDownList({ ecr_type: '2' });
+    this.service.loadTalentDropDownList({}); // 初始載入全部專櫃
   };
 
   public onSubmit(): void {

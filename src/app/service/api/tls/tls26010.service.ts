@@ -134,11 +134,37 @@ export class TLS26010Service {
   /** 取得專櫃編號 */
   public loadTalentDropDownList(query: DependentDataQuery): void {
     this.tltLoading.set(true);
-    this.http.post<BaseQueryResponse<TltItem>>(`${apiUrl}/queryTalentDropDownList`, query).pipe(
+
+    // 將參數轉換為後端期望的格式（過濾掉 undefined 和 null）
+    const requestBody: {
+      building_nos?: string[];
+      floor_nos?: string[];
+      area_nos?: string[];
+      tlt_openflag?: string | null;
+      approve_status?: string | null;
+      tlt_no?: string | null;
+      tlt_name?: string | null;
+      ven_no?: string | null;
+      tlt_bdate?: string | null;
+      tlt_edate?: string | null;
+    } = {};
+
+    if (query.building_nos?.length) requestBody['building_nos'] = query.building_nos;
+    if (query.floor_nos?.length) requestBody['floor_nos'] = query.floor_nos;
+    if (query.area_nos?.length) requestBody['area_nos'] = query.area_nos;
+    if (query.tlt_openflag) requestBody['tlt_openflag'] = query.tlt_openflag;
+    if (query.approve_status) requestBody['approve_status'] = query.approve_status;
+    if (query.tlt_no) requestBody['tlt_no'] = query.tlt_no;
+    if (query.tlt_name) requestBody['tlt_name'] = query.tlt_name;
+    if (query.ven_no) requestBody['ven_no'] = query.ven_no;
+    if (query.tlt_bdate) requestBody['tlt_bdate'] = query.tlt_bdate;
+    if (query.tlt_edate) requestBody['tlt_edate'] = query.tlt_edate;
+
+    this.http.post<BaseQueryResponse<TltItem>>(`${apiUrl}/queryTalentDropDownList`, requestBody).pipe(
       take(1),
       tap(res => {
-        this.tltOptions.set(res.Data);
-        console.log('專櫃編號查詢 request 💡:', query);
+        this.tltOptions.set(res.Data || []);
+        console.log('專櫃編號查詢 request 💡:', requestBody);
         console.log('專櫃編號查詢 response:', res.Data);
       }),
       finalize(() => this.tltLoading.set(false))
