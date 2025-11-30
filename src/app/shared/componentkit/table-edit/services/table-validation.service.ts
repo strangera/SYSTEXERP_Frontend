@@ -133,7 +133,7 @@ export class TableValidationService {
         if (!isValidField) {
           // 發現錯誤時，發出錯誤訊息，並返回失敗
           this.messageService.errorBubble(`｢${col.header}」 ` + rowData._validationErrors[col.field], '表格欄位驗證失敗');
-          return { isValid: false, isTableEmpty: tableDataEmpty, firstErrorIndex: i }; // 🌟 返回第一個錯誤的索引 i
+          return { isValid: false, isTableEmpty: tableDataEmpty, firstErrorIndex: i }; // 返回第一個錯誤的索引 i
         }
       }
 
@@ -146,7 +146,7 @@ export class TableValidationService {
       if (rowData._rowValidationError?.isValid === false) {
         // 發現整行錯誤時，發出錯誤訊息，並返回失敗
         this.messageService.errorBubble(rowData._rowValidationError.errorMessage, '表格驗證失敗');
-        return { isValid: false, isTableEmpty: tableDataEmpty, firstErrorIndex: i }; // 🌟 返回第一個錯誤的索引 i
+        return { isValid: false, isTableEmpty: tableDataEmpty, firstErrorIndex: i }; // 返回第一個錯誤的索引 i
       }
     }
 

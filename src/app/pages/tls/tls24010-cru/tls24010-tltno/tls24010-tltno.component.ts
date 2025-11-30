@@ -95,12 +95,12 @@ export class Tls24010TltnoComponent implements OnChanges {
       let pos2004Option: POS2004ForUpdateResponse[];
 
       if (this.store_way === STORE_WAY.自營) {
-        // 🌟 自營模式：根據 PLU_MagNo 篩選，避免重複選取相同商品
+        //  自營模式：根據 PLU_MagNo 篩選，避免重複選取相同商品
         pos2004Option = this.POS2004Options.filter(item =>
           !this.tltIdData.find(data => data.PLU_MagNo === item.PLU_MagNo)
         );
       } else if (this.store_way === STORE_WAY.專櫃) {
-        // 🌟 專櫃模式：根據 talent_id 篩選，避免重複選取相同專櫃
+        //  專櫃模式：根據 talent_id 篩選，避免重複選取相同專櫃
         pos2004Option = this.POS2004Options.filter(item =>
           !this.tltIdData.find(data => data.Talent_ID === item.talent_id)
         );
