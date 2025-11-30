@@ -1,35 +1,40 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { ItemUnitService } from './../../../service/basic/item-unit.service';
-import { PostageChargeService } from './../../../service/basic/postage-charge.service';
-// Shared
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS11040Request, ASS11040Response, Ass11040Service } from '@service/api/ass/ass11040.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
-import { AuthService } from '../../../service/system/auth.service';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { ValidationService } from '../../../shared/service/validation.service';
-//
-
 //3.1.1.4 品項資料維護作業
 @Component({
   selector: 'app-ass11040',
   templateUrl: './ass11040.component.html',
-  styleUrl: './ass11040.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, EditorTextComponent, TableComponent, TranslateModule]
+  imports: [InputTextareaComponent, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, TranslateModule]
 })
-export class ASS11040Component extends BasicQpageComponent implements OnInit {
-  //
+export class ASS11040Component extends BasicQueryPageComponent<ASS11040Response> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    itemCode: [null, [Validators.maxLength(13)]], // 品項代碼
+    itemName: [null, [Validators.maxLength(32)]], // 品項代碼
+    bigCategoryCode: [null], // 大分類代碼
+    midCategoryCode: [null], // 中分類代碼
+    smlCategoryCode: [null], // 小分類代碼
+    itemCategory: [null], // 品項類別區分
+    itemUnit: [null], // 基本單位
+    packageUnit: [null], // 包裝單位
+    warrantyMethod: [null], // 保固方式
+    maintenanceMethod: [null], // 保養方式
+    illustrate: [null], // 說明
+  });
   bigCategoryCodeOptions: any[] = [
     { value: 1, label: 'A/裝潢工程' },
     { value: 2, label: 'B/其他工程' },
@@ -67,36 +72,11 @@ export class ASS11040Component extends BasicQpageComponent implements OnInit {
     { value: 5, label: '盒' },
   ];
   warrantyMethodOptions: any[] = [];
-  //
-  queryForm = this.formBuilder.group({
-    itemCode: [, [Validators.maxLength(13)]], // 品項代碼
-    itemName: ['', [Validators.maxLength(32)]], // 品項代碼
-    bigCategoryCode: [], // 大分類代碼
-    midCategoryCode: [], // 中分類代碼
-    smlCategoryCode: [], // 小分類代碼
-    itemCategory: [], // 品項類別區分
-    itemUnit: [], // 基本單位
-    packageUnit: [], // 包裝單位
-    warrantyMethod: [], // 保固方式
-    maintenanceMethod: [], // 保養方式
-    illustrate: [,], // 說明
-  });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
+  data: ASS11040Response[] = [];
+  selectedRows: ASS11040Response[] = [];
+  totalRecords = 0;
+  lastQuery: ASS11040Request | null = null;
+  columns: ReportColumn[] = [
     { field: 'col1', header: '品項代碼', visible: true },
     { field: 'col2', header: '品項名稱', visible: true },
     { field: 'col3', header: '大分類代碼', visible: true },
@@ -107,131 +87,42 @@ export class ASS11040Component extends BasicQpageComponent implements OnInit {
     { field: 'col8', header: '小分類名稱', visible: true },
     { field: 'col9', header: '品項類別區分', visible: true },
     { field: 'col10', header: '圖示說明', visible: true },
-    // 其他欄位
   ];
   // ----------------------------------------------------------------
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private postageChargeService: PostageChargeService,
-    private itemUnitService: ItemUnitService,
+    public readonly ass11040Service: Ass11040Service,
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310004';
-    this.cruPage = '/ASS1000/ASS11040CRU';
-    //
-
-    //
-    this.postageChargeService.getSystemTypes().subscribe(data => {
-      this.warrantyMethodOptions = data;
-    });
-    //
-    this.itemUnitService.getItemUnits().subscribe(data => {
-      this.itemUnitOptions = data;
-    });
-    // ----------------------------------------------------------------
+    this.initializePage('ASS11040', 'ass/ass11040cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.handleSubmit(frm, () => {
+      this.ass11040Service.queryASS11040(frm.getRawValue()).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount;
+        this.lastQuery = frm.getRawValue();
+        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+      })
+    })
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
-  }
-  categories = [
-    {
-      label: 'A-裝潢工程',
-      value: 'A',
-      children: [
-        {
-          label: '木工裝潢',
-          value: 'A1',
-          children: [
-            { label: '木製家具', value: 'A1-1' },
-            { label: '木地板', value: 'A1-2' },
-          ],
-        },
-        {
-          label: '油漆裝潢',
-          value: 'A2',
-          children: [
-            { label: '內牆油漆', value: 'A2-1' },
-            { label: '外牆油漆', value: 'A2-2' },
-          ],
-        },
-      ],
-    },
-    {
-      label: 'B-其他工程',
-      value: 'B',
-      children: [
-        {
-          label: '防水工程',
-          value: 'B1',
-          children: [
-            { label: '屋頂防水', value: 'B1-1' },
-            { label: '外牆防水', value: 'B1-2' },
-          ],
-        },
-      ],
-    },
-  ]; // 大分類資料
-
-  selectedCategory: any = null; // 選中的大分類
-  selectedSubCategory: any = null; // 選中的中分類
-  selectedSubSubCategory: any = null; // 選中的小分類
-
-  onCategorySelectionChange(event: any): void {
-    console.log('選擇結果:', event);
-    this.selectedCategory = event.category;
-    this.selectedSubCategory = event.subCategory;
-    this.selectedSubSubCategory = event.subSubCategory;
+  onDelete(selectedItems: ASS11040Response[]) {
+    this.confirmationService.confirm({
+      header: `是否確認刪除 ${selectedItems.length} 筆資料?`,
+      accept: () => {
+        const idList = selectedItems.map(item => item.id);
+        // this.cpm12030Service.deleteASS11040({ idList }).pipe(untilDestroyed(this)).subscribe(() => {
+        //     this.messageService.successBubble('刪除成功');
+        //     this.onSubmit(this.queryForm);
+        //   });
+      }
+    });
   }
 }

@@ -7,8 +7,8 @@ export const assRoutes: Routes = [
   // { path: 'ass11020cru', loadComponent: () => import('./ass11020-cru/ass11020-cru.component').then(m => m.ASS11020CRUComponent) },
   // { path: 'ass11030', loadComponent: () => import('./ass11030/ass11030.component').then(m => m.ASS11030Component) }, // 資產列管品及耗材分類管理作業-小分類維護作業
   // { path: 'ass11030cru', loadComponent: () => import('./ass11030-cru/ass11030-cru.component').then(m => m.ASS11030CRUComponent) },
-  // { path: 'ass11040', loadComponent: () => import('./ass11040/ass11040.component').then(m => m.ASS11040Component) }, // 資產列管品及耗材分類管理作業-品項資料維護作業
-  // { path: 'ass11040cru', loadComponent: () => import('./ass11040-cru/ass11040-cru.component').then(m => m.ASS11040CRUComponent) },
+  { path: 'ass11040', loadComponent: () => import('./ass11040/ass11040.component').then(m => m.ASS11040Component) }, // 資產列管品及耗材分類管理作業-品項資料維護作業
+  { path: 'ass11040cru', loadComponent: () => import('./ass11040-cru/ass11040-cru.component').then(m => m.ASS11040CRUComponent) },
   // { path: 'ass11050', loadComponent: () => import('./ass11050/ass11050.component').then(m => m.ASS11050Component) }, // 資材分類樹狀圖
   // { path: 'ass11060', loadComponent: () => import('./ass11060/ass11060.component').then(m => m.ASS11060Component) }, // 供應商資料維護作業
   // { path: 'ass11060cru', loadComponent: () => import('./ass11060-cru/ass11060-cru.component').then(m => m.ASS11060CRUComponent) },
