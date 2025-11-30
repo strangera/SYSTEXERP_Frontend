@@ -48,8 +48,8 @@ export interface EcrItem {
   floor_name?: string;
   floor_no?: string;
   talent_id?: number;
-  tlt_name: string;
-  tlt_no: string;
+  tlt_name: string | null;
+  tlt_no: string | null;
   /** 操作狀態 */
   Status?: ItemOperationStatus;
 }
@@ -64,8 +64,8 @@ export interface TltItem {
   floor_name?: string;
   floor_no?: string;
   talent_id?: number;
-  tlt_name: string;
-  tlt_no: string;
+  tlt_name: string | null;
+  tlt_no: string | null;
   ven_no?: string;
   /** 操作狀態 */
   Status?: ItemOperationStatus;

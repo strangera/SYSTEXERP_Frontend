@@ -32,7 +32,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { CRUDStatus, ItemOperationStatus } from '../../../shared/models/system/CRUDstatus';
 
 // 擴展 EcrItem 加上 id 和 status
 export interface EcrItemWithStatus extends EcrItem {
@@ -291,14 +291,16 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
               .map(item => ({
                 ECR_No: item.ECR_No!,
                 ecr_name: item.ecr_name || item.ECR_Name || '',
-                tlt_no: item.tlt_no!,
-                tlt_name: item.tlt_name || ''
+                tlt_no: null,
+                tlt_name: null,
+                Status: ItemOperationStatus.New
               })),
             talent_list: this.tltData
               .filter(item => item.status !== 'delete' && item.status !== 'deleted')
               .map(item => ({
-                tlt_no: item.tlt_no!,
-                tlt_name: item.tlt_name || ''
+                tlt_no: item.tlt_no || null,
+                tlt_name: item.tlt_name || null,
+                Status: ItemOperationStatus.New
               }))
           };
 
@@ -935,11 +937,11 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
   }
 
   // 檢查是否可以新增專櫃
-  get canInsertTlt(): boolean {
-    const pod_sdate = this.dataForm.get('pod_sdate')?.value;
-    const pod_edate = this.dataForm.get('pod_edate')?.value;
-    return !!pod_sdate && !!pod_edate;
-  }
+  // get canInsertTlt(): boolean {
+  //   const pod_sdate = this.dataForm.get('pod_sdate')?.value;
+  //   const pod_edate = this.dataForm.get('pod_edate')?.value;
+  //   return !!pod_sdate && !!pod_edate;
+  // }
 
   // 處理專櫃新增按鈕點擊
   onTltInsertClick() {

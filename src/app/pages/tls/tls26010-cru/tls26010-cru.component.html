@@ -65,7 +65,7 @@
       <app-table-edit
         title="收銀機"
         tableKey="ecrTable"
-        [dataKey]="'id'"
+        [dataKey]="'ECR_No'"
         [data]="ecrData"
         class="col-12"
         [columns]="ecrColumn"
@@ -93,7 +93,7 @@
       <app-table-edit
         title="專櫃"
         tableKey="tltTable"
-        [dataKey]="'id'"
+        [dataKey]="'tlt_no'"
         [data]="tltData"
         class="col-12"
         [columns]="tltColumn"
@@ -101,7 +101,7 @@
         [selectedItems]="selectedTLTItems"
         [showInsert]="true"
         [showDelete]="true"
-        [canInsert]="canInsertTlt"
+        [canInsert]="false"
         (insert)="onTltInsertClick()"
         [dataStatusValue]="{
           Original: 'original',
