@@ -1,27 +1,27 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { AsyncPipe, NgIf } from '@angular/common';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
-import { TranslateModule } from '@ngx-translate/core';
-import { TableModule } from "primeng/table";
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { finalize, merge } from 'rxjs';
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { POS2004DetailResponse, POS2023DAMResponse, POS2024DAMResponse, Tls56070Service } from '@service/api/tls/tls56070.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateMaxLength, validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { PanelModule } from 'primeng/panel';
+import { TableModule } from "primeng/table";
+import { finalize, merge } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 @Component({
   selector: 'app-tls56070-cru',
@@ -168,7 +168,8 @@ export class TLS56070CRUComponent extends BasicCruPageComponent<POS2023DAMRespon
   saveDialog() {
     this.data = [...this.data, ...this.selectedItemsDialog.map((item) => ({
       ...item,
-      id: 0
+      id: 0,
+      PLU_SalePrc_UNI: item.PLU_SalePrc_UNI ?? 0,
     }))];
     this.selectedItemsDialog = [];
     this.selectedItems = [];

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { TableColumnReorderEvent } from 'primeng/table';
-import { ColumnGroup, EditColumn } from './table-edit.model';
+import { ColumnGroup, EditColumn } from '../table-edit.model';
 
 @Injectable({
   providedIn: 'root'
@@ -69,8 +69,8 @@ export class TableUtilityService {
      * @param canInsert 是否允許新增行
      * @returns 排序後的資料陣列
      */
-  reorderTableData(data: any[], canInsert: boolean): any[] {
-    if (!canInsert) {
+  reorderTableData(data: any[], canInsert: boolean, disabled: boolean): any[] {
+    if (!canInsert || disabled) {
       return data; // 如果不允許新增，直接返回排序後的資料
     }
 
@@ -81,10 +81,8 @@ export class TableUtilityService {
     if (candidateIndex !== -1 && candidateIndex !== lastIndex) {
       // 1. 移除新增候選行
       const candidateRow = data.splice(candidateIndex, 1)[0];
-
       // 2. 將新增候選行放回末尾
       data.push(candidateRow);
-
       // 注意：PrimeNG 的 onRowReorder 事件已經處理了 data 陣列本身的順序修改。
       // 這裡我們只需要處理將新增候選行「歸位」到陣列末尾的邏輯。
       // 由於 data 是傳址，因此直接修改 data 陣列即可。

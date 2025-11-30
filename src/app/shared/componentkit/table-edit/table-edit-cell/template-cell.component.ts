@@ -1,10 +1,10 @@
 // ... (保留所有原本的 import)
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input, ViewChild, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, inject } from '@angular/core';
 import { InputTextModule } from 'primeng/inputtext';
-import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
+import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { TooltipModule } from 'primeng/tooltip';
-import { TableUtilityService } from '../table-edit-utility.service'; // 🎯 引入服務
+import { TableUtilityService } from '../services/table-edit-utility.service'; // 🎯 引入服務
 import { EditColumn } from '../table-edit.model';
 import { CellInput } from './table-edit-cell.model';
 
@@ -12,11 +12,14 @@ import { CellInput } from './table-edit-cell.model';
   selector: 'app-template-cell',
   template: `
     <div class="input-wrapper" [attr.data-suffix]="cellInput.col.suffix">
-      <input pInputText readonly class="w-full min-w-max" [placeholder]="'請選擇' + (cellInput.col.header || '')"
+      <input pInputText readonly class="w-full min-w-max" [placeholder]="isDisabled() ? '' :'請選擇' + (cellInput.col.header || '')"
              [value]="templateDisplayValue(cellInput.rowData, cellInput.col)"
-             [disabled]="cellInput.disabled"
+             [disabled]="isDisabled()"
              (click)="overlayPanel.show($event)" />
       </div>
+      <p-overlayPanel #overlayPanel>
+      <ng-container *ngTemplateOutlet="cellInput.col.templateRef !; context: { $implicit: cellInput.rowData, col: cellInput.col, overlayPanel }"></ng-container>
+    </p-overlayPanel>
     `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
@@ -29,9 +32,11 @@ import { CellInput } from './table-edit-cell.model';
 })
 export class TemplateCellComponent {
   @Input({ required: true }) cellInput!: CellInput;
-  @ViewChild('overlayPanel') overlayPanel!: OverlayPanel;
   protected readonly tableUtilityService = inject(TableUtilityService);
-
+  isDisabled(): boolean {
+    const col = this.cellInput.col;
+    return (col.disabled && col.disabled(this.cellInput.rowData[col.field], this.cellInput.index, this.cellInput.rowData)) || this.cellInput.disabled;
+  }
   /**
    * 處理 Template input 顯示的值
    * @param rowData 當前行資料

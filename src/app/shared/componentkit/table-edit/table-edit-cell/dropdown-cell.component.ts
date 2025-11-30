@@ -6,7 +6,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { TooltipModule } from 'primeng/tooltip';
-import { TableUtilityService } from '../table-edit-utility.service'; // 🎯 引入服務
+import { TableUtilityService } from '../services/table-edit-utility.service'; // 🎯 引入服務
 import { EditColumn } from '../table-edit.model';
 import { CellInput } from './table-edit-cell.model';
 
@@ -17,7 +17,7 @@ import { CellInput } from './table-edit-cell.model';
       <p-dropdown class="flex min-w-max" appendTo="body"
                   [(ngModel)]="cellInput.rowData[cellInput.col.field]"
                   [ngModelOptions]="{ standalone: true }"
-                  [placeholder]="'請輸入' + cellInput.col.header"
+                  [placeholder]="isDisabled() ? '' :'請輸入' + cellInput.col.header"
                   [options]="getOptions(cellInput.rowData, cellInput.col)"
                   [optionLabel]="cellInput.col.optionLabel"
                   [optionValue]="cellInput.col.optionValue"

@@ -12,7 +12,7 @@ import { CellInput } from './table-edit-cell.model';
   template: `
     <p-iconField iconPosition="right">
       <p-calendar class="min-w-max" [(ngModel)]="cellInput.rowData[cellInput.col.field]"
-                  [ngModelOptions]="{ standalone: true }" [placeholder]="'請輸入' + cellInput.col.header"
+                  [ngModelOptions]="{ standalone: true }" [placeholder]="isDisabled() ? '' : '請輸入' + cellInput.col.header"
                   [timeOnly]="cellInput.col.timeOnly || false" [showTime]="cellInput.col.showTime || false"
                   [hourFormat]="cellInput.col.hourFormat || '24'" [showSeconds]="cellInput.col.showSeconds"
                   [view]="cellInput.col.view || 'date'" [dateFormat]="cellInput.col.dateFormat || 'yy/mm/dd'"

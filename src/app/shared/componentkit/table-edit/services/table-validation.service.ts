@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable, inject } from '@angular/core';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { EditColumn } from './table-edit.model';
+import { EditColumn } from '../table-edit.model';
 
 // 定義 RowValidationFn 類型，這是 TableEditComponent 的 @Input() rowValidate 參數的類型
 type RowValidationFn = (rowData: any, index?: number) => { isValid: boolean, errorMessage: string; } | undefined;
@@ -21,6 +21,13 @@ export class TableValidationService {
    * @returns 欄位是否有效 (boolean)
    */
   public validateField(rowData: any, col: EditColumn, value: any, allData: any[]): boolean {
+    if (rowData._isAutoInsertCandidate) {
+      // 如果是新增候選行，確保沒有任何錯誤狀態被設定
+      if (rowData._validationErrors) {
+        delete rowData._validationErrors[col.field];
+      }
+      return true; // 視為通過
+    }
     if (!rowData._validationErrors) {
       rowData._validationErrors = {};
     }
@@ -68,8 +75,8 @@ export class TableValidationService {
     selectedItems: any[],
     tableRequired: boolean,
     validateOnlySelected: boolean,
-    rowValidate: RowValidationFn | undefined, // 🎯 關鍵修改：新增 | undefined
-  ): { isValid: boolean, isTableEmpty: boolean } {
+    rowValidate: RowValidationFn | undefined,
+  ): { isValid: boolean, isTableEmpty: boolean, firstErrorIndex: number | undefined } {
 
     // 1. 清除所有行的舊有驗證錯誤狀態
     for (const rowData of data) {
@@ -95,48 +102,55 @@ export class TableValidationService {
 
       if (shouldCheckActualDataEmpty) {
         tableDataEmpty = true;
-        return { isValid: false, isTableEmpty: tableDataEmpty };
+        return { isValid: false, isTableEmpty: tableDataEmpty, firstErrorIndex: 0 };
       }
     }
 
-    // 確定要驗證的資料集
+    // 確定要驗證的資料集 (使用 data，因為它的索引與 _tableData 相同，如果 data 傳入的是 _tableData)
     let rowsToValidate: any[];
     if (validateOnlySelected && selectedItems.length > 0) {
       rowsToValidate = selectedItems;
     } else if (validateOnlySelected && selectedItems.length === 0) {
-      return { isValid: true, isTableEmpty: tableDataEmpty }; // 只驗證選擇行，但沒選，視為通過
+      return { isValid: true, isTableEmpty: tableDataEmpty, firstErrorIndex: undefined };
     } else {
-      rowsToValidate = data.filter(row => !row._isAutoInsertCandidate);
+      rowsToValidate = data; // 這裡使用完整的 data (即 _tableData)
     }
 
     // 遍歷需要驗證的行 (欄位和行驗證)
-    for (const rowData of rowsToValidate) {
+    for (let i = 0; i < rowsToValidate.length; i++) {
+      const rowData = rowsToValidate[i];
+
+      // 排除新增候選行
+      if (rowData._isAutoInsertCandidate) {
+        continue;
+      }
+
       // --- 欄位驗證 (Field Validation) ---
       for (const col of columns) {
         // 使用 service 的 validateField 方法執行驗證並更新 rowData
-        const isValidField = this.validateField(rowData, col, rowData[col.field], data);
+        const isValidField = this.validateField(rowData, col, rowData[col.field], data); // data 是 _tableData
 
         if (!isValidField) {
           // 發現錯誤時，發出錯誤訊息，並返回失敗
           this.messageService.errorBubble(`｢${col.header}」 ` + rowData._validationErrors[col.field], '表格欄位驗證失敗');
-          return { isValid: false, isTableEmpty: tableDataEmpty };
+          return { isValid: false, isTableEmpty: tableDataEmpty, firstErrorIndex: i }; // 🌟 返回第一個錯誤的索引 i
         }
       }
 
       // --- 整行驗證 (Row Validation) ---
       if (rowValidate) {
         // 執行整行驗證並儲存結果
-        rowData._rowValidationError = rowValidate(rowData);
+        rowData._rowValidationError = rowValidate(rowData, i);
       }
 
       if (rowData._rowValidationError?.isValid === false) {
         // 發現整行錯誤時，發出錯誤訊息，並返回失敗
         this.messageService.errorBubble(rowData._rowValidationError.errorMessage, '表格驗證失敗');
-        return { isValid: false, isTableEmpty: tableDataEmpty };
+        return { isValid: false, isTableEmpty: tableDataEmpty, firstErrorIndex: i }; // 🌟 返回第一個錯誤的索引 i
       }
     }
 
-    return { isValid: true, isTableEmpty: tableDataEmpty }; // 所有驗證通過
+    return { isValid: true, isTableEmpty: tableDataEmpty, firstErrorIndex: undefined }; // 所有驗證通過
   }
 
   /**
