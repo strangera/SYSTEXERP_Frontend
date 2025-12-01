@@ -87,6 +87,10 @@ export interface TLS26080InsertPayload {
   TALPORDERD_VOUCHERDetails: TLS26080DetailTable[]; // 活動專櫃資料
 }
 
+export interface TLS26080UpdatePayload extends TLS26080InsertPayload {
+
+}
+
 export interface TLS26080Query extends BaseQueryRequest {
   POD_No?: string;            // 活動申請編號
   POD_Desc?: string;          // 活動名稱

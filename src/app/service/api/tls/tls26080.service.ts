@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { CampaignData, TLS26080Data, TLS26080DetailResult, TLS26080DetailTable, TLS26080InsertPayload, TLS26080Query, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
+import { CampaignData, TLS26080Data, TLS26080DetailResult, TLS26080DetailTable, TLS26080InsertPayload, TLS26080Query, TLS26080UpdatePayload, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
 import { Option, TalentChargeItem } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -102,6 +102,27 @@ export class TLS26080Service {
     );
   };
 
+  public insertTLS26080(data: TLS26080InsertPayload): Observable<BaseQueryResponse<any>> {
+    return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/insertTLS26080`, data).pipe(
+      take(1),
+      tap(res => this.logger.debug(`TLS26080新增結果:`, [res]))
+    );
+  };
+
+  public updateTLS26080(query: TLS26080UpdatePayload): Observable<BaseQueryResponse<TLS26080Data>> {
+    return this.http.post<BaseQueryResponse<TLS26080Data>>(`${apiUrl}/TLS0000/TLS2000/updateTLS26080`, query).pipe(
+      take(1),
+      tap(res => this.logger.debug(`TLS26080更新結果:`, [res]))
+    );
+  };
+
+  public deleteTLS26080(idList: string[]): Observable<BaseQueryResponse<unknown>> {
+    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26080`, { idList }).pipe(
+      take(1)
+    );
+  }
+
+
   /** 查詢環友資料 */
   public loadCampaignData(query: any = {}): Observable<BaseQueryResponse<CampaignData>> {
     return this.http.post<BaseQueryResponse<CampaignData>>(`${apiUrl}/TLS0000/TLS2000/queryCampaign`, query).pipe(
@@ -115,13 +136,6 @@ export class TLS26080Service {
     return this.http.post<BaseQueryResponse<TLS26080DetailTable>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080_Detail`, { pod_no: query }).pipe(
       take(1),
       tap(res => this.logger.debug(`專櫃活動細節查詢結果:`, [res]))
-    );
-  };
-
-  public insertTLS26080(data: TLS26080InsertPayload): Observable<BaseQueryResponse<any>> {
-    return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/insertTLS26080`, data).pipe(
-      take(1),
-      tap(res => this.logger.debug(`TLS26080新增結果:`, [res]))
     );
   };
 
@@ -158,12 +172,6 @@ export class TLS26080Service {
           })),
         };
       })
-    );
-  }
-
-  public deleteTLS26080(idList: string[]): Observable<BaseQueryResponse<unknown>> {
-    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26080`, { idList }).pipe(
-      take(1)
     );
   }
 

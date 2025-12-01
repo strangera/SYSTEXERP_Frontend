@@ -208,14 +208,16 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     this.logger.debug(`campaignEffect:`, [this.selectedCampaign(), podDesc]);
   });
 
-  public readonly podNo = effect(() => {
+  public readonly campaignIdEffect = effect(() => {
     const data = this.campaignData();
-    if (!data || data.length === 0) return;
-    this.df().pod_no.patchValue(this.selectedCampaign()?.CampaignId);
+    if (!data || data.length === 0 || !this.selectedCampaign()) return;
+    this.logger.debug(`campaignIdEffect:`, [data, this.df().pod_no, this.selectedCampaign()]);
+    this.df().pod_no.patchValue(this.selectedCampaign()!.CampaignId);
   }, { allowSignalWrites: !0 });
 
+  // 用名稱顯示但用編號傳值
   public readonly fieldsConfig: FieldsConfig[] = [
-    { field: 'CampaignId', header: '活動編號', mainDataField: !0 },
+    { field: 'CampaignId', header: '活動名稱', mainDataField: !0 },
   ];
 
   // 環友資料表
@@ -341,6 +343,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public ngOnInit(): void {
     this.initializePage('TLS26080', this.dataForm);
 
+    this.logger.debug(`init:`, [this.rowdata]);
+
     // this.service.getTLTTalentChargeOptions();
     this.service.getTLTTalentOptions();
     this.service.loadAPS1003(['E']);
@@ -401,14 +405,18 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         })),
       };
 
-      this.service.insertTLS26080(payload).pipe(
-        tap(res => this.logger.debug(`onSubmit:`, [d, payload, res])),
+      const request = this.isFormEditable
+        ? this.service.updateTLS26080(payload)
+        : this.service.insertTLS26080(payload);
+
+      this.logger.debug(`submit:`, [d, payload]);
+      request.pipe(
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
         next: res => {
           if (res.Status !== '0000') return;
           this.onCancel();
-          this.messageService.successBubble('新增成功');
+          this.messageService.successBubble(this.isFormEditable ? '更新成功' : '新增成功');
         },
       });
     });
