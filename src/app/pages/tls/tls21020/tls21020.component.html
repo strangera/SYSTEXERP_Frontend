@@ -32,7 +32,27 @@
 
 
 <div class="card">
-  <app-table-edit #dt
+  <app-table #dt
+             apiUrl="queryTLS21020"
+             class="col-12"
+             [dataKey]="'id'"
+             tableKey="TLS21020Detail"
+             [columns]="columns()"
+             [data]="tableData()"
+             (dataChange)="tableData.set($event); dt.getVisibleHeaderCount"
+             [selectedItems]="selectedItems()"
+             (selectionChange)="selectedItems.set($event)"
+             (edit)="onEdit($event)"
+             (delete)="onDelete($event)"
+             (detail)="onDetail($event)"
+             [showCheckBox]="!0"
+             [showRowEdit]="!0"
+             [alwaysEdit]="!0"
+             [totalRecords]="totalRecords()"
+             (lazyLoadData)="onLazyLoadData($event, queryForm); queryTLS21020()"
+             [lazy]="!0"
+             [loading]="tableLoading()"></app-table>
+  <!-- <app-table-edit #dt
                   class="col-12"
                   tableKey="TLS21020Detail"
                   [title]="'傳票項目之會計科目設定作業'"
@@ -46,5 +66,5 @@
                   [showDelete]="!1"
                   [canInsert]="!1"
                   [loading]="tableLoading()"
-                  [defaultInsertData]="defaultInsertData"></app-table-edit>
+                  [defaultInsertData]="defaultInsertData"></app-table-edit> -->
 </div>
