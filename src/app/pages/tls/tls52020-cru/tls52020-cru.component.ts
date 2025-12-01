@@ -129,49 +129,45 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     }
     const body = {
       VEN_No: venNo,
-      PLU_MagNo: value,
+      queryNo: value,
       LOGO_No: logoNo,
-      pageSize: 1,
-      pageIndex: 1,
     };
 
-    this.tls52010Service.queryPOS2004DetailByVenNo(body)
-      .pipe(untilDestroyed(this))
-      .subscribe((results) => {
-        if (results.Data && results.Data.length > 0) {
-          const newData = results.Data[0];
-          const updatedRow: TLS52020Detail = {
-            ...newData,
-            id: 0,
-            PLU_MagNo: newData.PLU_MagNo,
-            PLU_Name: newData.PLU_Name,
-            PLU_No: newData.PLU_No,
-            PLU_BoxQty: newData.PLU_BoxQty,
-            PLU_StockTaxType: newData.PLU_StockTaxType,
-            PLU_TaxType: newData.PLU_TaxType, // 確保 TaxType 屬性也被帶入
-            CRN_SalePrc: newData.PLU_SalePrc,
-            CRN_SubQty: 1,
-            PLU_Unit: newData.PLU_Unit,
-            UNIT_NAME: newData.UNIT_NAME,
-            CRN_BuyNet: newData.PLU_SalePrc_UNI || 0,
-            CRN_SaleAmt: newData.PLU_SalePrc || 0,
-            CRN_BuyPrc: newData.PLU_SalePrc_UNI || 0,
-            CRN_Remark: ''
-          };
-          this.data = [
-            ...this.data.slice(0, index), // 取得 index 之前的元素
-            updatedRow,                     // 放入新的物件
-            ...this.data.slice(index + 1)   // 取得 index 之後的元素
-          ];
-          this.calculateTotals();
-          this.cdr.detectChanges();
+    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      if (results.Data && results.Data.length > 0) {
+        const newData = results.Data[0];
+        const updatedRow: TLS52020Detail = {
+          ...newData,
+          id: 0,
+          PLU_MagNo: newData.PLU_MagNo,
+          PLU_Name: newData.PLU_Name,
+          PLU_No: newData.PLU_No,
+          PLU_BoxQty: newData.PLU_BoxQty,
+          PLU_StockTaxType: newData.PLU_StockTaxType,
+          PLU_TaxType: newData.PLU_TaxType, // 確保 TaxType 屬性也被帶入
+          CRN_SalePrc: newData.PLU_SalePrc,
+          CRN_SubQty: 1,
+          PLU_Unit: newData.PLU_Unit,
+          UNIT_NAME: newData.UNIT_NAME,
+          CRN_BuyNet: newData.PLU_SalePrc_UNI || 0,
+          CRN_SaleAmt: newData.PLU_SalePrc || 0,
+          CRN_BuyPrc: newData.PLU_SalePrc_UNI || 0,
+          CRN_Remark: ''
+        };
+        this.data = [
+          ...this.data.slice(0, index), // 取得 index 之前的元素
+          updatedRow,                     // 放入新的物件
+          ...this.data.slice(index + 1)   // 取得 index 之後的元素
+        ];
+        this.calculateTotals();
+        this.cdr.detectChanges();
 
-        } else {
-          this.messageService.errorBubble('查無該商品資訊');
-          this.data[index].PLU_MagNo = '';
-          this.data = [...this.data]; // 確保刷新
-        }
-      });
+      } else {
+        this.messageService.errorBubble('查無該商品資訊');
+        this.data[index].PLU_MagNo = '';
+        this.data = [...this.data]; // 確保刷新
+      }
+    });
   }
   constructor(
     private readonly dropDownListService: DropDownListService,
