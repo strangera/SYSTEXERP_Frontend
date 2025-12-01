@@ -129,15 +129,13 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     }
     const body = {
       VEN_No: venNo,
-      PLU_MagNo: value,
+      queryNo: value,
       LOGO_No: logoNo,
-      pageSize: 1,
-      pageIndex: 1,
     };
-    this.tls52010Service.queryPOS2004DetailByVenNo(body).pipe(untilDestroyed(this)).subscribe((results) => {
+    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
       if (results.Data && results.Data.length > 0) {
         const newData = results.Data[0];
-        const updatedRow: IPOS2004DetailData = {
+        const updatedRow: IQueryPOS2004DetailResponse = {
           ...newData,
           id: 0,
           PLU_MagNo: newData.PLU_MagNo,
@@ -154,9 +152,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
           POD_SaleAmt: newData.PLU_SalePrc || 0,
           POD_Remark: ''
         };
-        console.log(updatedRow);
-        this.data = [...this.data.slice(0, index), updatedRow, ...this.data.slice(index + 1)];
-        console.log(this.data);
+        this.data = [...this.data.slice(0, index), updatedRow, ...this.data.slice(index + 1)] as IPOS2004DetailData[];
         this.calculateTotals();
         this.cdr.detectChanges();
       } else {
@@ -465,6 +461,8 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   ];
   opTotalRecords = 0;
   onAutoCompleteInputChange(event: any) {
+    console.log(event);
+
     const body = {
       ...event,
       VEN_No: this.dataForm.controls.VEN_No.value,

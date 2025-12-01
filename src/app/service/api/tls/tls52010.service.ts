@@ -123,7 +123,12 @@ export interface IQueryPOS2004DetailResponse {
   PLU_StockTaxType: string,
   PLU_SalePrc_UNI: number,
   PLU_SalePrc: number,
-  PLU_TaxType: string
+  PLU_TaxType: string,
+
+  POD_SubQty?: number,
+  POD_BuyNet?: number,
+  POD_SaleAmt?: number,
+  POD_Remark?: string
 }
 
 /** 查詢廠商所有商品 (queryPOS2004Detail_VEN_No) 的請求介面 */
