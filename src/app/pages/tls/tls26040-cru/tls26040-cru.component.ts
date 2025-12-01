@@ -116,8 +116,22 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
       })
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
-          this.data = response.Data;
-          this.totalRecords = response.TotalCount;
+          // 將新資料與舊資料合併
+          const newData = response.Data;
+          const existingIds = new Set(this.data.map(item => item.id));
+
+          // 過濾出不重複的資料
+          const uniqueNewData = newData.filter(item => !existingIds.has(item.id));
+
+          // 合併並排序
+          this.data = [...this.data, ...uniqueNewData].sort((a, b) => {
+            const dateA = new Date(a.sad_date).getTime();
+            const dateB = new Date(b.sad_date).getTime();
+            return dateA - dateB;
+          });
+
+          this.totalRecords = this.data.length;
+
           // 預售總金額加總
           this.totalAmount = this.data.reduce((sum, item) => sum + (item.TXN_TotSaleAmt ?? 0), 0);
         });
@@ -200,5 +214,11 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
         this.dialogData = response.Data;
         this.dialogVisible = true;
       });
+  }
+
+  // 取消按鈕
+  reset(): void {
+    this.data = [];
+    this.selectedItems = [];
   }
 }
