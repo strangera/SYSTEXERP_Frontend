@@ -42,13 +42,18 @@
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
           <app-button btnType="clear" [form]="queryForm"></app-button>
-          <app-button btnType="query" [loading]="loading"></app-button>
+          <!-- <app-button btnType="query" [loading]="loading"></app-button> -->
+          <app-button
+            btnType="query"
+            [loading]="loading"
+            label="{{ '下載媒體檔案遞送單' | translate }}"
+          ></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
-<div class="card">
+<!-- <div class="card">
   <app-table
     tableKey="FIN15090"
     dataKey="field"
@@ -63,4 +68,4 @@
     [lazy]="true"
     [loading]="loading"
   ></app-table>
-</div>
+</div> -->
