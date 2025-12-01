@@ -20,7 +20,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { Column, formatToSixDigits } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls26040-cru',
@@ -193,7 +193,7 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
     { field: 'TLT_No', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true, format: formatToSixDigits },
     { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, format: formatAmount },
   ];
 
