@@ -1,12 +1,14 @@
 import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { NavigationExtras } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
 import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
@@ -25,6 +27,11 @@ export interface GroupedFIN55050Detail extends FIN55050Detail {
   AccNo: string;
   AccCName: string;
   VouDate: string;
+}
+declare global {
+  interface Window {
+    handleAcpNoClick?: (acpNo: string) => void;
+  }
 }
 //1.2.9.6 廠商付款明細表
 @Component({
@@ -59,19 +66,7 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
   pdfBtnLoading = false;
   excelBtnLoading = false;
   columns: Column[] = [
-    {
-      field: 'ACP_No',
-      header: '應付帳款編號',
-      visible: true,
-      htmlFormat: true,
-      format: (value: string) => {
-        // 處理 NULL、undefined 或空字串的情況
-        if (!value || value === 'null' || value === 'undefined') {
-          return '<span style="color: #999;">-</span>';
-        }
-        return `<a href="javascript:void(0)" onclick="window.handleAcpNoClick('${value}')" style="color: #007ad9; text-decoration: underline; cursor: pointer;">${value}</a>`;
-      }
-    },
+    { field: 'ACP_No', header: '應付帳款編號', visible: true, type: 'detail' },
     { field: 'VendorNo', header: '廠商編號', visible: true },
     { field: 'VendorName', header: '廠商名稱', visible: true },
     { field: 'AccNo', header: '會計科目', visible: true },
@@ -103,17 +98,8 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
   ngOnInit(): void {
     this.initializePage('FIN29060', '/FIN/FIN29060CRU', this.queryForm, (frm) => this.onSubmit(frm));
     this.loadOptions();
-    this.setupGlobalClickHandler();
   }
 
-  private setupGlobalClickHandler(): void {
-    // 設定全域方法處理 ACP_No 點擊
-    Object.assign(window, {
-      handleAcpNoClick: (acpNo: string) => {
-        this.onAcpNoClick({ ACP_No: acpNo } as FIN29060Data);
-      }
-    });
-  }
   override onLazyLoadData(event: any, form: FormGroup) {
     event.pageSize = 20;
     form.patchValue({
@@ -125,30 +111,6 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
     this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
   }
 
-
-  onAcpNoClick(row: FIN29060Data) {
-    const acpNo = row?.ACP_No;
-    if (!acpNo || acpNo === 'null' || acpNo === 'undefined' || acpNo.trim() === '') {
-      this.messageService?.warnBubble?.('無法開啟，缺少應付帳款編號。');
-      return;
-    }
-
-    try {
-      const handoff = {
-        acpNo,
-        fromRoute: window.location.pathname,
-        ts: Date.now(),
-      };
-      localStorage.setItem('FIN24010_CRU_HANDOFF', JSON.stringify(handoff));
-      localStorage.setItem('FIN24010_CRU_PROGNO', 'FIN24010');
-      console.log('[FIN24010] 已儲存 handoff:', handoff);
-    } catch (err) {
-      console.error('[FIN24010] handoff save failed:', err);
-      this.messageService?.warnBubble?.('寫入交接資料失敗。');
-    }
-
-    window.open('/account/fin/fin24010cru', '_blank', 'noopener');
-  }
   private loadOptions(): void {
     // 廠客代號
     this.dropDownListService.queryPOS2013_DropDownList()
@@ -160,14 +122,19 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
       .subscribe(res => this.AccNoOptions = res.Data.map((x: { No: string; Name: string }) => ({ label: `${x.No} - ${x.Name}`, value: x.No })));
 
   }
-  override onDetail(row: FIN29060Data) {
-    const vouNo = row?.VoucherNo;
-    if (!vouNo) {
-      this.messageService?.warnBubble?.('無法開啟，缺少傳票號碼。');
-      return;
-    }
 
-    try {
+  onDetailWithColValue(event: { row: FIN29060Data; col: any; value: any }) {
+    const extras: NavigationExtras = {
+      state: {
+        crudstatus: CRUDStatus.Read,
+        rowdata: event.row,
+        fromRoute: this.router.url,
+      },
+    };
+    if (event.col.field === 'ACP_No') {
+      this.router.navigate([`/account/fin/fin24010cru`], extras);
+    } else if (event.col.field === 'VoucherNo') {
+      const vouNo = event.row?.VoucherNo;
       const handoff = {
         vouNo,
         fromRoute: window.location.pathname,
@@ -175,14 +142,10 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
       };
       localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
       localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050');
-      console.log('[FIN55050] 已儲存 handoff:', handoff);
-    } catch (err) {
-      console.error('[FIN55050] handoff save failed:', err);
-      this.messageService?.warnBubble?.('寫入交接資料失敗。');
+      window.open('/account/fin/fin55050cru', '_blank', 'noopener');
     }
-
-    window.open('/account/fin/fin55050cru', '_blank', 'noopener');
   }
+
   onLazyLoad(event: any) {
     // event.first: 當前已載入的資料數量 (0, 20, 40...)
     // event.rows: 每次要載入幾筆 (通常 20)
