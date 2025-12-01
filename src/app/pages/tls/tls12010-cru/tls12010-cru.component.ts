@@ -1,27 +1,27 @@
 import { ValidationService } from './../../../shared/service/validation.service';
 // --Commonly used imports--
+import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { CommonModule, NgFor, NgIf } from '@angular/common';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
-import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
-import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
-import { Tls12010DetailService } from './tls12010-detail.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
+import { Tls12010DetailService } from './tls12010-detail.service';
 
 export interface Potential_Customer {
   id: number; // 主鍵，自動編號
