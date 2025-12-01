@@ -13,7 +13,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, formatToSixDigits } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls26040',
@@ -73,7 +73,7 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
     { field: 'TLT_No', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true, format: formatToSixDigits },
     { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, format: formatAmount },
   ];
 

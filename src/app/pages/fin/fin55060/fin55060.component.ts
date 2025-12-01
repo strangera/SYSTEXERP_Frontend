@@ -79,8 +79,8 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
     OrgId: [null],
     PTAFrom: [null],
     PTATo: [null],
-    AccNoFrom: [null],
-    AccNoTo: [null],
+    AccNoFrom: [null, [Validators.required]],
+    AccNoTo: [null, [Validators.required]],
     VendorFrom: [null],
     VendorTo: [null],
     ...createPaginationConfig([]), // pageIndex/pageSize/SortBy

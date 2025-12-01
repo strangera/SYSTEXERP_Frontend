@@ -14,7 +14,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate, formatToSixDigits } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-fin13070',
@@ -39,7 +39,7 @@ export class FIN13070Component extends BasicQueryPageComponent<FIN13070Data> imp
     { field: 'ID', header: 'ID', visible: false },
     { field: 'TXN_Date', header: '發票日期', visible: true, format: formatDate },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true, format: formatToSixDigits },
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
     { field: 'TXN_SaleAmt', header: '銷售金額', visible: true, format: formatAmount },
     {
