@@ -34,9 +34,22 @@ export class RentCalculationService {
   ): Subscription[] {
     const subscriptions: Subscription[] = [];
 
-    // 監聽預收租金選項變更
+    // ✅ 使用計數器機制,跳過前 2 次觸發(設定監聽器 + API 載入資料)
+    let skipCount = 0;
+    const SKIP_INITIAL_LOADS = 2;
+
     const rentAheadSubscription = formGroup.get('rent_ahead')?.valueChanges.subscribe((rentAhead) => {
-      console.log('📊 預收租金選項變更:', rentAhead);
+      // 跳過初始載入階段
+      if (skipCount < SKIP_INITIAL_LOADS) {
+        skipCount++;
+        console.log(`⏭️ 跳過 rent_ahead 第 ${skipCount} 次觸發 (初始載入)`, rentAhead);
+
+        // 即使跳過計算,仍然要更新驗證器
+        this.updateBaseRentValidators(formGroup, rentAhead);
+        return;
+      }
+
+      console.log('📊 預收租金選項變更 (使用者操作):', rentAhead);
 
       if (rentAhead === 'Y') {
         this.calculateRentPeriodIfPossible(formGroup, messageService);
@@ -146,8 +159,8 @@ export class RentCalculationService {
       console.log('ℹ️ 預收租金為"否":固定租金非必填');
     }
 
-    // 更新驗證狀態
-    baseRentControl.updateValueAndValidity();
+    // 更新驗證狀態 (不觸發 valueChanges 事件)
+    baseRentControl.updateValueAndValidity({ emitEvent: false });
   }
 
   // ==================== 輔助方法 ====================
@@ -329,12 +342,8 @@ export class RentCalculationService {
     // 根據預收租金設定驗證器
     this.updateBaseRentValidators(formGroup, rentAhead);
 
-    // 如果是預收租金且缺少期數,嘗試計算
-    if (rentAhead === 'Y') {
-      const rentPeriod = formGroup.get('rent_period')?.value;
-      if (!rentPeriod || rentPeriod <= 0) {
-        this.calculateRentPeriodIfPossible(formGroup, messageService);
-      }
-    }
+    // ❌ 移除自動計算邏輯 - 載入資料時不應該重新計算 rent_period
+    // 只有使用者手動操作 rent_ahead 下拉選單時才會計算
+    console.log('ℹ️ 初始化完成,不重新計算 rent_period (保留原值)');
   }
 }
