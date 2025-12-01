@@ -68,6 +68,7 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
   footerData: any[] = [];
 
   columns: Column[] = [
+    { header: '總計', field: 'group_name', hidden: true },
     { field: 'TXN_Date', header: '銷售日期', visible: true, format: formatDate },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true },
@@ -116,11 +117,8 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
       this.tls26030Service.queryTLS26030(frm.value)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
-          this.data = response.Data.mainData;
-          this.footerData = [{
-            txn_TotGUI: response.Data.totalData[0]?.txn_Total_TotGUI,
-            txn_TotSaleAmt: response.Data.totalData[0]?.txn_Total_TotSaleAmt
-          }]
+          this.data = response.Data;
+          this.footerData = response.footerData;
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });

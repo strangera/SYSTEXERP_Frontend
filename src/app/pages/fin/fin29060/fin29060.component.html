@@ -68,13 +68,10 @@
     </ng-template>
 
 
-    <app-table-subheader tableKey="SeqNo" dataKey="ACP_No" [data]="data" [columns]="columns"
-      [totalRecords]="totalRecords" [lazy]="true" (detailWithColValue)="onDetailWithColValue($event)"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showPaginator]="false"
-      [showCheckBox]="false" [showManage]="false" [showDelete]="false" [groupRowsBy]="'VendorGroup'"
-      [multiSortMeta]="[]" [groupRowsByName]="'廠商編號'" [showGroupheader]="true" [loading]="loading" [showSerialNo]="true"
-      [showReportMode]="false" [showSort]="false" [showSubTotal]="true" [showTotal]="true"
-      [groupHeaderTemplate]="vendorGroupHeader">
+    <app-fin29060-table-subheader tableKey="SeqNo" dataKey="ACP_No" [data]="data" [columns]="columns"
+      [totalRecords]="totalRecords" (detailWithColValue)="onDetailWithColValue($event)" [showManage]="false"
+      [groupRowsBy]="'VendorGroup'" [groupRowsByName]="'廠商編號'" [showGroupheader]="true" [loading]="loading"
+      [showSubTotal]="true" [showTotal]="true" [groupHeaderTemplate]="vendorGroupHeader">
       <header>
         <div class="flex justify-content-end align-items-center gap-2">
           <p-button styleClass="p-2" label="廠商付款明細表.PDF" icon="pi pi-file" (click)="onExportPDF()"
@@ -83,6 +80,6 @@
             [disabled]="data.length === 0" [loading]="excelBtnLoading"></p-button>
         </div>
       </header>
-    </app-table-subheader>
+    </app-fin29060-table-subheader>
   </div>
 </div>
