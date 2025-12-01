@@ -736,7 +736,8 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     queueMicrotask(() => {
       this.setFormControlsState();
       this.triggerAllDynamicValidators();
-      this.cdr.markForCheck();
+      // ✅ 使用 detectChanges 而不是 markForCheck，確保立即更新視圖
+      this.cdr.detectChanges();
       console.log(`[檢視-最終表單值] check_typeList:`, this.dataForm.get('check_typeList')?.value);
     });
   }
@@ -802,11 +803,17 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       console.log('    🔒 Readonly 模式填充');
       console.log('     cleanedData.check_typeList:', cleanedData.check_typeList);
       console.log('     checkTypeOptions:', this.checkTypeOptions);
-      // Readonly 模式：enable → 填充 → disable
+      // Readonly 模式：enable → 填充 → 重新建立陣列參照 → disable → 觸發變更檢測
       this.dataForm.enable();
       this.dataForm.patchValue(cleanedData, { emitEvent: false });
       console.log('     填充後 check_typeList 值:', this.dataForm.get('check_typeList')?.value);
+      // ✅ 關鍵修正：重新建立 checkTypeOptions 陣列參照，觸發 Angular 變更檢測（參考 TLS12040）
+      this.checkTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.checkType];
+      console.log('     ✅ 已重新建立 checkTypeOptions 陣列參照');
       this.dataForm.disable();
+      // ✅ 觸發變更檢測，確保 multi-select 的 readonly 模式正確顯示
+      this.cdr.detectChanges();
+      console.log('     ✅ 已觸發變更檢測');
     } else {
       console.log('    ✏️ 一般模式填充');
       console.log('     cleanedData.check_typeList:', cleanedData.check_typeList);
