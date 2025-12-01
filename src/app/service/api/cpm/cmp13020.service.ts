@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { SortMeta } from 'primeng/api';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
-export interface SortMeta { field: string; order: 1 | -1; }
 export interface QueryCPM13020Request {
   TXN_BDate?: string; // yyyy-MM-dd
   TXN_EDate?: string; // yyyy-MM-dd
@@ -20,7 +20,7 @@ export class Cpm13020Service {
   private allUrl = `${environment.ApiUrl}/CPM0000/CPM1000/queryCPM13020_All`;
   private posUrl = `${environment.ApiUrl}/CPM0000/CPM1000/queryCPM13020_Pos`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /** 全館彙總（後端分頁/排序） */
   queryAll(body: QueryCPM13020Request): Observable<any> {
