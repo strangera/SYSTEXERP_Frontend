@@ -124,15 +124,15 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
         fromRoute: window.location.pathname,
         ts: Date.now(),
       };
-      localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
-      localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050');
-      console.log('[FIN55050] 已儲存 handoff:', handoff);
+      localStorage.setItem('FIN29050_CRU_HANDOFF', JSON.stringify(handoff));
+      localStorage.setItem('FIN29050_CRU_PROGNO', 'FIN29050');
+      console.log('[FIN29050] 已儲存 handoff:', handoff);
     } catch (err) {
-      console.error('[FIN55050] handoff save failed:', err);
+      console.error('[FIN29050] handoff save failed:', err);
       this.messageService?.warnBubble?.('寫入交接資料失敗。');
     }
 
-    window.open('/account/fin/fin55050cru', '_blank', 'noopener');
+    window.open('/account/fin/fin29050cru', '_blank', 'noopener');
   }
 
   onSubmit(frm: FormGroup): void {
