@@ -1,5 +1,5 @@
 import { NgIf } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, NavigationExtras } from '@angular/router';
 import { NegotiatorOptionsService } from '@service/api/dropdownservice/negotiator-options.service';
@@ -354,6 +354,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     private validationService: TLS13010ValidationService,
     private dateValidationService: DateValidationService,
     private emailValidationService: EmailValidationService,
+    private cdr: ChangeDetectorRef,
     // private systemDataService: SystemDataService
   ) { super(); }
 
@@ -368,11 +369,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       // 步驟 2: 初始化檢視模式（同步）
       this.initializeViewMode();
 
-      // 步驟 3: 初始化工作流程（同步）
-      this.initializeWorkflow();
-
-      // 步驟 4: 載入所有下拉選單選項（等待完成）
+      // ✅ 步驟 3: 載入所有下拉選單選項（等待完成）- 必須在載入資料之前!
       await this.loadAllDropdownOptions();
+
+      // ✅ 步驟 4: 初始化工作流程（同步）- 在 dropdown options 載入後執行
+      this.initializeWorkflow();
 
       // 步驟 5: 載入資料（如果需要）（等待完成）
       await this.loadDataIfNeeded();
@@ -703,26 +704,41 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
    *  新增：從 session 載入資料
    */
   private loadFromSessionData(sessionData: any): void {
-    console.log('  💾 從 session 載入表單資料');
+    // ✅ check_type 轉換處理
+    if ((!sessionData.check_typeList || sessionData.check_typeList.length === 0) && sessionData.check_type) {
+      const checkTypeStr = String(sessionData.check_type);
+      sessionData.check_typeList = checkTypeStr.split(',').map((x: string) => String(x.trim())).filter((x: string) => x);
+      console.log(`[檢視-Session轉換] "${checkTypeStr}" → [${sessionData.check_typeList.join(', ')}]`);
+    }
 
-    // 填充表單
+    if (sessionData.check_type && Array.isArray(sessionData.check_typeList) && sessionData.check_typeList.length === 0) {
+      const checkTypeStr = String(sessionData.check_type);
+      if (checkTypeStr && checkTypeStr !== '' && checkTypeStr !== 'null' && checkTypeStr !== 'undefined') {
+        sessionData.check_typeList = checkTypeStr.split(',').map((x: string) => String(x.trim())).filter((x: string) => x);
+        console.log(`[檢視-Session強制轉換] "${checkTypeStr}" → [${sessionData.check_typeList.join(', ')}]`);
+      }
+    }
+
+    if (Array.isArray(sessionData.check_typeList) && sessionData.check_typeList.length > 0) {
+      sessionData.check_typeList = sessionData.check_typeList.map((x: any) => String(x));
+    }
+
     this.dataForm.patchValue(sessionData, { emitEvent: false });
 
-    // 載入銀行資訊
     if (sessionData.selectedBankInfo) {
       this.selectedBankInfo = sessionData.selectedBankInfo;
     }
 
-    // 載入位置資料
     if (sessionData.locationInfo && Array.isArray(sessionData.locationInfo)) {
       this.locationData = sessionData.locationInfo;
     }
 
-    // 重新觸發驗證和控制項狀態
-    setTimeout(() => {
+    queueMicrotask(() => {
       this.setFormControlsState();
       this.triggerAllDynamicValidators();
-    }, 100);
+      this.cdr.markForCheck();
+      console.log(`[檢視-最終表單值] check_typeList:`, this.dataForm.get('check_typeList')?.value);
+    });
   }
 
   private async loadContractDetailAsync(talentId: string): Promise<void> {
@@ -757,10 +773,22 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   private async patchFormWithDetailDataAsync(detailData: any): Promise<void> {
     console.log('    📝 開始填充表單資料');
 
-    // 處理 check_type 轉換
+    // ✅ 處理 check_type 轉換為 check_typeList（強化版）
     if (detailData.check_type && (!detailData.check_typeList || detailData.check_typeList.length === 0)) {
-      detailData.check_typeList = detailData.check_type.split(',').filter((x: string) => x);
-      console.log('     check_type 已轉換');
+      const checkTypeStr = String(detailData.check_type);
+      if (checkTypeStr && checkTypeStr !== '' && checkTypeStr !== 'null' && checkTypeStr !== 'undefined') {
+        detailData.check_typeList = checkTypeStr.split(',').map((x: string) => x.trim()).filter((x: string) => x);
+        console.log(`     check_type "${checkTypeStr}" 已轉換為 check_typeList:`, detailData.check_typeList);
+      }
+    }
+
+    // ✅ 額外防護：如果轉換後仍然是空陣列，但 check_type 有值，再次強制轉換
+    if (detailData.check_type && Array.isArray(detailData.check_typeList) && detailData.check_typeList.length === 0) {
+      const checkTypeStr = String(detailData.check_type);
+      if (checkTypeStr && checkTypeStr !== '' && checkTypeStr !== 'null' && checkTypeStr !== 'undefined') {
+        detailData.check_typeList = checkTypeStr.split(',').map((x: string) => x.trim()).filter((x: string) => x);
+        console.log(`     🔧 [patchForm] 強制轉換 check_type "${checkTypeStr}" 為 check_typeList:`, detailData.check_typeList);
+      }
     }
 
     //  步驟 1: 解析日期字串為 Date 物件（參考 TLS12040）
@@ -1150,10 +1178,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     console.log(' 表單資料填充完成');
 
-    // 填充完資料後，更新到 workflow
-    setTimeout(() => {
+    // ✅ 使用 queueMicrotask 替代 setTimeout
+    queueMicrotask(() => {
       this.saveToWorkflow();
-    }, 100);
+    });
   }
 
   private setupListeners(): void {
@@ -1573,10 +1601,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         // 🔥 發現重複,立即移除這筆資料
         console.log('❌ 發現重複櫃位,準備移除');
 
-        // 延遲一點點確保訊息顯示
-        setTimeout(() => {
+        // ✅ 使用 queueMicrotask 替代 setTimeout,確保訊息顯示後再移除
+        queueMicrotask(() => {
           this.removeLocationItem(String(rowData.id));
-        }, 100);
+        });
 
         return; // 不繼續處理
       }
@@ -2211,7 +2239,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         this.validationService.updatePaymentValidators(this.dataForm);
       });
 
-    //  簡化: 設定預收租金相關監聽
+    // ✅ 設定預收租金相關監聽
     const rentSubscriptions = this.rentCalculationService.setupRentAheadCalculation(
       this.dataForm,
       this.messageService
