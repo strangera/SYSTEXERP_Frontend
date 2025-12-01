@@ -461,8 +461,6 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   ];
   opTotalRecords = 0;
   onAutoCompleteInputChange(event: any) {
-    console.log(event);
-
     const body = {
       ...event,
       VEN_No: this.dataForm.controls.VEN_No.value,
