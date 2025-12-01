@@ -9,11 +9,12 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { Column, FieldChangeEvent } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, FieldChangeEvent } from '@shared/componentkit/table/table.model';
 import { validateRequired } from '@shared/componentkit/table/validate-field.model';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
@@ -38,6 +39,7 @@ import { CampaignData, TLS26080Data, TLS26080EditTable, TLS26080InsertPayload } 
     CalendarComponent,
     CalendarRangeComponent,
     DropdownComponent,
+    DropdownTableComponent,
     InputTextComponent,
     MenubarComponent,
     TableEditComponent,
@@ -49,33 +51,78 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public readonly fileUpload = viewChild.required<FileUpload>('fileUpload');
 
+  private readonly usrData = computed(() => ({
+    ...this.authService.currentUserValue,
+  }));
+
+  public readonly campaignForm = this.formBuilder.group({
+    CampaignId: new FormControl<string | void>(void 0, []), // 活動編號
+    CampaignName: new FormControl<string | void>(void 0, []), // 活動名稱
+    ...createPaginationConfig([{ field: 'CampaignId', order: 1 }]),
+  });
+  public readonly cf = computed(() => this.campaignForm.controls);
+
   public readonly dataForm = this.formBuilder.nonNullable.group({
     pod_no: new FormControl<string | void>(void 0, [Validators.maxLength(10)]), // 活動單號
     pod_desc: new FormControl<string | void>(void 0, [Validators.required]), // 活動名稱
     pod_sdate: new FormControl<Date>(this.service.dateS, [Validators.required]), // 起始日期(起)
+    pod_back_sdate: new FormControl<Date | void>(void 0, [Validators.required]), // 兌回日期(起)
     pod_edate: new FormControl<Date>(this.service.dateE, [Validators.required]), // 起始日期(迄)
+    pod_back_edate: new FormControl<Date | void>(void 0, [Validators.required]), // 兌回日期(迄)
     pod_busdate: new FormControl<Date | void>(void 0, [Validators.required]), // 活動正檔日期
     pod_type: new FormControl<'2'>('2', [Validators.required]), // 活動類型
+    pod_type2: new FormControl<'3'>('3', [Validators.required]), // 活動類型
+  }, {
+    validators: [
+      (group) => {
+        const sdate = group.get('pod_sdate')?.value;
+        const edate = group.get('pod_edate')?.value;
+        const backSdate = group.get('pod_back_sdate')?.value;
+        const backEdate = group.get('pod_back_edate')?.value;
+        const busdate = group.get('pod_busdate')?.value;
+
+        // 活動起始日期必須小於截止日期
+        if (sdate && edate && sdate >= edate) {
+          return { invalidDateRange: !0 };
+        }
+
+        // 兌回起始日期必須小於兌回截止日期
+        if (backSdate && backEdate && backSdate >= backEdate) {
+          return { invalidBackDateRange: !0 };
+        }
+
+        // 活動正檔日期必須在活動起始日期期間內
+        if (busdate && sdate && edate && (busdate < sdate || busdate >= edate)) {
+          return { invalidBusDate: !0 };
+        }
+
+        // 兌回日期必須在活動起始日期之後
+        if (backSdate && edate && backSdate < edate) {
+          return { invalidBackStartDate: !0 };
+        }
+
+        return null;
+      }
+    ]
   });
   public readonly df = computed(() => this.dataForm.controls);
 
+  private readonly dfSignal = toSignal(this.dataForm.valueChanges);
   private readonly podDescSignal = toSignal(this.df().pod_desc.valueChanges);
-  private readonly podSdateSignal = toSignal(this.df().pod_sdate.valueChanges);
-  private readonly podEdateSignal = toSignal(this.df().pod_edate.valueChanges);
-  private readonly podBusdateSignal = toSignal(this.df().pod_busdate.valueChanges);
 
   public readonly tls26080Data = signal<TLS26080Data[]>([]);
   public readonly tableData = signal<TLS26080EditTable[]>([]);
   public readonly totalRecords = signal(0);
   public readonly campaignData = signal<CampaignData[]>([]);
-
-  public readonly isSubmitDisabled = signal<boolean>(!0);
+  public readonly selectedItems = signal<TLS26080EditTable[]>([]);
 
   // 頁面專屬 Loading 狀態
   public readonly tableLoading = signal<boolean>(!1);
   public readonly uploadLoading = signal<boolean>(!1);
   public readonly downloadLoading = signal<boolean>(!1);
   public readonly campaignLoading = signal<boolean>(!1);
+
+  public readonly isRowSelectable = (rowData: TLS26080EditTable) => rowData.pod_status !== '9';
 
   public readonly calcDateType = [
     { label: '活動起始日至截止日', value: 'Y' },
@@ -109,31 +156,22 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     });
   }, { allowSignalWrites: !0 });
 
-  /** 驗證表單和表格資料是否完整 */
-  public readonly validatorEffect = effect(() => {
-    const sdate = this.podSdateSignal();
-    const edate = this.podEdateSignal();
-    const busdate = this.podBusdateSignal();
+  public readonly isSubmitDisabled = computed(() => {
+    const dfSignal = this.dfSignal();
     const data = this.tableData();
-    this.logger.debug(`validatorEffect:`, [data]);
+    this.logger.debug(`isSubmitDisabled:`, [this.dataForm.valid, data]);
 
-    // 表單必填欄位
-    if (!sdate || !edate || !busdate) return this.isSubmitDisabled.set(!0);
-
-    // 活動起迄日期必須正確
-    if (sdate! > edate!) return this.isSubmitDisabled.set(!0);
-
-    // 活動正檔日期必須在活動起迄日期之間
-    if (busdate! < sdate! || busdate! >= edate!) return this.isSubmitDisabled.set(!0);
+    // 基本表單驗證
+    if (this.dataForm.invalid) return !0;
 
     // 取得有效的表格資料（排除自動新增的候選行）
     const validTableData = data?.filter(item => !item._isAutoInsertCandidate) || [];
 
     // 至少要有一筆專櫃資料
-    if (!validTableData.length) return this.isSubmitDisabled.set(!0);
+    if (!validTableData.length) return !0;
 
     // 驗證表格資料的必填欄位和數值範圍
-    this.isSubmitDisabled.set(validTableData.some(item => {
+    return validTableData.some(item => {
       if (!item.tlt_no || !item.calc_date_type) return !0;
 
       // 檢查 tpy_rate_D16 和 tpy_rate_D17 是否有值
@@ -149,8 +187,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       if (basisPoint_D16 < 0 || basisPoint_D16 > 1e4 || basisPoint_D17 < 0 || basisPoint_D17 > 1e4) return !0;
 
       return !1;
-    }));
-  }, { allowSignalWrites: !0 });
+    });
+  });
 
   /** 根據選擇的活動名稱取得活動資料 */
   private readonly selectedCampaign = computed(() => {
@@ -174,10 +212,14 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     const data = this.campaignData();
     if (!data || data.length === 0) return;
     this.df().pod_no.patchValue(this.selectedCampaign()?.CampaignId);
-  });
+  }, { allowSignalWrites: !0 });
+
+  public readonly fieldsConfig: FieldsConfig[] = [
+    { field: 'CampaignId', header: '活動編號', mainDataField: !0 },
+  ];
 
   // 環友資料表
-  campaignColumns: Column[] = [
+  public readonly campaignColumns: Column[] = [
     { field: 'CampaignId', header: '活動編號' },
     { field: 'CampaignName', header: '活動名稱' },
     { field: 'StartTime', header: '活動開始時間', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
@@ -202,6 +244,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       optionValue: 'No',
       templateLabel: 'label',
       validate: [validateRequired],
+      disabled: (v, i, r) => r.pod_status !== '0',
       format: v => this.service.tltTalentMap().get(v)?.label ?? v,
     },
     {
@@ -213,6 +256,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       optionLabel: 'label',
       optionValue: 'value',
       validate: [validateRequired],
+      disabled: (v, i, r) => r.pod_status !== '0',
       // options: this.service.tltTalentChargeOptions(),
       // optionLabel: 'tlt_id_desc',
       // optionValue: 'tlt_id',
@@ -227,6 +271,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       optionLabel: 'label',
       optionValue: 'value',
       validate: [validateRequired],
+      disabled: (v, i, r) => r.pod_status !== '0',
       format: v => v === 'Y' ? '活動起始日至截止日' : '正檔日至截止日',
     },
     {
@@ -236,6 +281,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       type: this.isFormReadable ? void 0 : 'percent',
       validate: [this.numVal, validateRequired],
       maxFractionDigits: 2,
+      disabled: (v, i, r) => r.pod_status !== '0',
       format: v => this.isFormReadable ? String(v) + '%' : v,
     },
     {
@@ -245,6 +291,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       type: this.isFormReadable ? void 0 : 'percent',
       validate: [this.numVal, validateRequired],
       maxFractionDigits: 2,
+      disabled: (v, i, r) => r.pod_status !== '0',
       format: v => this.isFormReadable ? String(v) + '%' : v,
     },
     {
@@ -257,7 +304,14 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       header: 'D17',
       groupField: 'groupField2',
     },
-    { field: 'pod_status', header: '審核狀態', format: this.service.approvalStatus },
+    {
+      field: 'pod_status',
+      header: '審核狀態',
+      options: () => [{ value: '0', label: '未核准' }, { value: '1', label: '已核准' }],
+      optionLabel: 'label',
+      optionValue: 'value',
+      format: this.service.approvalStatus,
+    },
     { field: 'approved_usr_name', header: '審核人員' },
     { field: 'approved_date', header: '審核日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
   ]);
@@ -329,6 +383,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         pod_desc: this.selectedCampaign()?.CampaignName ?? d.pod_desc ?? '',
         pod_sdate: d.pod_sdate!,
         pod_edate: d.pod_edate!,
+        pod_back_sdate: d.pod_back_sdate!,
+        pod_back_edate: d.pod_back_edate!,
         pod_busdate: d.pod_busdate!,
         TALPORDERD_VOUCHERDetails: validTableData.map(item => ({
           pod_no: d.pod_no!,
@@ -380,6 +436,35 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     if (event.field === 'tlt_no') {
       this.service.tltTalentMap().get(event.value);
     }
+  }
+
+  public toggleApprovalStatus(): void {
+    const selectedRows = this.selectedItems();
+    if (!selectedRows?.length) {
+      this.messageService.errorBubble('請先勾選要切換狀態的專櫃資料');
+      return;
+    }
+    this.tableData.update(data => data.map(item => {
+      if (!selectedRows.includes(item)) return item;
+
+      // 切換審核狀態
+      const isApproved = item.pod_status === ApprovalStatus.已核准;
+      item.pod_status = isApproved ? ApprovalStatus.未核准 : ApprovalStatus.已核准;
+
+      // 若切換為已核准,設定審核資訊;若切換為未核准,清除審核資訊
+      if (!isApproved) {
+        item.approved_usr_no = this.usrData().user_No;
+        item.approved_usr_name = this.usrData().user_Name;
+        item.approved_date = new Date();
+      } else {
+        item.approved_usr_no = void 0;
+        item.approved_usr_name = void 0;
+        item.approved_date = void 0;
+      }
+
+      return item;
+    }));
+    this.selectedItems.set([]);
   }
 
   public async handleUpload(event: FileUploadHandlerEvent): Promise<void> {
@@ -461,4 +546,12 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     // const name = `專櫃活動設定匯入範本-${new Date().toISOString().slice(0, 10)}.xlsx`;
     XLSX.writeFile(wb, name);
   };
+
+  public onAutoCompleteInputChange(event: any): void {
+
+  }
+
+  public onformValueChanged(event: any): void {
+
+  }
 }

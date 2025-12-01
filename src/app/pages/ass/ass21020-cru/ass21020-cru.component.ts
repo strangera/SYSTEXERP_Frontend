@@ -1,28 +1,28 @@
-import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core'; // 新增 OnDestroy
+import { NgIf } from '@angular/common';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild } from '@angular/core'; // 新增 OnDestroy
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS21020Service } from '@service/api/ass/ass21020.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { PanelModule } from 'primeng/panel';
-import { ASS21020Data, ASS21020Detail, ASS21020Update, ASS21020UpdateData } from '../ass21020/ass21020.model';
-import { getSYS1000Options } from '@service/system/sys1000.service';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { NgIf } from '@angular/common';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { debounceTime, finalize, Subject } from 'rxjs';
-import { ButtonModule } from 'primeng/button';
-import { Option } from '@service/utility/dropdown-api.model';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { ButtonModule } from 'primeng/button';
+import { PanelModule } from 'primeng/panel';
+import { debounceTime, finalize, Subject } from 'rxjs';
+import { ASS21020Data, ASS21020Detail, ASS21020Update, ASS21020UpdateData } from '../ass21020/ass21020.model';
 
 @Component({
   selector: 'app-ass21020-cru',
@@ -86,6 +86,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     public readonly service: ASS21020Service,
     private readonly dropdown: DropdownApiService,
     public readonly dropDownListService: DropDownListService, // 注入 DropDownListService
+    private readonly cdr: ChangeDetectorRef
   ) {
     super();
   }
@@ -400,6 +401,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
     this.totalPercent = 100;
     this.errorMsg = false;
+    this.cdr.detectChanges();
   }
 
   // 【保留】 fieldChange：處理手動輸入

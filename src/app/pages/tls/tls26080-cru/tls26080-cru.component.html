@@ -18,15 +18,20 @@
                         [control]="df().pod_no"
                         [disabled]="!0"
                         [submitted]="submitted"></app-input-text>
-        <app-dropdown class="col-12 md:col-6 lg:col-8"
-                      label="活動名稱"
-                      controlName="pod_desc"
-                      [options]="campaignData()"
-                      optionLabel="CampaignName"
-                      optionValue="CampaignId"
-                      [control]="df().pod_desc"
-                      [loading]="loading"
-                      [submitted]="submitted"></app-dropdown>
+        <app-dropdown-table class="col-12 md:col-6 lg:col-8"
+                            label="活動名稱"
+                            controlName="pod_desc"
+                            [formGroup]="campaignForm"
+                            [dialogData]="campaignData()"
+                            [dialogColumns]="campaignColumns"
+                            optionLabel="CampaignName"
+                            optionValue="CampaignId"
+                            [fieldsConfig]="fieldsConfig"
+                            (inputValueChanged)="onAutoCompleteInputChange($event)"
+                            (formValueChanged)="onformValueChanged($event)"
+                            [control]="df().pod_desc"
+                            [loading]="loading"
+                            [submitted]="submitted"></app-dropdown-table>
       </div>
 
       <div class="grid p-fluid">
@@ -42,7 +47,7 @@
                       [submitted]="submitted"></app-dropdown>
         <app-calendar-range class="col-12 md:col-6 lg:col-4"
                             calendarType="dateRange"
-                            label="活動日期"
+                            label="活動起始日期"
                             [startControl]="df().pod_sdate"
                             [endControl]="df().pod_edate"
                             [submitted]="submitted">
@@ -54,6 +59,56 @@
                       [disabled]="false"
                       [submitted]="submitted"></app-calendar>
       </div>
+      <div class="grid p-fluid">
+        <app-dropdown class="col-12 md:col-6 lg:col-4"
+                      label="活動類型"
+                      controlName="pod_type"
+                      [options]="service.podTypeItems"
+                      optionLabel="label"
+                      optionValue="value"
+                      [disabled]="true"
+                      [control]="df().pod_type2"
+                      [loading]="loading"
+                      [submitted]="submitted"></app-dropdown>
+        <app-calendar-range class="col-12 md:col-6 lg:col-4"
+                            calendarType="dateRange"
+                            label="活動兌回日期"
+                            [startControl]="df().pod_back_sdate"
+                            [endControl]="df().pod_back_edate"
+                            [submitted]="submitted">
+        </app-calendar-range>
+
+        <!-- 日期驗證錯誤提示 -->
+        @if(dataForm.errors) {
+        <div class="flex align-items-center col-12 md:col-6 lg:col-4">
+          @if(dataForm.errors['invalidDateRange']) {
+          <p class="text-red-500 text-sm m-0">
+            <i class="pi pi-exclamation-triangle mr-2"></i>
+            活動起始日期必須小於截止日期
+          </p>
+          }
+          @if(dataForm.errors['invalidBackDateRange']) {
+          <p class="text-red-500 text-sm m-0">
+            <i class="pi pi-exclamation-triangle mr-2"></i>
+            兌回起始日期必須小於兌回截止日期
+          </p>
+          }
+          @if(dataForm.errors['invalidBusDate']) {
+          <p class="text-red-500 text-sm m-0">
+            <i class="pi pi-exclamation-triangle mr-2"></i>
+            活動正檔日期必須在活動起始日期之間
+          </p>
+          }
+          @if(dataForm.errors['invalidBackStartDate']) {
+          <p class="text-red-500 text-sm m-0">
+            <i class="pi pi-exclamation-triangle mr-2"></i>
+            兌回起始日期必須在活動截止日期之後
+          </p>
+          }
+        </div>
+        }
+      </div>
+
       @if(!isFormReadable) {
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel"
@@ -90,13 +145,23 @@
                         [data]="tableData()"
                         (dataChange)="tableData.set($event)"
                         (fieldChange)="onFieldChange($event)"
+                        [selectedItems]="selectedItems()"
+                        (selectionChange)="selectedItems.set($event)"
+                        [isRowSelectable]="isRowSelectable"
                         [columns]="counterColumns()"
                         [columnGroup]="counterColumnsGroup()"
                         [insertDisabled]="isFormReadable"
                         [defaultInsertData]="defaultInsertData"
                         [showReorder]="!isFormReadable"
                         [disabled]="isFormReadable"
-                        [loading]="tableLoading()"></app-table-edit>
+                        [loading]="tableLoading()">
+          <header>
+            <app-button btnType="submit"
+                        label="審核與反審核"
+                        [loading]="loading"
+                        (click)="toggleApprovalStatus()"></app-button>
+          </header>
+        </app-table-edit>
       </p-panel>
     </div>
   </div>

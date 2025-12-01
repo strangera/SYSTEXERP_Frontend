@@ -2,27 +2,31 @@ import { EditColumnExtend } from '@shared/componentkit/table-edit/table-edit.mod
 import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 
 export interface TLS26080Data {
-  act_no: string;              // 活動編號
-  approved_date: Date;         // 核准日期
-  approved_userno: string;     // 核准人員編號
-  approved_usr_name: string;   // 核准人員姓名
-  crt_date: Date;              // 建立日期
-  crt_usr_name: string;        // 建立人員姓名
-  crt_usr_no: string;          // 建立人員編號
   id: number;                  // 主鍵，自動編號
   mid: number;                 // 主檔關聯 ID
-  org_id: string;              // 組織部門 (SYS3100)
-  pod_busdate: Date;           // 活動正檔日期
-  pod_desc: string;            // 活動名稱
-  pod_edate: Date;             // 活動終止日期
-  pod_no: string;              // 活動申請編號
-  pod_sdate: Date;             // 活動起始日期
-  pod_status: '0' | '1' | '9'; // 活動狀態 (0=未核準, 1=已核準, 9=刪除)
-  pod_type: '1' | '2' | '8';   // 活動類型 (1=預售, 2=滿千送百, 8=期間開放折扣)
   str_no: string;              // 店鋪編號
-  upd_date: Date;              // 變更日期
-  upd_usr_name: string;        // 變更人員姓名
+  pod_no: string;              // 活動申請編號 (yyyyMMddsss)
+  pod_type: '1' | '2' | '8';   // 活動類型 (1=預售, 2=滿千送百, 8=期間開放折扣)
+  org_id: string;              // 組織部門 (SYS3100)
+  act_no: string;              // 活動編號 (群組)
+  pod_desc: string;            // 活動名稱
+  pod_sdate: Date;             // 活動起始日期
+  pod_edate: Date;             // 活動終止日期
+  pod_busdate: Date;           // 活動正檔日期
+  pod_back_sdate: Date;        // 兌回起始日期
+  pod_back_edate: Date;        // 兌回結束日期
+  cap_item: string;            // 扣款代碼
+  pod_status: '0' | '1' | '9'; // 活動狀態 (0=未核準, 1=已核準, 9=刪除)
+  approved_userno: string;     // 核准人員編號
+  approved_usr_name: string;   // 核准人員姓名
+  approved_date: Date;         // 核准日期
+  crt_usr_no: string;          // 建立人員編號
+  crt_usr_name: string;        // 建立人員姓名
+  crt_date: Date;              // 建立日期
   upd_usr_no: string;          // 變更人員編號
+  upd_usr_name: string;        // 變更人員姓名
+  upd_date: Date;              // 變更日期
+  CanEdit: boolean;            // 是否可編輯
 }
 
 export type TLS26080EditTable = Partial<EditColumnExtend> & TLS26080DetailTable;
@@ -45,7 +49,7 @@ export interface TLS26080DetailTable {
   tpy_rate_4?: number;
   pod_no: string;
   pod_status: '0' | '1' | '9';
-  approved_userno?: string;
+  approved_usr_no?: string;
   approved_usr_name?: string;
   approved_date?: Date;
 }
@@ -78,8 +82,8 @@ export interface TLS26080InsertPayload {
   pod_sdate: Date;            // 活動起始日期
   pod_edate: Date;            // 活動終止日期
   pod_busdate: Date;          // 活動正檔日期
-  pod_back_sdate?: string;      // 兌回起始日期
-  pod_back_edate?: string;      // 兌回結束日期
+  pod_back_sdate: Date;      // 兌回起始日期
+  pod_back_edate: Date;      // 兌回結束日期
   TALPORDERD_VOUCHERDetails: TLS26080DetailTable[]; // 活動專櫃資料
 }
 

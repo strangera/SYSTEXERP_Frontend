@@ -14,10 +14,11 @@ export interface EditColumn {
   // inputNumber
   min?: number; // 最小值
   max?: number; // 最大值
-  minLength?: number;
-  maxLength?: number;
+  minLength?: string | number | null;
+  maxLength?: string | number | null;
   minFractionDigits?: number;
   maxFractionDigits?: number;
+  suffix?: string;
   // dropdown
   options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
   optionLabel?: string; // 下拉選單 optionLabel

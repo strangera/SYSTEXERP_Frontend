@@ -55,18 +55,8 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   public readonly totalRecords = signal(0);
   public readonly selectedItems = signal<TLS26080Data[]>([]);
 
-  public readonly editDisabled = (rowData: TLS26080Data) => {
-    if (!rowData) return !0;
-    const hasCanEditFlag = Object.hasOwn(rowData, 'CanEdit');
-    const notPending = rowData.pod_status !== ApprovalStatus.未核准;
-    return hasCanEditFlag || notPending;
-  };
-  public readonly isRowSelectable = (rowData: TLS26080Data) => {
-    if (!rowData) return !1;
-    const hasCanDeleteFlag = Object.hasOwn(rowData, 'CanDelete');
-    const isPending = rowData.pod_status === ApprovalStatus.未核准;
-    return hasCanDeleteFlag || isPending;
-  };
+  public readonly editDisabled = (rowData: TLS26080Data) => !rowData.CanEdit;
+  public readonly isRowSelectable = (rowData: TLS26080Data) => rowData.pod_status !== ApprovalStatus.刪除;
 
   public readonly columns: (Omit<Column, 'field'> & { field: keyof TLS26080Data; })[] = [
     { field: 'pod_no', header: '活動編號' },
@@ -74,8 +64,8 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     { field: 'pod_sdate', header: '活動起始日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
     { field: 'pod_edate', header: '活動終止日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
     { field: 'pod_busdate', header: '活動正檔日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
-    { field: 'pod_edate', header: '兌回起始日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
-    { field: 'pod_edate', header: '兌回終止日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
+    { field: 'pod_back_sdate', header: '兌回起始日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
+    { field: 'pod_back_edate', header: '兌回終止日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
     { field: 'pod_status', header: '狀態', format: this.service.approvalStatus.bind(this) },
   ];
 

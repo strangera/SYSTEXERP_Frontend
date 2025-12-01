@@ -1,48 +1,35 @@
 import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { AuthService } from '../../../service/system/auth.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { CPM12030Response, Cpm12030Service } from '@service/api/cpm/cpm12030.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { finalize } from 'rxjs';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { ValidationService } from '../../../shared/service/validation.service';
 
 //5.1.2.3 顧客意見子類別維護 CRU
 @Component({
   selector: 'app-cpm12030-cru',
   templateUrl: './cpm12030-cru.component.html',
-  styleUrl: './cpm12030-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [InputTextareaComponent, MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class CPM12030CRUComponent implements OnInit {
-  ProgNo = '';
-  formTitle = '';
-  submitted = false;
-  crudstatus = '';
-
-  // ----------------------------------------------------------------
+export class CPM12030CRUComponent extends BasicCruPageComponent<CPM12030Response> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    subCategoryCode: [, [Validators.required, Validators.maxLength(10)]], // 子類別編號
-    subCategoryName: ['', [Validators.required, Validators.maxLength(40)]], // 責任單位名稱類別名稱
-    opinionCategory: [, [Validators.required]], // 客戶意見主類別
-    remark: [,], // 備註
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+    subCategoryCode: ['系統自動產生', [Validators.required, Validators.maxLength(10)]], // 子類別編號
+    subCategoryName: [null, [Validators.required, Validators.maxLength(40)]], // 責任單位名稱類別名稱
+    opinionCategory: [null, [Validators.required]], // 客戶意見主類別
+    remark: [null], // 備註
   });
-  // ----------------------------------------------------------------
-  opinionCategoryOptions: any[] = [
+  opinionCategoryOptions = [
     { value: 1, label: '意見反映' },
     { value: 2, label: '廣告業務' },
     { value: 3, label: '活動、場地洽談' },
@@ -50,125 +37,29 @@ export class CPM12030CRUComponent implements OnInit {
     { value: 5, label: '合作提案' },
   ];
 
-  //
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private validationService: ValidationService,
-    //
+    private readonly cpm12030Service: Cpm12030Service
   ) {
-    super();  // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '510010';
-    //
-
-    //
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-
-    console.log(this.accordionTabCss);
+    this.initializePage('CPM12030', this.dataForm);
   }
-
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      // counterPosition: [], // 所屬服務台位置
-      // allocateNumber: [, [this.validationService.numberValidator]], // 分配設備數量
-    });
-  }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
+    this.handleSubmit(frm, () => {
+      const params = {
+        ...frm.getRawValue()
+      }
+      const $request = this.isFormCreateable ? this.cpm12030Service.insertCPM12030(params) : this.cpm12030Service.updateCPM12030(params);
+      $request.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        this.messageService.successBubble(response.Message);
+        if (this.isFormCreateable) {
+          this.dataForm.reset();
+        } else {
+          this.onCancel();
         }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }//CRU
-
-  onCancel() {
-    this.router.navigate(['/CPM1000/CPM12030']);
+      })
+    })
   }
 }

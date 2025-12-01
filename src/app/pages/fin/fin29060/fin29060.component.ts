@@ -10,7 +10,7 @@ import { Column, createPaginationConfig, formatAmount, formatDate } from '@share
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
-import { FIN29060Data, FIN29060Service, QueryFIN29060Request } from '../../../service/api/fin/fin29060.service';
+import { FIN29060Data, FIN29060Service, FIN29060TotalData, QueryFIN29060Request } from '../../../service/api/fin/fin29060.service';
 import {
   FIN55050Detail,
   FIN55050Service
@@ -20,7 +20,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { DropDownListService } from './../../../service/utility/dropDownList.service';
 export interface GroupedFIN55050Detail extends FIN55050Detail {
   AccNo: string;
@@ -33,7 +32,7 @@ export interface GroupedFIN55050Detail extends FIN55050Detail {
   templateUrl: './fin29060.component.html',
   styleUrl: './fin29060.component.scss',
   standalone: true,
-  imports: [ButtonModule, TableSubheaderComponent, DropdownRangeComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, InputTextComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [ButtonModule, TableSubheaderComponent, DropdownRangeComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, InputTextComponent, RadiobuttonComponent, ButtonComponent, TranslateModule]
 })
 export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -49,12 +48,13 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
     ACP_Desc: [""],
     ShowUnpaid: [true],
     ShowZeroBalance: [true],
-    ...createPaginationConfig([{ field: 'ACP_No', order: 1 }]),
+    ...createPaginationConfig([{ field: 'VendorNo', order: 1 }]),
   });
   VendorNoOptions: { label: string; value: string }[] = []; // 廠客代號選項
   AccNoOptions: { label: string; value: string }[] = []; // 科目代號選項
   data: FIN29060Data[] = [];
   selectedItems: FIN29060Data[] = [];
+  totalData: FIN29060TotalData[] = [];
   totalRecords = 0;
   pdfBtnLoading = false;
   excelBtnLoading = false;
@@ -76,11 +76,12 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
     { field: 'VendorName', header: '廠商名稱', visible: true },
     { field: 'AccNo', header: '會計科目', visible: true },
     { field: 'PostDate', header: '立帳日期', visible: true, format: formatDate },
-    { field: 'ACP_Amt', header: '立帳金額', visible: true, format: formatAmount },
+    { field: 'ACP_Amt', header: '立帳金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
     { field: 'Summary', header: '摘要', visible: true },
-    { field: 'PayAmt', header: '付款金額', visible: true, format: formatAmount },
+    { field: 'PayAmt', header: '付款金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
     { field: 'PayRefDate', header: '開票/匯款日期', visible: true, format: formatDate },
     { field: 'BalanceAmt', header: '帳款餘額', visible: true, format: formatAmount },
+    { field: 'NotPayAmy', header: '未付金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
     { field: 'PaymentNo', header: '電匯/開票/單號', visible: true },
     { field: 'VoucherNo', header: '傳票號碼', visible: true, type: 'detail' }
   ];
@@ -88,7 +89,7 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
   // ----------------------------------------------------------------
   showUpOptions = [
     { value: 1, label: '顯示' },
-    { value: 2, label: '不顯示' },
+    { value: 0, label: '不顯示' },
   ];
 
   constructor(
@@ -113,6 +114,17 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
       }
     });
   }
+  override onLazyLoadData(event: any, form: FormGroup) {
+    event.pageSize = 20;
+    form.patchValue({
+      pageSize: event.pageSize,
+      pageIndex: event.pageIndex,
+      SortBy: event.SortBy
+    }, { emitEvent: false });
+
+    this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+  }
+
 
   onAcpNoClick(row: FIN29060Data) {
     const acpNo = row?.ACP_No;
@@ -171,61 +183,73 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
 
     window.open('/account/fin/fin55050cru', '_blank', 'noopener');
   }
+  onLazyLoad(event: any) {
+    // event.first: 當前已載入的資料數量 (0, 20, 40...)
+    // event.rows: 每次要載入幾筆 (通常 20)
+    const pageSize = event.rows ?? 20;
+    const pageIndex = (event.first ?? 0) / pageSize + 1;
+
+    const raw = this.queryForm.getRawValue();
+
+    const requestData: QueryFIN29060Request = {
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: raw.SortBy ?? [{ field: 'VendorNo', order: 1 }],
+      STO_No: raw.STO_No || '',
+      VEN_No_From: raw.VEN_No_From || '',
+      VEN_No_To: raw.VEN_No_To || '',
+      ODM_Date_From: raw.ODM_Date_From ? new Date(raw.ODM_Date_From).toISOString() : undefined,
+      ODM_Date_To: raw.ODM_Date_To ? new Date(raw.ODM_Date_To).toISOString() : undefined,
+      PayRefDate_From: raw.PayRefDate_From ? new Date(raw.PayRefDate_From).toISOString() : undefined,
+      PayRefDate_To: raw.PayRefDate_To ? new Date(raw.PayRefDate_To).toISOString() : undefined,
+      AccNo_From: raw.AccNo_From || '',
+      AccNo_To: raw.AccNo_To || '',
+      ACP_Desc: raw.ACP_Desc || '',
+      ShowUnpaid: raw.ShowUnpaid,
+      ShowZeroBalance: raw.ShowZeroBalance
+    };
+
+    this.loading = true;
+
+    this.fin29060Service.queryFIN29060(requestData)
+      .pipe(finalize(() => this.loading = false))
+      .subscribe(res => {
+        const rows = res?.Data?.mainData ?? [];
+        this.data = rows.map(x => ({
+          ...x,
+          VendorGroup: `${x.VendorNo} - ${x.VendorName ?? ''}`
+        }));
+        this.totalRecords = res.TotalCount ?? this.data.length;
+      });
+  }
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      const formValue = frm.value;
       this.loading = true;
-
-      const requestData: QueryFIN29060Request = {
-        PageSize: formValue.PageSize || 10,
-        PageIndex: formValue.PageIndex || 1,
-        SortBy: formValue.SortBy || [{ field: 'ACP_No', order: 1 }],
-        STO_No: formValue.STO_No || '',
-        VEN_No_From: formValue.VEN_No_From || '',
-        VEN_No_To: formValue.VEN_No_To || '',
-        ODM_Date_From: formValue.ODM_Date_From ? new Date(formValue.ODM_Date_From).toISOString() : undefined,
-        ODM_Date_To: formValue.ODM_Date_To ? new Date(formValue.ODM_Date_To).toISOString() : undefined,
-        PayRefDate_From: formValue.PayRefDate_From ? new Date(formValue.PayRefDate_From).toISOString().split('T')[0] : undefined,
-        PayRefDate_To: formValue.PayRefDate_To ? new Date(formValue.PayRefDate_To).toISOString().split('T')[0] : undefined,
-        AccNo_From: formValue.AccNo_From || '',
-        AccNo_To: formValue.AccNo_To || '',
-        ACP_Desc: formValue.ACP_Desc || '',
-        ShowUnpaid: formValue.ShowUnpaid === true,
-        ShowZeroBalance: formValue.ShowZeroBalance === true
-      };
-
-      this.fin29060Service
-        .queryFIN29060(requestData)
-        .pipe(
-          untilDestroyed(this),
-          finalize(() => {
-            this.loading = false;
-          })
-        )
-        .subscribe({
-          next: (response) => {
-            if (response && response.Data) {
-              this.data = response.Data;
-              this.totalRecords = response.TotalCount || 0;
-            } else {
-              this.data = [];
-              this.totalRecords = 0;
-            }
-          },
-
+      this.fin29060Service.queryFIN29060(frm.getRawValue())
+        .pipe(finalize(() => (this.loading = false)))
+        .subscribe((res) => {
+          this.data = (res?.Data?.mainData ?? []).map(x => ({
+            ...x,
+            VendorGroup: `${x.VendorNo} - ${x.VendorName ?? ''}`
+          }));
+          this.totalRecords = res.TotalCount ?? this.data.length;
+          // 你也可以加上查詢條件保存
+          // this.lastQueryBody = frm.getRawValue();
+          // this.queryStateService.setQueryState(this.ProgNo, this.lastQueryBody);
         });
     });
   }
+
   private buildExportPayload(): QueryFIN29060Request {
     const raw = this.queryForm.getRawValue();
 
     return {
       PageSize: raw.pageSize ?? 10,
       PageIndex: raw.pageIndex ?? 1,
-
-      // 後端 input 內沒有 OrderBy / Offset，我移除（要我可以加進 QueryFIN29060Request）
-      SortBy: raw.SortBy ?? [{ field: 'ACP_No', order: 1 }],
+      OrderBy: 'VendorNo',
+      Offset: ((raw.pageIndex ?? 1) - 1) * (raw.pageSize ?? 10),
+      SortBy: raw.SortBy ?? [{ field: 'VendorNo', order: 1 }],
 
       STO_No: raw.STO_No || '',
       VEN_No_From: raw.VEN_No_From || '',
@@ -240,19 +264,19 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
         : undefined,
 
       PayRefDate_From: raw.PayRefDate_From
-        ? new Date(raw.PayRefDate_From).toISOString().split('T')[0]
+        ? new Date(raw.PayRefDate_From).toISOString()
         : undefined,
 
       PayRefDate_To: raw.PayRefDate_To
-        ? new Date(raw.PayRefDate_To).toISOString().split('T')[0]
+        ? new Date(raw.PayRefDate_To).toISOString()
         : undefined,
 
       AccNo_From: raw.AccNo_From || '',
       AccNo_To: raw.AccNo_To || '',
       ACP_Desc: raw.ACP_Desc || '',
 
-      ShowUnpaid: raw.ShowUnpaid === true,
-      ShowZeroBalance: raw.ShowZeroBalance === true,
+      ShowUnpaid: raw.ShowUnpaid,
+      ShowZeroBalance: raw.ShowZeroBalance,
     };
   }
 

@@ -1,11 +1,13 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { ApiError, ApiMeta, BaseQueryRequest } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 // 查詢請求介面
 export interface QueryFIN29060Request extends BaseQueryRequest {
+  OrderBy?: string;                   // 排序欄位
+  Offset?: number;                    // 偏移量
   STO_No?: string;                    // 門市編號
   VEN_No_From?: string;               // 廠商編號起
   VEN_No_To?: string;                 // 廠商編號迄
@@ -16,8 +18,8 @@ export interface QueryFIN29060Request extends BaseQueryRequest {
   AccNo_From?: string;                // 科目代號起
   AccNo_To?: string;                  // 科目代號迄
   ACP_Desc?: string;                  // 應付帳款描述
-  ShowUnpaid?: boolean;               // 顯示未付款
-  ShowZeroBalance?: boolean;          // 顯示零餘額
+  ShowUnpaid?: boolean;               // 顯示未付款 (true=顯示, false=不顯示)
+  ShowZeroBalance?: boolean;          // 顯示零餘額 (true=顯示, false=不顯示)
 }
 
 // 明細查詢請求介面
@@ -39,33 +41,73 @@ export interface FIN29060Data {
   BalanceAmt: number;                 // 帳款餘額
   PaymentNo: string;                  // 電匯/開票/單號
   VoucherNo: string;                  // 傳票號碼
+  NotPayAmy: number;                  // 未付金額
 }
 
+// 總計資料介面
+export interface FIN29060TotalData {
+  VendorNo: string;                   // 廠商編號
+  ACP_Amt_Subtotal: number;          // 立帳金額小計
+  PayAmy_Subtotal: number;           // 付款金額小計
+  NotPayAmy_Subtotal: number;        // 未付金額小計
+  ACP_Amt_Total: number;             // 立帳金額總計
+  PayAmy_Total: number;              // 付款金額總計
+  NotPayAmy_Total: number;           // 未付金額總計
+}
 
+// 查詢回應資料結構
+export interface FIN29060ResponseData {
+  mainData: FIN29060Data[];           // 主要資料
+  totalData: FIN29060TotalData[];     // 總計資料
+}
+
+// 自訂查詢回應介面
+export interface FIN29060QueryResponse {
+  Status: string;
+  Data: FIN29060ResponseData;
+  Error?: ApiError;
+  Meta?: ApiMeta;
+  Message: string;
+  TotalCount: number;
+  TotalPage: number;
+}
 @Injectable({ providedIn: 'root' })
 export class FIN29060Service {
   private apiUrl = environment.ApiUrl + '/FIN0000/APS1000';
 
   constructor(private http: HttpClient) { }
-  queryFIN29060(data: QueryFIN29060Request): Observable<BaseQueryResponse<FIN29060Data>> {
-    return this.http.post<BaseQueryResponse<FIN29060Data>>(`${this.apiUrl}/queryFIN29060`, data);
+
+  /** 正確：直接送 payload，不要包一層 request */
+  queryFIN29060(data: QueryFIN29060Request): Observable<FIN29060QueryResponse> {
+    return this.http.post<FIN29060QueryResponse>(
+      `${this.apiUrl}/queryFIN29060`,
+      data
+    );
   }
+
   queryFIN29060Detail(data: QueryFIN29060DetailRequest): Observable<HttpResponse<Blob>> {
-    return this.http.post(`${this.apiUrl}/queryFIN29060Detail`, data, {
-      observe: 'response',
-      responseType: 'blob'
-    });
+    return this.http.post(
+      `${this.apiUrl}/queryFIN29060Detail`,
+      data,
+      { observe: 'response', responseType: 'blob' }
+    );
   }
+
+  /** 匯出 XLSX（也不能包 request） */
   exportFIN29060_Excel(data: QueryFIN29060Request): Observable<HttpResponse<Blob>> {
-    return this.http.post(`${this.apiUrl}/exportFIN29060_Excel`, data, {
-      observe: 'response',
-      responseType: 'blob'
-    });
+    return this.http.post(
+      `${this.apiUrl}/exportFIN29060_Excel`,
+      data,
+      { observe: 'response', responseType: 'blob' }
+    );
   }
+
+  /** 匯出 PDF */
   exportFIN29060_PDF(data: QueryFIN29060Request): Observable<HttpResponse<Blob>> {
-    return this.http.post(`${this.apiUrl}/exportFIN29060_PDF`, data, {
-      observe: 'response',
-      responseType: 'blob'
-    });
+    return this.http.post(
+      `${this.apiUrl}/exportFIN29060_PDF`,
+      data,
+      { observe: 'response', responseType: 'blob' }
+    );
   }
 }

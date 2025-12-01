@@ -42,6 +42,7 @@ export interface TLS31080Response {
   H22: number;
   H23: number;
   Reentry: number;
+  PresaleCheckout: number,
   Subtotal: number;
 }
 
@@ -76,12 +77,12 @@ export interface TLS31080DetailResponse {
 export class Tls31080Service {
   apiUrl: string = environment.ApiUrl + '/TLS0000/TLS3000';
   constructor(private http: HttpClient) { }
-          
+
   // 查詢各時段之營業報表
   queryTLS31080(body: TLS31080Request): Observable<any> {
     return this.http.post<TLS31080Response>(`${this.apiUrl}/queryTLS31080`, body);
   }
-              
+
   // 匯出各時段之營業報表 (EXCEL)
   exportTLS31080(body: TLS31080Request): Observable<Blob> {
     return this.http.post(`${this.apiUrl}/exportTLS31080`, body, {

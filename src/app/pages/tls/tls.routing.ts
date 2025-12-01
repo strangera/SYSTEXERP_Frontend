@@ -373,8 +373,10 @@ export const tlsRoutes: Routes = [
   { path: 'tls31080', loadComponent: () => import('./tls31080/tls31080.component').then(m => m.TLS31080Component) },
   // 各時段之樓層營業報表 CRU
   { path: 'tls31080cru', loadComponent: () => import('./tls31080-cru/tls31080-cru.component').then(m => m.Tls31080CRUComponent) },
-  // 各時段之大分類營業報表
+  // 時段之業種營業報表
   { path: 'tls31090', loadComponent: () => import('./tls31090/tls31090.component').then(m => m.TLS31090Component) },
+  // 時段之業種營業報表 CRU
+  { path: 'tls31090cru', loadComponent: () => import('./tls31090-cru/tls31090-cru.component').then(m => m.Tls31090CRUComponent) },
   // 銷售排名分析報表
   { path: 'tls32010', loadComponent: () => import('./tls32010/tls32010.component').then(m => m.TLS32010Component) },
   // 期間業績分析報表

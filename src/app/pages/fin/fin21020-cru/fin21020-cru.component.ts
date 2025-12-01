@@ -138,6 +138,9 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
 
   // 依照Remit_Fee自動帶入Cash_Back_Amt
   autoFillCashBackAmt(rowData: IFin21020Detail) {
+    if (!rowData.Cash_Back_Amt || !rowData.Remit_Fee) {
+      return;
+    }
     rowData.Cash_Back_Amt = rowData.Remit_Fee;
   }
 

@@ -18,16 +18,16 @@ export const cpmRoutes: Routes = [
   // { path: 'cpm11100', loadComponent: () => import('./cpm11100/cpm11100.component').then(m => m.Cpm11100Component) }, // 全館店櫃資訊查詢
   { path: 'cpm12010', loadComponent: () => import('./cpm12010/cpm12010.component').then(m => m.CPM12010Component) }, // 顧客意見類別維護
   { path: 'cpm12010cru', loadComponent: () => import('./cpm12010-cru/cpm12010-cru.component').then(m => m.CPM12010CRUComponent) },
-  // { path: 'cpm12020', loadComponent: () => import('./cpm12020/cpm12020.component').then(m => m.CPM12020Component) }, // 顧客意見責任單位維護
-  // { path: 'cpm12020cru', loadComponent: () => import('./cpm12020-cru/cpm12020-cru.component').then(m => m.CPM12020CRUComponent) },
-  // { path: 'cpm12030', loadComponent: () => import('./cpm12030/cpm12030.component').then(m => m.CPM12030Component) }, // 顧客意見子類別維護
-  // { path: 'cpm12030cru', loadComponent: () => import('./cpm12030-cru/cpm12030-cru.component').then(m => m.CPM12030CRUComponent) },
+  { path: 'cpm12020', loadComponent: () => import('./cpm12020/cpm12020.component').then(m => m.CPM12020Component) }, // 顧客意見責任單位維護
+  { path: 'cpm12020cru', loadComponent: () => import('./cpm12020-cru/cpm12020-cru.component').then(m => m.CPM12020CRUComponent) },
+  { path: 'cpm12030', loadComponent: () => import('./cpm12030/cpm12030.component').then(m => m.CPM12030Component) }, // 顧客意見子類別維護
+  { path: 'cpm12030cru', loadComponent: () => import('./cpm12030-cru/cpm12030-cru.component').then(m => m.CPM12030CRUComponent) },
   { path: 'cpm12040', loadComponent: () => import('./cpm12040/cpm12040.component').then(m => m.CPM12040Component) }, // 顧客意見來源維護
   { path: 'cpm12040cru', loadComponent: () => import('./cpm12040-cru/cpm12040-cru.component').then(m => m.CPM12040CRUComponent) },
   // { path: 'cpm12050', loadComponent: () => import('./cpm12050/cpm12050.component').then(m => m.CPM12050Component) }, // 顧客意見管理作業
   // { path: 'cpm12050cru', loadComponent: () => import('./cpm12050-cru/cpm12050-cru.component').then(m => m.CPM12050CRUComponent) },
   // { path: 'cpm12060', loadComponent: () => import('./cpm12060/cpm12060.component').then(m => m.CPM12060Component) }, // 顧客意見處理狀況表
-  // { path: 'cpm12070', loadComponent: () => import('./cpm12070/cpm12070.component').then(m => m.CPM12070Component) }, // 顧客意見類別統計表
+  { path: 'cpm12070', loadComponent: () => import('./cpm12070/cpm12070.component').then(m => m.CPM12070Component) }, // 顧客意見類別統計表
   { path: 'cpm13010', loadComponent: () => import('./cpm13010/cpm13010.component').then(m => m.CPM13010Component) }, // 停車費折抵補登作業
   { path: 'cpm13010cru', loadComponent: () => import('./cpm13010-cru/cpm13010-cru.component').then(m => m.CPM13010CRUComponent) },
   { path: 'cpm13020', loadComponent: () => import('./cpm13020/cpm13020.component').then(m => m.CPM13020Component) }, // 停車費折抵補登作業(可讀停車車號)
