@@ -115,7 +115,7 @@ export class ValidationService {
   }
   //
   exactLengthValidator(length: number): ValidatorFn {
-    return (control: AbstractControl): { [key: string]: any } | null => {
+    return (control: AbstractControl): Record<string, any> | null => {
       const value = control.value || ''; // Handle null or undefined
       const isValid = value.toString().length === length;
       return isValid ? null : { exactLength: { requiredLength: length } };
@@ -456,7 +456,7 @@ export class ValidationService {
 
   /**
    * 電話號碼驗證器
-   * 只允許數字和連字號(-)
+   * 只允許數字和連字號(-或#)
    */
   phoneNumberValidator(control: { value: string | null }) {
     const value = control.value;
@@ -465,7 +465,7 @@ export class ValidationService {
     }
 
     // 只允許數字和連字號
-    const phoneRegex = /^[0-9\-]+$/;
+    const phoneRegex = /^[0-9\-#]+$/;
 
     if (!phoneRegex.test(value)) {
       return { invalidPhoneNumber: true };
