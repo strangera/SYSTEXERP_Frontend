@@ -59,6 +59,7 @@ export interface IInsertTLS52050Detail {
   PLU_SalePrc?: number;
   MAM_UnitPrc?: number;
   MAD_Remark?: string;
+  _TABLE_KEY?: string;
 }
 
 // 插入 POS2008M (商品促銷主檔) 的請求介面

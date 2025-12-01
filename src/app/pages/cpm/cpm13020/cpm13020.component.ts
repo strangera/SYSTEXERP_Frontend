@@ -1,29 +1,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, Validators, FormsModule, ReactiveFormsModule, FormGroup } from '@angular/forms';
-import { HttpResponse } from '@angular/common/http';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { RadioButtonModule } from 'primeng/radiobutton';
-import { TranslateModule } from '@ngx-translate/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
-import { finalize, map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { finalize, map } from 'rxjs/operators';
 
-import { Cpm13020Service, QueryCPM13020Request, SortMeta as ApiSortMeta } from '../../../service/api/cpm/cmp13020.service';
-import type { SortMeta as PSortMeta } from 'primeng/api';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import type { SortMeta as PSortMeta, SortMeta } from 'primeng/api';
+import { Cpm13020Service, QueryCPM13020Request } from '../../../service/api/cpm/cmp13020.service';
 
 @UntilDestroy()
 @Component({
@@ -54,7 +52,7 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
   reportModeOptions = [
     { label: '全館彙總', value: 'ALL' },
     { label: '機台彙總', value: 'POS' },
-  ] as Array<{ label: string; value: 'ALL' | 'POS' }>;
+  ] as { label: string; value: 'ALL' | 'POS' }[];
 
   // 資料/總筆數/總計
   rows: any[] = [];
@@ -65,7 +63,7 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
   btnLoading = false;
   historyRequestBody: QueryCPM13020Request | null = null;
 
-  paymentTypeOptions: Array<{ label: string; value: string; Name: string; No: string; PAY_Type: string }> = [];
+  paymentTypeOptions: { label: string; value: string; Name: string; No: string; PAY_Type: string }[] = [];
 
   readonly yesterday: Date = (() => {
     const d = new Date();
@@ -108,116 +106,116 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
   ) {
     super();
   }
-ngOnInit(): void {
-  this.initializePage('CPM13020', 'cpm/cpm13020', this.queryForm, (form) => this.onSubmit(form));
+  ngOnInit(): void {
+    this.initializePage('CPM13020', 'cpm/cpm13020', this.queryForm, (form) => this.onSubmit(form));
 
-  this.dropDownListService.queryPOS1006_DropDownList()
-    .pipe(untilDestroyed(this))
-    .subscribe((res) => {
-      const rows = Array.isArray(res?.Data) ? res.Data : [];
-      this.paymentTypeOptions = rows.map((x: any) => ({
-        label: `${x.No ?? ''}-${x.Name ?? ''}`,
-        value: x.No ?? '',
-        Name: x.Name ?? '',
-        No: x.No ?? '',
-        PAY_Type: x.PAY_Type ?? '',
-      }));
+    this.dropDownListService.queryPOS1006_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        const rows = Array.isArray(res?.Data) ? res.Data : [];
+        this.paymentTypeOptions = rows.map((x: any) => ({
+          label: `${x.No ?? ''}-${x.Name ?? ''}`,
+          value: x.No ?? '',
+          Name: x.Name ?? '',
+          No: x.No ?? '',
+          PAY_Type: x.PAY_Type ?? '',
+        }));
+      });
+
+    // 檢視模式切換：清空總計 + 清空列表
+    this.queryForm.controls.reportMode.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(v => {
+        this.reportMode = (v === 'POS' ? 'POS' : 'ALL');
+
+        // ⬇️ 這三行是重點
+        this.grandTotal = null;     // 清總計
+        this.rows = [];             // 清 table 資料
+        this.totalRecords = 0;      // 清總筆數（paginator 也會變成 0）
+
+        // 如果希望切換模式時順便把頁碼重設為第 1 頁，可以加這行（避免觸發 onSubmit 再打 API 所以關閉 emitEvent）
+        // this.queryForm.patchValue({ pageIndex: 1 }, { emitEvent: false });
+      });
+
+    // ✅ 用 get() 逐一訂閱，避免 controls[key] 型別造成 subscribe 聯集簽章錯誤
+    const keysToWatch = ['TXN_BDate', 'TXN_EDate', 'PAY_No'] as const;
+    keysToWatch.forEach(k => {
+      const ctrl = this.queryForm.get(k);
+      if (ctrl) {
+        ctrl.valueChanges
+          .pipe(untilDestroyed(this))
+          .subscribe(() => {
+            this.grandTotal = null;
+          });
+      }
     });
-
-  // 檢視模式切換：清空總計 + 清空列表
-  this.queryForm.controls.reportMode.valueChanges
-    .pipe(untilDestroyed(this))
-    .subscribe(v => {
-      this.reportMode = (v === 'POS' ? 'POS' : 'ALL');
-
-      // ⬇️ 這三行是重點
-      this.grandTotal = null;     // 清總計
-      this.rows = [];             // 清 table 資料
-      this.totalRecords = 0;      // 清總筆數（paginator 也會變成 0）
-
-      // 如果希望切換模式時順便把頁碼重設為第 1 頁，可以加這行（避免觸發 onSubmit 再打 API 所以關閉 emitEvent）
-      // this.queryForm.patchValue({ pageIndex: 1 }, { emitEvent: false });
-    });
-
-  // ✅ 用 get() 逐一訂閱，避免 controls[key] 型別造成 subscribe 聯集簽章錯誤
-  const keysToWatch = ['TXN_BDate', 'TXN_EDate', 'PAY_No'] as const;
-  keysToWatch.forEach(k => {
-    const ctrl = this.queryForm.get(k);
-    if (ctrl) {
-      ctrl.valueChanges
-        .pipe(untilDestroyed(this))
-        .subscribe(() => {
-          this.grandTotal = null;
-        });
-    }
-  });
-}
+  }
 
   // 解析 API 回傳的總計物件
-private extractGrandTotal(apiResp: any): any {
-  const t0 = apiResp?.Data?.totalData?.[0];
-  if (!t0) return null;
-  return {
-    TXN_PayAmt: Number(t0.TXN_Total_PayAmt ?? 0),
-    TXN_CustCnt: Number(t0.TXN_Total_CustCnt ?? 0),
-  };
-}
+  private extractGrandTotal(apiResp: any): any {
+    const t0 = apiResp?.Data?.totalData?.[0];
+    if (!t0) return null;
+    return {
+      TXN_PayAmt: Number(t0.TXN_Total_PayAmt ?? 0),
+      TXN_CustCnt: Number(t0.TXN_Total_CustCnt ?? 0),
+    };
+  }
 
   // === PrimeNG SortMeta -> API SortMeta（order: 1 | -1）===
-  private normalizeSortMeta(meta: unknown): ApiSortMeta[] {
+  private normalizeSortMeta(meta: unknown): SortMeta[] {
     const arr = Array.isArray(meta) ? (meta as PSortMeta[]) : [];
     return arr
       .filter(s => !!s && !!s.field)
-      .map<ApiSortMeta>(s => ({
+      .map<SortMeta>(s => ({
         field: String(s.field),
         order: (s.order as number) === -1 ? -1 : 1,
       }));
   }
 
   // 送出：交由後端分頁/排序
-onSubmit = (frm: FormGroup) => {
-  this.handleSubmit(frm, () => {
-    // ⬇️ 先清空總計，避免畫面殘留舊的總計
-    this.grandTotal = null;
+  onSubmit = (frm: FormGroup) => {
+    this.handleSubmit(frm, () => {
+      // ⬇️ 先清空總計，避免畫面殘留舊的總計
+      this.grandTotal = null;
 
-    const val = this.queryForm.getRawValue();
-    const payNoRaw = val?.PAY_No;
-    const payNo: string | undefined =
-      (payNoRaw && String(payNoRaw).length > 0) ? String(payNoRaw) : undefined;
+      const val = this.queryForm.getRawValue();
+      const payNoRaw = val?.PAY_No;
+      const payNo: string | undefined =
+        (payNoRaw && String(payNoRaw).length > 0) ? String(payNoRaw) : undefined;
 
-    const payload: QueryCPM13020Request = {
-      TXN_BDate: this.toDateOnly(val?.TXN_BDate),
-      TXN_EDate: this.toDateOnly(val?.TXN_EDate),
-      PAY_No: payNo,
-      pageIndex: Number(val?.pageIndex ?? 1),
-      pageSize: Number(val?.pageSize ?? 30),
-      SortBy: this.normalizeSortMeta(val?.SortBy),
-    };
+      const payload: QueryCPM13020Request = {
+        TXN_BDate: this.toDateOnly(val?.TXN_BDate),
+        TXN_EDate: this.toDateOnly(val?.TXN_EDate),
+        PAY_No: payNo,
+        pageIndex: Number(val?.pageIndex ?? 1),
+        pageSize: Number(val?.pageSize ?? 30),
+        SortBy: this.normalizeSortMeta(val?.SortBy),
+      };
 
-    this.historyRequestBody = { ...payload };
-    this.loading = true;
+      this.historyRequestBody = { ...payload };
+      this.loading = true;
 
-    const mode = (val?.reportMode === 'POS') ? 'POS' : 'ALL';
-    const call$ = mode === 'ALL'
-      ? this.cpm13020Service.queryAll(payload)
-      : this.cpm13020Service.queryPos(payload);
+      const mode = (val?.reportMode === 'POS') ? 'POS' : 'ALL';
+      const call$ = mode === 'ALL'
+        ? this.cpm13020Service.queryAll(payload)
+        : this.cpm13020Service.queryPos(payload);
 
-    call$
-      .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-      .subscribe({
-        next: (resp) => {
-          this.rows = Array.isArray(resp?.Data?.mainData) ? resp.Data.mainData : [];
-          this.totalRecords = Number(resp?.TotalCount ?? this.rows.length ?? 0);
-          this.grandTotal = this.extractGrandTotal(resp); // ⬅️ 新總計回來再更新
-        },
-        error: () => {
-          this.rows = [];
-          this.totalRecords = 0;
-          this.grandTotal = null;
-        },
-      });
-  });
-};
+      call$
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe({
+          next: (resp) => {
+            this.rows = Array.isArray(resp?.Data?.mainData) ? resp.Data.mainData : [];
+            this.totalRecords = Number(resp?.TotalCount ?? this.rows.length ?? 0);
+            this.grandTotal = this.extractGrandTotal(resp); // ⬅️ 新總計回來再更新
+          },
+          error: () => {
+            this.rows = [];
+            this.totalRecords = 0;
+            this.grandTotal = null;
+          },
+        });
+    });
+  };
 
 
   // <app-table-report> 查詢（直接打後端分頁，回傳 GrandTotal）
