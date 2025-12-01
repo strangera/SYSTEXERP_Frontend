@@ -1,28 +1,26 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { CommonModule } from '@angular/common';
-import { createPaginationConfig } from '@shared/componentkit/table2/table2.model';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { Fin13040Service } from '@service/api/fin/fin13040.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { CalendarModule } from 'primeng/calendar';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { createPaginationConfig } from '@shared/componentkit/table2/table2.model';
+import { AccordionModule } from 'primeng/accordion';
+import { CalendarModule } from 'primeng/calendar';
 import { Column, formatAmount } from 'src/app/shared/componentkit/table/table.model';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { Fin13040Service } from '@service/api/fin/fin13040.service';
-import { finalize } from 'rxjs';
-import { environment } from 'src/environments/environment';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 //1.1.4.3 形成申報書
 @Component({
   selector: 'app-fin13040',
@@ -49,6 +47,24 @@ import { environment } from 'src/environments/environment';
   ],
 })
 export class FIN13040Component extends BasicQueryPageComponent<any> implements OnInit {
+  /**
+   * 取得當前或下一個雙數月的日期物件
+   */
+  private getEvenMonthDate(): Date {
+    const now = new Date();
+    let year = now.getFullYear();
+    let month = now.getMonth() + 1; // 1-12
+    if (month % 2 !== 0) {
+      month += 1;
+      if (month > 12) {
+        month = 2;
+        year += 1;
+      }
+    }
+    // 設定為該月1日
+    return new Date(year, month - 1, 1);
+  }
+
   queryForm = this.formBuilder.group({
     InvoiceType: [[]],
     GUI_Track: ['', [Validators.maxLength(2)]],
@@ -57,7 +73,7 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
     InvoiceDate_S: [''],
     InvoiceDate_E: [''],
     InvoiceDateYM: [''],
-    INV_DeclareYM: [new Date(), [Validators.required]],
+    INV_DeclareYM: [this.getEvenMonthDate(), [Validators.required]],
     INV_Data_YM_S: [''],
     INV_Data_YM_E: [''],
     Buyer_Uniform: [''],

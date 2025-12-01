@@ -7,6 +7,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
+import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -347,16 +348,28 @@ export class FIN15090Component extends BasicQueryPageComponent<TDS1002> implemen
 
       console.log('營業人媒體檔案遞送單 request', body);
 
-      this.fin15090Service.PrintFIN15090(body).pipe(untilDestroyed(this)).subscribe({
-        next: (response) => {
-          this.data = response.Data;
-          console.log('營業人媒體檔案遞送單 response', response);
-          this.totalRecords = response.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          this.loading = false;
-        },
-        error: () => { this.loading = false; },
-      });
+      this.fin15090Service.PrintFIN15090(body)
+        .pipe(untilDestroyed(this))
+        .subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              const printURL = response.Data?.printURL;
+
+              if (printURL) {
+                const url = printURL.startsWith('http')
+                  ? printURL
+                  : environment.BaseUrl + printURL;
+
+                window.open(url, '_blank');
+              }
+            }
+          },
+          error: () => { /* show error toast if needed */ },
+          complete: () => {
+            this.loading = false;
+          },
+        });
+
     });
   }
   onDelete(selectedRows: TDS1002[]) {
@@ -371,7 +384,6 @@ export class FIN15090Component extends BasicQueryPageComponent<TDS1002> implemen
   }
 
   isRowSelectable(row: TDS1002) {
-    // return row.CanDel;
     return true
   }
 

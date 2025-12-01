@@ -179,7 +179,7 @@
               </span>
             </ng-container>
             <ng-template #detailLink>
-              <a (click)="detailRow(rowData)">
+              <a (click)="detailRow(rowData, col, rowData[col.field])">
                 {{
                 col.format
                 ? col.format(rowData[col.field], rowIndex, rowData)
