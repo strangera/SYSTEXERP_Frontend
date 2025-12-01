@@ -1,4 +1,4 @@
-import { Component, computed, effect, OnInit, signal, viewChild } from '@angular/core';
+import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -7,10 +7,9 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
-import { createPaginationConfig, Maps } from '@shared/componentkit/table/table.model';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, Maps } from '@shared/componentkit/table/table.model';
+import { validateRequired } from '@shared/componentkit/table/validate-field.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { concatMap, finalize, tap } from 'rxjs';
@@ -28,12 +27,10 @@ import { EntryType, TLS21020Data, TLS21020Query, TLS21020UpdateQuery } from './t
     ButtonComponent,
     DropdownComponent,
     MenubarComponent,
-    TableEditComponent,
+    TableComponent,
   ],
 })
 export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> implements OnInit {
-
-  private readonly dt = viewChild.required<TableEditComponent>('dt');
 
   public readonly queryForm = this.formBuilder.group({
     ENTRY_TYPE: new FormControl<EntryType | void>(void 0),
@@ -46,8 +43,9 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   public readonly tableData = signal<TLS21020Data[]>([]);
   public readonly totalRecords = signal<number>(0);
   public readonly tableLoading = signal<boolean>(!1);
+  public readonly selectedItems = signal<TLS21020Data[]>([]);
 
-  /** entryType 改變時,取得table 資料 */
+  /** 根據 ENTRY_TYPE 動態調整欄位顯示與查詢 */
   public readonly entryTypeEffect = effect(() => {
     const ENTRY_TYPE = this.entryTypeSignal();
     if (!ENTRY_TYPE) return (this.tableData.set([]), this.totalRecords.set(0));
@@ -75,23 +73,8 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         });
         break;
     }
-
-    /**
-     * !不要再蓋過去了
-     */
-    const payload: TLS21020Query = { ENTRY_TYPE, pageSize: 1e9 };
-
-    this.tableLoading.set(!0);
     this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-    this.service.queryTLS21020(payload).pipe(
-      tap(res => this.logger.debug(`queryTLS21020:`, [ENTRY_TYPE, payload, res])),
-    ).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        this.tableData.set(res.Data || []);
-        this.totalRecords.set(res.TotalCount || 0);
-      },
-    });
+    this.queryTLS21020();
   }, { allowSignalWrites: !0 });
 
   private readonly AccDCMap = new Map<'D' | 'C', '借' | '貸'>([['D', '借'], ['C', '貸']]);
@@ -101,7 +84,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
    * - 有 key 就顯示該欄位,沒 key 就不顯示
    * - boolean 值 true 代表預設 type, false 則變成純文字顯示
    */
-  public readonly columnsKeys = signal<Partial<Record<keyof TLS21020Data, boolean>>>({
+  private readonly columnsKeys = signal<Partial<Record<keyof TLS21020Data, boolean>>>({
     AccDC: !0,
     ItemDesc: !0,
     AccNo: !0,
@@ -110,7 +93,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     AccNotes: !0,
     // PAY_No: !1,
   });
-  private readonly allColumns = computed((): EditColumn[] => [
+  private readonly allColumns = computed((): Column[] => [
     {
       field: 'AccDC',
       header: '借/貸',
@@ -124,8 +107,6 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       options: this.service.GLS1005Options,
       optionLabel: 'label',
       optionValue: 'value',
-      validate: [validateRequired],
-      showClear: !1,
     },
     {
       field: 'ABAT_YN',
@@ -139,7 +120,6 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       options: this.service.SYS3100Options,
       optionLabel: 'label',
       optionValue: 'value',
-      showClear: !1,
       validate: [validateRequired],
     },
     {
@@ -155,7 +135,6 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       options: this.service.getYNOptions,
       optionLabel: 'label',
       optionValue: 'value',
-      showClear: !1,
     },
     {
       field: 'RelatedPartyAccNo',
@@ -165,7 +144,6 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       options: this.service.GLS1005Options,
       optionLabel: 'label',
       optionValue: 'value',
-      showClear: !1,
     },
     {
       field: 'VEN_No',
@@ -175,14 +153,13 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       options: this.service.POS2013Options,
       optionValue: 'value',
       templateLabel: 'label',
-      showClear: !1,
-      disabled: (v, i, row) => row.ABAT_YN === 'N',
+      disabled: (v) => v.ABAT_YN === 'N',
     },
     {
       field: 'PAY_days',
       header: '付款天數',
       type: 'inputNumber',
-      disabled: (v, i, row) => row.ABAT_YN === 'N',
+      disabled: (v) => v.ABAT_YN === 'N',
     },
     {
       field: 'PAY_No',
@@ -191,9 +168,10 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     },
   ]);
 
-  public readonly columns = computed((): EditColumn[] => {
+  public readonly columns = computed((): Column[] => {
     const keys = this.columnsKeys();
     const all = this.allColumns();
+    this.logger.debug(`columns:`, [keys, all]);
     return all
       .filter(col => col.field in keys)
       .map(col => {
@@ -242,7 +220,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     this.handleSubmit(this.queryForm, () => {
       const ENTRY_TYPE = this.entryTypeSignal();
       this.logger.debug(`onSubmit:`, [ENTRY_TYPE, this.tableData()]);
-      if (!ENTRY_TYPE || !this.dt().validateAndShowErrors()) return void (this.loading = !1);
+      if (!ENTRY_TYPE) return void (this.loading = !1);
 
       const data = this.tableData().filter(v => !v._isAutoInsertCandidate);
       const payload: TLS21020UpdateQuery[] = data.map(item => {
@@ -272,6 +250,21 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
           this.messageService.successBubble('更新成功');
         },
       });
+    });
+  }
+
+  public queryTLS21020(): void {
+    this.tableLoading.set(!0);
+    const payload = <TLS21020Query>{ ...this.queryForm.getRawValue() };
+    this.service.queryTLS21020(payload).pipe(
+      tap(res => this.logger.debug(`queryTLS21020:`, [payload, res])),
+      finalize(() => this.tableLoading.set(!1)),
+    ).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        this.tableData.set(res.Data || []);
+        this.totalRecords.set(res.TotalCount || 0);
+      },
     });
   }
 
@@ -305,6 +298,10 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     }
 
     return { isValid: !0, errorMessage: '' };
+  };
+
+  public onDelete(event: any): void {
+
   };
 
   /** 檢查型別 */

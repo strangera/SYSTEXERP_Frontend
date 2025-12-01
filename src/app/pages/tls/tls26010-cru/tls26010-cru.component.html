@@ -13,6 +13,7 @@
           [control]="dataForm.controls.pod_no"
           [readonly]="true"
           [submitted]="submitted"
+          customPlaceholder="系統自動產生"
         ></app-input-text>
         <app-input-text
           class="col-12 md:col-6 lg:col-4"
@@ -64,7 +65,7 @@
       <app-table-edit
         title="收銀機"
         tableKey="ecrTable"
-        [dataKey]="'id'"
+        [dataKey]="'ECR_No'"
         [data]="ecrData"
         class="col-12"
         [columns]="ecrColumn"
@@ -92,7 +93,7 @@
       <app-table-edit
         title="專櫃"
         tableKey="tltTable"
-        [dataKey]="'id'"
+        [dataKey]="'tlt_no'"
         [data]="tltData"
         class="col-12"
         [columns]="tltColumn"
@@ -101,7 +102,7 @@
         [showInsert]="true"
         [showDelete]="true"
         [canInsert]="false"
-        (insert)="dialogVisible('tlt')"
+        (insert)="onTltInsertClick()"
         [dataStatusValue]="{
           Original: 'original',
           New: 'new',
@@ -180,14 +181,14 @@
               ></app-input-text>
             </div>
 
-            <div class="col-12 md:col-6 lg:col-4">
+            <!-- <div class="col-12 md:col-6 lg:col-4">
               <app-input-text
                 label="專櫃編號"
                 controlName="tlt_no"
                 [control]="ecrDialogForm.controls.tlt_no"
                 [submitted]="submitted"
               ></app-input-text>
-            </div>
+            </div> -->
 
             <div class="col-12">
               <app-table

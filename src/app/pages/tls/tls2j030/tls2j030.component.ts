@@ -223,18 +223,34 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
       this.messageService.warnBubble('沒有資料可以匯出');
       return;
     }
+
     this.btnLoading2 = true;
-    const startDate = this.queryForm.value.GUI_INPUTDATE_Start ?
-      formatDateToYYYY_MM_DD(this.queryForm.value.GUI_INPUTDATE_Start) : formatDateToYYYY_MM_DD(new Date());
-    const endDate = this.queryForm.value.GUI_INPUTDATE_End ?
-      formatDateToYYYY_MM_DD(this.queryForm.value.GUI_INPUTDATE_End) : formatDateToYYYY_MM_DD(new Date());
+
+    const startDate = this.queryForm.value.GUI_INPUTDATE_Start
+      ? formatDateToYYYY_MM_DD(this.queryForm.value.GUI_INPUTDATE_Start)
+      : formatDateToYYYY_MM_DD(new Date());
+
+    const endDate = this.queryForm.value.GUI_INPUTDATE_End
+      ? formatDateToYYYY_MM_DD(this.queryForm.value.GUI_INPUTDATE_End)
+      : formatDateToYYYY_MM_DD(new Date());
     const exportData = {
+      CHG_No: this.queryForm.value.CHG_No ?? '',
       GUI_InputDate_Start: startDate,
-      GUI_InputDate_End: endDate
+      GUI_InputDate_End: endDate,
+      TXN_Date_Start: this.queryForm.value.TXN_Date_Start
+        ? formatDateToYYYY_MM_DD(this.queryForm.value.TXN_Date_Start)
+        : '',
+      TXN_Date_End: this.queryForm.value.TXN_Date_End
+        ? formatDateToYYYY_MM_DD(this.queryForm.value.TXN_Date_End)
+        : '',
+      TXN_GUIBegNo: this.queryForm.value.TXN_GUIBegNo ?? '',
+
+      GUI_Status: this.queryForm.value.GUI_Status ?? '',
+      TXN_Uniform: this.queryForm.value.TXN_Uniform ?? '',
     };
 
     this.tls2j030Service.exportTLS2J030PDF(exportData)
-      .pipe(finalize(() => this.btnLoading2 = false))
+      .pipe(finalize(() => (this.btnLoading2 = false)))
       .subscribe({
         next: (blob) => {
           const url = window.URL.createObjectURL(blob);
@@ -243,8 +259,10 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
           link.download = `發票換開報表_${formatDateToYYYY_MM_DD(new Date())}.pdf`;
           link.click();
           window.URL.revokeObjectURL(url);
+
           this.messageService.successBubble('PDF 匯出成功');
         },
       });
   }
+
 }

@@ -567,7 +567,7 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryGLS1010_DropDownList`, {});
   }
   // 能源下拉選單
-  queryTLTTALENT_TLT_SPACE(params: { TltNo: string }): Observable<ApiResponse<TLTTALENT_TLT_SPACE[]>> {
+  queryTLTTALENT_TLT_SPACE(params: { TltNo: string; ENG_Type?: string }): Observable<ApiResponse<TLTTALENT_TLT_SPACE[]>> {
     return this.http.post<ApiResponse<TLTTALENT_TLT_SPACE[]>>(`${this.apiUrl}/queryTLTTALENT_TLT_SPACE_DropDownList`, params);
   }
   // 查詢 TDS1010 下拉選單

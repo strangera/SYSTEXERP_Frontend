@@ -150,7 +150,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
     { field: 'PUR_Tax', header: '發票稅額', visible: true },
     { field: 'PUR_DirectTypeDesc', header: '發票用途', visible: true },
     { field: 'PUR_TaxTypeDesc', header: '課稅別', visible: true },
-    { field: 'PUR_DiscNoDesc', header: '扣抵名稱', visible: true },
+    { field: 'PUR_DiscNoDesc', header: '扣抵代號', visible: true },
     { field: 'PUR_TypeDesc', header: '類別區分', visible: true },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票號碼', visible: true },

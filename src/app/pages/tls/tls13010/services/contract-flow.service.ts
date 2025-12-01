@@ -25,7 +25,7 @@ import { TLS13010Service } from '@service/api/tls/tls13010.service';
 })
 export class ContractFlowService {
   private readonly STORAGE_KEY = 'TLS13010_CONTRACT_FLOW';
-  private readonly VIEW_MODE_KEY = 'TLS13010_VIEW_MODE';
+  // 移除 VIEW_MODE_KEY - 改用 CRUDStatus 管理
 
   // 記憶體快取層
   private memoryCache = new Map<string, any>();
@@ -58,8 +58,7 @@ export class ContractFlowService {
   constructor(private http: HttpClient, private tls13010Service: TLS13010Service) {
     this.loadFromStorage();
     this.setupAutoSave();
-
-    this.restoreViewMode(); // 初始化時恢復檢視模式狀態
+    // 移除 restoreViewMode() - 改由 Component 的 crudstatus 管理
   }
 
   /**
@@ -683,19 +682,11 @@ export class ContractFlowService {
   }
 
   /**
-  * 新增：清除持久化的檢視模式資料
+  * 移除：不再需要清除 VIEW_MODE session storage (改用 CRUDStatus)
   */
   private clearPersistedViewMode(): void {
-    try {
-      const contractId = this.contractData.contractId;
-      if (contractId) {
-        const viewModeKey = `${this.VIEW_MODE_KEY}_${contractId}`;
-        sessionStorage.removeItem(viewModeKey);
-        console.log('🗑️ 已清除檢視模式持久化資料:', contractId);
-      }
-    } catch (error) {
-      console.warn('⚠️ 無法清除檢視模式持久化資料:', error);
-    }
+    // 不再需要，因為改用 Component 的 crudstatus 管理
+    console.log('🗑️ clearPersistedViewMode 已廢棄 (改用 CRUDStatus)');
   }
 
   /**
@@ -1151,19 +1142,8 @@ export class ContractFlowService {
    * 新增：檢查當前合約的檢視模式狀態
    */
   checkContractViewMode(contractId: string): boolean {
-    try {
-      const viewModeKey = `${this.VIEW_MODE_KEY}_${contractId}`;
-      const savedViewModeData = sessionStorage.getItem(viewModeKey);
-
-      if (savedViewModeData) {
-        const { isViewMode } = JSON.parse(savedViewModeData);
-        return isViewMode === true;
-      }
-    } catch (error) {
-      console.warn('⚠️ 檢查檢視模式狀態失敗:', error);
-    }
-
-    return false; // 預設為編輯模式
+    // 不再使用 session storage 檢查，改由 metadata 管理
+    return this.contractData.metadata._isViewMode;
   }
 
   /**
@@ -1271,11 +1251,18 @@ export class ContractFlowService {
 
   /**
    * 修正：套用載入的資料（包含版本號）
+   * 🔥 修正：同時恢復 isViewModeSubject
    */
   private applyLoadedData(data: any): void {
     try {
       this.contractData = data.contractData;
       this.workflowStatusSubject.next(data.workflowStatus);
+
+      // 🔥 關鍵修復：從 metadata 恢復檢視模式狀態
+      if (this.contractData?.metadata?._isViewMode !== undefined) {
+        this.isViewModeSubject.next(this.contractData.metadata._isViewMode);
+        console.log('🔍 從 sessionStorage 恢復檢視模式:', this.contractData.metadata._isViewMode);
+      }
     } catch (error) {
       console.error('❌ 套用載入資料失敗:', error);
     }
@@ -1809,56 +1796,19 @@ export class ContractFlowService {
   * 新增：持久化檢視模式狀態
   */
   private persistViewMode(isViewMode: boolean): void {
-    try {
-      const contractId = this.contractData.contractId;
-      if (contractId) {
-        const viewModeKey = `${this.VIEW_MODE_KEY}_${contractId}`;
-        sessionStorage.setItem(viewModeKey, JSON.stringify({
-          isViewMode,
-          contractId,
-          timestamp: Date.now()
-        }));
-        console.log('💾 檢視模式已持久化:', { isViewMode, contractId });
-      }
-    } catch (error) {
-      console.warn('⚠️ 無法持久化檢視模式狀態:', error);
-    }
+    // 不再使用 session storage，改用 metadata 管理
+    this.contractData.metadata._isViewMode = isViewMode;
+    console.log('💾 檢視模式已更新至 metadata:', isViewMode);
   }
 
   /**
-   * 新增：從持久化儲存中恢復檢視模式
+   * 移除：不再從 session storage 恢復，改由 metadata 管理
    */
   private restoreViewMode(): void {
-    try {
-      const contractId = this.contractData.contractId;
-      if (contractId) {
-        const viewModeKey = `${this.VIEW_MODE_KEY}_${contractId}`;
-        const savedViewModeData = sessionStorage.getItem(viewModeKey);
-
-        if (savedViewModeData) {
-          const { isViewMode, timestamp } = JSON.parse(savedViewModeData);
-
-          // 檢查資料是否過期（24小時）
-          const now = Date.now();
-          const maxAge = 24 * 60 * 60 * 1000; // 24小時
-
-          if (now - timestamp < maxAge) {
-            this.isViewModeSubject.next(isViewMode);
-            console.log('🔄 恢復檢視模式狀態:', { isViewMode, contractId });
-            return;
-          } else {
-            // 過期資料，清除
-            sessionStorage.removeItem(viewModeKey);
-            console.log('🗑️ 清除過期的檢視模式資料');
-          }
-        }
-      }
-    } catch (error) {
-      console.warn('⚠️ 無法恢復檢視模式狀態:', error);
-    }
-
-    // 預設為編輯模式
-    this.isViewModeSubject.next(false);
+    // 從 metadata 恢復檢視模式狀態
+    const isViewMode = this.contractData.metadata._isViewMode;
+    this.isViewModeSubject.next(isViewMode);
+    console.log('🔄 從 metadata 恢復檢視模式狀態:', isViewMode);
   }
 
   /**

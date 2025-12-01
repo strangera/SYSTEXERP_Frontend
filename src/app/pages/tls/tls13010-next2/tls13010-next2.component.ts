@@ -12,6 +12,7 @@ import { Subscription } from 'rxjs';
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { ContractSubmitService } from '../tls13010-next3/SubmitService/contract-submit.service';
 import { ContractFlowService } from '../tls13010/services/contract-flow.service';
@@ -32,7 +33,11 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   // === 核心狀態 ===
   dataForm: FormGroup;
-  isViewMode = false;
+
+  // 檢視模式用 (衍生自 crudstatus)
+  get isViewMode(): boolean {
+    return this.crudstatus === CRUDStatus.Read;
+  }
   dataLoaded = false;
   commissionDataLoaded = false; // 新增
   showConfirmDialog = false;
@@ -95,9 +100,12 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   // === 初始化方法 ===
   private setupViewMode(): void {
-    this.isViewMode = this.contractFlowService.isViewMode();
+    // 初始化 CRUD 狀態
+    const currentViewMode = this.contractFlowService.isViewMode();
+    this.crudstatus = currentViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
+
     const subscription = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
-      this.isViewMode = isViewMode;
+      this.crudstatus = isViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
     });
     this.subscriptions.push(subscription);
   }
