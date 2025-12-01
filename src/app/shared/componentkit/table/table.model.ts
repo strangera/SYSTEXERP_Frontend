@@ -334,6 +334,15 @@ export const convertDateToYYYY = (date: Date): string => {
   return String(year);
 };
 
+// 格式化為 6 位數，不足補 0
+export const formatToSixDigits = (value: string | number | null | undefined): string => {
+  if (value === null || value === undefined || value === '') {
+    return '';
+  }
+  const strValue = String(value);
+  return strValue.padStart(6, '0');
+};
+
 
 export type TableTypes =
   'input' |
