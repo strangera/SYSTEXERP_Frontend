@@ -4,84 +4,41 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="收銀機號"
-              controlName="ECR_No"
-              [options]="ECRNoOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.ECR_No"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ECR_No" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="專櫃編號"
-              controlName="TLT_No"
-              [control]="queryForm.controls.TLT_No"
-              [options]="CounterOptions"
-              optionLabel="formLabel"
-              optionValue="value"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="專櫃編號" controlName="TLT_No" [control]="queryForm.controls.TLT_No"
+              [options]="CounterOptions" optionLabel="formLabel" optionValue="value"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="館別"
-              controlName="tlt_building"
-              [options]="buildingNoOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.tlt_building"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="館別" controlName="tlt_building" [options]="buildingNoOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="樓層"
-              controlName="tlt_floor"
-              [options]="floorOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.tlt_floor"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="樓層" controlName="tlt_floor" [options]="floorOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.tlt_floor" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="收銀機IP"
-              controlName="EDC_IP"
-              [control]="queryForm.controls.EDC_IP"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="收銀機IP" controlName="EDC_IP" [control]="queryForm.controls.EDC_IP"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
-         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
       <div class="card mt-5">
         <!-- TabMenu -->
-        <p-tabMenu
-          [model]="items"
-          [(activeItem)]="activeItem"
-          class="mb-3"
-          (activeItemChange)="onTabChange($event)"
-        ></p-tabMenu>
+        <p-tabMenu [model]="items" [(activeItem)]="activeItem" class="mb-3"
+          (activeItemChange)="onTabChange($event)"></p-tabMenu>
 
         <!-- DataView -->
         <p-dataView [value]="pagedData" [layout]="layout">
@@ -89,40 +46,27 @@
           <ng-template pTemplate="header">
             <div class="w-full">
               <!-- 狀態說明 + 切換 layout 同一行 -->
-              <div
-                class="flex justify-content-between align-items-center mb-4 mt-2"
-              >
+              <div class="flex justify-content-between align-items-center mb-4 mt-2">
                 <!-- 狀態說明 -->
                 <div class="status-container">
                   <span class="status-label">狀態說明：</span>
 
-                  <div
-                    class="status-chip shutdown"
-                    style="background: #6c757d; color: #fff"
-                  >
+                  <div class="status-chip shutdown" style="background: #6c757d; color: #fff">
                     <i class="pi pi-desktop" style="color: #fff"></i>
                     關機
                   </div>
-                  <div
-                    class="status-chip logout"
-                    style="background: #dc3545; color: #fff"
-                  >
+                  <div class="status-chip logout" style="background: #dc3545; color: #fff">
                     <i class="pi pi-sign-out" style="color: #fff"></i>
                     離線
                   </div>
-                  <div
-                    class="status-chip success"
-                    style="background: #28a745; color: #fff"
-                  >
+                  <div class="status-chip success" style="background: #28a745; color: #fff">
                     <i class="pi pi-sync" style="color: #fff"></i>
                     交易中
                   </div>
                 </div>
 
                 <!-- 切換 layout -->
-                <p-dataViewLayoutOptions
-                  (layoutChange)="onLayoutChange($event)"
-                ></p-dataViewLayoutOptions>
+                <p-dataViewLayoutOptions (layoutChange)="onLayoutChange($event)"></p-dataViewLayoutOptions>
               </div>
             </div>
           </ng-template>
@@ -130,30 +74,22 @@
           <!-- Grid 模式 -->
           <ng-template pTemplate="grid" let-row>
             <div class="custom-grid">
-              <div
-                class="custom-grid-item"
-                *ngFor="let row of pagedData"
-                pTooltip="刷卡機編號(EDC_TmID)<br>刷卡機IP(ECR_IP)"
-                tooltipPosition="top"
-              >
+              <div class="custom-grid-item" *ngFor="let row of pagedData" pTooltip="刷卡機編號(EDC_TmID)<br>刷卡機IP(ECR_IP)"
+                tooltipPosition="top" [escape]="false"> <!-- 加入escape才可以支援html喔~ -->
                 <div class="p-3 border-1 surface-border surface-card relative">
                   <div class="status-container-grid grid-status-fixed">
                     <ng-container *ngIf="isShutdown(row); else edcChips">
                       <i class="pi pi-desktop shutdown-icon"></i>
                     </ng-container>
                     <ng-template #edcChips>
-                      <span
-                        [ngClass]="
+                      <span [ngClass]="
                           getEdcStatusClass(getBankStatus(row, '中信'))
-                        "
-                      >
+                        ">
                         中信
                       </span>
-                      <span
-                        [ngClass]="
+                      <span [ngClass]="
                           getEdcStatusClass(getBankStatus(row, '聯信'))
-                        "
-                      >
+                        ">
                         聯信
                       </span>
                     </ng-template>
@@ -171,12 +107,8 @@
         </p-dataView>
 
         <!-- 分頁 -->
-        <p-paginator
-          [rows]="rows"
-          [first]="first"
-          [totalRecords]="filteredData.length"
-          (onPageChange)="onPageChange($event)"
-        ></p-paginator>
+        <p-paginator [rows]="rows" [first]="first" [totalRecords]="filteredData.length"
+          (onPageChange)="onPageChange($event)"></p-paginator>
       </div>
     </p-accordionTab>
   </p-accordion>
