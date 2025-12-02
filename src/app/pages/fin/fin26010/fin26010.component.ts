@@ -6,7 +6,6 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { HttpResponse } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 
 import { CommonModule } from '@angular/common';
@@ -25,10 +24,8 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 
@@ -38,10 +35,17 @@ import {
   Fin26010Row,
   Fin26010Request,
   Fin26010GenerateRequest,
+  Aps1002BankDropDownRow,
   ApiResponse,
 } from '../../../service/api/fin/fin26010.service';
 
 type SortItem = { field: string; order: number };
+
+interface BankDropdownOption {
+  label: string;   // 顯示：BNK_No-BNK_BRANCHNAME
+  value: string;   // BNK_DepositAccNo (公司銀行科目代號)
+  raw: Aps1002BankDropDownRow;
+}
 
 @UntilDestroy()
 @Component({
@@ -59,10 +63,8 @@ type SortItem = { field: string; order: number };
     ButtonModule,
     ButtonComponent,
     CalendarRangeComponent,
-    InputNumberComponent,
     InputTextComponent,
     DropdownComponent,
-    MultiSelectComponent,
     TableReportComponent,
   ],
 })
@@ -79,7 +81,7 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
   /* ----------------- 匯款檔產生 loading ----------------- */
   btnGenerateFileLoading = false;
 
-  /* ----------------- 欄位定義 (APS3007) ----------------- */
+  /* ----------------- 欄位定義（對應 queryFIN26010Response） ----------------- */
   columns: ReportColumn[] = [
     { field: 'PAM_No', header: '匯款單號' },
     {
@@ -92,66 +94,57 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
       header: '匯款日期',
       format: (v: string) => this.formatDate(v),
     },
-    { field: 'BNK_id', header: '銀行代號' },
-    { field: 'BNK_No', header: '匯款銀行代碼' },
-    { field: 'BNK_BranchNo', header: '匯款銀行分行代號' },
-    { field: 'BNK_AccNo', header: '匯款帳號' },
-    { field: 'Status', header: '狀態' },
-    { field: 'VouNo', header: '傳票編號' },
-    { field: 'File_Name', header: '檔案名稱' },
+    { field: 'ACCNO', header: '銀行代號' }, // APS3007.BNK_id = GLS1005.ACCNO
+    { field: 'ACCCNAME', header: '銀行名稱' }, // GLS1005.ACCCNAME
+    { field: 'BNK_No', header: '全省銀行代號' }, // BNK_No + BNK_BranchNo
+    { field: 'BNK_BRANCHNAME', header: '全省銀行名稱' }, // BNK_BRANCHNAME
   ];
 
   /* ----------------- 預設排序 ----------------- */
   readonly defaultSort: SortItem[] = [{ field: 'PAM_No', order: 1 }];
 
-  /* ----------------- 下拉選項（暫時 mock） ----------------- */
+  /* ----------------- 匯款單號下拉（暫時 mock） ----------------- */
   transferSourceOptions: any[] = [
     { value: 'D20140106001', label: 'D20140106001/2014/0106/Y' },
     { value: 'D20140106002', label: 'D20140106002/2014/0106/Y' },
     { value: 'D20140106003', label: 'D20140106003/2014/0106/Y' },
   ];
 
-  // 拋轉傳票：依實際需求再調整
-  whetherOptions: any[] = [
+  // 拋轉傳票：Y=已拋轉, N=未拋轉（後端 Status 單值）
+  statusOptions: any[] = [
     { value: 'Y', label: '已拋轉' },
     { value: 'N', label: '未拋轉' },
   ];
 
+  // 銀行代號下拉：用 /queryAPS1002_DropDownList 回傳資料轉成 Dropdown options
+  bankOptions: BankDropdownOption[] = [];
+
   /* ----------------- 表單 ----------------- */
   queryForm = this.formBuilder.group({
-    // 匯款單號
+    // 匯款單號 PamNo
     transferSource: [null as string | null],
 
-    // 建立日期(起訖)
+    // 建立日期(起迄) CRT_DateFrom / CRT_DateTo
     buildDateFrom: [null as Date | null],
     buildDateTo: [null as Date | null],
 
-    // 匯款日期(起訖) ＊必填
-    transferDateFrom: [
-      null as Date | null,
-      [Validators.required],
-    ],
-    transferDateTo: [
-      null as Date | null,
-      [Validators.required],
-    ],
+    // 匯款日期(起迄) RMT_DateFrom / RMT_DateTo ＊業務需求：必填
+    transferDateFrom: [null as Date | null, [Validators.required]],
+    transferDateTo: [null as Date | null, [Validators.required]],
 
-    // 銀行代號 ＊必填
-    bankCode: [
-      null as string | null,
-      [Validators.required, Validators.maxLength(8)],
-    ],
+    // 銀行代號 BNK_id（用 dropdown：值為 BNK_DepositAccNo）
+    bankCode: [null as string | null],
 
-    // 銀行名稱
+    // 銀行名稱（純畫面顯示/輸入，後端目前未收）
     bankName: [null as string | null, [Validators.maxLength(40)]],
 
-    // 拋轉傳票 (多選 / 單選依實際需求)
-    tossSummon: [null as string | null],
+    // 拋轉傳票 Status (Y/N)
+    status: [null as string | null],
 
-    // 傳票編號
-    SummonNumber: [null as string | null, [Validators.maxLength(11)]],
+    // 傳票編號 VouNo (MaxLength 12)
+    SummonNumber: [null as string | null, [Validators.maxLength(12)]],
 
-    // 檔案名稱
+    // 檔案名稱 File_Name
     fileName: [null as string | null, [Validators.maxLength(100)]],
 
     ...createPaginationConfig([{ field: 'PAM_No', order: 1 }]),
@@ -211,8 +204,10 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
     return cleaned.length ? cleaned : fallback;
   }
 
-  /** 將畫面上的值整理成後端需要的 Fin26010Request */
+  /** 將畫面上的值整理成後端需要的 queryFIN26010Request */
   private buildPayload(base: any): Fin26010Request {
+    const fromForm = this.queryForm.getRawValue();
+
     const payload: Fin26010Request = {
       PageIndex:
         Number.isFinite(base?.pageIndex) && base.pageIndex >= 1
@@ -224,48 +219,57 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
           : 30,
       SortBy: this.normalizeSort(base?.SortBy, this.defaultSort),
 
-      PAM_No: base?.transferSource || undefined,
+      // PamNo
+      PamNo: base?.transferSource ?? fromForm.transferSource ?? undefined,
+
+      // 建立日期
       CRT_DateFrom: this.toYMDOrUndef(
-        base?.buildDateFrom ?? this.queryForm.get('buildDateFrom')?.value
+        base?.buildDateFrom ?? fromForm.buildDateFrom
       ),
       CRT_DateTo: this.toYMDOrUndef(
-        base?.buildDateTo ?? this.queryForm.get('buildDateTo')?.value
+        base?.buildDateTo ?? fromForm.buildDateTo
       ),
-      RMT_DateFrom:
-        this.toYMDOrUndef(
-          base?.transferDateFrom ??
-            this.queryForm.get('transferDateFrom')?.value
-        ) || '', // 必填
-      RMT_DateTo:
-        this.toYMDOrUndef(
-          base?.transferDateTo ??
-            this.queryForm.get('transferDateTo')?.value
-        ) || '', // 必填
+
+      // 匯款日期
+      RMT_DateFrom: this.toYMDOrUndef(
+        base?.transferDateFrom ?? fromForm.transferDateFrom
+      ),
+      RMT_DateTo: this.toYMDOrUndef(
+        base?.transferDateTo ?? fromForm.transferDateTo
+      ),
+
+      // 銀行代號：值為 BNK_DepositAccNo -> 對應 BNK_id
       BNK_id:
         (base?.bankCode ??
-          this.queryForm.get('bankCode')?.value ??
-          '') + '', // 必填
-      BNK_Name: base?.bankName || this.queryForm.get('bankName')?.value || undefined,
-      TossSummon:
-        base?.tossSummon ?? this.queryForm.get('tossSummon')?.value ?? null,
+          fromForm.bankCode ??
+          '')?.toString().trim() || undefined,
+
+      // 拋轉傳票 Status (Y/N)
+      Status:
+        (base?.status ?? fromForm.status)?.toString().trim() || undefined,
+
+      // 傳票編號
       VouNo:
-        base?.SummonNumber ??
-        this.queryForm.get('SummonNumber')?.value ??
+        (base?.SummonNumber ?? fromForm.SummonNumber)?.toString().trim() ||
         undefined,
+
+      // 檔案名稱
       File_Name:
-        base?.fileName ?? this.queryForm.get('fileName')?.value ?? undefined,
+        (base?.fileName ?? fromForm.fileName)?.toString().trim() || undefined,
     };
 
-    // 移除空字串/null/undefined
+    // 移除空字串 / null / undefined
     Object.keys(payload).forEach((k) => {
       const v = (payload as any)[k];
-      if (v === '' || v == null) delete (payload as any)[k];
+      if (v === '' || v == null) {
+        delete (payload as any)[k];
+      }
     });
 
     return payload;
   }
 
-  /** 產生匯款檔 payload：從目前查詢條件 + 已選資料組出 */
+  /** 產生匯款檔 payload：目前仍假設後端使用 IdList，等後端正式規格可再調整 */
   private buildGeneratePayload(): Fin26010GenerateRequest | null {
     if (!this.selectedItems || this.selectedItems.length === 0) {
       return null;
@@ -287,8 +291,8 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
     }
 
     const ids = this.selectedItems
-      .map((r) => r.id)
-      .filter((x) => x != null) as number[];
+      .map((r: any) => r.id)
+      .filter((x: any) => x != null) as number[];
 
     if (!ids.length) return null;
 
@@ -300,6 +304,27 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
     };
 
     return payload;
+  }
+
+  /** 載入銀行代號下拉（/queryAPS1002_DropDownList） */
+  private loadBankOptions(): void {
+    this.fin26010Service
+      .queryAPS1002DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
+          const list = Array.isArray(res?.Data) ? res.Data : [];
+          this.bankOptions = list.map((x) => ({
+            label: `${x.BNK_No}-${x.BNK_BRANCHNAME}`,
+            value: x.BNK_DepositAccNo,
+            raw: x,
+          }));
+        },
+        error: (err) => {
+          console.error('載入銀行代號下拉失敗', err);
+          this.bankOptions = [];
+        },
+      });
   }
 
   /* ----------------- 給 <app-table-report> 用的查詢函式 ----------------- */
@@ -327,6 +352,9 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
       transferDateFrom: today,
       transferDateTo: today,
     });
+
+    // 載入銀行代號下拉
+    this.loadBankOptions();
 
     this.initializePage(
       'FIN26010',
@@ -408,7 +436,7 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
       transferDateTo: today,
       bankCode: null,
       bankName: null,
-      tossSummon: null,
+      status: null,
       SummonNumber: null,
       fileName: null,
       ...createPaginationConfig(this.defaultSort),
@@ -425,7 +453,6 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
   generateRemitFile(): void {
     const payload = this.buildGeneratePayload();
     if (!payload) {
-      // 這裡可以依你的 NotificationService 改成友善提示
       console.warn('產生匯款檔條件不足或沒有選取任何資料');
       return;
     }
@@ -437,10 +464,6 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (res: ApiResponse<any>) => {
-          // 後端負責：
-          // 1. 產生檔名 yyyyMMddSSS_TSBRT.txt
-          // 2. 寫入匯款明細檔(APS3008)的 File_Name
-          // 3. 回應成功/失敗訊息
           console.log('Remit file generated:', res);
         },
         error: (err: any) => {

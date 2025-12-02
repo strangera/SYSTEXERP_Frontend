@@ -6,8 +6,8 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 
 // ==== 主表每列型別（對應 SP_FIN29110Query 回傳欄位） ====
 export interface Fin29110Row {
-  VendorNo: string;           // 廠商代號
-  VendorName: string;         // 廠商名稱
+  VendorNo: string;        // 廠商代號
+  LTYPE_NAME: string;      // 廠商名稱（來源欄位）
 
   Overdue_Over301Days: number;
   Overdue_241_300_Days: number;
@@ -23,10 +23,11 @@ export interface Fin29110Row {
   NotDue_61_120_Days: number;
   NotDue_0_60_Days: number;
 
-  SumAmount: number;          // 總計
+  SumAmount: number;       // 總計
 
   [key: string]: any;
 }
+
 
 // ==== 主表 Request 型別（對應 SP_FIN29110Query 參數） ====
 export interface Fin29110Request {
@@ -34,20 +35,23 @@ export interface Fin29110Request {
   PageIndex?: number;
   SortBy?: { field: string; order: number }[];
 
-  AnalysisDate?: string;       // @AnalysisDate
-  BucketDays?: number;         // @BucketDays
-  Periods?: number;            // @Periods
-  DateType?: string;           // @DateType ('E' / 'P')
-  PayDate?: string;            // @PayDate
-  DueFlag?: string;            // @DueFlag ('A' / 'O' / 'N')
-  RefDateFrom?: string;        // @RefDateFrom
-  RefDateTo?: string;          // @RefDateTo
-  VEN_No_From?: string;        // @VEN_No_From
-  VEN_No_To?: string;          // @VEN_No_To
+  /** 新增：後端有定義 */
+  OrderBy?: string | null;
+  Offset?: number | null;
+
+  AnalysisDate?: string;
+  BucketDays?: number;
+  Periods?: number;
+  DateType?: string;
+  PayDate?: string;
+  DueFlag?: string;
+  RefDateFrom?: string;
+  RefDateTo?: string;
+  VEN_No_From?: string;
+  VEN_No_To?: string;
 
   [key: string]: any;
 }
-
 // ==== 明細每列型別（對應 SP_FIN29110QueryDetail 回傳欄位） ====
 export interface Fin29110DetailRow {
   RowNo: number;              // 序號
@@ -77,13 +81,16 @@ export interface Fin29110DetailRequest {
   PageIndex?: number;
   SortBy?: { field: string; order: number }[];
 
-  AnalysisDate: string;       // @AnalysisDate
-  BucketDays: number;         // @BucketDays
-  DateType: string;           // @DateType ('E' / 'P')
-  PayDate: string;            // @PayDate
-  Side: string;               // @Side ('O' / 'N')
-  BucketN: number;            // @BucketN (0~5)
-  VEN_No?: string | null;     // @VEN_No
+  OrderBy?: string | null;
+  Offset?: number | null;
+
+  AnalysisDate: string;
+  BucketDays: number;
+  DateType: string;
+  PayDate: string;
+  Side: string;      // 'O' / 'N'
+  BucketN: number;   // 0~5
+  VEN_No?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })

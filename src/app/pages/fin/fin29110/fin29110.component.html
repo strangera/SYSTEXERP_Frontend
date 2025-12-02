@@ -118,47 +118,50 @@
 
 <!-- 主表 -->
 <div class="card">
-  <app-table-report
-    [tableKey]="'fin29110_' + tableVer"
-    [dataKey]="'_rowKey'"
-    [columns]="columns"
-    [data]="data"
-    [totalRecords]="viewTotalRecords"
-    [loading]="loading"
-    [showManage]="false"
-    [showFilter]="true"
-    [showExcel]="false"
-    [footerData]="footerData"
-    [queryFunction]="queryFIN29110ForReport"
-    [lastQueryBody]="lastQueryBody"
-    [showDelete]="false"
-    [showReportMode]="false"
-    [showCheckBox]="false"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event">
+<app-table-report
+  [tableKey]="'fin29110_' + tableVer"
+  [dataKey]="'_rowKey'"
+  [columns]="columns"
+  [data]="data"
+  [totalRecords]="viewTotalRecords"
+  [loading]="loading"
+  [showManage]="false"
+  [showFilter]="true"
+  [showExcel]="false"
+  [footerData]="footerData"
+  [queryFunction]="queryFIN29110ForReport"
+  [lastQueryBody]="lastQueryBody"
+  [showDelete]="false"
+  [showReportMode]="false"
+  [showCheckBox]="false"
+  [selectedItems]="selectedItems"
+  (selectionChange)="selectedItems = $event"
+  [showDetail]="true"
+  (detail)="onDetail($event)">
+  <header>
+    <!-- 匯出按鈕維持原本 -->
+    <div class="flex justify-content-end gap-2">
+      <p-button
+        styleClass="p-2"
+        label="匯出 Excel"
+        icon="pi pi-file-excel"
+        [loading]="btnExportExcelLoading"
+        (click)="downloadFIN29110Excel()"
+        [disabled]="btnExportExcelLoading || btnExportPdfLoading">
+      </p-button>
 
-    <header>
-      <div class="flex justify-content-end gap-2">
-        <p-button
-          styleClass="p-2"
-          label="匯出 Excel"
-          icon="pi pi-file-excel"
-          [loading]="btnExportExcelLoading"
-          (click)="downloadFIN29110Excel()"
-          [disabled]="btnExportExcelLoading || btnExportPdfLoading">
-        </p-button>
+      <p-button
+        styleClass="p-2"
+        label="匯出 PDF"
+        icon="pi pi-file-pdf"
+        [loading]="btnExportPdfLoading"
+        (click)="downloadFIN29110PDF()"
+        [disabled]="btnExportPdfLoading || btnExportExcelLoading">
+      </p-button>
+    </div>
+  </header>
+</app-table-report>
 
-        <p-button
-          styleClass="p-2"
-          label="匯出 PDF"
-          icon="pi pi-file-pdf"
-          [loading]="btnExportPdfLoading"
-          (click)="downloadFIN29110PDF()"
-          [disabled]="btnExportPdfLoading || btnExportExcelLoading">
-        </p-button>
-      </div>
-    </header>
-  </app-table-report>
 </div>
 
 <!-- 明細 Dialog -->

@@ -36,7 +36,7 @@ import {
   LazyLoadEvent,
 } from '../../../shared/componentkit/table/table.model';
 import { ValidationService } from '../../../shared/service/validation.service';
-
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 @UntilDestroy()
 @Component({
   selector: 'app-tls23020',
@@ -64,6 +64,7 @@ import { ValidationService } from '../../../shared/service/validation.service';
     // Table2Component,
     ButtonModule,
     TableReportComponent, // ⬅️ 新增
+    InputTextRangeComponent,
   ],
 })
 export class TLS23020Component extends BasicQueryPageComponent<any> {
