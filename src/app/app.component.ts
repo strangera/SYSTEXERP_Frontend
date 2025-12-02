@@ -109,12 +109,7 @@ export class AppComponent implements OnInit {
         // 錯誤通常包含 "Loading chunk" 或 "Failed to fetch dynamically imported module" 等關鍵詞
         if (errorMsg.includes('chunk') || errorMsg.includes('module')) {
           console.error('偵測到動態模組載入失敗 (可能因版本更新):', error);
-
-          // 提示使用者並執行強制重新載入
-          const userConfirmed = confirm('應用程式已更新。為確保功能正常，需要重新載入頁面。點擊「確定」重新整理。');
-
-          if (userConfirmed) {
-            // 傳入 true 以強制從伺服器載入，不使用瀏覽器快取
+          if (confirm('偵測到應用程式版本不符，必須重新載入頁面。點擊「確定」以修復。')) {
             window.location.reload();
           }
         } else {
@@ -136,19 +131,16 @@ export class AppComponent implements OnInit {
       ).subscribe((evt) => {
         // 這裡 VersionDetectedEvent 只有 version 屬性，沒有 previousVersion
         console.log(`SW: 偵測到新版本。新版本雜湊/版本號: ${evt.version}。`);
-        // 如果要顯示通知，例如：
-        this.notificationService.infoBubble('新版本正在背景下載，請稍候。', '系統更新中...');
       });
 
       // 2. 偵聽是否有可用的新版本 (已下載到快取中) - VERSION_READY
       this.swUpdate.versionUpdates.pipe(
         filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY')
       ).subscribe((evt) => {
-        // VersionReadyEvent 包含 previousVersion 和 currentVersion (即 version)
-        console.log(`SW: 新版本已準備就緒。新版本: ${evt.currentVersion}。`);
-        if (confirm('偵測到系統有更新！是否立即重新整理頁面以使用最新版本？')) {
-          this.swUpdate.activateUpdate().then(() => document.location.reload());
-        }
+        this.notificationService.infoBubble('應用程式已更新。正在重新載入頁面...', '系統更新');
+        this.swUpdate.activateUpdate().then(() => {
+          document.location.reload();
+        });
       });
 
       // 3. 設定檢查間隔：每 15 分鐘主動檢查
