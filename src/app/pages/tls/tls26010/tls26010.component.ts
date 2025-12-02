@@ -43,7 +43,7 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     sys3A00: new FormControl<string[] | void>(void 0), // 區域
     ecrNos: new FormControl<string[] | void>(void 0), // 收銀機號
     tltNos: new FormControl<string[] | void>(void 0), // 專櫃ID
-    podSdateS: new FormControl<Date | void>(this.service.dateS), // 起始日期(起)
+    podSdateS: new FormControl<Date | void>(void 0), // 起始日期(起)
     podSdateE: new FormControl<Date | void>(void 0), // 起始日期(迄)
     podEdateS: new FormControl<Date | void>(void 0), // 截止日期(起)
     podEdateE: new FormControl<Date | void>(void 0), // 截止日期(迄)
@@ -85,7 +85,6 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
           if (start > end) isValid = !1;
         }
 
-        if (!podSdateS && !podSdateE && !podEdateS && !podEdateE) return { dateRequired: !0 };
         if (!isValid) return { dateRangeInvalid: !0 };
 
         return null;
@@ -101,12 +100,6 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
   private readonly sys3800Signal = toSignal(this.qf().sys3800.valueChanges);
   private readonly sys3900Signal = toSignal(this.qf().sys3900.valueChanges);
   private readonly sys3A00Signal = toSignal(this.qf().sys3A00.valueChanges);
-  private readonly ecrsignal = toSignal(this.qf().ecrNos.valueChanges);
-  private readonly tltsignal = toSignal(this.qf().tltNos.valueChanges);
-  private readonly sdateSSignal = toSignal(this.qf().podSdateS.valueChanges, { initialValue: this.service.dateS });
-  private readonly sdateESignal = toSignal(this.qf().podSdateE.valueChanges);
-  private readonly edateSSignal = toSignal(this.qf().podEdateS.valueChanges);
-  private readonly edateESignal = toSignal(this.qf().podEdateE.valueChanges);
 
   // Table 相關
   public readonly editDisabled = (rowData: TLS26010Data) =>
@@ -151,15 +144,15 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
   }, { allowSignalWrites: !0 });
 
   private readonly queryTLS26010 = computed<TLS26010Query>(() => {
-    const { pageIndex, pageSize, SortBy, ...rest } = this.queryForm.getRawValue();
+    const { pageIndex, pageSize, SortBy, ecrNos, tltNos, podSdateS, podSdateE, podEdateS, podEdateE, ...rest } = this.queryForm.getRawValue();
     const raw = {
-      ECR_No: this.ecrsignal(),
-      tlt_nos: this.tltsignal(),
+      ECR_No: ecrNos,
+      tlt_nos: tltNos,
       tlt_no: '',
-      pod_sdate_S: this.sdateSSignal()?.toISOString(),
-      pod_sdate_E: this.sdateESignal()?.toISOString(),
-      pod_edate_S: this.edateSSignal()?.toISOString(),
-      pod_edate_E: this.edateESignal()?.toISOString(),
+      pod_sdate_S: podSdateS?.toISOString(),
+      pod_sdate_E: podSdateE?.toISOString(),
+      pod_edate_S: podEdateS?.toISOString(),
+      pod_edate_E: podEdateE?.toISOString(),
       pageIndex, pageSize, SortBy,
     } as TLS26010Query;
 
