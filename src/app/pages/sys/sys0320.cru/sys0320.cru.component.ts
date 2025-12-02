@@ -90,8 +90,11 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
       next: (response: ApiResponse<TreeNode[]>) => {
         if (response.Data && Array.isArray(response.Data)) {
           response.Data.forEach(node => {
-            // 在這裡呼叫輔助方法，為每個節點及其子節點設置 parent 引用
-            const transformedNode = this.setParentReferences(node);
+            // 1. 設置 parent 引用
+            let transformedNode = this.setParentReferences(node);
+
+            // 2. 【新增】對整個樹狀結構進行排序
+            transformedNode = this.sortNodeData(transformedNode);
 
             switch (transformedNode.id) {
               case 'ASS00000':
@@ -123,6 +126,40 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
         this.loading = false;
       },
     });
+  }
+  /**
+ * 遞迴地對節點及其子節點的 children 和 actions 進行排序 (依據 id)。
+ * 注意：針對 actions 的 id，由於是數字字串，我們將其轉為數字再排序。
+ * @param node 要排序的節點
+ * @returns 排序後的節點
+ */
+  private sortNodeData(node: TreeNode): TreeNode {
+    // 1. 遞迴處理子節點 (children)
+    if (node.children && node.children.length > 0) {
+      // 先對子節點進行排序 (使用字串 id 排序，通常這層的 id 是複合代碼)
+      node.children.sort((a, b) => a.id.localeCompare(b.id));
+      // 再遞迴處理每個子節點的子項
+      node.children = node.children.map(child => this.sortNodeData(child));
+    }
+
+    // 2. 處理行為權限 (actions) - 修正數字字串排序問題
+    if (node.actions && node.actions.length > 0) {
+      // *** 核心修正點：將 a.id 和 b.id 轉換為數字再相減 ***
+      node.actions.sort((a, b) => {
+        const idA = parseInt(a.id, 10);
+        const idB = parseInt(b.id, 10);
+
+        // 確保 NaN 或非數字情況下的健壯性
+        if (isNaN(idA) || isNaN(idB)) {
+          // 如果無法轉換為數字，則退回字串比較
+          return a.id.localeCompare(b.id);
+        }
+        // 數字比較
+        return idA - idB;
+      });
+    }
+
+    return node;
   }
   private setParentReferences(node: TreeNode, parent: TreeNode | null = null): TreeNode {
     const newNode: TreeNode = { ...node, parent: parent || undefined };

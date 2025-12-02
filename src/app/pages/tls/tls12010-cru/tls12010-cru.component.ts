@@ -141,6 +141,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
 
   // ---Potential_Customer_Detail 潛在客戶其他資料明細檔---
   potentialDetail: Potential_Customer_Detail[] = [];
+  org_potentialDetail: Potential_Customer_Detail[] = []; // 備份
   //欄位資訊
   Potential_Customer_Detail_Columns: ColumnDef[] = [
     { field: 'other_shop', header: '其他商場', type: 'text', editable: true, autoWidth: true },
@@ -319,7 +320,11 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
   }
 
   onClearForm() {
-    this.dataForm.reset(); // 重置表單
+    // this.dataForm.reset(); // 重置表單
+    if (this.crudstatus == CRUDStatus.Create)
+      this.potentialDetail = []; // 清除明細
+    if (this.crudstatus == CRUDStatus.Edit)
+      this.potentialDetail = this.org_potentialDetail; // 還原明細
   }
 
   // 讀取dopropdown選項
@@ -404,6 +409,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
           ...item,
           status: 'original', // 有明細資料，讀取明細狀態設定為 'original';
         }));
+        this.org_potentialDetail = [...this.potentialDetail]
         console.log('取得明細資料:', this.potentialDetail);
       } else {
         this.messageService.errorBubble(`讀取失敗: ${response.Message}`);

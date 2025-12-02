@@ -39,6 +39,7 @@ import { InputNumberRangeComponent } from '../../../shared/componentkit/input-nu
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 
 @UntilDestroy()
 // 型態別報表
@@ -66,6 +67,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     ButtonModule,
     CheckboxModule,
     TableReportComponent,
+    InputTextRangeComponent,
   ],
 })
 export class TLS23010Component extends BasicQueryPageComponent<any> implements OnInit {

@@ -83,7 +83,8 @@
   </p-panel>
 </div>
 <ng-template #moduleContent let-moduleData="moduleData">
-  <div *ngFor="let item of moduleData.children; trackBy: trackByFn" class="flex flex-column py-2">
+  <div *ngFor="let item of moduleData.children; trackBy: trackByFn"
+    class="flex flex-column py-2 border-bottom-1 surface-border">
     <p-button [text]="true" styleClass="flex align-items-center justify-content-between gap-2"
       (click)="item.isOpen = !item.isOpen">
       <div class="flex align-items-start gap-2">

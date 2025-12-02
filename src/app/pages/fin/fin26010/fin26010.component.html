@@ -16,7 +16,7 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
-          <!-- 匯款單號 -->
+          <!-- 匯款單號 PamNo -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="匯款單號"
@@ -29,7 +29,7 @@
             ></app-dropdown>
           </div>
 
-          <!-- 建立日期(起迄) -->
+          <!-- 建立日期(起迄) CRT_DateFrom / CRT_DateTo -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
@@ -40,7 +40,7 @@
             ></app-calendar-range>
           </div>
 
-          <!-- 匯款日期(起迄) 必填 -->
+          <!-- 匯款日期(起迄) RMT_DateFrom / RMT_DateTo -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
@@ -50,57 +50,49 @@
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
-        </div>
 
-        <div class="grid p-fluid">
-          <!-- 銀行代號 必填 -->
+
+
+          <!-- 銀行代號 BNK_id：用 dropdown，選項文字 BNK_No-BNK_BRANCHNAME，值為 BNK_DepositAccNo -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-dropdown
               label="銀行代號"
               controlName="bankCode"
-              [control]="queryForm.controls.bankCode"
-              [submitted]="submitted"
-            ></app-input-number>
-          </div>
-
-          <!-- 銀行名稱 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="銀行名稱"
-              controlName="bankName"
-              [control]="queryForm.controls.bankName"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-
-          <!-- 拋轉傳票 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="拋轉傳票"
-              controlName="tossSummon"
-              [options]="whetherOptions"
+              [options]="bankOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.tossSummon"
+              [control]="queryForm.controls.bankCode"
               [submitted]="submitted"
-            ></app-multi-select>
+            ></app-dropdown>
           </div>
-        </div>
 
-        <div class="grid p-fluid">
-          <!-- 傳票編號 -->
+
+          <!-- 拋轉傳票 Status (Y/N) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-dropdown
+              label="拋轉傳票"
+              controlName="status"
+              [options]="statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.status"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+
+
+          <!-- 傳票編號 VouNo -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
               label="傳票編號"
               controlName="SummonNumber"
               [control]="queryForm.controls.SummonNumber"
               [submitted]="submitted"
-            ></app-input-number>
+            ></app-input-text>
           </div>
 
-          <!-- 檔案名稱 -->
+          <!-- 檔案名稱 File_Name -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="檔案名稱"
@@ -111,7 +103,9 @@
           </div>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button
             btnType="clear"
             [type]="'button'"
@@ -119,11 +113,7 @@
           >
           </app-button>
 
-          <app-button
-            btnType="query"
-            [loading]="loading"
-          >
-          </app-button>
+          <app-button btnType="query" [loading]="loading"> </app-button>
         </div>
       </form>
     </p-accordionTab>

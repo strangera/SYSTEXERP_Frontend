@@ -42,7 +42,8 @@ import { Column, formatToSixDigits } from '../../../shared/componentkit/table/ta
     InputTextComponent,
     InputNumberComponent,
     DialogComponent,
-    CommonModule
+    CommonModule,
+    ButtonComponent,
   ]
 })
 export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> implements OnInit {
@@ -116,22 +117,8 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
       })
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
-          // 將新資料與舊資料合併
-          const newData = response.Data;
-          const existingIds = new Set(this.data.map(item => item.id));
-
-          // 過濾出不重複的資料
-          const uniqueNewData = newData.filter(item => !existingIds.has(item.id));
-
-          // 合併並排序
-          this.data = [...this.data, ...uniqueNewData].sort((a, b) => {
-            const dateA = new Date(a.sad_date).getTime();
-            const dateB = new Date(b.sad_date).getTime();
-            return dateA - dateB;
-          });
-
+          this.data = response.Data;
           this.totalRecords = this.data.length;
-
           // 預售總金額加總
           this.totalAmount = this.data.reduce((sum, item) => sum + (item.TXN_TotSaleAmt ?? 0), 0);
         });
@@ -140,26 +127,31 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
 
   // 結帳
   onCheckout(): void {
-    if (this.selectedItems.length === 0 || this.dataForm2.invalid) return;
-
-    this.btnLoading = true;
+    if (this.selectedCheckoutItems.length === 0 || this.dataForm2.invalid) return;
 
     const insertRequest = {
       sad_preorder_date: this.datePipe.transform(this.dataForm2.value.sad_preorder_date, 'yyyy-MM-dd') ?? '',
-      idList: this.selectedItems.map(item => item.id),
+      idList: this.selectedCheckoutItems.map(item => item.id),
       sad_date_start: this.datePipe.transform(this.dataForm.value.sad_date_start, 'yyyy-MM-dd') ?? '',
       sad_date_end: this.datePipe.transform(this.dataForm.value.sad_date_end, 'yyyy-MM-dd') ?? '',
     };
 
-    this.tls26040Service.insertTLS26040(insertRequest)
-      .pipe(finalize(() => this.btnLoading = false))
-      .subscribe(response => {
-        this.messageService.successBubble('結帳成功');
-        // 重新查詢資料
-        this.onSubmit(this.dataForm);
-        // 清空選取項目
-        this.selectedItems = [];
-      });
+    this.confirmationService.confirm({
+      header: `確認結帳 ${this.selectedCheckoutItems.length} 筆資料？`,
+      accept: () => {
+        this.btnLoading = true;
+        this.tls26040Service.insertTLS26040(insertRequest)
+          .pipe(finalize(() => this.btnLoading = false))
+          .subscribe(response => {
+            this.messageService.successBubble('結帳成功');
+            // 重新查詢資料
+            this.onSubmit(this.dataForm);
+            // 清空選取項目
+            this.selectedItems = [];
+            this.selectedCheckoutItems = [];
+          });
+      },
+    });
   }
 
   loadOptions() {
@@ -221,4 +213,34 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
     this.data = [];
     this.selectedItems = [];
   }
+
+  //#region 結帳選定資料
+  checkoutData: TLS26040Data[] = [];
+  selectedCheckoutItems: TLS26040Data[] = [];
+  checkoutColumns: Column[] = [
+    { field: 'id', header: 'ID', visible: false },
+    { field: 'sad_date', header: '預售日期', visible: true, format: formatDate },
+    { field: 'tlt_no', header: '櫃別編號', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true },
+    { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, format: formatAmount },
+  ];
+
+  onAdd() {
+    // 將資料加到TLS26040_Checkout
+    this.checkoutData = [...this.checkoutData, ...this.selectedItems];
+    this.selectedItems = [];
+  }
+
+  onRemove(event: TLS26040Data[]) {
+    const idsToRemove = new Set(event.map(item => item.id));
+    this.checkoutData = this.checkoutData.filter(item => !idsToRemove.has(item.id));
+    this.selectedCheckoutItems = [];
+  }
+
+  isRowSelectable(rowData: TLS26040Data): boolean {
+    if (!this.selectedCheckoutItems) return true;
+    // 如果該列資料已存在於 checkoutData 中，則不可選取
+    return !this.checkoutData.some(item => item.id === rowData.id);
+  }
+  //#endregion
 }
