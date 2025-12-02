@@ -239,6 +239,7 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
       console.log('送出request請求', formValue);
       this.tls31090Service.queryTLS31090(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data ?? [];               // 查詢資料
+        this.totalRecords = res.Data.length;      // 長度計算筆數
         console.log('查詢結果', res.Data ?? []);
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })

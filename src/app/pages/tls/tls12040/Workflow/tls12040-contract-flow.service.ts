@@ -1001,7 +1001,7 @@ export class TLS12040FlowService {
   private processFixedRentCondition(condition: any, operations: any): void {
     const cleanItem = {
       ...(this.hasValidId(condition.id) ? { id: Number(condition.id) } : {}),
-      talent_id: condition.talent_id || '',
+      apply_no: condition.apply_no || '',
       tlt_id: condition.tlt_id || '',
       cag_bdate: this.formatDate(condition.cag_bdate),
       cag_edate: this.formatDate(condition.cag_edate),
