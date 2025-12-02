@@ -5,8 +5,8 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls12070Service } from '@service/api/tls/tls12070.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { option } from '@shared/models/sys/sysb000.model';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -59,6 +59,14 @@ export class Tls12070CRUComponent extends BasicCruPageComponent<any>
     contact_record: [''], // 洽談重點及交換資料紀錄
     contact_remarks: [''], // 備註
   });
+  willing_options = [
+    { label: '?/未確認', value: 'N' },
+    { label: 'A/交涉中(基本合意)', value: 'A' },
+    { label: 'B/交涉中(反應良好)', value: 'B' },
+    { label: 'C/交涉中(反應不好)', value: 'C' },
+    { label: 'D/保留', value: 'D' },
+    { label: 'F/無意進駐', value: 'F' }
+  ]; // 意願等級下拉選單資料
   //
   willing_data: WillingDetail[] = [];
   willing_columns: Column[] = [ //意願報表欄位
@@ -71,18 +79,11 @@ export class Tls12070CRUComponent extends BasicCruPageComponent<any>
       field: 'willing_level', header: '意願等級', visible: true,
       format: (value: string) =>
         this.willing_options.find((option) => option.value === value)?.label ||
-        value
+        value,
+      exportFormat: transformOptionsForExport(this.willing_options)
     },
   ];
 
-  willing_options: option[] = [
-    { label: '?/未確認', value: 'N' },
-    { label: 'A/交涉中(基本合意)', value: 'A' },
-    { label: 'B/交涉中(反應良好)', value: 'B' },
-    { label: 'C/交涉中(反應不好)', value: 'C' },
-    { label: 'D/保留', value: 'D' },
-    { label: 'F/無意進駐', value: 'F' }
-  ]; // 意願等級下拉選單資料
 
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 

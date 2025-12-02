@@ -1,22 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
-import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 
 export interface Potential_Customer {
   id: number; // 主鍵，自動編號
@@ -78,7 +78,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
     CreatedDateStart: [null],  // 建立日期_起始日
     CreatedDateEnd: [null],  // 建立日期_終止日
     contact_USR_Name: ['', [Validators.maxLength(16)]],  // 接洽人員代碼/名稱 -- 之後會用dropdown*
-    cus_uniform_id: [[], [Validators.maxLength(16)]], // 廠商統一編號 --這邊要請後端更新 pos2013.ven_uniform 的下拉 *
+    cus_uniform_id: [[]], // 廠商統一編號 --這邊要請後端更新 pos2013.ven_uniform 的下拉 *
     // /*若廠商類型為1=統編, 為廠商統編 (pos2013.ven_uniform) */
     /*若廠商 類型為2=身份證字號, 進行身份證檢查碼檢查 */
     /*若廠商類型為3=員工ID, 檢查 tblUser.user_no */
@@ -88,7 +88,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
     VEN_EngName: ['', [Validators.maxLength(100)]], // 廠商名稱(英文)
     /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
     /*若廠商類型為3=員工ID, 由使用者自行輸入 */
-    bus_type: [[], [Validators.maxLength(2)]], // 業種-大分類代碼(tltbustype)
+    bus_type: [[]], // 業種-大分類代碼(tltbustype)
     tlt_name: ['', [Validators.maxLength(100)]],  // 品牌(專櫃名稱) --- 20251007 修改: 品牌名稱(中文)應為文字輸入欄位
     tlt_EngName: ['', [Validators.maxLength(100)]], // 品牌英文(專櫃名稱)
     //分頁查詢
