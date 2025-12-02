@@ -1,28 +1,28 @@
 import { Component, ViewChild } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { AddButton, Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { AddButton, Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 
 // Component Kit
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { AccordionModule } from 'primeng/accordion';
 import { FileUploadHandlerEvent } from 'primeng/fileupload';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 // Services
-import { TLS53020Data, TLS53020Service } from '../../../service/api/tls/tls53020.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DatePipe } from '@angular/common';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { finalize } from 'rxjs';
+import { TLS53020Data, TLS53020Service } from '../../../service/api/tls/tls53020.service';
 
 @Component({
   selector: 'app-tls53020',
@@ -47,7 +47,7 @@ import { DatePipe } from '@angular/common';
 })
 export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> {
   queryForm = this.formBuilder.group({
-    PST_No: ['', [Validators.maxLength(14)]], // 盤點單編號
+    PST_No: ['', [Validators.maxLength(20)]], // 盤點單編號
     HOS_No: [[]], // 倉別代碼
     LOGO_No: [[]], // 品牌代碼
     PST_DateStart: [new Date(), Validators.required],    // 盤點基準日期(起)
