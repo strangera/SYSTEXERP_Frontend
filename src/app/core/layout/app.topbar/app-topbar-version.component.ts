@@ -1,7 +1,7 @@
-import { Component, inject } from '@angular/core';
-import { environment } from '@environment';
-import { TooltipModule } from 'primeng/tooltip';
 import { CommonModule } from '@angular/common';
+import { Component } from '@angular/core';
+import { TooltipModule } from 'primeng/tooltip';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-topbar-version',
@@ -55,5 +55,5 @@ import { CommonModule } from '@angular/common';
 })
 export class AppTopbarVersionComponent {
   public version: string = environment.version;
-  public tooltipText: string = `系統版本：${environment.version}\n環境：${environment.production ? '正式環境' : '開發環境'}`;
+  public tooltipText = `系統版本：${environment.version}\n環境：${environment.production ? '正式環境' : '開發環境'}`;
 }

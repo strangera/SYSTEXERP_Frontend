@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, isDevMode } from '@angular/core';
-import { environment } from '@environment';
 import { interval, Subject } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
+import { environment } from 'src/environments/environment';
 
 export interface VersionInfo {
   version: string;
@@ -22,7 +22,7 @@ export class VersionCheckService {
   // 版本更新事件
   public versionUpdateAvailable$ = new Subject<VersionInfo>();
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly http: HttpClient) { }
 
   /**
    * 啟動版本檢查機制
