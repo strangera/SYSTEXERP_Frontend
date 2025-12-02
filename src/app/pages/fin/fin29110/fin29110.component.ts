@@ -106,7 +106,7 @@ export class FIN29110Component extends BasicQueryPageComponent<any> {
   // 主表欄位
   columns: ReportColumn[] = [
     { field: 'VendorNo', header: '廠商代號' },
-    { field: 'VendorName', header: '廠商名稱' },
+    // { field: 'VendorName', header: '廠商名稱' },
 
     { field: 'Overdue_Over301Days', header: '已到期(≧301天)', format: this.moneyFormat.bind(this) },
     { field: 'Overdue_241_300_Days', header: '已到期(241-300天)', format: this.moneyFormat.bind(this) },
@@ -266,41 +266,60 @@ export class FIN29110Component extends BasicQueryPageComponent<any> {
   }
 
   /** 將畫面上的值整理成後端需要的 Fin29110Request */
-  private buildPayload(base: any): Fin29110Request {
-    const { bucketDays, periods } = this.parsePeriodInput(
-      base?.PeriodsInput ?? this.queryForm.get('PeriodsInput')?.value
-    );
+ private buildPayload(base: any): Fin29110Request {
+  const { bucketDays, periods } = this.parsePeriodInput(
+    base?.PeriodsInput ?? this.queryForm.get('PeriodsInput')?.value
+  );
 
-    const payload: Fin29110Request = {
-      PageIndex:
-        Number.isFinite(base?.pageIndex) && base.pageIndex >= 1
-          ? base.pageIndex
-          : 1,
-      PageSize:
-        Number.isFinite(base?.pageSize) && base.pageSize > 0
-          ? base.pageSize
-          : 30,
-      SortBy: this.normalizeSort(base?.SortBy, this.defaultSort),
+  const pageIndex =
+    Number.isFinite(base?.pageIndex) && base.pageIndex >= 1
+      ? base.pageIndex
+      : 1;
+  const pageSize =
+    Number.isFinite(base?.pageSize) && base.pageSize > 0
+      ? base.pageSize
+      : 30;
 
-      AnalysisDate: this.toYMDOrUndef(base?.AnalysisDate),
-      BucketDays: bucketDays,
-      Periods: periods,
-      DateType: base?.DateType || 'E',
-      PayDate: this.toYMDOrUndef(base?.PayDate),
-      DueFlag: base?.DueFlag || 'A',
-      RefDateFrom: this.toYMDOrUndef(base?.RefDateFrom),
-      RefDateTo: this.toYMDOrUndef(base?.RefDateTo),
-      VEN_No_From: base?.VEN_No_From || undefined,
-      VEN_No_To: base?.VEN_No_To || undefined,
-    };
+  const sort = this.normalizeSort(base?.SortBy, this.defaultSort);
 
-    Object.keys(payload).forEach((k) => {
-      const v = (payload as any)[k];
-      if (v === '' || v == null) delete (payload as any)[k];
-    });
+  // 產 OrderBy 字串，例如：VendorNo ASC, SumAmount DESC
+  const orderBy =
+    sort && sort.length
+      ? sort
+          .map((s) => {
+            const dir = s.order === -1 ? 'DESC' : 'ASC';
+            return `${s.field} ${dir}`;
+          })
+          .join(', ')
+      : null;
 
-    return payload;
-  }
+  const payload: Fin29110Request = {
+    PageIndex: pageIndex,
+    PageSize: pageSize,
+    SortBy: sort,
+
+    OrderBy: orderBy,
+    Offset: (pageIndex - 1) * pageSize,
+
+    AnalysisDate: this.toYMDOrUndef(base?.AnalysisDate),
+    BucketDays: bucketDays,
+    Periods: periods,
+    DateType: base?.DateType || 'E',
+    PayDate: this.toYMDOrUndef(base?.PayDate),
+    DueFlag: base?.DueFlag || 'A',
+    RefDateFrom: this.toYMDOrUndef(base?.RefDateFrom),
+    RefDateTo: this.toYMDOrUndef(base?.RefDateTo),
+    VEN_No_From: base?.VEN_No_From || undefined,
+    VEN_No_To: base?.VEN_No_To || undefined,
+  };
+
+  Object.keys(payload).forEach((k) => {
+    const v = (payload as any)[k];
+    if (v === '' || v == null) delete (payload as any)[k];
+  });
+
+  return payload;
+}
 
   /** 匯出用：沿用查詢條件，但移除 PageIndex/PageSize */
   private buildExportPayload(): Fin29110Request {
@@ -312,36 +331,51 @@ export class FIN29110Component extends BasicQueryPageComponent<any> {
   }
 
   /** 明細查詢 payload：從 dialogContext + body (pageIndex/pageSize/SortBy) 組出 */
-  private buildDetailPayload(body: any): Fin29110DetailRequest {
-    if (!this.dialogContext) {
-      throw new Error('DetailContext is not set.');
-    }
-
-    const ctx = this.dialogContext;
-    const payload: Fin29110DetailRequest = {
-      PageIndex:
-        Number.isFinite(body?.pageIndex) && body.pageIndex >= 1
-          ? body.pageIndex
-          : 1,
-      PageSize:
-        Number.isFinite(body?.pageSize) && body.pageSize > 0
-          ? body.pageSize
-          : 30,
-      SortBy: this.normalizeSort(body?.SortBy, [
-        { field: 'ACP_Date', order: -1 },
-      ]),
-
-      AnalysisDate: ctx.AnalysisDate,
-      BucketDays: ctx.BucketDays,
-      DateType: ctx.DateType,
-      PayDate: ctx.PayDate,
-      Side: ctx.Side,
-      BucketN: ctx.BucketN,
-      VEN_No: ctx.VEN_No,
-    };
-
-    return payload;
+private buildDetailPayload(body: any): Fin29110DetailRequest {
+  if (!this.dialogContext) {
+    throw new Error('DetailContext is not set.');
   }
+
+  const ctx = this.dialogContext;
+
+  const pageIndex =
+    Number.isFinite(body?.pageIndex) && body.pageIndex >= 1
+      ? body.pageIndex
+      : 1;
+  const pageSize =
+    Number.isFinite(body?.pageSize) && body.pageSize > 0
+      ? body.pageSize
+      : 30;
+
+  const sort = this.normalizeSort(body?.SortBy, [
+    { field: 'ACP_Date', order: -1 },
+  ]);
+
+  const orderBy =
+    sort && sort.length
+      ? sort
+          .map((s) => `${s.field} ${s.order === -1 ? 'DESC' : 'ASC'}`)
+          .join(', ')
+      : null;
+
+  const payload: Fin29110DetailRequest = {
+    PageIndex: pageIndex,
+    PageSize: pageSize,
+    SortBy: sort,
+    OrderBy: orderBy,
+    Offset: (pageIndex - 1) * pageSize,
+
+    AnalysisDate: ctx.AnalysisDate,
+    BucketDays: ctx.BucketDays,
+    DateType: ctx.DateType,
+    PayDate: ctx.PayDate,
+    Side: ctx.Side,
+    BucketN: ctx.BucketN,
+    VEN_No: ctx.VEN_No,
+  };
+
+  return payload;
+}
 
   private getFilenameFromResponse(
     res: HttpResponse<Blob>,
@@ -371,15 +405,45 @@ export class FIN29110Component extends BasicQueryPageComponent<any> {
   }
 
   /* ----------------- 給 <app-table-report> 用的查詢函式（主表） ----------------- */
-  public queryFIN29110ForReport = (body: any) =>
-    this.fin29110Service.queryFIN29110(this.buildPayload(body || {})).pipe(
-      map((res: ApiResponse<Fin29110Row[]>) => {
-        const rows: Fin29110Row[] = Array.isArray(res?.Data) ? res.Data : [];
+public queryFIN29110ForReport = (body: any) =>
+  this.fin29110Service.queryFIN29110(this.buildPayload(body || {})).pipe(
+    map((res: ApiResponse<Fin29110Row[] | Fin29110Row>) => {
+      const src = res?.Data as any;
+      const rows: Fin29110Row[] = Array.isArray(src)
+        ? src
+        : src
+        ? [src]
+        : [];
+
+      const totalCount =
+        Number((res as any)?.TotalCount ?? rows.length) || rows.length;
+
+      rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
+
+      return {
+        Data: rows,
+        TotalCount: totalCount,
+        GrandTotal: null,
+      };
+    })
+  );
+
+
+  /* ----------------- 給 Dialog <app-table-report> 用的查詢函式（明細） ----------------- */
+public queryFIN29110DetailForReport = (body: any) =>
+  this.fin29110Service
+    .queryFIN29110Detail(this.buildDetailPayload(body || {}))
+    .pipe(
+      map((res: ApiResponse<Fin29110DetailRow[] | Fin29110DetailRow>) => {
+        const src = res?.Data as any;
+        const rows: Fin29110DetailRow[] = Array.isArray(src)
+          ? src
+          : src
+          ? [src]
+          : [];
         const totalCount =
-          Number(res?.TotalCount ?? rows.length) || rows.length;
-
+          Number((res as any)?.TotalCount ?? rows.length) || rows.length;
         rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
-
         return {
           Data: rows,
           TotalCount: totalCount,
@@ -388,25 +452,6 @@ export class FIN29110Component extends BasicQueryPageComponent<any> {
       })
     );
 
-  /* ----------------- 給 Dialog <app-table-report> 用的查詢函式（明細） ----------------- */
-  public queryFIN29110DetailForReport = (body: any) =>
-    this.fin29110Service
-      .queryFIN29110Detail(this.buildDetailPayload(body || {}))
-      .pipe(
-        map((res: ApiResponse<Fin29110DetailRow[]>) => {
-          const rows: Fin29110DetailRow[] = Array.isArray(res?.Data)
-            ? res.Data
-            : [];
-          const totalCount =
-            Number(res?.TotalCount ?? rows.length) || rows.length;
-          rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
-          return {
-            Data: rows,
-            TotalCount: totalCount,
-            GrandTotal: null,
-          };
-        })
-      );
 
   /* ----------------- Init ----------------- */
   ngOnInit(): void {
@@ -614,7 +659,25 @@ export class FIN29110Component extends BasicQueryPageComponent<any> {
       });
   }
 
-  onDialogClose(visible: boolean) {
+onDialogClose(visible: boolean) {
     this.dialogVisible = visible;
   }
+
+  // 主表「明細」按鈕事件（跟 TLS23070 的 override onDetail 一樣概念）
+  override onDetail(row: Fin29110Row): void {
+    if (!row || !row.VendorNo) {
+      console.warn('detail 事件沒有帶到 VendorNo：', row);
+      return;
+    }
+
+    // 這裡先用「已到期」第 0 期 bucket 開明細
+    this.openDetail(row, 'O', 0);
+  }
+
+
+
+
+
+  
+
 }

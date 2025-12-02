@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges, Type, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, NgZone, OnChanges, Output, SimpleChanges, Type, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { SortMeta } from 'primeng/api';
@@ -19,6 +19,7 @@ import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableModule, TableRowReorderEvent } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
+import { LazyLoadEvent } from '../table/table.model';
 import { TableEditDataService } from './services/table-edit-data.service';
 import { TableUtilityService } from './services/table-edit-utility.service';
 import { TableValidationService } from './services/table-validation.service';
@@ -55,6 +56,8 @@ import { ColumnGroup, EditColumn, FieldChangeEvent } from './table-edit.model';
     TableModule,
     TooltipModule,
   ],
+  // 🔧 關鍵修正：在 Component 層級提供 Service，確保每個表格實例都有獨立的 Service
+  providers: [TableEditDataService, TableValidationService]
 })
 export class TableEditComponent implements OnChanges {
   @ViewChild('dt') private readonly table!: Table;
@@ -110,13 +113,43 @@ export class TableEditComponent implements OnChanges {
   @Input() validateOnlySelected = false; // 是否只驗證已選擇的資料
   @Input() errorMessage: string | undefined; // 錯誤訊息
   // Footer
-  @Input() footerData: any;         // (總計)頁尾資料
+  /** 頁尾資料 @default n/a */
+  @Input() footerData: any;
+  /** 是否顯示 Footer @default false */
+  @Input() showFooter = false;
+  /** 分頁器 @default n/a */
+  /** table 高度 @default '867px' */
+  @Input() scrollHeight = '867px';
+  /** 是否要滾輪 @default true */
+  @Input() scrollable = true;
+  /** 是否顯示 分頁器 @default false */
+  @Input() showPaginator = false;
+  /** 記錄總數 @default 0 */
+  @Input() totalRecords = 0;
+  /** 分頁選項 @default [20, 40, 60, 80, 100] */
+  @Input() rowsPerPageOptions: any[] | undefined = [20, 40, 60, 80, 100];
+  /** 共幾頁數 @default 0 */
+  totalPages = 0;
+  /** 每頁顯示的行數 @default 20 */
+  @Input() rows = 20;
+  /** 當前表格的起始索引 @default 0 */
+  first = 0;
+  /** (右上)下拉選單 頁數選項 @default [] */
+  pages: { label: string, value: number; }[] = [];
+  /** (右上)下拉選單 當前選擇的頁數 @default 1 */
+  selectedPage: number | null = 1;
+  /** 是否啟用 Lazy 加載 @default false */
+  @Input() lazy = false;
+  /** Lazy 加載事件 */
+  @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>();
+
 
   protected readonly tableUtilityService = inject(TableUtilityService);
   protected readonly cdr = inject(ChangeDetectorRef);
   protected readonly messageService = inject(NotificationService);
   protected readonly validationService = inject(TableValidationService);
   protected readonly dataService = inject(TableEditDataService);
+  protected readonly zone = inject(NgZone);
 
   public get _tableData(): any[] {
     return this.dataService.tableData;
@@ -175,8 +208,20 @@ export class TableEditComponent implements OnChanges {
   }
   onSelectionChange(event: any) {
     if (this.disabled) { return; }
-    event = event.filter((item: any) => !item._isAutoInsertCandidate);
-    this.selectionChange.emit(event);
+
+    // 使用 zone. runOutsideAngular 優化效能
+    this.zone.runOutsideAngular(() => {
+      // 過濾掉新增候選行
+      const filtered = event.filter((item: any) => !item._isAutoInsertCandidate);
+
+      // 延遲更新，避免阻塞 UI
+      requestAnimationFrame(() => {
+        this.zone.run(() => {
+          this.selectionChange.emit(filtered);
+          this.cdr.markForCheck();
+        });
+      });
+    });
   }
   // Insert 按鈕
   insertRow() {

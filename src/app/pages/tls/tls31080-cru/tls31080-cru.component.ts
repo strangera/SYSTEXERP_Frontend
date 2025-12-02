@@ -199,6 +199,7 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
     this.tls31080Service.queryTLS31080Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
       console.log('單時段之營業報表response', res.Data);
       this.data = res.Data ?? [];               // 查詢資料
+      this.totalRecords = res.Data.length;      // 長度計算筆數
       this.historyRequestBody = request;        // 查詢條件
       this.loading = false;
     })

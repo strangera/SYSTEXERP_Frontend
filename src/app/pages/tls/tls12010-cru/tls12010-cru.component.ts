@@ -1,27 +1,27 @@
 import { ValidationService } from './../../../shared/service/validation.service';
 // --Commonly used imports--
+import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { CommonModule, NgFor, NgIf } from '@angular/common';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
-import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
-import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
-import { Tls12010DetailService } from './tls12010-detail.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
+import { Tls12010DetailService } from './tls12010-detail.service';
 
 export interface Potential_Customer {
   id: number; // 主鍵，自動編號
@@ -141,6 +141,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
 
   // ---Potential_Customer_Detail 潛在客戶其他資料明細檔---
   potentialDetail: Potential_Customer_Detail[] = [];
+  org_potentialDetail: Potential_Customer_Detail[] = []; // 備份
   //欄位資訊
   Potential_Customer_Detail_Columns: ColumnDef[] = [
     { field: 'other_shop', header: '其他商場', type: 'text', editable: true, autoWidth: true },
@@ -319,7 +320,11 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
   }
 
   onClearForm() {
-    this.dataForm.reset(); // 重置表單
+    // this.dataForm.reset(); // 重置表單
+    if (this.crudstatus == CRUDStatus.Create)
+      this.potentialDetail = []; // 清除明細
+    if (this.crudstatus == CRUDStatus.Edit)
+      this.potentialDetail = this.org_potentialDetail; // 還原明細
   }
 
   // 讀取dopropdown選項
@@ -404,6 +409,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
           ...item,
           status: 'original', // 有明細資料，讀取明細狀態設定為 'original';
         }));
+        this.org_potentialDetail = [...this.potentialDetail]
         console.log('取得明細資料:', this.potentialDetail);
       } else {
         this.messageService.errorBubble(`讀取失敗: ${response.Message}`);

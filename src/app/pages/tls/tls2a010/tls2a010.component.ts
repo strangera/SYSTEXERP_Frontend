@@ -101,13 +101,15 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       label: '編輯',
       icon: 'pi pi pi-pencil',
       action: (rowData: any) => this.onEditDetail(rowData),
-      disabled: (rowData: any) =>
-        rowData.PAY_Type === 'C' ||
-        rowData.PAY_Type === 'A' ||
-        rowData.PAY_Type === '0' ||
-        rowData.PAY_Type === '1' ||
-        rowData.check_status === 'Y' ||
-        rowData.isClose === 'Y'
+      disabled: (rowData: any) => {
+        // 1. 已審核 或 已關帳 直接禁用
+        if (rowData.check_status === 'Y' || rowData.isClose === 'Y') {
+          return true;
+        }
+        // 2. PAY_NO 在這些值時也禁用(現金、信用卡)
+        const disabledPayNos = ['10', '12', '14', '41', '42', '43', '44', '81'];
+        return disabledPayNos.includes(rowData.PAY_NO);
+      }
     }
   ];
 

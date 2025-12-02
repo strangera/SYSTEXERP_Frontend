@@ -48,9 +48,10 @@
       <hr />
       <app-table-edit class="col-12" tableKey="TLS52040Detail" [columns]="editColumns" [columnGroup]="columnGroup"
         [data]="data" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
-        errorMessage="請至少選擇一個驗收項目！" (dataChange)="data = $event" [tableRequired]="true" [disabled]="isFormReadable"
+        [rowValidate]="validateEntireRow" errorMessage="請至少選擇一個驗收項目！" (dataChange)="data = $event"
+        [tableRequired]="true"
+        [disabled]="isFormReadable || !(dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value)"
         (insert)="dialogVisible = true" [showInsert]="isFormCreateable || rowdata?.MAM_Status === '0'"
-        [canInsert]="false"
         [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value ? false : true" />
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" (clickEvent)="onReset()" />
@@ -64,10 +65,10 @@
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
     <div class="grid p-fluid">
       <app-dropdown-table class="col-12" [control]="dialogQueryForm.controls.PLU_MagNo" [submitted]="submitted"
-        optionLabel="label" optionValue="PLU_MagNo" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
-        (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
-        [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
-        [totalRecords]="opTotalRecords">
+        templateLabel="label" optionLabel="PLU_MagNo" optionValue="PLU_MagNo" [suggestions]="suggestions"
+        [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
+        (formValueChanged)="onformValueChanged($event)" [formGroup]="opForm" [dialogData]="opData"
+        [dialogColumns]="opColumns" [loading]="opLoading" [totalRecords]="opTotalRecords">
         <app-input-text class="col-12 md:col-6" label="商品管理編號/國際條碼/廠商貨號" controlName="queryNo"
           [control]="opForm.controls.queryNo" />
         <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"

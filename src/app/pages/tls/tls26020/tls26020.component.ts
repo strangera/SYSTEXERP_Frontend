@@ -16,7 +16,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from "../../../shared/componentkit/multi-select/multi-select.component";
-import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate, formatToSixDigits } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls26020',
@@ -77,7 +77,7 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
   expansionColumns: Column[] = [
     { field: 'TXN_DATE', header: '銷售日期', visible: true, format: formatDate },
     { field: 'ECR_NO', header: '機號', visible: true },
-    { field: 'TXN_NO', header: '交易序號', visible: true },
+    { field: 'TXN_NO', header: '交易序號', visible: true, format: formatToSixDigits },
     { field: 'TXN_GUIBegNo_Pre', header: '字軌', visible: true },
     { field: 'TXN_GUIBegNo', header: '發票起始號碼', visible: true },
     { field: 'TXN_GUIEndNo', header: '發票結束號碼', visible: true },

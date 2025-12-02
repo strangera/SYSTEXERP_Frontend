@@ -94,9 +94,9 @@ export class TLS43010Component extends BasicQueryPageComponent<QueryTls43010Resp
   }
 
   isRowSelectable(row: QueryTls43010Response) {
-    return row.NOT_Status !== '2';
+    return row.NOT_Status === '0';
   }
   editDisabled(row: QueryTls43010Response) {
-    return row.NOT_Status === '2';
+    return row.NOT_Status !== '0';
   }
 }

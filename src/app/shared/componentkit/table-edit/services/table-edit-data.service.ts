@@ -7,9 +7,7 @@ import { TableUtilityService } from './table-edit-utility.service';
  * TableDataService 負責管理表格的完整資料 (_fullData) 和顯示資料 (_tableData) 的狀態。
  * 包含資料的初始化、新增、刪除、修改狀態標記等核心邏輯。
  */
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()  // 🔧 移除 providedIn: 'root'，改為在 Component 層級提供
 export class TableEditDataService {
   // 完整資料 (包含 deleted 狀態的資料)
   private _fullData: any[] = [];

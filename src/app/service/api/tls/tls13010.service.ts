@@ -41,12 +41,35 @@ export class TLS13010Service {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010`, payload).pipe(
       tap((res) => console.log('查詢結果:', res)),
       map((response: { Status: string; Data: any[]; }) => {
-        // 如果查詢成功且有資料，就清理空格
+        // 如果查詢成功且有資料，就清理空格並轉換 check_type
         if (response.Status === '0000' && response.Data && Array.isArray(response.Data)) {
-          response.Data = response.Data.map((item: any) => ({
-            ...item,
-            tlt_term_type: item.tlt_term_type?.trim() || ''
-          }));
+          response.Data = response.Data.map((item: any) => {
+            // ✅ 處理 check_type 轉換為 check_typeList
+            let checkTypeList = item.check_typeList || [];
+
+            // 第一次轉換嘗試
+            if ((!checkTypeList || checkTypeList.length === 0) && item.check_type) {
+              const checkTypeStr = String(item.check_type);
+              if (checkTypeStr && checkTypeStr !== '' && checkTypeStr !== 'null' && checkTypeStr !== 'undefined') {
+                checkTypeList = checkTypeStr.split(',').map((x: string) => x.trim()).filter((x: string) => x);
+              }
+            }
+
+            // ✅ 額外防護：如果 check_typeList 仍然是空陣列但 check_type 有值，強制轉換
+            if (item.check_type && Array.isArray(checkTypeList) && checkTypeList.length === 0) {
+              const checkTypeStr = String(item.check_type);
+              if (checkTypeStr && checkTypeStr !== '' && checkTypeStr !== 'null' && checkTypeStr !== 'undefined') {
+                checkTypeList = checkTypeStr.split(',').map((x: string) => x.trim()).filter((x: string) => x);
+                console.log(`🔧 [queryTLS13010] 強制轉換 check_type "${checkTypeStr}" 為 check_typeList:`, checkTypeList);
+              }
+            }
+
+            return {
+              ...item,
+              tlt_term_type: item.tlt_term_type?.trim() || '',
+              check_typeList: checkTypeList  // ✅ 加入轉換後的 check_typeList
+            };
+          });
         }
         return response;
       })
@@ -64,12 +87,35 @@ export class TLS13010Service {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010Detail`, payload).pipe(
       tap((res) => console.log('查詢結果:', res)),
       map((response: { Status: string; Data: any[]; }) => {
-        // 如果查詢成功且有資料，就清理空格
+        // 如果查詢成功且有資料，就清理空格並轉換 check_type
         if (response.Status === '0000' && response.Data && Array.isArray(response.Data)) {
-          response.Data = response.Data.map((item: any) => ({
-            ...item,
-            tlt_term_type: item.tlt_term_type?.trim() || ''
-          }));
+          response.Data = response.Data.map((item: any) => {
+            // ✅ 處理 check_type 轉換為 check_typeList
+            let checkTypeList = item.check_typeList || [];
+
+            // 第一次轉換嘗試
+            if ((!checkTypeList || checkTypeList.length === 0) && item.check_type) {
+              const checkTypeStr = String(item.check_type);
+              if (checkTypeStr && checkTypeStr !== '' && checkTypeStr !== 'null' && checkTypeStr !== 'undefined') {
+                checkTypeList = checkTypeStr.split(',').map((x: string) => x.trim()).filter((x: string) => x);
+              }
+            }
+
+            // ✅ 額外防護：如果 check_typeList 仍然是空陣列但 check_type 有值，強制轉換
+            if (item.check_type && Array.isArray(checkTypeList) && checkTypeList.length === 0) {
+              const checkTypeStr = String(item.check_type);
+              if (checkTypeStr && checkTypeStr !== '' && checkTypeStr !== 'null' && checkTypeStr !== 'undefined') {
+                checkTypeList = checkTypeStr.split(',').map((x: string) => x.trim()).filter((x: string) => x);
+                console.log(`🔧 [queryTLS13010Detail] 強制轉換 check_type "${checkTypeStr}" 為 check_typeList:`, checkTypeList);
+              }
+            }
+
+            return {
+              ...item,
+              tlt_term_type: item.tlt_term_type?.trim() || '',
+              check_typeList: checkTypeList  // ✅ 加入轉換後的 check_typeList
+            };
+          });
         }
         return response;
       })

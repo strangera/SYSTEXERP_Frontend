@@ -26,7 +26,7 @@
 <div class="card">
   <div class="flex justify-content-end gap-2" style="margin-bottom: -42px">
     <p-button [style]="{'z-index': '999'}" label="列印報表" severity="info" icon="pi pi-print" (click)="onExportPdf()"
-      [disabled]="!canPerformAction('60') || queryForm.invalid" [loading]="pdfBtnLoding" />
+      [disabled]="!hasPermission('60') || queryForm.invalid" [loading]="pdfBtnLoding" />
   </div>
   <app-table tableKey="FIN15060" dataKey="INV_GUINo" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords"

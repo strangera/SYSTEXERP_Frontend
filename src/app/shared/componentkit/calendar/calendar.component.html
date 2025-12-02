@@ -20,11 +20,9 @@
 
 <!-- 唯讀模式 -->
 <ng-template #readonlyMode>
-  <div class="readonly-calendar">
-    <input type="text" [id]="controlName" [value]="getDisplayValue()" [placeholder]="placeholder"
-      [class]="calendarClasses" [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }" pInputText
-      readonly />
-  </div>
+  <app-readonly-calendar-display [control]="control" [calendarType]="calendarType" [showSeconds]="showSeconds"
+    [placeholder]="placeholder" [submitted]="submitted" [controlName]="controlName">
+  </app-readonly-calendar-display>
 </ng-template>
 
 <!-- 錯誤訊息 -->
