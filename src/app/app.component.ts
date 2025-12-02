@@ -7,6 +7,7 @@ import { PrimeNGConfig } from 'primeng/api';
 import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { filter, interval } from 'rxjs';
 import { NotificationMessageComponent } from './shared/component/notification-message/notification-message.component';
+import { VersionCheckService } from './service/system/version-check.service';
 
 @Component({
   selector: 'app-root',
@@ -20,12 +21,14 @@ export class AppComponent implements OnInit {
     private readonly translate: TranslateService,
     private readonly router: Router,
     private readonly swUpdate: SwUpdate,
-    private readonly notificationService: NotificationService
+    private readonly notificationService: NotificationService,
+    private readonly versionCheckService: VersionCheckService
   ) {
     this.translate.setDefaultLang('zh-tw');
     this.translate.use('zh-tw');
     this.handleRouteLoadErrors();
     this.checkForAppUpdate();
+    this.startVersionMonitoring();
   }
   ngOnInit(): void {
     this.primengConfig.ripple = true;
@@ -146,19 +149,62 @@ export class AppComponent implements OnInit {
       ).subscribe((evt) => {
         // VersionReadyEvent 包含 previousVersion 和 currentVersion (即 version)
         console.log(`SW: 新版本已準備就緒。新版本: ${evt.currentVersion}。`);
-        if (confirm('偵測到系統有更新！是否立即重新整理頁面以使用最新版本？')) {
-          this.swUpdate.activateUpdate().then(() => document.location.reload());
-        }
+
+        // 🔥 改為更積極的更新策略：自動更新而非詢問
+        this.notificationService.infoBubble(
+          '系統將在 5 秒後自動更新到最新版本...',
+          '偵測到新版本'
+        );
+
+        // 5 秒後自動刷新
+        setTimeout(() => {
+          this.swUpdate.activateUpdate().then(() => {
+            console.log('SW: 正在啟用新版本並重新載入頁面...');
+            document.location.reload();
+          });
+        }, 5000);
       });
 
-      // 3. 設定檢查間隔：每 15 分鐘主動檢查
-      interval(15 * 60 * 1000).subscribe(() => {
+      // 3. 設定檢查間隔：每 5 分鐘主動檢查 (從 15 分鐘縮短)
+      interval(5 * 60 * 1000).subscribe(() => {
         console.log('SW: 主動檢查是否有新版本...');
         this.swUpdate.checkForUpdate();
       });
 
       // 4. 在 App 啟動時主動檢查一次
       this.swUpdate.checkForUpdate();
+
+      // 5. 🔥 每次使用者聚焦視窗時也檢查 (使用者從其他分頁切回來)
+      window.addEventListener('focus', () => {
+        console.log('SW: 視窗重新聚焦，檢查更新...');
+        this.swUpdate.checkForUpdate();
+      });
     }
+  }
+
+  /**
+   * 🔥 啟動版本監控 (檢查 version.json)
+   */
+  private startVersionMonitoring(): void {
+    // 訂閱版本更新事件
+    this.versionCheckService.versionUpdateAvailable$.subscribe((newVersion) => {
+      console.log('[App] 偵測到新版本:', newVersion);
+
+      // 顯示通知並自動刷新
+      this.notificationService.infoBubble(
+        `新版本 ${newVersion.version} 已發布！系統將在 3 秒後自動更新...`,
+        '系統更新通知'
+      );
+
+      // 3 秒後刷新頁面
+      setTimeout(() => {
+        console.log('[App] 正在重新載入頁面以套用新版本...');
+        // 強制重新載入（不使用快取）
+        window.location.reload();
+      }, 3000);
+    });
+
+    // 啟動版本檢查
+    this.versionCheckService.startVersionCheck();
   }
 }
