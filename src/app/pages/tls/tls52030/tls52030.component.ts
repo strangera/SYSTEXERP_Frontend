@@ -78,7 +78,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   pluMagNoOptions: { label: string, value: string }[] = []; // 商品管理編號
   brandOptions = this.dropdown.queryPluLogo();
   vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' })
-  poStatusOptions = getSYS1000Options('PO_Status');// 採購單狀態 (靜態資料)
+  poStatusOptions = getSYS1000Options('ODM_Status');// (靜態資料)
   userOptions = this.dropdown.queryTblUser();
   data: ITLS52030Data[] = [];
   selectedItems: ITLS52030Data[] = [];
