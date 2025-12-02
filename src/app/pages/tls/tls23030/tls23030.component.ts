@@ -35,6 +35,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 
 // === 總計欄位鍵（給 footerData 用）===
 const TOTAL_FIELD_MAP = {
@@ -70,6 +71,7 @@ const TOTAL_FIELD_MAP = {
     DropdownComponent,
     InputTextComponent,
     ButtonComponent,
+    InputTextRangeComponent,
 
     // Table
     TableReportComponent,
