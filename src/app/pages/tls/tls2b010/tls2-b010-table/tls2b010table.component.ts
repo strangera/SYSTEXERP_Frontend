@@ -597,7 +597,7 @@ export class tls2b010tableComponent
     }
   }
 
-  canPerformAction(action: string): boolean {
+  hasPermission(action: string): boolean {
     return this.funInfo?.PrivilegeBehavior?.some(b => b.function_code === action) || false;
   }
 

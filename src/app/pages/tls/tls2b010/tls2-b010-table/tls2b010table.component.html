@@ -15,8 +15,8 @@
                 + (IsPrint ? ' p-datatable-gridlines' : '')
                 + ' table-font-md'" currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})"
   (selectionChange)="onSelectionChange($event)" (onRowSelect)="select.emit($event)"
-  (onRowUnselect)="unSelect.emit($event)" [rowSelectable]="rowSelectableWrapper"
-   [loading]="loading" paginatorDropdownAppendTo="body" editMode="row">
+  (onRowUnselect)="unSelect.emit($event)" [rowSelectable]="rowSelectableWrapper" [loading]="loading"
+  paginatorDropdownAppendTo="body" editMode="row">
 
   <!-- ===== Caption / 工具列 ===== -->
   <ng-template pTemplate="caption">
@@ -30,18 +30,18 @@
         <p-button [icon]="IsPrint ? 'pi pi-file' : 'pi pi-times'" [rounded]="true"
           *ngIf="showReportMode && data.length > 0" (click)="toggleVisibility()"
           [pTooltip]="IsPrint ? '報表模式' : '關閉報表模式'" tooltipPosition="top" [outlined]="!IsPrint"
-          [disabled]="!canPerformAction('50')" />
+          [disabled]="!hasPermission('50')" />
 
         <!-- 報表/匯出（非報表模式） -->
         <div [@toggleButtons]="!IsPrint ? 'visible' : 'hidden'" [ngClass]="IsPrint ? 'hidden' : 'flex'" class="gap-2">
           <p-button tooltipPosition="top" pTooltip="列印PDF" class="p-button-rounded p-button-text p-button-info"
             icon="fa-regular fa-file-pdf" (click)="customReport ? exportEvent.emit('PDF') : export('PDF')"
-            [disabled]="!canPerformAction('60')">
+            [disabled]="!hasPermission('60')">
           </p-button>
 
           <p-button tooltipPosition="top" pTooltip="匯出Excel" class="p-button-rounded p-button-text p-button-info"
             icon="fa-regular fa-file-lines" (click)="customReport ? exportEvent.emit('Excel') : export('Excel')"
-            [disabled]="!canPerformAction('70')">
+            [disabled]="!hasPermission('70')">
           </p-button>
         </div>
 

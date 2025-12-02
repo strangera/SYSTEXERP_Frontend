@@ -148,7 +148,7 @@ export abstract class BasicPrintDataComponent {
     });
   }
   // 權限
-  canPerformAction(action: string): boolean {
+  hasPermission(action: string): boolean {
     return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
   }
 }

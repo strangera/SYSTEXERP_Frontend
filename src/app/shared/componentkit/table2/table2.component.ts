@@ -1,44 +1,50 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { NgClass, NgFor, NgIf } from '@angular/common';
 import {
-  Component, EventEmitter, Input, SimpleChanges, OnChanges, Output,
-  ViewChild, OnDestroy, OnInit,
+  Component, EventEmitter, Input,
+  OnChanges,
+  OnDestroy, OnInit,
+  Output,
+  SimpleChanges,
+  ViewChild,
 } from '@angular/core';
-import {
-  Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent,
-  TableRowUnSelectEvent, TableModule,
-} from 'primeng/table';
+import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { SortMeta } from 'primeng/api';
+import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
+import { BlockUIModule } from 'primeng/blockui';
+import { ButtonModule } from 'primeng/button';
+import { CalendarModule } from 'primeng/calendar';
+import { CheckboxModule } from 'primeng/checkbox';
+import { DividerModule } from 'primeng/divider';
+import { DropdownModule } from 'primeng/dropdown';
+import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
+import { ImageModule } from 'primeng/image';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { RippleModule } from 'primeng/ripple';
+import { SkeletonModule } from 'primeng/skeleton';
+import {
+  Table, TableLazyLoadEvent,
+  TableModule,
+  TablePageEvent, TableRowSelectEvent,
+  TableRowUnSelectEvent,
+} from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip';
+import { Observable, Subject, takeUntil } from 'rxjs';
+import { CurrentPageService } from 'src/app/core/layout/app.menulist/current-page.service';
+import { NotificationService } from '../../component/notification-message/notification.service';
+import { BasicPrintData2Component } from '../../componentextends/basic-print/basic-print-data2.component';
+import { FunsrightInfo } from '../../models/system/funsrightInfo';
+import { QueryStateService } from '../../service/query-state.service';
+import { TableExpansion2Component } from './table-expansion2/table-expansion2.component';
+import { TableExport2Component } from './table-export2/table-export2.component';
+import { Table2UtilityService } from './table2-utility.service';
 import {
   AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent,
   RowEditSaveEvent, toggleButtons, validateRowData,
 } from './table2.model';
-import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
-import { NotificationService } from '../../component/notification-message/notification.service';
-import { QueryStateService } from '../../service/query-state.service';
-import { BasicPrintData2Component } from '../../componentextends/basic-print/basic-print-data2.component';
-import { Observable, Subject, takeUntil } from 'rxjs';
-import { FunsrightInfo } from '../../models/system/funsrightInfo';
-import { NgIf, NgClass, NgFor } from '@angular/common';
-import { DividerModule } from 'primeng/divider';
-import { MultiSelectModule } from 'primeng/multiselect';
-import { TooltipModule } from 'primeng/tooltip';
-import { FormsModule } from '@angular/forms';
-import { ButtonModule } from 'primeng/button';
-import { DropdownModule } from 'primeng/dropdown';
-import { RippleModule } from 'primeng/ripple';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { CalendarModule } from 'primeng/calendar';
-import { CheckboxModule } from 'primeng/checkbox';
-import { SkeletonModule } from 'primeng/skeleton';
-import { TableExpansion2Component } from './table-expansion2/table-expansion2.component';
-import { TableExport2Component } from './table-export2/table-export2.component';
-import { BlockUIModule } from 'primeng/blockui';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { Table2UtilityService } from './table2-utility.service';
-import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
-import { ImageModule } from 'primeng/image';
-import { CurrentPageService } from 'src/app/core/layout/app.menulist/current-page.service';
 
 @Component({
   selector: 'app-table2',
@@ -680,7 +686,7 @@ export class Table2Component
     }
   }
 
-  canPerformAction(action: string): boolean {
+  hasPermission(action: string): boolean {
     return (
       this.funInfo?.PrivilegeBehavior?.some(
         (behavior) => behavior.function_code === action,
