@@ -115,7 +115,8 @@ jobs:
           ],
           'outputHashing': 'all',
           'aot': true,
-          'optimization': true
+          'optimization': true,
+          'serviceWorker': 'ngsw-config.json'
         };
         
         fs.writeFileSync('angular.json', JSON.stringify(config, null, 2));
@@ -129,26 +130,58 @@ jobs:
         npx ng build --configuration production \
           --base-href /TSRDWEB/ \
           --output-hashing=all
-        
+
+        echo "=== 🔥 生成 version.json（用於前端版本檢測）==="
+
+        # 取得建置資訊
+        BUILD_TIME=$(TZ=Asia/Taipei date '+%Y/%m/%d %H:%M:%S')
+        BUILD_TIMESTAMP=$(TZ=Asia/Taipei date '+%s')
+        TAG_NAME=${GITHUB_REF##*/}
+
+        # 從 environment.prod.ts 讀取版本號
+        VERSION=$(grep -oP "version:\s*'\K[^']+" src/environments/environment.prod.ts || echo "unknown")
+
+        # 找到 dist 目錄
+        DIST_DIR=$(find dist -type d -name "browser" | head -1)
+        if [ -z "$DIST_DIR" ]; then
+          DIST_DIR=$(find dist -type f -name "index.html" -exec dirname {} \; | head -1)
+        fi
+
+        if [ -z "$DIST_DIR" ]; then
+          echo "❌ 找不到 dist 目錄"
+          exit 1
+        fi
+
+        # 🔥 生成 version.json（前端會定期抓取此檔案比對版本）
+        cat > "$DIST_DIR/version.json" <<EOF
+        {
+          "version": "$VERSION",
+          "buildTime": "$BUILD_TIME",
+          "buildTimestamp": $BUILD_TIMESTAMP,
+          "tag": "$TAG_NAME",
+          "hash": "$(echo -n "$VERSION-$BUILD_TIMESTAMP" | md5sum | cut -d' ' -f1)"
+        }
+        EOF
+
+        echo "✅ 已生成 version.json"
+        cat "$DIST_DIR/version.json"
+
         echo "=== 強制更新 index.html（確保 Service Worker 偵測到變更）==="
-        
-        # 找到 index.html（在 dist 原始目錄）
-        INDEX_FILE=$(find dist -name index.html -type f | head -1)
-        
-        if [ -z "$INDEX_FILE" ]; then
+
+        # 找到 index.html
+        INDEX_FILE="$DIST_DIR/index.html"
+
+        if [ ! -f "$INDEX_FILE" ]; then
           echo "❌ 找不到 index.html"
           exit 1
         fi
-        
-        # 產生唯一的建置資訊（台灣時間）
-        BUILD_TIME=$(TZ=Asia/Taipei date '+%Y/%m/%d %H:%M:%S')
-        TAG_NAME=${GITHUB_REF##*/}
-        
+
         # 在 </head> 前插入註解（改變 index.html 內容 → 觸發 SW 更新）
-        sed -i "s#</head>#  <!-- Build: $BUILD_TIME - Tag: $TAG_NAME -->\n</head>#" "$INDEX_FILE"
-        
+        sed -i "s#</head>#  <!-- Build: $BUILD_TIME - Tag: $TAG_NAME - Hash: $(echo -n "$VERSION-$BUILD_TIMESTAMP" | md5sum | cut -d' ' -f1) -->\n</head>#" "$INDEX_FILE"
+
         echo "✅ 已注入建置資訊到 index.html"
         echo "   檔案：$INDEX_FILE"
+        echo "   版本：$VERSION"
         echo "   時間：$BUILD_TIME"
         echo "   標籤：$TAG_NAME"
       env:
@@ -176,24 +209,55 @@ jobs:
         npx ng build --configuration staging \
           --base-href /tsrdwebdev/ \
           --output-hashing=all
-        
+
+        echo "=== 🔥 生成 version.json（用於前端版本檢測）==="
+
+        # 取得建置資訊
+        BUILD_TIME=$(TZ=Asia/Taipei date '+%Y/%m/%d %H:%M:%S')
+        BUILD_TIMESTAMP=$(TZ=Asia/Taipei date '+%s')
+        TAG_NAME=${GITHUB_REF##*/}
+
+        # 從 environment.staging.ts 讀取版本號
+        VERSION=$(grep -oP "version:\s*'\K[^']+" src/environments/environment.staging.ts || echo "unknown")
+
+        # 找到 dist 目錄
+        DIST_DIR=$(find dist -type d -name "browser" | head -1)
+        if [ -z "$DIST_DIR" ]; then
+          DIST_DIR=$(find dist -type f -name "index.html" -exec dirname {} \; | head -1)
+        fi
+
+        if [ -z "$DIST_DIR" ]; then
+          echo "❌ 找不到 dist 目錄"
+          exit 1
+        fi
+
+        # 🔥 生成 version.json
+        cat > "$DIST_DIR/version.json" <<EOF
+        {
+          "version": "$VERSION",
+          "buildTime": "$BUILD_TIME",
+          "buildTimestamp": $BUILD_TIMESTAMP,
+          "tag": "$TAG_NAME (STAGING)",
+          "hash": "$(echo -n "$VERSION-$BUILD_TIMESTAMP" | md5sum | cut -d' ' -f1)"
+        }
+        EOF
+
+        echo "✅ 已生成 version.json (STAGING)"
+        cat "$DIST_DIR/version.json"
+
         echo "=== 強制更新 index.html（確保 Service Worker 偵測到變更）==="
-        
+
         # 找到 index.html
-        INDEX_FILE=$(find dist -name index.html -type f | head -1)
-        
-        if [ -z "$INDEX_FILE" ]; then
+        INDEX_FILE="$DIST_DIR/index.html"
+
+        if [ ! -f "$INDEX_FILE" ]; then
           echo "❌ 找不到 index.html"
           exit 1
         fi
-        
-        # 產生唯一的建置資訊
-        BUILD_TIME=$(TZ=Asia/Taipei date '+%Y/%m/%d %H:%M:%S')
-        TAG_NAME=${GITHUB_REF##*/}
-        
+
         # 注入建置資訊
-        sed -i "s#</head>#  <!-- Build: $BUILD_TIME - Tag: $TAG_NAME - STAGING -->\n</head>#" "$INDEX_FILE"
-        
+        sed -i "s#</head>#  <!-- Build: $BUILD_TIME - Tag: $TAG_NAME - STAGING - Hash: $(echo -n "$VERSION-$BUILD_TIMESTAMP" | md5sum | cut -d' ' -f1) -->\n</head>#" "$INDEX_FILE"
+
         echo "✅ 已注入建置資訊到 index.html (STAGING)"
       env:
         NODE_OPTIONS: "--max_old_space_size=4096"
