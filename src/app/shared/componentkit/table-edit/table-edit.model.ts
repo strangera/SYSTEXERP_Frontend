@@ -11,6 +11,9 @@ export interface EditColumn {
   groupField?: string;
   width?: string;
   textAlign?: 'left' | 'right' | 'center' | 'justify' | 'match-parent' | 'initial' | 'inherit' | 'unset' | 'revert' | 'revert-layer' | 'unset';
+  showSort?: boolean;
+  // input
+  placeholder?: string;
   // inputNumber
   min?: number; // 最小值
   max?: number; // 最大值
