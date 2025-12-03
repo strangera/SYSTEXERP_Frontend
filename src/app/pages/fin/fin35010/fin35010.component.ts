@@ -8,7 +8,6 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { HasPermissionDirective } from '@shared/directive/has-permission.directive';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -16,6 +15,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
+import { UpdateType } from './fin35010.model';
 
 @Component({
   selector: 'app-fin35010',
@@ -34,31 +34,33 @@ import { DropdownApiService } from './../../../service/utility/dropdown-api.serv
     InputTextComponent,
     TranslateModule,
     CalendarRangeQuickComponent,
-    HasPermissionDirective
   ],
 })
 export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response> implements OnInit {
+  public readonly UpdateType = UpdateType;
   queryForm = this.formBuilder.nonNullable.group({
-    VEN_No: [], // 廠客代號(下拉), POS2013.VEN_NO
+    VEN_No: [null], // 廠客代號(下拉), POS2013.VEN_NO
     VEN_Name: [null, Validators.maxLength(100)], // "廠客名稱, POS2013.VEN_NAME LIKE %%" (input輸入)
     TLT_Name: [null, Validators.maxLength(100)], // 櫃位名稱(下拉)
-    tlt_bdateStart: [],// 合約起日(日期範圍)
-    tlt_bdateEnd: [],// 合約起日(日期範圍)
-    tlt_edateStart: [],// 合約迄日(日期範圍)
-    tlt_edateEnd: [],// 合約迄日(日期範圍)
-    Deposit_DateStart: [], // 收票日期(日期範圍)
-    Deposit_DateEnd: [], // 收票日期(日期範圍)
-    CHK_ExpireDateStart: [], // 保證票到期日(日期範圍)
-    CHK_ExpireDateEnd: [], // 保證票到期日(日期範圍)
-    UPD_DateStart: [], // 變更日期(日期範圍)
-    UPD_DateEnd: [], // 變更日期(日期範圍)
+    tlt_bdateStart: [null],// 合約起日(日期範圍)
+    tlt_bdateEnd: [null],// 合約起日(日期範圍)
+    tlt_edateStart: [null],// 合約迄日(日期範圍)
+    tlt_edateEnd: [null],// 合約迄日(日期範圍)
+    Deposit_DateStart: [null], // 收票日期(日期範圍)
+    Deposit_DateEnd: [null], // 收票日期(日期範圍)
+    CHK_ExpireDateStart: [null], // 保證票到期日(日期範圍)
+    CHK_ExpireDateEnd: [null], // 保證票到期日(日期範圍)
+    UPD_DateStart: [null], // 變更日期(日期範圍)
+    UPD_DateEnd: [null], // 變更日期(日期範圍)
     CHK_No: [null, Validators.maxLength(10)], // 票據編號(input輸入)
-    Status: [], // 票據狀態(下拉) // 狀態 (0=未繳票 1=已繳票 2=已退票 3=封存)
-    CHK_Type: [], // 保證票類型(下拉) // 票據種類 (1=支票 2=本票 3=銀行保證函 4=其他)
-    org_id: [], // 組織代碼(下拉)
+    Status: [null], // 票據狀態(下拉) // 狀態 (0=未繳票 1=已繳票 2=已退票 3=封存)
+    CHK_Type: [null], // 保證票類型(下拉) // 票據種類 (1=支票 2=本票 3=銀行保證函 4=其他)
+    org_id: [null], // 組織代碼(下拉)
     Remark: [null, Validators.maxLength(160)], // 摘要(input輸入)
-    Deposit_Type: [], // 保證類別(下拉) // 保證金類型 (1=押金 2=履約保證金 3=施工保證金 4=開業保證金)
+    Deposit_Type: [null], // 保證類別(下拉) // 保證金類型 (1=押金 2=履約保證金 3=施工保證金 4=開業保證金)
     CHK_Amt: [null, Validators.max(9999999999)], // 金額(數字範圍輸入)
+    pageIndex: [1],
+    pageSize: [30],
   });
   VEN_NoOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
   TLT_NameOptions = this.dropdown.queryTltTalent();
