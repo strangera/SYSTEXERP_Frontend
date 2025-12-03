@@ -22,6 +22,7 @@ export interface EditColumn {
   minFractionDigits?: number;
   maxFractionDigits?: number;
   suffix?: string;
+  placeholder?: string; // 提示文字
   // dropdown
   options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
   optionLabel?: string; // 下拉選單 optionLabel
