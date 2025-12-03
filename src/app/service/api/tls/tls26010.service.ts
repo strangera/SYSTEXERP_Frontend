@@ -272,7 +272,7 @@ export class TLS26010Service {
             currentData[index].approved_date = approval ? new Date() : null;
             currentData[index].pod_status = approval ? ApprovalStatus.已核准 : ApprovalStatus.未核准;
           }
-          return currentData;
+          return [...currentData];
         })),
         tap(res => {
           if (res.Status !== '0000') return void this.messageService.errorBubble(`${this.approvalCheck(data).confirm}失敗: ${res.Message}`);
