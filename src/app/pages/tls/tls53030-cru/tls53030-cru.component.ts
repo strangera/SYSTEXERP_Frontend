@@ -89,7 +89,12 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
       format: formatAmount,
       type: 'inputNumber',
       disabled: () => this.rowdata?.PST_Status !== '1',
-      placeholder: '請輸入數量'
+      placeholder: '請輸入數量',
+      calculate: (row) => {
+        return {
+          'DIFF_Qty': row.PST_Qty1 - row.SYS_STOCK_QTY,
+        };
+      }
     },
     {
       field: 'PST_Qty2',
@@ -98,6 +103,11 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
       type: 'inputNumber',
       disabled: () => this.rowdata?.PST_Status !== '2',
       placeholder: '請輸入數量',
+      calculate: (row) => {
+        return {
+          'DIFF_Qty': row.PST_Qty2 - row.SYS_STOCK_QTY,
+        };
+      }
     },
     {
       field: 'PST_Qty3',
@@ -105,7 +115,12 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
       format: formatAmount,
       type: 'inputNumber',
       disabled: () => this.rowdata?.PST_Status !== '3',
-      placeholder: '請輸入數量'
+      placeholder: '請輸入數量',
+      calculate: (row) => {
+        return {
+          'DIFF_Qty': row.PST_Qty3 - row.SYS_STOCK_QTY,
+        };
+      }
     },
     { field: 'DIFF_Qty', header: '差異量', format: formatAmount },
   ];
