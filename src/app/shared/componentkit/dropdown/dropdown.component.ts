@@ -41,6 +41,7 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
   private _options: any[] = [];
   @Input() optionLabel = 'label'; // 資料的 Label
   @Input() optionValue: string | undefined; // 資料的 Value
+  @Input() optionDisabled: string | undefined; // 資料的 Disabled 屬性
   @Input() customPlaceholder = '請選擇';
   @Input() submitted = false; // 檢查欄位是否標準
   // PrimeNG 下拉選單屬性
