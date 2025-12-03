@@ -12,8 +12,6 @@ export interface EditColumn {
   width?: string;
   textAlign?: 'left' | 'right' | 'center' | 'justify' | 'match-parent' | 'initial' | 'inherit' | 'unset' | 'revert' | 'revert-layer' | 'unset';
   showSort?: boolean;
-  // input
-  placeholder?: string;
   // inputNumber
   min?: number; // 最小值
   max?: number; // 最大值
@@ -22,6 +20,7 @@ export interface EditColumn {
   minFractionDigits?: number;
   maxFractionDigits?: number;
   suffix?: string;
+  placeholder?: string; // 提示文字
   // dropdown
   options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
   optionLabel?: string; // 下拉選單 optionLabel
