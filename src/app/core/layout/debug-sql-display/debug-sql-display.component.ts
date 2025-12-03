@@ -77,7 +77,12 @@ export class DebugSqlDisplayComponent {
   onToggle(event: Event, op: any): void {
     op.toggle(event);
   }
-
+  /**
+     * 新增功能：手動清除所有歷史記錄
+     */
+  onClearHistory(): void {
+    this.debugService.clearHistory();
+  }
   /**
    * 當點擊表格中的列時，複製 SQL 語法到剪貼簿
    * @param sqlDetail 選中的 SQL 記錄 (現在是 FlatSqlDetail)

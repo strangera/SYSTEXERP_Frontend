@@ -115,10 +115,22 @@ export class DebugToggleService {
         stackTrace: stackTrace,
         timestamp: new Date()
       };
-
       // 更新 allSqlHistory Signal (追加新的 API 呼叫記錄)
-      this.allSqlHistory.update(currentHistory => [...currentHistory, newEntry]);
+      this.allSqlHistory.update(currentHistory => {
+        // === 歷史記錄筆數限制邏輯 ===
+        const MAX_ENTRIES = 15; // 最大記錄 API 呼叫筆數
+        const TRIM_COUNT = 5;  // 超出限制時，清除的舊筆數
 
+        const updatedHistory = [...currentHistory, newEntry];
+
+        if (updatedHistory.length > MAX_ENTRIES) {
+          console.warn(`[Debug Service] 歷史記錄超過 ${MAX_ENTRIES} 筆，清除最舊的 ${TRIM_COUNT} 筆記錄。`);
+          // 清除最舊的 TRIM_COUNT 筆記錄
+          return updatedHistory.slice(TRIM_COUNT);
+        }
+        // ===================================
+        return updatedHistory;
+      });
       // 這裡可以觸發通知
       // this.notificationService.show('info', `API 呼叫 [${apiUrl}] 包含 ${processedSqlData.length} 條 SQL 語法`);
 
@@ -128,7 +140,16 @@ export class DebugToggleService {
       this.latestStackTrace.set(null);
     }
   }
-
+  /**
+     * 新增功能：清除所有歷史 SQL 記錄
+     */
+  public clearHistory(): void {
+    this.allSqlHistory.set([]);
+    this.latestSqlData.set([]);
+    this.latestStackTrace.set(null);
+    this.notificationService.infoBubble('所有 SQL 歷史記錄已清除。');
+    console.log('[Debug Service] 所有 SQL 歷史記錄已手動清除。');
+  }
   /**
    * 為了保持向下相容性，但請注意此函數現在回傳的是 ApiSqlHistoryEntry[]
    * 如果您的舊程式碼需要 ExecutedSqlDetail[]，此函數的設計應重新考慮。
