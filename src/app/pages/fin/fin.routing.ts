@@ -117,8 +117,8 @@ export const finRoutes: Routes = [
   { path: 'fin24010', loadComponent: () => import('./fin24010/fin24010.component').then(m => m.FIN24010Component), data: { progNo: 'FIN24010' } },
   { path: 'fin24010cru', loadComponent: () => import('./fin24010-cru/fin24010-cru.component').then(m => m.FIN24010CRUComponent), data: { progNo: 'FIN24010' } },
   // 保留款沖款維護
-  // { path: 'fin24020', loadComponent: () => import('./fin24020/fin24020.component').then(m => m.FIN24020Component),data:{progNo:'FIN24020'} },
-  // { path: 'fin24020cru', loadComponent: () => import('./fin24020-cru/fin24020-cru.component').then(m => m.FIN24020CRUComponent),data: { progNo: 'FIN24020'} },
+  { path: 'fin24020', loadComponent: () => import('./fin24020/fin24020.component').then(m => m.FIN24020Component) },
+  { path: 'fin24020cru', loadComponent: () => import('./fin24020-cru/fin24020-cru.component').then(m => m.FIN24020CRUComponent) },
   // 產生電匯付款資料
   // { path: 'fin25010', loadComponent: () => import('./fin25010/fin25010.component').then(m => m.FIN25010Component),data:{progNo:'FIN25010'} },
   // { path: 'fin25010cru', loadComponent: () => import('./fin25010-cru/fin25010-cru.component').then(m => m.FIN25010CRUComponent),data: { progNo: 'FIN25010'} },

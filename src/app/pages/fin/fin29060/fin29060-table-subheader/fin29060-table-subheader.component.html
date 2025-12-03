@@ -112,7 +112,7 @@
           <span class="pi pi-bars" pReorderableRowHandle></span>
         </td>
         <td class="text-center">{{ rowIndex + 1 }}</td>
-        <td *ngFor="let col of columns" class="text-center" style="text-overflow: ellipsis" style="min-width: 55px"
+        <td *ngFor="let col of columns" class="text-center" style="text-overflow: ellipsis; min-width: 55px;"
           [ngClass]="col.style">
           <!-- 連結到cruPage Read -->
           <ng-container *ngIf="col.type === 'detail'">
@@ -163,7 +163,7 @@
         </td>
       </ng-container>
       <ng-template #loadingTemplate>
-        <td *ngFor="let _ of [].constructor(getVisibleHeaderCount - 1)">
+        <td *ngFor="let _ of [].constructor(getVisibleHeaderCount)">
           <p-skeleton />
         </td>
       </ng-template>

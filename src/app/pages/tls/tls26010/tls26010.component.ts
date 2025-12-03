@@ -145,8 +145,11 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
   }, { allowSignalWrites: !0 });
 
   private buildQueryPayload(): TLS26010Query {
-    const { pageIndex, pageSize, SortBy, ecrNos, tltNos, podSdateS, podSdateE, podEdateS, podEdateE, ...rest } = this.queryForm.getRawValue();
+    const { pageIndex, pageSize, SortBy, sys3800, sys3900, sys3A00, ecrNos, tltNos, podSdateS, podSdateE, podEdateS, podEdateE, ...rest } = this.queryForm.getRawValue();
     const raw = {
+      building_nos: sys3800,
+      floor_nos: sys3900,
+      area_nos: sys3A00,
       ECR_No: ecrNos,
       tlt_nos: tltNos,
       pod_sdate_S: podSdateS ? DateUtils.toDateString(podSdateS) : undefined,

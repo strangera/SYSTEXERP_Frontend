@@ -6,7 +6,6 @@ import { FloorService } from '@service/basic/querySYS3900.service';
 import { RegionService } from '@service/basic/querySYS3A00.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
@@ -18,6 +17,7 @@ import { TLS32030Data, TLS32030Service } from '../../../service/api/tls/tls32030
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
@@ -71,6 +71,11 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     tax: [true], // 是否含稅
     tlt_building: [null], // 館別
     issue: ['2'], // 是否開立業主發票
+    onedate_Startd_c: [null], // 比較日期起
+    onedate_End: [null], // 比較日期迄
+    onedatedd_c_Start: [null], // 比較日期起（日報表）
+    onedatedd_c_End: [null], // 比較日期迄（日報表）
+    onedate_Start: [null], // 比較日期起（週/半年/年報表）
     ...createPaginationConfig([{ field: 'team_name', order: -1 }])
   });
 
