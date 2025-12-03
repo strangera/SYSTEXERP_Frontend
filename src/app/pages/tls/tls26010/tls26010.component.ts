@@ -105,18 +105,6 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
   // Table 相關
   public readonly editDisabled = (rowData: TLS26010Data) =>
     (Reflect.has(rowData, 'CanEdit') && rowData.CanEdit == '1') || rowData.pod_status !== ApprovalStatus.未核准;
-  public readonly addButton: AddButton[] = [
-    {
-      label: '核准', icon: 'pi pi-check-circle text-green-500',
-      action: (rowData: TLS26010Data) => this.service.loadApproval(rowData, this.tableData),
-      disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.未核准,
-    },
-    {
-      label: '反核准', icon: 'pi pi-undo text-orange-500',
-      action: (rowData: TLS26010Data) => this.service.loadApproval(rowData, this.tableData),
-      disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.已核准,
-    },
-  ];
 
   // 監聽館別、樓層及區域變化，載入相關資料
   public readonly dependentDataEffect = effect(() => {
@@ -196,6 +184,37 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     { field: 'approved_date', header: '核准日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
   ];
 
+  public readonly addButton: AddButton[] = [
+    {
+      label: '核准', icon: 'pi pi-check-circle text-green-500',
+      action: (rowData: TLS26010Data) => {
+        this.logger.debug('核准按鈕被點擊:', rowData);
+        this.service.loadApproval(rowData).subscribe({
+          next: (res) => {
+            if (res.Status === '0000') {
+              this.onSubmit(this.queryForm);
+            }
+          }
+        });
+      },
+      disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.未核准,
+    },
+    {
+      label: '反核准', icon: 'pi pi-undo text-orange-500',
+      action: (rowData: TLS26010Data) => {
+        this.logger.debug('反核准按鈕被點擊:', rowData);
+        this.service.loadApproval(rowData).subscribe({
+          next: (res) => {
+            if (res.Status === '0000') {
+              this.onSubmit(this.queryForm);
+            }
+          }
+        });
+      },
+      disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.已核准,
+    },
+  ];
+
   constructor(
     public readonly service: TLS26010Service,
     private readonly datePipe: DatePipe,
@@ -252,4 +271,5 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
       });
     }
   }
+
 }

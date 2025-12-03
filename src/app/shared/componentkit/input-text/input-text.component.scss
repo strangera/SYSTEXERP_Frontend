@@ -35,9 +35,9 @@ input {
   line-height: 1.5 !important;
   font-size: 1rem !important;
 
-  // 移除 disabled 的灰色背景，保持白色背景
+  // 保持 readonly 的灰色背景，即使在 disabled 狀態
   &[disabled] {
-    background-color: #ffffff !important;
+    background-color: #f8f9fa !important;
     opacity: 1 !important;
   }
 

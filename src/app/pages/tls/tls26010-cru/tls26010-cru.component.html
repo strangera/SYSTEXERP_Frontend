@@ -72,8 +72,9 @@
         [columns]="ecrColumn"
         (selectionChange)="selectedECRItems = $event"
         [selectedItems]="selectedECRItems"
-        [showInsert]="true"
-        [showDelete]="true"
+        [showCheckBox]="!isFormReadable"
+        [showInsert]="!isFormReadable"
+        [showDelete]="!isFormReadable"
         [canInsert]="false"
         (insert)="dialogVisible('ecr')"
         [dataStatusValue]="{
@@ -100,8 +101,9 @@
         [columns]="tltColumn"
         (selectionChange)="selectedTLTItems = $event"
         [selectedItems]="selectedTLTItems"
-        [showInsert]="true"
-        [showDelete]="true"
+        [showCheckBox]="!isFormReadable"
+        [showInsert]="!isFormReadable"
+        [showDelete]="!isFormReadable"
         [canInsert]="false"
         (insert)="onTltInsertClick()"
         [dataStatusValue]="{

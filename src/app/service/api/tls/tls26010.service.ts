@@ -256,30 +256,25 @@ export class TLS26010Service {
   }
 
   /** 核准或反核准預購活動 */
-  public loadApproval(data: TLS26010Data, tableData: WritableSignal<TLS26010Data[]>): void {
-    if (this.approvalStatusLoading()) return;
+  public loadApproval(data: TLS26010Data): Observable<BaseQueryResponse<{ Status: ApprovalStatus; }>> {
+    if (this.approvalStatusLoading()) {
+      this.logger.warn('核准/反核准操作進行中，請稍後再試');
+      return of({ Status: 'LOADING', Message: '操作進行中' } as any);
+    }
     this.approvalStatusLoading.set(true);
     const id = data.id;
-    this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
-      `${apiUrl}/TLS0000/TLS2000/${this.approvalCheck(data).api}`, { id }).pipe(
+    const actionInfo = this.approvalCheck(data);
+    this.logger.debug(`執行${actionInfo.confirm}操作:`, { id, data, api: actionInfo.api });
+    return this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
+      `${apiUrl}/TLS0000/TLS2000/${actionInfo.api}`, { id }).pipe(
         take(1),
-        tap(() => tableData.update(currentData => {
-          const index = currentData.findIndex(item => item.id === id);
-          const usr = this.auth.getUserInfo();
-          const approval = this.approvalCheck(data).confirm === '核准';
-          if (index !== -1) {
-            currentData[index].approved_usr_name = approval ? usr!.user_Name : null;
-            currentData[index].approved_date = approval ? new Date() : null;
-            currentData[index].pod_status = approval ? ApprovalStatus.已核准 : ApprovalStatus.未核准;
-          }
-          return [...currentData];
-        })),
         tap(res => {
-          if (res.Status !== '0000') return void this.messageService.errorBubble(`${this.approvalCheck(data).confirm}失敗: ${res.Message}`);
-          this.messageService.successBubble(`${this.approvalCheck(data).confirm}成功`);
+          this.logger.debug(`${actionInfo.confirm}結果:`, res);
+          if (res.Status !== '0000') return void this.messageService.errorBubble(`${actionInfo.confirm}失敗: ${res.Message}`);
+          this.messageService.successBubble(`${actionInfo.confirm}成功`);
         }),
         finalize(() => this.approvalStatusLoading.set(false))
-      ).subscribe();
+      );
   }
 
   //新增的
