@@ -124,7 +124,9 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
 
   ecrColumn: EditColumn[] = [
     { field: 'ECR_No', header: '收銀機編號', type: 'input', width: '12rem', disabled: () => true },
-    { field: 'ecr_name', header: '收銀機名稱', type: 'input', width: '12rem', disabled: () => true }
+    { field: 'ecr_name', header: '收銀機名稱', type: 'input', width: '12rem', disabled: () => true },
+    { field: 'tlt_no', header: '專櫃編號', type: 'input', width: '12rem', disabled: () => true },
+    { field: 'tlt_name', header: '專櫃名稱', type: 'input', width: '12rem', disabled: () => true }
   ];
 
   createDefaultNewECR() {
@@ -923,26 +925,15 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
       return { isValid: false, errorMessage: '收銀機編號不可重複' };
     }
 
-    // 檢查專櫃編號是否重複(如果有填寫專櫃編號)
+    // 檢查專櫃編號是否與專櫃表格重複(如果有填寫專櫃編號)
+    // 注意：收銀機表格內可以有相同的專櫃編號(不同收銀機可以綁定同一個專櫃)
     if (rowData.tlt_no) {
-      // 檢查收銀機表格內是否有相同的 tlt_no
-      const duplicateTltInEcr = this.ecrData.some(
-        item => item.tlt_no === rowData.tlt_no &&
-          item !== rowData &&
-          item.status !== 'deleted' &&
-          item.status !== 'delete'
-      );
-
-      // 檢查專櫃表格內是否有相同的 tlt_no
+      // 只檢查專櫃表格內是否有相同的 tlt_no
       const duplicateTltInTalent = this.tltData.some(
         item => item.tlt_no === rowData.tlt_no &&
           item.status !== 'deleted' &&
           item.status !== 'delete'
       );
-
-      if (duplicateTltInEcr) {
-        return { isValid: false, errorMessage: '專櫃編號不可重複(收銀機表格已存在)' };
-      }
 
       if (duplicateTltInTalent) {
         return { isValid: false, errorMessage: '專櫃編號不可重複(專櫃表格已存在)' };
