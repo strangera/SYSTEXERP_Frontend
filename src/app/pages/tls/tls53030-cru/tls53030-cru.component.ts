@@ -1,22 +1,22 @@
+import { DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { finalize, forkJoin } from 'rxjs';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS53030Data, TLS53030DetailData, TLS53030Service } from '@service/api/tls/tls53030.service';
-import { formatAmount } from '@shared/componentkit/table/table.model';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { DatePipe, NgIf } from '@angular/common';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { formatAmount } from '@shared/componentkit/table/table.model';
+import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 @Component({
   selector: 'app-tls53030-cru',
@@ -46,7 +46,7 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
     LOGO_CH_NAME: [{ value: '', disabled: true }],  // 品牌名稱
     PST_Date: [{ value: '', disabled: true }],      // 盤點基準日期
     PST_Type: [{ value: '', disabled: true }],      // 盤點類別
-    PST_Status: [{ value: '', disabled: false }],    // 盤點狀態
+    PST_Status: [{ value: '', disabled: true }],    // 盤點狀態
   });
 
   //#region 下拉選項
@@ -77,16 +77,51 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
   detailLoading = false;
 
   detailColumns: EditColumn[] = [
-    { field: 'PLU_PageNum', header: '貨架編號' },
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
     // { field: 'PLU_Unit', header: '單位代碼'},
     { field: 'UNIT_NAME', header: '單位' },
     { field: 'SYS_STOCK_QTY', header: '庫存量', format: formatAmount },
-    { field: 'PST_Qty1', header: '初盤', format: formatAmount, type: 'inputNumber', width: '50px' },
-    { field: 'PST_Qty2', header: '複盤', format: formatAmount, type: 'inputNumber', width: '50px' },
-    { field: 'PST_Qty3', header: '抽盤', format: formatAmount, type: 'inputNumber', width: '50px' },
+    {
+      field: 'PST_Qty1',
+      header: '初盤',
+      format: formatAmount,
+      type: 'inputNumber',
+      disabled: () => this.rowdata?.PST_Status !== '1',
+      placeholder: '請輸入數量',
+      calculate: (row) => {
+        return {
+          'DIFF_Qty': row.PST_Qty1 - row.SYS_STOCK_QTY,
+        };
+      }
+    },
+    {
+      field: 'PST_Qty2',
+      header: '複盤',
+      format: formatAmount,
+      type: 'inputNumber',
+      disabled: () => this.rowdata?.PST_Status !== '2',
+      placeholder: '請輸入數量',
+      calculate: (row) => {
+        return {
+          'DIFF_Qty': row.PST_Qty2 - row.SYS_STOCK_QTY,
+        };
+      }
+    },
+    {
+      field: 'PST_Qty3',
+      header: '抽盤',
+      format: formatAmount,
+      type: 'inputNumber',
+      disabled: () => this.rowdata?.PST_Status !== '3',
+      placeholder: '請輸入數量',
+      calculate: (row) => {
+        return {
+          'DIFF_Qty': row.PST_Qty3 - row.SYS_STOCK_QTY,
+        };
+      }
+    },
     { field: 'DIFF_Qty', header: '差異量', format: formatAmount },
   ];
   //#endregion
@@ -120,20 +155,7 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
           PST_Qty3: item.PST_Qty3
         }));
 
-        // 更新盤點單狀態
-        const updatePSTStatus = {
-          MID: this.rowdata!.MID,
-          PST_No: this.rowdata!.PST_No,
-          SYS_StoreNo: this.rowdata!.SYS_StoreNo,
-          HOS_No: this.rowdata!.HOS_No,
-          PST_Status: this.dataForm.get('PST_Status')!.value!
-        };
-
-        // 使用 forkJoin 並行執行兩個請求
-        forkJoin({
-          updateDetailsResponse: this.tls53030Service.updateTLS53030Detail(updateDetails),
-          updatePSTStatusResponse: this.tls53030Service.updateTLS53030PSTStatus(updatePSTStatus)
-        })
+        this.tls53030Service.updateTLS53030Detail(updateDetails)
           .pipe(
             untilDestroyed(this),
             finalize(() => this.loading = false)

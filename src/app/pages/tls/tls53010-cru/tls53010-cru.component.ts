@@ -220,6 +220,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
           .subscribe(() => {
             this.messageService.successBubble('新增全品項完成');
             this.resetForm();
+            this.onCancel();
           });
       }
     });
