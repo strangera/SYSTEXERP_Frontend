@@ -1,37 +1,23 @@
 import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { Fin35010Service } from '@service/api/fin/fin35010.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { PanelModule } from 'primeng/panel';
-import { AuthService } from '../../../service/system/auth.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 @Component({
   selector: 'app-fin35010-cru',
   templateUrl: './fin35010-cru.component.html',
-  styleUrl: './fin35010-cru.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarComponent, NgIf, TranslateModule]
 })
-export class FIN35010CRUComponent implements OnInit {
-  ProgNo = '';
-  formTitle = '';
-  submitted = false;
-  crudstatus = '';
-
-  CashRegisterTypeItems: any[] = [
-    { label: '業主', value: '1' },
-    { label: '非業主', value: '2' },
-  ];
-  // ----------------------------------------------------------------
+export class FIN35010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     depositSerialNumberStart: [], // 保證金序號
     depositSerialNumberEnd: [],
@@ -78,26 +64,21 @@ export class FIN35010CRUComponent implements OnInit {
     recruitmentNumber: [],
     voucherNumber: [],
     amount: [],
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
   });
-  // Dropdown options
+  CashRegisterTypeItems: any[] = [
+    { label: '業主', value: '1' },
+    { label: '非業主', value: '2' },
+  ];
   debitAccount: any[] = [
     { value: 1, label: '110302' },
-
-
   ];
   creditAccount: any[] = [
     { value: 1, label: '110301' },
     { value: 2, label: '110302' },
-
   ];
   isPostVoucher: any[] = [
     { value: 1, label: '是' },
     { value: 2, label: '否' },
-
   ];
   vendorCodeOptions: any[] = [
     { value: 1, label: '00000000-1' },
@@ -132,8 +113,6 @@ export class FIN35010CRUComponent implements OnInit {
     { value: 1, label: '建立' },
 
   ];
-  // { value: 2, label: '已退還' },
-  // { value: 3, label: '收款挪轉' },
   depositTypeOptions: any[] = [
     { value: 1, label: '押金' },
     { value: 2, label: '履約保證金' },
@@ -156,134 +135,14 @@ export class FIN35010CRUComponent implements OnInit {
     { value: 2, label: '統一企業股份有限公司' },
     { value: 3, label: '統正開發股份有限公司' },
   ];
-
-  // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-  ) {
-  }
+    public readonly fin35010Service: Fin35010Service
+  ) { super(); }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '130011';
-    //
-    // ----------------------------------------------------------------
-    //
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-
-    console.log(this.accordionTabCss);
+    this.initializePage('FIN35010', this.dataForm);
   }
-
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      name: ['', [Validators.required, Validators.maxLength(14)]], // Input Text
-      CashRegisterType: ['1', Validators.required], // 收銀機型態
-      SalesDate: ['', Validators.required], // 銷售日期
-      CashRegisterCode: ['', Validators.required], // 收銀機號
-      TransactionSerialNumber: ['', Validators.required], // 交易流水號
-      CounterNumber: ['', Validators.required], // 專櫃編號
-      TwoPartInvoiceNumberStart: ['', Validators.required], // 二聯發票號碼(起號)
-      TwoPartInvoiceNumberEnd: ['', Validators.required], // 二聯發票號碼(迄號)
-      TaxableAmount: ['', Validators.required], // 應稅金額
-      TaxFreeAmount: ['', Validators.required], // 免稅金額
-    });
-  }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  accordionTabCss = '';
-  canEdit() { return false; }
-  canAdd() { return false; }
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }//CRU
-
-  onCancel() {
-    this.router.navigate(['/demo/demofin35010']);
+    this.handleSubmit(frm, () => { });
   }
 }

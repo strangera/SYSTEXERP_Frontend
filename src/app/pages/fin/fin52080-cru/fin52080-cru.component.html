@@ -113,16 +113,14 @@
       </div>
       @if (!isFormReadable) {
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        @if (treeLoading()) {
-        <p-progressSpinner></p-progressSpinner>
-        } @else {
         <app-tree-dropdown [members]="FIN52080Tree()"
                            [Columns]="service.TreeElements.treeColumn"
                            [LeaveColumnLabel]="service.TreeElements.LeaveLabel"
                            (confirmSelected)="onLevelSelected($event)"
-                           [SelectbleCheckBox]="false"
+                           [SelectbleCheckBox]="!1"
+                           [card]="!1"
+                           [loading]="treeLoading()"
                            [listTitle]="service.TreeElements.listTitle"></app-tree-dropdown>
-        }
         <app-button btnType="cancel"
                     [form]="dataForm"></app-button>
         <app-button btnType="submit"

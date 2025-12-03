@@ -1,29 +1,20 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div>
-      <app-button btnType="create" label="專櫃履約保證金" icon="" (onClick)="onSubmit(dataForm)"
-        disabled="isDisabled"></app-button>
-    </div>
-    <div>
-      <app-button btnType="create" label="專櫃押金" icon="" (onClick)="onSubmit(dataForm)" disabled="true"></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
+        <!-- 廠客代號, POS2013.VEN_NO -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="廠客代號" controlName="vendorCode" [options]="vendorCodeOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.vendorCode" [submitted]="submitted"></app-dropdown>
+        </div>
         <!-- 保證金序號 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="保證金序號" controlName="depositSerialNumber"
             [control]="dataForm.controls.depositSerialNumber" [submitted]="submitted"></app-input-text>
-        </div>
-
-        <!-- 廠商編號 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="廠商編號" controlName="vendorCode" [options]="vendorCodeOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.vendorCode" [submitted]="submitted"></app-dropdown>
         </div>
 
         <!-- 專櫃編號 -->
@@ -138,12 +129,10 @@
             optionValue="value" [control]="dataForm.controls.depositType" [submitted]="submitted"></app-dropdown>
         </div>
       </div>
-    </form>
-    <div class="col pt-4">
-      <div class="grid justify-content-end">
-        <app-button btnType="cancel" (click)="onCancel()"></app-button>
-        <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
-    </div>
+    </form>
   </p-panel>
 </div>

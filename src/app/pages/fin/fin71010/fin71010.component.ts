@@ -11,7 +11,6 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { tap } from 'rxjs';
 import { finalize } from 'rxjs/internal/operators/finalize';
 
 @Component({
@@ -148,14 +147,15 @@ export class FIN71010Component extends BasicQueryPageComponent<unknown> implemen
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const payload = {
-        ...this.queryForm.getRawValue(),
-      };
+      const raw = { ...this.queryForm.getRawValue() };
+      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+      )) as unknown as Record<string, any>;
 
       this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.logger.debug(`onSubmit:`, [raw, payload]);
       this.service.loadFIN71010(payload).pipe(
-        tap(res => this.logger.debug(`onSubmit:`, [payload, res])),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
         next: res => {

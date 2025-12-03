@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { SystemDataService } from '@service/system/system-data.service';
+import { Actions, PermissionGuardService } from '@shared/service/permission-guard.service';
 import { ConfirmationService } from 'primeng/api';
 import { take } from 'rxjs';
 import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
@@ -31,6 +32,8 @@ export abstract class BasicQueryPageComponent<T> {
   confirmationService = inject(ConfirmationService);
   activatedRoute = inject(ActivatedRoute);
   systemDataService = inject(SystemDataService);
+  private permissionGuard = inject(PermissionGuardService);
+  public readonly Actions = Actions;
 
   language = navigator.language;
   loading = false;
@@ -48,7 +51,7 @@ export abstract class BasicQueryPageComponent<T> {
     const previousRoute = state?.['fromRoute'] || '/account/dashboard';
     // 通用規則：檢查 previousRoute 是否包含 ProgNo（例如 tls13010），涵蓋 CRU 和所有 next 頁面
     const isFromRelatedRoute = previousRoute.includes(this.ProgNo.toLowerCase());
-    if (this.canPerformAction('10') && isFromRelatedRoute && queryForm) {
+    if (this.hasPermission(Actions.Query) && isFromRelatedRoute && queryForm) {
       const query = this.queryStateService.getQueryStateValue(this.ProgNo);
       if (query) {
         queryForm?.patchValue(query);
@@ -59,8 +62,8 @@ export abstract class BasicQueryPageComponent<T> {
       }
     }
   }
-  canPerformAction(action: string): boolean {
-    return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
+  hasPermission(action: string): boolean {
+    return this.permissionGuard.hasPermission(this.ProgNo, action);
   }
   navigateWithState(crudstatus: CRUDStatus, rowdata?: T | unknown, queryConditions?: any) {
     const extras: NavigationExtras = {
@@ -75,29 +78,22 @@ export abstract class BasicQueryPageComponent<T> {
   }
   // 移動路由
   onCreate(data?: unknown, queryConditions?: any) {
-    if (this.canPerformAction('20')) { // '新增' 的 function_code 是 "20"
+    if (this.hasPermission(Actions.Create)) { // '新增' 的 function_code 是 "20"
       this.navigateWithState(CRUDStatus.Create, data, queryConditions);
     }
   }
   onEdit(data: T, queryConditions?: any) {
-    if (this.canPerformAction('30')) { // '修改' 的 function_code 是 "30"
+    if (this.hasPermission(Actions.Edit)) { // '修改' 的 function_code 是 "30"
       this.navigateWithState(CRUDStatus.Edit, data, queryConditions);
     }
   }
   onDetail(data: T, queryConditions?: any) {
-    if (this.canPerformAction('10')) { // '查詢' 的 function_code 是 "10"
+    if (this.hasPermission(Actions.Query)) { // '查詢' 的 function_code 是 "10"
       this.navigateWithState(CRUDStatus.Read, data, queryConditions);
     }
   }
-  canDelete() {
-    if (this.canPerformAction('40')) { // '刪除' 的 function_code 是 "40"
-      this.navigateWithState(CRUDStatus.Delete);
-    }
-  }
   onCopy(data: T) {
-    if (this.canPerformAction('20')) { // '複製' 的 function_code 是 "20"
-      this.navigateWithState(CRUDStatus.Create, data);
-    }
+    this.navigateWithState(CRUDStatus.Create, data);
   }
 
   // 送出查詢
@@ -131,7 +127,7 @@ export abstract class BasicQueryPageComponent<T> {
     storageKey: string,
     onSubmit: (form: FormGroup) => void,
   ) {
-    if (this.canPerformAction('10')) { // '查詢' 的 function_code 是 "10"
+    if (this.hasPermission(Actions.Query)) { // '查詢' 的 function_code 是 "10"
       this.queryStateService.getQueryState(storageKey)?.pipe(take(1)).subscribe((query) => {
         if (query) {
           queryForm.patchValue(query);
