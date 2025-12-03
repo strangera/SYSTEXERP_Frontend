@@ -14,7 +14,9 @@ import { CellInput } from './table-edit-cell.model';
       <p-inputNumber class="min-w-max w-full" mode="decimal"
                      [(ngModel)]="cellInput.rowData[cellInput.col.field]"
                      [ngModelOptions]="{ standalone: true }"
-                     [placeholder]="cellInput.col.placeholder && !isDisabled() ? cellInput.col.placeholder : '請輸入' + cellInput.col.header"
+                     [placeholder]="
+                     isDisabled() ? '' :cellInput.col.placeholder ? cellInput.col.placeholder : '請輸入' + cellInput.col.header
+                     "
                      [min]="cellInput.col.min" [max]="cellInput.col.max"
                      [disabled]="isDisabled()"
                      (onInput)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index)"
