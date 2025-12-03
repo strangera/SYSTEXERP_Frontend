@@ -23,7 +23,7 @@
                     [form]="queryForm"></app-button>
         <app-button btnType="submit"
                     [label]="'存檔'"
-                    [disabled]="!qf().ENTRY_TYPE.value"
+                    [disabled]="!qf().ENTRY_TYPE.value || !canSave()"
                     [loading]="loading"></app-button>
       </div>
     </form>
@@ -39,13 +39,11 @@
              tableKey="TLS21020Detail"
              [columns]="columns()"
              [data]="tableData()"
-             (dataChange)="tableData.set($event); dt.getVisibleHeaderCount"
+             (dataChange)="tableData.set($event)"
              [selectedItems]="selectedItems()"
              (selectionChange)="selectedItems.set($event)"
-             (edit)="onEdit($event)"
-             (delete)="onDelete($event)"
-             (detail)="onDetail($event)"
-             [showCheckBox]="!0"
+             [showDelete]="!1"
+             [showFilter]="!1"
              [showRowEdit]="!0"
              [alwaysEdit]="!0"
              [totalRecords]="totalRecords()"
