@@ -28,13 +28,12 @@ export interface DependentDataQuery {
 }
 
 export interface TLS26010Query extends BaseQueryRequest {
-  ECR_No: string[];
-  tlt_nos: string[];
-  tlt_no: string;
-  pod_sdate_S?: Date;
-  pod_sdate_E?: Date;
-  pod_edate_S?: Date;
-  pod_edate_E?: Date;
+  ECR_No?: string[];
+  tlt_nos?: string[];
+  pod_sdate_S?: string;
+  pod_sdate_E?: string;
+  pod_edate_S?: string;
+  pod_edate_E?: string;
 }
 
 export interface EcrItem {

@@ -2,7 +2,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, effect, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26010Service } from '@service/api/tls/tls26010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -16,6 +16,7 @@ import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { tap } from 'rxjs';
+import { DateUtils } from '../../../core/utils/date-utils';
 import { TLS26010Data, TLS26010Query } from './tls26010.model';
 
 @Component({
@@ -143,16 +144,15 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     });
   }, { allowSignalWrites: !0 });
 
-  private readonly queryTLS26010 = computed<TLS26010Query>(() => {
+  private buildQueryPayload(): TLS26010Query {
     const { pageIndex, pageSize, SortBy, ecrNos, tltNos, podSdateS, podSdateE, podEdateS, podEdateE, ...rest } = this.queryForm.getRawValue();
     const raw = {
       ECR_No: ecrNos,
       tlt_nos: tltNos,
-      tlt_no: '',
-      pod_sdate_S: podSdateS?.toISOString(),
-      pod_sdate_E: podSdateE?.toISOString(),
-      pod_edate_S: podEdateS?.toISOString(),
-      pod_edate_E: podEdateE?.toISOString(),
+      pod_sdate_S: podSdateS ? DateUtils.toDateString(podSdateS) : undefined,
+      pod_sdate_E: podSdateE ? DateUtils.toDateString(podSdateE) : undefined,
+      pod_edate_S: podEdateS ? DateUtils.toDateString(podEdateS) : undefined,
+      pod_edate_E: podEdateE ? DateUtils.toDateString(podEdateE) : undefined,
       pageIndex, pageSize, SortBy,
     } as TLS26010Query;
 
@@ -162,7 +162,7 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
 
     this.logger.debug(`queryTLS26010:`, [rest, raw, payload]);
     return payload;
-  });
+  }
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.service.sys3800Loading()
@@ -172,6 +172,15 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
       || this.service.tltLoading()
       || this.service.tableLoading()
       || this.service.approvalStatusLoading();
+  });
+
+  // 專櫃選項加上 Label（格式：專櫃編號 - 專櫃名稱）
+  public readonly tltOptionsWithLabel = computed(() => {
+    return this.service.tltOptions().map(item => ({
+      No: item.tlt_no,
+      Name: item.tlt_name,
+      Label: `${item.tlt_no} - ${item.tlt_name}`
+    }));
   });
 
   public readonly columns: (Omit<Column, 'field'> & { field: keyof TLS26010Data; })[] = [
@@ -193,7 +202,7 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
   }
 
   public ngOnInit(): void {
-    this.initializePage('TLS26010', '/TLS/TLS26010CRU', this.queryForm, this.onSubmit.bind(this));
+    this.initializePage('TLS26010', '/TLS/TLS26010CRU', this.queryForm, (form) => this.onSubmit(form));
 
     // 載入所有下拉選單資料
     this.service.loadSYS3800();
@@ -203,15 +212,15 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     this.service.loadTalentDropDownList({}); // 初始載入全部專櫃
   };
 
-  public onSubmit(): void {
-    this.handleSubmit(this.queryForm, () => {
-      this.service.loadTLS26010(this.queryTLS26010()).pipe(
+  public onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      this.service.loadTLS26010(this.buildQueryPayload()).pipe(
         tap(res => {
           this.tableData.set(res.Data ?? []);
           this.totalRecords.set(res.TotalCount ?? 0);
         }),
       ).subscribe();
-      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.queryStateService.setQueryState(this.ProgNo, frm.value);
     });
   };
 
@@ -227,14 +236,14 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
           completedCount++;
           // 當所有刪除操作完成後，重新查詢
           if (completedCount === totalCount) {
-            this.onSubmit();
+            this.onSubmit(this.queryForm);
           }
         },
         error: () => {
           completedCount++;
           // 即使有錯誤，也要檢查是否所有操作都已完成
           if (completedCount === totalCount) {
-            this.onSubmit();
+            this.onSubmit(this.queryForm);
           }
         }
       });

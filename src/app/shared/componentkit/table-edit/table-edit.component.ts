@@ -19,7 +19,6 @@ import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableModule, TableRowReorderEvent } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
-import { LazyLoadEvent } from '../table/table.model';
 import { TableEditDataService } from './services/table-edit-data.service';
 import { TableUtilityService } from './services/table-edit-utility.service';
 import { TableValidationService } from './services/table-validation.service';
@@ -77,6 +76,7 @@ export class TableEditComponent implements OnChanges {
   @Input() disabled = false;               // 是否禁用 table
   // 排序
   @Input() multiSortMeta: SortMeta[] | null | undefined = undefined; // table 多重排序
+  @Input() showSort = false;                // 是否顯示排序
   // select 選擇Row相關
   @Input() showCheckBox = true;                        // 是否顯示 checkbox
   @Input() selectedItems: any = [];                    // table 已勾選資料
@@ -113,36 +113,10 @@ export class TableEditComponent implements OnChanges {
   @Input() validateOnlySelected = false; // 是否只驗證已選擇的資料
   @Input() errorMessage: string | undefined; // 錯誤訊息
   // Footer
-  /** 頁尾資料 @default n/a */
   @Input() footerData: any;
-  /** 是否顯示 Footer @default false */
   @Input() showFooter = false;
-  /** 分頁器 @default n/a */
-  /** table 高度 @default '867px' */
-  @Input() scrollHeight = '867px';
-  /** 是否要滾輪 @default true */
-  @Input() scrollable = true;
-  /** 是否顯示 分頁器 @default false */
-  @Input() showPaginator = false;
-  /** 記錄總數 @default 0 */
-  @Input() totalRecords = 0;
-  /** 分頁選項 @default [20, 40, 60, 80, 100] */
-  @Input() rowsPerPageOptions: any[] | undefined = [20, 40, 60, 80, 100];
-  /** 共幾頁數 @default 0 */
-  totalPages = 0;
-  /** 每頁顯示的行數 @default 20 */
-  @Input() rows = 20;
-  /** 當前表格的起始索引 @default 0 */
-  first = 0;
-  /** (右上)下拉選單 頁數選項 @default [] */
-  pages: { label: string, value: number; }[] = [];
-  /** (右上)下拉選單 當前選擇的頁數 @default 1 */
-  selectedPage: number | null = 1;
-  /** 是否啟用 Lazy 加載 @default false */
-  @Input() lazy = false;
-  /** Lazy 加載事件 */
-  @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>();
-
+  @Input() scrollable = false; // 是否要滾輪
+  @Input() showPaginator = false; // 是否顯示 分頁器
 
   protected readonly tableUtilityService = inject(TableUtilityService);
   protected readonly cdr = inject(ChangeDetectorRef);
@@ -208,12 +182,10 @@ export class TableEditComponent implements OnChanges {
   }
   onSelectionChange(event: any) {
     if (this.disabled) { return; }
-
     // 使用 zone. runOutsideAngular 優化效能
     this.zone.runOutsideAngular(() => {
       // 過濾掉新增候選行
       const filtered = event.filter((item: any) => !item._isAutoInsertCandidate);
-
       // 延遲更新，避免阻塞 UI
       requestAnimationFrame(() => {
         this.zone.run(() => {

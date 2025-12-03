@@ -124,7 +124,9 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
 
   ecrColumn: EditColumn[] = [
     { field: 'ECR_No', header: '收銀機編號', type: 'input', width: '12rem', disabled: () => true },
-    { field: 'ecr_name', header: '收銀機名稱', type: 'input', width: '12rem', disabled: () => true }
+    { field: 'ecr_name', header: '收銀機名稱', type: 'input', width: '12rem', disabled: () => true },
+    { field: 'tlt_no', header: '專櫃編號', type: 'input', width: '12rem', disabled: () => true },
+    { field: 'tlt_name', header: '專櫃名稱', type: 'input', width: '12rem', disabled: () => true }
   ];
 
   createDefaultNewECR() {
@@ -292,8 +294,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
               .map(item => ({
                 ECR_No: item.ECR_No!,
                 ecr_name: item.ecr_name || '',
-                tlt_no: null,
-                tlt_name: null,
+                tlt_no: item.tlt_no || null,
+                tlt_name: item.tlt_name || null,
                 Status: ItemOperationStatus.New
               })),
             talent_list: this.tltData
@@ -406,7 +408,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
         return {
           id: item.id ?? null,
           ECR_No: item.ECR_No!,
-          tlt_no: item.tlt_no!,
+          tlt_no: item.tlt_no || null,
+          tlt_name: item.tlt_name || null,
           Status: status
         };
       });
@@ -571,8 +574,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
           id: undefined,
           ECR_No: item.ECR_No,
           ecr_name: item.ecr_name || '',
-          tlt_no: '',  // 不自動帶入專櫃編號
-          tlt_name: '',  // 不自動帶入專櫃名稱
+          tlt_no: item.tlt_no || null,    // 從 Dialog 選擇的項目帶入專櫃編號
+          tlt_name: item.tlt_name || null, // 從 Dialog 選擇的項目帶入專櫃名稱
           status: 'new'
         });
       }
@@ -910,15 +913,31 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
       return { isValid: false, errorMessage: '收銀機編號不可為空' };
     }
 
-    const duplicate = this.ecrData.some(
+    // 檢查收銀機編號是否重複
+    const duplicateEcr = this.ecrData.some(
       item => item.ECR_No === rowData.ECR_No &&
         item !== rowData &&
         item.status !== 'deleted' &&
         item.status !== 'delete'
     );
 
-    if (duplicate) {
+    if (duplicateEcr) {
       return { isValid: false, errorMessage: '收銀機編號不可重複' };
+    }
+
+    // 檢查專櫃編號是否與專櫃表格重複(如果有填寫專櫃編號)
+    // 注意：收銀機表格內可以有相同的專櫃編號(不同收銀機可以綁定同一個專櫃)
+    if (rowData.tlt_no) {
+      // 只檢查專櫃表格內是否有相同的 tlt_no
+      const duplicateTltInTalent = this.tltData.some(
+        item => item.tlt_no === rowData.tlt_no &&
+          item.status !== 'deleted' &&
+          item.status !== 'delete'
+      );
+
+      if (duplicateTltInTalent) {
+        return { isValid: false, errorMessage: '專櫃編號不可重複(專櫃表格已存在)' };
+      }
     }
 
     return { isValid: true, errorMessage: '' };
@@ -929,16 +948,29 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
       return { isValid: false, errorMessage: '專櫃編號不可為空' };
     }
 
-    const duplicate = this.tltData.some(
+    // 檢查專櫃表格內是否重複
+    const duplicateInTalent = this.tltData.some(
       item => item.tlt_no === rowData.tlt_no &&
         item !== rowData &&
         item.status !== 'deleted' &&
         item.status !== 'delete'
     );
 
-    if (duplicate) {
-      return { isValid: false, errorMessage: '專櫃編號不可重複' };
+    if (duplicateInTalent) {
+      return { isValid: false, errorMessage: '專櫃編號不可重複(專櫃表格已存在)' };
     }
+
+    // 檢查收銀機表格內是否有相同的 tlt_no
+    const duplicateInEcr = this.ecrData.some(
+      item => item.tlt_no === rowData.tlt_no &&
+        item.status !== 'deleted' &&
+        item.status !== 'delete'
+    );
+
+    if (duplicateInEcr) {
+      return { isValid: false, errorMessage: '專櫃編號不可重複(收銀機表格已存在)' };
+    }
+
     return { isValid: true, errorMessage: '' };
   };
 

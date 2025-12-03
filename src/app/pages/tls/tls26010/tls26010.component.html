@@ -11,7 +11,7 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <app-multi-select
             class="col-12 md:col-6 lg:col-4"
@@ -61,9 +61,9 @@
             class="col-12 md:col-6 lg:col-4"
             label="專櫃名稱"
             controlName="tltNos"
-            [options]="service.tltOptions()"
-            optionLabel="tlt_name"
-            optionValue="tlt_no"
+            [options]="tltOptionsWithLabel()"
+            optionLabel="Label"
+            optionValue="No"
             [loading]="service.tltLoading()"
             [control]="qf().tltNos"
             [submitted]="submitted"
@@ -125,10 +125,9 @@
       [columns]="columns"
       [multiSortMeta]="[{ field: 'id', order: 1 }]"
       [totalRecords]="totalRecords()"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
       [lazy]="true"
       [loading]="service.tableLoading()"
-      (lazyLoadData)="onSubmit()"
     ></app-table>
   </div>
 </div>
