@@ -13,7 +13,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, tap } from 'rxjs';
+import { finalize } from 'rxjs';
 import { FIN52090Data, FIN52090Query } from './fin52090.model';
 
 @Component({
@@ -78,16 +78,19 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
 
   onSubmit() {
     this.handleSubmit(this.queryForm, () => {
-      const payload = <FIN52090Query>{
+      const raw = <FIN52090Query>{
         ...this.queryForm.getRawValue(),
         AccNo: this.qf().AccNo.value?.length ? this.qf().AccNo.value : void 0,
         NoteDesc: this.qf().NoteDesc.value ?? void 0,
       };
+      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+      )) as unknown as FIN52090Query;
 
       this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.logger.debug(`onSubmit:`, [raw, payload]);
       this.service.loadFIN52090(payload).pipe(
-        tap(res => this.logger.debug(`onSubmit:`, [payload, res])),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
         next: res => {

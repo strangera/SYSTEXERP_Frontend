@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges, Type, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, NgZone, OnChanges, Output, SimpleChanges, Type, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { SortMeta } from 'primeng/api';
@@ -55,6 +55,8 @@ import { ColumnGroup, EditColumn, FieldChangeEvent } from './table-edit.model';
     TableModule,
     TooltipModule,
   ],
+  // 🔧 關鍵修正：在 Component 層級提供 Service，確保每個表格實例都有獨立的 Service
+  providers: [TableEditDataService, TableValidationService]
 })
 export class TableEditComponent implements OnChanges {
   @ViewChild('dt') private readonly table!: Table;
@@ -74,6 +76,7 @@ export class TableEditComponent implements OnChanges {
   @Input() disabled = false;               // 是否禁用 table
   // 排序
   @Input() multiSortMeta: SortMeta[] | null | undefined = undefined; // table 多重排序
+  @Input() showSort = false;                // 是否顯示排序
   // select 選擇Row相關
   @Input() showCheckBox = true;                        // 是否顯示 checkbox
   @Input() selectedItems: any = [];                    // table 已勾選資料
@@ -110,13 +113,17 @@ export class TableEditComponent implements OnChanges {
   @Input() validateOnlySelected = false; // 是否只驗證已選擇的資料
   @Input() errorMessage: string | undefined; // 錯誤訊息
   // Footer
-  @Input() footerData: any;         // (總計)頁尾資料
+  @Input() footerData: any;
+  @Input() showFooter = false;
+  @Input() scrollable = false; // 是否要滾輪
+  @Input() showPaginator = false; // 是否顯示 分頁器
 
   protected readonly tableUtilityService = inject(TableUtilityService);
   protected readonly cdr = inject(ChangeDetectorRef);
   protected readonly messageService = inject(NotificationService);
   protected readonly validationService = inject(TableValidationService);
   protected readonly dataService = inject(TableEditDataService);
+  protected readonly zone = inject(NgZone);
 
   public get _tableData(): any[] {
     return this.dataService.tableData;
@@ -175,8 +182,18 @@ export class TableEditComponent implements OnChanges {
   }
   onSelectionChange(event: any) {
     if (this.disabled) { return; }
-    event = event.filter((item: any) => !item._isAutoInsertCandidate);
-    this.selectionChange.emit(event);
+    // 使用 zone. runOutsideAngular 優化效能
+    this.zone.runOutsideAngular(() => {
+      // 過濾掉新增候選行
+      const filtered = event.filter((item: any) => !item._isAutoInsertCandidate);
+      // 延遲更新，避免阻塞 UI
+      requestAnimationFrame(() => {
+        this.zone.run(() => {
+          this.selectionChange.emit(filtered);
+          this.cdr.markForCheck();
+        });
+      });
+    });
   }
   // Insert 按鈕
   insertRow() {

@@ -1,30 +1,27 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownOption } from '../../../shared/models/api/base-api.interface';
 import { DatePipe, NgIf } from '@angular/common';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { debounceTime, finalize } from 'rxjs';
-import { ValidationService } from '@shared/service/validation.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { POS2004Info, QueryTLS53010POS2004Request, TLS53010Data, TLS53010DetailQueryRequest, TLS53010InsertManualRequest, TLS53010Service, TLS53010UpdateRequest } from '@service/api/tls/tls53010.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
-import { getSYS1000 } from '@service/system/sys1000.service';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { Pos2004LogoItem } from '@service/utility/dropdown-api.model';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { ValidationService } from '@shared/service/validation.service';
+import { PanelModule } from 'primeng/panel';
+import { debounceTime, finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 @Component({
   selector: 'app-tls53010-cru',
@@ -223,6 +220,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
           .subscribe(() => {
             this.messageService.successBubble('新增全品項完成');
             this.resetForm();
+            this.onCancel();
           });
       }
     });
@@ -239,9 +237,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     CAT_MNo: [{ value: null, disabled: true }], // 中分類代碼
     CAT_SNo: [{ value: null, disabled: true }], // 小分類代碼
     // 分頁及排序
-    pageSize: [20],
-    pageIndex: [1],
-    SortBy: [[{ field: 'PLU_MagNo', order: 1 }]],
+    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]) // 分頁和排序參數
   });
 
   totalRecords = 0;
@@ -268,9 +264,6 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     const queryRequest: QueryTLS53010POS2004Request = {
       ...frm.getRawValue(),
       LOGO_No: this.dataForm.get('LOGO_No')?.value || '',
-      pageSize: 20,
-      pageIndex: 1,
-      SortBy: [],
     };
     this.tls53010Service.queryTLS53010POS2004(queryRequest).pipe(untilDestroyed(this)).subscribe(response => {
       this.dialogData = response.Data;

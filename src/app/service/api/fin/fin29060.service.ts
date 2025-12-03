@@ -2,6 +2,7 @@ import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiError, ApiMeta, BaseQueryRequest } from '@shared/models/api/base-api.interface';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 
 // 查詢請求介面
@@ -77,11 +78,15 @@ export class FIN29060Service {
 
   constructor(private http: HttpClient) { }
 
-  /** 正確：直接送 payload，不要包一層 request */
-  queryFIN29060(data: QueryFIN29060Request): Observable<FIN29060QueryResponse> {
-    return this.http.post<FIN29060QueryResponse>(
-      `${this.apiUrl}/queryFIN29060`,
-      data
+  queryFIN29060(data: QueryFIN29060Request): Observable<any> {
+    return this.http.post<FIN29060QueryResponse>(`${this.apiUrl}/queryFIN29060`, data).pipe(
+      map(res => ({
+        ...res,
+        Data: res?.Data?.mainData ?? [],
+        totalData: res?.Data?.totalData ?? [],
+        TotalCount: res?.TotalCount ?? 0,
+        TotalPage: res?.TotalPage ?? 0
+      }))
     );
   }
 
@@ -93,7 +98,6 @@ export class FIN29060Service {
     );
   }
 
-  /** 匯出 XLSX（也不能包 request） */
   exportFIN29060_Excel(data: QueryFIN29060Request): Observable<HttpResponse<Blob>> {
     return this.http.post(
       `${this.apiUrl}/exportFIN29060_Excel`,
@@ -102,7 +106,7 @@ export class FIN29060Service {
     );
   }
 
-  /** 匯出 PDF */
+
   exportFIN29060_PDF(data: QueryFIN29060Request): Observable<HttpResponse<Blob>> {
     return this.http.post(
       `${this.apiUrl}/exportFIN29060_PDF`,

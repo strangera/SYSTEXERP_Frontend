@@ -223,8 +223,9 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     }
   }
   onScroll(event: any) {
-    if (this.data.length >= this.totalRecords || this.data.length < 30) {
-      this.virtualData = [...this.data]
+    const pageSize = this.lastQueryBody?.pageSize || 30;
+    if (this.data.length >= this.totalRecords || this.data.length < pageSize) {
+      this.virtualData = [...this.data];
       return;
     }
     if (event && event.originalEvent && event.originalEvent.target) {

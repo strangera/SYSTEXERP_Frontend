@@ -1,155 +1,266 @@
 <div class="card">
-    <div class="flex gap-2 mb-2">
-        <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-        <app-button btnType="back" (click)="onCancel()"></app-button>
-    </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar calendarType="dateOne" label="建立日期"
-                        [control]="dataForm.controls.CRT_Date" controlName="CRT_Date" [submitted]="submitted" />
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="接洽人員代碼/名稱" controlName="contact_USR_No" [options]="contact_USR_Option" optionLabel="Label"
-                        optionValue="No" [control]="dataForm.controls.contact_USR_No" [submitted]="submitted" (changeEvent)="onUSR_NoChange($event.value)"></app-dropdown>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-radiobutton 
-                    label="廠商類型" 
-                    groupname="cus_type"
-                    [control]="dataForm.controls.cus_type"
-                    [options]="cus_type_Option"
-                    [submitted]="submitted" />
-                </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="建立日期"
+            [control]="dataForm.controls.CRT_Date"
+            controlName="CRT_Date"
+            [submitted]="submitted"
+          />
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="接洽人員代碼/名稱"
+            controlName="contact_USR_No"
+            [options]="contact_USR_Option"
+            optionLabel="Label"
+            optionValue="No"
+            [control]="dataForm.controls.contact_USR_No"
+            [submitted]="submitted"
+            (changeEvent)="onUSR_NoChange($event.value)"
+          ></app-dropdown>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-radiobutton
+            label="廠商類型"
+            groupname="cus_type"
+            [control]="dataForm.controls.cus_type"
+            [options]="cus_type_Option"
+            [submitted]="submitted"
+          />
+        </div>
 
-                <div class="col-12 md:col-6 lg:col-4">
-                    <ng-container [ngSwitch]="dataForm.get('cus_type')?.value">
-                    
-                    <!-- 廠商 -->
-                    <app-input-text *ngSwitchCase="'1'" 
-                        label="廠商統一編號"
-                        controlName="cus_uniform_id"
-                        [control]="dataForm.controls.cus_uniform_id"
-                        [submitted]="submitted">
-                    </app-input-text>
+        <div class="col-12 md:col-6 lg:col-4">
+          <ng-container [ngSwitch]="dataForm.get('cus_type')?.value">
+            <!-- 廠商 -->
+            <app-input-text
+              *ngSwitchCase="'1'"
+              label="廠商統一編號"
+              controlName="cus_uniform_id"
+              [control]="dataForm.controls.cus_uniform_id"
+              [submitted]="submitted"
+            ></app-input-text>
 
-                    <!-- 個人 -->
-                    <app-input-text *ngSwitchCase="'2'" 
-                        label="身分證"
-                        controlName="cus_uniform_id"
-                        [control]="dataForm.controls.cus_uniform_id"
-                        [submitted]="submitted">
-                    </app-input-text>
+            <!-- 個人 -->
+            <app-input-text
+              *ngSwitchCase="'2'"
+              label="身分證"
+              controlName="cus_uniform_id"
+              [control]="dataForm.controls.cus_uniform_id"
+              [submitted]="submitted"
+            ></app-input-text>
 
-                    <!-- 員工 -->
-                    <app-input-text *ngSwitchDefault
-                        label="員工ID"
-                        controlName="cus_uniform_id"
-                        [control]="dataForm.controls.cus_uniform_id"
-                        [submitted]="submitted">
-                    </app-input-text>
+            <!-- 員工 -->
+            <app-input-text
+              *ngSwitchDefault
+              label="員工ID"
+              controlName="cus_uniform_id"
+              [control]="dataForm.controls.cus_uniform_id"
+              [submitted]="submitted"
+            ></app-input-text>
+          </ng-container>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="廠商名稱(中文)"
+            controlName="VEN_Name"
+            [control]="dataForm.controls.VEN_Name"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="廠商名稱(英文)"
+            controlName="VEN_EngName"
+            [control]="dataForm.controls.VEN_EngName"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="大分類代碼/名稱"
+            controlName="bus_type"
+            [options]="bus_type_Option"
+            optionLabel="Label"
+            optionValue="No"
+            [control]="dataForm.controls.bus_type"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="品牌名稱(中文)"
+            controlName="tlt_name"
+            [control]="dataForm.controls.tlt_name"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="品牌名稱(英文)"
+            controlName="tlt_EngName"
+            [control]="dataForm.controls.tlt_EngName"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="廠商聯絡人"
+            controlName="VEN_Boss"
+            [control]="dataForm.controls.VEN_Boss"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="廠商聯絡人電話"
+            controlName="VEN_BossTel"
+            [control]="dataForm.controls.VEN_BossTel"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="廠商聯絡人頭銜"
+            controlName="VEN_BossTitle"
+            [control]="dataForm.controls.VEN_BossTitle"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="廠商聯絡人傳真"
+            controlName="VEN_BossFax"
+            [control]="dataForm.controls.VEN_BossFax"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="廠商聯絡人行動電話"
+            controlName="VEN_BossMobile"
+            [control]="dataForm.controls.VEN_BossMobile"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="廠商聯絡人電子郵件"
+            controlName="VEN_BossEmail"
+            [control]="dataForm.controls.VEN_BossEmail"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="公司通訊地址"
+            controlName="VEN_Addr"
+            [control]="dataForm.controls.VEN_Addr"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="公司負責人"
+            controlName="VEN_PersonInCharge"
+            [control]="dataForm.controls.VEN_PersonInCharge"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="經營方式"
+            controlName="business_type"
+            [options]="business_type_Option"
+            optionLabel="Label"
+            optionValue="No"
+            [control]="dataForm.controls.business_type"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="需求面積"
+            controlName="demanded_area"
+            [control]="dataForm.controls.demanded_area"
+            [maxFractionDigits]="3"
+            [submitted]="submitted"
+          />
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="商品出產地"
+            controlName="country_of_origin"
+            [control]="dataForm.controls.country_of_origin"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="備註"
+            controlName="remarks"
+            [control]="dataForm.controls.remarks"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+      <hr />
 
-                    </ng-container>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="廠商名稱(中文)" controlName="VEN_Name" [control]="dataForm.controls.VEN_Name"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="廠商名稱(英文)" controlName="VEN_EngName" [control]="dataForm.controls.VEN_EngName"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="大分類代碼/名稱" controlName="bus_type" [options]="bus_type_Option" optionLabel="Label"
-                    optionValue="No" [control]="dataForm.controls.bus_type" [submitted]="submitted"></app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="品牌名稱(中文)" controlName="tlt_name" [control]="dataForm.controls.tlt_name"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="品牌名稱(英文)" controlName="tlt_EngName" [control]="dataForm.controls.tlt_EngName"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="廠商聯絡人" controlName="VEN_Boss" [control]="dataForm.controls.VEN_Boss"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="廠商聯絡人電話" controlName="VEN_BossTel" [control]="dataForm.controls.VEN_BossTel"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="廠商聯絡人頭銜" controlName="VEN_BossTitle" [control]="dataForm.controls.VEN_BossTitle"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="廠商聯絡人傳真" controlName="VEN_BossFax" [control]="dataForm.controls.VEN_BossFax"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="廠商聯絡人行動電話" controlName="VEN_BossMobile" [control]="dataForm.controls.VEN_BossMobile"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="廠商聯絡人電子郵件" controlName="VEN_BossEmail" [control]="dataForm.controls.VEN_BossEmail"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="公司通訊地址" controlName="VEN_Addr" [control]="dataForm.controls.VEN_Addr"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="公司負責人" controlName="VEN_PersonInCharge" [control]="dataForm.controls.VEN_PersonInCharge"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="經營方式" controlName="business_type" [options]="business_type_Option" optionLabel="Label"
-                    optionValue="No" [control]="dataForm.controls.business_type" [submitted]="submitted"></app-dropdown>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="需求面積" controlName="demanded_area"
-                    [control]="dataForm.controls.demanded_area" [maxFractionDigits]="3" [submitted]="submitted" />
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="商品出產地" controlName="country_of_origin" [control]="dataForm.controls.country_of_origin"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="備註" controlName="remarks" [control]="dataForm.controls.remarks"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-            </div><hr>
+      <!-- 潛在客戶明細檔 -->
+      <app-expandable-edit-table
+        #detailTable
+        [mainColumns]="Potential_Customer_Detail_Columns"
+        [data]="filteredDetail"
+        [loading]="expandDetailLoading"
+        detailKey=""
+        dataKey="id"
+        [showCheckBox]="true"
+        [showPaginator]="false"
+        [showAddButton]="true"
+        [showDetailTabs]="false"
+        [showDetailAddButton]="false"
+        [readonly]="crudstatus === 'Read'"
+        [defaultNewItem]="defaultNewDetail"
+        (save)="onRowSaveDetail($event)"
+        (cancel)="onRowCancelDetail($event)"
+        (batchDelete)="onBatchDeleteDetail($event)"
+        (addMainItem)="onAddDetail()"
+      ></app-expandable-edit-table>
 
-            <!-- 潛在客戶明細檔 -->
-            <app-expandable-edit-table #detailTable [mainColumns]="Potential_Customer_Detail_Columns" [data]="filteredDetail"
-                [loading]="expandDetailLoading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
-                [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false" [readonly]="crudstatus === 'Read'"
-                [defaultNewItem]="defaultNewDetail" (save)="onRowSaveDetail($event)" (cancel)="onRowCancelDetail($event)"
-                (batchDelete)="onBatchDeleteDetail($event)" (addMainItem)="onAddDetail()"></app-expandable-edit-table>
-
-            <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-                *ngIf="!isFormReadable">
-                <app-button btnType="cancel" [form]="dataForm"></app-button>
-                <app-button btnType="submit"></app-button>
-            </div>
-        </form>
-    </p-panel>
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        *ngIf="!isFormReadable"
+      >
+        <app-button
+          btnType="cancel"
+          [form]="dataForm"
+          (click)="onClearForm()"
+        ></app-button>
+        <app-button btnType="submit"></app-button>
+      </div>
+    </form>
+  </p-panel>
 </div>

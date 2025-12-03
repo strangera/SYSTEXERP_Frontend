@@ -61,10 +61,10 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="收銀員" controlName="ECR_USR_No" [control]="queryForm.controls.ECR_USR_No"
-              [options]="CashierOptions" optionLabel="Name" optionValue="No" [submitted]="submitted"></app-dropdown>
+              [options]="CashierOptions" optionLabel="label" optionValue="No" [submitted]="submitted"></app-dropdown>
           </div>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀員姓名" controlName="ECR_USR_Name"
-            [control]="queryForm.controls.ECR_USR_Name" [submitted]="submitted"></app-input-text>
+          <!-- <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀員姓名" controlName="ECR_USR_Name"
+            [control]="queryForm.controls.ECR_USR_Name" [submitted]="submitted"></app-input-text> -->
         </div>
         <div class="grid p-fluid">
           <app-input-text class="col-12 md:col-6 lg:col-4" label="機台電腦名稱" controlName="ECR_ComName"

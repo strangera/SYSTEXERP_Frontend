@@ -326,8 +326,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         ? this.service.insertFIN53010Data({ ...payload, CRT_USR_No: this.user.user_No })
         : this.service.updateFIN53010Data({ ...payload, id: this.rowdata!.id, UPD_USR_No: this.user.user_No });
 
+
+      this.logger.debug(`submit:`, [payload]);
       request.pipe(
-        tap(res => this.logger.debug(`onSubmit:`, [payload, res])),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
         next: res => {

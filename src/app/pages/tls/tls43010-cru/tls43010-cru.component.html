@@ -67,7 +67,7 @@
         [columns]="columns" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
         (dataChange)="data = $event" [rowValidate]="validateEntireRow" dataStatusField="status"
         [disabled]="dataForm.controls.NOT_Status.value === '1' || isFormReadable" [loading]="loading"
-        [tableRequired]="dataForm.controls.NOT_DtlLimit.value !== '0'">
+        [tableRequired]="dataForm.controls.NOT_DtlLimit.value !== '0'" [showSort]="true">
       </app-table-edit>
       <div *ngIf="dataForm.controls.NOT_Status.value !== '1' && !isFormReadable"
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

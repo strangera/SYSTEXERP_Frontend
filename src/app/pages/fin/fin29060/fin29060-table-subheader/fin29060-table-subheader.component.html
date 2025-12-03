@@ -3,20 +3,23 @@
     {{ title }}
   </span>
 </p-divider>
-<p-table #dt [value]="data" [columns]="selectedColumns" [totalRecords]="totalRecords" [rows]="rows"
-  selectionMode="multiple" [dataKey]="dataKey" [rowTrackBy]="trackByRow" [scrollable]="true" scrollHeight="400px"
-  [(rows)]="rows" [(first)]="first" [lazy]="lazy || !IsPrint" [reorderableColumns]="true"
-  (onColReorder)="onColReorder($event)" (onRowReorder)="onRowReorder($event)" tableStyleClass="h-full"
-  styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines p-datatable-striped" [virtualScroll]="false"
-  [virtualScrollDelay]="250" [loading]="loading && data.length === 0" paginatorDropdownAppendTo="body"
-  [groupRowsBy]="groupRowsBy" rowGroupMode="subheader">
+<p-table #dt [value]="virtualData" [columns]="selectedColumns" [totalRecords]="totalRecords" selectionMode="multiple"
+  [dataKey]="dataKey" [rowTrackBy]="trackByRow" [scrollable]="true" scrollHeight="450px" [lazy]="true"
+  [rows]="lazyBatchSize" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
+  (onRowReorder)="onRowReorder($event)" tableStyleClass="h-full"
+  styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines p-datatable-striped" [virtualScroll]="true"
+  [virtualScrollItemSize]="46" [virtualScrollDelay]="0" [virtualScrollOptions]="{
+  inline: true,
+  trackBy: trackByFn,
+  autoSize: true,
+  onScroll: onScroll
+}" [loading]="loading && data.length === 0" [groupRowsBy]="groupRowsBy" rowGroupMode="subheader">
   <ng-template pTemplate="caption">
     <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
       [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event" [tableKey]="tableKey"
       [showCaption]="showCaption" [showHeader]="showHeader" [showFilter]="showFilter" [showReportMode]="false"
       [showReportPDF]="false" [showReportExcel]="false" [deleteData]="false" [showDelete]="false" [disabled]="false"
-      [showPage]="showPage" [totalPages]="totalPages" [pages]="pages" [selectedPage]="selectedPage" [rows]="rows"
-      [first]="first" [totalRecords]="dt.totalRecords">
+      [totalRecords]="dt.totalRecords">
       <header><ng-content select="header"></ng-content></header>
     </app-table-caption>
   </ng-template>
@@ -109,7 +112,7 @@
           <span class="pi pi-bars" pReorderableRowHandle></span>
         </td>
         <td class="text-center">{{ rowIndex + 1 }}</td>
-        <td *ngFor="let col of columns" class="text-center" style="text-overflow: ellipsis" style="min-width: 55px"
+        <td *ngFor="let col of columns" class="text-center" style="text-overflow: ellipsis; min-width: 55px;"
           [ngClass]="col.style">
           <!-- 連結到cruPage Read -->
           <ng-container *ngIf="col.type === 'detail'">
@@ -160,7 +163,7 @@
         </td>
       </ng-container>
       <ng-template #loadingTemplate>
-        <td *ngFor="let _ of [].constructor(getVisibleHeaderCount - 1)">
+        <td *ngFor="let _ of [].constructor(getVisibleHeaderCount)">
           <p-skeleton />
         </td>
       </ng-template>

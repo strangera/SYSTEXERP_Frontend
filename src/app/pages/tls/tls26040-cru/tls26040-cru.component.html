@@ -23,16 +23,39 @@
           ></app-input-number>
         </div>
       </div>
-      <div
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-      >
-        <app-button
-          label="結帳選定資料"
-          [disabled]="selectedItems.length === 0 || dataForm2.invalid"
-          [loading]="loading"
-          (click)="onCheckout()"
-          [loading]="btnLoading"
-        ></app-button>
+      <div class="m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-table
+          tableKey="TLS26040_Checkout"
+          dataKey="id"
+          [data]="checkoutData"
+          [columns]="checkoutColumns"
+          [selectedItems]="selectedCheckoutItems"
+          (selectionChange)="
+            selectedCheckoutItems = $event; selectionChange($event)
+          "
+          [showSort]="false"
+          (delete)="onRemove($event)"
+          [showCheckBox]="true"
+          [showManage]="false"
+          [showReportMode]="false"
+          [showPaginator]="false"
+          [showFilter]="false"
+          [showPage]="false"
+          [emptyMessage]="'尚無認列資料'"
+        >
+          <header>
+            <div class="flex justify-content-end">
+              <app-button
+                label="結帳選定資料"
+                [disabled]="
+                  selectedCheckoutItems.length === 0 || dataForm2.invalid
+                "
+                (click)="onCheckout()"
+                [loading]="btnLoading"
+              ></app-button>
+            </div>
+          </header>
+        </app-table>
       </div>
     </p-panel>
   </div>
@@ -115,18 +138,13 @@
 </div>
 
 <div class="card">
-  <div class="col-12 align-items-start">
-    <span class="text-red-500 text-sm font-bold">
-      查詢預售總金額：{{ totalAmount | number }}
-    </span>
-  </div>
   <app-table
     tableKey="TLS26040_CRU"
     dataKey="id"
     [data]="data"
     [columns]="columns"
     [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event; selectionChange($event)"
+    (selectionChange)="selectedItems = $event"
     [totalRecords]="totalRecords"
     [showSort]="false"
     (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit(dataForm)"
@@ -140,7 +158,22 @@
     [showFilter]="false"
     [showPage]="false"
     (detail)="onDetail($event)"
-  ></app-table>
+    [isRowSelectable]="isRowSelectable.bind(this)"
+  >
+    <header>
+      <div class="flex justify-content-between align-items-baseline">
+        <app-button
+          label="新增認列"
+          severity="success"
+          [disabled]="selectedItems.length === 0"
+          (click)="onAdd()"
+        />
+        <span class="text-red-500 text-sm font-bold">
+          查詢預售總金額：{{ totalAmount | number }}
+        </span>
+      </div>
+    </header>
+  </app-table>
 </div>
 
 <app-dialog

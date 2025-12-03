@@ -1,41 +1,34 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
 // Shared
 
 import { ValidationService } from '../../../shared/service/validation.service';
 
 // 使用共用服務和常數
-import { SharedDropdownService } from '../../../shared/services/shared-dropdown.service';
 import {
-  formatDecoType,
-  formatMoneyType,
-  formatApproveStatus,
-  formatOpenflagStatus,
-  formatTltTermType,
-  formatStoreWay,
-  formatPaytype,
-  formatTltKind
+  formatApproveStatus
 } from '../../../shared/constants/business.constants';
+import { SharedDropdownService } from '../../../shared/services/shared-dropdown.service';
 
 // UI Components
+import { TranslateModule } from '@ngx-translate/core';
+import { TLS12040Service } from '@service/api/tls/tls12040.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { AddButton, Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { AccordionModule } from 'primeng/accordion';
+import { CheckboxModule } from 'primeng/checkbox';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { CheckboxModule } from 'primeng/checkbox';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { AddButton, Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { TLS12040Service } from '@service/api/tls/tls12040.service';
 import { ContractItem, TLS12040QueryRequest } from './models/tls12040.model';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 // 2.1.2.4 專櫃要約書維護
 export interface TLS12040Response {
@@ -417,14 +410,14 @@ export class TLS12040Component extends BasicQueryPageComponent<ContractItem> imp
 
   //編輯權限
   onRowClick(rowData: TLS12040Response): void {
-    if (this.canPerformAction('30')) { // '修改' 的 function_code 是 "30"
+    if (this.hasPermission('30')) { // '修改' 的 function_code 是 "30"
       this.navigateWithState(CRUDStatus.Edit, rowData);
       console.log('🔄 進入編輯模式:', rowData);
     }
   }
 
   onDetailClick(rowData: TLS12040Response): void {
-    if (this.canPerformAction('10')) { // '查詢' 的 function_code 是 "10"
+    if (this.hasPermission('10')) { // '查詢' 的 function_code 是 "10"
       this.navigateWithState(CRUDStatus.Read, rowData);
     }
   }

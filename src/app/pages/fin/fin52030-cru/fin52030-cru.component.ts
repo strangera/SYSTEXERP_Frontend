@@ -21,7 +21,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
 import { concatMap, finalize, tap } from 'rxjs';
-import { FIN52030Data, FIN52030DetailData, FIN52030DetailTable, VendorList } from '../fin52030/fin52030.model';
+import { FIN52030Data, FIN52030DetailData, FIN52030DetailTable, FIN52030InsertPayload, FIN52030UpdatePayload, VendorList } from '../fin52030/fin52030.model';
 
 @Component({
   selector: 'app-fin52030-cru',
@@ -280,7 +280,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const d = this.dataForm.getRawValue();
-      const payload = <any>{
+      const raw = <FIN52030InsertPayload | FIN52030UpdatePayload>{
         ...d,
         Details: this.tableData().map(({ AccAmtD, AccAmtC, NoteDesc, ...rest }, index) => ({
           ...rest,
@@ -290,14 +290,17 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
           NoteDesc: this.service.noteDescMap().get(String(NoteDesc))?.label ?? NoteDesc,
         })),
       };
+      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+      )) as unknown as FIN52030InsertPayload | FIN52030UpdatePayload;
 
       this.tableLoading.set(!0);
+      this.logger.debug(`onSubmit:`, [raw, payload]);
       const request = this.isFormCreateable
         ? this.service.insertFIN52030Data({ ...payload, CRT_USR_No: this.user.user_No })
         : this.service.updateFIN52030Data({ ...payload, id: this.rowdata!.id, UPD_USR_No: this.user.user_No });
 
       request.pipe(
-        tap(res => this.logger.debug(`onSubmit:`, [payload, res])),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
         next: res => {

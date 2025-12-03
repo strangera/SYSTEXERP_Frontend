@@ -198,6 +198,10 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     } else if (this.isFormEditable) {
       this.dataForm.get('ECR_No')?.disable();
     }
+    // 新增/編輯模式時，收銀員姓名由系統依 ECR_USR_No 自動帶入，不允許手動編輯
+    if (this.isFormCreateable || this.isFormEditable) {
+      this.dataForm.get('ECR_USR_Name')?.disable();
+    }
     // 環境變數下拉選單
     this.dropDownListService.queryPOS1002TML_ALL_DropDownList().subscribe(res => {
       if (res?.Data) {
@@ -240,20 +244,16 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     });
 
     //位置編號
-    const locationParams = {} as any; // 依後端定義填入查詢參數
-    this.dropDownListService.queryPOS2002_Location_DropDownList(locationParams).subscribe(res => {
-      if (res?.Data) {
+
+    this.dropDownListService.queryPOS2002_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
         this.LocOptions = res.Data.map(item => ({
-          No: item.location_no,
-          Name: item.location_no,
-          value: item.location_no,
-          label: item.location_no,
-          tlt_building: item.tlt_building,
-          tlt_floor: item.tlt_floor,
-          area_no: item.area_no
+          ...item,
+          value: item.No,
+          label: item.Name
         }));
-      }
-    });
+      });
 
     this.dataForm.get('ECR_LocNo')?.valueChanges
       .pipe(untilDestroyed(this))

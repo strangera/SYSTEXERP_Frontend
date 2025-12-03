@@ -28,6 +28,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 
 // untilDestroyed
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 
 @UntilDestroy()
 @Component({
@@ -43,14 +44,16 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
     ReactiveFormsModule,
     CalendarRangeQuickComponent,
     MultiSelectComponent,
-    InputNumberRangeComponent,
+    // InputNumberRangeComponent,
     InputTextComponent,
     ButtonComponent,
     DialogModule,
     RadioButtonModule,
     TranslateModule,
     ButtonModule,
+    InputTextRangeComponent,
     TableReportComponent,
+   
   ],
 })
 export class TLS23040Component extends BasicQueryPageComponent<any> {

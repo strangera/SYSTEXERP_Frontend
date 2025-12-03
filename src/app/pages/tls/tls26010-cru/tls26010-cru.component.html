@@ -59,6 +59,7 @@
           [control]="dataForm.controls.approved_date"
           [submitted]="submitted"
           [readonly]="true"
+          customPlaceholder="核准後自動產生"
         ></app-calendar>
       </div>
       <!-- ECR明細檔 -->
@@ -110,8 +111,7 @@
           Deleted: 'deleted',
         }"
         [rowValidate]="validateTLT"
-        [defaultInsertData]="defaultNewTLT"
-        (dataChange)="tltData = $event"
+        (dataChange)="onTltDataChange($event)"
         dataStatusField="status"
         [loading]="tltLoading"
         [keepDeletedData]="true"
@@ -181,14 +181,16 @@
               ></app-input-text>
             </div>
 
-            <!-- <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="專櫃編號"
-                controlName="tlt_no"
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown
+                label="專櫃編號/名稱"
+                [options]="tlt_noOption"
+                optionLabel="Label"
+                optionValue="No"
                 [control]="ecrDialogForm.controls.tlt_no"
                 [submitted]="submitted"
-              ></app-input-text>
-            </div> -->
+              ></app-dropdown>
+            </div>
 
             <div class="col-12">
               <app-table
@@ -201,7 +203,7 @@
                 [selectedItems]="ecrDialogSelected"
                 (selectionChange)="onSelectionECRChange($event)"
                 [data]="ecrDialogData"
-                [dataKey]="'ECR_No'"
+                [dataKey]="'ecr_no'"
                 [tableKey]="'ecrDialogTable'"
                 [columns]="ecrDialogColumn"
                 [loading]="ecrDialogLoading"

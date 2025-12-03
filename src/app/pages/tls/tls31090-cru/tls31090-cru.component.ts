@@ -204,6 +204,7 @@ export class Tls31090CRUComponent extends BasicCruPageComponent<TLS31090Response
     this.tls31090Service.queryTLS31090Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
       console.log('時段之業種營業報表response', res.Data);
       this.data = res.Data ?? [];               // 查詢資料
+      this.totalRecords = res.Data.length;      // 長度計算筆數
       this.historyRequestBody = request;        // 查詢條件
       this.loading = false;
     })

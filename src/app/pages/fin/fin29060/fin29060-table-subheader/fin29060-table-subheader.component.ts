@@ -22,7 +22,7 @@ import { MultiSelectChangeEvent, MultiSelectModule } from 'primeng/multiselect';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableColumnReorderEvent, TableModule, TableRowReorderEvent } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
-import { debounceTime, fromEvent } from 'rxjs';
+import { debounceTime, finalize, fromEvent, Observable } from 'rxjs';
 
 @Component({
   selector: 'app-fin29060-table-subheader',
@@ -35,7 +35,7 @@ import { debounceTime, fromEvent } from 'rxjs';
     MultiSelectModule,
     TooltipModule,
     FormsModule,
-    Button, // 注意：Button 和 ButtonDirective 通常會被 ButtonModule 涵蓋
+    Button,
     FileUploadModule,
     DropdownModule,
     InputTextModule,
@@ -75,6 +75,16 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   @Output() dataChange = new EventEmitter<any[]>();
   /** 是否顯示 loading @default false */
   @Input() loading = false;
+  // --- 分頁 & 虛擬滾動新增 ---
+  @Input() lastQueryBody?: any;
+  @Input() queryFunction: ((body: any) => Observable<any>) | null = null;
+  public _loading = false;
+  virtualData: any[] = [];
+
+  trackByFn = (index: number, item: any) => {
+    return this.dataKey ? item?.[this.dataKey] : index;
+  };
+
   // select 選擇Row相關
   /** 資料點選(事件) */
   @Output() itemClick = new EventEmitter<any>();
@@ -105,6 +115,7 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   groupedDataCache = new Map();
   /** 是否顯示群組小計 @default false */
   @Input() showSubTotal = false;
+  groupTotals: Record<string, Record<string, number>> = {};
   // 資料總計
   /** 是否顯示總計 @default false */
   @Input() showTotal = false;
@@ -153,31 +164,164 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   /** table 無資料時顯示文字 @default '查無資料' */
   @Input() emptyMessage = '查無資料';
 
+  @Input() fullData: any[] = [];  // << 新增：全部資料
+  @Input() lazyBatchSize = 30;
+
   constructor(
     private readonly sanitizer: DomSanitizer,
     private readonly tableUtilityService: TableUtilityService,
     private readonly cd: ChangeDetectorRef,
   ) { super(); }
 
-  // 當 data 發生變化時，重置分頁與頁碼
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
-      setTimeout(() => {
-        this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
-      });
-    }
-    // 僅在 columns 首次被設定時執行初始化邏輯// 這樣就不會在每次 data 變動時都重置 filter 狀態
-    if (changes['columns'] && this.columns.length > 0) {
-      this.originalColumns = this.columns;
-      this.showSubTotal = this.showSubTotal ? this.showSubTotal : this.columns.find(c => c.isSubTotal) !== undefined;
-      this.showTotal = this.showTotal ? this.showTotal : this.columns.find(c => c.isTotal) !== undefined;
-      if (changes['columns'].firstChange) {
-        setTimeout(() => {// 恢復歷史紀錄，如果沒有就使用預設值
-          this.rows = this.queryState.getQueryState(this.tableKey + 'rows')?.value ?? this.rows; // 取得分頁狀態
-        }, 300);
+      this.virtualData = [...this.data];
+
+      if (this.dt) {
+        // totalRecords 正常更新
+        this.dt.totalRecords = this.totalRecords;
       }
+      this.cd.detectChanges();
+    }
+
+    if (changes['columns'] && this.columns.length > 0) {
+      this.originalColumns = [...this.columns];
+      this.selectedColumns = this.columns.filter(c => !c.hidden);
+
+      this.showSubTotal = this.showSubTotal || this.columns.some(c => c.isSubTotal);
+      this.showTotal = this.showTotal || this.columns.some(c => c.isTotal);
     }
   }
+
+  loadMoreData() {
+    // 判斷是「一頁式載入模式」
+    const isLocalMode = !this.queryFunction;
+
+    // 一頁式模式：資料全部在 fullData（例如 FIN29060）
+    if (isLocalMode) {
+      const batch = this.lastQueryBody?.pageSize || this.lazyBatchSize || 30;
+      const currentLength = this.data.length;
+      const next = currentLength + batch;
+
+      const more = this.fullData.slice(currentLength, next);
+
+      if (more.length) {
+        this.data = [...this.data, ...more];
+        this.virtualData = this.data;
+        this.dataChange.emit(this.data);
+      }
+
+      return;
+    }
+
+    // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+    // API 分頁模式（queryFunction 存在）
+    // ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+    if (
+      this._loading ||
+      !this.lastQueryBody ||
+      this.data.length >= this.totalRecords
+    ) {
+      return;
+    }
+
+    const pageSize = this.lastQueryBody.pageSize || 30;
+
+    const body = {
+      ...this.lastQueryBody,
+      pageIndex: Math.floor(this.data.length / pageSize) + 1,
+      pageSize
+    };
+
+    this._loading = true;
+
+    // 使用 queryFunction!：你已保證不會是 null
+    this.queryFunction!(body)
+      .pipe(finalize(() => (this._loading = false)))
+      .subscribe((res) => {
+        if (res?.Data?.length) {
+          this.data = [...this.data, ...res.Data];
+          this.virtualData = this.data;
+          this.totalRecords = res.TotalCount || this.totalRecords;
+          this.dataChange.emit(this.data);
+        }
+      });
+  }
+
+  /** 增量更新小計 */
+  updateGroupTotals(newData: any[]) {
+    if (!this.showSubTotal || !this.groupRowsBy) return;
+
+    const groupField = this.groupRowsBy;
+
+    newData.forEach(row => {
+      const groupKey = String(row[groupField] ?? '').trim();
+      if (!groupKey) return;
+
+      if (!this.groupTotals[groupKey]) {
+        this.groupTotals[groupKey] = {};
+      }
+
+      this.columns.forEach(col => {
+        if (col.isSubTotal) {
+          const val = Number(row[col.field]) || 0;
+          this.groupTotals[groupKey][col.field] =
+            (this.groupTotals[groupKey][col.field] || 0) + val;
+        }
+      });
+    });
+  }
+  onScroll(event: any) {
+    // API 模式
+    if (this.queryFunction) {
+      if (this.data.length >= this.totalRecords) return;
+    }
+    // 一頁式模式（fullData 模式）
+    else {
+      if (this.data.length >= this.fullData.length) return;
+    }
+
+    if (event?.originalEvent?.target) {
+      const target = event.originalEvent.target;
+      if (target.scrollHeight - target.scrollTop - target.clientHeight <= 2) {
+        this.loadMoreData();
+      }
+    }
+
+    this.cd.detectChanges();
+  }
+  onSort(event: any) {
+    if (!this.queryFunction || !this.lastQueryBody) return;
+
+    const pageSize = this.lastQueryBody.pageSize || 30;
+
+    const body = {
+      ...this.lastQueryBody,
+      pageIndex: 1,
+      pageSize,
+      SortBy: event.multiSortMeta ?? []
+    };
+
+    this.loading = true;
+
+    this.queryFunction(body)
+      .pipe(finalize(() => {
+        this.loading = false;
+        this._loading = false;
+      }))
+      .subscribe(res => {
+        if (res?.Data) {
+          this.data = res.Data;
+          this.virtualData = this.data;
+          this.totalRecords = res.TotalCount;
+          if (this.dt) {
+            this.dt.virtualScroll = res.Data.length >= pageSize;
+          }
+        }
+      });
+  }
+
 
   // 視窗大小變化時重新計算表格寬度
   ngAfterViewInit() {
@@ -190,10 +334,17 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   // 行追蹤
   trackByRow = (index: number, item: any) => { return item?.[this.dataKey] || index; };
 
-  // 計算欄位總數(包含序號、勾選、管理)
   get getVisibleHeaderCount(): number {
+    let count = 0;
+    if (!this.showSubTotal && this.data.length && this.showReorder) {
+      count += 1;
+    }
+    count += 1;
     const visibleColumnCount = this.tableUtilityService.getVisibleColumnCount(this.selectedColumns);
-    return 1 + visibleColumnCount + Number(this.showManage) + (this.showSubTotal || this.showTotal ? 0 : 1);
+    count += visibleColumnCount;
+    if (this.showManage) count += 1;
+
+    return count;
   }
 
   // 過濾欄位記錄保存

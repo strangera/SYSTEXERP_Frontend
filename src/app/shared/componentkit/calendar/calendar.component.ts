@@ -62,7 +62,12 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
       this.showTime = config.showTime;
       this.dateFormat = config.dateFormat;
       this.view = config.view as 'date' | 'month' | 'year';
-      this.placeholder = config.customPlaceholder;
+      // 如果沒有自訂 placeholder，才使用預設值
+      if (!this.customPlaceholder || this.customPlaceholder === '請選擇') {
+        this.placeholder = config.customPlaceholder;
+      } else {
+        this.placeholder = this.customPlaceholder;
+      }
     }
 
     // 🔧 改進:處理字串格式的日期

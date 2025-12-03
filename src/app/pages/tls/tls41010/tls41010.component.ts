@@ -183,11 +183,25 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
               const info = res.Data;
 
               // 對應樓層
-              const matchedFloor = this.floorOption.find((f: apiOption) =>
-                (f as any).value === info.ECR_SubGroup ||
-                (f as any).label === info.ECR_SubGroup ||
-                ((f as any).label?.includes?.(info.ECR_SubGroup))
-              );
+              const infoSub = String(info.ECR_SubGroup ?? '').trim();
+              const normalizedInfoSub = infoSub.toLowerCase();
+
+              const matchedFloor = this.floorOption.find((f: apiOption) => {
+                const val = String((f as any).value ?? (f as any).No ?? '').trim();
+                const label = String((f as any).label ?? (f as any).Name ?? '').trim();
+                const name = String((f as any).Name ?? '').trim();
+
+                if (val === infoSub || label === infoSub || name === infoSub) return true;
+
+                if (val.toLowerCase() === normalizedInfoSub || label.toLowerCase() === normalizedInfoSub || name.toLowerCase() === normalizedInfoSub) return true;
+
+                if (infoSub) {
+                  if (label.includes(infoSub) || name.includes(infoSub) || val.includes(infoSub)) return true;
+                  if (label.toLowerCase().includes(normalizedInfoSub) || name.toLowerCase().includes(normalizedInfoSub) || val.toLowerCase().includes(normalizedInfoSub)) return true;
+                }
+
+                return false;
+              });
 
               this.queryForm.patchValue({
                 ECR_LocNo: info.ECR_LocNo ?? '',
@@ -281,20 +295,16 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       }));
     });
     //位置編號
-    const locationParams = {} as any; // 依後端定義填入查詢參數
-    this.dropDownListService.queryPOS2002_Location_DropDownList(locationParams).subscribe(res => {
-      if (res?.Data) {
+
+    this.dropDownListService.queryPOS2002_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
         this.LocOptions = res.Data.map(item => ({
-          No: item.location_no,
-          Name: item.location_no,
-          value: item.location_no,
-          label: item.location_no,
-          tlt_building: item.tlt_building,
-          tlt_floor: item.tlt_floor,
-          area_no: item.area_no
+          ...item,
+          value: item.No,
+          label: item.Name
         }));
-      }
-    });
+      });
   }
   //  Submit 查詢
   onSubmit(frm: FormGroup) {

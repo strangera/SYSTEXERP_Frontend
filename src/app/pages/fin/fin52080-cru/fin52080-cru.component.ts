@@ -13,7 +13,7 @@ import { ValidationService } from '@shared/service/validation.service';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { finalize, tap } from 'rxjs';
+import { finalize } from 'rxjs';
 import { AccDCType, FIN52080Data, FIN52080Query, FIN52080Tree, LedgerMDType, VoucherType } from '../fin52080/fin52080.model';
 
 @Component({
@@ -115,30 +115,25 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
   public ngOnInit(): void {
     this.initializePage('FIN52080', this.dataForm);
 
-    this.service.getClassNos();
-
     this.treeLoading.set(!0);
-    this.service.getFIN52080Tree().pipe(
-      tap(res => this.logger.debug(`init:`, [this.rowdata])),
-      finalize(() => this.treeLoading.set(!1)),
-    ).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        this.FIN52080Tree.set(res.Data || []);
-      },
-    });
+    this.service.getClassNos();
+    this.service.getFIN52080Tree().pipe(finalize(() => this.treeLoading.set(!1)))
+      .subscribe(res => this.FIN52080Tree.set(res.Data || []));
+
+    this.logger.debug(`init:`, [this.service.classNoOptions(), this.FIN52080Tree(), this.rowdata]);
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      const payload = <FIN52080Query>{
-        ...this.dataForm.getRawValue(),
-      };
+      const raw = <FIN52080Query>{ ...this.dataForm.getRawValue() };
+      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+      ));
 
       this.tableLoading.set(!0);
+      this.logger.debug(`onSubmit:`, [raw, payload]);
       this.service.saveFIN52080(payload).pipe(
-        tap(res => this.logger.debug(`onSubmit:`, [payload, res])),
-        finalize(() => this.tableLoading.set(!1)),
+        finalize(() => this.tableLoading.set(!1))
       ).subscribe({
         next: res => {
           if (res.Status !== '0000') return;
