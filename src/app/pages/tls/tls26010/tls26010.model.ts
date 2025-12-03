@@ -28,6 +28,9 @@ export interface DependentDataQuery {
 }
 
 export interface TLS26010Query extends BaseQueryRequest {
+  building_nos?: string[];
+  floor_nos?: string[];
+  area_nos?: string[];
   ECR_No?: string[];
   tlt_nos?: string[];
   pod_sdate_S?: string;
