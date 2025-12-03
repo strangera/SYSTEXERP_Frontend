@@ -219,7 +219,6 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
       const ENTRY_TYPE = this.entryTypeSignal();
-      this.logger.debug(`onSubmit:`, [ENTRY_TYPE, this.tableData()]);
       if (!ENTRY_TYPE) return void (this.loading = !1);
 
       const data = this.tableData().filter(v => !v._isAutoInsertCandidate);
@@ -237,6 +236,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
       this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.logger.debug(`submit:`, [ENTRY_TYPE, this.tableData(), payload]);
       this.service.updateTLS21020(payload).pipe(
         tap(res => this.logger.debug(`updateTLS21020:`, [data, payload, res])),
         concatMap(() => this.service.queryTLS21020({ ENTRY_TYPE })),

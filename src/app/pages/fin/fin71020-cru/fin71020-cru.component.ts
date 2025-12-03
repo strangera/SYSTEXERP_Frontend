@@ -10,8 +10,8 @@ import { InputNumberComponent } from '@shared/componentkit/input-number/input-nu
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { finalize, tap } from 'rxjs';
-import { FIN71020Data } from '../fin71020/fin71020.model';
+import { finalize } from 'rxjs';
+import { FIN71020Data, FIN71020Insert, FIN71020Update } from '../fin71020/fin71020.model';
 
 @Component({
   selector: 'app-fin71020-cru',
@@ -91,13 +91,14 @@ export class FIN71020CRUComponent extends BasicCruPageComponent<FIN71020Data> im
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      const payload = {
-        ...this.dataForm.getRawValue(),
-      };
+      const raw = <FIN71020Update | FIN71020Insert>{ ...this.dataForm.getRawValue() };
+      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+      )) as unknown as FIN71020Update | FIN71020Insert;
 
       this.tableLoading.set(!0);
+      this.logger.debug(`onSubmit:`, [payload]);
       this.service.saveFIN71020(payload, this.isFormCreateable ? 'insert' : 'update').pipe(
-        tap(res => this.logger.debug(`onSubmit:`, [payload, res])),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
         next: res => {

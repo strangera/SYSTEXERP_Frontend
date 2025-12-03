@@ -11,7 +11,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { finalize, tap } from 'rxjs';
+import { finalize } from 'rxjs';
 import { ASS21010Data, ASS21010Payload, EngType } from '../ass21010/ass21010.model';
 
 @Component({
@@ -92,7 +92,7 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const d = this.dataForm.getRawValue();
-      const payload: ASS21010Payload = {
+      const raw = <ASS21010Payload>{
         ENG_Type: d.ENG_Type ?? void 0,
         ENG_MeterNo: d.ENG_MeterNo ?? void 0,
         Location_No: d.Location_No ?? void 0,
@@ -100,10 +100,13 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
         ID: this.rowdata?.ID ?? void 0,
         ...this.usrData(),
       };
+      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+      )) as unknown as ASS21010Payload;
 
       this.tableLoading.set(!0);
+      this.logger.debug(`onSubmit:`, [payload]);
       this.service.updateASS21010(payload).pipe(
-        tap(res => this.logger.debug(`onSubmit:`, [d, payload, res])),
         finalize(() => this.tableLoading.set(!1))
       ).subscribe({
         next: res => {

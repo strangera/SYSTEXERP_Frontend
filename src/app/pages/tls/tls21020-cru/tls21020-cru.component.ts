@@ -164,7 +164,6 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
 
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      this.logger.debug(`onSubmit:`, [this.tableData()]);
       const entryType = this.rowdata!.ENTRY_TYPE;
       if (!entryType) return;
       const data = this.tableData();
@@ -175,8 +174,9 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
           keys.has(k) && !this.validateValue(v)
         )) as TLS21020UpdateQuery;
       });
-      this.logger.debug(`onSubmit:`, [data, payload]);
+
       this.tableLoading.set(!0);
+      this.logger.debug(`submit:`, [data, payload]);
       this.service.updateTLS21020(payload).pipe(
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
