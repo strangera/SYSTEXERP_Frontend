@@ -10,6 +10,7 @@ import { AutoCompleteComponent } from '@shared/componentkit/auto-complete/auto-c
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { yesterday } from '@shared/models/system/query-form.model';
+import { Actions } from '@shared/service/permission-guard.service';
 import { ValidationService } from '@shared/service/validation.service';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
@@ -214,12 +215,38 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   items: MenuItem[] = [];
   updateItems(): void {
     this.items = [
-      { label: '專櫃編號修正', icon: 'pi pi-id-card', command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.專櫃編號修正) },
-      { label: '折數修正', icon: 'pi pi-percentage', disabled: this.selectedRowData?.store_way === STORE_WAY.自營, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.折扣別修正) },
-      { label: '抽成類別修正', icon: 'pi pi-tags', disabled: this.selectedRowData?.store_way === STORE_WAY.自營, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.抽成類別修正) },
-      { label: '付款別修正', icon: 'pi pi-credit-card', command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.付款別修正) },
-      { label: '是否為預售交易修正', icon: 'pi pi-shopping-cart', command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.預售交易修正) },
-      { label: '交易資料作廢', icon: 'pi pi-trash', command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.交易資料作廢) },
+      {
+        label: '專櫃編號修正',
+        icon: 'pi pi-id-card',
+        disabled: !this.hasPermission(Actions.CounterNoCorrection),
+        command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.專櫃編號修正),
+      },
+      {
+        label: '折數修正',
+        icon: 'pi pi-percentage',
+        disabled: this.selectedRowData?.store_way === STORE_WAY.自營 || !this.hasPermission(Actions.DiscountCorrection),
+        command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.折扣別修正)
+      },
+      {
+        label: '抽成類別修正', icon: 'pi pi-tags',
+        disabled: this.selectedRowData?.store_way === STORE_WAY.自營 || !this.hasPermission(Actions.CommissionTypeCorrection),
+        command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.抽成類別修正)
+      },
+      {
+        label: '付款別修正', icon: 'pi pi-credit-card',
+        disabled: !this.hasPermission(Actions.PaymentTypeCorrection),
+        command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.付款別修正),
+      },
+      {
+        label: '是否為預售交易修正', icon: 'pi pi-shopping-cart',
+        disabled: !this.hasPermission(Actions.PresaleCorrection),
+        command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.預售交易修正),
+      },
+      {
+        label: '交易資料作廢', icon: 'pi pi-trash',
+        disabled: !this.hasPermission(Actions.InvalidateTransaction),
+        command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.交易資料作廢),
+      },
     ];
   }
 

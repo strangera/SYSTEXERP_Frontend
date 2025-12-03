@@ -32,6 +32,6 @@
     [multiSortMeta]="[{ field: 'id', order: 1 }]" [totalRecords]="totalRecords" [showCheckBox]="true"
     (delete)="onDelete($event)" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
     [isRowSelectable]="isRowSelectable" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [lazy]="true" [loading]="loading" [showExcel]="true" [showExcelExport]="false"
+    [lazy]="true" [loading]="loading" [showExcel]="hasPermission('130')" [showExcelExport]="false"
     (importExcel)="onImportExcel($event)"></app-table>
 </div>

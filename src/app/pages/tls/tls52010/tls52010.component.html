@@ -15,7 +15,7 @@
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="採購單狀態" controlName="PO_Status"
             [options]="poStatusOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.PO_StatusList" [submitted]="submitted" />
-          <!-- 管理編號 -->
+          <!-- 商品管理編號/國際條碼/廠商貨號 -->
           <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.queryNo"
             templateLabel="label" [submitted]="submitted" optionLabel="PLU_MagNo" optionValue="PLU_MagNo"
             [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"

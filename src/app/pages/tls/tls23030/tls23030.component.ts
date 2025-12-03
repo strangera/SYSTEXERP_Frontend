@@ -35,6 +35,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 
 // === 總計欄位鍵（給 footerData 用）===
 const TOTAL_FIELD_MAP = {
@@ -70,6 +71,7 @@ const TOTAL_FIELD_MAP = {
     DropdownComponent,
     InputTextComponent,
     ButtonComponent,
+    InputTextRangeComponent,
 
     // Table
     TableReportComponent,
@@ -165,7 +167,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
         return Number(row?.TERM_No ?? 0) > 1 ? '是' : '否';
       }
     },
-
+{ field: 'TERM_Name', header: '分期期數', visible: true },
     { field: 'TXN_MemCard', header: '會員卡號', visible: true },
     { field: 'org_id', header: '組織編號', visible: true },
     { field: 'Org_Name', header: '組織名稱', visible: true },

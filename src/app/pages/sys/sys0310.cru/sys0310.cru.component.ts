@@ -1,5 +1,5 @@
 import { CdkFixedSizeVirtualScroll, CdkVirtualForOf, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
-import { NgClass, NgFor, NgIf } from '@angular/common';
+import { NgClass, NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -58,7 +58,8 @@ interface PrivilegeOutput {
     CdkFixedSizeVirtualScroll,
     CdkVirtualForOf,
     TranslateModule,
-    TriStateCheckboxModule
+    TriStateCheckboxModule,
+    NgTemplateOutlet
   ],
 })
 // 角色系統權限設定 CRU
@@ -90,8 +91,11 @@ export class SYS0310CRUComponent extends BasicCruPageComponent<Role> implements 
       next: (response: ApiResponse<TreeNode[]>) => {
         if (response.Data && Array.isArray(response.Data)) {
           response.Data.forEach(node => {
-            // 在這裡呼叫輔助方法，為每個節點及其子節點設置 parent 引用
-            const transformedNode = this.setParentReferences(node);
+            // 1. 設置 parent 引用
+            let transformedNode = this.setParentReferences(node);
+
+            // 2. 【新增】對整個樹狀結構進行排序
+            transformedNode = this.sortNodeData(transformedNode);
 
             switch (transformedNode.id) {
               case 'ASS00000':
@@ -124,35 +128,52 @@ export class SYS0310CRUComponent extends BasicCruPageComponent<Role> implements 
       },
     });
   }
+  /**
+  * 遞迴地對節點及其子節點的 children 和 actions 進行排序 (依據 id)。
+  * 注意：針對 actions 的 id，由於是數字字串，我們將其轉為數字再排序。
+  * @param node 要排序的節點
+  * @returns 排序後的節點
+  */
+  private sortNodeData(node: TreeNode): TreeNode {
+    // 1. 遞迴處理子節點 (children)
+    if (node.children && node.children.length > 0) {
+      // 先對子節點進行排序 (使用字串 id 排序，通常這層的 id 是複合代碼)
+      node.children.sort((a, b) => a.id.localeCompare(b.id));
+      // 再遞迴處理每個子節點的子項
+      node.children = node.children.map(child => this.sortNodeData(child));
+    }
+
+    // 2. 處理行為權限 (actions) - 修正數字字串排序問題
+    if (node.actions && node.actions.length > 0) {
+      // *** 核心修正點：將 a.id 和 b.id 轉換為數字再相減 ***
+      node.actions.sort((a, b) => {
+        const idA = parseInt(a.id, 10);
+        const idB = parseInt(b.id, 10);
+
+        // 確保 NaN 或非數字情況下的健壯性
+        if (isNaN(idA) || isNaN(idB)) {
+          // 如果無法轉換為數字，則退回字串比較
+          return a.id.localeCompare(b.id);
+        }
+        // 數字比較
+        return idA - idB;
+      });
+    }
+
+    return node;
+  }
   private setParentReferences(node: TreeNode, parent: TreeNode | null = null): TreeNode {
     const newNode: TreeNode = { ...node, parent: parent || undefined };
-
-    // 初始化 partialSelected 和 isOpen
-    if (newNode.partialSelected === undefined) {
-      newNode.partialSelected = false;
-      newNode.IsEnable = null;
-    }
-    // 為第二層節點（模組下的直接子節點）初始化 isOpen
-    // 我們假設 `item` 是指模組的直接子節點，它們會有 `isOpen` 屬性
-    if (parent && parent.id && parent.id.endsWith('00000') || parent?.id.endsWith('0000')) { // 判斷是否為模組的直接子節點
-      if (newNode.isOpen === undefined) {
-        newNode.isOpen = false;
-      }
-    }
-
-
     if (newNode.children && newNode.children.length > 0) {
       newNode.children = newNode.children.map(child =>
         this.setParentReferences(child, newNode)
       );
     }
-
     if (newNode.actions && newNode.actions.length > 0) {
       newNode.actions = newNode.actions.map(action =>
         this.setParentReferences(action, newNode)
       );
     }
-
     return newNode;
   }
 
@@ -165,65 +186,60 @@ export class SYS0310CRUComponent extends BasicCruPageComponent<Role> implements 
       }
     });
   }
+  /**
+   * 計算並更新單個父節點的 IsEnable 和 partialSelected 狀態
+   * @param node 需要計算狀態的節點 (通常是父節點)
+   * @returns 狀態是否發生變化
+   */
+  private recalculateNodeStatus(node: TreeNode): boolean {
+    if (!((node.children && node.children.length > 0) || (node.actions && node.actions.length > 0))) {
+      return false; // 如果沒有子項，則不需計算
+    }
 
+    let totalSelectableItems = 0;
+    let selectedItemsCount = 0;
+    let hasPartialSelectedChild = false;
+
+    const childrenAndActions = [...(node.children || []), ...(node.actions || [])];
+
+    childrenAndActions.forEach(child => {
+      totalSelectableItems++;
+      if (child.IsEnable === true) { // 檢查是否完全啟用
+        selectedItemsCount++;
+      }
+      if (child.partialSelected === true) { // 檢查子節點是否有部分選中狀態
+        hasPartialSelectedChild = true;
+      }
+    });
+
+    const oldIsEnable = node.IsEnable;
+    const oldPartialSelected = node.partialSelected;
+
+    if (totalSelectableItems === 0) {
+      node.IsEnable = null;
+      node.partialSelected = false;
+    } else if (selectedItemsCount === totalSelectableItems) {
+      node.IsEnable = true;
+      node.partialSelected = false;
+    } else if (selectedItemsCount > 0 || hasPartialSelectedChild) {
+      node.IsEnable = false;
+      node.partialSelected = true;
+    } else {
+      node.IsEnable = null;
+      node.partialSelected = false;
+    }
+
+    return oldIsEnable !== node.IsEnable || oldPartialSelected !== node.partialSelected;
+  }
   private traverseAndCalculateStatus(node: TreeNode) {
-    // 先遞迴處理子節點和 actions，確保它們的狀態是最新的
     if (node.children) {
       node.children.forEach(child => this.traverseAndCalculateStatus(child));
     }
     if (node.actions) {
       node.actions.forEach(action => this.traverseAndCalculateStatus(action));
     }
-
     // 計算當前節點 (node) 的 IsEnable 和 partialSelected 狀態
-    // 只有當節點有 children 或 actions 時才需要計算
-    if ((node.children && node.children.length > 0) || (node.actions && node.actions.length > 0)) {
-      let totalSelectableItems = 0;
-      let selectedItemsCount = 0;
-      let hasPartialSelectedChild = false;
-
-      // 統計所有直接子節點的狀態
-      if (node.children) {
-        node.children.forEach(child => {
-          totalSelectableItems++; // 每個子節點本身是可選單元
-          if (child.IsEnable) {
-            selectedItemsCount++;
-          }
-          if (child.partialSelected) {
-            hasPartialSelectedChild = true;
-          }
-        });
-      }
-
-      // 統計所有 actions (行為) 的狀態
-      if (node.actions) {
-        node.actions.forEach(action => {
-          totalSelectableItems++; // 每個 action 也是可選單元
-          if (action.IsEnable) {
-            selectedItemsCount++;
-          }
-        });
-      }
-
-      // 根據子項的狀態更新當前節點
-      if (totalSelectableItems === 0) {
-        // 沒有任何可選項目，父節點應該是未勾選
-        node.IsEnable = null;
-        node.partialSelected = false;
-      } else if (selectedItemsCount === totalSelectableItems) {
-        // 所有可選項目都已選中，父節點完全勾選
-        node.IsEnable = true;
-        node.partialSelected = false;
-      } else if (selectedItemsCount > 0 || hasPartialSelectedChild) {
-        // 有部分項目選中或有部分選中的子節點，父節點部分勾選
-        node.IsEnable = false; // 不是完全勾選
-        node.partialSelected = true;
-      } else {
-        // 沒有任何項目選中，父節點未勾選
-        node.IsEnable = null;
-        node.partialSelected = false;
-      }
-    }
+    this.recalculateNodeStatus(node);
   }
   private setInitialOpenStateForSecondLevelNodes() {
     const modules = [this.FIN00000Data, this.ASS00000Data, this.TLS00000Data, this.SYS0000Data, this.CPM0000Data];
@@ -269,58 +285,9 @@ export class SYS0310CRUComponent extends BasicCruPageComponent<Role> implements 
     if (!node.parent) {
       return; // 如果沒有父節點，則停止遞迴
     }
-
-    const parentNode = node.parent;
-    let totalSelectableChildrenAndActions = 0;
-    let selectedChildrenAndActionsCount = 0;
-    let hasPartialSelectedChildOrAction = false;
-
-    // 計算父節點的所有直接子節點和 actions 的狀態
-    // 注意：這裡應該是統計父節點的所有直接子節點 (children) 和 actions
-    if (parentNode.children) {
-      parentNode.children.forEach(child => {
-        totalSelectableChildrenAndActions++;
-        if (child.IsEnable) {
-          selectedChildrenAndActionsCount++;
-        }
-        if (child.partialSelected) { // 檢查子節點是否有部分選中狀態
-          hasPartialSelectedChildOrAction = true;
-        }
-      });
-    }
-
-    if (parentNode.actions) {
-      parentNode.actions.forEach(action => {
-        totalSelectableChildrenAndActions++;
-        if (action.IsEnable) {
-          selectedChildrenAndActionsCount++;
-        }
-      });
-    }
-
-    const oldParentIsEnable = parentNode.IsEnable;
-    const oldParentPartialSelected = parentNode.partialSelected;
-
-    if (totalSelectableChildrenAndActions === 0) {
-      parentNode.IsEnable = null;
-      parentNode.partialSelected = false;
-    } else if (selectedChildrenAndActionsCount === totalSelectableChildrenAndActions) {
-      // 所有子項都已選中，父節點完全勾選
-      parentNode.IsEnable = true;
-      parentNode.partialSelected = false;
-    } else if (selectedChildrenAndActionsCount > 0 || hasPartialSelectedChildOrAction) {
-      // 有部分子項選中或有部分選中的子節點，父節點部分勾選
-      parentNode.IsEnable = false; // 不是完全勾選
-      parentNode.partialSelected = true;
-    } else {
-      // 沒有任何子項選中
-      parentNode.IsEnable = null;
-      parentNode.partialSelected = false;
-    }
-
     // 如果父節點的狀態發生了改變，則繼續向上遞迴
-    if (oldParentIsEnable !== parentNode.IsEnable || oldParentPartialSelected !== parentNode.partialSelected) {
-      this.cascadeUp(parentNode);
+    if (this.recalculateNodeStatus(node.parent)) {
+      this.cascadeUp(node.parent);
     }
   }
 
@@ -335,65 +302,39 @@ export class SYS0310CRUComponent extends BasicCruPageComponent<Role> implements 
       node.actions.forEach(action => this.cascadeDown(action, enableValue));
     }
   }
-
-  inputSwitchOpen(node: TreeNode): void {
-    if (node.partialSelected) {
-      return;
+  /**
+ * 遞迴地遍歷樹狀節點，提取所有啟用的行為權限。
+ * @param node 當前節點
+ * @param privilegeList 收集結果的陣列
+ */
+  private extractEnabledPrivileges(node: TreeNode, privilegeList: PrivilegeOutput[]) {
+    if (node.actions && node.actions.length > 0) {
+      node.actions.forEach(behavior => {
+        if (behavior.IsEnable === true) {
+          privilegeList.push({
+            prog_no: node.id,
+            function_code: behavior.id,
+            isEnable: 'Y'
+          });
+        }
+      });
     }
-    node.isOpen = !node.isOpen;
+    if (node.children && node.children.length > 0) {
+      node.children.forEach(child => {
+        this.extractEnabledPrivileges(child, privilegeList);
+      });
+    }
   }
-
   onSubmit(): void {
     const privilegeList: PrivilegeOutput[] = [];
+    const modules = [this.FIN00000Data, this.ASS00000Data, this.TLS00000Data, this.SYS0000Data, this.CPM0000Data];
 
-    const processModuleData = (moduleData: TreeNode | undefined) => {
-      if (!moduleData || !moduleData.children) {
-        return;
+    // 對每個模組執行遞迴提取
+    modules.forEach(moduleData => {
+      if (moduleData) {
+        this.extractEnabledPrivileges(moduleData, privilegeList);
       }
-
-      // 遍歷 Level 2: item (e.g., FIN00000.children)
-      moduleData.children.forEach(item => {
-        if (!item.children) {
-          return;
-        }
-
-        // 遍歷 Level 3: subItem (e.g., item.children)
-        item.children.forEach(subItem => {
-          if (!subItem.children) {
-            return;
-          }
-
-          // 遍歷 Level 4: program (e.g., subItem.children)
-          subItem.children.forEach(program => { // <-- 這是新的 "program" 層次
-            if (!program.children) {
-              return;
-            }
-
-            // 遍歷 Level 5: behavior (functions, e.g., program.children)
-            program.actions.forEach(behavior => {
-              // 檢查 behavior 的 IsEnable 狀態
-              if (behavior.IsEnable !== undefined && behavior.IsEnable) { // 確保 IsEnable 存在
-                privilegeList.push({
-                  prog_no: program.id,       // Level 4 的 id (這個現在是你要的 prog_no)
-                  function_code: behavior.id,  // Level 5 的 id (這個現在是你要的 function_code)
-                  isEnable: 'Y'  // 根據 IsEnable 狀態給 'Y' 或 'N'
-                });
-              }
-            });
-          });
-        });
-      });
-    };
-
-    // 依序處理每個模組的數據
-    processModuleData(this.FIN00000Data);
-    processModuleData(this.ASS00000Data);
-    processModuleData(this.TLS00000Data);
-    processModuleData(this.SYS0000Data);
-    processModuleData(this.CPM0000Data);
-
-    console.log('Generated Privilege List:', privilegeList);
-
+    });
     const body = {
       Role_No: this.dataForm.getRawValue().Role_No,
       data: privilegeList

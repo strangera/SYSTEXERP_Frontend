@@ -1,90 +1,107 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
-    <app-menubar [ProgNo]="ProgNo"
-                 class="flex-1"></app-menubar>
-    <app-button btnType="create"
-                (click)="onCreate()"></app-button>
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
 
   <p-accordion>
-    <p-accordionTab [header]="'query-conditions' | translate"
-                    [selected]="true"
-                    class="line-height-3 m-0"
-                    [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit()">
+    <p-accordionTab
+      [header]="'query-conditions' | translate"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
-          <app-multi-select class="col-12 md:col-6 lg:col-4"
-                            label="館別"
-                            controlName="sys3800"
-                            [options]="service.sys3800Options()"
-                            optionLabel="Name"
-                            optionValue="No"
-                            [loading]="service.sys3800Loading()"
-                            [control]="qf().sys3800"
-                            [submitted]="submitted"></app-multi-select>
-          <app-multi-select class="col-12 md:col-6 lg:col-4"
-                            label="樓層"
-                            controlName="sys3900"
-                            [options]="service.sys3900Options()"
-                            optionLabel="Name"
-                            optionValue="No"
-                            [loading]="service.sys3900Loading()"
-                            [control]="qf().sys3900"
-                            [submitted]="submitted"></app-multi-select>
-          <app-multi-select class="col-12 md:col-6 lg:col-4"
-                            label="區域"
-                            controlName="sys3A00"
-                            [options]="service.sys3A00Options()"
-                            optionLabel="Name"
-                            optionValue="No"
-                            [loading]="service.sys3A00Loading()"
-                            [control]="qf().sys3A00"
-                            [submitted]="submitted"></app-multi-select>
-          <app-multi-select class="col-12 md:col-6 lg:col-4"
-                            label="收銀機號"
-                            controlName="ecrNos"
-                            [options]="service.ecrOptions()"
-                            optionLabel="ecr_name"
-                            optionValue="ecr_no"
-                            [loading]="service.ecrLoading()"
-                            [control]="qf().ecrNos"
-                            [submitted]="submitted"></app-multi-select>
-          <app-multi-select class="col-12 md:col-6 lg:col-4"
-                            label="專櫃名稱"
-                            controlName="tltNos"
-                            [options]="service.tltOptions()"
-                            optionLabel="tlt_name"
-                            optionValue="tlt_no"
-                            [loading]="service.tltLoading()"
-                            [control]="qf().tltNos"
-                            [submitted]="submitted"></app-multi-select>
+          <app-multi-select
+            class="col-12 md:col-6 lg:col-4"
+            label="館別"
+            controlName="sys3800"
+            [options]="service.sys3800Options()"
+            optionLabel="Name"
+            optionValue="No"
+            [loading]="service.sys3800Loading()"
+            [control]="qf().sys3800"
+            [submitted]="submitted"
+          ></app-multi-select>
+          <app-multi-select
+            class="col-12 md:col-6 lg:col-4"
+            label="樓層"
+            controlName="sys3900"
+            [options]="service.sys3900Options()"
+            optionLabel="Name"
+            optionValue="No"
+            [loading]="service.sys3900Loading()"
+            [control]="qf().sys3900"
+            [submitted]="submitted"
+          ></app-multi-select>
+          <app-multi-select
+            class="col-12 md:col-6 lg:col-4"
+            label="區域"
+            controlName="sys3A00"
+            [options]="service.sys3A00Options()"
+            optionLabel="Name"
+            optionValue="No"
+            [loading]="service.sys3A00Loading()"
+            [control]="qf().sys3A00"
+            [submitted]="submitted"
+          ></app-multi-select>
+          <app-multi-select
+            class="col-12 md:col-6 lg:col-4"
+            label="收銀機號"
+            controlName="ecrNos"
+            [options]="service.ecrOptions()"
+            optionLabel="ecr_name"
+            optionValue="ecr_no"
+            [loading]="service.ecrLoading()"
+            [control]="qf().ecrNos"
+            [submitted]="submitted"
+          ></app-multi-select>
+          <app-multi-select
+            class="col-12 md:col-6 lg:col-4"
+            label="專櫃名稱"
+            controlName="tltNos"
+            [options]="service.tltOptions()"
+            optionLabel="tlt_name"
+            optionValue="tlt_no"
+            [loading]="service.tltLoading()"
+            [control]="qf().tltNos"
+            [submitted]="submitted"
+          ></app-multi-select>
           <div class="lg:col-4 d-none"></div>
-          <app-calendar-range class="col-12 md:col-6 lg:col-4"
-                              calendarType="dateRange"
-                              label="起始日期"
-                              [startControl]="qf().podSdateS"
-                              [endControl]="qf().podSdateE"
-                              [submitted]="submitted"></app-calendar-range>
-          <app-calendar-range class="col-12 md:col-6 lg:col-4"
-                              calendarType="dateRange"
-                              label="截止日期"
-                              [startControl]="qf().podEdateS"
-                              [endControl]="qf().podEdateE"
-                              [submitted]="submitted"></app-calendar-range>
+          <app-calendar-range
+            class="col-12 md:col-6 lg:col-4"
+            calendarType="dateRange"
+            label="起始日期"
+            [startControl]="qf().podSdateS"
+            [endControl]="qf().podSdateE"
+            [submitted]="submitted"
+          ></app-calendar-range>
+          <app-calendar-range
+            class="col-12 md:col-6 lg:col-4"
+            calendarType="dateRange"
+            label="截止日期"
+            [startControl]="qf().podEdateS"
+            [endControl]="qf().podEdateE"
+            [submitted]="submitted"
+          ></app-calendar-range>
           @if (queryForm.errors) {
-          <div class="col-12 text-red-500 text-center">
-            @if (queryForm.errors['dateRangeInvalid']) {{{ '日期範圍無效' }}}
-          </div>
+            <div class="col-12 text-red-500 text-center">
+              @if (queryForm.errors["dateRangeInvalid"]) {
+                {{ "日期範圍無效" }}
+              }
+            </div>
           }
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear"
-                      [form]="queryForm"></app-button>
-          <app-button btnType="query"
-                      [disabled]="queryForm.invalid"
-                      [loading]="loading"></app-button>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button
+            btnType="query"
+            [disabled]="queryForm.invalid"
+            [loading]="loading"
+          ></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -93,23 +110,25 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table [showCheckBox]="true"
-               [data]="tableData()"
-               [tableKey]="'TLS26010'"
-               [dataKey]="'id'"
-               [columns]="columns"
-               [addButton]="addButton"
-               [editDisabled]="editDisabled"
-               [isRowSelectable]="service.isRowSelectable"
-               (delete)="onDelete($event)"
-               (edit)="onEdit($event)"
-               (detail)="onDetail($event)"
-               [columns]="columns"
-               [multiSortMeta]="[{ field: 'id', order: 1 }]"
-               [totalRecords]="totalRecords()"
-               (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
-               [lazy]="true"
-               [loading]="service.tableLoading()"
-               (lazyLoadData)="onSubmit()"></app-table>
+    <app-table
+      [showCheckBox]="true"
+      [data]="tableData()"
+      [tableKey]="'TLS26010'"
+      [dataKey]="'id'"
+      [columns]="columns"
+      [addButton]="addButton"
+      [editDisabled]="editDisabled"
+      [isRowSelectable]="service.isRowSelectable"
+      (delete)="onDelete($event)"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+      [columns]="columns"
+      [multiSortMeta]="[{ field: 'id', order: 1 }]"
+      [totalRecords]="totalRecords()"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
+      [lazy]="true"
+      [loading]="service.tableLoading()"
+      (lazyLoadData)="onSubmit()"
+    ></app-table>
   </div>
 </div>

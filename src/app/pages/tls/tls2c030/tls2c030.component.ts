@@ -12,7 +12,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { Column, createPaginationConfig, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls2c030',
@@ -36,7 +36,7 @@ export class TLS2C030Component extends BasicQueryPageComponent<TLS2C030Data> imp
     { field: 'id', header: 'ID', hidden: true },
     { field: 'mid', header: 'MID', hidden: true },
     { field: 'cls_date', header: '關帳日期', visible: true, format: formatDate },
-    { field: 'day_lock_date', header: '日關帳鎖定日期', visible: true, format: formatDateTime },
+    { field: 'day_lock_date', header: '日關帳鎖定日期', visible: true, format: formatDate },
     { field: 'day_USR_No', header: '日關帳鎖定人員', visible: true },
     { field: 'day_USR_Name', header: '日關帳鎖定人員姓名', visible: true },
   ];
@@ -57,9 +57,9 @@ export class TLS2C030Component extends BasicQueryPageComponent<TLS2C030Data> imp
       .pipe(untilDestroyed(this))
       .subscribe(response => {
         this.closeDate = response.Data.CLS_DATE || '';
-        // cls_date 為 closeDate - 1 天
+        // cls_date 為 closeDate + 1 天
         const nextDate = new Date(this.closeDate);
-        nextDate.setDate(nextDate.getDate() - 1);
+        nextDate.setDate(nextDate.getDate() + 1);
         this.queryForm.patchValue({ onedatedd: this.datePipe.transform(nextDate, 'yyyy/MM/dd') || '' });
       });
   }

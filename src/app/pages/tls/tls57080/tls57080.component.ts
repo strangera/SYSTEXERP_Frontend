@@ -1,10 +1,10 @@
-import { AsyncPipe, DatePipe } from '@angular/common';
+import { AsyncPipe, DatePipe, DecimalPipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
-import { QueryTLS57080DetailsApiResponse, QueryTLS57080Request, Tls57080Service } from '@service/api/tls/tls57080.service';
+import { QueryPOS2005PLUNo, QueryPOS2005PLUNoResponse, QueryTLS57080DetailsApiResponse, QueryTLS57080Request, Tls57080Service } from '@service/api/tls/tls57080.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -16,6 +16,7 @@ import { Column, createPaginationConfig } from '@shared/componentkit/table/table
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { DividerModule } from 'primeng/divider';
 import { finalize, Observable } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -38,23 +39,25 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     TranslateModule,
     CalendarRangeQuickComponent,
     DropdownComponent,
-    DropdownTableComponent
+    DropdownTableComponent,
+    DatePipe,
+    DecimalPipe,
+    NgIf,
+    DividerModule
   ],
 })
 export class TLS57080Component extends BasicQueryPageComponent<QueryTLS57080DetailsApiResponse> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     StartDate: [new Date('2025/01/01') as Date | null, [Validators.required]],
     EndDate: [new Date('2025/06/09') as Date | null, [Validators.required]],
-    PLU_MagNo: ['0800000005599', [Validators.maxLength(20)]],
-    PLU_No: [null, [Validators.maxLength(20), Validators.required]],
-    HOS_No: ['0001'],
+    PLU_MagNo: [null, [Validators.maxLength(20)]],
+    PLU_No: ['3605970363222', [Validators.required, Validators.maxLength(20)]],
+    HOS_No: ['0001', [Validators.maxLength(4)]],
     PLU_Name: [null, [Validators.maxLength(50)]],
-    SQLType: [null], // 預設為 1: 售價 2: 單位成本
-    pageIndex: [1],
-    pageSize: [30],
   });
   HOS_NoOptions = this.dropdown.queryPos2034();
   data: QueryTLS57080DetailsApiResponse[] = [];
+  headerData: any;
   totalRecords = 0;
   historyRequestBody: QueryTLS57080Request | null = null;
   columns: ReportColumn[] = [
@@ -74,11 +77,11 @@ export class TLS57080Component extends BasicQueryPageComponent<QueryTLS57080Deta
   ];
 
   constructor(
-    public readonly tls57080Service: Tls57080Service,
+    private readonly tls57080Service: Tls57080Service,
     private readonly tls52010Service: Tls52010Service,
     private readonly dropdown: DropdownApiService,
     private readonly datePipe: DatePipe,
-    private readonly fileExportService: FileExportService
+    private readonly fileExportService: FileExportService,
   ) { super(); }
 
   ngOnInit(): void {
@@ -93,9 +96,17 @@ export class TLS57080Component extends BasicQueryPageComponent<QueryTLS57080Deta
     }
     this.handleSubmit(frm, () => {
       this.tls57080Service.queryTLS57080(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-        this.data = res.Data[0].Details;
-        this.totalRecords = res.Data[0].Details.length;
-        this.historyRequestBody = body;
+        if (res.Data.length) {
+          this.headerData = res.Data[0].Details[0];
+          this.data = res.Data[0].Details.filter(d => d.nos.trim() !== "");
+          this.totalRecords = res.Data[0].Details.length - 1;
+          this.historyRequestBody = body;
+        } else {
+          this.headerData = null;
+          this.data = [];
+          this.totalRecords = 0;
+          this.historyRequestBody = null;
+        }
       })
     });
   }
@@ -140,7 +151,7 @@ export class TLS57080Component extends BasicQueryPageComponent<QueryTLS57080Deta
   });
   suggestions: IQueryPOS2004DetailResponse[] = [];
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '管理編號', mainDataField: true },
+    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
   ];
   opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
   opColumns: Column[] = [
@@ -179,6 +190,58 @@ export class TLS57080Component extends BasicQueryPageComponent<QueryTLS57080Deta
       this.opData = [...results.Data]; // 更新data資料
       this.opTotalRecords = results.TotalCount;
       this.opLoading = false;
+    });
+  }
+  // 國際條碼
+  opLoading2 = false;
+  opForm2 = this.formBuilder.group({
+    PLU_No: [null, [Validators.maxLength(20)]], // 國際條碼
+    PLU_Name: [null, [Validators.maxLength(60)]], // 商品名稱
+    LOGO_No: [null, [Validators.maxLength(60)]], // 品牌代號
+    ...createPaginationConfig([{ field: 'PLU_No', order: 1 }]), // 分頁和排序參數
+  });
+  suggestions2: QueryPOS2005PLUNoResponse[] = [];
+  fieldsConfig2: FieldsConfig[] = [
+    { field: 'PLU_No', header: '國際條碼', mainDataField: true },
+  ];
+  opData2: QueryPOS2005PLUNoResponse[] = [];
+  opColumns2: Column[] = [
+    { field: 'PLU_MagNo', header: '商品管理編號' },
+    { field: 'PLU_No', header: '國際條碼' },
+    { field: 'PLU_Name', header: '商品名稱' },
+  ];
+  opTotalRecords2 = 0;
+  onAutoCompleteInputChange2(event: any) {
+    const body = {
+      ...event,
+      PLU_No: event.PLU_No || null,
+      PLU_Name: null,
+      LOGO_No: null,
+      pageSize: 30,
+      pageIndex: 1,
+      SortBy: [{ field: 'PLU_No', order: 1 }],
+    }
+    this.tls57080Service.queryPOS2005PLUNo(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.suggestions2 = [...results.Data.map(item => ({
+        ...item,
+        label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No,
+      }))];
+    });
+  }
+  onformValueChanged2(event: QueryPOS2005PLUNo) {
+    this.opLoading2 = true;
+    const body = {
+      PLU_No: event.PLU_No || null,
+      PLU_Name: event.PLU_Name || null,
+      LOGO_No: event.LOGO_No || null,
+      pageSize: 20,
+      pageIndex: 1,
+      SortBy: [{ field: 'PLU_No', order: 1 }],
+    };
+    this.tls57080Service.queryPOS2005PLUNo(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.opData2 = [...results.Data]; // 更新data資料
+      this.opTotalRecords2 = results.TotalCount;
+      this.opLoading2 = false;
     });
   }
 }

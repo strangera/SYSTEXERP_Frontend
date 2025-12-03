@@ -1,6 +1,7 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { SortMeta } from 'primeng/api';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -32,6 +33,20 @@ export interface QueryTLS57080DetailsApiResponse {
   TRN_BuyAmt: number
 }
 
+export interface QueryPOS2005PLUNo {
+  PageSize?: number,
+  PageIndex?: number,
+  SortBy?: SortMeta[],
+  PLU_No: string | null,
+  PLU_Name: string | null,
+  LOGO_No: string | null
+}
+
+export interface QueryPOS2005PLUNoResponse {
+  PLU_MagNo: string,
+  PLU_No: string,
+  PLU_Name: string
+}
 
 export type ExportFileResponse = HttpResponse<Blob>;
 
@@ -62,5 +77,9 @@ export class Tls57080Service {
       observe: 'response',
       responseType: 'blob'
     });
+  }
+
+  queryPOS2005PLUNo(request: QueryPOS2005PLUNo): Observable<ApiResponse<QueryPOS2005PLUNoResponse[]>> {
+    return this.http.post<ApiResponse<QueryPOS2005PLUNoResponse[]>>(`${this.apiUrl}/queryPOS2005PLUNo`, request)
   }
 }

@@ -166,10 +166,10 @@ export class FormStateService {
     // 更新標題
     const newTitle = this.getFormTitle(isViewMode, isNewMode);
 
-    // 重新設定控制狀態
-    setTimeout(() => {
+    // ✅ 使用 queueMicrotask 替代 setTimeout(0)
+    queueMicrotask(() => {
       this.setFormControlsState(formGroup, isViewMode, isNewMode);
-    }, 0);
+    });
 
     return newTitle;
   }

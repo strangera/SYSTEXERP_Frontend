@@ -79,10 +79,11 @@ export class TLS13010DataLoaderService {
       component.locationData = [];
       component.selectedBankInfo = null;
 
-      setTimeout(() => {
+      // ✅ 使用 queueMicrotask 替代 setTimeout(0)
+      queueMicrotask(() => {
         component.setFormControlsState();
         component.triggerAllDynamicValidators();
-      }, 100);
+      });
     }
   }
 
@@ -195,6 +196,22 @@ export class TLS13010DataLoaderService {
   loadSavedFormData(component: any, savedFormData: any): void {
     console.log('💾 載入暫存表單資料');
 
+    // ✅ 防禦性檢查:確保 check_type 已轉換為 check_typeList
+    if ((!savedFormData.check_typeList || savedFormData.check_typeList.length === 0) && savedFormData.check_type) {
+      const checkTypeStr = String(savedFormData.check_type);
+      savedFormData.check_typeList = checkTypeStr.split(',').filter((x: string) => x.trim()).filter((x: string) => x);
+      console.log(`✅ Session 資料 check_type "${checkTypeStr}" 已轉換為 check_typeList:`, savedFormData.check_typeList);
+    }
+
+    // ✅ 額外防護：如果 check_typeList 仍然是空陣列但 check_type 有值，強制轉換
+    if (savedFormData.check_type && Array.isArray(savedFormData.check_typeList) && savedFormData.check_typeList.length === 0) {
+      const checkTypeStr = String(savedFormData.check_type);
+      if (checkTypeStr && checkTypeStr !== '' && checkTypeStr !== 'null' && checkTypeStr !== 'undefined') {
+        savedFormData.check_typeList = checkTypeStr.split(',').map((x: string) => x.trim()).filter((x: string) => x);
+        console.log(`🔧 強制轉換 check_type "${checkTypeStr}" 為 check_typeList:`, savedFormData.check_typeList);
+      }
+    }
+
     // 載入表單資料
     component.dataForm.patchValue(savedFormData);
 
@@ -207,9 +224,10 @@ export class TLS13010DataLoaderService {
 
     // 載入分類資料
     if (savedFormData.bus_type) {
-      setTimeout(() => {
+      // ✅ 使用 queueMicrotask 替代 setTimeout
+      queueMicrotask(() => {
         this.loadBusinessClassifications(component, savedFormData.bus_type);
-      }, 100);
+      });
     }
 
     // 載入位置資料
@@ -228,11 +246,11 @@ export class TLS13010DataLoaderService {
       }
     }
 
-    // 重新設定控制狀態
-    setTimeout(() => {
+    // ✅ 使用 queueMicrotask 替代 setTimeout
+    queueMicrotask(() => {
       component.setFormControlsState();
       component.triggerAllDynamicValidators();
-    }, 100);
+    });
   }
 
   /**
@@ -266,15 +284,16 @@ export class TLS13010DataLoaderService {
     // 載入業務分類
     const busType = queryData['bus_type'] as string;
     if (busType) {
-      setTimeout(() => {
+      // ✅ 使用 queueMicrotask 替代 setTimeout
+      queueMicrotask(() => {
         this.loadBusinessClassifications(component, busType);
-      }, 100);
+      });
     }
 
-    // 重新設定控制狀態
-    setTimeout(() => {
+    // ✅ 使用 queueMicrotask 替代 setTimeout
+    queueMicrotask(() => {
       component.setFormControlsState();
-    }, 100);
+    });
   }
 
   /**
@@ -291,6 +310,27 @@ export class TLS13010DataLoaderService {
     venUniform: string,
     venNo: string
   ): any {
+    // ✅ 處理 check_type 轉換為 check_typeList
+    let checkTypeList = (queryData['check_typeList'] as string[]) || [];
+
+    // 如果 check_typeList 是空的,但 check_type 有值,則進行轉換
+    if ((!checkTypeList || checkTypeList.length === 0) && queryData['check_type']) {
+      const checkTypeStr = String(queryData['check_type']);
+      if (checkTypeStr && checkTypeStr !== '' && checkTypeStr !== 'null' && checkTypeStr !== 'undefined') {
+        checkTypeList = checkTypeStr.split(',').map((x: string) => x.trim()).filter((x: string) => x);
+        console.log(`✅ check_type "${checkTypeStr}" 已轉換為 check_typeList:`, checkTypeList);
+      }
+    }
+
+    // ✅ 額外防護：如果 check_typeList 仍然是空陣列但 check_type 有值，強制轉換
+    if (queryData['check_type'] && Array.isArray(checkTypeList) && checkTypeList.length === 0) {
+      const checkTypeStr = String(queryData['check_type']);
+      if (checkTypeStr && checkTypeStr !== '' && checkTypeStr !== 'null' && checkTypeStr !== 'undefined') {
+        checkTypeList = checkTypeStr.split(',').map((x: string) => x.trim()).filter((x: string) => x);
+        console.log(`🔧 強制轉換 check_type "${checkTypeStr}" 為 check_typeList:`, checkTypeList);
+      }
+    }
+
     return {
       vendor_ven_no: matchedVendorVenNo,
       vendor_no: venUniform,
@@ -322,7 +362,7 @@ export class TLS13010DataLoaderService {
       // 商務條件
       deco_type: queryData['deco_type'] as string,
       money_type: queryData['money_type'] as string,
-      check_typeList: (queryData['check_typeList'] as string[]) || [],
+      check_typeList: checkTypeList,
       tlt_term_type: (queryData['tlt_term_type'] as string)?.trim() || '',
       comm_comp_type: queryData['comm_comp_type'] as string || '2',
       store_way: queryData['store_way'] as string,
@@ -568,10 +608,10 @@ export class TLS13010DataLoaderService {
         if (success) {
           console.log(' 工作流程初始化成功');
 
-          // 延遲一點再載入工作流程資料,確保初始化完成
-          setTimeout(() => {
+          // ✅ 使用 Promise.resolve().then() 確保初始化完成後載入
+          Promise.resolve().then(() => {
             this.loadWorkflowData(component);
-          }, 100);
+          });
 
           return true;
         } else {

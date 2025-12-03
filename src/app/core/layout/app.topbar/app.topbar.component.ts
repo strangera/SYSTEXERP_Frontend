@@ -27,6 +27,7 @@ import { AppTopbarTimeComponent } from './app-topbar-time.component';
 import { AppTopbarSearchComponent } from './app-topbar-search.component';
 import { AppTopbarFavoritesComponent } from './app-topbar-favorites.component';
 import { AppTopbarUserComponent } from './app-topbar-user.component';
+import { AppTopbarVersionComponent } from './app-topbar-version.component';
 
 @Component({
   selector: 'app-topbar',
@@ -37,7 +38,7 @@ import { AppTopbarUserComponent } from './app-topbar-user.component';
   imports: [
     RouterLink, Button, MenuModule, TranslateModule, TooltipModule, NgClass, NgFor,
     // 引入新的小元件
-    AppTopbarTimeComponent, AppTopbarSearchComponent, AppTopbarFavoritesComponent, AppTopbarUserComponent
+    AppTopbarTimeComponent, AppTopbarSearchComponent, AppTopbarFavoritesComponent, AppTopbarUserComponent, AppTopbarVersionComponent
   ],
 })
 export class AppTopbarComponent {
