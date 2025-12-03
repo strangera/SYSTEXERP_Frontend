@@ -18,15 +18,13 @@
         <div class="grid p-fluid">
           <!-- 匯款單號 PamNo -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+
+                        <app-input-text
               label="匯款單號"
-              controlName="transferSource"
-              [options]="transferSourceOptions"
-              optionLabel="label"
-              optionValue="value"
+              controlName="SummonNumber"
               [control]="queryForm.controls.transferSource"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-input-text>
           </div>
 
           <!-- 建立日期(起迄) CRT_DateFrom / CRT_DateTo -->
@@ -51,8 +49,6 @@
             ></app-calendar-range>
           </div>
 
-
-
           <!-- 銀行代號 BNK_id：用 dropdown，選項文字 BNK_No-BNK_BRANCHNAME，值為 BNK_DepositAccNo -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -66,7 +62,6 @@
             ></app-dropdown>
           </div>
 
-
           <!-- 拋轉傳票 Status (Y/N) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -79,8 +74,6 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
-
-
 
           <!-- 傳票編號 VouNo -->
           <div class="col-12 md:col-6 lg:col-4">
@@ -129,7 +122,7 @@
     [data]="data"
     [totalRecords]="viewTotalRecords"
     [loading]="loading"
-    [showManage]="true"
+    [showManage]="false"
     [showFilter]="true"
     [showExcel]="false"
     [footerData]="footerData"
