@@ -235,23 +235,16 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       if (!ENTRY_TYPE) return void (this.loading = !1);
 
       const data = this.tableData().filter(v => !v._isAutoInsertCandidate);
-      const payload: TLS21020UpdateQuery[] = data.map(item => {
-        const row: Partial<TLS21020UpdateQuery> = { id: item.id };
-        const fields: (keyof TLS21020Data)[] = ['ABAT_YN', 'AccNo', 'AccNotes', 'ObjectNo', 'Org_ID', 'PAY_No', 'PAY_days', 'RelatedPartyAccNo', 'VEN_No'];
-
-        for (const field of fields) {
-          const value = item[field];
-          if (!this.validateValue(value)) (row as any)[field] = value;
-        }
-
-        return row as TLS21020UpdateQuery;
-      });
+      const payload: TLS21020UpdateQuery[] = data.map(item => ({
+        ...item,
+        ObjectNo: item.ObjectNo === 'Y' ? 'Y' : 'N',
+      }));
 
       this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       this.logger.debug(`submit:`, [ENTRY_TYPE, this.tableData(), payload]);
       this.service.updateTLS21020(payload).pipe(
-        concatMap(() => this.service.queryTLS21020({ ENTRY_TYPE })),
+        concatMap(() => this.service.queryTLS21020({ ENTRY_TYPE, pageSize: 1e5 })),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
         next: res => {
