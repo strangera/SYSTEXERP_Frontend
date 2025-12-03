@@ -5,7 +5,7 @@ import { UntilDestroy } from '@ngneat/until-destroy';
 import { SystemDataService } from '@service/system/system-data.service';
 import { UserInfo } from '@shared/models/system/userInfo';
 import { FormLabelService } from '@shared/service/form-label.service';
-import { PermissionGuardService } from '@shared/service/permission-guard.service';
+import { Actions, PermissionGuardService } from '@shared/service/permission-guard.service';
 import { ValidationService } from '@shared/service/validation.service';
 import { ConfirmationService } from 'primeng/api';
 import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
@@ -36,6 +36,7 @@ export abstract class BasicCruPageComponent<T> {
   rowdata: T | null = null;
   queryData: any;
   user: UserInfo = this.authService.currentUserValue!;
+  public readonly Actions = Actions;
   // CRU----------------------------------------------------------------
   crudstatus: CRUDStatus = CRUDStatus.Read;
   formTitle = '';

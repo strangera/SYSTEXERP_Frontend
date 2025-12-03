@@ -33,6 +33,7 @@ export abstract class BasicQueryPageComponent<T> {
   activatedRoute = inject(ActivatedRoute);
   systemDataService = inject(SystemDataService);
   private permissionGuard = inject(PermissionGuardService);
+  public readonly Actions = Actions;
 
   language = navigator.language;
   loading = false;
