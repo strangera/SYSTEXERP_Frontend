@@ -7,8 +7,9 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, Maps } from '@shared/componentkit/table/table.model';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { createPaginationConfig, Maps } from '@shared/componentkit/table/table.model';
 import { validateRequired } from '@shared/componentkit/table/validate-field.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
@@ -27,7 +28,8 @@ import { EntryType, TLS21020Data, TLS21020Query, TLS21020UpdateQuery } from './t
     ButtonComponent,
     DropdownComponent,
     MenubarComponent,
-    TableComponent,
+    // TableComponent,
+    TableEditComponent,
   ],
 })
 export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> implements OnInit {
@@ -102,7 +104,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     AccNotes: !0,
     // PAY_No: !1,
   });
-  private readonly allColumns = computed((): Column[] => [
+  private readonly allColumns = computed((): EditColumn[] => [
     {
       field: 'AccDC',
       header: '借/貸',
@@ -162,13 +164,15 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       options: this.service.POS2013Options,
       optionValue: 'value',
       templateLabel: 'label',
-      disabled: v => v.ABAT_YN === 'N',
+      // disabled: v => v.ABAT_YN === 'N',
+      disabled: (v, i, r) => r.ABAT_YN === 'N',
     },
     {
       field: 'PAY_days',
       header: '付款天數',
       type: 'inputNumber',
-      disabled: v => v.ABAT_YN === 'N',
+      // disabled: v => v.ABAT_YN === 'N',
+      disabled: (v, i, r) => r.ABAT_YN === 'N',
     },
     {
       field: 'PAY_No',
@@ -177,7 +181,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     },
   ]);
 
-  public readonly columns = computed((): Column[] => {
+  public readonly columns = computed((): EditColumn[] => {
     const keys = this.columnsKeys();
     const all = this.allColumns();
     this.logger.debug(`columns:`, [keys, all]);
@@ -262,7 +266,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
   public queryTLS21020(): void {
     this.tableLoading.set(!0);
-    const payload = <TLS21020Query>{ ...this.queryForm.getRawValue() };
+    const payload = <TLS21020Query>{ ...this.queryForm.getRawValue(), pageSize: 1e5 };
     this.logger.debug(`queryTLS21020:`, [payload]);
     this.service.queryTLS21020(payload).pipe(
       finalize(() => this.tableLoading.set(!1)),

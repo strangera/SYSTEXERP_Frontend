@@ -32,7 +32,7 @@
 
 
 <div class="card">
-  <app-table #dt
+  <!-- <app-table #dt
              apiUrl="queryTLS21020"
              class="col-12"
              [dataKey]="'id'"
@@ -49,14 +49,15 @@
              [totalRecords]="totalRecords()"
              (lazyLoadData)="onLazyLoadData($event, queryForm); queryTLS21020()"
              [lazy]="!0"
-             [loading]="tableLoading()"></app-table>
-  <!-- <app-table-edit #dt
+             [loading]="tableLoading()"></app-table> -->
+  <app-table-edit #dt
                   class="col-12"
                   tableKey="TLS21020Detail"
-                  [title]="'傳票項目之會計科目設定作業'"
                   [columns]="columns()"
                   [data]="tableData()"
                   (dataChange)="tableData.set($event)"
+                  [selectedItems]="selectedItems()"
+                  (selectionChange)="selectedItems.set($event)"
                   [rowValidate]="validateRow"
                   [tableRequired]="!0"
                   [showReorder]="!1"
@@ -64,5 +65,5 @@
                   [showDelete]="!1"
                   [canInsert]="!1"
                   [loading]="tableLoading()"
-                  [defaultInsertData]="defaultInsertData"></app-table-edit> -->
+                  [defaultInsertData]="defaultInsertData"></app-table-edit>
 </div>
