@@ -167,7 +167,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
         return Number(row?.TERM_No ?? 0) > 1 ? '是' : '否';
       }
     },
-
+{ field: 'TERM_Name', header: '分期期數', visible: true },
     { field: 'TXN_MemCard', header: '會員卡號', visible: true },
     { field: 'org_id', header: '組織編號', visible: true },
     { field: 'Org_Name', header: '組織名稱', visible: true },

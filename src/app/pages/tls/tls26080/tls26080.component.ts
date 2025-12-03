@@ -15,7 +15,7 @@ import { Column, createPaginationConfig } from '@shared/componentkit/table/table
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, tap } from 'rxjs';
+import { finalize } from 'rxjs';
 import { TLS26080Data, TLS26080Query } from './tls26080.model';
 
 @Component({
@@ -111,8 +111,8 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
       };
 
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.logger.debug(`submit:`, [raw, payload]);
       this.service.loadTLS26080(payload).pipe(
-        tap(res => this.logger.debug(`onSubmit:`, [raw, payload, res])),
         finalize(() => this.tableLoading.set(!1))
       ).subscribe({
         next: res => {

@@ -1,27 +1,24 @@
+import { NgFor, NgIf } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { TreeNode } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
-import { NgFor, NgIf } from '@angular/common';
 import { TreeModule } from 'primeng/tree';
 
-export interface Column {
-  value: string;
-  label: string;
-}
+type Column = { value: string; label: string; };
 
 @Component({
-    selector: 'app-tree-dropdown',
-    templateUrl: './tree-dropdown.component.html',
-    styleUrls: ['./tree-dropdown.component.scss'],
-    standalone: true,
-    imports: [
-        Button,
-        OverlayPanelModule,
-        NgFor,
-        NgIf,
-        TreeModule,
-    ],
+  selector: 'app-tree-dropdown',
+  templateUrl: './tree-dropdown.component.html',
+  styleUrls: ['./tree-dropdown.component.scss'],
+  standalone: true,
+  imports: [
+    Button,
+    NgFor,
+    NgIf,
+    OverlayPanelModule,
+    TreeModule,
+  ],
 })
 export class TreeDropdownComponent implements OnInit {
   // 扁平化導入的資料
@@ -34,6 +31,10 @@ export class TreeDropdownComponent implements OnInit {
   //   { id: '5', department: 'Department B', role: 'Reviewer', name: 'Elwin Sharvill', email: 'elwin@email.com', phone: '0955555555' },
   // ];
   @Input() members: any[] = []; // 允許外部傳入成員資料
+
+  @Input() card = true; // 是否顯示卡片樣式
+  @Input() loading = false; // 是否顯示載入中
+  @Input() disabled = false; // 按鍵是否禁用
 
   //外部提供顯示名稱
   // Columns = [

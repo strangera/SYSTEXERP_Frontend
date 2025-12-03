@@ -1,10 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { FIN52080ClassNo, FIN52080Data, FIN52080Query, FIN52080Tree } from '@pages/fin/fin52080/fin52080.model';
+import { Option } from '@service/utility/dropdown-api.model';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
-import { apiOption } from '@shared/models/sys/sysb000.model';
 import { NGXLogger } from 'ngx-logger';
-import { finalize, Observable, take, tap } from 'rxjs';
+import { finalize, map, Observable, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
@@ -19,51 +19,52 @@ export class FIN52080Service {
   public accNoFilter = /^\d{1,8}$/;
 
   public readonly classNoMap = computed(() => new Map(this.classNoOptions().map(item => [item.ClassNo, item.ClassCName])));
+  public readonly voucherTypeMap = computed(() => new Map(this.voucherTypeOption.map(item => [item.value, item.label])));
 
   /** 借/貸 */
-  public readonly accDCOption: apiOption[] = [
-    { No: 'D', Name: '借' },
-    { No: 'C', Name: '貸' }
+  public readonly accDCOption: Option[] = [
+    { value: 'D', label: '借' },
+    { value: 'C', label: '貸' }
   ];
 
   /** 統制/明細 */
-  public readonly ledgerMDOption: apiOption[] = [
-    { No: '0', Name: '統制' },
-    { No: '1', Name: '明細' }
+  public readonly ledgerMDOption: Option[] = [
+    { value: '0', label: '統制' },
+    { value: '1', label: '明細' }
   ];
 
   /** 是否 */
-  public readonly whetherOption: apiOption[] = [
-    { No: 'Y', Name: '是' },
-    { No: 'N', Name: '否' }
+  public readonly whetherOption: Option[] = [
+    { value: 'Y', label: '是' },
+    { value: 'N', label: '否' }
   ];
 
   /** 傳票格式 */
-  public readonly voucherTypeOption: apiOption[] = [
-    { No: '0', Name: '無特定' },
-    { No: '1', Name: '應付票據' },
-    { No: '2', Name: '應收票據' },
-    { No: '3', Name: '應付帳款' },
+  public readonly voucherTypeOption: Option[] = [
+    { value: '0', label: '無特定' },
+    { value: '1', label: '應付票據' },
+    { value: '2', label: '應收票據' },
+    { value: '3', label: '應付帳款' },
 
-    { No: '4', Name: '應收帳款' },
-    { No: '5', Name: '進項稅額' },
-    { No: '6', Name: '銷項稅額' },
-    { No: '7', Name: '銀行存款' },
+    { value: '4', label: '應收帳款' },
+    { value: '5', label: '進項稅額' },
+    { value: '6', label: '銷項稅額' },
+    { value: '7', label: '銀行存款' },
 
-    { No: 'A', Name: '應付費用' },
-    { No: 'B', Name: '代收稅款' },
-    { No: 'C', Name: '固定資產' },
-    { No: 'D', Name: '現金' },
-    { No: 'E', Name: '應收保證票據' }
+    { value: 'A', label: '應付費用' },
+    { value: 'B', label: '代收稅款' },
+    { value: 'C', label: '固定資產' },
+    { value: 'D', label: '現金' },
+    { value: 'E', label: '應收保證票據' }
   ];
+
+  private readonly LeaveLabel = 'T_Name';
+  private readonly listTitle = '科目圖';
   private readonly treeColumn = [
     { value: 'T10Label', label: '大分類' },
     { value: 'T20Label', label: '中分類' },
     { value: 'T30Label', label: '小分類' },
   ];
-
-  private readonly LeaveLabel = 't_name';
-  private readonly listTitle = '科目圖';
 
   public readonly TreeElements = {
     treeColumn: this.treeColumn,
@@ -80,6 +81,18 @@ export class FIN52080Service {
     return this.http.post<BaseQueryResponse<FIN52080Data>>(`${apiUrl}/queryFIN52080`, payload).pipe(
       take(1),
       tap(res => this.logger.debug('查詢FIN52080結果:', [res])),
+      map(res => ({
+        ...res,
+        Data: res.Data.map(item => ({
+          ...item,
+          AccDC: typeof item.AccDC === 'string' && item.AccDC.length > 0 ? item.AccDC.toUpperCase().trim() : void 0,
+          Ledger_MD: typeof item.Ledger_MD === 'string' && item.Ledger_MD.length > 0 ? item.Ledger_MD.toUpperCase().trim() : void 0,
+          Budget_YN: typeof item.Budget_YN === 'string' && item.Budget_YN.length > 0 ? item.Budget_YN.toUpperCase().trim() : void 0,
+          Org_YN: typeof item.Org_YN === 'string' && item.Org_YN.length > 0 ? item.Org_YN.toUpperCase().trim() : void 0,
+          Input_YN: typeof item.Input_YN === 'string' && item.Input_YN.length > 0 ? item.Input_YN.toUpperCase().trim() : void 0,
+        }))
+      }) as unknown as BaseQueryResponse<FIN52080Data>),
+      tap(res => this.logger.debug('格式化FIN52080結果:', [res])),
     );
   };
 

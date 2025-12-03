@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, effect, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN52010Service } from '@service/api/fin/fin52010.service';
@@ -11,6 +11,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { FIN52010Data, FIN52010UpdatePayload } from './fin52010.model';
 
 @Component({
@@ -60,10 +61,13 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
     return this.dataForm.valid;
   });
 
+  public readonly tableData = signal<FIN52010Data>(Object.create(null));
+  public readonly tableLoading = signal<boolean>(!1);
+
   public readonly dataEffect = effect(() => {
     const orgUsr = this.service.orgUsrOptions();
     const gls1005 = this.service.gls1005Options();
-    const { OpenDate, CloseDate, ...rest } = this.service.FIN52010Data();
+    const { OpenDate, CloseDate, ...rest } = this.tableData();
 
     if (!orgUsr.length || !gls1005.length) return;
     const orgLoading = this.service.orgUsrLoading();
@@ -82,7 +86,7 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
   }, { allowSignalWrites: !0 });
 
   public readonly loadingEffect = effect(() => {
-    this.loading = this.service.dataLoading()
+    this.loading = this.tableLoading()
       || this.service.orgUsrLoading()
       || this.service.gls1005Loading();
   });
@@ -97,10 +101,18 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
 
   public ngOnInit(): void {
     this.initializePage('FIN52010', void 0, this.dataForm);
+    this.tableLoading.set(!0);
 
     this.service.getTblUsrOrgOptions();
     this.service.getGLS1005DropDownOptions();
-    this.service.loadFIN52010(this.user!.CompNo);
+    this.service.loadFIN52010(this.user!.CompNo).pipe(
+      finalize(() => this.tableLoading.set(!1)),
+    ).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        this.tableData.set(res.Data);
+      }
+    });
 
     this.logger.debug(`init:`, [this.user]);
   }
@@ -108,17 +120,22 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const { OriOpenDate, OriCloseDate, ...rest } = this.dataForm.value;
-      const payload = <FIN52010UpdatePayload>{
+      const raw = <FIN52010UpdatePayload>{
         ...rest,
         AccYear: this.df().AccYear.value,
         OpenDate: OriOpenDate,
         CloseDate: OriCloseDate,
         CompNo: this.user!.CompNo,
       };
+      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+      ));
 
-      this.logger.debug(`onSubmit:`, [rest, payload]);
-
-      this.service.updateFIN52010Data(payload).subscribe({
+      this.tableLoading.set(!0);
+      this.logger.debug(`onSubmit:`, [raw, payload]);
+      this.service.updateFIN52010Data(payload).pipe(
+        finalize(() => this.tableLoading.set(!1)),
+      ).subscribe({
         next: () => this.messageService.successBubble('更新成功'),
         error: () => this.messageService.errorBubble('更新失敗'),
       });

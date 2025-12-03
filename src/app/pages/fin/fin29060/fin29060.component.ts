@@ -58,7 +58,8 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
   });
   VendorNoOptions: { label: string; value: string }[] = []; // 廠客代號選項
   AccNoOptions: { label: string; value: string }[] = []; // 科目代號選項
-
+  lastQueryBody: any = null;
+  queryFunction = null;
   selectedItems: FIN29060Data[] = [];
   totalData: FIN29060TotalData[] = [];
   totalRecords = 0;
@@ -113,7 +114,9 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
       .subscribe(res => this.AccNoOptions = res.Data.map((x: { No: string; Name: string }) => ({ label: `${x.No} - ${x.Name}`, value: x.No })));
 
   }
-
+  onTableDataChange(newData: FIN29060Data[]) {
+    this.data = newData;
+  }
   onDetailWithColValue(event: { row: FIN29060Data; col: any; value: any }) {
     const extras: NavigationExtras = {
       state: {
@@ -142,20 +145,27 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
     if (form.invalid) return;
 
     this.loading = true;
-    const body = form.value as QueryFIN29060Request;
 
-    this.fin29060Service.queryFIN29060(body)
+    const raw = form.value as QueryFIN29060Request;
+
+    this.lastQueryBody = {
+      ...raw,
+      pageIndex: 1,
+      pageSize: this.lazyBatchSize,
+    };
+
+    this.fin29060Service.queryFIN29060(this.lastQueryBody)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe((res) => {
-        const all = res.Data?.mainData ?? [];
 
-        this.fullData = all;          // 所有資料
-        this.totalRecords = all.length;
+        const all: FIN29060Data[] = res.Data ?? [];
 
-        // 顯示前 30筆
+        this.fullData = all;
+        this.totalRecords = res.TotalCount || all.length;
         this.data = this.fullData.slice(0, this.lazyBatchSize);
       });
   }
+
 
 
   private buildExportPayload(): QueryFIN29060Request {

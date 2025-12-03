@@ -115,14 +115,18 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
       const vns = this.qf().VouNoStart.value;
       const vne = this.qf().VouNoEnd.value;
 
-      const payload = <FIN53010Payload>{
+      const raw = <FIN53010Payload>{
         ...this.queryForm.getRawValue(),
         VouNoStart: vns ? String(vns).padEnd(12, '0') : void 0,
         VouNoEnd: vne ? String(vne).padEnd(12, '9') : void 0,
       };
+      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+      )) as unknown as FIN53010Payload;
 
       this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.logger.debug(`onSubmit:`, [vns, vne, payload]);
       this.service.loadFIN53010(payload).pipe(
         tap(res => this.service.getAccDescOptions(res.Data.map(d => d.Remark).filter(Boolean))),
         finalize(() => this.tableLoading.set(!1)),
@@ -131,7 +135,6 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
           if (res.Status !== '0000') return;
           this.tableData.set(res.Data || []);
           this.totalRecords.set(res.TotalCount || 0);
-          this.logger.debug(`onSubmit:`, [payload, res]);
         },
       });
     });

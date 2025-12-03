@@ -13,7 +13,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, tap } from 'rxjs';
+import { finalize } from 'rxjs';
 import { ASS2100ENGMeterType, ASS21010Data, ASS21010Payload, EngType } from './ass21010.model';
 
 @Component({
@@ -121,17 +121,14 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
         ...this.queryForm.getRawValue(),
         ...this.usrData(),
       };
-
-      const payload = (Object.keys(raw) as (keyof typeof raw)[]).reduce<Record<string, unknown>>((acc, key) => {
-        const v = raw[key];
-        if (v !== null && v !== void 0 && v !== '' && !(Array.isArray(v) && !v.length)) acc[key] = v;
-        return acc;
-      }, {}) as unknown as ASS21010Payload;
+      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+      )) as unknown as ASS21010Payload;
 
       this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.logger.debug(`onSubmit:`, [raw, payload]);
       this.service.loadASS21010(payload).pipe(
-        tap(res => this.logger.debug(`onSubmit:`, [raw, payload, res])),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
         next: res => {

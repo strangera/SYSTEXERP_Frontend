@@ -82,10 +82,11 @@ export class FIN54035Component extends BasicQueryPageComponent<FIN54030Data> imp
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
       if (!this.qf().TargetYM.value?.length) return this.messageService.errorBubble('請選擇目標年月');
+
       this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.logger.debug(`onSubmit:`, [this.qf().TargetYM.value]);
       this.service.closeFIN54030(this.qf().TargetYM.value!, '2').pipe(
-        tap(res => this.logger.debug(`onSubmit:`, [res])),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
         next: res => {

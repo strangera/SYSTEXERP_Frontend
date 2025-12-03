@@ -56,7 +56,7 @@ import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/i
     ReactiveFormsModule,
     CalendarRangeQuickComponent,
     MultiSelectComponent,
-    InputNumberRangeComponent,
+    // InputNumberRangeComponent,
     InputTextComponent,
     DropdownComponent,
     InputTextModule,
