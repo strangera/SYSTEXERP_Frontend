@@ -1,136 +1,112 @@
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { Fin32010Service } from '@service/api/fin/fin32010.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatDate } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-//
-
-//1.2.4.2 保留款沖款維護
+import { formatAmount } from './../../../shared/componentkit/table-report/table-report.model';
+//1.3.2.1 應收帳款維護
 @Component({
   selector: 'app-fin24020',
   templateUrl: './fin24020.component.html',
   styleUrl: './fin24020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, CalendarRangeComponent, InputNumberRangeComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
+  imports: [AsyncPipe, CalendarRangeQuickComponent, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, InputTextComponent, ButtonComponent, TranslateModule]
 })
-export class FIN24020Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    shouldPayID: [, [Validators.maxLength(14)]], // 應付ID
-    factoryID: [], // 廠客代號
-    onedatemm: [], // 年月
-    accountCash: [, [Validators.maxLength(2)]], // 帳款帳次
-    startRefundDate: [], // 退保留款日期
-    endRefundDate: [], // 退保留款日期
-    startRefundRetainer: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 退保留款金額
-    endRefundRetainer: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 退保留款金額
-    generatePayout: [[] as number[]], // 是否產生付款資料
-    remark: ['', [Validators.maxLength(160)]], // 備註
+export class FIN24020Component extends BasicQueryPageComponent<any> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    ARS_No: [null, [Validators.maxLength(14)]],
+    ORG_ID: [null, [Validators.maxLength(20)]],
+    sam_yyymm: ["", [Validators.maxLength(6)]],
+    sam_termno: [null, [Validators.max(99)]],
+    ARS_Amt_From: [null, [Validators.max(9999999999)]],
+    ARS_Amt_To: [null, [Validators.max(9999999999)]],
+    PTA_Amt_From: [null, [Validators.max(9999999999)]],
+    PTA_Amt_To: [null, [Validators.max(9999999999)]],
+    BalAmt_From: [null, [Validators.max(9999999999)]],
+    BalAmt_To: [null, [Validators.max(9999999999)]],
+    PTA_Date_From: [null],
+    PTA_Date_To: [null],
+    ARS_Date_From: [null],
+    ARS_Date_To: [null],
+    CustNo: [null],
+    Uniform_No: [null, [Validators.maxLength(16)]],
+    AccNo: [null, [Validators.maxLength(50)]],
+    ARS_SourceNo: [null, [Validators.maxLength(80)]],
+    VouNo: ["", [Validators.maxLength(12)]],
+    PostFlag: [null, [Validators.maxLength(100)]],
+    ARS_Status: [null],
+    SubDetailNo: [""],
+    NoteDesc: [null, [Validators.maxLength(160)]],
+    PTA_Key: [null]
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
   // 表格
   // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
+  pageSize = 20;
+  pageIndex = 1;
+  sortBy = '';
+  totalRecords = 0;
+  data: any[] = [];
+  lastQueryBody: any | null = null;
+  columns: ReportColumn[] = [
+    // { field: 'RowNo', header: '序號', visible: false },
+    { field: 'ARS_ID', header: '應收ID' },
+    { field: 'ARS_Amt', header: '廠商編號', format: formatAmount },
+    { field: 'PTA_Amt', header: '帳款年月', format: formatAmount },
+    { field: 'ARS_BalAmt', header: '帳款帳次', format: formatAmount },
+    { field: 'ARS_Date', header: '退保留款日期', format: formatDate },
+    { field: 'PTA_Date', header: '退保留款金額', format: formatDate },
+    { field: 'CustInfo', header: '是否產生付款資料' },
+    { field: 'NoteDesc', header: '備註' },
   ];
-  columns: any[] = [
-    { field: 'col1', header: '應付ID', visible: true },
-    { field: 'col2', header: '廠客代號', visible: true },
-    { field: 'col3', header: '年月', visible: true },
-    { field: 'col4', header: '帳次', visible: true },
-    { field: 'col5', header: '退保留款日期', visible: true },
-    { field: 'col6', header: '退保留款金額', visible: true },
-    { field: 'col7', header: '是否產生付款資料', visible: true },
-    { field: 'col8', header: '備註', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  factoryIDOptions: any[] = [];
-  whetherOptions: any[] = [];
+  VEN_No_ParamOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商代號
+  PTA_KeyOptions = [
+    { label: '是', value: 'Y' },
+    { label: '否', value: 'N' },
 
+  ];
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private validationService: ValidationService,
+    private readonly dropDown: DropdownApiService,
+    private readonly datePipe: DatePipe,
+    public readonly fin32010Service: Fin32010Service,
   ) {
-    super(); // 呼叫父類建構子
+    super();
+  }
+
+  // 禁止編輯的判斷：若該列已有 VouNo（傳票號）則不可編輯
+  editDisabledByVouNo = (rowData: any): boolean => {
+    return !!(rowData && rowData.VouNo);
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '120015';
-    this.cruPage = '/FIN2000/FIN24020CRU';
-    //
-    // ----------------------------------------------------------------
-    // ----------------------------------------------------------------
-  }
+    this.initializePage('FIN24020', 'fin/FIN24020cru', this.queryForm, (form) => this.onSubmit(form));
 
-  // ----------------------------------------------------------------
+  }
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(frm, () => {
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
+      // this.fin32010Service.queryFIN32010()
+      //   .pipe(finalize(() => this.loading = false), untilDestroyed(this))
+      //   .subscribe(response => {
 
-    this.loading = false;
-    this.messageService.unblockUi();
+      //     this.totalRecords = response.TotalCount ?? 0;
+
+      //   });
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
-  }
 }

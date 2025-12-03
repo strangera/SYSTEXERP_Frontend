@@ -6,6 +6,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { HttpResponse } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 
 import { CommonModule } from '@angular/common';
@@ -28,15 +29,17 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { forkJoin, EMPTY } from 'rxjs';
+
 
 // Service & 型別
 import {
   Fin26010Service,
   Fin26010Row,
   Fin26010Request,
-  Fin26010GenerateRequest,
   Aps1002BankDropDownRow,
   ApiResponse,
+  ExportFin26010TxtRequest,
 } from '../../../service/api/fin/fin26010.service';
 
 type SortItem = { field: string; order: number };
@@ -104,11 +107,7 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
   readonly defaultSort: SortItem[] = [{ field: 'PAM_No', order: 1 }];
 
   /* ----------------- 匯款單號下拉（暫時 mock） ----------------- */
-  transferSourceOptions: any[] = [
-    { value: 'D20140106001', label: 'D20140106001/2014/0106/Y' },
-    { value: 'D20140106002', label: 'D20140106002/2014/0106/Y' },
-    { value: 'D20140106003', label: 'D20140106003/2014/0106/Y' },
-  ];
+
 
   // 拋轉傳票：Y=已拋轉, N=未拋轉（後端 Status 單值）
   statusOptions: any[] = [
@@ -133,7 +132,7 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
     transferDateTo: [null as Date | null, [Validators.required]],
 
     // 銀行代號 BNK_id（用 dropdown：值為 BNK_DepositAccNo）
-    bankCode: [null as string | null],
+    bankCode: [null as string | null, [Validators.required]],
 
     // 銀行名稱（純畫面顯示/輸入，後端目前未收）
     bankName: [null as string | null, [Validators.maxLength(40)]],
@@ -265,43 +264,6 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
         delete (payload as any)[k];
       }
     });
-
-    return payload;
-  }
-
-  /** 產生匯款檔 payload：目前仍假設後端使用 IdList，等後端正式規格可再調整 */
-  private buildGeneratePayload(): Fin26010GenerateRequest | null {
-    if (!this.selectedItems || this.selectedItems.length === 0) {
-      return null;
-    }
-
-    const base = this.queryForm.getRawValue();
-    const rmtFrom =
-      this.toYMDOrUndef(base.transferDateFrom) ||
-      this.toYMDOrUndef(base.transferDateTo) ||
-      '';
-    const rmtTo =
-      this.toYMDOrUndef(base.transferDateTo) ||
-      this.toYMDOrUndef(base.transferDateFrom) ||
-      '';
-
-    const bankCode = (base.bankCode || '').toString().trim();
-    if (!rmtFrom || !rmtTo || !bankCode) {
-      return null;
-    }
-
-    const ids = this.selectedItems
-      .map((r: any) => r.id)
-      .filter((x: any) => x != null) as number[];
-
-    if (!ids.length) return null;
-
-    const payload: Fin26010GenerateRequest = {
-      IdList: ids,
-      RMT_DateFrom: rmtFrom,
-      RMT_DateTo: rmtTo,
-      BNK_id: bankCode,
-    };
 
     return payload;
   }
@@ -449,29 +411,108 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
     this.footerData = undefined;
   }
 
-  /* ----------------- 產生匯款檔 ----------------- */
+  /* ----------------- 產生匯款檔 (TXT)：多列 → 多檔 ----------------- */
+  /* ----------------- 產生匯款檔 (TXT)：依匯款日期(RMT_Date) 分批 → 多檔 ----------------- */
   generateRemitFile(): void {
-    const payload = this.buildGeneratePayload();
-    if (!payload) {
-      console.warn('產生匯款檔條件不足或沒有選取任何資料');
+    if (!this.selectedItems || this.selectedItems.length === 0) {
+      console.warn('產生匯款檔：未選取任何資料');
+      return;
+    }
+
+    // 依「匯款日期 RMT_Date」分組，把每組內的 PAM_No 集合起來
+    const dateGroups = new Map<string, Set<string>>();
+
+    this.selectedItems.forEach((row) => {
+      const pamNo = (row.PAM_No ?? '').toString().trim();
+      if (!pamNo) return;
+
+      const rawDate = row.RMT_Date ?? ''; // 用匯款日期 RMT_Date 當 key
+      let dateKey = 'NO_DATE';
+
+      if (rawDate) {
+        const d = new Date(rawDate);
+        if (!isNaN(d.getTime())) {
+          const yyyy = d.getFullYear();
+          const mm = (d.getMonth() + 1).toString().padStart(2, '0');
+          const dd = d.getDate().toString().padStart(2, '0');
+          // 檔名用 yyyyMMdd 比較好看
+          dateKey = `${yyyy}${mm}${dd}`;
+        } else {
+          // 解析失敗就用原始字串前 10 碼當 key，例如 2025-12-03
+          dateKey = rawDate.toString().substring(0, 10) || 'NO_DATE';
+        }
+      }
+
+      if (!dateGroups.has(dateKey)) {
+        dateGroups.set(dateKey, new Set<string>());
+      }
+      dateGroups.get(dateKey)!.add(pamNo);
+    });
+
+    if (dateGroups.size === 0) {
+      console.warn('產生匯款檔：選取資料沒有可用的 PAM_No');
       return;
     }
 
     this.btnGenerateFileLoading = true;
 
-    this.fin26010Service
-      .generateRemitFile(payload)
+    // 每個日期一個 request，PamNoList 裡面放該日期的所有 PAM_No
+    const requests = Array.from(dateGroups.entries()).map(([dateKey, pamSet]) => {
+      const payload: ExportFin26010TxtRequest = {
+        PamNoList: Array.from(pamSet),
+      };
+
+      return this.fin26010Service
+        .exportFIN26010TXT(payload)
+        .pipe(map((res: HttpResponse<Blob>) => ({ dateKey, res })));
+    });
+
+    forkJoin(requests)
       .pipe(untilDestroyed(this))
       .subscribe({
-        next: (res: ApiResponse<any>) => {
-          console.log('Remit file generated:', res);
+        next: (results) => {
+          results.forEach(({ dateKey, res }) => {
+            const blob = res.body;
+            if (!blob) {
+              console.error(
+                `FIN26010 TXT 匯出失敗：回傳 body 為空 (Date=${dateKey})`
+              );
+              return;
+            }
+
+            // 預設檔名：FIN26010_{日期}.txt
+            let filename = `FIN26010_${dateKey}.txt`;
+
+            // 嘗試從 Content-Disposition 取檔名
+            const cd = res.headers.get('Content-Disposition');
+            if (cd) {
+              const match = /filename\*?=(?:UTF-8''|")?([^"]+)/i.exec(cd);
+              if (match && match[1]) {
+                filename = decodeURIComponent(match[1].replace(/"/g, ''));
+              }
+            }
+
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            console.log('FIN26010 TXT 匯出完成，檔名：', filename);
+          });
         },
-        error: (err: any) => {
-          console.error('FIN26010 generate remit file error:', err);
+        error: (err) => {
+          console.error('FIN26010 TXT 匯出 API 錯誤:', err);
         },
       })
       .add(() => {
         this.btnGenerateFileLoading = false;
       });
   }
+
+
+
 }

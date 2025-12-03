@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -44,14 +44,11 @@ export interface Fin26010Request {
 }
 
 /**
- * 產生匯款檔 Request 型別
- * （目前仍沿用 IdList，等後端正式規格再調整）
+ * 匯出 FIN26010 TXT 檔 Request 型別
+ * 對應 API: /ExportLabel/ExportFIN26010TXT
  */
-export interface Fin26010GenerateRequest {
-  IdList: number[];     // APS3007.id 集合
-  RMT_DateFrom: string; // 匯款日期起
-  RMT_DateTo: string;   // 匯款日期迄
-  BNK_id: string;       // 銀行代號
+export interface ExportFin26010TxtRequest {
+  PamNoList: string[];
 }
 
 /**
@@ -83,14 +80,19 @@ export class Fin26010Service {
     );
   }
 
-  /** 產生匯款檔：實作依後端規格為準 */
-  generateRemitFile(
-    body: Fin26010GenerateRequest
-  ): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(
-      `${this.apiUrl}/generateFIN26010RemitFile`,
-      body
-    );
+  /**
+   * 匯出 FIN26010 TXT 檔
+   * API: POST /ExportLabel/ExportFIN26010TXT
+   * body: { PamNoList: string[] }
+   */
+  exportFIN26010TXT(
+    body: ExportFin26010TxtRequest
+  ): Observable<HttpResponse<Blob>> {
+    const url = `${environment.ApiUrl}/ExportLabel/ExportFIN26010TXT`;
+    return this.http.post(url, body, {
+      responseType: 'blob',
+      observe: 'response',
+    });
   }
 
   /** 銀行代號下拉：/queryAPS1002_DropDownList，POST {} */

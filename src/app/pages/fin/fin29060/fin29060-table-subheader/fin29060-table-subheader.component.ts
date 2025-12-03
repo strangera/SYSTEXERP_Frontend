@@ -175,35 +175,24 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
-      this.virtualData = [];
-      const pageSize = this.lastQueryBody?.pageSize || 30;
+      this.virtualData = [...this.data];
 
       if (this.dt) {
-        if (this.data.length < pageSize) {
-          this.dt.virtualScroll = false;
-          this.virtualData = this.data;
-        } else {
-          this.dt.virtualScroll = true;
-          this.virtualData = Array.from({ length: this.data.length });
-          this.cd.detectChanges();
-          this.virtualData = this.data;
-        }
-
+        // totalRecords 正常更新
         this.dt.totalRecords = this.totalRecords;
-      } else {
-        // 無 dt 時，至少讓 virtualData 不會 undefined
-        this.virtualData = this.data;
       }
+      this.cd.detectChanges();
     }
 
-
-    // 原本 columns 初始化保留
     if (changes['columns'] && this.columns.length > 0) {
-      this.originalColumns = this.columns;
+      this.originalColumns = [...this.columns];
+      this.selectedColumns = this.columns.filter(c => !c.hidden);
+
       this.showSubTotal = this.showSubTotal || this.columns.some(c => c.isSubTotal);
       this.showTotal = this.showTotal || this.columns.some(c => c.isTotal);
     }
   }
+
   loadMoreData() {
     // 判斷是「一頁式載入模式」
     const isLocalMode = !this.queryFunction;
@@ -284,7 +273,14 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
     });
   }
   onScroll(event: any) {
-    if (this.data.length >= this.totalRecords) return;
+    // API 模式
+    if (this.queryFunction) {
+      if (this.data.length >= this.totalRecords) return;
+    }
+    // 一頁式模式（fullData 模式）
+    else {
+      if (this.data.length >= this.fullData.length) return;
+    }
 
     if (event?.originalEvent?.target) {
       const target = event.originalEvent.target;
@@ -338,10 +334,17 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   // 行追蹤
   trackByRow = (index: number, item: any) => { return item?.[this.dataKey] || index; };
 
-  // 計算欄位總數(包含序號、勾選、管理)
   get getVisibleHeaderCount(): number {
+    let count = 0;
+    if (!this.showSubTotal && this.data.length && this.showReorder) {
+      count += 1;
+    }
+    count += 1;
     const visibleColumnCount = this.tableUtilityService.getVisibleColumnCount(this.selectedColumns);
-    return 1 + visibleColumnCount + Number(this.showManage) + (this.showSubTotal || this.showTotal ? 0 : 1);
+    count += visibleColumnCount;
+    if (this.showManage) count += 1;
+
+    return count;
   }
 
   // 過濾欄位記錄保存

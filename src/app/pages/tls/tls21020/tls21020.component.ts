@@ -7,12 +7,13 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, Maps } from '@shared/componentkit/table/table.model';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { createPaginationConfig, Maps } from '@shared/componentkit/table/table.model';
 import { validateRequired } from '@shared/componentkit/table/validate-field.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { concatMap, finalize, tap } from 'rxjs';
+import { concatMap, finalize } from 'rxjs';
 import { EntryType, TLS21020Data, TLS21020Query, TLS21020UpdateQuery } from './tls21020.model';
 
 @Component({
@@ -27,7 +28,8 @@ import { EntryType, TLS21020Data, TLS21020Query, TLS21020UpdateQuery } from './t
     ButtonComponent,
     DropdownComponent,
     MenubarComponent,
-    TableComponent,
+    // TableComponent,
+    TableEditComponent,
   ],
 })
 export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> implements OnInit {
@@ -44,6 +46,15 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   public readonly totalRecords = signal<number>(0);
   public readonly tableLoading = signal<boolean>(!1);
   public readonly selectedItems = signal<TLS21020Data[]>([]);
+
+  public readonly canSave = computed(() => {
+    for (const item of this.tableData()) {
+      if (item._isAutoInsertCandidate) continue;
+      const validation = this.validateRow(item);
+      if (!validation.isValid) return !1;
+    }
+    return !0;
+  });
 
   /** 根據 ENTRY_TYPE 動態調整欄位顯示與查詢 */
   public readonly entryTypeEffect = effect(() => {
@@ -93,7 +104,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     AccNotes: !0,
     // PAY_No: !1,
   });
-  private readonly allColumns = computed((): Column[] => [
+  private readonly allColumns = computed((): EditColumn[] => [
     {
       field: 'AccDC',
       header: '借/貸',
@@ -153,13 +164,15 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       options: this.service.POS2013Options,
       optionValue: 'value',
       templateLabel: 'label',
-      disabled: (v) => v.ABAT_YN === 'N',
+      // disabled: v => v.ABAT_YN === 'N',
+      disabled: (v, i, r) => r.ABAT_YN === 'N',
     },
     {
       field: 'PAY_days',
       header: '付款天數',
       type: 'inputNumber',
-      disabled: (v) => v.ABAT_YN === 'N',
+      // disabled: v => v.ABAT_YN === 'N',
+      disabled: (v, i, r) => r.ABAT_YN === 'N',
     },
     {
       field: 'PAY_No',
@@ -168,7 +181,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     },
   ]);
 
-  public readonly columns = computed((): Column[] => {
+  public readonly columns = computed((): EditColumn[] => {
     const keys = this.columnsKeys();
     const all = this.allColumns();
     this.logger.debug(`columns:`, [keys, all]);
@@ -222,31 +235,22 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       if (!ENTRY_TYPE) return void (this.loading = !1);
 
       const data = this.tableData().filter(v => !v._isAutoInsertCandidate);
-      const payload: TLS21020UpdateQuery[] = data.map(item => {
-        const row: Partial<TLS21020UpdateQuery> = { id: item.id };
-        const fields: (keyof TLS21020Data)[] = ['ABAT_YN', 'AccNo', 'AccNotes', 'ObjectNo', 'Org_ID', 'PAY_No', 'PAY_days', 'RelatedPartyAccNo', 'VEN_No'];
-
-        for (const field of fields) {
-          const value = item[field];
-          if (!this.validateValue(value)) (row as any)[field] = value;
-        }
-
-        return row as TLS21020UpdateQuery;
-      });
+      const payload: TLS21020UpdateQuery[] = data.map(item => ({
+        ...item,
+        ObjectNo: item.ObjectNo === 'Y' ? 'Y' : 'N',
+      }));
 
       this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       this.logger.debug(`submit:`, [ENTRY_TYPE, this.tableData(), payload]);
       this.service.updateTLS21020(payload).pipe(
-        tap(res => this.logger.debug(`updateTLS21020:`, [data, payload, res])),
-        concatMap(() => this.service.queryTLS21020({ ENTRY_TYPE })),
-        tap(res => this.logger.debug(`queryTLS21020:`, [res])),
+        concatMap(() => this.service.queryTLS21020({ ENTRY_TYPE, pageSize: 1e5 })),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
         next: res => {
           if (res.Status !== '0000') return;
-          this.tableData.set(res.Data ?? []);
-          this.totalRecords.set(res.TotalCount ?? 0);
+          this.tableData.set(res.Data || []);
+          this.totalRecords.set(res.TotalCount || 0);
           this.messageService.successBubble('更新成功');
         },
       });
@@ -255,9 +259,9 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
   public queryTLS21020(): void {
     this.tableLoading.set(!0);
-    const payload = <TLS21020Query>{ ...this.queryForm.getRawValue() };
+    const payload = <TLS21020Query>{ ...this.queryForm.getRawValue(), pageSize: 1e5 };
+    this.logger.debug(`queryTLS21020:`, [payload]);
     this.service.queryTLS21020(payload).pipe(
-      tap(res => this.logger.debug(`queryTLS21020:`, [payload, res])),
       finalize(() => this.tableLoading.set(!1)),
     ).subscribe({
       next: res => {
@@ -298,10 +302,6 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     }
 
     return { isValid: !0, errorMessage: '' };
-  };
-
-  public onDelete(event: any): void {
-
   };
 
   /** 檢查型別 */
