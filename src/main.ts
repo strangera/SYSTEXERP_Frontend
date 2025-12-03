@@ -5,6 +5,7 @@ import { importProvidersFrom, isDevMode } from '@angular/core';
 import { bootstrapApplication, provideClientHydration } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter, UrlSerializer } from '@angular/router';
+import { provideServiceWorker } from '@angular/service-worker';
 import { JwtModule } from '@auth0/angular-jwt';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
@@ -15,12 +16,12 @@ import { routes } from './app/app.routing';
 import { AuthinterceptorService } from './app/core/interceptors/authinterceptor.service';
 import { CustomheaderinterceptorService } from './app/core/interceptors/customheaderinterceptor.service';
 import { DateToISOStringInterceptor } from './app/core/interceptors/dateToISOStringInterceptor.interceptor';
+import { DebugHeaderInterceptor } from './app/core/interceptors/debug-header.interceptor';
 import { ErrorinterceptorService } from './app/core/interceptors/errorinterceptor.service';
 import { HTTPRequestInterceptorService } from './app/core/interceptors/httpRequest.interceptor';
 import { QueryCacheInterceptorService } from './app/core/interceptors/querycacheinterceptor.service';
 import { LowerCaseUrlSerializer } from './app/core/utils/LowerCaseUrlSerializer';
 import { environment } from './environments/environment';
-import { provideServiceWorker } from '@angular/service-worker';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -94,6 +95,11 @@ bootstrapApplication(AppComponent, {
     {
       provide: HTTP_INTERCEPTORS,
       useClass: HTTPRequestInterceptorService, // 路由變更時取消請求攔截器
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: DebugHeaderInterceptor,
       multi: true
     },
     { provide: UrlSerializer, useClass: LowerCaseUrlSerializer },

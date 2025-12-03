@@ -2,6 +2,7 @@
 export const environment = {
   production: true,
   version: '2025/09/12_V1 09:30', // 手動設定的預設值
+  showDebugToggleInMenu: true,
   BaseUrl: '/TSRD_WEBAPIDEV',
   ApiUrl: '/TSRD_WEBAPIDEV',
   PasswordKey: '8a9zx@a1231sdl!aafohc.u',

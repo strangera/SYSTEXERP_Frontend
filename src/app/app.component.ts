@@ -6,6 +6,7 @@ import { NotificationService } from '@shared/component/notification-message/noti
 import { PrimeNGConfig } from 'primeng/api';
 import { ConfirmDialogModule } from "primeng/confirmdialog";
 import { filter, interval } from 'rxjs';
+import { DebugSqlDisplayComponent } from './core/layout/debug-sql-display/debug-sql-display.component';
 import { VersionCheckService } from './service/system/version-check.service';
 import { NotificationMessageComponent } from './shared/component/notification-message/notification-message.component';
 
@@ -13,7 +14,7 @@ import { NotificationMessageComponent } from './shared/component/notification-me
   selector: 'app-root',
   templateUrl: './app.component.html',
   standalone: true,
-  imports: [RouterOutlet, NotificationMessageComponent, ConfirmDialogModule],
+  imports: [RouterOutlet, NotificationMessageComponent, ConfirmDialogModule, DebugSqlDisplayComponent],
 })
 export class AppComponent implements OnInit {
   constructor(

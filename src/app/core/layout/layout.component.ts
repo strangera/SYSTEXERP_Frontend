@@ -1,28 +1,28 @@
+import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
   Component,
+  computed,
+  DestroyRef,
   effect,
   ElementRef,
   HostListener,
-  Renderer2,
-  ViewChild,
-  computed,
-  DestroyRef,
   inject,
-  signal
+  Renderer2,
+  signal,
+  ViewChild
 } from '@angular/core';
-import { Router, NavigationEnd, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { AppMenulistComponent } from './app.menulist/app.menulist.component';
 import { AppTopbarComponent } from './app.topbar/app.topbar.component';
 import { LayoutService } from './layout.service';
-import { CommonModule } from '@angular/common';
 // 最佳實踐：在 Angular 16+，推薦使用 takeUntilDestroyed
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 // 由於您使用了 @ngneat/until-destroy，我們保留其 Decorator，但在 RxJS 鏈中使用 takeUntilDestroyed
 import { UntilDestroy } from '@ngneat/until-destroy';
-import { UserInfo } from '@shared/models/system/userInfo';
 import { AuthService } from '@service/system/auth.service';
+import { UserInfo } from '@shared/models/system/userInfo';
 import { TabViewModule } from 'primeng/tabview';
 import { AppProgressBarComponent } from './app-progress-bar/app-progress-bar.component';
 import { TabService } from './app.tab/tab.service';

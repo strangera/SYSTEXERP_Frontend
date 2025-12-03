@@ -1,14 +1,17 @@
-import { Component, ViewChild, inject, Input } from '@angular/core';
+import { NgIf, NgStyle } from '@angular/common';
+// 🎯 新增引入 OnInit, OnDestroy
+import { Component, inject, Input, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
-import { MenuItem } from 'primeng/api';
-import { MenuModule } from 'primeng/menu';
-import { TooltipModule } from 'primeng/tooltip';
-import { NgStyle } from '@angular/common';
 import { AuthService } from '@service/system/auth.service';
-import { OverlayPanel } from 'primeng/overlaypanel';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { MenuItem } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { MenuModule } from 'primeng/menu';
+import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
+import { TooltipModule } from 'primeng/tooltip';
+import { DebugToggleService } from '../../services/debug-toggle.service';
 
 // 為了與父組件傳入的 user() 類型匹配，我們定義一個 UserInfo 接口（或使用 FunsrightInfo 內的用戶部分）
-// 這裡假設傳入的 user 物件具備 user_No 和 user_Name
 interface UserInfo {
   user_No: string;
   user_Name: string;
@@ -18,45 +21,69 @@ interface UserInfo {
   selector: 'app-topbar-user',
   template: `
     <div class="text-center ml-1 block" [ngStyle]="{'color': 'rgb(146, 60, 60)'}">
-      <!-- 點擊按鈕開啟選單 -->
-      <button type="button" class="layout-topbar-button p-link min-w-max" pTooltip="個人資料"
-        (click)="menu.toggle($event)">
-        <!-- 接收 Input 的 user 物件 -->
-        <span class="text-sm block" style="color: var(--text-color-secondary);">{{ user?.user_No }}</span>
-        <span class="text-lg font-bold block" style="color: var(--text-color);">{{ user?.user_Name }}</span>
-        <i class="pi pi-angle-down" style="color: var(--text-color);"></i>
-      </button>
-      
-      <!-- PrimeNG Menu -->
-      <p-menu #menu [model]="userMenuItems" [popup]="true" class="static" styleClass="border-round-xl p-2"
-        [style]="{'width': '12rem'}" appendTo="body">
-        <ng-template pTemplate="submenuheader" let-item>
+        <button type="button" class="layout-topbar-button p-link min-w-max" pTooltip="個人資料"
+      (click)="menu.toggle($event)">
+            <i *ngIf="debugService.isDebugEnabled()"
+        class="pi pi-bug mr-1"
+        pTooltip="SQL 偵錯模式已開啟"
+        style="color: red;">
+      </i>
+            <span class="text-sm block" style="color: var(--text-color-secondary);">{{ user?.user_No }}</span>
+      <span class="text-lg font-bold block" style="color: var(--text-color);">{{ user?.user_Name }}</span>
+      <i class="pi pi-angle-down" style="color: var(--text-color);"></i>
+    </button>
+
+    <p-menu #menu [model]="userMenuItems" [popup]="true" class="static" styleClass="border-round-xl p-2"
+      [style]="{'width': '14rem'}" appendTo="body">
+
+      <ng-template pTemplate="start">
+            <div class="p-menuitem p-0" *ngIf="showDebugToggleInMenu">
+       <div class="flex justify-content-between align-items-center p-menuitem-link hover:surface-100 p-2 cursor-pointer">
+         <i class="pi pi-bolt"></i>
+         <span class="ml-2 w-full">SQL 偵錯模式</span>
+         <p-button
+           (onClick)="toggleDebugMode()"
+           [label]="debugService.isDebugEnabled() ? '關閉' : '開啟'"
+           [severity]="debugService.isDebugEnabled() ? 'danger' : 'success'"
+           [style]="{'font-size': '0.75rem', 'padding': '0.2rem 0.5rem'}">
+         </p-button>
+       </div>
+     </div>
+                 <li class="p-menu-separator" *ngIf="showDebugToggleInMenu"></li>
+   </ng-template>
+
+      <ng-template pTemplate="submenuheader" let-item>
           <span class="font-bold text-lg text-primary">{{ item.label }}</span>
-        </ng-template>
-        <ng-template pTemplate="item" let-item>
+      </ng-template>
+
+      <ng-template pTemplate="item" let-item>
           <a pRipple class="flex justify-content-between align-items-center p-menuitem-link" tabindex="0"
             (click)="item.command()" (keydown.enter)="item.command()" (keydown.space)="item.command()">
-            <span [class]="item.icon"></span>
-            <div class="w-full">
-              <span class="ml-2">{{ item.label }}</span>
-            </div>
+              <span [class]="item.icon"></span>
+              <div class="w-full">
+                  <span class="ml-2">{{ item.label }}</span>
+              </div>
           </a>
-        </ng-template>
-      </p-menu>
+      </ng-template>
+    </p-menu>
     </div>
-  `,
+    `,
   standalone: true,
   imports: [
-    MenuModule, TooltipModule, NgStyle
-  ]
+    MenuModule, TooltipModule, NgStyle, ButtonModule, OverlayPanelModule, NgIf
+  ],
 })
 export class AppTopbarUserComponent {
   private readonly router = inject(Router);
-  private readonly authService = inject(AuthService); // 注入 AuthService 執行登出
+  private readonly authService = inject(AuthService);
 
-  @ViewChild('menu') menu!: OverlayPanel; // 引用 PrimeNG Menu (使用 OverlayPanel 更準確，但 PrimeNG Menu 也常用 #menu)
+  public readonly debugService = inject(DebugToggleService);
 
-  // 接收父組件傳入的使用者資訊 (Signal 的值)
+  private readonly notemessage = inject(NotificationService);
+  public readonly showDebugToggleInMenu = this.debugService.showDebugToggleInMenu;
+  @ViewChild('menu') menu!: OverlayPanel;
+  @ViewChild('op') op!: OverlayPanel;
+
   @Input() user: UserInfo | null = null;
 
   // 使用者選單
@@ -70,4 +97,13 @@ export class AppTopbarUserComponent {
       ]
     },
   ];
+
+  /**
+   * 切換除錯模式開關
+   */
+  public toggleDebugMode(): void {
+    const newState = !this.debugService.isDebugEnabled();
+    this.debugService.toggleDebug(newState);
+    console.log(`SQL 偵錯模式已切換為: ${newState ? '開啟' : '關閉'}`);
+  }
 }
