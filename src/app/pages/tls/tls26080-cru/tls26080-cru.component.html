@@ -45,6 +45,7 @@
         <app-calendar-range class="col-12 md:col-6 lg:col-4"
                             calendarType="dateRange"
                             label="活動起始日期"
+                            [disabled]="!0"
                             [startControl]="df().pod_sdate"
                             [endControl]="df().pod_edate"
                             [submitted]="submitted">
@@ -76,28 +77,10 @@
         <!-- 日期驗證錯誤提示 -->
         @if(dataForm.errors) {
         <div class="flex align-items-center col-12 md:col-6 lg:col-4">
-          @if(dataForm.errors['invalidDateRange']) {
-          <p class="text-red-500 text-sm m-0">
-            <i class="pi pi-exclamation-triangle mr-2"></i>
-            活動起始日期必須小於截止日期
-          </p>
-          }
-          @if(dataForm.errors['invalidBackDateRange']) {
-          <p class="text-red-500 text-sm m-0">
-            <i class="pi pi-exclamation-triangle mr-2"></i>
-            兌回起始日期必須小於兌回截止日期
-          </p>
-          }
           @if(dataForm.errors['invalidBusDate']) {
           <p class="text-red-500 text-sm m-0">
             <i class="pi pi-exclamation-triangle mr-2"></i>
-            活動正檔日期必須在活動起始日期之間
-          </p>
-          }
-          @if(dataForm.errors['invalidBackStartDate']) {
-          <p class="text-red-500 text-sm m-0">
-            <i class="pi pi-exclamation-triangle mr-2"></i>
-            兌回起始日期必須在活動截止日期之後
+            活動正檔日期必須在活動起始日期期間內
           </p>
           }
         </div>
@@ -144,20 +127,61 @@
                         (selectionChange)="selectedItems.set($event)"
                         [isRowSelectable]="isRowSelectable"
                         [columns]="counterColumns()"
-                        [columnGroup]="counterColumnsGroup()"
-                        [insertDisabled]="isFormReadable"
-                        [defaultInsertData]="defaultInsertData"
+                        [columnGroup]="counterColumnsGroup"
+                        (insert)="displayDialog.set(!0)"
+                        [canInsert]="!1"
+                        [tableRequired]="!0"
+                        [showInsert]="!isFormReadable"
                         [showReorder]="!isFormReadable"
                         [disabled]="isFormReadable"
                         [loading]="tableLoading()">
+          @if (!isFormReadable) {
           <header>
             <app-button btnType="submit"
                         label="審核與反審核"
                         [loading]="loading"
+                        [disabled]="!selectedItems().length || !dt.validateAndShowErrors()"
                         (click)="toggleApprovalStatus()"></app-button>
           </header>
+          }
         </app-table-edit>
       </p-panel>
     </div>
   </div>
 </div>
+
+
+<app-dialog [visible]="displayDialog()"
+            header="選擇專櫃"
+            (visibleChange)="displayDialog.set($event)"
+            (save)="saveDialog()"
+            [disable]="!selectedItemsDialog().length">
+  <form [formGroup]="dialogQueryForm">
+    <div class="grid p-fluid">
+      <app-input-text class="col-6"
+                      label="專櫃編號"
+                      controlName="TltNo"
+                      [control]="dqf().No"></app-input-text>
+      <app-input-text class="col-6"
+                      label="專櫃名稱"
+                      controlName="TltName"
+                      [control]="dqf().Name"></app-input-text>
+    </div>
+  </form>
+  <app-table-report tableKey="tls26080_dialogTable"
+                    [showReportMode]="!1"
+                    [showDelete]="!1"
+                    [showCaption]="!1"
+                    [showManage]="!1"
+                    [showCheckBox]="!0"
+                    [data]="filteredDialogData()"
+                    [columns]="dialogColumns()"
+                    [selectedItems]="selectedItemsDialog()"
+                    (selectionChange)="selectedItemsDialog.set($event)"
+                    [isRowSelectable]="isRowSelectable.bind(this)"
+                    [totalRecords]="dialogTotalRecords()"
+                    [loading]="dialogLoading()"
+                    [lastQueryBody]="{}"
+                    [queryFunction]="service.getTLTTalentOptions.bind(service)">
+  </app-table-report>
+</app-dialog>

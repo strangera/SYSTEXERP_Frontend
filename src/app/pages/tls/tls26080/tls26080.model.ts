@@ -32,26 +32,26 @@ export interface TLS26080Data {
 export type TLS26080EditTable = Partial<EditColumnExtend> & TLS26080DetailTable;
 
 export interface TLS26080DetailTable {
-  id?: number;
-  talent_id: string;
-  tlt_id: string;
-  tlt_id_desc?: string;
-  tlt_no: string;
-  tlt_name: string;
-  calc_date_type: 'Y' | 'N';
-  cap_item_D16: string;
-  tpy_rate_D16: number;
-  cap_item_D17: string;
-  tpy_rate_D17: number;
-  cap_item_3?: string;
-  tpy_rate_3?: number;
-  cap_item_4?: string;
-  tpy_rate_4?: number;
-  pod_no: string;
-  pod_status: '0' | '1' | '9';
-  approved_usr_no?: string;
-  approved_usr_name?: string;
-  approved_date?: Date;
+  id?: number;                 // 主鍵
+  talent_id: string;           // 專櫃 ID
+  tlt_id: string;              // 抽成類別
+  tlt_id_desc?: string;        // 抽成類別名稱
+  tlt_no: string;              // 專櫃編號
+  tlt_name: string;            // 櫃位名稱
+  calc_date_type: 'Y' | 'N';   // 正檔起日計算 ('Y'=活動起始日至截止日, 'N'=正檔日至截止日)
+  cap_item_D16: string;        // D16
+  tpy_rate_D16: number;        // D16 費用比率 (不含'%')
+  cap_item_D17: string;        // D17
+  tpy_rate_D17: number;        // D17 費用比率 (不含'%')
+  cap_item_3?: string;         // 合約建檔 D16
+  tpy_rate_3?: number;         // 合約建檔 D16 費用比率
+  cap_item_4?: string;         // 合約建檔 D17
+  tpy_rate_4?: number;         // 合約建檔 D17 費用比率
+  pod_no: string;              // 活動編號
+  pod_status: '0' | '1' | '9'; // 活動狀態 (0=未核準, 1=已核準, 9=刪除)
+  approved_usr_no?: string;    // 核准人員編號
+  approved_usr_name?: string;  // 核准人員姓名
+  approved_date?: Date;        // 核准日期
 }
 
 export interface TLS26080DetailResult {
@@ -66,8 +66,8 @@ export interface TLS26080DetailResult {
   tpy_rate_D16: string;              // D16 費用比率 (含'%')
   cap_item_D17: string;              // D17
   tpy_rate_D17: string;              // D17 費用比率 (含'%')
-  pod_no?: string;                   // 活動申請編號
-  pod_status: '0' | '1' | '9';       // 活動狀態
+  pod_no?: string;                   // 活動編號
+  pod_status: '0' | '1' | '9';       // 活動狀態 (0=未核準, 1=已核準, 9=刪除)
   approved_userno?: string;          // 核准人員編號
   approved_usr_name?: string;        // 核准人員姓名
   approved_date?: Date;              // 核准日期
