@@ -63,11 +63,11 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
     // 日後可客製化欄位顯示
     switch (ENTRY_TYPE) {
-      case EntryType['銷售日傳票']:
+      case EntryType['SD銷售日傳票']:
         this.columnsKeys.update(prev => ({
           ...prev,
-          ObjectNo: !1,
-          RelatedPartyAccNo: !1,
+          ObjectNo: !0,
+          RelatedPartyAccNo: !0,
           VEN_No: !0,
           PAY_days: !0,
         }));
@@ -132,6 +132,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       optionLabel: 'label',
       optionValue: 'value',
       validate: [validateRequired],
+      format: (v: string) => this.service.SYS3100Map().get(v)?.label || v,
     },
     {
       field: 'AccNotes',
@@ -146,6 +147,8 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       options: this.service.getYNOptions,
       optionLabel: 'label',
       optionValue: 'value',
+      width: '4rem',
+      showClear: !1,
     },
     {
       field: 'RelatedPartyAccNo',
@@ -155,6 +158,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       options: this.service.GLS1005Options,
       optionLabel: 'label',
       optionValue: 'value',
+      format: (v: string) => this.service.GLS1005Map().get(v)?.label || v || null,
     },
     {
       field: 'VEN_No',
@@ -173,6 +177,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       type: 'inputNumber',
       // disabled: v => v.ABAT_YN === 'N',
       disabled: (v, i, r) => r.ABAT_YN === 'N',
+      width: '4rem',
     },
     {
       field: 'PAY_No',
@@ -189,10 +194,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       .filter(col => col.field in keys)
       .map(col => {
         const shouldKeepType = keys[col.field as keyof TLS21020Data];
-        if (!shouldKeepType) {
-          const { type, ...rest } = col;
-          return { ...rest, type: void 0 };
-        }
+        if (!shouldKeepType) { const { type, ...rest } = col; return { ...rest, type: void 0 }; }
         return col;
       });
   });
@@ -259,7 +261,11 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
   public queryTLS21020(): void {
     this.tableLoading.set(!0);
-    const payload = <TLS21020Query>{ ...this.queryForm.getRawValue(), pageSize: 1e5 };
+    const raw = <TLS21020Query>{ ...this.queryForm.getRawValue(), pageSize: 1e5 };
+    const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+      v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+    )) as unknown as TLS21020Query;
+
     this.logger.debug(`queryTLS21020:`, [payload]);
     this.service.queryTLS21020(payload).pipe(
       finalize(() => this.tableLoading.set(!1)),

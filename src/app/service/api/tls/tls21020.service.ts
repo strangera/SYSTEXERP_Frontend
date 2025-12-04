@@ -19,18 +19,24 @@ export class TLS21020Service {
   public readonly GLS1005Options = signal<Option[]>([]);
   public readonly POS2013Options = signal<Option[]>([]);
 
+  public readonly SYS3100Map = computed(() =>
+    new Map<string, Option>(this.SYS3100Options().map(item => [item.value, item]))
+  );
+  public readonly GLS1005Map = computed(() =>
+    new Map<string, Option>(this.GLS1005Options().map(item => [item.value, item]))
+  );
   public readonly POS2013Map = computed(() =>
     new Map<string, Option>(this.POS2013Options().map(item => [item.value, item]))
   );
 
   public readonly entryTypeMap = new Map<string, string>([
-    [EntryType['銷售日傳票'], EntryType.SD],
-    [EntryType['租金傳票'], EntryType.MR],
-    [EntryType['代扣傳票'], EntryType.MD],
-    [EntryType['抽成傳票'], EntryType.PR],
-    [EntryType['進貨帳款-暫估應付'], EntryType.PN],
-    [EntryType['進貨帳款-成本結轉'], EntryType.PNC],
-    [EntryType['進貨請款'], EntryType.PT],
+    [EntryType['SD銷售日傳票'], EntryType.SD],
+    [EntryType['MR租金傳票'], EntryType.MR],
+    [EntryType['MD代扣傳票'], EntryType.MD],
+    [EntryType['PR抽成傳票'], EntryType.PR],
+    [EntryType['PN進貨帳款-暫估應付'], EntryType.PN],
+    [EntryType['PNC進貨帳款-成本結轉'], EntryType.PNC],
+    [EntryType['PT進貨請款'], EntryType.PT],
   ]);
 
   public readonly gls1005Loading = signal<boolean>(!1);
@@ -46,13 +52,13 @@ export class TLS21020Service {
 
   public getEntryTypes(): Option[] {
     return [
-      { value: EntryType['銷售日傳票'], label: EntryType.SD },
-      { value: EntryType['租金傳票'], label: EntryType.MR },
-      { value: EntryType['代扣傳票'], label: EntryType.MD },
-      { value: EntryType['抽成傳票'], label: EntryType.PR },
-      { value: EntryType['進貨帳款-暫估應付'], label: EntryType.PN },
-      { value: EntryType['進貨帳款-成本結轉'], label: EntryType.PNC },
-      { value: EntryType['進貨請款'], label: EntryType.PT },
+      { value: EntryType['SD銷售日傳票'], label: EntryType.SD },
+      { value: EntryType['MR租金傳票'], label: EntryType.MR },
+      { value: EntryType['MD代扣傳票'], label: EntryType.MD },
+      { value: EntryType['PR抽成傳票'], label: EntryType.PR },
+      { value: EntryType['PN進貨帳款-暫估應付'], label: EntryType.PN },
+      { value: EntryType['PNC進貨帳款-成本結轉'], label: EntryType.PNC },
+      { value: EntryType['PT進貨請款'], label: EntryType.PT },
     ];
   }
 
