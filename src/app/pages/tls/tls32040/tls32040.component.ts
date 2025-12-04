@@ -243,7 +243,6 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
 
     // 日期表單控制
     this.onReportTypeChange('1');
-    this.on_C_ReportTypeChange('1'); //比較報表驗證
     this.setReadOnlyFields();
 
     // 監聽 dateForm 的變化，套用日期到 queryForm(比較日是基準日帶入結果，不進行自行控制)
@@ -400,53 +399,6 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
     Object.keys(this.dateForm.controls).forEach(key => {
       if (key !== 'reportType') {
         this.dateForm.get(key)?.clearValidators();
-      }
-    });
-
-    // 根據報表類型設定必要欄位驗證
-    switch (reportType) {
-      case '1': // 日營業報表
-        this.dateForm.get('onedatedd')?.setValidators([Validators.required]);
-        break;
-      case '2': // 週營業報表
-        this.dateForm.get('onedateyy')?.setValidators([Validators.required]);
-        this.dateForm.get('weeks')?.setValidators([Validators.required]);
-        this.dateForm.get('startdate')?.setValidators([Validators.required]);
-        this.dateForm.get('enddate')?.setValidators([Validators.required]);
-        break;
-      case '3': // 月營業報表
-        this.dateForm.get('onedatemm')?.setValidators([Validators.required]);
-        break;
-      case '4': // 半年營業報表
-        this.dateForm.get('halfyear_onedateyy')?.setValidators([Validators.required]);
-        break;
-      case '5': // 年營業報表
-        this.dateForm.get('year_onedateyy')?.setValidators([Validators.required]);
-        break;
-      case '6': // 區間營業報表
-        this.dateForm.get('sad_startdate')?.setValidators([Validators.required]);
-        this.dateForm.get('sad_enddate')?.setValidators([Validators.required]);
-        break;
-      case '7': // 活動區間營業報表
-        this.dateForm.get('event_startdate')?.setValidators([Validators.required]);
-        this.dateForm.get('event_enddate')?.setValidators([Validators.required]);
-        break;
-    }
-
-    // 更新所有欄位驗證狀態
-    Object.keys(this.dateForm.controls).forEach(key => {
-      this.dateForm.get(key)?.updateValueAndValidity();
-    });
-  }
-
-  //比較報表驗證
-  on_C_ReportTypeChange(event: any) {
-    // 根據報表類型設定欄位驗證
-    const reportType = event;
-
-    // 清除所有驗證器
-    Object.keys(this.c_dateForm.controls).forEach(key => {
-      if (key !== 'reportType') {
         this.c_dateForm.get(key)?.clearValidators();
       }
     });
@@ -454,36 +406,49 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
     // 根據報表類型設定必要欄位驗證
     switch (reportType) {
       case '1': // 日營業報表
+        this.dateForm.get('onedatedd')?.setValidators([Validators.required]);
         this.c_dateForm.get('onedatedd')?.setValidators([Validators.required]);
         break;
       case '2': // 週營業報表
+        this.dateForm.get('onedateyy')?.setValidators([Validators.required]);
+        this.dateForm.get('weeks')?.setValidators([Validators.required]);
+        this.dateForm.get('startdate')?.setValidators([Validators.required]);
+        this.dateForm.get('enddate')?.setValidators([Validators.required]);
+
         this.c_dateForm.get('onedateyy')?.setValidators([Validators.required]);
         this.c_dateForm.get('weeks')?.setValidators([Validators.required]);
         this.c_dateForm.get('startdate')?.setValidators([Validators.required]);
         this.c_dateForm.get('enddate')?.setValidators([Validators.required]);
         break;
       case '3': // 月營業報表
+        this.dateForm.get('onedatemm')?.setValidators([Validators.required]);
         this.c_dateForm.get('onedatemm')?.setValidators([Validators.required]);
         break;
       case '4': // 半年營業報表
+        this.dateForm.get('halfyear_onedateyy')?.setValidators([Validators.required]);
         this.c_dateForm.get('halfyear_onedateyy')?.setValidators([Validators.required]);
         break;
       case '5': // 年營業報表
+        this.dateForm.get('year_onedateyy')?.setValidators([Validators.required]);
         this.c_dateForm.get('year_onedateyy')?.setValidators([Validators.required]);
         break;
       case '6': // 區間營業報表
+        this.dateForm.get('sad_startdate')?.setValidators([Validators.required]);
+        this.dateForm.get('sad_enddate')?.setValidators([Validators.required]);
         this.c_dateForm.get('sad_startdate')?.setValidators([Validators.required]);
         this.c_dateForm.get('sad_enddate')?.setValidators([Validators.required]);
         break;
       case '7': // 活動區間營業報表
+        this.dateForm.get('event_startdate')?.setValidators([Validators.required]);
+        this.dateForm.get('event_enddate')?.setValidators([Validators.required]);
         this.c_dateForm.get('event_startdate')?.setValidators([Validators.required]);
         this.c_dateForm.get('event_enddate')?.setValidators([Validators.required]);
         break;
     }
 
     // 更新所有欄位驗證狀態
-    Object.keys(this.c_dateForm.controls).forEach(key => {
-      this.c_dateForm.get(key)?.updateValueAndValidity();
+    Object.keys(this.dateForm.controls).forEach(key => {
+      this.dateForm.get(key)?.updateValueAndValidity();
     });
   }
 
