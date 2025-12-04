@@ -155,6 +155,7 @@ export interface ColumnDef {
 
   allowDecimal?: boolean;  // 是否允許小數點
   decimalPlaces?: number;  // 小數位數，預設2位
+  displayMultiplier?: number;  // 顯示倍率(例如 100 表示 0.2 顯示為 20，用於百分比等場景)
 
   // 使用語義化的日期格式類型
   dateFormat?: DateFormatType;
@@ -2130,8 +2131,13 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   //=====================預設值=====================
   getFieldDefaultValue(column: ColumnDef, rowData: any): any {
     // 如果有值就使用現有值
-    const currentValue = rowData[column.field];
+    let currentValue = rowData[column.field];
     if (currentValue !== undefined && currentValue !== null && currentValue !== '') {
+      // 🔑 如果是數字類型且設定了 displayMultiplier，將實際值轉換為顯示值
+      // 例如: 後端的 0.2 → 前端顯示 20 (0.2 × 100)
+      if (column.type === 'number' && column.displayMultiplier && column.displayMultiplier > 0) {
+        currentValue = currentValue * column.displayMultiplier;
+      }
       return currentValue;
     }
 
@@ -2142,6 +2148,27 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
     // 使用靜態預設值
     return column.defaultValue || '';
+  }
+
+  /**
+   * 🔑 取得數字欄位的顯示值（用於唯讀模式顯示）
+   * 如果設定了 displayMultiplier，會將實際值轉換為顯示值
+   * 例如: 後端的 0.2 → 前端顯示 20 (0.2 × 100)
+   */
+  getNumberDisplayValue(column: ColumnDef, rowData: any): number {
+    const actualValue = rowData[column.field];
+
+    // 如果沒有值，返回 0
+    if (actualValue === undefined || actualValue === null || actualValue === '') {
+      return 0;
+    }
+
+    // 如果設定了 displayMultiplier，將實際值轉換為顯示值
+    if (column.displayMultiplier && column.displayMultiplier > 0) {
+      return actualValue * column.displayMultiplier;
+    }
+
+    return actualValue;
   }
 
   // 設定新增項目的預設值
@@ -2266,8 +2293,18 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       numericValue = 0;
     }
 
-    // 自動限制到最大值和最小值（保持原有邏輯）
+    // 🔑 獲取欄位配置（用於倍率轉換和範圍限制）
     const column = this.findColumnByField(fieldName);
+
+    // 🔑 如果設定了 displayMultiplier，將顯示值轉換回實際值
+    // 例如: 使用者輸入 20 → 後端儲存 0.2 (20 ÷ 100)
+    if (column?.displayMultiplier && column.displayMultiplier > 0) {
+      numericValue = numericValue / column.displayMultiplier;
+      console.log(`應用倍率轉換: 顯示值 ${newValue} → 實際值 ${numericValue} (倍率: ${column.displayMultiplier})`);
+    }
+
+    // 自動限制到最大值和最小值（保持原有邏輯）
+    // 注意: maxValue 和 minValue 應該是「實際值」的範圍，不是「顯示值」的範圍
     if (column) {
       if (column.maxValue !== undefined && numericValue > column.maxValue) {
         numericValue = column.maxValue;

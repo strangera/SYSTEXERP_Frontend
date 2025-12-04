@@ -342,7 +342,7 @@
 
               <!-- 數字顯示 -->
               <span *ngSwitchCase="'number'">
-                {{ rowData[col.field] | number }}
+                {{ getNumberDisplayValue(col, rowData) | number }}
               </span>
 
               <!-- 下拉選單顯示 -->
@@ -781,7 +781,7 @@
 
                         <!-- 數字顯示 -->
                         <span *ngSwitchCase="'number'">
-                          {{ detailData[col.field] | number }}
+                          {{ getNumberDisplayValue(col, detailData) | number }}
                         </span>
 
                         <!-- Checkbox 顯示 -->

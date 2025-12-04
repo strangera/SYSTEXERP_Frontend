@@ -165,7 +165,7 @@ export const finRoutes: Routes = [
   // 應付帳款帳齡分析表
   { path: 'fin29110', loadComponent: () => import('./fin29110/fin29110.component').then(m => m.FIN29110Component), data: { progNo: 'FIN29110' } },
   // 應付帳款進項發票對應表
-  // { path: 'fin29120', loadComponent: () => import('./fin29120/fin29120.component').then(m => m.FIN29120Component),data:{progNo:'FIN29120'} },
+  { path: 'fin29120', loadComponent: () => import('./fin29120/fin29120.component').then(m => m.FIN29120Component) },
   // 收款項目對照會計科目維護
   { path: 'fin31010', loadComponent: () => import('./fin31010/fin31010.component').then(m => m.FIN31010Component), data: { progNo: 'FIN31010' } },
   { path: 'fin31010cru', loadComponent: () => import('./fin31010-cru/fin31010-cru.component').then(m => m.FIN31010CRUComponent), data: { progNo: 'FIN31010' } },

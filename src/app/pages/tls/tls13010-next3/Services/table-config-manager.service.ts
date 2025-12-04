@@ -1,6 +1,6 @@
-import { TLS13010_DROPDOWN_OPTIONS } from './../../tls13010/tls13010.dropdown';
-import { ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { Injectable } from '@angular/core';
+import { ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { TLS13010_DROPDOWN_OPTIONS } from './../../tls13010/tls13010.dropdown';
 
 /**
  * 表格配置管理服務
@@ -111,12 +111,12 @@ export class TableConfigManager {
       },
       {
         field: 'cag_charge_rate',
-        header: '抽成率',
+        header: '抽成率(%)',
         type: 'number',
         editable: true,
         autoWidth: true,
         allowDecimal: true,
-        decimalPlaces: 4
+        decimalPlaces: 2, displayMultiplier: 100
       }
     ];
   }
@@ -132,12 +132,12 @@ export class TableConfigManager {
       { field: 'limit_amt', header: '包底金額', type: 'number', editable: true, autoWidth: true },
       {
         field: 'limit_charge_rate',
-        header: '抽成率',
+        header: '抽成率(%)',
         type: 'number',
         editable: true,
         autoWidth: true,
         allowDecimal: true,
-        decimalPlaces: 4
+        decimalPlaces: 2, displayMultiplier: 100
       }
     ];
   }
@@ -154,12 +154,12 @@ export class TableConfigManager {
       { field: 'end_number', header: '階梯金額(迄值)', type: 'number', editable: true, autoWidth: true, maxValue: 9999999999999, minValue: 0 },
       {
         field: 'charge_rate',
-        header: '抽成率',
+        header: '抽成率(%)',
         type: 'number',
         editable: true,
         autoWidth: true,
         allowDecimal: true,
-        decimalPlaces: 4
+        decimalPlaces: 2, displayMultiplier: 100
       }
     ];
   }
@@ -177,12 +177,12 @@ export class TableConfigManager {
       { field: 'end_number', header: '階梯金額(迄值)', type: 'number', editable: true, autoWidth: true, maxValue: 9999999999999, minValue: 0 },
       {
         field: 'charge_rate',
-        header: '抽成率',
+        header: '抽成率(%)',
         type: 'number',
         editable: true,
         autoWidth: true,
         allowDecimal: true,
-        decimalPlaces: 4
+        decimalPlaces: 2, displayMultiplier: 100
       }
     ];
   }
