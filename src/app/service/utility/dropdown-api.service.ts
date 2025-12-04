@@ -1,3 +1,4 @@
+import { AuthService } from './../system/auth.service';
 // !!! 新版下拉方法
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
@@ -47,7 +48,9 @@ import {
   TalentQuery,
   TalentStatusQuery,
   TalentStoreWayQuery,
+  TALPORDERMDataForShare,
   TALPORDERMQuery,
+  TALPORDERMQueryForShare,
   TblUserOrgidItem,
   TLTTALENTItem,
   TLTTALENTQuery,
@@ -60,7 +63,10 @@ import {
 export class DropdownApiService {
   private readonly apiUrl = environment.ApiUrl;
 
-  constructor(private readonly http: HttpClient) { }
+  constructor(
+    private readonly http: HttpClient,
+    private readonly authService: AuthService
+  ) { }
 
   /**
      * 泛型底層方法：處理所有下拉選單的查詢和轉換
@@ -620,6 +626,16 @@ export class DropdownApiService {
   /** 查詢專櫃活動編號資料表下拉選單() */
   queryTALPORDERM_DropDownList(body?: TALPORDERMQuery): Observable<Option[] | null> {
     return this.queryAndMapDropdown<IDropdownItem, TALPORDERMQuery>('/queryTALPORDERM_DropDownList', 'No', 'Name', body).pipe(
+      shareReplay(1)// 避免重複查詢
+    );
+  }
+  queryTALPORDERM_DropDownListShare(body?: TALPORDERMQueryForShare): Observable<Option[] | null> {
+    const request = {
+      ...body,
+      mid: this.authService.currentUserValue?.mid || 0,
+      str_no: this.authService.currentUserValue?.SYS_StoreNo || '',
+    }
+    return this.queryAndMapDropdown<TALPORDERMDataForShare, TALPORDERMQueryForShare>('/Share/queryTALPORDERM_DropDownList', 'pod_no', 'pod_desc', request).pipe(
       shareReplay(1)// 避免重複查詢
     );
   }

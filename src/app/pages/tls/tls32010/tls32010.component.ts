@@ -1,173 +1,510 @@
-import { AsyncPipe, NgIf } from '@angular/common';
+import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { FloorService } from '@service/basic/querySYS3900.service';
-import { RegionService } from '@service/basic/querySYS3A00.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
-import { TLS32010Data, TLS32010Service } from '../../../service/api/tls/tls32010.service';
+import { ButtonModule } from 'primeng/button';
+import { finalize, map } from 'rxjs';
+import { TLS32010Data, TLS32010QueryRequest, TLS32010Service } from '../../../service/api/tls/tls32010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { formatAmount, formatAmountCN } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls32010',
   templateUrl: './tls32010.component.html',
   standalone: true,
-  imports: [AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent]
+  imports: [ButtonModule, CalendarRangeComponent, CalendarComponent, TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule, RadiobuttonComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent]
 })
 export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> implements OnInit {
   queryForm = this.formBuilder.group({
     // 日期查詢條件
-    reportType: ['6'], // 報表類型（預設區間營業報表）
-    sad_startdate: [null], // 區間開始日期
-    sad_enddate: [null], // 區間結束日期
+    reportType: ['1'], // 報表類型（預設區間營業報表）
+    // 日營業報表
+    // 週營業報表
+    year: [new Date()], // 修正：預設為一個 Date 物件
+    week: [null as number | null], // 修正：預設為 null
+    // 月營業報表
+    month: [null as number | null],
+    // 半年營業報表
+    halfYear: [null as number | null],
+    // 年營業報表
+    // 區間營業報表
+    // 活動區間營業報表
     eventID: [null], // 活動ID
-    event_startdate: [null], // 活動開始日期
-    event_enddate: [null], // 活動結束日期
+
+    DateFrom: [null as Date | null, [Validators.required]], // 區間開始日期
+    DateTo: [null as Date | null, [Validators.required]], // 區間結束日期
     // 合約查詢條件
-    floor: [null], // 樓層
-    region: [null], // 區域
-    bus_type: [null], // 大分類/中分類
-    tlt_kind: [null], // 櫃別
-    org_id: [null], // 組織代號
-    tlt_term_type: [null], // 抽成別
-    tlt_no: [null], // 專櫃編號
-    tax: [true], // 是否含稅
-    ...createPaginationConfig([{ field: 'team_name', order: -1 }])
+    FloorList: [null], // 樓層
+    AreaList: [null], // 區域
+    BusTypeList: [null], // 大分類
+    BusClassList: [null], // 中分類
+    CabinetKindList: [null], // 櫃別
+    TermTypeList: [null], // 抽成別
+    OrgList: [null], // 組織代號
+    TltNoList: [null], // 專櫃編號
+    TaxFlag: ['1'], // 是否含稅
   });
-
   totalRecords = 0;
+  historyRequestBody: TLS32010QueryRequest | null = null;
   data: TLS32010Data[] = [];
-  selectedItems: TLS32010Data[] = [];
-
-  columns: Column[] = [];
+  columns: ReportColumn[] = [
+    { field: '館別', header: '館別' },
+    { field: '組織名稱', header: '組織名稱' },
+    { field: '櫃別名稱', header: '櫃別' }, // 使用「櫃別名稱」
+    { field: '專櫃編號', header: '櫃位編號', groupField: 'dept' },
+    { field: '櫃位名稱', header: '櫃位名稱', groupField: 'dept' },
+    { field: '位置編號', header: '位置編號', groupField: 'dept' },
+    { field: '坪數', header: '坪數', format: formatAmount },
+    { field: '營業目標', header: '營業目標', format: formatAmount },
+    { field: '營業實績', header: '營業實績', format: formatAmount },
+    { field: '交易筆數', header: '交易筆數' },
+    { field: '客單價', header: '客單價', format: formatAmount },
+    { field: '月坪效', header: '月坪效', format: formatAmount },
+    { field: '達成率', header: '達成率', format: (value: number) => value ? `${value.toFixed(1)}%` : '0%' },
+    { field: '坪數_排名', header: '坪數', format: formatAmountCN, groupField: 'tier' },
+    { field: '營業目標_排名', header: '營業目標', format: formatAmountCN, groupField: 'tier' },
+    { field: '營業實績_排名', header: '營業實績', format: formatAmountCN, groupField: 'tier' },
+    { field: '交易筆數_排名', header: '交易筆數', groupField: 'tier' },
+    { field: '客單價_排名', header: '客單價', format: formatAmountCN, groupField: 'tier' },
+    { field: '月坪效_排名', header: '月坪效', format: formatAmountCN, groupField: 'tier' },
+    { field: '達成率_排名', header: '達成率', format: formatAmountCN, groupField: 'tier' },
+  ];
   columnGroup = [
     { field: 'dept', header: '單位' },
     { field: 'tier', header: '排名順位' }
   ];
-
-  //#region 選項
-  organizationOptions: any[] = [];
-  regionOptions: any[] = [];
-  floorOptions: any[] = [];
-  businessTypeCodeOptions: any[] = [];
+  footerData: TLS32010Data | null = null;
+  reportTypeOptions = [
+    { value: '1', label: '日營業報表' },
+    { value: '2', label: '週營業報表' },
+    { value: '3', label: '月營業報表' },
+    { value: '4', label: '半年營業報表' },
+    { value: '5', label: '年營業報表' },
+    { value: '6', label: '區間營業報表' },
+    { value: '7', label: '活動區間營業報表' }
+  ];
+  organizationOptions = this.dropdown.querySys3100();
+  regionOptions = this.dropdown.querySys3A00();
+  floorOptions = this.dropdown.querySys3900();
+  businessTypeCodeOptions = this.dropdown.queryTltBusType();
+  BusClassListOptions = this.dropdown.queryTltBusType();
   commissionTypeOptions = getSYS1000Options('tlt_term_type');
   operationsOptions = getSYS1000Options('store_way');
   counterCodeOptions = this.dropdown.queryTltTalent();
-  taxOptions: any[] = [
-    { value: true, label: '含稅' },
-    { value: false, label: '未稅' }
-  ];
-  reportTypeOptions: any[] = [
-    { value: '6', label: '區間營業報表' },
-    { value: '7', label: '活動區間營業報表' },
-  ];
-  EventIDOptions: any[] = [
-    { value: '1', label: '活動1' },
-    { value: '2', label: '活動2' },
-  ];
-  //#endregion
+  EventIDOptions = this.dropdown.queryTALPORDERM_DropDownListShare().pipe(
+    map(data => {
+      if (!data) return null;
+      return data.map(item => {
+        // 格式化日期為 yyyy/MM/dd
+        const sdate = this.datePipe.transform(item['pod_sdate'], 'yyyy/MM/dd');
+        const edate = this.datePipe.transform(item['pod_edate'], 'yyyy/MM/dd');
 
+        return {
+          // 顯示的 label
+          label: `${item['pod_no']}/${item['pod_desc']} ${sdate} ~ ${edate}`,
+          // 傳輸的值
+          value: item['pod_no'],
+          // 額外儲存起始和結束日期，用於後續選取時自動帶入 DateFrom/DateTo
+          pod_sdate: item['pod_sdate'],
+          pod_edate: item['pod_edate'],
+        };
+      });
+    })
+  );
+  taxOptions = [{ value: '1', label: '含稅' }, { value: '2', label: '未稅' }];
+  monthOptions = Array.from({ length: 12 }, (_, i) => ({
+    value: i + 1, // 1 到 12
+    label: `${i + 1} 月`
+  }));
+  weekOptions: { value: number, label: string }[] = [];
+  halfYearOptions = [
+    { value: 1, label: '上半年' }, // 1: 上半年
+    { value: 2, label: '下半年' } // 2: 下半年
+  ];
+  btnLoading = false;
+  // 新增屬性：儲存格式化後的活動清單，以便在監聽 eventID 變化時使用
+  private formattedEventOptions: Option[] = [];
   constructor(
     private readonly dropdown: DropdownApiService,
-    private tls32010Service: TLS32010Service,
-    private floorService: FloorService,
-    private regionService: RegionService,
-  ) {
-    super();
-  }
+    public readonly tls32010Service: TLS32010Service,
+    private readonly datePipe: DatePipe,
+    private readonly fileExportService: FileExportService
+  ) { super(); }
 
   ngOnInit(): void {
-    this.initializePage('TLS32010', 'tls/tls32010cru', this.queryForm, (form) => this.onSubmit(form));
-    this.loadOptions();
-    this.setColumns(true);
+    this.initializePage('TLS32010');
+
+    // 初始化週次選項
+    const initialYear = this.queryForm.controls.year.value;
+    if (initialYear) {
+      this.setWeekOptions(initialYear);
+    }
+
+    // 訂閱 reportType 變化，切換時重設 year/week/month 避免髒數據
+    this.queryForm.controls.reportType.valueChanges.pipe(untilDestroyed(this)).subscribe(type => {
+      // 重設非當前報表類型的日期控制項 (同時重設 year 避免跨報表污染)
+      this.queryForm.controls.year.setValue(new Date(), { emitEvent: false });
+      this.queryForm.controls.week.setValue(null, { emitEvent: false });
+      this.queryForm.controls.month.setValue(null, { emitEvent: false });
+      this.queryForm.controls.halfYear.setValue(null, { emitEvent: false }); // 新增：重設 halfYear
+      if (type === '2') {
+        const currentYear = this.queryForm.controls.year.value;
+        if (currentYear) {
+          this.setWeekOptions(currentYear); // 切回週報表時重新設定週次選項
+        }
+      } else if (type === '3') { // 新增：月報表處理邏輯
+        // 預設選中當前月份
+        this.queryForm.controls.month.setValue(new Date().getMonth() + 1);
+        // 切換後立即計算日期
+        this.calculateMonthRange(this.queryForm.controls.year.value, this.queryForm.controls.month.value);
+      } else if (type === '4') { // 新增：半年報表處理邏輯
+        // 預設選中當前半年別 (1:上半年, 2:下半年)
+        const currentMonth = new Date().getMonth() + 1;
+        const defaultHalfYear = currentMonth <= 6 ? 1 : 2;
+        this.queryForm.controls.halfYear.setValue(defaultHalfYear);
+        // 切換後立即計算日期
+        this.calculateHalfYearRange(this.queryForm.controls.year.value, this.queryForm.controls.halfYear.value);
+      } else if (type === '5') { // 新增：年報表處理邏輯
+        // 預設選中當前年份，並立即計算日期
+        this.calculateYearRange(this.queryForm.controls.year.value);
+      } else if (type === '7') { // 活動區間報表
+        // 如果已選定活動，則自動更新日期範圍
+        this.updateDateRangeByEventID(this.queryForm.controls.eventID.value);
+      }
+    });
+
+    // ----------------------------------------------------
+    // 週報表 (保留原邏輯)
+    // 訂閱 year 和 week 欄位變化，當兩者都有值時，觸發日期計算
+    this.queryForm.controls.year.valueChanges.pipe(untilDestroyed(this)).subscribe(year => {
+      const reportType = this.queryForm.controls.reportType.value;
+      if (reportType === '2') {
+        this.setWeekOptions(year);
+        this.calculateWeekRange(year, this.queryForm.controls.week.value);
+      } else if (reportType === '3') {
+        this.calculateMonthRange(year, this.queryForm.controls.month.value);
+      } else if (reportType === '4') { // 針對半年報表
+        this.calculateHalfYearRange(year, this.queryForm.controls.halfYear.value);
+      } else if (reportType === '5') { // 針對年報表
+        this.calculateYearRange(year);
+      }
+    });
+    // ----------------------------------------------------
+    // 週報表
+    this.queryForm.controls.week.valueChanges.pipe(untilDestroyed(this)).subscribe(week => {
+      if (this.queryForm.controls.reportType.value === '2') {
+        this.calculateWeekRange(this.queryForm.controls.year.value, week);
+      }
+    });
+    // ----------------------------------------------------
+    // 月報表訂閱邏輯
+    this.queryForm.controls.month.valueChanges.pipe(untilDestroyed(this)).subscribe(month => {
+      if (this.queryForm.controls.reportType.value === '3') {
+        this.calculateMonthRange(this.queryForm.controls.year.value, month);
+      }
+    });
+    // ----------------------------------------------------
+    // 新增：半年報表訂閱邏輯
+    this.queryForm.controls.halfYear.valueChanges.pipe(untilDestroyed(this)).subscribe(halfYear => {
+      if (this.queryForm.controls.reportType.value === '4') {
+        this.calculateHalfYearRange(this.queryForm.controls.year.value, halfYear);
+      }
+    });
+    // ----------------------------------------------------
+    // 新增：訂閱 EventIDOptions，儲存格式化後的活動清單
+    this.EventIDOptions.pipe(untilDestroyed(this)).subscribe(options => {
+      if (options) {
+        this.formattedEventOptions = options;
+      }
+    });
+    // ----------------------------------------------------
+    // 新增：監聽 eventID 變化，自動更新 DateFrom 和 DateTo
+    this.queryForm.controls.eventID.valueChanges.pipe(untilDestroyed(this)).subscribe(eventID => {
+      if (this.queryForm.controls.reportType.value === '7') {
+        this.updateDateRangeByEventID(eventID);
+      }
+    });
   }
 
+  /**
+     * 根據年份設定週次選項 (1~53)
+     * @param year Date object
+     */
+  setWeekOptions(year: Date | null): void {
+    if (!year) return;
+
+    // 簡化處理：這裡假設一年最大週數為 53 (需根據您使用的 ISO 或 U.S. 標準調整)
+    // 實際精確計算需考慮 ISO 8601 標準，但這裡為了簡單，先取 53
+    const maxWeeks = 53;
+
+    this.weekOptions = Array.from({ length: maxWeeks }, (_, i) => ({
+      value: i + 1,
+      label: `第 ${i + 1} 週` // 顯示年份增加可讀性
+    }));
+
+    // 如果當前選擇的週次大於新年份的最大週數，則重設週次
+    if (this.queryForm.controls.week.value && this.queryForm.controls.week.value > maxWeeks) {
+      this.queryForm.controls.week.setValue(null, { emitEvent: false }); // 設置值時不觸發 change event 避免循環
+    }
+  }
+
+  /**
+   * 計算選定週次的起始日期和結束日期，並更新 DateFrom 和 DateTo
+   * @param year 年份 (Date Object)
+   * @param week 週次 (number)
+   */
+  calculateWeekRange(year: Date | null, week: number | null): void {
+    if (!year || !week || week < 1) {
+      this.queryForm.controls.DateFrom.setValue(null);
+      this.queryForm.controls.DateTo.setValue(null);
+      return;
+    }
+
+    const yearNum = year.getFullYear();
+
+    // === 日期計算邏輯 (假設使用 **星期一** 作為一週的開始 - ISO 標準) ===
+
+    // 1. 獲取該年 1 月 4 日，這天肯定在 ISO 週曆的第一週
+    const jan4 = new Date(yearNum, 0, 4);
+
+    // 2. 找到 Jan 4 所在的星期一（ISO: getDay() 0=日, 1=一... 6=六；ISO: 1=一... 7=日）
+    // 透過 (day + 6) % 7 獲得 ISO weekday (1=一, 7=日)
+    const dayOfWeek = jan4.getDay() === 0 ? 7 : jan4.getDay(); // 調整為 1=一 ~ 7=日
+
+    // 計算該年第一週的星期一
+    // jan4 減去 (dayOfWeek - 1) 天，就是第一週的星期一
+    const firstMonday = new Date(jan4);
+    firstMonday.setDate(jan4.getDate() - dayOfWeek + 1);
+
+    // 3. 計算目標週的起始日期 (DateFrom):
+    // 從該年第一週的星期一開始，加上 (week - 1) 週
+    const dateFrom = new Date(firstMonday);
+    dateFrom.setDate(firstMonday.getDate() + (week - 1) * 7);
+
+    // 4. 計算目標週的結束日期 (DateTo):
+    // 在起始日期的基礎上加上 6 天
+    const dateTo = new Date(dateFrom);
+    dateTo.setDate(dateFrom.getDate() + 6);
+
+    // 更新表單欄位
+    this.queryForm.controls.DateFrom.setValue(dateFrom, { emitEvent: false }); // 不觸發 event 避免循環
+    this.queryForm.controls.DateTo.setValue(dateTo, { emitEvent: false }); // 不觸發 event 避免循環
+
+    console.log(`選擇 ${yearNum} 年第 ${week} 週: ${this.datePipe.transform(dateFrom, 'yyyy-MM-dd')} ~ ${this.datePipe.transform(dateTo, 'yyyy-MM-dd')}`);
+  }
+  /**
+     * 計算選定月份的起始日期和結束日期，並更新 DateFrom 和 DateTo
+     * @param year 年份 (Date Object)
+     * @param month 月份 (number, 1-12)
+     */
+  calculateMonthRange(year: Date | null, month: number | null): void {
+    if (!year || !month || month < 1 || month > 12) {
+      this.queryForm.controls.DateFrom.setValue(null);
+      this.queryForm.controls.DateTo.setValue(null);
+      return;
+    }
+
+    const yearNum = year.getFullYear();
+
+    // 1. 起始日期 (該月 1 日)
+    // 注意：JS Date 的月份是 0-11，所以 month 1-12 要減 1
+    const dateFrom = new Date(yearNum, month - 1, 1);
+
+    // 2. 結束日期 (下個月 0 日，即該月的最後一天)
+    const dateTo = new Date(yearNum, month, 0);
+
+    // 更新表單欄位
+    this.queryForm.controls.DateFrom.setValue(dateFrom, { emitEvent: false });
+    this.queryForm.controls.DateTo.setValue(dateTo, { emitEvent: false });
+
+    console.log(`選擇 ${yearNum} 年 ${month} 月: ${this.datePipe.transform(dateFrom, 'yyyy-MM-dd')} ~ ${this.datePipe.transform(dateTo, 'yyyy-MM-dd')}`);
+  }
+  /**
+   * 計算選定半年的起始日期和結束日期，並更新 DateFrom 和 DateTo
+   * @param year 年份 (Date Object)
+   * @param halfYear 半年別 (number, 1=上半年, 2=下半年)
+   */
+  calculateHalfYearRange(year: Date | null, halfYear: number | null): void {
+    if (!year || !halfYear || (halfYear !== 1 && halfYear !== 2)) {
+      this.queryForm.controls.DateFrom.setValue(null);
+      this.queryForm.controls.DateTo.setValue(null);
+      return;
+    }
+
+    const yearNum = year.getFullYear();
+    let dateFrom: Date;
+    let dateTo: Date;
+
+    if (halfYear === 1) {
+      // 上半年 (1月1日 到 6月30日)
+      dateFrom = new Date(yearNum, 0, 1); // 1月 (索引 0) 1日
+      dateTo = new Date(yearNum, 6, 0); // 7月 (索引 6) 的第 0 天，即 6月30日
+    } else { // halfYear === 2
+      // 下半年 (7月1日 到 12月31日)
+      dateFrom = new Date(yearNum, 6, 1); // 7月 (索引 6) 1日
+      dateTo = new Date(yearNum, 12, 0); // 次年 1月 (索引 12) 的第 0 天，即 12月31日
+    }
+
+    // 更新表單欄位
+    this.queryForm.controls.DateFrom.setValue(dateFrom, { emitEvent: false });
+    this.queryForm.controls.DateTo.setValue(dateTo, { emitEvent: false });
+
+    console.log(`選擇 ${yearNum} 年第 ${halfYear} 半年: ${this.datePipe.transform(dateFrom, 'yyyy-MM-dd')} ~ ${this.datePipe.transform(dateTo, 'yyyy-MM-dd')}`);
+  }
+  /**
+   * 計算選定年度的起始日期和結束日期，並更新 DateFrom 和 DateTo
+   * @param year 年份 (Date Object)
+   */
+  calculateYearRange(year: Date | null): void {
+    if (!year) {
+      this.queryForm.controls.DateFrom.setValue(null);
+      this.queryForm.controls.DateTo.setValue(null);
+      return;
+    }
+
+    const yearNum = year.getFullYear();
+
+    // 1. 起始日期 (該年 1 月 1 日)
+    const dateFrom = new Date(yearNum, 0, 1); // 1月 (索引 0) 1日
+
+    // 2. 結束日期 (次年 1 月 0 日，即該年 12 月 31 日)
+    const dateTo = new Date(yearNum + 1, 0, 0);
+
+    // 更新表單欄位
+    this.queryForm.controls.DateFrom.setValue(dateFrom, { emitEvent: false });
+    this.queryForm.controls.DateTo.setValue(dateTo, { emitEvent: false });
+
+    console.log(`選擇 ${yearNum} 年度: ${this.datePipe.transform(dateFrom, 'yyyy-MM-dd')} ~ ${this.datePipe.transform(dateTo, 'yyyy-MM-dd')}`);
+  }
+  /**
+   * 根據選定的 eventID 查找活動的起始和結束日期，並更新 DateFrom 和 DateTo
+   * @param eventID 選定的活動 ID (pod_no)
+   */
+  updateDateRangeByEventID(eventID: string | null): void {
+    if (!eventID) {
+      this.queryForm.controls.DateFrom.setValue(null, { emitEvent: false });
+      this.queryForm.controls.DateTo.setValue(null, { emitEvent: false });
+      return;
+    }
+
+    // 從格式化後的清單中找到對應的活動
+    const selectedEvent = this.formattedEventOptions.find(opt => opt.value === eventID);
+
+    if (selectedEvent && selectedEvent['pod_sdate'] && selectedEvent['pod_edate']) {
+      // 將日期字串轉換為 Date 物件，然後寫入欄位
+      const dateFrom = new Date(selectedEvent['pod_sdate']);
+      const dateTo = new Date(selectedEvent['pod_edate']);
+
+      this.queryForm.controls.DateFrom.setValue(dateFrom, { emitEvent: false });
+      this.queryForm.controls.DateTo.setValue(dateTo, { emitEvent: false });
+
+      console.log(`活動 ${eventID} 日期: ${this.datePipe.transform(dateFrom, 'yyyy-MM-dd')} ~ ${this.datePipe.transform(dateTo, 'yyyy-MM-dd')}`);
+    } else {
+      this.queryForm.controls.DateFrom.setValue(null, { emitEvent: false });
+      this.queryForm.controls.DateTo.setValue(null, { emitEvent: false });
+    }
+  }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.tls32010Service.queryTLS32010(frm.getRawValue())
-        .pipe(finalize(() => this.loading = false))
-        .subscribe(response => {
-          this.setColumns(frm.value.tax);
-          this.data = response.Data;
-          this.totalRecords = response.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-        });
+      // 1. 取得所有欄位值
+      const formValue = frm.value;
+
+      // 2. 轉換多選 List 欄位為逗號分隔字串
+      const convertedListBody = {
+        FloorList: this.formatListForBackend(formValue.FloorList),
+        AreaList: this.formatListForBackend(formValue.AreaList),
+        BusTypeList: this.formatListForBackend(formValue.BusTypeList),
+        BusClassList: this.formatListForBackend(formValue.BusClassList),
+        CabinetKindList: this.formatListForBackend(formValue.CabinetKindList),
+        TermTypeList: this.formatListForBackend(formValue.TermTypeList),
+        OrgList: this.formatListForBackend(formValue.OrgList),
+        TltNoList: this.formatListForBackend(formValue.TltNoList),
+      };
+
+      // 3. 組裝最終傳輸給後端的 Body
+      const body: TLS32010QueryRequest = {
+        // 基礎欄位
+        ...formValue,
+        // 覆蓋：已轉換的 List 欄位
+        ...convertedListBody,
+        // 覆蓋：日期欄位格式化
+        DateFrom: this.datePipe.transform(formValue.DateFrom, 'yyyy-MM-dd'),
+        DateTo: this.datePipe.transform(formValue.DateTo, 'yyyy-MM-dd'),
+        // 移除前端專用的日期計算控制項
+        year: undefined,
+        week: undefined,
+        month: undefined,
+        halfYear: undefined,
+      } as TLS32010QueryRequest; // 確保類型正確
+      this.tls32010Service.queryTLS32010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        this.historyRequestBody = body;
+        this.data = response.Data.slice(0, response.Data.length - 1);
+        this.totalRecords = response.TotalCount;
+        this.footerData = {
+          ...response.Data[response.Data.length - 1],
+          館別: '',
+        };
+      });
     });
   }
-
-  // 載入下拉選項
-  loadOptions() {
-    // 樓層下拉選項
-    this.floorService.getFloors().subscribe(data => {
-      this.floorOptions = data;
-    });
-    // 區域下拉選項
-    this.regionService.getRegionOptions().subscribe(data => {
-      this.regionOptions = data.map(item => ({
-        ...item,
-        value: typeof item.value === 'number' ? item.value.toString() : item.value
-      }));
-    });
-    // TODO: 請改打API
-    // 大分類/中分類下拉選項
-    // this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
-    //   this.businessTypeCodeOptions = data.map(item => ({
-    //     ...item,
-    //     value: typeof item.value === 'number' ? item.value.toString() : item.value
-    //   }));
-    // });
-    //TODO 請呼叫API 不要呼叫寫死的
-    // 組織代號下拉選項
-    // this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {
-    //   this.organizationOptions = data.map(item => ({
-    //     ...item,
-    //     value: typeof item.value === 'number' ? item.value.toString() : item.value
-    //   }));
-    // });
+  /**
+   * 輔助函數：將陣列轉換為逗號分隔的字串
+   * @param list 待轉換的陣列 (例如: ['A', 'B'] 或 null)
+   * @returns 逗號分隔的字串 (例如: 'A,B' 或 null)
+   */
+  private formatListForBackend(list: any[] | null): string | null {
+    if (Array.isArray(list) && list.length > 0) {
+      // 確保所有元素都是字串或數字，並用逗號連接
+      return list.map(item => String(item)).join(',');
+    }
+    return null;
   }
 
-  // 根據銷售金額是否含稅設定顯示Header
-  setColumns(tax: boolean) {
-    this.columns = [
-      { field: 'talent_id', header: '櫃位編號', hidden: true },
-      { field: 'tlt_building', header: '館別', visible: true },
-      { field: 'org_name', header: '組織名稱', visible: true },
-      { field: 'tlt_kind', header: '櫃別', visible: true },
-      { field: 'talent_id', header: '櫃位編號', visible: true, groupField: 'dept' },
-      { field: 'talent_name', header: '櫃位名稱', visible: true, groupField: 'dept' },
-      { field: 'position_no', header: '位置編號', visible: true, groupField: 'dept' },
-      { field: 'tlt_space', header: '坪數', visible: true, format: formatAmount },
-      { field: 'sales_target', header: '營業目標', visible: true, format: formatAmount },
-      { field: 'sales_actual', header: '營業實績', hidden: tax, format: formatAmount },
-      { field: 'sales_actual_tax', header: '營業實績', hidden: !tax, format: formatAmount },
-      { field: 'transaction_count', header: '交易筆數', visible: true },
-      { field: 'avg_unit_price', header: '客單價', hidden: tax, format: formatAmount },
-      { field: 'avg_unit_price_tax', header: '客單價', hidden: !tax, format: formatAmount },
-      { field: 'floor_efficiency', header: '坪效', hidden: tax, format: formatAmount },
-      { field: 'floor_efficiency_tax', header: '坪效', hidden: !tax, format: formatAmount },
-      { field: 'achievement_rate', header: '達成率', hidden: tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%' },
-      { field: 'achievement_rate_tax', header: '達成率', hidden: !tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%' },
-      // 排名順位
-      { field: 'tlt_space_t', header: '坪數', visible: true, format: formatAmount, groupField: 'tier' },
-      { field: 'sales_target_t', header: '營業目標', visible: true, format: formatAmount, groupField: 'tier' },
-      { field: 'sales_actual_t', header: '營業實績', visible: true, format: formatAmount, groupField: 'tier' },
-      { field: 'transaction_count_t', header: '交易筆數', visible: true, groupField: 'tier' },
-      { field: 'avg_unit_price_t', header: '客單價', visible: true, format: formatAmount, groupField: 'tier' },
-      { field: 'floor_efficiency_t', header: '日坪效', visible: true, format: formatAmount, groupField: 'tier' },
-      { field: 'achievement_rate_t', header: '達成率', visible: true, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', groupField: 'tier' },
-    ];
+
+  onExportPDF() {
+    if (!this.historyRequestBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
+    }
+
+    const export$ = this.tls32010Service.exportTLS32010PDF(this.historyRequestBody);
+
+    // 呼叫 Service 執行匯出，並將直到銷毀的邏輯加入
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
+      '.pdf',
+      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
+    );
+  }
+
+  onExportXLSX() {
+    if (!this.historyRequestBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
+    }
+
+    const export$ = this.tls32010Service.exportTLS32010Excel(this.historyRequestBody);
+
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
+      '.xlsx',
+      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
+    );
   }
 }

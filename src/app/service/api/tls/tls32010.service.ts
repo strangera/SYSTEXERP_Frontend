@@ -1,8 +1,8 @@
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
-import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
 
 // 查詢參數 Model
 export interface TLS32010QueryRequest extends BaseQueryRequest {
@@ -29,20 +29,26 @@ export interface TLS32010QueryRequest extends BaseQueryRequest {
 
 // 查詢結果 Model
 export interface TLS32010Data {
-  id: number; // ID
-  tlt_building: string; // 館別
-  org_name: string; // 組織名稱
-  tlt_kind: string; // 櫃別
-  talent_id: string; // 櫃位編號
-  talent_name: string; // 櫃位名稱
-  position_no: string; // 位置編號
-  tlt_space: number; // 坪數
-  sales_target: number; // 營業目標
-  sales_actual: number; // 營業實績
-  transaction_count: number; // 交易筆數
-  avg_unit_price: number; // 客單價
-  floor_efficiency: number; // 坪效
-  achievement_rate: number; // 達成率
+  館別: string,
+  組織名稱: string,
+  櫃別名稱: string,
+  專櫃編號: string,
+  櫃位名稱: string,
+  位置編號: string,
+  坪數: string,
+  營業目標: string,
+  營業實績: string,
+  交易筆數: string,
+  客單價: string,
+  月坪效: string,
+  達成率: string,
+  坪數_排名: string,
+  營業目標_排名: string,
+  營業實績_排名: string,
+  交易筆數_排名: string,
+  客單價_排名: string,
+  月坪效_排名: string,
+  達成率_排名: string,
 }
 
 @Injectable({
@@ -55,59 +61,43 @@ export class TLS32010Service {
 
   // 查詢櫃位營業報表資料
   queryTLS32010(data: TLS32010QueryRequest): Observable<BaseQueryResponse<TLS32010Data>> {
-    return of({
-      Status: '0000',
-      Message: '查詢成功',
-      Data: [
-        {
-          id: 1,
-          tlt_building: 'A館',
-          org_name: '組織一',
-          tlt_kind: '服飾櫃',
-          talent_id: 'A001',
-          talent_name: '時尚服飾',
-          position_no: 'A-1F-001',
-          tlt_space: 50.5,
-          sales_target: 1000000,
-          sales_actual: 850000,
-          transaction_count: 120,
-          avg_unit_price: 7083,
-          floor_efficiency: 16832,
-          achievement_rate: 85.0,
-          tlt_space_t: 50.5,
-          sales_target_t: 1000000,
-          sales_actual_t: 850000,
-          transaction_count_t: 120,
-          avg_unit_price_t: 7083,
-          floor_efficiency_t: 16832,
-          achievement_rate_t: 85.0
-        },
-        {
-          id: 2,
-          tlt_building: 'B館',
-          org_name: '組織二',
-          tlt_kind: '美食櫃',
-          talent_id: 'B001',
-          talent_name: '美味餐廳',
-          position_no: 'B-2F-005',
-          tlt_space: 30.2,
-          sales_target: 800000,
-          sales_actual: 920000,
-          transaction_count: 200,
-          avg_unit_price: 4600,
-          floor_efficiency: 30464,
-          achievement_rate: 115.0,
-          tlt_space_t: 30.2,
-          sales_target_t: 800000,
-          sales_actual_t: 920000,
-          transaction_count_t: 200,
-          avg_unit_price_t: 4600,
-          floor_efficiency_t: 30464,
-          achievement_rate_t: 115.0
-        }
-      ],
-      TotalCount: 2,
-      TotalPage: 1
-    });
+    return this.http.post<BaseQueryResponse<TLS32010Data>>(this.apiUrl + '/queryTLS32010', data);
+  }
+
+  /**
+     * 匯出進貨/退貨單據統計報表 (PDF) 的 API 呼叫
+     * 請求參數與查詢介面 (QueryTLS32010Request) 相同
+     * @param body 統一的匯出請求物件 (QueryTLS32010Request)
+     * @returns 包含 PDF 檔案的 Blob 物件
+     */
+  exportTLS32010PDF(
+    body: TLS32010QueryRequest
+  ): Observable<HttpResponse<Blob>> { // 將回傳類型改為 HttpResponse<Blob>
+    return this.http.post(
+      `${this.apiUrl}/exportTLS32010PDF`,
+      body,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      }
+    );
+  }
+  /**
+   * 匯出進貨/退貨單據統計報表 (Excel) 的 API 呼叫
+   * 請求參數與查詢介面 (QueryTLS32010Request) 相同
+   * @param body 統一的匯出請求物件 (QueryTLS32010Request)
+   * @returns 包含 Excel 檔案的 Blob 物件
+   */
+  exportTLS32010Excel(
+    body: TLS32010QueryRequest
+  ): Observable<HttpResponse<Blob>> { // 將回傳類型改為 HttpResponse<Blob>
+    return this.http.post(
+      `${this.apiUrl}/exportTLS32010Excel`,
+      body,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      }
+    );
   }
 }
