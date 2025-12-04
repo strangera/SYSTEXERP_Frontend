@@ -36,6 +36,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input({ required: true }) columns: ReportColumn[] = [];        // 用來儲存查詢結果
   @Input() queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
   virtualData: any = [];
+  @Input() lazy = true;
   @Input() dataKey: string | undefined;         // 用來儲存查詢結果
   selectedColumns: ReportColumn[] = [];     // 用來儲存查詢結果
   // tableKey預設給路由名稱
@@ -159,7 +160,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     });
   }
   onSort(event: any) {
-    if (this._loading) {
+    if (this._loading || !this.lazy) {
       return;
     }
     if (event.multiSortMeta && event.multiSortMeta.length > 0) {

@@ -401,7 +401,23 @@ export interface TALPORDERMQuery {
   pod_typeList: string[];
   pod_statusList: string[];
 }
+/**
+ * 查詢 share/queryTALPORDERM_DropDownList 時的請求 body
+ */
+export interface TALPORDERMQueryForShare {
+  mid: number,
+  str_no: string,
+  pod_type?: string[],
+  pod_status?: string
+}
 
+export interface TALPORDERMDataForShare {
+  pod_no: string,
+  pod_type: string,
+  pod_desc: string,
+  pod_sdate: string,
+  pod_edate: string
+}
 
 /**
  * 查詢 queryENG1001_ENG_MeterNo_DropDownList 回傳的項目型別
