@@ -118,12 +118,13 @@ export class Fin29110Service {
     );
   }
 
+
   /** 匯出 Excel（與主表查詢條件相同，但不帶 PageIndex/PageSize） */
   exportFIN29110Excel(
     body: Fin29110Request
   ): Observable<HttpResponse<Blob>> {
     return this.http.post(
-      `${this.apiUrl}/exportFIN29110Excel`,
+      `${this.apiUrl}/exportFIN29110Execl`,
       body,
       { responseType: 'blob', observe: 'response' }
     ) as Observable<HttpResponse<Blob>>;
