@@ -261,7 +261,11 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
   public queryTLS21020(): void {
     this.tableLoading.set(!0);
-    const payload = <TLS21020Query>{ ...this.queryForm.getRawValue(), pageSize: 1e5 };
+    const raw = <TLS21020Query>{ ...this.queryForm.getRawValue(), pageSize: 1e5 };
+    const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+      v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+    )) as unknown as TLS21020Query;
+
     this.logger.debug(`queryTLS21020:`, [payload]);
     this.service.queryTLS21020(payload).pipe(
       finalize(() => this.tableLoading.set(!1)),

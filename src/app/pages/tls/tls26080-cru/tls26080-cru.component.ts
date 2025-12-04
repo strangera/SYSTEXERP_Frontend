@@ -142,7 +142,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   });
 
   public readonly isSubmitDisabled = computed(() => {
-    const _dfSignal = this.dfSignal(); // 觸發用
+    const _df = this.dfSignal(); // 觸發用
     const data = this.tableData();
     this.logger.debug(`isSubmitDisabled:`, [this.dataForm.valid, data]);
 
@@ -203,11 +203,14 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     this.filteredDialogData.set((!nos?.length && !names?.length)
       ? this.dialogData()
       : this.dialogData().filter(d => {
-        if (nos && !d['No'].includes(nos)) return !1;
+        if (nos && !d.value.includes(nos)) return !1;
         if (names && !d['Name'].includes(names)) return !1;
         return !0;
       }));
     this.dialogTotalRecords.set(this.filteredDialogData().length);
+    this.selectedItemsDialog.update(items => items
+      .filter(opt => this.tableData()
+        .some(td => td.tlt_no === opt.value)));
   }, { allowSignalWrites: !0 });
 
   /** 根據選擇的活動名稱更新表單 */
@@ -250,6 +253,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
             tpy_rate_D17: Number(v.tpy_rate_D17),
           })));
           this.totalRecords.set(res.TotalCount || 0);
+          this.initEffect.destroy();
         },
       });
   }, { allowSignalWrites: !0 });
@@ -432,21 +436,15 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         return void this.messageService.errorBubble('請至少新增一筆專櫃資料');
       }
 
-      const payload = <TLS26080InsertPayload>{
+      const raw = <TLS26080InsertPayload>{
         ...d,
-        pod_no: d.pod_no ?? '',
         pod_type: '2',
         pod_desc: this.selectedCampaign()?.CampaignName ?? d.pod_desc ?? '',
-        pod_sdate: d.pod_sdate!,
-        pod_edate: d.pod_edate!,
-        pod_back_sdate: d.pod_back_sdate!,
-        pod_back_edate: d.pod_back_edate!,
-        pod_busdate: d.pod_busdate!,
         TALPORDERD_VOUCHERDetails: validTableData.map(item => ({
           pod_no: d.pod_no!,
           talent_id: item.talent_id,
           tlt_id: item.tlt_id,
-          tlt_no: this.service.tltTalentMap().get(item.tlt_no)?.['No'] ?? '',
+          tlt_no: this.service.tltTalentMap().get(item.tlt_no)?.value ?? '',
           tlt_name: this.service.tltTalentMap().get(item.tlt_no)?.['Name'] ?? '',
           calc_date_type: item.calc_date_type ?? 'Y',
           cap_item_D16: 'D16',
@@ -456,6 +454,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
           pod_status: item.pod_status ?? '0',
         })),
       };
+      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+      )) as unknown as TLS26080InsertPayload;
 
       const request = this.isFormEditable
         ? this.service.updateTLS26080(payload)
@@ -512,7 +513,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       // 同步更新 dialog 內的已選專櫃
       this.selectedItemsDialog.update(items => items
         .filter(opt => this.tableData()
-          .some(td => td.tlt_no === opt['No'])));
+          .some(td => td.tlt_no === opt.value)));
     }
   }
   public toggleApprovalStatus(): void {
@@ -624,11 +625,11 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     this.tableData.update(data => {
       const idSet = new Set(data.map(v => v.tlt_no));
       const newItems = this.selectedItemsDialog()
-        .filter(item => !idSet.has(item['No']))
+        .filter(item => !idSet.has(item.value))
         .map(item => ({
           talent_id: '',
           tlt_id: '',
-          tlt_no: item['No'],
+          tlt_no: item.value,
           tlt_name: item['Name'],
           calc_date_type: 'N' as 'Y' | 'N',
           cap_item_D16: '',
