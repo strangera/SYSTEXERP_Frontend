@@ -17,7 +17,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, createPaginationConfig, FieldChangeEvent } from '@shared/componentkit/table/table.model';
+import { Column, ColumnGroup, createPaginationConfig, FieldChangeEvent } from '@shared/componentkit/table/table.model';
 import { validateRequired } from '@shared/componentkit/table/validate-field.model';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
@@ -91,12 +91,17 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       (group) => {
         const sdate = group.get('pod_sdate')?.value;
         const edate = group.get('pod_edate')?.value;
+        const bsdate = group.get('pod_back_sdate')?.value;
+        const bedate = group.get('pod_back_edate')?.value;
         const busdate = group.get('pod_busdate')?.value;
 
+        // 兌回起始日期必須小於兌回結束日期
+        if (!bsdate || !bedate) return null;
+        else if (bsdate && bedate && bsdate > bedate) return { invalidBackDateRange: !0 };
+
         // 活動正檔日期必須在活動起始日期期間內
-        if (busdate && sdate && edate && (busdate < sdate || busdate >= edate)) {
-          return { invalidBusDate: !0 };
-        }
+        if (!sdate || !edate || !busdate) return null;
+        else if (busdate && sdate && edate && (busdate < sdate || busdate >= edate)) return { invalidBusDate: !0 };
 
         return null;
       }
@@ -297,6 +302,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       optionValue: 'value',
       validate: [validateRequired],
       disabled: (v, i, r) => r.pod_status !== '0',
+      width: '6rem',
+      textAlign: 'right',
     },
     {
       field: 'calc_date_type',
@@ -319,6 +326,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       maxFractionDigits: 2,
       disabled: (v, i, r) => r.pod_status !== '0',
       format: v => this.isFormReadable ? String(v) + '%' : v,
+      width: '4rem',
+      textAlign: 'right',
     },
     {
       field: 'tpy_rate_D17',
@@ -329,15 +338,19 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       maxFractionDigits: 2,
       disabled: (v, i, r) => r.pod_status !== '0',
       format: v => this.isFormReadable ? String(v) + '%' : v,
+      width: '4rem',
+      textAlign: 'right',
     },
     {
       field: 'tpy_rate_3',
       header: 'D16',
+      textAlign: 'right',
       groupField: 'groupField2',
     },
     {
       field: 'tpy_rate_4',
       header: 'D17',
+      textAlign: 'right',
       groupField: 'groupField2',
     },
     {
@@ -356,7 +369,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     },
   ]);
 
-  public readonly counterColumnsGroup: Column[] = [
+  public readonly counterColumnsGroup: ColumnGroup[] = [
     { field: 'groupField1', header: '匯入分攤' },
     { field: 'groupField2', header: '合約建檔' },
   ];
@@ -460,7 +473,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     });
   }
 
-  private numVal(value: string | number, rowData: TLS26080EditTable, data: TLS26080EditTable[], field: string, header: string): { isValid: boolean; errorMessage: string[]; } {
+  private numVal(value: string | number): ValidationResult {
     const normalized = typeof value === 'number' ? value.toString() : `${value ?? ''}`.trim().replace(/%$/, '');
     if (normalized === '') return { isValid: !1, errorMessage: ['請輸入有效的數字'] };
 
@@ -476,7 +489,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     return { isValid: !0, errorMessage: [] };
   }
 
-  private duplicateVal(value: string, rowData: TLS26080EditTable, data: TLS26080EditTable[], field: string, header: string): { isValid: boolean; errorMessage: string[]; } {
+  private duplicateVal(value: string, rowData: TLS26080EditTable): ValidationResult {
     return this.tableData().some(item => item.tlt_no === value && rowData !== item)
       ? { isValid: !1, errorMessage: ['專櫃編號不可重複'] }
       : { isValid: !0, errorMessage: [] };
@@ -501,8 +514,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         .filter(opt => this.tableData()
           .some(td => td.tlt_no === opt['No'])));
     }
-
-    event.value?.length && this.dt().validateAndShowErrors();
   }
   public toggleApprovalStatus(): void {
     const selectedRows = this.selectedItems();
@@ -641,3 +652,5 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     return void this.logger.debug(`onformValueChanged:`, [event]);
   }
 }
+
+type ValidationResult = { isValid: boolean; errorMessage: string[]; };

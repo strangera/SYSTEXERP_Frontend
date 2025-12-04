@@ -41,11 +41,8 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   public readonly queryForm = this.formBuilder.group({
     pod_no: new FormControl<string | undefined>(undefined, [Validators.maxLength(10)]), // 活動單號
     pod_desc: new FormControl<string | undefined>(undefined, [Validators.maxLength(100)]), // 活動名稱
-    pod_status: new FormControl<ApprovalStatus>(ApprovalStatus.未核准), // 核准狀態
-    org_id: new FormControl<string | undefined>(undefined), // 部門
-    pod_date: new FormControl<{ start: Date | null; end: Date | null; }>({ start: this.service.dateS, end: this.service.dateE }), // 活動起始日期
-    pod_sdate: new FormControl<Date>(this.service.dateS), // 起始日期(起)
-    pod_edate: new FormControl<Date>(this.service.dateE), // 起始日期(迄)
+    pod_sdate: new FormControl<Date | void>(void 0), // 起始日期(起)
+    pod_edate: new FormControl<Date | void>(this.service.dateE), // 起始日期(迄)
     pod_busdate: new FormControl<Date | undefined>(undefined), // 活動正檔日期
     ...createPaginationConfig([{ field: 'pod_no', order: 1 }]), // 分頁和排序參數
   });
@@ -96,22 +93,11 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
+      const payload = <TLS26080Query>{ ...this.queryForm.getRawValue() };
+
       this.tableLoading.set(!0);
-
-      const raw = this.queryForm.getRawValue();
-      const payload = <TLS26080Query>{
-        SortBy: raw.SortBy,
-        PageSize: raw.pageSize,
-        PageIndex: raw.pageIndex,
-        POD_No: raw.pod_no,
-        POD_Desc: raw.pod_desc,
-        POD_SDate_start: raw.pod_sdate,
-        POD_SDate_end: raw.pod_edate,
-        POD_BusDate: raw.pod_busdate,
-      };
-
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-      this.logger.debug(`submit:`, [raw, payload]);
+      this.logger.debug(`submit:`, [payload]);
       this.service.loadTLS26080(payload).pipe(
         finalize(() => this.tableLoading.set(!1))
       ).subscribe({
