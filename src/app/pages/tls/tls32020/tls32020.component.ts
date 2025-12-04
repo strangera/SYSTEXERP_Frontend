@@ -121,23 +121,25 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
       format: (value) => this.formatYM(value) // **新增：動態格式化**
     },
     { field: 'BuildingName', header: '館別' },
-    { field: 'BaseTarget', header: '營業目標', format: formatAmount, isSubTotal: true },
-    { field: 'BaseSale', header: '營業實績', format: formatAmount, isSubTotal: true },
-    { field: 'BaseAchieveRate', header: '達成率', format: (value: number) => value ? `${(value * 100).toFixed(1)}%` : '0%', isSubTotal: true },
-    { field: 'BaseTxnCnt', header: '交易筆數', isSubTotal: true },
-    { field: 'BaseTicket', header: '客單價', format: formatAmount, isSubTotal: true },
-    { field: 'CompareSale', header: '營業實績', format: formatAmount, isSubTotal: true },
+    { field: 'BaseTarget', header: '營業目標', format: formatAmount, isSubTotal: true, groupField: 'revenue' },
+    { field: 'BaseAchieveRate', header: '達成率', format: (value: number) => value ? `${(value * 100).toFixed(1)}%` : '0%', isSubTotal: true, groupField: 'revenue' },
+    { field: 'BaseSale', header: '營業實績', format: formatAmount, isSubTotal: true, groupField: 'revenue' },
+    { field: 'BaseTxnCnt', header: '交易筆數', isSubTotal: true, groupField: 'atv' },
+    { field: 'BaseTicket', header: '客單價', format: formatAmount, isSubTotal: true, groupField: 'atv' },
+    { field: 'CompareSale', header: '營業實績', format: formatAmount, isSubTotal: true, groupField: 'popupCounter' },
     { field: 'CompareTxnCnt', header: '交易筆數', isSubTotal: true },
     { field: 'CompareTicket', header: '客單價', format: formatAmount, isSubTotal: true },
     { field: 'DiffAmt', header: '業績差異', format: formatAmount, isSubTotal: true },
-    { field: 'GrowthRate', header: '成長率', format: (value: number) => value ? `${(value * 100).toFixed(1)}%` : '0%', isSubTotal: true },
     { field: 'DiffTxn', header: '交易筆數差異', isSubTotal: true },
     { field: 'DiffTicket', header: '客單價差異', format: formatAmount, isSubTotal: true },
-    { field: '達成率', header: '達成率', format: (value: number) => value ? `${(value * 100).toFixed(1)}%` : '0%', isSubTotal: true },
+    { field: 'GrowthRate', header: '成長率', format: (value: number) => value ? `${(value * 100).toFixed(1)}%` : '0%', isSubTotal: true },
   ];
   columnGroup = [
-    { field: 'dept', header: '單位' },
-    { field: 'tier', header: '排名順位' }
+    { field: 'revenue', header: '營業額' },
+    { field: 'revenueRatio', header: '營業佔比' },
+    { field: 'atv', header: '客單價' },
+    { field: 'salesPerArea', header: '營業坪效' },
+    { field: 'popupCounter', header: '臨時櫃' }
   ];
 
 
