@@ -264,54 +264,54 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="館別"
-              controlName="tlt_building"
+              controlName="BuildingList"
               [options]="tlt_building_Option"
               optionLabel="Name"
               optionValue="No"
-              [control]="queryForm.controls.tlt_building"
+              [control]="queryForm.controls.BuildingList"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="樓層"
-              controlName="tlt_floor"
+              controlName="FloorList"
               [options]="tlt_floor_Option"
               optionLabel="Name"
               optionValue="No"
-              [control]="queryForm.controls.tlt_floor"
+              [control]="queryForm.controls.FloorList"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="區域"
-              controlName="area_no"
+              controlName="AreaList"
               [options]="area_no_Option"
               optionLabel="Name"
               optionValue="No"
-              [control]="queryForm.controls.area_no"
+              [control]="queryForm.controls.AreaList"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="大分類代碼/名稱"
-              controlName="bus_type"
+              controlName="BusTypeList"
               [options]="bus_type_Option"
               optionLabel="label"
               optionValue="No"
-              [control]="queryForm.controls.bus_type"
+              [control]="queryForm.controls.BusTypeList"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="中分類代碼/名稱"
-              controlName="bus_class"
+              controlName="BusClassList"
               [options]="bus_class_Option"
               optionLabel="label"
-              [control]="queryForm.controls.bus_class"
+              [control]="queryForm.controls.BusClassList"
               [submitted]="submitted"
               [group]="true"
               optionGroupLabel="CAT_LName"
@@ -321,64 +321,71 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="櫃別"
-              controlName="tlt_kind"
+              controlName="TltKindList"
               [options]="tlt_kind_Option"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.tlt_kind"
+              [control]="queryForm.controls.TltKindList"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="抽成別"
-              controlName="tlt_term_type"
+              controlName="TermTypeList"
               [options]="tlt_term_type"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.tlt_term_type"
+              [control]="queryForm.controls.TermTypeList"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="組織"
-              controlName="org_id"
+              controlName="OrgList"
               [options]="org_id_Option"
               optionLabel="label"
               optionValue="No"
-              [control]="queryForm.controls.org_id"
+              [control]="queryForm.controls.OrgList"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="專櫃編號"
-              controlName="tlt_no"
+              controlName="TltNoList"
               [options]="tlt_no_id_Option"
               optionLabel="label"
               optionValue="No"
-              [control]="queryForm.controls.tlt_no"
+              [control]="queryForm.controls.TltNoList"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               label="銷售金額是否含稅"
-              controlName="TaxType"
-              [control]="queryForm.controls.TaxType"
+              controlName="AmtTaxMode"
+              [control]="queryForm.controls.AmtTaxMode"
               [options]="TaxType_Option"
               [submitted]="submitted"
             ></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton-yn
+            <!-- <app-radiobutton-yn
               label="是否開立業主發票"
-              controlName="IsRece_Yn"
-              [control]="queryForm.controls.IsRece_Yn"
+              controlName="ReceFilter"
+              [control]="queryForm.controls.ReceFilter"
               [submitted]="submitted"
               [showAll]="true"
-            ></app-radiobutton-yn>
+            ></app-radiobutton-yn> -->
+            <app-radiobutton
+              label="是否開立業主發票"
+              controlName="ReceFilter"
+              [control]="queryForm.controls.ReceFilter"
+              [options]="ReceFilter_Option"
+              [submitted]="submitted"
+            ></app-radiobutton>
           </div>
         </div>
         <div
@@ -393,7 +400,7 @@
 </div>
 <div class="card">
   <app-table-report
-    tableKey="tls31040"
+    tableKey="tls32040"
     [lastQueryBody]="historyRequestBody"
     [data]="data"
     [columns]="columns"
@@ -402,11 +409,9 @@
     (detail)="onDetail1($event)"
     [showDelete]="false"
     [showEdit]="false"
-    [showManage]="true"
+    [showManage]="false"
     [showReportMode]="false"
-    [queryFunction]="tls31020Service.queryTLS31020.bind(tls31020Service)"
-    [footerData]="footershowTotal"
-    [footerPercentData]="footershowPercent"
+    [queryFunction]="tls32040Service.queryTLS32040.bind(tls32040Service)"
     [loading]="loading"
   >
     <header>

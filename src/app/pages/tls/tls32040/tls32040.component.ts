@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
-import { footerShowTotal, TLS31020Item, TLS31020PrintRequest, TLS31020Request, TLS31020Response, Tls31020Service, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { TLS32040Request, TLS32040Response, TLS32040Service } from '@service/api/tls/tls32040.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -21,7 +21,7 @@ import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
-import { debounceTime } from 'rxjs';
+import { debounceTime, finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -55,30 +55,30 @@ const today = new Date();
   ]
 })
 
-export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response> implements OnInit {
+export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    TXN_DateS: [yesterday],  //交易日期開始
-    TXN_DateE: [yesterday],  // 交易日期結束
-    C_TXN_DateS: [null as Date | null],// 比較日期開始
-    C_TXN_DateE: [null as Date | null],//比較日期結束
+    BaseDateFrom: [today],  //交易日期開始
+    BaseDateTo: [today],  // 交易日期結束
+    CompareDateFrom: [yesterday as Date | null],// 比較日期開始
+    CompareDateTo: [yesterday as Date | null],//比較日期結束
 
     // 合約查詢條件
-    tlt_floor: [[]],// 樓層
-    area_no: [[]],// 區域
-    bus_type: [[] as string[]],//大分類
-    bus_class: [[] as IDropdownItem[]],//中分類
-    tlt_kind: [[]], //櫃別 (1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
-    org_id: [[]],  // 組織
-    tlt_no: [[]], //專櫃編號 (queryTLTTALENT_DropDownList)
-    tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:層級抽成   6:包底加層級   "
-    tlt_building: [[]],// 館別
+    FloorList: [[]],// 樓層
+    AreaList: [[]],// 區域
+    BusTypeList: [[] as string[]],//大分類
+    BusClassList: [[] as IDropdownItem[]],//中分類
+    TltKindList: [[]], //櫃別 (1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
+    OrgList: [[]],  // 組織
+    TltNoList: [[]], //專櫃編號 (queryTLTTALENT_DropDownList)
+    TermTypeList: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:層級抽成   6:包底加層級   "
+    BuildingList: [[]],// 館別
 
-    TaxType: ["0"],  // 銷售金額是否含稅(0:是 1:否 預設含稅)
-    IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
+    AmtTaxMode: ["G"],  // 銷售金額是否含稅(G:是 N:否 預設含稅)
+    ReceFilter: ['A'],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 A:預設全部))
 
     pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'tlt_floor', order: 1 }]],
+    SortBy: [[{ field: 'TeamId', order: 1 }]],
   });
 
   // 日期查詢條件表單
@@ -115,7 +115,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
     event_enddate: [null as Date | null],
   });
 
-  // 比較表單 (只負責顯示，送出的是主表的C_TXN_DateS、C_TXN_DateE)
+  // 比較表單 (只負責顯示，送出的是主表的CompareDateFrom、CompareDateTo)
   c_dateForm = this.formBuilder.nonNullable.group({
     // 日期查詢條件（單選報表類型）
     reportType: ['1'], // 報表類型
@@ -155,8 +155,8 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
   ];
 
   EventIDOptions = [
-    { value: '1', label: '活動1', TXN_DateS: null, TXN_DateE: null },
-    { value: '2', label: '活動2', TXN_DateS: null, TXN_DateE: null },
+    { value: '1', label: '活動1', BaseDateFrom: null, BaseDateTo: null },
+    { value: '2', label: '活動2', BaseDateFrom: null, BaseDateTo: null },
   ];
 
   reportTypeOptions = [
@@ -169,33 +169,49 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
   ];
 
   totalRecords = 0;
-  data: TLS31020Item[] = [];
-  footerTotal: TLS31020Total | null = null; // 總計取得原始資料
-  footershowTotal: footerShowTotal | null = null; // 總計資料轉換名稱
-  footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
-  historyRequestBody: TLS31020Request | null = null; //歷史查詢條件
+  data: TLS32040Response[] = [];
+  historyRequestBody: TLS32040Request | null = null; //歷史查詢條件
 
   columns: Column[] = [
-    // { field: 'tlt_floor', header: '樓層代碼', visible: false },
-    { field: 'floor_desc', header: '樓層名稱', visible: true },
+    { field: 'RowType', header: '列別', visible: true },
+    { field: 'TeamId', header: '單位代碼', visible: true },
+    { field: 'TeamName', header: '單位名稱', visible: true },
+    { field: 'OrgId', header: '樓組代碼', visible: true },
+    { field: 'OrgName', header: '樓組名稱', visible: true },
+    { field: 'Base_Target', header: '本期銷售目標', visible: true, format: formatAmount },
+    { field: 'Base_SaleAmt', header: '本期銷售金額', visible: true, format: formatAmount },
+    { field: 'Base_AchieveRate', header: '本期達成率', visible: true, format: (value) => formatPercentage(value, 2) },
+    { field: 'Base_TxnCnt', header: '本期交易筆數', visible: true },
+    { field: 'Base_AvgTicket', header: '本期客單價', visible: true, format: formatAmount },
 
-    { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
-    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },
-    { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2) },
-    { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
-    { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
-    { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount },
-    { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount },
-    { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
-    { field: 'MonthlyPSM', header: '月坪效', visible: true, groupField: 'space' },
+    { field: 'Comp_SaleAmt', header: '上期銷售金額', visible: true, format: formatAmount },
+    { field: 'Comp_TxnCnt', header: '上期交易筆數', visible: true },
+    { field: 'Comp_AvgTicket', header: '上期客單價', visible: true },
+    { field: 'Growth_SaleAmtPct', header: '成長比', visible: true, format: (value) => formatPercentage(value, 2) },
 
-    { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp', format: formatAmount },
-    { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp', format: formatAmount },
-    { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', visible: true, groupField: 'temp', format: formatAmount },
+    { field: 'Diff_SaleAmt', header: '銷售金額差異', visible: true },
+    { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true },
+    { field: 'Diff_AvgTicket', header: '客單價差異', visible: true },
+    { field: 'Space', header: '營業坪數', visible: true },
+    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true },
 
-    { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
-    { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
-    { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2) },
+    // { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
+    // { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },
+    // { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2) },
+    // { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
+    // { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
+    // { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount },
+    // { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount },
+    // { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
+    // { field: 'MonthlyPSM', header: '月坪效', visible: true, groupField: 'space' },
+
+    // { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp', format: formatAmount },
+    // { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp', format: formatAmount },
+    // { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', visible: true, groupField: 'temp', format: formatAmount },
+
+    // { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
+    // { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
+    // { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2) },
   ];
   columnGroup: ColumnGroup[] = [
     { field: 'budgetAmt', header: '營業額' },
@@ -220,8 +236,13 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
     { value: "6", label: "包底加層級" },
   ]
   TaxType_Option = [
-    { value: "0", label: "是" },
-    { value: "1", label: "否" },
+    { value: "G", label: "是" },
+    { value: "N", label: "否" },
+  ]
+  ReceFilter_Option = [
+    { value: "A", label: "全部" },
+    { value: "Y", label: "是" },
+    { value: "N", label: "否" },
   ]
   tlt_building_Option: IDropdownItem[] = []; // 館別
   tlt_floor_Option: IDropdownItem[] = []; // 樓層
@@ -233,7 +254,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
 
   constructor(
     private readonly dropDownListService: DropDownListService,
-    public readonly tls31020Service: Tls31020Service,
+    public readonly tls32040Service: TLS32040Service,
     private tls26050Service: TLS26050Service, // 日期的api，套用現有模式
     private datePipe: DatePipe,
   ) { super(); }
@@ -267,7 +288,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
       this.bus_type_Option = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     });
     // 監聽大分類變化
-    this.queryForm.controls.bus_type.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value: string[]) => {
+    this.queryForm.controls.BusTypeList.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value: string[]) => {
       if (value && value.length > 0) {
         this.dropDownListService.queryTLTBUSCLASS_DropDownList({ bus_type: value }).pipe(untilDestroyed(this)).subscribe(response => {
           const groupedData = response.Data.reduce((accumulator, currentItem) => {
@@ -292,7 +313,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
         });
       } else {
         this.bus_class_Option = [];
-        this.queryForm.controls.bus_class.setValue([]);
+        this.queryForm.controls.BusTypeList.setValue([]);
       }
     });
 
@@ -304,47 +325,38 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
     this.handleSubmit(frm, () => {
       const formValue = {
         ...frm.getRawValue(),
-        bus_class: (frm.getRawValue().bus_class || []).map((x: any) => [x.bus_type, x.No]),
 
-        TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
-        TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
-      } as TLS31020Request;
+        ReportType: this.dateForm.get('reportType')?.value, // 從日期表單抓
+        BaseDateFrom: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
+        BaseDateTo: formatDate(frm.getRawValue().BaseDateTo, 'yyyy-MM-dd', 'en-US'),
+        CompareDateFrom: formatDate(frm.getRawValue().CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
+        CompareDateTo: formatDate(frm.getRawValue().CompareDateTo, 'yyyy-MM-dd', 'en-US'),
+        FloorList: (frm.getRawValue().FloorList || []).join(','),
+        AreaList: (frm.getRawValue().AreaList || []).join(','),
+
+        BusTypeList: (frm.getRawValue().BusTypeList || []).join(','), //這邊怪怪的之後可能會改成舊的模式(還是大: "大字串", 中: "中字串")
+        BusClassList: (frm.getRawValue().BusClassList || []) //這邊怪怪的之後可能會改成舊的模式
+          .map((x: any) => x.No)
+          .join(','),
+
+        TltKindList: (frm.getRawValue().TltKindList || []).join(','),
+        OrgList: (frm.getRawValue().OrgList || []).join(','),
+        TltNoList: (frm.getRawValue().TltNoList || []).join(','),
+        TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
+        BuildingList: (frm.getRawValue().BuildingList || []).join(','),
+
+      } as TLS32040Request;
 
       console.log('送出query請求_api尚未提供', formValue);
-      // this.tls31020Service.queryTLS31020(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      this.tls32040Service.queryTLS32040(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
 
-      //   // this.data = res.Data?.QueryData ?? [];               // 查詢資料
-      //   this.data = res.Data ?? [];               // 查詢資料
-      //   this.footerTotal = res.TotalData ?? null;;    // 總計資料
+        this.data = res.Data ?? [];               // 查詢資料
+        this.historyRequestBody = formValue;                 // 查詢條件
+        console.log('查詢結果', res.Data);
 
-      //   this.footershowTotal = this.footerTotal ? {          // 人工轉換欄位
-      //     budget: this.footerTotal.TotalBudget,
-      //     AVN_TotSaleAmt: this.footerTotal.TotalSales,
-      //     TxnCount: this.footerTotal.TotalTxnCount,
-      //     AvgTicket: this.footerTotal.AvgTicket,
-      //     tlt_space: this.footerTotal.TotalSpace,
-      //     MonthlyPSM: this.footerTotal.AvgPSM,
-      //     MonthlyPayment: this.footerTotal.AvgMonthlyPayment,
-      //     TempCounterSaleAmt: this.footerTotal.TotalTempCounterSales,
-
-      //     MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
-      //     MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
-
-      //     AchievementRate: this.footerTotal.AvgAchievementRate,
-      //     CompletionRate: this.footerTotal.AvgCompletionRate,
-      //   } : null;
-      //   // this.footershowPercent = this.footerTotal ? {    // 人工轉換百分比欄位
-
-      //   // } : null;
-
-      //   this.historyRequestBody = formValue;                 // 查詢條件
-      //   console.log('查詢結果', this.data);
-      //   console.log('查詢總計', this.footerTotal);
-      //   console.log('查詢總計(轉換後)', this.footershowTotal);
-
-      //   this.totalRecords = res.TotalCount;
-      //   this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-      // })
+        this.totalRecords = res.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+      })
     })
   }
   btnLoading = false;
@@ -357,10 +369,13 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
       SortBy: undefined,
       pageIndex: undefined,
       pageSize: undefined,
-      bus_class: (frm.getRawValue().bus_class || []).map((x: any) => [x.bus_type, x.No]),
-      TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
-      TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
-    } as TLS31020PrintRequest;
+      BusTypeList: (frm.getRawValue().BusTypeList || []).map((x: any) => (x.BusTypeList, x.No)),
+      BaseDateFrom: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
+      BaseDateTo: formatDate(frm.getRawValue().BaseDateTo, 'yyyy-MM-dd', 'en-US'),
+      CompareDateFrom: formatDate(frm.getRawValue().CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
+      CompareDateTo: formatDate(frm.getRawValue().CompareDateTo, 'yyyy-MM-dd', 'en-US'),
+    }
+    // } as TLS31020PrintRequest;
 
     console.log('送出print請求_api尚未提供', formValue);
 
@@ -463,8 +478,8 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
   queryEvent(event: any) {
     console.log(event);
     console.log(this.EventIDOptions);
-    this.dateForm.controls['event_startdate'].setValue(this.EventIDOptions.find(x => x.value === event)?.TXN_DateS ?? null);
-    this.dateForm.controls['event_enddate'].setValue(this.EventIDOptions.find(x => x.value === event)?.TXN_DateE ?? null);
+    this.dateForm.controls['event_startdate'].setValue(this.EventIDOptions.find(x => x.value === event)?.BaseDateFrom ?? null);
+    this.dateForm.controls['event_enddate'].setValue(this.EventIDOptions.find(x => x.value === event)?.BaseDateTo ?? null);
   }
 
   // #region 同步日期選單內容給表單日期
@@ -594,15 +609,15 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
     }
 
     // 套用到 queryForm
-    if (start) this.queryForm.get('TXN_DateS')?.setValue(start);
-    if (end) this.queryForm.get('TXN_DateE')?.setValue(end);
+    if (start) this.queryForm.get('BaseDateFrom')?.setValue(start);
+    if (end) this.queryForm.get('BaseDateTo')?.setValue(end);
 
     // ----- 寫入比較日期 -----
-    this.queryForm.get('C_TXN_DateS')?.setValue(compareStart);
-    this.queryForm.get('C_TXN_DateE')?.setValue(compareEnd);
+    this.queryForm.get('CompareDateFrom')?.setValue(compareStart);
+    this.queryForm.get('CompareDateTo')?.setValue(compareEnd);
 
-    console.log('比較日期(起)', this.queryForm.get('C_TXN_DateS')?.value);
-    console.log('比較日期(迄)', this.queryForm.get('C_TXN_DateE')?.value);
+    console.log('比較日期(起)', this.queryForm.get('CompareDateFrom')?.value);
+    console.log('比較日期(迄)', this.queryForm.get('CompareDateTo')?.value);
   }
 
   onDetail1(event: any) {
