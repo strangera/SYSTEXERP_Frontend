@@ -80,7 +80,6 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
-    // { field: 'PLU_Unit', header: '單位代碼'},
     { field: 'UNIT_NAME', header: '單位' },
     { field: 'SYS_STOCK_QTY', header: '庫存量', format: formatAmount },
     {
@@ -91,6 +90,13 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
       disabled: () => this.rowdata?.PST_Status !== '1',
       placeholder: '請輸入數量',
       calculate: (row) => {
+        if (this.crudstatus !== CRUDStatus.Edit) return {};
+
+        // 如果 DIFF_Qty 已經有值（初始載入時），則不重新計算
+        if (row.DIFF_Qty !== undefined && row.DIFF_Qty !== null && row._dataStatus === 'original') {
+          return {};
+        }
+
         return {
           'DIFF_Qty': row.PST_Qty1 - row.SYS_STOCK_QTY,
         };
@@ -104,6 +110,13 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
       disabled: () => this.rowdata?.PST_Status !== '2',
       placeholder: '請輸入數量',
       calculate: (row) => {
+        if (this.crudstatus !== CRUDStatus.Edit) return {};
+
+        // 如果 DIFF_Qty 已經有值（初始載入時），則不重新計算
+        if (row.DIFF_Qty !== undefined && row.DIFF_Qty !== null && row._dataStatus === 'original') {
+          return {};
+        }
+
         return {
           'DIFF_Qty': row.PST_Qty2 - row.SYS_STOCK_QTY,
         };
@@ -117,6 +130,13 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
       disabled: () => this.rowdata?.PST_Status !== '3',
       placeholder: '請輸入數量',
       calculate: (row) => {
+        if (this.crudstatus !== CRUDStatus.Edit) return {};
+
+        // 如果 DIFF_Qty 已經有值（初始載入時），則不重新計算
+        if (row.DIFF_Qty !== undefined && row.DIFF_Qty !== null && row._dataStatus === 'original') {
+          return {};
+        }
+
         return {
           'DIFF_Qty': row.PST_Qty3 - row.SYS_STOCK_QTY,
         };
