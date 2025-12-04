@@ -135,13 +135,16 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
   }
   @HostListener('window:acp-open', ['$event'])
   onAcpOpen(event: any) {
-    console.log(1123123)
-    //  到該分頁 做 用key撈資料
+    const acpId = event.detail;
+    const url = `/account/fin/fin24010cru/${acpId}`;
+    window.open(url, '_blank', 'noopener');
   }
+
   @HostListener('window:invoice-open', ['$event'])
   onInvoiceOpen(event: any) {
-    console.log(456)
-    //  到該分頁 做 用key撈資料
+    const invoiceNo = event.detail;
+    const url = `/account/fin/fin13050cru/${invoiceNo}`;
+    window.open(url, '_blank', 'noopener');
   }
 
 
