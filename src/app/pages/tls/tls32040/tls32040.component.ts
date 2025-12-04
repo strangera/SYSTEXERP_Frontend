@@ -8,6 +8,7 @@ import { footerShowTotal, TLS31020Item, TLS31020PrintRequest, TLS31020Request, T
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
@@ -25,6 +26,8 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 
+const today = new Date();
+
 @Component({
   selector: 'app-tls32040',
   templateUrl: './tls32040.component.html',
@@ -36,6 +39,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
     ReactiveFormsModule,
     CommonModule,
     CalendarComponent,
+    CalendarRangeComponent,
     CalendarRangeQuickComponent,
     DropdownComponent,
     InputTextComponent,
@@ -50,12 +54,13 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
     ButtonModule
   ]
 })
+
 export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     TXN_DateS: [yesterday],  //交易日期開始
     TXN_DateE: [yesterday],  // 交易日期結束
-    //比較日期開始(這邊看後端是否需要)
-    //比較日期結束(這邊看後端)
+    C_TXN_DateS: [null as Date | null],// 比較日期開始
+    C_TXN_DateE: [null as Date | null],//比較日期結束
 
     // 合約查詢條件
     tlt_floor: [[]],// 樓層
@@ -82,7 +87,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
     reportType: ['1'], // 報表類型
 
     // --- 日報（type 1）使用的單一基準 / 比較日期
-    onedatedd: [yesterday],        // 基準日期 (日)
+    onedatedd: [today],        // 基準日期 (日)
 
     // --- 週報（type 2）相關
     onedateyy: [new Date()],      // 基準年度 (年字串)
@@ -96,6 +101,40 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
     // --- 半年報（type 4）
     halfyear_onedateyy: [new Date()],
     halfyear: ['1'],         // 上/下半年
+
+    // --- 年報（type 5）
+    year_onedateyy: [new Date()],
+
+    // --- 區間報（type 6）
+    sad_startdate: [null],
+    sad_enddate: [null],
+
+    // --- 活動區間報（type 7）
+    eventID: [null],
+    event_startdate: [null as Date | null],
+    event_enddate: [null as Date | null],
+  });
+
+  // 比較表單 (只負責顯示，送出的是主表的C_TXN_DateS、C_TXN_DateE)
+  c_dateForm = this.formBuilder.nonNullable.group({
+    // 日期查詢條件（單選報表類型）
+    reportType: ['1'], // 報表類型
+
+    // --- 日報（type 1）使用的單一基準 / 比較日期
+    onedatedd: [yesterday as Date | null],        // 基準日期 (日)
+
+    // --- 週報（type 2）相關
+    onedateyy: [new Date()],      // 基準年度 (年字串)
+    weeks: [''],                                           // 基準週數 (輸入)
+    startdate: [null as Date | null],           // 基準開始日期 (由週數帶出)
+    enddate: [null as Date | null],             // 基準結束日期 (由週數帶出)
+
+    // --- 月報（type 3）
+    onedatemm: [null as Date | null],       // 基準年月 (可由 calendar 取值)
+
+    // --- 半年報（type 4）
+    halfyear_onedateyy: [new Date()],
+    halfyear: ['1' as string | null],         // 上/下半年
 
     // --- 年報（type 5）
     year_onedateyy: [new Date()],
@@ -126,7 +165,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
     { value: '3', label: '月營業報表' },
     { value: '4', label: '半年營業報表' },
     { value: '5', label: '年營業報表' },
-    { value: '6', label: '區間營業報表' },
+    // { value: '6', label: '區間營業報表' }, //本作業不使用
   ];
 
   totalRecords = 0;
@@ -204,9 +243,10 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
 
     // 日期表單控制
     this.onReportTypeChange('1');
+    this.on_C_ReportTypeChange('1'); //比較報表驗證
     this.setReadOnlyFields();
 
-    // 監聽 dateForm 的變化，套用日期到 queryForm
+    // 監聽 dateForm 的變化，套用日期到 queryForm(比較日是基準日帶入結果，不進行自行控制)
     this.dateForm.valueChanges.subscribe(() => {
       this.syncDateToQueryForm();
     });
@@ -399,6 +439,54 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
     });
   }
 
+  //比較報表驗證
+  on_C_ReportTypeChange(event: any) {
+    // 根據報表類型設定欄位驗證
+    const reportType = event;
+
+    // 清除所有驗證器
+    Object.keys(this.c_dateForm.controls).forEach(key => {
+      if (key !== 'reportType') {
+        this.c_dateForm.get(key)?.clearValidators();
+      }
+    });
+
+    // 根據報表類型設定必要欄位驗證
+    switch (reportType) {
+      case '1': // 日營業報表
+        this.c_dateForm.get('onedatedd')?.setValidators([Validators.required]);
+        break;
+      case '2': // 週營業報表
+        this.c_dateForm.get('onedateyy')?.setValidators([Validators.required]);
+        this.c_dateForm.get('weeks')?.setValidators([Validators.required]);
+        this.c_dateForm.get('startdate')?.setValidators([Validators.required]);
+        this.c_dateForm.get('enddate')?.setValidators([Validators.required]);
+        break;
+      case '3': // 月營業報表
+        this.c_dateForm.get('onedatemm')?.setValidators([Validators.required]);
+        break;
+      case '4': // 半年營業報表
+        this.c_dateForm.get('halfyear_onedateyy')?.setValidators([Validators.required]);
+        break;
+      case '5': // 年營業報表
+        this.c_dateForm.get('year_onedateyy')?.setValidators([Validators.required]);
+        break;
+      case '6': // 區間營業報表
+        this.c_dateForm.get('sad_startdate')?.setValidators([Validators.required]);
+        this.c_dateForm.get('sad_enddate')?.setValidators([Validators.required]);
+        break;
+      case '7': // 活動區間營業報表
+        this.c_dateForm.get('event_startdate')?.setValidators([Validators.required]);
+        this.c_dateForm.get('event_enddate')?.setValidators([Validators.required]);
+        break;
+    }
+
+    // 更新所有欄位驗證狀態
+    Object.keys(this.c_dateForm.controls).forEach(key => {
+      this.c_dateForm.get(key)?.updateValueAndValidity();
+    });
+  }
+
   setReadOnlyFields() {
     this.dateForm.controls['startdate'].disable();
     this.dateForm.controls['enddate'].disable();
@@ -420,16 +508,53 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
 
     let start: Date | null = null;
     let end: Date | null = null;
+    //---比較日期---
+    let compareStart: Date | null = null;
+    let compareEnd: Date | null = null;
+
+    const today = new Date();
+    const yesterday = new Date(today);
+    //---
 
     switch (reportType) {
       case '1': // 日報
         start = this.dateForm.get('onedatedd')?.value ?? null;
         end = start;
+
+        // 比較表單
+        if (start) {
+          yesterday.setDate(start.getDate() - 1);
+          compareStart = yesterday;
+          compareEnd = yesterday;
+
+          console.log('比較日期(日報)', compareStart);
+
+          this.c_dateForm.get('onedatedd')?.setValue(compareStart);
+        }
         break;
 
       case '2': // 週報
         start = this.dateForm.get('startdate')?.value ?? null;
         end = this.dateForm.get('enddate')?.value ?? null;
+
+        // 比較表單
+        if (start) {
+          compareStart = new Date(start as Date);
+          compareStart.setDate((start.getDate() - 7) as number);
+
+          compareEnd = new Date(compareStart);
+          compareEnd.setDate(compareStart.getDate() + 6);
+
+          // 以start為準推算比較年度/週數
+          const compareYear = compareEnd.getFullYear();
+          const compareYearDate = new Date(compareYear, 0, 1);
+          const compareWeek = this.getWeekNumber(compareEnd);
+
+          this.c_dateForm.get('onedateyy')?.setValue(compareYearDate);
+          this.c_dateForm.get('weeks')?.setValue(compareWeek);
+          this.c_dateForm.get('startdate')?.setValue(compareStart);
+          this.c_dateForm.get('enddate')?.setValue(compareEnd);
+        }
         break;
 
       case '3': { // 月報
@@ -437,6 +562,13 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
         if (onedatemm) {
           start = new Date(onedatemm.getFullYear(), onedatemm.getMonth(), 1);
           end = new Date(onedatemm.getFullYear(), onedatemm.getMonth() + 1, 0);
+
+          // 比較表單
+          const compareMonth = new Date(onedatemm.getFullYear(), onedatemm.getMonth() - 1, 1);
+          compareStart = new Date(compareMonth.getFullYear(), compareMonth.getMonth(), 1);
+          compareEnd = new Date(compareMonth.getFullYear(), compareMonth.getMonth() + 1, 0);
+
+          this.c_dateForm.get('onedatemm')?.setValue(compareStart);
         }
         break;
       }
@@ -450,9 +582,21 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
           if (half === '1') { // 上半年
             start = new Date(year, 0, 1);
             end = new Date(year, 5, 30);
+
+            // 比較：去年下半年
+            compareStart = new Date(year - 1, 6, 1);
+            compareEnd = new Date(year - 1, 11, 31);
+            this.c_dateForm.get('halfyear_onedateyy')?.setValue(compareStart);
+            this.c_dateForm.get('halfyear')?.setValue('2');
           } else if (half === '2') { // 下半年
             start = new Date(year, 6, 1);
             end = new Date(year, 11, 31);
+
+            // 比較：今年上半年
+            compareStart = new Date(year, 0, 1);
+            compareEnd = new Date(year, 5, 30);
+            this.c_dateForm.get('halfyear_onedateyy')?.setValue(compareStart);
+            this.c_dateForm.get('halfyear')?.setValue('1');
           }
         }
         break;
@@ -465,23 +609,49 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS31020Response>
         if (year) {
           start = new Date(year, 0, 1);
           end = new Date(year, 11, 31);
+
+          // 比較：去年下半年
+          compareStart = new Date(year - 1, 0, 1);
+          compareEnd = new Date(year - 1, 11, 31);
+
+          this.c_dateForm.get('year_onedateyy')?.setValue(compareStart);
         }
         break;
       }
+      // case '6': // 區間報
+      //   start = this.dateForm.get('sad_startdate')?.value ?? null;
+      //   end = this.dateForm.get('sad_enddate')?.value ?? null;
 
-      case '6': // 區間報
-        start = this.dateForm.get('sad_startdate')?.value ?? null;
-        end = this.dateForm.get('sad_enddate')?.value ?? null;
-        break;
+      //   // 不自動帶入 comparison
+      //   compareStart = null;
+      //   compareEnd = null;
+      //   break;
     }
 
     // 套用到 queryForm
     if (start) this.queryForm.get('TXN_DateS')?.setValue(start);
     if (end) this.queryForm.get('TXN_DateE')?.setValue(end);
+
+    // ----- 寫入比較日期 -----
+    this.queryForm.get('C_TXN_DateS')?.setValue(compareStart);
+    this.queryForm.get('C_TXN_DateE')?.setValue(compareEnd);
+
+    console.log('比較日期(起)', this.queryForm.get('C_TXN_DateS')?.value);
+    console.log('比較日期(迄)', this.queryForm.get('C_TXN_DateE')?.value);
   }
 
   onDetail1(event: any) {
     const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);
     this.onDetail(event, queryConditions);
+  }
+
+  // 算比較表單的週數
+  getWeekNumber(d: Date) {
+    const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const dayNum = date.getDay() || 7; // 週日為 7
+    date.setDate(date.getDate() + 4 - dayNum);
+    const yearStart = new Date(date.getFullYear(), 0, 1);
+    const weekNo = Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+    return String(weekNo);
   }
 }
