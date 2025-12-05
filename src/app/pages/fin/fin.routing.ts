@@ -189,7 +189,7 @@ export const finRoutes: Routes = [
   // 客戶收款明細表
   // { path: 'fin34020', loadComponent: () => import('./fin34020/fin34020.component').then(m => m.FIN34020Component),data:{progNo:'FIN34020'} },
   // 廠客收/付款彙總表
-  // { path: 'fin34030', loadComponent: () => import('./fin34030/fin34030.component').then(m => m.FIN34030Component),data:{progNo:'FIN34030'} },
+  { path: 'fin34030', loadComponent: () => import('./fin34030/fin34030.component').then(m => m.FIN34030Component), data: { progNo: 'FIN34030' } },
   // 應收帳款帳齡分析表
   // { path: 'fin34040', loadComponent: () => import('./fin34040/fin34040.component').then(m => m.FIN34040Component),data:{progNo:'FIN34040'} },
   // 存入保證金維護作業
