@@ -128,7 +128,7 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
         CompNo: this.user!.CompNo,
       };
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
-        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       ));
 
       this.tableLoading.set(!0);

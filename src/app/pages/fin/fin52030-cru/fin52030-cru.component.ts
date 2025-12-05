@@ -291,7 +291,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
         })),
       };
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
-        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       )) as unknown as FIN52030InsertPayload | FIN52030UpdatePayload;
 
       this.tableLoading.set(!0);
