@@ -16,7 +16,7 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -186,41 +186,15 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
     { field: 'Comp_SaleAmt', header: '上期銷售金額', visible: true, format: formatAmount },
     { field: 'Comp_TxnCnt', header: '上期交易筆數', visible: true },
-    { field: 'Comp_AvgTicket', header: '上期客單價', visible: true },
+    { field: 'Comp_AvgTicket', header: '上期客單價', visible: true, format: formatAmount },
     { field: 'Growth_SaleAmtPct', header: '成長比', visible: true, format: (value) => formatPercentage(value, 2) },
 
-    { field: 'Diff_SaleAmt', header: '銷售金額差異', visible: true },
+    { field: 'Diff_SaleAmt', header: '銷售金額差異', visible: true, format: formatAmount },
     { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true },
-    { field: 'Diff_AvgTicket', header: '客單價差異', visible: true },
+    { field: 'Diff_AvgTicket', header: '客單價差異', visible: true, format: formatAmount },
     { field: 'Space', header: '營業坪數', visible: true },
-    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true },
-
-    // { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
-    // { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },
-    // { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2) },
-    // { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
-    // { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
-    // { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount },
-    // { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount },
-    // { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
-    // { field: 'MonthlyPSM', header: '月坪效', visible: true, groupField: 'space' },
-
-    // { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp', format: formatAmount },
-    // { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp', format: formatAmount },
-    // { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', visible: true, groupField: 'temp', format: formatAmount },
-
-    // { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
-    // { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
-    // { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2) },
+    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true }
   ];
-  columnGroup: ColumnGroup[] = [
-    { field: 'budgetAmt', header: '營業額' },
-    { field: 'sum', header: '營業佔比' },
-    { field: 'custCnt', header: '客單價' },
-    { field: 'space', header: '營業坪效' },
-    { field: 'temp', header: '臨時櫃' },
-    { field: 'month', header: '月累計' },
-  ]
   tlt_kind_Option = [
     { value: "1", label: "正櫃" },
     { value: "2", label: "臨時櫃" },
@@ -347,11 +321,10 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
       } as TLS32040Request;
 
-      console.log('送出query請求_api尚未提供', formValue);
       this.tls32040Service.queryTLS32040(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
 
-        this.data = res.Data ?? [];               // 查詢資料
-        this.historyRequestBody = formValue;                 // 查詢條件
+        this.data = res.Data ?? [];                           // 查詢資料
+        this.historyRequestBody = formValue;                  // 查詢條件
         console.log('查詢結果', res.Data);
 
         this.totalRecords = res.TotalCount;
@@ -598,14 +571,6 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         }
         break;
       }
-      // case '6': // 區間報
-      //   start = this.dateForm.get('sad_startdate')?.value ?? null;
-      //   end = this.dateForm.get('sad_enddate')?.value ?? null;
-
-      //   // 不自動帶入 comparison
-      //   compareStart = null;
-      //   compareEnd = null;
-      //   break;
     }
 
     // 套用到 queryForm
