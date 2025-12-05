@@ -138,15 +138,6 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
     // --- 年報（type 5）
     year_onedateyy: [new Date()],
-
-    // --- 區間報（type 6）
-    sad_startdate: [null],
-    sad_enddate: [null],
-
-    // --- 活動區間報（type 7）
-    eventID: [null],
-    event_startdate: [null as Date | null],
-    event_enddate: [null as Date | null],
   });
 
   halfyearOptions = [
@@ -245,6 +236,13 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
       this.syncDateToQueryForm();
     });
 
+    //同步自定義比較表單
+    // this.c_dateForm.valueChanges
+    //   .pipe(untilDestroyed(this))
+    //   .subscribe(() => {
+    //     this.syncCDateToQueryForm();
+    //   });
+
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.tlt_building_Option = res.Data;
     })
@@ -296,16 +294,16 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     })
   }
   onSubmit(frm: FormGroup) {
-    if (this.dateForm.invalid) {
-      this.messageService.errorBubble('基準資料為必填');
-      console.log('基準資料為必填', this.dateForm);
-      return
-    }
-    if (this.c_dateForm.invalid) {
-      this.messageService.errorBubble('比較資料為必填');
-      console.log('比較資料為必填', this.c_dateForm);
-      return
-    }
+    // if (this.dateForm.invalid) {
+    //   this.messageService.errorBubble('基準資料為必填');
+    //   console.log('基準資料為必填', this.dateForm);
+    //   return
+    // }
+    // if (this.c_dateForm.invalid) {
+    //   this.messageService.errorBubble('比較資料為必填');
+    //   console.log('比較資料為必填', this.c_dateForm);
+    //   return
+    // }
 
     this.handleSubmit(frm, () => {
       const formValue = {
@@ -394,6 +392,11 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     } else {
       console.log('api準備中');
     }
+  }
+
+  onChart(frm: FormGroup) {
+    console.log('呼叫圖檔API', frm.value);
+
   }
 
   // #region 日期選單事件
@@ -615,6 +618,77 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
     console.log('比較日期(起)', this.queryForm.get('CompareDateFrom')?.value);
     console.log('比較日期(迄)', this.queryForm.get('CompareDateTo')?.value);
+  }
+
+  // 用戶輸入的比較表單也同步到主表
+  private syncCDateToQueryForm(): void {
+    const type = this.c_dateForm.controls.reportType.value;
+
+    let compareStart: Date | null = null;
+    let compareEnd: Date | null = null;
+
+    switch (type) {
+      case '1': { // 日報
+        const d = this.c_dateForm.controls.onedatedd.value;
+        compareStart = d;
+        compareEnd = d;
+        break;
+      }
+
+      case '2': { // 週報
+        const s = this.c_dateForm.controls.startdate.value;
+        const e = this.c_dateForm.controls.enddate.value;
+        compareStart = s;
+        compareEnd = e;
+        break;
+      }
+
+      case '3': { // 月報
+        const m = this.c_dateForm.controls.onedatemm.value;
+        if (m) {
+          // 計算該月的第一天和最後一天
+          const monthDate = new Date(m);
+          compareStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+          compareEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+        }
+        break;
+      }
+
+      case '4': { // 半年報
+        const yearValue = this.c_dateForm.controls.halfyear_onedateyy.value;
+        const year = yearValue instanceof Date ? yearValue.getFullYear() : Number(yearValue);
+        const half = String(this.c_dateForm.controls.halfyear.value);
+
+        if (year && half) {
+          if (half === '1') { // 上半年
+            compareStart = new Date(year, 0, 1);      // 1/1
+            compareEnd = new Date(year, 5, 30);        // 6/30
+          } else if (half === '2') { // 下半年
+            compareStart = new Date(year, 6, 1);       // 7/1
+            compareEnd = new Date(year, 11, 31);       // 12/31
+          }
+        }
+        break;
+      }
+
+      case '5': { // 年報
+        const yearValue = this.c_dateForm.controls.year_onedateyy.value;
+        const year = yearValue instanceof Date ? yearValue.getFullYear() : Number(yearValue);
+
+        if (year) {
+          compareStart = new Date(year, 0, 1);         // 1/1
+          compareEnd = new Date(year, 11, 31);         // 12/31
+        }
+        break;
+      }
+    }
+
+    // 更新到 queryForm
+    this.queryForm.controls.CompareDateFrom.setValue(compareStart);
+    this.queryForm.controls.CompareDateTo.setValue(compareEnd);
+
+    console.log('比較日期(起)', compareStart);
+    console.log('比較日期(迄)', compareEnd);
   }
 
   onDetail1(event: any) {
