@@ -18,18 +18,18 @@
           <!-- 日營業報表 -->
           <div class="flex col-12" *ngIf="queryForm.controls.reportType.value == '1'">
             <div class="col-6 flex flex-column border-right-1 surface-border">
-              <!-- <div class="col-12 flex justify-content-center">
+              <div class="col-12 flex justify-content-center">
                 <B><u>基準資料查詢條件</u></B>
-              </div> -->
+              </div>
               <div class="col-12">
                 <app-calendar-range-quick label="基準日期" [startControl]="queryForm.controls.onedate_Start"
                   [endControl]="queryForm.controls.onedate_End" [submitted]="submitted"></app-calendar-range-quick>
               </div>
             </div>
             <div class="col-6 flex flex-column">
-              <!-- <div class="col-12 flex justify-content-center">
+              <div class="col-12 flex justify-content-center">
                 <B><u>比較資料查詢條件</u></B>
-              </div> -->
+              </div>
               <!-- 比較日期 -->
 
               <div class="col-12">
@@ -41,9 +41,9 @@
           <!-- 週營業報表 -->
           <div class="flex col-12" *ngIf="queryForm.controls.reportType.value == '2'">
             <div class="col-6 flex flex-column border-right-1 surface-border">
-              <!-- <div class="col-12 flex justify-content-center">
+              <div class="col-12 flex justify-content-center">
                 <B><u>基準資料查詢條件</u></B>
-              </div> -->
+              </div>
               <!-- 基準年度 -->
               <div class="col-12">
                 <app-calendar calendarType="dateYearOne" label="基準年度" [control]="queryForm.controls.onedateyy"
@@ -233,11 +233,14 @@
             <app-multi-select label="區域" controlName="region" [options]="regionOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.region" [submitted]="submitted"></app-multi-select>
           </div>
-
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="大分類/中分類" controlName="bus_type" [options]="businessTypeCodeOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.bus_type"
-              [submitted]="submitted"></app-multi-select>
+            <app-multi-select label="大分類代碼/名稱" controlName="bus_type" [options]="bus_type_Option" optionLabel="label"
+              optionValue="No" [control]="queryForm.controls.bus_type" [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="中分類代碼/名稱" controlName="bus_class" [options]="bus_class_Option" optionLabel="label"
+              [control]="queryForm.controls.bus_class" [submitted]="submitted" [group]="true" optionGroupLabel="label"
+              optionGroupChildren="items"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="櫃別" controlName="tlt_kind" [options]="operationsOptions" optionLabel="label"
