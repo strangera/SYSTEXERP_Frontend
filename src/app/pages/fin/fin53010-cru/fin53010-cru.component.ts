@@ -25,7 +25,7 @@ import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
 import { concatMap, finalize, Observable, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailData, FIN52030Payload } from '../fin52030/fin52030.model';
-import { FIN53010Data, FIN53010DetailTable, FIN53010InsertResult, FIN53010UpdateResult, QueryFIN53010Detail } from '../fin53010/fin53010.model';
+import { FIN53010Data, FIN53010DetailTable, FIN53010InsertPayload, FIN53010InsertResult, FIN53010UpdatePayload, FIN53010UpdateResult, QueryFIN53010Detail } from '../fin53010/fin53010.model';
 
 @Component({
   selector: 'app-fin53010-cru',
@@ -304,7 +304,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const { VouNo, ...d } = this.dataForm.getRawValue();
-      const payload = <any>{
+      const raw = <FIN53010InsertPayload | FIN53010UpdatePayload>{
         ...d,
         Details: this.tableData().map(({ AccAmtD, AccAmtC, NoteDesc, ...rest }, index) => {
           return {
@@ -314,12 +314,15 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
             AccAmt: (AccAmtD ?? 0) + (AccAmtC ?? 0),
             AccDC: AccAmtD ? 'D' : AccAmtC ? 'C' : '',
             ORG_ID: rest.ORG_ID || '100000',
-            VoucherType: d.VoucherType?.padEnd(3, ' ') || 'GL ',
+            VoucherType: (d.VoucherType?.padEnd(3, ' ')) || 'GL ',
             NoteDesc: this.service.noteDescMap().get(String(NoteDesc))?.label ?? NoteDesc,
           };
         }),
-        ...(this.isFormCreateable ? {} : { VouNo }),
+        ...(!this.isFormCreateable && { VouNo }),
       };
+      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+      )) as unknown as FIN53010InsertPayload | FIN53010UpdatePayload;
 
       this.tableLoading.set(!0);
       const request: Observable<FIN53010InsertResult | FIN53010UpdateResult> = this.isFormCreateable

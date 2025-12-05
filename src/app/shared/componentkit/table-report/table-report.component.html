@@ -4,7 +4,7 @@
   [reorderableColumns]="true" (onColReorder)="onColReorder($event)" (onLazyLoad)="onLazyLoad()"
   styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" [selectAll]="isAllSelected"
   (selectAllChange)="onSelectAllChange($event)" (selectionChange)="selectionChange.emit($event)"
-  [rowSelectable]="rowSelectableWrapper" [lazy]="true" [virtualScrollItemSize]="46" [virtualScrollDelay]="0"
+  [rowSelectable]="rowSelectableWrapper" [lazy]="lazy" [virtualScrollItemSize]="46" [virtualScrollDelay]="0"
   [virtualScrollOptions]="{
     inline: true,
     trackBy: trackByFn,

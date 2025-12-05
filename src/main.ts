@@ -105,7 +105,8 @@ bootstrapApplication(AppComponent, {
     { provide: UrlSerializer, useClass: LowerCaseUrlSerializer },
     DatePipe,
     provideServiceWorker('ngsw-worker.js', {
-      enabled: !isDevMode(),
+      // enabled: !isDevMode(),
+      enabled: false,
       registrationStrategy: 'registerWhenStable:30000'
     }),
   ]

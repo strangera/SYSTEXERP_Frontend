@@ -36,6 +36,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input({ required: true }) columns: ReportColumn[] = [];        // 用來儲存查詢結果
   @Input() queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
   virtualData: any = [];
+  @Input() lazy = true;
   @Input() dataKey: string | undefined;         // 用來儲存查詢結果
   selectedColumns: ReportColumn[] = [];     // 用來儲存查詢結果
   // tableKey預設給路由名稱
@@ -115,7 +116,6 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       this.virtualData = [];
       this.groupTotals = {};
       this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
-
       if (this.data.length !== 0) {
         if (this.dt) {
           this.dt.virtualScroll = false;
@@ -137,7 +137,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     }
   }
   loadMoreData() {
-    if (this._loading || !this.queryFunction || !this.lastQueryBody || this.data.length >= this.totalRecords) {
+    if (this._loading || !this.queryFunction || !this.lastQueryBody || this.data.length >= this.totalRecords || !this.lazy) {
       return; // 如果正在載入、沒有查詢函式、沒有查詢條件或已載入全部資料，則退出
     }
     const body = {
@@ -159,7 +159,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     });
   }
   onSort(event: any) {
-    if (this._loading) {
+    if (this._loading || !this.lazy) {
       return;
     }
     if (event.multiSortMeta && event.multiSortMeta.length > 0) {
@@ -223,6 +223,9 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     }
   }
   onScroll(event: any) {
+    if (this._loading || !this.lazy) {
+      return;
+    }
     const pageSize = this.lastQueryBody?.pageSize || 30;
     if (this.data.length >= this.totalRecords || this.data.length < pageSize) {
       this.virtualData = [...this.data];
