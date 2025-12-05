@@ -98,7 +98,7 @@ export interface Fin32020GetARSRequest {
 @Injectable({ providedIn: 'root' })
 export class FIN32020Service {
   /** 對應 FIN32020Controller */
-  private apiUrl = `${environment.ApiUrl}/FIN0000/ARS1000/FIN32020`;
+  private apiUrl = `${environment.ApiUrl}/FIN0000/ARS1000`;
 
   constructor(private http: HttpClient) {}
 
