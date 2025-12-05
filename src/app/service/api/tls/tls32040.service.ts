@@ -98,6 +98,37 @@ export interface TLS32040DetailResponse extends BaseQueryRequest {
   "BaseDays": number, //基準天數（用于計算坪效）
 }
 
+// 折線圖 request
+export interface TLS32040ChartRequest extends BaseQueryRequest {
+  "Year": number, // 年度 (例如 2025) 必填
+
+  "FloorList": string, //樓層（SYS3900） → TLTTALENT_LOCATION.tlt_floor (多選條件（逗號分隔，例如 "1,2,3"）。NULL 或空字串代表不篩選。)
+  "AreaList": string, //區域（SYS3A00） → TLTTALENT_LOCATION.area_no (多選)
+  "BusTypeList": string, //大分類 → TLTTALENT.bus_type (多選)
+  "BusClassList": string, //中分類 → TLTTALENT.bus_class (多選)
+  "TltKindList": string, // 櫃別（SYS1000 TLT_Kind） → TLTTALENT.tlt_kind (多選)
+  "OrgList": string, // 組織 → TLTTALENT.org_id (多選)
+  "TltNoList": string, // 專櫃編號 → TLTTALENT.tlt_no
+  "TermTypeList": string, // 抽成別 → TLTTALENT.tlt_term_type
+  "BuildingList": string, // 館別（SYS3800） → TLTTALENT_LOCATION.tlt_building
+  "AmtTaxMode": string, // 銷售金額是否含稅：'G' = 含稅 (AVN_TotSaleAmt), 'N' = 未稅 (AVN_TotSaleNet). Default: 'G'
+  "ReceFilter": string  // 是否開立業主發票：'A' = 全部 (default), 'Y' = 是, 'N' = 否
+}
+
+// 折線圖 response
+export interface TLS32040ChartResponse extends BaseQueryRequest {
+  "Building": string, // 館別代碼
+  "BuildingName": string, // 館別名稱
+  "TeamId": string, // 單位代碼（TEAM / 館別 / 總計用)
+  "TeamName": string, // 單位名稱（TEAM / 館別 / 總計顯示用）
+  "OrgId": string, // 樓組代碼
+  "OrgName": string, // 樓組名稱
+  "SaleYear": number, // 年度
+  "SaleMonth": number, // 月份
+  "YearMonth": string, // YYYY-MM
+  "SaleAmt": number// 營業額
+}
+
 
 @Injectable({
   providedIn: 'root'
@@ -115,5 +146,15 @@ export class TLS32040Service {
   // 查詢組織預售業績 明細資料
   queryTLS32040Detail(data: TLS32040DetailRequest): Observable<BaseQueryResponse<TLS32040DetailResponse>> {
     return this.http.post<BaseQueryResponse<TLS32040DetailResponse>>(`${this.apiUrl}/queryTLS32040Detail`, data);
+  }
+
+  // 查詢組織預售業績 總表折線圖
+  queryTLS32040Chart(data: TLS32040ChartRequest): Observable<BaseQueryResponse<TLS32040ChartResponse>> {
+    return this.http.post<BaseQueryResponse<TLS32040ChartResponse>>(`${this.apiUrl}/queryTLS32040Chart`, data);
+  }
+
+  // 查詢組織預售業績 總表PDF
+  exportTLS32040PDF(data: TLS32040Request): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/exportTLS32040PDF`, data);
   }
 }
