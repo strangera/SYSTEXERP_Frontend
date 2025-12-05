@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 // Shared
 import { TranslateModule } from '@ngx-translate/core';
@@ -7,7 +7,6 @@ import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 //
@@ -26,7 +25,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
   templateUrl: './fin29120.component.html',
   styleUrl: './fin29120.component.scss',
   standalone: true,
-  imports: [CommonModule, DropdownComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, InputNumberRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [CommonModule, DropdownComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class FIN29120Component extends BasicQueryPageComponent<any> implements OnInit {
   data: any[] = [
@@ -102,50 +101,64 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
         .subscribe((response) => {
 
-          this.data = (response.Data ?? []).map(row => ({
-            ...row,
-            ACPId: row.ACPId
-              ? this.sanitizer.bypassSecurityTrustHtml(
-                `<a href="#"
-          class="acp-link"
-          data-acpid="${row.ACPId}"
-          onclick="window.dispatchEvent(new CustomEvent('acp-open', { detail: '${row.ACPId}' })); return false;"
-        >
-          ${row.ACPId}
-       </a>`
-              )
-              : '',
-            InvoiceNo: row.InvoiceNo
-              ? this.sanitizer.bypassSecurityTrustHtml(
-                `<a href="#"
-            class="invoice-link"
-            data-invoice="${row.InvoiceNo}"
-            onclick="window.dispatchEvent(new CustomEvent('invoice-open', { detail: '${row.InvoiceNo}' })); return false;"
-        >
-          ${row.InvoiceNo}
-        </a>`
-              )
-              : ''
-          }));
+          this.data = (response.Data ?? []).map(row => {
+
+            // 構建 ACPId 的目標 URL (FIN24010CRU)
+            // 使用 Query String 參數: ?acpId=XXX
+            const acpIdUrl = `/account/fin/fin24010cru?acpId=${row.ACPId}`;
+
+            // 構建 InvoiceNo 的目標 URL (FIN13050CRU)
+            // 使用 Query String 參數: ?invoiceNo=XXX
+            const invoiceNoUrl = `/account/fin/fin13050cru?invoiceNo=${row.InvoiceNo}`;
+
+            return {
+              ...row,
+              // *** 重點修改：直接在 onclick 中執行 window.open，並傳入完整的 URL ***
+              ACPId: row.ACPId
+                ? this.sanitizer.bypassSecurityTrustHtml(
+                  // 移除 window.dispatchEvent，直接使用 window.open(url, '_blank')
+                  `<a href="#"
+                    class="acp-link"
+                    data-acpid="${row.ACPId}"
+                    onclick="window.open('${acpIdUrl}', '_blank'); return false;"
+                  >
+                    ${row.ACPId}
+                  </a>`
+                )
+                : '',
+              InvoiceNo: row.InvoiceNo
+                ? this.sanitizer.bypassSecurityTrustHtml(
+                  // 移除 window.dispatchEvent，直接使用 window.open(url, '_blank')
+                  `<a href="#"
+                    class="invoice-link"
+                    data-invoice="${row.InvoiceNo}"
+                    onclick="window.open('${invoiceNoUrl}', '_blank'); return false;"
+                  >
+                    ${row.InvoiceNo}
+                  </a>`
+                )
+                : ''
+            };
+          });
 
           this.totalRecords = response.TotalCount ?? this.data.length;
           this.queryStateService.setQueryState(this.ProgNo, formValue);
         });
     });
   }
-  @HostListener('window:acp-open', ['$event'])
-  onAcpOpen(event: any) {
-    const acpId = event.detail;
-    const url = `/account/fin/fin24010cru/${acpId}`;
-    window.open(url, '_blank', 'noopener');
-  }
+  // @HostListener('window:acp-open', ['$event'])
+  // onAcpOpen(event: any) {
+  //   const acpId = event.detail;
+  //   const url = `/account/fin/fin24010cru?acpId=${acpId}`;
+  //   window.open(url, '_blank', 'noopener');
+  // }
 
-  @HostListener('window:invoice-open', ['$event'])
-  onInvoiceOpen(event: any) {
-    const invoiceNo = event.detail;
-    const url = `/account/fin/fin13050cru/${invoiceNo}`;
-    window.open(url, '_blank', 'noopener');
-  }
+  // @HostListener('window:invoice-open', ['$event'])
+  // onInvoiceOpen(event: any) {
+  //   const invoiceNo = event.detail;
+  //   const url = `/account/fin/fin13050cru?invoiceNo=${invoiceNo}`;
+  //   window.open(url, '_blank', 'noopener');
+  // }
 
 
   private buildQueryPayload(formValue: any): any {

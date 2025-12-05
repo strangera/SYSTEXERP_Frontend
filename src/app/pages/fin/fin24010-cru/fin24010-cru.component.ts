@@ -1,6 +1,7 @@
 import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin24010Service, QueryFIN24010Response } from '@service/api/fin/fin24010.service';
@@ -94,13 +95,20 @@ export class FIN24010CRUComponent extends BasicCruPageComponent<QueryFIN24010Res
   constructor(
     private readonly fin24010Service: Fin24010Service,
     private readonly dropDown: DropdownApiService,
-    private readonly datePipe: DatePipe
+    private readonly datePipe: DatePipe,
+    private readonly route: ActivatedRoute
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN24010', this.dataForm);
+    this.route.queryParams.pipe(untilDestroyed(this)).subscribe(params => {
+      const body = { ACP_No: params['acpid'] }
+      this.fin24010Service.queryFIN24010(body).pipe(untilDestroyed(this)).subscribe(response => {
+        this.dataForm.patchValue(response.Data[0] as any);
+      })
+    });
   }
 
   onSubmit(form: FormGroup): void {
