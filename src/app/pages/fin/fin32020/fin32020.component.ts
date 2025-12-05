@@ -84,34 +84,27 @@ export class FIN32020Component
   tableVer = 0;                // 讓 table key 變化，強制重繪
 
   /* ----------------- 欄位定義 (app-table-report) ----------------- */
+  // 先只顯示主檔欄位（ADJ_No / ADJ_Date / Remark）
   columns: ReportColumn[] = [
-    { field: 'AdjustNo', header: '調整單號' },
+    { field: 'ADJ_No', header: '調整單號' },
     {
-      field: 'AdjustDate',
+      field: 'ADJ_Date',
       header: '調整日期',
       format: (v: string) => this.formatDate(v),
     },
-    { field: 'AdjustRemark', header: '備註' },
-    { field: 'ARS_No', header: '應收帳款單號' },
-    { field: 'AdjustAccNo', header: '調整科目' },
-    {
-      field: 'AdjustAmt',
-      header: '調整金額',
-      format: this.moneyFormat.bind(this),
-    },
-    { field: 'VouNo', header: '傳票單號' },
+    { field: 'Remark', header: '備註' },
   ];
 
-  /** 預設排序：調整日期 DESC, 調整單號 ASC（可自行調整） */
+  /** 預設排序：調整日期 DESC, 調整單號 ASC */
   readonly defaultSort: SortItem[] = [
-    { field: 'AdjustDate', order: -1 },
-    { field: 'AdjustNo', order: 1 },
+    { field: 'ADJ_Date', order: -1 },
+    { field: 'ADJ_No', order: 1 },
   ];
 
   /* ----------------- 查詢表單 ----------------- */
   queryForm = this.formBuilder.group({
-    // 調整單號（對應 @ADJ_No，SP 為 VARCHAR(14)）
-    adjust_ID: [null as number | null, [Validators.maxLength(14)]],
+    // 調整單號（對應 @ADJ_No）
+    adjust_ID: [null as string | null, [Validators.maxLength(14)]],
 
     // 調整日期 起訖（對應 @ADJ_Date_From / @ADJ_Date_To）
     adjust_Date_From: [null as Date | null],
@@ -121,11 +114,11 @@ export class FIN32020Component
     remark: ['', [Validators.maxLength(30)]],
 
     // 傳票單號 起迄（對應 @VouNo_From / @VouNo_To）
-    summons_ID_From: [null as number | null],
-    summons_ID_To: [null as number | null],
+    summons_ID_From: [null as string | null],
+    summons_ID_To: [null as string | null],
 
     // 分頁 + 排序（給 table-report 用）
-    ...createPaginationConfig([{ field: 'AdjustDate', order: -1 }]),
+    ...createPaginationConfig([{ field: 'ADJ_Date', order: -1 }]),
   });
 
   constructor(
@@ -137,9 +130,8 @@ export class FIN32020Component
 
   /* ----------------- LifeCycle ----------------- */
   ngOnInit(): void {
-    // ProgNo / CRU 路徑依你系統規劃
     this.ProgNo = 'FIN32020';
-    this.cruPage = '/FIN3000/FIN32020CRU';
+    this.cruPage = '/fin/fin32020cru';
 
     // 回到查詢頁時如果有歷史條件就自動帶入 + 查一次
     this.initializePage(
@@ -151,11 +143,6 @@ export class FIN32020Component
   }
 
   /* ----------------- Utility ----------------- */
-  private moneyFormat(value: number): string {
-    if (value == null) return '0';
-    return Number(value || 0).toLocaleString('en-US');
-  }
-
   private formatDate(val: string): string {
     if (!val) return '';
     const d = new Date(val);
@@ -187,7 +174,7 @@ export class FIN32020Component
     return cleaned.length ? cleaned : fallback;
   }
 
-  /** 把表單 & table-report body 組成 SP_FIN32020Query 的 Request */
+  /** 把表單 & table-report body 組成 queryFIN32020Request */
   private buildPayload(base: any): Fin32020QueryRequest {
     const raw = this.queryForm.getRawValue();
 
@@ -202,7 +189,6 @@ export class FIN32020Component
 
     const sort = this.normalizeSort(base?.SortBy, this.defaultSort);
 
-    // 產 OrderBy 字串，例如：AdjustDate DESC, AdjustNo ASC
     const orderBy =
       sort && sort.length
         ? sort
@@ -220,29 +206,17 @@ export class FIN32020Component
       OrderBy: orderBy,
       Offset: (pageIndex - 1) * pageSize,
 
-      ADJ_No:
-        raw.adjust_ID !== null && raw.adjust_ID !== undefined
-          ? String(raw.adjust_ID)
-          : null,
+      ADJ_No: raw.adjust_ID ? String(raw.adjust_ID) : null,
 
       ADJ_Date_From: this.toYMDOrNull(raw.adjust_Date_From),
       ADJ_Date_To: this.toYMDOrNull(raw.adjust_Date_To),
 
       Remark: raw.remark || null,
 
-      VouNo_From:
-        raw.summons_ID_From !== null &&
-        raw.summons_ID_From !== undefined
-          ? String(raw.summons_ID_From)
-          : null,
-      VouNo_To:
-        raw.summons_ID_To !== null &&
-        raw.summons_ID_To !== undefined
-          ? String(raw.summons_ID_To)
-          : null,
+      VouNo_From: raw.summons_ID_From ? String(raw.summons_ID_From) : null,
+      VouNo_To: raw.summons_ID_To ? String(raw.summons_ID_To) : null,
     };
 
-    // 把 null / '' 清掉，減少後端處理
     Object.keys(req).forEach((k) => {
       const v = (req as any)[k];
       if (v === '' || v === null || v === undefined) {
@@ -258,31 +232,27 @@ export class FIN32020Component
     this.fin32020Service
       .queryFIN32020(this.buildPayload(body || {}))
       .pipe(
-        map(
-          (
-            res: ApiResponse<Fin32020Row[] | Fin32020Row>
-          ) => {
-            const src = res?.Data as any;
-            const rows: Fin32020Row[] = Array.isArray(src)
-              ? src
-              : src
-              ? [src]
-              : [];
-            const totalCount =
-              Number((res as any)?.TotalCount ?? rows.length) ||
-              rows.length;
+        map((res: ApiResponse<Fin32020Row[] | Fin32020Row>) => {
+          const src = res?.Data as any;
+          const rows: Fin32020Row[] = Array.isArray(src)
+            ? src
+            : src
+            ? [src]
+            : [];
+          const totalCount =
+            Number((res as any)?.TotalCount ?? rows.length) ||
+            rows.length;
 
-            rows.forEach(
-              (r, idx) => ((r as any)._rowKey = idx + 1)
-            );
+          rows.forEach(
+            (r, idx) => ((r as any)._rowKey = idx + 1)
+          );
 
-            return {
-              Data: rows,
-              TotalCount: totalCount,
-              GrandTotal: null,
-            };
-          }
-        )
+          return {
+            Data: rows,
+            TotalCount: totalCount,
+            GrandTotal: null,
+          };
+        })
       );
 
   /* ----------------- Submit（主表查詢） ----------------- */
@@ -306,7 +276,6 @@ export class FIN32020Component
       SortBy: raw.SortBy || this.defaultSort,
     });
 
-    // 強制從第一頁開始
     payload.PageIndex = 1;
     payload.Offset = 0;
 
@@ -345,7 +314,6 @@ export class FIN32020Component
             };
           });
 
-          // 記錄查詢條件，回來可以 restore
           this.queryStateService.setQueryState(
             this.ProgNo,
             this.queryForm.value
@@ -384,7 +352,6 @@ export class FIN32020Component
   }
 
   /* ----------------- 建立 / 編輯 / 明細 ----------------- */
-  // 建立時把目前查詢條件也帶過去（方便 CRU 回來還原）
   onClickCreate() {
     this.onCreate(undefined, this.queryForm.value);
   }

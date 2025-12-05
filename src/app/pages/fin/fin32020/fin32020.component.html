@@ -4,11 +4,11 @@
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
     <div>
-      <app-button
-        btnType="create"
-        (onClick)="onClickCreate()"
-        class="col"
-      ></app-button>
+    <app-button
+      btnType="create"
+      (click)="onCreate()"
+      label="{{ 'create' | translate }}"
+    ></app-button>
     </div>
   </div>
 
