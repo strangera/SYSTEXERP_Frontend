@@ -3,13 +3,14 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { POS2004Info, QueryTLS53010POS2004Request, TLS53010Data, TLS53010DetailQueryRequest, TLS53010InsertManualRequest, TLS53010Service, TLS53010UpdateRequest } from '@service/api/tls/tls53010.service';
+import { POS2004Info, QueryTLS53010POS2004Request, TLS53010Data, TLS53010InsertManualRequest, TLS53010Service, TLS53010UpdateRequest } from '@service/api/tls/tls53010.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { ValidationService } from '@shared/service/validation.service';
@@ -42,7 +43,8 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
     InputTextareaComponent,
     TableEditComponent,
     DialogComponent,
-    TableComponent
+    TableComponent,
+    TableReportComponent
   ]
 })
 export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> implements OnInit {
@@ -75,9 +77,10 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
   data: POS2004Info[] = [];
   selectedItems: POS2004Info[] = [];
   detailLoading = false;
+  lastQueryBody: any;
 
   constructor(
-    private tls53010Service: TLS53010Service,
+    public tls53010Service: TLS53010Service,
     private datePipe: DatePipe,
     private validationService: ValidationService,
     private dropDownListService: DropDownListService,
@@ -95,16 +98,25 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
       if (this.rowdata) {
         this.detailLoading = true;
-        const payload: TLS53010DetailQueryRequest = {
+        const payload = {
           MID: 0,
           PST_No: this.rowdata.PST_No,
           SYS_StoreNo: this.rowdata.SYS_StoreNo,
-          HOS_No: this.rowdata.HOS_No
+          HOS_No: this.rowdata.HOS_No,
+          pageSize: 30,
+          pageIndex: 1,
+          SortBy: [],
         };
+
+        // 先設定 lastQueryBody
+        this.lastQueryBody = payload;
+
         this.tls53010Service.queryTLS53010Detail(payload)
           .pipe(untilDestroyed(this), finalize(() => this.detailLoading = false))
           .subscribe(response => {
             this.data = response.Data;
+            // 更新 totalRecords 以啟用虛擬滾動
+            this.totalRecords = response.TotalCount || response.Data.length;
           });
       }
     }
@@ -344,5 +356,13 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
         PLU_LocNo: item.PLU_LocNo,
       }))
     };
+  }
+
+  queryDetailFunction = (body: any) => {
+    return this.tls53010Service.queryTLS53010Detail(body);
+  };
+
+  onDelete(selectedItems: POS2004Info[]) {
+    this.data = this.data.filter(item => !selectedItems.includes(item));
   }
 }
