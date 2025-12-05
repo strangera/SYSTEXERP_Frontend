@@ -64,10 +64,19 @@
       ]
     }
   },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "tmp",
+    "**/*.spec.ts",
+    "api"
+  ],
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
     "strictInjectionParameters": true,
     "strictInputAccessModifiers": true,
-    "strictTemplates": true
+    "strictTemplates": true,
+    "incremental": true,
+    "tsBuildInfoFile": "./.tsbuildinfo"
   }
 }

@@ -1,7 +1,7 @@
 // 開發環境的 API 路徑
 export const environment = {
   production: false,
-  version: '2025/01/15_V1 09:30', // 手動設定的預設值
+  version: '@@BUILD_VERSION@@', // 手動設定的預設值
   showDebugToggleInMenu: false,
   // AWSApiUrl: 'http://10.60.8.66/TSRD_WEBAPI',
   // AWSBaseUrl: 'http://10.60.8.66/TSRD_WEBAPI',
@@ -11,12 +11,12 @@ export const environment = {
   // ApiUrl: 'http://10.7.55.13/TSRD_WEBAPI',
   // BaseUrl: 'https://43.207.4.99/TSRD_WEBAPIDEV',
   // ApiUrl: 'https://43.207.4.99/TSRD_WEBAPIDEV',
-  BaseUrl: 'https://10.3.11.2/TSRD_WEBAPIDEV',
-  ApiUrl: 'https://10.3.11.2/TSRD_WEBAPIDEV',
+  // BaseUrl: 'https://10.3.11.2/TSRD_WEBAPIDEV',
+  // ApiUrl: 'https://10.3.11.2/TSRD_WEBAPIDEV',
   // BaseUrl: 'https://localhost:44333',
   // ApiUrl: 'https://localhost:44333',
-  // BaseUrl: 'http://localhost:5142',
-  // ApiUrl: 'http://localhost:5142',
+  BaseUrl: 'http://localhost:5142',
+  ApiUrl: 'http://localhost:5142',
 
 
   PasswordKey: '8a9zx@a1231sdl!aafohc.u',
