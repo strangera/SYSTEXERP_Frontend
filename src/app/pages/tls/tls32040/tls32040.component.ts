@@ -76,9 +76,9 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     AmtTaxMode: ["G"],  // 銷售金額是否含稅(G:是 N:否 預設含稅)
     ReceFilter: ['A'],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 A:預設全部))
 
-    pageSize: [30],
+    pageSize: [20],
     pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'TeamId', order: 1 }]],
+    SortBy: [[{ field: 'RowType', order: 1 }]],
   });
 
   // 日期查詢條件表單
@@ -321,13 +321,14 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
       } as TLS32040Request;
 
+      console.log('主查詢請求', formValue);
+
       this.tls32040Service.queryTLS32040(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
 
         this.data = res.Data ?? [];                           // 查詢資料
         this.historyRequestBody = formValue;                  // 查詢條件
-        console.log('查詢結果', res.Data);
-
-        this.totalRecords = res.TotalCount;
+        this.totalRecords = res.TotalCount;              // 等候端
+        console.log('主查詢結果', res.Data);
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })
     })

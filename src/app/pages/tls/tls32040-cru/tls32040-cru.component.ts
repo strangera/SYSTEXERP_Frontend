@@ -128,7 +128,7 @@ export class Tls32040CRUComponent extends BasicCruPageComponent<TLS32040DetailRe
 
     // 重新讀取類別資料
     if (this.queryConditions) {
-      this.queryTLS31020Detail(); // 查詢單組織業績之資料
+      this.queryTLS32040Detail(); // 查詢單組織業績之資料
     } else {
       this.messageService.errorBubble('請返回查詢頁重新操作');
     }
@@ -165,9 +165,10 @@ export class Tls32040CRUComponent extends BasicCruPageComponent<TLS32040DetailRe
     //   });
   }
 
-  queryTLS31020Detail() {
+  queryTLS32040Detail() {
     // 把 OrgId 從 string[] 轉成 string
     const request = {
+      ...this.queryConditions,
       OrgId: this.dataForm.get('OrgId')?.value ?? '',
       BaseDateFrom: formatDate(this.queryConditions.BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
       BaseDateTo: formatDate(this.queryConditions.BaseDateTo, 'yyyy-MM-dd', 'en-US'),
@@ -191,15 +192,15 @@ export class Tls32040CRUComponent extends BasicCruPageComponent<TLS32040DetailRe
       ReceFilter: ([] as string[]).concat(this.queryConditions.ReceFilter || []).join(','),
     } as TLS32040DetailRequest;
 
-    // console.log('單組織之營業報表request', request);
-    console.log('單組織之營業報表request', JSON.stringify(request, null, 2));
+    console.log('單組織之營業報表request', request);
+    // console.log('單組織之營業報表request', JSON.stringify(request, null, 2));
 
     this.tls32040Service.queryTLS32040Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
       console.log('單組織之營業報表response', res.Data);
       this.data = res.Data ?? [];               // 查詢資料
       this.historyRequestBody = request;        // 查詢條件
       console.log('明細資料', res.Data);
-      this.totalRecords = res.TotalCount;
+      this.totalRecords = res.TotalCount;        // 等候端
     })
   }
 }
