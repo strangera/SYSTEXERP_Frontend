@@ -176,8 +176,8 @@ export const finRoutes: Routes = [
   { path: 'fin32010', loadComponent: () => import('./fin32010/fin32010.component').then(m => m.FIN32010Component), data: { progNo: 'FIN32010' } },
   { path: 'fin32010cru', loadComponent: () => import('./fin32010-cru/fin32010-cru.component').then(m => m.FIN32010CRUComponent), data: { progNo: 'FIN32010' } },
   // 應收帳款調整作業
-  // { path: 'fin32020', loadComponent: () => import('./fin32020/fin32020.component').then(m => m.FIN32020Component),data:{progNo:'FIN32020'} },
-  // { path: 'fin32020cru', loadComponent: () => import('./fin32020-cru/fin32020-cru.component').then(m => m.FIN32020CRUComponent),data: { progNo: 'FIN32020'} },
+  { path: 'fin32020', loadComponent: () => import('./fin32020/fin32020.component').then(m => m.FIN32020Component),data:{progNo:'FIN32020'} },
+  { path: 'fin32020cru', loadComponent: () => import('./fin32020-cru/fin32020-cru.component').then(m => m.FIN32020CRUComponent),data: { progNo: 'FIN32020'} },
   // 收款沖帳維護
   // { path: 'fin32030', loadComponent: () => import('./fin32030/fin32030.component').then(m => m.FIN32030Component),data:{progNo:'FIN32030'} },
   // { path: 'fin32030cru', loadComponent: () => import('./fin32030-cru/fin32030-cru.component').then(m => m.FIN32030CRUComponent),data: { progNo: 'FIN32030'} },
@@ -189,7 +189,7 @@ export const finRoutes: Routes = [
   // 客戶收款明細表
   // { path: 'fin34020', loadComponent: () => import('./fin34020/fin34020.component').then(m => m.FIN34020Component),data:{progNo:'FIN34020'} },
   // 廠客收/付款彙總表
-  // { path: 'fin34030', loadComponent: () => import('./fin34030/fin34030.component').then(m => m.FIN34030Component),data:{progNo:'FIN34030'} },
+  { path: 'fin34030', loadComponent: () => import('./fin34030/fin34030.component').then(m => m.FIN34030Component), data: { progNo: 'FIN34030' } },
   // 應收帳款帳齡分析表
   // { path: 'fin34040', loadComponent: () => import('./fin34040/fin34040.component').then(m => m.FIN34040Component),data:{progNo:'FIN34040'} },
   // 存入保證金維護作業

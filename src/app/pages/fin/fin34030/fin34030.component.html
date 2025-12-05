@@ -1,8 +1,6 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
 
   <p-accordion>
@@ -20,15 +18,15 @@
         <div class="grid p-fluid">
           <!-- 廠客代號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="廠客代號"
-              controlName="fncCode"
-              [options]="fncCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.fncCode"
+              controlName="PartyNoList"
+              [options]="partyNoOptions | async"
+              [optionLabel]="'label'"
+              [optionValue]="'value'"
+              [control]="queryForm.controls.PartyNoList"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
 
           <!-- 立帳日期 -->
@@ -36,8 +34,8 @@
             <app-calendar-range
               calendarType="dateRange"
               label="立帳日期"
-              [startControl]="queryForm.controls.sPostDate"
-              [endControl]="queryForm.controls.ePostDate"
+              [startControl]="queryForm.controls.DocDateFrom"
+              [endControl]="queryForm.controls.DocDateTo"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
@@ -47,8 +45,8 @@
             <app-calendar-range
               calendarType="dateRange"
               label="收/付款日期"
-              [startControl]="queryForm.controls.sRpd"
-              [endControl]="queryForm.controls.eRpd"
+              [startControl]="queryForm.controls.PayDateFrom"
+              [endControl]="queryForm.controls.PayDateTo"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
@@ -58,19 +56,23 @@
             <app-calendar-range
               calendarType="dateRange"
               label="調整日期"
-              [startControl]="queryForm.controls.sAdjDate"
-              [endControl]="queryForm.controls.eAdjDate"
+              [startControl]="queryForm.controls.AdjDateFrom"
+              [endControl]="queryForm.controls.AdjDateTo"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
+        </div>
 
+        <hr />
+
+        <div class="grid p-fluid">
           <!-- 應付金額是否顯示 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               label="應付金額是否顯示"
-              groupname="displayAmountRadio"
-              [control]="queryForm.controls.displayAmount"
-              [options]="displayAmountOptions"
+              groupname="ShowAPAmount"
+              [control]="queryForm.controls.ShowAPAmount"
+              [options]="showAPAmountOptions"
               [submitted]="submitted"
             ></app-radiobutton>
           </div>
@@ -79,8 +81,8 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               label="帳款餘額為零是否顯示"
-              groupname="zeroBalanceDisplayRadio"
-              [control]="queryForm.controls.showZeroBalance"
+              groupname="ShowZeroBalance"
+              [control]="queryForm.controls.ShowZeroBalance"
               [options]="showZeroBalanceOptions"
               [submitted]="submitted"
             ></app-radiobutton>
@@ -90,36 +92,60 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               label="是否只顯示專櫃"
-              groupname="displayOnlyCounter"
-              [control]="queryForm.controls.displayOnlyCounter"
-              [options]="displayOnlyCounterOptions"
+              groupname="OnlyTLT"
+              [control]="queryForm.controls.OnlyTLT"
+              [options]="onlyTLTOptions"
               [submitted]="submitted"
             ></app-radiobutton>
           </div>
         </div>
-      </form>
 
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
+            btnType="clear"
+            [type]="'button'"
+            (clickEvent)="onClear(queryForm)"
           ></app-button>
+
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
-      </div>
+      </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table-report
+    [tableKey]="'fin34030_' + tableVer"
+    [dataKey]="'ARAP_DocNo'"
+    [columns]="columns"
+    [data]="data"
+    [totalRecords]="viewTotalRecords"
+    [loading]="loading"
+    [showManage]="false"
+    [showFilter]="true"
+    [showExcel]="false"
+    [queryFunction]="queryFIN34030ForReport"
+    [lastQueryBody]="lastQueryBody"
+    [showDelete]="false"
+    [showReportMode]="false"
+    [showCheckBox]="false"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+  >
+    <header>
+      <div class="flex justify-content-end gap-2">
+        <p-button
+          styleClass="p-2"
+          label="匯出 PDF"
+          icon="pi pi-file-pdf"
+          [loading]="btnExportPdfLoading"
+          (click)="downloadFIN34030PDF()"
+          [disabled]="btnExportPdfLoading"
+        ></p-button>
+      </div>
+    </header>
+  </app-table-report>
 </div>

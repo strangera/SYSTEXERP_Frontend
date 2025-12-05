@@ -1,23 +1,22 @@
+import { DatePipe } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { finalize, Observable } from 'rxjs';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, AddButton, formatDate, formatAmount } from '../../../shared/componentkit/table/table.model';
-import { TLS53010Data, TLS53010DetailData, TLS53010Service } from '../../../service/api/tls/tls53010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import saveAs from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { TLS53010Data, TLS53010Service } from '../../../service/api/tls/tls53010.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { DatePipe } from '@angular/common';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
-import { HttpResponse } from '@angular/common/http';
-import saveAs from 'file-saver';
+import { AddButton, Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls53010',
@@ -116,46 +115,6 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
     const state = this.loadingStates.get(id)!;
     state[action] = loading;
   }
-
-  // 展開行設置
-  expansionColumns: Column[] = [
-    // {
-    //   field: 'LOGO_No',
-    //   header: '品牌代碼/名稱',
-    //   hidden: true,
-    //   format: (v, i, r) => `${r.LOGO_No}-${r.LOGO_CH_NAME}`
-    // },
-    { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
-    { field: 'PLU_No', header: '國際條碼', visible: true },
-    { field: 'PLU_Name', header: '商品名稱', visible: true },
-    {
-      field: 'CAT_LNo',
-      header: '大分類代碼/名稱',
-      visible: true,
-      format: (v, i, r) => `${r.CAT_LNo}-${r.CAT_LName}`
-    },
-    {
-      field: 'CAT_MNo',
-      header: '中分類代碼/名稱',
-      visible: true,
-      format: (v, i, r) => `${r.CAT_MNo}-${r.CAT_MName}`
-    },
-    {
-      field: 'CAT_SNo',
-      header: '小分類代碼/名稱',
-      visible: true,
-      format: (v, i, r) => `${r.CAT_SNo}-${r.CAT_SName}`
-    },
-    // { field: 'PLU_Attribute', header: '商品型態', visible: true },
-    { field: 'PLU_AttributeName', header: '商品型態', visible: true },
-    { field: 'PLU_SalePrc', header: '商品售價', visible: true, format: formatAmount },
-    // {
-    //   field: 'HOS_No',
-    //   header: '倉別代碼/名稱',
-    //   hidden: true,
-    //   format: (v, i, r) => `${r.HOS_No}-${r.HOS_NAME}`
-    // }
-  ]
 
   constructor(
     private tls53010Service: TLS53010Service,
@@ -278,11 +237,6 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
           console.error('匯出失敗:', err);
         }
       });
-  }
-
-  // 載入明細資料
-  loadDetails = (rowData: TLS53010Data): Observable<BaseQueryResponse<TLS53010DetailData>> => {
-    return this.tls53010Service.queryTLS53010Detail(this.createDetailQueryRequest(rowData));
   }
 
   private createDetailQueryRequest(rowData: TLS53010Data) {
