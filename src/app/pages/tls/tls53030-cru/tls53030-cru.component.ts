@@ -73,6 +73,7 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
 
   //#region 明細資料
   detailData: TLS53030DetailData[] = [];
+  originalDetailData: TLS53030DetailData[] = [];
   selectedItems: TLS53030DetailData[] = [];
   detailLoading = false;
 
@@ -202,6 +203,8 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
     this.tls53030Service.queryTLS53030Detail(payload)
       .pipe(untilDestroyed(this), finalize(() => this.detailLoading = false))
       .subscribe(response => {
+        // 使用深拷貝保存原始資料
+        this.originalDetailData = JSON.parse(JSON.stringify(response.Data));
         this.detailData = response.Data;
       });
   }
@@ -226,5 +229,10 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
           label: `${item.No}-${item.Name}`
         }));
       });
+  }
+
+  resetTable() {
+    // 使用深拷貝重置明細資料
+    this.detailData = JSON.parse(JSON.stringify(this.originalDetailData));
   }
 }
