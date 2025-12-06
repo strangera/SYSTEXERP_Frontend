@@ -240,21 +240,18 @@ export function validateBusTaxExmpCardRequired(
 
 /** 新增模式用的來源發票欄位（用於 table-edit） */
 export const COLUMNS_NATURAL_EDIT: EditColumn[] = [
-  { field: 'TXN_GUIBegNo', header: '發票號碼起' },
-  { field: 'TXN_GUIEndNo', header: '發票號碼迄', disabled: () => true },
+  { field: 'TXN_GUIBegNo', header: '發票號碼' },
   { field: 'TXN_Date', header: '交易日期' },
-  { field: 'TXN_TotGUI', header: '發票發票金額' },
+  { field: 'TXN_TotGUI', header: '發票金額' },
   { field: 'ECR_No', header: '收銀機號' },
   { field: 'TXN_No', header: '交易序號' },
   { field: 'TXN_Uniform', header: '統一編號' },
-  { field: 'TXN_TotGUISaleTax', header: '應稅發票金額' },
-  { field: 'TXN_TotGUISaleNoTax', header: '免稅發票金額' },
+  { field: 'TXN_TotGUISaleTax', header: '應稅金額' },
+  { field: 'TXN_TotGUISaleNoTax', header: '免稅金額' },
   { field: 'TXN_TotTax', header: '稅額' },
   { field: 'TXN_TaxType', header: '稅別' },
-  { field: 'TXN_TaxType_Name', header: '稅別(名稱)' },
-  { field: 'TXN_TotSaleTax', header: '應稅發票金額', disabled: () => true },
-  { field: 'TXN_TotSaleNoTax', header: '免稅發票金額', disabled: () => true },
 ];
+
 
 /** 查看模式用的來源發票欄位（用於 app-table） */
 export const COLUMNS_NATURAL_VIEW: Column[] = [
@@ -330,6 +327,7 @@ export const COLUMNS_DETAIL_EDIT: EditColumn[] = [
     field: 'INV_ItemName',
     header: '項目名稱',
     type: 'template',
+    isUserInput: true,
     width: '100%',
     validate: [validateRequired]
   },

@@ -211,6 +211,11 @@ export class TableEditComponent implements OnChanges {
   onValueChange(rowData: any, value: any, col: EditColumn, index: number) {
     if (this.disabled) { return; }
     this.tableDataEmpty = false;
+    if ((col as any).isUserInput === true && rowData._isAutoInsertCandidate) {
+      rowData._isAutoInsertCandidate = false;
+      // 標示這筆為 New（避免共通把它當成舊資料）
+      rowData[this.dataStatusField] = this.dataStatusValue.New;
+    }
     this.validationService.validateField(rowData, col, value, this._tableData);
     // 執行所有狀態轉換、計算、驗證和自動新增邏輯
     const { shouldInsertNewRow, cleanData } = this.dataService.updateRowOnValueChange(
