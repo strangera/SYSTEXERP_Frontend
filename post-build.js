@@ -35,10 +35,10 @@ try {
   // 4. 移除模板檔案
   fs.unlinkSync(templatePath);
 
-  console.log(`✅ [${configName}] web.config 已成功生成!`);
+  console.log(`[${configName}] web.config 已成功生成!`);
   console.log(`檔案位置: ${targetPath}`);
 } catch (error) {
-  console.error('❌ 生成 web.config 失敗:', error.message);
+  console.error('生成 web.config 失敗:', error.message);
   console.error(`請確認 ${templatePath} 檔案是否存在。`);
   process.exit(1);
 }

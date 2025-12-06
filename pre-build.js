@@ -12,21 +12,20 @@ const targetProdFile = path.join(__dirname, 'src', 'environments', 'environment.
 const targetStagingFile = path.join(__dirname, 'src', 'environments', 'environment.staging.ts');
 
 const versionPlaceholder = '@@BUILD_VERSION@@';
-const newVersion = `${formattedDate}`; 
-// 如果使用 Git， newVersion = `v${commitHash}-${formattedDate}`; 
-
+const newVersion = `${formattedDate}`;
+// newVersion = `v${commitHash}-${formattedDate}`; // 如果使用 Git Commit Hash 來作為版本號
 try {
-    const filesToUpdate = [targetProdFile, targetStagingFile];
-    
-    filesToUpdate.forEach(filePath => {
-        let content = fs.readFileSync(filePath, 'utf8');
-        // 替換佔位符
-        content = content.replace(versionPlaceholder, newVersion);
-        fs.writeFileSync(filePath, content, 'utf8');
-    });
+  const filesToUpdate = [targetEnvFile, targetProdFile, targetStagingFile];
 
-    console.log(`✅ Environment 版本更新為: ${newVersion}`);
+  filesToUpdate.forEach(filePath => {
+    let content = fs.readFileSync(filePath, 'utf8');
+    // 替換佔位符
+    content = content.replace(versionPlaceholder, newVersion);
+    fs.writeFileSync(filePath, content, 'utf8');
+  });
+
+  console.log(`Environment 版本更新為: ${newVersion}`);
 } catch (error) {
-    console.error('❌ 版本寫入失敗:', error.message);
-    process.exit(1);
+  console.error('版本寫入失敗:', error.message);
+  process.exit(1);
 }
