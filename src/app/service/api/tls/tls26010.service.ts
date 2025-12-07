@@ -124,7 +124,7 @@ export class TLS26010Service {
           ECR_No: item.ecr_no, // tls26010的組成都是吃ECR_No，這邊先進行轉換
         }));
         this.ecrOptions.set(mapped);
-        console.log('收銀機號查詢 request 💡:', query);
+        console.log('收銀機號查詢 request :', query);
         console.log(`收銀機號查詢結果:`, res.Data);
       }),
       finalize(() => this.ecrLoading.set(false)),
@@ -164,7 +164,7 @@ export class TLS26010Service {
       take(1),
       tap(res => {
         this.tltOptions.set(res.Data || []);
-        console.log('專櫃編號查詢 request 💡:', requestBody);
+        console.log('專櫃編號查詢 request :', requestBody);
         console.log('專櫃編號查詢 response:', res.Data);
       }),
       finalize(() => this.tltLoading.set(false))
@@ -187,7 +187,7 @@ export class TLS26010Service {
     return this.http.post<TLS26010DetailResponse>(`${apiUrl}/TLS0000/TLS2000/queryTLS26010Detail`, query).pipe(
       take(1),
       tap(res => {
-        console.log('預購活動檔期細節 request 💡:', query);
+        console.log('預購活動檔期細節 request :', query);
         console.log('預購活動檔期細節 response:', res.Data);
       }
       ),

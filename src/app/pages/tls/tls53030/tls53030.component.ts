@@ -357,6 +357,6 @@ export class TLS53030Component extends BasicQueryPageComponent<TLS53030Data> imp
 
   // 編輯禁用
   editDisabled(rowData: TLS53030Data) {
-    return !['0', '1', '2', '3'].includes(rowData.PST_Status)
+    return !['0', '1', '2', '3'].includes(rowData.PST_Status) || rowData.PST_Type === '尚未盤點'
   }
 }
