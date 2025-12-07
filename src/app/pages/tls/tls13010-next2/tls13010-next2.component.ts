@@ -1147,8 +1147,73 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   // === 驗證和提交 ===
+  /**
+   * 🔧 確保所有已勾選的 discount 都有對應的 level 項目
+   * 這個方法在提交前調用，確保即使使用者沒有切換到 level 標籤，
+   * 也能正確建立 level 項目
+   */
+  private ensureAllDiscountsHaveLevels(): void {
+    console.log('='.repeat(80));
+    console.log('🔄 開始確保所有 discount 都有對應的 level');
+
+    this.commissionData.forEach((commissionItem, commissionIndex) => {
+      // 跳過已刪除的抽成項目
+      if (commissionItem._status === 'deleted') {
+        return;
+      }
+
+      console.log(`\n處理抽成項目 ${commissionIndex + 1}: ${commissionItem.tlt_id_desc}`);
+
+      // 遍歷所有折扣設定
+      commissionItem.discountSettingItems?.forEach((discount, discountIndex) => {
+        console.log(`  檢查 discount ${discountIndex + 1}: ${discount.cag_barcode}, selected: ${discount.selected}, status: ${discount._status}`);
+
+        // 只處理已勾選且未刪除的 discount
+        if (!discount.selected || discount._status === 'deleted') {
+          console.log(`    ⏭️ 跳過 (未勾選或已刪除)`);
+          return;
+        }
+
+        // 檢查是否已有對應的 level
+        const existingLevels = commissionItem.discountLevelItems?.filter(
+          level => level.charged_id === discount.id && level._status !== 'deleted'
+        ) || [];
+
+        console.log(`    找到 ${existingLevels.length} 個對應的 level (charged_id: ${discount.id})`);
+
+        if (existingLevels.length === 0) {
+          // 沒有對應的 level，需要新增
+          console.log(`    ✨ 需要新增 level 項目`);
+          this.tableService.syncDiscountLevelBasedOnSelection(commissionItem, discount);
+          console.log(`    ✅ 已為 ${discount.cag_barcode} 新增 level 項目`);
+        } else {
+          // 已有對應的 level，確保 selected = true
+          existingLevels.forEach(level => {
+            if (!level.selected) {
+              console.log(`    🔧 修正 level selected 狀態: false → true`);
+              level.selected = true;
+            }
+          });
+        }
+      });
+    });
+
+    console.log('\n✅ 所有 discount 的 level 檢查完成');
+    console.log('='.repeat(80));
+  }
+
   async onSubmitNext(): Promise<void> {
     console.log('📝 Next2: 準備提交契約資料');
+
+    // 🔒 防止重複提交
+    if (this.loading) {
+      console.warn('⚠️ 正在提交中，忽略重複請求');
+      return;
+    }
+
+    // 🔧 關鍵修正：在提交前強制同步所有 discount 到 level
+    console.log('🔄 提交前強制同步所有 discount 到 level');
+    this.ensureAllDiscountsHaveLevels();
 
     // 驗證資料
     const validation = this.validationService.validateAllData(this.commissionData);
@@ -1420,6 +1485,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
  */
   onGoToNext3(): void {
     console.log('📝 Next2: 前往 Next3 設定條件');
+
+    // 🔧 關鍵修正：在前往 Next3 前也要確保 discount 都有對應的 level
+    console.log('🔄 前往 Next3 前強制同步所有 discount 到 level');
+    this.ensureAllDiscountsHaveLevels();
 
     // 驗證資料
     const validation = this.validationService.validateAllData(this.commissionData);
