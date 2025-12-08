@@ -237,11 +237,11 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     });
 
     //同步自定義比較表單
-    // this.c_dateForm.valueChanges
-    //   .pipe(untilDestroyed(this))
-    //   .subscribe(() => {
-    //     this.syncCDateToQueryForm();
-    //   });
+    this.c_dateForm.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(() => {
+        this.syncCDateToQueryForm();
+      });
 
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.tlt_building_Option = res.Data;
@@ -622,10 +622,14 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
   // 用戶輸入的比較表單也同步到主表
   private syncCDateToQueryForm(): void {
-    const type = this.c_dateForm.controls.reportType.value;
+    const type = this.dateForm.get('reportType')?.value; //這邊要抓主表的reportType
 
     let compareStart: Date | null = null;
     let compareEnd: Date | null = null;
+
+    // console.log('手動變更比較表單，起: ', compareStart, "迄: ", compareEnd);
+    // console.log('月份表單', this.c_dateForm.value);
+    // console.log('目前類型', type);
 
     switch (type) {
       case '1': { // 日報
@@ -636,10 +640,24 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
       }
 
       case '2': { // 週報
-        const s = this.c_dateForm.controls.startdate.value;
-        const e = this.c_dateForm.controls.enddate.value;
-        compareStart = s;
-        compareEnd = e;
+        const chooseYear = this.c_dateForm.get('onedateyy')?.value ?? null;
+        const chooseWeeks = this.c_dateForm.get('weeks')?.value ?? null;
+
+        if (chooseYear && chooseWeeks) {
+
+          const yearNumber = chooseYear.getFullYear(); // <-- 修正這裡！
+
+          console.log('選擇年份:', yearNumber, '選擇週次:', chooseWeeks);
+
+          const { weekStart, weekEnd } = this.getDateRangeByYearWeek(yearNumber, Number(chooseWeeks));
+
+          this.queryForm.patchValue({
+            CompareDateFrom: weekStart,
+            CompareDateTo: weekEnd,
+          });
+
+          console.log('更新 CompareDateFrom / CompareDateTo: ', weekStart, weekEnd);
+        }
         break;
       }
 
@@ -704,5 +722,26 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     const yearStart = new Date(date.getFullYear(), 0, 1);
     const weekNo = Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
     return String(weekNo);
+  }
+
+  // 給年 + 週數 → 回傳該週的開始日期（週一）與結束日期（週日）
+  getDateRangeByYearWeek(year: number, week: number) {
+    // 先建立該年的 1 月 4 日（ISO 規範的 anchor day）
+    const simple = new Date(year, 0, 4);
+
+    // 取得該年的第一個 ISO 週的週一
+    const dayOfWeek = simple.getDay() || 7; // 週日 = 7
+    const firstWeekMonday = new Date(simple);
+    firstWeekMonday.setDate(simple.getDate() - dayOfWeek + 1);
+
+    // 該週的週一 = 第一週的週一 + (週數 - 1) * 7 天
+    const weekStart = new Date(firstWeekMonday);
+    weekStart.setDate(firstWeekMonday.getDate() + (week - 1) * 7);
+
+    // 該週的週日
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+
+    return { weekStart, weekEnd };
   }
 }

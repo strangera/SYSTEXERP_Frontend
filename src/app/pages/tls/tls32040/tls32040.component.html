@@ -109,7 +109,6 @@
                   label="比較年度"
                   [control]="c_dateForm.controls.onedateyy"
                   [submitted]="submitted"
-                  [disabled]="true"
                 ></app-calendar>
               </div>
               <!-- 週數 -->
@@ -120,7 +119,6 @@
                   [control]="c_dateForm.controls.weeks"
                   (blurEvent)="queryWeek($event)"
                   [submitted]="submitted"
-                  [disabled]="true"
                 ></app-input-text>
               </div>
               <!-- 日期範圍 -->
@@ -130,6 +128,7 @@
                   [startControl]="c_dateForm.controls.startdate"
                   [endControl]="c_dateForm.controls.enddate"
                   [submitted]="submitted"
+                  [disabled]="true"
                 />
               </div>
             </div>
