@@ -30,7 +30,7 @@ import { CellInput } from './table-edit-cell.model';
     TooltipModule
   ]
 })
-export class TemplateCellComponent {
+export class FIN32020TemplateCellComponent {
   @Input({ required: true }) cellInput!: CellInput;
   protected readonly tableUtilityService = inject(TableUtilityService);
   isDisabled(): boolean {

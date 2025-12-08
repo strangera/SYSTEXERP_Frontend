@@ -64,6 +64,7 @@
         [defaultInsertData]="defaultDetailRow"
         [showPaginator]="false"
         [scrollable]="false"
+         [showCaption]="false" 
         (dataChange)="onDetailDataChange($event)"
         (fieldChange)="onDetailFieldChange($event)"
         (delete)="onDetailDelete($event)"
@@ -89,22 +90,37 @@
 <!-- ====== 應收帳款單號查詢 Dialog ====== -->
 <app-dialog
   [(visible)]="arsDialogVisible"
-  [title]="'選擇應收帳款'"
+  [header]="'選擇應收帳款'"
 >
   <form
     [formGroup]="arsSearchForm"
     (ngSubmit)="onSearchARS()"
     class="grid p-fluid mb-3"
   >
+    <!-- 廠客代號 -->
     <div class="col-12 md:col-4 lg:col-3">
       <app-input-text
         label="廠客代號"
-        controlName="custNo"
-        [control]="arsSearchForm.controls.custNo"
+        controlName="VEN_No"
+        [control]="arsSearchForm.controls.VEN_No"
         [submitted]="false"
       ></app-input-text>
     </div>
 
+    <!-- 立帳日 -->
+    <div class="col-12 md:col-4 lg:col-3">
+
+                 <app-calendar-range
+              calendarType="dateRange"
+              label="立帳日"
+              [startControl]="arsSearchForm.controls.ARS_Date_From"
+              [endControl]="arsSearchForm.controls.ARS_Date_To"
+              [submitted]="submitted"
+            ></app-calendar-range>
+    </div>
+
+
+    <!-- 查詢按鈕 -->
     <div class="col-12 md:col-4 lg:col-3 flex align-items-end">
       <app-button btnType="query" [type]="'submit'"></app-button>
     </div>
@@ -129,10 +145,11 @@
   </app-table>
 </app-dialog>
 
+
 <!-- ====== 調整科目代號查詢 Dialog ====== -->
 <app-dialog
   [(visible)]="adjAccDialogVisible"
-  [title]="'選擇調整科目'"
+  [header]="'選擇調整科目'"
 >
   <app-table
     [tableKey]="'fin32020AdjAcc'"
