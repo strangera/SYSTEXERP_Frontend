@@ -37,18 +37,18 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TableEditDataService } from './services/fin32020table-edit-data.service';
 import { TableUtilityService } from './services/fin32020table-edit-utility.service';
 import { TableValidationService } from './services/fin32020table-validation.service';
-import { DateCellComponent } from './fin32020table-edit-cell/date-cell.component';
-import { DropdownCellComponent } from './fin32020table-edit-cell/dropdown-cell.component';
-import { InputCellComponent } from './fin32020table-edit-cell/input-cell.component';
-import { NumberCellComponent } from './fin32020table-edit-cell/number-cell.component';
-import { PercentCellComponent } from './fin32020table-edit-cell/percent-cell.component';
-import { CellInput } from './fin32020table-edit-cell/table-edit-cell.model';
+import { FIN32020DateCellComponent } from './fin32020table-edit-cell/FIN32020date-cell.component';
+import { FIN32020DropdownCellComponent } from './fin32020table-edit-cell/FIN32020dropdown-cell.component';
+import { FIN32020InputCellComponent } from './fin32020table-edit-cell/FIN32020input-cell.component';
+import { FIN32020NumberCellComponent } from './fin32020table-edit-cell/FIN32020number-cell.component';
+import { FIN32020PercentCellComponent } from './fin32020table-edit-cell/FIN32020percent-cell.component';
+import { FIN32020CellInput } from './fin32020table-edit-cell/FIN32020table-edit-cell.model';
 import {
   ColumnGroup,
   EditColumn,
   FieldChangeEvent,
 } from './fin32020table-edit.model';
-import { FIN32020TemplateCellComponent } from './fin32020table-edit-cell/template-cell.component';
+import { FIN32020TemplateCellComponent } from './fin32020table-edit-cell/FIN32020template-cell.component';
 
 @Component({
   selector: 'app-fin32020table-edit',
@@ -404,15 +404,15 @@ export class FIN32020TableEditComponent implements OnChanges {
   getEditComponent(type: EditColumn['type']): Type<any> | undefined {
     switch (type) {
       case 'input':
-        return InputCellComponent;
+        return FIN32020InputCellComponent;
       case 'percent':
-        return PercentCellComponent;
+        return FIN32020PercentCellComponent;
       case 'inputNumber':
-        return NumberCellComponent;
+        return FIN32020NumberCellComponent;
       case 'dropdown':
-        return DropdownCellComponent;
+        return FIN32020DropdownCellComponent;
       case 'date':
-        return DateCellComponent;
+        return FIN32020DateCellComponent;
       case 'template':
         return FIN32020TemplateCellComponent;
       default:
@@ -421,7 +421,7 @@ export class FIN32020TableEditComponent implements OnChanges {
   }
 
   // NgComponentOutlet 的輸入參數
-  public cellInputData(rowData: any, col: EditColumn, index: number): CellInput {
+  public cellInputData(rowData: any, col: EditColumn, index: number): FIN32020CellInput {
     return {
       rowData,
       col,

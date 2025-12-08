@@ -6,7 +6,7 @@ import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { TooltipModule } from 'primeng/tooltip';
 import { TableUtilityService } from '../services/fin32020table-edit-utility.service'; // 🎯 引入服務
 import { EditColumn } from '../fin32020table-edit.model';
-import { CellInput } from './table-edit-cell.model';
+import { FIN32020CellInput } from './FIN32020table-edit-cell.model';
 
 @Component({
   selector: 'app-template-cell',
@@ -31,7 +31,7 @@ import { CellInput } from './table-edit-cell.model';
   ]
 })
 export class FIN32020TemplateCellComponent {
-  @Input({ required: true }) cellInput!: CellInput;
+  @Input({ required: true }) cellInput!: FIN32020CellInput;
   protected readonly tableUtilityService = inject(TableUtilityService);
   isDisabled(): boolean {
     const col = this.cellInput.col;
