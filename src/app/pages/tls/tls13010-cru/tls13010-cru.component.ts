@@ -34,7 +34,7 @@ import { TLS13010DataLoaderService } from './services/data-loader.service';
 import { FormStateService } from './services/form-state.service';
 import { LocationDataManagementService } from './services/location-data-management.service';
 import { RentCalculationService } from './services/rent-calculation.service';
-import { TLS13010FormInitService } from './services/tls13010-cru.formInit.service';
+import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
 import { DateValidationService } from './validation/date-validation.service';
 import { EmailValidationService } from './validation/email-validation.service';
 import { TLS13010ValidationService } from './validation/tls13010-validation.service';
@@ -334,7 +334,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   constructor(
     // 核心服務
-    private formInitService: TLS13010FormInitService,
+    private tlsBaseService: TlsContractBaseService,
     private locationManagementService: LocationDataManagementService,
     private dataLoaderService: TLS13010DataLoaderService,
 
@@ -430,7 +430,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.crudstatus = CRUDStatus.Edit;
 
     // 使用 service 取得標題
-    this.formTitle = this.formInitService.getFormTitle(
+    this.formTitle = this.getFormTitle(
       this.contractFlowService.isNewContractMode(),
       this.isViewMode
     );
@@ -632,7 +632,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 新建模式：設定預設值
     if (this.contractFlowService.isNewContractMode()) {
       console.log('  🆕 新建模式：設定預設值');
-      this.formInitService.setCurrentUserAsNegotiator(this.dataForm);
+      this.tlsBaseService.setCurrentUserAsNegotiator(this.dataForm);
       this.saveToWorkflow();
       console.log('   預設值設定完成');
       return;
@@ -1197,6 +1197,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.setupAutoSave();
     this.setupBusTypeListener();
     this.setupVendorUniformListener();
+    this.setupDateAutoFillListeners();
 
     console.log('   監聽器設定完成');
   }
@@ -1276,6 +1277,79 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     if (venUniformSubscription) {
       this.subscriptions.push(venUniformSubscription);
     }
+  }
+
+  /**
+   * 設定日期自動填充監聽器
+   * 1. 回函日期預帶當天，回函截止日預帶當天+15天
+   * 2. 契約起始日/截止日輸入完，營運起始日/截止日預帶相同日期
+   */
+  private setupDateAutoFillListeners(): void {
+    // 1. 監聽新建模式：回函日期預帶今天
+    if (this.contractFlowService.isNewContractMode()) {
+      const today = new Date();
+      const todayStr = this.formatDate(today);
+
+      // 預設回函日期為今天
+      if (!this.dataForm.get('feedback_date')?.value) {
+        this.dataForm.patchValue({ feedback_date: todayStr }, { emitEvent: false });
+      }
+
+      // 預設回函截止日為今天+15天（重新創建 Date 物件避免污染）
+      if (!this.dataForm.get('due_date')?.value) {
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 15);
+        this.dataForm.patchValue({ due_date: this.formatDate(dueDate) }, { emitEvent: false });
+      }
+    }
+
+    // 2. 監聽回函日期變更，自動更新回函截止日（+15天）
+    const feedbackDateSub = this.dataForm.get('feedback_date')?.valueChanges
+      .pipe(distinctUntilChanged())
+      .subscribe(feedbackDate => {
+        if (feedbackDate && !this.isViewMode) {
+          const date = new Date(feedbackDate);
+          if (!isNaN(date.getTime())) {
+            date.setDate(date.getDate() + 15);
+            this.dataForm.patchValue({ due_date: this.formatDate(date) }, { emitEvent: false });
+          }
+        }
+      });
+
+    // 3. 監聽契約起始日變更，自動更新營運起始日
+    const contractStartSub = this.dataForm.get('tlt_bdate')?.valueChanges
+      .pipe(distinctUntilChanged())
+      .subscribe(contractStart => {
+        if (contractStart && !this.isViewMode) {
+          // 每次契約起始日變更都自動帶入營運起始日
+          this.dataForm.patchValue({ tlt_contract_bdate: contractStart }, { emitEvent: false });
+        }
+      });
+
+    // 4. 監聽契約截止日變更，自動更新營運截止日
+    const contractEndSub = this.dataForm.get('tlt_edate')?.valueChanges
+      .pipe(distinctUntilChanged())
+      .subscribe(contractEnd => {
+        if (contractEnd && !this.isViewMode) {
+          // 每次契約截止日變更都自動帶入營運截止日
+          this.dataForm.patchValue({ tlt_contract_edate: contractEnd }, { emitEvent: false });
+        }
+      });
+
+    // 加入訂閱清單
+    if (feedbackDateSub) this.subscriptions.push(feedbackDateSub);
+    if (contractStartSub) this.subscriptions.push(contractStartSub);
+    if (contractEndSub) this.subscriptions.push(contractEndSub);
+  }
+
+  /**
+   * 格式化日期為 YYYY-MM-DD
+   */
+  private formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   /**
@@ -1558,8 +1632,8 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   onClearForm(): void {
     if (confirm('確定要清除所有輸入的資料嗎?此操作無法復原。')) {
-      // 使用 service 重設表單
-      this.formInitService.resetFormToDefaults(this.dataForm);
+      // 使用共用 service 重設表單
+      this.tlsBaseService.resetToDefaults(this.dataForm, 'TLS13010', ['apply_no', 'tlt_no']);
 
       this.locationData = []; // 清除位置資料
       this.contractFlowService.clearTempData();
@@ -2169,9 +2243,17 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   getApplyNoPlaceholder(): string {
-    return this.formInitService.getApplyNoPlaceholder(
-      this.contractFlowService.isNewContractMode()
-    );
+    return this.contractFlowService.isNewContractMode() ? "'系統自動產生'" : '';
+  }
+
+  /**
+   * 根據模式取得表單標題
+   */
+  private getFormTitle(isNewMode: boolean, isViewMode: boolean): string {
+    if (isViewMode) {
+      return '檢視合約資料';
+    }
+    return isNewMode ? '新增合約資料' : '編輯合約資料';
   }
 
   private checkRequiredFieldsBeforeSubmit(): boolean {
@@ -2198,15 +2280,27 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.dataForm.patchValue({ ven_uniform: vendorNo }, { emitEvent: false });
     }
 
-    const result = this.formInitService.checkRequiredFields(this.dataForm);
+    // 檢查必填欄位
+    const requiredFields = [
+      'tlt_name', 'bus_type', 'bus_class', 'tlt_bdate', 'tlt_edate',
+      'org_id', 'tlt_contract_bdate', 'tlt_contract_edate',
+      'tlt_term_type', 'comm_comp_type', 'invoice_type'
+    ];
 
-    if (!result.isComplete) {
-      // 🔍 打印缺失的欄位
-      console.log('❌ 缺失的必填欄位:', result.missingFields);
+    const missingFields: string[] = [];
+    requiredFields.forEach(fieldName => {
+      const control = this.dataForm.get(fieldName);
+      if (control && !control.value) {
+        missingFields.push(fieldName);
+      }
+    });
 
-      const missingFieldNames = result.missingFields
+    if (missingFields.length > 0) {
+      console.log('❌ 缺失的必填欄位:', missingFields);
+
+      const missingFieldNames = missingFields
         .map(field => {
-          const displayName = this.formInitService.getFieldDisplayName(field);
+          const displayName = this.tlsBaseService.getFieldDisplayName(field);
           const currentValue = this.dataForm.get(field)?.value;
           console.log(`  - ${field} (${displayName}): 當前值 =`, currentValue);
           return displayName;
@@ -2214,8 +2308,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         .join('、');
 
       this.messageService.warnBubble(`請填寫必填欄位: ${missingFieldNames}`);
-
-      // 🔍 額外的調試信息
       console.log('========== 調試完成 ==========');
       return false;
     }
