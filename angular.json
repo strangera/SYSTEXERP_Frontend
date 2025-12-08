@@ -34,8 +34,8 @@
             "assets": [
               "src/favicon.ico",
               "src/assets",
-              "src/web.config",
               "src/serve.json",
+              "src/web.config.template",
               {
                 "glob": "**/*",
                 "input": "public",
@@ -84,7 +84,66 @@
               "outputHashing": "all",
               "aot": true,
               "optimization": true,
-              "serviceWorker": "ngsw-config.json"
+              "serviceWorker": "ngsw-config.json",
+              "assets": [
+                "src/web.config",
+                "src/favicon.ico",
+                "src/assets",
+                "src/serve.json",
+                {
+                  "glob": "**/*",
+                  "input": "public",
+                  "output": "/"
+                }
+              ]
+            },
+            "tsrdwebdev": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.staging.ts"
+                }
+              ],
+              "outputHashing": "none",
+              "optimization": false,
+              "sourceMap": true,
+              "extractLicenses": false,
+              "baseHref": "/tsrdwebdev/",
+              "assets": [
+                "src/favicon.ico",
+                "src/assets",
+                "src/serve.json",
+                "src/web.config.template",
+                {
+                  "glob": "**/*",
+                  "input": "public",
+                  "output": "/"
+                }
+              ]
+            },
+            "tsrdweb": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
+                }
+              ],
+              "outputHashing": "all",
+              "aot": true,
+              "optimization": true,
+              "serviceWorker": "ngsw-config.json",
+              "baseHref": "/TSRDWEB/",
+              "assets": [
+                "src/favicon.ico",
+                "src/assets",
+                "src/serve.json",
+                "src/web.config.template",
+                {
+                  "glob": "**/*",
+                  "input": "public",
+                  "output": "/"
+                }
+              ]
             },
             "development": {
               "optimization": {

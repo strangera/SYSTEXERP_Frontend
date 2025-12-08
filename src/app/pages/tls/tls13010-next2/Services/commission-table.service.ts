@@ -110,7 +110,7 @@ export class CommissionTableService {
       } else if (linkedLevelItems.length > 0) {
         // 如果已存在 level，將 selected 設為 true
         linkedLevelItems.forEach(level => {
-          level.selected = false;
+          level.selected = true;
         });
         console.log(`🔄 已將折扣 ${discountItem.cag_barcode} 的 ${linkedLevelItems.length} 個 Level 項目 selected 設為 true`);
       }

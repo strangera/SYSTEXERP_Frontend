@@ -36,6 +36,7 @@ export interface EditColumn {
   view?: CalendarTypeView;
   minDate?: Date;
   maxDate?: Date;
+  isUserInput?: boolean; // 模板是否當成輸入欄位
   // 事件
   calculate?: (rowData: any, value: any) => Record<string, any>;
   onFocus?: (rowData: any, value: any, col: EditColumn, index: number) => void;

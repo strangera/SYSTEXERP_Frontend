@@ -17,7 +17,7 @@
         ],
         // 允許單次訂閱（例如 HTTP 請求）使用 take(1) 或 first()
         "checkComplete": true,
-        // 檢查訂閱鏈中的每個 observable 
+        // 檢查訂閱鏈中的每個 observable
         "checkEach": true
       }
     ],
@@ -29,7 +29,7 @@
     // 3. 確保手動取消訂閱是可行的 (必須賦值給變數)
     // 避免有人寫了 this.service.pipe(...).subscribe() 卻沒辦法取消
     "@angular-eslint/no-ignored-subscribe": "error"
-    // 💡 注意：您不需要其他規則來強制執行手動或自動模式，
+    //  注意：您不需要其他規則來強制執行手動或自動模式，
     // 上述規則會涵蓋所有有效的取消訂閱模式。
   }
 }

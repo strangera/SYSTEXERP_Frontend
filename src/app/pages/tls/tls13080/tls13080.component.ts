@@ -1,25 +1,25 @@
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms'; // 引入 AbstractControl
+import { untilDestroyed } from '@ngneat/until-destroy'; // 引入直到組件銷毀才停止訂閱的工具
 import { TranslateModule } from '@ngx-translate/core'; //  引入 TranslateService
+import { Tls13080InsertRequest, Tls13080QueryRequest, Tls13080Response, Tls13080Service } from '@service/api/tls/tls13080.service'; //  修正 Tls13080CreateRequest 為 Tls13080InsertRequest
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService, IAPS1003Item } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { AccordionModule } from 'primeng/accordion';
-import { untilDestroyed } from '@ngneat/until-destroy'; // 引入直到組件銷毀才停止訂閱的工具
-import { PanelModule } from 'primeng/panel';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { Tls13080InsertRequest, Tls13080QueryRequest, Tls13080Response, Tls13080Service } from '@service/api/tls/tls13080.service'; // 💡 修正 Tls13080CreateRequest 為 Tls13080InsertRequest
-import { finalize } from 'rxjs';
-import { DropDownListService, IAPS1003Item } from '@service/utility/dropDownList.service';
+import { AccordionModule } from 'primeng/accordion';
+import { PanelModule } from 'primeng/panel';
 import { TableSelectAllChangeEvent } from 'primeng/table';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-tls13080',

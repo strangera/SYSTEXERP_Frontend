@@ -1,10 +1,10 @@
 /// <reference types="@angular/localize" />
 import { DatePipe } from '@angular/common';
-import { HTTP_INTERCEPTORS, HttpClient, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import { importProvidersFrom, isDevMode } from '@angular/core';
+import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
+import { importProvidersFrom } from '@angular/core';
 import { bootstrapApplication, provideClientHydration } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { provideRouter, UrlSerializer } from '@angular/router';
+import { PreloadAllModules, provideRouter, UrlSerializer, withPreloading } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
 import { JwtModule } from '@auth0/angular-jwt';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
@@ -13,13 +13,13 @@ import { LoggerModule, NgxLoggerLevel } from 'ngx-logger';
 import { ConfirmationService, MessageService, PrimeNGConfig } from 'primeng/api';
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routing';
-import { AuthinterceptorService } from './app/core/interceptors/authinterceptor.service';
-import { CustomheaderinterceptorService } from './app/core/interceptors/customheaderinterceptor.service';
-import { DateToISOStringInterceptor } from './app/core/interceptors/dateToISOStringInterceptor.interceptor';
-import { DebugHeaderInterceptor } from './app/core/interceptors/debug-header.interceptor';
-import { ErrorinterceptorService } from './app/core/interceptors/errorinterceptor.service';
-import { HTTPRequestInterceptorService } from './app/core/interceptors/httpRequest.interceptor';
-import { QueryCacheInterceptorService } from './app/core/interceptors/querycacheinterceptor.service';
+import { authInterceptor } from './app/core/interceptors/auth.interceptor';
+import { customHeaderInterceptor } from './app/core/interceptors/custom-header.interceptor';
+import { dateToISOStringInterceptor } from './app/core/interceptors/date-to-iso-string.interceptor';
+import { debugHeaderInterceptor } from './app/core/interceptors/debug-header.interceptor';
+import { errorInterceptor } from './app/core/interceptors/error.interceptor';
+import { httpRequestInterceptor } from './app/core/interceptors/http-request.interceptor';
+import { queryCacheInterceptor } from './app/core/interceptors/query-cache.interceptor';
 import { LowerCaseUrlSerializer } from './app/core/utils/LowerCaseUrlSerializer';
 import { environment } from './environments/environment';
 
@@ -34,6 +34,12 @@ export function tokenGetter() {
   }
   return null;
 }
+
+const primeNgProviders = [
+  MessageService,
+  ConfirmationService,
+  PrimeNGConfig,
+];
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -62,46 +68,20 @@ bootstrapApplication(AppComponent, {
         timestampFormat: 'yyyy-MM-dd HH:mm:ss:SSS',
       }),
     ),
-    provideRouter(routes), // 提供路由模組
-    provideHttpClient(withInterceptorsFromDi()), // 啟用 HttpClient 並讓其支援 DI 提供的攔截器
-    MessageService,
-    ConfirmationService,
-    PrimeNGConfig,
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: AuthinterceptorService, // 再處理認證
-      multi: true
-    },
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: CustomheaderinterceptorService, // 添加自定義頭部
-      multi: true
-    },
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: DateToISOStringInterceptor, // 序列化日期
-      multi: true
-    },
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: ErrorinterceptorService, // 處理錯誤
-      multi: true
-    },
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: QueryCacheInterceptorService, // 查詢快取攔截器
-      multi: true
-    },
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: HTTPRequestInterceptorService, // 路由變更時取消請求攔截器
-      multi: true
-    },
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: DebugHeaderInterceptor,
-      multi: true
-    },
+    provideRouter(
+      routes,
+      withPreloading(PreloadAllModules)
+    ),
+    provideHttpClient(withInterceptors([
+      authInterceptor,
+      customHeaderInterceptor,
+      dateToISOStringInterceptor,
+      debugHeaderInterceptor,
+      errorInterceptor,
+      httpRequestInterceptor,
+      queryCacheInterceptor
+    ])), // 啟用 HttpClient 並讓其支援 DI 提供的攔截器
+    ...primeNgProviders,
     { provide: UrlSerializer, useClass: LowerCaseUrlSerializer },
     DatePipe,
     provideServiceWorker('ngsw-worker.js', {

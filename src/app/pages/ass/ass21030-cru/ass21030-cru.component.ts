@@ -127,6 +127,38 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
             // 編輯模式: 取得上一期
             this.fetchPreviousReading(meterNo);
           }
+        } else {
+          // 清空錶號時，也清空上次抄表資料
+          this.dataForm.patchValue({
+            ENG_LastReadingDate: null,
+            ENG_CurrentReading_Last: 0
+          });
+        }
+      });
+
+    // 監聽能源類型變更，如果已選擇錶號則重新取得資料
+    this.dataForm.controls.ENG_Type.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(() => {
+        const meterNo = this.dataForm.controls.ENG_MeterNo.value;
+        if (meterNo) {
+          if (this.crudstatus === CRUDStatus.Create) {
+            this.fetchLatestReading(meterNo);
+          } else if (this.crudstatus === CRUDStatus.Edit) {
+            this.fetchPreviousReading(meterNo);
+          }
+        }
+      });
+
+    // 監聽結算年月變更，如果是編輯模式且已選擇錶號則重新取得資料
+    this.dataForm.controls.ENG_YYMM.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(() => {
+        if (this.crudstatus === CRUDStatus.Edit) {
+          const meterNo = this.dataForm.controls.ENG_MeterNo.value;
+          if (meterNo) {
+            this.fetchPreviousReading(meterNo);
+          }
         }
       });
   }

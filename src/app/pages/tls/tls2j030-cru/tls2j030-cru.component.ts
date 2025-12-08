@@ -60,6 +60,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
 
   // 儲存查詢到的 ECR_No
   currentEcrNo = '';
+  // (已移除即時暫存警告，改為按送出時統一驗證)
 
 
   // 使用 model 檔案中的欄位定義
@@ -299,11 +300,8 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       const detailTotal = this.detailEditData.reduce((sum, item) => sum + (Number(item.INV_SaleAmt) || 0), 0);
       const changeTotal = Number(data[0]?.TXN_SaleAmt) || 0;
 
-      if (changeTotal !== 0 && Math.abs(detailTotal - changeTotal) > 0.01) {
-        this.messageService.warnBubble(
-          `提醒：換開發票銷售金額 (${changeTotal.toFixed(2)}) 與商品明細總計 (${detailTotal.toFixed(2)}) 不一致`
-        );
-      }
+      // 不在編輯時顯示警告，改為在按送出時統一驗證與提示
+      // （保留邏輯但不顯示）
     }
   }
 
@@ -312,6 +310,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     const txnGuiBegNo = this.dataForm.get('TXN_GUIBegNo')?.value;
 
     if (!txnGuiBegNo) {
+      // 不在查詢按鈕或輸入時顯示警告，改為在送出時統一驗證
       this.messageService.warnBubble('請輸入來源發票號碼');
       return;
     }
@@ -342,6 +341,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
           const todayYYMM = this.formatDateToYYYYMM(new Date().toISOString());
 
           if (sourceYYMM !== todayYYMM) {
+            // 查詢時仍需即時回饋使用者查詢結果（來源發票非當期）
             this.messageService.warnBubble(`來源發票非當期發票 (${sourceYYMM})，無法新增`);
             return;
           }
@@ -366,11 +366,8 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       const currentSaleAmt = Number(row.TXN_SaleAmt) || 0;
 
       // 檢查金額是否一致，如果不一致則顯示警告
-      if (currentSaleAmt !== 0 && Math.abs(currentSaleAmt - total) > 0.01) {
-        this.messageService.warnBubble(
-          `注意：商品明細金額總計 (${total.toFixed(2)}) 與換開發票銷售金額 (${currentSaleAmt.toFixed(2)}) 不一致，已自動調整為明細總計`
-        );
-      }
+      // 不在編輯時顯示警告，僅自動調整數值；提醒將在送出時顯示
+      // （若要在此處提示使用者請改用 messageService.warnBubble）
 
       row.TXN_SaleAmt = total;
 
@@ -408,8 +405,8 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
         TXN_GUIEndNo: (sourceItem['TXN_GUIEndNo'] as string) || '',
         TXN_TotGUI: (sourceItem['TXN_TotGUI'] as number) || 0,
         TXN_TaxType: (sourceItem['TXN_TaxType'] as string) || '',
-        TXN_TotSaleTax: (sourceItem['TXN_TotSaleTax'] as number) || 0,
-        TXN_TotSaleNoTax: (sourceItem['TXN_TotSaleNoTax'] as number) || 0,
+        TXN_TotSaleTax: Number(sourceItem['TXN_TotGUISaleTax']) || 0,
+        TXN_TotSaleNoTax: Number(sourceItem['TXN_TotGUISaleNoTax']) || 0,
         TXN_TotTax: (sourceItem['TXN_TotTax'] as number) || 0
       };
     });
@@ -451,6 +448,57 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
 
   /** 送出 */
   onSubmit(frm: FormGroup) {
+    // 在按送出時統一驗證：收集警告，顯示後中止送出；若為錯誤則顯示錯誤並中止
+    const warnings = new Set<string>();
+
+    if (!this.data || this.data.length === 0) {
+      warnings.add('請先查詢來源發票');
+    }
+
+    if (!this.changeEditData || this.changeEditData.length === 0) {
+      warnings.add('請填寫換開發票資料');
+    }
+
+    if (!this.detailEditData || this.detailEditData.length === 0) {
+      warnings.add('請填寫商品明細資料');
+    }
+
+    // 若存在換開與明細，檢查金額一致性（這裡視為錯誤，與 insertData 的檢查一致）
+    // 先檢查：來源發票合計（應稅 + 免稅 + 交易稅）必須等於換開發票的銷售金額
+    if (this.data && this.data.length > 0 && this.changeEditData.length > 0) {
+      const sourceSum = this.data.reduce((sum, item) => {
+        const tax = Number((item as any).TXN_TotGUISaleTax) || 0;
+        const notax = Number((item as any).TXN_TotGUISaleNoTax) || 0;
+        const txnTax = Number((item as any).TXN_TotTax) || 0;
+        return sum + tax + notax + txnTax;
+      }, 0);
+      const changeTotalCheck = Number(this.changeEditData[0]?.TXN_SaleAmt) || 0;
+      if (Math.abs(sourceSum - changeTotalCheck) > 0.01) {
+        this.messageService.errorBubble(
+          `來源發票金額合計 (${sourceSum.toFixed(2)}) 與換開發票銷售金額 (${changeTotalCheck.toFixed(2)}) 不一致，請檢查來源或換開發票金額`
+        );
+        return;
+      }
+    }
+
+    if (this.changeEditData.length > 0 && this.detailEditData.length > 0) {
+      const detailTotal = this.detailEditData.reduce((sum, item) => sum + (Number(item.INV_SaleAmt) || 0), 0);
+      const changeTotal = Number(this.changeEditData[0]?.TXN_SaleAmt) || 0;
+      if (Math.abs(detailTotal - changeTotal) > 0.01) {
+        this.messageService.errorBubble(
+          `商品明細金額總計 (${detailTotal.toFixed(2)}) 與換開發票銷售金額 (${changeTotal.toFixed(2)}) 不一致，請檢查資料`
+        );
+        return;
+      }
+    }
+
+    if (warnings.size > 0) {
+      for (const msg of warnings) {
+        this.messageService.warnBubble(msg);
+      }
+      return; // 中止送出，讓使用者先處理警告
+    }
+
     this.handleSubmit(frm, () => {
       this.insertData();
     });
@@ -665,19 +713,19 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
    * 開啟項目選擇對話框
    */
   openItemDialog(rowData: TLS2J030Data): void {
-    console.log('openItemDialog called with:', rowData);
-    if (!rowData._TABLE_KEY) {
-      rowData._TABLE_KEY = 'detail_' + Date.now() + '_' + Math.random();
+    const idx = this.detailEditData.findIndex(r => r._TABLE_KEY === rowData._TABLE_KEY);
+
+    // 如果找不到 _TABLE_KEY → 用 index 建立
+    if (idx !== -1 && !this.detailEditData[idx]._TABLE_KEY) {
+      this.detailEditData[idx]._TABLE_KEY = 'detail_' + Date.now() + '_' + Math.random();
     }
-    this.currentEditingRow = rowData;
+
+    this.currentEditingRow = this.detailEditData[idx];
     this.selectedBusType = '';
     this.selectedItemName = '';
     this.itemNameOptions = [];
     this.showItemDialog = true;
-
-    console.log('showItemDialog set to:', this.showItemDialog);
   }
-
 
   /**
    * 確認選擇項目名稱

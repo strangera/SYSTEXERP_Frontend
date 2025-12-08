@@ -1019,6 +1019,23 @@ export class DataCleaner {
       this.processCommissionDetails(commission, discountSettings, annualSettings, levelSettings);
     });
 
+    // 🔍 最終檢查：確認 discount 和 level 的 ID 都正確
+    console.log('='.repeat(80));
+    console.log('📊 DataCleaner 清理完成，最終結果:');
+    console.log('  Discount toInsert:', discountSettings.toInsert.map(d => ({
+      id: d.id,
+      id_type: typeof d.id,
+      cag_barcode: d.cag_barcode
+    })));
+    console.log('  Level toInsert:', levelSettings.toInsert.map(l => ({
+      id: l.id,
+      id_type: typeof l.id,
+      charged_id: l.charged_id,
+      charged_id_type: typeof l.charged_id,
+      cag_barcode: l.cag_barcode
+    })));
+    console.log('='.repeat(80));
+
     return { masters, discountSettings, annualSettings, levelSettings };
   }
 
@@ -1032,12 +1049,12 @@ export class DataCleaner {
 
     // 處理折扣設定明細
     commission.discountSettingItems?.forEach((detail: any) => {
-      console.log(`處理折扣項目: ${detail.cag_barcode}, selected: ${detail.selected}, status: ${detail._status}`);
+      console.log(`處理折扣項目: ${detail.cag_barcode}, selected: ${detail.selected}, status: ${detail._status}, id: ${detail.id}`);
 
       // 關鍵修正：處理取消勾選的現有項目
       if (!detail.selected && this.hasValidId(detail.id)) {
         console.log(`處理取消勾選的折扣項目: ${detail.cag_barcode} (ID: ${detail.id})`);
-        discountSettings.toDelete.push({ id: Number(detail.id) });
+        discountSettings.toDelete.push({ id: String(detail.id) });  // 🔑 修正：toDelete 也要用 String
         return;
       }
 
@@ -1048,8 +1065,13 @@ export class DataCleaner {
       }
 
       // 處理已勾選的項目
+      // 🔧 修正：所有項目的 id 都統一為 String 格式
+      // - 新增項目: "temp_XXX"
+      // - 現有項目: "10707"（數字轉字串）
       const cleanDetail = {
-        ...(this.hasValidId(detail.id) ? { id: Number(detail.id) } : {}),
+        ...(detail.id ? {
+          id: String(detail.id)  // 🔑 統一轉為 String
+        } : {}),
         tlt_id: commission.tlt_id || '',
         cag_barcode: detail.cag_barcode || '',
         tlt_bdate: this.formatDate(detail.tlt_bdate),
@@ -1057,16 +1079,19 @@ export class DataCleaner {
         cag_charge_rate: this.parseNumber(detail.cag_charge_rate) || 0
       };
 
+      console.log(`  → cleanDetail for ${detail.cag_barcode}:`, { id: cleanDetail.id, hasId: !!cleanDetail.id });
+
       switch (detail._status) {
         case 'new':
           discountSettings.toInsert.push(cleanDetail);
+          console.log(`    ✅ 加入 toInsert (id: ${cleanDetail.id})`);
           break;
         case 'modified':
           discountSettings.toUpdate.push(cleanDetail);
           break;
         case 'deleted':
           if (this.hasValidId(detail.id)) {
-            discountSettings.toDelete.push({ id: Number(detail.id) });
+            discountSettings.toDelete.push({ id: String(detail.id) });  // 🔑 修正：toDelete 也要用 String
           }
           break;
       }
@@ -1102,12 +1127,12 @@ export class DataCleaner {
 
     // 處理層級抽成明細
     commission.discountLevelItems?.forEach((detail: any, index: number) => {
-      console.log(`處理層級抽成項目: ${detail.cag_barcode}, selected: ${detail.selected}, status: ${detail._status}`);
+      console.log(`處理層級抽成項目: ${detail.cag_barcode}, selected: ${detail.selected}, status: ${detail._status}, id: ${detail.id}, charged_id: ${detail.charged_id}`);
 
       // 關鍵修正：處理取消勾選的現有項目
       if (!detail.selected && this.hasValidId(detail.id)) {
         console.log(`處理取消勾選的層級抽成項目: ${detail.cag_barcode} (ID: ${detail.id})`);
-        levelSettings.toDelete.push({ id: Number(detail.id) });
+        levelSettings.toDelete.push({ id: String(detail.id) });  // 🔑 修正：toDelete 也要用 String
         return;
       }
 
@@ -1118,27 +1143,43 @@ export class DataCleaner {
       }
 
       // 處理已勾選的項目
+      // 🔧 修正：所有項目的 id 和 charged_id 都統一為 String 格式
+      // - 新增項目: id: "temp_YYY", charged_id: "temp_XXX"
+      // - 現有項目: id: "456", charged_id: "123"（數字轉字串）
       const cleanLevel = {
-        ...(this.hasValidId(detail.id) ? { id: Number(detail.id) } : {}),
+        ...(detail.id ? {
+          id: String(detail.id)  // 🔑 統一轉為 String
+        } : {}),
         tlt_id: commission.tlt_id || '',
         seq_no: index + 1,
         cag_barcode: detail.cag_barcode || '',
         level_bmount: this.parseNumber(detail.level_bmount) || 0,
         level_eamount: this.parseNumber(detail.level_eamount) || 0,
         level_charge_rate: this.parseNumber(detail.level_charge_rate) || 0,
-        charged_id: detail.charged_id
+        // charged_id 必須包含，用於關聯 discount
+        ...(detail.charged_id ? {
+          charged_id: String(detail.charged_id)  // 🔑 統一轉為 String
+        } : {})
       };
+
+      console.log(`  → cleanLevel for ${detail.cag_barcode}:`, {
+        id: cleanLevel.id,
+        charged_id: cleanLevel.charged_id,
+        hasId: !!cleanLevel.id,
+        hasChargedId: !!cleanLevel.charged_id
+      });
 
       switch (detail._status) {
         case 'new':
           levelSettings.toInsert.push(cleanLevel);
+          console.log(`    ✅ 加入 toInsert (id: ${cleanLevel.id}, charged_id: ${cleanLevel.charged_id})`);
           break;
         case 'modified':
           levelSettings.toUpdate.push(cleanLevel);
           break;
         case 'deleted':
           if (this.hasValidId(detail.id)) {
-            levelSettings.toDelete.push({ id: Number(detail.id) });
+            levelSettings.toDelete.push({ id: String(detail.id) });  // 🔑 修正：toDelete 也要用 String
           }
           break;
       }
