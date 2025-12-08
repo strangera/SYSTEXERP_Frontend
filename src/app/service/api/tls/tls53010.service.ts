@@ -114,6 +114,7 @@ export interface TLS53010UpdateRequest {
     PLU_PageNum?: string;           // 棚割編號
     PLU_LocNo?: number;             // 棚割序號
     POS2033_ID?: number;            // POS2033_ID
+    Action: "I" | "U" | "D";        // "I"=新增, "U"=更新, "D"=刪除
   }[];
 }
 

@@ -5,7 +5,7 @@
 <p-blockUI [target]="dt" [blocked]="disabled"></p-blockUI>
 
 <p-table #dt [value]="data" [columns]="selectedColumns" [(selection)]="selectedItems" sortMode="multiple"
-  [selectionMode]="showCheckBox && IsPrint ? selectionMode : null" [dataKey]="dataKey" [rowTrackBy]="trackByRow"
+  [selectionMode]="selectionMode" [dataKey]="dataKey" [rowTrackBy]="trackByRow"
   [resizableColumns]="true" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
   [paginator]="showPaginator && IsPrint && !rowEditing " [scrollable]="scrollable"
   [showCurrentPageReport]="IsPrint && showPaginator" [multiSortMeta]="multiSortMeta"
