@@ -197,9 +197,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
    */
   private initializeEcrNo() {
     // 如果 queryEcrNo API 目前無法使用，可以直接設定預設值
-    // 根據你的範例，ECR_No 是 "000081"
-    this.currentEcrNo = '890000';
-
+    this.currentEcrNo = '888888';
     // 如果需要使用 API 查詢，可以取消註解下面幾行
     // const defaultIP = '192.168.1.81'; // 根據你的範例，使用 000081 對應的 IP
     // this.queryEcrNo(defaultIP);
