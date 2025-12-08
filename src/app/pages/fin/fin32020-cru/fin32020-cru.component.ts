@@ -28,8 +28,9 @@ import {
   Fin32020AdjAccRow,
 } from '../../../service/api/fin/fin32020.service';
 
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
+// ⭐ 改用 Table2Component
+import { Table2Component } from '../../../shared/componentkit/table2/table2.component';
+import { Column } from '../../../shared/componentkit/table2/table2.model';
 
 // 專屬 FIN32020 的 table-edit 元件
 import { FIN32020TableEditComponent } from './fin32020table-edit/fin32020table-edit.component';
@@ -57,7 +58,7 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
     InputTextComponent,
     ButtonComponent,
     TranslateModule,
-    TableComponent,
+    Table2Component,          // ⭐ 這裡換成 Table2
     DialogComponent,
     CalendarRangeComponent,
     FIN32020TableEditComponent,
@@ -67,9 +68,7 @@ export class FIN32020CRUComponent
   extends BasicCruPageComponent<Fin32020Row>
   implements OnInit
 {
-  /** 主檔表單
-   *  adjust_ID：只是畫面顯示 ADJ_No，用 disabled，不拿來當 insert 的必要欄位
-   */
+  /** 主檔表單 */
   dataForm = this.formBuilder.nonNullable.group({
     adjust_ID: [{ value: '', disabled: true } as any], // ADJ_No（顯示用）
     adjust_Date: [null as Date | null, [Validators.required]], // ADJ_Date
@@ -84,7 +83,7 @@ export class FIN32020CRUComponent
       adjustID: null, // AccNo
       adjustAmount: null, // ADJ_Amt
       adjustRemark: '', // Detail_Remark
-      gls3001_id: null, // 傳票 ID（編輯時可能會用到）
+      gls3001_id: null, // 傳票 ID
     },
   ];
   detailLoading = false;
@@ -143,6 +142,7 @@ export class FIN32020CRUComponent
   arsDialogVisible = false;
   arsLoading = false;
   arsList: Fin32020ARSRow[] = [];
+  arsSelectedRows: Fin32020ARSRow[] = [];
   arsColumns: Column[] = [
     { field: 'ARS_No', header: '應收帳款單號' },
     { field: 'VEN_No', header: '廠客代號' },
@@ -155,17 +155,19 @@ export class FIN32020CRUComponent
     },
     { field: 'NoteDesc', header: '備註' },
   ];
-  // 這裡用 custNo 當 VEN_No 的輸入（為了不動 HTML）
-arsSearchForm = this.formBuilder.nonNullable.group({
-  VEN_No: [''],
-  ARS_Date_From: [null as Date | null],
-  ARS_Date_To: [null as Date | null],
-});
+
+  // 查詢條件
+  arsSearchForm = this.formBuilder.nonNullable.group({
+    VEN_No: [''],
+    ARS_Date_From: [null as Date | null],
+    ARS_Date_To: [null as Date | null],
+  });
 
   // ===== 調整科目查詢 Dialog =====
   adjAccDialogVisible = false;
   adjAccLoading = false;
   adjAccList: Fin32020AdjAccRow[] = [];
+  adjAccSelectedRows: Fin32020AdjAccRow[] = [];
   adjAccColumns: Column[] = [
     { field: 'CAR_AccNo', header: '調整科目代號' },
     { field: 'AccCName', header: '科目名稱' },
@@ -184,12 +186,10 @@ arsSearchForm = this.formBuilder.nonNullable.group({
   ngOnInit(): void {
     this.initializePage('FIN32020', this.dataForm);
 
-    // 如果是修改 / 明細，會有 rowdata
     if (this.rowdata) {
       this.patchFromRowdata(this.rowdata);
     }
 
-    // 建立模式：預設調整日期 = 今天
     if (this.crudstatus === CRUDStatus.Create) {
       this.dataForm.patchValue({
         adjust_Date: new Date(),
@@ -197,7 +197,7 @@ arsSearchForm = this.formBuilder.nonNullable.group({
     }
   }
 
-  /** Query row → CRU mapping（從 queryFIN32020Response 帶進來） */
+  /** Query row → CRU mapping */
   private patchFromRowdata(row: Fin32020Row): void {
     this.dataForm.patchValue({
       adjust_ID: row.ADJ_No ?? '',
@@ -225,7 +225,7 @@ arsSearchForm = this.formBuilder.nonNullable.group({
     this.reCalcSeqNo();
   }
 
-  onDetailFieldChange(event: FieldChangeEvent): void {
+  onDetailFieldChange(_event: FieldChangeEvent): void {
     // 目前暫時沒特別邏輯，先保留
   }
 
@@ -262,56 +262,68 @@ arsSearchForm = this.formBuilder.nonNullable.group({
   openARSDialog(): void {
     if (this.isFormReadable) return;
     this.arsDialogVisible = true;
-
-    // ❌ 不要一打開就查詢，避免空條件被後端擋掉
-    // if (!this.arsList.length) {
-    //   this.onSearchARS();
-    // }
-  }
-onSearchARS(): void {
-  const raw = this.arsSearchForm.getRawValue();
-
-  const venNo = raw.VEN_No?.trim() || null;
-  const arsDateFrom = raw.ARS_Date_From
-    ? this.toYMD(raw.ARS_Date_From as Date)
-    : null;
-  const arsDateTo = raw.ARS_Date_To
-    ? this.toYMD(raw.ARS_Date_To as Date)
-    : null;
-
-  // ✅ 用「變數」來檢查是否有輸入條件
-  if (!venNo && !arsDateFrom && !arsDateTo) {
-    console.warn('請至少輸入廠客代號或立帳日');
-    return;
   }
 
-  this.arsLoading = true;
+  onSearchARS(): void {
+    const raw = this.arsSearchForm.getRawValue();
 
-  const req = {
-    VEN_No: venNo,
-    ARS_Date_From: arsDateFrom,
-    ARS_Date_To: arsDateTo,
-    PageIndex: 1,
-    PageSize: 50,
-  };
+    const venNo = raw.VEN_No?.trim() || null;
+    const arsDateFrom = raw.ARS_Date_From
+      ? this.toYMD(raw.ARS_Date_From as Date)
+      : null;
+    const arsDateTo = raw.ARS_Date_To
+      ? this.toYMD(raw.ARS_Date_To as Date)
+      : null;
 
-  this.fin32020Service.getARS(req).subscribe({
-    next: (res) => {
-      this.arsList = Array.isArray(res.Data) ? res.Data : [];
-      this.arsLoading = false;
-    },
-    error: (err) => {
-      console.error('FIN32020 getARS error:', err);
-      this.arsList = [];
-      this.arsLoading = false;
-    },
-  });
-}
+    if (!venNo && !arsDateFrom && !arsDateTo) {
+      console.warn('請至少輸入廠客代號或立帳日');
+      return;
+    }
 
+    this.arsLoading = true;
 
+    const req = {
+      VEN_No: venNo,
+      ARS_Date_From: arsDateFrom,
+      ARS_Date_To: arsDateTo,
+      PageIndex: 1,
+      PageSize: 50,
+    };
 
-  onSelectARS(row: Fin32020ARSRow): void {
+    this.fin32020Service.getARS(req).subscribe({
+      next: (res) => {
+        this.arsList = Array.isArray(res.Data) ? res.Data : [];
+        this.arsLoading = false;
+      },
+      error: (err) => {
+        console.error('FIN32020 getARS error:', err);
+        this.arsList = [];
+        this.arsLoading = false;
+      },
+    });
+  }
+
+  /** 單點選擇（固定高光） */
+  onARSSelectionChange(selected: Fin32020ARSRow[] | Fin32020ARSRow): void {
+    this.arsSelectedRows = Array.isArray(selected)
+      ? selected
+      : selected
+      ? [selected]
+      : [];
+  }
+
+  /** 雙擊列 → 直接當成選取 + 確定 */
+  onARSRowDetail(row: Fin32020ARSRow): void {
     if (!row) return;
+    this.arsSelectedRows = [row];
+    this.confirmARSSelection();
+  }
+
+  /** 按「確定」或雙擊完成選擇 */
+  confirmARSSelection(): void {
+    if (!this.arsSelectedRows.length) return;
+
+    const row = this.arsSelectedRows[0];
     const idx = this.currentDetailIndex ?? 0;
     if (!this.detailData[idx]) return;
 
@@ -324,6 +336,7 @@ onSearchARS(): void {
     this.reCalcSeqNo();
     this.arsDialogVisible = false;
     this.currentDetailIndex = null;
+    this.arsSelectedRows = [];
   }
 
   /* ================= 調整科目 Dialog ================= */
@@ -351,8 +364,27 @@ onSearchARS(): void {
     });
   }
 
-  onSelectAdjAcc(row: Fin32020AdjAccRow): void {
+  /** 單點選擇（固定高光） */
+  onAdjAccSelectionChange(selected: Fin32020AdjAccRow[] | Fin32020AdjAccRow): void {
+    this.adjAccSelectedRows = Array.isArray(selected)
+      ? selected
+      : selected
+      ? [selected]
+      : [];
+  }
+
+  /** 雙擊列 → 直接當成選取 + 確定 */
+  onAdjAccRowDetail(row: Fin32020AdjAccRow): void {
     if (!row) return;
+    this.adjAccSelectedRows = [row];
+    this.confirmAdjAccSelection();
+  }
+
+  /** 按「確定」或雙擊完成選擇 */
+  confirmAdjAccSelection(): void {
+    if (!this.adjAccSelectedRows.length) return;
+
+    const row = this.adjAccSelectedRows[0];
     const idx = this.currentDetailIndex ?? 0;
     if (!this.detailData[idx]) return;
 
@@ -365,6 +397,7 @@ onSearchARS(): void {
     this.reCalcSeqNo();
     this.adjAccDialogVisible = false;
     this.currentDetailIndex = null;
+    this.adjAccSelectedRows = [];
   }
 
   /* ================= 組 payload ================= */
@@ -377,7 +410,6 @@ onSearchARS(): void {
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  /** 把畫面上的 detailData 轉成 _Details（對應 queryFIN32020detailResponse） */
   private buildDetailList(): Fin32020DetailRow[] {
     return (this.detailData || [])
       .map((row, idx) => {
@@ -403,7 +435,6 @@ onSearchARS(): void {
       );
   }
 
-  /** Insert 用 payload：對應 insertFIN32020Request */
   private buildInsertPayload(): Fin32020InsertRequest {
     const raw = this.dataForm.getRawValue();
     const detailList = this.buildDetailList();
@@ -417,7 +448,6 @@ onSearchARS(): void {
     return payload;
   }
 
-  /** Update 用 payload：對應 updateFIN32020Request */
   private buildUpdatePayload(): Fin32020UpdateRequest {
     const raw = this.dataForm.getRawValue();
     const detailList = this.buildDetailList();
@@ -439,7 +469,6 @@ onSearchARS(): void {
   /* ================= Submit ================= */
 
   onSubmit(frm: FormGroup) {
-    // 先驗證明細 Table（使用共用的 validateAndShowErrors）
     if (this.detailTableEdit) {
       const tableValid = this.detailTableEdit.validateAndShowErrors();
       if (!tableValid) {
@@ -468,7 +497,7 @@ onSearchARS(): void {
           },
           error: (err) => {
             console.error('FIN32020 Update error:', err);
-            loading: false
+            this.loading = false;
           },
         });
       }
