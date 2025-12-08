@@ -115,29 +115,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
 
     // 編輯跟檢視時 帶回明細資料
     if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
-      if (this.rowdata) {
-        this.detailLoading = true;
-        const payload = {
-          MID: 0,
-          PST_No: this.rowdata.PST_No,
-          SYS_StoreNo: this.rowdata.SYS_StoreNo,
-          HOS_No: this.rowdata.HOS_No,
-          pageSize: 30,
-          pageIndex: 1,
-          SortBy: [],
-        };
-
-        // 先設定 lastQueryBody
-        this.lastQueryBody = payload;
-
-        this.tls53010Service.queryTLS53010Detail(payload)
-          .pipe(untilDestroyed(this), finalize(() => this.detailLoading = false))
-          .subscribe(response => {
-            this.data = response.Data;
-            // 更新 totalRecords 以啟用虛擬滾動
-            this.totalRecords = response.TotalCount || response.Data.length;
-          });
-      }
+      this.loadDetailData();
     }
   }
 
@@ -374,6 +352,27 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
         PLU_Name: item.PLU_Name,
         PLU_PageNum: item.PLU_PageNum,
         PLU_LocNo: item.PLU_LocNo,
+        Action: 'U',
+      }))
+    };
+  }
+
+  get TLS53010DeleteRequest(): TLS53010UpdateRequest {
+    return {
+      POS2033M_ID: this.rowdata!.id,
+      PST_No: this.dataForm.get('PST_No')?.value || '',
+      PST_Date: this.datePipe.transform(this.dataForm.get('PST_Date')?.value, 'yyyy-MM-dd')!,
+      PST_Remark: this.dataForm.get('PST_Remark')?.value || '',
+      POS2004List: this.selectedItems.map(item => ({
+        POS2033_ID: item.id || 0,
+        PLU_MagNo: item.PLU_MagNo || '',
+        PLU_No: item.PLU_No || '',
+        PLU_Unit: item.PLU_Unit,
+        PLU_BoxQty: item.PLU_BoxQty,
+        PLU_Name: item.PLU_Name,
+        PLU_PageNum: item.PLU_PageNum,
+        PLU_LocNo: item.PLU_LocNo,
+        Action: 'D',
       }))
     };
   }
@@ -382,12 +381,17 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     return this.tls53010Service.queryTLS53010Detail(body);
   };
 
-  // TODO: 待串接api 並且要跳確認視窗
   onDelete(selectedItems: POS2004Info[]) {
     this.confirmationService.confirm({
       header: `已選擇 ${selectedItems.length} 筆資料，確定刪除？`,
       accept: () => {
-        this.messageService.warnBubble('api待串接');
+        this.tls53010Service.updateTLS53010(this.TLS53010DeleteRequest)
+          .pipe(untilDestroyed(this)).subscribe(() => {
+            this.messageService.successBubble('刪除成功');
+            // 刪除後從 data 移除選取的項目
+            this.loadDetailData();
+            this.selectedItems = [];
+          });
       }
     });
   }
@@ -434,4 +438,30 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     }
     return { isValid: true, errorMessage: '' };
   };
+
+  loadDetailData() {
+    if (this.rowdata) {
+      this.detailLoading = true;
+      const payload = {
+        MID: 0,
+        PST_No: this.rowdata.PST_No,
+        SYS_StoreNo: this.rowdata.SYS_StoreNo,
+        HOS_No: this.rowdata.HOS_No,
+        pageSize: 30,
+        pageIndex: 1,
+        SortBy: [],
+      };
+
+      // 先設定 lastQueryBody
+      this.lastQueryBody = payload;
+
+      this.tls53010Service.queryTLS53010Detail(payload)
+        .pipe(untilDestroyed(this), finalize(() => this.detailLoading = false))
+        .subscribe(response => {
+          this.data = response.Data;
+          // 更新 totalRecords 以啟用虛擬滾動
+          this.totalRecords = response.TotalCount || response.Data.length;
+        });
+    }
+  }
 }
