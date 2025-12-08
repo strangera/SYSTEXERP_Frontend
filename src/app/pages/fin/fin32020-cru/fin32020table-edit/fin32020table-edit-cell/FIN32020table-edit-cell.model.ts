@@ -1,7 +1,7 @@
 import { EditColumn } from "../fin32020table-edit.model";
 
 // 定義 Cell 元件的輸入屬性
-export interface CellInput {
+export interface FIN32020CellInput {
   rowData: any;
   col: EditColumn;
   index: number;

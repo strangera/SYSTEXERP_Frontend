@@ -64,6 +64,7 @@
         [defaultInsertData]="defaultDetailRow"
         [showPaginator]="false"
         [scrollable]="false"
+        [showCaption]="false"
         (dataChange)="onDetailDataChange($event)"
         (fieldChange)="onDetailFieldChange($event)"
         (delete)="onDetailDelete($event)"
@@ -89,28 +90,44 @@
 <!-- ====== 應收帳款單號查詢 Dialog ====== -->
 <app-dialog
   [(visible)]="arsDialogVisible"
-  [title]="'選擇應收帳款'"
+  [header]="'選擇應收帳款'"
+   [showFooter]="false"
 >
+  <!-- 查詢區塊 -->
   <form
     [formGroup]="arsSearchForm"
     (ngSubmit)="onSearchARS()"
     class="grid p-fluid mb-3"
   >
-    <div class="col-12 md:col-4 lg:col-3">
+    <div class="col-12 md:col-4">
       <app-input-text
         label="廠客代號"
-        controlName="custNo"
-        [control]="arsSearchForm.controls.custNo"
-        [submitted]="false"
-      ></app-input-text>
+        controlName="VEN_No"
+        [control]="arsSearchForm.controls.VEN_No"
+      >
+      </app-input-text>
     </div>
 
-    <div class="col-12 md:col-4 lg:col-3 flex align-items-end">
-      <app-button btnType="query" [type]="'submit'"></app-button>
+    <div class="col-12 md:col-4">
+      <app-calendar-range
+        calendarType="dateRange"
+        label="立帳日"
+        [startControl]="arsSearchForm.controls.ARS_Date_From"
+        [endControl]="arsSearchForm.controls.ARS_Date_To"
+        [submitted]="submitted"
+      ></app-calendar-range>
+    </div>
+
+    <div class="col-12 flex justify-content-end mt-2">
+      <app-button
+        btnType="query"
+        [type]="'submit'"
+      ></app-button>
     </div>
   </form>
 
-  <app-table
+  <!-- 查詢結果表格：使用 table2 -->
+  <app-table2
     [tableKey]="'fin32020Ars'"
     dataKey="ARS_No"
     [columns]="arsColumns"
@@ -118,23 +135,44 @@
     [loading]="arsLoading"
     [showCheckBox]="false"
     [showManage]="false"
-    [showDetail]="true"
+    [showDetail]="true"          
     [showEdit]="false"
     [showHeader]="true"
     [showFilter]="false"
     [showReportMode]="false"
     [showPaginator]="false"
-    (detail)="onSelectARS($event)"
+    [showCaption]="false"
+    selectionMode="single"
+    [(selectedItems)]="arsSelectedRows"
+    (selectionChange)="onARSSelectionChange($event)"
+    (detail)="onARSRowDetail($event)"   
   >
-  </app-table>
+  </app-table2>
+
+   <div class="flex justify-content-end gap-2 mt-3">
+    <app-button
+      btnType="cancel"
+      [type]="'button'"
+      (click)="arsDialogVisible = false"
+    ></app-button>
+    <app-button
+      btnType="submit"
+      [type]="'button'"
+      [disabled]="!arsSelectedRows || !arsSelectedRows.length"
+      (click)="confirmARSSelection()"
+    ></app-button>
+  </div>
 </app-dialog>
 
 <!-- ====== 調整科目代號查詢 Dialog ====== -->
 <app-dialog
   [(visible)]="adjAccDialogVisible"
-  [title]="'選擇調整科目'"
+  [header]="'選擇調整科目'"
+   [showFooter]="false"
 >
-  <app-table
+
+
+  <app-table2
     [tableKey]="'fin32020AdjAcc'"
     dataKey="CAR_AccNo"
     [columns]="adjAccColumns"
@@ -142,13 +180,31 @@
     [loading]="adjAccLoading"
     [showCheckBox]="false"
     [showManage]="false"
-    [showDetail]="true"
+    [showDetail]="true"         
     [showEdit]="false"
     [showHeader]="true"
     [showFilter]="false"
     [showReportMode]="false"
     [showPaginator]="false"
-    (detail)="onSelectAdjAcc($event)"
+    [showCaption]="false"
+    selectionMode="single"
+    [(selectedItems)]="adjAccSelectedRows"
+    (selectionChange)="onAdjAccSelectionChange($event)"
+    (detail)="onAdjAccRowDetail($event)"  
   >
-  </app-table>
+  </app-table2>
+
+  <div class="flex justify-content-end gap-2 mt-3">
+    <app-button
+      btnType="cancel"
+      [type]="'button'"
+      (click)="adjAccDialogVisible = false"
+    ></app-button>
+    <app-button
+      btnType="submit"
+      [type]="'button'"
+      [disabled]="!adjAccSelectedRows || !adjAccSelectedRows.length"
+      (click)="confirmAdjAccSelection()"
+    ></app-button>
+  </div>
 </app-dialog>

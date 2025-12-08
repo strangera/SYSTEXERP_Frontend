@@ -5,7 +5,7 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { TooltipModule } from 'primeng/tooltip';
-import { CellInput } from './table-edit-cell.model';
+import { FIN32020CellInput } from './FIN32020table-edit-cell.model';
 
 @Component({
   selector: 'app-input-cell',
@@ -44,8 +44,8 @@ import { CellInput } from './table-edit-cell.model';
     TooltipModule
   ]
 })
-export class InputCellComponent {
-  @Input({ required: true }) cellInput!: CellInput;
+export class FIN32020InputCellComponent {
+  @Input({ required: true }) cellInput!: FIN32020CellInput;
 
   isDisabled(): boolean {
     const col = this.cellInput.col;

@@ -32,6 +32,7 @@
   currentPageReportTemplate="顯示第 {first} 到 {last} 筆，共 {totalRecords} 筆"
 >
   <ng-template pTemplate="caption">
+  <ng-container *ngIf="showCaption">
     <div class="grid align-items-center justify-content-between mx-0">
       <div class="caption-left button-group flex gap-2 py-2">
         <p-button
@@ -93,6 +94,8 @@
         </div>
       </div>
     </div>
+
+     </ng-container>
   </ng-template>
 
   <ng-template pTemplate="header" let-columns>
@@ -264,20 +267,33 @@
         'insert-row': rowData._isAutoInsertCandidate
       }"
     >
-      <td *ngIf="_tableData.length && showReorder" class="w-1rem text-center">
-        <span
-          *ngIf="!rowData._isAutoInsertCandidate && _tableData.length > 0"
-          class="pi pi-bars w-1rem text-center"
-          pReorderableRowHandle
-        ></span>
-        <span
-          *ngIf="rowData._isAutoInsertCandidate && !disabled"
-          class="pi pi-plus w-1rem text-center"
-          [ngClass]="{
-            'text-blue-500': rowData._isAutoInsertCandidate
-          }"
-        ></span>
-      </td>
+<td *ngIf="_tableData.length && showReorder" class="w-3rem text-center">
+  <!-- 一般資料列：拖曳 + 刪除 -->
+  <ng-container *ngIf="!rowData._isAutoInsertCandidate; else insertRowTpl">
+    <span
+      *ngIf="!disabled"
+      class="pi pi-bars mr-2 cursor-move w-1rem text-center"
+      pReorderableRowHandle
+    ></span>
+
+    <span
+      *ngIf="showDelete && !disabled"
+      class="pi pi-trash cursor-pointer text-red-500"
+      (click)="onRowDelete(rowData, $event)"
+    ></span>
+  </ng-container>
+
+  <!-- 自動新增候選列：顯示 +，點擊時把自己變正式列，再補一筆新的候選列 -->
+  <ng-template #insertRowTpl>
+    <span
+      *ngIf="!disabled"
+      class="pi pi-plus cursor-pointer w-1rem text-center text-blue-500"
+      (click)="onInsertFromPlus(rowData, rowIndex, $event)"
+    ></span>
+  </ng-template>
+</td>
+
+
 
       <td
         class="text-center w-1rem"

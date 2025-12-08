@@ -57,69 +57,83 @@
           [submitted]="submitted"
         ></app-input-textarea>
       </div>
-
-      <div
-        *ngIf="isFormCreateable"
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-      >
-        <app-button
-          label="新增全品項"
-          (clickEvent)="insertTLS53010(dataForm)"
-          [loading]="loading"
-        ></app-button>
-      </div>
-
-      <!-- 編輯table 一頁式 -->
-      <div class="col-12" *ngIf="isFormEditable || isFormCreateable">
-        <app-table-edit
-          tableKey="TLS53010Detail"
-          [columns]="editColumns"
-          [data]="data"
-          (selectionChange)="selectedItems = $event"
-          [selectedItems]="selectedItems"
-          [tableRequired]="true"
-          [disabled]="isFormReadable"
-          (insert)="dialogVisible = true"
-          [showInsert]="isFormCreateable || isFormEditable"
-          [canInsert]="false"
-          [insertDisabled]="dataForm.controls.LOGO_No.value ? false : true"
-          (dataChange)="data = $event"
-          [loading]="detailLoading"
-        />
-      </div>
-
-      <!-- 檢視table 分批載入-->
-      <div class="col-12" *ngIf="isFormReadable">
-        <app-table-report
-          tableKey="TLS53010Detail"
-          dataKey="id"
-          [data]="data"
-          [columns]="editColumns"
-          [showCheckBox]="false"
-          [showDelete]="false"
-          [loading]="detailLoading"
-          [selectedItems]="selectedItems"
-          (selectionChange)="selectedItems = $event"
-          [showReportMode]="false"
-          [totalRecords]="totalRecords"
-          [lastQueryBody]="lastQueryBody"
-          [queryFunction]="queryDetailFunction"
-          [showManage]="false"
-        />
-      </div>
-
-      <div
-        *ngIf="!isFormReadable"
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-      >
-        <app-button
-          btnType="cancel"
-          [form]="dataForm"
-          (clickEvent)="clearDetail()"
-        ></app-button>
-        <app-button btnType="submit" [loading]="loading"></app-button>
-      </div>
     </form>
+
+    <div
+      *ngIf="isFormCreateable"
+      class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+    >
+      <app-button
+        label="新增全品項"
+        (clickEvent)="insertTLS53010(dataForm)"
+        [loading]="loading"
+      ></app-button>
+    </div>
+
+    <!-- 編輯table 一頁式 -->
+    <div class="col-12" *ngIf="isFormEditable || isFormCreateable">
+      <app-table-edit
+        #editTable
+        tableKey="TLS53010Detail"
+        [columns]="editColumns"
+        [data]="editData"
+        (selectionChange)="selectedEditItems = $event"
+        [selectedItems]="selectedEditItems"
+        [tableRequired]="true"
+        [disabled]="isFormReadable"
+        (insert)="dialogVisible = true"
+        [showInsert]="isFormCreateable || isFormEditable"
+        [canInsert]="dataForm.controls.LOGO_No.value ? true : false"
+        [insertDisabled]="dataForm.controls.LOGO_No.value ? false : true"
+        (dataChange)="editData = $event"
+        [rowValidate]="validateEntireRow"
+      >
+        <header>
+          <span class="text-xl" *ngIf="isFormCreateable">新增商品</span>
+          <span class="text-xl" *ngIf="isFormEditable">本次新增商品</span>
+        </header>
+      </app-table-edit>
+    </div>
+    <div
+      *ngIf="!isFormReadable"
+      class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+    >
+      <app-button
+        btnType="cancel"
+        [form]="dataForm"
+        (clickEvent)="clearDetail()"
+      ></app-button>
+      <app-button
+        btnType="submit"
+        [loading]="loading"
+        [disabled]="editData.length === 0"
+        (clickEvent)="onSubmit(dataForm)"
+      ></app-button>
+    </div>
+
+    <!-- 檢視table 分批載入-->
+    <div class="col-12" *ngIf="isFormReadable || isFormEditable">
+      <app-table-report
+        tableKey="TLS53010Detail"
+        dataKey="id"
+        [data]="data"
+        [columns]="columns"
+        [showCheckBox]="isFormEditable"
+        [showDelete]="isFormEditable"
+        [loading]="detailLoading"
+        [selectedItems]="selectedItems"
+        (selectionChange)="selectedItems = $event"
+        [showReportMode]="false"
+        [totalRecords]="totalRecords"
+        [lastQueryBody]="lastQueryBody"
+        [queryFunction]="queryDetailFunction"
+        [showManage]="false"
+        [showFilter]="false"
+        (delete)="onDelete($event)"
+      >
+        <header><span class="text-xl">目前商品</span></header>
+      </app-table-report>
+    </div>
   </p-panel>
 </div>
 
@@ -195,7 +209,7 @@
     [showManage]="false"
     [showCheckBox]="true"
     [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]"
-    [totalRecords]="totalRecords"
+    [totalRecords]="dialogTotalRecords"
     (lazyLoadData)="
       onLazyLoadData($event, dialogQueryForm); onQuery(dialogQueryForm)
     "

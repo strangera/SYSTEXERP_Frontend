@@ -1,6 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { environment } from 'src/environments/environment';
+// import { HttpClient } from '@angular/common/http'; // 如果要在服務中呼叫 Debug API，需要這個
 
 const DEBUG_KEY = 'AppDebugModeEnabled';
 // 定義 SQL 數據的型別
@@ -11,10 +12,10 @@ export interface ExecutedSqlDetail {
 
 /** 完整 API 呼叫的除錯記錄項目 */
 export interface ApiSqlHistoryEntry {
-  apiUrl: string;       // API 請求路徑
+  apiUrl: string;           // API 請求路徑
   sqlData: ExecutedSqlDetail[]; // 該 API 產生的 SQL 列表
   stackTrace: string | null; // 堆疊追蹤資訊
-  timestamp: Date;      // 記錄時間戳 (可選，但推薦)
+  timestamp: Date;          // 記錄時間戳 (可選，但推薦)
 }
 
 @Injectable({
@@ -35,8 +36,10 @@ export class DebugToggleService {
   // 儲存最近一次 API 呼叫所收集到的 StackTrace
   public latestStackTrace = signal<string | null>(null);
   private readonly notificationService = inject(NotificationService);
+  // private readonly http = inject(HttpClient); // 如果需要在服務中發出 HTTP 請求，則需要這個
+
   constructor() {
-    //  方便開發者：將指令公開到瀏覽器全域變數 (僅限非生產環境)
+    // 方便開發者：將指令公開到瀏覽器全域變數 (僅限非生產環境)
     if (!environment.production) {
       (window as any).SQL_ON = () => this.enableDebugByCommand(true);
       (window as any).SQL_OFF = () => this.enableDebugByCommand(false);
@@ -45,17 +48,17 @@ export class DebugToggleService {
       if (this.initialDebugState) {
         console.log(`[Debug Service] 偵測到 Local Storage 啟用，SQL 偵錯模式自動開啟。`);
       } else {
-        console.log('[Debug Service] 已啟用全域除錯指令：enableAppDebug() / disableAppDebug()');
+        console.log('[Debug Service] 已啟用全域除錯指令：SQL_ON() / SQL_OFF()');
       }
     }
   }
   /**
-   * 切換除錯開關狀態。
-   */
+    * 切換除錯開關狀態。
+    */
   toggleDebug(enable: boolean) {
     this.isDebugEnabled.set(enable);
 
-    //  關鍵：每次切換都必須將最新狀態寫入 Local Storage
+    // 關鍵：每次切換都必須將最新狀態寫入 Local Storage
     localStorage.setItem(DEBUG_KEY, enable.toString());
 
     if (!enable) {
@@ -69,8 +72,8 @@ export class DebugToggleService {
   }
 
   /**
-     *  供 Console 指令呼叫的方法，強制開啟或關閉除錯模式。
-     */
+      * 供 Console 指令呼叫的方法，強制開啟或關閉除錯模式。
+      */
   public enableDebugByCommand(enable: boolean): void {
     if (environment.production && enable) {
       console.error('生產環境下不允許使用指令強制開啟除錯模式！');
@@ -84,16 +87,16 @@ export class DebugToggleService {
   }
 
   /**
-   * 在 Interceptor 中呼叫，用於儲存並顯示 SQL 資訊。
-   * 修正邏輯：將完整的 API 呼叫記錄到 allSqlHistory 中。
-   * @param apiUrl API 請求路徑
-   * @param sqlData 來自 Header 的 Base64 解碼後的 SQL 列表
-   * @param stackTrace 來自 Header 的 Base64 解碼後的 StackTrace
-   */
+    * 在 Interceptor 中呼叫，用於儲存並顯示 SQL 資訊。
+    * 修正邏輯：將完整的 API 呼叫記錄到 allSqlHistory 中。
+    * @param apiUrl API 請求路徑
+    * @param sqlData 來自 Debug API 的 SQL 列表
+    * @param stackTrace 來自 Debug API 的 StackTrace
+    */
   setAndShowSqlData(apiUrl: string, sqlData: string[] | ExecutedSqlDetail[], stackTrace: string | null = null) {
     let processedSqlData: ExecutedSqlDetail[] = [];
 
-    // 檢查並轉換：如果陣列中的第一個元素是字串，則進行轉換
+    // 檢查並轉換：如果陣列中的第一個元素是字串 (後端返回的 Data 可能是 string[] 或 ExecutedSqlDetail[])
     if (sqlData.length > 0 && typeof sqlData[0] === 'string') {
       processedSqlData = (sqlData as string[]).map(sqlString => ({
         sql: sqlString
@@ -119,7 +122,7 @@ export class DebugToggleService {
       this.allSqlHistory.update(currentHistory => {
         // === 歷史記錄筆數限制邏輯 ===
         const MAX_ENTRIES = 15; // 最大記錄 API 呼叫筆數
-        const TRIM_COUNT = 5;  // 超出限制時，清除的舊筆數
+        const TRIM_COUNT = 5; 	// 超出限制時，清除的舊筆數
 
         const updatedHistory = [...currentHistory, newEntry];
 
@@ -141,8 +144,8 @@ export class DebugToggleService {
     }
   }
   /**
-     * 新增功能：清除所有歷史 SQL 記錄
-     */
+      * 新增功能：清除所有歷史 SQL 記錄
+      */
   public clearHistory(): void {
     this.allSqlHistory.set([]);
     this.latestSqlData.set([]);
@@ -151,9 +154,8 @@ export class DebugToggleService {
     console.log('[Debug Service] 所有 SQL 歷史記錄已手動清除。');
   }
   /**
-   * 為了保持向下相容性，但請注意此函數現在回傳的是 ApiSqlHistoryEntry[]
-   * 如果您的舊程式碼需要 ExecutedSqlDetail[]，此函數的設計應重新考慮。
-   */
+    * 為了保持向下相容性，但請注意此函數現在回傳的是 ApiSqlHistoryEntry[]
+    */
   getAllSqlHistory(): ApiSqlHistoryEntry[] {
     return this.allSqlHistory();
   }
