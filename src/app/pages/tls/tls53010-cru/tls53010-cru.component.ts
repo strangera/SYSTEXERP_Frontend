@@ -355,6 +355,8 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     this.dialogData = [];
     this.selectedItems = [];
     this.dialogSelectedItems = [];
+    this.editData = [];
+    this.selectedEditItems = [];
   }
 
   get TLS53010UpdateRequest(): TLS53010UpdateRequest {
