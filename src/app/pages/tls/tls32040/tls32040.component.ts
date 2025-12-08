@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
-import { TLS32040Request, TLS32040Response, TLS32040Service } from '@service/api/tls/tls32040.service';
+import { TLS32040ChartRequest, TLS32040Request, TLS32040Response, TLS32040Service } from '@service/api/tls/tls32040.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -217,6 +217,9 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
   org_id_Option: IDropdownItem[] = []; // 組織
   tlt_no_id_Option: IDropdownItem[] = []; // 專櫃編號
 
+  btnLoading = false; // PDF excel 讀取進度條
+  btnChartLoading = false;
+
   constructor(
     private readonly dropDownListService: DropDownListService,
     public readonly tls32040Service: TLS32040Service,
@@ -342,7 +345,6 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
       })
     })
   }
-  btnLoading = false;
   onReport(frm: FormGroup, isExcel: boolean) {
     if (isExcel == false) {
       if (this.dateForm.invalid) {
@@ -394,9 +396,34 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     }
   }
 
+  // #region 呼叫圖檔
   onChart(frm: FormGroup) {
-    console.log('呼叫圖檔API', frm.value);
+    const formValue = {
+      ...frm.getRawValue(),
 
+      Year: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy', 'en-US'), //圖表要抓年分
+
+      FloorList: (frm.getRawValue().FloorList || []).join(','),
+      AreaList: (frm.getRawValue().AreaList || []).join(','),
+
+      BusTypeList: (frm.getRawValue().BusTypeList || []).join(','), //這邊怪怪的之後可能會改成舊的模式(還是大: "大字串", 中: "中字串")
+      BusClassList: (frm.getRawValue().BusClassList || []) //這邊怪怪的之後可能會改成舊的模式
+        .map((x: any) => x.No)
+        .join(','),
+
+      TltKindList: (frm.getRawValue().TltKindList || []).join(','),
+      OrgList: (frm.getRawValue().OrgList || []).join(','),
+      TltNoList: (frm.getRawValue().TltNoList || []).join(','),
+      TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
+      BuildingList: (frm.getRawValue().BuildingList || []).join(','),
+    } as TLS32040ChartRequest
+    this.tls32040Service.queryTLS32040Chart(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
+      .subscribe(res => {
+        this.messageService.successBubble(res.Message);
+        if (res.Data) {
+          console.log('圖檔資料', res.Data);
+        }
+      });
   }
 
   // #region 日期選單事件
@@ -626,10 +653,6 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
     let compareStart: Date | null = null;
     let compareEnd: Date | null = null;
-
-    // console.log('手動變更比較表單，起: ', compareStart, "迄: ", compareEnd);
-    // console.log('月份表單', this.c_dateForm.value);
-    // console.log('目前類型', type);
 
     switch (type) {
       case '1': { // 日報
