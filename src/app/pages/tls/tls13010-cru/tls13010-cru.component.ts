@@ -75,12 +75,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   // ========== CRUD 狀態管理 (參考 TLS12040) ==========
   override crudstatus: CRUDStatus = CRUDStatus.Create;
 
+  // 將 CRUDStatus 暴露給模板使用
+  readonly CRUDStatus = CRUDStatus;
+
   // ========== 表單唯讀狀態 (衍生自 crudstatus) ==========
   get isFormReadonly(): boolean {
-    return this.crudstatus === CRUDStatus.Read;
-  }
-
-  get isViewMode(): boolean {
     return this.crudstatus === CRUDStatus.Read;
   }
   // 位置選項資料
@@ -432,7 +431,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 使用 service 取得標題
     this.formTitle = this.getFormTitle(
       this.contractFlowService.isNewContractMode(),
-      this.isViewMode
+      this.contractFlowService.isViewMode()
     );
 
     console.log('   基本初始化完成');
@@ -446,7 +445,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   isFieldReadonly(fieldName: string): boolean {
     return this.formStateService.isFieldReadonly(
       fieldName,
-      this.isViewMode,
+      this.crudstatus === CRUDStatus.Read,
       this.contractFlowService.isNewContractMode()
     );
   }
@@ -646,7 +645,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     }
 
     //  🔥 檢視模式策略：優先從 API 載入最新資料（參考 TLS12040）
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       console.log('  🔍 檢視模式：無條件從 API 載入最新資料');
       await this.loadContractDetailAsync(String(queryRowData.talent_id));
       console.log('   資料載入完成');
@@ -799,7 +798,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     const cleanedData = this.cleanStringFields(dataWithDates);
 
     //  步驟 3: 根據模式決定如何填充（參考 TLS12040）
-    if (this.isViewMode || this.isFormReadonly) {
+    if (this.crudstatus === CRUDStatus.Read || this.isFormReadonly) {
       console.log('    🔒 Readonly 模式填充');
       console.log('     cleanedData.check_typeList:', cleanedData.check_typeList);
       console.log('     checkTypeOptions:', this.checkTypeOptions);
@@ -1219,7 +1218,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         }
 
         //  檢視模式下不執行自動帶入
-        if (this.isViewMode) {
+        if (this.crudstatus === CRUDStatus.Read) {
           console.log('👁️ 檢視模式，不執行自動帶入');
           return;
         }
@@ -1307,7 +1306,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     const feedbackDateSub = this.dataForm.get('feedback_date')?.valueChanges
       .pipe(distinctUntilChanged())
       .subscribe(feedbackDate => {
-        if (feedbackDate && !this.isViewMode) {
+        if (feedbackDate && this.crudstatus !== CRUDStatus.Read) {
           const date = new Date(feedbackDate);
           if (!isNaN(date.getTime())) {
             date.setDate(date.getDate() + 15);
@@ -1320,7 +1319,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     const contractStartSub = this.dataForm.get('tlt_bdate')?.valueChanges
       .pipe(distinctUntilChanged())
       .subscribe(contractStart => {
-        if (contractStart && !this.isViewMode) {
+        if (contractStart && this.crudstatus !== CRUDStatus.Read) {
           // 每次契約起始日變更都自動帶入營運起始日
           this.dataForm.patchValue({ tlt_contract_bdate: contractStart }, { emitEvent: false });
         }
@@ -1330,7 +1329,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     const contractEndSub = this.dataForm.get('tlt_edate')?.valueChanges
       .pipe(distinctUntilChanged())
       .subscribe(contractEnd => {
-        if (contractEnd && !this.isViewMode) {
+        if (contractEnd && this.crudstatus !== CRUDStatus.Read) {
           // 每次契約截止日變更都自動帶入營運截止日
           this.dataForm.patchValue({ tlt_contract_edate: contractEnd }, { emitEvent: false });
         }
@@ -1358,7 +1357,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   private setFormControlsState(): void {
     this.formStateService.setFormControlsState(
       this.dataForm,
-      this.isViewMode,
+      this.crudstatus === CRUDStatus.Read,
       this.contractFlowService.isNewContractMode()
     );
   }
@@ -1592,7 +1591,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   onSubmitNext(): void {
     // 檢視模式：直接導航，不驗證
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.router.navigate(['account/tls/tls13010next1']);
       return;
     }
@@ -1613,7 +1612,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     const extras: NavigationExtras = {
       state: { fromRoute: this.router.url },
     };
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.contractFlowService.clearViewMode();
       this.contractFlowService.clearTempData();
       this.router.navigate(['account/tls/tls13010'], extras);
@@ -1644,7 +1643,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   // ==========  位置表格事件處理 ==========
 
   onAddLocationItem(): void {
-    if (this.isViewMode) return;
+    if (this.crudstatus === CRUDStatus.Read) return;
 
     this.updateDisplayLocationData();
 
@@ -1866,7 +1865,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   onBatchDeleteLocation(selectedItems: LocationItem[]): void {
-    if (this.isViewMode) return;
+    if (this.crudstatus === CRUDStatus.Read) return;
 
     const result = this.locationManagementService.processBatchDelete(
       selectedItems,
@@ -2147,7 +2146,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     }
 
     // 檢查是否為檢視模式
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.messageService.warnBubble('檢視模式下無法修改資料');
       return;
     }
@@ -2178,7 +2177,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   canCopyAddress(): boolean {
     // 只要有公司登記地址且不是檢視模式就可以複製
     const hasAddress = !!this.getCompanyAddress();
-    const canEdit = !this.isViewMode;
+    const canEdit = this.crudstatus !== CRUDStatus.Read;
 
     // console.log('🔍 檢查複製按鈕狀態:', {
     //   hasAddress,

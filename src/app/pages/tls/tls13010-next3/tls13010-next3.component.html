@@ -3,7 +3,7 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
     <app-button
-      *ngIf="!isViewMode"
+      *ngIf="crudstatus !== CRUDStatus.Read"
       btnType="submit"
       label="確認"
       (click)="onSubmitNext()"
@@ -64,13 +64,13 @@
             <app-expandable-edit-table
               [data]="getTableData(tableConfig)"
               [mainColumns]="getTableColumns(tableConfig)"
-              [showCheckBox]="!isViewMode"
+              [showCheckBox]="crudstatus !== CRUDStatus.Read"
               [showPaginator]="false"
               [showAddButton]="
-                !isViewMode && getTableSetting(tableConfig, 'showAddButton')
+                crudstatus !== CRUDStatus.Read && getTableSetting(tableConfig, 'showAddButton')
               "
               [showBatchDelete]="
-                !isViewMode && getTableSetting(tableConfig, 'showBatchDelete')
+                crudstatus !== CRUDStatus.Read && getTableSetting(tableConfig, 'showBatchDelete')
               "
               [showActionColumn]="
                 getTableSetting(tableConfig, 'showActionColumn')
@@ -84,7 +84,7 @@
               [loading]="loading"
               [dataKey]="'id'"
               [forceEditMode]="
-                !isViewMode && getTableSetting(tableConfig, 'forceEditMode')
+                crudstatus !== CRUDStatus.Read && getTableSetting(tableConfig, 'forceEditMode')
               "
               [detailKey]="''"
               [emptyMessage]="tableConfig.emptyMessage"
