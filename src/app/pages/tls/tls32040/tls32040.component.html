@@ -414,13 +414,13 @@
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
           <app-button btnType="clear" [form]="queryForm"></app-button>
-          <ng-container *ngIf="dateForm.controls.reportType.value === '5'">
+          <!-- <ng-container *ngIf="dateForm.controls.reportType.value === '5'">
             <app-button
               severity="secondary"
               label="產生年度曲線圖"
               (click)="onChart(queryForm)"
             ></app-button>
-          </ng-container>
+          </ng-container> -->
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
@@ -466,3 +466,15 @@
     </header>
   </app-table-report>
 </div>
+<!--規格沒有先取消-->
+<!-- <ng-container *ngIf="dateForm.controls.reportType.value === '5'">
+  <div class="card">
+    <p-chart
+      type="line"
+      [data]="chartData"
+      [options]="chart_options"
+      [loading]="btnChartLoading"
+      class="h-[30rem]"
+    />
+  </div>
+</ng-container> -->

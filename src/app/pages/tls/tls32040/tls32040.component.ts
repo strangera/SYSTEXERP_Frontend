@@ -1,5 +1,5 @@
-import { CommonModule, DatePipe, formatDate } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { CommonModule, DatePipe, formatDate, isPlatformBrowser } from '@angular/common';
+import { ChangeDetectorRef, Component, inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -20,11 +20,13 @@ import { Column, formatAmount, formatPercentage } from '@shared/componentkit/tab
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { ChartModule } from 'primeng/chart';
 import { TableModule } from 'primeng/table';
 import { debounceTime, finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { TLS32040ChartResponse } from './../../../service/api/tls/tls32040.service';
 
 const today = new Date();
 
@@ -51,7 +53,8 @@ const today = new Date();
     TranslateModule,
     TableComponent,
     MultiSelectComponent,
-    ButtonModule
+    ButtonModule,
+    ChartModule
   ]
 })
 
@@ -161,6 +164,8 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
   totalRecords = 0;
   data: TLS32040Response[] = [];
+  chartData: any = []; // 圖檔資料
+  chart_options: any = []; // 圖檔欄位
   historyRequestBody: TLS32040Request | null = null; //歷史查詢條件
 
   columns: Column[] = [
@@ -218,13 +223,14 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
   tlt_no_id_Option: IDropdownItem[] = []; // 專櫃編號
 
   btnLoading = false; // PDF excel 讀取進度條
-  btnChartLoading = false;
+  platformId = inject(PLATFORM_ID);
 
   constructor(
     private readonly dropDownListService: DropDownListService,
     public readonly tls32040Service: TLS32040Service,
     private tls26050Service: TLS26050Service, // 日期的api，套用現有模式
     private datePipe: DatePipe,
+    private cd: ChangeDetectorRef
   ) { super(); }
 
   ngOnInit(): void {
@@ -346,57 +352,59 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     })
   }
   onReport(frm: FormGroup, isExcel: boolean) {
-    if (isExcel == false) {
-      if (this.dateForm.invalid) {
-        this.messageService.errorBubble('基準資料為必填');
-        return
-      }
-      if (this.c_dateForm.invalid) {
-        this.messageService.errorBubble('比較資料為必填');
-        return
-      }
+    // Yvv 說先推遲
+    console.log('api準備中');
+    // if (isExcel == false) {
+    //   if (this.dateForm.invalid) {
+    //     this.messageService.errorBubble('基準資料為必填');
+    //     return
+    //   }
+    //   if (this.c_dateForm.invalid) {
+    //     this.messageService.errorBubble('比較資料為必填');
+    //     return
+    //   }
 
-      const formValue = {
-        ...frm.getRawValue(),
+    //   const formValue = {
+    //     ...frm.getRawValue(),
 
-        ReportType: this.dateForm.get('reportType')?.value, // 從日期表單抓
-        BaseDateFrom: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
-        BaseDateTo: formatDate(frm.getRawValue().BaseDateTo, 'yyyy-MM-dd', 'en-US'),
-        CompareDateFrom: formatDate(frm.getRawValue().CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
-        CompareDateTo: formatDate(frm.getRawValue().CompareDateTo, 'yyyy-MM-dd', 'en-US'),
-        FloorList: (frm.getRawValue().FloorList || []).join(','),
-        AreaList: (frm.getRawValue().AreaList || []).join(','),
+    //     ReportType: this.dateForm.get('reportType')?.value, // 從日期表單抓
+    //     BaseDateFrom: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
+    //     BaseDateTo: formatDate(frm.getRawValue().BaseDateTo, 'yyyy-MM-dd', 'en-US'),
+    //     CompareDateFrom: formatDate(frm.getRawValue().CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
+    //     CompareDateTo: formatDate(frm.getRawValue().CompareDateTo, 'yyyy-MM-dd', 'en-US'),
+    //     FloorList: (frm.getRawValue().FloorList || []).join(','),
+    //     AreaList: (frm.getRawValue().AreaList || []).join(','),
 
-        BusTypeList: (frm.getRawValue().BusTypeList || []).join(','), //這邊怪怪的之後可能會改成舊的模式(還是大: "大字串", 中: "中字串")
-        BusClassList: (frm.getRawValue().BusClassList || []) //這邊怪怪的之後可能會改成舊的模式
-          .map((x: any) => x.No)
-          .join(','),
+    //     BusTypeList: (frm.getRawValue().BusTypeList || []).join(','), //這邊怪怪的之後可能會改成舊的模式(還是大: "大字串", 中: "中字串")
+    //     BusClassList: (frm.getRawValue().BusClassList || []) //這邊怪怪的之後可能會改成舊的模式
+    //       .map((x: any) => x.No)
+    //       .join(','),
 
-        TltKindList: (frm.getRawValue().TltKindList || []).join(','),
-        OrgList: (frm.getRawValue().OrgList || []).join(','),
-        TltNoList: (frm.getRawValue().TltNoList || []).join(','),
-        TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
-        BuildingList: (frm.getRawValue().BuildingList || []).join(','),
-      }
-      this.btnLoading = true;
-      this.tls32040Service.exportTLS32040PDF(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
-        .subscribe(res => {
-          this.messageService.successBubble(res.Message);
-          // if (res.Data && res.Data.Print_URL) {
-          //   const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-          //   window.open(downloadUrl, '_blank');
-          // }
-          if (res.Data) {
-            console.log('api回應', res);
-          }
-        });
+    //     TltKindList: (frm.getRawValue().TltKindList || []).join(','),
+    //     OrgList: (frm.getRawValue().OrgList || []).join(','),
+    //     TltNoList: (frm.getRawValue().TltNoList || []).join(','),
+    //     TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
+    //     BuildingList: (frm.getRawValue().BuildingList || []).join(','),
+    //   }
+    //   this.btnLoading = true;
+    //   this.tls32040Service.exportTLS32040PDF(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
+    //     .subscribe(res => {
+    //       this.messageService.successBubble(res.Message);
+    //       // if (res.Data && res.Data.Print_URL) {
+    //       //   const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+    //       //   window.open(downloadUrl, '_blank');
+    //       // }
+    //       if (res.Data) {
+    //         console.log('api回應', res);
+    //       }
+    //     });
 
-    } else {
-      console.log('api準備中');
-    }
+    // } else {
+    //   console.log('api準備中');
+    // }
   }
 
-  // #region 呼叫圖檔
+  // #region 呼叫圖檔(這邊先不用做，既有規格有，新版規格沒有)
   onChart(frm: FormGroup) {
     const formValue = {
       ...frm.getRawValue(),
@@ -421,9 +429,84 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
       .subscribe(res => {
         this.messageService.successBubble(res.Message);
         if (res.Data) {
-          console.log('圖檔資料', res.Data);
+          const chartData = this.buildLineChartData(res.Data);
+          this.chartData = chartData;   // 綁定資料
+          this.initChart();     // 初始化 options
+          console.log('圖表資料', chartData);
         }
       });
+  }
+
+  /** ------------------------------------------
+   * PrimeNG 官方樣式格式
+   * ------------------------------------------ */
+  private initChart() {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    const documentStyle = getComputedStyle(document.documentElement);
+    const textColor = documentStyle.getPropertyValue('--p-text-color');
+    const textColorSecondary = documentStyle.getPropertyValue('--p-text-muted-color');
+    const surfaceBorder = documentStyle.getPropertyValue('--p-content-border-color');
+
+    this.chart_options = {
+      responsive: true,
+      plugins: {
+        legend: {
+          labels: {
+            color: textColor
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: textColorSecondary
+          },
+          grid: {
+            color: surfaceBorder
+          }
+        },
+        y: {
+          ticks: {
+            color: textColorSecondary
+          },
+          grid: {
+            color: surfaceBorder
+          }
+        }
+      }
+    };
+
+    this.cd.markForCheck();
+  }
+
+  // 圖檔格式化
+  private buildLineChartData(rows: TLS32040ChartResponse[]) {
+    // 建立 1~12 月的 labels
+    const labels = Array.from({ length: 12 }, (_, i) => `${i + 1}月`);
+
+    // grouped[OrgName][Month] = SaleAmt
+    const grouped: Record<string, Record<number, number>> = {};
+
+    rows.forEach(r => {
+      if (!grouped[r.OrgName]) grouped[r.OrgName] = {};
+      grouped[r.OrgName][r.SaleMonth] = r.SaleAmt;
+    });
+
+    // 產生 datasets
+    const datasets = Object.keys(grouped).map((orgName) => {
+      return {
+        label: orgName,
+        data: labels.map((_, monthIndex) => {
+          return grouped[orgName][monthIndex + 1] ?? 0; // 沒資料補 0
+        }),
+        tension: 0.3,
+        borderWidth: 2,
+        fill: false
+      };
+    });
+
+    return { labels, datasets };
   }
 
   // #region 日期選單事件
@@ -643,8 +726,8 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     this.queryForm.get('CompareDateFrom')?.setValue(compareStart);
     this.queryForm.get('CompareDateTo')?.setValue(compareEnd);
 
-    console.log('比較日期(起)', this.queryForm.get('CompareDateFrom')?.value);
-    console.log('比較日期(迄)', this.queryForm.get('CompareDateTo')?.value);
+    // console.log('比較日期(起)', this.queryForm.get('CompareDateFrom')?.value);
+    // console.log('比較日期(迄)', this.queryForm.get('CompareDateTo')?.value);
   }
 
   // 用戶輸入的比較表單也同步到主表
@@ -728,8 +811,8 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     this.queryForm.controls.CompareDateFrom.setValue(compareStart);
     this.queryForm.controls.CompareDateTo.setValue(compareEnd);
 
-    console.log('比較日期(起)', compareStart);
-    console.log('比較日期(迄)', compareEnd);
+    // console.log('比較日期(起)', compareStart);
+    // console.log('比較日期(迄)', compareEnd);
   }
 
   onDetail1(event: any) {
