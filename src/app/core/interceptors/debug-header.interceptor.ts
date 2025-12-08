@@ -1,65 +1,45 @@
-import { HttpEvent, HttpHandlerFn, HttpInterceptorFn, HttpRequest, HttpResponse } from '@angular/common/http';
+import {
+  HttpClient,
+  HttpEvent,
+  HttpHandlerFn,
+  HttpInterceptorFn,
+  HttpRequest,
+  HttpResponse,
+} from '@angular/common/http';
 import { inject } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { catchError, Observable, of, tap } from 'rxjs'; // <--- 引入 switchMap, of, catchError
 import { environment } from 'src/environments/environment';
 import { DebugToggleService, ExecutedSqlDetail } from '../services/debug-toggle.service';
 
-const SQL_DATA_HEADER = 'X-Internal-Sql-Data';
-const STACK_TRACE_HEADER = 'X-Internal-StackTrace';
+// 後端新的 Header 鍵
+const DEBUG_ID_HEADER = 'X-Debug-Id';
 const BASE_URL_TO_REMOVE = environment.BaseUrl;
 
-/**
- * 修正亂碼的核心函數：將 Base64 字串安全地解碼為 UTF-8 字串
- * 修正 2：將 private 方法轉換為獨立函式
- */
-function decodeBase64Utf8(base64String: string | null): string | null {
-  if (!base64String) return null;
-  let binary_string;
-  try {
-    // 由於 window.atob 在某些環境中可能不存在，但 Angular 應用程式通常在瀏覽器環境中
-    binary_string = window.atob(base64String);
-  } catch (e) {
-    console.error("Base64 解碼失敗:", e);
-    return null;
-  }
-  const bytes = new Uint8Array(binary_string.length);
-  for (let i = 0; i < binary_string.length; i++) {
-    bytes[i] = binary_string.charCodeAt(i);
-  }
-  try {
-    const decoder = new TextDecoder('utf-8');
-    return decoder.decode(bytes);
-  } catch (e) {
-    console.error("UTF-8 解碼失敗:", e);
-    return null;
-  }
-}
-
+// 新的 Debug API 路徑樣板
+const DEBUG_API_PATH = '/TSRDERP_Main/Controllers/Debug/';
 
 /**
- * 偵錯標頭功能型攔截器
+ * 偵錯標頭功能型攔截器 (更新為使用 Debug ID 呼叫新 API)
  */
 export const debugHeaderInterceptor: HttpInterceptorFn = (
   req: HttpRequest<unknown>,
   next: HttpHandlerFn
 ): Observable<HttpEvent<unknown>> => {
 
-  // 修正 3：使用 inject() 獲取服務
   const debugService = inject(DebugToggleService);
+  const http = inject(HttpClient); // <--- 注入 HttpClient
 
   // 如果偵錯未啟用，直接傳遞請求
   if (!debugService.isDebugEnabled()) {
-    return next(req); // 使用 next(req)
+    return next(req);
   }
 
   // 1. 取得完整的 API 請求路徑 (包含 Query String)
   let apiUrl = req.urlWithParams;
 
-  // 2. 修正邏輯：動態移除環境變數中定義的 Base URL
+  // 2. 移除環境變數中定義的 Base URL
   const baseUrl = BASE_URL_TO_REMOVE;
-
   if (baseUrl && apiUrl.startsWith(baseUrl)) {
-    // 從 Base URL 之後開始截取路徑
     apiUrl = apiUrl.substring(baseUrl.length);
   }
 
@@ -72,40 +52,20 @@ export const debugHeaderInterceptor: HttpInterceptorFn = (
   }
 
   // 4. 處理請求並檢查響應標頭
-  return next(req).pipe( // 使用 next(req)
+  return next(req).pipe(
     tap(event => {
-      if (event instanceof HttpResponse) {
+      // 檢查是否為 HttpResponse 且 Debug Service 仍在啟用狀態
+      if (event instanceof HttpResponse && debugService.isDebugEnabled()) {
 
         const headers = event.headers;
-        const encodedSql = headers.get(SQL_DATA_HEADER);
-        const encodedStackTrace = headers.get(STACK_TRACE_HEADER);
+        const debugId = headers.get(DEBUG_ID_HEADER);
 
-        if (encodedSql) {
-          try {
-            // 呼叫外部函式 decodeBase64Utf8
-            const jsonString = decodeBase64Utf8(encodedSql);
-
-            if (!jsonString) {
-              throw new Error('UTF-8 解碼結果為空');
-            }
-
-            const sqlData: ExecutedSqlDetail[] = JSON.parse(jsonString);
-
-            let stackTrace: string | null = null;
-            if (encodedStackTrace) {
-              // 呼叫外部函式 decodeBase64Utf8
-              stackTrace = decodeBase64Utf8(encodedStackTrace);
-            }
-
-            // 呼叫服務，傳遞處理後的 apiUrl
-            debugService.setAndShowSqlData(apiUrl, sqlData, stackTrace);
-
-          } catch (e) {
-            console.error('DebugHeaderInterceptor: 無法解析或解碼 SQL Header 數據', e);
-            debugService.setAndShowSqlData(apiUrl, [], null);
-          }
+        // 如果 Debug ID 存在
+        if (debugId) {
+          // 呼叫一個私有方法來處理 Debug API 請求，並將結果傳遞給 Service
+          fetchDebugData(debugId, apiUrl, http, debugService);
         } else {
-          // 使用 Signal 的 set 方法 (符合您的原始邏輯)
+          // 如果沒有 Debug ID，清除最新的數據
           debugService.latestSqlData.set([]);
           debugService.latestStackTrace.set(null);
         }
@@ -113,3 +73,58 @@ export const debugHeaderInterceptor: HttpInterceptorFn = (
     })
   );
 };
+
+
+/**
+ * 處理 Debug API 請求的獨立函數
+ * @param debugId 從響應標頭取得的 ID
+ * @param apiUrl 原始的 API 請求路徑
+ * @param http HttpClient 實例
+ * @param debugService DebugToggleService 實例
+ */
+function fetchDebugData(
+  debugId: string,
+  apiUrl: string,
+  http: HttpClient,
+  debugService: DebugToggleService
+): void {
+  const debugUrl = `${BASE_URL_TO_REMOVE}${DEBUG_API_PATH}${debugId}`;
+
+  http.get<any>(debugUrl).pipe(
+    catchError((error) => {
+      console.error(`[Debug Interceptor] 呼叫 Debug API 失敗: ${debugUrl}`, error);
+      debugService.setAndShowSqlData(apiUrl, [], null);
+      return of(null);
+    })
+  ).subscribe(
+    (response) => {
+      // 🐛 核心修正：正確解析新的 API 響應結構
+      const debugData = response?.Data;
+
+      if (debugData && debugData.SqlStatements) {
+
+        // SqlStatements 是包含 SQL 字串的陣列 (string[])
+        const sqlStatements: string[] = debugData.SqlStatements || [];
+
+        // 將 string[] 轉換為 ExecutedSqlDetail[]
+        const processedSqlData: ExecutedSqlDetail[] = sqlStatements.map(sqlString => ({
+          sql: sqlString // 每個元素都是一個完整的 SQL 語法
+        }));
+
+        const stackTrace = debugData.StackTrace || null;
+
+        // 呼叫服務，將解析後的數據傳入
+        debugService.setAndShowSqlData(apiUrl, processedSqlData, stackTrace);
+      }
+      // 處理 9102/過期/失敗 的情況
+      else if (response?.ReturnCode || response === null) {
+        console.warn(`[Debug Interceptor] Debug ID [${debugId}] 無效、過期或響應數據結構不符。`);
+        debugService.setAndShowSqlData(apiUrl, [], null);
+      } else {
+        // 成功的空響應或其他未預期結構
+        debugService.setAndShowSqlData(apiUrl, [], null);
+      }
+    },
+    // 訂閱的錯誤處理（已由 catchError 處理，這裡可省略）
+  );
+}
