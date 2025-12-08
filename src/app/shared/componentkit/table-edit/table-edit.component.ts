@@ -179,6 +179,42 @@ export class TableEditComponent implements OnChanges {
         }
       }
     }
+
+    // 處理 canInsert 動態變化
+    if (changes['canInsert']) {
+      const prev = changes['canInsert'].previousValue;
+      const curr = changes['canInsert'].currentValue;
+      if (prev !== curr) {
+        // 啟用 canInsert：若沒有 candidate row 且未 disabled，插入一筆候選行
+        if (curr === true) {
+          if (!this.disabled) {
+            const hasCandidate = this._tableData.some(item => item._isAutoInsertCandidate);
+            if (!hasCandidate) {
+              this.dataService.insertNewRow(
+                this.columns,
+                this.dataKey,
+                this.defaultInsertData,
+                this.dataStatusField,
+                this.dataStatusValue
+              );
+              this.cdr.detectChanges();
+            }
+          }
+        } else {
+          // 停用 canInsert：移除所有 candidate rows 並發射 clean data 給父層
+          const beforeLen = this._tableData.length;
+          const keep = this._tableData.filter(item => !item._isAutoInsertCandidate);
+          if (keep.length !== beforeLen) {
+            // 直接修改內部陣列（service 的 tableData 參考）
+            this._tableData.length = 0;
+            this._tableData.push(...keep);
+            // 發射 clean data 給父層（過濾掉 candidate）
+            this.dataChange.emit(this._tableData.filter(item => !item._isAutoInsertCandidate));
+            this.cdr.detectChanges();
+          }
+        }
+      }
+    }
   }
   onSelectionChange(event: any) {
     if (this.disabled) { return; }
