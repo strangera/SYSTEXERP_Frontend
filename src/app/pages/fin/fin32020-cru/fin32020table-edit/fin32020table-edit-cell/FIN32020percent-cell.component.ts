@@ -6,7 +6,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { KeyFilterModule } from 'primeng/keyfilter';
 import { TooltipModule } from 'primeng/tooltip';
-import { FIN32020CellInput } from './FIN32020table-edit-cell.model'; // 假設路徑正確
+import { FIN32020CellInput } from './FIN32020table-edit-cell.model'
 
 @Component({
   selector: 'app-percent-cell',
