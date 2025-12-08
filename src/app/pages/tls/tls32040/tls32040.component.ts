@@ -223,7 +223,6 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
   tlt_no_id_Option: IDropdownItem[] = []; // 專櫃編號
 
   btnLoading = false; // PDF excel 讀取進度條
-  btnChartLoading = false;
   platformId = inject(PLATFORM_ID);
 
   constructor(
@@ -403,7 +402,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     }
   }
 
-  // #region 呼叫圖檔
+  // #region 呼叫圖檔(這邊先不用做，既有規格有，新版規格沒有)
   onChart(frm: FormGroup) {
     const formValue = {
       ...frm.getRawValue(),
@@ -810,8 +809,8 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     this.queryForm.controls.CompareDateFrom.setValue(compareStart);
     this.queryForm.controls.CompareDateTo.setValue(compareEnd);
 
-    console.log('比較日期(起)', compareStart);
-    console.log('比較日期(迄)', compareEnd);
+    // console.log('比較日期(起)', compareStart);
+    // console.log('比較日期(迄)', compareEnd);
   }
 
   onDetail1(event: any) {
