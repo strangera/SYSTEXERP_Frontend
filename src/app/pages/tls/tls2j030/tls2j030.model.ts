@@ -239,16 +239,16 @@ export function validateBusTaxExmpCardRequired(
 // ===== 來源發票欄位定義 =====
 
 /** 新增模式用的來源發票欄位（用於 table-edit） */
-export const COLUMNS_NATURAL_EDIT: EditColumn[] = [
+export const COLUMNS_NATURAL_EDIT: Column[] = [
   { field: 'TXN_GUIBegNo', header: '發票號碼' },
-  { field: 'TXN_Date', header: '交易日期' },
-  { field: 'TXN_TotGUI', header: '發票金額' },
+  { field: 'TXN_Date', header: '交易日期', format: formatDate },
+  { field: 'TXN_TotGUI', header: '發票金額', format: formatAmount, style: 'text-right' },
   { field: 'ECR_No', header: '收銀機號' },
   { field: 'TXN_No', header: '交易序號' },
   { field: 'TXN_Uniform', header: '統一編號' },
-  { field: 'TXN_TotGUISaleTax', header: '應稅金額' },
-  { field: 'TXN_TotGUISaleNoTax', header: '免稅金額' },
-  { field: 'TXN_TotTax', header: '稅額' },
+  { field: 'TXN_TotGUISaleTax', header: '應稅金額', format: formatAmount, style: 'text-right' },
+  { field: 'TXN_TotGUISaleNoTax', header: '免稅金額', format: formatAmount, style: 'text-right' },
+  { field: 'TXN_TotTax', header: '稅額', format: formatAmount, style: 'text-right' },
   { field: 'TXN_TaxType', header: '稅別' },
 ];
 
@@ -323,11 +323,18 @@ export const COLUMNS_CHANGE_VIEW: Column[] = [
 
 /** 新增模式用的商品明細欄位（用於 table-edit） */
 export const COLUMNS_DETAIL_EDIT: EditColumn[] = [
+
+  {
+    field: 'bus_type_name',
+    header: '大分類名稱',
+    type: 'dropdown',
+    width: '100%',
+    validate: [validateRequired]
+  },
   {
     field: 'INV_ItemName',
     header: '項目名稱',
-    type: 'template',
-    isUserInput: true,
+    type: 'dropdown',
     width: '100%',
     validate: [validateRequired]
   },
@@ -370,7 +377,6 @@ export interface TLS2J030Data {
   GUI_DingType?: string;
   TXN_GUIRemark?: string;
   TXN_Notes?: string;
-
   // 商品明細
   ID?: number;           // 後端回傳的資料庫 ID
   TXN_Item?: number;     // 項次

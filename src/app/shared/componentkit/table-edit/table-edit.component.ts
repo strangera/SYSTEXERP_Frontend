@@ -189,6 +189,8 @@ export class TableEditComponent implements OnChanges {
       // 延遲更新，避免阻塞 UI
       requestAnimationFrame(() => {
         this.zone.run(() => {
+          // 更新元件內部 selectedItems 並向外發射 selectionChange
+          this.selectedItems = filtered;
           this.selectionChange.emit(filtered);
           this.cdr.markForCheck();
         });
