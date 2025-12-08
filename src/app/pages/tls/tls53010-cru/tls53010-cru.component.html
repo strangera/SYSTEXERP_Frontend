@@ -107,6 +107,7 @@
         btnType="submit"
         [loading]="loading"
         [disabled]="editData.length === 0"
+        (clickEvent)="onSubmit(dataForm)"
       ></app-button>
     </div>
 
