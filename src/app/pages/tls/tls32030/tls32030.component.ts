@@ -1,27 +1,29 @@
 import { AsyncPipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { finalize } from 'rxjs';
+
 import { FloorService } from '@service/basic/querySYS3900.service';
 import { RegionService } from '@service/basic/querySYS3A00.service';
-import { getSYS1000Options } from '@service/system/sys1000.service';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { TLS32030Data, TLS32030QueryRequest, TLS32030Service } from '../../../service/api/tls/tls32030.service';
+
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { AccordionModule } from 'primeng/accordion';
-import { debounceTime, finalize } from 'rxjs';
-import { TLS32030Data, TLS32030Service } from '../../../service/api/tls/tls32030.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
@@ -29,132 +31,81 @@ import { Column, createPaginationConfig } from '../../../shared/componentkit/tab
   selector: 'app-tls32030',
   templateUrl: './tls32030.component.html',
   standalone: true,
-  imports: [AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, CalendarComponent, InputNumberComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent]
+  imports: [
+    AsyncPipe, NgIf, FormsModule, ReactiveFormsModule, TranslateModule, AccordionModule,
+    MenubarComponent, ButtonComponent, CalendarComponent, CalendarRangeComponent,
+    CalendarRangeQuickComponent, InputNumberComponent, InputTextComponent, DropdownComponent,
+    MultiSelectComponent, RadiobuttonComponent, TableComponent
+  ]
 })
 export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> implements OnInit {
+
   queryForm = this.formBuilder.group({
-    // 日期查詢條件（單選報表類型）
-    reportType: ['1', [Validators.required]], // 報表類型
-    floor: [null], // 樓層
-    region: [null], // 區域
-    bus_type: [null], // 大分類
-    bus_class: [null], // 中分類
-    tlt_kind: [null], // 櫃別
-    org_id: [null], // 組織代號
-    tlt_term_type: [null], // 抽成別
-    onedatedd: ['2024/12/12', [Validators.required]], // 日期（日報表）
-    onedatedd_c: [null, [Validators.required]], // 比較日期（日報表）
-    onedateyy: [null, [Validators.required]], // 年度（週/半年/年報表）
-    weeks: [null], // 週數
-    onedatemm: [null, [Validators.required]], // 年月（月報表）
-    halfyear_onedateyy: [null, [Validators.required]], // 半年報表年度
-    halfyear: [null], // 半年別
-    year_onedateyy: [null, [Validators.required]], // 年報表年度
-    startdate: [null, [Validators.required]], // 開始日期
-    enddate: [null, [Validators.required]], // 結束日期
-    onedateyy_c: [null, [Validators.required]], // 比較年度（週報表）
-    weeks_c: [null], // 比較週數
-    startdate_c: [null, [Validators.required]], // 比較開始日期（週報表用）
-    enddate_c: [null, [Validators.required]], // 比較結束日期（週報表用）
-    onedatemm_c: [null, [Validators.required]], // 比較年月（月報表）
-    halfyear_onedateyy_c: [null, [Validators.required]], // 比較半年報表年度
-    halfyear_c: [null], // 比較半年別
-    year_onedateyy_c: [null, [Validators.required]], // 比較年報表年度
-    sad_startdate: [null, [Validators.required]], // 區間開始日期
-    sad_enddate: [null, [Validators.required]], // 區間結束日期
-    sad_startdate_c: [null, [Validators.required]], // 比較區間開始日期
-    sad_enddate_c: [null, [Validators.required]], // 比較區間結束日期
-    eventID: [null], // 活動ID
-    event_startdate: [null], // 活動開始日期
-    event_enddate: [null], // 活動結束日期
-    eventID_c: [null], // 比較活動ID
-    event_startdate_c: [null], // 比較活動開始日期
-    event_enddate_c: [null], // 比較活動結束日期
-    tlt_no: [null], // 專櫃編號
-    tax: [true], // 是否含稅
-    tlt_building: [null], // 館別
-    issue: ['2'], // 是否開立業主發票
-    onedate_Startd_c: [null, [Validators.required]], // 比較日期起
-    onedate_End: [null, [Validators.required]], // 比較日期迄
-    onedatedd_c_Start: [null, [Validators.required]], // 比較日期起（日報表）
-    onedatedd_c_End: [null, [Validators.required]], // 比較日期迄（日報表）
-    onedate_Start: [null, [Validators.required]], // 比較日期起（週/半年/年報表）
-    ...createPaginationConfig([{ field: 'team_name', order: -1 }])
+    reportType: ['1', Validators.required],
+    BudgetVersion: [""],
+    // 日報表
+    onedate_Start: [null as Date | null],
+    onedate_End: [null as Date | null],
+    onedatedd_c_Start: [null as Date | null],
+    onedatedd_c_End: [null as Date | null],
+
+    // 週報表
+    onedateyy: [null as Date | null],
+    weeks: [null as number | null],
+    startdate: [null as Date | null],
+    enddate: [null as Date | null],
+    onedateyy_c: [null as Date | null],
+    weeks_c: [null as number | null],
+    startdate_c: [null as Date | null],
+    enddate_c: [null as Date | null],
+    // 月報表
+    onedatemm: [null as Date | null],
+    onedatemm_c: [null as Date | null],
+
+    // 半年報表
+    halfyear_onedateyy: [null as Date | null],
+    halfyear: [null as string | null],
+    halfyear_onedateyy_c: [null as Date | null],
+    halfyear_c: [null as string | null],
+
+    // 年報表
+    year_onedateyy: [null as Date | null],
+    year_onedateyy_c: [null as Date | null],
+
+    // 區間
+    sad_startdate: [null as Date | null],
+    sad_enddate: [null as Date | null],
+    sad_startdate_c: [null as Date | null],
+    sad_enddate_c: [null as Date | null],
+
+    // 活動
+    eventID: [null as string | null],
+    event_startdate: [null as Date | null],
+    event_enddate: [null as Date | null],
+    eventID_c: [null as string | null],
+    event_startdate_c: [null as Date | null],
+    event_enddate_c: [null as Date | null],
+    // 合約條件
+    floor: [[]],
+    region: [[]],
+    bus_type: [[]],
+    bus_class: [[]],
+    tlt_kind: [[]],
+    tlt_term_type: [[]],
+    org_id: [[]],
+    tlt_no: [[]],
+    tlt_building: [[]],
+    issue: ['2'],
+    tax: [true],
+
+    ...createPaginationConfig([{ field: 'counterNumber', order: -1 }])
   });
 
-  totalRecords = 0;
   data: TLS32030Data[] = [];
+  totalRecords = 0;
   selectedItems: TLS32030Data[] = [];
 
-  columnGroup = [
-    { header: '單位', field: 'unit' },
-    { header: '比較', field: 'compare' },
-    { header: '基準', field: 'baseline' },
-    { header: '成長率', field: 'growthRate' },
-    { header: '差異', field: 'difference' },
-  ];
-
-  columns: Column[] = [
-    // 基本資訊欄位
-    { field: 'building', header: '館別', groupField: 'unit' },
-    { field: 'organization', header: '組織', groupField: 'unit' },
-    { field: 'counterType', header: '櫃別', groupField: 'unit' },
-    { field: 'counterNumber', header: '專櫃編號', groupField: 'unit' },
-    { field: 'counterName', header: '專櫃名稱', groupField: 'unit' },
-
-    // 比較欄位群組 (2024/05/14)
-    { field: 'compare_salesAmount', header: '銷售金額', groupField: 'compare' },
-    { field: 'compare_salesCount', header: '銷售筆數', groupField: 'compare' },
-    { field: 'compare_customerCount', header: '來客數', groupField: 'compare' },
-    { field: 'compare_unitPrice', header: '日坪效', groupField: 'compare' },
-    { field: 'compare_conversionRate', header: '達成率', groupField: 'compare' },
-    { field: 'compare_averageSpend', header: '客單價', groupField: 'compare' },
-    { field: 'compare_position', header: '位置排名', groupField: 'compare' },
-
-    // 基準欄位群組 (2024/05/13)
-    { field: 'baseline_salesAmount', header: '銷售金額', groupField: 'baseline' },
-    { field: 'baseline_salesCount', header: '銷售筆數', groupField: 'baseline' },
-    { field: 'baseline_customerCount', header: '來客數', groupField: 'baseline' },
-    { field: 'baseline_unitPrice', header: '日坪效', groupField: 'baseline' },
-    { field: 'baseline_conversionRate', header: '達成率', groupField: 'baseline' },
-    { field: 'baseline_averageSpend', header: '客單價', groupField: 'baseline' },
-    { field: 'baseline_position', header: '位置排名', groupField: 'baseline' },
-
-    // 成長率欄位群組
-    { field: 'growth_salesAmount', header: '銷售金額', groupField: 'growthRate' },
-    { field: 'growth_salesCount', header: '銷售筆數', groupField: 'growthRate' },
-    { field: 'growth_customerCount', header: '來客數', groupField: 'growthRate' },
-    { field: 'growth_unitPrice', header: '日坪效', groupField: 'growthRate' },
-    { field: 'growth_conversionRate', header: '達成率', groupField: 'growthRate' },
-    { field: 'growth_averageSpend', header: '客單價', groupField: 'growthRate' },
-    { field: 'growth_position', header: '位置排名', groupField: 'growthRate' },
-
-    // 差異欄位群組
-    { field: 'diff_salesAmount', header: '銷售金額', groupField: 'difference' },
-    { field: 'diff_salesCount', header: '銷售筆數', groupField: 'difference' },
-    { field: 'diff_customerCount', header: '來客數', groupField: 'difference' },
-    { field: 'diff_unitPrice', header: '日坪效', groupField: 'difference' },
-    { field: 'diff_conversionRate', header: '達成率', groupField: 'difference' },
-    { field: 'diff_averageSpend', header: '客單價', groupField: 'difference' },
-    { field: 'diff_position', header: '位置排名', groupField: 'difference' }
-  ];
-
-  //#region 選項
-  bus_type_Option: IDropdownItem[] = []; // 大分類
-  bus_class_Option: IDropdownItem[] = []; // 中分類
-  organizationOptions: any[] = [];
-  regionOptions: any[] = [];
-  floorOptions: any[] = [];
-  commissionTypeOptions = getSYS1000Options('tlt_term_type');
-  typeOptions: any[] = [];
-  counterCodeOptions = this.dropdown.queryTltTalent();
-  taxOptions: any[] = [
-    { value: true, label: '含稅' },
-    { value: false, label: '未稅' }
-  ];
-  operationsOptions = getSYS1000Options('store_way');
-
-  reportTypeOptions: any[] = [
+  reportTypeOptions = [
     { value: '1', label: '日營業報表' },
     { value: '2', label: '週營業報表' },
     { value: '3', label: '月營業報表' },
@@ -163,159 +114,348 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     { value: '6', label: '區間營業報表' },
     { value: '7', label: '活動區間營業報表' },
   ];
-  EventIDOptions: any[] = [
-    { value: '1', label: '活動1' },
-    { value: '2', label: '活動2' },
-  ];
-  halfyearOptions: any[] = [
+
+  halfyearOptions = [
     { value: '1', label: '上半年' },
-    { value: '2', label: '下半年' },
+    { value: '2', label: '下半年' }
   ];
+
+  EventIDOptions = [
+    { value: '1', label: '活動1' },
+    { value: '2', label: '活動2' }
+  ];
+
+  taxOptions = [
+    { value: true, label: '含稅' },
+    { value: false, label: '未稅' }
+  ];
+  issueOptions: any[] = [{ value: '0', label: '是' }, { value: '1', label: '否' }, { value: '2', label: '全部' },];
+
   BUILDING_NO_Options: any[] = [];
-  issueOptions: any[] = [
-    { value: '0', label: '是' },
-    { value: '1', label: '否' },
-    { value: '2', label: '全部' },
+  floorOptions: any[] = [];
+  regionOptions: any[] = [];
+  organizationOptions: any[] = [];
+  counterCodeOptions = this.dropdown.queryTltTalent();
+  operationsOptions = getSYS1000Options('store_way');
+  bus_type_Option: IDropdownItem[] = []; // 大分類
+  bus_class_Option: IDropdownItem[] = []; // 中分類
+  commissionTypeOptions = getSYS1000Options('tlt_term_type');
+
+  columns: Column[] = [
+    { field: 'building_desc', header: '館別' },
+    { field: 'Org_Name', header: '組織' },
+    { field: 'SYS_Name', header: '櫃別' },
+    { field: 'counterNumber', header: '櫃別' },
+    { field: 'TltNo', header: '專櫃編號' },
+    { field: 'TltName', header: '專櫃名稱' },
+
+    { field: 'Base_LocationNo', header: '位置編號', groupField: 'Base' },
+    { field: 'Base_Space', header: '坪數', groupField: 'Base' },
+    { field: 'Base_SaleAmt', header: '銷售金額', groupField: 'Base' },
+    { field: 'Base_TxnCnt', header: '交易筆數', groupField: 'Base' },
+    { field: 'Base_Target', header: '目標', groupField: 'Base' },
+    { field: 'Base_DaySpaceEff', header: '日坪效', groupField: 'Base' },
+    { field: 'Base_AchieveRate', header: '達成率', groupField: 'Base' },
+    { field: 'Base_AvgTicket', header: '客單價', groupField: 'Base' },
+
+    { field: 'Comp_LocationNo', header: '位置編號', groupField: 'Comp' },
+    { field: 'Comp_Space', header: '坪數', groupField: 'Comp' },
+    { field: 'Comp_SaleAmt', header: '銷售金額', groupField: 'Comp' },
+    { field: 'Comp_TxnCnt', header: '交易筆數', groupField: 'Comp' },
+    { field: 'Comp_Target', header: '目標', groupField: 'Comp' },
+    { field: 'Comp_DaySpaceEff', header: '日坪效', groupField: 'Comp' },
+    { field: 'Comp_AchieveRate', header: '達成率', groupField: 'Comp' },
+    { field: 'Comp_AvgTicket', header: '客單價', groupField: 'Comp' },
+
+    { field: 'Diff_SaleAmt', header: '銷售金額差異', groupField: 'Diff' },
+    { field: 'Diff_TxnCnt', header: '交易筆數差異', groupField: 'Diff' },
+    { field: 'Diff_Target', header: '目標差異', groupField: 'Diff' },
+    { field: 'Diff_DaySpaceEff', header: '日坪效差異', groupField: 'Diff' },
+    { field: 'Diff_AchieveRate', header: '達成率差異', groupField: 'Diff' },
+    { field: 'Diff_AvgTicket', header: '客單價差異', groupField: 'Diff' },
+
+    { field: 'Diff_SaleAmt', header: '銷售金額差異', groupField: 'Diff' },
+    { field: 'Diff_TxnCnt', header: '交易筆數差異', groupField: 'Diff' },
+    { field: 'Diff_Target', header: '目標差異', groupField: 'Diff' },
+    { field: 'Diff_DaySpaceEff', header: '日坪效差異', groupField: 'Diff' },
+    { field: 'Diff_AchieveRate', header: '達成率差異', groupField: 'Diff' },
+    { field: 'Diff_AvgTicket', header: '客單價差異', groupField: 'Diff' },
+
   ];
-  //#endregion
+  columnGroup = [
+    { header: '基準', field: 'Base' },
+    { header: '比較', field: 'Comp' },
+    { header: '差異', field: 'Diff' },
+    { header: '成長率', field: 'Growth' }
+  ];
 
   constructor(
-    private readonly dropdown: DropdownApiService,
     private tls32030Service: TLS32030Service,
+    private dropdown: DropdownApiService,
     private floorService: FloorService,
     private regionService: RegionService,
-    private readonly dropDownListService: DropDownListService,
+    private dropDownListService: DropDownListService
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS32030', 'tls/tls32030cru', this.queryForm, (form) => this.onSubmit(form));
-    this.loadOptions();
-    // 初始化日期預設值
-    this.setDateDefaults(this.queryForm.controls.reportType.value);
-    // 當使用者切換報表類型時自動帶入相對應預設日期
-    (this.queryForm.controls.reportType.valueChanges as unknown as import('rxjs').Observable<string | null>)
+    this.initializePage('TLS32030', 'tls/tls32030', this.queryForm, f => this.onSubmit(f));
+
+    this.setDateDefaults('1');
+
+    this.queryForm.controls.reportType.valueChanges
       .pipe(untilDestroyed(this))
-      .subscribe((value: string | null) => this.setDateDefaults(value));
-    this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.bus_type_Option = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
-    });
-    (this.queryForm.controls.bus_type.valueChanges as unknown as import('rxjs').Observable<string[]>)
-      .pipe(debounceTime(300), untilDestroyed(this))
-      .subscribe((value: string[]) => {
-        if (value && value.length > 0) {
-          this.dropDownListService.queryTLTBUSCLASS_DropDownList({ bus_type: value }).pipe(untilDestroyed(this)).subscribe(response => {
-            const groupedData = response.Data.reduce((accumulator, currentItem) => {
-              const groupKey = currentItem.bus_type || '';
-              if (!accumulator[groupKey]) {
-                accumulator[groupKey] = {
-                  label: `${currentItem.bus_type} - ${currentItem.bus_type_name}`, // <-- 修正這裡！
-                  items: []
-                };
-              }
-
-              accumulator[groupKey].items.push({
-                ...currentItem,
-                label: `${currentItem.No} - ${currentItem.Name}`,
-              });
-
-              return accumulator;
-            }, {} as Record<string, any>);
-
-            // 最後，將分組物件的值轉換為陣列，得到最終的分組下拉清單格式
-            this.bus_class_Option = Object.values(groupedData);
-            console.log(this.bus_class_Option);
-
-          });
-        } else {
-          this.bus_class_Option = [];
-        }
-      });
+      .subscribe(v => this.setDateDefaults(v ?? '1'));
+    this.loadOptions();
   }
 
-  private setDateDefaults(reportType: string | null) {
-    const rt = reportType ?? '1';
-    const today = new Date();
-    const toStartOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    const addDays = (d: Date, days: number) => {
-      const r = new Date(d);
-      r.setDate(r.getDate() + days);
-      return r;
+  private formatDate(val: any): string | null {
+    if (!val) return null;
+    if (val instanceof Date) return val.toISOString().substring(0, 10);
+    return val;
+  }
+
+  private buildQueryRequest(): TLS32030QueryRequest {
+    const raw = this.queryForm.getRawValue();
+    const pageSize = raw.pageSize ?? 20;
+    const pageIndex = raw.pageIndex ?? 1;
+    const d = this.resolveDateRange(raw);
+
+    return {
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      Offset: (pageIndex - 1) * pageSize,
+      OrderBy: '',
+      SortBy: raw.SortBy ?? [],
+
+      BaseDateFrom: this.formatDate(d.BaseFrom),
+      BaseDateTo: this.formatDate(d.BaseTo),
+      CompareDateFrom: this.formatDate(d.CompFrom),
+      CompareDateTo: this.formatDate(d.CompTo),
+
+      BudgetVersion: null,
+      AmtTaxMode: raw.tax ? '1' : '0',
+      ReceFilter: raw.issue ?? null,
+
+      FloorList: raw.floor ?? [],
+      AreaList: raw.region ?? [],
+      BusTypeList: raw.bus_type ?? [],
+      BusClassList: raw.bus_class ?? [],
+      TltKindList: raw.tlt_kind ?? [],
+      OrgList: raw.org_id ?? [],
+      TltNoList: raw.tlt_no ?? [],
+      TermTypeList: raw.tlt_term_type ?? [],
+      BuildingList: raw.tlt_building ?? [],
     };
-    const startOfWeek = (d: Date) => {
-      // 以週一為一週起始(day 1)，回傳週一
-      const day = d.getDay(); // 0 Sunday, 1 Monday ...
-      const diff = (day === 0) ? -6 : 1 - day; // 若為 Sunday(0) 則往前推6天至 Monday
-      return addDays(toStartOfDay(d), diff);
-    };
-    const endOfWeek = (d: Date) => addDays(startOfWeek(d), 6);
-    const startOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
-    const endOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0);
+  }
+
+  private resolveDateRange(raw: any) {
+    const rt = raw.reportType;
+
+    // 預設皆為 null，避免 undefined 報錯
+    let BaseFrom: Date | null = null;
+    let BaseTo: Date | null = null;
+    let CompFrom: Date | null = null;
+    let CompTo: Date | null = null;
 
     switch (rt) {
-      case '1': // 日營業報表
-        (this.queryForm.get('onedate_Start') as FormControl).setValue(toStartOfDay(today));
-        (this.queryForm.get('onedate_End') as FormControl).setValue(toStartOfDay(today));
-        const yesterday = addDays(toStartOfDay(today), -1);
-        (this.queryForm.get('onedatedd_c_Start') as FormControl).setValue(yesterday);
-        (this.queryForm.get('onedatedd_c_End') as FormControl).setValue(yesterday);
+      case '1': // 日報表
+        BaseFrom = raw.onedate_Start;
+        BaseTo = raw.onedate_End;
+
+        CompFrom = raw.onedatedd_c_Start;
+        CompTo = raw.onedatedd_c_End;
         break;
-      case '2': // 週營業報表
-        const sWeek = startOfWeek(today);
-        const eWeek = endOfWeek(today);
-        (this.queryForm.get('startdate') as FormControl).setValue(sWeek);
-        (this.queryForm.get('enddate') as FormControl).setValue(eWeek);
-        const prevSWeek = addDays(sWeek, -7);
-        const prevEWeek = addDays(eWeek, -7);
-        (this.queryForm.get('startdate_c') as FormControl).setValue(prevSWeek);
-        (this.queryForm.get('enddate_c') as FormControl).setValue(prevEWeek);
+
+      case '2': // 週報表
+        BaseFrom = raw.startdate;
+        BaseTo = raw.enddate;
+
+        CompFrom = raw.startdate_c;
+        CompTo = raw.enddate_c;
         break;
-      case '3': // 月營業報表
-        const sMonth = startOfMonth(today);
-        const prevMonthDate = addDays(sMonth, -1); // 上月最後一天
-        const prevMonthFirst = startOfMonth(prevMonthDate);
-        (this.queryForm.get('onedatemm') as FormControl).setValue(sMonth);
-        (this.queryForm.get('onedatemm_c') as FormControl).setValue(prevMonthFirst);
-        break;
-      case '4': // 半年營業報表
-        const month = today.getMonth() + 1; // 1-12
-        if (month <= 6) {
-          // 當前為上半年，基準為今年上半年，比較為去年下半年
-          (this.queryForm.get('halfyear_onedateyy') as FormControl).setValue(new Date(today.getFullYear(), 0, 1));
-          (this.queryForm.get('halfyear') as FormControl).setValue('1');
-          (this.queryForm.get('halfyear_onedateyy_c') as FormControl).setValue(new Date(today.getFullYear() - 1, 0, 1));
-          (this.queryForm.get('halfyear_c') as FormControl).setValue('2');
-        } else {
-          // 當前為下半年，基準為今年下半年，比較為今年上半年
-          (this.queryForm.get('halfyear_onedateyy') as FormControl).setValue(new Date(today.getFullYear(), 0, 1));
-          (this.queryForm.get('halfyear') as FormControl).setValue('2');
-          (this.queryForm.get('halfyear_onedateyy_c') as FormControl).setValue(new Date(today.getFullYear(), 0, 1));
-          (this.queryForm.get('halfyear_c') as FormControl).setValue('1');
+
+      case '3': { // 月報表
+        if (raw.onedatemm) {
+          const y = raw.onedatemm.getFullYear();
+          const m = raw.onedatemm.getMonth();
+          BaseFrom = new Date(y, m, 1);
+          BaseTo = new Date(y, m + 1, 0);
+        }
+        if (raw.onedatemm_c) {
+          const y = raw.onedatemm_c.getFullYear();
+          const m = raw.onedatemm_c.getMonth();
+          CompFrom = new Date(y, m, 1);
+          CompTo = new Date(y, m + 1, 0);
         }
         break;
-      case '5': // 年營業報表
-        (this.queryForm.get('year_onedateyy') as FormControl).setValue(new Date(today.getFullYear(), 0, 1));
-        (this.queryForm.get('year_onedateyy_c') as FormControl).setValue(new Date(today.getFullYear() - 1, 0, 1));
+      }
+
+      case '4': { // 半年報表
+        const year = raw.halfyear_onedateyy?.getFullYear();
+        const half = raw.halfyear;
+
+        if (year) {
+          if (half === '1') {
+            BaseFrom = new Date(year, 0, 1);
+            BaseTo = new Date(year, 5, 30);
+          } else {
+            BaseFrom = new Date(year, 6, 1);
+            BaseTo = new Date(year, 11, 31);
+          }
+        }
+
+        const cyear = raw.halfyear_onedateyy_c?.getFullYear();
+        const chalf = raw.halfyear_c;
+
+        if (cyear) {
+          if (chalf === '1') {
+            CompFrom = new Date(cyear, 0, 1);
+            CompTo = new Date(cyear, 5, 30);
+          } else {
+            CompFrom = new Date(cyear, 6, 1);
+            CompTo = new Date(cyear, 11, 31);
+          }
+        }
         break;
-      default:
+      }
+
+      case '5': { // 年報表
+        const y1 = raw.year_onedateyy?.getFullYear();
+        const y2 = raw.year_onedateyy_c?.getFullYear();
+
+        if (y1) {
+          BaseFrom = new Date(y1, 0, 1);
+          BaseTo = new Date(y1, 11, 31);
+        }
+        if (y2) {
+          CompFrom = new Date(y2, 0, 1);
+          CompTo = new Date(y2, 11, 31);
+        }
+        break;
+      }
+
+      case '6': // 區間
+        BaseFrom = raw.sad_startdate;
+        BaseTo = raw.sad_enddate;
+
+        CompFrom = raw.sad_startdate_c;
+        CompTo = raw.sad_enddate_c;
+        break;
+
+      case '7': // 活動
+        BaseFrom = raw.event_startdate;
+        BaseTo = raw.event_enddate;
+
+        CompFrom = raw.event_startdate_c;
+        CompTo = raw.event_enddate_c;
+        break;
+    }
+
+
+    return {
+      BaseFrom,
+      BaseTo,
+      CompFrom,
+      CompTo
+    };
+  }
+
+
+  private setDateDefaults(rt: string) {
+    const f = this.queryForm;
+    const today = new Date();
+    const base = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    switch (rt) {
+      case '1':
+        f.patchValue({
+          onedate_Start: base,
+          onedate_End: base,
+          onedatedd_c_Start: new Date(base.getTime() - 86400000),
+          onedatedd_c_End: new Date(base.getTime() - 86400000)
+        });
+        break;
+
+      case '2': {
+        const monday = new Date(base);
+        monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+        const sunday = new Date(monday);
+        sunday.setDate(sunday.getDate() + 6);
+
+        f.patchValue({
+          onedateyy: today,
+          weeks: 1,
+          startdate: monday,
+          enddate: sunday,
+
+          onedateyy_c: new Date(today.getFullYear() - 1, today.getMonth(), today.getDate()),
+          weeks_c: 1,
+          startdate_c: new Date(monday.getTime() - 7 * 86400000),
+          enddate_c: new Date(sunday.getTime() - 7 * 86400000)
+        });
+        break;
+      }
+
+      case '3':
+        f.patchValue({
+          onedatemm: new Date(today.getFullYear(), today.getMonth(), 1),
+          onedatemm_c: new Date(today.getFullYear(), today.getMonth() - 1, 1)
+        });
+        break;
+
+      case '4':
+        f.patchValue({
+          halfyear_onedateyy: new Date(today.getFullYear(), 0, 1),
+          halfyear: today.getMonth() < 6 ? '1' : '2',
+          halfyear_onedateyy_c: new Date(today.getFullYear() - 1, 0, 1),
+          halfyear_c: today.getMonth() < 6 ? '2' : '1'
+        });
+        break;
+
+      case '5':
+        f.patchValue({
+          year_onedateyy: new Date(today.getFullYear(), 0, 1),
+          year_onedateyy_c: new Date(today.getFullYear() - 1, 0, 1)
+        });
+        break;
+
+      case '6':
+        f.patchValue({
+          sad_startdate: base,
+          sad_enddate: base,
+          sad_startdate_c: new Date(base.getTime() - 86400000),
+          sad_enddate_c: new Date(base.getTime() - 86400000)
+        });
+        break;
+
+      case '7':
+        f.patchValue({
+          eventID: '1',
+          event_startdate: base,
+          event_enddate: base,
+          eventID_c: '1',
+          event_startdate_c: new Date(base.getTime() - 86400000),
+          event_enddate_c: new Date(base.getTime() - 86400000)
+        });
         break;
     }
   }
 
-  onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      this.tls32030Service.queryTLS32030(frm.getRawValue())
+  onSubmit(form: FormGroup) {
+    this.handleSubmit(form, () => {
+      const req = this.buildQueryRequest();
+      this.tls32030Service.queryTLS32030(req)
         .pipe(finalize(() => this.loading = false))
-        .subscribe(response => {
-          this.data = response.Data;
-          this.totalRecords = response.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        .subscribe(res => {
+          this.data = res.Data;
+          this.totalRecords = res.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
         });
     });
   }
 
-  // 載入下拉選項
   loadOptions() {
     // 樓層下拉選項
     this.floorService.getFloors().subscribe(data => {
@@ -332,3 +472,4 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
 
   }
 }
+
