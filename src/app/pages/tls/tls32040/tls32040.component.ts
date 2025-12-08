@@ -352,54 +352,56 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     })
   }
   onReport(frm: FormGroup, isExcel: boolean) {
-    if (isExcel == false) {
-      if (this.dateForm.invalid) {
-        this.messageService.errorBubble('基準資料為必填');
-        return
-      }
-      if (this.c_dateForm.invalid) {
-        this.messageService.errorBubble('比較資料為必填');
-        return
-      }
+    // Yvv 說先推遲
+    console.log('api準備中');
+    // if (isExcel == false) {
+    //   if (this.dateForm.invalid) {
+    //     this.messageService.errorBubble('基準資料為必填');
+    //     return
+    //   }
+    //   if (this.c_dateForm.invalid) {
+    //     this.messageService.errorBubble('比較資料為必填');
+    //     return
+    //   }
 
-      const formValue = {
-        ...frm.getRawValue(),
+    //   const formValue = {
+    //     ...frm.getRawValue(),
 
-        ReportType: this.dateForm.get('reportType')?.value, // 從日期表單抓
-        BaseDateFrom: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
-        BaseDateTo: formatDate(frm.getRawValue().BaseDateTo, 'yyyy-MM-dd', 'en-US'),
-        CompareDateFrom: formatDate(frm.getRawValue().CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
-        CompareDateTo: formatDate(frm.getRawValue().CompareDateTo, 'yyyy-MM-dd', 'en-US'),
-        FloorList: (frm.getRawValue().FloorList || []).join(','),
-        AreaList: (frm.getRawValue().AreaList || []).join(','),
+    //     ReportType: this.dateForm.get('reportType')?.value, // 從日期表單抓
+    //     BaseDateFrom: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
+    //     BaseDateTo: formatDate(frm.getRawValue().BaseDateTo, 'yyyy-MM-dd', 'en-US'),
+    //     CompareDateFrom: formatDate(frm.getRawValue().CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
+    //     CompareDateTo: formatDate(frm.getRawValue().CompareDateTo, 'yyyy-MM-dd', 'en-US'),
+    //     FloorList: (frm.getRawValue().FloorList || []).join(','),
+    //     AreaList: (frm.getRawValue().AreaList || []).join(','),
 
-        BusTypeList: (frm.getRawValue().BusTypeList || []).join(','), //這邊怪怪的之後可能會改成舊的模式(還是大: "大字串", 中: "中字串")
-        BusClassList: (frm.getRawValue().BusClassList || []) //這邊怪怪的之後可能會改成舊的模式
-          .map((x: any) => x.No)
-          .join(','),
+    //     BusTypeList: (frm.getRawValue().BusTypeList || []).join(','), //這邊怪怪的之後可能會改成舊的模式(還是大: "大字串", 中: "中字串")
+    //     BusClassList: (frm.getRawValue().BusClassList || []) //這邊怪怪的之後可能會改成舊的模式
+    //       .map((x: any) => x.No)
+    //       .join(','),
 
-        TltKindList: (frm.getRawValue().TltKindList || []).join(','),
-        OrgList: (frm.getRawValue().OrgList || []).join(','),
-        TltNoList: (frm.getRawValue().TltNoList || []).join(','),
-        TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
-        BuildingList: (frm.getRawValue().BuildingList || []).join(','),
-      }
-      this.btnLoading = true;
-      this.tls32040Service.exportTLS32040PDF(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
-        .subscribe(res => {
-          this.messageService.successBubble(res.Message);
-          // if (res.Data && res.Data.Print_URL) {
-          //   const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-          //   window.open(downloadUrl, '_blank');
-          // }
-          if (res.Data) {
-            console.log('api回應', res);
-          }
-        });
+    //     TltKindList: (frm.getRawValue().TltKindList || []).join(','),
+    //     OrgList: (frm.getRawValue().OrgList || []).join(','),
+    //     TltNoList: (frm.getRawValue().TltNoList || []).join(','),
+    //     TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
+    //     BuildingList: (frm.getRawValue().BuildingList || []).join(','),
+    //   }
+    //   this.btnLoading = true;
+    //   this.tls32040Service.exportTLS32040PDF(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
+    //     .subscribe(res => {
+    //       this.messageService.successBubble(res.Message);
+    //       // if (res.Data && res.Data.Print_URL) {
+    //       //   const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+    //       //   window.open(downloadUrl, '_blank');
+    //       // }
+    //       if (res.Data) {
+    //         console.log('api回應', res);
+    //       }
+    //     });
 
-    } else {
-      console.log('api準備中');
-    }
+    // } else {
+    //   console.log('api準備中');
+    // }
   }
 
   // #region 呼叫圖檔(這邊先不用做，既有規格有，新版規格沒有)
