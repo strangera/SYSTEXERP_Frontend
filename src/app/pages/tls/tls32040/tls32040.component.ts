@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
-import { TLS32040Request, TLS32040Response, TLS32040Service } from '@service/api/tls/tls32040.service';
+import { TLS32040ChartRequest, TLS32040Request, TLS32040Response, TLS32040Service } from '@service/api/tls/tls32040.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -217,6 +217,9 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
   org_id_Option: IDropdownItem[] = []; // 組織
   tlt_no_id_Option: IDropdownItem[] = []; // 專櫃編號
 
+  btnLoading = false; // PDF excel 讀取進度條
+  btnChartLoading = false;
+
   constructor(
     private readonly dropDownListService: DropDownListService,
     public readonly tls32040Service: TLS32040Service,
@@ -237,11 +240,11 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     });
 
     //同步自定義比較表單
-    // this.c_dateForm.valueChanges
-    //   .pipe(untilDestroyed(this))
-    //   .subscribe(() => {
-    //     this.syncCDateToQueryForm();
-    //   });
+    this.c_dateForm.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(() => {
+        this.syncCDateToQueryForm();
+      });
 
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.tlt_building_Option = res.Data;
@@ -342,7 +345,6 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
       })
     })
   }
-  btnLoading = false;
   onReport(frm: FormGroup, isExcel: boolean) {
     if (isExcel == false) {
       if (this.dateForm.invalid) {
@@ -394,9 +396,34 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     }
   }
 
+  // #region 呼叫圖檔
   onChart(frm: FormGroup) {
-    console.log('呼叫圖檔API', frm.value);
+    const formValue = {
+      ...frm.getRawValue(),
 
+      Year: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy', 'en-US'), //圖表要抓年分
+
+      FloorList: (frm.getRawValue().FloorList || []).join(','),
+      AreaList: (frm.getRawValue().AreaList || []).join(','),
+
+      BusTypeList: (frm.getRawValue().BusTypeList || []).join(','), //這邊怪怪的之後可能會改成舊的模式(還是大: "大字串", 中: "中字串")
+      BusClassList: (frm.getRawValue().BusClassList || []) //這邊怪怪的之後可能會改成舊的模式
+        .map((x: any) => x.No)
+        .join(','),
+
+      TltKindList: (frm.getRawValue().TltKindList || []).join(','),
+      OrgList: (frm.getRawValue().OrgList || []).join(','),
+      TltNoList: (frm.getRawValue().TltNoList || []).join(','),
+      TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
+      BuildingList: (frm.getRawValue().BuildingList || []).join(','),
+    } as TLS32040ChartRequest
+    this.tls32040Service.queryTLS32040Chart(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
+      .subscribe(res => {
+        this.messageService.successBubble(res.Message);
+        if (res.Data) {
+          console.log('圖檔資料', res.Data);
+        }
+      });
   }
 
   // #region 日期選單事件
@@ -622,7 +649,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
   // 用戶輸入的比較表單也同步到主表
   private syncCDateToQueryForm(): void {
-    const type = this.c_dateForm.controls.reportType.value;
+    const type = this.dateForm.get('reportType')?.value; //這邊要抓主表的reportType
 
     let compareStart: Date | null = null;
     let compareEnd: Date | null = null;
@@ -636,10 +663,24 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
       }
 
       case '2': { // 週報
-        const s = this.c_dateForm.controls.startdate.value;
-        const e = this.c_dateForm.controls.enddate.value;
-        compareStart = s;
-        compareEnd = e;
+        const chooseYear = this.c_dateForm.get('onedateyy')?.value ?? null;
+        const chooseWeeks = this.c_dateForm.get('weeks')?.value ?? null;
+
+        if (chooseYear && chooseWeeks) {
+
+          const yearNumber = chooseYear.getFullYear(); // <-- 修正這裡！
+
+          console.log('選擇年份:', yearNumber, '選擇週次:', chooseWeeks);
+
+          const { weekStart, weekEnd } = this.getDateRangeByYearWeek(yearNumber, Number(chooseWeeks));
+
+          this.queryForm.patchValue({
+            CompareDateFrom: weekStart,
+            CompareDateTo: weekEnd,
+          });
+
+          console.log('更新 CompareDateFrom / CompareDateTo: ', weekStart, weekEnd);
+        }
         break;
       }
 
@@ -704,5 +745,26 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     const yearStart = new Date(date.getFullYear(), 0, 1);
     const weekNo = Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
     return String(weekNo);
+  }
+
+  // 給年 + 週數 → 回傳該週的開始日期（週一）與結束日期（週日）
+  getDateRangeByYearWeek(year: number, week: number) {
+    // 先建立該年的 1 月 4 日（ISO 規範的 anchor day）
+    const simple = new Date(year, 0, 4);
+
+    // 取得該年的第一個 ISO 週的週一
+    const dayOfWeek = simple.getDay() || 7; // 週日 = 7
+    const firstWeekMonday = new Date(simple);
+    firstWeekMonday.setDate(simple.getDate() - dayOfWeek + 1);
+
+    // 該週的週一 = 第一週的週一 + (週數 - 1) * 7 天
+    const weekStart = new Date(firstWeekMonday);
+    weekStart.setDate(firstWeekMonday.getDate() + (week - 1) * 7);
+
+    // 該週的週日
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+
+    return { weekStart, weekEnd };
   }
 }
