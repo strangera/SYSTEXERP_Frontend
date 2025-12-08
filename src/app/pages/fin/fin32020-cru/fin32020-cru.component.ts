@@ -40,6 +40,7 @@ import {
 
 // Dialog 元件
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 
 @Component({
   selector: 'app-fin32020-cru',
@@ -58,6 +59,7 @@ import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
     TranslateModule,
     TableComponent,
     DialogComponent,
+    CalendarRangeComponent,
     FIN32020TableEditComponent,
   ],
 })
@@ -154,9 +156,11 @@ export class FIN32020CRUComponent
     { field: 'NoteDesc', header: '備註' },
   ];
   // 這裡用 custNo 當 VEN_No 的輸入（為了不動 HTML）
-  arsSearchForm = this.formBuilder.nonNullable.group({
-    custNo: [''],
-  });
+arsSearchForm = this.formBuilder.nonNullable.group({
+  VEN_No: [''],
+  ARS_Date_From: [null as Date | null],
+  ARS_Date_To: [null as Date | null],
+});
 
   // ===== 調整科目查詢 Dialog =====
   adjAccDialogVisible = false;
@@ -258,35 +262,53 @@ export class FIN32020CRUComponent
   openARSDialog(): void {
     if (this.isFormReadable) return;
     this.arsDialogVisible = true;
-    if (!this.arsList.length) {
-      this.onSearchARS();
-    }
+
+    // ❌ 不要一打開就查詢，避免空條件被後端擋掉
+    // if (!this.arsList.length) {
+    //   this.onSearchARS();
+    // }
+  }
+onSearchARS(): void {
+  const raw = this.arsSearchForm.getRawValue();
+
+  const venNo = raw.VEN_No?.trim() || null;
+  const arsDateFrom = raw.ARS_Date_From
+    ? this.toYMD(raw.ARS_Date_From as Date)
+    : null;
+  const arsDateTo = raw.ARS_Date_To
+    ? this.toYMD(raw.ARS_Date_To as Date)
+    : null;
+
+  // ✅ 用「變數」來檢查是否有輸入條件
+  if (!venNo && !arsDateFrom && !arsDateTo) {
+    console.warn('請至少輸入廠客代號或立帳日');
+    return;
   }
 
-  onSearchARS(): void {
-    this.arsLoading = true;
+  this.arsLoading = true;
 
-    const raw = this.arsSearchForm.getRawValue();
-    const req = {
-      VEN_No: raw.custNo?.trim() || null,
-      ARS_Date_From: null,
-      ARS_Date_To: null,
-      PageIndex: 1,
-      PageSize: 50,
-    };
+  const req = {
+    VEN_No: venNo,
+    ARS_Date_From: arsDateFrom,
+    ARS_Date_To: arsDateTo,
+    PageIndex: 1,
+    PageSize: 50,
+  };
 
-    this.fin32020Service.getARS(req).subscribe({
-      next: (res) => {
-        this.arsList = Array.isArray(res.Data) ? res.Data : [];
-        this.arsLoading = false;
-      },
-      error: (err) => {
-        console.error('FIN32020 getARS error:', err);
-        this.arsList = [];
-        this.arsLoading = false;
-      },
-    });
-  }
+  this.fin32020Service.getARS(req).subscribe({
+    next: (res) => {
+      this.arsList = Array.isArray(res.Data) ? res.Data : [];
+      this.arsLoading = false;
+    },
+    error: (err) => {
+      console.error('FIN32020 getARS error:', err);
+      this.arsList = [];
+      this.arsLoading = false;
+    },
+  });
+}
+
+
 
   onSelectARS(row: Fin32020ARSRow): void {
     if (!row) return;
@@ -446,6 +468,7 @@ export class FIN32020CRUComponent
           },
           error: (err) => {
             console.error('FIN32020 Update error:', err);
+            loading: false
           },
         });
       }

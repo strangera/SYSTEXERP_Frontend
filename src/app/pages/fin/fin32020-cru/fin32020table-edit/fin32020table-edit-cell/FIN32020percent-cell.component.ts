@@ -6,7 +6,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { KeyFilterModule } from 'primeng/keyfilter';
 import { TooltipModule } from 'primeng/tooltip';
-import { CellInput } from './table-edit-cell.model'; // 假設路徑正確
+import { FIN32020CellInput } from './FIN32020table-edit-cell.model'; // 假設路徑正確
 
 @Component({
   selector: 'app-percent-cell',
@@ -45,8 +45,8 @@ import { CellInput } from './table-edit-cell.model'; // 假設路徑正確
     TooltipModule
   ]
 })
-export class PercentCellComponent {
-  @Input({ required: true }) cellInput!: CellInput;
+export class FIN32020PercentCellComponent {
+  @Input({ required: true }) cellInput!: FIN32020CellInput;
 
   // 移過來的屬性和方法
   public readonly percentKeyFilter = /^(100(\.0{1,2})?|(\d{1,2})(\.\d*)?)$/;
