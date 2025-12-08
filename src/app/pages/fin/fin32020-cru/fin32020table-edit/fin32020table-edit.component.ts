@@ -48,7 +48,7 @@ import {
   EditColumn,
   FieldChangeEvent,
 } from './fin32020table-edit.model';
-import { TemplateCellComponent } from './fin32020table-edit-cell/template-cell.component';
+import { FIN32020TemplateCellComponent } from './fin32020table-edit-cell/template-cell.component';
 
 @Component({
   selector: 'app-fin32020table-edit',
@@ -94,6 +94,7 @@ export class FIN32020TableEditComponent implements OnChanges {
   @Output() dataChange = new EventEmitter<any[]>(); // table 資料改變 (事件)
   @Input() loading = false; // 是否顯示 loading
   @Input() disabled = false; // 是否禁用 table
+  @Input() showCaption = true; // ✅ 是否顯示 caption（新增/刪除/Excel 那條）
 
   // 排序
   @Input() multiSortMeta: SortMeta[] | null | undefined = undefined;
@@ -413,7 +414,7 @@ export class FIN32020TableEditComponent implements OnChanges {
       case 'date':
         return DateCellComponent;
       case 'template':
-        return TemplateCellComponent;
+        return FIN32020TemplateCellComponent;
       default:
         return undefined;
     }
@@ -444,4 +445,86 @@ export class FIN32020TableEditComponent implements OnChanges {
     }
     this.cellClick.emit({ col, rowData, index, event });
   }
+    // 管理欄位用的「單筆刪除」
+  onRowDelete(rowData: any, event?: MouseEvent) {
+    if (this.disabled) return;
+
+    // 避免點刪除時觸發 row select
+    if (event) {
+      event.stopPropagation();
+    }
+
+    this.deleteRow([rowData]); // 重用原本的刪除邏輯
+  }
+    // 管理欄位：從「新增資料」那列的 + 建立新列
+  onInsertFromCandidate(rowData: any, index: number, event?: MouseEvent) {
+    if (this.disabled || !this.canInsert) return;
+    if (event) {
+      event.stopPropagation(); // 避免觸發 row select
+    }
+
+    // 1. 先把目前這筆候選列變成正式資料列（可編輯）
+    if (rowData._isAutoInsertCandidate) {
+      rowData._isAutoInsertCandidate = false;
+
+      if (this.dataStatusField) {
+        rowData[this.dataStatusField] = this.dataStatusValue.New;
+      }
+    }
+
+    // 2. 再新增一筆新的候選列，維持最後一列是「新增資料」
+    this.dataService.insertNewRow(
+      this.columns,
+      this.dataKey,
+      this.defaultInsertData,
+      this.dataStatusField,
+      this.dataStatusValue
+    );
+
+    // 3. 對外同步資料（排除候選列）
+    const cleanData = this._tableData.filter(
+      (item) => !item._isAutoInsertCandidate
+    );
+    this.dataChange.emit(cleanData);
+
+    this.cdr.detectChanges();
+  }
+// 管理欄位按下 + ：一次完成「把候選列變成正式列 + 再多一筆候選列」
+// 管理欄位按下 + ：一次完成「把候選列變成正式列 + 再多一筆候選列」
+onInsertFromPlus(rowData: any, index: number, event?: MouseEvent) {
+  if (this.disabled || !this.canInsert) return;
+  if (event) {
+    event.stopPropagation(); // 避免觸發 row select
+  }
+
+  // 1. 先把目前這筆候選列變成「正式資料列」（可編輯）
+  if (rowData._isAutoInsertCandidate) {
+    rowData._isAutoInsertCandidate = false;
+
+    if (this.dataStatusField) {
+      rowData[this.dataStatusField] = this.dataStatusValue.New;
+    }
+  }
+
+  // 2. 再新增一筆新的候選列，維持最後一列是「新增資料」
+  this.dataService.insertNewRow(
+    this.columns,
+    this.dataKey,
+    this.defaultInsertData,
+    this.dataStatusField,
+    this.dataStatusValue
+  );
+
+  // 3. 對外同步資料（排除候選列）
+  const cleanData = this._tableData.filter(
+    (item) => !item._isAutoInsertCandidate
+  );
+  this.dataChange.emit(cleanData);
+
+  this.cdr.detectChanges();
+}
+
+
+
+
 }
