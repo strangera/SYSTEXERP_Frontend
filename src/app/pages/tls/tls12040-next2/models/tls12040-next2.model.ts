@@ -133,6 +133,9 @@ export interface ChargeSettingBusinessModel extends ChargeSettingAPIModel {
 
   // 新增：統一的明細資料屬性（用於表格顯示）
   detailItems?: any[];  // 動態設定，根據當前標籤顯示對應的資料
+
+  // 🆕 新增：折扣摘要欄位（由前端自動產生，用於顯示已勾選的折扣設定）
+  remark?: string;
 }
 
 /**

@@ -217,13 +217,16 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       // 2. 確保折扣項目有正確的日期
       this.fixDiscountItemDates(item);
 
-      // 3. 更新顯示項目
+      // 3. 🆕 產生備註欄位
+      item.remark = this.formatRemarkText(item);
+
+      // 4. 更新顯示項目
       this.updateItemDisplayData(item);
 
       console.log(`  項目 ${index + 1} 已重置到 discount 標籤`);
     });
 
-    // 4. 同步全域標籤狀態
+    // 5. 同步全域標籤狀態
     this.selectedSettingTab = 'discount';
 
     console.log(' 資料一致性確保完成');
@@ -274,6 +277,37 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         }
       });
     }
+  }
+
+  /**
+   * 🆕 根據折扣設定產生備註欄位文字
+   * 格式: `折扣別-(起始日-終止日)-抽成率`
+   * 所有項目用逗號分隔，在同一行顯示
+   */
+  private formatRemarkText(commissionItem: ChargeSettingBusinessModel): string {
+    if (!commissionItem.ChargeDetails || commissionItem.ChargeDetails.length === 0) {
+      return '';
+    }
+
+    // 1. 過濾出 'is_selected' 為 true 的項目
+    const selectedDiscounts = commissionItem.ChargeDetails.filter(d => d.is_selected);
+
+    if (selectedDiscounts.length === 0) {
+      return '';
+    }
+
+    // 2. 按折扣別排序後，產生所有備註項目
+    const remarkParts = selectedDiscounts
+      .sort((a, b) => (a.cag_barcode || '').localeCompare(b.cag_barcode || ''))
+      .map(d => {
+        const startDate = this.formatDateString(d.tlt_bdate).replace(/-/g, '/');
+        const endDate = this.formatDateString(d.tlt_edate).replace(/-/g, '/');
+        const rate = (d.cag_charge_rate || 0) * 100;
+        return `${d.cag_barcode}-(${startDate}-${endDate})-${rate}`;
+      });
+
+    // 3. 用逗號連接所有項目
+    return remarkParts.join(',');
   }
 
   /**
@@ -1741,7 +1775,14 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
     // 關鍵修正：狀態更新完成後，才同步到 Level
     if (originalType === 'discount') {
+      const parentItem = this.findParentOfDetailItem(rowData);
       this.syncDiscountSelectionToLevel(rowData, rowData.is_selected);
+
+      // 🆕 更新備註欄位(重新產生備註文字)
+      if (parentItem) {
+        parentItem.remark = this.formatRemarkText(parentItem);
+        console.log('✅ 已更新備註欄位:', parentItem.remark);
+      }
     }
 
     //  重要：確保 cag_barcode 值不會被意外修改
