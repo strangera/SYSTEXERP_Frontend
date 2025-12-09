@@ -1589,7 +1589,8 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     if (col.allowDecimal) {
       return {
         ...baseConfig,
-        minFractionDigits: 0,
+        // 🔧 修復: 不設置 minFractionDigits，避免 Backspace 刪除時自動補 0
+        // minFractionDigits: 0,
         maxFractionDigits: col.decimalPlaces || 2,
         step: col.decimalPlaces === 1 ? 0.1 : 0.01
       };
@@ -1597,7 +1598,8 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
     return {
       ...baseConfig,
-      minFractionDigits: 0,
+      // 🔧 修復: 不設置 minFractionDigits，避免 Backspace 刪除時自動補 0
+      // minFractionDigits: 0,
       maxFractionDigits: 0,
       step: 1
     };

@@ -327,13 +327,48 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   /**
    * 🆕 格式化合約期間顯示
+   * 使用 DateUtils 確保日期格式化的一致性
    */
   private formatContractPeriod(startDate: any, endDate: any): string {
+    // 導入 DateUtils 來處理日期格式化，避免時區問題
     const formatDate = (date: any) => {
       if (!date) return '';
-      const d = date instanceof Date ? date : new Date(date);
-      if (isNaN(d.getTime())) return '';
-      return d.toISOString().split('T')[0];
+
+      // 處理 Date 物件
+      if (date instanceof Date) {
+        if (isNaN(date.getTime())) return '';
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      // 處理字串
+      if (typeof date === 'string') {
+        // 如果已經是 YYYY-MM-DD 格式，直接返回
+        if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+          return date;
+        }
+        // 如果包含 T（ISO 格式），取日期部分
+        if (date.includes('T')) {
+          return date.split('T')[0];
+        }
+      }
+
+      // 嘗試轉換為 Date 再格式化
+      try {
+        const d = new Date(date);
+        if (!isNaN(d.getTime())) {
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        }
+      } catch {
+        return '';
+      }
+
+      return '';
     };
 
     const start = formatDate(startDate);

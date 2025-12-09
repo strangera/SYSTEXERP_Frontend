@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import { CommissionItem, DiscountSettingItem, AnnualPerformanceItem, DiscountLevelItem } from '../../tls13010/tls13010.model';
 import { ContractFlowService } from '@pages/tls/tls13010/services/contract-flow.service';
+import { DateUtils } from 'src/app/core/utils/date-utils';
 
 export interface OperationResult {
   success: boolean;
@@ -105,8 +106,33 @@ export class CommissionTableService {
           is_configured: true,
           is_enabled: true
         };
-        parentItem.discountLevelItems.push(newLevelItem);
-        console.log(`✅ 已為折扣 ${discountItem.cag_barcode} (ID: ${discountItem.id}) 新增一個 Level 項目 (ID: ${newLevelItem.id})`);
+
+        // 🔧 修復：按照 discount 在 discountSettingItems 中的順序插入 level
+        // 找到當前 discount 在 discountSettingItems 中的索引
+        const discountIndex = parentItem.discountSettingItems?.findIndex(d => d.id === discountItem.id) ?? -1;
+
+        if (discountIndex !== -1 && parentItem.discountSettingItems) {
+          // 計算應該插入的位置：找到所有在此 discount 之前的 discount 對應的 level 數量
+          let insertIndex = 0;
+          for (let i = 0; i < discountIndex; i++) {
+            const prevDiscount = parentItem.discountSettingItems[i];
+            // 計算這個 discount 有多少個對應的 level（未刪除且 selected）
+            const prevLevelCount = parentItem.discountLevelItems?.filter(
+              level => level.charged_id === prevDiscount.id &&
+                      level._status !== 'deleted' &&
+                      level.selected !== false
+            ).length || 0;
+            insertIndex += prevLevelCount;
+          }
+
+          // 在計算出的位置插入新 level
+          parentItem.discountLevelItems.splice(insertIndex, 0, newLevelItem);
+          console.log(`✅ 已在索引 ${insertIndex} 位置為折扣 ${discountItem.cag_barcode} (ID: ${discountItem.id}) 插入 Level 項目 (ID: ${newLevelItem.id})`);
+        } else {
+          // 如果找不到索引，還是用 push（向後兼容）
+          parentItem.discountLevelItems.push(newLevelItem);
+          console.log(`✅ 已為折扣 ${discountItem.cag_barcode} (ID: ${discountItem.id}) 新增一個 Level 項目 (ID: ${newLevelItem.id}) [使用 push]`);
+        }
       } else if (linkedLevelItems.length > 0) {
         // 如果已存在 level，將 selected 設為 true
         linkedLevelItems.forEach(level => {
@@ -128,18 +154,17 @@ export class CommissionTableService {
 
   /**
    * 🆕 格式化合約期間顯示
+   * 使用 DateUtils 確保日期格式化的一致性，避免時區問題
    */
   private formatContractPeriod(startDate: any, endDate: any): string {
-    const formatDate = (date: any) => {
-      if (!date) return '';
-      const d = date instanceof Date ? date : new Date(date);
-      if (isNaN(d.getTime())) return '';
-      return d.toISOString().split('T')[0];
-    };
+    const start = DateUtils.toDateString(startDate);
+    const end = DateUtils.toDateString(endDate);
 
-    const start = formatDate(startDate);
-    const end = formatDate(endDate);
-    return start && end ? `${start} ~ ${end}` : '';
+    if (!start || !end) {
+      return '';
+    }
+
+    return `${start} ~ ${end}`;
   }
 
   // 保持原有代碼，並從此處開始向下貼上...
