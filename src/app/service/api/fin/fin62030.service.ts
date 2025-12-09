@@ -26,7 +26,7 @@ export interface VoucherDetail {
   NoteDesc?: string;      // 摘要
   Debit_Amt?: number;     // 借方金額
   Credit_Amt?: number;    // 貸方金額
-  ORG_ID?: string;        // 組織代碼
+  ORG_ID?: string;        // 組織代號
   ORG_Name?: string;      // 組織名稱
   PTA?: string;           // 立沖代號
   ProjectNo?: string;     // 活動代號
@@ -70,7 +70,7 @@ export interface TranNoDetail {
   IsFee?: boolean;        // 是否為手續費
   AccNo?: string;         // 科目代號
   NoteDesc?: string;      // 摘要
-  ORG_ID?: string;        // 組織代碼
+  ORG_ID?: string;        // 組織代號
   ProjectNo?: string;     // 活動代號
   SubDetailNo?: string;   // 對象別編號
 }
@@ -106,7 +106,7 @@ export class FIN62030Service {
 
   // 查詢銀行調撥資料
   queryFIN62030(req: QueryFIN62030Request): Observable<BaseQueryResponse<FIN62030Data>> {
-    // return this.http.post<BaseQueryResponse<FIN62030Data>>(`${this.apiUrl}/queryFIN62030`, req);
+    return this.http.post<BaseQueryResponse<FIN62030Data>>(`${this.apiUrl}/queryFIN62030`, req);
     // return 假資料
     return of({
       Status: "Success",
@@ -144,7 +144,7 @@ export class FIN62030Service {
 
   // 查詢APS4001調撥單號
   queryAPS4001Tran_No(): Observable<any> {
-    // return this.http.post<any>(`${this.apiUrl}/queryAPS4001Tran_No`, {});
+    return this.http.post<any>(`${this.apiUrl}/queryAPS4001Tran_No`, {});
     // return假資料
     return of({
       Status: "Success",
@@ -166,7 +166,7 @@ export class FIN62030Service {
 
   // 預覽銀行調撥傳票拋轉作業資料
   previewFIN62030(req: PreviewFIN62030Request): Observable<PreviewFIN62030ApiResponse> {
-    // return this.http.post<PreviewFIN62030ApiResponse>(`${this.apiUrl}/previewFIN62030`, req);
+    return this.http.post<PreviewFIN62030ApiResponse>(`${this.apiUrl}/previewFIN62030`, req);
     // return假資料
     return of({
       Status: "Success",
@@ -193,7 +193,23 @@ export class FIN62030Service {
             ORG_ID: "100000",
             ORG_Name: "總公司",
             PTA: "P001",
-            ProjectNo: "PRJ001",
+            ProjectNo: "20250730001",
+            SubDetailNo: "SUB001"
+          },
+          {
+            Tran_No: "T001",
+            AccDC: "C",
+            SerNo: "1",
+            ACC_No: "612003",
+            ACC_Name: "零用金",
+            DetailNo: "V001",
+            NoteDesc: "銀行調撥-貸方",
+            Debit_Amt: 0,
+            Credit_Amt: 1000,
+            ORG_ID: "100000",
+            ORG_Name: "總公司",
+            PTA: "P001",
+            ProjectNo: "20250730001",
             SubDetailNo: "SUB001"
           },
           {
@@ -209,7 +225,7 @@ export class FIN62030Service {
             ORG_ID: "100200",
             ORG_Name: "總公司",
             PTA: "P002",
-            ProjectNo: "PRJ001",
+            ProjectNo: "20250730001",
             SubDetailNo: "SUB002"
           }
         ]
@@ -222,7 +238,7 @@ export class FIN62030Service {
 
   // 執行銀行調撥傳票拋轉作業
   insertFIN62030(req: InsertFIN62030Request): Observable<any> {
-    // return this.http.post<any>(`${this.apiUrl}/insertFIN62030`, req);
+    return this.http.post<any>(`${this.apiUrl}/insertFIN62030`, req);
     // return假資料
     return of({
       Status: "Success",

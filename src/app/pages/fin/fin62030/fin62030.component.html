@@ -69,7 +69,11 @@
     [showReportMode]="false"
   >
     <header>
-      <p-button label="預覽" (click)="onPreview()" />
+      <p-button
+        label="預覽"
+        (click)="onPreview()"
+        [disabled]="selectedItems.length === 0"
+      />
     </header>
   </app-table>
 </div>
