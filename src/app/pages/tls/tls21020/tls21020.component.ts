@@ -131,6 +131,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       options: this.service.GLS1005Options,
       optionLabel: 'label',
       optionValue: 'value',
+      showClear: !1,
     },
     {
       field: 'ABAT_YN',
@@ -146,6 +147,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       optionValue: 'value',
       validate: [validateRequired],
       format: (v: string) => this.service.SYS3100Map().get(v)?.label || v,
+      showClear: !1,
     },
     {
       field: 'AccNotes',
