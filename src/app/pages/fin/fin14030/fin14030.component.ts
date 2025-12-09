@@ -75,9 +75,9 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
   });
 
   // ---彈出視窗控制選項---
-  showDialog = false;        // 控制 dialog 開關
-  dialogData: any = {};      // 用來存放送出後的 form 值
-  auditMode: '審核' | '反審核' = '審核'; // 標題用，可根據需求切換
+  // showDialog = false;        // 控制 dialog 開關
+  // dialogData: any = {};      // 用來存放送出後的 form 值
+  // auditMode: '審核' | '反審核' = '審核'; // 標題用，可根據需求切換
 
   totalRecords = 0; // 總記錄數
   data: Record<string, string>[] = [];
@@ -159,8 +159,8 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
       // 視窗，可以執行「審核」與「反審核」的功能。
 
       // 這裡彈窗顯示
-      this.dialogData = body;
-      this.auditMode = '審核';   // 或者根據狀態切換 '反審核'
+      // this.dialogData = body;
+      // this.auditMode = '審核';   // 或者根據狀態切換 '反審核'
 
       this.fin14030Service.printFIN14030(body).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
@@ -177,12 +177,12 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
 
             // ⬇️ 用 sanitizer 包裝
             this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(rawUrl);
-            this.showDialog = true;
+            // this.showDialog = true;
             this.loading = false;
           }
         },
         error: () => {
-          this.showDialog = false;
+          // this.showDialog = false;
           this.loading = false;
 
           // 清空pdf 關掉審核/反審核按鈕
@@ -218,18 +218,18 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
               this.messageService.successBubble('審核成功');
             } else {
               this.messageService.errorBubble(response.Data.MsgApprove);
-              this.showDialog = false;
+              // this.showDialog = false;
             }
           },
           error: (error) => {
             this.messageService.errorBubble('審核失敗，請稍後再試');
             console.error('審核錯誤:', error);
-            this.showDialog = false;
+            // this.showDialog = false;
           }
         });
       }
     });
-    this.showDialog = false;
+    // this.showDialog = false;
     this.loading = false;
   }
 
@@ -268,7 +268,7 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
         });
       }
     });
-    this.showDialog = false;
+    // this.showDialog = false;
     this.loading = false;
   }
 
