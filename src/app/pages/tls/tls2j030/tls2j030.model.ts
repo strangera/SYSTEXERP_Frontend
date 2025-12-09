@@ -30,6 +30,19 @@ export const PLU_TAXTYPE_OPTIONS = [
   { label: '應稅', value: '1' },
 ];
 
+// 後端來源發票稅別選項（TXN_TaxType）
+export const TXN_TAXTYPE_OPTIONS = [
+  { label: '免稅', value: '0' },
+  { label: '應稅', value: '1' },
+];
+
+// TXN_TaxType 格式化函數（只處理 0/1，其他顯示「未知」）
+export function formatTXNTaxType(v: any) {
+  const str = String(v ?? '');
+  const found = TXN_TAXTYPE_OPTIONS.find(o => o.value === str);
+  return found?.label ?? '未知';
+}
+
 // 零稅註記選項
 export const INV_NONETAX_OPTIONS = [
   { label: '正常', value: '0' },
@@ -172,7 +185,7 @@ export const COLUMNS_NATURAL_EDIT: Column[] = [
   { field: 'TXN_TotGUISaleTax', header: '應稅金額', format: formatAmount, style: 'text-right' },
   { field: 'TXN_TotGUISaleNoTax', header: '免稅金額', format: formatAmount, style: 'text-right' },
   { field: 'TXN_TotTax', header: '稅額', format: formatAmount, style: 'text-right' },
-  { field: 'TXN_TaxType', header: '稅別' },
+  { field: 'TXN_TaxType', header: '稅別', format: formatTXNTaxType },
 ];
 
 
@@ -258,7 +271,7 @@ export const COLUMNS_DETAIL_EDIT: EditColumn[] = [
     width: '100%',
     validate: [validateRequired]
   },
-  { field: 'INV_Qty', header: '數量', type: 'inputNumber', min: 1, minFractionDigits: 0, maxFractionDigits: 3, validate: [validateRequired] },
+  { field: 'INV_Qty', header: '數量', type: 'inputNumber', min: 1, minFractionDigits: 0, maxFractionDigits: 3, validate: [validateRequired], defaultValueFunction: () => 1 },
   { field: 'INV_SaleAmt', header: '發票金額', type: 'inputNumber', minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
 ];
 /** 查看模式用的商品明細欄位（用於 app-table） */

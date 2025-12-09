@@ -177,11 +177,15 @@ export class Tls32040CRUComponent extends BasicCruPageComponent<TLS32040DetailRe
 
       FloorList: ([] as string[]).concat(this.queryConditions.FloorList || []).join(','),
       AreaList: ([] as string[]).concat(this.queryConditions.AreaList || []).join(','),
-      BusTypeList: ([] as string[]).concat(this.queryConditions.BusTypeList || []).join(','), //這邊怪怪的之後可能會改成舊的模式(還是大: "大字串", 中: "中字串")
-      BusClassList: ([] as any[])
-        .concat(this.queryConditions.BusClassList || [])
-        .map(x => x.No)
-        .join(','),
+
+      BusTypeList: this.toArray(this.queryConditions.BusTypeList).map((x: any) =>
+        x.bus_type ?? ''
+      ),
+
+      BusClassList: this.toArray(this.queryConditions.BusClassList).map((item: any) => ({
+        BusType: item.bus_type ?? '',
+        BusClass: item.No ?? ''
+      })),
 
       TltKindList: ([] as string[]).concat(this.queryConditions.TltKindList || []).join(','),
       OrgList: ([] as string[]).concat(this.queryConditions.OrgList || []).join(','),
@@ -202,5 +206,12 @@ export class Tls32040CRUComponent extends BasicCruPageComponent<TLS32040DetailRe
       console.log('明細資料', res.Data);
       this.totalRecords = res.TotalCount;        // 等候端
     })
+  }
+
+  toArray(value: any): any[] {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') return value.split(',').filter(x => x);
+    return [];
   }
 }
