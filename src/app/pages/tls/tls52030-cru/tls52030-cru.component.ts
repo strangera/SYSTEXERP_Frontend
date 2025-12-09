@@ -91,8 +91,15 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
         const buyNet = Math.round(buyPrice * confirmQty);
         const buyTax = stockTaxType === '1' ? Math.round(buyNet * 0.05) : 0;
         const buyAmt = buyNet + buyTax;
-        const saleTax = saleTaxType === '1' ? Math.round((salePrice * confirmQty) / 21) : 0;
-        const saleAmt = Math.round(salePrice * confirmQty);
+        const saleAmt = Math.round(salePrice * confirmQty); // 驗收數量 * 含稅售價 (含稅小計)
+
+        let saleTax = 0;
+        if (saleTaxType === '1') {
+          // 假設稅率為 0.05 (5%)
+          // 從含稅金額中計算稅額： 含稅金額 * (稅率 / (1 + 稅率))
+          // 這是更精確的算法 (約等於 1/21)
+          saleTax = Math.round(saleAmt * 0.05 / 1.05);
+        }
         return {
           'ODD_BuyNet': buyNet,
           'ODD_BuyTax': buyTax, // 假設你的資料物件有這個欄位
@@ -269,17 +276,44 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
     this.tls52030Service.getPOS2017AndPOS2019(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
       this.data = [
         ...this.data,
-        ...response.Data.Data.map((item: IODDetail) => ({
-          ...item,
-          ODD_ConfirmQty: (item.POD_SubQty || 0) - item.ODD_ConfirmQty_Finished,
-        }))
+        ...response.Data.Data.map((item: IODDetail) => {
+          // 1. 計算應驗收數量
+          const confirmQty = (item.POD_SubQty || 0) - (item.ODD_ConfirmQty_Finished || 0);
+
+          // 2. 準備計算所需的基本值
+          const buyPrice = Number(item.ODD_BuyPrc ?? 0);
+          const salePrice = Number(item.ODD_SalePrc ?? 0);
+          const stockTaxType = item.PLU_StockTaxType;
+          const saleTaxType = item.PLU_TaxType;
+
+          // 3. 執行金額計算 (複製自 ODD_ConfirmQty 的 calculate 邏輯)
+          const buyNet = Math.round(buyPrice * confirmQty);
+          const buyTax = stockTaxType === '1' ? Math.round(buyNet * 0.05) : 0;
+          const buyAmt = buyNet + buyTax;
+          const saleAmt = Math.round(salePrice * confirmQty); // 驗收數量 * 含稅售價 (含稅小計)
+
+          let saleTax = 0;
+          if (saleTaxType === '1') {
+            saleTax = Math.round(saleAmt * 0.05 / 1.05); // 使用修正後的稅額計算
+          }
+
+          // 4. 返回包含所有計算值的明細物件
+          return {
+            ...item,
+            ODD_ConfirmQty: confirmQty, // 設定驗收數量
+            ODD_BuyNet: buyNet,
+            ODD_BuyTax: buyTax,
+            ODD_BuyAmt: buyAmt,
+            ODD_SaleTax: saleTax,
+            ODD_SaleAmt: saleAmt,
+          };
+        })
       ];
       this.calculateTotals();
     })
     this.dialogVisible = false;
     this.selectedItemsDialog = [];
     this.selectedItems = [];
-    this.calculateTotals();
   }
   isRowSelectable(event: IODDetail): boolean {
     return !this.data || !this.data.some((item: IODDetail) => item.PO_No === event.PO_No);

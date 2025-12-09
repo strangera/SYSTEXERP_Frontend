@@ -61,6 +61,7 @@ export class FIN24010CRUComponent extends BasicCruPageComponent<QueryFIN24010Res
     PTA_Amt: [{ value: null, disabled: true }], // 沖帳金額 (唯讀)
     ACP_Balance: [{ value: null, disabled: true }], // 應付餘額 (唯讀)
     ACP_ReserveAmt: [{ value: null, disabled: true }], // 保留款金額 (唯讀)
+    RetReserveAmt: [{ value: null, disabled: true }], // 退保留款金額 (唯讀)
     VEN_PayType: [null], // 付款方式 (Editable: PayType)
     VEN_BNK_No: [null], // 匯款銀行代號 (Editable: BankNo, 對應 `VEN_BNK_No`)
     VEN_BNK_BranchNo: [{ value: null, disabled: true }], // 匯款銀行分行代號 (唯讀)

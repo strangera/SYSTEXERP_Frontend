@@ -1009,40 +1009,27 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       return;
     }
 
-    try {
-      // 儲存當前資料
-      this.saveFareDataToWorkflow();
-
-      // 驗證是否有選中的項目
-      // const selectedCount = this.getTotalSelectedCount();
-      // if (selectedCount === 0) {
-      //   this.messageService.warnBubble('請至少選擇一個扣款項目');
-      //   return;
-      // }
-
-      const navigationExtras: NavigationExtras = {
-        state: {
-          crudstatus: this.crudstatus, // 確保這裡有設定現有狀態
-          fromRoute: this.router.url
-        }
-      };
-
-      // 根據合約類型決定導航目標
-      const tltTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
-      if (tltTermType === '1') {
-        // 固定租金：跳過 next2 直接到 next3
-        console.log('🔍 合約類型為固定租金(1)，直接跳轉到 next3');
-        this.router.navigate(['account/tls/tls12040next3'], navigationExtras);
-      } else {
-        // 其他類型：正常導航到 next2
-        console.log('🔍 合約類型非固定租金，跳轉到 next2');
-        this.router.navigate(['account/tls/tls12040next2'], navigationExtras);
-      }
-
-    } catch (error) {
-      console.error('❌ 前往下一步時發生錯誤:', error);
-      this.messageService.warnBubble('儲存資料失敗，無法前往下一步');
+    // 🔥 新增：檢視模式不需要驗證，直接跳轉
+    if (this.isReadOnlyMode) {
+      console.log('🔍 檢視模式：跳過驗證，直接跳轉');
+      this.navigateToNextStep();
+      return;
     }
+
+    // 🔥 新增：編輯模式進行完整驗證
+    console.log('🔍 開始進行完整驗證...');
+    const validationResults = this.validateAllSelectedFareTypes();
+
+    if (!validationResults.isValid) {
+      console.error('❌ 驗證失敗:', validationResults.errors);
+      this.showValidationErrors(validationResults.errors);
+      return;
+    }
+
+    console.log('✅ 驗證通過，準備跳轉到下一步');
+
+    // 呼叫共用導航方法
+    this.navigateToNextStep();
   }
 
   /**
@@ -1634,7 +1621,16 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   private performRealTimeValidation(rowData: any, capType: string): void {
     const allItemsOfType = this.originalFareData[capType] || [];
-    const validationResult = this.fareValidationService.validateSingleItem(rowData, capType, allItemsOfType);
+
+    // 🔥 新增：取得合約日期範圍
+    const contractRange = this.getContractDateRange();
+
+    const validationResult = this.fareValidationService.validateSingleItem(
+      rowData,
+      capType,
+      allItemsOfType,
+      contractRange  // 傳入合約日期範圍
+    );
 
     if (!validationResult.isValid) {
       console.warn(`⚠️ ${capType} 類型項目驗證失敗:`, validationResult.errors);
@@ -1937,7 +1933,16 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     // 只對已勾選的項目進行驗證
     if (data.is_selected) {
       const allItemsOfType = this.originalFareData[capType] || [];
-      const validationResult = this.fareValidationService.validateSingleItem(data, capType, allItemsOfType);
+
+      // 🔥 新增：取得合約日期範圍
+      const contractRange = this.getContractDateRange();
+
+      const validationResult = this.fareValidationService.validateSingleItem(
+        data,
+        capType,
+        allItemsOfType,
+        contractRange  // 傳入合約日期範圍
+      );
 
       if (!validationResult.isValid) {
         const errorMessage = validationResult.errors.join('\n');
@@ -2153,6 +2158,100 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     // 儲存到工作流程
     this.saveFareDataToWorkflow();
+  }
+
+  /**
+   * 🔥 新增：驗證所有已選中的扣款類型
+   */
+  private validateAllSelectedFareTypes(): { isValid: boolean, errors: string[] } {
+    const allErrors: string[] = [];
+    const capTypes = ['A', 'B', 'C', 'D', 'E'];
+
+    // 🔥 取得合約日期範圍
+    const contractRange = this.getContractDateRange();
+
+    capTypes.forEach(capType => {
+      const typeData = this.originalFareData[capType] || [];
+      const selectedItems = typeData.filter(item => item.is_selected);
+
+      if (selectedItems.length > 0) {
+        console.log(`🔍 驗證 ${capType} 類型，已選項目: ${selectedItems.length} 筆`);
+
+        const validationResult = this.fareValidationService.validateFareTypeData(
+          typeData,
+          capType,
+          contractRange  // 傳入合約日期範圍
+        );
+
+        if (!validationResult.isValid) {
+          const typeName = this.getCapTypeName(capType);
+          allErrors.push(`【${typeName}】`);
+          allErrors.push(...validationResult.errors.map(error => `  • ${error}`));
+          allErrors.push(''); // 空行分隔
+        }
+      }
+    });
+
+    return {
+      isValid: allErrors.length === 0,
+      errors: allErrors
+    };
+  }
+
+  /**
+   * 🔥 新增：取得合約日期範圍(用於驗證)
+   */
+  private getContractDateRange() {
+    const contractInfo = this.contractInfoData[0];
+
+    return {
+      tlt_bdate: contractInfo?.tlt_bdate || null,
+      tlt_edate: contractInfo?.tlt_edate || null
+    };
+  }
+
+  /**
+   * 🔥 新增：顯示驗證錯誤訊息
+   */
+  private showValidationErrors(errors: string[]): void {
+    const errorMessage = [
+      '❌ 資料驗證失敗，請修正以下問題：',
+      '',
+      ...errors,
+      '請修正上述問題後再進行下一步。'
+    ].join('\n');
+
+    this.messageService.warnBubble(errorMessage);
+  }
+
+  /**
+   * 🔥 新增：導航到下一步(共用邏輯)
+   */
+  private navigateToNextStep(): void {
+    try {
+      // 儲存當前資料
+      this.saveFareDataToWorkflow();
+
+      const navigationExtras: NavigationExtras = {
+        state: {
+          crudstatus: this.crudstatus,
+          fromRoute: this.router.url
+        }
+      };
+
+      // 根據合約類型決定導航目標
+      const tltTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
+      if (tltTermType === '1') {
+        console.log('🔍 合約類型為固定租金(1)，直接跳轉到 next3');
+        this.router.navigate(['account/tls/tls12040next3'], navigationExtras);
+      } else {
+        console.log('🔍 合約類型非固定租金，跳轉到 next2');
+        this.router.navigate(['account/tls/tls12040next2'], navigationExtras);
+      }
+    } catch (error) {
+      console.error('❌ 導航時發生錯誤:', error);
+      this.messageService.warnBubble('儲存資料失敗，無法前往下一步');
+    }
   }
 
   ngOnDestroy(): void {

@@ -187,6 +187,6 @@ export class AppComponent implements OnInit {
     });
 
     // 啟動版本檢查
-    this.versionCheckService.startVersionCheck();
+    // this.versionCheckService.startVersionCheck();
   }
 }

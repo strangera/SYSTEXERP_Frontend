@@ -258,7 +258,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       _TABLE_KEY: `detail_${Date.now()}`,
       status: 'insert',
       INV_ItemName: '',
-      INV_Qty: 0,
+      INV_Qty: 1,
       INV_SaleAmt: 0,
       _isAutoInsertCandidate: true
     }];
@@ -660,7 +660,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
             this.resetForm();
 
             setTimeout(() => {
-              this.router.navigate(['/tls/tls2j030']);
+              this.router.navigate(['/account/tls/tls2j030']);
             }, 1500);
           } else {
             this.messageService.errorBubble(res?.Message || '新增失敗');

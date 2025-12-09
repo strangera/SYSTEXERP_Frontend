@@ -95,10 +95,27 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       validate: [validateRequired, validateMinNumber(1)],
       width: '100px',
       calculate: (row) => {
+        const subQty = Number(row.POD_SubQty ?? 0);
+        const buyPrc = Number(row.PLU_SalePrc_UNI ?? 0); // 採購單價
+        const salePrc = Number(row.PLU_SalePrc ?? 0); // 售價
+        const taxType = row.PLU_StockTaxType; // 採購稅別
+
+        // 採購金額計算
+        const buyNet = Math.round(subQty * buyPrc); // 採購淨額 (未稅小計)
+        const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0; // 採購稅額
+        const buyAmt = buyNet + buyTax; // 採購合計 (含稅小計)
+
+        // 售價小計計算 (PLU_SalePrc 是含稅售價，假設無需再次計算稅額)
+        const saleAmt = Math.round(subQty * salePrc);
+        // 銷售稅額 (雖然欄位沒有顯示，但提交時需要，先算出來)
+        const saleTax = row.PLU_TaxType === '1' ? Math.round((saleAmt || 0) / 21) : 0; // 假設銷售稅率 5%
+
         return {
-          // *** 修正點：使用 Math.round() 進行四捨五入取整數 ***
-          'POD_BuyNet': Math.round(row.POD_SubQty * row.PLU_SalePrc_UNI), // 計算小計並四捨五入
-          'POD_SaleAmt': Math.round(row.POD_SubQty * row.PLU_SalePrc) // 計算售價小計並四捨五入
+          'POD_BuyNet': buyNet,
+          'POD_BuyTax': buyTax, // 新增：明細採購稅額
+          'POD_BuyAmt': buyAmt, // 新增：明細採購合計
+          'POD_SaleAmt': saleAmt,
+          'POD_SaleTax': saleTax, // 新增：明細銷售稅額 (如果模型有此欄位)
         };
       }
     }, { field: 'PLU_SalePrc_UNI', header: '單價', format: (v) => formatAmountWithDecimals(v, 2) },
@@ -135,6 +152,16 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
       if (results.Data && results.Data.length > 0) {
         const newData = results.Data[0];
+        const buyPrc = newData.PLU_SalePrc_UNI || 0;
+        const salePrc = newData.PLU_SalePrc || 0;
+        const taxType = newData.PLU_StockTaxType;
+        const subQty = 1; // 預設數量為 1
+
+        const buyNet = Math.round(subQty * buyPrc);
+        const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0;
+        const buyAmt = buyNet + buyTax;
+        const saleAmt = Math.round(subQty * salePrc);
+        const saleTax = newData.PLU_TaxType === '1' ? Math.round((saleAmt || 0) / 21) : 0;
         const updatedRow: IQueryPOS2004DetailResponse = {
           ...newData,
           id: 0,
@@ -145,11 +172,14 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
           PLU_BoxQty: newData.PLU_BoxQty,
           PLU_StockTaxType: newData.PLU_StockTaxType,
           PLU_TaxType: newData.PLU_TaxType,
-          PLU_SalePrc_UNI: newData.PLU_SalePrc_UNI,
-          PLU_SalePrc: newData.PLU_SalePrc,
-          POD_SubQty: 1,
-          POD_BuyNet: newData.PLU_SalePrc_UNI || 0,
-          POD_SaleAmt: newData.PLU_SalePrc || 0,
+          PLU_SalePrc_UNI: buyPrc,
+          PLU_SalePrc: salePrc,
+          POD_SubQty: subQty,
+          POD_BuyNet: buyNet, // 修正為計算後的 buyNet
+          POD_BuyTax: buyTax, // 新增
+          POD_BuyAmt: buyAmt, // 新增
+          POD_SaleAmt: saleAmt, // 修正為計算後的 saleAmt
+          POD_SaleTax: saleTax, // 新增 (確保明細資料結構包含此欄位)
           POD_Remark: ''
         };
         this.data = [...this.data.slice(0, index), updatedRow, ...this.data.slice(index + 1)] as IPOS2004DetailData[];
@@ -334,34 +364,64 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   }
   saveDialog() {
     this.dialogVisible = false;
-    this.data = [
-      ...this.data,
-      ...this.selectedItemsDialog.map(item => ({
+    const newItems = this.selectedItemsDialog.map(item => {
+      const buyPrc = item.PLU_SalePrc_UNI || 0;
+      const salePrc = item.PLU_SalePrc || 0;
+      const taxType = item.PLU_StockTaxType;
+      const subQty = 1; // 預設數量為 1
+
+      const buyNet = Math.round(subQty * buyPrc);
+      const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0;
+      const buyAmt = buyNet + buyTax;
+      const saleAmt = Math.round(subQty * salePrc);
+      const saleTax = item.PLU_TaxType === '1' ? Math.round((saleAmt || 0) / 21) : 0;
+
+      return {
         ...item,
         id: 0,
+        POD_BuyNet: buyNet, // 修正
+        POD_BuyTax: buyTax, // 新增
+        POD_BuyAmt: buyAmt, // 新增
+        POD_SaleAmt: saleAmt, // 修正
+        POD_SaleTax: saleTax, // 新增
         PLU_BoxQty: item.PLU_BoxQty === undefined || item.PLU_BoxQty === null ? 0 : item.PLU_BoxQty,
-        POD_SubQty: 1,
+        POD_SubQty: subQty, // 修正為 1
         POD_Remark: ''
-      }))
+      }
+    });
+    this.data = [
+      ...this.data,
+      ...newItems
     ];
+    this.calculateTotals();
     this.selectedItemsDialog = [];
     this.selectedItems = [];
-    this.calculateTotals();
+    this.cdr.detectChanges();
   }
+
   isRowSelectable(event: IPOS2004DetailData): boolean {
     return !this.data || !this.data.some((item: IPOS2004DetailData) => item.PLU_MagNo === event.PLU_MagNo);
   }
+
   // 總計計算邏輯
   calculateTotals(): void {
     let totalBuyNet = 0; // 採購金額(即所有明細的「小計」加總)
-    let totalBuyTax = 0; // 採購金額(即所有明細的「小計」加總)
+    let totalBuyTax = 0; // 稅額
     let totalSaleAmt = 0; // 售價總計(即所有明細的「售價小計」加總)
-    this.data.forEach(item => {
-      totalBuyNet += item.POD_BuyNet || 0;
-      totalBuyTax += item.PLU_StockTaxType === '1' ? Math.round((item.POD_BuyNet || 0) * 0.05) : 0;
-      totalSaleAmt += item.POD_SaleAmt || 0;
-    });
-    const totalBuyAmt = totalBuyNet + totalBuyTax;
+    try {
+      this.data.forEach(item => {
+        const buyNet = Number(item.POD_BuyNet) || 0;
+        const buyTax = Number(item.POD_BuyTax) || 0; // 從明細項中取得已計算的稅額
+        const saleAmt = Number(item.POD_SaleAmt) || 0;
+        totalBuyNet += buyNet;
+        totalBuyTax += buyTax; // 簡單加總明細稅額
+        totalSaleAmt += saleAmt;
+      });
+    } catch (e) {
+      totalBuyNet = totalBuyTax = totalSaleAmt = 0;
+    }
+    const totalBuyAmt = totalBuyNet + totalBuyTax; // 採購合計
+    // ... 後續的 setValue 保持不變
     this.dataForm.controls.PO_TotalBuyNet.setValue(Math.round(totalBuyNet));
     this.dataForm.controls.PO_TotalBuyTax.setValue(Math.round(totalBuyTax));
     this.dataForm.controls.PO_TotalBuyAmt.setValue(Math.round(totalBuyAmt));

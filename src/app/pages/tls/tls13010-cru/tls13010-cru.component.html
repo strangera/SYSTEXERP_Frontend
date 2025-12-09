@@ -29,7 +29,7 @@
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="廠商統一編號" controlName="vendor_ven_no" [options]="pos2013Options" optionLabel="label"
                 optionValue="value" [control]="dataForm.controls.vendor_ven_no" [readonly]="isFormReadonly"
-                (optionSelected)="onVendorOptionSelected($event)"></app-dropdown>
+                (valueChange)="onVendorChange($event)"></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="廠商編號" controlName="ven_no" optionLabel="label" optionValue="value"
