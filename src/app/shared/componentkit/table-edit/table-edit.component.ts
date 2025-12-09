@@ -243,6 +243,7 @@ export class TableEditComponent implements OnChanges {
       this.dataStatusField,
       this.dataStatusValue
     );
+    this.dataChange.emit(this._tableData.filter(item => !item._isAutoInsertCandidate));
     this.cdr.detectChanges();
   }
   // 處理 onValueChange 事件，並發送給父元件
@@ -277,7 +278,7 @@ export class TableEditComponent implements OnChanges {
 
     // 發射 cleanData 給父層
     this.dataChange.emit(cleanData);
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
   // Delete 按鈕
   deleteRow(selectedItems: any) {
@@ -303,7 +304,7 @@ export class TableEditComponent implements OnChanges {
 
     // 3. 發射資料給父層
     this.dataChange.emit(cleanData);
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
   }
   /** // !!! 整筆欄位使用，父層使用方法：
   /* // !!! 1. 宣告：@ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;

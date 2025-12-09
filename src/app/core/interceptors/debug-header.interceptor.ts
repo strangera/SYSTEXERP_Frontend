@@ -7,15 +7,13 @@ import {
   HttpResponse,
 } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { catchError, Observable, of, tap } from 'rxjs'; // <--- 引入 switchMap, of, catchError
+import { AuthService } from '@service/system/auth.service';
+import { catchError, Observable, of, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { DebugToggleService, ExecutedSqlDetail } from '../services/debug-toggle.service';
 
-// 後端新的 Header 鍵
 const DEBUG_ID_HEADER = 'X-Debug-Id';
 const BASE_URL_TO_REMOVE = environment.BaseUrl;
-
-// 新的 Debug API 路徑樣板
 const DEBUG_API_PATH = '/TSRDERP_Main/Controllers/Debug/';
 
 /**
@@ -27,23 +25,32 @@ export const debugHeaderInterceptor: HttpInterceptorFn = (
 ): Observable<HttpEvent<unknown>> => {
 
   const debugService = inject(DebugToggleService);
-  const http = inject(HttpClient); // <--- 注入 HttpClient
+  const http = inject(HttpClient);
+  const authService = inject(AuthService); // <-- 注入 AuthService
 
-  // 如果偵錯未啟用，直接傳遞請求
+  // *** 核心修改部分：檢查 Token/登入狀態 ***
+  // 如果用戶未登入 (即沒有 Token)，則不執行 Debug 邏輯，直接傳遞請求。
+  // 注意：這裡只檢查了登入狀態，如果想排除特定的無 Token 請求 (例如 /User/userLogin)，
+  // 您可能需要額外判斷 req.url。但一般來說，檢查 isLoggedIn() 即可滿足「無 Token 不觸發」的要求。
+  if (!authService.isLoggedIn()) {
+    return next(req);
+  }
+
+  // 1. 如果偵錯未啟用，直接傳遞請求 (保留此檢查)
   if (!debugService.isDebugEnabled()) {
     return next(req);
   }
 
-  // 1. 取得完整的 API 請求路徑 (包含 Query String)
+  // 2. 取得完整的 API 請求路徑 (包含 Query String)
   let apiUrl = req.urlWithParams;
 
-  // 2. 移除環境變數中定義的 Base URL
+  // 3. 移除環境變數中定義的 Base URL
   const baseUrl = BASE_URL_TO_REMOVE;
   if (baseUrl && apiUrl.startsWith(baseUrl)) {
     apiUrl = apiUrl.substring(baseUrl.length);
   }
 
-  // 3. 確保開頭是 '/'
+  // 4. 確保開頭是 '/'
   if (apiUrl.length > 0 && !apiUrl.startsWith('/')) {
     apiUrl = '/' + apiUrl;
   }
@@ -51,7 +58,7 @@ export const debugHeaderInterceptor: HttpInterceptorFn = (
     apiUrl = '/';
   }
 
-  // 4. 處理請求並檢查響應標頭
+  // 5. 處理請求並檢查響應標頭
   return next(req).pipe(
     tap(event => {
       // 檢查是否為 HttpResponse 且 Debug Service 仍在啟用狀態
@@ -76,11 +83,8 @@ export const debugHeaderInterceptor: HttpInterceptorFn = (
 
 
 /**
- * 處理 Debug API 請求的獨立函數
- * @param debugId 從響應標頭取得的 ID
- * @param apiUrl 原始的 API 請求路徑
- * @param http HttpClient 實例
- * @param debugService DebugToggleService 實例
+ * 處理 Debug API 請求的獨立函數 (不變)
+ * ... (保持不變)
  */
 function fetchDebugData(
   debugId: string,
@@ -98,7 +102,7 @@ function fetchDebugData(
     })
   ).subscribe(
     (response) => {
-      // 🐛 核心修正：正確解析新的 API 響應結構
+      // 核心修正：正確解析新的 API 響應結構
       const debugData = response?.Data;
 
       if (debugData && debugData.SqlStatements) {
@@ -125,6 +129,5 @@ function fetchDebugData(
         debugService.setAndShowSqlData(apiUrl, [], null);
       }
     },
-    // 訂閱的錯誤處理（已由 catchError 處理，這裡可省略）
   );
 }

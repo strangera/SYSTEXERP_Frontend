@@ -40,6 +40,8 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
     BalAmt_To: [null, [Validators.max(9999999999)]], // 應付餘額迄 (NUMERIC(14,4))
     Reserve_From: [null, [Validators.max(9999999999)]], // 保留款金額起 (NUMERIC(14,4))
     Reserve_To: [null, [Validators.max(9999999999)]], // 保留款金額迄 (NUMERIC(14,4))
+    RetReserve_From: [null, [Validators.max(9999999999)]], // 退保留款金額起 (NUMERIC(14,4))
+    RetReserve_To: [null, [Validators.max(9999999999)]], // 退保留款金額迄 (NUMERIC(14,4))
     PayType: [null], // 付款方式 (char(1))
     VEN_BNK_No_Param: [null], // 匯款銀行代號 (varchar(5))
     BankAccountNo: [null, [Validators.maxLength(50)]], // 銀行帳號 (varchar(50))
@@ -66,48 +68,16 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
   lastQueryBody: QueryFIN24010Request | null = null;
   totalRecords = 0;
   columns: ReportColumn[] = [
-    { field: 'ACP_No', header: '應付帳款編號' }, // (單據別+YYYYMMDD+XXXX)
-    { field: 'org_id', header: '組織代碼' }, // (SYS3100)
-    { field: 'ACP_YYYYMM', header: '應付帳款年月' },
-    { field: 'acp_termno', header: '帳款帳次' },
-    { field: 'ACP_Date', header: '立帳日期' },
     { field: 'VEN_No', header: '廠商編號' },
     { field: 'VEN_Name', header: '廠商名稱' },
-    { field: 'VEN_Uniform', header: '廠商統一編號/身份證字號' },
-    { field: 'AccNo', header: '會計科目' },
-    { field: 'ACP_SourceNo', header: '帳款來源單號' },
+    { field: 'NoteDesc', header: '摘要' },
+    { field: 'ACP_Date', header: '立帳日期' },
+    { field: 'VouNo', header: '傳票編號' },
     { field: 'ACP_Amt', header: '應付金額' },
     { field: 'PTA_Amt', header: '沖帳金額' },
-    { field: 'ACP_Balance', header: '應付餘額' }, // (ACP_Amt - PTA_Amt)
-    { field: 'ACP_ReserveAmt', header: '保留金額' },
-    { field: 'VEN_PayType', header: '付款方式' }, // (1:電匯,2:開票,3:現金)
-    { field: 'VEN_BNK_No', header: '匯款銀行代碼' },
-    { field: 'VEN_BNK_BranchNo', header: '匯款銀行分行代碼' },
-    { field: 'VEN_BankAccountNo', header: '匯款帳號' },
-    { field: 'VEN_AccountName', header: '匯款帳戶名稱' },
-    { field: 'ACP_ExpectPayDate', header: '預計付款日期' },
-    { field: 'VEN_CheckTitle', header: '支票抬頭' },
-    { field: 'VEN_CTRLYN', header: '是否禁止背書轉讓' }, // (Y是 N否)
-    { field: 'Bank_Name', header: '銀行名稱' },
-    { field: 'Bank_BranchName', header: '銀行分行名稱' },
-    { field: 'Bank_AccName', header: '公司銀行帳戶名稱' },
-    { field: 'VouNo', header: '傳票編號' },
-    { field: 'Vou_PostFlag', header: '傳票過帳旗標' }, // (0=未過帳 1=已製票 3=已過帳)
-    { field: 'Vou_PostFlagName', header: '傳票過帳狀態中文說明' },
-    { field: 'ACP_Status', header: '應付帳款狀態' }, // (0=作廢 2=建立)
-    { field: 'SubDetailNo', header: '對象編號' },
-    { field: 'CRT_Date', header: '建立日期' },
-    { field: 'CRT_USR_No', header: '建立人員' },
-    { field: 'CRT_USR_Name', header: '建立人員姓名' },
-    { field: 'UPD_Date', header: '變更日期' },
-    { field: 'UPD_USR_No', header: '變更人員' },
-    { field: 'UPD_USR_Name', header: '變更人員姓名' },
-    { field: 'POS_VEN_BNK_No', header: 'POS2013 廠商銀行代碼' },
-    { field: 'POS_VEN_BankAccountNo', header: 'POS2013 廠商銀行帳號' },
-    { field: 'POS_VEN_AccountName', header: 'POS2013 廠商帳戶名稱' },
-    { field: 'Diff_BNK_No', header: '銀行代碼是否不同' }, // (Y/N)
-    { field: 'Diff_BankAccountNo', header: '銀行帳號是否不同' }, // (Y/N)
-    { field: 'Diff_AccountName', header: '帳戶名稱是否不同' }, // (Y/N)
+    { field: 'ACP_ReserveAmt', header: '保留款金額' },
+    { field: 'RetReserveAmt', header: '退保留款金額' },
+    { field: 'ACP_Balance', header: '未付金額' },
   ];
 
   // 下拉選單/多選列表的 Options 宣告 (必須與 HTML 中的 options 屬性對應)
@@ -140,6 +110,8 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
     this.handleSubmit(frm, () => {
       const body = {
         ...frm.value,
+        pageIndex: 1, // 第一次查詢預設從第一頁開始
+        pageSize: 30, // 第一次查詢預設30筆
         ACP_YYYYMM: this.datePipe.transform(frm.value.ACP_YYYYMM, 'yyyyMM'),
       }
       this.fin24010Service.queryFIN24010(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
