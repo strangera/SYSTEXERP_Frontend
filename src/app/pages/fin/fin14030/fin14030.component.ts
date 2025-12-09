@@ -15,7 +15,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, convertDateToYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { Column } from '../../../shared/componentkit/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 // 本期發票月
@@ -184,6 +184,9 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
         error: () => {
           this.showDialog = false;
           this.loading = false;
+
+          // 清空pdf 關掉審核/反審核按鈕
+          this.pdfUrl = null
         },
       });
     });
@@ -202,7 +205,7 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
         const body = {
           ...frm.value,
           Mid: Number(frm.value.Mid),
-          REP_GUIYM: convertDateToYYYYMM(frm.value.REP_GUIYM),
+          REP_GUIYM: this.convertDateToYYYYMM(frm.value.REP_GUIYM),
           REP_AuditStatus: '1' // 0=未審核, 1=已審核
         }
         // 可以用 202406 , 703902231 測試
@@ -243,7 +246,7 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
         const body = {
           ...frm.value,
           Mid: Number(frm.value.Mid),
-          REP_GUIYM: convertDateToYYYYMM(frm.value.REP_GUIYM),
+          REP_GUIYM: this.convertDateToYYYYMM(frm.value.REP_GUIYM),
           REP_AuditStatus: '0' // 0=未審核, 1=已審核
         }
         // 可以用 202406 , 703902231 測試
@@ -267,5 +270,21 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
     });
     this.showDialog = false;
     this.loading = false;
+  }
+
+  convertDateToYYYYMM(value: any): string {
+    if (!value) return '';
+
+    // 若是 YYYYMM 字串 → 直接回傳
+    if (typeof value === 'string' && /^\d{6}$/.test(value)) {
+      return value;
+    }
+
+    // 若是 Date → 格式化
+    if (value instanceof Date) {
+      return value.getFullYear() + String(value.getMonth() + 1).padStart(2, '0');
+    }
+
+    throw new Error('convertDateToYYYYMM: 不支援的日期格式');
   }
 }

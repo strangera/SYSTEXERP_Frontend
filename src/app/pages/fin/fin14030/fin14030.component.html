@@ -34,6 +34,16 @@
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
       >
         <app-button btnType="clear" [form]="queryForm"></app-button>
+        <ng-container *ngIf="pdfUrl !== null">
+          <app-button
+            label="審核"
+            (click)="confirmCheck(queryForm)"
+          ></app-button>
+          <app-button
+            label="反審核"
+            (click)="cancelRecheck(queryForm)"
+          ></app-button>
+        </ng-container>
         <app-button
           btnType="query"
           [loading]="loading"
@@ -43,7 +53,7 @@
     </form>
   </p-accordionTab>
 </p-accordion>
-<div class="card" *ngIf="pdfUrl">
+<div class="card" *ngIf="pdfUrl !== null">
   <!-- PDF 預覽區 -->
   <div style="height: 90vh">
     <iframe
@@ -56,7 +66,7 @@
 </div>
 
 <!-- 彈出視窗 -->
-<p-dialog
+<!-- <p-dialog
   header="{{ auditMode }}確認"
   [(visible)]="showDialog"
   modal
@@ -71,4 +81,4 @@
     <app-button label="審核" (click)="confirmCheck(queryForm)"></app-button>
     <app-button label="反審核" (click)="cancelRecheck(queryForm)"></app-button>
   </ng-template>
-</p-dialog>
+</p-dialog> -->
