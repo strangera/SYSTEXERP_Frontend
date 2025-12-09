@@ -201,50 +201,43 @@
       </tr>
     </ng-container>
 
-    <!-- 非群組表頭 -->
-    <ng-container *ngIf="!columnGroup?.length">
-      <tr>
-        <th
-          *ngIf="_tableData.length && showReorder"
-          rowspan="2"
-          class="w-1rem text-center"
-        ></th>
-        <th
-          [attr.colspan]="
-            canInsert &&
-            !disabled &&
-            _tableData.length > 0 &&
-            _tableData[_tableData.length - 1]._isAutoInsertCandidate &&
-            !showCheckBox
-              ? 2
-              : 1
-          "
-          class="w-1rem text-center"
-        >
-          {{ serialName }}
-        </th>
-        <th
-          *ngIf="showCheckBox && !disabled && data.length"
-          class="w-1rem text-center"
-        >
-          <p-tableHeaderCheckbox [disabled]="disabled" />
-        </th>
-        <th
-          *ngFor="let col of columns"
-          pReorderableColumn
-          pResizableColumn
-          [pSortableColumn]="showSort ? col.field : undefined"
-          [pSortableColumnDisabled]="!showSort || col.showSort === false"
-          class="text-center"
-        >
-          {{ col.header }}
-          <p-sortIcon
-            *ngIf="showSort && col.showSort !== false && data.length"
-            [field]="col.field"
-          />
-        </th>
-      </tr>
-    </ng-container>
+<!-- 非群組表頭 -->
+<ng-container *ngIf="!columnGroup?.length">
+  <tr>
+    <th
+      *ngIf="_tableData.length && showReorder"
+      class="w-1rem text-center"
+    ></th>
+
+    <!-- ✅ 序號不用再動態 colspan，固定一格 -->
+    <th class="w-1rem text-center">
+      {{ serialName }}
+    </th>
+
+    <th
+      *ngIf="showCheckBox && !disabled && data.length"
+      class="w-1rem text-center"
+    >
+      <p-tableHeaderCheckbox [disabled]="disabled" />
+    </th>
+
+    <th
+      *ngFor="let col of columns"
+      pReorderableColumn
+      pResizableColumn
+      [pSortableColumn]="showSort ? col.field : undefined"
+      [pSortableColumnDisabled]="!showSort || col.showSort === false"
+      class="text-center"
+    >
+      {{ col.header }}
+      <p-sortIcon
+        *ngIf="showSort && col.showSort !== false && data.length"
+        [field]="col.field"
+      />
+    </th>
+  </tr>
+</ng-container>
+
   </ng-template>
 
   <ng-template
