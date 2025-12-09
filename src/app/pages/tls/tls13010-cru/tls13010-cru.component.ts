@@ -371,31 +371,32 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       // 步驟 2: 初始化檢視模式（同步）
       this.initializeViewMode();
 
-      // ✅ 步驟 3: 載入所有下拉選單選項（等待完成）- 必須在載入資料之前!
-      await this.loadAllDropdownOptions();
-
-      // ✅ 步驟 4: 初始化工作流程（同步）- 在 dropdown options 載入後執行
+      // ✅ 步驟 3: 初始化工作流程（同步）- 移到 dropdown 之前，避免阻塞
       this.initializeWorkflow();
 
-      // 步驟 5: 載入資料（如果需要）（等待完成）
-      await this.loadDataIfNeeded();
+      // ⚡ 步驟 4: 並行載入下拉選單與資料 - 這是關鍵優化！
+      // 不再等待 dropdown 全部載入完成才載入資料，而是同時進行
+      const [dropdownsLoaded] = await Promise.all([
+        this.loadAllDropdownOptions(),
+        this.loadDataIfNeeded() // 與 dropdown 並行載入
+      ]);
 
-      // 步驟 6: 設定監聽器（同步）
+      // 步驟 5: 設定監聽器（同步）
       this.setupListeners();
 
-      // 步驟 7: 設定動態驗證器（同步）
+      // 步驟 6: 設定動態驗證器（同步）
       this.setupDynamicValidators();
 
-      // 步驟 8: 設定表單控制項狀態（同步）
+      // 步驟 7: 設定表單控制項狀態（同步）
       this.setFormControlsState();
 
-      // 步驟 9: 執行初始驗證（同步）
+      // 步驟 8: 執行初始驗證（同步）
       this.performInitialValidation();
 
-      // 步驟 10: 更新 UI（同步）
+      // 步驟 9: 更新 UI（同步）
       this.updateUI();
 
-      console.log(' ========== TLS13010 元件初始化完成 ==========');
+      console.log('✅ ========== TLS13010 元件初始化完成 ==========');
 
     } catch (error) {
       console.error('❌ ========== TLS13010 元件初始化失敗 ==========');
