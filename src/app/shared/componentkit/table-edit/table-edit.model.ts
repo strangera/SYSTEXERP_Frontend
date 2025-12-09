@@ -37,6 +37,8 @@ export interface EditColumn {
   minDate?: Date;
   maxDate?: Date;
   isUserInput?: boolean; // 模板是否當成輸入欄位
+  // default value generator for new rows
+  defaultValueFunction?: () => any;
   // 事件
   calculate?: (rowData: any, value: any) => Record<string, any>;
   onFocus?: (rowData: any, value: any, col: EditColumn, index: number) => void;
