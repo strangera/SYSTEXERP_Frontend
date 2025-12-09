@@ -156,6 +156,7 @@ export interface ColumnDef {
   allowDecimal?: boolean;  // 是否允許小數點
   decimalPlaces?: number;  // 小數位數，預設2位
   displayMultiplier?: number;  // 顯示倍率(例如 100 表示 0.2 顯示為 20，用於百分比等場景)
+  useGrouping?: boolean;  // 是否使用千分位分隔符，預設為 true
 
   // 使用語義化的日期格式類型
   dateFormat?: DateFormatType;
@@ -1580,11 +1581,23 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   // 取得數字輸入的設定
   getNumberInputConfig(col: ColumnDef): any {
-    const baseConfig = {
+    // 🔧 優先使用欄位定義的 useGrouping，若未定義則預設為 true
+    const useGrouping = col.useGrouping !== undefined ? col.useGrouping : true;
+
+    const baseConfig: any = {
       mode: 'decimal',
-      useGrouping: true,  // 這是關鍵！確保千分位顯示
-      min: 0
+      useGrouping: useGrouping  // 使用欄位定義的千分位設定
     };
+
+    // 🔧 修復: 只在欄位定義有設定 minValue 時才加入 min，避免刪除時自動填 0
+    if (col.minValue !== undefined) {
+      baseConfig.min = col.minValue;
+    }
+
+    // 🔧 只在欄位定義有設定 maxValue 時才加入 max
+    if (col.maxValue !== undefined) {
+      baseConfig.max = col.maxValue;
+    }
 
     if (col.allowDecimal) {
       return {

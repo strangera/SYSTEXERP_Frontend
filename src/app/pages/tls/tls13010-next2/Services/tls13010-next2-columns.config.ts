@@ -48,7 +48,17 @@ export class TLS13010Next2ColumnsConfig {
       { field: 'cag_barcode', header: '折扣別', type: 'dropdown', editable: false, options: discountOptions },
       { field: 'tlt_bdate', header: '合約起始日', type: 'date', editable: true },
       { field: 'tlt_edate', header: '合約終止日', type: 'date', editable: true },
-      { field: 'cag_charge_rate', header: '抽成率(%)', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 2, displayMultiplier: 100 }
+      {
+        field: 'cag_charge_rate',
+        header: '抽成率(%)',
+        type: 'number',
+        editable: true,
+        allowDecimal: true,
+        decimalPlaces: 2,
+        useGrouping: false,  // 關閉千分位分隔符
+        maxValue: 100,
+        minValue: 0
+      }
     ];
   }
 
@@ -57,7 +67,17 @@ export class TLS13010Next2ColumnsConfig {
       { field: 'tlt_bdate', header: '帳務起', type: 'date', editable: true },
       { field: 'tlt_edate', header: '帳務迄', type: 'date', editable: true },
       { field: 'year_amount', header: '業績超過金額含', type: 'number', editable: true },
-      { field: 'extra_rate', header: '抽成率(%)', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 2, displayMultiplier: 100 }
+      {
+        field: 'extra_rate',
+        header: '抽成率(%)',
+        type: 'number',
+        editable: true,
+        allowDecimal: true,
+        decimalPlaces: 2,
+        useGrouping: false,  // 關閉千分位分隔符
+        maxValue: 100,
+        minValue: 0
+      }
     ];
   }
 
@@ -89,7 +109,17 @@ export class TLS13010Next2ColumnsConfig {
       },
       { field: 'level_bmount', header: '業績計算金額(起)', type: 'number', editable: true },
       { field: 'level_eamount', header: '業績計算金額(迄)', type: 'number', editable: true },
-      { field: 'level_charge_rate', header: '抽成率(%)', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 2, displayMultiplier: 100 }
+      {
+        field: 'level_charge_rate',
+        header: '抽成率(%)',
+        type: 'number',
+        editable: true,
+        allowDecimal: true,
+        decimalPlaces: 2,
+        useGrouping: false,  // 關閉千分位分隔符
+        maxValue: 100,
+        minValue: 0
+      }
     ];
   }
 

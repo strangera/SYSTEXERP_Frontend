@@ -233,7 +233,7 @@
                 *ngSwitchCase="'number'"
                 [ngModel]="getFieldDefaultValue(col, rowData)"
                 [max]="col.maxValue"
-                [min]="col.minValue || 0"
+                [min]="col.minValue"
                 (ngModelChange)="
                   onNumberModelChange($event, col.field, rowData, false)
                 "
@@ -245,7 +245,8 @@
                   getNumberInputConfig(col).maxFractionDigits
                 "
                 [step]="getNumberInputConfig(col).step"
-                mode="decimal"
+                [mode]="getNumberInputConfig(col).mode"
+                [useGrouping]="getNumberInputConfig(col).useGrouping"
               ></p-inputNumber>
 
               <!-- 下拉選單 -->
@@ -626,7 +627,7 @@
                           *ngSwitchCase="'number'"
                           [ngModel]="getFieldDefaultValue(col, detailData)"
                           [max]="col.maxValue"
-                          [min]="col.minValue || 0"
+                          [min]="col.minValue"
                           (ngModelChange)="
                             onNumberModelChange(
                               $event,
@@ -655,7 +656,8 @@
                             getNumberInputConfig(col).maxFractionDigits
                           "
                           [step]="getNumberInputConfig(col).step"
-                          mode="decimal"
+                          [mode]="getNumberInputConfig(col).mode"
+                          [useGrouping]="getNumberInputConfig(col).useGrouping"
                         ></p-inputNumber>
 
                         <!-- 下拉選單 -->
