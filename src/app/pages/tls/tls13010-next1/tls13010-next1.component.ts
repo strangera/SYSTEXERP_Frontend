@@ -728,7 +728,16 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     */
   private performRealTimeValidation(rowData: any, capType: string): void {
     const allItemsOfType = this.originalFareData[capType] || [];
-    const validationResult = this.fareValidationService.validateSingleItem(rowData, capType, allItemsOfType);
+
+    // 🔥 新增：取得合約日期範圍
+    const contractRange = this.getContractDateRange();
+
+    const validationResult = this.fareValidationService.validateSingleItem(
+      rowData,
+      capType,
+      allItemsOfType,
+      contractRange  // 傳入合約日期範圍
+    );
 
     if (!validationResult.isValid) {
       console.warn(`⚠️ ${capType} 類型項目驗證失敗:`, validationResult.errors);
@@ -1612,6 +1621,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     const allErrors: string[] = [];
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
 
+    // 🔥 新增：取得合約日期範圍
+    const contractRange = this.getContractDateRange();
+
     capTypes.forEach(capType => {
       const typeData = this.originalFareData[capType] || [];
       const selectedItems = typeData.filter(item => item.is_selected);
@@ -1619,7 +1631,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       if (selectedItems.length > 0) {
         console.log(`🔍 驗證 ${capType} 類型，已選項目: ${selectedItems.length} 筆`);
 
-        const validationResult = this.fareValidationService.validateFareTypeData(typeData, capType);
+        const validationResult = this.fareValidationService.validateFareTypeData(
+          typeData,
+          capType,
+          contractRange  // 傳入合約日期範圍
+        );
 
         if (!validationResult.isValid) {
           const typeName = this.getCapTypeName(capType);
@@ -1633,6 +1649,18 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     return {
       isValid: allErrors.length === 0,
       errors: allErrors
+    };
+  }
+
+  /**
+   * 🔥 新增：取得合約日期範圍(用於驗證)
+   */
+  private getContractDateRange() {
+    const contractInfo = this.contractInfoData[0];
+
+    return {
+      tlt_bdate: contractInfo?.tlt_bdate || null,
+      tlt_edate: contractInfo?.tlt_edate || null
     };
   }
 

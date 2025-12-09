@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { ContractDateValidator, ContractDateRange } from '@shared/utils/contract-date-validator.util';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -13,8 +14,11 @@ export class Tls12040FareValidationService {
 
   /**
    * 驗證整個扣款類型的資料
+   * @param fareData 扣款資料陣列
+   * @param capType 扣款類型
+   * @param contractRange 合約日期範圍(可選,用於驗證日期是否在合約期間內)
    */
-  validateFareTypeData(fareData: any[], capType: string): ValidationResult {
+  validateFareTypeData(fareData: any[], capType: string, contractRange?: ContractDateRange): ValidationResult {
     const errors: string[] = [];
     const conflictItems: any[] = [];
 
@@ -29,7 +33,13 @@ export class Tls12040FareValidationService {
     const requiredFieldErrors = this.validateRequiredFields(selectedItems, capType);
     errors.push(...requiredFieldErrors);
 
-    // 2. 時間重複檢查
+    // 2. 🔥 新增：合約日期範圍驗證
+    if (contractRange) {
+      const dateRangeErrors = this.validateContractDateRange(selectedItems, capType, contractRange);
+      errors.push(...dateRangeErrors);
+    }
+
+    // 3. 時間重複檢查
     const timeConflictResult = this.validateTimeConflicts(selectedItems, capType);
     errors.push(...timeConflictResult.errors);
     conflictItems.push(...(timeConflictResult.conflictItems || []));
@@ -39,6 +49,23 @@ export class Tls12040FareValidationService {
       errors,
       conflictItems
     };
+  }
+
+  /**
+   * 🔥 新增：驗證扣款項目日期是否在合約期間內
+   */
+  private validateContractDateRange(selectedItems: any[], capType: string, contractRange: ContractDateRange): string[] {
+    const errors: string[] = [];
+
+    selectedItems.forEach((item, index) => {
+      const validationResult = ContractDateValidator.validateFareItemDates(item, contractRange, capType);
+
+      if (!validationResult.isValid && validationResult.errorMessage) {
+        errors.push(validationResult.errorMessage);
+      }
+    });
+
+    return errors;
   }
 
   /**
@@ -255,19 +282,29 @@ export class Tls12040FareValidationService {
 
   /**
    * 單一項目即時驗證
+   * @param item 要驗證的項目
+   * @param capType 扣款類型
+   * @param allItems 所有項目(用於檢查衝突)
+   * @param contractRange 合約日期範圍(可選)
    */
-  validateSingleItem(item: any, capType: string, allItems: any[]): ValidationResult {
+  validateSingleItem(item: any, capType: string, allItems: any[], contractRange?: ContractDateRange): ValidationResult {
     if (!item.is_selected) {
       return { isValid: true, errors: [] };
     }
 
     const errors: string[] = [];
 
-    // 必填欄位檢查
+    // 1. 必填欄位檢查
     const requiredErrors = this.validateRequiredFields([item], capType);
     errors.push(...requiredErrors);
 
-    // 時間衝突檢查（與其他已選項目）
+    // 2. 🔥 新增：合約日期範圍驗證
+    if (contractRange) {
+      const dateRangeErrors = this.validateContractDateRange([item], capType, contractRange);
+      errors.push(...dateRangeErrors);
+    }
+
+    // 3. 時間衝突檢查（與其他已選項目）
     const otherSelectedItems = allItems.filter(other =>
       other.is_selected &&
       other.id !== item.id &&
