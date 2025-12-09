@@ -127,7 +127,7 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
     this.handleSubmit(this.dataForm, () => {
       const raw = <FIN52080Query>{ ...this.dataForm.getRawValue() };
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
-        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       ));
 
       this.tableLoading.set(!0);

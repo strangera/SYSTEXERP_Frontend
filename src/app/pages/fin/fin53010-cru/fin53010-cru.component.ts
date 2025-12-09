@@ -321,7 +321,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         ...(!this.isFormCreateable && { VouNo }),
       };
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
-        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       )) as unknown as FIN53010InsertPayload | FIN53010UpdatePayload;
 
       this.tableLoading.set(!0);

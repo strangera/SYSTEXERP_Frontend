@@ -122,7 +122,7 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
         ...this.usrData(),
       };
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
-        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       )) as unknown as ASS21010Payload;
 
       this.tableLoading.set(!0);

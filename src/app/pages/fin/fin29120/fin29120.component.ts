@@ -105,11 +105,11 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
 
             // 構建 ACPId 的目標 URL (FIN24010CRU)
             // 使用 Query String 參數: ?acpId=XXX
-            const acpIdUrl = `/account/fin/fin24010cru?acpId=${row.ACPId}`;
+            const acpIdUrl = `./account/fin/fin24010cru?acpId=${row.ACPId}`;
 
             // 構建 InvoiceNo 的目標 URL (FIN13050CRU)
             // 使用 Query String 參數: ?invoiceNo=XXX
-            const invoiceNoUrl = `/account/fin/fin13050cru?invoiceNo=${row.InvoiceNo}`;
+            const invoiceNoUrl = `./account/fin/fin13050cru?invoiceNo=${row.InvoiceNo}`;
 
             return {
               ...row,

@@ -293,7 +293,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       disabled: (v, i, r) => r.pod_status !== '0',
     },
     {
-      field: 'tlt_name',
+      field: 'tlt_',
       header: '專櫃名稱',
     },
     {
@@ -301,13 +301,17 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       header: '抽成類別',
       type: this.isFormReadable ? void 0 : 'dropdown',
       showClear: !1,
-      options: this.service.tltIdOptions(),
+      options: this.service.tltTalentChargeOptions(),
       optionLabel: 'label',
       optionValue: 'value',
       validate: [validateRequired],
       disabled: (v, i, r) => r.pod_status !== '0',
       width: '6rem',
       textAlign: 'right',
+    },
+    {
+      field: 'tlt_id_desc',
+      header: '抽成類別名稱',
     },
     {
       field: 'calc_date_type',
@@ -345,18 +349,18 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       width: '4rem',
       textAlign: 'right',
     },
-    {
-      field: 'tpy_rate_3',
-      header: 'D16',
-      textAlign: 'right',
-      groupField: 'groupField2',
-    },
-    {
-      field: 'tpy_rate_4',
-      header: 'D17',
-      textAlign: 'right',
-      groupField: 'groupField2',
-    },
+    // {
+    //   field: 'tpy_rate_3',
+    //   header: 'D16',
+    //   textAlign: 'right',
+    //   groupField: 'groupField2',
+    // },
+    // {
+    //   field: 'tpy_rate_4',
+    //   header: 'D17',
+    //   textAlign: 'right',
+    //   groupField: 'groupField2',
+    // },
     {
       field: 'pod_status',
       header: '審核狀態',
@@ -375,7 +379,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public readonly counterColumnsGroup: ColumnGroup[] = [
     { field: 'groupField1', header: '匯入分攤' },
-    { field: 'groupField2', header: '合約建檔' },
+    // { field: 'groupField2', header: '合約建檔' },
   ];
 
   public readonly loadingEffect = effect(() => {
@@ -455,7 +459,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         })),
       };
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
-        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       )) as unknown as TLS26080InsertPayload;
 
       const request = this.isFormEditable
@@ -503,10 +507,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     if (event.field === 'tlt_no') {
       // 更新專櫃名稱
       this.tableData.update(data => data.map(item => {
-        if (this.service.tltTalentMap().has(v)) {
-          const opt = this.service.tltTalentMap().get(v)!;
-          if (item.tlt_no === v) item.tlt_name = opt['Name'];
-        }
+        const opt = this.service.tltTalentMap().get(v);
+        if (opt && item.tlt_no === v) item.tlt_name = opt['Name'];
         return item;
       }));
 
@@ -514,6 +516,15 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       this.selectedItemsDialog.update(items => items
         .filter(opt => this.tableData()
           .some(td => td.tlt_no === opt.value)));
+    }
+
+    if (event.field === 'tlt_id') {
+      // 更新抽成類別名稱
+      this.tableData.update(data => data.map(item => {
+        const opt = this.service.tltTalentChargeMap().get(v);
+        if (opt && item.tlt_id === v) item.tlt_id_desc = opt.tlt_id_desc;
+        return item;
+      }));
     }
   }
   public toggleApprovalStatus(): void {

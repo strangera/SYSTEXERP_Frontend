@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { CampaignData, TLS26080Data, TLS26080DetailResult, TLS26080DetailTable, TLS26080InsertPayload, TLS26080Query, TLS26080UpdatePayload, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
-import { Option } from '@service/utility/dropdown-api.model';
+import { Option, TalentChargeItem } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
@@ -23,20 +23,19 @@ export class TLS26080Service {
 
   // 儲存資料
   public readonly tltTalentOptions = signal<Option[]>([]);
-  public readonly tltIdOptions = signal<Option[]>(
-    Array.from({ length: 10 }, (_, i) => ({ value: `${i}`, label: `${i}` }))
-  );
+  public readonly tltTalentChargeOptions = signal<TalentChargeItem[]>([]);
 
   public readonly tltTalentMap = computed(() => {
     return new Map<string, Option>(this.tltTalentOptions().map(item => [item.value, item]));
+  });
+  public readonly tltTalentChargeMap = computed(() => {
+    return new Map<string, TalentChargeItem>(this.tltTalentChargeOptions().map(item => [item.tlt_id, item]));
   });
 
   // 共享資料讀取狀態
   public readonly capItemsLoading = signal<boolean>(!1);
   public readonly tltTalentOptionsLoading = signal<boolean>(!1);
   public readonly tltTalentChargeOptionsLoading = signal<boolean>(!1);
-
-  private readonly tltTalentOptionsDebounce = signal<boolean>(!1);
 
   // 下拉選單資料
   public departmentItems = signal<Option[]>([]);
@@ -88,6 +87,17 @@ export class TLS26080Service {
       }),
       finalize(() => this.capItemsLoading.set(!1))
     ).subscribe();
+  }
+
+  public queryTltTalentCharge(talent_id: number): Observable<TalentChargeItem[]> {
+    this.tltTalentChargeOptionsLoading.set(!0);
+    return this.dropdown.queryTltTalentCharge({ talent_id }).pipe(
+      take(1),
+      tap(res => this.logger.debug(`queryTltTalentCharge:`, [res])),
+      map(res => res?.length && res || []),
+      tap(res => this.tltTalentChargeOptions.set(res)),
+      finalize(() => this.tltTalentChargeOptionsLoading.set(!1)),
+    );
   }
 
   /** 查詢資料 */

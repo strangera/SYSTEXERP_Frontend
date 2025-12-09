@@ -149,7 +149,7 @@ export class FIN71010Component extends BasicQueryPageComponent<unknown> implemen
     this.handleSubmit(this.queryForm, () => {
       const raw = { ...this.queryForm.getRawValue() };
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
-        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       )) as unknown as Record<string, any>;
 
       this.tableLoading.set(!0);
