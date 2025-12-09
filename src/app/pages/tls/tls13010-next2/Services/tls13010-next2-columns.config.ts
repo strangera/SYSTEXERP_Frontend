@@ -90,16 +90,30 @@ export class TLS13010Next2ColumnsConfig {
         editable: false,
         // directEdit: true,
       },
-      // {
-      //   field: 'copy_button',
-      //   header: '複製',
-      //   type: 'button',
-      //   buttonLabel: '複製',
-      //   buttonIcon: 'pi pi-copy',
-      //   buttonClass: 'p-button-sm p-button-secondary',
-      //   buttonTooltip: '複製此扣款項目',
-      //   editable: false
-      // },
+      {
+        field: 'copy_level_button',
+        header: '複製',
+        type: 'button',
+        buttonIcon: 'pi pi-copy',
+        buttonClass: 'p-button-sm p-button-secondary',
+        buttonTooltip: '複製此折扣層級',
+        style: 'width: 50px;',
+        editable: false
+      },
+      {
+        field: 'delete_level_button',
+        header: '刪除',
+        type: 'button',
+        buttonIcon: 'pi pi-trash',
+        buttonClass: 'p-button-sm p-button-danger',
+        buttonTooltip: '刪除此折扣層級',
+        style: 'width: 50px;',
+        editable: false,
+        showCondition: (rowData: any) => {
+          // 使用預先計算的 _canDelete 欄位
+          return rowData._canDelete !== false;
+        }
+      },
       { field: 'cag_barcode', header: '折扣別', type: 'dropdown', editable: false, options: discountOptions },
       {
         field: 'contract_period',  // 🆕 新增欄位

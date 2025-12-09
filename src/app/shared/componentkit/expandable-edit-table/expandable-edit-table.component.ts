@@ -126,6 +126,7 @@ export interface ColumnDef {
   buttonIcon?: string;     // 按鈕圖示
   buttonClass?: string;    // 按鈕樣式
   buttonTooltip?: string;  // 提示文字
+  showCondition?: (rowData: any, allData: any[]) => boolean;  // 按鈕顯示條件函數
 
   defaultValue?: any;  // 預設值
 

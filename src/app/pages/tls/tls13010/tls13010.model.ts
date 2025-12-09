@@ -473,6 +473,8 @@ export interface FareItem {
   _status?: 'new' | 'modified' | 'deleted' | 'original';
   _originalSelected?: boolean;
   _originalData?: Partial<FareItem>;
+  level_id?: string; // 用來識別同一個 discount 的不同 level
+  is_first_level?: boolean; // 標記是否為第一個 level（不可刪除）
   [key: string]: any;
 }
 

@@ -932,10 +932,25 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
         return true;
       })
-      .map(item => ({
-        ...item,
-        _originalType: currentTab
-      }));
+      .map(item => {
+        let canDelete = true;
+
+        // 如果是 level，檢查同一個 discount 下是否只剩一個
+        if (currentTab === 'level') {
+          const sameDiscountLevels = sourceArray.filter(
+            (l: any) => l.charged_id === item.charged_id &&
+                       l.selected &&
+                       l._status !== 'deleted'
+          );
+          canDelete = sameDiscountLevels.length > 1;
+        }
+
+        return {
+          ...item,
+          _originalType: currentTab,
+          _canDelete: canDelete
+        };
+      });
 
     console.log('📊 過濾結果:', {
       原始數量: sourceArray.length,
@@ -1444,8 +1459,13 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     console.log('詳細按鈕點擊事件:', event);
 
     // 判斷是否為複製按鈕
-    if (event.field === 'copy_button') {
+    if (event.field === 'copy_button' || event.field === 'copy_level_button') {
       this.copyDetailItem(event.detailData, event.parentData);
+    }
+
+    // 判斷是否為刪除 level 按鈕
+    if (event.field === 'delete_level_button') {
+      this.deleteLevelItem(event.detailData, event.parentData);
     }
   }
 
@@ -1542,6 +1562,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         copiedItem.level_bmount = sourceItem.level_bmount || 0;
         copiedItem.level_eamount = sourceItem.level_eamount || 0;
         copiedItem.level_charge_rate = sourceItem.level_charge_rate || 0;
+        copiedItem.charged_id = sourceItem.charged_id; // 保留原 discount 關聯
+        copiedItem.contract_period = sourceItem.contract_period; // 保留合約期間
+        copiedItem.selected = true; // 複製的 level 預設勾選
         break;
     }
 
@@ -1551,6 +1574,115 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   private generateTempId(): string {
     return 'temp_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
+  }
+
+  /**
+   * 刪除 level 項目
+   * - 有 id 的（從 API 來的）：標記 _status = 'deleted'
+   * - 臨時 id 的（新增的）：直接從陣列移除
+   */
+  private deleteLevelItem(levelItem: any, parentData: any): void {
+    if (this.crudstatus === CRUDStatus.Read) {
+      this.notificationService.infoBubble('檢視模式下無法刪除項目');
+      return;
+    }
+
+    console.log('='.repeat(80));
+    console.log('🗑️ 開始刪除 level 項目');
+    console.log('要刪除的項目:', {
+      id: levelItem.id,
+      charged_id: levelItem.charged_id,
+      cag_barcode: levelItem.cag_barcode,
+      _status: levelItem._status,
+      selected: levelItem.selected
+    });
+
+    // 檢查是否至少保留一個 level
+    const samDiscountLevels = (parentData.discountLevelItems || []).filter(
+      (item: any) => item.charged_id === levelItem.charged_id &&
+                    item.selected &&
+                    item._status !== 'deleted'
+    );
+
+    console.log('同 discount 下的 level 數量:', samDiscountLevels.length);
+    console.log('同 discount 下的 levels:', samDiscountLevels.map((l: any) => ({
+      id: l.id,
+      _status: l._status,
+      selected: l.selected
+    })));
+
+    if (samDiscountLevels.length <= 1) {
+      this.notificationService.warnBubble('每個折扣別至少需要保留一個層級');
+      return;
+    }
+
+    // 判斷是臨時 id 還是真實 id
+    const isTempId = typeof levelItem.id === 'string' && levelItem.id.startsWith('temp_');
+
+    console.log('ID 類型判斷:', {
+      id: levelItem.id,
+      type: typeof levelItem.id,
+      isTempId
+    });
+
+    // 找到原始陣列中的項目（重要！不能只改 levelItem，因為它可能是 detailItems 的副本）
+    const targetArray = parentData.discountLevelItems || [];
+    const originalItem = targetArray.find((item: any) => item.id === levelItem.id);
+
+    if (!originalItem) {
+      console.error('❌ 找不到原始項目，無法刪除');
+      return;
+    }
+
+    console.log('找到原始項目:', {
+      id: originalItem.id,
+      _status: originalItem._status,
+      selected: originalItem.selected
+    });
+
+    if (isTempId || !levelItem.id) {
+      // 臨時 id：直接從陣列移除
+      const index = targetArray.findIndex((item: any) => item.id === levelItem.id);
+
+      console.log('臨時 ID - 從陣列移除, index:', index);
+
+      if (index !== -1) {
+        targetArray.splice(index, 1);
+        console.log('✅ 已直接移除臨時 level 項目');
+      }
+    } else {
+      // 真實 id：標記為 deleted（修改原始項目）
+      console.log('真實 ID - 標記為 deleted');
+      originalItem._status = 'deleted';
+      originalItem.selected = false;
+      console.log('✅ 已標記原始 level 項目為 deleted:', {
+        id: originalItem.id,
+        _status: originalItem._status,
+        selected: originalItem.selected
+      });
+    }
+
+    console.log('刪除後的 discountLevelItems 數量:', parentData.discountLevelItems?.length);
+
+    // 更新顯示
+    console.log('🔄 開始更新顯示...');
+    this.refreshItemDetailDisplay(parentData);
+
+    console.log('更新後的 detailItems 數量:', parentData.detailItems?.length);
+    console.log('更新後的 detailItems:', parentData.detailItems?.map((item: any) => ({
+      id: item.id,
+      _status: item._status,
+      selected: item.selected
+    })));
+
+    this.updateMainArray(parentData);
+    this.saveToWorkflow();
+
+    // 強制觸發變更檢測
+    this.cdr.detectChanges();
+
+    this.notificationService.successBubble('已刪除層級');
+    console.log('='.repeat(80));
   }
 
   /**

@@ -318,6 +318,7 @@
 
               <ng-container *ngSwitchCase="'button'">
                 <button
+                  *ngIf="!col.showCondition || col.showCondition(rowData, data)"
                   pButton
                   pRipple
                   type="button"
@@ -368,6 +369,7 @@
               <!-- 按鈕在非編輯狀態下也要顯示 -->
               <ng-container *ngSwitchCase="'button'">
                 <button
+                  *ngIf="!col.showCondition || col.showCondition(rowData, data)"
                   pButton
                   pRipple
                   type="button"
