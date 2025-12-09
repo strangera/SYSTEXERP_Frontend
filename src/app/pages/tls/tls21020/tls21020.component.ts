@@ -64,13 +64,26 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     // 日後可客製化欄位顯示
     switch (ENTRY_TYPE) {
       case EntryType['SD銷售日傳票']:
-        this.columnsKeys.update(prev => ({
-          ...prev,
+        this.columnsKeys.set({
+          AccDC: !0,
+          ItemDesc: !0,
+          AccNo: !0,
+          Org_ID: !0,
+          AccNotes: !0,
           ObjectNo: !0,
           RelatedPartyAccNo: !0,
           VEN_No: !0,
           PAY_days: !0,
-        }));
+        });
+        break;
+      case EntryType['WD自營日結傳票']:
+        this.columnsKeys.set({
+          AccDC: !0,
+          ItemDesc: !0,
+          AccNo: !0,
+          Org_ID: !0,
+          AccNotes: !0,
+        });
         break;
       default:
         this.columnsKeys.set({
@@ -138,6 +151,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       field: 'AccNotes',
       header: '傳票備註',
       type: 'input',
+      width: '100%', /** @describe 先100 太寬再改 */
     },
     {
       field: 'ObjectNo',
