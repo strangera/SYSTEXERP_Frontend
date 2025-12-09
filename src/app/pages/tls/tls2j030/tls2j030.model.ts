@@ -258,7 +258,7 @@ export const COLUMNS_DETAIL_EDIT: EditColumn[] = [
     width: '100%',
     validate: [validateRequired]
   },
-  { field: 'INV_Qty', header: '數量', type: 'inputNumber', minFractionDigits: 0, maxFractionDigits: 3, validate: [validateRequired] },
+  { field: 'INV_Qty', header: '數量', type: 'inputNumber', min: 1, minFractionDigits: 0, maxFractionDigits: 3, validate: [validateRequired] },
   { field: 'INV_SaleAmt', header: '發票金額', type: 'inputNumber', minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
 ];
 /** 查看模式用的商品明細欄位（用於 app-table） */
