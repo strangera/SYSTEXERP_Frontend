@@ -50,7 +50,9 @@ export interface TLS32020Data {
   DiffAmt: number,
   GrowthRate: number,
   DiffTxn: number,
-  DiffTicket: number
+  DiffTicket: number,
+  DiffPyeff: number,
+  DiffPyContrib: number,
 }
 
 @Injectable({

@@ -1,0 +1,120 @@
+<p-table #dt [columns]="selectedColumns" [value]="virtualData" [scrollable]="true" [dataKey]="dataKey"
+  scrollHeight="flex" sortMode="multiple" [rowTrackBy]="trackByFn" [loading]="loading"
+  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" [lazy]="lazy" [virtualScrollItemSize]="46"
+  [virtualScrollDelay]="0" [virtualScrollOptions]="{ inline: true,  trackBy: trackByFn,  autoSize: true }"
+  rowGroupMode="rowspan" groupRowsBy="YM">
+  <ng-template pTemplate="caption">
+    <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
+      [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event" [showCaption]="true"
+      [showFilter]="true" [showReportMode]="false" [showDelete]="false" [showPage]="false"
+      [totalRecords]="dt.totalRecords">
+      <header><ng-content select="header"></ng-content></header>
+    </app-table-caption>
+  </ng-template>
+  <ng-template pTemplate="header" let-columns>
+    <ng-container *ngIf="columnGroup && columnGroup.length > 0">
+      <tr>
+        <th class="w-1rem text-center" rowspan="2" pFrozenColumn>序號</th>
+        <ng-container *ngFor="let col of columns; let i = index">
+          <!-- 如果是第一次出現這個群組 -->
+          <ng-container *ngIf="tableUtility.shouldRenderGroupHeader(col, i, columns)">
+            <th [attr.colspan]="tableUtility.getColumnSpan(columns, col.groupField!)" class="group-header text-center">
+              {{ getGroupHeader(col.groupField!) }}
+            </th>
+          </ng-container>
+          <!-- 如果是沒群組的欄位 -->
+          <ng-container *ngIf="!col.groupField">
+            <th rowspan="2" class="text-center" pFrozenColumn [frozen]="!!col.frozen"
+              [alignFrozen]="col.alignFrozen || 'right'">
+              {{ col.header }}
+            </th>
+          </ng-container>
+        </ng-container>
+      </tr>
+      <!-- 第二層：實際欄位標題 -->
+      <tr>
+        <ng-container *ngFor="let col of columns">
+          <th *ngIf="col.groupField" class="text-center" style="min-width: 55px">
+            {{ col.header }}
+          </th>
+        </ng-container>
+      </tr>
+    </ng-container>
+  </ng-template>
+  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex"
+    let-expanded="expanded" let-rowgroup="rowgroup" let-rowspan="rowspan">
+    <tr [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined" [pSelectableRow]="rowData"  
+      [style]="{ height: '46px' }" [pSelectableRowIndex]="rowIndex">
+      <td class="w-1rem text-center" pFrozenColumn>{{ rowIndex + 1 }}</td>
+      <ng-container *ngFor="let col of columns">
+        <td *ngIf="col.field === 'YM' && rowgroup" [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
+          [attr.rowspan]="rowspan" style="text-overflow: ellipsis; min-width: 55px">
+          {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+        </td>
+        <td *ngIf="col.field !== 'YM'" [ngStyle]="{'text-align': col.align ? col.align : 'center'}"  
+          style="text-overflow: ellipsis; min-width: 55px">
+          <span>
+            {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+          </span>
+        </td>
+      </ng-container>
+    </tr>
+    <tr *ngIf="rowData && isGroupLastRow(rowData, rowIndex) && hasSubtotalColumns()"
+      class="font-bold text-center text-sm bg-gray-200 text-primary">
+      <td class="w-1rem text-center">
+        <span class="font-bold">小計</span>
+      </td>
+      <ng-container *ngFor="let col of columns">
+        <td class="text-center">
+          <span class="font-bold"> {{ getGroupSubtotal(rowData, col) }}</span>
+        </td>
+      </ng-container>
+    </tr>
+    <ng-container *ngIf="data.length < totalRecords && rowIndex === data.length - 1">
+      <tr *ngFor="let i of [0, 1, 2, 3]" style="height:46px">
+        <td>
+          <p-skeleton />
+        </td>
+        <td *ngFor="let col of columns">
+          <p-skeleton />
+        </td>
+      </tr>
+    </ng-container>
+  </ng-template>
+  <ng-template pTemplate="footer" let-columns let-rowData>
+    <tr *ngIf="footerData" class="font-bold text-center text-sm bg-gray-200 text-primary">
+      <td class="w-1rem text-center">
+        <span class="font-bold">總計</span>
+      </td>
+      <ng-container *ngFor="let col of columns">
+        <td class="text-center">
+          <span class="font-bold">
+            {{ col.format ? col.format(footerData[col.field]) : footerData[col.field] }}
+          </span>
+        </td>
+      </ng-container>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="summary">
+    <div class="flex align-items-center justify-content-between p-2">
+      <div [style.min-width.px]="150" class="flex align-items-center">
+      </div>
+      <div class="flex align-items-center">
+        <span [pTooltip]="'已載入筆數 ' + data.length">
+          總筆數: {{ totalRecords }} 筆
+        </span>
+        <p-button icon="pi pi-arrow-up" (click)="dt.scrollTo({ top: 0, behavior: 'smooth'});"
+          styleClass="p-button-text p-button-sm ml-2" pTooltip="滾動到頂部" />
+      </div>
+    </div>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td [attr.colspan]="1 + columns.length">
+        <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
+          查無資料
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
