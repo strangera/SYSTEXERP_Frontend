@@ -75,7 +75,7 @@ export class TLS13010DataLoaderService {
     if (savedFormData && Object.keys(savedFormData).length > 0) {
       this.loadSavedFormData(component, savedFormData);
     } else {
-      component.formInitService.initializeEmptyForm(component.dataForm);
+      component.tlsBaseService.initializeEmptyForm(component.dataForm, 'TLS13010');
       component.locationData = [];
       component.selectedBankInfo = null;
 

@@ -34,10 +34,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   // === 核心狀態 ===
   dataForm: FormGroup;
 
-  // 檢視模式用 (衍生自 crudstatus)
-  get isViewMode(): boolean {
-    return this.crudstatus === CRUDStatus.Read;
-  }
+  // 將 CRUDStatus 暴露給模板使用
+  readonly CRUDStatus = CRUDStatus;
+
   dataLoaded = false;
   commissionDataLoaded = false; // 新增
   showConfirmDialog = false;
@@ -920,7 +919,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   onAddCommissionItem(): void {
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.notificationService.infoBubble('檢視模式下無法新增項目');
       return;
     }
@@ -941,7 +940,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     }
   }
   onAddDetailItem(parentData: any): void {
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.notificationService.infoBubble('檢視模式下無法新增明細項目');
       return;
     }
@@ -960,7 +959,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   onBatchDelete(selectedItems: any[]): void {
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.notificationService.infoBubble('檢視模式下無法刪除項目');
       return;
     }
@@ -974,7 +973,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   onDetailBatchDelete(event: { selectedDetails: any[], parentData: any }): void {
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.notificationService.infoBubble('檢視模式下無法刪除項目');
       return;
     }
@@ -1066,7 +1065,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
    * 處理複製折扣設定
    */
   private handleCopyDiscount(discountItem: any, parentData: any): void {
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.notificationService.infoBubble('檢視模式下無法複製項目');
       return;
     }
@@ -1380,7 +1379,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
    * 複製詳細項目（插入到下一行）
    */
   private copyDetailItem(sourceItem: any, parentData: any): void {
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.notificationService.infoBubble('檢視模式下無法複製項目');
       return;
     }

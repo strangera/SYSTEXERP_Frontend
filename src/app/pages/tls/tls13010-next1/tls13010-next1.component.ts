@@ -54,10 +54,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   currentRowData: any = null;
   currentCapType: string = '';
 
-  // 檢視模式用 (衍生自 crudstatus)
-  get isViewMode(): boolean {
-    return this.crudstatus === CRUDStatus.Read;
-  }
+  // 將 CRUDStatus 暴露給模板使用
+  readonly CRUDStatus = CRUDStatus;
 
   // 組織table下拉
   orgOptions: any[] = [];
@@ -119,7 +117,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   get shouldForceEdit(): boolean {
-    return !this.isViewMode; // 檢視模式時關閉常駐編輯
+    return this.crudstatus !== CRUDStatus.Read; // 檢視模式時關閉常駐編輯
   }
 
 
@@ -136,13 +134,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   get deductionAColumns(): ColumnDef[] {
     if (!this._cachedDeductionAColumns ||
       this._lastOrgOptionsLength !== this.orgOptions.length ||
-      this._lastViewMode !== this.isViewMode ||
+      this._lastViewMode !== (this.crudstatus === CRUDStatus.Read) ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
       // console.log('🔄 重新生成 deductionAColumns');
       let columns = FareColumnDefinitions.getDeductionAColumns(this.contractInfoData);
       columns = FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
-      if (this.isViewMode) {
+      if (this.crudstatus === CRUDStatus.Read) {
         columns = FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
       this._cachedDeductionAColumns = columns;
@@ -153,12 +151,12 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   get deductionBColumns(): ColumnDef[] {
     if (!this._cachedDeductionBColumns ||
-      this._lastViewMode !== this.isViewMode ||
+      this._lastViewMode !== (this.crudstatus === CRUDStatus.Read) ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
       // console.log('🔄 重新生成 deductionBColumns');
       let columns = FareColumnDefinitions.getDeductionBColumns(this.contractInfoData);
-      if (this.isViewMode) {
+      if (this.crudstatus === CRUDStatus.Read) {
         columns = FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
       this._cachedDeductionBColumns = columns;
@@ -170,13 +168,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   get deductionCColumns(): ColumnDef[] {
     if (!this._cachedDeductionCColumns ||
       this._lastOrgOptionsLength !== this.orgOptions.length ||
-      this._lastViewMode !== this.isViewMode ||
+      this._lastViewMode !== (this.crudstatus === CRUDStatus.Read) ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
       // console.log('🔄 重新生成 deductionCColumns');
       let columns = FareColumnDefinitions.getDeductionCColumns(this.contractInfoData);
       columns = FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
-      if (this.isViewMode) {
+      if (this.crudstatus === CRUDStatus.Read) {
         columns = FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
       this._cachedDeductionCColumns = columns;
@@ -189,14 +187,14 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     if (!this._cachedDeductionDColumns ||
       this._lastOrgOptionsLength !== this.orgOptions.length ||
       this._lastPayNoOptionsLength !== this.payNoOptions.length ||  // 加這行
-      this._lastViewMode !== this.isViewMode ||
+      this._lastViewMode !== (this.crudstatus === CRUDStatus.Read) ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
       let columns = FareColumnDefinitions.getDeductionDColumns(this.contractInfoData);
       columns = FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
       columns = FareColumnDefinitions.updatePayNoOptionsInColumns(columns, this.payNoOptions); // 加這行
 
-      if (this.isViewMode) {
+      if (this.crudstatus === CRUDStatus.Read) {
         columns = FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
 
@@ -210,14 +208,14 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     if (!this._cachedDeductionEColumns ||
       this._lastOrgOptionsLength !== this.orgOptions.length ||
       this._lastPayNoOptionsLength !== this.payNoOptions.length ||  // 加這行
-      this._lastViewMode !== this.isViewMode ||
+      this._lastViewMode !== (this.crudstatus === CRUDStatus.Read) ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
       let columns = FareColumnDefinitions.getDeductionEColumns(this.contractInfoData);
       columns = FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
       columns = FareColumnDefinitions.updatePayNoOptionsInColumns(columns, this.payNoOptions); // 加這行
 
-      if (this.isViewMode) {
+      if (this.crudstatus === CRUDStatus.Read) {
         columns = FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
 
@@ -230,7 +228,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   private _updateCacheFlags(): void {
     this._lastOrgOptionsLength = this.orgOptions.length;
     this._lastPayNoOptionsLength = this.payNoOptions.length;
-    this._lastViewMode = this.isViewMode;
+    this._lastViewMode = (this.crudstatus === CRUDStatus.Read);
     this._lastContractInfoLength = this.contractInfoData.length;
   }
 
@@ -1278,7 +1276,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.saveFareDataToWorkflow();
 
     // 🔥 檢視模式：不需要驗證，直接跳轉
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       console.log('🔍 檢視模式：跳過驗證，直接跳轉');
       const contractTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
       if (contractTermType === '1') {
@@ -1316,7 +1314,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     const extras: NavigationExtras = {
       state: { fromRoute: this.router.url },
     };
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.router.navigate(['account/tls/tls13010cru'], extras);
       return;
     }

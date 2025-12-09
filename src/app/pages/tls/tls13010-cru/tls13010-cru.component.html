@@ -140,8 +140,8 @@
         [headerStyleClass]="'query-accordionTab'">
         <div class="col-12">
           <app-expandable-edit-table [data]="getDisplayLocationData()" [mainColumns]="locationColumns"
-            [showCheckBox]="!isViewMode" [showPaginator]="false" [showAddButton]="!isViewMode"
-            [showBatchDelete]="!isViewMode" [showActionColumn]="false" [forceEditMode]="!isViewMode"
+            [showCheckBox]="crudstatus !== CRUDStatus.Read" [showPaginator]="false" [showAddButton]="crudstatus !== CRUDStatus.Read"
+            [showBatchDelete]="crudstatus !== CRUDStatus.Read" [showActionColumn]="false" [forceEditMode]="crudstatus !== CRUDStatus.Read"
             [autoEditOnAdd]="true" [loading]="loading" dataKey="id" detailKey="" emptyMessage="尚未設定位置資訊，請點擊新增按鈕開始設定"
             (addMainItem)="onAddLocationItem()" (batchDelete)="onBatchDeleteLocation($event)"
             (save)="onLocationTableSave($event)" (edit)="onLocationTableEdit($event)"

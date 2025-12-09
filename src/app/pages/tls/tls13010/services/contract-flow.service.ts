@@ -1,24 +1,23 @@
 // contract-flow.service.ts - 整合 DataCleaner 版本
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
 import {
+  // 新增：導入清理後的資料模型
+  CleanSubmitData,
   CommissionItem,
+  CommissionTypeChangeInfo,
   ConditionItem,
   ContractDataStructure,
   ContractInfo,
-  FareItem,
-  Step3DataChangeTracker,
-  UnifiedCommissionResponse,
-  WorkflowStatus,
-  WorkflowStep,
-  // 新增：導入清理後的資料模型
-  CleanSubmitData,
   DataCleaner,
   DataClearOperations,
-  CommissionTypeChangeInfo
+  FareItem,
+  UnifiedCommissionResponse,
+  WorkflowStatus,
+  WorkflowStep
 } from '../tls13010.model';
-import { TLS13010Service } from '@service/api/tls/tls13010.service';
 
 @Injectable({
   providedIn: 'root'
@@ -46,7 +45,7 @@ export class ContractFlowService {
       lastModified: new Date(),
       version: 1,
       _isNewContract: true,
-      _isViewMode: false,
+      // _isViewMode: false,
       _loadedFromAPI: false
     }
   };
@@ -505,7 +504,6 @@ export class ContractFlowService {
         lastModified: new Date(),
         version: 1,
         _isNewContract: true,
-        _isViewMode: false,
         _loadedFromAPI: false
       }
     };
@@ -577,7 +575,6 @@ export class ContractFlowService {
           lastModified: new Date(),
           version: 1,
           _isNewContract: false,
-          _isViewMode: false,
           _loadedFromAPI: false
         }
       };
@@ -731,7 +728,6 @@ export class ContractFlowService {
       apply_no: contractData.apply_no ? String(contractData.apply_no) : '',
       rental_count: contractData.rental_count ? String(contractData.rental_count) : '',
       _isNewContract: false,
-      _isViewMode: isViewMode,
       _loadedFromAPI: true
     };
 
@@ -757,7 +753,6 @@ export class ContractFlowService {
         lastModified: new Date(),
         version: 1,
         _isNewContract: false,
-        _isViewMode: isViewMode,
         _loadedFromAPI: true
       }
     };
@@ -1128,7 +1123,6 @@ export class ContractFlowService {
         lastModified: new Date(),
         version: 1,
         _isNewContract: false,
-        _isViewMode: false,
         _loadedFromAPI: false
       }
     };
@@ -1142,8 +1136,8 @@ export class ContractFlowService {
    * 新增：檢查當前合約的檢視模式狀態
    */
   checkContractViewMode(contractId: string): boolean {
-    // 不再使用 session storage 檢查，改由 metadata 管理
-    return this.contractData.metadata._isViewMode;
+    // 改用 isViewModeSubject 的值
+    return this.isViewModeSubject.value;
   }
 
   /**
@@ -1152,13 +1146,8 @@ export class ContractFlowService {
   forceViewMode(contractId: string): void {
     console.log('🔒 強制設定為檢視模式:', contractId);
 
-    // 先更新當前狀態
+    // 更新當前狀態 (不再需要更新 metadata)
     this.setViewMode(true);
-
-    // 確保資料結構中也有正確的標記
-    if (this.contractData.metadata) {
-      this.contractData.metadata._isViewMode = true;
-    }
   }
   /**
    * 取得某個欄位的值（給第5步用）
@@ -1258,11 +1247,8 @@ export class ContractFlowService {
       this.contractData = data.contractData;
       this.workflowStatusSubject.next(data.workflowStatus);
 
-      // 🔥 關鍵修復：從 metadata 恢復檢視模式狀態
-      if (this.contractData?.metadata?._isViewMode !== undefined) {
-        this.isViewModeSubject.next(this.contractData.metadata._isViewMode);
-        console.log('🔍 從 sessionStorage 恢復檢視模式:', this.contractData.metadata._isViewMode);
-      }
+      // 檢視模式狀態由 isViewModeSubject 自己管理，不從 metadata 恢復
+      console.log('📦 已載入工作流程資料');
     } catch (error) {
       console.error('❌ 套用載入資料失敗:', error);
     }
@@ -1624,7 +1610,7 @@ export class ContractFlowService {
   /**
    * 新增：提交資料到後端（模擬）
    */
-  submitToBackend(apiEndpoint: string = '/api/contracts/submit'): Observable<any> {
+  submitToBackend(apiEndpoint = '/api/contracts/submit'): Observable<any> {
     const cleanData = this.generateCleanSubmitData();
     const validation = this.validateCleanSubmitData(cleanData);
 
@@ -1796,19 +1782,16 @@ export class ContractFlowService {
   * 新增：持久化檢視模式狀態
   */
   private persistViewMode(isViewMode: boolean): void {
-    // 不再使用 session storage，改用 metadata 管理
-    this.contractData.metadata._isViewMode = isViewMode;
-    console.log('💾 檢視模式已更新至 metadata:', isViewMode);
+    // 檢視模式由 isViewModeSubject 管理，不需要持久化到 metadata
+    console.log('💾 檢視模式狀態已更新:', isViewMode);
   }
 
   /**
-   * 移除：不再從 session storage 恢復，改由 metadata 管理
+   * 移除：不再從 session storage 恢復
    */
   private restoreViewMode(): void {
-    // 從 metadata 恢復檢視模式狀態
-    const isViewMode = this.contractData.metadata._isViewMode;
-    this.isViewModeSubject.next(isViewMode);
-    console.log('🔄 從 metadata 恢復檢視模式狀態:', isViewMode);
+    // 檢視模式由 isViewModeSubject 自己管理，不需要恢復
+    console.log('🔄 restoreViewMode 已簡化 (由 isViewModeSubject 管理)');
   }
 
   /**

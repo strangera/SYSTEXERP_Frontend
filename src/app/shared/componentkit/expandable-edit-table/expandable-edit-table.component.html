@@ -499,7 +499,9 @@
                   class="p-button-rounded"
                 ></button>
               </div>
-              <div class="detail-table-header-right">
+              <div class="detail-table-header-right flex align-items-center gap-2">
+                <!-- 詳細表格提示區域 -->
+                <ng-content select="[detail-hint]"></ng-content>
                 <ng-content select="[detail-header-right]"></ng-content>
               </div>
             </div>

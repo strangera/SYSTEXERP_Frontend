@@ -289,9 +289,9 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="TLS32030" dataKey="talent_id" [data]="data" [columns]="columns" [showCheckBox]="false"
-    [showDelete]="false" [showManage]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-    [multiSortMeta]="[{ field: 'team_name', order: -1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [columnGroup]="columnGroup"></app-table>
+  <app-table tableKey="TLS32030" dataKey="counterNumber" [data]="data" [columns]="columns" [columnGroup]="columnGroup"
+    [showCheckBox]="false" [showDelete]="false" [showManage]="false" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [multiSortMeta]="[{ field: 'counterNumber', order: -1 }]"
+    [totalRecords]="totalRecords" [lazy]="true" [loading]="loading" (lazyLoadData)="onLazyLoadData($event, queryForm)">
+  </app-table>
 </div>
