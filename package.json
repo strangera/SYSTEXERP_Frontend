@@ -59,6 +59,8 @@
     "@types/jasmine": "~5.1.0",
     "@types/js-base64": "^3.0.0",
     "@types/jszip": "^3.4.0",
+    "@types/range-parser": "^1.2.7",
+    "@types/send": "^1.2.1",
     "@types/xlsx": "^0.0.35",
     "angular-eslint": "19.0.0",
     "eslint": "^9.15.0",
