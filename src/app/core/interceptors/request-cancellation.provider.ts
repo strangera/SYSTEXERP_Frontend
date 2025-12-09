@@ -1,5 +1,3 @@
-// src/app/core/interceptors/request-cancellation.provider.ts (新檔案)
-
 import { inject, isDevMode } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, Subject } from 'rxjs';
@@ -8,7 +6,7 @@ import { filter, Subject } from 'rxjs';
 // 共享狀態和邏輯
 // -------------------------------------------------------------------------
 
-// 🚨 這是共享的中斷信號 Subject，必須在類別/函式外部定義，以便所有攔截器實例共享
+// 這是共享的中斷信號 Subject，必須在類別/函式外部定義，以便所有攔截器實例共享
 export const cancelRequests$ = new Subject<void>();
 
 // 這是您原始 Class 中定義的排除清單，現在作為外部可選參數
