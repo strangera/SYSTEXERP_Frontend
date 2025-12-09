@@ -13,8 +13,11 @@ export interface TLS32040Request extends BaseQueryRequest {
   "CompareDateTo": Date, // 比較日期訖
   "FloorList": string, //樓層（SYS3900） → TLTTALENT_LOCATION.tlt_floor (多選條件（逗號分隔，例如 "1,2,3"）。NULL 或空字串代表不篩選。)
   "AreaList": string, //區域（SYS3A00） → TLTTALENT_LOCATION.area_no (多選)
-  "BusTypeList": string, //大分類 → TLTTALENT.bus_type (多選)
-  "BusClassList": string, //中分類 → TLTTALENT.bus_class (多選)
+  "BusTypeList": string[], //大分類 → TLTTALENT.bus_type (多選)
+  "BusClassList": { //中分類 → TLTTALENT.bus_class (多選)
+    "BusType": string;
+    "BusClass": string;
+  }[],
   "TltKindList": string, // 櫃別（SYS1000 TLT_Kind） → TLTTALENT.tlt_kind (多選)
   "OrgList": string, // 組織 → TLTTALENT.org_id (多選)
   "TltNoList": string, // 專櫃編號 → TLTTALENT.tlt_no
@@ -58,8 +61,11 @@ export interface TLS32040DetailRequest extends BaseQueryRequest {
 
   "FloorList": string, //樓層（SYS3900） → TLTTALENT_LOCATION.tlt_floor (多選條件（逗號分隔，例如 "1,2,3"）。NULL 或空字串代表不篩選。)
   "AreaList": string, //區域（SYS3A00） → TLTTALENT_LOCATION.area_no (多選)
-  "BusTypeList": string, //大分類 → TLTTALENT.bus_type (多選)
-  "BusClassList": string, //中分類 → TLTTALENT.bus_class (多選)
+  "BusTypeList": string[], //大分類 → TLTTALENT.bus_type (多選)
+  "BusClassList": { //中分類 → TLTTALENT.bus_class (多選)
+    "BusType": string;
+    "BusClass": string;
+  }[],
   "TltKindList": string, // 櫃別（SYS1000 TLT_Kind） → TLTTALENT.tlt_kind (多選)
   "OrgList": string, // 組織 → TLTTALENT.org_id (多選)
   "TltNoList": string, // 專櫃編號 → TLTTALENT.tlt_no

@@ -80,7 +80,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     ReceFilter: ['A'],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 A:預設全部))
 
     pageSize: [20],
-    pageIndex: [1], // 你將初始頁碼改為 1
+    pageIndex: [0], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'RowType', order: 1 }]],
   });
 
@@ -314,6 +314,8 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     //   return
     // }
 
+    // console.log('大類表單', frm.getRawValue().BusTypeList);
+
     this.handleSubmit(frm, () => {
       const formValue = {
         ...frm.getRawValue(),
@@ -326,10 +328,11 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         FloorList: (frm.getRawValue().FloorList || []).join(','),
         AreaList: (frm.getRawValue().AreaList || []).join(','),
 
-        BusTypeList: (frm.getRawValue().BusTypeList || []).join(','), //這邊怪怪的之後可能會改成舊的模式(還是大: "大字串", 中: "中字串")
-        BusClassList: (frm.getRawValue().BusClassList || []) //這邊怪怪的之後可能會改成舊的模式
-          .map((x: any) => x.No)
-          .join(','),
+        BusTypeList: (frm.getRawValue().BusTypeList),
+        BusClassList: (frm.getRawValue().BusClassList || []).map((item: any) => ({
+          BusType: item.bus_type ?? '',
+          BusClass: item.No ?? ''
+        })),
 
         TltKindList: (frm.getRawValue().TltKindList || []).join(','),
         OrgList: (frm.getRawValue().OrgList || []).join(','),
