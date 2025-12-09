@@ -25,6 +25,7 @@
           [submitted]="submitted"
           [optionLabel]="'label'"
           [optionValue]="'value'"
+          (valueChange)="onHOSNoChange($event)"
         ></app-dropdown>
 
         <!-- 品牌代碼/名稱 -->
@@ -37,6 +38,7 @@
           [submitted]="submitted"
           [optionLabel]="'label'"
           [optionValue]="'value'"
+          (valueChange)="onLOGONoChange($event)"
         ></app-dropdown>
 
         <!-- 盤點基準日期 -->
@@ -101,7 +103,7 @@
       <app-button
         btnType="cancel"
         [form]="dataForm"
-        (clickEvent)="clearDetail()"
+        (clickEvent)="onClear()"
       ></app-button>
       <app-button
         btnType="submit"
