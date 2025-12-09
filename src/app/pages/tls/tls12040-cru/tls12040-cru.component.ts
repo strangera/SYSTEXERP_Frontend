@@ -326,7 +326,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 初始化表單和下拉選項
     this.initializeFormDefaults(); // 2. 初始化預設值，包含 existingData 處理
     this.initializeDropdownOptions(); // 3. 初始化下拉選項
-    this.setupVendorUniformListener(); // 4. 設定監聽器
+    // this.setupVendorUniformListener(); // 4. 已改用 HTML 的 (valueChange) 事件
     this.setupBusinessClassificationListeners();// 5. 設定大分類監聽器 (新增)
     this.setupDynamicValidators(); // 6. 設定動態驗證
     this.setupContractDateSync(); // 7. 設定契約日期與營運日期的同步
@@ -947,20 +947,83 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     });
   }
 
+  /**
+   * ✨ 廠商變更事件處理 (替代監聽器的更優雅方案)
+   * 此方法只在使用者手動操作 dropdown 時觸發,不會在 patchValue 時觸發
+   */
+  onVendorChange(vendorVenNo: string): void {
+    console.log('🔍 使用者變更廠商統一編號:', vendorVenNo);
+
+    if (!vendorVenNo || !vendorVenNo.trim()) {
+      // 清空所有相關欄位
+      this.dataForm.patchValue({
+        vendor_no: '',
+        ven_no: '',
+        ven_uniform: '',
+        VEN_Name: '',
+        VEN_Address: '',
+        vendor_acct_name: '',
+        tlt_name: '',        // 清空專櫃名稱
+        bus_type: '',        // 清空大分類
+        contact_tel: '',     // 清空電話
+        contact_fax: ''      // 清空傳真
+      }, { emitEvent: false });
+      return;
+    }
+
+    // 檢查 vendorOptions 是否已載入
+    if (!this.vendorOptions || this.vendorOptions.length === 0) {
+      console.warn('⚠ vendorOptions 尚未載入');
+      return;
+    }
+
+    // 找到選中的廠商資料
+    const selectedOption = this.vendorOptions.find(opt => opt.value === vendorVenNo);
+
+    if (!selectedOption) {
+      console.warn('⚠ 找不到對應的廠商選項');
+      return;
+    }
+
+    const vendorData = selectedOption as any;
+
+    // A. 帶入廠商基本資料
+    this.dataForm.patchValue({
+      vendor_no: vendorData.No || '',
+      ven_no: vendorVenNo,
+      ven_uniform: vendorData.No || '',
+      VEN_Name: vendorData.Name || vendorData.label || '',
+      VEN_Address: vendorData.VEN_Address || '',
+      vendor_acct_name: vendorData.Name || vendorData.label || ''
+    }, { emitEvent: false });
+
+    // 標記為已觸碰
+    this.dataForm.get('ven_no')?.markAsTouched();
+    this.dataForm.get('ven_uniform')?.markAsTouched();
+    this.dataForm.get('VEN_Name')?.markAsTouched();
+    this.dataForm.get('VEN_Address')?.markAsTouched();
+    this.dataForm.get('vendor_acct_name')?.markAsTouched();
+
+    console.log('✅ 已設定表單值');
+    this.messageService.successBubble('已自動填入廠商編號、廠商名稱、公司登記地址和帳戶名稱');
+
+    // B. 📞 載入潛在客戶資料
+    const venUniform = vendorData.No || '';
+    if (venUniform) {
+      this.loadPotentialCustomerData(venUniform);
+    }
+  }
+
   // 大分類變更時載入中分類（需要屬性方式）
   onBusTypeChange(busType: string) {
     console.log('🔄 大分類變更:', busType);
 
-    // ⚠️ 只在使用者手動變更時才清空
-    // 載入既有資料時不應該清空
-    const shouldClearOnChange = !this.isLoadingExistingData;
-
-    if (shouldClearOnChange) {
-      this.dataForm.patchValue({
-        bus_class: '',
-        bus_sclass: ''
-      }, { emitEvent: false });
-    }
+    // ✅ 因為使用 (valueChange) 事件,只會在使用者手動操作時觸發
+    // 所以不需要 isLoadingExistingData flag 檢查
+    this.dataForm.patchValue({
+      bus_class: '',
+      bus_sclass: ''
+    }, { emitEvent: false });
 
     // 清空選項（這是必要的）
     this.busClassOptions = [];
@@ -989,14 +1052,10 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     const busType = this.dataForm.get('bus_type')?.value;
 
-    // ⚠️ 只在使用者手動變更時才清空
-    const shouldClearOnChange = !this.isLoadingExistingData;
-
-    if (shouldClearOnChange) {
-      this.dataForm.patchValue({
-        bus_sclass: ''
-      }, { emitEvent: false });
-    }
+    // ✅ 因為使用 (valueChange) 事件,只會在使用者手動操作時觸發
+    this.dataForm.patchValue({
+      bus_sclass: ''
+    }, { emitEvent: false });
 
     // 清空選項
     this.busSClassOptions = [];
@@ -1940,75 +1999,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     return '';
   }
 
-  private setupVendorUniformListener(): void {
-    const venUniformSubscription = this.dataForm.get('vendor_ven_no')?.valueChanges
-      .pipe(
-        debounceTime(300),
-        distinctUntilChanged()
-      )
-      .subscribe(vendorVenNo => {
-        console.log('🔍 vendor_ven_no 變更:', vendorVenNo);
-
-        if (vendorVenNo && vendorVenNo.trim()) {
-          if (!this.vendorOptions || this.vendorOptions.length === 0) {
-            console.warn(' vendorOptions 尚未載入');
-            return;
-          }
-
-          const selectedOption = this.vendorOptions.find(opt => opt.value === vendorVenNo);
-
-          if (selectedOption) {
-            const vendorData = selectedOption as any;
-
-            // A. 帶入廠商基本資料
-            this.dataForm.patchValue({
-              vendor_no: vendorData.No || '',
-              ven_no: vendorVenNo,
-              ven_uniform: vendorData.No || '',
-              VEN_Name: vendorData.Name || vendorData.label || '',
-              VEN_Address: vendorData.VEN_Address || '',
-              vendor_acct_name: vendorData.Name || vendorData.label || ''
-            }, { emitEvent: false });
-
-            // 標記為已觸碰
-            this.dataForm.get('ven_no')?.markAsTouched();
-            this.dataForm.get('ven_uniform')?.markAsTouched();
-            this.dataForm.get('VEN_Name')?.markAsTouched();
-            this.dataForm.get('VEN_Address')?.markAsTouched();
-            this.dataForm.get('vendor_acct_name')?.markAsTouched();
-
-            console.log(' 已設定表單值');
-            this.messageService.successBubble('已自動填入廠商編號、廠商名稱、公司登記地址和帳戶名稱');
-
-            // B.  載入潛在客戶資料
-            const venUniform = vendorData.No || '';
-            if (venUniform) {
-              this.loadPotentialCustomerData(venUniform);
-            }
-          } else {
-            console.warn(' 找不到對應選項');
-          }
-        } else {
-          //  清空所有欄位（包含潛在客戶相關欄位）
-          this.dataForm.patchValue({
-            vendor_no: '',
-            ven_no: '',
-            ven_uniform: '',
-            VEN_Name: '',
-            VEN_Address: '',
-            vendor_acct_name: '',
-            tlt_name: '',        //  清空專櫃名稱
-            bus_type: '',        //  清空大分類
-            contact_tel: '',     //  清空電話
-            contact_fax: ''      //  清空傳真
-          }, { emitEvent: false });
-        }
-      });
-
-    if (venUniformSubscription) {
-      this.subscriptions.push(venUniformSubscription);
-    }
-  }
+  // ✅ 已移除 setupVendorUniformListener(),改用 HTML 的 (valueChange)="onVendorChange($event)" 事件
 
   /**
  * 🔧 設定業種分類的連動監聽
