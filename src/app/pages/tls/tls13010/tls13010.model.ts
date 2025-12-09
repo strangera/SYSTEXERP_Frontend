@@ -498,6 +498,7 @@ export interface CommissionItem {
   mainStartDate?: Date | string;
   mainEndDate?: Date | string;
 
+  remark?: string;
   _hasError?: boolean;
   _hasValidationError?: boolean;
 }

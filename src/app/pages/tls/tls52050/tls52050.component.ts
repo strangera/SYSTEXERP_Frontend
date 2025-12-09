@@ -1,31 +1,31 @@
-import { ITLS52050Data, Tls52050Service } from './../../../service/api/tls/tls52050.service';
-import { Component, OnInit, signal } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { AddButton, Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize, tap } from 'rxjs';
-import { EXPORT_LABEL_COLUMNS, MAMStatus, POS2008M_COLUMNS } from './tls52050.model';
-import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
-import { ExportLabelService, IExportLabelRequest } from '../../../service/utility/exportLabel.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { AsyncPipe } from '@angular/common';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { Component, OnInit, signal } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { ExcelColumn, ExcelExportService } from '@shared/service/excel-export.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { ExcelColumn, ExcelExportService } from '@shared/service/excel-export.service';
+import { AccordionModule } from 'primeng/accordion';
+import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
+import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
+import { finalize, tap } from 'rxjs';
+import { ExportLabelService, IExportLabelRequest } from '../../../service/utility/exportLabel.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { AddButton, Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { ITLS52050Data, Tls52050Service } from './../../../service/api/tls/tls52050.service';
+import { EXPORT_LABEL_COLUMNS, MAMStatus, POS2008M_COLUMNS } from './tls52050.model';
 
 @Component({
   selector: 'app-tls52050',
@@ -78,7 +78,7 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
   addButton: AddButton[] = [
     { label: '審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS52050Data) => { this.statusChange(rowData, MAMStatus.已審核); }, disabled: (rowData: ITLS52050Data) => rowData.MAM_Status !== MAMStatus.已申請 || (new Date(rowData.MAM_BegDate).setHours(0, 0, 0, 0)) < (new Date().setHours(0, 0, 0, 0)) }, // 審核
     { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: ITLS52050Data) => { this.statusChange(rowData, MAMStatus.已申請); }, disabled: (rowData: ITLS52050Data) => rowData.MAM_Status !== MAMStatus.已審核 || (new Date(rowData.MAM_BegDate).setHours(0, 0, 0, 0)) <= (new Date().setHours(0, 0, 0, 0)) }, // 反審核
-    { label: '產生標籤檔', icon: 'pi pi-tags', action: (rowData: ITLS52050Data) => { this.generateLabelFile(rowData); } }, // 標籤檔
+    { label: '產生標籤檔', icon: 'pi pi-tags', action: (rowData: ITLS52050Data) => { this.generateLabelFile(rowData); }, disabled: (rowData: ITLS52050Data) => rowData.MAM_Status === MAMStatus.已申請 || rowData.MAM_Status === MAMStatus.變價結束 || rowData.MAM_Status === MAMStatus.作廢 }, // 標籤檔
   ];
   editDisabled = (rowData: ITLS52050Data) => rowData.MAM_Status !== MAMStatus.已申請;
   btnLoading = signal(false);

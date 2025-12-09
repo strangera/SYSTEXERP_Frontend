@@ -82,6 +82,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   get isFormReadonly(): boolean {
     return this.crudstatus === CRUDStatus.Read;
   }
+
+  // ========== 資料載入狀態旗標 ==========
+  // ✅ 已移除 isLoadingExistingData flag,因為改用 (optionSelected) 事件,不需要 flag 了
   // 位置選項資料
   locationWithDetailsOptions: DropdownOption[] = [];
   displayLocationData: LocationItem[] = [];
@@ -1195,96 +1198,22 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     this.setupAutoSave();
     this.setupBusTypeListener();
-    this.setupVendorUniformListener();
+    // this.setupVendorUniformListener(); // ✅ 已改用 HTML 的 (optionSelected)="onVendorOptionSelected($event)" 事件
     this.setupDateAutoFillListeners();
 
     console.log('   監聽器設定完成');
   }
 
-  private setupVendorUniformListener(): void {
-    //  使用標記追蹤是否為初始載入
-    let skipCount = 0;
-    const SKIP_INITIAL_LOADS = 2; // 跳過前兩次（ngOnInit + patchValue）
-
-    const venUniformSubscription = this.dataForm.get('vendor_ven_no')?.valueChanges
-      .subscribe(vendorVenNo => {
-        console.log('📝 vendor_ven_no 變更:', vendorVenNo, '跳過計數:', skipCount);
-
-        //  跳過初始載入
-        if (skipCount < SKIP_INITIAL_LOADS) {
-          skipCount++;
-          console.log(`⏭️ 跳過第 ${skipCount} 次觸發（初始載入）`);
-          return;
-        }
-
-        //  檢視模式下不執行自動帶入
-        if (this.crudstatus === CRUDStatus.Read) {
-          console.log('👁️ 檢視模式，不執行自動帶入');
-          return;
-        }
-
-        if (vendorVenNo && vendorVenNo.trim()) {
-          const selectedOption = this.pos2013Options.find(opt => opt.value === vendorVenNo);
-
-          if (selectedOption) {
-            console.log('🔄 執行廠商資料自動帶入');
-
-            // A. 帶入廠商基本資料
-            this.dataForm.patchValue({
-              vendor_no: selectedOption.No,
-              ven_no: selectedOption.VEN_No,
-              ven_uniform: selectedOption.No,
-              VEN_Name: selectedOption.Name,
-              VEN_Address: selectedOption.VEN_Address,
-              vendor_acct_name: selectedOption.Name
-            }, { emitEvent: false });
-
-            // B. 使用 DataLoaderService 載入潛在客戶資料
-            this.dataLoaderService.loadPotentialCustomerData(
-              selectedOption.No,
-              this.dataForm
-            ).subscribe({
-              next: (hasData) => {
-                if (hasData) {
-                  this.messageService.successBubble('已自動帶入潛在客戶資料');
-                } else {
-                  this.messageService.infoBubble('查無潛在客戶資料，已帶入廠商基本資料');
-                }
-              },
-              error: () => {
-                this.messageService.warnBubble('查詢潛在客戶資料失敗，僅帶入廠商基本資料');
-              },
-              complete: () => {
-                this.saveToWorkflow();
-              }
-            });
-
-            console.log(' 已帶入廠商基本資料');
-          }
-        } else {
-          // 清空相關欄位
-          this.dataForm.patchValue({
-            vendor_no: '',
-            ven_no: '',
-            ven_uniform: '',
-            VEN_Name: '',
-            VEN_Address: '',
-          }, { emitEvent: false });
-        }
-      });
-
-    if (venUniformSubscription) {
-      this.subscriptions.push(venUniformSubscription);
-    }
-  }
+  // ✅ 已移除 setupVendorUniformListener(),改用 HTML 的 (optionSelected)="onVendorOptionSelected($event)" 事件
 
   /**
    * 設定日期自動填充監聽器
-   * 1. 回函日期預帶當天，回函截止日預帶當天+15天
-   * 2. 契約起始日/截止日輸入完，營運起始日/截止日預帶相同日期
+   * 1. 新建模式：回函日期、洽談日期預帶今天，回函截止日預帶今天+15天
+   * 2. 回函日期變更時，自動更新回函截止日（+15天）
+   * 3. 契約起始日/截止日輸入完，營運起始日/截止日預帶相同日期
    */
   private setupDateAutoFillListeners(): void {
-    // 1. 監聽新建模式：回函日期預帶今天
+    // 1. 監聽新建模式：回函日期、洽談日期預帶今天，回函截止日預帶今天+15天
     if (this.contractFlowService.isNewContractMode()) {
       const today = new Date();
       const todayStr = this.formatDate(today);
@@ -1299,6 +1228,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         const dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + 15);
         this.dataForm.patchValue({ due_date: this.formatDate(dueDate) }, { emitEvent: false });
+      }
+
+      // ✅ 新增：預設洽談日期為今天
+      if (!this.dataForm.get('contact_Date')?.value) {
+        this.dataForm.patchValue({ contact_Date: todayStr }, { emitEvent: false });
       }
     }
 
@@ -2406,23 +2340,88 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   /**
- * 廠商選項被選中
- */
-  onVendorOptionSelected(selectedOption: any): void {
-    console.log('📝 廠商被選中:', selectedOption);
+   * ✨ 廠商變更事件處理 (替代監聽器的優雅方案)
+   * 此方法只在使用者手動操作 dropdown 時觸發,不會在 patchValue 時觸發
+   * @param vendorVenNo - 廠商統一編號 (完整編號, 例如: "00000000-2")
+   */
+  onVendorChange(vendorVenNo: string): void {
+    console.log('📝 使用者變更廠商統一編號:', vendorVenNo);
 
+    if (!vendorVenNo || !vendorVenNo.trim()) {
+      // 清空所有相關欄位(包含潛在客戶欄位)
+      this.dataForm.patchValue({
+        vendor_ven_no: '',
+        vendor_no: '',
+        ven_no: '',
+        ven_uniform: '',
+        VEN_Name: '',
+        VEN_Address: '',
+        vendor_acct_name: '',
+        tlt_name: '',        // 清空專櫃名稱
+        bus_type: '',        // 清空大分類
+        contact_tel: '',     // 清空電話
+        contact_fax: ''      // 清空傳真
+      }, { emitEvent: false });
+      this.saveToWorkflow();
+      return;
+    }
+
+    // 檢查 pos2013Options 是否已載入
+    if (!this.pos2013Options || this.pos2013Options.length === 0) {
+      console.warn('⚠ pos2013Options 尚未載入');
+      return;
+    }
+
+    // 找到選中的廠商資料
+    const selectedOption = this.pos2013Options.find(opt => opt.value === vendorVenNo);
+
+    if (!selectedOption) {
+      console.warn('⚠ 找不到對應的廠商選項');
+      return;
+    }
+
+    console.log('✅ 找到廠商資料:', selectedOption);
+
+    // A. 帶入廠商基本資料
     this.dataForm.patchValue({
       vendor_ven_no: selectedOption.VEN_No,   // "00000000-2" (完整編號)
       vendor_no: selectedOption.No,           // "00000000" (統編)
       ven_no: selectedOption.VEN_No,          // "00000000-2"
       ven_uniform: selectedOption.No,         // "00000000" (統編) - 必填欄位！
       VEN_Name: selectedOption.Name,
-      VEN_Address: selectedOption.VEN_Address
+      VEN_Address: selectedOption.VEN_Address,
+      vendor_acct_name: selectedOption.Name
     }, { emitEvent: false });
 
-    console.log(' 已更新廠商資料，包含 ven_uniform:', this.dataForm.get('ven_uniform')?.value);
+    // 標記為已觸碰
+    this.dataForm.get('ven_no')?.markAsTouched();
+    this.dataForm.get('ven_uniform')?.markAsTouched();
+    this.dataForm.get('VEN_Name')?.markAsTouched();
+    this.dataForm.get('VEN_Address')?.markAsTouched();
+    this.dataForm.get('vendor_acct_name')?.markAsTouched();
 
-    // 觸發儲存
-    this.saveToWorkflow();
+    console.log('✅ 已更新廠商資料，包含 ven_uniform:', this.dataForm.get('ven_uniform')?.value);
+
+    // B. 📞 使用 DataLoaderService 載入潛在客戶資料
+    console.log('🔍 準備載入潛在客戶資料，統編:', selectedOption.No);
+
+    this.dataLoaderService.loadPotentialCustomerData(
+      selectedOption.No,
+      this.dataForm
+    ).subscribe({
+      next: (hasData) => {
+        if (hasData) {
+          this.messageService.successBubble('已自動帶入潛在客戶資料');
+        } else {
+          this.messageService.infoBubble('查無潛在客戶資料，已帶入廠商基本資料');
+        }
+      },
+      error: () => {
+        this.messageService.warnBubble('查詢潛在客戶資料失敗，僅帶入廠商基本資料');
+      },
+      complete: () => {
+        this.saveToWorkflow();
+      }
+    });
   }
 }

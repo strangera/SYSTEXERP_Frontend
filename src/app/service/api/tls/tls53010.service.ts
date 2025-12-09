@@ -93,10 +93,11 @@ export interface TLS53010DetailData {
   PLU_SalePrc: number;      // 修正型別
   HOS_No: string;
   HOS_NAME: string;
-  PLU_Unit: string;         // 新增
-  PLU_BoxQty: number;       // 新增
-  PLU_PageNum: string;      // 新增
-  PLU_LocNo: number;        // 新增
+  PLU_Unit: string;
+  UNIT_NAME: string;
+  PLU_BoxQty: number;
+  PLU_PageNum: string;
+  PLU_LocNo: number;
 }
 
 // Update request interface for TLS53010 (更新盤點單)
@@ -121,11 +122,27 @@ export interface TLS53010UpdateRequest {
 // 查詢POS2004資料表 Request
 export interface QueryTLS53010POS2004Request extends BaseQueryRequest {
   LOGO_No: string;         // 品牌代碼 (必填)
+  HOS_No?: string;         // 倉別代碼
   PLU_MagNo?: string;      // 商品管理編號
   PLU_Name?: string;       // 商品名稱
   CAT_LNo?: string;        // 大分類代碼
   CAT_MNo?: string;        // 中分類代碼
   CAT_SNo?: string;        // 小分類代碼
+}
+
+// 查詢品牌對應倉別 Request
+export interface QueryLOGOaccorHOSRequest {
+  LOGO_No?: string;         // 品牌代碼 - 必填
+  HOS_No?: string;          // 倉別代碼 - 必填
+}
+
+// 查詢品牌對應倉別 Response
+export interface QueryLOGOaccorHOSResponse {
+  TotalCount: number;
+  LOGO_No: string;
+  LOGO_CH_NAME: string;
+  HOS_No: string;
+  HOS_NAME: string;
 }
 
 @Injectable({
@@ -196,5 +213,10 @@ export class TLS53010Service {
         } as ApiResponse<TLS53010DetailData[]>; // 使用斷言確保類型匹配
       })
     );
+  }
+
+  // 查詢品牌對應倉別
+  queryLOGOaccorHOS(data: QueryLOGOaccorHOSRequest): Observable<BaseQueryResponse<QueryLOGOaccorHOSResponse>> {
+    return this.http.post<BaseQueryResponse<QueryLOGOaccorHOSResponse>>(`${this.apiUrl}/queryLOGOaccorHOS`, data);
   }
 }

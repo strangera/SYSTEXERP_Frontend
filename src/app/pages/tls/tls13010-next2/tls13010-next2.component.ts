@@ -198,9 +198,43 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       // 確保層級抽成項目的數量和內容與折扣設定一致
       this.syncDiscountChangesToLevel(item);
 
+      // 🆕 產生備註欄位
+      item.remark = this.formatRemarkText(item);
+
       // 更新顯示項目
       this.tableService.updateDetailItems(item);
     });
+  }
+
+  /**
+   * 🆕 根據折扣設定產生備註欄位文字
+   * 格式: `折扣別-(起始日-終止日)-抽成率`
+   * 所有項目用逗號分隔，在同一行顯示
+   */
+  private formatRemarkText(commissionItem: CommissionItem): string {
+    if (!commissionItem.discountSettingItems || commissionItem.discountSettingItems.length === 0) {
+      return '';
+    }
+
+    // 1. 過濾出 'selected' 為 true 的項目
+    const selectedDiscounts = commissionItem.discountSettingItems.filter(d => d.selected);
+
+    if (selectedDiscounts.length === 0) {
+      return '';
+    }
+
+    // 2. 按折扣別排序後，產生所有備註項目
+    const remarkParts = selectedDiscounts
+      .sort((a, b) => (a.cag_barcode || '').localeCompare(b.cag_barcode || ''))
+      .map(d => {
+        const startDate = this.formatDateString(d.tlt_bdate).replace(/-/g, '/');
+        const endDate = this.formatDateString(d.tlt_edate).replace(/-/g, '/');
+        const rate = (d.cag_charge_rate || 0) * 100;
+        return `${d.cag_barcode}-(${startDate}-${endDate})-${rate}`;
+      });
+
+    // 3. 用逗號連接所有項目
+    return remarkParts.join(',');
   }
 
   /**
@@ -452,6 +486,11 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         console.log('🔄 折扣設定勾選狀態變更，直接調用 syncDiscountLevelBasedOnSelection');
         // 🔑 直接調用 table service 的方法來同步單個 discount 對應的 level
         this.tableService.syncDiscountLevelBasedOnSelection(parentItem, rowData);
+
+        // 🆕 更新備註欄位(重新產生備註文字)
+        parentItem.remark = this.formatRemarkText(parentItem);
+        console.log('✅ 已更新備註欄位:', parentItem.remark);
+
         // 更新主數組
         this.updateMainArray(parentItem);
       }
