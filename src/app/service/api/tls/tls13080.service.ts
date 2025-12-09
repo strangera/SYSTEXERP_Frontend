@@ -76,7 +76,7 @@ export interface Tls13080SelectListItem {
  * 修正: 新增 isAll 和 Query 欄位
  */
 export interface Tls13080InsertRequest {
-  /** 💡 新增: 是否全選查詢結果 */
+  /**  新增: 是否全選查詢結果 */
   isAll: boolean;
   cap_item: string; // 扣款代號
   cap_saletype: string; // 銷售類型
@@ -87,7 +87,7 @@ export interface Tls13080InsertRequest {
   tpy_rate: number; // 抽成率 (%)
   /** 只有當 isAll=false 時，selectList 才有作用 */
   selectList: Tls13080SelectListItem[];
-  /** 💡 新增: 查詢條件 (用於 isAll=true 時) */
+  /**  新增: 查詢條件 (用於 isAll=true 時) */
   Query: Tls13080QueryRequest;
 }
 

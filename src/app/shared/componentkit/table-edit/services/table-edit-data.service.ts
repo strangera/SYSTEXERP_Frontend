@@ -167,61 +167,61 @@ export class TableEditDataService {
     dataStatusValue: any,
     keepDeletedData: boolean,
     canInsert: boolean,
-    rowValidate: ((rowData: any, index?: number) => { isValid: boolean, errorMessage: string; }) | undefined,
+    rowValidate: ((rowData: any, index?: number) => { isValid: boolean; errorMessage: string; }) | undefined,
     defaultInsertData: any,
-  ): { shouldInsertNewRow: boolean, cleanData: any[] } {
+  ): { shouldInsertNewRow: boolean; cleanData: any[] } {
 
     let shouldInsertNewRow = false;
 
-    // 1. 狀態轉換
+    //  新增：識別 template 欄位的使用者輸入
+    const isUserInput = (col as any)?.isUserInput === true;
+
+    // 1. 狀態標記
     if (rowData[dataStatusField] === dataStatusValue.Original) {
       rowData[dataStatusField] = dataStatusValue.Modified;
     }
 
     const isAutoInsertCandidate = rowData['_isAutoInsertCandidate'];
 
-    // 2. 自動新增邏輯
-    if (isAutoInsertCandidate && value !== undefined && value !== null && value !== '' && canInsert) {
+    // 新增：判定輸入生效，不限於 value
+    const isEffectiveValue =
+      isUserInput || (value !== undefined && value !== null && value !== '');
+
+    // 2. 自動新增下一筆
+    if (isAutoInsertCandidate && isEffectiveValue && canInsert) {
       this.insertNewRow(columns, dataKey, defaultInsertData, dataStatusField, dataStatusValue);
       rowData['_isAutoInsertCandidate'] = false;
       shouldInsertNewRow = true;
-      // 確保它是 New 狀態
+
       rowData[dataStatusField] = dataStatusValue.New;
-      // 由於它已經是 _tableData 的一部分，我們將它也加入 _fullData
-      this._fullData = [...this._fullData, rowData]; // <--- 確保加入 _fullData
+
+      this._fullData = [...this._fullData, rowData];
     }
 
-    // 3. 單一欄位值更新/計算
-    // PrimeNG 已經更新了 rowData[col.field]，這裡只執行 calculate
+    // 3. 執行欄位計算
     if (col.calculate) {
       const updates = col.calculate(rowData, value);
       for (const field in updates) {
-        if (Object.prototype.hasOwnProperty.call(updates, field)) {
-          rowData[field] = updates[field];
-        }
+        rowData[field] = updates[field];
       }
     }
 
-    // 4. 整行驗證 (如果不是新增行)
+    // 4. 行驗證
     if (rowValidate && !isAutoInsertCandidate) {
       rowData._rowValidationError = rowValidate(rowData, index);
     } else if (isAutoInsertCandidate) {
-      if (rowData._rowValidationError) {
-        delete rowData._rowValidationError;
-      }
+      delete rowData._rowValidationError;
     }
 
-    // 5. 同步更新 _fullData (如果它已經在 _fullData 中)
-    const fullDataIndex = this._fullData.findIndex(item => item[dataKey] === rowData[dataKey]);
-    if (fullDataIndex !== -1) {
-      this._fullData[fullDataIndex] = rowData;
+    // 5. 同步 fullData
+    const fullIndex = this._fullData.findIndex(item => item[dataKey] === rowData[dataKey]);
+    if (fullIndex !== -1) {
+      this._fullData[fullIndex] = rowData;
     }
-
-    // 6. 處理空表自動新增 (這是舊邏輯，現在應該由步驟 2 處理，但為了保險可以保留在 Component 端)
 
     return {
       shouldInsertNewRow,
-      cleanData: this.getCleanData(keepDeletedData, canInsert)
+      cleanData: this.getCleanData(keepDeletedData, canInsert),
     };
   }
 

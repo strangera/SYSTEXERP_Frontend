@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { CalendarType } from '../calendar.component';
 
 @Component({
@@ -10,13 +11,17 @@ import { CalendarType } from '../calendar.component';
   standalone: true,
   imports: [ReactiveFormsModule]
 })
-export class ReadonlyCalendarDisplayComponent {
+export class ReadonlyCalendarDisplayComponent implements OnInit, OnDestroy {
   @Input({ required: true }) control!: FormControl;
   @Input() calendarType: CalendarType = 'dateOne';
   @Input() showSeconds = false;
   @Input() placeholder: string | undefined;
   @Input() submitted = false; // 用於錯誤樣式
   @Input() controlName = '';
+
+  private valueChangeSubscription?: Subscription;
+
+  constructor(private cdr: ChangeDetectorRef) {}
 
   /**
    * 根據 calendarType 格式化並返回要顯示的字串值。
@@ -80,5 +85,18 @@ export class ReadonlyCalendarDisplayComponent {
     }
 
     return classes.join(' ');
+  }
+
+  ngOnInit(): void {
+    // 監聽 FormControl 值變化，觸發視圖更新
+    this.valueChangeSubscription = this.control.valueChanges.subscribe(() => {
+      this.cdr.markForCheck();
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.valueChangeSubscription) {
+      this.valueChangeSubscription.unsubscribe();
+    }
   }
 }

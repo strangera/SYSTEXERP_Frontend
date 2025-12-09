@@ -31,6 +31,9 @@
             *ngIf="dateForm.controls.reportType.value === '1'"
           >
             <div class="col-6 flex flex-column border-right-1 surface-border">
+              <div class="col-12 flex justify-content-center">
+                <B><u>基準資料查詢條件</u></B>
+              </div>
               <!-- 日期 -->
               <div class="col-12">
                 <app-calendar
@@ -43,6 +46,9 @@
             </div>
             <!--比較表單-->
             <div class="col-6 flex flex-column">
+              <div class="col-12 flex justify-content-center">
+                <B><u>比較資料查詢條件</u></B>
+              </div>
               <div class="col-12">
                 <app-calendar
                   calendarType="dateOne"
@@ -59,6 +65,9 @@
             *ngIf="dateForm.controls.reportType.value === '2'"
           >
             <div class="col-6 flex flex-column border-right-1 surface-border">
+              <div class="col-12 flex justify-content-center">
+                <B><u>基準資料查詢條件</u></B>
+              </div>
               <!-- 年度 -->
               <div class="col-12">
                 <app-calendar
@@ -90,6 +99,9 @@
             </div>
             <!--比較表單-->
             <div class="col-6 flex flex-column">
+              <div class="col-12 flex justify-content-center">
+                <B><u>比較資料查詢條件</u></B>
+              </div>
               <!-- 年度 -->
               <div class="col-12">
                 <app-calendar
@@ -97,7 +109,6 @@
                   label="比較年度"
                   [control]="c_dateForm.controls.onedateyy"
                   [submitted]="submitted"
-                  [disabled]="true"
                 ></app-calendar>
               </div>
               <!-- 週數 -->
@@ -108,16 +119,16 @@
                   [control]="c_dateForm.controls.weeks"
                   (blurEvent)="queryWeek($event)"
                   [submitted]="submitted"
-                  [disabled]="true"
                 ></app-input-text>
               </div>
-              <!-- 基準日期範圍 -->
+              <!-- 日期範圍 -->
               <div class="col-12">
                 <app-calendar-range
                   label="比較日期範圍"
                   [startControl]="c_dateForm.controls.startdate"
                   [endControl]="c_dateForm.controls.enddate"
                   [submitted]="submitted"
+                  [disabled]="true"
                 />
               </div>
             </div>
@@ -128,6 +139,9 @@
             *ngIf="dateForm.controls.reportType.value === '3'"
           >
             <div class="col-6 flex flex-column border-right-1 surface-border">
+              <div class="col-12 flex justify-content-center">
+                <B><u>基準資料查詢條件</u></B>
+              </div>
               <!-- 基準年月 -->
               <div class="col-12">
                 <app-calendar
@@ -140,6 +154,9 @@
             </div>
             <!--比較表單-->
             <div class="col-6 flex flex-column">
+              <div class="col-12 flex justify-content-center">
+                <B><u>比較資料查詢條件</u></B>
+              </div>
               <div class="col-12">
                 <app-calendar
                   calendarType="dateMonthOne"
@@ -156,6 +173,9 @@
             *ngIf="dateForm.controls.reportType.value === '4'"
           >
             <div class="col-6 flex flex-column border-right-1 surface-border">
+              <div class="col-12 flex justify-content-center">
+                <B><u>基準資料查詢條件</u></B>
+              </div>
               <!-- 年度 -->
               <div class="col-12">
                 <app-calendar
@@ -180,6 +200,9 @@
             </div>
             <!--比較表單-->
             <div class="col-6 flex flex-column">
+              <div class="col-12 flex justify-content-center">
+                <B><u>比較資料查詢條件</u></B>
+              </div>
               <!-- 年度 -->
               <div class="col-12">
                 <app-calendar
@@ -209,6 +232,9 @@
             *ngIf="dateForm.controls.reportType.value === '5'"
           >
             <div class="col-6 flex flex-column border-right-1 surface-border">
+              <div class="col-12 flex justify-content-center">
+                <B><u>基準資料查詢條件</u></B>
+              </div>
               <!-- 年度 -->
               <div class="col-12">
                 <app-calendar
@@ -221,6 +247,9 @@
             </div>
             <!--比較表單-->
             <div class="col-6 flex flex-column">
+              <div class="col-12 flex justify-content-center">
+                <B><u>比較資料查詢條件</u></B>
+              </div>
               <!-- 年度 -->
               <div class="col-12">
                 <app-calendar
@@ -372,13 +401,6 @@
             ></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <!-- <app-radiobutton-yn
-              label="是否開立業主發票"
-              controlName="ReceFilter"
-              [control]="queryForm.controls.ReceFilter"
-              [submitted]="submitted"
-              [showAll]="true"
-            ></app-radiobutton-yn> -->
             <app-radiobutton
               label="是否開立業主發票"
               controlName="ReceFilter"
@@ -392,6 +414,13 @@
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
           <app-button btnType="clear" [form]="queryForm"></app-button>
+          <!-- <ng-container *ngIf="dateForm.controls.reportType.value === '5'">
+            <app-button
+              severity="secondary"
+              label="產生年度曲線圖"
+              (click)="onChart(queryForm)"
+            ></app-button>
+          </ng-container> -->
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
@@ -404,12 +433,11 @@
     [lastQueryBody]="historyRequestBody"
     [data]="data"
     [columns]="columns"
-    [columnGroup]="columnGroup"
     [totalRecords]="totalRecords"
     (detail)="onDetail1($event)"
     [showDelete]="false"
     [showEdit]="false"
-    [showManage]="false"
+    [showManage]="true"
     [showReportMode]="false"
     [queryFunction]="tls32040Service.queryTLS32040.bind(tls32040Service)"
     [loading]="loading"
@@ -438,3 +466,15 @@
     </header>
   </app-table-report>
 </div>
+<!--規格沒有先取消-->
+<!-- <ng-container *ngIf="dateForm.controls.reportType.value === '5'">
+  <div class="card">
+    <p-chart
+      type="line"
+      [data]="chartData"
+      [options]="chart_options"
+      [loading]="btnChartLoading"
+      class="h-[30rem]"
+    />
+  </div>
+</ng-container> -->

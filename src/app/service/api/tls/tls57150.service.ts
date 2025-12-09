@@ -1,8 +1,8 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { SortMeta } from 'primeng/api';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { SortMeta } from 'primeng/api';
 
 /**
  * 統一的盤點統計表 請求參數 (QueryTLS57150Request)
@@ -128,8 +128,8 @@ export class Tls57150Service {
           TotalCount: res.TotalCount,
           Message: res.Message,
           GrandTotal: grandTotal,
-          SubTotals: subTotals, // 💡 新增回傳 SubTotals
-        } as QueryTLS57150MappedResult; // 💡 強制轉換型別
+          SubTotals: subTotals, //  新增回傳 SubTotals
+        } as QueryTLS57150MappedResult; //  強制轉換型別
       })
     );
   }

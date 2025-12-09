@@ -386,11 +386,11 @@ export const tlsRoutes: Routes = [
   // 組織業績總表
   { path: 'tls32040', loadComponent: () => import('./tls32040/tls32040.component').then(m => m.TLS32040Component), data: { progNo: 'TLS32040' } },
   // 組織業績總表 CRU
-  { path: 'tls31040cru', loadComponent: () => import('./tls32040-cru/tls32040-cru.component').then(m => m.Tls32040CRUComponent), data: { progNo: 'Tls31040' } },
+  { path: 'tls32040cru', loadComponent: () => import('./tls32040-cru/tls32040-cru.component').then(m => m.Tls32040CRUComponent), data: { progNo: 'Tls32040' } },
   // 中分類業績報表
   { path: 'tls32050', loadComponent: () => import('./tls32050/tls32050.component').then(m => m.TLS32050Component), data: { progNo: 'TLS32050' } },
   // 中分類業績報表 CRU
-  { path: 'tls31050cru', loadComponent: () => import('./tls32050-cru/tls32050-cru.component').then(m => m.Tls32050CRUComponent), data: { progNo: 'Tls31050' } },
+  { path: 'tls32050cru', loadComponent: () => import('./tls32050-cru/tls32050-cru.component').then(m => m.Tls32050CRUComponent), data: { progNo: 'Tls32050' } },
   // 成長率分析報表
   { path: 'tls32060', loadComponent: () => import('./tls32060/tls32060.component').then(m => m.TLS32060Component), data: { progNo: 'TLS32060' } },
   // 收銀機基本資料維護

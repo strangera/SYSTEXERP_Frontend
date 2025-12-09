@@ -34,10 +34,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   // === 核心狀態 ===
   dataForm: FormGroup;
 
-  // 檢視模式用 (衍生自 crudstatus)
-  get isViewMode(): boolean {
-    return this.crudstatus === CRUDStatus.Read;
-  }
+  // 將 CRUDStatus 暴露給模板使用
+  readonly CRUDStatus = CRUDStatus;
+
   dataLoaded = false;
   commissionDataLoaded = false; // 新增
   showConfirmDialog = false;
@@ -920,7 +919,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   onAddCommissionItem(): void {
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.notificationService.infoBubble('檢視模式下無法新增項目');
       return;
     }
@@ -941,7 +940,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     }
   }
   onAddDetailItem(parentData: any): void {
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.notificationService.infoBubble('檢視模式下無法新增明細項目');
       return;
     }
@@ -960,7 +959,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   onBatchDelete(selectedItems: any[]): void {
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.notificationService.infoBubble('檢視模式下無法刪除項目');
       return;
     }
@@ -974,7 +973,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   onDetailBatchDelete(event: { selectedDetails: any[], parentData: any }): void {
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.notificationService.infoBubble('檢視模式下無法刪除項目');
       return;
     }
@@ -1066,7 +1065,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
    * 處理複製折扣設定
    */
   private handleCopyDiscount(discountItem: any, parentData: any): void {
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.notificationService.infoBubble('檢視模式下無法複製項目');
       return;
     }
@@ -1147,8 +1146,73 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   // === 驗證和提交 ===
+  /**
+   * 🔧 確保所有已勾選的 discount 都有對應的 level 項目
+   * 這個方法在提交前調用，確保即使使用者沒有切換到 level 標籤，
+   * 也能正確建立 level 項目
+   */
+  private ensureAllDiscountsHaveLevels(): void {
+    console.log('='.repeat(80));
+    console.log('🔄 開始確保所有 discount 都有對應的 level');
+
+    this.commissionData.forEach((commissionItem, commissionIndex) => {
+      // 跳過已刪除的抽成項目
+      if (commissionItem._status === 'deleted') {
+        return;
+      }
+
+      console.log(`\n處理抽成項目 ${commissionIndex + 1}: ${commissionItem.tlt_id_desc}`);
+
+      // 遍歷所有折扣設定
+      commissionItem.discountSettingItems?.forEach((discount, discountIndex) => {
+        console.log(`  檢查 discount ${discountIndex + 1}: ${discount.cag_barcode}, selected: ${discount.selected}, status: ${discount._status}`);
+
+        // 只處理已勾選且未刪除的 discount
+        if (!discount.selected || discount._status === 'deleted') {
+          console.log(`    ⏭️ 跳過 (未勾選或已刪除)`);
+          return;
+        }
+
+        // 檢查是否已有對應的 level
+        const existingLevels = commissionItem.discountLevelItems?.filter(
+          level => level.charged_id === discount.id && level._status !== 'deleted'
+        ) || [];
+
+        console.log(`    找到 ${existingLevels.length} 個對應的 level (charged_id: ${discount.id})`);
+
+        if (existingLevels.length === 0) {
+          // 沒有對應的 level，需要新增
+          console.log(`    ✨ 需要新增 level 項目`);
+          this.tableService.syncDiscountLevelBasedOnSelection(commissionItem, discount);
+          console.log(`    ✅ 已為 ${discount.cag_barcode} 新增 level 項目`);
+        } else {
+          // 已有對應的 level，確保 selected = true
+          existingLevels.forEach(level => {
+            if (!level.selected) {
+              console.log(`    🔧 修正 level selected 狀態: false → true`);
+              level.selected = true;
+            }
+          });
+        }
+      });
+    });
+
+    console.log('\n✅ 所有 discount 的 level 檢查完成');
+    console.log('='.repeat(80));
+  }
+
   async onSubmitNext(): Promise<void> {
     console.log('📝 Next2: 準備提交契約資料');
+
+    // 🔒 防止重複提交
+    if (this.loading) {
+      console.warn('⚠️ 正在提交中，忽略重複請求');
+      return;
+    }
+
+    // 🔧 關鍵修正：在提交前強制同步所有 discount 到 level
+    console.log('🔄 提交前強制同步所有 discount 到 level');
+    this.ensureAllDiscountsHaveLevels();
 
     // 驗證資料
     const validation = this.validationService.validateAllData(this.commissionData);
@@ -1315,7 +1379,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
    * 複製詳細項目（插入到下一行）
    */
   private copyDetailItem(sourceItem: any, parentData: any): void {
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.notificationService.infoBubble('檢視模式下無法複製項目');
       return;
     }
@@ -1420,6 +1484,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
  */
   onGoToNext3(): void {
     console.log('📝 Next2: 前往 Next3 設定條件');
+
+    // 🔧 關鍵修正：在前往 Next3 前也要確保 discount 都有對應的 level
+    console.log('🔄 前往 Next3 前強制同步所有 discount 到 level');
+    this.ensureAllDiscountsHaveLevels();
 
     // 驗證資料
     const validation = this.validationService.validateAllData(this.commissionData);

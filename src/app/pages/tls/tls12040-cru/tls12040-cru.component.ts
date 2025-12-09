@@ -1,46 +1,41 @@
+import { NgFor, NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, NavigationExtras } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { CheckboxModule } from 'primeng/checkbox';
+import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { CheckboxModule } from 'primeng/checkbox';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { NgFor, NgIf } from '@angular/common';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 
-import { InputTextareaComponent } from "@shared/componentkit/input-textarea/input-textarea.component";
-import { AccordionModule } from "primeng/accordion";
-import { ColumnDef, ExpandableEditTableComponent } from "@shared/componentkit/expandable-edit-table/expandable-edit-table.component";
-import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
-import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
-import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
-import { catchError, debounceTime, distinctUntilChanged, forkJoin, Observable, of, Subscription, tap } from 'rxjs';
-import { TLS12040Service } from '@service/api/tls/tls12040.service';
-import { LocationDetails, TLS12040DetailModel, TLS12040RequestModel, Tls12040SelectorTableColumn } from './models/tls12040-cru.model';
-import { TLS12040Response } from '../tls12040/tls12040.component';
-import { BusinessClassificationService } from './services/business-classification.service';
-import { TLS12040FlowService } from '../tls12040/Workflow/tls12040-contract-flow.service';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
+import { VendorCategoryOptionsService } from '@service/api/dropdownservice/vendor-category-options.service';
+import { Tls12010Service } from '@service/api/tls/tls12010.service';
+import { TLS12040Service } from '@service/api/tls/tls12040.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TLS12040ValidationService } from './validation/tls12040-validation.service';
+import { ColumnDef, ExpandableEditTableComponent } from "@shared/componentkit/expandable-edit-table/expandable-edit-table.component";
+import { InputTextareaComponent } from "@shared/componentkit/input-textarea/input-textarea.component";
+import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
+import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
+import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
+import { AccordionModule } from "primeng/accordion";
+import { debounceTime, distinctUntilChanged, forkJoin, Observable, Subscription } from 'rxjs';
+import { CrudModeService } from '../tls12040/Workflow/crud-mode.service';
+import { TLS12040FlowService } from '../tls12040/Workflow/tls12040-contract-flow.service';
 import { DateValidationService } from '../tls13010-cru/validation/date-validation.service';
 import { EmailValidationService } from '../tls13010-cru/validation/email-validation.service';
-import { VendorCategoryOptionsService } from '@service/api/dropdownservice/vendor-category-options.service';
-import { CrudModeService } from '../tls12040/Workflow/crud-mode.service';
-import { DropdownOption } from '@shared/constants/business.constants';
-import { TLS12040FormInitService } from './services/tls12040-form-init.service';
-import { Tls12010Service } from '@service/api/tls/tls12010.service';
+import { LocationDetails, TLS12040DetailModel, TLS12040RequestModel, Tls12040SelectorTableColumn } from './models/tls12040-cru.model';
+import { BusinessClassificationService } from './services/business-classification.service';
+import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
+import { TLS12040ValidationService } from './validation/tls12040-validation.service';
 
 interface CategoryItem {
   id: number;
@@ -297,7 +292,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   });
   // ----------------------------------------------------------------
   constructor(
-    private formInitService: TLS12040FormInitService,
+    private tlsBaseService: TlsContractBaseService,
     private translate: TranslateService,
     // private validationService: ValidationService,
     private sharedDropdownService: SharedDropdownService,
@@ -334,6 +329,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.setupVendorUniformListener(); // 4. 設定監聽器
     this.setupBusinessClassificationListeners();// 5. 設定大分類監聽器 (新增)
     this.setupDynamicValidators(); // 6. 設定動態驗證
+    this.setupContractDateSync(); // 7. 設定契約日期與營運日期的同步
 
     // 調試當前狀態
     console.log('=== CRU 狀態調試 ===');
@@ -1810,7 +1806,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
    * 取得欄位顯示名稱
    */
   private getFieldDisplayName(fieldName: string): string {
-    const fieldNames: { [key: string]: string } = {
+    const fieldNames: Record<string, string> = {
       'email': '聯絡信箱',
       'invoice_email': '發票信箱'
     };
@@ -1849,6 +1845,15 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 初始驗證器設定
     this.validationService.updateAllValidators(this.dataForm);
+  }
+
+  /**
+   * 設定契約日期與營運日期的同步
+   */
+  private setupContractDateSync(): void {
+    const dateSyncSubs = this.tlsBaseService.setupContractDateSync(this.dataForm);
+    this.subscriptions.push(...dateSyncSubs);
+    console.log('✅ 契約日期同步監聽已設定');
   }
 
   // 新增：設定預收租金計算邏輯（從 tls13010 複製）
@@ -2262,10 +2267,10 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       }, 1000);
     } else {
       console.log('🆕 新增模式，設定預設值');
-      this.formInitService.initializeByMode(this.dataForm, this.crudstatus);
+      this.tlsBaseService.initializeFormByMode(this.dataForm, 'TLS12040', this.crudstatus);
 
       if (this.crudstatus === CRUDStatus.Create) {
-        this.setCurrentUserAsNegotiator();
+        this.tlsBaseService.setCurrentUserAsNegotiator(this.dataForm);
       }
 
       this.triggerAllDynamicValidators();
@@ -2276,7 +2281,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   onClearForm(): void {
     if (confirm('確定要清除所有輸入的資料嗎?此操作無法復原。')) {
       // 保留某些系統欄位
-      this.formInitService.resetToDefaults(this.dataForm, ['apply_no', 'tlt_no']);
+      this.tlsBaseService.resetToDefaults(this.dataForm, 'TLS12040', ['apply_no', 'tlt_no']);
 
       this.locationInfo = [];
       this.flowService.clearAll();

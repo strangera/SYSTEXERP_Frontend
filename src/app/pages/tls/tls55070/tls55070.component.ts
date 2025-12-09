@@ -27,6 +27,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { CashierService } from '@service/basic/queryPOS2001.service';
 import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+import { ValidationService } from '@shared/service/validation.service';
 import { TLS55070Service } from '../../../service/api/tls/tls55070.service';
 import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 import { tls2b010tableComponent } from '../tls2b010/tls2-b010-table/tls2b010table.component';
@@ -57,6 +58,7 @@ type SubtotalFieldMap = typeof SUBTOTAL_FIELD_MAP;
     ButtonModule,
     InputTextRangeComponent,
     TLS55070TableComponent,
+    InputTextRangeComponent
   ],
 })
 export class TLS55070Component extends BasicQueryPageComponent<any> implements AfterViewInit, OnInit {
@@ -105,14 +107,14 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
     ECR_No: [''],
     TXN_GUIBegNoStart: [null],
     TXN_GUIBegNoEnd: [null],
-    TXN_NoStart: [null],
-    TXN_NoEnd: [null],
+    TXN_NoStart: [null, [this.validationService.numberValidator, Validators.maxLength(6)]],
+    TXN_NoEnd: [null, [this.validationService.numberValidator, Validators.maxLength(6)]],
     LOGO_No: [''],
     TLT_No: [''],
     HOS_NO: [''],
     USR_No: [''],
     TXN_Status: [''],
-    IsShowStatus: [''],
+    IsShowStatus: ['0'],
     ...createPaginationConfig(this.defaultSort),
   });
 
@@ -176,6 +178,7 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
     private cashierService: CashierService,
+    private validationService: ValidationService
   ) {
     super();
   }

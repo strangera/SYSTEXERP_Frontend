@@ -24,7 +24,9 @@ export interface QueryTLS57050Request {
 
 export interface QueryTLS57050ApiResponse {
   DetailData: DetailData[],
-  SummaryData: SummaryData[]
+  SummaryData: SummaryData[],
+  DetailFooter?: DetailFooter;
+  SummaryFooter?: SummaryFooter;
 }
 export interface DetailData {
   TXN_SaleNoteNo: string,
@@ -58,6 +60,21 @@ export interface SummaryData {
   TotRebate: number,
   TotDisc: number
 }
+export interface DetailFooter {
+  TXN_Qty?: number;
+  PLU_SalePrc?: number;
+  TXN_SaleAmt?: number;
+  TotRebate?: number;
+  TotDisc?: number;
+}
+
+export interface SummaryFooter {
+  TXN_TotQty?: number;
+  PLU_SalePrc?: number;
+  TXN_TotSaleAmt?: number;
+  TotRebate?: number;
+  TotDisc?: number;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -79,7 +96,8 @@ export class Tls57050Service {
         return {
           Data: data,
           TotalCount: res.TotalCount,
-          Message: res.Message
+          Message: res.Message,
+          FooterData: request.ReportType === '明細' ? res.Data.DetailFooter : res.Data.SummaryFooter
         };
       })
     );

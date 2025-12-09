@@ -7,75 +7,214 @@
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <!-- 盤點單編號 -->
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="盤點單編號" controlName="PST_No"
-          [control]="dataForm.controls.PST_No" [submitted]="submitted"></app-input-text>
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="盤點單編號"
+          controlName="PST_No"
+          [control]="dataForm.controls.PST_No"
+          [submitted]="submitted"
+        ></app-input-text>
 
         <!-- 倉別代碼/名稱 -->
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="倉別代碼/名稱" controlName="HOS_No" [options]="hosOptions"
-          [control]="dataForm.controls.HOS_No" [submitted]="submitted" [optionLabel]="'label'"
-          [optionValue]="'value'"></app-dropdown>
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="倉別代碼/名稱"
+          controlName="HOS_No"
+          [options]="hosOptions"
+          [control]="dataForm.controls.HOS_No"
+          [submitted]="submitted"
+          [optionLabel]="'label'"
+          [optionValue]="'value'"
+        ></app-dropdown>
 
         <!-- 品牌代碼/名稱 -->
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="品牌代碼/名稱" controlName="LOGO_No" [options]="logoOptions"
-          [control]="dataForm.controls.LOGO_No" [submitted]="submitted" [optionLabel]="'label'"
-          [optionValue]="'value'"></app-dropdown>
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="品牌代碼/名稱"
+          controlName="LOGO_No"
+          [options]="logoOptions"
+          [control]="dataForm.controls.LOGO_No"
+          [submitted]="submitted"
+          [optionLabel]="'label'"
+          [optionValue]="'value'"
+        ></app-dropdown>
 
         <!-- 盤點基準日期 -->
-        <app-calendar class="col-12 md:col-6 lg:col-4" label="盤點基準日期" calendarType="dateOne"
-          [control]="dataForm.controls.PST_Date" [submitted]="submitted"></app-calendar>
+        <app-calendar
+          class="col-12 md:col-6 lg:col-4"
+          label="盤點基準日期"
+          calendarType="dateOne"
+          [control]="dataForm.controls.PST_Date"
+          [submitted]="submitted"
+        ></app-calendar>
 
         <!-- 盤點單說明 -->
-        <app-input-textarea class="col-12" label="盤點單說明" controlName="PST_Remark"
-          [control]="dataForm.controls.PST_Remark" [submitted]="submitted"></app-input-textarea>
-      </div>
-
-      <div *ngIf="isFormCreateable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button label="新增全品項" (clickEvent)="insertTLS53010(dataForm)" [loading]="loading"></app-button>
-      </div>
-
-      <!-- 明細table -->
-      <div class="col-12">
-        <app-table-edit tableKey="TLS53010Detail" [columns]="editColumns" [data]="data"
-          (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [tableRequired]="true"
-          [disabled]="isFormReadable" (insert)="dialogVisible = true" [showInsert]="isFormCreateable || isFormEditable"
-          [canInsert]="false" [insertDisabled]="dataForm.controls.LOGO_No.value ? false : true"
-          (dataChange)="data = $event" [loading]="detailLoading" />
-      </div>
-
-      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataForm" (clickEvent)="clearDetail()"></app-button>
-        <app-button btnType="submit" [loading]="loading"></app-button>
+        <app-input-textarea
+          class="col-12"
+          label="盤點單說明"
+          controlName="PST_Remark"
+          [control]="dataForm.controls.PST_Remark"
+          [submitted]="submitted"
+        ></app-input-textarea>
       </div>
     </form>
+
+    <div
+      *ngIf="isFormCreateable"
+      class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+    >
+      <app-button
+        label="新增全品項"
+        (clickEvent)="insertTLS53010(dataForm)"
+        [loading]="loading"
+      ></app-button>
+    </div>
+
+    <!-- 編輯table 一頁式 -->
+    <div class="col-12" *ngIf="isFormEditable || isFormCreateable">
+      <app-table-edit
+        #editTable
+        tableKey="TLS53010Detail"
+        [columns]="editColumns"
+        [data]="editData"
+        (selectionChange)="selectedEditItems = $event"
+        [selectedItems]="selectedEditItems"
+        [tableRequired]="true"
+        [disabled]="isFormReadable"
+        (insert)="dialogVisible = true"
+        [showInsert]="isFormCreateable || isFormEditable"
+        [canInsert]="dataForm.controls.LOGO_No.value ? true : false"
+        [insertDisabled]="dataForm.controls.LOGO_No.value ? false : true"
+        (dataChange)="editData = $event"
+        [rowValidate]="validateEntireRow"
+      >
+        <header>
+          <span class="text-xl" *ngIf="isFormCreateable">新增商品</span>
+          <span class="text-xl" *ngIf="isFormEditable">本次新增商品</span>
+        </header>
+      </app-table-edit>
+    </div>
+    <div
+      *ngIf="!isFormReadable"
+      class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+    >
+      <app-button
+        btnType="cancel"
+        [form]="dataForm"
+        (clickEvent)="clearDetail()"
+      ></app-button>
+      <app-button
+        btnType="submit"
+        [loading]="loading"
+        [disabled]="editData.length === 0"
+        (clickEvent)="onSubmit(dataForm)"
+      ></app-button>
+    </div>
+
+    <!-- 檢視table 分批載入-->
+    <div class="col-12" *ngIf="isFormReadable || isFormEditable">
+      <app-table-report
+        tableKey="TLS53010Detail"
+        dataKey="id"
+        [data]="data"
+        [columns]="columns"
+        [showCheckBox]="isFormEditable"
+        [showDelete]="isFormEditable"
+        [loading]="detailLoading"
+        [selectedItems]="selectedItems"
+        (selectionChange)="selectedItems = $event"
+        [showReportMode]="false"
+        [totalRecords]="totalRecords"
+        [lastQueryBody]="lastQueryBody"
+        [queryFunction]="queryDetailFunction"
+        [showManage]="false"
+        [showFilter]="false"
+        (delete)="onDelete($event)"
+      >
+        <header><span class="text-xl">目前商品</span></header>
+      </app-table-report>
+    </div>
   </p-panel>
 </div>
 
 <!-- 商品明細選擇dialog -->
-<app-dialog header="選擇商品明細" [visible]="dialogVisible" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
-  [disable]="dialogSelectedItems.length === 0">
+<app-dialog
+  header="選擇商品明細"
+  [visible]="dialogVisible"
+  (visibleChange)="dialogVisible = $event"
+  (save)="saveDialog()"
+  [disable]="dialogSelectedItems.length === 0"
+>
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
     <div class="grid p-fluid">
-      <app-input-text class="col-12" label="商品管理編號/國際條碼/廠商貨號" controlName="PLU_MagNo"
-        [control]="dialogQueryForm.controls.PLU_MagNo" />
-      <app-input-text class="col-12" label="商品名稱" controlName="PLU_Name"
-        [control]="dialogQueryForm.controls.PLU_Name" />
-      <app-dropdown class="col-12 col-6 lg:col-4" label="大分類代碼" controlName="CAT_LNo"
-        [control]="dialogQueryForm.controls.CAT_LNo" [options]="CAT_LNoOptions" optionLabel="label" optionValue="No" />
-      <app-dropdown class="col-12 col-6 lg:col-4" label="中分類代碼" controlName="CAT_MNo"
-        [control]="dialogQueryForm.controls.CAT_MNo" [options]="CAT_MNoOptions" optionLabel="label" optionValue="No" />
-      <app-dropdown class="col-12 col-6 lg:col-4" label="小分類代碼" controlName="CAT_SNo"
-        [control]="dialogQueryForm.controls.CAT_SNo" [options]="CAT_SNoOptions" optionLabel="label" optionValue="No" />
+      <app-input-text
+        class="col-12"
+        label="商品管理編號/國際條碼/廠商貨號"
+        controlName="PLU_MagNo"
+        [control]="dialogQueryForm.controls.PLU_MagNo"
+      />
+      <app-input-text
+        class="col-12"
+        label="商品名稱"
+        controlName="PLU_Name"
+        [control]="dialogQueryForm.controls.PLU_Name"
+      />
+      <app-dropdown
+        class="col-12 col-6 lg:col-4"
+        label="大分類代碼"
+        controlName="CAT_LNo"
+        [control]="dialogQueryForm.controls.CAT_LNo"
+        [options]="CAT_LNoOptions"
+        optionLabel="label"
+        optionValue="No"
+      />
+      <app-dropdown
+        class="col-12 col-6 lg:col-4"
+        label="中分類代碼"
+        controlName="CAT_MNo"
+        [control]="dialogQueryForm.controls.CAT_MNo"
+        [options]="CAT_MNoOptions"
+        optionLabel="label"
+        optionValue="No"
+      />
+      <app-dropdown
+        class="col-12 col-6 lg:col-4"
+        label="小分類代碼"
+        controlName="CAT_SNo"
+        [control]="dialogQueryForm.controls.CAT_SNo"
+        [options]="CAT_SNoOptions"
+        optionLabel="label"
+        optionValue="No"
+      />
     </div>
-    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+    <div
+      class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+    >
       <app-button btnType="clear" [form]="dialogQueryForm"></app-button>
       <app-button btnType="query" [loading]="dialogLoading"></app-button>
     </div>
   </form>
   <hr />
-  <app-table tableKey="TLS53010CruDialogTable" dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData"
-    [columns]="dialogColumns" [showDelete]="false" [selectedItems]="dialogSelectedItems" [showCaption]="false"
-    (selectionChange)="dialogSelectedItems = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
-    [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]" [totalRecords]="totalRecords" (lazyLoadData)="
+  <app-table
+    tableKey="TLS53010CruDialogTable"
+    dataKey="PLU_MagNo"
+    [showReportMode]="false"
+    [data]="dialogData"
+    [columns]="dialogColumns"
+    [showDelete]="false"
+    [selectedItems]="dialogSelectedItems"
+    [showCaption]="false"
+    (selectionChange)="dialogSelectedItems = $event"
+    [showHeader]="false"
+    [showManage]="false"
+    [showCheckBox]="true"
+    [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]"
+    [totalRecords]="dialogTotalRecords"
+    (lazyLoadData)="
       onLazyLoadData($event, dialogQueryForm); onQuery(dialogQueryForm)
-    " [lazy]="true" [loading]="dialogLoading" [isRowSelectable]="isRowSelectable.bind(this)"></app-table>
+    "
+    [lazy]="true"
+    [loading]="dialogLoading"
+    [isRowSelectable]="isRowSelectable.bind(this)"
+  ></app-table>
 </app-dialog>

@@ -1,8 +1,9 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryRequest, BaseQueryResponse, BaseDeleteRequest } from '@shared/models/api/base-api.interface';
+import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { Observable } from 'rxjs';
 
 // Query request interface for TLS53010
 export interface TLS53010QueryRequest extends BaseQueryRequest {
@@ -113,6 +114,7 @@ export interface TLS53010UpdateRequest {
     PLU_PageNum?: string;           // 棚割編號
     PLU_LocNo?: number;             // 棚割序號
     POS2033_ID?: number;            // POS2033_ID
+    Action: "I" | "U" | "D";        // "I"=新增, "U"=更新, "D"=刪除
   }[];
 }
 
@@ -137,11 +139,6 @@ export class TLS53010Service {
   // 查詢盤點單
   queryTLS53010(data: TLS53010QueryRequest): Observable<BaseQueryResponse<TLS53010Data>> {
     return this.http.post<BaseQueryResponse<TLS53010Data>>(`${this.apiUrl}/queryTLS53010`, data);
-  }
-
-  // 查詢盤點單明細
-  queryTLS53010Detail(data: TLS53010DetailQueryRequest): Observable<BaseQueryResponse<TLS53010DetailData>> {
-    return this.http.post<BaseQueryResponse<TLS53010DetailData>>(`${this.apiUrl}/queryTLS53010_Detail`, data);
   }
 
   // 新增盤點單 (新增全品項)
@@ -186,5 +183,18 @@ export class TLS53010Service {
   // 查詢POS2004資料表
   queryTLS53010POS2004(data: QueryTLS53010POS2004Request): Observable<BaseQueryResponse<POS2004Info>> {
     return this.http.post<BaseQueryResponse<POS2004Info>>(`${this.apiUrl}/queryTLS53010_POS2004`, data);
+  }
+
+  // 查詢盤點單明細
+  queryTLS53010Detail(data: TLS53010DetailQueryRequest): Observable<ApiResponse<TLS53010DetailData[]>> {
+    return this.http.post<ApiResponse<TLS53010DetailData[]>>(`${this.apiUrl}/queryTLS53010_Detail`, data).pipe(
+      map(res => {
+        // 返回新的響應對象，使用處理過的 Data
+        return {
+          ...res,
+          Data: res.Data // 將處理過的 Data 重新賦值
+        } as ApiResponse<TLS53010DetailData[]>; // 使用斷言確保類型匹配
+      })
+    );
   }
 }

@@ -1,10 +1,10 @@
-import { CommonModule, DatePipe, formatDate } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { CommonModule, DatePipe, formatDate, isPlatformBrowser } from '@angular/common';
+import { ChangeDetectorRef, Component, inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
-import { TLS32040Request, TLS32040Response, TLS32040Service } from '@service/api/tls/tls32040.service';
+import { TLS32040ChartRequest, TLS32040Request, TLS32040Response, TLS32040Service } from '@service/api/tls/tls32040.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -16,15 +16,17 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { ChartModule } from 'primeng/chart';
 import { TableModule } from 'primeng/table';
 import { debounceTime, finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { TLS32040ChartResponse } from './../../../service/api/tls/tls32040.service';
 
 const today = new Date();
 
@@ -51,7 +53,8 @@ const today = new Date();
     TranslateModule,
     TableComponent,
     MultiSelectComponent,
-    ButtonModule
+    ButtonModule,
+    ChartModule
   ]
 })
 
@@ -76,9 +79,9 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     AmtTaxMode: ["G"],  // 銷售金額是否含稅(G:是 N:否 預設含稅)
     ReceFilter: ['A'],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 A:預設全部))
 
-    pageSize: [30],
+    pageSize: [20],
     pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'TeamId', order: 1 }]],
+    SortBy: [[{ field: 'RowType', order: 1 }]],
   });
 
   // 日期查詢條件表單
@@ -138,15 +141,6 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
     // --- 年報（type 5）
     year_onedateyy: [new Date()],
-
-    // --- 區間報（type 6）
-    sad_startdate: [null],
-    sad_enddate: [null],
-
-    // --- 活動區間報（type 7）
-    eventID: [null],
-    event_startdate: [null as Date | null],
-    event_enddate: [null as Date | null],
   });
 
   halfyearOptions = [
@@ -170,6 +164,8 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
   totalRecords = 0;
   data: TLS32040Response[] = [];
+  chartData: any = []; // 圖檔資料
+  chart_options: any = []; // 圖檔欄位
   historyRequestBody: TLS32040Request | null = null; //歷史查詢條件
 
   columns: Column[] = [
@@ -186,41 +182,15 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
     { field: 'Comp_SaleAmt', header: '上期銷售金額', visible: true, format: formatAmount },
     { field: 'Comp_TxnCnt', header: '上期交易筆數', visible: true },
-    { field: 'Comp_AvgTicket', header: '上期客單價', visible: true },
+    { field: 'Comp_AvgTicket', header: '上期客單價', visible: true, format: formatAmount },
     { field: 'Growth_SaleAmtPct', header: '成長比', visible: true, format: (value) => formatPercentage(value, 2) },
 
-    { field: 'Diff_SaleAmt', header: '銷售金額差異', visible: true },
+    { field: 'Diff_SaleAmt', header: '銷售金額差異', visible: true, format: formatAmount },
     { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true },
-    { field: 'Diff_AvgTicket', header: '客單價差異', visible: true },
+    { field: 'Diff_AvgTicket', header: '客單價差異', visible: true, format: formatAmount },
     { field: 'Space', header: '營業坪數', visible: true },
-    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true },
-
-    // { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
-    // { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },
-    // { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2) },
-    // { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
-    // { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
-    // { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount },
-    // { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount },
-    // { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
-    // { field: 'MonthlyPSM', header: '月坪效', visible: true, groupField: 'space' },
-
-    // { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp', format: formatAmount },
-    // { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp', format: formatAmount },
-    // { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', visible: true, groupField: 'temp', format: formatAmount },
-
-    // { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
-    // { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
-    // { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2) },
+    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true }
   ];
-  columnGroup: ColumnGroup[] = [
-    { field: 'budgetAmt', header: '營業額' },
-    { field: 'sum', header: '營業佔比' },
-    { field: 'custCnt', header: '客單價' },
-    { field: 'space', header: '營業坪效' },
-    { field: 'temp', header: '臨時櫃' },
-    { field: 'month', header: '月累計' },
-  ]
   tlt_kind_Option = [
     { value: "1", label: "正櫃" },
     { value: "2", label: "臨時櫃" },
@@ -252,11 +222,15 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
   org_id_Option: IDropdownItem[] = []; // 組織
   tlt_no_id_Option: IDropdownItem[] = []; // 專櫃編號
 
+  btnLoading = false; // PDF excel 讀取進度條
+  platformId = inject(PLATFORM_ID);
+
   constructor(
     private readonly dropDownListService: DropDownListService,
     public readonly tls32040Service: TLS32040Service,
     private tls26050Service: TLS26050Service, // 日期的api，套用現有模式
     private datePipe: DatePipe,
+    private cd: ChangeDetectorRef
   ) { super(); }
 
   ngOnInit(): void {
@@ -270,6 +244,13 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     this.dateForm.valueChanges.subscribe(() => {
       this.syncDateToQueryForm();
     });
+
+    //同步自定義比較表單
+    this.c_dateForm.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(() => {
+        this.syncCDateToQueryForm();
+      });
 
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.tlt_building_Option = res.Data;
@@ -322,6 +303,17 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     })
   }
   onSubmit(frm: FormGroup) {
+    // if (this.dateForm.invalid) {
+    //   this.messageService.errorBubble('基準資料為必填');
+    //   console.log('基準資料為必填', this.dateForm);
+    //   return
+    // }
+    // if (this.c_dateForm.invalid) {
+    //   this.messageService.errorBubble('比較資料為必填');
+    //   console.log('比較資料為必填', this.c_dateForm);
+    //   return
+    // }
+
     this.handleSubmit(frm, () => {
       const formValue = {
         ...frm.getRawValue(),
@@ -347,47 +339,174 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
       } as TLS32040Request;
 
-      console.log('送出query請求_api尚未提供', formValue);
+      console.log('主查詢請求', formValue);
+
       this.tls32040Service.queryTLS32040(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
 
-        this.data = res.Data ?? [];               // 查詢資料
-        this.historyRequestBody = formValue;                 // 查詢條件
-        console.log('查詢結果', res.Data);
-
-        this.totalRecords = res.TotalCount;
+        this.data = res.Data ?? [];                           // 查詢資料
+        this.historyRequestBody = formValue;                  // 查詢條件
+        this.totalRecords = res.TotalCount;              // 等候端
+        console.log('主查詢結果', res.Data);
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })
     })
   }
-  btnLoading = false;
   onReport(frm: FormGroup, isExcel: boolean) {
-    const printData = this.queryStateService.getQueryStateValue(this.ProgNo);
+    // Yvv 說先推遲
+    console.log('api準備中');
+    // if (isExcel == false) {
+    //   if (this.dateForm.invalid) {
+    //     this.messageService.errorBubble('基準資料為必填');
+    //     return
+    //   }
+    //   if (this.c_dateForm.invalid) {
+    //     this.messageService.errorBubble('比較資料為必填');
+    //     return
+    //   }
+
+    //   const formValue = {
+    //     ...frm.getRawValue(),
+
+    //     ReportType: this.dateForm.get('reportType')?.value, // 從日期表單抓
+    //     BaseDateFrom: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
+    //     BaseDateTo: formatDate(frm.getRawValue().BaseDateTo, 'yyyy-MM-dd', 'en-US'),
+    //     CompareDateFrom: formatDate(frm.getRawValue().CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
+    //     CompareDateTo: formatDate(frm.getRawValue().CompareDateTo, 'yyyy-MM-dd', 'en-US'),
+    //     FloorList: (frm.getRawValue().FloorList || []).join(','),
+    //     AreaList: (frm.getRawValue().AreaList || []).join(','),
+
+    //     BusTypeList: (frm.getRawValue().BusTypeList || []).join(','), //這邊怪怪的之後可能會改成舊的模式(還是大: "大字串", 中: "中字串")
+    //     BusClassList: (frm.getRawValue().BusClassList || []) //這邊怪怪的之後可能會改成舊的模式
+    //       .map((x: any) => x.No)
+    //       .join(','),
+
+    //     TltKindList: (frm.getRawValue().TltKindList || []).join(','),
+    //     OrgList: (frm.getRawValue().OrgList || []).join(','),
+    //     TltNoList: (frm.getRawValue().TltNoList || []).join(','),
+    //     TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
+    //     BuildingList: (frm.getRawValue().BuildingList || []).join(','),
+    //   }
+    //   this.btnLoading = true;
+    //   this.tls32040Service.exportTLS32040PDF(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
+    //     .subscribe(res => {
+    //       this.messageService.successBubble(res.Message);
+    //       // if (res.Data && res.Data.Print_URL) {
+    //       //   const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+    //       //   window.open(downloadUrl, '_blank');
+    //       // }
+    //       if (res.Data) {
+    //         console.log('api回應', res);
+    //       }
+    //     });
+
+    // } else {
+    //   console.log('api準備中');
+    // }
+  }
+
+  // #region 呼叫圖檔(這邊先不用做，既有規格有，新版規格沒有)
+  onChart(frm: FormGroup) {
     const formValue = {
-      ...printData,
-      IsExcel: isExcel,
-      IsMerge: true,
-      SortBy: undefined,
-      pageIndex: undefined,
-      pageSize: undefined,
-      BusTypeList: (frm.getRawValue().BusTypeList || []).map((x: any) => (x.BusTypeList, x.No)),
-      BaseDateFrom: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
-      BaseDateTo: formatDate(frm.getRawValue().BaseDateTo, 'yyyy-MM-dd', 'en-US'),
-      CompareDateFrom: formatDate(frm.getRawValue().CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
-      CompareDateTo: formatDate(frm.getRawValue().CompareDateTo, 'yyyy-MM-dd', 'en-US'),
-    }
-    // } as TLS31020PrintRequest;
+      ...frm.getRawValue(),
 
-    console.log('送出print請求_api尚未提供', formValue);
+      Year: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy', 'en-US'), //圖表要抓年分
 
-    this.btnLoading = true;
-    // this.tls31020Service.printTLS31020(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
-    //   .subscribe(res => {
-    //     this.messageService.successBubble(res.Message);
-    //     if (res.Data && res.Data.Print_URL) {
-    //       const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-    //       window.open(downloadUrl, '_blank');
-    //     }
-    //   });
+      FloorList: (frm.getRawValue().FloorList || []).join(','),
+      AreaList: (frm.getRawValue().AreaList || []).join(','),
+
+      BusTypeList: (frm.getRawValue().BusTypeList || []).join(','), //這邊怪怪的之後可能會改成舊的模式(還是大: "大字串", 中: "中字串")
+      BusClassList: (frm.getRawValue().BusClassList || []) //這邊怪怪的之後可能會改成舊的模式
+        .map((x: any) => x.No)
+        .join(','),
+
+      TltKindList: (frm.getRawValue().TltKindList || []).join(','),
+      OrgList: (frm.getRawValue().OrgList || []).join(','),
+      TltNoList: (frm.getRawValue().TltNoList || []).join(','),
+      TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
+      BuildingList: (frm.getRawValue().BuildingList || []).join(','),
+    } as TLS32040ChartRequest
+    this.tls32040Service.queryTLS32040Chart(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
+      .subscribe(res => {
+        this.messageService.successBubble(res.Message);
+        if (res.Data) {
+          const chartData = this.buildLineChartData(res.Data);
+          this.chartData = chartData;   // 綁定資料
+          this.initChart();     // 初始化 options
+          console.log('圖表資料', chartData);
+        }
+      });
+  }
+
+  /** ------------------------------------------
+   * PrimeNG 官方樣式格式
+   * ------------------------------------------ */
+  private initChart() {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    const documentStyle = getComputedStyle(document.documentElement);
+    const textColor = documentStyle.getPropertyValue('--p-text-color');
+    const textColorSecondary = documentStyle.getPropertyValue('--p-text-muted-color');
+    const surfaceBorder = documentStyle.getPropertyValue('--p-content-border-color');
+
+    this.chart_options = {
+      responsive: true,
+      plugins: {
+        legend: {
+          labels: {
+            color: textColor
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: textColorSecondary
+          },
+          grid: {
+            color: surfaceBorder
+          }
+        },
+        y: {
+          ticks: {
+            color: textColorSecondary
+          },
+          grid: {
+            color: surfaceBorder
+          }
+        }
+      }
+    };
+
+    this.cd.markForCheck();
+  }
+
+  // 圖檔格式化
+  private buildLineChartData(rows: TLS32040ChartResponse[]) {
+    // 建立 1~12 月的 labels
+    const labels = Array.from({ length: 12 }, (_, i) => `${i + 1}月`);
+
+    // grouped[OrgName][Month] = SaleAmt
+    const grouped: Record<string, Record<number, number>> = {};
+
+    rows.forEach(r => {
+      if (!grouped[r.OrgName]) grouped[r.OrgName] = {};
+      grouped[r.OrgName][r.SaleMonth] = r.SaleAmt;
+    });
+
+    // 產生 datasets
+    const datasets = Object.keys(grouped).map((orgName) => {
+      return {
+        label: orgName,
+        data: labels.map((_, monthIndex) => {
+          return grouped[orgName][monthIndex + 1] ?? 0; // 沒資料補 0
+        }),
+        tension: 0.3,
+        borderWidth: 2,
+        fill: false
+      };
+    });
+
+    return { labels, datasets };
   }
 
   // #region 日期選單事件
@@ -409,7 +528,6 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
   onReportTypeChange(event: any) {
     // 根據報表類型設定欄位驗證
     const reportType = event;
-
     // 清除所有驗證器
     Object.keys(this.dateForm.controls).forEach(key => {
       if (key !== 'reportType') {
@@ -598,14 +716,6 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         }
         break;
       }
-      // case '6': // 區間報
-      //   start = this.dateForm.get('sad_startdate')?.value ?? null;
-      //   end = this.dateForm.get('sad_enddate')?.value ?? null;
-
-      //   // 不自動帶入 comparison
-      //   compareStart = null;
-      //   compareEnd = null;
-      //   break;
     }
 
     // 套用到 queryForm
@@ -616,8 +726,93 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     this.queryForm.get('CompareDateFrom')?.setValue(compareStart);
     this.queryForm.get('CompareDateTo')?.setValue(compareEnd);
 
-    console.log('比較日期(起)', this.queryForm.get('CompareDateFrom')?.value);
-    console.log('比較日期(迄)', this.queryForm.get('CompareDateTo')?.value);
+    // console.log('比較日期(起)', this.queryForm.get('CompareDateFrom')?.value);
+    // console.log('比較日期(迄)', this.queryForm.get('CompareDateTo')?.value);
+  }
+
+  // 用戶輸入的比較表單也同步到主表
+  private syncCDateToQueryForm(): void {
+    const type = this.dateForm.get('reportType')?.value; //這邊要抓主表的reportType
+
+    let compareStart: Date | null = null;
+    let compareEnd: Date | null = null;
+
+    switch (type) {
+      case '1': { // 日報
+        const d = this.c_dateForm.controls.onedatedd.value;
+        compareStart = d;
+        compareEnd = d;
+        break;
+      }
+
+      case '2': { // 週報
+        const chooseYear = this.c_dateForm.get('onedateyy')?.value ?? null;
+        const chooseWeeks = this.c_dateForm.get('weeks')?.value ?? null;
+
+        if (chooseYear && chooseWeeks) {
+
+          const yearNumber = chooseYear.getFullYear(); // <-- 修正這裡！
+
+          console.log('選擇年份:', yearNumber, '選擇週次:', chooseWeeks);
+
+          const { weekStart, weekEnd } = this.getDateRangeByYearWeek(yearNumber, Number(chooseWeeks));
+
+          this.queryForm.patchValue({
+            CompareDateFrom: weekStart,
+            CompareDateTo: weekEnd,
+          });
+
+          console.log('更新 CompareDateFrom / CompareDateTo: ', weekStart, weekEnd);
+        }
+        break;
+      }
+
+      case '3': { // 月報
+        const m = this.c_dateForm.controls.onedatemm.value;
+        if (m) {
+          // 計算該月的第一天和最後一天
+          const monthDate = new Date(m);
+          compareStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+          compareEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+        }
+        break;
+      }
+
+      case '4': { // 半年報
+        const yearValue = this.c_dateForm.controls.halfyear_onedateyy.value;
+        const year = yearValue instanceof Date ? yearValue.getFullYear() : Number(yearValue);
+        const half = String(this.c_dateForm.controls.halfyear.value);
+
+        if (year && half) {
+          if (half === '1') { // 上半年
+            compareStart = new Date(year, 0, 1);      // 1/1
+            compareEnd = new Date(year, 5, 30);        // 6/30
+          } else if (half === '2') { // 下半年
+            compareStart = new Date(year, 6, 1);       // 7/1
+            compareEnd = new Date(year, 11, 31);       // 12/31
+          }
+        }
+        break;
+      }
+
+      case '5': { // 年報
+        const yearValue = this.c_dateForm.controls.year_onedateyy.value;
+        const year = yearValue instanceof Date ? yearValue.getFullYear() : Number(yearValue);
+
+        if (year) {
+          compareStart = new Date(year, 0, 1);         // 1/1
+          compareEnd = new Date(year, 11, 31);         // 12/31
+        }
+        break;
+      }
+    }
+
+    // 更新到 queryForm
+    this.queryForm.controls.CompareDateFrom.setValue(compareStart);
+    this.queryForm.controls.CompareDateTo.setValue(compareEnd);
+
+    // console.log('比較日期(起)', compareStart);
+    // console.log('比較日期(迄)', compareEnd);
   }
 
   onDetail1(event: any) {
@@ -633,5 +828,26 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     const yearStart = new Date(date.getFullYear(), 0, 1);
     const weekNo = Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
     return String(weekNo);
+  }
+
+  // 給年 + 週數 → 回傳該週的開始日期（週一）與結束日期（週日）
+  getDateRangeByYearWeek(year: number, week: number) {
+    // 先建立該年的 1 月 4 日（ISO 規範的 anchor day）
+    const simple = new Date(year, 0, 4);
+
+    // 取得該年的第一個 ISO 週的週一
+    const dayOfWeek = simple.getDay() || 7; // 週日 = 7
+    const firstWeekMonday = new Date(simple);
+    firstWeekMonday.setDate(simple.getDate() - dayOfWeek + 1);
+
+    // 該週的週一 = 第一週的週一 + (週數 - 1) * 7 天
+    const weekStart = new Date(firstWeekMonday);
+    weekStart.setDate(firstWeekMonday.getDate() + (week - 1) * 7);
+
+    // 該週的週日
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+
+    return { weekStart, weekEnd };
   }
 }

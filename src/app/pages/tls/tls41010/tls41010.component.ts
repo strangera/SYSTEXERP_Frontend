@@ -5,6 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls46010Service } from '@service/api/tls/tls46010.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { DropdownChangeEvent } from 'primeng/dropdown';
@@ -76,6 +77,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   typeOptions = getSYS1000Options('ECR_Type');
   guiTypeOptions = getSYS1000Options('ECR_GUI_Type');
   salTypeOptions = getSYS1000Options('ECR_SAL_Type');
+  areaNoOptions: IDropdownItem[] = [];
   data: TLS41010Data[] = [];
   selectedItems: TLS41010Data[] = [];
   totalRecords = 0;
@@ -112,9 +114,10 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     public tls41010Service: TLS41010Service,
     private tls46010Service: Tls46010Service,
     private tls11010Service: Tls11010Service,
-    private dropDownListService: DropDownListService,
     private counterNameService: CounterNameService,
     private tls14030Service: Tls14030Service,
+    private dropDownListService: DropDownListService,
+    private dropdownApiService: DropdownApiService,
   ) {
     super();
   }
@@ -163,6 +166,9 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
           formLabel: `${x.value} - ${x.label}`, // 下拉顯示
           value: x.value            // 存值
         })) || [];
+    });
+    this.dropdownApiService.querySys3A00().subscribe(options => {
+      this.areaNoOptions = options ?? [];
     });
     this.queryForm.get('ECR_TLT_No')?.valueChanges
       .pipe(untilDestroyed(this))

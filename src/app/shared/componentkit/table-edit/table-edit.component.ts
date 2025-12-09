@@ -179,6 +179,42 @@ export class TableEditComponent implements OnChanges {
         }
       }
     }
+
+    // 處理 canInsert 動態變化
+    if (changes['canInsert']) {
+      const prev = changes['canInsert'].previousValue;
+      const curr = changes['canInsert'].currentValue;
+      if (prev !== curr) {
+        // 啟用 canInsert：若沒有 candidate row 且未 disabled，插入一筆候選行
+        if (curr === true) {
+          if (!this.disabled) {
+            const hasCandidate = this._tableData.some(item => item._isAutoInsertCandidate);
+            if (!hasCandidate) {
+              this.dataService.insertNewRow(
+                this.columns,
+                this.dataKey,
+                this.defaultInsertData,
+                this.dataStatusField,
+                this.dataStatusValue
+              );
+              this.cdr.detectChanges();
+            }
+          }
+        } else {
+          // 停用 canInsert：移除所有 candidate rows 並發射 clean data 給父層
+          const beforeLen = this._tableData.length;
+          const keep = this._tableData.filter(item => !item._isAutoInsertCandidate);
+          if (keep.length !== beforeLen) {
+            // 直接修改內部陣列（service 的 tableData 參考）
+            this._tableData.length = 0;
+            this._tableData.push(...keep);
+            // 發射 clean data 給父層（過濾掉 candidate）
+            this.dataChange.emit(this._tableData.filter(item => !item._isAutoInsertCandidate));
+            this.cdr.detectChanges();
+          }
+        }
+      }
+    }
   }
   onSelectionChange(event: any) {
     if (this.disabled) { return; }
@@ -189,6 +225,8 @@ export class TableEditComponent implements OnChanges {
       // 延遲更新，避免阻塞 UI
       requestAnimationFrame(() => {
         this.zone.run(() => {
+          // 更新元件內部 selectedItems 並向外發射 selectionChange
+          this.selectedItems = filtered;
           this.selectionChange.emit(filtered);
           this.cdr.markForCheck();
         });
@@ -211,6 +249,11 @@ export class TableEditComponent implements OnChanges {
   onValueChange(rowData: any, value: any, col: EditColumn, index: number) {
     if (this.disabled) { return; }
     this.tableDataEmpty = false;
+    if ((col as any).isUserInput === true && rowData._isAutoInsertCandidate) {
+      rowData._isAutoInsertCandidate = false;
+      // 標示這筆為 New（避免共通把它當成舊資料）
+      rowData[this.dataStatusField] = this.dataStatusValue.New;
+    }
     this.validationService.validateField(rowData, col, value, this._tableData);
     // 執行所有狀態轉換、計算、驗證和自動新增邏輯
     const { shouldInsertNewRow, cleanData } = this.dataService.updateRowOnValueChange(

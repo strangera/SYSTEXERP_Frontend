@@ -121,6 +121,8 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
           this.totalRecords = this.data.length;
           // 預售總金額加總
           this.totalAmount = this.data.reduce((sum, item) => sum + (item.TXN_TotSaleAmt ?? 0), 0);
+          // 如果資料已經在結帳區塊，則從查詢結果中移除
+          this.data = this.data.filter(item => !this.checkoutData.some(ckItem => ckItem.id === item.id));
         });
     });
   }
@@ -229,12 +231,19 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
     // 將資料加到TLS26040_Checkout
     this.checkoutData = [...this.checkoutData, ...this.selectedItems];
     this.selectedItems = [];
+    // 移除所選的資料
+    this.data = this.data.filter(item => !this.checkoutData.some(ckItem => ckItem.id === item.id));
   }
 
   onRemove(event: TLS26040Data[]) {
     const idsToRemove = new Set(event.map(item => item.id));
     this.checkoutData = this.checkoutData.filter(item => !idsToRemove.has(item.id));
     this.selectedCheckoutItems = [];
+    // 把移除的資料加回 data 但重複的id不要加
+    const itemsToAddBack = event.filter(item => !this.data.some(dataItem => dataItem.id === item.id));
+    this.data = [...this.data, ...itemsToAddBack];
+    // 重新排序 data 依預售日期由小至大
+    this.data.sort((a, b) => (a.sad_date! > b.sad_date! ? 1 : -1));
   }
 
   isRowSelectable(rowData: TLS26040Data): boolean {

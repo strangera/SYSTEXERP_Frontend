@@ -157,16 +157,16 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_Time', header: '交易時間', visible: true, format: (v: string) => this.formatDateTime(v) },
     { field: 'CRD_Name', header: '信用卡別', visible: true },
     { field: 'CRD_No', header: '信用卡卡號/條碼', visible: true, style: 'text-right' },
-    {
-      field: 'IsHaveTERM_No',
-      header: '是否分期',
-      visible: true,
-      format: (_: any, row: any) => {
-        // footer 列（沒有 _rowKey）→ 不顯示
-        if (!row || !row._rowKey) return '';
-        return Number(row?.TERM_No ?? 0) > 1 ? '是' : '否';
-      }
-    },
+{
+  field: 'TERM_No',
+  header: '是否分期',
+  visible: true,
+  format: (v: any) => {
+    // footer 或沒有值 → 空白
+    if (v == null) return '';
+    return Number(v ?? 0) > 1 ? '是' : '否';
+  },
+},
 { field: 'TERM_Name', header: '分期期數', visible: true },
     { field: 'TXN_MemCard', header: '會員卡號', visible: true },
     { field: 'org_id', header: '組織編號', visible: true },
