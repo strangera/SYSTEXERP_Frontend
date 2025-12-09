@@ -6,7 +6,9 @@ import { FIN62030Data, FIN62030Service } from '@service/api/fin/fin62030.service
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from "@shared/componentkit/dropdown/dropdown.component";
 import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -24,7 +26,8 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
     ReactiveFormsModule,
     TableComponent,
     TranslateModule,
-    DropdownComponent
+    DropdownComponent,
+    ButtonModule
   ]
 })
 export class FIN62030Component extends BasicQueryPageComponent<FIN62030Data> implements OnInit {
@@ -48,7 +51,7 @@ export class FIN62030Component extends BasicQueryPageComponent<FIN62030Data> imp
     { field: 'BNK_No_Out', header: '調出銀行' },
     { field: 'BNK_Name_Out', header: '調出帳號' },
     { field: 'Tran_Amt', header: '金額', format: formatAmount },
-    { field: 'Fee_Amt', header: '手續費' },
+    { field: 'Fee_Amt', header: '手續費', format: formatAmount },
     { field: 'Remark', header: '備註' }
   ];
 
@@ -76,5 +79,9 @@ export class FIN62030Component extends BasicQueryPageComponent<FIN62030Data> imp
           this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
         });
     });
+  }
+
+  onPreview() {
+    this.navigateWithState(CRUDStatus.Edit, this.selectedItems, this.queryStateService.getQueryStateValue(this.ProgNo));
   }
 }

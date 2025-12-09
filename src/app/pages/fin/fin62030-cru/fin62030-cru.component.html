@@ -1,1 +1,95 @@
-<p>fin62030-cru works!</p>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text
+            label="傳票編號"
+            controlName="VouNo"
+            [control]="dataForm.controls.VouNo"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text
+            label="傳票種類"
+            controlName="VouTypeName"
+            [control]="dataForm.controls.VouTypeName"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text
+            label="傳票型態"
+            controlName="VoucherType"
+            [control]="dataForm.controls.VoucherType"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-calendar
+            calendarType="dateOne"
+            label="傳票日期"
+            controlName="VouDate"
+            [control]="dataForm.controls.VouDate"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+        <div class="col-12">
+          <app-input-text
+            label="傳票摘要"
+            controlName="Remark"
+            [control]="dataForm.controls.Remark"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text
+            label="建立者"
+            controlName="CRT_USR_No"
+            [control]="dataForm.controls.CRT_USR_No"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-calendar
+            calendarType="dateOne"
+            label="建立日"
+            controlName="CRT_Date"
+            [control]="dataForm.controls.CRT_Date"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+      </div>
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button
+          btnType="submit"
+          label="確定拋轉"
+          [loading]="loading"
+        ></app-button>
+      </div>
+    </form>
+    <div class="mt-2">
+      <app-table-edit
+        #editTable
+        tableKey="FIN62030Detail"
+        [columns]="columns"
+        [data]="data"
+        (selectionChange)="selectedItems = $event"
+        [selectedItems]="selectedItems"
+        [showInsert]="false"
+        [canInsert]="false"
+        [showDelete]="false"
+        [showCheckBox]="false"
+        [showReorder]="false"
+      ></app-table-edit>
+    </div>
+  </p-panel>
+</div>
