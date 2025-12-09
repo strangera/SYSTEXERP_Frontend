@@ -266,21 +266,62 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
     const body = {
       CRN_NoList: this.selectedItemsDialog.map(item => item.CRN_No).filter(crnNo => crnNo != null)
     };
+    this.dialogLoading = true; // 設置讀取狀態
     this.tls52040Service.GetPOS2032PAndPOS2032(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
       this.data = [
         ...this.data,
-        ...response.Data.Data.map((item: ITLS52040Detail) => ({
-          ...item,
-          RJD_ConfirmQty: (item.CRN_SubQty || 0) - (item.RJD_ConfirmQty_Finished || 0),
-          RJD_BuyPrc: item.RJD_BuyNet,
-          RJD_BuyNet: 0,
-        }))
+        ...response.Data.Data.map((item: ITLS52040Detail) => {
+          // 1. 計算實際退回數量
+          const confirmQty = (item.CRN_SubQty || 0) - (item.RJD_ConfirmQty_Finished || 0);
+
+          // 2. 【重要】從 API 回傳的總淨額和應退數量，推算原始未稅單價 (RJD_BuyPrc)
+          // 假設 RJD_BuyNet (API 回傳值) = CRN_SubQty * 原始未稅單價
+          const subQty = Number(item.CRN_SubQty ?? 0);
+          const apiBuyNet = Number(item.RJD_BuyNet ?? 0);
+          // 使用 API 傳回的 RJD_BuyPrc 作為單價，如果為 0 則推算
+          let buyPrice = Number(item.RJD_BuyPrc ?? 0);
+          if (buyPrice === 0 && subQty > 0) {
+            // 如果 RJD_BuyPrc 遺失，則假設單價 = API_BuyNet / CRN_SubQty
+            buyPrice = apiBuyNet / subQty;
+          }
+
+          const salePrice = Number(item.RJD_SalePrc ?? 0);
+          const stockTaxType = item.PLU_StockTaxType;
+          const saleTaxType = item.PLU_TaxType;
+
+          // 3. 執行金額計算 (複製自 RJD_ConfirmQty 的 calculate 邏輯)
+          const buyNet = Math.round(buyPrice * confirmQty); // 未稅金額
+          const buyTax = stockTaxType === '1' ? Math.round(buyNet * 0.05) : 0; // 稅額
+          const buyAmt = buyNet + buyTax; // 進價小計
+
+          const saleAmt = Math.round(salePrice * confirmQty); // 售價小計 (含稅)
+          let saleTax = 0;
+          if (saleTaxType === '1') {
+            // 這裡使用 RJD_SaleAmt * 0.05 / 1.05 的精確計算，而非 / 21
+            saleTax = Math.round(saleAmt * 0.05 / 1.05);
+          }
+
+          // 4. 返回包含所有計算值的明細物件
+          return {
+            ...item,
+            // 賦予正確的單價 (以防 API 傳 $0)
+            RJD_BuyPrc: buyPrice,
+            // 設定退回數量
+            RJD_ConfirmQty: confirmQty,
+            // 賦予計算後的金額
+            RJD_BuyNet: buyNet,
+            RJD_BuyTax: buyTax,
+            RJD_BuyAmt: buyAmt,
+            RJD_SaleTax: saleTax,
+            RJD_SaleAmt: saleAmt,
+          };
+        })
       ];
+      this.calculateTotals();
     })
     this.dialogVisible = false;
     this.selectedItemsDialog = [];
     this.selectedItems = [];
-    this.calculateTotals();
   }
   onDelete(selectedRows: ITLS52040Detail[]) {
     this.data = this.data.filter(row => !selectedRows.includes(row));
