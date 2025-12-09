@@ -334,33 +334,45 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   }
   saveDialog() {
     this.dialogVisible = false;
+    const newItems = this.selectedItemsDialog.map(item => ({
+      ...item,
+      id: 0,
+      POD_BuyNet: item.PLU_SalePrc_UNI || 0,
+      POD_SaleAmt: item.PLU_SalePrc || 0,
+      PLU_BoxQty: item.PLU_BoxQty === undefined || item.PLU_BoxQty === null ? 0 : item.PLU_BoxQty,
+      POD_SubQty: 1,
+      POD_Remark: ''
+    }));
     this.data = [
       ...this.data,
-      ...this.selectedItemsDialog.map(item => ({
-        ...item,
-        id: 0,
-        PLU_BoxQty: item.PLU_BoxQty === undefined || item.PLU_BoxQty === null ? 0 : item.PLU_BoxQty,
-        POD_SubQty: 1,
-        POD_Remark: ''
-      }))
+      ...newItems
     ];
+    this.calculateTotals();
     this.selectedItemsDialog = [];
     this.selectedItems = [];
-    this.calculateTotals();
+    this.cdr.detectChanges();
   }
+
   isRowSelectable(event: IPOS2004DetailData): boolean {
     return !this.data || !this.data.some((item: IPOS2004DetailData) => item.PLU_MagNo === event.PLU_MagNo);
   }
+
   // 總計計算邏輯
   calculateTotals(): void {
     let totalBuyNet = 0; // 採購金額(即所有明細的「小計」加總)
     let totalBuyTax = 0; // 採購金額(即所有明細的「小計」加總)
     let totalSaleAmt = 0; // 售價總計(即所有明細的「售價小計」加總)
-    this.data.forEach(item => {
-      totalBuyNet += item.POD_BuyNet || 0;
-      totalBuyTax += item.PLU_StockTaxType === '1' ? Math.round((item.POD_BuyNet || 0) * 0.05) : 0;
-      totalSaleAmt += item.POD_SaleAmt || 0;
-    });
+    try {
+      this.data.forEach(item => {
+        const buyNet = Number(item.POD_BuyNet) || 0;
+        const saleAmt = Number(item.POD_SaleAmt) || 0;
+        totalBuyNet += buyNet;
+        totalBuyTax += item.PLU_StockTaxType === '1' ? Math.round(buyNet * 0.05) : 0;
+        totalSaleAmt += saleAmt;
+      });
+    } catch (e) {
+      totalBuyNet = totalBuyTax = totalSaleAmt = 0;
+    }
     const totalBuyAmt = totalBuyNet + totalBuyTax;
     this.dataForm.controls.PO_TotalBuyNet.setValue(Math.round(totalBuyNet));
     this.dataForm.controls.PO_TotalBuyTax.setValue(Math.round(totalBuyTax));

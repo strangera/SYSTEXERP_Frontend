@@ -7,17 +7,13 @@ import {
   HttpResponse,
 } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { AuthService } from '@service/system/auth.service';
 import { catchError, Observable, of, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { DebugToggleService, ExecutedSqlDetail } from '../services/debug-toggle.service';
-// 假設您的 AuthService 路徑是這樣
-import { AuthService } from '@service/system/auth.service'; // <-- 引入 AuthService
 
-// 後端新的 Header 鍵
 const DEBUG_ID_HEADER = 'X-Debug-Id';
 const BASE_URL_TO_REMOVE = environment.BaseUrl;
-
-// 新的 Debug API 路徑樣板
 const DEBUG_API_PATH = '/TSRDERP_Main/Controllers/Debug/';
 
 /**
@@ -106,7 +102,7 @@ function fetchDebugData(
     })
   ).subscribe(
     (response) => {
-      // 🐛 核心修正：正確解析新的 API 響應結構
+      // 核心修正：正確解析新的 API 響應結構
       const debugData = response?.Data;
 
       if (debugData && debugData.SqlStatements) {
@@ -133,6 +129,5 @@ function fetchDebugData(
         debugService.setAndShowSqlData(apiUrl, [], null);
       }
     },
-    // 訂閱的錯誤處理（已由 catchError 處理，這裡可省略）
   );
 }
