@@ -98,8 +98,8 @@ export interface Tls57160QueryResult extends ApiResponse<Tls57160DataItem[], Tls
 })
 export class Tls57160Service {
 
-  // API 的基礎路徑為 /TLS0000/TLS2000
-  apiUrl = `${environment.ApiUrl}/TLS0000/TLS2000`;
+  // API 的基礎路徑為 /TLS0000/TLS5000
+  apiUrl = `${environment.ApiUrl}/TLS0000/TLS5000`;
 
   constructor(private http: HttpClient) { }
 
