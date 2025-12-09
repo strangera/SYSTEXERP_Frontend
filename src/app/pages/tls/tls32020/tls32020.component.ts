@@ -113,35 +113,51 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     { value: 2, label: '下半年' } // 2: 下半年 (7/1 ~ 12/31)
   ];
 
-  // 報表欄位結構 (沿用 TLS32010)
+  // 報表欄位結構 (已補齊 BasePyeff/PyContrib, ComparePyeff/PyContrib)
   columns: ReportColumn[] = [
     {
       field: 'YM',
       header: '月份', // 預設為 '月份' (因為 DayType 預設為 3)
-      format: (value) => this.formatYM(value) // **新增：動態格式化**
+      format: (value) => this.formatYM(value) // **動態格式化**
     },
     { field: 'BuildingName', header: '館別' },
+
+    // ======================= 基準期 (Base) 欄位 =======================
     { field: 'BaseTarget', header: '營業目標', format: formatAmount, isSubTotal: true, groupField: 'revenue' },
-    { field: 'BaseAchieveRate', header: '達成率', format: (value: number) => value ? `${(value * 100).toFixed(1)}%` : '0%', isSubTotal: true, groupField: 'revenue' },
     { field: 'BaseSale', header: '營業實績', format: formatAmount, isSubTotal: true, groupField: 'revenue' },
+    { field: 'BaseAchieveRate', header: '達成率', format: (value: number) => value ? `${(value * 100).toFixed(1)}%` : '0%', isSubTotal: true, groupField: 'revenue' },
     { field: 'BaseTxnCnt', header: '交易筆數', isSubTotal: true, groupField: 'atv' },
     { field: 'BaseTicket', header: '客單價', format: formatAmount, isSubTotal: true, groupField: 'atv' },
-    { field: 'CompareSale', header: '營業實績', format: formatAmount, isSubTotal: true, groupField: 'popupCounter' },
-    { field: 'CompareTxnCnt', header: '交易筆數', isSubTotal: true },
-    { field: 'CompareTicket', header: '客單價', format: formatAmount, isSubTotal: true },
+    { field: 'BasePyeff', header: '月坪效', format: formatAmount, isSubTotal: true, groupField: 'salesPerArea' }, // <--- 新增欄位
+    { field: 'BasePyContrib', header: '月坪貢獻(未稅)', format: formatAmount, isSubTotal: true, groupField: 'salesPerArea' }, // <--- 新增欄位
+
+    // ======================= 比較期 (Compare) 欄位 =======================
+    { field: 'CompareTarget', header: '營業目標', format: formatAmount, isSubTotal: true, groupField: 'compareRevenue' }, // 修改 GroupField
+    { field: 'CompareSale', header: '營業實績', format: formatAmount, isSubTotal: true, groupField: 'compareRevenue' }, // 修改 GroupField
+    { field: 'CompareAchieveRate', header: '達成率', format: (value: number) => value ? `${(value * 100).toFixed(1)}%` : '0%', isSubTotal: true, groupField: 'compareRevenue' },
+    { field: 'CompareTxnCnt', header: '交易筆數', isSubTotal: true, groupField: 'compareATV' },
+    { field: 'CompareTicket', header: '客單價', format: formatAmount, isSubTotal: true, groupField: 'compareATV' },
+    { field: 'ComparePyeff', header: '月坪效', format: formatAmount, isSubTotal: true, groupField: 'compareSalesPerArea' }, // <--- 新增欄位
+    { field: 'ComparePyContrib', header: '月坪貢獻(未稅)', format: formatAmount, isSubTotal: true, groupField: 'compareSalesPerArea' }, // <--- 新增欄位
+
+    // ======================= 差異 (Difference) 欄位 =======================
     { field: 'DiffAmt', header: '業績差異', format: formatAmount, isSubTotal: true },
+    { field: 'GrowthRate', header: '成長率', format: (value: number) => value ? `${(value * 100).toFixed(1)}%` : '0%', isSubTotal: true },
     { field: 'DiffTxn', header: '交易筆數差異', isSubTotal: true },
     { field: 'DiffTicket', header: '客單價差異', format: formatAmount, isSubTotal: true },
-    { field: 'GrowthRate', header: '成長率', format: (value: number) => value ? `${(value * 100).toFixed(1)}%` : '0%', isSubTotal: true },
-  ];
-  columnGroup = [
-    { field: 'revenue', header: '營業額' },
-    { field: 'revenueRatio', header: '營業佔比' },
-    { field: 'atv', header: '客單價' },
-    { field: 'salesPerArea', header: '營業坪效' },
-    { field: 'popupCounter', header: '臨時櫃' }
+    { field: 'DiffPyeff', header: '月坪效差異', format: formatAmount, isSubTotal: true },
+    { field: 'DiffPyContrib', header: '月坪貢獻差異(未稅)', format: formatAmount, isSubTotal: true },
   ];
 
+  // 報表分組標頭 (配合新增的欄位進行調整)
+  columnGroup = [
+    { field: 'revenue', header: 'YYYY 營業額' }, // 調整 Group Header
+    { field: 'atv', header: 'YYYY 客單價' }, // 調整 Group Header
+    { field: 'salesPerArea', header: 'YYYY 營業坪效' }, // <--- 新增 Group
+    { field: 'compareRevenue', header: 'XXXX 營業額' }, // <--- 新增 Group
+    { field: 'compareATV', header: 'XXXX 客單價' }, // <--- 新增 Group
+    { field: 'compareSalesPerArea', header: 'XXXX 營業坪效' }, // <--- 新增 Group
+  ];
 
   constructor() {
     super();
@@ -205,13 +221,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     this.updateYMColumnHeader(this.queryForm.controls.DayType.value);
   }
 
-  // ====================================================================
-  // 新增：YM 欄位格式化相關邏輯
-  // ====================================================================
-
   /**
-   * 根據 Date 物件取得中文星期幾
-   */
+    * 根據 Date 物件取得中文星期幾
+    */
   private getDayOfWeekInChinese(date: Date): string {
     const day = date.getDay(); // 0 (Sunday) to 6 (Saturday)
     const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
@@ -219,13 +231,16 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   }
 
   /**
-   * 根據 DayType 動態格式化 YM 欄位的內容
-   * @param value 後端回傳的 YM 原始值
-   */
+    * 根據 DayType 動態格式化 YM 欄位的內容
+    * @param value 後端回傳的 YM 原始值
+    */
   formatYM(value: any): string {
     if (!value) return '';
     const dayType = this.queryForm.controls.DayType.value;
     const rawValue = String(value);
+
+    // 處理小計/總計
+    if (rawValue === '小計' || rawValue === '總計') return rawValue;
 
     switch (dayType) {
       case '1': // 日營業報表 (YYYY-MM-DD -> YYYY/MM/DD (DayOfWeek))
@@ -275,10 +290,10 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   }
 
   /**
-   * 根據報表類型計算基準日期和比較日期區間，並更新表單欄位。
-   * 這是新的核心日期邏輯。
-   * @param type 報表類型 (1:日, 2:週, 3:月, 4:半年, 5:年)
-   */
+    * 根據報表類型計算基準日期和比較日期區間，並更新表單欄位。
+    * 這是新的核心日期邏輯。
+    * @param type 報表類型 (1:日, 2:週, 3:月, 4:半年, 5:年)
+    */
   calculateDateRanges(type: string | null): void {
     if (!type) return;
 
@@ -367,9 +382,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   }
 
   /**
-   * 初始化時設定預設月份和計算日期範圍
-   * @param defaultType 預設的報表類型
-   */
+    * 初始化時設定預設月份和計算日期範圍
+    * @param defaultType 預設的報表類型
+    */
   calculateInitialRanges(defaultType: string): void {
     const today = new Date();
     this.queryForm.controls.year.setValue(today, { emitEvent: false });
@@ -388,9 +403,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   }
 
   /**
-   * 根據年份設定週次選項 (1~53)
-   * @param year Date object
-   */
+    * 根據年份設定週次選項 (1~53)
+    * @param year Date object
+    */
   setWeekOptions(year: Date | null): void {
     if (!year) return;
 
@@ -408,13 +423,12 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   }
 
   // ====================================================================
-  // 輔助函數：日期區間計算 (返回 { from: Date, to: Date })
-  // [此區塊與前次相同，為節省篇幅省略詳細實作]
+  // 輔助函數：日期區間計算
   // ====================================================================
 
   /**
-   * 獲取指定年、週次的日期區間 (ISO: 星期一為第一天)
-   */
+    * 獲取指定年、週次的日期區間 (ISO: 星期一為第一天)
+    */
   private getWeekRange(yearNum: number, week: number): { from: Date, to: Date } | null {
     if (week < 1) {
       // 若週次為 0 或負數，計算前一年的最後一週
@@ -443,8 +457,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   }
 
   /**
-   * 獲取前一年最後一週的日期區間
-   */
+    * 獲取前一年最後一週的日期區間
+    */
   private getPreviousYearLastWeekRange(yearNum: number): { from: Date, to: Date } | null {
     // 取得次年 1 月 4 日
     const jan4NextYear = new Date(yearNum + 1, 0, 4);
@@ -465,8 +479,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   }
 
   /**
-   * 獲取指定年、月份的日期區間
-   */
+    * 獲取指定年、月份的日期區間
+    */
   private getMonthRange(yearNum: number, month: number): { from: Date, to: Date } | null {
     if (month < 1) {
       // 獲取前一年的 12 月份
@@ -486,8 +500,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   }
 
   /**
-   * 獲取指定年、半年別的日期區間
-   */
+    * 獲取指定年、半年別的日期區間
+    */
   private getHalfYearRange(yearNum: number, halfYear: number): { from: Date, to: Date } | null {
     let dateFrom: Date;
     let dateTo: Date;
@@ -507,8 +521,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   }
 
   /**
-   * 獲取指定年、半年別的**上一個**半年區間
-   */
+    * 獲取指定年、半年別的**上一個**半年區間
+    */
   private getPreviousHalfYearRange(yearNum: number, halfYear: number): { from: Date, to: Date } | null {
     let previousYearNum: number;
     let previousHalfYear: number;
@@ -529,8 +543,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   }
 
   /**
-   * 獲取指定年度的日期區間 (1/1 ~ 12/31)
-   */
+    * 獲取指定年度的日期區間 (1/1 ~ 12/31)
+    */
   private getYearRange(yearNum: number): { from: Date, to: Date } | null {
     // 1. 起始日期 (該年 1 月 1 日)
     const dateFrom = new Date(yearNum, 0, 1);
@@ -541,8 +555,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   }
 
   /**
-   * 根據 DayType 動態更新 YM (日期/週別/月份/半年度/年份) 欄位標頭
-   */
+    * 根據 DayType 動態更新 YM (日期/週別/月份/半年度/年份) 欄位標頭
+    */
   private updateYMColumnHeader(dayType: string | null): void {
     if (!dayType) return;
 
@@ -652,8 +666,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   }
 
   /**
-   * 輔助函數：將陣列轉換為逗號分隔的字串
-   */
+    * 輔助函數：將陣列轉換為逗號分隔的字串
+    */
   private formatListForBackend(list: any[] | null): string | null {
     if (Array.isArray(list) && list.length > 0) {
       return list.map(item => String(item)).join(',');

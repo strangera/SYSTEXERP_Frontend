@@ -29,14 +29,24 @@ export interface TLS32020Data {
   YM: string,
   Building: string,
   BuildingName: string,
+
+  // ======================= 基準期 (Base) 欄位 =======================
   BaseTarget: number,
   BaseSale: number,
   BaseAchieveRate: number,
   BaseTxnCnt: number,
   BaseTicket: number,
+  BasePyeff: number,       // <--- 補充：基準期坪效
+  BasePyContrib: number,   // <--- 補充：基準期坪貢獻
+
+  // ======================= 比較期 (Compare) 欄位 =======================
   CompareSale: number,
   CompareTxnCnt: number,
   CompareTicket: number,
+  ComparePyeff: number,    // <--- 補充：比較期坪效
+  ComparePyContrib: number,  // <--- 補充：比較期坪貢獻
+
+  // ======================= 差異 (Difference) 欄位 =======================
   DiffAmt: number,
   GrowthRate: number,
   DiffTxn: number,
