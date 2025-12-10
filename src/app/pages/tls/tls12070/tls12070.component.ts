@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -107,15 +107,22 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
   onSubmit(frm: FormGroup) {
     this.activeReport = 'query';
     this.handleSubmit(frm, () => {
+
+      const request = {
+        ...frm.getRawValue(),
+        contact_Date_Start: formatDate(frm.getRawValue().contact_Date_Start, 'yyyy-MM-dd', 'en-US'),
+        contact_Date_End: formatDate(frm.getRawValue().contact_Date_End, 'yyyy-MM-dd', 'en-US'),
+      }
+
+      console.log('主查詢request', request);
       // 查詢 Customer_interview資料表
-      this.tls12070Service.queryTLS12070_Count(frm.value).pipe(untilDestroyed(this)).subscribe({
+      this.tls12070Service.queryTLS12070_Count(request).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
             this.interview_data = response.Data || [];
             console.log('Result', response.Data);
             this.totalRecords = response.TotalCount || response.Data.length;
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          } else {
+            this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
             console.error('API error:', response.Status, response.Message);
           }
           this.loading = false;
@@ -174,5 +181,10 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
       }));
       console.log('接待人員代號:', this.contact_USR_Option);
     });
+  }
+
+  onDetail1(event: any) {
+    const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);
+    this.onDetail(event, queryConditions);
   }
 }
