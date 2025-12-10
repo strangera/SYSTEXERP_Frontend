@@ -73,6 +73,7 @@ export class Tls12070CRUComponent extends BasicCruPageComponent<any>
     { field: 'contact_USR_Name', header: '接洽人員', visible: true },
     { field: 'VEN_Name', header: '廠商名稱', visible: true },
     { field: 'contact_Date', header: '訪談時間', visible: true, format: tableFormatDate },
+    { field: 'contact_record', header: '洽談重點', visible: true },
     { field: 'contact_remarks', header: '備註', visible: true },
     {
       field: 'willing_level', header: '意願等級', visible: true,
