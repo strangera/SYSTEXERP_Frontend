@@ -23,20 +23,19 @@ export class TLS26080Service {
 
   // 儲存資料
   public readonly tltTalentOptions = signal<Option[]>([]);
-  public readonly tltIdOptions = signal<Option[]>(
-    Array.from({ length: 10 }, (_, i) => ({ value: `${i}`, label: `${i}` }))
-  );
+  public readonly tltTalentChargeOptions = signal<Option[]>([]);
 
   public readonly tltTalentMap = computed(() => {
     return new Map<string, Option>(this.tltTalentOptions().map(item => [item.value, item]));
+  });
+  public readonly tltTalentChargeMap = computed(() => {
+    return new Map<string, Option>(this.tltTalentChargeOptions().map(item => [item.value, item]));
   });
 
   // 共享資料讀取狀態
   public readonly capItemsLoading = signal<boolean>(!1);
   public readonly tltTalentOptionsLoading = signal<boolean>(!1);
   public readonly tltTalentChargeOptionsLoading = signal<boolean>(!1);
-
-  private readonly tltTalentOptionsDebounce = signal<boolean>(!1);
 
   // 下拉選單資料
   public departmentItems = signal<Option[]>([]);
@@ -88,6 +87,21 @@ export class TLS26080Service {
       }),
       finalize(() => this.capItemsLoading.set(!1))
     ).subscribe();
+  }
+
+  public queryTltTalentCharge(talent_id: number): Observable<Option[]> {
+    this.tltTalentChargeOptionsLoading.set(!0);
+    return this.dropdown.queryTltTalentCharge({ talent_id }).pipe(
+      take(1),
+      tap(res => this.logger.debug(`queryTltTalentCharge:`, [res])),
+      map(res => res?.length && res.map(item => ({
+        ...item,
+        label: `${item.tlt_id} - ${item.tlt_id_desc}`,
+        value: item.tlt_id,
+      }) as unknown as Option) || []),
+      tap(res => this.tltTalentChargeOptions.set(res)),
+      finalize(() => this.tltTalentChargeOptionsLoading.set(!1)),
+    );
   }
 
   /** 查詢資料 */
@@ -210,25 +224,12 @@ export class TLS26080Service {
     );
   }
 
-  // 沒用到
-  public keyInTLS26080(data: TLS26080DetailTable, currentTableData: TLS26080DetailTable[]): Observable<{ success: boolean; data: TLS26080DetailTable; message?: string; }> {
+  public keyInTLS26080(data: TLS26080DetailTable, currentTableData: TLS26080DetailTable[]): Observable<TLS26080UploadResponse> {
     return this.http.post<TLS26080UploadResponse>(`${apiUrl}/TLS0000/TLS2000/keyInTLS26080`, {
       queryTLS26080_DetailResponses: currentTableData,
-      keyInTLS26080: data,
+      keyiInTLS26080: data,
     }).pipe(
       take(1),
-      map(res => {
-        const d = res.Data;
-        if (!d.Success) {
-          this.dealErrorFilePath(d);
-          this.logger.debug(`keyInTLS26080 fail:`, [res]);
-          this.messageService.errorBox(res.Message || '鍵入失敗');
-          return { success: !1, data, message: res.Message };
-        } else {
-          this.logger.debug(`keyInTLS26080 鍵入成功:`, [res]);
-          return { success: !0, data };
-        }
-      }),
       finalize(() => this.logger.debug(`單筆鍵入檢查:`, [data]))
     );
   }

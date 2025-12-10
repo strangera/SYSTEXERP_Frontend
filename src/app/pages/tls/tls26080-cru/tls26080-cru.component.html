@@ -54,7 +54,7 @@
                       label="活動正檔日期"
                       controlName="pod_busdate"
                       [control]="df().pod_busdate"
-                      [disabled]="false"
+                      [disabled]="!1"
                       [submitted]="submitted"></app-calendar>
         <app-dropdown class="col-12 md:col-6 lg:col-4"
                       label="活動類型"
@@ -62,7 +62,7 @@
                       [options]="service.podTypeItems"
                       optionLabel="label"
                       optionValue="value"
-                      [disabled]="true"
+                      [disabled]="!0"
                       [control]="df().pod_type2"
                       [loading]="loading"
                       [submitted]="submitted"></app-dropdown>
@@ -146,7 +146,7 @@
             <app-button btnType="submit"
                         label="審核與反審核"
                         [loading]="loading"
-                        [disabled]="!selectedItems().length || !dt.validateAndShowErrors()"
+                        [disabled]="!selectedItems().length"
                         (click)="toggleApprovalStatus()"></app-button>
           </header>
           }

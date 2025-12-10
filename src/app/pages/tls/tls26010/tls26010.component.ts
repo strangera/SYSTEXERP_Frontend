@@ -148,7 +148,7 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     } as TLS26010Query;
 
     const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
-      v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+      v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
     )) as TLS26010Query;
 
     this.logger.debug(`queryTLS26010:`, [rest, raw, payload]);

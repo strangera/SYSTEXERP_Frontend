@@ -221,7 +221,7 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
     this.handleSubmit(this.queryForm, () => {
       const raw = <FIN52080Query>{ ...this.queryForm.getRawValue() };
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
-        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       )) as unknown as FIN52080Query;
 
       this.tableLoading.set(!0);

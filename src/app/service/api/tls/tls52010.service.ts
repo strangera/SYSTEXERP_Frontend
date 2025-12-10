@@ -97,6 +97,7 @@ export interface IPOS2004DetailData {
   PLU_SalePrc_UNI?: number; // 單價
   PLU_SalePrc?: number; // 售價
   POD_SubQty?: number; // 採購數量
+  POD_BuyTax?: number; // 採購稅額
   POD_BuyNet?: number; // 採購淨額
   POD_SaleAmt?: number; // 銷售金額
   POD_Remark?: string; // 備註
@@ -129,6 +130,9 @@ export interface IQueryPOS2004DetailResponse {
   POD_BuyNet?: number,
   POD_SaleAmt?: number,
   POD_Remark?: string
+  POD_BuyTax?: number
+  POD_BuyAmt?: number
+  POD_SaleTax?: number
 }
 
 /** 查詢廠商所有商品 (queryPOS2004Detail_VEN_No) 的請求介面 */

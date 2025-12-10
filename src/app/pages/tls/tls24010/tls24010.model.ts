@@ -15,7 +15,7 @@ export const txnStatusOptions = [
 export const columns: Column[] = [
   { field: 'TXN_Date', header: '銷售日期', visible: true, format: formatDate },
   { field: 'ECR_No', header: '收銀機號', visible: true },
-  { field: 'TXN_No', header: '交易序號', visible: true },
+  { field: 'TXN_No', header: '交易序號', visible: true, format: (value: string) => value.padStart(8, '0') },
   { field: 'TLT_No', header: '專櫃編號', visible: true },
   { field: 'TLT_Name', header: '專櫃名稱', visible: true },
   { field: 'TXN_Status', header: '交易型態', visible: true, format: (value: string) => txnStatusOptions.find(opt => opt.value === value)?.label || value },

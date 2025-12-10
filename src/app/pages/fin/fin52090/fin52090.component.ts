@@ -84,7 +84,7 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
         NoteDesc: this.qf().NoteDesc.value ?? void 0,
       };
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
-        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       )) as unknown as FIN52090Query;
 
       this.tableLoading.set(!0);

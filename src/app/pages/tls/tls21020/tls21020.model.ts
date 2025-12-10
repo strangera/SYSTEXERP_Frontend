@@ -74,6 +74,7 @@ export interface POS2013 extends Option {
 
 export enum EntryType {
   'SD銷售日傳票' = 'SD',
+  'WD自營日結傳票' = 'WD',
   'MR租金傳票' = 'MR',
   'MD代扣傳票' = 'MD',
   'PR抽成傳票' = 'PR',
@@ -81,6 +82,7 @@ export enum EntryType {
   'PNC進貨帳款-成本結轉' = 'PNC',
   'PT進貨請款' = 'PT',
   SD = 'SD銷售日傳票',
+  WD = 'WD自營日結傳票',
   MR = 'MR租金傳票',
   MD = 'MD代扣傳票',
   PR = 'PR抽成傳票',

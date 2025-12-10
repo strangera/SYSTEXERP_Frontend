@@ -64,5 +64,16 @@
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     [lazy]="true"
     [loading]="loading"
-  ></app-table>
+    [showDelete]="false"
+    [showManage]="false"
+    [showReportMode]="false"
+  >
+    <header>
+      <p-button
+        label="預覽"
+        (click)="onPreview()"
+        [disabled]="selectedItems.length === 0"
+      />
+    </header>
+  </app-table>
 </div>

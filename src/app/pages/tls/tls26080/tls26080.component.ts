@@ -95,7 +95,7 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     this.handleSubmit(this.queryForm, () => {
       const raw = <TLS26080Query>{ ...this.queryForm.getRawValue() };
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
-        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       )) as unknown as TLS26080Query;
 
       this.tableLoading.set(!0);

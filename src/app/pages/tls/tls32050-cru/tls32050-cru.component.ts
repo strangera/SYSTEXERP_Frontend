@@ -1,18 +1,15 @@
 import { formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { footerShowTotal, TLS31020DetailItem, TLS31020DetailRequest, TLS31020DetialPrintRequest, TLS31020Request, TLS31020Response, Tls31020Service, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { TLS32040DetailRequest, TLS32040DetailResponse, TLS32040Request, TLS32040Service } from '@service/api/tls/tls32040.service';
 import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
-import { finalize } from 'rxjs';
-import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
@@ -32,76 +29,62 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
   ],
   templateUrl: './tls32050-cru.component.html'
 })
-export class Tls32050CRUComponent extends BasicCruPageComponent<TLS31020Response> implements OnInit {
+export class Tls32050CRUComponent extends BasicCruPageComponent<TLS32040DetailResponse> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    TXN_DateS: [],//交易日期開始
-    TXN_DateE: [],  // 交易日期結束
-
-    tlt_floor: [''],//樓層
-    floor_desc: [''],//樓層名稱
-
-    budget: [''],//營業目標
-    AVN_TotSaleAmt: [''],//營業實績
-    AchievementRate: [''],//達成率
-    BudgetRate: [''],//營業目標佔比
-    PerformanceRate: [''],//營業實績佔比
-    TxnCount: [''],//交易筆數
-    AvgTicket: [''],//客單價
-    tlt_space: [''],//坪數
-    MonthlyPSM: [''],//坪效
-
-    TempCounterSaleAmt: [''],//營業實績
-    TempCounterSalesRate: [''],//營業實績佔比
-    TempCounterAmtRate: [''],//臨時櫃業績佔比
-
-    MonthlyBudgetTotal: [''],//月營業目標
-    MonthlySalesTotal: [''],//營業實績
-    CompletionRate: [''],//完成率
+    //點選的主檔response
+    RowType: [null], // 列別：'TEAM' / 'TeamSum' / 'BUILDING' / 'TOTAL'
+    TeamId: [null], // 單位代碼（TEAM / 館別 / 總計用)
+    TeamName: [null], // 單位名稱（TEAM / 館別 / 總計顯示用）
+    OrgId: [null], // 樓組代碼
+    OrgName: [null], // 樓組名稱
+    Base_Target: [null], // 本期銷售目標
+    Base_SaleAmt: [null], // 本期銷售金額
+    Base_AchieveRate: [null], // 本期達成率（銷售金額 / 目標）
+    Base_TxnCnt: [null], // 本期交易筆數
+    Base_AvgTicket: [null], // 本期客單價（銷售金額 / 來客數)
+    Comp_SaleAmt: [null], // 上期銷售金額
+    Comp_TxnCnt: [null], // 上期交易筆數
+    Comp_AvgTicket: [null], // 上期客單價
+    Growth_SaleAmtPct: [null], // 成長比(銷售金額成長率)
+    Diff_SaleAmt: [null], // 銷售金額差異（本期 - 上期
+    Diff_TxnCnt: [null], // 交易筆數差異
+    Diff_AvgTicket: [null], // 客單價差異
+    Space: [null], // 營業坪數（坪）
+    Base_DaySpaceEff: [null], // 本期日平均坪效（每坪每日銷售
 
   });
   totalRecords = 0;
-  data: TLS31020DetailItem[] = [];
-  footerTotal: TLS31020Total | null = null; // 總計
-  footershowTotal: footerShowTotal | null = null; // 總計資料轉換名稱
-  footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
-  historyRequestBody: TLS31020DetailRequest | null = null; //歷史查詢條件
+  data: TLS32040DetailResponse[] = [];
+  historyRequestBody: TLS32040DetailRequest | null = null; //歷史查詢條件
 
   columns: Column[] = [
-    { field: 'building_desc', header: '館別', visible: true },
-    { field: 'org_name', header: '組織名稱', visible: true },
-    { field: 'tlt_kind', header: '櫃別', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'location_no', header: '位置編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    // { field: 'bus_type', header: '大分類', visible: true }, // queryTLS31030
-    // { field: 'bus_type_name', header: '大分類名稱', visible: true }, // queryTLS31030
+    { field: 'RowType', header: '列別', visible: true },
+    { field: 'TeamId', header: '單位代碼', visible: true },
+    { field: 'TeamName', header: '單位名稱', visible: true },
+    { field: 'OrgId', header: '樓組代碼', visible: true },
+    { field: 'OrgName', header: '樓組名稱', visible: true },
+    { field: 'Base_Target', header: '本期銷售目標', visible: true, format: formatAmount },
+    { field: 'Base_SaleAmt', header: '本期銷售金額', visible: true, format: formatAmount },
+    { field: 'Base_AchieveRate', header: '本期達成率', visible: true, format: (value) => formatPercentage(value, 2) },
+    { field: 'Base_TxnCnt', header: '本期交易筆數', visible: true },
+    { field: 'Base_AvgTicket', header: '本期客單價', visible: true, format: formatAmount },
 
-    { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
-    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },
-    { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2) },
-    { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
-    { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
-    { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount },
-    { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount },
-    { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
-    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space' },
+    { field: 'Comp_SaleAmt', header: '上期銷售金額', visible: true, format: formatAmount },
+    { field: 'Comp_TxnCnt', header: '上期交易筆數', visible: true },
+    { field: 'Comp_AvgTicket', header: '上期客單價', visible: true, format: formatAmount },
+    { field: 'Growth_SaleAmtPct', header: '成長比', visible: true, format: (value) => formatPercentage(value, 2) },
 
-    // { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp' }, // queryTLS31030
-    // { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp' }, // queryTLS31030
-    // { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', visible: true, groupField: 'temp' }, // queryTLS31030
+    { field: 'Diff_SaleAmt', header: '銷售金額差異', visible: true, format: formatAmount },
+    { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true },
+    { field: 'Diff_AvgTicket', header: '客單價差異', visible: true, format: formatAmount },
+    { field: 'Space', header: '營業坪數', visible: true },
 
-    { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
-    { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
-    { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2) },
+    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true },
+    { field: 'BaseCustCnt', header: '本期顧客數', visible: true },
+    { field: 'CompCustCnt', header: '上期顧客數', visible: true },
+    { field: 'TotalSpace', header: '總坪數', visible: true },
+    { field: 'BaseDays', header: '基準天數', visible: true },
   ];
-  columnGroup: ColumnGroup[] = [
-    { field: 'budgetAmt', header: '營業額' },
-    { field: 'sum', header: '營業佔比' },
-    { field: 'custCnt', header: '客單價' },
-    { field: 'space', header: '營業坪效' },
-    // { field: 'temp', header: '臨時櫃' }, // queryTLS31030
-    { field: 'month', header: '月累計' },
-  ]
   tlt_kind_Option = [
     { value: "1", label: "正櫃" },
     { value: "2", label: "臨時櫃" },
@@ -125,11 +108,11 @@ export class Tls32050CRUComponent extends BasicCruPageComponent<TLS31020Response
   org_id_Option: IDropdownItem[] = []; // 組織
 
   //查詢頁查詢條件
-  queryConditions!: TLS31020Request;
+  queryConditions!: TLS32040Request;
 
   // ----------------------------------------------------------------
   constructor(
-    public readonly tls31020Service: Tls31020Service,
+    public readonly tls32040Service: TLS32040Service,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -143,7 +126,7 @@ export class Tls32050CRUComponent extends BasicCruPageComponent<TLS31020Response
 
     // 重新讀取類別資料
     if (this.queryConditions) {
-      this.queryTLS31020Detail(); // 查詢單樓層之資料
+      this.queryTLS32040Detail(); // 查詢單組織業績之資料
     } else {
       this.messageService.errorBubble('請返回查詢頁重新操作');
     }
@@ -159,66 +142,74 @@ export class Tls32050CRUComponent extends BasicCruPageComponent<TLS31020Response
       ...this.queryConditions,
       IsExcel: isExcel,
       IsMerge: true,
-      tlt_floor: this.dataForm.get('tlt_floor')?.value ?? '',
-      TXN_DateS: formatDate(this.queryConditions.TXN_DateS, 'yyyy-MM-dd', 'en-US'),
-      TXN_DateE: formatDate(this.queryConditions.TXN_DateE, 'yyyy-MM-dd', 'en-US'),
-    } as TLS31020DetialPrintRequest;
-
-    console.log('單樓層之營業報表print請求', formValue);
-
-    this.btnLoading = true;
-    this.tls31020Service.printTLS31020Detail(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
-      .subscribe(res => {
-        this.messageService.successBubble(res.Message);
-        if (res.Data && res.Data.Print_URL) {
-          const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-          window.open(downloadUrl, '_blank');
-        }
-      });
-  }
-
-  queryTLS31020Detail() {
-    // 把 tlt_floor 從 string[] 轉成 string
-    const request: TLS31020DetailRequest = {
-      ...this.queryConditions,
-      tlt_floor: this.dataForm.get('bus_class')?.value ?? '',
-      TXN_DateS: formatDate(this.queryConditions.TXN_DateS, 'yyyy-MM-dd', 'en-US'),
-      TXN_DateE: formatDate(this.queryConditions.TXN_DateE, 'yyyy-MM-dd', 'en-US'),
+      OrgId: this.dataForm.get('OrgId')?.value ?? '',
+      BaseDateFrom: formatDate(this.queryConditions.BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
+      BaseDateTo: formatDate(this.queryConditions.BaseDateTo, 'yyyy-MM-dd', 'en-US'),
+      CompareDateFrom: formatDate(this.queryConditions.CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
+      CompareDateTo: formatDate(this.queryConditions.CompareDateTo, 'yyyy-MM-dd', 'en-US'),
     };
 
-    //用Json顯示request
-    console.log('單樓層之營業報表request', JSON.stringify(request));
+    console.log('api準備中');
 
-    this.tls31020Service.queryTLS31020Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-      console.log('單樓層之營業報表response', res.Data);
-      this.data = res.Data ?? [];               // 查詢資料
-      this.footerTotal = res.TotalData ?? null;;    // 總計資料
-      this.footershowTotal = this.footerTotal ? {          // 人工轉換欄位
-        budget: this.footerTotal.TotalBudget,
-        AVN_TotSaleAmt: this.footerTotal.TotalSales,
-        TxnCount: this.footerTotal.TotalTxnCount,
-        AvgTicket: this.footerTotal.AvgTicket,
-        tlt_space: this.footerTotal.TotalSpace,
-        MonthlyPSM: this.footerTotal.AvgPSM,
-        MonthlyPayment: this.footerTotal.AvgMonthlyPayment,
-        // TempCounterSaleAmt: this.footerTotal.TotalTempCounterSales,
+    this.btnLoading = false;
+    // this.tls31020Service.printTLS31020Detail(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
+    //   .subscribe(res => {
+    //     this.messageService.successBubble(res.Message);
+    //     if (res.Data && res.Data.Print_URL) {
+    //       const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+    //       window.open(downloadUrl, '_blank');
+    //     }
+    //   });
+  }
 
-        MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
-        MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
+  queryTLS32040Detail() {
+    // 把 OrgId 從 string[] 轉成 string
+    const request = {
+      ...this.queryConditions,
+      OrgId: this.dataForm.get('OrgId')?.value ?? '',
+      BaseDateFrom: formatDate(this.queryConditions.BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
+      BaseDateTo: formatDate(this.queryConditions.BaseDateTo, 'yyyy-MM-dd', 'en-US'),
+      CompareDateFrom: formatDate(this.queryConditions.CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
+      CompareDateTo: formatDate(this.queryConditions.CompareDateTo, 'yyyy-MM-dd', 'en-US'),
 
-        AchievementRate: this.footerTotal.AvgAchievementRate,
-        CompletionRate: this.footerTotal.AvgCompletionRate,
-      } : null;
-      // this.footershowPercent = this.footerTotal ? {    // 人工轉換百分比欄位
+      FloorList: ([] as string[]).concat(this.queryConditions.FloorList || []).join(','),
+      AreaList: ([] as string[]).concat(this.queryConditions.AreaList || []).join(','),
 
-      // } : null;
+      BusTypeList: this.toArray(this.queryConditions.BusTypeList).map((x: any) =>
+        x.bus_type ?? ''
+      ),
 
-      this.historyRequestBody = request;                 // 查詢條件
-      console.log('明細資料', this.data)
-      console.log('明細總計', this.footerTotal);
-      console.log('明細總計(轉換後)', this.footershowTotal);
-      // console.log('明細條件',this.historyRequestBody);
-      this.totalRecords = res.TotalCount;
-    })
+      BusClassList: this.toArray(this.queryConditions.BusClassList).map((item: any) => ({
+        BusType: item.bus_type ?? '',
+        BusClass: item.No ?? ''
+      })),
+
+      TltKindList: ([] as string[]).concat(this.queryConditions.TltKindList || []).join(','),
+      OrgList: ([] as string[]).concat(this.queryConditions.OrgList || []).join(','),
+      TltNoList: ([] as string[]).concat(this.queryConditions.TltNoList || []).join(','),
+      TermTypeList: ([] as string[]).concat(this.queryConditions.TermTypeList || []).join(','),
+      BuildingList: ([] as string[]).concat(this.queryConditions.BuildingList || []).join(','),
+      AmtTaxMode: ([] as string[]).concat(this.queryConditions.AmtTaxMode || []).join(','),
+      ReceFilter: ([] as string[]).concat(this.queryConditions.ReceFilter || []).join(','),
+    } as TLS32040DetailRequest;
+
+    console.log('單組織之營業報表request', request);
+    console.log('明細api準備中');
+    // console.log('單組織之營業報表request', JSON.stringify(request, null, 2));
+
+    // this.tls32040Service.queryTLS32040Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+    //   console.log('單組織之營業報表response', res.Data);
+    //   this.data = res.Data ?? [];               // 查詢資料
+    //   this.historyRequestBody = request;        // 查詢條件
+    //   console.log('明細資料', res.Data);
+    //   this.totalRecords = res.TotalCount;        // 等候端
+    // })
+  }
+
+  toArray(value: any): any[] {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') return value.split(',').filter(x => x);
+    return [];
   }
 }

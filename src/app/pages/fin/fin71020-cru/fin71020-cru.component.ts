@@ -93,7 +93,7 @@ export class FIN71020CRUComponent extends BasicCruPageComponent<FIN71020Data> im
     this.handleSubmit(this.dataForm, () => {
       const raw = <FIN71020Update | FIN71020Insert>{ ...this.dataForm.getRawValue() };
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
-        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       )) as unknown as FIN71020Update | FIN71020Insert;
 
       this.tableLoading.set(!0);
