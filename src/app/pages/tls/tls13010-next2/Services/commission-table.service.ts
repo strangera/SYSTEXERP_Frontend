@@ -157,6 +157,7 @@ export class CommissionTableService {
   /**
    * 🆕 格式化合約期間顯示
    * 使用 DateUtils 確保日期格式化的一致性，避免時區問題
+   * 格式：yyyy/mm/dd ~ yyyy/mm/dd
    */
   private formatContractPeriod(startDate: any, endDate: any): string {
     const start = DateUtils.toDateString(startDate);
@@ -166,7 +167,11 @@ export class CommissionTableService {
       return '';
     }
 
-    return `${start} ~ ${end}`;
+    // 將日期格式從 YYYY-MM-DD 轉換為 yyyy/mm/dd
+    const formattedStart = start.replace(/-/g, '/');
+    const formattedEnd = end.replace(/-/g, '/');
+
+    return `${formattedStart} ~ ${formattedEnd}`;
   }
 
   // 保持原有代碼，並從此處開始向下貼上...

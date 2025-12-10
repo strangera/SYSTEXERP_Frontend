@@ -344,18 +344,18 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+        return `${year}/${month}/${day}`;
       }
 
       // 處理字串
       if (typeof date === 'string') {
-        // 如果已經是 YYYY-MM-DD 格式，直接返回
+        // 如果已經是 YYYY-MM-DD 格式，轉換為 YYYY/MM/DD
         if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-          return date;
+          return date.replace(/-/g, '/');
         }
-        // 如果包含 T（ISO 格式），取日期部分
+        // 如果包含 T（ISO 格式），取日期部分並轉換
         if (date.includes('T')) {
-          return date.split('T')[0];
+          return date.split('T')[0].replace(/-/g, '/');
         }
       }
 
@@ -366,7 +366,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
           const year = d.getFullYear();
           const month = String(d.getMonth() + 1).padStart(2, '0');
           const day = String(d.getDate()).padStart(2, '0');
-          return `${year}-${month}-${day}`;
+          return `${year}/${month}/${day}`;
         }
       } catch {
         return '';
