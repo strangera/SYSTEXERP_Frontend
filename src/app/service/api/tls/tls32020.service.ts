@@ -1,6 +1,7 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 export interface TLS32020QueryRequest {
@@ -66,7 +67,34 @@ export class TLS32020Service {
   queryTLS32020(body: TLS32020QueryRequest) {
     return this.http.post<BaseQueryResponse<TLS32020Data>>(this.apiUrl + '/queryTLS32020', body);
   }
-  // 模擬匯出方法
-  exportTLS32020PDF(body: TLS32020QueryRequest) { return { pipe: (cb: any) => cb(new Blob()) } as any; }
-  exportTLS32020Excel(body: TLS32020QueryRequest) { return { pipe: (cb: any) => cb(new Blob()) } as any; }
+  exportTLS32020PDF(
+    body: TLS32020QueryRequest
+  ): Observable<HttpResponse<Blob>> { // 將回傳類型改為 HttpResponse<Blob>
+    return this.http.post(
+      `${this.apiUrl}/exportTLS32020PDF`,
+      body,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      }
+    );
+  }
+  /**
+   * 匯出進貨/退貨單據統計報表 (Excel) 的 API 呼叫
+   * 請求參數與查詢介面 (QueryTLS32020Request) 相同
+   * @param body 統一的匯出請求物件 (QueryTLS32020Request)
+   * @returns 包含 Excel 檔案的 Blob 物件
+   */
+  exportTLS32020Excel(
+    body: TLS32020QueryRequest
+  ): Observable<HttpResponse<Blob>> { // 將回傳類型改為 HttpResponse<Blob>
+    return this.http.post(
+      `${this.apiUrl}/exportTLS32020Excel`,
+      body,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      }
+    );
+  }
 }

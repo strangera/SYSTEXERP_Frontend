@@ -74,7 +74,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     OwnerInvFlag: ['A'],
   });
 
-  // 其餘屬性 (沿用 TLS32010)
+  // 其餘屬性 (沿用 TLS32020)
   totalRecords = 0;
   historyRequestBody: TLS32020QueryRequest | null = null;
   data: TLS32020Data[] = [];
@@ -124,7 +124,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
 
   // 報表欄位結構 (已補齊 BasePyeff/PyContrib, ComparePyeff/PyContrib)
   columns: ReportColumn[] = [
-    { field: 'YM', header: '月份', format: (value) => this.formatYM(value) }, // 預設為 '月份' (因為 DayType 預設為 3)
+    { field: 'YM', header: '月份' }, // 預設為 '月份' (因為 DayType 預設為 3)
     { field: 'BuildingName', header: '館別' },
     // ======================= 基準期 (Base) 欄位 =======================
     { field: 'BaseTarget', header: '營業目標', format: formatAmount, isSubTotal: true, groupField: 'revenue' },
@@ -165,10 +165,8 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     this.initializePage('TLS32020');
     this.setWeekOptions(this.queryForm.controls.year.value);// 初始化週次選項
     this.calculateInitialRanges('3');// 【保留】只在頁面初始化時執行一次完整的初始化
-
-    // 1. DayType 變化：【集中所有邏輯，使用 startWith 確保初始化】
     this.queryForm.controls.DayType.valueChanges.pipe(
-      startWith(this.queryForm.controls.DayType.value), // ⚠️ 讓訂閱在初始化時觸發一次
+      startWith(this.queryForm.controls.DayType.value),
       untilDestroyed(this)
     ).subscribe(type => {
 
@@ -250,57 +248,6 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
     return weekdays[day];
   }
-  /**
-    * 根據 DayType 動態格式化 YM 欄位的內容
-    * @param value 後端回傳的 YM 原始值
-    */
-  formatYM(value: any): string {
-    if (!value) return '';
-    const dayType = this.queryForm.controls.DayType.value;
-    const rawValue = String(value);
-    // 處理小計/總計
-    if (rawValue === '小計' || rawValue === '總計') return rawValue;
-    switch (dayType) {
-      case '1': // 日營業報表 (YYYY-MM-DD -> YYYY/MM/DD (DayOfWeek))
-        {
-          const date = new Date(rawValue);// 確保日期解析正確，使用 DatePipe 轉換格式並加上中文星期
-          if (isNaN(date.getTime())) return rawValue; // 無效日期則返回原始值
-          const datePart = this.datePipe.transform(date, 'yyyy/MM/dd');// 格式化日期部分
-          const dayOfWeek = this.getDayOfWeekInChinese(date);// 取得中文星期
-          return `${datePart} (${dayOfWeek})`;
-        }
-      case '2': // 週營業報表 (YYYYWww -> YYYY 第ww週)
-        // 匹配 YYYYWww
-        {
-          const weekMatch = rawValue.match(/^(\d{4})W(\d{1,2})$/);
-          if (weekMatch) {
-            return `${weekMatch[1]} 第${weekMatch[2]}週`;
-          }
-          return rawValue;
-        }
-
-      case '3': // 月營業報表 (YYYY-MM -> YYYY/MM)
-        // 匹配 YYYY-MM 並替換分隔符
-        return rawValue.replace(/-/g, '/');
-
-      case '4': // 半年營業報表 (YYYYHh -> YYYY 上/下半年)
-        // 匹配 YYYY H1 或 H2
-        {
-          const halfYearMatch = rawValue.match(/^(\d{4})H([12])$/);
-          if (halfYearMatch) {
-            const year = halfYearMatch[1];
-            const half = halfYearMatch[2] === '1' ? '上半年' : '下半年';
-            return `${year} ${half}`;
-          }
-          return rawValue;
-        }
-
-      case '5': // 年營業報表 (YYYY) - 不變
-      default:
-        return rawValue;
-    }
-  }
-
   /**
     * 根據報表類型計算基準日期和比較日期區間，並更新表單欄位。
     * 這是新的核心日期邏輯。
@@ -703,13 +650,14 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
       this.messageService.warnBubble('請先執行查詢以產生報表。');
       return;
     }
-    // **變更**：呼叫新的 Service 方法
+
     const export$ = this.tls32020Service.exportTLS32020PDF(this.historyRequestBody);
 
+    // 呼叫 Service 執行匯出，並將直到銷毀的邏輯加入
     this.fileExportService.executeFileExport(
-      export$.pipe(untilDestroyed(this)),
+      export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
       '.pdf',
-      (isLoading) => this.btnLoading = isLoading
+      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
     );
   }
 
@@ -718,13 +666,13 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
       this.messageService.warnBubble('請先執行查詢以產生報表。');
       return;
     }
-    // **變更**：呼叫新的 Service 方法
+
     const export$ = this.tls32020Service.exportTLS32020Excel(this.historyRequestBody);
 
     this.fileExportService.executeFileExport(
-      export$.pipe(untilDestroyed(this)),
+      export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
       '.xlsx',
-      (isLoading) => this.btnLoading = isLoading
+      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
     );
   }
 }
