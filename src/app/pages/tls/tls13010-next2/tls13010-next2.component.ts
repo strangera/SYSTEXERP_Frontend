@@ -961,6 +961,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       .filter(item => {
         console.log(`  🔍 過濾項目 (id: ${item.id}):`, {
           _status: item._status,
+          selected: item.selected,
           會被過濾: item._status === 'deleted'
         });
 
@@ -970,16 +971,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
           return false;
         }
 
-        // 2. Level 額外檢查：
-        //    (a) 過濾 selected === false 的項目（方案 B）
-        //    (b) 是否有對應的 discount
+        // 2. Level 額外檢查：是否有對應的 discount
+        // 🔑 修正：移除 selected === false 的過濾條件，因為這會導致要刪除的項目無法送到後端
         if (currentTab === 'level') {
-          // 🆕 方案 B：過濾掉 selected === false 的 level
-          if (item.selected === false) {
-            console.log(`    ❌ 項目 ${item.id} 被過濾 (selected = false)`);
-            return false;
-          }
-
           const validDiscounts = commissionItem.discountSettingItems
             ?.filter(d => d.selected && d._status !== 'deleted') || [];
           const validDiscountIds = new Set(validDiscounts.map(d => d.id));
@@ -1002,7 +996,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
             return false;
           }
 
-          console.log(`    ✅ 項目 ${item.id} 保留 (有對應 discount 且 selected = true)`);
+          console.log(`    ✅ 項目 ${item.id} 保留 (有對應 discount)`);
         }
 
         return true;
@@ -2018,7 +2012,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       // 真實 id：標記為 deleted（修改原始項目）
       console.log('真實 ID - 標記為 deleted');
       originalItem._status = 'deleted';
-      originalItem.selected = false;
+      // 🔑 修正：不再設定 selected = false，因為現在過濾邏輯不依賴 selected
       console.log('✅ 已標記原始 level 項目為 deleted:', {
         id: originalItem.id,
         _status: originalItem._status,
