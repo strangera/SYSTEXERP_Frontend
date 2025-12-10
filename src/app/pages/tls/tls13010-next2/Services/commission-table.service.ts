@@ -357,14 +357,58 @@ export class CommissionTableService {
     parentItem: CommissionItem,
     discountOptions: any[]
   ): OperationResult {
+    console.log('🔍 copyDiscountItem 開始:', {
+      sourceItem_tlt_edate: sourceItem.tlt_edate,
+      parentItem_mainEndDate: parentItem.mainEndDate
+    });
+
+    // 🔑 檢查原項目的終止日是否已經是合約終止日
+    const contractEndDate = this.parseDate(parentItem.mainEndDate);
+    const sourceEndDate = this.parseDate(sourceItem.tlt_edate);
+
+    console.log('🔍 解析後的日期:', {
+      contractEndDate: contractEndDate,
+      sourceEndDate: sourceEndDate
+    });
+
+    // 將時間部分歸零以進行日期比較
+    contractEndDate.setHours(0, 0, 0, 0);
+    sourceEndDate.setHours(0, 0, 0, 0);
+
+    console.log('🔍 歸零後的日期:', {
+      contractEndDate: contractEndDate,
+      sourceEndDate: sourceEndDate,
+      sourceEndDate_time: sourceEndDate.getTime(),
+      contractEndDate_time: contractEndDate.getTime(),
+      comparison: sourceEndDate.getTime() >= contractEndDate.getTime()
+    });
+
+    if (sourceEndDate.getTime() >= contractEndDate.getTime()) {
+      console.log('❌ 終止日已達合約終止日，無法複製');
+      return {
+        success: false,
+        message: '此折扣設定的終止日已達合約終止日，無法複製'
+      };
+    }
+
+    // 🔑 計算新項目的日期：起始日 = 原終止日 + 1 天，終止日 = 合約終止日
+    const newStartDate = new Date(sourceEndDate);
+    newStartDate.setDate(newStartDate.getDate() + 1);
+    const newEndDate = new Date(contractEndDate);
+
+    console.log('✅ 計算新項目的日期:', {
+      newStartDate: newStartDate,
+      newEndDate: newEndDate
+    });
+
     const newDiscountId = this.generateTempId();
 
     const newItem: DiscountSettingItem = {
       id: newDiscountId,
       selected: sourceItem.selected,
       cag_barcode: sourceItem.cag_barcode,
-      tlt_bdate: new Date(sourceItem.tlt_bdate),
-      tlt_edate: new Date(sourceItem.tlt_edate),
+      tlt_bdate: newStartDate,  // 🔑 使用接續的起始日
+      tlt_edate: newEndDate,    // 🔑 使用合約終止日
       cag_charge_rate: sourceItem.cag_charge_rate,
       _status: 'new',
       is_configured: sourceItem.is_configured,
