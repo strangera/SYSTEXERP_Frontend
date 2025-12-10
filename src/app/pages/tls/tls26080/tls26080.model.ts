@@ -30,6 +30,7 @@ export interface TLS26080Data {
 }
 
 export type TLS26080EditTable = Partial<EditColumnExtend> & TLS26080DetailTable;
+export type TLS26080KeyInTable = Omit<TLS26080DetailTable, 'tpy_rate_D16' | 'tpy_rate_D17'> & { tpy_rate_D16: string; tpy_rate_D17: string; };
 
 export interface TLS26080DetailTable {
   id?: number;                 // 主鍵

@@ -229,7 +229,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       .map(d => {
         const startDate = this.formatDateString(d.tlt_bdate).replace(/-/g, '/');
         const endDate = this.formatDateString(d.tlt_edate).replace(/-/g, '/');
-        const rate = (d.cag_charge_rate || 0) * 100;
+        const rate = d.cag_charge_rate || 0;  // 🔑 已經是百分比格式，不需要乘以 100
         return `${d.cag_barcode}-(${startDate}-${endDate})-${rate}`;
       });
 
@@ -302,7 +302,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   /**
-   * 🆕 填充 level 的 contract_period 欄位
+   * 🆕 填充 level 的 contract_period 欄位和同步日期
    */
   private fillLevelContractPeriod(commissionItem: CommissionItem): void {
     if (!commissionItem.discountSettingItems || !commissionItem.discountLevelItems) {
@@ -316,24 +316,63 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       );
 
       if (correspondingDiscount) {
-        // 格式化合約期間
+        // 格式化合約期間（顯示用）
         level.contract_period = this.formatContractPeriod(
           correspondingDiscount.tlt_bdate,
           correspondingDiscount.tlt_edate
         );
+
+        // 🔑 同步起始日期和終止日期
+        level.tlt_bdate = correspondingDiscount.tlt_bdate;
+        level.tlt_edate = correspondingDiscount.tlt_edate;
       }
     });
   }
 
   /**
    * 🆕 格式化合約期間顯示
+   * 使用 DateUtils 確保日期格式化的一致性
    */
   private formatContractPeriod(startDate: any, endDate: any): string {
+    // 導入 DateUtils 來處理日期格式化，避免時區問題
     const formatDate = (date: any) => {
       if (!date) return '';
-      const d = date instanceof Date ? date : new Date(date);
-      if (isNaN(d.getTime())) return '';
-      return d.toISOString().split('T')[0];
+
+      // 處理 Date 物件
+      if (date instanceof Date) {
+        if (isNaN(date.getTime())) return '';
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}/${month}/${day}`;
+      }
+
+      // 處理字串
+      if (typeof date === 'string') {
+        // 如果已經是 YYYY-MM-DD 格式，轉換為 YYYY/MM/DD
+        if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+          return date.replace(/-/g, '/');
+        }
+        // 如果包含 T（ISO 格式），取日期部分並轉換
+        if (date.includes('T')) {
+          return date.split('T')[0].replace(/-/g, '/');
+        }
+      }
+
+      // 嘗試轉換為 Date 再格式化
+      try {
+        const d = new Date(date);
+        if (!isNaN(d.getTime())) {
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          return `${year}/${month}/${day}`;
+        }
+      } catch {
+        return '';
+      }
+
+      return '';
     };
 
     const start = formatDate(startDate);
@@ -417,13 +456,36 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       currentStatus: rowData._status
     });
 
+    // 🔑 日期欄位驗證
+    if (fieldName === 'tlt_bdate' || fieldName === 'tlt_edate') {
+      const validationResult = this.validateDateField(rowData, fieldName, newValue);
+      if (!validationResult.isValid) {
+        // 標記此項目有驗證錯誤（會顯示紅色背景）
+        rowData._hasValidationError = true;
+        this.notificationService.errorBubble(validationResult.message);
+
+        // 強制更新顯示以顯示錯誤背景
+        this.cdr.detectChanges();
+        return; // 驗證失敗，不更新
+      } else {
+        // 驗證通過，清除錯誤標記
+        rowData._hasValidationError = false;
+      }
+    }
+
     // 更新明細項目的欄位值
     rowData[fieldName] = newValue;
 
     // 特殊處理：selected 欄位的狀態變更
     if (fieldName === 'selected') {
       this.handleSelectedFieldChange(rowData, newValue);
-    } else {
+    }
+    // 🔑 特殊處理：如果是 discount 的日期欄位變更，需要同步到對應的 level
+    else if ((fieldName === 'tlt_bdate' || fieldName === 'tlt_edate') && rowData._originalType === 'discount') {
+      this.updateItemStatus(rowData);
+      this.syncDiscountDateToLevel(rowData);
+    }
+    else {
       // 其他欄位變更的狀態處理
       this.updateItemStatus(rowData);
     }
@@ -433,10 +495,58 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     if (parentItem) {
       this.syncDetailToParentArray(rowData, parentItem);
       this.updateItemStatus(parentItem);
+
+      // 🔑 如果是 discount 的任何欄位變更（除了 selected，因為 selected 在 handleSelectedFieldChange 中已處理），都要重新生成折扣摘要
+      if (rowData._originalType === 'discount' && fieldName !== 'selected') {
+        parentItem.remark = this.formatRemarkText(parentItem);
+        console.log('✅ 已更新折扣摘要:', parentItem.remark);
+      }
+
       this.updateMainArray(parentItem);
     }
 
     this.saveToWorkflow();
+  }
+
+  /**
+   * 🔑 同步 discount 的日期變更到對應的 level 項目
+   */
+  private syncDiscountDateToLevel(discountData: any): void {
+    const parentItem = this.findParentOfDetailItem(discountData);
+    if (!parentItem || !parentItem.discountLevelItems) {
+      return;
+    }
+
+    console.log('🔄 同步 discount 日期到 level:', {
+      discountId: discountData.id,
+      discountBarcode: discountData.cag_barcode,
+      tlt_bdate: discountData.tlt_bdate,
+      tlt_edate: discountData.tlt_edate
+    });
+
+    // 找到所有對應的 level 項目並更新日期
+    parentItem.discountLevelItems.forEach(level => {
+      if (level.charged_id === discountData.id) {
+        // 更新日期
+        level.tlt_bdate = discountData.tlt_bdate;
+        level.tlt_edate = discountData.tlt_edate;
+
+        // 更新合約期間顯示
+        level.contract_period = this.formatContractPeriod(
+          discountData.tlt_bdate,
+          discountData.tlt_edate
+        );
+
+        // 更新狀態
+        this.updateItemStatus(level);
+
+        console.log(`✅ 已更新 level ${level.id} 的日期:`, {
+          tlt_bdate: level.tlt_bdate,
+          tlt_edate: level.tlt_edate,
+          contract_period: level.contract_period
+        });
+      }
+    });
   }
 
   private handleSelectedFieldChange(rowData: any, newValue: boolean): void {
@@ -851,6 +961,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       .filter(item => {
         console.log(`  🔍 過濾項目 (id: ${item.id}):`, {
           _status: item._status,
+          selected: item.selected,
           會被過濾: item._status === 'deleted'
         });
 
@@ -860,16 +971,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
           return false;
         }
 
-        // 2. Level 額外檢查：
-        //    (a) 過濾 selected === false 的項目（方案 B）
-        //    (b) 是否有對應的 discount
+        // 2. Level 額外檢查：是否有對應的 discount
+        // 🔑 修正：移除 selected === false 的過濾條件，因為這會導致要刪除的項目無法送到後端
         if (currentTab === 'level') {
-          // 🆕 方案 B：過濾掉 selected === false 的 level
-          if (item.selected === false) {
-            console.log(`    ❌ 項目 ${item.id} 被過濾 (selected = false)`);
-            return false;
-          }
-
           const validDiscounts = commissionItem.discountSettingItems
             ?.filter(d => d.selected && d._status !== 'deleted') || [];
           const validDiscountIds = new Set(validDiscounts.map(d => d.id));
@@ -892,15 +996,30 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
             return false;
           }
 
-          console.log(`    ✅ 項目 ${item.id} 保留 (有對應 discount 且 selected = true)`);
+          console.log(`    ✅ 項目 ${item.id} 保留 (有對應 discount)`);
         }
 
         return true;
       })
-      .map(item => ({
-        ...item,
-        _originalType: currentTab
-      }));
+      .map(item => {
+        let canDelete = true;
+
+        // 如果是 level，檢查同一個 discount 下是否只剩一個
+        if (currentTab === 'level') {
+          const sameDiscountLevels = sourceArray.filter(
+            (l: any) => l.charged_id === item.charged_id &&
+                       l.selected &&
+                       l._status !== 'deleted'
+          );
+          canDelete = sameDiscountLevels.length > 1;
+        }
+
+        return {
+          ...item,
+          _originalType: currentTab,
+          _canDelete: canDelete
+        };
+      });
 
     console.log('📊 過濾結果:', {
       原始數量: sourceArray.length,
@@ -971,6 +1090,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     );
 
     if (result.success) {
+      // 🔑 生成折扣摘要欄位
+      result.newItem.remark = this.formatRemarkText(result.newItem);
+
       this.commissionData = [...this.commissionData, result.newItem];
       this.saveToWorkflow();
       this.notificationService.infoBubble('新增完成');
@@ -1023,6 +1145,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       return;
     }
 
+    // 檢查是否有刪除 discount 項目
+    const hasDiscountDeleted = selectedDetails.some(detail => detail._originalType === 'discount');
+
     // 處理刪除邏輯
     selectedDetails.forEach(detail => {
       if (detail._status === 'new' || !this.hasValidId(detail)) {
@@ -1034,6 +1159,12 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         this.syncDetailToParentArray(detail, parentData);
       }
     });
+
+    // 🔑 如果刪除了 discount 項目，需要更新折扣摘要
+    if (hasDiscountDeleted) {
+      parentData.remark = this.formatRemarkText(parentData);
+      console.log('✅ 批次刪除後已更新折扣摘要:', parentData.remark);
+    }
 
     // 重新刷新顯示
     this.refreshItemDetailDisplay(parentData);
@@ -1110,23 +1241,35 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     }
 
     console.log('📋 複製折扣設定:', discountItem);
+    console.log('📋 parentData:', {
+      mainEndDate: parentData.mainEndDate,
+      discountItem_tlt_edate: discountItem.tlt_edate
+    });
 
     // 使用 table service 複製項目
     const result = this.tableService.copyDiscountItem(discountItem, parentData, this.discountOptions);
 
-    if (result.success) {
-      // 同步到層級抽成
-      this.syncDiscountChangesToLevel(parentData);
+    console.log('📋 複製結果:', result);
 
-      // 更新顯示
-      this.refreshItemDetailDisplay(parentData);
-      this.updateMainArray(parentData);
-      this.saveToWorkflow();
-
-      this.notificationService.successBubble('折扣設定已複製');
-    } else {
+    if (!result.success) {
+      // 🔑 如果複製失敗，顯示錯誤訊息並提前返回
       this.notificationService.errorBubble(result.message || '複製失敗');
+      return;
     }
+
+    // 複製成功的處理
+    // 同步到層級抽成
+    this.syncDiscountChangesToLevel(parentData);
+
+    // 🔑 更新折扣摘要
+    parentData.remark = this.formatRemarkText(parentData);
+
+    // 更新顯示
+    this.refreshItemDetailDisplay(parentData);
+    this.updateMainArray(parentData);
+    this.saveToWorkflow();
+
+    this.notificationService.successBubble('折扣設定已複製');
   }
 
   /**
@@ -1253,8 +1396,21 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     console.log('🔄 提交前強制同步所有 discount 到 level');
     this.ensureAllDiscountsHaveLevels();
 
-    // 驗證資料
-    const validation = this.validationService.validateAllData(this.commissionData);
+    // 🔑 先驗證所有日期欄位並標記錯誤項目
+    const dateValidation = this.validateAllDatesBeforeSubmit();
+    if (dateValidation.hasErrors) {
+      this.notificationService.errorBubble(
+        `日期驗證失敗：${dateValidation.errorSummary}\n請檢查標記為紅色的項目`
+      );
+      return;
+    }
+
+    // 驗證資料（含合約日期範圍檢查）
+    const validation = this.validationService.validateAllData(
+      this.commissionData,
+      this.getContractDate('start'),
+      this.getContractDate('end')
+    );
     if (!validation.isValid) {
       this.notificationService.errorBubble(validation.errors[0]);
       return;
@@ -1409,8 +1565,13 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     console.log('詳細按鈕點擊事件:', event);
 
     // 判斷是否為複製按鈕
-    if (event.field === 'copy_button') {
+    if (event.field === 'copy_button' || event.field === 'copy_level_button') {
       this.copyDetailItem(event.detailData, event.parentData);
+    }
+
+    // 判斷是否為刪除 level 按鈕
+    if (event.field === 'delete_level_button') {
+      this.deleteLevelItem(event.detailData, event.parentData);
     }
   }
 
@@ -1434,8 +1595,19 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       return;
     }
 
+    // 🔑 如果是 discount，檢查是否可以複製（日期是否已達合約終止日）
+    if (currentTab === 'discount') {
+      const contractEndDate = this.parseContractDate(this.getContractDate('end'));
+      const sourceEndDate = this.parseContractDate(sourceItem.tlt_edate);
+
+      if (sourceEndDate.getTime() >= contractEndDate.getTime()) {
+        this.notificationService.errorBubble('此折扣設定的終止日已達合約終止日，無法複製');
+        return;
+      }
+    }
+
     // 建立複製的項目
-    const copiedItem = this.createCopiedItem(sourceItem, currentTab);
+    const copiedItem = this.createCopiedItem(sourceItem, currentTab, parentData);
 
     // 找出原項目的索引位置
     let targetArray: any[] = [];
@@ -1463,6 +1635,12 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       console.log('找不到原項目位置，將複製項目加到最後');
     }
 
+    // 🔑 如果是複製折扣設定，需要重新生成 remark
+    if (currentTab === 'discount') {
+      parentData.remark = this.formatRemarkText(parentData);
+      console.log('✅ 複製折扣後重新生成 remark:', parentData.remark);
+    }
+
     // 更新顯示
     this.refreshItemDetailDisplay(parentData);
 
@@ -1479,7 +1657,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   /**
    * 建立複製的項目（只處理 discount 和 level）
    */
-  private createCopiedItem(sourceItem: any, itemType: string): any {
+  private createCopiedItem(sourceItem: any, itemType: string, parentData?: any): any {
     const tempId = this.generateTempId();
 
     // 基礎複製物件
@@ -1494,11 +1672,26 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     // 根據類型處理特定欄位
     switch (itemType) {
       case 'discount':
-        // 折扣設定複製
+        // 折扣設定複製 - 實作日期接續邏輯
         copiedItem.cag_barcode = sourceItem.cag_barcode || '';
         copiedItem.cag_charge_rate = sourceItem.cag_charge_rate || 0;
-        copiedItem.tlt_bdate = sourceItem.tlt_bdate ? new Date(sourceItem.tlt_bdate) : new Date();
-        copiedItem.tlt_edate = sourceItem.tlt_edate ? new Date(sourceItem.tlt_edate) : new Date();
+
+        // 計算日期接續
+        const contractEndDate = this.parseContractDate(this.getContractDate('end'));
+        const sourceEndDate = this.parseContractDate(sourceItem.tlt_edate);
+
+        // 新的起始日 = 原終止日 + 1 天
+        const newStartDate = new Date(sourceEndDate);
+        newStartDate.setDate(newStartDate.getDate() + 1);
+
+        copiedItem.tlt_bdate = newStartDate;
+        copiedItem.tlt_edate = new Date(contractEndDate);
+
+        console.log('📅 折扣日期接續:', {
+          原終止日: this.formatDateString(sourceItem.tlt_edate),
+          新起始日: this.formatDateString(newStartDate),
+          新終止日: this.formatDateString(contractEndDate)
+        });
         break;
 
       case 'level':
@@ -1507,6 +1700,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         copiedItem.level_bmount = sourceItem.level_bmount || 0;
         copiedItem.level_eamount = sourceItem.level_eamount || 0;
         copiedItem.level_charge_rate = sourceItem.level_charge_rate || 0;
+        copiedItem.charged_id = sourceItem.charged_id; // 保留原 discount 關聯
+        copiedItem.contract_period = sourceItem.contract_period; // 保留合約期間
+        copiedItem.selected = true; // 複製的 level 預設勾選
         break;
     }
 
@@ -1519,6 +1715,335 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   /**
+   * 解析合約日期字串為 Date 物件
+   */
+  private parseContractDate(dateInput: any): Date {
+    if (!dateInput) {
+      return new Date();
+    }
+
+    if (dateInput instanceof Date) {
+      const result = new Date(dateInput);
+      result.setHours(0, 0, 0, 0);
+      return result;
+    }
+
+    if (typeof dateInput === 'string') {
+      if (dateInput.includes('T')) {
+        const datePart = dateInput.split('T')[0];
+        const [year, month, day] = datePart.split('-').map(Number);
+        return new Date(year, month - 1, day);
+      }
+
+      const parts = dateInput.split('-');
+      if (parts.length === 3) {
+        const [year, month, day] = parts.map(Number);
+        return new Date(year, month - 1, day);
+      }
+    }
+
+    try {
+      const result = new Date(dateInput);
+      result.setHours(0, 0, 0, 0);
+      return result;
+    } catch {
+      return new Date();
+    }
+  }
+
+  /**
+   * 驗證日期欄位是否在合約期間內
+   */
+  private validateDateField(rowData: any, fieldName: string, newValue: Date | string | null): { isValid: boolean, message: string } {
+    if (!newValue) {
+      return { isValid: true, message: '' };
+    }
+
+    // 取得合約起訖日期
+    const contractStartDate = this.parseContractDate(this.getContractDate('start'));
+    const contractEndDate = this.parseContractDate(this.getContractDate('end'));
+    const inputDate = this.parseContractDate(newValue);
+
+    console.log('🔍 驗證日期:', {
+      fieldName,
+      inputDate,
+      contractStartDate,
+      contractEndDate
+    });
+
+    // 檢查是否在合約期間內
+    if (inputDate < contractStartDate) {
+      return {
+        isValid: false,
+        message: `${fieldName === 'tlt_bdate' ? '起始日' : '終止日'}不可早於合約起始日 (${this.formatDateString(contractStartDate)})`
+      };
+    }
+
+    if (inputDate > contractEndDate) {
+      return {
+        isValid: false,
+        message: `${fieldName === 'tlt_bdate' ? '起始日' : '終止日'}不可晚於合約終止日 (${this.formatDateString(contractEndDate)})`
+      };
+    }
+
+    // 檢查起始日和終止日的邏輯關係
+    if (fieldName === 'tlt_bdate' && rowData.tlt_edate) {
+      const endDate = this.parseContractDate(rowData.tlt_edate);
+      if (inputDate > endDate) {
+        return {
+          isValid: false,
+          message: '起始日不可晚於終止日'
+        };
+      }
+    }
+
+    if (fieldName === 'tlt_edate' && rowData.tlt_bdate) {
+      const startDate = this.parseContractDate(rowData.tlt_bdate);
+      if (inputDate < startDate) {
+        return {
+          isValid: false,
+          message: '終止日不可早於起始日'
+        };
+      }
+    }
+
+    return { isValid: true, message: '' };
+  }
+
+  /**
+   * 🔑 送出前驗證所有日期欄位，並標記錯誤項目
+   * @returns 驗證結果，包含是否有錯誤及錯誤摘要
+   */
+  private validateAllDatesBeforeSubmit(): { hasErrors: boolean; errorSummary: string } {
+    let hasErrors = false;
+    const errorMessages: string[] = [];
+    const contractStartDate = this.parseContractDate(this.getContractDate('start'));
+    const contractEndDate = this.parseContractDate(this.getContractDate('end'));
+
+    this.commissionData.forEach((commissionItem, idx) => {
+      if (commissionItem._status === 'deleted') return;
+
+      let itemHasError = false;
+      const itemErrorTabs = new Set<string>();
+
+      // 驗證折扣設定
+      if (commissionItem.discountSettingItems) {
+        commissionItem.discountSettingItems
+          .filter(d => d._status !== 'deleted' && d.selected)
+          .forEach(discount => {
+            const isValid = this.checkDateRange(
+              discount.tlt_bdate,
+              discount.tlt_edate,
+              contractStartDate,
+              contractEndDate
+            );
+
+            discount._hasValidationError = !isValid;
+            if (!isValid) {
+              hasErrors = true;
+              itemHasError = true;
+              itemErrorTabs.add('折扣設定');
+            }
+            // 同步到 detailItems
+            const detailItem = commissionItem.detailItems?.find(
+              d => d.id === discount.id && d._originalType === 'discount'
+            );
+            if (detailItem) {
+              detailItem._hasValidationError = !isValid;
+            }
+          });
+      }
+
+      // 驗證年度業績
+      if (commissionItem.annualPerformanceItems) {
+        commissionItem.annualPerformanceItems
+          .filter(a => a._status !== 'deleted')
+          .forEach(annual => {
+            const isValid = this.checkDateRange(
+              annual.tlt_bdate,
+              annual.tlt_edate,
+              contractStartDate,
+              contractEndDate
+            );
+
+            annual._hasValidationError = !isValid;
+            if (!isValid) {
+              hasErrors = true;
+              itemHasError = true;
+              itemErrorTabs.add('年度總業績');
+            }
+            // 同步到 detailItems
+            const detailItem = commissionItem.detailItems?.find(
+              d => d.id === annual.id && d._originalType === 'annual'
+            );
+            if (detailItem) {
+              detailItem._hasValidationError = !isValid;
+            }
+          });
+      }
+
+      // 標記主項目有錯誤（用於主表格顯示）
+      commissionItem._hasValidationError = itemHasError;
+
+      if (itemHasError) {
+        const errorSummary = Array.from(itemErrorTabs).join('、');
+        errorMessages.push(`抽成項目${idx + 1} 的 ${errorSummary} 日期有誤`);
+      }
+    });
+
+    // 如果有錯誤，強制更新顯示
+    if (hasErrors) {
+      this.cdr.detectChanges();
+    }
+
+    const errorSummary = errorMessages.join('；');
+    return { hasErrors, errorSummary };
+  }
+
+  /**
+   * 檢查日期範圍是否在合約期間內
+   */
+  private checkDateRange(
+    startDate: Date | string | null | undefined,
+    endDate: Date | string | null | undefined,
+    contractStartDate: Date,
+    contractEndDate: Date
+  ): boolean {
+    if (!startDate || !endDate) {
+      return true; // 如果沒有日期，由其他驗證處理
+    }
+
+    const start = this.parseContractDate(startDate);
+    const end = this.parseContractDate(endDate);
+
+    // 檢查起始日不可早於合約起始日
+    if (start < contractStartDate) {
+      return false;
+    }
+
+    // 檢查終止日不可晚於合約終止日
+    if (end > contractEndDate) {
+      return false;
+    }
+
+    // 檢查起始日不可晚於終止日
+    if (start > end) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * 刪除 level 項目
+   * - 有 id 的（從 API 來的）：標記 _status = 'deleted'
+   * - 臨時 id 的（新增的）：直接從陣列移除
+   */
+  private deleteLevelItem(levelItem: any, parentData: any): void {
+    if (this.crudstatus === CRUDStatus.Read) {
+      this.notificationService.infoBubble('檢視模式下無法刪除項目');
+      return;
+    }
+
+    console.log('='.repeat(80));
+    console.log('🗑️ 開始刪除 level 項目');
+    console.log('要刪除的項目:', {
+      id: levelItem.id,
+      charged_id: levelItem.charged_id,
+      cag_barcode: levelItem.cag_barcode,
+      _status: levelItem._status,
+      selected: levelItem.selected
+    });
+
+    // 檢查是否至少保留一個 level
+    const samDiscountLevels = (parentData.discountLevelItems || []).filter(
+      (item: any) => item.charged_id === levelItem.charged_id &&
+                    item.selected &&
+                    item._status !== 'deleted'
+    );
+
+    console.log('同 discount 下的 level 數量:', samDiscountLevels.length);
+    console.log('同 discount 下的 levels:', samDiscountLevels.map((l: any) => ({
+      id: l.id,
+      _status: l._status,
+      selected: l.selected
+    })));
+
+    if (samDiscountLevels.length <= 1) {
+      this.notificationService.warnBubble('每個折扣別至少需要保留一個層級');
+      return;
+    }
+
+    // 判斷是臨時 id 還是真實 id
+    const isTempId = typeof levelItem.id === 'string' && levelItem.id.startsWith('temp_');
+
+    console.log('ID 類型判斷:', {
+      id: levelItem.id,
+      type: typeof levelItem.id,
+      isTempId
+    });
+
+    // 找到原始陣列中的項目（重要！不能只改 levelItem，因為它可能是 detailItems 的副本）
+    const targetArray = parentData.discountLevelItems || [];
+    const originalItem = targetArray.find((item: any) => item.id === levelItem.id);
+
+    if (!originalItem) {
+      console.error('❌ 找不到原始項目，無法刪除');
+      return;
+    }
+
+    console.log('找到原始項目:', {
+      id: originalItem.id,
+      _status: originalItem._status,
+      selected: originalItem.selected
+    });
+
+    if (isTempId || !levelItem.id) {
+      // 臨時 id：直接從陣列移除
+      const index = targetArray.findIndex((item: any) => item.id === levelItem.id);
+
+      console.log('臨時 ID - 從陣列移除, index:', index);
+
+      if (index !== -1) {
+        targetArray.splice(index, 1);
+        console.log('✅ 已直接移除臨時 level 項目');
+      }
+    } else {
+      // 真實 id：標記為 deleted（修改原始項目）
+      console.log('真實 ID - 標記為 deleted');
+      originalItem._status = 'deleted';
+      // 🔑 修正：不再設定 selected = false，因為現在過濾邏輯不依賴 selected
+      console.log('✅ 已標記原始 level 項目為 deleted:', {
+        id: originalItem.id,
+        _status: originalItem._status,
+        selected: originalItem.selected
+      });
+    }
+
+    console.log('刪除後的 discountLevelItems 數量:', parentData.discountLevelItems?.length);
+
+    // 更新顯示
+    console.log('🔄 開始更新顯示...');
+    this.refreshItemDetailDisplay(parentData);
+
+    console.log('更新後的 detailItems 數量:', parentData.detailItems?.length);
+    console.log('更新後的 detailItems:', parentData.detailItems?.map((item: any) => ({
+      id: item.id,
+      _status: item._status,
+      selected: item.selected
+    })));
+
+    this.updateMainArray(parentData);
+    this.saveToWorkflow();
+
+    // 強制觸發變更檢測
+    this.cdr.detectChanges();
+
+    this.notificationService.successBubble('已刪除層級');
+    console.log('='.repeat(80));
+  }
+
+  /**
  * 前往 Next3（不提交後端，只導航）
  */
   onGoToNext3(): void {
@@ -1528,8 +2053,19 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     console.log('🔄 前往 Next3 前強制同步所有 discount 到 level');
     this.ensureAllDiscountsHaveLevels();
 
-    // 驗證資料
-    const validation = this.validationService.validateAllData(this.commissionData);
+    // 🔑 先驗證所有日期欄位並標記錯誤項目
+    const hasDateErrors = this.validateAllDatesBeforeSubmit();
+    if (hasDateErrors) {
+      this.notificationService.errorBubble('部分項目日期超出合約期間，請檢查標記為紅色的項目');
+      return;
+    }
+
+    // 驗證資料（含合約日期範圍檢查）
+    const validation = this.validationService.validateAllData(
+      this.commissionData,
+      this.getContractDate('start'),
+      this.getContractDate('end')
+    );
     if (!validation.isValid) {
       this.notificationService.errorBubble(validation.errors[0]);
       return;
