@@ -229,7 +229,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       .map(d => {
         const startDate = this.formatDateString(d.tlt_bdate).replace(/-/g, '/');
         const endDate = this.formatDateString(d.tlt_edate).replace(/-/g, '/');
-        const rate = (d.cag_charge_rate || 0) * 100;
+        const rate = d.cag_charge_rate || 0;  // 🔑 已經是百分比格式，不需要乘以 100
         return `${d.cag_barcode}-(${startDate}-${endDate})-${rate}`;
       });
 
@@ -302,7 +302,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   /**
-   * 🆕 填充 level 的 contract_period 欄位
+   * 🆕 填充 level 的 contract_period 欄位和同步日期
    */
   private fillLevelContractPeriod(commissionItem: CommissionItem): void {
     if (!commissionItem.discountSettingItems || !commissionItem.discountLevelItems) {
@@ -316,11 +316,15 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       );
 
       if (correspondingDiscount) {
-        // 格式化合約期間
+        // 格式化合約期間（顯示用）
         level.contract_period = this.formatContractPeriod(
           correspondingDiscount.tlt_bdate,
           correspondingDiscount.tlt_edate
         );
+
+        // 🔑 同步起始日期和終止日期
+        level.tlt_bdate = correspondingDiscount.tlt_bdate;
+        level.tlt_edate = correspondingDiscount.tlt_edate;
       }
     });
   }
@@ -458,7 +462,13 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     // 特殊處理：selected 欄位的狀態變更
     if (fieldName === 'selected') {
       this.handleSelectedFieldChange(rowData, newValue);
-    } else {
+    }
+    // 🔑 特殊處理：如果是 discount 的日期欄位變更，需要同步到對應的 level
+    else if ((fieldName === 'tlt_bdate' || fieldName === 'tlt_edate') && rowData._originalType === 'discount') {
+      this.updateItemStatus(rowData);
+      this.syncDiscountDateToLevel(rowData);
+    }
+    else {
       // 其他欄位變更的狀態處理
       this.updateItemStatus(rowData);
     }
@@ -468,10 +478,58 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     if (parentItem) {
       this.syncDetailToParentArray(rowData, parentItem);
       this.updateItemStatus(parentItem);
+
+      // 🔑 如果是 discount 的任何欄位變更（除了 selected，因為 selected 在 handleSelectedFieldChange 中已處理），都要重新生成折扣摘要
+      if (rowData._originalType === 'discount' && fieldName !== 'selected') {
+        parentItem.remark = this.formatRemarkText(parentItem);
+        console.log('✅ 已更新折扣摘要:', parentItem.remark);
+      }
+
       this.updateMainArray(parentItem);
     }
 
     this.saveToWorkflow();
+  }
+
+  /**
+   * 🔑 同步 discount 的日期變更到對應的 level 項目
+   */
+  private syncDiscountDateToLevel(discountData: any): void {
+    const parentItem = this.findParentOfDetailItem(discountData);
+    if (!parentItem || !parentItem.discountLevelItems) {
+      return;
+    }
+
+    console.log('🔄 同步 discount 日期到 level:', {
+      discountId: discountData.id,
+      discountBarcode: discountData.cag_barcode,
+      tlt_bdate: discountData.tlt_bdate,
+      tlt_edate: discountData.tlt_edate
+    });
+
+    // 找到所有對應的 level 項目並更新日期
+    parentItem.discountLevelItems.forEach(level => {
+      if (level.charged_id === discountData.id) {
+        // 更新日期
+        level.tlt_bdate = discountData.tlt_bdate;
+        level.tlt_edate = discountData.tlt_edate;
+
+        // 更新合約期間顯示
+        level.contract_period = this.formatContractPeriod(
+          discountData.tlt_bdate,
+          discountData.tlt_edate
+        );
+
+        // 更新狀態
+        this.updateItemStatus(level);
+
+        console.log(`✅ 已更新 level ${level.id} 的日期:`, {
+          tlt_bdate: level.tlt_bdate,
+          tlt_edate: level.tlt_edate,
+          contract_period: level.contract_period
+        });
+      }
+    });
   }
 
   private handleSelectedFieldChange(rowData: any, newValue: boolean): void {
@@ -1021,6 +1079,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     );
 
     if (result.success) {
+      // 🔑 生成折扣摘要欄位
+      result.newItem.remark = this.formatRemarkText(result.newItem);
+
       this.commissionData = [...this.commissionData, result.newItem];
       this.saveToWorkflow();
       this.notificationService.infoBubble('新增完成');
@@ -1073,6 +1134,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       return;
     }
 
+    // 檢查是否有刪除 discount 項目
+    const hasDiscountDeleted = selectedDetails.some(detail => detail._originalType === 'discount');
+
     // 處理刪除邏輯
     selectedDetails.forEach(detail => {
       if (detail._status === 'new' || !this.hasValidId(detail)) {
@@ -1084,6 +1148,12 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         this.syncDetailToParentArray(detail, parentData);
       }
     });
+
+    // 🔑 如果刪除了 discount 項目，需要更新折扣摘要
+    if (hasDiscountDeleted) {
+      parentData.remark = this.formatRemarkText(parentData);
+      console.log('✅ 批次刪除後已更新折扣摘要:', parentData.remark);
+    }
 
     // 重新刷新顯示
     this.refreshItemDetailDisplay(parentData);
@@ -1167,6 +1237,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     if (result.success) {
       // 同步到層級抽成
       this.syncDiscountChangesToLevel(parentData);
+
+      // 🔑 更新折扣摘要
+      parentData.remark = this.formatRemarkText(parentData);
 
       // 更新顯示
       this.refreshItemDetailDisplay(parentData);

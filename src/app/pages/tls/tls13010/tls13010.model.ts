@@ -548,6 +548,8 @@ export interface DiscountLevelItem {
   _status?: 'original' | 'modified' | 'new' | 'deleted';
   _source?: 'api' | 'new';
   contract_period?: string;
+  tlt_bdate?: Date | string;  // 🔑 合約起始日（從 discount 同步）
+  tlt_edate?: Date | string;  // 🔑 合約終止日（從 discount 同步）
 
   is_configured: boolean;
   is_enabled: boolean;

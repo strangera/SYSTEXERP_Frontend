@@ -98,6 +98,8 @@ export class CommissionTableService {
           selected: true,
           cag_barcode: discountItem.cag_barcode,
           contract_period: contractPeriod,  // 🆕 合約期間
+          tlt_bdate: new Date(discountItem.tlt_bdate),  // 🔑 同步起始日期
+          tlt_edate: new Date(discountItem.tlt_edate),  // 🔑 同步終止日期
           level_bmount: 0,
           level_eamount: 0,
           level_charge_rate: 0,
@@ -380,11 +382,16 @@ export class CommissionTableService {
       ) || [];
 
       // 為新複製的折扣設定產生對應的層級項目
+      const newContractPeriod = this.formatContractPeriod(newItem.tlt_bdate, newItem.tlt_edate);
+
       relatedLevelItems.forEach(sourceLevelItem => {
         const newLevelItem: DiscountLevelItem = {
           id: this.generateTempId(), // 確保是新的 ID
           selected: sourceLevelItem.selected,
           cag_barcode: newItem.cag_barcode,
+          contract_period: newContractPeriod,  // 🔑 同步合約期間
+          tlt_bdate: new Date(newItem.tlt_bdate),  // 🔑 同步起始日期
+          tlt_edate: new Date(newItem.tlt_edate),  // 🔑 同步終止日期
           level_bmount: sourceLevelItem.level_bmount,
           level_eamount: sourceLevelItem.level_eamount,
           level_charge_rate: sourceLevelItem.level_charge_rate,
