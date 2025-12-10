@@ -126,6 +126,7 @@ export interface ColumnDef {
   buttonIcon?: string;     // 按鈕圖示
   buttonClass?: string;    // 按鈕樣式
   buttonTooltip?: string;  // 提示文字
+  showCondition?: (rowData: any, allData: any[]) => boolean;  // 按鈕顯示條件函數
 
   defaultValue?: any;  // 預設值
 
@@ -156,6 +157,7 @@ export interface ColumnDef {
   allowDecimal?: boolean;  // 是否允許小數點
   decimalPlaces?: number;  // 小數位數，預設2位
   displayMultiplier?: number;  // 顯示倍率(例如 100 表示 0.2 顯示為 20，用於百分比等場景)
+  useGrouping?: boolean;  // 是否使用千分位分隔符，預設為 true
 
   // 使用語義化的日期格式類型
   dateFormat?: DateFormatType;
@@ -1580,16 +1582,29 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   // 取得數字輸入的設定
   getNumberInputConfig(col: ColumnDef): any {
-    const baseConfig = {
+    // 🔧 優先使用欄位定義的 useGrouping，若未定義則預設為 true
+    const useGrouping = col.useGrouping !== undefined ? col.useGrouping : true;
+
+    const baseConfig: any = {
       mode: 'decimal',
-      useGrouping: true,  // 這是關鍵！確保千分位顯示
-      min: 0
+      useGrouping: useGrouping  // 使用欄位定義的千分位設定
     };
+
+    // 🔧 修復: 只在欄位定義有設定 minValue 時才加入 min，避免刪除時自動填 0
+    if (col.minValue !== undefined) {
+      baseConfig.min = col.minValue;
+    }
+
+    // 🔧 只在欄位定義有設定 maxValue 時才加入 max
+    if (col.maxValue !== undefined) {
+      baseConfig.max = col.maxValue;
+    }
 
     if (col.allowDecimal) {
       return {
         ...baseConfig,
-        minFractionDigits: 0,
+        // 🔧 修復: 不設置 minFractionDigits，避免 Backspace 刪除時自動補 0
+        // minFractionDigits: 0,
         maxFractionDigits: col.decimalPlaces || 2,
         step: col.decimalPlaces === 1 ? 0.1 : 0.01
       };
@@ -1597,7 +1612,8 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
     return {
       ...baseConfig,
-      minFractionDigits: 0,
+      // 🔧 修復: 不設置 minFractionDigits，避免 Backspace 刪除時自動補 0
+      // minFractionDigits: 0,
       maxFractionDigits: 0,
       step: 1
     };

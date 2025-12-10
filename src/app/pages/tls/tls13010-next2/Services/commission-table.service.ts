@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import { CommissionItem, DiscountSettingItem, AnnualPerformanceItem, DiscountLevelItem } from '../../tls13010/tls13010.model';
 import { ContractFlowService } from '@pages/tls/tls13010/services/contract-flow.service';
+import { DateUtils } from 'src/app/core/utils/date-utils';
 
 export interface OperationResult {
   success: boolean;
@@ -97,6 +98,8 @@ export class CommissionTableService {
           selected: true,
           cag_barcode: discountItem.cag_barcode,
           contract_period: contractPeriod,  // 🆕 合約期間
+          tlt_bdate: new Date(discountItem.tlt_bdate),  // 🔑 同步起始日期
+          tlt_edate: new Date(discountItem.tlt_edate),  // 🔑 同步終止日期
           level_bmount: 0,
           level_eamount: 0,
           level_charge_rate: 0,
@@ -105,8 +108,33 @@ export class CommissionTableService {
           is_configured: true,
           is_enabled: true
         };
-        parentItem.discountLevelItems.push(newLevelItem);
-        console.log(`✅ 已為折扣 ${discountItem.cag_barcode} (ID: ${discountItem.id}) 新增一個 Level 項目 (ID: ${newLevelItem.id})`);
+
+        // 🔧 修復：按照 discount 在 discountSettingItems 中的順序插入 level
+        // 找到當前 discount 在 discountSettingItems 中的索引
+        const discountIndex = parentItem.discountSettingItems?.findIndex(d => d.id === discountItem.id) ?? -1;
+
+        if (discountIndex !== -1 && parentItem.discountSettingItems) {
+          // 計算應該插入的位置：找到所有在此 discount 之前的 discount 對應的 level 數量
+          let insertIndex = 0;
+          for (let i = 0; i < discountIndex; i++) {
+            const prevDiscount = parentItem.discountSettingItems[i];
+            // 計算這個 discount 有多少個對應的 level（未刪除且 selected）
+            const prevLevelCount = parentItem.discountLevelItems?.filter(
+              level => level.charged_id === prevDiscount.id &&
+                      level._status !== 'deleted' &&
+                      level.selected !== false
+            ).length || 0;
+            insertIndex += prevLevelCount;
+          }
+
+          // 在計算出的位置插入新 level
+          parentItem.discountLevelItems.splice(insertIndex, 0, newLevelItem);
+          console.log(`✅ 已在索引 ${insertIndex} 位置為折扣 ${discountItem.cag_barcode} (ID: ${discountItem.id}) 插入 Level 項目 (ID: ${newLevelItem.id})`);
+        } else {
+          // 如果找不到索引，還是用 push（向後兼容）
+          parentItem.discountLevelItems.push(newLevelItem);
+          console.log(`✅ 已為折扣 ${discountItem.cag_barcode} (ID: ${discountItem.id}) 新增一個 Level 項目 (ID: ${newLevelItem.id}) [使用 push]`);
+        }
       } else if (linkedLevelItems.length > 0) {
         // 如果已存在 level，將 selected 設為 true
         linkedLevelItems.forEach(level => {
@@ -128,18 +156,22 @@ export class CommissionTableService {
 
   /**
    * 🆕 格式化合約期間顯示
+   * 使用 DateUtils 確保日期格式化的一致性，避免時區問題
+   * 格式：yyyy/mm/dd ~ yyyy/mm/dd
    */
   private formatContractPeriod(startDate: any, endDate: any): string {
-    const formatDate = (date: any) => {
-      if (!date) return '';
-      const d = date instanceof Date ? date : new Date(date);
-      if (isNaN(d.getTime())) return '';
-      return d.toISOString().split('T')[0];
-    };
+    const start = DateUtils.toDateString(startDate);
+    const end = DateUtils.toDateString(endDate);
 
-    const start = formatDate(startDate);
-    const end = formatDate(endDate);
-    return start && end ? `${start} ~ ${end}` : '';
+    if (!start || !end) {
+      return '';
+    }
+
+    // 將日期格式從 YYYY-MM-DD 轉換為 yyyy/mm/dd
+    const formattedStart = start.replace(/-/g, '/');
+    const formattedEnd = end.replace(/-/g, '/');
+
+    return `${formattedStart} ~ ${formattedEnd}`;
   }
 
   // 保持原有代碼，並從此處開始向下貼上...
@@ -330,14 +362,58 @@ export class CommissionTableService {
     parentItem: CommissionItem,
     discountOptions: any[]
   ): OperationResult {
+    console.log('🔍 copyDiscountItem 開始:', {
+      sourceItem_tlt_edate: sourceItem.tlt_edate,
+      parentItem_mainEndDate: parentItem.mainEndDate
+    });
+
+    // 🔑 檢查原項目的終止日是否已經是合約終止日
+    const contractEndDate = this.parseDate(parentItem.mainEndDate);
+    const sourceEndDate = this.parseDate(sourceItem.tlt_edate);
+
+    console.log('🔍 解析後的日期:', {
+      contractEndDate: contractEndDate,
+      sourceEndDate: sourceEndDate
+    });
+
+    // 將時間部分歸零以進行日期比較
+    contractEndDate.setHours(0, 0, 0, 0);
+    sourceEndDate.setHours(0, 0, 0, 0);
+
+    console.log('🔍 歸零後的日期:', {
+      contractEndDate: contractEndDate,
+      sourceEndDate: sourceEndDate,
+      sourceEndDate_time: sourceEndDate.getTime(),
+      contractEndDate_time: contractEndDate.getTime(),
+      comparison: sourceEndDate.getTime() >= contractEndDate.getTime()
+    });
+
+    if (sourceEndDate.getTime() >= contractEndDate.getTime()) {
+      console.log('❌ 終止日已達合約終止日，無法複製');
+      return {
+        success: false,
+        message: '此折扣設定的終止日已達合約終止日，無法複製'
+      };
+    }
+
+    // 🔑 計算新項目的日期：起始日 = 原終止日 + 1 天，終止日 = 合約終止日
+    const newStartDate = new Date(sourceEndDate);
+    newStartDate.setDate(newStartDate.getDate() + 1);
+    const newEndDate = new Date(contractEndDate);
+
+    console.log('✅ 計算新項目的日期:', {
+      newStartDate: newStartDate,
+      newEndDate: newEndDate
+    });
+
     const newDiscountId = this.generateTempId();
 
     const newItem: DiscountSettingItem = {
       id: newDiscountId,
       selected: sourceItem.selected,
       cag_barcode: sourceItem.cag_barcode,
-      tlt_bdate: new Date(sourceItem.tlt_bdate),
-      tlt_edate: new Date(sourceItem.tlt_edate),
+      tlt_bdate: newStartDate,  // 🔑 使用接續的起始日
+      tlt_edate: newEndDate,    // 🔑 使用合約終止日
       cag_charge_rate: sourceItem.cag_charge_rate,
       _status: 'new',
       is_configured: sourceItem.is_configured,
@@ -355,11 +431,16 @@ export class CommissionTableService {
       ) || [];
 
       // 為新複製的折扣設定產生對應的層級項目
+      const newContractPeriod = this.formatContractPeriod(newItem.tlt_bdate, newItem.tlt_edate);
+
       relatedLevelItems.forEach(sourceLevelItem => {
         const newLevelItem: DiscountLevelItem = {
           id: this.generateTempId(), // 確保是新的 ID
           selected: sourceLevelItem.selected,
           cag_barcode: newItem.cag_barcode,
+          contract_period: newContractPeriod,  // 🔑 同步合約期間
+          tlt_bdate: new Date(newItem.tlt_bdate),  // 🔑 同步起始日期
+          tlt_edate: new Date(newItem.tlt_edate),  // 🔑 同步終止日期
           level_bmount: sourceLevelItem.level_bmount,
           level_eamount: sourceLevelItem.level_eamount,
           level_charge_rate: sourceLevelItem.level_charge_rate,

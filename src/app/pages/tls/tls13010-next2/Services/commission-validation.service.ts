@@ -16,7 +16,7 @@ export class CommissionValidationService {
   /**
    * 驗證所有抽成數據
    */
-  validateAllData(commissionData: CommissionItem[]): ValidationResult {
+  validateAllData(commissionData: CommissionItem[], contractStartDate?: Date | string, contractEndDate?: Date | string): ValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -34,7 +34,7 @@ export class CommissionValidationService {
 
     // 逐項檢查
     activeItems.forEach((item, index) => {
-      const itemErrors = this.validateCommissionItem(item, index + 1);
+      const itemErrors = this.validateCommissionItem(item, index + 1, contractStartDate, contractEndDate);
       errors.push(...itemErrors.errors);
       if (itemErrors.warnings) {
         warnings.push(...itemErrors.warnings);
@@ -51,7 +51,7 @@ export class CommissionValidationService {
   /**
    * 驗證單一抽成項目
    */
-  validateCommissionItem(item: CommissionItem, itemIndex: number): ValidationResult {
+  validateCommissionItem(item: CommissionItem, itemIndex: number, contractStartDate?: Date | string, contractEndDate?: Date | string): ValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
     const prefix = `抽成項目 ${itemIndex}`;
@@ -76,11 +76,11 @@ export class CommissionValidationService {
     }
 
     // 折扣設定檢查
-    const discountErrors = this.validateDiscountItems(item.discountSettingItems, prefix);
+    const discountErrors = this.validateDiscountItems(item.discountSettingItems, prefix, contractStartDate, contractEndDate);
     errors.push(...discountErrors.errors);
 
     // 年度業績檢查
-    const annualErrors = this.validateAnnualItems(item.annualPerformanceItems, prefix);
+    const annualErrors = this.validateAnnualItems(item.annualPerformanceItems, prefix, contractStartDate, contractEndDate);
     errors.push(...annualErrors.errors);
 
     // 層級抽成檢查
@@ -93,7 +93,7 @@ export class CommissionValidationService {
   /**
    * 驗證折扣設定項目
    */
-  validateDiscountItems(items: DiscountSettingItem[], prefix: string): ValidationResult {
+  validateDiscountItems(items: DiscountSettingItem[], prefix: string, contractStartDate?: Date | string, contractEndDate?: Date | string): ValidationResult {
     const errors: string[] = [];
     const activeItems = items?.filter(d => d._status !== 'deleted' && d.selected) || [];
 
@@ -111,6 +111,18 @@ export class CommissionValidationService {
       if (!this.isValidDateRange(discount.tlt_bdate, discount.tlt_edate)) {
         errors.push(`${itemPrefix}: 日期範圍無效`);
       }
+
+      // 🔑 驗證日期是否在合約期間內
+      if (contractStartDate && contractEndDate) {
+        const dateRangeErrors = this.validateDateWithinContract(
+          discount.tlt_bdate,
+          discount.tlt_edate,
+          contractStartDate,
+          contractEndDate,
+          itemPrefix
+        );
+        errors.push(...dateRangeErrors);
+      }
     });
 
     // 檢查同一折扣別的日期重疊
@@ -123,7 +135,7 @@ export class CommissionValidationService {
   /**
    * 驗證年度業績項目
    */
-  validateAnnualItems(items: AnnualPerformanceItem[], prefix: string): ValidationResult {
+  validateAnnualItems(items: AnnualPerformanceItem[], prefix: string, contractStartDate?: Date | string, contractEndDate?: Date | string): ValidationResult {
     const errors: string[] = [];
     const activeItems = items?.filter(a => a._status !== 'deleted') || [];
 
@@ -140,6 +152,18 @@ export class CommissionValidationService {
 
       if (!this.isValidDateRange(annual.tlt_bdate, annual.tlt_edate)) {
         errors.push(`${itemPrefix}: 日期範圍無效`);
+      }
+
+      // 🔑 驗證日期是否在合約期間內
+      if (contractStartDate && contractEndDate) {
+        const dateRangeErrors = this.validateDateWithinContract(
+          annual.tlt_bdate,
+          annual.tlt_edate,
+          contractStartDate,
+          contractEndDate,
+          itemPrefix
+        );
+        errors.push(...dateRangeErrors);
       }
     });
 
@@ -345,5 +369,41 @@ export class CommissionValidationService {
     ) || false;
 
     return hasDiscountChanges || hasAnnualChanges || hasLevelChanges;
+  }
+
+  /**
+   * 🔑 驗證日期是否在合約期間內
+   */
+  private validateDateWithinContract(
+    startDate: any,
+    endDate: any,
+    contractStartDate: Date | string,
+    contractEndDate: Date | string,
+    itemPrefix: string
+  ): string[] {
+    const errors: string[] = [];
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const contractStart = new Date(contractStartDate);
+    const contractEnd = new Date(contractEndDate);
+
+    // 歸零時間部分以進行純日期比較
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    contractStart.setHours(0, 0, 0, 0);
+    contractEnd.setHours(0, 0, 0, 0);
+
+    // 檢查起始日是否早於合約起始日
+    if (start < contractStart) {
+      errors.push(`${itemPrefix}: 起始日 (${this.formatDate(startDate)}) 不可早於合約起始日 (${this.formatDate(contractStartDate)})`);
+    }
+
+    // 檢查終止日是否晚於合約終止日
+    if (end > contractEnd) {
+      errors.push(`${itemPrefix}: 終止日 (${this.formatDate(endDate)}) 不可晚於合約終止日 (${this.formatDate(contractEndDate)})`);
+    }
+
+    return errors;
   }
 }
