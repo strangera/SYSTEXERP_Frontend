@@ -1,13 +1,14 @@
 <div class="grid p-fluid">
   <ng-container *ngFor="let field of fieldsConfig">
     <div class="col pb-0">
-      <ng-container *ngIf="field.mainDataField; else elseBlock">
+      <ng-container *ngIf="field.mainDataField">
         <label [for]="field.field">{{ field.header }}
           <span *ngIf="isRequired" class="text-red-500">*</span>
         </label>
         <p-autoComplete [formControl]="control" [id]="field.field" [optionLabel]="optionLabel"
-          (click)="op.toggle($event)" (input)="onInputChange();op.hide()" (onFocus)="op.toggle($event)"
-          [suggestions]="suggestions" [optionValue]="optionValue" [placeholder]="control.disabled ? '' : placeholder">
+          (click)="onFocusAndInitialLoad($event)" (input)="onInputChange(); op?.hide()"
+          (onFocus)="onFocusAndInitialLoad($event)" (onSelect)="onValueChange($event)" [suggestions]="suggestions"
+          [optionValue]="optionValue" [placeholder]="control.disabled ? '' : placeholder">
           <ng-template let-options pTemplate="item">
             <div class="flex align-items-center gap-2">
               <div>{{ templateLabel !== '' ? options[templateLabel] : options[optionLabel] }}</div>
@@ -19,7 +20,7 @@
       </ng-container>
       <ng-template #elseBlock>
         <label for="{{ field.field }}">{{ field.header }}</label>
-        <input type="text" pInputText [disabled]="true" [value]="getFieldValue(field)" [disabled]="true" />
+        <input type="text" pInputText [disabled]="true" [value]="getFieldValue(field)" />
       </ng-template>
     </div>
   </ng-container>
@@ -31,7 +32,7 @@
     <app-table class="col-12" [dataKey]="optionValue" [data]="dialogData" [selectedItems]="selectedItems"
       (select)="onSelectionChange($event)" [columns]="dialogColumns" [showHeader]="false" [showPage]="false"
       [showCheckBox]="true" selectionMode="single" [showManage]="false" scrollHeight="200px" [loading]="loading"
-      [multiSortMeta]="formGroup.controls['SortBy'].value" [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, formGroup)" [lazy]="lazy" [showCaption]="false" />
+      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, formGroup)" [lazy]="lazy"
+      [showCaption]="false" />
   </form>
 </p-overlayPanel>

@@ -1,37 +1,103 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
-  <p-panel [header]="formTitle" class="line-height-3 m-0">
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateMonthOne" label="結帳年月" [control]="dataForm.controls.salesDateFrom"
-            [submitted]="submitted"></app-calendar>
+      <div class="card grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-calendar calendarType="dateMonthOne" label="結帳年月" controlName="ACP_YYYYMM"
+            [control]="dataForm.controls.ACP_YYYYMM" [submitted]="submitted"></app-calendar>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="廠商編號" controlName="vendorCode" optionLabel="label" optionValue="value"
-            [control]="dataForm.controls.vendorCode" [submitted]="submitted"></app-dropdown>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-dropdown-table label="廠商編號" controlName="VEN_No" [control]="dataForm.controls.VEN_No"
+            [submitted]="submitted" optionLabel="VEN_No" optionValue="VEN_No" templateLabel="label"
+            [fieldsConfig]="vendorFieldsConfig" [dialogData]="vendorTableData" [loading]="vendorTableLoading"
+            [dialogColumns]="vendorDialogColumns" [totalRecords]="vendorTotalRecords" [formGroup]="vendorQueryForm"
+            (formValueChanged)="loadVenData($event)" (inputValueChanged)="loadVenData($event)"
+            (select)="onVenSelect($event)" [suggestions]="vevdorSuggestions">
+            <div class="col-12">
+              <app-input-text label="廠商編號" controlName="VEN_No"
+                [control]="vendorQueryForm.controls.VEN_No"></app-input-text>
+            </div>
+          </app-dropdown-table>
         </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-calendar label="付款日期" controlName="ACP_PayDate" [control]="dataForm.controls.ACP_PayDate"
+            [submitted]="submitted" [disabled]="true"></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-dropdown label="單據種類" controlName="TABTYPE" [options]="TABTYPEOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.TABTYPE" [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12">
+          <app-button label="匯入當月驗收單" (click)="onImport()" [disabled]="!dataForm.valid" />
+        </div>
+      </div>
 
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="付款日期" controlName="counterCode" [control]="dataForm.controls.counterCode"
-            [submitted]="submitted"></app-input-text>
+      <div *ngIf="dataForm.valid && APS30181Data.length > 0" class="card grid p-fluid">
+        <div class="col-12">
+          <app-table-edit title="單據資料" [multiSortMeta]="[{field: 'EVENT_TYPE',order: 1}]" [columns]="APS30181Columns"
+            [data]="APS30181Data" (selectionChange)="APS30181selectedItems = $event"
+            [selectedItems]="APS30181selectedItems" [disabled]="isFormReadable"
+            (dataChange)=" APS30181Data=$event;updateTotals()" [tableRequired]="true" [showReorder]="false"
+            [loading]="APS30181Loading" footerSummaryLabel='單據小計：' [canInsert]="false">
+          </app-table-edit>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="單據種類" controlName="paperType" optionLabel="label" optionValue="value"
-            [control]="dataForm.controls.paperType" [submitted]="submitted"></app-dropdown>
+      </div>
+
+      <div *ngIf="dataForm.valid && APS30181Data.length > 0" class="card grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-number label="發票總金額(未稅)" controlName="PUR_TotNet" [control]="dataForm.controls.PUR_TotNet"
+            [submitted]="submitted"></app-input-number>
         </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-number label="單據總金額(未稅)" controlName="EVENT_TotAmt" [control]="dataForm.controls.EVENT_TotAmt"
+            [submitted]="submitted"></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-number label="調整總金額(未稅)" controlName="ADJ_TotAmt" [control]="dataForm.controls.ADJ_TotAmt"
+            [submitted]="submitted"></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-number label="差異金額" controlName="DIFF_TotAmt" [control]="dataForm.controls.DIFF_TotAmt"
+            [submitted]="submitted"></app-input-number>
+        </div>
+      </div>
+
+      <div *ngIf="dataForm.valid && APS30181Data.length > 0" class="card grid p-fluid">
+        <div class="col-12">
+          <app-table-edit title="發票資料" [columns]="APS3018Columns" [data]="APS3018Data"
+            (selectionChange)="APS3018selectedItems = $event" [selectedItems]="APS3018selectedItems"
+            [disabled]="isFormReadable" (dataChange)="APS3018Data = $event;updateTotals()" [tableRequired]="true"
+            [loading]="APS3018Loading" [defaultInsertData]="defaultInsertData">
+          </app-table-edit>
+        </div>
+      </div>
+
+      <div *ngIf="dataForm.valid && APS30181Data.length > 0" class="p-fluid">
+        <div class="col-12">
+          <ul class="list-none p-0 m-0">
+            <ng-container *ngFor="let option of PUR_VoucherTypeOptions">
+              <li>
+                <strong class="text-blue-500">{{ option.value }}.</strong> {{ option.label }}
+              </li>
+            </ng-container>
+          </ul>
+        </div>
+      </div>
+
+      <div *ngIf="!isFormReadable && dataForm.valid && APS30181Data.length > 0"
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm" />
+        <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>
-    <div class="col pt-4">
-      <div class="grid justify-content-end">
-        <app-button btnType="cancel" (click)="onCancel()"></app-button>
-        <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
-      </div>
-    </div>
   </p-panel>
 </div>
+
+<app-tls55040-good-data-dialog [(visible)]="ODMVisible" [venNo]="dataForm.controls.VEN_No.value"
+  [acpYYYYMM]="datePipe.transform(dataForm.controls.ACP_YYYYMM.value, 'yyyyMM')" [existingDocs]="APS30181Data"
+  (itemsImported)="onImportItems($event)">
+</app-tls55040-good-data-dialog>

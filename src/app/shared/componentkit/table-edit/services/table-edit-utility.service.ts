@@ -92,4 +92,26 @@ export class TableUtilityService {
     // 且上面的邏輯保證了新增行在最後，所以直接返回 data 即可。
     return data;
   }
+  /** 找出第一個有外部 footerData 值的欄位索引 */
+  public getFirstAggregateIndex(columns: EditColumn[], footerData: any): number {
+    if (!footerData) return -1;
+    for (let i = 0; i < columns.length; i++) {
+      if (footerData[columns[i].field] !== undefined) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  /** 找出第一個有內部計算總計值的欄位索引 */
+  public getFirstCalculatedAggregateIndex(columns: EditColumn[], calculatedFooterData: any): number {
+    if (!calculatedFooterData) return -1;
+    for (let i = 0; i < columns.length; i++) {
+      const col = columns[i];
+      if (col.aggregate && calculatedFooterData[col.field] !== undefined) {
+        return i;
+      }
+    }
+    return -1;
+  }
 }

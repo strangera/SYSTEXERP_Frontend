@@ -5,9 +5,8 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Sysbp00Request, Sysbp00Response, Sysbp00Service } from '@service/api/sys/sysbp00.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatDateTime } from '@shared/componentkit/table-report/table-report.model';
+import { formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -32,10 +31,10 @@ export class SYSBP00Component extends BasicQueryPageComponent<Sysbp00Response> i
   selectedRows: Sysbp00Response[] = [];
   totalRecords = 0;
   lastQuery: Sysbp00Request | null = null;
-  columns: EditColumn[] = [
+  columns: ReportColumn[] = [
     { field: 'SYS_Type', header: '參數標題/參數說明' },
   ];
-  subColumns: EditColumn[] = [
+  subColumns: ReportColumn[] = [
     { field: 'SYS_Code', header: '參數代號' },
     { field: 'SYS_Name', header: '參數名稱' },
     { field: 'SYS_Sort', header: '排序' },
