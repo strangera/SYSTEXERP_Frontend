@@ -5,170 +5,75 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="領用單編號"
-              controlName="issuanceNoteCode"
-              [control]="queryForm.controls.issuanceNoteCode"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number label="領用單編號" controlName="issuanceNoteCode"
+              [control]="queryForm.controls.issuanceNoteCode" [submitted]="submitted"></app-input-number>
           </div>
-          <app-multi-select
-            class="col-12 md:col-6 lg:col-4"
-            label="倉別"
-            controlName="HOS_No"
-            [options]="warehouseOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.HOS_NoList"
-            [submitted]="submitted"
-          ></app-multi-select>
-          <!-- 管理編號 -->
-          <app-dropdown-table
-            class="col-12 md:col-6 lg:col-4"
-            [control]="queryForm.controls.queryNo"
-            [submitted]="submitted"
-            optionLabel="PLU_MagNo"
-            optionValue="PLU_MagNo"
-            [suggestions]="suggestions"
-            [fieldsConfig]="fieldsConfig"
-            (inputValueChanged)="onAutoCompleteInputChange($event)"
-            (formValueChanged)="onFormValueChanged($event)"
-            [formGroup]="opForm"
-            [dialogData]="opData"
-            [dialogColumns]="opColumns"
-            [loading]="opLoading"
-            [totalRecords]="opTotalRecords"
-          >
-            <app-input-text
-              class="col-12 md:col-6"
-              label="管理編號"
-              controlName="queryNo"
-              [control]="opForm.controls.queryNo"
-            />
-            <app-input-text
-              class="col-12 md:col-6"
-              label="商品名稱"
-              controlName="PLU_Name"
-              [control]="opForm.controls.PLU_Name"
-            />
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉別" controlName="HOS_No"
+            [options]="warehouseOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.HOS_NoList" [submitted]="submitted"></app-multi-select>
+          <!-- 商品管理編號/國際條碼/廠商貨號 -->
+          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.queryNo"
+            templateLabel="label" [submitted]="submitted" optionLabel="PLU_MagNo" optionValue="PLU_MagNo"
+            [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
+            (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
+            [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
+            [totalRecords]="opTotalRecords">
+            <app-input-text class="col-12 md:col-6" label="管理編號" controlName="queryNo"
+              [control]="opForm.controls.queryNo" />
+            <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
+              [control]="opForm.controls.PLU_Name" />
           </app-dropdown-table>
 
           <!-- 品牌代碼 (對應 LOGO_No) -->
-          <app-multi-select
-            class="col-12 md:col-6 lg:col-4"
-            label="品牌代碼/名稱"
-            controlName="LOGO_No"
-            [options]="brandOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.LOGO_NoList"
-            [submitted]="submitted"
-          ></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="品牌代碼/名稱" controlName="LOGO_No"
+            [options]="brandOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.LOGO_NoList"
+            [submitted]="submitted"></app-multi-select>
           <!-- 廠商編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="領用類別"
-              controlName="issuanceType"
-              [options]="issuanceTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.issuanceType"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="領用類別" controlName="issuanceType" [options]="issuanceTypeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.issuanceType" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="領用單狀態"
-              controlName="issuanceNoteStatus"
-              [options]="issuanceNoteStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.issuanceNoteStatus"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="領用單狀態" controlName="issuanceNoteStatus" [options]="issuanceNoteStatusOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.issuanceNoteStatus"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <hr />
         </div>
-          <div class="grid p-fluid">
-            <!-- 申請人員 -->
-            <app-dropdown
-              class="col-12 md:col-6 lg:col-4"
-              label="申請人"
-              controlName="APPLY_USR"
-              [options]="userOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.APPLY_USR"
-              [submitted]="submitted"
-            />
-            <!-- 申請日期 -->
-            <app-calendar-range
-              class="col-12 md:col-6 lg:col-4"
-              calendarType="dateRange"
-              label="申請日期"
-              [startControl]="queryForm.controls.APPLY_Date_Start"
-              [endControl]="queryForm.controls.APPLY_Date_End"
-              [submitted]="submitted"
-            />
-          </div>
-          <div class="grid p-fluid">
-            <!-- 審核人員 -->
-            <app-dropdown
-              class="col-12 md:col-6 lg:col-4"
-              label="審核人"
-              controlName="APRV_USR"
-              [options]="userOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.APRV_USR"
-              [submitted]="submitted"
-            />
-            <!-- 審核日期 -->
-            <app-calendar-range
-              class="col-12 md:col-6 lg:col-4"
-              calendarType="dateRange"
-              label="審核日期"
-              [startControl]="queryForm.controls.APRV_Date_Start"
-              [endControl]="queryForm.controls.APRV_Date_End"
-              [submitted]="submitted"
-            />
-          </div>
-          <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-            <app-button btnType="clear" />
-            <app-button btnType="query" [loading]="loading" />
-          </div>
+        <div class="grid p-fluid">
+          <!-- 申請人員 -->
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="申請人" controlName="APPLY_USR" [options]="userOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.APPLY_USR" [submitted]="submitted" />
+          <!-- 申請日期 -->
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
+            [startControl]="queryForm.controls.APPLY_Date_Start" [endControl]="queryForm.controls.APPLY_Date_End"
+            [submitted]="submitted" />
+        </div>
+        <div class="grid p-fluid">
+          <!-- 審核人員 -->
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="審核人" controlName="APRV_USR" [options]="userOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.APRV_USR" [submitted]="submitted" />
+          <!-- 審核日期 -->
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="審核日期"
+            [startControl]="queryForm.controls.APRV_Date_Start" [endControl]="queryForm.controls.APRV_Date_End"
+            [submitted]="submitted" />
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" />
+          <app-button btnType="query" [loading]="loading" />
+        </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <app-table
-    tableKey="TLS2A020"
-    [data]="data"
-    [columns]="columns"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [showCheckBox]="false"
-    dataKey="id"
-    [multiSortMeta]="[{ field: 'VEN_No', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [showManage]="true"
-    [loading]="loading"
-    [showDelete]="false"
-  ></app-table>
+  <app-table tableKey="TLS2A020" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [showCheckBox]="false" dataKey="id" [multiSortMeta]="[{ field: 'VEN_No', order: 1 }]" [totalRecords]="totalRecords"
+    [lazy]="true" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="true"
+    [loading]="loading" [showDelete]="false"></app-table>
 </div>

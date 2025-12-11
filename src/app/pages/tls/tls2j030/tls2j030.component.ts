@@ -20,13 +20,12 @@ import { finalize } from 'rxjs/operators';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
-import { formatGUIStatus, GUI_STATUS_OPTIONS, TLS2J030Data } from './tls2j030.model';
+import { GUI_STATUS_OPTIONS, TLS2J030Data } from './tls2j030.model';
 
 // 2.2.18.3 後台發票換開補登作業
 @Component({
   selector: 'app-tls2j030',
   templateUrl: './tls2j030.component.html',
-  styleUrl: './tls2j030.component.scss',
   standalone: true,
   imports: [ButtonModule, AsyncPipe, NgIf, TableReportComponent, ButtonComponent, DropdownComponent, CalendarRangeComponent, InputTextComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule]
 })
@@ -78,9 +77,8 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
   ];
 
   formatStatus(value: string | number) {
-    return formatGUIStatus(value);
+    return GUI_STATUS_OPTIONS.find(o => o.value === String(value))?.label ?? String(value);
   }
-
   detailNaturalData: any[] = [];  // 來源發票
   detailChangeData: any[] = [];   // 換開發票
   detailItemData: any[] = [];     // 換開發票明細

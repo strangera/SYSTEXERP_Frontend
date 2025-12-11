@@ -4,234 +4,116 @@
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form
-      *ngIf="currentCreateType === 'counter'"
-      [formGroup]="dataFormCounter"
-      id="dataForm"
-      (ngSubmit)="onSubmit()"
-    >
+    <form *ngIf="currentCreateType === 'counter'" [formGroup]="dataFormCounter" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="專櫃編號/名稱"
-          controlName="tlt_no"
-          [options]="tlt_noOptions"
-          optionLabel="label"
-          [control]="dataFormCounter.controls.tlt_no"
-          [submitted]="submitted"
-        ></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號/名稱" controlName="tlt_no" [options]="tlt_noOptions"
+          optionLabel="label" [control]="dataFormCounter.controls.tlt_no" [submitted]="submitted"></app-dropdown>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            label="總金額"
-            controlName="totalCash"
-            [control]="dataFormCounter.controls.totalCash"
-            [submitted]="submitted"
-          ></app-input-number>
+          <app-input-number label="總金額" controlName="totalCash" [control]="dataFormCounter.controls.totalCash"
+            [submitted]="submitted"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="活動代碼/名稱"
-            controlName="pod_no"
-            [options]="pod_noOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataFormCounter.controls.pod_no"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="活動代碼/名稱" controlName="pod_no" [options]="pod_noOptions" optionLabel="label"
+            optionValue="value" [control]="dataFormCounter.controls.pod_no" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="契約編號"
-            controlName="contract_no"
-            [control]="dataFormCounter.controls.contract_no"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="契約編號" controlName="contract_no" [control]="dataFormCounter.controls.contract_no"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="版次"
-            controlName="contract_subno"
-            [control]="dataFormCounter.controls.contract_subno"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="版次" controlName="contract_subno" [control]="dataFormCounter.controls.contract_subno"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="營運起始日"
-            controlName="tlt_contract_bdate"
-            [control]="dataFormCounter.controls.tlt_contract_bdate"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="營運起始日" controlName="tlt_contract_bdate"
+            [control]="dataFormCounter.controls.tlt_contract_bdate" [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="營運起始日"
-            controlName="tlt_contract_edate"
-            [control]="dataFormCounter.controls.tlt_contract_edate"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="營運截止日" controlName="tlt_contract_edate"
+            [control]="dataFormCounter.controls.tlt_contract_edate" [submitted]="submitted"></app-input-text>
         </div>
       </div>
-      <app-table-edit
-        title="新增專櫃扣款"
-        tableKey="TLSD010Detail"
-        [data]="data"
-        class="col-12"
-        [columns]="columnsCounter"
-        (selectionChange)="selectedItems = $event"
-        [selectedItems]="selectedItems"
-        (dataChange)="onCounterDataChange($event)"
-        dataStatusField="status"
-        [loading]="loading"
-        [tableRequired]="true"
-      ></app-table-edit>
-      <div
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-      >
+      <app-table-edit title="新增專櫃扣款" tableKey="TLSD010Detail" [data]="data" class="col-12" [columns]="columnsCounter"
+        (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
+        (dataChange)="onCounterDataChange($event)" dataStatusField="status" [loading]="loading"
+        [tableRequired]="true"></app-table-edit>
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataFormCounter" />
-       <app-button btnType="submit" [loading]="loading" />
+        <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>
-    <form
-      *ngIf="currentCreateType === 'normal'"
-      [formGroup]="dataFormNormal"
-      id="dataForm"
-      (ngSubmit)="onSubmit()"
-    >
+    <form *ngIf="currentCreateType === 'normal'" [formGroup]="dataFormNormal" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
         <!-- 扣款類型 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="扣款類型"
-            controlName="CAP_Type"
-            [options]="CAP_TypeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataFormNormal.controls.CAP_Type"
-            [submitted]="submitted"
-            (valueChange)="onCAP_TypeChange($event)"
-          ></app-dropdown>
+          <app-dropdown label="扣款類型" controlName="CAP_Type" [options]="CAP_TypeOptions" optionLabel="label"
+            optionValue="value" [control]="dataFormNormal.controls.CAP_Type" [submitted]="submitted"
+            (valueChange)="onCAP_TypeChange($event)"></app-dropdown>
         </div>
 
         <!-- 扣款項目 -->
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="扣款項目"
-          controlName="CAP_Item"
-          [options]="FilterCAP_ItemOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="dataFormNormal.controls.CAP_Item"
-          [submitted]="submitted"
-          (valueChange)="onCAP_ItemChange($event)"
-        ></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="扣款項目" controlName="CAP_Item"
+          [options]="FilterCAP_ItemOptions" optionLabel="label" optionValue="value"
+          [control]="dataFormNormal.controls.CAP_Item" [submitted]="submitted"
+          (valueChange)="onCAP_ItemChange($event)"></app-dropdown>
 
         <!-- 扣款名稱 (唯讀) -->
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="扣款名稱"
-          controlName="CAP_Name"
-          [control]="dataFormNormal.controls.CAP_Name"
-          [submitted]="submitted"
-        ></app-input-text>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="扣款名稱" controlName="CAP_Name"
+          [control]="dataFormNormal.controls.CAP_Name" [submitted]="submitted"></app-input-text>
 
         <!-- 扣款日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            label="扣款日期"
-            controlName="tpy_date"
-            calendarType="dateOne"
-            [control]="dataFormNormal.controls.tpy_date"
-            [submitted]="submitted"
-          ></app-calendar>
+          <app-calendar label="扣款日期" controlName="tpy_date" calendarType="dateOne"
+            [control]="dataFormNormal.controls.tpy_date" [submitted]="submitted"></app-calendar>
         </div>
 
         <!-- 扣款金額 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            label="扣款金額"
-            controlName="tpy_net"
-            [control]="dataFormNormal.controls.tpy_net"
-            [submitted]="submitted"
-          ></app-input-number>
+          <app-input-number label="扣款金額" controlName="tpy_net" [control]="dataFormNormal.controls.tpy_net"
+            [submitted]="submitted"></app-input-number>
         </div>
 
         <!-- 課稅別 (唯讀) -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="課稅別"
-            controlName="cap_taxtype"
-            [options]="cap_taxtypeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataFormNormal.controls.cap_taxtype"
-            [submitted]="submitted"
-            [disabled]="true"
-          ></app-dropdown>
+          <app-dropdown label="課稅別" controlName="cap_taxtype" [options]="cap_taxtypeOptions" optionLabel="label"
+            optionValue="value" [control]="dataFormNormal.controls.cap_taxtype" [submitted]="submitted"
+            [disabled]="true"></app-dropdown>
         </div>
 
         <!-- 會計科目 (唯讀) -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="會計科目"
-            controlName="AccNo"
-            [options]="AccNoOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataFormNormal.controls.AccNo"
-            [submitted]="submitted"
-            [disabled]="true"
-          ></app-dropdown>
+          <app-dropdown label="會計科目" controlName="AccNo" [options]="AccNoOptions" optionLabel="label"
+            optionValue="value" [control]="dataFormNormal.controls.AccNo" [submitted]="submitted"
+            [disabled]="true"></app-dropdown>
         </div>
 
-        <!-- 組織代號/名稱 -->
+        <!-- 組織代號/名稱
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="組織代號/名稱"
-            controlName="org_id"
-            [options]="org_idOptions"
-            [control]="dataFormNormal.controls.org_id"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
+          <app-dropdown label="組織代號/名稱" controlName="org_id" [options]="org_idOptions"
+            [control]="dataFormNormal.controls.org_id" [submitted]="submitted"></app-dropdown>
+        </div> -->
 
         <!-- 是否開立發票 (可修改) -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-radiobutton
-            label="是否開立發票"
-            groupname="GUI_FLAGOption"
-            [control]="dataFormNormal.controls.GUI_FLAG"
-            [submitted]="submitted"
-            [options]="[
+          <app-radiobutton label="是否開立發票" groupname="GUI_FLAGOption" [control]="dataFormNormal.controls.GUI_FLAG"
+            [submitted]="submitted" [options]="[
               { value: 'Y', label: '是' },
               { value: 'N', label: '否' },
-            ]"
-          ></app-radiobutton>
+            ]"></app-radiobutton>
         </div>
       </div>
 
       <!-- table-edit -->
-      <app-table-edit
-        title="新增扣款"
-        tableKey="TLSD010Detail"
-        [data]="data"
-        class="col-12"
-        [columns]="columnsNormal"
-        (selectionChange)="selectedItems = $event"
-        [selectedItems]="selectedItems"
-        (dataChange)="onCounterDataChange($event)"
-        dataStatusField="status"
-        [loading]="loading"
-        [tableRequired]="true"
-      ></app-table-edit>
+      <app-table-edit title="新增扣款" tableKey="TLSD010Detail" [data]="data" class="col-12" [columns]="columnsNormal"
+        (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
+        (dataChange)="onCounterDataChange($event)" dataStatusField="status" [loading]="loading"
+        [tableRequired]="true"></app-table-edit>
 
       <!-- 按鈕 -->
-      <div
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-      >
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataFormNormal" />
-        <app-button  btnType="submit" [loading]="loading"  />
+        <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>
   </p-panel>

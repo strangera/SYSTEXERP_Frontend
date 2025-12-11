@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -9,7 +9,7 @@ import { environment } from '../../../../environments/environment';
 export class Tls42010Service {
   private apiUrl = `${environment.ApiUrl}/TLS0000/TLS4000`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // 查詢 POS1004M 資料表
   queryTLS42010M(data: any): Observable<any> {
@@ -32,5 +32,8 @@ export class Tls42010Service {
   // 更新 POS1004M 資料表
   updateTLS42010M(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/updateTLS42010M`, data);
+  }
+  deletepageTLS42010(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deletepageTLS42010`, data);
   }
 }

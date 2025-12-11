@@ -1,18 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Tls2e060Data, Tls2e060Service } from '@service/api/tls/tls2e060.service';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, convertDateToYYYYMM, createPaginationConfig, formatAmount, formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, convertDateToYYYYMM, createPaginationConfig, formatYYYYMM } from '@shared/componentkit/table/table.model';
-import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
-import { Tls2e060Data, Tls2e060Service } from '@service/api/tls/tls2e060.service';
-import { finalize } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 
 // 2.2.14.6 專櫃結帳前調整作業
 @Component({
@@ -33,13 +33,13 @@ export class TLS2E060Component extends BasicQueryPageComponent<Tls2e060Data> imp
   data: Tls2e060Data[] = [];
   columns: Column[] = [
     { field: 'adj_no', header: '調整單號', visible: true },
-    { field: 'adj_date', header: '調整日期', visible: true },
+    { field: 'adj_date', header: '調整日期', visible: true, format: formatDate },
     { field: 'sam_yyymm', header: '調整年月', visible: true, format: formatYYYYMM },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'contract_no', header: '契約編號', visible: true },
     { field: 'contract_subno', header: '版次', visible: true },
     { field: 'adj_taxtype', header: '調整稅別', visible: true, format: (v) => getSYS1000('PLU_TaxType', v) }, // 0=免稅, 1=應稅
-    { field: 'adj_amount', header: '調整金額', visible: true },
+    { field: 'adj_amount', header: '調整金額', visible: true, format: formatAmount },
   ];
   constructor(
     private readonly tls2e060Service: Tls2e060Service,

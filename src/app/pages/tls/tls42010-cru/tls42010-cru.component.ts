@@ -430,23 +430,41 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       header: '刪除確認',
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
-        // 刪除當前頁
-        this.pages.splice(this.activeIndex, 1);
+        this.loading = true;
+        const payload = {
+          MID: this.rowdata?.ID ?? 0,
+          KB_KeyPage: this.activeIndex + 1
+        };
+        this.tls42010Service.deletepageTLS42010(payload)
+          .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
+          .subscribe({
+            next: (res: any) => {
+              const ok = res?.Status === '0000' || res?.Message?.includes('成功');
+              if (ok) {
+                // 刪除當前頁（僅在後端成功後）
+                this.pages.splice(this.activeIndex, 1);
 
-        // 調整活動頁面索引
-        if (this.activeIndex >= this.pages.length) {
-          this.activeIndex = this.pages.length - 1;
-        }
+                // 調整活動頁面索引
+                if (this.activeIndex >= this.pages.length) {
+                  this.activeIndex = this.pages.length - 1;
+                }
 
-        this.dataForm.controls.activePage.setValue(this.activeIndex);
+                this.dataForm.controls.activePage.setValue(this.activeIndex);
 
-        // 選擇新活動頁面的第一個按鍵
-        const currentPage = this.pages[this.activeIndex];
-        if (currentPage?.length) {
-          this.selectKey(currentPage[0]);
-        }
+                // 選擇新活動頁面的第一個按鍵
+                const currentPage = this.pages[this.activeIndex];
+                if (currentPage?.length) {
+                  this.selectKey(currentPage[0]);
+                }
 
-        this.messageService.successBubble('頁面已刪除');
+                this.messageService.successBubble(res?.Message ?? '頁面已刪除');
+              } else {
+                console.warn('deletepageTLS42010 failed', { payload, res });
+                const reqId = res?.Meta?.RequestId ? ` (RequestId: ${res.Meta.RequestId})` : '';
+                this.messageService.errorBubble(res?.Message ? `${res.Message}${reqId}` : '刪除失敗，請稍後再試');
+              }
+            },
+          });
       }
     });
   }
