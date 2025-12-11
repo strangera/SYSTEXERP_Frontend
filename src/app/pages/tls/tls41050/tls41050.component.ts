@@ -1,25 +1,25 @@
+import { NgStyle } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
-import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { Tls41050Service } from '../../../service/api/tls/tls41050.service';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { concatMap, finalize, from } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { ButtonModule } from 'primeng/button';
-import { NgStyle } from '@angular/common';
-import { TooltipModule } from 'primeng/tooltip';
+import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
+import { concatMap, finalize, from } from 'rxjs';
+import { Tls41050Service } from '../../../service/api/tls/tls41050.service';
 import { getSYS1000, SystemOptionsService } from '../../../service/system/sys1000.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { apiOption } from '../../../shared/models/sys/sysb000.model';
 export interface POS1002 {
   ID: number; // decimal(19,0)
 
@@ -126,10 +126,10 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
       visible: true,
       format: (value) => getSYS1000('ECR_Status', value)
     },
-     {
-    field: 'ECR_GUI_Type', header: '發票類別', visible: true,
-    format: (value) => SystemOptionsService.getOptions('ECR_GUI_Type')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
-  },
+    {
+      field: 'ECR_GUI_Type', header: '發票類別', visible: true,
+      format: (value) => SystemOptionsService.getOptions('ECR_GUI_Type')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+    },
     { field: 'ECR_GUI_PeriodQty', header: '發票預設配號數量', visible: true },
     { field: 'ECR_GUI_MinQty', header: '發票安全存量', visible: true },
   ];
@@ -183,7 +183,7 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
     this.tls41050Service.queryPOS1002_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.POS1002_Option = response.Data.map((item: any) => ({
         No: item.No, // 收銀機號
-        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+        Label: item.No + '-' + item.Name, // 組合成顯示用的Label
       }));
       console.log('收銀機號:', this.TLTTALENT_Option);
     });
@@ -191,7 +191,7 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
     this.tls41050Service.queryTLTTALENT_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.TLTTALENT_Option = response.Data.map((item: any) => ({
         No: item.No, // 專櫃主代碼
-        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+        Label: item.No + '-' + item.Name, // 組合成顯示用的Label
       }));
       console.log('專櫃主檔代號:', this.TLTTALENT_Option);
     });
