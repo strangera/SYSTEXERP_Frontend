@@ -2,7 +2,7 @@ import { formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { TLS32040DetailRequest, TLS32040DetailResponse, TLS32040Request, TLS32040Service } from '@service/api/tls/tls32040.service';
+import { TLS32050DetailRequest, TLS32050DetailResponse, TLS32050Request, TLS32050Service } from '@service/api/tls/tls32050.service';
 import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -29,16 +29,21 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
   ],
   templateUrl: './tls32050-cru.component.html'
 })
-export class Tls32050CRUComponent extends BasicCruPageComponent<TLS32040DetailResponse> implements OnInit {
+export class Tls32050CRUComponent extends BasicCruPageComponent<TLS32050DetailResponse> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     //點選的主檔response
     RowType: [null], // 列別：'TEAM' / 'TeamSum' / 'BUILDING' / 'TOTAL'
+    BuildingName: [null], // 館別
     TeamId: [null], // 單位代碼（TEAM / 館別 / 總計用)
     TeamName: [null], // 單位名稱（TEAM / 館別 / 總計顯示用）
     OrgId: [null], // 樓組代碼
     OrgName: [null], // 樓組名稱
+    TltKindName: [null], // 中分類代碼
+    BusClassName: [null], // 中分類名稱
+    Bus_Class: [null], // 櫃別名稱
     Base_Target: [null], // 本期銷售目標
     Base_SaleAmt: [null], // 本期銷售金額
+
     Base_AchieveRate: [null], // 本期達成率（銷售金額 / 目標）
     Base_TxnCnt: [null], // 本期交易筆數
     Base_AvgTicket: [null], // 本期客單價（銷售金額 / 來客數)
@@ -54,8 +59,8 @@ export class Tls32050CRUComponent extends BasicCruPageComponent<TLS32040DetailRe
 
   });
   totalRecords = 0;
-  data: TLS32040DetailResponse[] = [];
-  historyRequestBody: TLS32040DetailRequest | null = null; //歷史查詢條件
+  data: TLS32050DetailResponse[] = [];
+  historyRequestBody: TLS32050DetailRequest | null = null; //歷史查詢條件
 
   columns: Column[] = [
     { field: 'RowType', header: '列別', visible: true },
@@ -108,11 +113,11 @@ export class Tls32050CRUComponent extends BasicCruPageComponent<TLS32040DetailRe
   org_id_Option: IDropdownItem[] = []; // 組織
 
   //查詢頁查詢條件
-  queryConditions!: TLS32040Request;
+  queryConditions!: TLS32050Request;
 
   // ----------------------------------------------------------------
   constructor(
-    public readonly tls32040Service: TLS32040Service,
+    public readonly tls32050Service: TLS32050Service,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -126,7 +131,7 @@ export class Tls32050CRUComponent extends BasicCruPageComponent<TLS32040DetailRe
 
     // 重新讀取類別資料
     if (this.queryConditions) {
-      this.queryTLS32040Detail(); // 查詢單組織業績之資料
+      this.queryTLS32050Detail(); // 查詢單組織業績之資料
     } else {
       this.messageService.errorBubble('請返回查詢頁重新操作');
     }
@@ -162,11 +167,12 @@ export class Tls32050CRUComponent extends BasicCruPageComponent<TLS32040DetailRe
     //   });
   }
 
-  queryTLS32040Detail() {
+  queryTLS32050Detail() {
     // 把 OrgId 從 string[] 轉成 string
     const request = {
       ...this.queryConditions,
-      OrgId: this.dataForm.get('OrgId')?.value ?? '',
+      BusClass: this.dataForm.get('TltKindName')?.value ?? '',
+      // OrgId: this.dataForm.get('OrgId')?.value ?? '',
       BaseDateFrom: formatDate(this.queryConditions.BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
       BaseDateTo: formatDate(this.queryConditions.BaseDateTo, 'yyyy-MM-dd', 'en-US'),
       CompareDateFrom: formatDate(this.queryConditions.CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
@@ -175,29 +181,39 @@ export class Tls32050CRUComponent extends BasicCruPageComponent<TLS32040DetailRe
       FloorList: ([] as string[]).concat(this.queryConditions.FloorList || []).join(','),
       AreaList: ([] as string[]).concat(this.queryConditions.AreaList || []).join(','),
 
-      BusTypeList: this.toArray(this.queryConditions.BusTypeList).map((x: any) =>
-        x.bus_type ?? ''
-      ),
+      // BusTypeList: this.toArray(this.queryConditions.BusTypeList).map((x: any) =>
+      //   x.bus_type ?? ''
+      // ),
 
-      BusClassList: this.toArray(this.queryConditions.BusClassList).map((item: any) => ({
-        BusType: item.bus_type ?? '',
-        BusClass: item.No ?? ''
-      })),
+      // BusClassList: this.toArray(this.queryConditions.BusClassList).map((item: any) => ({
+      //   BusType: item.bus_type ?? '',
+      //   BusClass: item.No ?? ''
+      // })),
 
+      // BusTypeList: (this.queryConditions.BusTypeList || []).join(','),
+      // BusClass: (this.queryConditions.BusClassList || [])
+      //   .map((x: any) => x.No ?? '')
+      //   .join(','),
+
+      BusTypeList: (Array.isArray(this.queryConditions.BusTypeList) ? this.queryConditions.BusTypeList : []).join(','),
+      // BusClass: (Array.isArray(this.queryConditions.BusClassList) ? this.queryConditions.BusClassList : [])
+      //   .map((x: any) => x.No ?? '')
+      //   .join(','),
+
+      OrgId: ([] as string[]).concat(this.queryConditions.OrgList || []).join(','),
       TltKindList: ([] as string[]).concat(this.queryConditions.TltKindList || []).join(','),
-      OrgList: ([] as string[]).concat(this.queryConditions.OrgList || []).join(','),
       TltNoList: ([] as string[]).concat(this.queryConditions.TltNoList || []).join(','),
       TermTypeList: ([] as string[]).concat(this.queryConditions.TermTypeList || []).join(','),
       BuildingList: ([] as string[]).concat(this.queryConditions.BuildingList || []).join(','),
       AmtTaxMode: ([] as string[]).concat(this.queryConditions.AmtTaxMode || []).join(','),
       ReceFilter: ([] as string[]).concat(this.queryConditions.ReceFilter || []).join(','),
-    } as TLS32040DetailRequest;
+    } as TLS32050DetailRequest;
 
-    console.log('單組織之營業報表request', request);
+    console.log('單中分類之營業報表request', request);
     console.log('明細api準備中');
     // console.log('單組織之營業報表request', JSON.stringify(request, null, 2));
 
-    // this.tls32040Service.queryTLS32040Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+    // this.tls32050Service.queryTLS32050Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
     //   console.log('單組織之營業報表response', res.Data);
     //   this.data = res.Data ?? [];               // 查詢資料
     //   this.historyRequestBody = request;        // 查詢條件
