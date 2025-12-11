@@ -57,14 +57,14 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     CompareMonth: [null as number | null],
     CompareHalfYear: [null as number | null],
 
-    FloorList: [null],
-    AreaList: [null],
-    BuildingList: [null],
-    BusTypeList: [null],
-    BusClassList: [null],
-    TltKindList: [null],
-    OrgList: [null],
-    TltNoList: [null],
+    FloorList: [""],
+    AreaList: [""],
+    BuildingList: [""],
+    BusTypeList: [""],
+    BusClassList: [""],
+    TltKindList: [""],
+    OrgList: [""],
+    TltNoList: [""],
     TermTypeList: [null],
     AmtTaxMode: ['G'], // 是否含稅 (預設含稅)
     ReceFilter: ['A'],
@@ -492,36 +492,37 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     this.handleSubmit(form, () => {
       const formValue = form.getRawValue();
 
-      const formatDateTime = (value: any): string | null => {
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      const formatDate = (value: any): string | null => {
         if (!value) return null;
         const d = value instanceof Date ? value : new Date(value);
         if (isNaN(d.getTime())) return null;
-        return d.toISOString();
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
       };
 
       const body = {
         PageSize: formValue.PageSize ?? formValue.pageSize ?? 0,
         PageIndex: formValue.PageIndex ?? formValue.pageIndex ?? 0,
-        OrderBy: formValue.OrderBy ?? formValue.orderBy ?? '',
+        OrderBy: formValue.OrderBy ?? formValue.orderBy ?? 'ID',
         Offset: formValue.Offset ?? formValue.offset ?? 0,
-        SortBy: formValue.SortBy ?? formValue.SortBy ?? [{ field: 'TltNo', order: -1 }],
+        SortBy: formValue.SortBy ?? [{ field: formValue.OrderBy ?? formValue.orderBy ?? 'ID', order: 0 }],
 
-        BaseDateFrom: formatDateTime(formValue.BaseDateFrom),
-        BaseDateTo: formatDateTime(formValue.BaseDateTo),
-        CompareDateFrom: formatDateTime(formValue.CompareDateFrom),
-        CompareDateTo: formatDateTime(formValue.CompareDateTo),
+        BaseDateFrom: formatDate(formValue.BaseDateFrom),
+        BaseDateTo: formatDate(formValue.BaseDateTo),
+        CompareDateFrom: formatDate(formValue.CompareDateFrom),
+        CompareDateTo: formatDate(formValue.CompareDateTo),
         AmtTaxMode: formValue.AmtTaxMode ?? null,
         ReceFilter: formValue.ReceFilter ?? null,
 
-        FloorList: formValue.FloorList || [],
-        AreaList: formValue.AreaList || [],
-        BusTypeList: formValue.BusTypeList || [],
-        BusClassList: formValue.BusClassList || [],
-        TltKindList: formValue.TltKindList || [],
-        OrgList: formValue.OrgList || [],
-        TltNoList: formValue.TltNoList || [],
-        TermTypeList: formValue.TermTypeList || [],
-        BuildingList: formValue.BuildingList || [],
+        FloorList: formValue.FloorList ?? '',
+        AreaList: formValue.AreaList ?? '',
+        BusTypeList: formValue.BusTypeList ?? '',
+        BusClassList: formValue.BusClassList ?? '',
+        TltKindList: formValue.TltKindList ?? '',
+        OrgList: formValue.OrgList ?? '',
+        TltNoList: formValue.TltNoList ?? '',
+        TermTypeList: formValue.TermTypeList ?? '',
+        BuildingList: formValue.BuildingList ?? ''
       };
 
       console.log('送出的查詢 body (TLS32030)', body);
@@ -533,10 +534,8 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
           this.loading = false;
           this.messageService.unblockUi();
         },
-
       });
     });
-
   }
 
 }

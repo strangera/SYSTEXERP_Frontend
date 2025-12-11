@@ -1,26 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { finalize, map } from 'rxjs/operators';
-
-// Services
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { Tls56020Service } from '../../../service/api/tls/tls56020.service';
-
-// Model
-import {
-  TLS56020Item,
-  TLS56020_COLUMNS,
-  buildTLS56020QueryBody,
-} from './tls56020.model';
-
-// Shared
 import { TranslateModule } from '@ngx-translate/core';
+import { Tls52010Service } from '@service/api/tls/tls52010.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize, map } from 'rxjs/operators';
+import { Tls56020Service } from '../../../service/api/tls/tls56020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
@@ -28,6 +18,11 @@ import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentk
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import {
+  TLS56020Item,
+  TLS56020_COLUMNS,
+  buildTLS56020QueryBody,
+} from './tls56020.model';
 
 interface IQueryPOS2004DetailRequest {
   queryNo?: string;
@@ -106,7 +101,8 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
 
   constructor(
     private tls56020Service: Tls56020Service,
-    private dropDownListService: DropDownListService
+    private dropDownListService: DropDownListService,
+    private readonly tls52010Service: Tls52010Service,
   ) {
     super();
   }
@@ -183,12 +179,11 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
     PLU_Name: ['', [Validators.maxLength(60)]],
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
   });
-
   suggestions: IQueryPOS2004DetailResponse[] = [];
   fieldsConfig: FieldsConfig[] = [
     { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
   ];
-  opData: IQueryPOS2004DetailResponse[] = [];
+  opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
   opColumns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_No', header: '國際條碼' },
@@ -196,7 +191,6 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
     { field: 'PLU_Name', header: '商品名稱' },
   ];
   opTotalRecords = 0;
-
   // 自動完成輸入
   onAutoCompleteInputChange(event: any) {
     const body = {
@@ -207,27 +201,26 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
       pageSize: 30,
       pageIndex: 1,
       SortBy: [{ field: 'PLU_MagNo', order: 1 }],
-    };
-    this.tls56020Service.queryPOS2004Detail_TLS56020(body).pipe(untilDestroyed(this))
-      .subscribe(results => this.suggestions = [...(results?.Data ?? [])]);
+    }
+    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.suggestions = [...results.Data.map(item => ({
+        ...item,
+        label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo,
+      }))];
+    });
   }
-
-  // overlay panel 查詢
-  onFormValueChanged(event: IQueryPOS2004DetailRequest) {
+  onformValueChanged(event: IQueryPOS2004DetailRequest) {
     this.opLoading = true;
     const body = {
       queryNo: event.queryNo || '',
       PLU_Name: event.PLU_Name || '',
       VEN_No: '',
       LOGO_No: '',
-      ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
     };
-    this.tls56020Service.queryPOS2004Detail_TLS56020(body).pipe(
-      finalize(() => this.opLoading = false),
-      untilDestroyed(this)
-    ).subscribe(results => {
-      this.opData = [...(results?.Data ?? [])];
-      this.opTotalRecords = results?.TotalCount ?? this.opData.length;
+    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.opData = [...results.Data]; // 更新data資料
+      this.opTotalRecords = results.TotalCount;
+      this.opLoading = false;
     });
   }
 }
