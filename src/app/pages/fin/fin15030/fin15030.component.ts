@@ -59,7 +59,7 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     TXN_Date_S: [null],                                         // 退出/折讓日期起 (date picker)
     TXN_Date_E: [null],                                         // 退出/折讓日期訖 (date picker)
     Credit_Type: [null],                                        // 區別 (dropdown)
-    INV_YM: [null, [Validators.required]],                      // 申報年月 (必填, date picker)
+    INV_YM: ['', [Validators.required]],                      // 申報年月 (必填, date picker)
     INV_Data_YM_S: [''],                                      // 資料所屬年月起 (date picker)
     INV_Data_YM_E: [''],                                      // 資料所屬年月訖 (date picker)
     Source_Doc_No_S: ['', [Validators.maxLength(16)]],          // 憑證單號起 (string(16))
@@ -132,6 +132,13 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
   ngOnInit(): void {
     this.initializePage('FIN15030', 'fin/fin15030', this.queryForm, (form) => this.onSubmit(form));
     this.loadDropdownOptions();
+    // 設定INV_YM預設值
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11
+    if (currentMonth % 2 !== 0) {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+    this.queryForm.get('INV_YM')?.setValue(this.datePipe.transform((currentDate), 'yyyyMM'));
   }
 
   onSubmit(frm: FormGroup): void {

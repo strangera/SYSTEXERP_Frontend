@@ -61,7 +61,7 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     INV_GUINumber_E: ['', [Validators.maxLength(8)]],       // 發票號碼訖
     INV_YM1_S: [''],                                      // 資料所屬年月起
     INV_YM1_E: [''],                                      // 資料所屬年月訖
-    INV_YM2: [null, [Validators.required]], // 申報年月
+    INV_YM2: ['', [Validators.required]], // 申報年月
     PUR_Uniform: ['', [Validators.maxLength(8)]],           // 廠商統一編號
     PUR_TaxType: [null],                                    // 課稅別
     Source_Doc_No_S: ['', [Validators.maxLength(16)]],      // 憑證單號起
@@ -146,6 +146,13 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
   ngOnInit(): void {
     this.initializePage('FIN15040', 'fin/fin15040cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadDropdownOptions();
+    // 設定INV_YM2預設值
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11
+    if (currentMonth % 2 !== 0) {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+    this.queryForm.get('INV_YM2')?.setValue(this.datePipe.transform((currentDate), 'yyyyMM'));
   }
 
   onSubmit(frm: FormGroup): void {
