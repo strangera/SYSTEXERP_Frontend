@@ -1,10 +1,10 @@
-import { CommonModule, DatePipe, formatDate, isPlatformBrowser } from '@angular/common';
+import { CommonModule, DatePipe, formatDate } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
-import { TLS32040ChartRequest, TLS32040Request, TLS32040Response, TLS32040Service } from '@service/api/tls/tls32040.service';
+import { TLS32050Request, TLS32050Response, TLS32050Service } from '@service/api/tls/tls32050.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -20,13 +20,11 @@ import { Column, formatAmount, formatPercentage } from '@shared/componentkit/tab
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { ChartModule } from 'primeng/chart';
 import { TableModule } from 'primeng/table';
 import { debounceTime, finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { TLS32040ChartResponse } from './../../../service/api/tls/tls32040.service';
 
 const today = new Date();
 
@@ -53,11 +51,10 @@ const today = new Date();
     TranslateModule,
     TableComponent,
     MultiSelectComponent,
-    ButtonModule,
-    ChartModule
+    ButtonModule
   ]
 })
-export class TLS32050Component extends BasicQueryPageComponent<TLS32040Response> implements OnInit {
+export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     BaseDateFrom: [today],  //交易日期開始
     BaseDateTo: [today],  // 交易日期結束
@@ -162,17 +159,20 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32040Response>
   ];
 
   totalRecords = 0;
-  data: TLS32040Response[] = [];
-  chartData: any = []; // 圖檔資料
-  chart_options: any = []; // 圖檔欄位
-  historyRequestBody: TLS32040Request | null = null; //歷史查詢條件
+  data: TLS32050Response[] = [];
+  historyRequestBody: TLS32050Request | null = null; //歷史查詢條件
 
   columns: Column[] = [
     { field: 'RowType', header: '列別', visible: true },
+    { field: 'BuildingName', header: '館別', visible: true },
     { field: 'TeamId', header: '單位代碼', visible: true },
     { field: 'TeamName', header: '單位名稱', visible: true },
     { field: 'OrgId', header: '樓組代碼', visible: true },
     { field: 'OrgName', header: '樓組名稱', visible: true },
+    { field: 'TltKindName', header: '櫃別名稱', visible: true },
+    { field: 'Bus_Class', header: '中分類代碼', visible: true },
+    { field: 'BusClassName', header: '中分類名稱', visible: true },
+
     { field: 'Base_Target', header: '本期銷售目標', visible: true, format: formatAmount },
     { field: 'Base_SaleAmt', header: '本期銷售金額', visible: true, format: formatAmount },
     { field: 'Base_AchieveRate', header: '本期達成率', visible: true, format: (value) => formatPercentage(value, 2) },
@@ -226,7 +226,7 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32040Response>
 
   constructor(
     private readonly dropDownListService: DropDownListService,
-    public readonly tls32040Service: TLS32040Service,
+    public readonly tls32050Service: TLS32050Service,
     private tls26050Service: TLS26050Service, // 日期的api，套用現有模式
     private datePipe: DatePipe,
     private cd: ChangeDetectorRef
@@ -319,7 +319,7 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32040Response>
       const formValue = {
         ...frm.getRawValue(),
 
-        ReportType: this.dateForm.get('reportType')?.value, // 從日期表單抓
+        // ReportType: this.dateForm.get('reportType')?.value, // 從日期表單抓
         BaseDateFrom: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
         BaseDateTo: formatDate(frm.getRawValue().BaseDateTo, 'yyyy-MM-dd', 'en-US'),
         CompareDateFrom: formatDate(frm.getRawValue().CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
@@ -327,11 +327,16 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32040Response>
         FloorList: (frm.getRawValue().FloorList || []).join(','),
         AreaList: (frm.getRawValue().AreaList || []).join(','),
 
-        BusTypeList: (frm.getRawValue().BusTypeList),
-        BusClassList: (frm.getRawValue().BusClassList || []).map((item: any) => ({
-          BusType: item.bus_type ?? '',
-          BusClass: item.No ?? ''
-        })),
+        // BusTypeList: (frm.getRawValue().BusTypeList), // 之後可能改這個
+        // BusClassList: (frm.getRawValue().BusClassList || []).map((item: any) => ({
+        //   BusType: item.bus_type ?? '',
+        //   BusClass: item.No ?? ''
+        // })),
+
+        BusTypeList: (frm.getRawValue().BusTypeList || []).join(','),
+        BusClassList: (frm.getRawValue().BusClassList || [])
+          .map((x: any) => x.No ?? '')
+          .join(','),
 
         TltKindList: (frm.getRawValue().TltKindList || []).join(','),
         OrgList: (frm.getRawValue().OrgList || []).join(','),
@@ -339,19 +344,18 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32040Response>
         TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
         BuildingList: (frm.getRawValue().BuildingList || []).join(','),
 
-      } as TLS32040Request;
+      } as TLS32050Request;
 
-      console.log('api準備中');
       this.loading = false;
 
-      // this.tls32040Service.queryTLS32040(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      this.tls32050Service.queryTLS32050(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
 
-      //   this.data = res.Data ?? [];                           // 查詢資料
-      //   this.historyRequestBody = formValue;                  // 查詢條件
-      //   this.totalRecords = res.TotalCount;              // 等候端
-      //   console.log('主查詢結果', res.Data);
-      //   this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-      // })
+        this.data = res.Data ?? [];                           // 查詢資料
+        this.historyRequestBody = formValue;                  // 查詢條件
+        this.totalRecords = res.TotalCount;              // 等候端
+        console.log('主查詢結果', res.Data);
+        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+      })
     })
   }
   onReport(frm: FormGroup, isExcel: boolean) {
@@ -405,111 +409,6 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32040Response>
     // } else {
     //   console.log('api準備中');
     // }
-  }
-
-  // #region 呼叫圖檔(這邊先不用做，既有規格有，新版規格沒有)
-  onChart(frm: FormGroup) {
-    const formValue = {
-      ...frm.getRawValue(),
-
-      Year: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy', 'en-US'), //圖表要抓年分
-
-      FloorList: (frm.getRawValue().FloorList || []).join(','),
-      AreaList: (frm.getRawValue().AreaList || []).join(','),
-
-      BusTypeList: (frm.getRawValue().BusTypeList || []).join(','), //這邊怪怪的之後可能會改成舊的模式(還是大: "大字串", 中: "中字串")
-      BusClassList: (frm.getRawValue().BusClassList || []) //這邊怪怪的之後可能會改成舊的模式
-        .map((x: any) => x.No)
-        .join(','),
-
-      TltKindList: (frm.getRawValue().TltKindList || []).join(','),
-      OrgList: (frm.getRawValue().OrgList || []).join(','),
-      TltNoList: (frm.getRawValue().TltNoList || []).join(','),
-      TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
-      BuildingList: (frm.getRawValue().BuildingList || []).join(','),
-    } as TLS32040ChartRequest
-    this.tls32040Service.queryTLS32040Chart(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
-      .subscribe(res => {
-        this.messageService.successBubble(res.Message);
-        if (res.Data) {
-          const chartData = this.buildLineChartData(res.Data);
-          this.chartData = chartData;   // 綁定資料
-          this.initChart();     // 初始化 options
-          console.log('圖表資料', chartData);
-        }
-      });
-  }
-
-  /** ------------------------------------------
-   * PrimeNG 官方樣式格式
-   * ------------------------------------------ */
-  private initChart() {
-    if (!isPlatformBrowser(this.platformId)) return;
-
-    const documentStyle = getComputedStyle(document.documentElement);
-    const textColor = documentStyle.getPropertyValue('--p-text-color');
-    const textColorSecondary = documentStyle.getPropertyValue('--p-text-muted-color');
-    const surfaceBorder = documentStyle.getPropertyValue('--p-content-border-color');
-
-    this.chart_options = {
-      responsive: true,
-      plugins: {
-        legend: {
-          labels: {
-            color: textColor
-          }
-        }
-      },
-      scales: {
-        x: {
-          ticks: {
-            color: textColorSecondary
-          },
-          grid: {
-            color: surfaceBorder
-          }
-        },
-        y: {
-          ticks: {
-            color: textColorSecondary
-          },
-          grid: {
-            color: surfaceBorder
-          }
-        }
-      }
-    };
-
-    this.cd.markForCheck();
-  }
-
-  // 圖檔格式化
-  private buildLineChartData(rows: TLS32040ChartResponse[]) {
-    // 建立 1~12 月的 labels
-    const labels = Array.from({ length: 12 }, (_, i) => `${i + 1}月`);
-
-    // grouped[OrgName][Month] = SaleAmt
-    const grouped: Record<string, Record<number, number>> = {};
-
-    rows.forEach(r => {
-      if (!grouped[r.OrgName]) grouped[r.OrgName] = {};
-      grouped[r.OrgName][r.SaleMonth] = r.SaleAmt;
-    });
-
-    // 產生 datasets
-    const datasets = Object.keys(grouped).map((orgName) => {
-      return {
-        label: orgName,
-        data: labels.map((_, monthIndex) => {
-          return grouped[orgName][monthIndex + 1] ?? 0; // 沒資料補 0
-        }),
-        tension: 0.3,
-        borderWidth: 2,
-        fill: false
-      };
-    });
-
-    return { labels, datasets };
   }
 
   // #region 日期選單事件
