@@ -32,19 +32,27 @@ import { DropDownListService, IAPS1003Item, IDropdownItem, ITalentOption } from 
   ],
 })
 export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
-  // 新增：table row 關聯 mapping（不影響原有邏輯）
   private setTableRowMapping(row: any) {
-    if (row.CAP_Item !== undefined && row.CAP_Item !== null && row.CAP_Item !== '') {
-      const selected = this.FilterCAP_ItemOptions.find(opt => opt.value === row.CAP_Item);
-      if (selected) {
-        const item = selected.data;
-        // 只有在欄位為空時才覆蓋，否則保留查詢資料
-        if (!row.AccNo) row.AccNo = item.AccNo;
-        if (!row.GUI_FLAG) row.GUI_FLAG = item.GUI_FLAG;
-        if (!row.cap_taxtype) row.cap_taxtype = item.CAP_TaxType;
-      }
-    }
+    if (!row.CAP_Item) return;
+
+    const candidates = this.CAP_ItemOptions
+      ? this.CAP_ItemOptions.filter(it => !row.CAP_Type || it.CAP_Type === row.CAP_Type)
+      : [];
+
+    const match = candidates.find((it: any) => {
+      if (String(it.CAP_Item) === String(row.CAP_Item)) return true;
+      if (String((it as any).value) === String(row.CAP_Item)) return true;
+      return false;
+    });
+
+    if (!match) return;
+
+    row.AccNo = match.AccNo ? String(match.AccNo).trim() : '';
+    row.GUI_FLAG = match.GUI_FLAG ?? null;
+    row.cap_taxtype =
+      match.CAP_TaxType != null ? String(match.CAP_TaxType) : null;
   }
+
   currentCreateType: 'normal' | 'counter' = 'counter';
   isDetailMode = false;
   data: any[] = [];
@@ -392,8 +400,16 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
               .map(item => ({ value: item.CAP_Item, label: `${item.CAP_Item}-${item.CAP_Name}`, data: item }));
           }
         },
-        { field: 'AccNo', header: '會計科目', type: 'dropdown', width: '10rem', options: this.AccNoOptions, optionLabel: 'label', optionValue: 'No', disabled: () => true },
-        { field: 'org_id', header: '組織代號', type: 'dropdown', width: '15rem', options: this.org_idOptions, optionLabel: 'label', optionValue: 'value' },
+        {
+          field: 'AccNo',
+          header: '會計科目',
+          type: 'dropdown',
+          width: '10rem',
+          options: this.AccNoOptions,
+          optionLabel: 'label',
+          optionValue: 'No',
+          disabled: () => true
+        }, { field: 'org_id', header: '組織代號', type: 'dropdown', width: '15rem', options: this.org_idOptions, optionLabel: 'label', optionValue: 'value' },
         { field: 'GUI_FLAG', header: '是否開立發票', type: 'dropdown', width: '9rem', options: this.GuiFlagOptions, optionLabel: 'label', optionValue: 'value' },
         { field: 'cap_taxtype', header: '課稅別', type: 'dropdown', width: '9rem', options: this.cap_taxtypeOptions, optionLabel: 'label', optionValue: 'value', disabled: () => true },
         { field: 'tpy_net', header: '扣款金額(未稅)', type: 'inputNumber', width: '12rem', textAlign: 'right' },
@@ -480,27 +496,41 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       console.warn('updateTotalCash error', e);
     }
   }
-  // table-edit 欄位選擇時即時關聯
-  onCounterCAPItemChange(row: any, value: string, field?: string) {
-    // tlt_no 欄位選擇時，標記 row._tlt_noChanged
-    if (field === 'tlt_no') {
-      row._tlt_noChanged = true;
-    }
-    // CAP_Item 欄位選擇時即時關聯
+  onCounterCAPItemChange(row: any, value: any, field?: string) {
+
     if (field === 'CAP_Item' || !field) {
-      const selected = this.FilterCAP_ItemOptions.find(opt => opt.value === value);
-      if (selected) {
-        const item = selected.data;
-        row.AccNo = item.AccNo;
-        row.GUI_FLAG = item.GUI_FLAG;
-        row.cap_taxtype = item.CAP_TaxType != null ? String(item.CAP_TaxType) : item.CAP_TaxType;
+
+      let compareValue = value;
+      if (compareValue && typeof compareValue === 'object') {
+        compareValue = compareValue.value ?? compareValue.CAP_Item ?? null;
+      }
+      compareValue = compareValue != null ? String(compareValue).trim() : null;
+
+      const candidates = this.CAP_ItemOptions.filter(
+        it => !row.CAP_Type || it.CAP_Type === row.CAP_Type
+      );
+
+      const match = candidates.find(it => String(it.CAP_Item).trim() === compareValue);
+
+      if (match) {
+        // 關鍵修正：後端 AccNo 去空白（trim）
+        row.AccNo = match.AccNo ? String(match.AccNo).trim() : '';
+
+        row.GUI_FLAG = match.GUI_FLAG ?? null;
+        row.cap_taxtype =
+          match.CAP_TaxType != null ? String(match.CAP_TaxType) : null;
+
       } else {
         row.AccNo = null;
         row.GUI_FLAG = null;
         row.cap_taxtype = null;
       }
+
+      this.data = [...this.data];
     }
   }
+
+
   /** 下拉欄位轉字串，避免傳整個物件 */
   private normalizeValue(field: any): string {
     if (!field) return '';
