@@ -141,15 +141,6 @@
                         [showReorder]="!isFormReadable"
                         [disabled]="isFormReadable"
                         [loading]="tableLoading()">
-          @if (!isFormReadable) {
-          <header>
-            <app-button btnType="submit"
-                        label="審核與反審核"
-                        [loading]="loading"
-                        [disabled]="!selectedItems().length"
-                        (click)="toggleApprovalStatus()"></app-button>
-          </header>
-          }
         </app-table-edit>
       </p-panel>
     </div>
