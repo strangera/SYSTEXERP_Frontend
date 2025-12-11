@@ -17,7 +17,7 @@ import { CellInput } from './table-edit-cell.model';
                      [placeholder]="
                      isDisabled() ? '' :cellInput.col.placeholder ? cellInput.col.placeholder : '請輸入' + cellInput.col.header
                      "
-                     [min]="cellInput.col.min" [max]="cellInput.col.max"
+                     [min]="cellInput.col.min || -Infinity" [max]="cellInput.col.max || Infinity"
                      [disabled]="isDisabled()"
                      (onInput)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index)"
                      [minlength]="cellInput.col.minLength || null"
@@ -27,7 +27,7 @@ import { CellInput } from './table-edit-cell.model';
                      (onFocus)="cellInput.col.onFocus?.(cellInput.rowData, cellInput.rowData[cellInput.col.field], cellInput.col, cellInput.index)"
                      (onBlur)="handleBlur()"
                      [style]="{'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
-                     [inputStyle]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign || 'center'}"
+                     [inputStyle]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign || 'right'}"
                      [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
                      [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }" />
 
@@ -55,7 +55,7 @@ export class NumberCellComponent {
     const col = this.cellInput.col;
     return (col.disabled && col.disabled(this.cellInput.rowData[col.field], this.cellInput.index, this.cellInput.rowData)) || this.cellInput.disabled;
   }
-
+  Infinity = Infinity;
   handleBlur() {
     this.cellInput.col.onBlur?.(
       this.cellInput.rowData,

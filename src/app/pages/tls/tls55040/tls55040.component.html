@@ -37,5 +37,7 @@
 <div class="card">
   <app-table-report apiUrl="queryTLS55040" tableKey="TLS55040query" dataKey="OTA_No" [lastQueryBody]="lastQueryBody"
     [totalRecords]="totalRecords" [data]="data" (edit)="onEdit($event)" (detail)="onDetail($event)" [columns]="columns"
-    [loading]="loading" [queryFunction]="tls55040Service.queryTLS55040.bind(tls55040Service)"></app-table-report>
+    [loading]="loading" [queryFunction]="tls55040Service.queryTLS55040.bind(tls55040Service)" [showCheckBox]="true"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showSort]="true"
+    (delete)="onDelete($event)"></app-table-report>
 </div>

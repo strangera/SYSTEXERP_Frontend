@@ -4,12 +4,13 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls55040Data, Tls55040QueryBody, Tls55040Service } from '@service/api/tls/tls55040.service';
+import { getSYS1000 } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount, formatYYYYMM, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -33,16 +34,17 @@ export class TLS55040Component extends BasicQueryPageComponent<Tls55040Data> imp
   });
   VEN_NoOptions = this.dropDown.queryPos2013({ VEN_Flag: '' });
   data: Tls55040Data[] = [];
+  selectedItems: Tls55040Data[] = [];
   totalRecords = 0;
   lastQueryBody: Tls55040QueryBody | null = null;
   columns: ReportColumn[] = [
-    { field: 'OTA_No', header: '請款編號', visible: true },
-    { field: 'ACP_YYYYMM', header: '結帳年月', visible: true },
-    { field: 'VEN_NAME', header: '廠商資料', visible: true },
-    { field: 'TABTYPE', header: '單據種類', visible: true },
-    { field: 'PUR_VoucherType', header: '格式', visible: true },
-    { field: 'OTA_Status', header: '狀況', visible: true },
-    { field: 'PUR_TotNet', header: '未銷金額', visible: true },
+    { field: 'OTA_No', header: '請款編號' },
+    { field: 'ACP_YYYYMM', header: '結帳年月', format: formatYYYYMM },
+    { field: 'VEN_NAME', header: '廠商資料' },
+    { field: 'TABTYPE', header: '單據種類', format: value => getSYS1000('TABTYPE', value) },
+    { field: 'PUR_VoucherType', header: '格式', format: value => getSYS1000('PUR_VoucherType', value) },
+    { field: 'OTA_Status', header: '狀況', format: value => getSYS1000('OTA_Status', value) },
+    { field: 'PUR_TotNet', header: '未銷金額', format: formatAmount },
   ];
 
   constructor(
@@ -72,5 +74,18 @@ export class TLS55040Component extends BasicQueryPageComponent<Tls55040Data> imp
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       })
     })
+  }
+  onDelete(event: Tls55040Data[]) {
+    this.confirmationService.confirm({
+      header: '刪除確認',
+      message: '確定要刪除選取的資料嗎？',
+      accept: () => {
+        this.tls55040Service.deleteTLS55040({ OTA_NoList: event.map(x => x.OTA_No) }).pipe(untilDestroyed(this)).subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          this.selectedItems = [];
+          this.onSubmit(this.queryForm);
+        });
+      },
+    });
   }
 }

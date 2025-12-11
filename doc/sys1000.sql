@@ -1,7 +1,7 @@
 -- ==============================================================================
 -- 參數組：Status (狀態) - 修正為 檢查 SYS_Type 是否存在
 -- ==============================================================================
-DECLARE @Status_SYS_Type NVARCHAR(50) = 'Status';
+DECLARE @Status_SYS_Type NVARCHAR(50) = 'OTA_Status';
 DECLARE @Status_CRT_USR_No NVARCHAR(50) = 'SYSTEX';
 DECLARE @Status_CRT_USR_Name NVARCHAR(100) = N'Leo';
 DECLARE @Status_InsertCount INT = 0;
@@ -15,10 +15,8 @@ DECLARE @ParamsToInsert TABLE (
 
 --  Status 參數配置區塊
 INSERT INTO @ParamsToInsert (SYS_Code, SYS_Name, SYS_Sort) VALUES
-('0', N'未繳票', 1.00),
-('1', N'已繳票', 2.00),
-('2', N'已退票', 3.00),
-('3', N'封存', 4.00);
+('1', N'未結帳', 2.00),
+('2', N'已結帳', 3.00),
 --------------------------------------
 
 -- 步驟二：執行預檢查 (僅檢查 SYS_Type 是否已存在)
