@@ -1,26 +1,27 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { CustomFooterTableComponent } from "@shared/componentkit/custom-footer-table/customFooterTable.component";
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { FIN15010Service, FIN15010Data, FIN15010QueryRequest, FIN15010PrintRequest } from '../../../service/api/fin/fin15010.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { environment } from '../../../../environments/environment';
+import { FIN15010Data, FIN15010PrintRequest, FIN15010QueryRequest, FIN15010Service } from '../../../service/api/fin/fin15010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { AccordionModule } from 'primeng/accordion';
-import { TranslateModule } from '@ngx-translate/core';
 import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
-import { environment } from '../../../../environments/environment';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { getSYS1000Options } from '@service/system/sys1000.service';
-import { CustomFooterTableComponent } from "@shared/componentkit/custom-footer-table/customFooterTable.component";
+import { ValidationService } from '../../../shared/service/validation.service';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 export interface Option {
   label: string;
@@ -45,7 +46,8 @@ export interface Option {
     DropdownComponent,
     CalendarComponent,
     CommonModule,
-    CustomFooterTableComponent
+    CustomFooterTableComponent,
+    YearMonthComponent
   ]
 })
 export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> implements OnInit {
@@ -56,7 +58,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     GUI_Track: [null],                                          // 字軌
     InvoiceNo_S: ['', [Validators.maxLength(8)]],               // 發票號碼_起
     InvoiceNo_E: ['', [Validators.maxLength(8)]],               // 發票號碼_迄
-    PUR_RepYYYYMM: ['', [Validators.required, this.validationService.evenMonthValidator]], // 申報年月
+    PUR_RepYYYYMM: ['', [Validators.required]], // 申報年月
     PUR_GUIDateYYYYMM_S: [''],         // 資料所屬年月_起
     PUR_GUIDateYYYYMM_E: [''],         // 資料所屬年月_迄
     PUR_Uniform_S: ['', [Validators.maxLength(10)]],            // 廠商統一編號_起
@@ -151,7 +153,6 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
         ...frm.value,
         PUR_GUIDate_S: this.datePipe.transform(frm.get('PUR_GUIDate_S')?.value, 'yyyy-MM-dd') ?? '',
         PUR_GUIDate_E: this.datePipe.transform(frm.get('PUR_GUIDate_E')?.value, 'yyyy-MM-dd') ?? '',
-        PUR_RepYYYYMM: this.datePipe.transform(frm.get('PUR_RepYYYYMM')?.value, 'yyyyMM') ?? '',
         PUR_GUIDateYYYYMM_S: this.datePipe.transform(frm.get('PUR_GUIDateYYYYMM_S')?.value, 'yyyyMM') ?? '',
         PUR_GUIDateYYYYMM_E: this.datePipe.transform(frm.get('PUR_GUIDateYYYYMM_E')?.value, 'yyyyMM') ?? '',
         CRT_Date_S: this.datePipe.transform(frm.get('CRT_Date_S')?.value, 'yyyy-MM-dd') ?? '',
@@ -185,7 +186,6 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
       ...frm1.value,
       PUR_GUIDate_S: this.datePipe.transform(frm1.get('PUR_GUIDate_S')?.value, 'yyyy-MM-dd') ?? '',
       PUR_GUIDate_E: this.datePipe.transform(frm1.get('PUR_GUIDate_E')?.value, 'yyyy-MM-dd') ?? '',
-      PUR_RepYYYYMM: this.datePipe.transform(frm1.get('PUR_RepYYYYMM')?.value, 'yyyyMM') ?? '',
       PUR_GUIDateYYYYMM_S: this.datePipe.transform(frm1.get('PUR_GUIDateYYYYMM_S')?.value, 'yyyyMM') ?? '',
       PUR_GUIDateYYYYMM_E: this.datePipe.transform(frm1.get('PUR_GUIDateYYYYMM_E')?.value, 'yyyyMM') ?? '',
       CRT_Date_S: this.datePipe.transform(frm1.get('CRT_Date_S')?.value, 'yyyy-MM-dd') ?? '',
@@ -231,7 +231,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
   loadGuiTrackOptions(event: any): void {
     // 選完申報年月 載入字軌下拉
     this.dropDownListService.queryPOS1018_GUI_TRACK_DropDownList({
-      GUI_YYMM: this.datePipe.transform(event, 'yyyyMM') ?? '',
+      GUI_YYMM: event,
       MID: 0,
       STO_No: '10',
       GUI_Type: this.queryForm.controls.PUR_VoucherType.value ?? []
@@ -240,11 +240,13 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     });
 
     // 自動代入資料所屬年月(起迄)
-    if (this.queryForm.controls.PUR_RepYYYYMM.valid) {
-      const selectedDate = new Date(event);
-      const startOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1);
+    if (this.queryForm.controls.PUR_RepYYYYMM.valid && event) {
+      const year = parseInt(event.substring(0, 4));
+      const month = parseInt(event.substring(4, 6));
+      const startOfMonth = new Date(year, month - 2, 1);
+      const endOfMonth = new Date(year, month - 1, 1);
       this.queryForm.controls.PUR_GUIDateYYYYMM_S.setValue(this.datePipe.transform(startOfMonth, 'yyyy/MM'));
-      this.queryForm.controls.PUR_GUIDateYYYYMM_E.setValue(this.datePipe.transform(selectedDate, 'yyyy/MM'));
+      this.queryForm.controls.PUR_GUIDateYYYYMM_E.setValue(this.datePipe.transform(endOfMonth, 'yyyy/MM'));
     }
     else {
       this.queryForm.controls.PUR_GUIDateYYYYMM_S.setValue('');
