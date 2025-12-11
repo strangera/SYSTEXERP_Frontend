@@ -1,22 +1,22 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
 import { CommonModule, DatePipe } from '@angular/common';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { AccordionModule } from 'primeng/accordion';
-import { TranslateModule } from '@ngx-translate/core';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { FIN15050PrintRequest, FIN15050Service } from '@service/api/fin/fin15050.service';
-import { environment } from 'src/environments/environment';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { FIN15050PrintRequest, FIN15050Service } from '@service/api/fin/fin15050.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { environment } from 'src/environments/environment';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ValidationService } from '../../../shared/service/validation.service';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 @Component({
   selector: 'app-fin15050',
@@ -24,9 +24,17 @@ import { untilDestroyed } from '@ngneat/until-destroy';
   styleUrl: './fin15050.component.scss',
   standalone: true,
   imports: [
-    MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule,
-    InputTextComponent, InputTextRangeComponent, DropdownComponent, TranslateModule,
-    CalendarComponent, CommonModule
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    InputTextRangeComponent,
+    DropdownComponent,
+    TranslateModule,
+    CommonModule,
+    YearMonthComponent
   ]
 })
 export class FIN15050Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -59,7 +67,6 @@ export class FIN15050Component extends BasicQueryPageComponent<any> implements O
       ...frm.getRawValue(),
       Mid: 0,
       STO_No: '10',
-      REP_GUIYM: this.datePipe.transform(frm.get('REP_GUIYM')?.value, 'yyyyMM') || '',
     }
 
     this.handleSubmit(frm, () => {
