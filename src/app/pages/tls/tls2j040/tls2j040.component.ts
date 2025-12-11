@@ -16,7 +16,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { untilDestroyed } from '@ngneat/until-destroy';
 
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatDateTime,formatAmount } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls2j040',
@@ -55,13 +55,14 @@ export class TLS2J040Component extends BasicQueryPageComponent<any> implements O
 
 
   columns: Column[] = [
-    { field: 'BuyerUniform', header: '統一編號', visible: true },
+      { field: 'InvoiceCreateDate', header: '換開日期', visible: true, format: this.formatDateOnly },  
+
 
   { field: 'InvoiceNumber', header: '發票號碼', visible: true },
 
-  { field: 'InvoiceCreateDate', header: '換開日期', visible: true, format: this.formatDateOnly },  
+    { field: 'BuyerUniform', header: '統一編號', visible: true },
 
-  { field: 'AmountNTax', header: '金額', visible: true },
+  { field: 'AmountNTax', header: '金額', visible: true, format: formatAmount },
 
   { field: 'TotalTax', header: '稅額', visible: true },
 
