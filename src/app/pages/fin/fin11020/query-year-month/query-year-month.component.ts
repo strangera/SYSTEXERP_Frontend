@@ -1,5 +1,5 @@
 import { NgClass, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
 import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
@@ -24,6 +24,7 @@ export class YearMonthComponent extends BasicKitComponent implements OnInit, OnC
   @Input() submitted = false;
   @Input() control!: FormControl;
   @Input() evenMonth = false;
+  @Output() valueChanges = new EventEmitter<any>()
 
   yearControl = new FormControl<Date | string | null>(null);
   monthControl = new FormControl<string | null>(null);
@@ -160,5 +161,6 @@ export class YearMonthComponent extends BasicKitComponent implements OnInit, OnC
     if (!this.isUpdatingFromParent) {
       this.syncToParentControl();
     }
+    this.valueChanges.emit(this.control.value);
   }
 }

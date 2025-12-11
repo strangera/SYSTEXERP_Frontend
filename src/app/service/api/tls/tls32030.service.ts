@@ -16,7 +16,6 @@ export interface TLS32030QueryRequest {
   CompareDateFrom: string | null;
   CompareDateTo: string | null;
 
-  BudgetVersion: string | null;
   AmtTaxMode: string | null;
   ReceFilter: string | null;
 

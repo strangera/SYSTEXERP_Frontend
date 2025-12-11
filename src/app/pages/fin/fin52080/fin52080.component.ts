@@ -1,5 +1,4 @@
 import { Component, computed, effect, OnInit, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN52080Service } from '@service/api/fin/fin52080.service';
@@ -75,9 +74,6 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
-  private readonly accNoSignal = toSignal(this.qf().AccNo.valueChanges);
-  private readonly classNoSignal = toSignal(this.qf().ClassNo.valueChanges);
-
   public readonly FIN52080Tree = signal<FIN52080Tree[]>([]);
 
   public readonly tableLoading = signal<boolean>(!1);
@@ -101,27 +97,6 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
         && (!formValue.Org_YN?.length || formValue.Org_YN.includes(item.Org_YN))
         && (!formValue.Input_YN?.length || formValue.Input_YN.includes(item.Input_YN));
     });
-  });
-
-  /** accNo驗證 綁定classNo用 */
-  public readonly accNoEffect = effect(() => {
-    const accNo = String(this.accNoSignal() ?? 0)?.substring(0, 3);
-    this.qf().ClassNo.setValue(void 0);
-    // this.logger.debug(`accNoEffect:`, [accNo, this.queryForm.getRawValue()]);
-    if (!accNo) return;
-    const matched = this.service.classNoMap().get(accNo);
-    matched?.length && this.qf().ClassNo.setValue(accNo, { emitEvent: !1 });
-  }, { allowSignalWrites: !0 });
-
-  /** classNo驗證 accNo沒在清單內就清空 */
-  public readonly classNoEffect = effect(() => {
-    const classNo = this.classNoSignal();
-    const current = this.qf().AccNo.value?.substring(0, 3);
-    // this.logger.debug(`classNoEffect:`, [classNo, current, this.queryForm.getRawValue()]);
-    if (!classNo?.length) return;
-
-    const match = this.service.classNoMap().get(classNo) === current;
-    if (!match) this.qf().AccNo.setValue(void 0, { emitEvent: !1 });
   });
 
   public readonly loadingEffect = effect(() => {

@@ -1,65 +1,60 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-    </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="設備代號" controlName="equipmentCode"
-                        [control]="dataForm.controls.equipmentCode" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="設備名稱" controlName="equipmentName" [control]="dataForm.controls.equipmentName"
-                        [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="設備總量" controlName="equipmentNumber"
-                        [control]="dataForm.controls.equipmentNumber" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-            </div>
-            <!---->
-            <hr />
-            <ng-container formArrayName="items">
-                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-                    <div class="grid align-items-center">
-                        <div class="col" style="flex: 1">
-                            <p>服務台 {{ i + 1 }}</p>
-                        </div>
-                        <div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="設備代號"
+          controlName="Device_ID"
+          [control]="dataForm.controls.Device_ID"
+          [submitted]="submitted"
+        />
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="設備名稱"
+          controlName="Device_Name"
+          [control]="dataForm.controls.Device_Name"
+          [submitted]="submitted"
+        />
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="設備總量"
+          controlName="Device_TotQty"
+          [control]="dataForm.controls.Device_TotQty"
+          [submitted]="submitted"
+          [readonly]="true"
+          [customPlaceholder]="'系統自動加總'"
+        />
+      </div>
 
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown label="所屬服務台位置" controlName="counterPosition" [options]="counterOptions"
-                                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'counterPosition')"
-                                [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="分配設備數量" controlName="allocateNumber"
-                                [control]="getFormControl(i, 'allocateNumber')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                    </div>
-                    <hr />
-                </ng-container>
-            </ng-container>
-            <div class="pt-1">
+      <app-table-edit
+        class="col-12"
+        tableKey="CPM11020Detail"
+        [columns]="editColumns"
+        [data]="data"
+        (selectionChange)="selectedItems = $event"
+        [selectedItems]="selectedItems"
+        [keepDeletedData]="true"
+        (dataChange)="onDataChange($event)"
+        [tableRequired]="true"
+        [disabled]="isFormReadable"
+      />
 
-            </div>
-        </form>
-        <div class="col pt-4">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
-            </div>
-        </div>
-    </p-panel>
+      <div
+        *ngIf="!isFormReadable"
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
+        <app-button
+          btnType="cancel"
+          [form]="dataForm"
+          (clickEvent)="onReset()"
+        />
+        <app-button btnType="submit" [loading]="loading" />
+      </div>
+    </form>
+  </p-panel>
 </div>

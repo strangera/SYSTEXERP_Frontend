@@ -77,26 +77,27 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
   public readonly tableLoading = signal<boolean>(!1);
   public readonly treeLoading = signal<boolean>(!1);
 
-  /** accNo驗證 綁定classNo用 */
+  /** accNo/classNo 雙向同步 */
   public readonly accNoEffect = effect(() => {
-    const accNo = String(this.accNoSignal() ?? 0)?.substring(0, 3);
-    this.df().ClassNo.setValue(void 0);
-    // this.logger.debug(`accNoEffect:`, [accNo, this.queryForm.getRawValue()]);
-    if (!accNo) return;
-    const matched = this.service.classNoMap().get(accNo);
-    matched?.length && this.df().ClassNo.setValue(accNo, { emitEvent: !1 });
+    const accNo = this.accNoSignal();
+    if (!accNo || accNo.length < 3) return;
+
+    const classNoPrefix = accNo.substring(0, 3);
+    const currentClassNo = this.df().ClassNo.value;
+    if (this.service.classNoMap().has(classNoPrefix) && currentClassNo !== classNoPrefix)
+      this.df().ClassNo.setValue(classNoPrefix, { emitEvent: !1 });
   }, { allowSignalWrites: !0 });
 
-  /** classNo驗證 accNo沒在清單內就清空 */
+  /** classNo 變更時驗證與 accNo 的一致性 */
   public readonly classNoEffect = effect(() => {
     const classNo = this.classNoSignal();
-    const current = this.df().AccNo.value?.substring(0, 3);
-    // this.logger.debug(`classNoEffect:`, [classNo, current, this.queryForm.getRawValue()]);
-    if (!classNo?.length) return;
+    const accNo = this.df().AccNo.value;
+    if (!classNo || !accNo || accNo.length < 3) return;
 
-    const match = this.service.classNoMap().get(classNo) === current;
-    if (!match) this.df().AccNo.setValue('', { emitEvent: !1 });
-  });
+    const accNoPrefix = accNo.substring(0, 3);
+    if (classNo !== accNoPrefix)
+      this.df().AccNo.setValue('', { emitEvent: !1 });
+  }, { allowSignalWrites: !0 });
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.tableLoading()
