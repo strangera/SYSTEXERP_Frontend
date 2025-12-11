@@ -56,8 +56,9 @@
         </div>
         <!-- 廠商編號 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="廠商編號" controlName="VEN_No" [options]="VEN_NoOptions | async" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>
+          <app-dropdown label="廠商編號" controlName="VEN_No" [options]="VEN_NoOptions | async" optionLabel="value"
+            templateLabel="label" optionValue="value" [control]="dataForm.controls.VEN_No"
+            [submitted]="submitted"></app-dropdown>
         </div>
         <!-- 廠商名稱 -->
         <div class="col-12 md:col-6 lg:col-4">
@@ -66,17 +67,17 @@
         </div>
         <!-- 專櫃編號 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="專櫃編號" controlName="tlt_no" [options]="tlt_noOptions | async" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.tlt_no" [submitted]="submitted"></app-dropdown>
+          <app-dropdown label="專櫃編號" controlName="TLT_No" [options]="tlt_noOptions | async" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.TLT_No" [submitted]="submitted"></app-dropdown>
         </div>
         <!-- 領回日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" label="領回日期" controlName="return_edate"
-            [control]="dataForm.controls.return_edate" [submitted]="submitted"></app-calendar>
+          <app-calendar calendarType="dateOne" label="領回日期" controlName="Return_EDate"
+            [control]="dataForm.controls.Return_EDate" [submitted]="submitted"></app-calendar>
         </div>
         <!-- 領回人姓名 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="領回人姓名" controlName="return_get_person" [control]="dataForm.controls.return_get_person"
+          <app-input-text label="領回人姓名" controlName="Return_Get_Person" [control]="dataForm.controls.Return_Get_Person"
             [submitted]="submitted"></app-input-text>
         </div>
       </div>
