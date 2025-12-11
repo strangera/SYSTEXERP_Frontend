@@ -1,19 +1,18 @@
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
-import { AuthService } from '../../../service/system/auth.service';
+import { finalize, map, Observable } from 'rxjs';
+import { CPM11010Service, CPM11020Data } from '../../../service/api/cpm/cpm11020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
 //
 
 //5.1.1.2 客服設備資料維護作業
@@ -22,105 +21,76 @@ import { ValidationService } from '../../../shared/service/validation.service';
   templateUrl: './cpm11020.component.html',
   styleUrl: './cpm11020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, TableComponent, TranslateModule, AsyncPipe]
 })
-export class CPM11020Component extends BasicQpageComponent implements OnInit {
-  //
+export class CPM11020Component extends BasicQueryPageComponent<CPM11020Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    equipmentCode: [], // 設備代號
-    equipmentName: ['', [Validators.maxLength(60)]], // 設備名稱
+    Device_id: [null], // 設備代號
+    Device_Name: ['', [Validators.maxLength(60)]], // 設備名稱
+    ...createPaginationConfig([{ field: 'Device_ID', order: 1 }]), // 分頁和排序參數
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+
+  totalRecords = 0;
+  data: CPM11020Data[] = [];
+  selectedItems: CPM11020Data[] = [];
+
+  // 設備代號下拉選項 - 從 API 載入
+  deviceOptions: Observable<{ label: string; value: string }[]> = this.cpm11020Service.queryDeviceListCPM11020().pipe(
+    map(response =>
+      response.Data.map(item => ({
+        label: `${item.Device_id} - ${item.Device_Name}`,
+        value: item.Device_id
+      }))
+    )
+  );
+
+  columns: Column[] = [
+    { field: 'Device_ID', header: '設備代號', visible: true },
+    { field: 'Device_Name', header: '設備名稱', visible: true },
+    { field: 'Device_TotQty', header: '設備總量', visible: true },
+    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateTime },
+    { field: 'CRT_USR_Name', header: '建立人員', visible: true },
+    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime },
+    { field: 'UPD_USR_Name', header: '變更人員', visible: false },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    { isdelete: false, 'equipmentCode': '01', 'equipmentName': '輕便娃娃車', 'equipmentNumber': 60 },
-    { isdelete: false, 'equipmentCode': '02', 'equipmentName': '愛心輪椅', 'equipmentNumber': 3 },
-    { isdelete: false, 'equipmentCode': 'A0001', 'equipmentName': '測試', 'equipmentNumber': 1 },
-    { isdelete: true, 'equipmentCode': '', 'equipmentName': '', 'equipmentNumber': 0 },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'equipmentCode', header: '設備代號', visible: true },
-    { field: 'equipmentName', header: '設備名稱', visible: true },
-    { field: 'equipmentNumber', header: '設備數量', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  equipmentCodeOptions: any[] = [
-    { value: 1, label: '奇哥Joie輕便娃娃車' },
-    { value: 2, label: '愛心輪椅' },
-  ]
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
+    private readonly cpm11020Service: CPM11010Service
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '510002';
-    this.cruPage = '/CPM1000/CPM11020CRU';
-    //
-
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('CPM11020', 'cpm/cpm11020cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.handleSubmit(frm, () => {
+      this.cpm11020Service.queryCPM11010(frm.value)
+        .pipe(
+          finalize(() => this.loading = false),
+          untilDestroyed(this)
+        )
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        });
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+  onDelete(selectedItems: CPM11020Data[]) {
+    this.confirmationService.confirm({
+      header: `是否確認刪除 ${selectedItems.length} 筆資料？`,
+      accept: () => {
+        const idList = selectedItems.map(item => item.ID);
+        this.cpm11020Service.deleteCPM11020({ IdList: idList })
+          .pipe(untilDestroyed(this))
+          .subscribe(() => {
+            this.messageService.successBubble('刪除成功');
+            this.onSubmit(this.queryForm);
+          });
+      }
+    });
   }
 }

@@ -3,8 +3,8 @@ import { Routes } from '@angular/router';
 export const cpmRoutes: Routes = [
   { path: 'cpm11010', loadComponent: () => import('./cpm11010/cpm11010.component').then(m => m.CPM11010Component), data: { progNo: 'CPM11010' } }, // 服務台位置維護作業
   { path: 'cpm11010cru', loadComponent: () => import('./cpm11010-cru/cpm11010-cru.component').then(m => m.CPM11010CRUComponent), data: { progNo: 'CPM11010' } },
-  // { path: 'cpm11020', loadComponent: () => import('./cpm11020/cpm11020.component').then(m => m.CPM11020Component), data: { progNo: 'CPM11020' } }, // 客服設備資料維護作業
-  // { path: 'cpm11020cru', loadComponent: () => import('./cpm11020-cru/cpm11020-cru.component').then(m => m.CPM11020CRUComponent), data: {progNo:'CPM11020'} },
+  { path: 'cpm11020', loadComponent: () => import('./cpm11020/cpm11020.component').then(m => m.CPM11020Component), data: { progNo: 'CPM11020' } }, // 客服設備資料維護作業
+  { path: 'cpm11020cru', loadComponent: () => import('./cpm11020-cru/cpm11020-cru.component').then(m => m.CPM11020CRUComponent), data: { progNo: 'CPM11020' } },
   // { path: 'cpm11030', loadComponent: () => import('./cpm11030/cpm11030.component').then(m => m.CPM11030Component),data: {progNo:'CPM11030'} }, // 設備出借作業
   // { path: 'cpm11030cru', loadComponent: () => import('./cpm11030-cru/cpm11030-cru.component').then(m => m.CPM11030CRUComponent), data: {progNo:'CPM11030'} },
   // { path: 'cpm11040', loadComponent: () => import('./cpm11040/cpm11040.component').then(m => m.CPM11040Component),data: {progNo:'CPM11040'} }, // 設備歸還作業
