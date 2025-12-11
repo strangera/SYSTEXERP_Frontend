@@ -20,6 +20,7 @@ import { FIN15100Service } from '../../../service/api/fin/fin15100.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 
 
@@ -45,7 +46,8 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
     DropdownModule,
     CalendarModule,
     ButtonModule,
-    CalendarComponent
+    CalendarComponent,
+    YearMonthComponent
   ],
 })
 export class FIN15100Component extends BasicQueryPageComponent<any> {
@@ -100,7 +102,7 @@ export class FIN15100Component extends BasicQueryPageComponent<any> {
     const { mid, SYS_StoreNo } = this.getUserInfoFromLocal();
 
     const payload = {
-      INV_DeclareYM: this.toYYYYMM(f.INV_DeclareYM),
+      INV_DeclareYM: f.INV_DeclareYM ?? '',
       TXN_Ret_NoS: f.TXN_Ret_NoS ?? '',
       TXN_Ret_NoE: f.TXN_Ret_NoE ?? '',
       InvoiceTrack: f.InvoiceTrack ?? '',
