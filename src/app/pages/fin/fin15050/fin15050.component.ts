@@ -60,6 +60,13 @@ export class FIN15050Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('FIN15050', 'fin/fin15050cru', this.queryForm, (form) => this.onSubmit(form));
+    // 設定REP_GUIYM預設值
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11
+    if (currentMonth % 2 !== 0) {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+    this.queryForm.get('REP_GUIYM')?.setValue(this.datePipe.transform((currentDate), 'yyyyMM'));
   }
 
   onSubmit(frm: FormGroup): void {

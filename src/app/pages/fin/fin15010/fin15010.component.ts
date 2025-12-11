@@ -141,6 +141,13 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
   ngOnInit(): void {
     this.initializePage('FIN15010', 'fin/fin15010cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadDropdownOptions();
+    // 設定PUR_RepYYYYMM預設值
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11
+    if (currentMonth % 2 !== 0) {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+    this.queryForm.get('PUR_RepYYYYMM')?.setValue(this.datePipe.transform((currentDate), 'yyyyMM'));
   }
 
   onSubmit(frm: FormGroup): void {
