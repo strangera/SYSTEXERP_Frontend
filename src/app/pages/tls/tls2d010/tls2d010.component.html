@@ -28,7 +28,7 @@
               [control]="queryForm.controls.org_idList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar label="扣款年月" calendarType="dateYearOne" [control]="queryForm.controls.tpy_date"
+            <app-calendar label="扣款年月" calendarType="dateMonthOne" [control]="queryForm.controls.tpy_date"
               [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -43,8 +43,8 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="活動代碼/名稱" controlName="pod_noList" [options]="pod_noOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.pod_noList" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="活動代碼/名稱" controlName="pod_noList" [options]="pod_noOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.pod_noList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton label="是否開立發票" groupname="GUI_FLAGOption" [control]="queryForm.controls.GUI_FLAG"
@@ -69,7 +69,7 @@
     (detail)="onDetail(setCounterType($event))" [showCheckBox]="true" dataKey="id"
     [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="true" [loading]="loading"
-   [showExcelExport]="true" [showExcel]="true" (importExcel)="onImportExcel($event)" (delete)="onDelete($event)">
+    [showExcelExport]="true" [showExcel]="true" (importExcel)="onImportExcel($event)" (delete)="onDelete($event)">
 
   </app-table>
 </div>

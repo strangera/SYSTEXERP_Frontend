@@ -82,7 +82,8 @@ export class DropdownCellComponent {
         // 檢查當前值是否仍在有效選項列表中
         const valueKey = col.optionValue || col.optionLabel;
         isValidOption = options.some((option: any) => {
-          if (valueKey && option[valueKey] === currentValue) {
+          // 使用字串化比較以避免 number vs string 的嚴格相等問題
+          if (valueKey && String(option[valueKey]) === String(currentValue)) {
             return true;
           }
           if (!col.optionValue && typeof currentValue === 'object' && option === currentValue) {

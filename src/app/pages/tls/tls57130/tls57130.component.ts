@@ -1,23 +1,23 @@
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { AsyncPipe } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Tls57130DataItem, Tls57130Request, Tls57130Service } from '@service/api/tls/tls57130.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount, formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { Tls57130DataItem, Tls57130Request, Tls57130Service } from '@service/api/tls/tls57130.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
-import { formatAmount, formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
-import { AsyncPipe } from '@angular/common';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ButtonModule } from 'primeng/button';
-import { HttpResponse } from '@angular/common/http';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 
 @Component({
   selector: 'app-tls57130',
@@ -43,7 +43,7 @@ export class TLS57130Component extends BasicQueryPageComponent<Tls57130DataItem>
   totalRecords = 0;
   lastQueryBody: Tls57130Request | null = null;
   data: Tls57130DataItem[] = [];
-  columns: EditColumn[] = [
+  columns: ReportColumn[] = [
     { field: 'LOGO_No', header: '品牌代碼' },
     { field: 'LOGO_CH_NAME', header: '品牌名稱' },
     { field: 'PLU_MagNo', header: '商品管理編號' },

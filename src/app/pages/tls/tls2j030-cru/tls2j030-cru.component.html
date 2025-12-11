@@ -23,22 +23,20 @@
 
       <!-- 來源發票 table -->
       <app-table title="來源發票" tableKey="TLSD010Detail" [data]="data" class="col-12" [columns]="columnsnatural"
-        dataKey="TXN_GUIBegNo" [showCaption]="false" [showManage]="false" (selectionChange)="selectedItems = $event"
-        [showCheckBox]="false" [selectedItems]="selectedItems" dataStatusField="status" [showReportMode]="false"
-        [loading]="queryLoading">
+        dataKey="TXN_GUIBegNo" [showCaption]="false" [showManage]="false" [showCheckBox]="false"
+        dataStatusField="status" [showReportMode]="false" [loading]="queryLoading">
       </app-table>
 
       <!-- 編輯兩個 table-edit -->
       <div class="card">
         <app-table-edit title="換開發票" tableKey="ChangeEdit" class="col-12" [data]="changeEditData"
-          [columns]="columnschange" dataStatusField="status" [loading]="editLoading" [tableRequired]="true"
-          [showDelete]="false" [showInsert]="false" (dataChange)="onChangeEditDataChange($event)" [canInsert]="false"
-          [showCheckBox]="false">
+          [columns]="columnschange" dataStatusField="status" [tableRequired]="true" [showDelete]="false"
+          [showInsert]="false" (dataChange)="onChangeEditDataChange($event)" [canInsert]="false" [showCheckBox]="false">
         </app-table-edit>
         <app-table-edit title="換開發票明細" tableKey="DetailEdit" class="col-12" [(data)]="detailEditData"
-          [columns]="columnsdetail" dataStatusField="status" [loading]="editLoading" [tableRequired]="true"
-          [showDelete]="true" [showInsert]="false" [canInsert]="true" [showCheckBox]="true"
-          (dataChange)="onDetailEditDataChange($event)" (fieldChange)="onDetailFieldChange($event)">
+          [columns]="columnsdetail" dataStatusField="status" [tableRequired]="true" [showDelete]="true"
+          [showInsert]="false" [canInsert]="true" [showCheckBox]="true" (dataChange)="onDetailEditDataChange($event)"
+          (fieldChange)="onDetailFieldChange($event)">
 
         </app-table-edit>
 

@@ -1,21 +1,21 @@
-import { DropDownListService } from './../../../service/utility/dropDownList.service';
-import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Validators, FormsModule, ReactiveFormsModule, FormGroup } from '@angular/forms';
-import { forkJoin, map, finalize } from 'rxjs';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { Column } from '@shared/componentkit/table/table.model';
+import { PanelModule } from 'primeng/panel';
+import { finalize, forkJoin, map } from 'rxjs';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { Tls41040Service } from '../../../service/api/tls/tls41040.service';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { DropDownListService } from './../../../service/utility/dropDownList.service';
 
 // ===== 定義 TLS41040 明細型別 =====
 export interface TLS41040Detail {
@@ -78,7 +78,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
   ];
 
   // Table 欄位
-  columns: EditColumn[] = [];
+  columns: Column[] = [];
 
   // 下拉選項
   SYS3700_Options: { value: string; label: string }[] = [];

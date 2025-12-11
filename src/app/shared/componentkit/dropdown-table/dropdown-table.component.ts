@@ -1,7 +1,7 @@
 import { NgFor, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { AutoCompleteModule } from 'primeng/autocomplete';
+import { AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { InputTextModule } from 'primeng/inputtext';
 import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
 import { TableRowSelectEvent } from 'primeng/table';
@@ -48,18 +48,13 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   @Input() totalRecords = 0;             // 總筆數
   @Output() select = new EventEmitter<any>(); // 選擇事件
   @Input() lazy = true;                  // 是否啟用分頁
-  // 新增一個 Subject 來處理 debounce
   private inputChangeSubject = new Subject<Record<string, string>>();
-
+  // 新增標記，判斷是否為第一次點擊
+  private initialLoadDone = false;
   ngOnInit(): void {
     this.updateControlState(this.control);
     this.formGroup.valueChanges.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(value => {
-      const hasInputValue = Object.values(value).some(
-        (val) => val !== null && val !== undefined && val !== '' && (!Array.isArray(val) || val.length > 0)
-      );
-      if (hasInputValue) {
-        this.formValueChanged.emit(value);
-      }
+      this.formValueChanged.emit(value);
     });
 
     // 訂閱 inputChangeSubject，並應用 debounceTime
@@ -77,12 +72,9 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   }
 
   onInputChange() {
-    if (this.control.value === null || this.control.value === undefined || this.control.value === '') {
-      this.suggestions = [];
-      return;
-    }
-    // 【修改處】使用 optionLabel 作為 key，因為 control.value 是使用者在 p-autoComplete 輸入的字串
-    this.inputChangeSubject.next({ [this.optionLabel]: this.control.value });
+    const inputValue = this.control.value || '';
+    // 使用 optionLabel 作為 key，傳遞輸入的字串
+    this.inputChangeSubject.next({ [this.optionLabel]: inputValue });
   }
 
   getFieldValue(field: FieldsConfig): string {
@@ -145,5 +137,21 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
       pageIndex: event.pageIndex,
       SortBy: event.SortBy
     });
+  }
+  // 【新增 onFocusAndInitialLoad】: 處理初次點擊時的載入邏輯
+  onFocusAndInitialLoad(event: any) {
+    // 觸發 Overlay Panel
+    this.op?.toggle(event);
+
+    // 如果表格資料為空，且尚未載入過，則發送一次空的查詢請求，讓父元件載入所有資料
+    if (!this.initialLoadDone && (!this.dialogData || this.dialogData.length === 0)) {
+      // 發出一個空值事件，讓父元件觸發初始載入 (loadVenData())
+      this.formValueChanged.emit(this.formGroup.value);
+    }
+    this.initialLoadDone = true;
+  }
+
+  onValueChange(event: AutoCompleteSelectEvent) {
+    this.select.emit(event.value);
   }
 }

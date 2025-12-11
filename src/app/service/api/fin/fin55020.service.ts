@@ -1,25 +1,16 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { SortMeta } from 'primeng/api';
 import { Observable, map } from 'rxjs';
 import { environment } from 'src/environments/environment';
-
-// 請求主體的介面 (與匯出共用)
-// 為了遵循 API 規範，我們需要將 QueryFIN55020Request 擴充，納入分頁/排序參數。
-// 由於您提供的匯出 API Schema 包含 PageSize, PageIndex, OrderBy 等，我們假設 QueryFIN55020Request 應該是包含這些參數的。
-// 這裡我們定義一個 ExportRequest 介面，它包含 QueryFIN55020Request 的參數以及分頁和排序參數。
-
-export interface SortBy {
-  field: string;
-  order: number;
-}
 
 export interface ExportFIN55020Request {
   PageSize?: number;
   PageIndex?: number;
   OrderBy?: string;
   Offset?: number;
-  SortBy?: SortBy[];
+  SortBy?: SortMeta[];
   VOUDATE_Start: string,
   VOUDATE_End: string,
   ORG_ID?: string,

@@ -22,6 +22,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TableEditDataService } from './services/table-edit-data.service';
 import { TableUtilityService } from './services/table-edit-utility.service';
 import { TableValidationService } from './services/table-validation.service';
+import { CheckboxCellComponent } from './table-edit-cell/checkbox-cell.component';
 import { DateCellComponent } from './table-edit-cell/date-cell.component';
 import { DropdownCellComponent } from './table-edit-cell/dropdown-cell.component';
 import { InputCellComponent } from './table-edit-cell/input-cell.component';
@@ -114,6 +115,8 @@ export class TableEditComponent implements OnChanges {
   @Input() errorMessage: string | undefined; // 錯誤訊息
   // Footer
   @Input() footerData: any;
+  protected _calculatedFooterData: any = {}; // 用於儲存計算結果
+  @Input() footerSummaryLabel = '總計'; // 新增：Footer 摘要行的標籤名稱
   @Input() showFooter = false;
   @Input() scrollable = false; // 是否要滾輪
   @Input() showPaginator = false; // 是否顯示 分頁器
@@ -150,7 +153,7 @@ export class TableEditComponent implements OnChanges {
             this.dataStatusValue, this.keepDeletedData, this.canInsert,
             this.rowValidate, this.defaultInsertData, this.disabled
           );
-          // 由於 Service 已經更新了 _tableData，我們需要通知 Angular 刷新視圖
+          this._calculatedFooterData = this.calculateFooterData(); // 新增
           this.cdr.detectChanges();
         }
       }
@@ -275,7 +278,7 @@ export class TableEditComponent implements OnChanges {
 
     // 觸發 fieldChange 事件
     this.fieldChange.emit({ rowData, field: col.field, value, index });
-
+    this._calculatedFooterData = this.calculateFooterData(); // 新增
     // 發射 cleanData 給父層
     this.dataChange.emit(cleanData);
     this.cdr.markForCheck();
@@ -301,7 +304,7 @@ export class TableEditComponent implements OnChanges {
     if (this._tableData.length === 0 && this.canInsert) {
       this.insertRow();
     }
-
+    this._calculatedFooterData = this.calculateFooterData();
     // 3. 發射資料給父層
     this.dataChange.emit(cleanData);
     this.cdr.markForCheck();
@@ -368,6 +371,8 @@ export class TableEditComponent implements OnChanges {
         return DropdownCellComponent;
       case 'date':
         return DateCellComponent;
+      case 'checkbox':
+        return CheckboxCellComponent;
       case 'template':
         return TemplateCellComponent;
       default:
@@ -383,5 +388,81 @@ export class TableEditComponent implements OnChanges {
       disabled: this.disabled,
       onValueChange: this.onValueChange.bind(this),
     };
+  }
+  /**
+   * 根據 col.cellClass 屬性，獲取 <td> 標籤應用的 CSS class
+   * @param rowData 當前行資料
+   * @param col EditColumn 配置物件
+   * @returns 應用的 CSS class 字串
+   */
+  getTdClass(rowData: any, col: EditColumn): string {
+    if (!col.cellClass) return '';
+    if (typeof col.cellClass === 'function') return col.cellClass(rowData);
+    return col.cellClass;
+  }
+  /**
+ * 根據設定的 columns 聚合屬性，計算表格底部總計資料 (Footer Data)。
+ * @returns 包含計算結果的物件，例如: { Amount: 1234, Quantity: 50, ... }
+ */
+  private calculateFooterData(): any {
+    if (!this._tableData || !this.columns) {
+      return {};
+    }
+
+    // 過濾掉新增候選行（因為它不是實際數據）和已刪除的資料（如果 keepDeletedData 為 true）
+    const aggregatedData = this._tableData.filter(item =>
+      !item._isAutoInsertCandidate &&
+      !(this.keepDeletedData && item[this.dataStatusField] === this.dataStatusValue.Deleted)
+    );
+
+    const footer: Record<string, any> = {};
+
+    // 遍歷所有欄位配置
+    this.columns.forEach(col => {
+      if (col.aggregate === 'sum') {
+        let sum = 0;
+        aggregatedData.forEach(item => {
+          const value = item[col.field];
+          // 確保值是有效數字
+          if (typeof value === 'number' && !isNaN(value)) {
+            sum += value;
+          }
+        });
+        footer[col.field] = sum;
+
+      } else if (col.aggregate === 'count') {
+        // 僅計算非空的行數
+        footer[col.field] = aggregatedData.filter(item => item[col.field] !== null && item[col.field] !== undefined).length;
+      }
+      // 您可以根據需要添加 'avg' 等其他聚合邏輯
+    });
+
+    return footer;
+  }
+  /**
+   * 允許模板存取 Object.keys (解決 Angular Change Detection 限制)
+   */
+  protected getObjectKeys(obj: any): string[] {
+    return obj ? Object.keys(obj) : [];
+  }
+  /**
+ * 計算總計行第一個 td 應該合併的欄位數量 (colspan)
+ * @returns 合併的欄位數
+ */
+  calculateFooterColspan(): number {
+    let baseColspan = 1;// 基礎合併數：序號欄位 (1)
+    if (this.showReorder && this._tableData.length) baseColspan++;// Reorder 欄位
+    if (this.showCheckBox && !this.disabled && this.data.length) baseColspan++;// CheckBox 欄位 (僅在顯示且資料不為空時計入)
+    let firstAggregateIndex = -1;
+    if (this.footerData) {
+      firstAggregateIndex = this.tableUtilityService.getFirstAggregateIndex(this.columns, this.footerData);
+    } else if (this.getObjectKeys(this._calculatedFooterData).length > 0) {
+      firstAggregateIndex = this.tableUtilityService.getFirstCalculatedAggregateIndex(this.columns, this._calculatedFooterData);
+    }
+    // 如果沒有總計值，或所有欄位都有總計值 (則不需要合併)
+    if (firstAggregateIndex === -1 || firstAggregateIndex === 0) {
+      return baseColspan; // 僅合併前面幾個非資料欄位
+    }
+    return baseColspan + firstAggregateIndex;// 合併數為：基礎 colspan + 第一個有總計值的資料欄位索引
   }
 }
