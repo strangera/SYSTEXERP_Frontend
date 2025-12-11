@@ -23,7 +23,7 @@ import { CellInput } from './table-edit-cell.model';
                   (onFocus)="cellInput.col.onFocus?.(cellInput.rowData, cellInput.rowData[cellInput.col.field], cellInput.col, cellInput.index)"
                   (onBlur)="handleBlur()"
                   [style]="{'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
-                  [inputStyle]="{'width': cellInput.col.width}"
+                  [inputStyle]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign || 'center'}"
                   [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
                   [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }">
         <ng-template pTemplate="inputicon">

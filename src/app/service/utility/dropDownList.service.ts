@@ -235,6 +235,7 @@ export interface IAPS1003Item {
   GUI_FLAG: string;
   CAP_TaxType?: string;
   CAP_Type: string;
+  org_id?: string;
 }
 
 

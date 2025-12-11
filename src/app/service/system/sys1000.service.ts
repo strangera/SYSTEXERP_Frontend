@@ -110,6 +110,8 @@ export class SystemOptionsService {
    */
   static getOptionName(sysType: string, value: string | number): string | number {
     const options = this.getOptions(sysType);
-    return options.find(x => x.SYS_Code === value)?.SYS_Name || value;
+    // 使用字串比較，確保傳入的 number 或 string 都能正確對應到 SYS_Code
+    const found = options.find(x => String(x.SYS_Code) === String(value));
+    return found ? found.SYS_Name : value;
   }
 }
