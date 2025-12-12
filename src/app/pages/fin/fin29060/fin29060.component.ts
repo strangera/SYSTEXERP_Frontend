@@ -1,4 +1,4 @@
-import { HttpResponse } from '@angular/common/http';
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras } from '@angular/router';
@@ -12,16 +12,14 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { FIN29060Data, FIN29060Service, FIN29060TotalData, QueryFIN29060Request } from '../../../service/api/fin/fin29060.service';
-import {
-  FIN55050Detail,
-  FIN55050Service
-} from '../../../service/api/fin/fin55050.service';
+import { FIN55050Detail } from '../../../service/api/fin/fin55050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { DropDownListService } from './../../../service/utility/dropDownList.service';
+import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
+import { FileExportService } from './../../../shared/service/file-export.service';
 import { Fin29060TableSubheaderComponent } from './fin29060-table-subheader/fin29060-table-subheader.component';
 export interface GroupedFIN55050Detail extends FIN55050Detail {
   AccNo: string;
@@ -33,38 +31,33 @@ declare global {
     handleAcpNoClick?: (acpNo: string) => void;
   }
 }
-//1.2.9.6 廠商付款明細表
 @Component({
   selector: 'app-fin29060',
   templateUrl: './fin29060.component.html',
-  styleUrl: './fin29060.component.scss',
   standalone: true,
-  imports: [ButtonModule, Fin29060TableSubheaderComponent, DropdownRangeComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, InputTextComponent, RadiobuttonComponent, ButtonComponent, TranslateModule]
+  imports: [AsyncPipe, ButtonModule, Fin29060TableSubheaderComponent, DropdownRangeComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, InputTextComponent, RadiobuttonComponent, ButtonComponent, TranslateModule]
 })
 export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    STO_No: [""],
-    VEN_No_From: [""],
-    VEN_No_To: [""],
+    STO_No: [null],
+    VEN_No_From: [null],
+    VEN_No_To: [null],
     ODM_Date_From: [null],
     ODM_Date_To: [null],
     PayRefDate_From: [null],
     PayRefDate_To: [null],
-    AccNo_From: [""],
-    AccNo_To: [""],
-    ACP_Desc: [""],
+    AccNo_From: [null],
+    AccNo_To: [null],
+    ACP_Desc: [null],
     ShowUnpaid: [true],
     ShowZeroBalance: [true],
   });
-  VendorNoOptions: { label: string; value: string }[] = []; // 廠客代號選項
-  AccNoOptions: { label: string; value: string }[] = []; // 科目代號選項
+  VendorNoOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
+  AccNoOptions = this.dropdown.queryGls1005();
   lastQueryBody: any = null;
-  queryFunction = null;
   selectedItems: FIN29060Data[] = [];
   totalData: FIN29060TotalData[] = [];
   totalRecords = 0;
-  pdfBtnLoading = false;
-  excelBtnLoading = false;
   fullData: FIN29060Data[] = [];
   data: FIN29060Data[] = [];
   lazyBatchSize = 30;
@@ -83,39 +76,14 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
     { field: 'PaymentNo', header: '電匯/開票/單號', visible: true },
     { field: 'VoucherNo', header: '傳票號碼', visible: true, type: 'detail' }
   ];
-
-  // ----------------------------------------------------------------
-  showUpOptions = [
-    { value: 1, label: '顯示' },
-    { value: 0, label: '不顯示' },
-  ];
-
   constructor(
-    private dropDownListService: DropDownListService,
-    private fin55050Service: FIN55050Service,
-    private fin29060Service: FIN29060Service
-  ) {
-    super(); // 呼叫父類建構子
-  }
+    public readonly fin29060Service: FIN29060Service,
+    private readonly dropdown: DropdownApiService,
+    private readonly fileExportService: FileExportService,
+  ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('FIN29060', '/FIN/FIN29060CRU', this.queryForm, (frm) => this.onSubmit(frm));
-    this.loadOptions();
-  }
-
-  private loadOptions(): void {
-    // 廠客代號
-    this.dropDownListService.queryPOS2013_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(res => this.VendorNoOptions = res.Data.map((x: { No: string; Name: string }) => ({ label: `${x.No} - ${x.Name}`, value: x.No })));
-    // 科目代號
-    this.dropDownListService.queryGLS1005_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(res => this.AccNoOptions = res.Data.map((x: { No: string; Name: string }) => ({ label: `${x.No} - ${x.Name}`, value: x.No })));
-
-  }
-  onTableDataChange(newData: FIN29060Data[]) {
-    this.data = newData;
   }
   onDetailWithColValue(event: { row: FIN29060Data; col: any; value: any }) {
     const extras: NavigationExtras = {
@@ -141,56 +109,35 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
   }
 
   onSubmit(form: FormGroup) {
-    this.submitted = true;
-    if (form.invalid) return;
-
-    this.loading = true;
-
-    const raw = form.value as QueryFIN29060Request;
-
-    this.lastQueryBody = {
-      ...raw,
-      pageIndex: 1,
-      pageSize: this.lazyBatchSize,
-    };
-
-    this.fin29060Service.queryFIN29060(this.lastQueryBody)
-      .pipe(finalize(() => (this.loading = false)))
-      .subscribe((res) => {
-
-        const all: FIN29060Data[] = res.Data ?? [];
-
-        this.fullData = all;
-        this.totalRecords = res.TotalCount || all.length;
+    this.handleSubmit(form, () => {
+      const raw = form.value as QueryFIN29060Request;
+      this.lastQueryBody = {
+        ...raw,
+        pageIndex: 1,
+        pageSize: this.lazyBatchSize,
+      };
+      this.fin29060Service.queryFIN29060(this.lastQueryBody).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe((res) => {
+        this.fullData = res.Data;
+        this.totalRecords = res.TotalCount;
         this.data = this.fullData.slice(0, this.lazyBatchSize);
       });
+    })
   }
-
-
 
   private buildExportPayload(): QueryFIN29060Request {
     const raw = this.queryForm.getRawValue();
-
     return {
       STO_No: raw.STO_No || '',
       VEN_No_From: raw.VEN_No_From || '',
       VEN_No_To: raw.VEN_No_To || '',
 
-      ODM_Date_From: raw.ODM_Date_From
-        ? new Date(raw.ODM_Date_From).toISOString()
-        : undefined,
+      ODM_Date_From: raw.ODM_Date_From ? new Date(raw.ODM_Date_From).toISOString() : undefined,
 
-      ODM_Date_To: raw.ODM_Date_To
-        ? new Date(raw.ODM_Date_To).toISOString()
-        : undefined,
+      ODM_Date_To: raw.ODM_Date_To ? new Date(raw.ODM_Date_To).toISOString() : undefined,
 
-      PayRefDate_From: raw.PayRefDate_From
-        ? new Date(raw.PayRefDate_From).toISOString()
-        : undefined,
+      PayRefDate_From: raw.PayRefDate_From ? new Date(raw.PayRefDate_From).toISOString() : undefined,
 
-      PayRefDate_To: raw.PayRefDate_To
-        ? new Date(raw.PayRefDate_To).toISOString()
-        : undefined,
+      PayRefDate_To: raw.PayRefDate_To ? new Date(raw.PayRefDate_To).toISOString() : undefined,
 
       AccNo_From: raw.AccNo_From || '',
       AccNo_To: raw.AccNo_To || '',
@@ -202,48 +149,33 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
   }
 
 
+  excelBtnLoading = false;
   onExportExcel() {
     if (!this.data?.length) {
       this.messageService.warnBubble('目前沒有資料可匯出');
       return;
     }
-
     const payload = this.buildExportPayload();
-
-    this.excelBtnLoading = true;
-    this.fin29060Service.exportFIN29060_Excel(payload)
-      .pipe(finalize(() => this.excelBtnLoading = false))
-      .subscribe({
-        next: (r) => this.downloadFile(r, '.xlsx', '廠商付款明細表'),
-        error: () => this.messageService.warnBubble('匯出 Excel 失敗')
-      });
+    const export$ = this.fin29060Service.exportFIN29060_Excel(payload);
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this)),
+      '.pdf',
+      (isLoading) => this.excelBtnLoading = isLoading
+    );
   }
+  pdfBtnLoading = false;
   onExportPDF() {
     if (!this.data?.length) {
       this.messageService.warnBubble('目前沒有資料可匯出');
       return;
     }
-
-    const payload = this.buildExportPayload();
-
     this.pdfBtnLoading = true;
-    this.fin29060Service.exportFIN29060_PDF(payload)
-      .pipe(finalize(() => this.pdfBtnLoading = false))
-      .subscribe({
-        next: (r) => this.downloadFile(r, '.pdf', '廠商付款明細表'),
-        error: () => this.messageService.warnBubble('匯出 PDF 失敗')
-      });
+    const payload = this.buildExportPayload();
+    const export$ = this.fin29060Service.exportFIN29060_PDF(payload);
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this)),
+      '.pdf',
+      (isLoading) => this.pdfBtnLoading = isLoading
+    );
   }
-
-  private downloadFile(resp: HttpResponse<Blob>, ext: string, name: string) {
-    const blob = resp.body!;
-    const fileName = `${name}_${new Date().getTime()}${ext}`;
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  }
-
 }

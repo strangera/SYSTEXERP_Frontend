@@ -10,7 +10,7 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown-range label="廠商代號" [startControl]="queryForm.controls.VEN_No_From"
-              [endControl]="queryForm.controls.VEN_No_To" [submitted]="submitted" [options]="VendorNoOptions"
+              [endControl]="queryForm.controls.VEN_No_To" [submitted]="submitted" [options]="VendorNoOptions | async"
               optionLabel="label" optionValue="value" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -27,7 +27,7 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown-range label="會計科目代號" [startControl]="queryForm.controls.AccNo_From"
-              [endControl]="queryForm.controls.AccNo_To" [submitted]="submitted" [options]="AccNoOptions"
+              [endControl]="queryForm.controls.AccNo_To" [submitted]="submitted" [options]="AccNoOptions | async"
               optionLabel="label" optionValue="value" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -69,9 +69,9 @@
 
 
     <app-fin29060-table-subheader [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-      [lastQueryBody]="lastQueryBody" [queryFunction]="queryFunction" [lazyBatchSize]="lazyBatchSize"
-      [showManage]="false" (dataChange)="onTableDataChange($event)" [groupRowsBy]="'VendorNo'" [fullData]="fullData"
-      [groupRowsByName]="'廠商編號'" [showSubTotal]="true" [showTotal]="true"
+      [lastQueryBody]="lastQueryBody" [queryFunction]="fin29060Service.queryFIN29060.bind(fin29060Service)"
+      [lazyBatchSize]="lazyBatchSize" [showManage]="false" (dataChange)="data = $event" [groupRowsBy]="'VendorNo'"
+      [fullData]="fullData" [groupRowsByName]="'廠商編號'" [showSubTotal]="true" [showTotal]="true"
       (detailWithColValue)="onDetailWithColValue($event)">
       <header>
         <div class="flex justify-content-end align-items-center gap-2">
