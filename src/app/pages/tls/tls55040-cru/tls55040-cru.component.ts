@@ -190,22 +190,29 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
         }, validate: [validateRequired]
       },
       { field: 'PUR_RepYYYYMM', header: '申報年月', format: this.formatRepYYYYMM, validate: [validateRequired] },
-      { field: 'OTA_TaxType', header: '課稅別', validate: [validateRequired], type: this.isFormCreateable ? 'dropdown' : undefined, options: getSYS1000Options('OTA_TaxType'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('OTA_TaxType', v), disabled: () => !this.isFormCreateable },
+      {
+        field: 'OTA_TaxType', header: '課稅別', validate: [validateRequired], type: this.isFormCreateable ? 'dropdown' : undefined, options: getSYS1000Options('OTA_TaxType'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('OTA_TaxType', v), disabled: () => !this.isFormCreateable,
+        calculate: (rowData, value) => {
+          return {
+            PUR_Tax: value !== '1' ? 0 : rowData.PUR_Tax,
+            PUR_TotAmt: value !== '1' ? rowData.PUR_TotNet : rowData.PUR_TotAmt,
+          };
+        },
+      },
       { field: 'PUR_DirectType', header: '發票用途', type: this.isFormCreateable ? 'dropdown' : undefined, options: getSYS1000Options('PUR_DirectType'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('PUR_DirectType', v) },
       { field: 'PUR_DiscNo', header: '扣抵代號', type: this.isFormCreateable ? 'dropdown' : undefined, options: getSYS1000Options('PUR_DiscNo'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('PUR_DiscNo', v) },
       {
         field: 'PUR_TotNet', header: '未稅金額', format: formatAmount, validate: [validateRequired], max: 9999999999, maxLength: 10, type: 'inputNumber',
-        calculate: (rowData, value) => {
-          return {
-            'PUR_TotTax': rowData.OTA_TaxType === '1' ? Math.round(value * 0.05) : 0,
-            'PUR_TotAmt': rowData.OTA_TaxType === '1' ? Math.round(value * 1.05) : value
-          };
-        },
-        textAlign: 'right',
-        aggregate: 'sum'
+        onBlur: (rowData, value) => this.onPurTotNetBlur(rowData, value), textAlign: 'right', aggregate: 'sum', min: 0,
       },
-      { field: 'PUR_TotTax', header: '稅額', format: formatAmount, validate: [validateRequired], max: 9999999999, maxLength: 10, type: 'inputNumber', textAlign: 'right', aggregate: 'sum' },
-      { field: 'PUR_TotAmt', header: '應稅金額', format: formatAmount, validate: [validateRequired], max: 9999999999, maxLength: 10, type: 'inputNumber', disabled: () => true, aggregate: 'sum', textAlign: 'right' },
+      {
+        field: 'PUR_TotTax', header: '稅額', format: formatAmount, validate: [validateRequired], max: 9999999999, min: 0, maxLength: 10, type: 'inputNumber', textAlign: 'right', aggregate: 'sum',
+        onBlur: (rowData, value) => this.onPurTotTaxBlur(rowData, value), disabled: (value, index, rowData) => {
+          if (rowData.OTA_TaxType !== '1') { rowData.PUR_TotTax = 0 }
+          return rowData.OTA_TaxType !== '1'
+        }
+      },
+      { field: 'PUR_TotAmt', header: '應稅金額', format: formatAmount, validate: [validateRequired], max: 9999999999, min: 0, maxLength: 10, type: 'inputNumber', disabled: () => true, aggregate: 'sum', textAlign: 'right' },
       {
         field: 'PUR_VoucherType', header: '發票格式', validate: [validateRequired], type: 'dropdown',
         options: this.PUR_VoucherTypeOptions,
@@ -213,7 +220,58 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
       },
     ]
   }
+  /**
+ * PUR_TotNet (未稅金額) 失焦時的連動計算邏輯
+ * @param rowData 當前行的數據
+ * @param newNetValue 新的未稅金額值
+ */
+  onPurTotNetBlur(rowData: APS3018, newNetValue: number): void {
+    // 1. 取得新的未稅金額 (N)
+    const purTotNet = newNetValue || 0;
 
+    // 2. 根據 OTA_TaxType 計算稅額 (T = N * 0.05) 和總金額 (A)
+    let purTotTax = 0;
+    let purTotAmt = purTotNet;
+
+    if (rowData.OTA_TaxType === '1') { // 應稅時
+      purTotTax = Math.round(purTotNet * 0.05);
+      purTotAmt = Math.round(purTotNet * 1.05);
+    }
+
+    // 3. 更新 rowData
+    rowData.PUR_TotTax = purTotTax;
+    rowData.PUR_TotAmt = purTotAmt;
+
+    // 4. 強制更新表頭總計
+    this.updateTotals();
+
+    // 5. 確保畫面更新
+    this.cdr.detectChanges();
+  }
+
+  /**
+   * PUR_TotTax (稅額) 失焦時的連動計算邏輯
+   * @param rowData 當前行的數據
+   * @param newTaxValue 新的稅額值
+   */
+  onPurTotTaxBlur(rowData: APS3018, newTaxValue: number): void {
+    // 1. 取得當前的未稅金額 (N)
+    const purTotNet = rowData.PUR_TotNet || 0;
+
+    // 2. 計算總金額 (A = N + T)
+    const purTotAmt = rowData.OTA_TaxType === '1'
+      ? Math.round(purTotNet + (newTaxValue || 0))
+      : purTotNet; // 非應稅時，總金額 = 未稅金額 (忽略手動輸入的稅額，因為邏輯上應為 0)
+
+    // 3. 更新 rowData
+    rowData.PUR_TotAmt = purTotAmt;
+
+    // 4. 強制更新表頭總計
+    this.updateTotals();
+
+    // 5. 確保畫面更新
+    this.cdr.detectChanges();
+  }
   loadVenData(body?: Record<string, string>): void {
     this.vendorTableLoading = true;
     const queryBody: Tls55040VenQueryBody = { VEN_No: body?.['VEN_No'] || '' };

@@ -56,17 +56,31 @@ export class NumberCellComponent {
     return (col.disabled && col.disabled(this.cellInput.rowData[col.field], this.cellInput.index, this.cellInput.rowData)) || this.cellInput.disabled;
   }
   Infinity = Infinity;
+  // 來自 NumberCellComponent.ts
   handleBlur() {
+    const field = this.cellInput.col.field;
+    let currentValue = this.cellInput.rowData[field];
+    const min = this.cellInput.col.min ?? -Infinity;
+
+    // 1. 執行 Min 限制修正
+    if (typeof currentValue === 'number' && !isNaN(currentValue) && currentValue < min) {
+      currentValue = min;
+      // 強制更新模型，將負數修正為 0
+      this.cellInput.rowData[field] = min;
+    }
+
+    // 2. 觸發 onBlur 函數 (PUR_TotNet/Tax 的 onBlur)
     this.cellInput.col.onBlur?.(
       this.cellInput.rowData,
-      this.cellInput.rowData[this.cellInput.col.field],
+      currentValue, // 傳遞修正後的值
       this.cellInput.col,
       this.cellInput.index
     );
-    // 執行一次 onValueChange 以觸發最終驗證
+
+    // 3. 執行一次 onValueChange 以觸發最終驗證/狀態更新
     this.cellInput.onValueChange(
       this.cellInput.rowData,
-      this.cellInput.rowData[this.cellInput.col.field],
+      currentValue, // 傳遞修正後的值
       this.cellInput.col,
       this.cellInput.index
     );
