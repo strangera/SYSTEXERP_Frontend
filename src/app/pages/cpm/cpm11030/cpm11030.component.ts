@@ -1,161 +1,385 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { ChangeDetectorRef, Component } from '@angular/core';
+import {
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-//
+import { HttpResponse } from '@angular/common/http';
+import { map } from 'rxjs/operators';
 
-//5.1.1.3 設備出借作業
+import { CommonModule } from '@angular/common';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import {
+  createPaginationConfig,
+  formatDateToYYYY_MM_DD,
+} from '../../../shared/componentkit/table/table.model';
+
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+
+// UI
+import { TranslateModule } from '@ngx-translate/core';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+
+// Service & 型別
+import {
+  Cpm11030Service,
+  Cpm11030Row,
+  Cpm11030Request,
+  ApiResponse,
+} from '../../../service/api/cpm/cpm11030.service';
+
+// 如果要吃 SYS1000 的證件類型，可以用這個 helper（你已經有這支）
+import { getSYS1000Options } from '@service/system/sys1000.service';
+
+type SortItem = { field: string; order: number };
+
+@UntilDestroy()
 @Component({
   selector: 'app-cpm11030',
   templateUrl: './cpm11030.component.html',
-  styleUrl: './cpm11030.component.scss',
+  styleUrls: ['./cpm11030.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarRangeComponent, InputTextComponent, MultiSelectComponent, DropdownComponent, TableComponent, TranslateModule]
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    MenubarComponent,
+    AccordionModule,
+    ButtonModule,
+    ButtonComponent,
+    CalendarRangeComponent,
+    InputNumberComponent,
+    InputTextComponent,
+    MultiSelectComponent,
+    DropdownComponent,
+    TableReportComponent,
+  ],
 })
-export class CPM11030Component extends BasicQpageComponent implements OnInit {
-  //
+export class CPM11030Component extends BasicQueryPageComponent<any> {
+  /* ----------------- 主表狀態 ----------------- */
+  data: Cpm11030Row[] = [];
+  totalRecords = 0;
+  viewTotalRecords = 0;
+  selectedItems: Cpm11030Row[] = [];
+  lastQueryBody: any = null;
+  footerData: any = undefined;
+  tableVer = 0;
+
+  /* ----------------- 欄位定義（列表） ----------------- */
+  columns: ReportColumn[] = [
+    { field: 'Loan_No', header: '出借編號' },
+    {
+      field: 'Loan_Date',
+      header: '出借日期',
+      format: (v: string) => this.formatDate(v),
+    },
+    { field: 'Service_Id', header: '服務台位置' },
+    { field: 'USER_NAME', header: '借用人姓名' },
+    { field: 'Loan_phone', header: '電話' },
+    { field: 'Loan_USR_Name', header: '出借處理人員' },
+    { field: 'CertTypeName', header: '證件類型' },
+    { field: 'Cert_No', header: '證件編號' },
+    { field: 'Device_Name', header: '設備名稱' },
+  ];
+
+  /* ----------------- 預設排序 ----------------- */
+  readonly defaultSort: SortItem[] = [{ field: 'Loan_Date', order: -1 }];
+
+  /* ----------------- 下拉選項 ----------------- */
+
+  // 證件類型：用 SYS1000（Cert_Type），如果 localStorage 沒載好就會是空陣列，之後你可以在 App 啟動時先 load
+  paperTypeOptions = getSYS1000Options('Cert_Type');
+
+  // 設備名稱：目前先寫死，之後可以改成從 CSS2001 來
+  equipmentNameOptions: { value: string; label: string }[] = [
+    { value: '01', label: '奇哥Joie輕便娃娃車' },
+    { value: '02', label: '愛心輪椅' },
+  ];
+
+  // 服務台位置：目前寫死，之後可改打 API 取 CSS1001
+  counterCodeOptions: { value: string; label: string }[] = [
+    { value: '11A001', label: '11A001/服務諮詢台' },
+    { value: '12A001', label: '12A001/VIP室' },
+    { value: '12D001', label: '12D001/總機' },
+    { value: '15A001', label: '15A001/顧客服務中心' },
+  ];
+
+  /* ----------------- 查詢表單 ----------------- */
   queryForm = this.formBuilder.group({
-    recordCode: [, [Validators.maxLength(14)]], // 記錄編號
-    borrowDateFrom: [], // 出借日期
-    borrowDateTo: [], // 出借日期
-    name: ['', [Validators.maxLength(20)]], // 姓名
+    // 記錄編號（出借編號）
+    recordCode: [null as string | null, [Validators.maxLength(14)]],
 
-    staffName: ['', [Validators.maxLength(10)]], // 出借處理人員
-    phone: [, [Validators.maxLength(20)]], // 連絡電話
-    paperType: [[] as number[]], // 證件類型
+    // 出借日期區間
+    borrowDateFrom: [null as Date | null],
+    borrowDateTo: [null as Date | null],
 
-    paperCode: [, [Validators.maxLength(20)]], // 證件編號
-    equipmentName: [[] as number[]], // 設備名稱
-    deviceCode: [, [Validators.maxLength(10)]], // 設備編號
+    // 借用人姓名
+    name: ['', [Validators.maxLength(20)]],
 
-    counterCode: [], // 服務台位置編號
+    // 出借處理人員
+    staffName: ['', [Validators.maxLength(10)]],
+
+    // 連絡電話
+    phone: ['', [Validators.maxLength(20)]],
+
+    // 證件類型（多選，SYS1000 Cert_Type）
+    paperType: [[] as string[]],
+
+    // 證件編號
+    paperCode: ['', [Validators.maxLength(20)]],
+
+    // 設備名稱（多選）
+    equipmentName: [[] as string[]],
+
+    // 設備編號
+    deviceCode: ['', [Validators.maxLength(10)]],
+
+    // 服務台位置編號
+    counterCode: [null as string | null],
+
+    // 分頁 / 排序
+    ...createPaginationConfig([{ field: 'Loan_Date', order: -1 }]),
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'recordCode', header: '記錄編號', visible: true },
-    { field: 'borrowDate', header: '出借日期', visible: true },
-    { field: 'name', header: '姓名', visible: true },
-
-    { field: 'phone', header: '連絡電話', visible: true },
-    { field: 'staffName', header: '出借處理人員', visible: true },
-    { field: 'paperType', header: '證件類型', visible: true },
-
-    { field: 'paperCode', header: '證件編號', visible: true },
-    { field: 'remark', header: '備註', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  paperTypeOptions: any[] = [
-    { value: 1, label: '身分證' },
-    { value: 2, label: '健保卡' },
-    { value: 3, label: '駕照' },
-    { value: 4, label: '護照' },
-    { value: 5, label: '其他' },
-  ]
-
-  equipmentNameOptions: any[] = [
-    { value: 1, label: '奇哥Joie輕便娃娃車' },
-    { value: 2, label: '愛心輪椅' },
-  ]
-
-  counterCodeOptions: any[] = [
-    { value: 1, label: '11A001/服務諮詢台' },
-    { value: 2, label: '12A001/VIP室' },
-    { value: 3, label: '12D001/總機' },
-    { value: 4, label: '15A001/顧客服務中心' },
-  ]
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
+    
+    private cpm11030Service: Cpm11030Service,
+    private cdr: ChangeDetectorRef
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
+  /* ----------------- 工具函式 ----------------- */
+
+  private formatDate(val: string): string {
+    if (!val) return '';
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return val;
+    return `${d.getFullYear()}/${(d.getMonth() + 1)
+      .toString()
+      .padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}`;
+  }
+
+  private toYMDOrUndef(
+    d: Date | string | null | undefined
+  ): string | undefined {
+    if (d == null) return undefined;
+    const s = formatDateToYYYY_MM_DD(d as Date | string) as
+      | string
+      | null
+      | undefined;
+    return !s ? undefined : s;
+  }
+
+  private normalizeSort(input: any, fallback: SortItem[]): SortItem[] {
+    const asArr = Array.isArray(input) ? input : [];
+    const cleaned = asArr
+      .filter(
+        (x) =>
+          x && typeof x.field === 'string' && typeof x.order === 'number'
+      )
+      .map((x) => ({ field: String(x.field), order: x.order as number }));
+    return cleaned.length ? cleaned : fallback;
+  }
+
+  /** 將畫面上的值整理成後端需要的 Cpm11030Request */
+  private buildPayload(base: any): Cpm11030Request {
+    const pageIndex =
+      Number.isFinite(base?.pageIndex) && base.pageIndex >= 1
+        ? base.pageIndex
+        : 1;
+    const pageSize =
+      Number.isFinite(base?.pageSize) && base.pageSize > 0
+        ? base.pageSize
+        : 30;
+
+    const sort = this.normalizeSort(base?.SortBy, this.defaultSort);
+
+    const orderBy =
+      sort && sort.length
+        ? sort
+            .map((s) => `${s.field} ${s.order === -1 ? 'DESC' : 'ASC'}`)
+            .join(', ')
+        : null;
+
+    const payload: Cpm11030Request = {
+      PageIndex: pageIndex,
+      PageSize: pageSize,
+      SortBy: sort,
+      OrderBy: orderBy,
+      Offset: (pageIndex - 1) * pageSize,
+
+      RecordCode: base?.recordCode || undefined,
+      BorrowDateFrom: this.toYMDOrUndef(base?.borrowDateFrom),
+      BorrowDateTo: this.toYMDOrUndef(base?.borrowDateTo),
+      Name: base?.name || undefined,
+      StaffName: base?.staffName || undefined,
+      Phone: base?.phone || undefined,
+      PaperTypeList:
+        (base?.paperType as (string | number)[])?.map((x) => String(x)) ||
+        undefined,
+      PaperCode: base?.paperCode || undefined,
+      EquipmentNameList:
+        (base?.equipmentName as (string | number)[])?.map((x) =>
+          String(x)
+        ) || undefined,
+      DeviceCode: base?.deviceCode || undefined,
+      CounterCode: base?.counterCode || undefined,
+    };
+
+    // 把 '' / null / undefined 的欄位砍掉，避免送空字串
+    Object.keys(payload).forEach((k) => {
+      const v = (payload as any)[k];
+      if (v === '' || v == null) delete (payload as any)[k];
+    });
+
+    return payload;
+  }
+
+  /* ----------------- 給 <app-table-report> 用的查詢函式 ----------------- */
+  public queryCPM11030ForReport = (body: any) =>
+    this.cpm11030Service
+      .queryCPM11030(this.buildPayload(body || {}))
+      .pipe(
+        map((res: ApiResponse<Cpm11030Row[] | Cpm11030Row>) => {
+          const src = res?.Data as any;
+          const rows: Cpm11030Row[] = Array.isArray(src)
+            ? src
+            : src
+            ? [src]
+            : [];
+
+          const totalCount =
+            Number((res as any)?.TotalCount ?? rows.length) || rows.length;
+
+          rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
+
+          return {
+            Data: rows,
+            TotalCount: totalCount,
+            GrandTotal: null,
+          };
+        })
+      );
+
+  /* ----------------- Init ----------------- */
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '510003';
-    this.cruPage = '/CPM1000/CPM11030CRU';
-    //
+    // 預設：出借日期 = 今天
+    const today = new Date();
+    this.queryForm.patchValue({
+      borrowDateFrom: today,
+      borrowDateTo: today,
+    });
 
-    //
-    // ----------------------------------------------------------------
+    this.initializePage(
+      'CPM11030',
+      '/cpm/cpm11030cru',
+      this.queryForm,
+      (form) => this.onSubmit(form)
+    );
   }
 
-  // ----------------------------------------------------------------
+  /* ----------------- Submit（主表查詢） ----------------- */
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
     this.submitted = true;
+
+    if (this.queryForm.invalid) {
+      this.queryForm.markAllAsTouched();
+      return;
+    }
+
+    const raw = this.queryForm.getRawValue();
+    const payload = this.buildPayload(raw);
+    payload.PageIndex = 1;
+
     this.loading = true;
-    this.messageService.blockUi();
+    this.data = [];
+    this.selectedItems = [];
+    this.footerData = undefined;
+    this.totalRecords = 0;
+    this.viewTotalRecords = 0;
+    this.tableVer++;
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
+    this.cpm11030Service
+      .queryCPM11030(payload)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (response: ApiResponse<Cpm11030Row[]>) => {
+          const rows: Cpm11030Row[] = Array.isArray(response?.Data)
+            ? response.Data
+            : [];
 
-    this.loading = false;
-    this.messageService.unblockUi();
+          rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
+
+          this.data = rows;
+          this.viewTotalRecords = this.data.length;
+          this.cdr.detectChanges();
+
+          const realTotal =
+            Number(response?.TotalCount ?? rows.length) || rows.length;
+          setTimeout(() => {
+            this.totalRecords = realTotal;
+            this.viewTotalRecords = realTotal;
+            this.lastQueryBody = { ...payload };
+          });
+
+          this.queryStateService.setQueryState(
+            this.ProgNo,
+            this.queryForm.value
+          );
+          this.loading = false;
+        },
+        error: (err: any) => {
+          console.error('CPM11030 query API error:', err);
+          this.data = [];
+          this.totalRecords = 0;
+          this.viewTotalRecords = 0;
+          this.footerData = undefined;
+          this.loading = false;
+        },
+      });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+  /* ----------------- 清除 ----------------- */
+  onClear(frm: FormGroup) {
+    const today = new Date();
+    frm.reset({
+      recordCode: null,
+      borrowDateFrom: today,
+      borrowDateTo: today,
+      name: '',
+      staffName: '',
+      phone: '',
+      paperType: [],
+      paperCode: '',
+      equipmentName: [],
+      deviceCode: '',
+      counterCode: null,
+      ...createPaginationConfig(this.defaultSort),
+    });
+
+    this.submitted = false;
+    this.data = [];
+    this.totalRecords = 0;
+    this.viewTotalRecords = 0;
+    this.footerData = undefined;
   }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
-  }
+ 
 }
