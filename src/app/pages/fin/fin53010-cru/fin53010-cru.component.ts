@@ -193,74 +193,93 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { label: '員工', value: 'user' }
   ];
 
-  public readonly columns = computed<(Omit<EditColumn, 'field'> & { field: keyof FIN53010DetailTable; })[]>(() => [
-    { field: 'SerNo', header: '序號' },
-    {
-      field: 'AccNo',
-      header: '科目代號',
-      type: 'dropdown',
-      required: !0,
-      showClear: !1,
-      options: () => this.service.accNoOptions(),
-      optionLabel: 'value',
-      optionValue: 'value',
-      templateLabel: 'templateLabel',
-    },
-    { field: 'AccCName', header: '科目名稱' },
-    {
-      field: 'DetailNo',
-      header: '廠商/員工代號',
-      type: 'template',
-      templateRef: this.venUsrTemplate(),
-    },
-    { field: 'DetailName', header: '廠商/員工名稱' },
-    {
-      field: 'NoteDesc',
-      header: '摘要',
-      type: 'dropdown',
-      options: (v: FIN53010DetailTable) => this.service.noteDescOptions().find(item => item.value === v.AccNo)?.data ?? [],
-      optionLabel: 'label',
-      optionValue: 'value',
-    },
-    {
-      field: 'AccAmtD',
-      header: '借方金額',
-      type: 'inputNumber',
-      format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
-    },
-    {
-      field: 'AccAmtC',
-      header: '貸方金額',
-      type: 'inputNumber',
-      format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
-    },
-    {
-      field: 'ORG_ID',
-      header: '組織代號',
-      type: 'dropdown',
-      showClear: !1,
-      options: () => this.service.orgNoOptions(),
-      optionLabel: 'label',
-      optionValue: 'value',
-    },
-    {
-      field: 'clearingCode',
-      header: '立沖代號',
-      type: 'dropdown',
-      options: () => [],
-      optionLabel: 'label',
-      optionValue: 'value',
-    },
-    {
-      field: 'ReflNo',
-      header: '對象別編號',
-      type: 'dropdown',
-      options: () => this.service.refNameOptions(),
-      optionLabel: 'label',
-      optionValue: 'value',
-    },
-    { field: 'recKey', header: '對帳KEY值', type: 'input' },
-  ]);
+  public readonly columns = computed<(Omit<EditColumn, 'field'> & { field: keyof FIN53010DetailTable; })[]>(() => {
+    const accMap = this.service.accNoMap();
+    const vendorMap = this.service.vendorMap();
+    const usrMap = this.service.usrMap();
+
+    return [
+      { field: 'SerNo', header: '序號' },
+      {
+        field: 'AccNo',
+        header: '科目代號',
+        type: this.isFormReadable ? void 0 : 'dropdown',
+        required: !0,
+        showClear: !1,
+        options: () => this.service.accNoOptions(),
+        optionLabel: 'value',
+        optionValue: 'value',
+        templateLabel: 'templateLabel',
+      },
+      {
+        field: 'AccCName',
+        header: '科目名稱',
+        format: (v, i, r) => r?.AccNo ? accMap.get(String(r.AccNo))?.label ?? '' : '',
+      },
+      {
+        field: 'DetailNo',
+        header: '廠商/員工代號',
+        type: this.isFormReadable ? void 0 : 'template',
+        templateRef: this.venUsrTemplate(),
+      },
+      {
+        field: 'DetailName',
+        header: '廠商/員工名稱',
+        format: (v, i, r) => r?.DetailNo ? vendorMap.get(String(r.DetailNo))?.['Name']
+          ?? usrMap.get(String(r.DetailNo))?.label ?? '' : '',
+      },
+      {
+        field: 'NoteDesc',
+        header: '摘要',
+        type: this.isFormReadable ? void 0 : 'dropdown',
+        options: (v: FIN53010DetailTable) => this.service.noteDescOptions().find(item => item.value === v.AccNo)?.data ?? [],
+        optionLabel: 'label',
+        optionValue: 'value',
+      },
+      {
+        field: 'AccAmtD',
+        header: '借方金額',
+        type: this.isFormReadable ? void 0 : 'inputNumber',
+        format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
+      },
+      {
+        field: 'AccAmtC',
+        header: '貸方金額',
+        type: this.isFormReadable ? void 0 : 'inputNumber',
+        format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
+      },
+      {
+        field: 'ORG_ID',
+        header: '組織代號',
+        type: this.isFormReadable ? void 0 : 'dropdown',
+        showClear: !1,
+        options: () => this.service.orgNoOptions(),
+        optionLabel: 'label',
+        optionValue: 'value',
+      },
+      {
+        field: 'clearingCode',
+        header: '立沖代號',
+        type: this.isFormReadable ? void 0 : 'dropdown',
+        options: () => [],
+        optionLabel: 'label',
+        optionValue: 'value',
+      },
+      {
+        field: 'ReflNo',
+        header: '對象別編號',
+        type: this.isFormReadable ? void 0 : 'dropdown',
+        options: () => this.service.refNameOptions(),
+        optionLabel: 'label',
+        optionValue: 'value',
+      },
+      {
+        field: 'recKey',
+        header: '對帳KEY值',
+        type: this.isFormReadable ? void 0 : 'input',
+      },
+    ];
+  });
 
   public readonly templateColumns: (Omit<Column, 'field'> & { field: keyof FIN52030Data; })[] = [
     { field: 'TempNo', header: '傳票號碼' },
