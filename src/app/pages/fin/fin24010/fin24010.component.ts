@@ -1,4 +1,4 @@
-import { AsyncPipe, DatePipe } from '@angular/common';
+import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -9,8 +9,9 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -24,7 +25,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
   selector: 'app-fin24010',
   templateUrl: './fin24010.component.html',
   standalone: true,
-  imports: [AsyncPipe, CalendarRangeQuickComponent, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, InputTextComponent, ButtonComponent, TranslateModule]
+  imports: [NgIf, ButtonModule, AsyncPipe, CalendarRangeQuickComponent, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, InputTextComponent, ButtonComponent, TranslateModule]
 })
 export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -65,20 +66,37 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
     CheckChangedUser: [null], // 異動帳號檢核
   });
   data: QueryFIN24010Response[] = [];
+  selectedItems: QueryFIN24010Response[] = [];
   lastQueryBody: QueryFIN24010Request | null = null;
   totalRecords = 0;
+  // 1. 原始查詢欄位 (預設/通用)
   columns: ReportColumn[] = [
     { field: 'VEN_No', header: '廠商編號' },
     { field: 'VEN_Name', header: '廠商名稱' },
     { field: 'NoteDesc', header: '摘要' },
-    { field: 'ACP_Date', header: '立帳日期' },
+    { field: 'ACP_Date', header: '立帳日期', format: formatDate },
     { field: 'VouNo', header: '傳票編號' },
-    { field: 'ACP_Amt', header: '應付金額' },
-    { field: 'PTA_Amt', header: '沖帳金額' },
-    { field: 'ACP_ReserveAmt', header: '保留款金額' },
-    { field: 'RetReserveAmt', header: '退保留款金額' },
-    { field: 'ACP_Balance', header: '未付金額' },
+    { field: 'ACP_Amt', header: '應付金額', format: formatAmount },
+    { field: 'PTA_Amt', header: '沖帳金額', format: formatAmount },
+    { field: 'ACP_ReserveAmt', header: '保留款金額', format: formatAmount },
+    { field: 'RetReserveAmt', header: '退保留款金額', format: formatAmount },
+    { field: 'ACP_Balance', header: '未付金額', format: formatAmount },
   ];
+
+  // 2. 異動帳號檢核專屬欄位 (新增)
+  checkChangedUserColumns: ReportColumn[] = [
+    { field: 'VEN_No', header: '廠商編號' },
+    { field: 'VEN_Name', header: '廠商名稱' },
+    { field: 'VEN_BNK_No', header: '原匯款銀行代號' },
+    { field: 'VEN_AccountName', header: '原帳戶名稱' },
+    { field: 'VEN_BankAccountNo', header: '原銀行帳號' },
+    { field: 'POS_VEN_BNK_No', header: 'POS銀行代號' },
+    { field: 'POS_VEN_AccountName', header: 'POS帳戶名稱' },
+    { field: 'POS_VEN_BankAccountNo', header: 'POS銀行帳號' },
+  ];
+
+  // 3. 追蹤目前是否處於異動檢核模式 (新增)
+  isCheckChangedUserMode = false;
 
   // 下拉選單/多選列表的 Options 宣告 (必須與 HTML 中的 options 屬性對應)
   Org_IdOptions = this.dropDown.querySys3100(); // 組織代碼
@@ -107,6 +125,7 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
 
   // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
+    this.isCheckChangedUserMode = false;
     this.handleSubmit(frm, () => {
       const body = {
         ...frm.value,
@@ -119,6 +138,33 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
         this.totalRecords = response.TotalCount;
         this.lastQueryBody = body;
       });
+    });
+  }
+  onCheckChangedUser(frm: FormGroup) {
+    // this.handleSubmit(frm, () => {
+    this.loading = true;
+    this.isCheckChangedUserMode = true;
+    const body = {
+      ...frm.value,
+      pageIndex: 1, // 第一次查詢預設從第一頁開始
+      pageSize: 30, // 第一次查詢預設30筆
+      ACP_YYYYMM: this.datePipe.transform(frm.value.ACP_YYYYMM, 'yyyyMM'),
+      CheckChangedUser: 'Y'
+    }
+    this.fin24010Service.queryFIN24010(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
+      this.data = response.Data;
+      this.totalRecords = response.TotalCount;
+      this.lastQueryBody = body;
+    });
+    // });
+  }
+  btnLoading = false;
+  onUpdateRemit() {
+    this.btnLoading = true;
+    this.fin24010Service.updateFIN24010Remit({
+      ACP_No_List: this.selectedItems.map(item => item.ACP_No)
+    }).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this)).subscribe(response => {
+      this.messageService.successBubble(response.Message);
     });
   }
 }

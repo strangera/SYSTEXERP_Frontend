@@ -51,6 +51,7 @@
   /* custom-theme */
   --table-header-bg-group: #a5b4fc;
   --table-header-bg: #c7d2fe;
+  --table-footer-bg: #eef2ff;
   --p-selectable-row-hover: #e3f2fd;
   --icon-button-bg: rgb(239, 246, 255);
   --icon-button-border: 1px solid rgb(212, 212, 212);

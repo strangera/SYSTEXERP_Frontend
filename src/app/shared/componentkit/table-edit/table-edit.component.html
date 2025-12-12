@@ -183,12 +183,12 @@
   </ng-template>
   <ng-template pTemplate="footer">
     <tr *ngIf="footerData" class="font-bold text-center text-sm text-primary">
-      <td class="text-center bg-gray-300" [colSpan]="calculateFooterColspan()" pFrozenColumn>
+      <td class="text-center" [colSpan]="calculateFooterColspan()" pFrozenColumn>
         <span class="font-bold">{{ footerSummaryLabel }}</span>
       </td>
       <ng-container *ngFor="let col of columns; let i = index">
         <td *ngIf="i >= tableUtilityService.getFirstAggregateIndex(columns, footerData)"  
-          [style]="{ 'text-align': col.textAlign || 'center' }" class="bg-gray-300">
+          [style]="{ 'text-align': col.textAlign || 'center' }">
           <span class="font-bold">
             {{
             col.format
@@ -202,12 +202,12 @@
 
     <tr *ngIf="getObjectKeys(_calculatedFooterData).length > 0 && !footerData"
       class="font-bold text-center text-sm text-primary">
-      <td class="text-center bg-gray-300" [colSpan]="calculateFooterColspan()" pFrozenColumn>
+      <td class="text-center" [colSpan]="calculateFooterColspan()" pFrozenColumn>
         <span class="font-bold">{{ footerSummaryLabel }}</span>
       </td>
       <ng-container *ngFor="let col of columns; let i = index">
         <td *ngIf="i >= tableUtilityService.getFirstCalculatedAggregateIndex(columns, _calculatedFooterData)"  
-          [style]="{ 'text-align': col.textAlign || 'center' }" class="bg-gray-300">
+          [style]="{ 'text-align': col.textAlign || 'center' }">
           <span class="font-bold">
             {{
             col.aggregate && _calculatedFooterData[col.field] !== undefined

@@ -90,7 +90,7 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
   //用於表格顯示格式化 (因為表格欄位需要 format 函式)
   private formatRepYYYYMM = (value: string, index: number | undefined, rowData: APS3018): string | number | null => {
     const repYYYYMM = this.calculateRepYYYYMM(rowData.PUR_GUIDate);
-    if (!repYYYYMM) return '';
+    if (!repYYYYMM) return '--';
     return `${repYYYYMM.substring(0, 4)}年${repYYYYMM.substring(4, 6)}月`;
   };
   APS3018Columns: EditColumn[] = [];
