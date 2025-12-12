@@ -8,13 +8,13 @@
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            [useGrouping]="false"
+          <app-input-text
+          
             label="記錄編號"
             controlName="recordCode"
             [control]="dataForm.controls.recordCode"
             [submitted]="submitted">
-          </app-input-number>
+          </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar-range
@@ -45,13 +45,13 @@
           </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            [useGrouping]="false"
+          <app-input-text
+          
             label="連絡電話"
             controlName="phone"
             [control]="dataForm.controls.phone"
             [submitted]="submitted">
-          </app-input-number>
+          </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
@@ -68,13 +68,13 @@
 
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            [useGrouping]="false"
+          <app-input-text
+          
             label="證件編號"
             controlName="paperCode"
             [control]="dataForm.controls.paperCode"
             [submitted]="submitted">
-          </app-input-number>
+          </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
@@ -88,13 +88,13 @@
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            [useGrouping]="false"
+          <app-input-text
+          
             label="設備編號"
             controlName="deviceCode"
             [control]="dataForm.controls.deviceCode"
             [submitted]="submitted">
-          </app-input-number>
+          </app-input-text>
         </div>
       </div>
 

@@ -6,8 +6,6 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
-import { HttpResponse } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 
 import { CommonModule } from '@angular/common';
@@ -19,28 +17,26 @@ import {
   formatDateToYYYY_MM_DD,
 } from '../../../shared/componentkit/table/table.model';
 
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 // UI
 import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonModule } from 'primeng/button';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 // Service & 型別
 import {
-  Cpm11030Service,
-  Cpm11030Row,
-  Cpm11030Request,
   ApiResponse,
+  Cpm11030Request,
+  Cpm11030Row,
+  Cpm11030Service,
 } from '../../../service/api/cpm/cpm11030.service';
 
 // 如果要吃 SYS1000 的證件類型，可以用這個 helper（你已經有這支）
@@ -64,7 +60,7 @@ type SortItem = { field: string; order: number };
     ButtonModule,
     ButtonComponent,
     CalendarRangeComponent,
-    InputNumberComponent,
+    // InputNumberComponent,
     InputTextComponent,
     MultiSelectComponent,
     DropdownComponent,
@@ -158,7 +154,7 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
   });
 
   constructor(
-    
+
     private cpm11030Service: Cpm11030Service,
     private cdr: ChangeDetectorRef
   ) {
@@ -214,8 +210,8 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
     const orderBy =
       sort && sort.length
         ? sort
-            .map((s) => `${s.field} ${s.order === -1 ? 'DESC' : 'ASC'}`)
-            .join(', ')
+          .map((s) => `${s.field} ${s.order === -1 ? 'DESC' : 'ASC'}`)
+          .join(', ')
         : null;
 
     const payload: Cpm11030Request = {
@@ -262,8 +258,8 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
           const rows: Cpm11030Row[] = Array.isArray(src)
             ? src
             : src
-            ? [src]
-            : [];
+              ? [src]
+              : [];
 
           const totalCount =
             Number((res as any)?.TotalCount ?? rows.length) || rows.length;
@@ -381,5 +377,5 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
     this.footerData = undefined;
   }
 
- 
+
 }

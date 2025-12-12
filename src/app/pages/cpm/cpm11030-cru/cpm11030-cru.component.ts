@@ -34,7 +34,7 @@ import {
     PanelModule,
     FormsModule,
     ReactiveFormsModule,
-    InputNumberComponent,
+    // InputNumberComponent,
     CalendarRangeComponent,
     InputTextComponent,
     DropdownComponent,

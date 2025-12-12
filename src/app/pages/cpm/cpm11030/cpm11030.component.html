@@ -25,13 +25,13 @@
         <!-- 第一排：記錄編號 + 出借日期 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
+            
               label="記錄編號"
               controlName="recordCode"
               [control]="queryForm.controls.recordCode"
               [submitted]="submitted">
-            </app-input-number>
+            </app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -66,13 +66,13 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
+            
               label="連絡電話"
               controlName="phone"
               [control]="queryForm.controls.phone"
               [submitted]="submitted">
-            </app-input-number>
+            </app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -91,13 +91,13 @@
         <!-- 第三排：證件編號 / 設備名稱 / 設備編號 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
+            
               label="證件編號"
               controlName="paperCode"
               [control]="queryForm.controls.paperCode"
               [submitted]="submitted">
-            </app-input-number>
+            </app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -113,13 +113,13 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
+            
               label="設備編號"
               controlName="deviceCode"
               [control]="queryForm.controls.deviceCode"
               [submitted]="submitted">
-            </app-input-number>
+            </app-input-text>
           </div>
         </div>
 
