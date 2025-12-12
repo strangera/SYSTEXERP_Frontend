@@ -2,12 +2,18 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
 
+    <!-- 每日設備可出借量維護 -->
+    <app-button
+      [type]="'button'"
+      label="每日設備可出借量維護"
+      (clickEvent)="openDailyDialog()"
+    ></app-button>
     <!-- 新增按鈕 -->
     <app-button
       btnType="create"
       [type]="'button'"
-      (clickEvent)="onCreate()">
-    </app-button>
+      (clickEvent)="onCreate()"
+    ></app-button>
   </div>
 
   <p-accordion>
@@ -15,23 +21,22 @@
       header="{{ 'query-conditions' | translate }}"
       [selected]="true"
       class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-
+      [headerStyleClass]="'query-accordionTab'"
+    >
       <form
         [formGroup]="queryForm"
         id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)">
-
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <!-- 第一排：記錄編號 + 出借日期 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-            
               label="記錄編號"
               controlName="recordCode"
               [control]="queryForm.controls.recordCode"
-              [submitted]="submitted">
-            </app-input-text>
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -40,8 +45,8 @@
               label="出借日期"
               [startControl]="queryForm.controls.borrowDateFrom"
               [endControl]="queryForm.controls.borrowDateTo"
-              [submitted]="submitted">
-            </app-calendar-range>
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -49,8 +54,8 @@
               label="姓名"
               controlName="name"
               [control]="queryForm.controls.name"
-              [submitted]="submitted">
-            </app-input-text>
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
 
@@ -61,18 +66,17 @@
               label="出借處理人員"
               controlName="staffName"
               [control]="queryForm.controls.staffName"
-              [submitted]="submitted">
-            </app-input-text>
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-            
               label="連絡電話"
               controlName="phone"
               [control]="queryForm.controls.phone"
-              [submitted]="submitted">
-            </app-input-text>
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -83,8 +87,8 @@
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.paperType"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
         </div>
 
@@ -92,12 +96,11 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-            
               label="證件編號"
               controlName="paperCode"
               [control]="queryForm.controls.paperCode"
-              [submitted]="submitted">
-            </app-input-text>
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -108,18 +111,17 @@
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.equipmentName"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-            
               label="設備編號"
               controlName="deviceCode"
               [control]="queryForm.controls.deviceCode"
-              [submitted]="submitted">
-            </app-input-text>
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
 
@@ -133,23 +135,22 @@
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.counterCode"
-              [submitted]="submitted">
-            </app-dropdown>
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
         </div>
 
         <!-- 按鈕列 -->
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button
             btnType="clear"
             [type]="'button'"
-            (clickEvent)="onClear(queryForm)">
-          </app-button>
+            (clickEvent)="onClear(queryForm)"
+          ></app-button>
 
-          <app-button
-            btnType="query"
-            [loading]="loading">
-          </app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -177,6 +178,95 @@
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
     [showDetail]="true"
-    (detail)="onDetail($event)">
-  </app-table-report>
+    (detail)="onDetail($event)"
+  ></app-table-report>
 </div>
+
+<!-- ✅ Dialog：每日設備可出借量維護（Table 改用 app-table） -->
+<app-dialog
+  [(visible)]="dailyDialogVisible"
+  header="每日設備可出借量維護"
+  width="900px"
+  [loading]="dailyLoading"
+  [disable]="dailySaving"
+  [showFooter]="true"
+  (save)="onDailySave()"
+  (visibleChange)="onDailyDialogVisibleChange($event)"
+>
+  <!-- 上方：服務台位置編號 / 營業日期 -->
+  <form [formGroup]="dailyForm" class="p-fluid">
+    <div class="grid justify-content-center p-fluid">
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-dropdown
+          label="服務台位置編號"
+          controlName="counterCode"
+          [options]="counterCodeOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="queryForm.controls.counterCode"
+          [submitted]="submitted"
+        ></app-dropdown>
+      </div>
+
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-calendar
+          calendarType="dateOne"
+          label="營業日期"
+          controlName="bizDate"
+          [control]="dailyForm.controls.bizDate"
+          [submitted]="submitted"
+        ></app-calendar>
+      </div>
+
+      <div
+        class="col-12 md:col-12 lg:col-2 flex align-items-end justify-content-end"
+      >
+        <app-button
+          [type]="'button'"
+          btnType="query"
+          [loading]="dailyLoading"
+          (clickEvent)="onDailyQuery()"
+        ></app-button>
+      </div>
+    </div>
+  </form>
+
+  <!-- ✅ 改用 app-table -->
+  <div class="mt-3">
+    <app-table
+      [tableKey]="'cpm11030_daily_equipment_' + dailyTableVer"
+      [dataKey]="'_rowKey'"
+      [title]="undefined"
+      [columns]="dailyColumns"
+      [data]="dailyRows"
+      [loading]="dailyLoading"
+      [showCaption]="false"
+      [showHeader]="true"
+      [showFilter]="false"
+      [showReportMode]="false"
+      [showReportPDF]="false"
+      [showReportExcel]="false"
+      [showExcel]="false"
+      [showExcelExport]="false"
+      [showExcelImport]="false"
+      [showCustomExcelImport]="false"
+      [showInsert]="false"
+      [showDelete]="false"
+      [showManage]="true"
+      [showDetail]="false"
+      [showEdit]="false"
+      [showSerialNo]="false"
+      [showCheckBox]="false"
+      [showPaginator]="false"
+      [scrollable]="true"
+      [scrollHeight]="'360px'"
+      [showSort]="false"
+      [showRowEdit]="true"
+      [alwaysEdit]="true"
+      [alwaysBlurValidate]="false"
+      [disabled]="dailySaving"
+      emptyMessage="無資料"
+      (rowEditSave)="onDailyRowEditSave($event)"
+    ></app-table>
+  </div>
+</app-dialog>

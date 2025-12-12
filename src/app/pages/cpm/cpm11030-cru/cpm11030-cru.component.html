@@ -10,20 +10,53 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
           
-            label="記錄編號"
+            label="出借編號"
             controlName="recordCode"
             [control]="dataForm.controls.recordCode"
             [submitted]="submitted">
           </app-input-text>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar-range
-            calendarType="dateRange"
-            label="出借日期"
-            [startControl]="dataForm.controls.borrowDateFrom"
-            [endControl]="dataForm.controls.borrowDateTo"
+                <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="出借處理人員"
+            controlName="staffName"
+            [control]="dataForm.controls.staffName"
             [submitted]="submitted">
-          </app-calendar-range>
+          </app-input-text>
+        </div>
+                <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="服務台位置編號"
+            controlName="counterCode"
+            [options]="counterCodeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.counterCode"
+            [submitted]="submitted">
+          </app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+        
+          
+                 <app-calendar
+          calendarType="dateOne"
+          label="出借日期"
+          controlName="borrowDate"
+          [control]="dataForm.controls.borrowDate"
+          [submitted]="submitted"
+        ></app-calendar>
+ 
+        </div>
+       <div class="col-12 md:col-6 lg:col-4">
+        
+       <app-calendar
+          calendarType="timeOne"
+          label="出借時間"
+          controlName="borrowTime"
+          [control]="dataForm.controls.borrowTime"
+          [submitted]="submitted"
+        ></app-calendar>
+ 
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
@@ -33,17 +66,8 @@
             [submitted]="submitted">
           </app-input-text>
         </div>
-      </div>
 
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="出借處理人員"
-            controlName="staffName"
-            [control]="dataForm.controls.staffName"
-            [submitted]="submitted">
-          </app-input-text>
-        </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
           
@@ -64,9 +88,7 @@
             [submitted]="submitted">
           </app-dropdown>
         </div>
-      </div>
 
-      <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
           
@@ -96,21 +118,9 @@
             [submitted]="submitted">
           </app-input-text>
         </div>
-      </div>
+ </div>
 
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="服務台位置編號"
-            controlName="counterCode"
-            [options]="counterCodeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.counterCode"
-            [submitted]="submitted">
-          </app-dropdown>
-        </div>
-      </div>
+
 
       <!-- 按鈕列：只在非 Read 模式顯示 -->
       <div

@@ -23,6 +23,7 @@ import {
   Cpm11030Service,
   Cpm11030CruPayload,
 } from '../../../service/api/cpm/cpm11030.service';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 
 @Component({
   selector: 'app-cpm11030-cru',
@@ -35,12 +36,13 @@ import {
     FormsModule,
     ReactiveFormsModule,
     // InputNumberComponent,
-    CalendarRangeComponent,
+    // CalendarRangeComponent,
     InputTextComponent,
     DropdownComponent,
     ButtonComponent,
     NgIf,
     TranslateModule,
+    CalendarComponent,
   ],
 })
 export class CPM11030CRUComponent
@@ -54,8 +56,8 @@ export class CPM11030CRUComponent
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     recordCode: [null as number | null, [Validators.maxLength(14)]], // 記錄編號(對應 Loan_No，可讓後端自產)
-    borrowDateFrom: [null as Date | null], // 出借日期(起) → 會當作 Loan_Date
-    borrowDateTo: [null as Date | null],   // 出借日期(迄) 預留不用送後端
+    borrowDate: [null as Date | null], // 出借日期(起) → 會當作 Loan_Date
+   borrowTime: [null as Date | null], // 出借時間(起) → 預留欄位，後端不處理
     name: ['', [Validators.maxLength(20)]], // 姓名(借用人)
 
     staffName: ['', [Validators.maxLength(10)]], // 出借處理人員
