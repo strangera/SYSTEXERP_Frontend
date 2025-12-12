@@ -80,8 +80,8 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     ReceFilter: ['A'],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 A:預設全部))
 
     pageSize: [20],
-    pageIndex: [0], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'RowType', order: 1 }]],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    // SortBy: [[{ field: 'RowType', order: 1 }]],
   });
 
   // 日期查詢條件表單
