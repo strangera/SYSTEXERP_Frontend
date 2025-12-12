@@ -170,13 +170,15 @@ export class Tls32050CRUComponent extends BasicCruPageComponent<TLS32050DetailRe
   queryTLS32050Detail() {
     // 把 OrgId 從 string[] 轉成 string
     const request = {
-      ...this.queryConditions,
-      BusClass: this.dataForm.get('TltKindName')?.value ?? '',
-      // OrgId: this.dataForm.get('OrgId')?.value ?? '',
       BaseDateFrom: formatDate(this.queryConditions.BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
       BaseDateTo: formatDate(this.queryConditions.BaseDateTo, 'yyyy-MM-dd', 'en-US'),
       CompareDateFrom: formatDate(this.queryConditions.CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
       CompareDateTo: formatDate(this.queryConditions.CompareDateTo, 'yyyy-MM-dd', 'en-US'),
+
+      OrgId: this.dataForm.get('OrgId')?.value ?? '',
+      BusClass: this.dataForm.get('TltKindName')?.value ?? '',
+      AmtTaxMode: ([] as string[]).concat(this.queryConditions.AmtTaxMode || []).join(','),
+      ReceFilter: ([] as string[]).concat(this.queryConditions.ReceFilter || []).join(','),
 
       FloorList: ([] as string[]).concat(this.queryConditions.FloorList || []).join(','),
       AreaList: ([] as string[]).concat(this.queryConditions.AreaList || []).join(','),
@@ -200,25 +202,22 @@ export class Tls32050CRUComponent extends BasicCruPageComponent<TLS32050DetailRe
       //   .map((x: any) => x.No ?? '')
       //   .join(','),
 
-      OrgId: ([] as string[]).concat(this.queryConditions.OrgList || []).join(','),
       TltKindList: ([] as string[]).concat(this.queryConditions.TltKindList || []).join(','),
       TltNoList: ([] as string[]).concat(this.queryConditions.TltNoList || []).join(','),
       TermTypeList: ([] as string[]).concat(this.queryConditions.TermTypeList || []).join(','),
       BuildingList: ([] as string[]).concat(this.queryConditions.BuildingList || []).join(','),
-      AmtTaxMode: ([] as string[]).concat(this.queryConditions.AmtTaxMode || []).join(','),
-      ReceFilter: ([] as string[]).concat(this.queryConditions.ReceFilter || []).join(','),
+
     } as TLS32050DetailRequest;
 
     console.log('單中分類之營業報表request', request);
-    console.log('明細api準備中');
     // console.log('單組織之營業報表request', JSON.stringify(request, null, 2));
 
     // this.tls32050Service.queryTLS32050Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
     //   console.log('單組織之營業報表response', res.Data);
-    //   this.data = res.Data ?? [];               // 查詢資料
-    //   this.historyRequestBody = request;        // 查詢條件
-    //   console.log('明細資料', res.Data);
-    //   this.totalRecords = res.TotalCount;        // 等候端
+    // this.data = res.Data ?? [];               // 查詢資料
+    // this.historyRequestBody = request;        // 查詢條件
+    // console.log('明細資料', res.Data);
+    // this.totalRecords = res.TotalCount;        // 等候端
     // })
   }
 
