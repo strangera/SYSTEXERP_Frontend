@@ -22,7 +22,7 @@ import { CellInput } from './table-edit-cell.model'; // 假設路徑正確
                [style]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available' }"
                [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
                [pKeyFilter]="percentKeyFilter"
-               (blur)="handleBlur()"
+               (blur)="handleBlur()"(keydown.enter)="handleEnter($event)"
                [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }" />
         <span class="d-block">%</span>
       </div>
@@ -70,5 +70,10 @@ export class PercentCellComponent {
       this.cellInput.col,
       this.cellInput.index
     );
+  }
+  handleEnter(event: Event) {
+    event.preventDefault(); // 阻止表單提交
+    event.stopPropagation(); // 阻止事件冒泡
+    this.handleBlur();
   }
 }
