@@ -71,14 +71,16 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
   selectedEditItems: POS2004Info[] = [];
   editColumns: EditColumn[] = [
     {
-      field: 'PLU_MagNo',
-      header: '商品管理編號',
+      field: 'PLU_No',
+      header: '國際條碼',
       width: '150px',
       type: 'input',
-      onBlur: (rowData: POS2004Info, value: string, col: EditColumn, index: number) => this.onPLU_MagNoBlur(rowData, value, col, index),
+      onBlur: (rowData: POS2004Info, value: string, col: EditColumn, index: number) => this.onPLU_NoBlur(rowData, value, col, index),
       validate: [validateRequired],
-    }, { field: 'PLU_Name', header: '商品名稱' },
-    { field: 'PLU_No', header: '國際條碼' },
+    },
+    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'PLU_MagNo', header: '商品管理編號' },
+
     { field: 'UNIT_NAME', header: '單位' },
   ]
   //#endregion
@@ -90,9 +92,9 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
   lastQueryBody: any;
   totalRecords = 0;
   columns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號', },
-    { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
+    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'PLU_MagNo', header: '商品管理編號', },
     { field: 'UNIT_NAME', header: '單位' },
   ]
   //#endregion
@@ -264,9 +266,9 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
   dialogTotalRecords = 0;
 
   dialogColumns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號' },
-    { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
+    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'UNIT_NAME', header: '單位' },
     { field: 'PLU_BoxQty', header: '包裝入數' },
     { field: 'PLU_PageNum', header: '棚割編號' },
@@ -410,14 +412,14 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     });
   }
 
-  // 手動輸入商品管理編號 代回商品資料
-  onPLU_MagNoBlur(rowData: POS2004Info, value: string, col: EditColumn, index: number) {
+  // 手動輸入國際條碼 代回商品資料
+  onPLU_NoBlur(rowData: POS2004Info, value: string, col: EditColumn, index: number) {
     const logoNo = this.dataForm.controls.LOGO_No.value;
     if (!logoNo || !value) {
       return;
     }
     const queryRequest: QueryTLS53010POS2004Request = {
-      PLU_MagNo: value,      // 商品管理編號
+      PLU_MagNo: value,      // 輸入商品管理編號/國際條碼都可以 模糊查詢
       LOGO_No: this.dataForm.get('LOGO_No')?.value || '',
       HOS_No: this.dataForm.get('HOS_No')?.value || '',
     };
