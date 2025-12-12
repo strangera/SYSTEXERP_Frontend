@@ -55,7 +55,7 @@ import { validateMinNumber } from '../../../shared/componentkit/table/validate-f
   ],
 })
 export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> implements OnInit {
-  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   dataForm = this.formBuilder.nonNullable.group({
     CRN_No: [{ value: '系統自動產生', disabled: true }], // 採購單號 (與 POS2016.PO_No 對應)
     VEN_No: [null as string | null, [Validators.required]], // 廠商編號 (與 POS2016.VEN_No 對應)
@@ -79,7 +79,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
   filteredLogoOptions: Option[] | null = null;
   // 新增：倉別下拉選單選項 (用於動態綁定到畫面上 HOS_No 的選項)
   filteredWarehouseOptions: Option[] | null = null;
-  warehouseOptions = this.dropdown.queryPos2034() // 倉別下拉選單選項
+  warehouseOptions = this.dropdown.queryPos2034(); // 倉別下拉選單選項
   // 新增：儲存完整的倉別資料 (用於過濾)
   fullWarehouseData: Option[] = [];
   editColumns: EditColumn[] = [
@@ -129,12 +129,12 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     { field: 'CRN_SalePrc', header: '售價', format: formatAmount },
     { field: 'CRN_SaleAmt', header: '售價小計', format: formatAmount },
     { field: 'CRN_Remark', header: '備註', type: 'input', width: '150px' },
-  ]
+  ];
   originalData: TLS52020Detail[] = [];
   data: TLS52020Detail[] = [];
   selectedItems: TLS52020Detail[] = [];
 
-  validateEntireRow = (rowData: IPOS2004DetailData): { isValid: boolean, errorMessage: string } => {
+  validateEntireRow = (rowData: IPOS2004DetailData): { isValid: boolean, errorMessage: string; } => {
     const hasDuplicatePLU_MagNo = this.data.some((item: TLS52020Detail) =>
       item.PLU_MagNo === rowData.PLU_MagNo && item._TABLE_KEY !== rowData._TABLE_KEY);
     if (hasDuplicatePLU_MagNo) {
@@ -418,7 +418,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : '應稅' },
     { field: 'PLU_SalePrc_UNI', header: '單價', showSort: false },
     { field: 'PLU_SalePrc', header: '售價' },
-  ]
+  ];
   dialogLoading = false;
   loadDialogData() {
     // 獲取大分類下拉選項
@@ -464,11 +464,11 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
       ...frm.getRawValue(),
       VEN_No: this.dataForm.controls.VEN_No.value,
       LOGO_No: this.dataForm.controls.LOGO_No.value,
-    }
+    };
     this.tls52020Service.queryPOS2004DetailVENNoTLS52020(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
       this.dialogData = response.Data;
       this.totalRecords = response.TotalCount;
-    })
+    });
   }
   // 在 TLS52020CRUComponent 內
   saveDialog() {
@@ -495,7 +495,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
         CRN_BuyTax: buyTax, // 新增
         CRN_BuyAmt: buyAmt, // 新增
         CRN_SaleAmt: Math.round(salePrc), // 修正
-      }
+      };
     });
 
     this.data = [...this.data, ...newItems];
@@ -539,12 +539,12 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     this.handleSubmit(frm, () => {
       if (this.data && this.data.length === 0) {
         this.messageService.errorBubble('明細至少要有一筆');
-        this.loading = false
+        this.loading = false;
         return;
       }
-      const valid = this.tableEditComponent.validateAndShowErrors()
+      const valid = this.tableEditComponent.validateAndShowErrors();
       if (!valid) {
-        this.loading = false
+        this.loading = false;
         return;
       }
       const formData = frm.getRawValue(); // 獲取所有表單值，包括 disabled 的
@@ -610,7 +610,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
             }
           });
       });
-    })
+    });
   }
   opLoading = false;
   opForm = this.formBuilder.group({
@@ -639,7 +639,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
       pageSize: 30,
       pageIndex: 1,
       SortBy: [{ field: 'PLU_MagNo', order: 1 }],
-    }
+    };
     this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
       this.suggestions = [...results.Data.map(item => ({
         ...item,

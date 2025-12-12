@@ -125,7 +125,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   ) {
     super();
   }
-  validateEntireRow = (rowData: IInsertTLS52050Detail): { isValid: boolean, errorMessage: string } => {
+  validateEntireRow = (rowData: IInsertTLS52050Detail): { isValid: boolean, errorMessage: string; } => {
     const hasDuplicatePLU_MagNo = this.data.some((item: IInsertTLS52050Detail) =>
       item.PLU_MagNo === rowData.PLU_MagNo && item._TABLE_KEY !== rowData._TABLE_KEY);
     if (hasDuplicatePLU_MagNo) {
@@ -161,7 +161,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
             VEN_No: venNo,
             LOGO_No: logoNo,
             PLU_MagNo: newData.PLU_MagNo,
-          }
+          };
           this.tls52050Service.queryTLS52050Detail(body2).pipe(untilDestroyed(this)).subscribe((results2) => {
             const detailData = results2.Data[0];
 
@@ -191,7 +191,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
             // *** 修正點 2：替換 data 的引用，通知通用表格元件更新 ***
             this.data = [...this.data];
             this.cdr.detectChanges();
-          })
+          });
         } else {
           this.messageService.errorBubble('查無該商品資訊');
 
@@ -258,14 +258,14 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       if (value) {
         this.vendorOptions = this.dropdown.queryPos2013LOGO_No({ LOGO_No: value });
       } else {
-        this.vendorOptions = of([])
+        this.vendorOptions = of([]);
       }
-    })
+    });
     this.dataForm.controls.MAM_Method.valueChanges.pipe(untilDestroyed(this), distinctUntilChanged()).subscribe(value => {
       const isPermanent = value === '1';
       this.dataForm.controls.MAM_EndDate.setValue(null);
       if (isPermanent) {
-        this.dataForm.controls.MAM_EndDate.disable()
+        this.dataForm.controls.MAM_EndDate.disable();
       } else {
         this.dataForm.controls.MAM_EndDate.enable();
       }
@@ -374,7 +374,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     { field: 'PLU_StockTaxType', header: '稅別', format: (value) => getSYS1000('PLU_StockTaxType', value) },
     { field: 'PLU_OrderPrc', header: '單價', showSort: false },
     { field: 'PLU_SalePrc', header: '售價' },
-  ]
+  ];
   dialogLoading = false;
   loadDialogData() {
     // 獲取大分類下拉選項
@@ -420,11 +420,11 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       VEN_No: this.dataForm.controls.VEN_No.value,
       LOGO_No: this.dataForm.controls.LOGO_No.value,
       ...frm.getRawValue(),
-    } as IQueryTLS52050DetailRequest
+    } as IQueryTLS52050DetailRequest;
     this.tls52050Service.queryTLS52050Detail(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
       this.dialogData = response.Data;
       this.totalRecords = response.TotalCount;
-    })
+    });
   }
   saveDialog() {
     this.dialogVisible = false;
@@ -457,11 +457,11 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
   });
-  suggestions: { PLU_MagNo: string, PLU_No: string, PLU_OrgPLUNo: string, PLU_Name: string }[] = [];
+  suggestions: { PLU_MagNo: string, PLU_No: string, PLU_OrgPLUNo: string, PLU_Name: string; }[] = [];
   fieldsConfig: FieldsConfig[] = [
     { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號 - 商品名稱', mainDataField: true },
   ];
-  opData: { PLU_MagNo: string, PLU_No: string, PLU_OrgPLUNo: string, PLU_Name: string }[] = [];// overlayPanel 裡面的table
+  opData: { PLU_MagNo: string, PLU_No: string, PLU_OrgPLUNo: string, PLU_Name: string; }[] = [];// overlayPanel 裡面的table
   opColumns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_No', header: '國際條碼' },
@@ -478,7 +478,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       pageSize: 30,
       pageIndex: 1,
       SortBy: [{ field: 'PLU_MagNo', order: 1 }],
-    }
+    };
     this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
       this.suggestions = [...results.Data.map(item => ({
         ...item,
@@ -486,7 +486,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       }))];
     });
   }
-  onformValueChanged(event: { queryNo: string, PLU_Name: string, pageIndex: number, pageSize: number, SortBy: { field: string, order: number }[] }) {
+  onformValueChanged(event: { queryNo: string, PLU_Name: string, pageIndex: number, pageSize: number, SortBy: { field: string, order: number; }[]; }) {
     this.opLoading = true;
     const body = {
       ...event,
@@ -522,7 +522,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
           MAM_UnitPrc: item.MAM_UnitPrc,
           MAD_Remark: item.MAD_Remark
         }))
-      }
+      };
       const $request = this.isFormCreateable ? this.tls52050Service.insertTLS52050(body) : this.tls52050Service.updateTLS52050(body);
       $request.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.messageService.successBubble(response.Message);
@@ -532,7 +532,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
         } else {
           this.onCancel();
         }
-      })
+      });
     });
   }
   onReset() {

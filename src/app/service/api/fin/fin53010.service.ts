@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { AccNoList, FIN52030Data, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030Payload, VendorList } from '@pages/fin/fin52030/fin52030.model';
+import { AccNoList, FIN52030Data, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030Payload } from '@pages/fin/fin52030/fin52030.model';
 import { AccDescOption, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010InsertPayload, FIN53010InsertResult, FIN53010Payload, FIN53010UpdatePayload, FIN53010UpdateResult, NoteDescResponse, VoucherType } from '@pages/fin/fin53010/fin53010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -30,7 +30,7 @@ export class FIN53010Service {
   /** 科目 */
   public readonly accNoOptions = signal<Option[]>([]);
   /** 廠商 */
-  public readonly vendorOptions = signal<(Option & { short: string; })[]>([]);
+  public readonly vendorOptions = signal<Option[]>([]);
   /** 員工 */
   public readonly usrOptions = signal<Option[]>([]);
   /** 組織代號 */
@@ -185,9 +185,9 @@ export class FIN53010Service {
 
   public getRefNameOptions(): void {
     this.refNameLoading.set(!0);
-    this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorOptions`, {}).pipe(
+    this.dropdownApi.queryGLS1016().pipe(
       take(1),
-      map(res => res.Data?.map(item => ({ value: item.VEN_No, label: item.VEN_Name } as Option)) ?? []),
+      map(res => res ?? []),
       tap(res => {
         this.refNameOptions.set(res);
         this.logger.debug('查詢RefNameOptions結果:', [res]);
@@ -237,11 +237,11 @@ export class FIN53010Service {
 
   public getVendorOptions(): void {
     this.venLoading.set(!0);
-    this.http.post<BaseQueryResponse<VendorList>>(`${apiUrl}/queryVendorOptions`, {}).pipe(
+    this.dropdownApi.queryPos2013({ VEN_Flag: '' }).pipe(
       take(1),
-      map(res => res.Data.map(item => ({ value: item.VEN_No, label: item.VEN_Name, short: item.VEN_ShortName } as Option))),
+      map(res => res ?? []),
       tap(res => {
-        this.vendorOptions.set(res as (Option & { short: string; })[]);
+        this.vendorOptions.set(res);
         this.logger.debug('查詢VendorOptions結果:', [res]);
       }),
       finalize(() => this.venLoading.set(!1)),
