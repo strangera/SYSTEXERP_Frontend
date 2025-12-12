@@ -8,7 +8,6 @@ import { Column, LazyLoadEvent } from '@shared/componentkit/table/table.model';
 import { AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { InputTextModule } from 'primeng/inputtext';
 import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
-import { TableRowSelectEvent } from 'primeng/table';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
 
 export interface FieldsConfig {
@@ -52,7 +51,7 @@ export class MultiselectTableComponent extends BasicKitComponent implements OnIn
   @Input() formGroup!: FormGroup;          // 下拉要輸入的form 必填
   @Input() dialogData: any = [];           // 下拉table 的資料 必填
   @Input() loading = false;
-  selectedItems: any;
+  selectedItems: any[] = [];
   @Input() dialogColumns: Column[] = [];       // 下拉table 的欄位配置 必填
   @Output() formValueChanged = new EventEmitter<any>(); // 表單改變事件
   @Input() totalRecords = 0;             // 總筆數
@@ -128,17 +127,21 @@ export class MultiselectTableComponent extends BasicKitComponent implements OnIn
     return '';
   }
 
-  onSelectionChange(event: TableRowSelectEvent) {
-    this.selectedItems = event.data;
-    this.select.emit(event.data);
+  onSelectionChange(event: any) {
+    this.selectedItems = event;
+    this.select.emit(event);
     this.suggestions = [...this.dialogData]
 
     // 【修改處】當 optionValue 為空時，設定完整的物件
-    this.control.setValue(this.optionValue ? this.selectedItems[this.optionValue] : this.selectedItems);
+    this.control.setValue(
+      this.optionValue
+        ? this.selectedItems.map(item => item[this.optionValue])
+        : this.selectedItems
+    );
 
-    this.op?.hide();
-    this.selectedItems = [];
-    this.formGroup.reset();
+    // this.op?.hide();
+    // this.selectedItems = [];
+    // this.formGroup.reset();
   }
 
   onLazyLoadData(event: LazyLoadEvent, dataForm: FormGroup) {
