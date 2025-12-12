@@ -18,6 +18,7 @@ import { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { Menu, MenuModule } from 'primeng/menu';
 import { finalize, Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
 import { TLS24010Data, TLS24010Request, Tls24010Service } from '../../../service/api/tls/tls24010.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -187,7 +188,22 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
           }
           this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
             this.messageService.successBubble(res.Message);
-            this.onSubmit(this.queryForm);
+            if (res.Data?.Is_Create_Ret) {
+              setTimeout(() => {
+                this.messageService.confirm({
+                  header: '折讓單已產生',
+                  message: '是否要列印折讓單?',
+                  accept: () => {
+                    this.tls24010Service.printTLS24010(res.Data?.TXN_Ret_No || '').pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+                      window.open(environment.ApiUrl + res.Data.Print_URL, '_blank');
+                      this.onSubmit(this.queryForm);
+                    })
+                  }
+                });
+              }, 1000);
+            } else {
+              this.onSubmit(this.queryForm);
+            }
           });
         },
         extraButtons: [
