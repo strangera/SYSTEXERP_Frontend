@@ -1,9 +1,11 @@
 import { DatePipe } from '@angular/common';
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { APS30181, Tls55040GoodData, Tls55040GoodQueryBody, Tls55040Service } from '@service/api/tls/tls55040.service';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { Column } from '@shared/componentkit/table/table.model';
 
@@ -12,10 +14,15 @@ import { Column } from '@shared/componentkit/table/table.model';
   selector: 'app-tls55040-good-data-dialog',
   templateUrl: './tls55040-good-data-dialog.component.html',
   standalone: true,
-  imports: [DialogComponent, TableReportComponent, TranslateModule],
+  imports: [ReactiveFormsModule, DialogComponent, TableReportComponent, TranslateModule, InputTextComponent],
   providers: [DatePipe]
 })
 export class Tls55040GoodDataDialogComponent implements OnInit {
+  formBuilder = inject(FormBuilder);
+  selectedTotalForm = this.formBuilder.group({
+    selectedTotal: [{ value: 0, disabled: true }],
+    taxIncludedTotal: [{ value: 0, disabled: true }],
+  });
 
   // ============== Input/Output 來自父元件 ==============
 
@@ -62,7 +69,22 @@ export class Tls55040GoodDataDialogComponent implements OnInit {
     // 初始載入資料 (如果元件在一開始就被創建)
     this.queryData();
   }
+  /**
+     *  新增：計算並更新選取單據的總金額到 selectedTotalForm
+     */
+  updateSelectedTotals(): void {
+    let totalNet = 0;
+    let totalAmt = 0;
 
+    if (this.ODMselectedItems && this.ODMselectedItems.length > 0) {
+      totalNet = this.ODMselectedItems.map(item => item.TotalBuyNet || 0).reduce((sum, current) => sum + current, 0);
+      totalAmt = this.ODMselectedItems.map(item => item.TotalBuyAmt || 0).reduce((sum, current) => sum + current, 0);
+    }
+
+    // 更新表單值
+    this.selectedTotalForm.controls.selectedTotal.setValue(totalNet);
+    this.selectedTotalForm.controls.taxIncludedTotal.setValue(totalAmt);
+  }
   /**
    * 執行商品資料查詢 (queryTLS55040GoodData)
    * 當父元件調用此方法或 TableReport 觸發懶載入時會執行
@@ -132,6 +154,6 @@ export class Tls55040GoodDataDialogComponent implements OnInit {
   closeDialog(): void {
     this.visibleChange.emit(false);
     this.ODMselectedItems = [];
-    // 不需要重置 ODMData，因為下次開啟時會重新查詢
+    this.updateSelectedTotals();
   }
 }

@@ -93,13 +93,13 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   selectedItems: IInsertTLS52050Detail[] | IUpdateTLS52050Detail[] = [];
   editColumns: EditColumn[] = [
     {
-      field: 'PLU_MagNo',
-      header: '商品管理編號',
+      field: 'PLU_No', header: '國際條碼',
       width: '150px',
       type: 'input',
       onBlur: (rowData: IPOS2004DetailData, value: string, col: EditColumn, index: number) => this.onPLU_MagNoBlur(rowData, value, col, index),
       validate: [validateRequired],
     },
+    { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'CAT_LNo', header: '大分類代號' },
     { field: 'CAT_LName', header: '大分類名稱' },
@@ -158,6 +158,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
             ...this.data.slice(0, index), {
               ID: 0,
               PLU_MagNo: results.Data[0].PLU_MagNo,
+              PLU_No: results.Data[0].PLU_No,
               PLU_Name: results.Data[0].PLU_Name,
               CAT_LNo: results.Data[0].CAT_LNo,
               CAT_LName: results.Data[0].CAT_LName,

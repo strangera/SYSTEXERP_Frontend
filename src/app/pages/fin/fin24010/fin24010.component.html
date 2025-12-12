@@ -195,14 +195,24 @@
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
+          <app-button label="異動帳號檢核" [loading]="loading" (click)="onCheckChangedUser(queryForm)"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report apiUrl="queryFIN24010" tableKey="FIN24010query" dataKey="id" [lastQueryBody]="lastQueryBody"
-    [totalRecords]="totalRecords" [data]="data" (edit)="onEdit($event)" (detail)="onDetail($event)" [columns]="columns"
-    [loading]="loading" [showDelete]="false"
-    [queryFunction]="fin24010Service.queryFIN24010.bind(fin24010Service)"></app-table-report>
+  <app-table-report apiUrl="queryFIN24010" tableKey="FIN24010query" dataKey="ACP_No" [lastQueryBody]="lastQueryBody"
+    [totalRecords]="totalRecords" [data]="data" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [showManage]="!isCheckChangedUserMode" [columns]="isCheckChangedUserMode ? checkChangedUserColumns : columns"
+    [loading]="loading" [showDelete]="false" [queryFunction]="fin24010Service.queryFIN24010.bind(fin24010Service)"
+    [showCheckBox]="isCheckChangedUserMode" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event">
+    <header>
+      <div class="flex align-items-center gap-2">
+        <p-button *ngIf="isCheckChangedUserMode" styleClass="p-2" label="更新匯款檔資料" [loading]="btnLoading"
+          icon="pi pi-file" (click)="onUpdateRemit()" [disabled]="!selectedItems || selectedItems.length === 0"  
+          [loading]="btnLoading"></p-button>
+      </div>
+    </header>
+  </app-table-report>
 </div>

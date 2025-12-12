@@ -1,15 +1,16 @@
 import { DatePipe, NgFor, NgIf } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { APS3018, APS30181, GetPayDateBody, Tls55040Data, Tls55040Service, Tls55040VenData, Tls55040VenQueryBody } from '@service/api/tls/tls55040.service';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateDuplicate, validateMaxLength, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { Column, formatAmount } from '@shared/componentkit/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
@@ -29,6 +30,7 @@ import { Tls55040GoodDataDialogComponent } from './tls55040-good-data-dialog/tls
 })
 export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
+    OTA_No: [{ value: null as string | null, disabled: true }],  // 單號 (系統產生，無法編輯)
     VEN_No: ['36260296-1' as string | null, [Validators.required]],   // 廠商編號 (下拉表格的主控項)
     ACP_YYYYMM: [new Date('2025-10-01') as Date | null, [Validators.required]],  // 結帳年月
     PUR_Uniform: [{ value: null as string | null, disabled: true }, [Validators.required]], // 統一編號 (由選取帶入)
@@ -62,54 +64,45 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
   // ========== Dropdown Table 相關屬性 END ==========
 
   // ========== APS30181 Table Edit 相關屬性 (保持不變) ==========
-  APS30181Columns: EditColumn[] = [
-    {
-      field: 'EVENT_TYPE', header: '單據別', format: (v) => v === '0' ? '進貨驗收單' : '進貨退回單', cellClass: row => {
-        return row.EVENT_TYPE === '0' ? 'text-primary' : 'text-red-500';
-      }
-    },
-    { field: 'EVENT_No', header: '單號', type: 'input', disabled: () => true },
-    { field: 'EVENT_DATE', header: '單據日期', type: 'date', disabled: () => true },
-    { field: 'EVENT_Net', header: '未稅金額', format: formatAmount, type: 'inputNumber', disabled: () => true, aggregate: 'sum' },
-    { field: 'EVENT_Tax', header: '稅額', format: formatAmount, type: 'inputNumber', disabled: () => true, aggregate: 'sum' },
-    { field: 'EVENT_Amt', header: '金額小計', format: formatAmount, type: 'inputNumber', disabled: () => true, aggregate: 'sum' },
-    { field: 'ADJ_Amt', header: '調整金額', format: formatAmount, type: 'inputNumber' },
-  ]
+  APS30181Columns: EditColumn[] = [];
   APS30181Data: APS30181[] = []; // 主資料表格
   APS30181selectedItems: APS30181[] = [];
   APS30181Loading = false;
   PUR_VoucherTypeOptions = getSYS1000Options('PUR_VoucherType').filter(v => v.value !== '23' && v.value !== '24')
   // ========== APS30181 Table Edit 相關屬性 END ==========
   // ========== APS3018 Table Edit 相關屬性 (保持不變) ==========
-  APS3018Columns: EditColumn[] = [
-    { field: 'TABTYPE', header: '單據別', type: 'checkbox', falseValue: '0', trueValue: '1', label: '抵讓' },
-    { field: 'PUR_GUINo', header: '發票/收據編號', type: 'input' },
-    { field: 'PUR_GUIDate', header: '發票/收據日期', type: 'date' },
-    { field: 'OTA_TaxType', header: '課稅別', type: 'dropdown', options: getSYS1000Options('OTA_TaxType'), optionLabel: 'label', optionValue: 'value' },
-    {
-      field: 'PUR_TotNet', header: '未稅金額', format: formatAmount, type: 'inputNumber',
-      calculate: (rowData, value) => {
-        return {
-          'PUR_TotTax': rowData.OTA_TaxType === '1' ? Math.round(value * 0.05) : 0,
-          'PUR_TotAmt': rowData.OTA_TaxType === '1' ? Math.round(value * 1.05) : value
-        };
-      }
-    },
-    { field: 'PUR_TotTax', header: '稅額', format: formatAmount, type: 'inputNumber' },
-    { field: 'PUR_TotAmt', header: '應稅金額', format: formatAmount, type: 'inputNumber' },
-    {
-      field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown',
-      options: this.PUR_VoucherTypeOptions,
-      optionLabel: 'value', optionValue: 'value'
-    },
-  ]
+  // 計算申報年月 YYYYMM 的函式
+  private calculateRepYYYYMM(dateValue: string | Date | null): string | null {
+    if (!dateValue) return null;
+    const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+    if (isNaN(date.getTime())) return null;
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1; // getMonth() 回傳 0-11
+    let repMonth: number;
+    if (month % 2 === 0) {
+      repMonth = month;
+    } else {
+      repMonth = month + 1;
+    }
+    const repMonthStr = repMonth.toString().padStart(2, '0');
+    return `${year}${repMonthStr}`;
+  }
+  //用於表格顯示格式化 (因為表格欄位需要 format 函式)
+  private formatRepYYYYMM = (value: string, index: number | undefined, rowData: APS3018): string | number | null => {
+    const repYYYYMM = this.calculateRepYYYYMM(rowData.PUR_GUIDate);
+    if (!repYYYYMM) return '--';
+    return `${repYYYYMM.substring(0, 4)}年${repYYYYMM.substring(4, 6)}月`;
+  };
+  APS3018Columns: EditColumn[] = [];
   APS3018Data: APS3018[] = []; // 主資料表格
   APS3018selectedItems: APS3018[] = [];
   APS3018Loading = false;
   defaultInsertData = {
     TABTYPE: '0',
     OTA_TaxType: '1',
-    PUR_VoucherType: '25'
+    PUR_VoucherType: '25',
+    PUR_DirectType: '0',
+    PUR_DiscNo: '1',
   };
   // ========== APS3018 Table Edit 相關屬性 END ==========
   // ========== 彈窗相關屬性 ==========
@@ -126,17 +119,159 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
   ngOnInit(): void {
     this.initializePage('TLS55040', this.dataForm);
     this.loadVenData();
-    // 結帳年月變動時，清空廠商和連動資料，確保資料連動正確
-    this.dataForm.get('ACP_YYYYMM')?.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
-      this.dataForm.get('VEN_No')?.reset(null);
-      this.dataForm.get('VEN_PayConditionDay')?.reset(null);
-      this.dataForm.get('ACP_PayDate')?.reset(null);
-      this.dataForm.get('TABTYPE')?.reset('0');
-      this.APS30181Data = []; // 清空明細資料
-      this.updateTotals();
-    });
+    if (!this.isFormCreateable && this.rowdata) {
+      // 讀取既有資料：使用 this.rowdata.OTA_No 查詢明細
+      this.tls55040Service.queryDetailTLS55040({ OTA_No: this.rowdata.OTA_No }).pipe(untilDestroyed(this)).subscribe(res => {
+        const detailData = res.Data?.[0];
+        if (!detailData) return;
+        this.APS30181Data = detailData.APS30181List;
+        this.APS3018Data = detailData.APS3018List;
+        this.dataForm.patchValue({
+          ACP_YYYYMM: new Date(detailData.ACP_YYYYMM.substring(0, 4) + '-' + detailData.ACP_YYYYMM.substring(4, 6) + '-01'),
+          ACP_PayDate: new Date(detailData.ACP_PayDate),
+          TABTYPE: detailData.APS3018List[0]?.TABTYPE || null,
+        });
+        // 3. 讀取廠商詳細資料，以填寫表單中缺少的 PUR_Uniform 和 VEN_PayConditionDay
+        this.tls55040Service.queryTLS55040VenData({ VEN_No: detailData.VEN_No }).pipe(untilDestroyed(this)).subscribe(venRes => {
+          const venData = venRes.Data[0];
+          if (venData) {
+            this.dataForm.patchValue({
+              PUR_Uniform: venData.VEN_Uniform,
+              VEN_PayConditionDay: venData.VEN_PayConditionDay,
+            });
+          }
+        });
+        this.updateTotals();
+        this.dataForm.disable({ emitEvent: false });
+      });
+    } else {
+      // 結帳年月變動時，清空廠商和連動資料，確保資料連動正確
+      this.dataForm.get('ACP_YYYYMM')?.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
+        this.dataForm.get('VEN_No')?.reset(null);
+        this.dataForm.get('VEN_PayConditionDay')?.reset(null);
+        this.dataForm.get('ACP_PayDate')?.reset(null);
+        this.dataForm.get('TABTYPE')?.reset('0');
+        this.APS30181Data = []; // 清空明細資料
+        this.updateTotals();
+      });
+    }
+    this.initTableColumn();
+  }
+  initTableColumn(): void {
+    this.APS30181Columns = [
+      {
+        field: 'EVENT_TYPE', header: '單據別',
+        format: (v) => v === '0' ?
+          (this.isFormCreateable ? '進貨驗收單' : '進貨') :
+          (this.isFormCreateable ? '進貨退回單' : '退貨'),
+        cellClass: row => {
+          return row.EVENT_TYPE === '0' ? 'text-primary' : 'text-red-500';
+        }
+      },
+      { field: 'EVENT_No', header: '單號', type: 'input', disabled: () => true },
+      { field: 'EVENT_DATE', header: '單據日期', type: 'date', disabled: () => true },
+      { field: 'EVENT_Net', header: '未稅金額', format: formatAmount, type: 'inputNumber', disabled: () => true, aggregate: 'sum', textAlign: 'right' },
+      { field: 'EVENT_Tax', header: '稅額', format: formatAmount, type: 'inputNumber', disabled: () => true, aggregate: 'sum', textAlign: 'right' },
+      { field: 'EVENT_Amt', header: this.isFormCreateable ? '金額小計' : '應稅金額', format: formatAmount, type: 'inputNumber', disabled: () => true, aggregate: 'sum', textAlign: 'right' },
+      { field: 'ADJ_Amt', header: this.isFormCreateable ? '調整金額' : '未稅調整金額', format: formatAmount, max: 9999999999, type: 'inputNumber', aggregate: 'sum', textAlign: 'right' },
+    ]
+    this.APS3018Columns = [
+      { field: 'TABTYPE', header: '單據別', format: v => getSYS1000('TABTYPE', v), type: this.isFormCreateable ? 'checkbox' : undefined, falseValue: '0', trueValue: '1', label: '抵讓' },
+      {
+        field: 'PUR_GUINo', header: '發票/收據編號', type: 'input', validate: [validateDuplicate, validateRequired, validateMaxLength(10), AA00000000], maxLength: 10,
+        onBlur: (rowData) => this.toUpperCase(rowData)
+      },
+      {
+        field: 'PUR_GUIDate', header: '發票/收據日期', type: 'date', calculate: (rowData, dateValue) => {
+          const repYYYYMM = this.calculateRepYYYYMM(dateValue);
+          return {
+            'PUR_RepYYYYMM': repYYYYMM,
+          };
+        }, validate: [validateRequired]
+      },
+      { field: 'PUR_RepYYYYMM', header: '申報年月', format: this.formatRepYYYYMM, validate: [validateRequired] },
+      {
+        field: 'OTA_TaxType', header: '課稅別', validate: [validateRequired], type: this.isFormCreateable ? 'dropdown' : undefined, options: getSYS1000Options('OTA_TaxType'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('OTA_TaxType', v), disabled: () => !this.isFormCreateable,
+        calculate: (rowData, value) => {
+          return {
+            PUR_Tax: value !== '1' ? 0 : rowData.PUR_Tax,
+            PUR_TotAmt: value !== '1' ? rowData.PUR_TotNet : rowData.PUR_TotAmt,
+          };
+        },
+      },
+      { field: 'PUR_DirectType', header: '發票用途', type: this.isFormCreateable ? 'dropdown' : undefined, options: getSYS1000Options('PUR_DirectType'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('PUR_DirectType', v) },
+      { field: 'PUR_DiscNo', header: '扣抵代號', type: this.isFormCreateable ? 'dropdown' : undefined, options: getSYS1000Options('PUR_DiscNo'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('PUR_DiscNo', v) },
+      {
+        field: 'PUR_TotNet', header: '未稅金額', format: formatAmount, validate: [validateRequired], max: 9999999999, maxLength: 10, type: 'inputNumber',
+        onBlur: (rowData, value) => this.onPurTotNetBlur(rowData, value), textAlign: 'right', aggregate: 'sum', min: 0,
+      },
+      {
+        field: 'PUR_TotTax', header: '稅額', format: formatAmount, validate: [validateRequired], max: 9999999999, min: 0, maxLength: 10, type: 'inputNumber', textAlign: 'right', aggregate: 'sum',
+        onBlur: (rowData, value) => this.onPurTotTaxBlur(rowData, value), disabled: (value, index, rowData) => {
+          if (rowData.OTA_TaxType !== '1') { rowData.PUR_TotTax = 0 }
+          return rowData.OTA_TaxType !== '1'
+        }
+      },
+      { field: 'PUR_TotAmt', header: '應稅金額', format: formatAmount, validate: [validateRequired], max: 9999999999, min: 0, maxLength: 10, type: 'inputNumber', disabled: () => true, aggregate: 'sum', textAlign: 'right' },
+      {
+        field: 'PUR_VoucherType', header: '發票格式', validate: [validateRequired], type: 'dropdown',
+        options: this.PUR_VoucherTypeOptions,
+        optionLabel: 'value', optionValue: 'value'
+      },
+    ]
+  }
+  /**
+ * PUR_TotNet (未稅金額) 失焦時的連動計算邏輯
+ * @param rowData 當前行的數據
+ * @param newNetValue 新的未稅金額值
+ */
+  onPurTotNetBlur(rowData: APS3018, newNetValue: number): void {
+    // 1. 取得新的未稅金額 (N)
+    const purTotNet = newNetValue || 0;
+
+    // 2. 根據 OTA_TaxType 計算稅額 (T = N * 0.05) 和總金額 (A)
+    let purTotTax = 0;
+    let purTotAmt = purTotNet;
+
+    if (rowData.OTA_TaxType === '1') { // 應稅時
+      purTotTax = Math.round(purTotNet * 0.05);
+      purTotAmt = Math.round(purTotNet * 1.05);
+    }
+
+    // 3. 更新 rowData
+    rowData.PUR_TotTax = purTotTax;
+    rowData.PUR_TotAmt = purTotAmt;
+
+    // 4. 強制更新表頭總計
+    this.updateTotals();
+
+    // 5. 確保畫面更新
+    this.cdr.detectChanges();
   }
 
+  /**
+   * PUR_TotTax (稅額) 失焦時的連動計算邏輯
+   * @param rowData 當前行的數據
+   * @param newTaxValue 新的稅額值
+   */
+  onPurTotTaxBlur(rowData: APS3018, newTaxValue: number): void {
+    // 1. 取得當前的未稅金額 (N)
+    const purTotNet = rowData.PUR_TotNet || 0;
+
+    // 2. 計算總金額 (A = N + T)
+    const purTotAmt = rowData.OTA_TaxType === '1'
+      ? Math.round(purTotNet + (newTaxValue || 0))
+      : purTotNet; // 非應稅時，總金額 = 未稅金額 (忽略手動輸入的稅額，因為邏輯上應為 0)
+
+    // 3. 更新 rowData
+    rowData.PUR_TotAmt = purTotAmt;
+
+    // 4. 強制更新表頭總計
+    this.updateTotals();
+
+    // 5. 確保畫面更新
+    this.cdr.detectChanges();
+  }
   loadVenData(body?: Record<string, string>): void {
     this.vendorTableLoading = true;
     const queryBody: Tls55040VenQueryBody = { VEN_No: body?.['VEN_No'] || '' };
@@ -204,26 +339,10 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
    * 新增：計算並更新表頭四個總計欄位
    */
   updateTotals(): void {
-    // 1. PUR_TotNet = 發票資料Table (APS3018Data) 的未稅金額 (PUR_TotNet) 加總
-    const PUR_TotNet = this.APS3018Data
-      .map(item => item.PUR_TotNet || 0)
-      .reduce((sum, current) => sum + current, 0);
-
-    // 2. EVENT_TotAmt = 單據資料Table (APS30181Data) 的未稅金額 (EVENT_Net) 加總
-    const EVENT_TotAmt = this.APS30181Data
-      .map(item => item.EVENT_Net || 0)
-      .reduce((sum, current) => sum + current, 0);
-
-    // 3. ADJ_TotAmt = 單據資料Table (APS30181Data) 的調整金額 (ADJ_Amt) 加總
-    // 假設 ADJ_Amt 欄位在 APS30181 結構中存在
-    const ADJ_TotAmt = this.APS30181Data
-      .map(item => item.ADJ_Amt || 0)
-      .reduce((sum, current) => sum + current, 0);
-
-    // 4. DIFF_TotAmt = PUR_TotNet – EVENT_TotAmt + ADJ_TotAmt
+    const PUR_TotNet = this.APS3018Data.map(item => item.PUR_TotNet || 0).reduce((sum, current) => sum + current, 0);
+    const EVENT_TotAmt = this.APS30181Data.map(item => item.EVENT_Net || 0).reduce((sum, current) => sum + current, 0);
+    const ADJ_TotAmt = this.APS30181Data.map(item => item.ADJ_Amt || 0).reduce((sum, current) => sum + current, 0);
     const DIFF_TotAmt = EVENT_TotAmt - PUR_TotNet + ADJ_TotAmt;
-
-    // 🎯 更新 dataForm 的值 (並確保值被設為 number)
     this.dataForm.patchValue({
       PUR_TotNet: PUR_TotNet,
       EVENT_TotAmt: EVENT_TotAmt,
@@ -231,11 +350,103 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
       DIFF_TotAmt: DIFF_TotAmt,
     });
   }
-
+  @ViewChild('APS30181TableEdit') APS30181TableEdit!: TableEditComponent;
+  @ViewChild('APS3018TableEdit') APS3018TableEdit!: TableEditComponent;
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      // TODO: 組裝完整的 Tls55040InsertBody，包含 APS30181List 和 APS3018List
-      // 並呼叫 this.tls55040Service.insertTLS55040(body)
+      if (!this.APS30181Data.length) {
+        this.messageService.errorBubble('請先新增單據資料 !!!');
+        this.loading = false
+        return;
+      };
+      if (!this.APS3018Data.length) {
+        this.messageService.errorBubble('請先新增發票資料 !!!');
+        this.loading = false
+        return;
+      }
+      const valid1 = this.APS30181TableEdit.validateAndShowErrors();
+      if (!valid1) {
+        this.loading = false;
+        return;
+      }
+      const valid2 = this.APS3018TableEdit.validateAndShowErrors();
+      if (!valid2) {
+        this.loading = false;
+        return;
+      }
+      if ((this.dataForm.controls.EVENT_TotAmt.value || 0) + (this.dataForm.controls.ADJ_TotAmt.value || 0) !== (this.dataForm.controls.PUR_TotNet.value || 0)) {
+        this.messageService.errorBubble('單據未稅總金額 加 總未稅調整金額 與 未稅發票總金額 不平 !!!');
+        this.loading = false
+        return;
+      }
+      const body = {
+        ...frm.getRawValue(),
+        ACP_PayDate: this.datePipe.transform(frm.controls['ACP_PayDate'].value, 'yyyy-MM-dd'),
+        ACP_YYYYMM: this.datePipe.transform(frm.controls['ACP_YYYYMM'].value, 'yyyyMM'),
+        APS30181List: this.APS30181Data.map(item => ({
+          ...item,
+          EVENT_DATE: this.datePipe.transform(item.EVENT_DATE, 'yyyy-MM-dd')
+        })),
+        APS3018List: this.APS3018Data.map(item => ({
+          ...item,
+          PUR_GUIDate: this.datePipe.transform(item.PUR_GUIDate, 'yyyy-MM-dd')
+        }))
+      };
+      const $req = this.isFormCreateable ? this.tls55040Service.insertTLS55040(body) : this.tls55040Service.updateTLS55040(body);
+      $req.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        this.messageService.successBubble(res.Message);
+        if (this.isFormCreateable) {
+          this.dataForm.reset();
+        } else if (this.isFormEditable) {
+          this.onCancel();
+        }
+      })
     })
   }
+  toUpperCase(rowData: APS3018): void {
+    if (rowData && rowData.PUR_GUINo) {
+      rowData.PUR_GUINo = rowData.PUR_GUINo.toUpperCase();
+    }
+  }
+}
+export function AA00000000(value: string): { isValid: boolean; errorMessage: string[] } {
+  // 移除頭尾空白，確保驗證準確
+  const cleanedValue = value ? value.trim() : '';
+
+  // 1. 優先判斷：長度檢查 (必須是 10 個字元)
+  if (cleanedValue.length !== 10) {
+    return {
+      isValid: false,
+      errorMessage: ['發票號碼必須為 10 個字元。'],
+    };
+  }
+
+  // 2. 次要判斷：前兩碼檢查 (必須是英文字母)
+  const prefix = cleanedValue.substring(0, 2);
+  // 正則表達式：開頭必須是兩個 A-Z 的字母，不區分大小寫
+  const prefixRegex = /^[A-Z]{2}$/i;
+  if (!prefixRegex.test(prefix)) {
+    return {
+      isValid: false,
+      errorMessage: ['發票號碼前 2 碼請輸入英文字母。'],
+    };
+  }
+
+  // 3. 第三判斷：後八碼檢查 (必須是數字)
+  const numericPart = cleanedValue.substring(2); // 取出從索引 2 開始到結尾的 8 個字元
+  // 正則表達式：必須是 8 個數字 (0-9)
+  const fullNumberRegex = /^[0-9]{8}$/;
+
+  if (!fullNumberRegex.test(numericPart)) {
+    return {
+      isValid: false,
+      errorMessage: ['發票號碼後 8 碼必須為數字。'],
+    };
+  }
+
+  // 所有檢查都通過
+  return {
+    isValid: true,
+    errorMessage: [],
+  };
 }

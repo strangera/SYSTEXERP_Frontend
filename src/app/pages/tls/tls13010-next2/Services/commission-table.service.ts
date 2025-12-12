@@ -95,7 +95,7 @@ export class CommissionTableService {
         const newLevelItem: DiscountLevelItem = {
           id: this.generateTempId(),
           _source: 'new',  // 🆕 前端新增的
-          selected: true,
+          selected: false,  // 🔑 修改：預設為 false，交給使用者自己決定
           cag_barcode: discountItem.cag_barcode,
           contract_period: contractPeriod,  // 🆕 合約期間
           tlt_bdate: new Date(discountItem.tlt_bdate),  // 🔑 同步起始日期
@@ -129,18 +129,15 @@ export class CommissionTableService {
 
           // 在計算出的位置插入新 level
           parentItem.discountLevelItems.splice(insertIndex, 0, newLevelItem);
-          console.log(`✅ 已在索引 ${insertIndex} 位置為折扣 ${discountItem.cag_barcode} (ID: ${discountItem.id}) 插入 Level 項目 (ID: ${newLevelItem.id})`);
+          console.log(`✅ 已在索引 ${insertIndex} 位置為折扣 ${discountItem.cag_barcode} (ID: ${discountItem.id}) 插入 Level 項目 (ID: ${newLevelItem.id})，selected 預設為 false`);
         } else {
           // 如果找不到索引，還是用 push（向後兼容）
           parentItem.discountLevelItems.push(newLevelItem);
-          console.log(`✅ 已為折扣 ${discountItem.cag_barcode} (ID: ${discountItem.id}) 新增一個 Level 項目 (ID: ${newLevelItem.id}) [使用 push]`);
+          console.log(`✅ 已為折扣 ${discountItem.cag_barcode} (ID: ${discountItem.id}) 新增一個 Level 項目 (ID: ${newLevelItem.id}) [使用 push]，selected 預設為 false`);
         }
       } else if (linkedLevelItems.length > 0) {
-        // 如果已存在 level，將 selected 設為 true
-        linkedLevelItems.forEach(level => {
-          level.selected = true;
-        });
-        console.log(`🔄 已將折扣 ${discountItem.cag_barcode} 的 ${linkedLevelItems.length} 個 Level 項目 selected 設為 true`);
+        // 🔑 修改：不再自動將 selected 設為 true，保持原有狀態
+        console.log(`ℹ️ 折扣 ${discountItem.cag_barcode} 已有 ${linkedLevelItems.length} 個 Level 項目，保持原有 selected 狀態`);
       }
     } else {
       // --- 取消勾選邏輯（方案 B：只更新 selected 狀態）---
@@ -517,13 +514,13 @@ export class CommissionTableService {
       const hasMatchingDiscount = validDiscountIds.has(level.charged_id);
 
       if (hasMatchingDiscount) {
-        // 有對應的 discount → 設定 selected = true
-        level.selected = true;
-        console.log(`  ✅ Level ${level.id} (charged_id: ${level.charged_id}) → selected = true`);
+        // 🔑 修改：有對應的 discount → 保持原有的 selected 狀態，不強制設為 true
+        // level.selected 保持不變，讓使用者自己控制
+        console.log(`  ✅ Level ${level.id} (charged_id: ${level.charged_id}) → 保持 selected = ${level.selected}`);
       } else {
         // 沒有對應的 discount → 設定 selected = false（不刪除）
         level.selected = false;
-        console.log(`  ❌ Level ${level.id} (charged_id: ${level.charged_id}) → selected = false`);
+        console.log(`  ❌ Level ${level.id} (charged_id: ${level.charged_id}) → selected = false (無對應 discount)`);
       }
     });
 

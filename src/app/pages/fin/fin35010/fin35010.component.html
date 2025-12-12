@@ -103,7 +103,7 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+  <app-table-report dataKey="Id" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [totalRecords]="totalRecords" [loading]="loading" [lastQueryBody]="lastQuery" [showDelete]="false"
     [queryFunction]="fin35010Service.queryFIN35010.bind(fin35010Service)"></app-table-report>
 </div>

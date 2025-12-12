@@ -238,8 +238,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   /**
-   * 🆕 初始化 discount 和 level 的 selected 狀態（雙向同步）
-   * 邏輯：如果 level 存在且不是 deleted，則 discount 和 level 都設為 selected = true
+   * 🆕 初始化 discount 和 level 的 selected 狀態
+   * 🔑 修改：不再強制設定狀態，而是根據 API 返回的資料來決定
+   * 只處理邏輯一致性檢查，不強制改變使用者的選擇
    */
   private initializeDiscountSelectedState(commissionItem: CommissionItem): void {
     if (!commissionItem.discountSettingItems || !commissionItem.discountLevelItems) {
@@ -253,19 +254,14 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         level => level.charged_id === discount.id && level._status !== 'deleted'
       );
 
+      // 🔑 修改：不再強制設定 selected，保持 API 返回的原始狀態
+      // discount.selected 和 level.selected 都保持原有值
       if (correspondingLevels.length > 0) {
-        // 如果有對應的 level，discount 和 level 都設為 selected = true
-        discount.selected = true;
-        correspondingLevels.forEach(level => {
-          level.selected = true;
-        });
-      } else {
-        // 如果沒有對應的 level，discount 設為 selected = false（除非原本就是勾選的）
-        // 這裡保持原本的狀態，不強制改變
+        console.log(`Discount ${discount.cag_barcode} 有 ${correspondingLevels.length} 個對應的 level，保持原有 selected 狀態`);
       }
     });
 
-    // 再處理沒有對應 discount 的 level（理論上不應該發生，但保險起見）
+    // 處理沒有對應 discount 的 level（孤立的 level，應該設為 selected = false）
     commissionItem.discountLevelItems.forEach(level => {
       if (level._status === 'deleted') {
         level.selected = false;
@@ -276,13 +272,12 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         d => d.id === level.charged_id
       );
 
-      if (correspondingDiscount) {
-        // level 的 selected 跟隨 discount
-        level.selected = correspondingDiscount.selected;
-      } else {
+      if (!correspondingDiscount) {
         // 沒有對應的 discount，設為 false
         level.selected = false;
+        console.log(`Level ${level.id} 沒有對應的 discount，設為 selected = false`);
       }
+      // 🔑 如果有對應的 discount，保持 level 原有的 selected 狀態
     });
 
     console.log('✅ 初始化 selected 狀態完成:', {
@@ -829,7 +824,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         commissionItem.discountSettingItems = currentTabItems.map(item => ({
           id: item.id,
           _source: item._source,  // 🔑 加這個
-          selected: item.selected || false,
+          selected: item.selected !== undefined ? item.selected : false,  // 🔑 修正：確保 false 值被正確保留
           cag_barcode: item.cag_barcode || '',
           tlt_bdate: this.ensureValidDate(item.tlt_bdate),
           tlt_edate: this.ensureValidDate(item.tlt_edate),
@@ -843,7 +838,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       case 'annual':
         commissionItem.annualPerformanceItems = currentTabItems.map(item => ({
           id: item.id,
-          selected: item.selected || false,
+          selected: item.selected !== undefined ? item.selected : false,  // 🔑 修正：確保 false 值被正確保留
           tlt_bdate: this.ensureValidDate(item.tlt_bdate),
           tlt_edate: this.ensureValidDate(item.tlt_edate),
           year_amount: item.year_amount || 0,
@@ -856,13 +851,15 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         commissionItem.discountLevelItems = currentTabItems.map(item => ({
           id: item.id,
           _source: item._source,  // 🔑 加這個
-          selected: item.selected || false,
+          selected: item.selected !== undefined ? item.selected : false,  // 🔑 修正：確保 false 值被正確保留
           cag_barcode: item.cag_barcode || '',
           contract_period: item.contract_period || '',  // 🔑 加這個
           level_bmount: item.level_bmount || 0,
           level_eamount: item.level_eamount || 0,
           level_charge_rate: item.level_charge_rate || 0,
           charged_id: item.charged_id,  // 🔑 加這個（最重要！）
+          tlt_bdate: item.tlt_bdate,  // 🔑 保留日期
+          tlt_edate: item.tlt_edate,  // 🔑 保留日期
           _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
           is_configured: item.is_configured || false,
           is_enabled: item.is_enabled || false
@@ -1368,13 +1365,8 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
           this.tableService.syncDiscountLevelBasedOnSelection(commissionItem, discount);
           console.log(`    ✅ 已為 ${discount.cag_barcode} 新增 level 項目`);
         } else {
-          // 已有對應的 level，確保 selected = true
-          existingLevels.forEach(level => {
-            if (!level.selected) {
-              console.log(`    🔧 修正 level selected 狀態: false → true`);
-              level.selected = true;
-            }
-          });
+          // 🔑 修改：已有對應的 level，保持原有的 selected 狀態，不強制改變
+          console.log(`    ℹ️ ${discount.cag_barcode} 已有 ${existingLevels.length} 個 level，保持原有 selected 狀態`);
         }
       });
     });

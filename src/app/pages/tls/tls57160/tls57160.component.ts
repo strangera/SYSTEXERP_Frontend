@@ -1,29 +1,29 @@
-import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { ColumnGroup, formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ColumnGroup, formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AccordionModule } from 'primeng/accordion';
+import { CheckboxModule } from 'primeng/checkbox';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 //  匯入 Tls57160FooterItem 才能用於 footerTotal 的型別
-import { Tls57160DataItem, Tls57160Request, Tls57160Service, Tls57160FooterItem } from '@service/api/tls/tls57160.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { debounceTime, finalize } from 'rxjs';
 import { AsyncPipe, DatePipe } from '@angular/common';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { HttpResponse } from '@angular/common/http'; //  新增匯入 HttpResponse
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { QueryPLUResponse, Tls57040Service } from '@service/api/tls/tls57040.service';
+import { Tls57160DataItem, Tls57160FooterItem, Tls57160Request, Tls57160Service } from '@service/api/tls/tls57160.service';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { ButtonModule } from 'primeng/button'; //  新增匯入 ButtonModule
-import { HttpResponse } from '@angular/common/http'; //  新增匯入 HttpResponse
+import { debounceTime, finalize } from 'rxjs';
 
 @Component({
   selector: 'app-tls57160',
@@ -128,7 +128,7 @@ export class TLS57160Component extends BasicQueryPageComponent<Tls57160DataItem>
   opData: QueryPLUResponse[] = [];
   opTotalRecords = 0;
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號', mainDataField: true },
+    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
   ];
   opColumns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
@@ -294,7 +294,7 @@ export class TLS57160Component extends BasicQueryPageComponent<Tls57160DataItem>
     this.tls57040Service.queryPLUForDropdown(body).pipe(untilDestroyed(this), debounceTime(300)).subscribe((results) => {
       this.suggestions = [...results.Data.map(item => ({
         ...item,
-        label: `${item.PLU_MagNo} - ${item.PLU_Name}`
+        label: item.PLU_MagNo + '/' + item.PLU_No + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
       }))];
     });
   }

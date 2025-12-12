@@ -4,13 +4,14 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000 } from '@service/system/sys1000.service';
+import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { formatAmountWithDecimals } from '@shared/componentkit/table-report/table-report.model';
 import { PanelModule } from 'primeng/panel';
-import { debounceTime, finalize, firstValueFrom, withLatestFrom } from 'rxjs';
+import { debounceTime, finalize, startWith, withLatestFrom } from 'rxjs';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { IPOS2004DetailData, ITLS52020Data, TLS52020Detail, TLS52020Request, Tls52020Service } from '../../../service/api/tls/tls52020.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
@@ -72,18 +73,25 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
   });
   vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }); // 廠商下拉選單選項
   brandOptions = this.dropdown.queryPluLogoHosNo(); // 品牌下拉選單選項
+  // 新增：儲存完整的品牌/倉別關聯資料 (用於過濾)
+  fullBrandData: Option[] = [];
+  // 新增：用於動態綁定到畫面上 LOGO_No 的選項
+  filteredLogoOptions: Option[] | null = null;
+  // 新增：倉別下拉選單選項 (用於動態綁定到畫面上 HOS_No 的選項)
+  filteredWarehouseOptions: Option[] | null = null;
   warehouseOptions = this.dropdown.queryPos2034() // 倉別下拉選單選項
+  // 新增：儲存完整的倉別資料 (用於過濾)
+  fullWarehouseData: Option[] = [];
   editColumns: EditColumn[] = [
     {
-      field: 'PLU_MagNo',
-      header: '商品管理編號',
+      field: 'PLU_No', header: '國際條碼',
       width: '150px',
       type: 'input',
       onBlur: (rowData: IPOS2004DetailData, value: string, col: EditColumn, index: number) => this.onPLU_MagNoBlur(rowData, value, col, index),
       validate: [validateRequired],
     },
+    { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
-    { field: 'PLU_No', header: '國際條碼' },
     { field: 'UNIT_NAME', header: '單位' },
     { field: 'PLU_BoxQty', header: '包裝入數' },
     { field: 'PLU_StockTaxType', header: '稅別', format: (value) => getSYS1000('PLU_StockTaxType', value) },
@@ -110,8 +118,8 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
 
         return {
           'CRN_BuyNet': buyNet,
-          'CRN_BuyTax': buyTax, // 🌟 新增：明細採購稅額
-          'CRN_BuyAmt': buyAmt, // 🌟 新增：明細採購合計 (雖然沒有顯示欄位，但便於提交和總計)
+          'CRN_BuyTax': buyTax, // 新增：明細採購稅額
+          'CRN_BuyAmt': buyAmt, // 新增：明細採購合計 (雖然沒有顯示欄位，但便於提交和總計)
           'CRN_SaleAmt': saleAmt,
         };
       }
@@ -173,8 +181,8 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
           UNIT_NAME: newData.UNIT_NAME,
           CRN_SubQty: subQty,
           CRN_BuyNet: buyNet, // 修正為計算後的 buyNet
-          CRN_BuyTax: buyTax, // 🌟 新增
-          CRN_BuyAmt: buyAmt, // 🌟 新增
+          CRN_BuyTax: buyTax, // 新增
+          CRN_BuyAmt: buyAmt, // 新增
           CRN_SaleAmt: Math.round(salePrc), // 修正為計算後的 saleAmt (數量為 1 時)
           CRN_BuyPrc: buyPrc,
           CRN_SalePrc: salePrc,
@@ -225,33 +233,129 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     }
     this.loadDialogData();
   }
-  private async loadDropdownOptions(): Promise<void> {
+  private loadDropdownOptions(): void { // <--- 移除 async
+    // 1. 訂閱完整的品牌和倉別資料
+    this.brandOptions.pipe(untilDestroyed(this)).subscribe(brandOpts => {
+      this.fullBrandData = brandOpts as Option[] || [];
+      this.filteredLogoOptions = brandOpts;
+      // 初始化時根據當前 HOS_No 過濾 LOGO_No 選項 (用於編輯模式)
+      this.filterLogoOptions(this.dataForm.controls.HOS_No.value);
+    });
+
+    this.warehouseOptions.pipe(untilDestroyed(this)).subscribe(warehouseOpts => {
+      this.fullWarehouseData = warehouseOpts || [];
+      this.filteredWarehouseOptions = warehouseOpts;
+      // 初始化時根據當前 LOGO_No 過濾 HOS_No 選項 (用於編輯模式)
+      this.filterWarehouseOptions(this.dataForm.controls.LOGO_No.value);
+    });
+
+    // 2. 監聽廠商編號變化 (邏輯不變)
+    this.dataForm.controls.VEN_No.valueChanges.pipe(withLatestFrom(this.vendorOptions), untilDestroyed(this)).subscribe(([vendorNo, options]) => {
+      this.dataForm.controls.vendorShortName.setValue(options?.find(opt => opt.value === vendorNo)?.['ShortName'] ?? '', { emitEvent: false });
+      [this.data, this.selectedItems, this.dialogData] = [[], [], []];
+    });
+
+    // 3. 監聽 LOGO_No 變化 (觸發 HOS_No 過濾和建議值設定)
+    this.dataForm.controls.LOGO_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((logoNo) => {
+
+      // a. 過濾 HOS_No 的選項
+      this.filterWarehouseOptions(logoNo);
+
+      // b. 設置建議的 HOS_No (如果有建議值，且倉別欄位目前為空或值不符合過濾後的選項)
+      const selectedBrand = this.fullBrandData?.find(opt => opt.value === logoNo);
+      const suggestedHOSNo = selectedBrand?.['HOS_No'] ?? null;
+      const currentHOSNo = this.dataForm.controls.HOS_No.value;
+
+      if (logoNo) {
+        const isValidHOSNo = this.fullWarehouseData.some(opt => opt.value === suggestedHOSNo);
+        // 如果倉別有建議值，且該建議值在完整的倉別列表裡，且目前倉別不是該建議值
+        if (suggestedHOSNo && isValidHOSNo && currentHOSNo !== suggestedHOSNo) {
+          // **重要：使用 emitEvent: false 避免觸發 HOS_No 的 valueChanges 造成無限循環**
+          this.dataForm.controls.HOS_No.setValue(suggestedHOSNo, { emitEvent: false });
+        }
+      } else {
+        // LOGO_No 清空時，HOS_No 也清空
+        this.dataForm.controls.HOS_No.setValue(null, { emitEvent: false });
+      }
+
+      [this.data, this.selectedItems, this.dialogData] = [[], [], []];
+      this.cdr.detectChanges(); // 觸發畫面更新
+    });
+
+    // 4. 監聽 HOS_No 變化 (觸發 LOGO_No 過濾)
+    this.dataForm.controls.HOS_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((hosNo) => {
+      // 過濾 LOGO_No 的選項
+      this.filterLogoOptions(hosNo);
+      this.cdr.detectChanges(); // 觸發畫面更新
+    });
+
+    // 處理非新增模式下的廠商簡稱載入 (將原本的 async 邏輯移到這)
     if (!this.isFormCreateable) {
-      // 使用 firstValueFrom 來獲取 Observable 發出的第一個值（即 Option[]）
-      const vendorOptions = await firstValueFrom(this.vendorOptions);
-      const selectedVendor = vendorOptions?.find(opt => opt['VEN_No'] === this.dataForm.controls.VEN_No.value);
-      this.dataForm.controls.vendorShortName.setValue(selectedVendor?.['ShortName'] ?? '');
-      this.ShortName = selectedVendor?.['ShortName'] ?? '';
+      this.vendorOptions.pipe(untilDestroyed(this), withLatestFrom(this.dataForm.controls.VEN_No.valueChanges.pipe(startWith(this.dataForm.controls.VEN_No.value)))).subscribe(([vendorOptions, venNo]) => {
+        const selectedVendor = vendorOptions?.find(opt => opt.value === venNo);
+        this.dataForm.controls.vendorShortName.setValue(selectedVendor?.['ShortName'] ?? '', { emitEvent: false });
+        this.ShortName = selectedVendor?.['ShortName'] ?? '';
+      });
     }
-    if (this.isFormCreateable) {
-      // 監聽廠商編號變化
-      this.dataForm.controls.VEN_No.valueChanges.pipe(withLatestFrom(this.vendorOptions), untilDestroyed(this)).subscribe(([vendorNo, options]) => {
-        this.dataForm.controls.vendorShortName.setValue(options?.find(opt => opt.value === vendorNo)?.['ShortName'] ?? '', { emitEvent: false });
-        [this.data, this.selectedItems, this.dialogData] = [[], [], []];
-      });
-      // 監聽品牌代碼變化，用於顯示剩餘預算金額和建議倉別
-      this.warehouseOptions.pipe(untilDestroyed(this)).subscribe(warehouseOpts => {
-        this.dataForm.controls.LOGO_No.valueChanges.pipe(withLatestFrom(this.brandOptions), debounceTime(300), untilDestroyed(this)).subscribe(([logoNo, brandOpts]) => {
-          const selectedBrand = brandOpts?.find(opt => opt.value === logoNo);
-          const suggestedHOSNo = selectedBrand ? selectedBrand['No'] : null;
-          let finalHOSNo: string | null = null;
-          if (suggestedHOSNo && warehouseOpts?.some(opt => opt['No'] === suggestedHOSNo)) {
-            finalHOSNo = suggestedHOSNo;
-          }
-          this.dataForm.controls.HOS_No.setValue(finalHOSNo, { emitEvent: false });
-          [this.data, this.selectedItems, this.dialogData] = [[], [], []];
-        });
-      });
+  }
+  /**
+   * 根據選定的品牌代碼 (LOGO_No) 過濾倉別 (HOS_No) 選項
+   * @param logoNo 選定的 LOGO_No
+   */
+  private filterWarehouseOptions(logoNo: string | null): void {
+    if (!this.fullBrandData || !this.fullWarehouseData) return;
+
+    if (!logoNo) {
+      // LOGO_No 清除時，HOS_No 顯示所有選項
+      this.filteredWarehouseOptions = this.fullWarehouseData;
+      return;
+    }
+
+    // 取得所有與該 LOGO_No 關聯的 HOS_No (包含可能為 null 的)
+    const associatedHOSNos = this.fullBrandData
+      .filter(item => item.value === logoNo)
+      .map(item => item['HOS_No'])
+      .filter((hosNo): hosNo is string => hosNo !== null && hosNo !== '');
+
+    // 過濾 HOS_No 選項
+    if (associatedHOSNos.length > 0) {
+      this.filteredWarehouseOptions = this.fullWarehouseData.filter(warehouse =>
+        associatedHOSNos.includes(warehouse.value)
+      );
+    } else {
+      // 如果 LOGO_No 查不到 HOS_No 關聯，則顯示所有倉別選項
+      this.filteredWarehouseOptions = this.fullWarehouseData;
+    }
+  }
+
+  /**
+   * 根據選定的倉別 (HOS_No) 過濾品牌代碼 (LOGO_No) 選項
+   * @param hosNo 選定的 HOS_No
+   */
+  private filterLogoOptions(hosNo: string | null): void {
+    if (!this.fullBrandData) return;
+
+    if (!hosNo) {
+      // HOS_No 清除時，LOGO_No 顯示所有選項
+      this.filteredLogoOptions = this.fullBrandData;
+      return;
+    }
+
+    // 取得所有與該 HOS_No 關聯的 LOGO_No
+    const associatedLOGONos = new Set(
+      this.fullBrandData
+        .filter(item => item['HOS_No'] === hosNo)
+        .map(item => item.value)
+    );
+
+    // 過濾 LOGO_No 選項
+    if (associatedLOGONos.size > 0) {
+      this.filteredLogoOptions = this.fullBrandData.filter(brand =>
+        associatedLOGONos.has(brand.value)
+      );
+    } else {
+      // 如果 HOS_No 查不到 LOGO_No 關聯，則顯示所有品牌選項
+      this.filteredLogoOptions = this.fullBrandData;
     }
   }
   dialogVisible = false;
@@ -352,8 +456,8 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
         CRN_SalePrc: salePrc,
         CRN_Remark: '',
         CRN_BuyNet: buyNet, // 修正
-        CRN_BuyTax: buyTax, // 🌟 新增
-        CRN_BuyAmt: buyAmt, // 🌟 新增
+        CRN_BuyTax: buyTax, // 新增
+        CRN_BuyAmt: buyAmt, // 新增
         CRN_SaleAmt: Math.round(salePrc), // 修正
       }
     });
@@ -384,7 +488,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     let totalSaleAmt = 0;
     this.data.forEach(item => {
       totalBuyNet += item.CRN_BuyNet || 0; // 使用明細的淨額
-      // 🌟 從明細 Item 中取得已計算的稅額 (需確保步驟 1, 2 已將此值存入)
+      // 從明細 Item 中取得已計算的稅額 (需確保步驟 1, 2 已將此值存入)
       totalBuyTax += item.CRN_BuyTax || 0;
       totalSaleAmt += item.CRN_SaleAmt || 0; // 使用明細的售價小計
     });

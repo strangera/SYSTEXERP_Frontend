@@ -87,7 +87,7 @@ export class TLS13010Next2ColumnsConfig {
         field: 'selected',
         header: '是否新增',
         type: 'checkbox',
-        editable: false,
+        editable: true,  // 🔑 改為 true，讓使用者可以自己決定是否勾選
         // directEdit: true,
       },
       {

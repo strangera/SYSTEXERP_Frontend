@@ -328,7 +328,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     this.selectedEditItems = [];
   }
 
-  // 手動新增 Request 
+  // 手動新增 Request
   get TLS53010InsertManualRequest(): TLS53010InsertManualRequest {
     return {
       HOS_No: this.dataForm.get('HOS_No')?.value || '',

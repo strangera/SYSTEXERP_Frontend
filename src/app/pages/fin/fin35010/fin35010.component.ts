@@ -1,14 +1,17 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { FIN35010Request, FIN35010Response, Fin35010Service } from '@service/api/fin/fin35010.service';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { FIN35010QueryRequest, FIN35010Response, Fin35010Service } from '@service/api/fin/fin35010.service';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -65,24 +68,24 @@ export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response>
   VEN_NoOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
   TLT_NameOptions = this.dropdown.queryTltTalent();
   org_idOptions = this.dropdown.querySys3100();
-  StatusOptions: any[] = [];
-  CHK_TypeOptions = getSYS1000Options('CHK_TYPE');
-  Deposit_TypeOptions = getSYS1000Options('DEPOSIT_TYPE');
+  StatusOptions = getSYS1000Options('ARS4008_Status');
+  CHK_TypeOptions = getSYS1000Options('CHK_Type');
+  Deposit_TypeOptions = getSYS1000Options('Deposit_Type');
   data: FIN35010Response[] = [];
   totalRecords = 0;
-  lastQuery: FIN35010Request | null = null;
+  lastQuery: FIN35010QueryRequest | null = null;
   columns: ReportColumn[] = [
     { field: 'CHK_No', header: '票據號碼' },
     { field: 'VEN_No', header: '廠商編號' },
     { field: 'VEN_Name', header: '廠商名稱' },
     { field: 'TLT_Name', header: '櫃位名稱' },
-    { field: 'CHK_Amt', header: '金額' },
-    { field: 'CHK_Type', header: '票據類型' },
-    { field: 'Deposit_Type', header: '保證類別' },
-    { field: 'Status', header: '票據狀態' },
+    { field: 'CHK_Amt', header: '金額', format: formatAmount },
+    { field: 'CHK_Type', header: '票據類型', format: (v) => getSYS1000('CHK_Type', v) },
+    { field: 'Deposit_Type', header: '保證類別', format: (v) => getSYS1000('Deposit_Type', v) },
+    { field: 'Status', header: '票據狀態', format: (v) => getSYS1000('ARS4008_Status', v) },
     { field: 'Remark', header: '摘要' },
-    { field: 'CRT_Date', header: '建檔日期' },
-    { field: 'UPD_Date', header: '變更日期' },
+    { field: 'CRT_Date', header: '建檔日期', format: formatDate },
+    { field: 'UPD_Date', header: '變更日期', format: formatDate },
   ];
 
   constructor(
@@ -97,7 +100,7 @@ export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response>
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.fin35010Service.queryFIN35010(frm.value).subscribe(res => {
+      this.fin35010Service.queryFIN35010(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
         this.lastQuery = frm.value;

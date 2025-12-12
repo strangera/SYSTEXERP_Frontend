@@ -1,28 +1,28 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div >
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+
+    <!-- 新增按鈕 -->
+    <app-button
+      btnType="create"
+      [type]="'button'"
+      (clickEvent)="onCreate()">
+    </app-button>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
       [selected]="true"
       class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
+      [headerStyleClass]="'query-accordionTab'">
+
       <form
         [formGroup]="queryForm"
         id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+        (ngSubmit)="onSubmit(queryForm)">
+
+        <!-- 第一排：記錄編號 + 出借日期 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number
@@ -30,45 +30,51 @@
               label="記錄編號"
               controlName="recordCode"
               [control]="queryForm.controls.recordCode"
-              [submitted]="submitted"
-            ></app-input-number>
+              [submitted]="submitted">
+            </app-input-number>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
               label="出借日期"
               [startControl]="queryForm.controls.borrowDateFrom"
               [endControl]="queryForm.controls.borrowDateTo"
-              [submitted]="submitted"
-            ></app-calendar-range>
+              [submitted]="submitted">
+            </app-calendar-range>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="姓名"
               controlName="name"
               [control]="queryForm.controls.name"
-              [submitted]="submitted"
-            ></app-input-text>
+              [submitted]="submitted">
+            </app-input-text>
           </div>
         </div>
+
+        <!-- 第二排：出借處理人員 / 連絡電話 / 證件類型 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="出借處理人員"
               controlName="staffName"
               [control]="queryForm.controls.staffName"
-              [submitted]="submitted"
-            ></app-input-text>
+              [submitted]="submitted">
+            </app-input-text>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number
               [useGrouping]="false"
               label="連絡電話"
               controlName="phone"
               [control]="queryForm.controls.phone"
-              [submitted]="submitted"
-            ></app-input-number>
+              [submitted]="submitted">
+            </app-input-number>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="證件類型"
@@ -77,10 +83,12 @@
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.paperType"
-              [submitted]="submitted"
-            ></app-multi-select>
+              [submitted]="submitted">
+            </app-multi-select>
           </div>
         </div>
+
+        <!-- 第三排：證件編號 / 設備名稱 / 設備編號 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number
@@ -88,9 +96,10 @@
               label="證件編號"
               controlName="paperCode"
               [control]="queryForm.controls.paperCode"
-              [submitted]="submitted"
-            ></app-input-number>
+              [submitted]="submitted">
+            </app-input-number>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="設備名稱"
@@ -99,19 +108,22 @@
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.equipmentName"
-              [submitted]="submitted"
-            ></app-multi-select>
+              [submitted]="submitted">
+            </app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number
               [useGrouping]="false"
               label="設備編號"
               controlName="deviceCode"
               [control]="queryForm.controls.deviceCode"
-              [submitted]="submitted"
-            ></app-input-number>
+              [submitted]="submitted">
+            </app-input-number>
           </div>
         </div>
+
+        <!-- 第四排：服務台位置編號 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -121,29 +133,50 @@
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.counterCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+              [submitted]="submitted">
+            </app-dropdown>
           </div>
         </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+
+        <!-- 按鈕列 -->
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button
+            btnType="clear"
+            [type]="'button'"
+            (clickEvent)="onClear(queryForm)">
+          </app-button>
+
+          <app-button
+            btnType="query"
+            [loading]="loading">
+          </app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
+
+<!-- 列表 -->
 <div class="card">
-  <app-table
-    [data]="data"
+  <app-table-report
+    [tableKey]="'cpm11030_' + tableVer"
+    [dataKey]="'_rowKey'"
     [columns]="columns"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-  ></app-table>
+    [data]="data"
+    [totalRecords]="viewTotalRecords"
+    [loading]="loading"
+    [showManage]="false"
+    [showFilter]="true"
+    [showExcel]="false"
+    [footerData]="footerData"
+    [queryFunction]="queryCPM11030ForReport"
+    [lastQueryBody]="lastQueryBody"
+    [showDelete]="false"
+    [showReportMode]="false"
+    [showCheckBox]="false"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+    [showDetail]="true"
+    (detail)="onDetail($event)">
+  </app-table-report>
 </div>

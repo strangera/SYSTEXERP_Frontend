@@ -37,6 +37,7 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   @Input() fieldsConfig: FieldsConfig[] = []; // 要顯示在 p-autoComplete 下方的欄位配置
   @Output() inputValueChanged = new EventEmitter<Record<string, string>>(); // 方法:輸入p-autoComplete事件
   // OverlayPanel
+  @Input() showOverlay = true;// 控制是否顯示 Overlay Panel，預設為 true (打開)
   @ViewChild('op') op: OverlayPanel | undefined;
   private destroy$ = new Subject<void>();      // 訂閱，為了監聽表單改變
   @Input() formGroup!: FormGroup;          // 下拉要輸入的form 必填
@@ -75,6 +76,10 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
     const inputValue = this.control.value || '';
     // 使用 optionLabel 作為 key，傳遞輸入的字串
     this.inputChangeSubject.next({ [this.optionLabel]: inputValue });
+    // 只有當 showOverlay 為 true 時，才隱藏 Overlay Panel
+    if (this.showOverlay) {
+      this.op?.hide();
+    }
   }
 
   getFieldValue(field: FieldsConfig): string {
@@ -140,9 +145,10 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   }
   // 【新增 onFocusAndInitialLoad】: 處理初次點擊時的載入邏輯
   onFocusAndInitialLoad(event: any) {
-    // 觸發 Overlay Panel
-    this.op?.toggle(event);
-
+    // 【修改點】只有當 showOverlay 為 true 時，才觸發 Overlay Panel
+    if (this.showOverlay) {
+      this.op?.toggle(event);
+    }
     // 如果表格資料為空，且尚未載入過，則發送一次空的查詢請求，讓父元件載入所有資料
     if (!this.initialLoadDone && (!this.dialogData || this.dialogData.length === 0)) {
       // 發出一個空值事件，讓父元件觸發初始載入 (loadVenData())

@@ -76,7 +76,7 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
   opData: QueryPLUResponse[] = [];
   opTotalRecords = 0;
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號', mainDataField: true },
+    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
   ];
   opColumns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
@@ -203,7 +203,7 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
     this.tls57040Service.queryPLUForDropdown(body).pipe(untilDestroyed(this), debounceTime(300)).subscribe((results) => {
       this.suggestions = [...results.Data.map(item => ({
         ...item,
-        label: `${item.PLU_MagNo} - ${item.PLU_Name}`
+        label: item.PLU_MagNo + '/' + item.PLU_No + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
       }))];
     });
   }

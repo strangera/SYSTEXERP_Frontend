@@ -205,6 +205,7 @@ export class TableEditDataService {
         rowData[field] = updates[field];
       }
     }
+    this.calculateRow(rowData, columns, this._tableData);
 
     // 4. 行驗證
     if (rowValidate && !isAutoInsertCandidate) {

@@ -328,19 +328,19 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
    */
   private syncSourceSumToChangeInvoice(): void {
     try {
+      // 只需要來源發票的 應稅金額 (TXN_TotSaleTax) + 免稅金額 (TXN_TotSaleNoTax)
       const sourceSum = this.data.reduce((sum, item) => {
         const tax = Number(item.TXN_TotSaleTax) || 0;
         const notax = Number(item.TXN_TotSaleNoTax) || 0;
-        const txnTax = Number(item.TXN_TotTax) || 0;
-        // 來源發票合計金額 = 應稅 + 免稅 + 交易稅
-        return sum + tax + notax + txnTax;
+        // 【已修正】來源發票合計金額 = 應稅 + 免稅 (排除稅額)
+        return sum + tax + notax;
       }, 0);
 
       if (this.changeEditData.length > 0) {
         const row = this.changeEditData[0] as any;
         row.TXN_SaleAmt = sourceSum;
 
-        // 觸發換開發票的欄位計算
+        // 觸發換開發票的欄位計算 (此處的邏輯是正確的)
         this.columnschange.filter(col => col.calculate).forEach(col => {
           const result = col.calculate!(row, row[col.field]);
           Object.assign(row, result);
@@ -387,11 +387,12 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
 
     if (warnings.length > 0) return { warnings, errors };
 
-    // 1. 來源發票總計 vs. 換開發票銷售金額
-    const sourceSum = this.data.reduce((sum, item) => sum + (Number(item.TXN_TotSaleTax) || 0) + (Number(item.TXN_TotSaleNoTax) || 0) + (Number(item.TXN_TotTax) || 0), 0);
+    // 【已修正】來源發票總計只取應稅 + 免稅金額，排除 TXN_TotTax 稅額
+    const sourceSum = this.data.reduce((sum, item) =>
+      sum + (Number(item.TXN_TotSaleTax) || 0) + (Number(item.TXN_TotSaleNoTax) || 0), 0);
     const changeTotalCheck = Number(changeData.TXN_SaleAmt) || 0;
     if (Math.abs(sourceSum - changeTotalCheck) > 0.01) {
-      errors.push(`來源發票金額合計 (${sourceSum.toFixed(2)}) 與換開發票銷售金額 (${changeTotalCheck.toFixed(2)}) 不一致，請檢查來源或換開發票金額`);
+      errors.push(`來源發票銷售金額 (應稅+免稅) (${sourceSum.toFixed(2)}) 與換開發票銷售金額 (${changeTotalCheck.toFixed(2)}) 不一致，請檢查來源或換開發票金額`);
     }
 
     // 2. 商品明細總計 vs. 換開發票銷售金額
