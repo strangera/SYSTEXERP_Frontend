@@ -346,8 +346,6 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
 
       } as TLS32050Request;
 
-      this.loading = false;
-
       this.tls32050Service.queryTLS32050(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
 
         this.data = res.Data ?? [];                           // 查詢資料

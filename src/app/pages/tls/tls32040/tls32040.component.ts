@@ -80,14 +80,14 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     ReceFilter: ['A'],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 A:預設全部))
 
     pageSize: [20],
-    pageIndex: [0], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'RowType', order: 1 }]],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    // SortBy: [[{ field: 'RowType', order: 1 }]],
   });
 
   // 日期查詢條件表單
   dateForm = this.formBuilder.nonNullable.group({
     // 日期查詢條件（單選報表類型）
-    reportType: ['1'], // 報表類型
+    reportType: ['DAY'], // 報表類型
 
     // --- 日報（type 1）使用的單一基準 / 比較日期
     onedatedd: [today],        // 基準日期 (日)
@@ -121,7 +121,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
   // 比較表單 (只負責顯示，送出的是主表的CompareDateFrom、CompareDateTo)
   c_dateForm = this.formBuilder.nonNullable.group({
     // 日期查詢條件（單選報表類型）
-    reportType: ['1'], // 報表類型
+    reportType: ['DAY'], // 報表類型
 
     // --- 日報（type 1）使用的單一基準 / 比較日期
     onedatedd: [yesterday as Date | null],        // 基準日期 (日)
@@ -154,11 +154,11 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
   ];
 
   reportTypeOptions = [
-    { value: '1', label: '日營業報表' },
-    { value: '2', label: '週營業報表' },
-    { value: '3', label: '月營業報表' },
-    { value: '4', label: '半年營業報表' },
-    { value: '5', label: '年營業報表' },
+    { value: 'DAY', label: '日營業報表' },
+    { value: 'WEEK', label: '週營業報表' },
+    { value: 'MONTH', label: '月營業報表' },
+    { value: 'HALFYEAR', label: '半年營業報表' },
+    { value: 'YEAR', label: '年營業報表' },
     // { value: '6', label: '區間營業報表' }, //本作業不使用
   ];
 
@@ -222,7 +222,8 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
   org_id_Option: IDropdownItem[] = []; // 組織
   tlt_no_id_Option: IDropdownItem[] = []; // 專櫃編號
 
-  btnLoading = false; // PDF excel 讀取進度條
+  btnPDFLoading = false; // PDF excel 讀取進度條
+  btnExcelLoading = false; // PDF excel 讀取進度條
   platformId = inject(PLATFORM_ID);
 
   constructor(
@@ -237,7 +238,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     this.initializePage('TLS32040', 'TLS/TLS32040cru', this.queryForm, (frm) => this.onSubmit(frm));
 
     // 日期表單控制
-    this.onReportTypeChange('1');
+    this.onReportTypeChange('DAY');
     this.setReadOnlyFields();
 
     // 監聽 dateForm 的變化，套用日期到 queryForm(比較日是基準日帶入結果，不進行自行控制)
@@ -355,56 +356,90 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     })
   }
   onReport(frm: FormGroup, isExcel: boolean) {
-    // Yvv 說先推遲
-    console.log('api準備中');
-    // if (isExcel == false) {
-    //   if (this.dateForm.invalid) {
-    //     this.messageService.errorBubble('基準資料為必填');
-    //     return
-    //   }
-    //   if (this.c_dateForm.invalid) {
-    //     this.messageService.errorBubble('比較資料為必填');
-    //     return
-    //   }
-
-    //   const formValue = {
-    //     ...frm.getRawValue(),
-
-    //     ReportType: this.dateForm.get('reportType')?.value, // 從日期表單抓
-    //     BaseDateFrom: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
-    //     BaseDateTo: formatDate(frm.getRawValue().BaseDateTo, 'yyyy-MM-dd', 'en-US'),
-    //     CompareDateFrom: formatDate(frm.getRawValue().CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
-    //     CompareDateTo: formatDate(frm.getRawValue().CompareDateTo, 'yyyy-MM-dd', 'en-US'),
-    //     FloorList: (frm.getRawValue().FloorList || []).join(','),
-    //     AreaList: (frm.getRawValue().AreaList || []).join(','),
-
-    //     BusTypeList: (frm.getRawValue().BusTypeList || []).join(','), //這邊怪怪的之後可能會改成舊的模式(還是大: "大字串", 中: "中字串")
-    //     BusClassList: (frm.getRawValue().BusClassList || []) //這邊怪怪的之後可能會改成舊的模式
-    //       .map((x: any) => x.No)
-    //       .join(','),
-
-    //     TltKindList: (frm.getRawValue().TltKindList || []).join(','),
-    //     OrgList: (frm.getRawValue().OrgList || []).join(','),
-    //     TltNoList: (frm.getRawValue().TltNoList || []).join(','),
-    //     TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
-    //     BuildingList: (frm.getRawValue().BuildingList || []).join(','),
-    //   }
-    //   this.btnLoading = true;
-    //   this.tls32040Service.exportTLS32040PDF(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
-    //     .subscribe(res => {
-    //       this.messageService.successBubble(res.Message);
-    //       // if (res.Data && res.Data.Print_URL) {
-    //       //   const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-    //       //   window.open(downloadUrl, '_blank');
-    //       // }
-    //       if (res.Data) {
-    //         console.log('api回應', res);
-    //       }
-    //     });
-
-    // } else {
-    //   console.log('api準備中');
+    // if (this.dateForm.invalid) {
+    //   this.messageService.errorBubble('基準資料為必填');
+    //   return
     // }
+    // if (this.c_dateForm.invalid) {
+    //   this.messageService.errorBubble('比較資料為必填');
+    //   return
+    // }
+
+    if (isExcel == false) {
+      const formValue = {
+        ...frm.getRawValue(),
+
+        ReportType: this.dateForm.get('reportType')?.value, // 從日期表單抓
+        BaseDateFrom: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
+        BaseDateTo: formatDate(frm.getRawValue().BaseDateTo, 'yyyy-MM-dd', 'en-US'),
+        CompareDateFrom: formatDate(frm.getRawValue().CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
+        CompareDateTo: formatDate(frm.getRawValue().CompareDateTo, 'yyyy-MM-dd', 'en-US'),
+        FloorList: (frm.getRawValue().FloorList || []).join(','),
+        AreaList: (frm.getRawValue().AreaList || []).join(','),
+
+        BusTypeList: (frm.getRawValue().BusTypeList),
+        BusClassList: (frm.getRawValue().BusClassList || []).map((item: any) => ({
+          BusType: item.bus_type ?? '',
+          BusClass: item.No ?? ''
+        })),
+
+        TltKindList: (frm.getRawValue().TltKindList || []).join(','),
+        OrgList: (frm.getRawValue().OrgList || []).join(','),
+        TltNoList: (frm.getRawValue().TltNoList || []).join(','),
+        TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
+        BuildingList: (frm.getRawValue().BuildingList || []).join(','),
+
+      } as TLS32040Request;
+
+      this.btnPDFLoading = true;
+      this.tls32040Service.exportTLS32040PDF(formValue).pipe(finalize(() => this.btnPDFLoading = false), untilDestroyed(this))
+        .subscribe(blob => {
+          if (blob) {
+            const blobUrl = URL.createObjectURL(blob);
+            window.open(blobUrl, '_blank');
+          }
+        });
+    } else {
+      const formValue = {
+        ...frm.getRawValue(),
+
+        ReportType: this.dateForm.get('reportType')?.value, // 從日期表單抓
+        BaseDateFrom: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
+        BaseDateTo: formatDate(frm.getRawValue().BaseDateTo, 'yyyy-MM-dd', 'en-US'),
+        CompareDateFrom: formatDate(frm.getRawValue().CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
+        CompareDateTo: formatDate(frm.getRawValue().CompareDateTo, 'yyyy-MM-dd', 'en-US'),
+        FloorList: (frm.getRawValue().FloorList || []).join(','),
+        AreaList: (frm.getRawValue().AreaList || []).join(','),
+
+        BusTypeList: (frm.getRawValue().BusTypeList),
+        BusClassList: (frm.getRawValue().BusClassList || []).map((item: any) => ({
+          BusType: item.bus_type ?? '',
+          BusClass: item.No ?? ''
+        })),
+
+        TltKindList: (frm.getRawValue().TltKindList || []).join(','),
+        OrgList: (frm.getRawValue().OrgList || []).join(','),
+        TltNoList: (frm.getRawValue().TltNoList || []).join(','),
+        TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
+        BuildingList: (frm.getRawValue().BuildingList || []).join(','),
+
+      } as TLS32040Request;
+
+      this.btnExcelLoading = true;
+      this.tls32040Service.exportTLS32040Excel(formValue).pipe(finalize(() => this.btnExcelLoading = false), untilDestroyed(this))
+        .subscribe(blob => {
+          if (blob) {
+            const blobUrl = URL.createObjectURL(blob);
+
+            // ⭐ 建議加下載功能
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = 'TLS32040.xlsx'; // 可以依需求改檔名
+            a.click();
+            URL.revokeObjectURL(blobUrl);
+          }
+        });
+    }
   }
 
   // #region 呼叫圖檔(這邊先不用做，既有規格有，新版規格沒有)
@@ -428,7 +463,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
       TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
       BuildingList: (frm.getRawValue().BuildingList || []).join(','),
     } as TLS32040ChartRequest
-    this.tls32040Service.queryTLS32040Chart(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
+    this.tls32040Service.queryTLS32040Chart(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this))
       .subscribe(res => {
         this.messageService.successBubble(res.Message);
         if (res.Data) {
@@ -541,11 +576,11 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
     // 根據報表類型設定必要欄位驗證
     switch (reportType) {
-      case '1': // 日營業報表
+      case 'DAY': // 日營業報表
         this.dateForm.get('onedatedd')?.setValidators([Validators.required]);
         this.c_dateForm.get('onedatedd')?.setValidators([Validators.required]);
         break;
-      case '2': // 週營業報表
+      case 'WEEK': // 週營業報表
         this.dateForm.get('onedateyy')?.setValidators([Validators.required]);
         this.dateForm.get('weeks')?.setValidators([Validators.required]);
         this.dateForm.get('startdate')?.setValidators([Validators.required]);
@@ -556,29 +591,17 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         this.c_dateForm.get('startdate')?.setValidators([Validators.required]);
         this.c_dateForm.get('enddate')?.setValidators([Validators.required]);
         break;
-      case '3': // 月營業報表
+      case 'MONTH': // 月營業報表
         this.dateForm.get('onedatemm')?.setValidators([Validators.required]);
         this.c_dateForm.get('onedatemm')?.setValidators([Validators.required]);
         break;
-      case '4': // 半年營業報表
+      case 'HALFYEAR': // 半年營業報表
         this.dateForm.get('halfyear_onedateyy')?.setValidators([Validators.required]);
         this.c_dateForm.get('halfyear_onedateyy')?.setValidators([Validators.required]);
         break;
-      case '5': // 年營業報表
+      case 'YEAR': // 年營業報表
         this.dateForm.get('year_onedateyy')?.setValidators([Validators.required]);
         this.c_dateForm.get('year_onedateyy')?.setValidators([Validators.required]);
-        break;
-      case '6': // 區間營業報表
-        this.dateForm.get('sad_startdate')?.setValidators([Validators.required]);
-        this.dateForm.get('sad_enddate')?.setValidators([Validators.required]);
-        this.c_dateForm.get('sad_startdate')?.setValidators([Validators.required]);
-        this.c_dateForm.get('sad_enddate')?.setValidators([Validators.required]);
-        break;
-      case '7': // 活動區間營業報表
-        this.dateForm.get('event_startdate')?.setValidators([Validators.required]);
-        this.dateForm.get('event_enddate')?.setValidators([Validators.required]);
-        this.c_dateForm.get('event_startdate')?.setValidators([Validators.required]);
-        this.c_dateForm.get('event_enddate')?.setValidators([Validators.required]);
         break;
     }
 
@@ -618,7 +641,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     //---
 
     switch (reportType) {
-      case '1': // 日報
+      case 'DAY': // 日報
         start = this.dateForm.get('onedatedd')?.value ?? null;
         end = start;
 
@@ -634,7 +657,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         }
         break;
 
-      case '2': // 週報
+      case 'WEEK': // 週報
         start = this.dateForm.get('startdate')?.value ?? null;
         end = this.dateForm.get('enddate')?.value ?? null;
 
@@ -658,7 +681,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         }
         break;
 
-      case '3': { // 月報
+      case 'MONTH': { // 月報
         const onedatemm = this.dateForm.get('onedatemm')?.value as Date | null;
         if (onedatemm) {
           start = new Date(onedatemm.getFullYear(), onedatemm.getMonth(), 1);
@@ -674,7 +697,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         break;
       }
 
-      case '4': { // 半年報
+      case 'HALFYEAR': { // 半年報
         const dateValue = this.dateForm.get('halfyear_onedateyy')?.value as Date | string;
         const year = dateValue instanceof Date ? dateValue.getFullYear() : Number(dateValue);
         const half = String(this.dateForm.get('halfyear')?.value); // 確保是字串
@@ -703,7 +726,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         break;
       }
 
-      case '5': { // 年報
+      case 'YEAR': { // 年報
         const dateValue = this.dateForm.get('year_onedateyy')?.value as Date | string;
         const year = dateValue instanceof Date ? dateValue.getFullYear() : Number(dateValue);
 
@@ -741,14 +764,14 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     let compareEnd: Date | null = null;
 
     switch (type) {
-      case '1': { // 日報
+      case 'DAY': { // 日報
         const d = this.c_dateForm.controls.onedatedd.value;
         compareStart = d;
         compareEnd = d;
         break;
       }
 
-      case '2': { // 週報
+      case 'WEEK': { // 週報
         const chooseYear = this.c_dateForm.get('onedateyy')?.value ?? null;
         const chooseWeeks = this.c_dateForm.get('weeks')?.value ?? null;
 
@@ -770,7 +793,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         break;
       }
 
-      case '3': { // 月報
+      case 'MONTH': { // 月報
         const m = this.c_dateForm.controls.onedatemm.value;
         if (m) {
           // 計算該月的第一天和最後一天
@@ -781,7 +804,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         break;
       }
 
-      case '4': { // 半年報
+      case 'HALFYEAR': { // 半年報
         const yearValue = this.c_dateForm.controls.halfyear_onedateyy.value;
         const year = yearValue instanceof Date ? yearValue.getFullYear() : Number(yearValue);
         const half = String(this.c_dateForm.controls.halfyear.value);
@@ -798,7 +821,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         break;
       }
 
-      case '5': { // 年報
+      case 'YEAR': { // 年報
         const yearValue = this.c_dateForm.controls.year_onedateyy.value;
         const year = yearValue instanceof Date ? yearValue.getFullYear() : Number(yearValue);
 

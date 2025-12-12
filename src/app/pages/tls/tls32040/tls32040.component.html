@@ -28,7 +28,7 @@
           <!-- 日營業報表 -->
           <div
             class="flex col-12"
-            *ngIf="dateForm.controls.reportType.value === '1'"
+            *ngIf="dateForm.controls.reportType.value === 'DAY'"
           >
             <div class="col-6 flex flex-column border-right-1 surface-border">
               <div class="col-12 flex justify-content-center">
@@ -62,7 +62,7 @@
           <!-- 週營業報表 -->
           <div
             class="flex col-12"
-            *ngIf="dateForm.controls.reportType.value === '2'"
+            *ngIf="dateForm.controls.reportType.value === 'WEEK'"
           >
             <div class="col-6 flex flex-column border-right-1 surface-border">
               <div class="col-12 flex justify-content-center">
@@ -136,7 +136,7 @@
           <!-- 月營業報表 -->
           <div
             class="flex col-12"
-            *ngIf="dateForm.controls.reportType.value === '3'"
+            *ngIf="dateForm.controls.reportType.value === 'MONTH'"
           >
             <div class="col-6 flex flex-column border-right-1 surface-border">
               <div class="col-12 flex justify-content-center">
@@ -170,7 +170,7 @@
           <!-- 半年營業報表 -->
           <div
             class="flex col-12"
-            *ngIf="dateForm.controls.reportType.value === '4'"
+            *ngIf="dateForm.controls.reportType.value === 'HALFYEAR'"
           >
             <div class="col-6 flex flex-column border-right-1 surface-border">
               <div class="col-12 flex justify-content-center">
@@ -229,7 +229,7 @@
           <!-- 年營業報表 -->
           <div
             class="flex col-12"
-            *ngIf="dateForm.controls.reportType.value === '5'"
+            *ngIf="dateForm.controls.reportType.value === 'YEAR'"
           >
             <div class="col-6 flex flex-column border-right-1 surface-border">
               <div class="col-12 flex justify-content-center">
@@ -261,32 +261,6 @@
               </div>
             </div>
           </div>
-          <!-- 區間營業報表(不使用) -->
-          <!-- <div
-            class="flex col-12"
-            *ngIf="dateForm.controls.reportType.value === '6'"
-          >
-            <div class="col-6 flex flex-column border-right-1 surface-border">
-              <div class="col-12">
-                <app-calendar-range-quick
-                  label="基準日期範圍"
-                  [startControl]="dateForm.controls.sad_startdate"
-                  [endControl]="dateForm.controls.sad_enddate"
-                  [submitted]="submitted"
-                />
-              </div>
-            </div>
-            <div class="col-6 flex flex-column border-right-1">
-              <div class="col-12">
-                <app-calendar-range
-                  label="比較日期範圍"
-                  [startControl]="c_dateForm.controls.sad_startdate"
-                  [endControl]="c_dateForm.controls.sad_enddate"
-                  [submitted]="submitted"
-                />
-              </div>
-            </div>
-          </div> -->
         </div>
         <hr />
         <div class="grid p-fluid">
@@ -447,20 +421,18 @@
         <p-button
           styleClass="p-2"
           label="組織業績總表.PDF"
-          [loading]="btnLoading"
           icon="pi pi-file"
           (click)="onReport(queryForm, false)"
           [disabled]="data.length === 0"
-          [loading]="btnLoading"
+          [loading]="btnPDFLoading"
         ></p-button>
         <p-button
           styleClass="p-2"
           label="組織業績總表.XLSX"
-          [loading]="btnLoading"
           icon="pi pi-file"
           (click)="onReport(queryForm, true)"
           [disabled]="data.length === 0"
-          [loading]="btnLoading"
+          [loading]="btnExcelLoading"
         ></p-button>
       </div>
     </header>
