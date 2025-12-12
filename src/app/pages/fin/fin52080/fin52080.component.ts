@@ -79,25 +79,8 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
   public readonly tableLoading = signal<boolean>(!1);
   public readonly treeLoading = signal<boolean>(!1);
 
-  public tableData = signal<FIN52080Data[]>([]);
-  public readonly totalRecords = computed(() => this.filteredData().length);
-
-  public readonly filteredData = computed(() => {
-    const formValue = this.queryForm.getRawValue();
-    return this.tableData().filter(item => {
-      return (!formValue.AccNo || item.AccNo.includes(formValue.AccNo))
-        && (!formValue.AccCname || item.AccCName.includes(formValue.AccCname))
-        && (!formValue.AccEname || item.AccEName?.includes(formValue.AccEname))
-        && (!formValue.AccDC?.length || formValue.AccDC.includes(item.AccDC))
-        && (!formValue.Ledger_MD?.length || formValue.Ledger_MD.includes(item.Ledger_MD))
-        && (!formValue.ClassNo?.length || formValue.ClassNo.includes(item.ClassNo))
-        && (!formValue.ABAT_YN?.length || formValue.ABAT_YN.includes(item.ABAT_YN))
-        && (!formValue.Voucher_Type?.length || formValue.Voucher_Type.includes(item.Voucher_Type))
-        && (!formValue.Budget_YN?.length || formValue.Budget_YN.includes(item.Budget_YN))
-        && (!formValue.Org_YN?.length || formValue.Org_YN.includes(item.Org_YN))
-        && (!formValue.Input_YN?.length || formValue.Input_YN.includes(item.Input_YN));
-    });
-  });
+  public readonly tableData = signal<FIN52080Data[]>([]);
+  public readonly totalRecords = signal<number>(0);
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.tableLoading()
@@ -208,9 +191,9 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
         next: res => {
           if (res.Status !== '0000') return;
           this.tableData.set(res.Data || []);
+          this.totalRecords.set(res.TotalCount || 0);
         },
       });
-
     });
   };
 
