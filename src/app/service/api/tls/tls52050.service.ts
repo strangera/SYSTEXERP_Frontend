@@ -125,6 +125,7 @@ export interface IQueryTLS52050DetailData {
   PLU_OrderPrcRate: string;
   PLU_OrderPrc: string;
   PLU_SalePrc: string;
+  PLU_No: string;
   [key: string]: string;
 }
 

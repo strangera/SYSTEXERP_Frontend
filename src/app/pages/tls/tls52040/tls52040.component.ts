@@ -207,7 +207,10 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
       SortBy: [{ field: 'PLU_MagNo', order: 1 }],
     }
     this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data];
+      this.suggestions = [...results.Data.map(item => ({
+        ...item,
+        label: item.PLU_MagNo + '/' + item.PLU_No + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
+      }))];
     });
   }
   onformValueChanged(event: IQueryPOS2004DetailRequest) {

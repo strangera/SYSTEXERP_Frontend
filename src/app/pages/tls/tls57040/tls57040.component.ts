@@ -1,23 +1,22 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators } from '@angular/forms';
-import { AccordionModule } from 'primeng/accordion';
-import { TooltipModule } from 'primeng/tooltip';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { QueryPLUResponse, QueryTLS57040Request, QueryTLS57040Response, Tls57040Service } from '@service/api/tls/tls57040.service';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { InputTextareaComponent } from "@shared/componentkit/input-textarea/input-textarea.component";
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { debounceTime, finalize } from 'rxjs';
-import { QueryPLUResponse, QueryTLS57040Request, QueryTLS57040Response, Tls57040Service } from '@service/api/tls/tls57040.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { CheckboxModule } from 'primeng/checkbox';
+import { TooltipModule } from 'primeng/tooltip';
+import { debounceTime, finalize } from 'rxjs';
 
 @Component({
   selector: 'app-tls57040',
@@ -80,7 +79,7 @@ export class TLS57040Component extends BasicQueryPageComponent<QueryTLS57040Resp
   opData: QueryPLUResponse[] = [];
   opTotalRecords = 0;
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號', mainDataField: true },
+    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
   ];
   opColumns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
@@ -186,7 +185,7 @@ export class TLS57040Component extends BasicQueryPageComponent<QueryTLS57040Resp
     this.tls57040Service.queryPLUForDropdown(body).pipe(untilDestroyed(this), debounceTime(300)).subscribe((results) => {
       this.suggestions = [...results.Data.map(item => ({
         ...item,
-        label: `${item.PLU_MagNo} - ${item.PLU_Name}`
+        label: item.PLU_MagNo + '/' + item.PLU_No + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
       }))];
     });
   }

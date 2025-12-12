@@ -4,6 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000 } from '@service/system/sys1000.service';
+import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
@@ -73,18 +74,26 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   // === 下拉選單選項 ===
   vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }); // 廠商下拉選單選項
   brandOptions = this.dropdown.queryPluLogoHosNo(); // 品牌下拉選單選項
+  // 新增：儲存完整的品牌/倉別關聯資料 (用於過濾)
+  fullBrandData: Option[] = [];
+  // 新增：用於動態綁定到畫面上 LOGO_No 的選項
+  filteredLogoOptions: Option[] | null = null;
+  // 新增：倉別下拉選單選項 (用於動態綁定到畫面上 HOS_No 的選項)
+  filteredWarehouseOptions: Option[] | null = null;
   warehouseOptions = this.dropdown.queryPos2034() // 倉別下拉選單選項
+  // 新增：儲存完整的倉別資料 (用於過濾)
+  fullWarehouseData: Option[] = [];
   editColumns: EditColumn[] = [
     {
-      field: 'PLU_MagNo',
-      header: '商品管理編號',
+      field: 'PLU_No', header: '國際條碼',
       width: '150px',
       type: 'input',
       onBlur: (rowData: IPOS2004DetailData, value: string, col: EditColumn, index: number) => this.onPLU_MagNoBlur(rowData, value, col, index),
       validate: [validateRequired],
+
     },
+    { field: 'PLU_MagNo', header: '商品管理編號', },
     { field: 'PLU_Name', header: '商品名稱' },
-    { field: 'PLU_No', header: '國際條碼' },
     { field: 'UNIT_NAME', header: '單位' },
     { field: 'PLU_BoxQty', header: '包裝入數' },
     { field: 'PLU_StockTaxType', header: '稅別', format: (value) => getSYS1000('PLU_StockTaxType', value) },
@@ -242,28 +251,70 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     this.loadDialogData();
   }
   private loadDropdownOptions(): void {
-    // 監聽廠商編號變化
+    // 1. 取得完整資料並設定初始選項
+    this.brandOptions.pipe(untilDestroyed(this)).subscribe(brandOpts => {
+      // 儲存完整的品牌資料
+      this.fullBrandData = brandOpts || [];
+      // 初始時，兩個選單都顯示所有選項
+      this.filteredLogoOptions = brandOpts;
+      // 執行過濾邏輯，用於初始化 HOS_No
+      this.filterWarehouseOptions(this.dataForm.controls.LOGO_No.value);
+    });
+
+    this.warehouseOptions.pipe(untilDestroyed(this)).subscribe(warehouseOpts => {
+      // 儲存完整的倉別資料
+      this.fullWarehouseData = warehouseOpts || [];
+      // 初始時，兩個選單都顯示所有選項
+      this.filteredWarehouseOptions = warehouseOpts;
+      // 執行過濾邏輯，用於初始化 HOS_No
+      this.filterLogoOptions(this.dataForm.controls.HOS_No.value);
+    });
+
+    // 2. 監聽表單欄位變化
+    // 監聽廠商編號變化 (邏輯不變)
     this.dataForm.controls.VEN_No.valueChanges.pipe(withLatestFrom(this.vendorOptions), untilDestroyed(this)).subscribe(([vendorNo, options]) => {
       this.dataForm.controls.vendorShortName.setValue(options?.find(opt => opt.value === vendorNo)?.['ShortName'] ?? '', { emitEvent: false });
       this.calculateTotals();
       [this.data, this.selectedItems, this.dialogData] = [[], [], []];
     });
-    // 監聽品牌代碼變化，用於顯示剩餘預算金額和建議倉別
-    this.warehouseOptions.pipe(untilDestroyed(this)).subscribe(warehouseOpts => {
-      this.dataForm.controls.LOGO_No.valueChanges.pipe(withLatestFrom(this.brandOptions), debounceTime(300), untilDestroyed(this)).subscribe(([logoNo, brandOpts]) => {
-        const selectedBrand = brandOpts?.find(opt => opt.value === logoNo);
-        const suggestedHOSNo = selectedBrand ? selectedBrand['No'] : null;
-        let finalHOSNo: string | null = null;
-        if (suggestedHOSNo && warehouseOpts?.some(opt => opt['No'] === suggestedHOSNo)) {
-          finalHOSNo = suggestedHOSNo;
+
+    // 監聽 LOGO_No 變化
+    this.dataForm.controls.LOGO_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((logoNo) => {
+      // a. 過濾 HOS_No 的選項
+      this.filterWarehouseOptions(logoNo);
+
+      // b. 設置建議的 HOS_No (如果 HOS_No 欄位目前是空的，或即將被過濾掉)
+      const currentHOSNo = this.dataForm.controls.HOS_No.value;
+      const selectedBrand = this.fullBrandData?.find(opt => opt.value === logoNo);
+      const suggestedHOSNo = selectedBrand?.['HOS_No'] ?? null;
+
+      // 只有在 suggestedHOSNo 存在，且 HOS_No 欄位目前沒有值，或目前的值與建議值不同，才設定
+      if (suggestedHOSNo && (!currentHOSNo || currentHOSNo !== suggestedHOSNo)) {
+        // 檢查建議倉別是否在完整的倉別列表中
+        const isValidHOSNo = this.fullWarehouseData.some(opt => opt.value === suggestedHOSNo);
+        if (isValidHOSNo) {
+          // **重要：必須設定 `emitEvent: false` 避免造成無限循環**
+          this.dataForm.controls.HOS_No.setValue(suggestedHOSNo, { emitEvent: false });
         }
-        this.dataForm.controls.HOS_No.setValue(finalHOSNo, { emitEvent: false });
-        this.GetBudgetAmount();
-        this.calculateTotals();
-        [this.data, this.selectedItems, this.dialogData] = [[], [], []];
-      });
+      } else if (!logoNo) {
+        // LOGO_No 被清除時，清空 HOS_No
+        this.dataForm.controls.HOS_No.setValue(null, { emitEvent: false });
+      }
+
+      // c. 執行後續邏輯 (不變)
+      this.GetBudgetAmount();
+      this.calculateTotals();
+      [this.data, this.selectedItems, this.dialogData] = [[], [], []];
     });
-    // 監聽申請日期變化，重新獲取剩餘預算金額
+
+    // 新增：監聽 HOS_No 變化
+    this.dataForm.controls.HOS_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((hosNo) => {
+      // 過濾 LOGO_No 的選項
+      this.filterLogoOptions(hosNo);
+      this.cdr.detectChanges(); // 觸發畫面更新
+    });
+
+    // 監聽申請日期變化，重新獲取剩餘預算金額 (邏輯不變)
     this.dataForm.controls.APPLY_Date.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe(() => {
       this.GetBudgetAmount();
     });
@@ -271,6 +322,66 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     // 確保在非新增模式（編輯模式）下也能載入預算金額
     if (!this.isFormCreateable) {
       this.GetBudgetAmount();
+    }
+  }
+  /**
+   * 根據選定的品牌代碼 (LOGO_No) 過濾倉別 (HOS_No) 選項
+   * @param logoNo 選定的 LOGO_No
+   */
+  private filterWarehouseOptions(logoNo: string | null): void {
+    if (!this.fullBrandData || !this.fullWarehouseData) return;
+
+    if (!logoNo) {
+      // LOGO_No 清除時，HOS_No 顯示所有選項
+      this.filteredWarehouseOptions = this.fullWarehouseData;
+      return;
+    }
+
+    // 取得所有與該 LOGO_No 關聯的 HOS_No (包含可能為 null 的)
+    const associatedHOSNos = this.fullBrandData
+      .filter(item => item.value === logoNo)
+      .map(item => item['HOS_No'])
+      .filter((hosNo): hosNo is string => hosNo !== null && hosNo !== '');
+
+    // 過濾 HOS_No 選項
+    if (associatedHOSNos.length > 0) {
+      this.filteredWarehouseOptions = this.fullWarehouseData.filter(warehouse =>
+        associatedHOSNos.includes(warehouse.value)
+      );
+    } else {
+      // 如果 LOGO_No 查不到 HOS_No 關聯，則顯示所有倉別選項 (根據您的資料範例，這個邏輯可能需要調整)
+      this.filteredWarehouseOptions = this.fullWarehouseData;
+    }
+  }
+
+  /**
+   * 根據選定的倉別 (HOS_No) 過濾品牌代碼 (LOGO_No) 選項
+   * @param hosNo 選定的 HOS_No
+   */
+  private filterLogoOptions(hosNo: string | null): void {
+    if (!this.fullBrandData) return;
+
+    if (!hosNo) {
+      // HOS_No 清除時，LOGO_No 顯示所有選項
+      this.filteredLogoOptions = this.fullBrandData;
+      return;
+    }
+
+    // 取得所有與該 HOS_No 關聯的 LOGO_No
+    const associatedLOGONos = new Set(
+      this.fullBrandData
+        .filter(item => item['HOS_No'] === hosNo)
+        .map(item => item.value)
+    );
+
+    // 過濾 LOGO_No 選項
+    if (associatedLOGONos.size > 0) {
+      this.filteredLogoOptions = this.fullBrandData.filter(brand =>
+        associatedLOGONos.has(brand.value)
+      );
+    } else {
+      // 如果 HOS_No 查不到 LOGO_No 關聯，則顯示所有品牌選項 (請根據實際業務需求調整)
+      this.filteredLogoOptions = this.fullBrandData;
     }
   }
   GetBudgetAmount(): void {// 獲取剩餘預算金額
