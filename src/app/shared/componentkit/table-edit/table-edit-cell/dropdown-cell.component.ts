@@ -26,7 +26,7 @@ import { CellInput } from './table-edit-cell.model';
                   [disabled]="isDisabled()"
                   [editable]="true"
                   (onChange)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index)"
-                  (onHide)="handleHide()"
+                  (onHide)="handleHide()"(keydown.enter)="handleEnter($event)"
                   [virtualScroll]="true" [virtualScrollItemSize]="40"
                   [showClear]="cellInput.col.showClear ?? true"
                   [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
@@ -120,5 +120,9 @@ export class DropdownCellComponent {
   public getOptions(rowData: any, col: EditColumn): any[] | undefined {
     // 邏輯直接從 TableEditComponent 搬過來
     return typeof col.options === 'function' ? (col.options(rowData) || undefined) : col.options || undefined;
+  }
+  handleEnter(event: Event) {
+    event.preventDefault(); // 阻止表單提交
+    event.stopPropagation(); // 阻止事件冒泡
   }
 }

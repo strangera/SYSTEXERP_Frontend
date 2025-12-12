@@ -21,7 +21,7 @@ import { CellInput } from './table-edit-cell.model';
                  [maxlength]="cellInput.col.maxLength || null"
                  [style]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
                  [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
-                 (blur)="handleBlur()"
+                 (blur)="handleBlur()"(keydown.enter)="handleEnter($event)"
                  [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }" />
         </ng-container>
 
@@ -67,5 +67,10 @@ export class InputCellComponent {
       this.cellInput.col,
       this.cellInput.index
     );
+  }
+  handleEnter(event: Event) {
+    event.preventDefault(); // 阻止表單提交
+    event.stopPropagation(); // 阻止事件冒泡
+    this.handleBlur();
   }
 }

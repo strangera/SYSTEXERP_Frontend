@@ -137,6 +137,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   onPLU_MagNoBlur(rowData: IPOS2004DetailData, value: string, col: EditColumn, index: number) {
     const venNo = this.dataForm.controls.VEN_No.value;
     const logoNo = this.dataForm.controls.LOGO_No.value;
+
     if (!venNo || !logoNo || !value) {
       return;
     }
@@ -145,53 +146,73 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       queryNo: value,
       LOGO_No: logoNo,
     };
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      if (results.Data && results.Data.length > 0) {
-        const newData = results.Data[0];
-        const body = {
-          VEN_No: venNo,
-          LOGO_No: logoNo,
-          PLU_MagNo: newData.PLU_MagNo,
-        }
-        this.tls52050Service.queryTLS52050Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-          this.data = [
-            ...this.data.slice(0, index), {
-              ID: 0,
-              PLU_MagNo: results.Data[0].PLU_MagNo,
-              PLU_No: results.Data[0].PLU_No,
-              PLU_Name: results.Data[0].PLU_Name,
-              CAT_LNo: results.Data[0].CAT_LNo,
-              CAT_LName: results.Data[0].CAT_LName,
-              CAT_MNo: results.Data[0].CAT_MNo,
-              CAT_MName: results.Data[0].CAT_MName,
-              CAT_SNo: results.Data[0].CAT_SNo,
-              CAT_SName: results.Data[0].CAT_SName,
-              PLU_OrderPrcRate: Number(results.Data[0].PLU_OrderPrcRate),
-              PLU_OrderPrc: Number(results.Data[0].PLU_OrderPrc),
-              MAM_OrderPrc: Number(results.Data[0].PLU_OrderPrc),
-              PLU_SalePrc: Number(results.Data[0].PLU_SalePrc),
-              MAM_UnitPrc: Number(results.Data[0].PLU_SalePrc),
-              MAD_Remark: ''
-            },
-            ...this.data.slice(index + 1)
-          ] as IPOS2004DetailData[];
-          this.cdr.detectChanges();
-        })
-      } else {
-        this.messageService.errorBubble('查無該商品資訊');
-        this.data[index] = {
-          ...this.data[index],
-          PLU_MagNo: '',
-          PLU_OrderPrcRate: 0,
-          PLU_OrderPrc: 0,
-          MAM_OrderPrc: 0,
-          PLU_SalePrc: 0,
-          MAM_UnitPrc: 0,
-          MAD_Remark: ''
-        };
-        this.data = [...this.data];
+
+    // 1. 將整個非同步流程延遲執行
+    setTimeout(() => {
+      // 再次檢查，防止延遲期間欄位被清除
+      if (!this.dataForm.controls.VEN_No.value || !this.dataForm.controls.LOGO_No.value || !value) {
+        return;
       }
-    });
+
+      this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+        if (results.Data && results.Data.length > 0) {
+          const newData = results.Data[0];
+          const body2 = { // 使用 body2 避免與外部的 body 混淆
+            VEN_No: venNo,
+            LOGO_No: logoNo,
+            PLU_MagNo: newData.PLU_MagNo,
+          }
+          this.tls52050Service.queryTLS52050Detail(body2).pipe(untilDestroyed(this)).subscribe((results2) => {
+            const detailData = results2.Data[0];
+
+            const updatedProps = {
+              // 這是您從結果中構建的新物件屬性
+              ID: 0,
+              PLU_MagNo: detailData.PLU_MagNo,
+              PLU_No: detailData.PLU_No,
+              PLU_Name: detailData.PLU_Name,
+              CAT_LNo: detailData.CAT_LNo,
+              CAT_LName: detailData.CAT_LName,
+              CAT_MNo: detailData.CAT_MNo,
+              CAT_MName: detailData.CAT_MName,
+              CAT_SNo: detailData.CAT_SNo,
+              CAT_SName: detailData.CAT_SName,
+              PLU_OrderPrcRate: Number(detailData.PLU_OrderPrcRate),
+              PLU_OrderPrc: Number(detailData.PLU_OrderPrc),
+              MAM_OrderPrc: Number(detailData.PLU_OrderPrc), // 注意這裡使用的是 PLU_OrderPrc
+              PLU_SalePrc: Number(detailData.PLU_SalePrc),
+              MAM_UnitPrc: Number(detailData.PLU_SalePrc), // 注意這裡使用的是 PLU_SalePrc
+              MAD_Remark: ''
+            };
+
+            // *** 修正點 1：使用 Object.assign 在原地更新行物件的屬性 ***
+            Object.assign(this.data[index], updatedProps);
+
+            // *** 修正點 2：替換 data 的引用，通知通用表格元件更新 ***
+            this.data = [...this.data];
+            this.cdr.detectChanges();
+          })
+        } else {
+          this.messageService.errorBubble('查無該商品資訊');
+
+          // *** 修正點 3：使用 Object.assign 在原地清空欄位值 ***
+          Object.assign(this.data[index], {
+            PLU_MagNo: '',
+            PLU_OrderPrcRate: 0,
+            PLU_OrderPrc: 0,
+            MAM_OrderPrc: 0,
+            PLU_SalePrc: 0,
+            MAM_UnitPrc: 0,
+            MAD_Remark: ''
+          });
+
+          // *** 修正點 4：替換 data 的引用，通知通用表格元件更新 ***
+          this.data = [...this.data];
+          this.cdr.detectChanges();
+        }
+      });
+    }, 50); // 延遲 50 毫秒
+
   }
 
   ngOnInit(): void {

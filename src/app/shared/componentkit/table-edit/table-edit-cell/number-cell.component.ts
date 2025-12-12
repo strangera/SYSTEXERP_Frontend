@@ -25,7 +25,7 @@ import { CellInput } from './table-edit-cell.model';
                      [minFractionDigits]="cellInput.col.minFractionDigits"
                      [maxFractionDigits]="cellInput.col.maxFractionDigits"
                      (onFocus)="cellInput.col.onFocus?.(cellInput.rowData, cellInput.rowData[cellInput.col.field], cellInput.col, cellInput.index)"
-                     (onBlur)="handleBlur()"
+                     (onBlur)="handleBlur()"(keydown.enter)="handleEnter($event)"
                      [style]="{'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
                      [inputStyle]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign || 'right'}"
                      [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
@@ -84,5 +84,10 @@ export class NumberCellComponent {
       this.cellInput.col,
       this.cellInput.index
     );
+  }
+  handleEnter(event: Event) {
+    event.preventDefault(); // 阻止表單提交
+    event.stopPropagation(); // 阻止事件冒泡
+    this.handleBlur();
   }
 }

@@ -148,6 +148,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     const venNo = this.dataForm.controls.VEN_No.value;
     const logoNo = this.dataForm.controls.LOGO_No.value;
 
+    // 1. 立即檢查並退出
     if (!venNo || !logoNo || !value) {
       return;
     }
@@ -157,51 +158,86 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
       LOGO_No: logoNo,
     };
 
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      if (results.Data && results.Data.length > 0) {
-        const newData = results.Data[0];
-        const buyPrc = newData.PLU_SalePrc_UNI || 0;
-        const salePrc = newData.PLU_SalePrc || 0;
-        const taxType = newData.PLU_StockTaxType;
-        const subQty = 1; // 預設數量為 1
-
-        const buyNet = Math.round(subQty * buyPrc);
-        const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0; // 計算稅額
-        const buyAmt = buyNet + buyTax; // 計算合計
-        const updatedRow: TLS52020Detail = {
-          ...newData,
-          id: 0,
-          PLU_MagNo: newData.PLU_MagNo,
-          PLU_Name: newData.PLU_Name,
-          PLU_No: newData.PLU_No,
-          PLU_BoxQty: newData.PLU_BoxQty,
-          PLU_StockTaxType: newData.PLU_StockTaxType,
-          PLU_TaxType: newData.PLU_TaxType, // 確保 TaxType 屬性也被帶入
-          PLU_Unit: newData.PLU_Unit,
-          UNIT_NAME: newData.UNIT_NAME,
-          CRN_SubQty: subQty,
-          CRN_BuyNet: buyNet, // 修正為計算後的 buyNet
-          CRN_BuyTax: buyTax, // 新增
-          CRN_BuyAmt: buyAmt, // 新增
-          CRN_SaleAmt: Math.round(salePrc), // 修正為計算後的 saleAmt (數量為 1 時)
-          CRN_BuyPrc: buyPrc,
-          CRN_SalePrc: salePrc,
-          CRN_Remark: ''
-        };
-        this.data = [
-          ...this.data.slice(0, index), // 取得 index 之前的元素
-          updatedRow,                     // 放入新的物件
-          ...this.data.slice(index + 1)   // 取得 index 之後的元素
-        ];
-        this.calculateTotals();
-        this.cdr.detectChanges();
-
-      } else {
-        this.messageService.errorBubble('查無該商品資訊');
-        this.data[index].PLU_MagNo = '';
-        this.data = [...this.data]; // 確保刷新
+    // 2. 延遲執行 API 查詢，讓瀏覽器有時間處理 Tab 鍵焦點跳轉
+    setTimeout(() => {
+      // 再次檢查，防止在延遲期間，使用者清除了 VEN_No/LOGO_No
+      if (!this.dataForm.controls.VEN_No.value || !this.dataForm.controls.LOGO_No.value || !value) {
+        return;
       }
-    });
+
+      this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+
+        if (results.Data && results.Data.length > 0) {
+          const newData = results.Data[0];
+          const buyPrc = newData.PLU_SalePrc_UNI || 0;
+          const salePrc = newData.PLU_SalePrc || 0;
+          const taxType = newData.PLU_StockTaxType;
+          const subQty = 1; // 預設數量為 1
+
+          const buyNet = Math.round(subQty * buyPrc);
+          const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0; // 計算稅額
+          const buyAmt = buyNet + buyTax; // 計算合計
+          const saleAmt = Math.round(subQty * salePrc); // 銷售小計
+
+          const updatedProps = {
+            ...newData, // 帶入所有查詢結果的屬性
+            id: 0,
+            PLU_MagNo: newData.PLU_MagNo,
+            PLU_Name: newData.PLU_Name,
+            PLU_No: newData.PLU_No,
+            PLU_BoxQty: newData.PLU_BoxQty || 0,
+            PLU_StockTaxType: newData.PLU_StockTaxType,
+            PLU_TaxType: newData.PLU_TaxType,
+            PLU_Unit: newData.PLU_Unit,
+            UNIT_NAME: newData.UNIT_NAME,
+            CRN_SubQty: subQty,
+            CRN_BuyNet: buyNet,
+            CRN_BuyTax: buyTax,
+            CRN_BuyAmt: buyAmt,
+            CRN_SaleAmt: saleAmt,
+            CRN_BuyPrc: buyPrc,
+            CRN_SalePrc: salePrc,
+            CRN_Remark: ''
+          };
+
+          // *** 修正點 1：在原地更新行物件的屬性 ***
+          Object.assign(this.data[index], updatedProps);
+
+          // *** 修正點 2：替換 data 的引用，通知通用表格元件更新 ***
+          this.data = [...this.data];
+
+          this.calculateTotals();
+          this.cdr.detectChanges();
+
+        } else {
+          this.messageService.errorBubble('查無該商品資訊');
+
+          // *** 修正點 3：在原地清空欄位值 ***
+          Object.assign(this.data[index], {
+            PLU_MagNo: '',
+            PLU_Name: '',
+            PLU_No: '',
+            UNIT_NAME: '',
+            PLU_BoxQty: 0,
+            PLU_StockTaxType: '',
+            PLU_TaxType: '',
+            CRN_SubQty: 0,
+            CRN_BuyNet: 0,
+            CRN_BuyTax: 0,
+            CRN_BuyAmt: 0,
+            CRN_SaleAmt: 0,
+            CRN_BuyPrc: 0,
+            CRN_SalePrc: 0,
+            CRN_Remark: ''
+          });
+
+          // *** 修正點 4：替換 data 的引用，通知通用表格元件更新 ***
+          this.data = [...this.data];
+          this.calculateTotals();
+          this.cdr.detectChanges();
+        }
+      });
+    }, 50); // 延遲 50 毫秒
   }
   constructor(
     private readonly dropDownListService: DropDownListService,
@@ -521,7 +557,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
         PLU_No: item.PLU_No, // 國際條碼
         PLU_Name: item.PLU_Name,
         PLU_Unit: item.PLU_Unit,
-        PLU_BoxQty: item.PLU_BoxQty,
+        PLU_BoxQty: item.PLU_BoxQty || 0,
         PLU_StockTaxType: item.PLU_StockTaxType,
         PLU_TaxType: item.PLU_TaxType,
         CRN_SubQty: item.CRN_SubQty || 0, // 確保有值，使用之前計算好的 POD_SubQty

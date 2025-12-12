@@ -27,6 +27,7 @@ import { CellInput } from './table-edit-cell.model';
           'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field]
         }"
         (onChange)="onCheckboxChange($event)"
+        (keydown.enter)="handleEnter($event)"
       />
 
       <span *ngIf="cellInput.rowData._validationErrors?.[cellInput.col.field]"
@@ -85,5 +86,9 @@ export class CheckboxCellComponent {
       this.cellInput.col,
       this.cellInput.index
     );
+  }
+  handleEnter(event: Event) {
+    event.preventDefault(); // 阻止表單提交
+    event.stopPropagation(); // 阻止事件冒泡
   }
 }

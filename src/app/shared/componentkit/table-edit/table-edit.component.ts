@@ -56,7 +56,6 @@ import { ColumnGroup, EditColumn, FieldChangeEvent } from './table-edit.model';
     TableModule,
     TooltipModule,
   ],
-  // 🔧 關鍵修正：在 Component 層級提供 Service，確保每個表格實例都有獨立的 Service
   providers: [TableEditDataService, TableValidationService]
 })
 export class TableEditComponent implements OnChanges {
