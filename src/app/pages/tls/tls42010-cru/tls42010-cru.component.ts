@@ -116,6 +116,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   xCount = 8;
   yCount = 5;
   pages: KeyItem[][] = [];   // 每頁獨立存 keys
+  pageOriginalNos: number[] = []; // 對應每個 pages 索引的原始頁碼（傳給後端）
   selected?: KeyItem;
 
   // ---------------- Tab Options ----------------
@@ -275,6 +276,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   ngOnInit(): void {
     this.initializePage('TLS42010', this.dataForm);
     this.pages = [this.buildGrid(0)];
+    // 初始化原始頁碼映射（第一頁原始為 1）
+    this.pageOriginalNos = [1];
     this.selected = this.pages[0][0];
     this.loadDropdowns();
 
@@ -408,6 +411,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   addPage() {
     const newPageIndex = this.totalPages;
     this.pages.push(this.buildGrid(newPageIndex));
+    // 新增頁面時，同步原始頁碼（使用目前的 index + 1 作為原始頁碼）
+    this.pageOriginalNos.push(newPageIndex + 1);
     setTimeout(() => {
       this.activeIndex = newPageIndex;
       this.dataForm.controls.activePage.setValue(newPageIndex);
@@ -431,9 +436,11 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
         this.loading = true;
+        // 使用原始頁碼陣列的值，若不存在則 fallback 為 activeIndex + 1
+        const origPageNo = this.pageOriginalNos[this.activeIndex] ?? (this.activeIndex + 1);
         const payload = {
           MID: this.rowdata?.ID ?? 0,
-          KB_KeyPage: this.activeIndex + 1
+          KB_KeyPage: origPageNo
         };
         this.tls42010Service.deletepageTLS42010(payload)
           .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
@@ -443,6 +450,10 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
               if (ok) {
                 // 刪除當前頁（僅在後端成功後）
                 this.pages.splice(this.activeIndex, 1);
+                // 同步原始頁碼陣列
+                if (this.pageOriginalNos && this.pageOriginalNos.length > this.activeIndex) {
+                  this.pageOriginalNos.splice(this.activeIndex, 1);
+                }
 
                 // 調整活動頁面索引
                 if (this.activeIndex >= this.pages.length) {

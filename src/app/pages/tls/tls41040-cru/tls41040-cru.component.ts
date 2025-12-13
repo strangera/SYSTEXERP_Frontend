@@ -4,7 +4,8 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin, map } from 'rxjs';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
@@ -51,6 +52,7 @@ export interface TLS41040Detail {
     CommonModule,
     TableComponent,
     InputTextareaComponent,
+    TableEditComponent,
   ]
 })
 export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -78,7 +80,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
   ];
 
   // Table 欄位
-  columns: Column[] = [];
+  columns: EditColumn[] = [];
 
   // 下拉選項
   SYS3700_Options: { value: string; label: string }[] = [];
@@ -105,9 +107,9 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
 
     // 確保主檔ID正確
     if (this.rowdata?.ID) {
-      console.log('✅ 帶入主檔 ID:', this.rowdata.ID);
+      console.log('帶入主檔 ID:', this.rowdata.ID);
     } else {
-      console.warn('⚠️ 無主檔 ID，更新會失敗');
+      console.warn(' 無主檔 ID，更新會失敗');
     }
 
     this.loadAndSetupColumns();
@@ -170,13 +172,12 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
       this.SYS3A00_Options = Area_No ?? [];
 
       this.columns = [
-        { field: 'NOT_SeqNo', header: '通告序號', format: (value) => this.isFormCreateable ? '自動給號' : value },
         { field: 'TLT_No', header: '專櫃編號', type: 'dropdown', options: this.TLTTALENT_OPTIONS, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
         { field: 'ECR_Type', header: '機台類型', type: 'dropdown', options: this.ECR_Type_Options, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
-        { field: 'ECR_GrpNo', header: '機檯群組編號', type: 'dropdown', options: this.ECR_GrpNoOptions, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isEcrGrpNoSelected(rowData) },
-        { field: 'BUILDING_No', header: '館別代碼', type: 'dropdown', options: this.SYS3700_Options, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
-        { field: 'FLOOR_No', header: '樓層代碼', type: 'dropdown', options: this.SYS3800_Options, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
-        { field: 'Area_No', header: '區域代碼', type: 'dropdown', options: this.SYS3A00_Options, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
+        { field: 'ECR_GrpNo', header: '機台群組編號', type: 'dropdown', options: this.ECR_GrpNoOptions, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isEcrGrpNoSelected(rowData) },
+        { field: 'BUILDING_No', header: '館別', type: 'dropdown', options: this.SYS3700_Options, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
+        { field: 'FLOOR_No', header: '樓層', type: 'dropdown', options: this.SYS3800_Options, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
+        { field: 'Area_No', header: '區域', type: 'dropdown', options: this.SYS3A00_Options, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
       ];
     });
   }

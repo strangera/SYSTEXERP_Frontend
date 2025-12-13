@@ -74,13 +74,29 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
 
   ECRNoOptions: { label: string; value: string }[] = [];
 
+  ECRTypeOptions: { No: string; Name: string }[] = [
+    { No: '1', Name: '統收(集中)機台' },
+    { No: '2', Name: '自收(專櫃)機台' },
+    { No: '5', Name: '離線機台' },
+    { No: '7', Name: '虛擬機台' },
+    { No: 'CH', Name: '發票換開機台' },
+    { No: 'OT', Name: '它社機台' }
+  ];
+
+  // 由 ECR_Type 的代碼取得中文顯示
+  getECRTypeLabel = (code: string | number | undefined): string => {
+    if (code === null || code === undefined) return '';
+    const c = String(code);
+    const found = this.ECRTypeOptions.find(x => x.No === c);
+    return found ? found.Name : c;
+  };
+
   NOT_Status_Options = [
     { label: '已生效', value: 'A' },
     { label: '已刪除', value: 'D' },
-    { label: '全部', value: '' },
   ];
 
-  private statusLabel = (v: string) => (v === 'A' ? '已生效(A)' : v === 'D' ? '已刪除(D)' : v ?? '');
+  private statusLabel = (v: string) => (v === 'A' ? '已生效' : v === 'D' ? '已刪除' : v ?? '');
 
   toColumnDateTimeFormat(dateInput: string | Date): string {
     const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
@@ -91,7 +107,7 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
     const hh = String(date.getHours()).padStart(2, '0');
     const min = String(date.getMinutes()).padStart(2, '0');
     const ss = String(date.getSeconds()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}-${hh}:${min}:${ss}`;
+    return `${yyyy}/${mm}/${dd}-${hh}:${min}:${ss}`;
   }
   columns7: Column[] = [
     { field: 'NOT_DateTime', header: '通告產生時間', visible: true, format: (v) => this.toColumnDateTimeFormat(v) },
@@ -103,9 +119,9 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
   ];
 
   expansionColumns7: Column[] = [
-    { field: 'NOT_SeqNo', header: '通告序號', visible: true },
     { field: 'TLT_No', header: '專櫃編號', visible: true },
-    { field: 'ECR_Type', header: '機台類別', visible: true },
+    { field: 'TLT_Name', header: '專櫃名稱', visible: true },
+    { field: 'ECR_Type', header: '機台類別', visible: true, format: (v) => this.getECRTypeLabel(v) },
     { field: 'ECR_GrpNo', header: '機台群組編號', visible: true },
     { field: 'BUILDING_No', header: '館別', visible: true },
     { field: 'FLOOR_No', header: '樓層', visible: true },
@@ -163,6 +179,30 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
     });
   }
 
+  isRowSelectable = (row: TLS41040Item) => {
+    // 如果 row 不存在則預設為可選
+    if (!row) return true;
+    // 已刪除的不可選
+    if (row.NOT_Status === 'D') return false;
+    // 結束日早於今天的也不可選（避免刪除/批次操作）
+    if (this.isEditDisabled(row)) return false;
+    return true;
+  };
+
+  // 判斷是否可以編輯/刪除：當 NOT_EndDateTime < 今日 (日期比較，不含時間) 時，回傳 true 表示禁用編輯
+  isEditDisabled = (row: TLS41040Item) => {
+    if (!row || !row.NOT_EndDateTime) return false; // 沒有結束日則允許
+    const end = new Date(row.NOT_EndDateTime);
+    if (isNaN(end.getTime())) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    return end < today; // 結束日 < 今天 => 禁用編輯/刪除
+  };
+
+  // rowEditDisabled 與 isEditDisabled 相同邏輯
+  isRowEditDisabled = (row: TLS41040Item) => this.isEditDisabled(row);
+
 
   // ---- 刪除 ----
   onDelete(selectedRows: TLS41040Item[]): void {
@@ -173,7 +213,6 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
         this.onSubmit(this.queryForm);
         this.selectedItems = [];
       },
-      error: () => { this.loading = false; },
     });
   }
 
