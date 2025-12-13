@@ -3,114 +3,317 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
-
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="預售活動編號" controlName="pod_no"
-          [control]="dialogForm().pod_no" [submitted]="submitted" [disabled]="false">
-        </app-input-text>
-
-        <app-calendar-range class="col-12 md:col-6 lg:col-8" calendarType="dateRange" label="預售期間"
-          [startControl]="dialogForm().pod_sdate" [endControl]="dialogForm().pod_edate" [submitted]="submitted">
-        </app-calendar-range>
-
-        <app-input-text class="col-12 md:col-8 lg:col-8" label="預售名稱" controlName="pod_desc"
-          [control]="dialogForm().pod_desc" [submitted]="submitted">
-        </app-input-text>
-
-        <app-input-text class="col-12 md:col-4 lg:col-4" label="核准狀態" controlName="pod_status"
-          [control]="dialogForm().pod_status" [disabled]="false">
-        </app-input-text>
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="預售編號"
+          controlName="pod_no"
+          [control]="dataForm.controls.pod_no"
+          [readonly]="true"
+          [submitted]="submitted"
+          customPlaceholder="系統自動產生"
+        ></app-input-text>
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="預售名稱"
+          controlName="pod_desc"
+          [control]="dataForm.controls.pod_desc"
+          [submitted]="submitted"
+        ></app-input-text>
+        <app-calendar-range
+          class="col-12 md:col-6 lg:col-4"
+          label="預售期間"
+          calendarType="dateRange"
+          [startControl]="dataForm.controls.pod_sdate"
+          [endControl]="dataForm.controls.pod_edate"
+          [submitted]="submitted"
+        ></app-calendar-range>
       </div>
+      <div class="grid p-fluid">
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="核准狀態"
+          controlName="pod_status"
+          [options]="pod_status_Option"
+          optionLabel="label"
+          optionValue="value"
+          [control]="dataForm.controls.pod_status"
+          [readonly]="true"
+          [submitted]="submitted"
+        ></app-dropdown>
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="核准人員"
+          controlName="approved_usr_name"
+          [control]="dataForm.controls.approved_usr_name"
+          [readonly]="true"
+          [submitted]="submitted"
+        ></app-input-text>
+        <app-calendar
+          class="col-12 md:col-6 lg:col-4"
+          calendarType="dateOne"
+          label="核准日期"
+          controlName="approved_date"
+          [control]="dataForm.controls.approved_date"
+          [submitted]="submitted"
+          [readonly]="true"
+          customPlaceholder="核准後自動產生"
+        ></app-calendar>
+      </div>
+      <!-- ECR明細檔 -->
+      <app-table-edit
+        title="收銀機"
+        tableKey="ecrTable"
+        [dataKey]="'ECR_No'"
+        [data]="ecrData"
+        class="col-12"
+        [columns]="ecrColumn"
+        (selectionChange)="selectedECRItems = $event"
+        [selectedItems]="selectedECRItems"
+        [showCheckBox]="!isFormReadable"
+        [showInsert]="!isFormReadable"
+        [showDelete]="!isFormReadable"
+        [canInsert]="false"
+        (insert)="dialogVisible('ecr')"
+        [dataStatusValue]="{
+          Original: 'original',
+          New: 'new',
+          Modified: 'modified',
+          Deleted: 'deleted',
+        }"
+        [rowValidate]="validateECR"
+        [defaultInsertData]="defaultNewECR"
+        (dataChange)="ecrData = $event"
+        dataStatusField="status"
+        [loading]="ecrLoading"
+        [keepDeletedData]="true"
+      ></app-table-edit>
 
-      <div *ngIf="isFormReadable===false"
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataForm"></app-button>
-        <app-button btnType="submit" [loading]="loading"></app-button>
+      <!-- TLT明細檔 -->
+      <app-table-edit
+        title="專櫃"
+        tableKey="tltTable"
+        [dataKey]="'tlt_no'"
+        [data]="tltData"
+        class="col-12"
+        [columns]="tltColumn"
+        (selectionChange)="selectedTLTItems = $event"
+        [selectedItems]="selectedTLTItems"
+        [showCheckBox]="!isFormReadable"
+        [showInsert]="!isFormReadable"
+        [showDelete]="!isFormReadable"
+        [canInsert]="false"
+        (insert)="onTltInsertClick()"
+        [dataStatusValue]="{
+          Original: 'original',
+          New: 'new',
+          Modified: 'modified',
+          Deleted: 'deleted',
+        }"
+        [rowValidate]="validateTLT"
+        (dataChange)="onTltDataChange($event)"
+        dataStatusField="status"
+        [loading]="tltLoading"
+        [keepDeletedData]="true"
+        [showExcel]="!isFormReadable"
+        [showExcelExport]="true"
+        [showExcelImport]="true"
+        (exportExcel)="onExportTltExcel()"
+        (importExcel)="onImportTltExcel($event)"
+      ></app-table-edit>
+
+      <!-- 收銀機 Dialog選單 -->
+      <app-dialog
+        [visible]="ecrDialogVisible"
+        (visibleChange)="ecrDialogVisible = $event"
+        [header]="'選擇收銀機'"
+        (save)="onDialogECRSubmit()"
+        [height]="'auto'"
+        [loading]="loading"
+      >
+        <form [formGroup]="ecrDialogForm">
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown
+                label="館別"
+                controlName="sys3800"
+                [options]="building_Option"
+                optionLabel="Name"
+                optionValue="No"
+                appendTo="body"
+                [control]="ecrDialogForm.controls.sys3800"
+                [submitted]="submitted"
+              ></app-dropdown>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown
+                label="樓層"
+                controlName="sys3900"
+                [options]="floor_Option"
+                optionLabel="Name"
+                optionValue="No"
+                appendTo="body"
+                [control]="ecrDialogForm.controls.sys3900"
+                [submitted]="submitted"
+              ></app-dropdown>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown
+                label="區域"
+                controlName="sys3A00"
+                [options]="area_Option"
+                optionLabel="Name"
+                optionValue="No"
+                appendTo="body"
+                [control]="ecrDialogForm.controls.sys3A00"
+                [submitted]="submitted"
+              ></app-dropdown>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="收銀機號"
+                controlName="ecr_no"
+                [control]="ecrDialogForm.controls.ecr_no"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown
+                label="專櫃編號/名稱"
+                [options]="tlt_noOption"
+                optionLabel="Label"
+                optionValue="No"
+                [control]="ecrDialogForm.controls.tlt_no"
+                [submitted]="submitted"
+              ></app-dropdown>
+            </div>
+
+            <div class="col-12">
+              <app-table
+                #ecrDialogTable
+                [showCheckBox]="true"
+                [showManage]="false"
+                [showDelete]="false"
+                [showReportMode]="false"
+                [rows]="10"
+                [selectedItems]="ecrDialogSelected"
+                (selectionChange)="onSelectionECRChange($event)"
+                [data]="ecrDialogData"
+                [dataKey]="'ecr_no'"
+                [tableKey]="'ecrDialogTable'"
+                [columns]="ecrDialogColumn"
+                [loading]="ecrDialogLoading"
+              ></app-table>
+            </div>
+          </div>
+        </form>
+      </app-dialog>
+
+      <!-- 專櫃 Dialog選單 -->
+      <app-dialog
+        [visible]="tltDialogVisible"
+        (visibleChange)="tltDialogVisible = $event"
+        [header]="'選擇專櫃'"
+        (save)="onDialogTLTSubmit()"
+        [height]="'auto'"
+        [loading]="loading"
+      >
+        <form [formGroup]="tltDialogForm">
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-multi-select
+                label="館別"
+                controlName="sys3800"
+                [options]="building_Option"
+                optionLabel="Name"
+                optionValue="No"
+                appendTo="body"
+                [control]="tltDialogForm.controls.sys3800"
+                [submitted]="submitted"
+              ></app-multi-select>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-multi-select
+                label="樓層"
+                controlName="sys3900"
+                [options]="floor_Option"
+                optionLabel="Name"
+                optionValue="No"
+                appendTo="body"
+                [control]="tltDialogForm.controls.sys3900"
+                [submitted]="submitted"
+              ></app-multi-select>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-multi-select
+                label="區域"
+                controlName="sys3A00"
+                [options]="area_Option"
+                optionLabel="Name"
+                optionValue="No"
+                appendTo="body"
+                [control]="tltDialogForm.controls.sys3A00"
+                [submitted]="submitted"
+              ></app-multi-select>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="專櫃編號"
+                controlName="tlt_no"
+                [control]="tltDialogForm.controls.tlt_no"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="專櫃名稱"
+                controlName="tlt_name"
+                [control]="tltDialogForm.controls.tlt_name"
+                [submitted]="submitted"
+              ></app-input-text>
+            </div>
+
+            <div class="col-12">
+              <app-table
+                #ecrDialogTable
+                [showCheckBox]="true"
+                [showManage]="false"
+                [showDelete]="false"
+                [showReportMode]="false"
+                [rows]="10"
+                [selectedItems]="tltDialogSelected"
+                (selectionChange)="onSelectionTLTChange($event)"
+                [data]="tltDialogData"
+                [dataKey]="'tlt_no'"
+                [tableKey]="'tltDialogTable'"
+                [columns]="tltDialogColumn"
+                [loading]="tltDialogLoading"
+              ></app-table>
+            </div>
+          </div>
+        </form>
+      </app-dialog>
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        *ngIf="!isFormReadable"
+      >
+        <app-button
+          btnType="cancel"
+          [form]="dataForm"
+          (click)="reset26010()"
+        ></app-button>
+        <app-button btnType="submit"></app-button>
       </div>
     </form>
   </p-panel>
 </div>
-
-<div class="card">
-  <div *ngIf="isFormReadable === false" class="grid p-fluid">
-    <div class="col-12 md:col-6 lg:col-4">
-      <app-button btnType="create" label="新增收銀機" [loading]="service.ecrLoading()"
-        (click)="onOpenDialog('ecr')"></app-button>
-    </div>
-  </div>
-
-  <div class="col-12">
-    <app-table [showCheckBox]="true" [showEdit]="false" [showDetail]="false" [showManage]="false"
-      [showReportMode]="false" [isRowSelectable]="isRowSelectableWrapper" (delete)="onDelete($event, 'ecr')"
-      (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()" [lazy]="true" [data]="ecrTableData()"
-      [dataKey]="'ecr_no'" [tableKey]="'TLS26010_ECR'" [loading]="service.tableLoading()" [columns]="ecr_Column">
-    </app-table>
-  </div>
-</div>
-
-<div class="card">
-  <div *ngIf="isFormReadable === false" class="grid p-fluid">
-    <div class="col-12 md:col-6 lg:col-4">
-      <app-button btnType="create" label="新增專櫃" [loading]="service.tltLoading()"
-        (click)="onOpenDialog('tlt')"></app-button>
-    </div>
-  </div>
-
-  <div class="col-12">
-    <app-table [showCheckBox]="true" [showEdit]="false" [showDetail]="false" [showManage]="false"
-      [showReportMode]="false" [isRowSelectable]="isRowSelectableWrapper" [showExcel]="isFormEditable"
-      (exportExcel)="onExportExcel()" (importExcel)="onImportExcel($event)" (delete)="onDelete($event, 'tlt')"
-      (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()" [lazy]="true" [loading]="service.tableLoading()"
-      [data]="tltTableData()" [dataKey]="'tlt_no'" [tableKey]="'TLS26010_TLT'" [columns]="tlt_Column">
-    </app-table>
-  </div>
-</div>
-
-<!-- 收銀機/專櫃 Dialog選單 -->
-<app-dialog [visible]="dialogVisible() === 'ecr' || dialogVisible() === 'tlt'" [header]="dialogHeader()"
-  (visibleChange)="onVisibleChange($event); dt.dt.reset()" (save)="onDialogSubmit()" [height]="'auto'"
-  [loading]="loading">
-  <form [formGroup]="dataForm">
-    <div class="grid p-fluid">
-      <div class="col-12 md:col-6 lg:col-4">
-        <app-multi-select label="館別" controlName="sys3800" [options]="service.sys3800Options()" optionLabel="Name"
-          optionValue="No" appendTo="body" [control]="dialogForm().sys3800" [loading]="service.sys3800Loading()"
-          [submitted]="submitted"></app-multi-select>
-      </div>
-
-      <div class="col-12 md:col-6 lg:col-4">
-        <app-multi-select label="樓層" controlName="sys3900" [options]="service.sys3900Options()" optionLabel="Name"
-          optionValue="No" appendTo="body" [control]="dialogForm().sys3900" [loading]="service.sys3900Loading()"
-          [submitted]="submitted"></app-multi-select>
-      </div>
-
-      <div class="col-12 md:col-6 lg:col-4">
-        <app-multi-select label="區域" controlName="sys3A00" [options]="service.sys3A00Options()" optionLabel="Name"
-          optionValue="No" appendTo="body" [control]="dialogForm().sys3A00" [loading]="service.sys3A00Loading()"
-          [submitted]="submitted"></app-multi-select>
-      </div>
-
-      <ng-container *ngIf="dialogVisible() === 'ecr'">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="收銀機號" controlName="ecr_no" [options]="ecr_no_Option" optionLabel="Label" optionValue="No"
-            [control]="dialogForm().ecr_nos" [submitted]="submitted"></app-dropdown>
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="專櫃編號" controlName="tlt_no" [options]="tlt_no_Option" optionLabel="Label" optionValue="No"
-            optionValue="value" [control]="dialogForm().tlt_nos" [submitted]="submitted"></app-dropdown>
-        </div>
-      </ng-container>
-
-      <div class="col-12">
-        <app-table #dt [showCheckBox]="true" [showManage]="false" [showDelete]="false" [showReportMode]="false"
-          [rows]="10" [selectedItems]="dialogSelectedData" (selectionChange)="onSelectionChange($event)"
-          [data]="dialogData()" [dataKey]="dialogDataKey()" [tableKey]="dialogTableKey()" [columns]="dialogColumn()"
-          [loading]="dialogLoading()">
-        </app-table>
-      </div>
-    </div>
-  </form>
-</app-dialog>

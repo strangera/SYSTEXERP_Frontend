@@ -16,11 +16,12 @@
             [options]="poStatusOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.RJM_StatusList" [submitted]="submitted"></app-multi-select>
           <!-- 管理編號 -->
-          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.queryNo"
-            [submitted]="submitted" optionLabel="PLU_MagNo" optionValue="PLU_MagNo" [suggestions]="suggestions"
-            [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
-            (formValueChanged)="onformValueChanged($event)" [formGroup]="opForm" [dialogData]="opData"
-            [dialogColumns]="opColumns" [loading]="opLoading" [totalRecords]="opTotalRecords">
+          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [showOverlay]="false"
+            [control]="queryForm.controls.queryNo" templateLabel="label" [submitted]="submitted" optionLabel="PLU_MagNo"
+            optionValue="PLU_MagNo" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
+            (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
+            [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
+            [totalRecords]="opTotalRecords">
             <app-input-text class="col-12 md:col-6" label="管理編號" controlName="queryNo"
               [control]="opForm.controls.queryNo" />
             <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"

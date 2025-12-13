@@ -155,7 +155,7 @@ export class TLS41020Component
         this.data = res?.Data || [];
         this.totalRecords = res?.TotalCount ?? this.data.length ?? 0;
       },
-      error: () => { this.loading = false; this.messageService.errorBubble('查詢失敗') },
+      
       complete: () => {
         this.loading = false;
         this.messageService.unblockUi();

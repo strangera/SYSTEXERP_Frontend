@@ -10,7 +10,7 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown-range label="廠商代號" [startControl]="queryForm.controls.VEN_No_From"
-              [endControl]="queryForm.controls.VEN_No_To" [submitted]="submitted" [options]="VendorNoOptions"
+              [endControl]="queryForm.controls.VEN_No_To" [submitted]="submitted" [options]="VendorNoOptions | async"
               optionLabel="label" optionValue="value" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -27,7 +27,7 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown-range label="會計科目代號" [startControl]="queryForm.controls.AccNo_From"
-              [endControl]="queryForm.controls.AccNo_To" [submitted]="submitted" [options]="AccNoOptions"
+              [endControl]="queryForm.controls.AccNo_To" [submitted]="submitted" [options]="AccNoOptions | async"
               optionLabel="label" optionValue="value" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -39,16 +39,16 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton label="未付款是否顯示" groupname="ShowUnpaid" [control]="queryForm.controls.ShowUnpaid" [options]="[
-                { label: '顯示', value: 'Y' },
-                { label: '不顯示', value: 'N' }
+                { label: '顯示', value: 1 },
+                { label: '不顯示', value: 0 }
               ]" [submitted]="submitted">
             </app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton label="帳款餘額為零是否顯示" groupname="ShowZeroBalance"
               [control]="queryForm.controls.ShowZeroBalance" [options]="[
-               { label: '顯示', value: 'Y' },
-                { label: '不顯示', value: 'N' }
+               { label: '顯示', value: 1 },
+                { label: '不顯示', value: 0 }
               ]" [submitted]="submitted">
             </app-radiobutton>
           </div>
@@ -63,11 +63,16 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table-subheader tableKey="SeqNo" dataKey="ACP_No" [data]="data" [columns]="columns" [showCheckBox]="false"
-      [showManage]="false" [showDelete]="false" (detail)="onDetail($event)" [multiSortMeta]="[]"
-      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [lazy]="true" [groupRowsBy]="''" [groupRowsByName]="''" [showGroupheader]="false" [loading]="loading"
-      [showSerialNo]="false" [showPaginator]="false" [showReportMode]="false" [showSort]="false">
+    <ng-template #vendorGroupHeader let-row>
+      <span>廠商編號：{{ row.VendorNo }}</span>
+    </ng-template>
+
+
+    <app-fin29060-table-subheader [data]="data" [columns]="columns" [totalRecords]="totalRecords"
+      [lastQueryBody]="lastQueryBody" [queryFunction]="fin29060Service.queryFIN29060.bind(fin29060Service)"
+      [lazyBatchSize]="lazyBatchSize" [showManage]="false" (dataChange)="data = $event" [groupRowsBy]="'VendorNo'"
+      [fullData]="fullData" [groupRowsByName]="'廠商編號'" [showSubTotal]="true" [showTotal]="true"
+      (detailWithColValue)="onDetailWithColValue($event)">
       <header>
         <div class="flex justify-content-end align-items-center gap-2">
           <p-button styleClass="p-2" label="廠商付款明細表.PDF" icon="pi pi-file" (click)="onExportPDF()"
@@ -76,6 +81,6 @@
             [disabled]="data.length === 0" [loading]="excelBtnLoading"></p-button>
         </div>
       </header>
-    </app-table-subheader>
+    </app-fin29060-table-subheader>
   </div>
 </div>

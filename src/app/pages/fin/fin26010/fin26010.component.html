@@ -1,9 +1,8 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
@@ -17,76 +16,76 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
+          <!-- 匯款單號 PamNo -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+
+                        <app-input-text
               label="匯款單號"
-              controlName="transferSource"
-              [options]="transferSourceOptions"
-              optionLabel="label"
-              optionValue="value"
+              controlName="SummonNumber"
               [control]="queryForm.controls.transferSource"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-input-text>
           </div>
+
+          <!-- 建立日期(起迄) CRT_DateFrom / CRT_DateTo -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
-              calendarType="dateTimeRange"
+              calendarType="dateRange"
               label="建立日期"
               [startControl]="queryForm.controls.buildDateFrom"
               [endControl]="queryForm.controls.buildDateTo"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
+
+          <!-- 匯款日期(起迄) RMT_DateFrom / RMT_DateTo -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
-              calendarType="dateTimeRange"
+              calendarType="dateRange"
               label="匯款日期"
               [startControl]="queryForm.controls.transferDateFrom"
               [endControl]="queryForm.controls.transferDateTo"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
-        </div>
-        <div class="grid p-fluid">
+
+          <!-- 銀行代號 BNK_id：用 dropdown，選項文字 BNK_No-BNK_BRANCHNAME，值為 BNK_DepositAccNo -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-dropdown
               label="銀行代號"
               controlName="bankCode"
-              [control]="queryForm.controls.bankCode"
-              [submitted]="submitted"
-            ></app-input-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="銀行名稱"
-              controlName="bankName"
-              [control]="queryForm.controls.bankName"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="拋轉傳票"
-              controlName="tossSummon"
-              [options]="whetherOptions"
+              [options]="bankOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.tossSummon"
+              [control]="queryForm.controls.bankCode"
               [submitted]="submitted"
-            ></app-multi-select>
+            ></app-dropdown>
           </div>
-        </div>
-        <div class="grid p-fluid">
+
+          <!-- 拋轉傳票 Status (Y/N) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-dropdown
+              label="拋轉傳票"
+              controlName="status"
+              [options]="statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.status"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <!-- 傳票編號 VouNo -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
               label="傳票編號"
               controlName="SummonNumber"
               [control]="queryForm.controls.SummonNumber"
               [submitted]="submitted"
-            ></app-input-number>
+            ></app-input-text>
           </div>
+
+          <!-- 檔案名稱 File_Name -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="檔案名稱"
@@ -96,27 +95,62 @@
             ></app-input-text>
           </div>
         </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button
+            btnType="clear"
+            [type]="'button'"
+            (clickEvent)="onClear(queryForm)"
+          >
+          </app-button>
+
+          <app-button btnType="query" [loading]="loading"> </app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
+
+<!-- 主表 -->
 <div class="card">
-  <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table-report
+    [tableKey]="'fin26010_' + tableVer"
+    [dataKey]="'_rowKey'"
+    [columns]="columns"
+    [data]="data"
+    [totalRecords]="viewTotalRecords"
+    [loading]="loading"
+    [showManage]="false"
+    [showFilter]="true"
+    [showExcel]="false"
+    [footerData]="footerData"
+    [queryFunction]="queryFIN26010ForReport"
+    [lastQueryBody]="lastQueryBody"
+    [showDelete]="false"
+    [showReportMode]="false"
+    [showCheckBox]="true"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+  >
+    <header>
+      <div class="flex justify-content-end gap-2">
+        <p-button
+          styleClass="p-2"
+          label="產生匯款檔"
+          icon="pi pi-file"
+          [loading]="btnGenerateFileLoading"
+          (click)="generateRemitFile()"
+          [disabled]="
+            btnGenerateFileLoading ||
+            loading ||
+            !selectedItems ||
+            selectedItems.length === 0
+          "
+        >
+        </p-button>
+      </div>
+    </header>
+  </app-table-report>
 </div>

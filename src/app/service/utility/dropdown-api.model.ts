@@ -401,7 +401,42 @@ export interface TALPORDERMQuery {
   pod_typeList: string[];
   pod_statusList: string[];
 }
+/**
+ * 查詢 share/queryTALPORDERM_DropDownList 時的請求 body
+ */
+export interface TALPORDERMQueryForShare {
+  mid: number,
+  str_no: string,
+  pod_type?: string[],
+  pod_status?: string
+}
 
+/**
+ * 查詢 queryLOGOaccorHOS 時的請求 body (品牌對應倉別)
+ */
+export interface LogoAccorHosQuery {
+  LOGO_No?: string;
+  HOS_No?: string;
+}
+
+/**
+ * 查詢 queryLOGOaccorHOS 回傳的項目型別 (品牌對應倉別)
+ */
+export interface LogoAccorHosItem {
+  TotalCount: number;
+  LOGO_No: string;
+  LOGO_CH_NAME: string;
+  HOS_No: string;
+  HOS_NAME: string;
+}
+
+export interface TALPORDERMDataForShare {
+  pod_no: string,
+  pod_type: string,
+  pod_desc: string,
+  pod_sdate: string,
+  pod_edate: string
+}
 
 /**
  * 查詢 queryENG1001_ENG_MeterNo_DropDownList 回傳的項目型別

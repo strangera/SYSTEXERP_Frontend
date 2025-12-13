@@ -3,50 +3,99 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="收銀機號" controlName="ECR_NoList" [options]="POS1002_Option" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.ECR_NoList" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="收銀機代號/名稱"
+              controlName="ECR_NoList"
+              [options]="POS1002_Option"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.ECR_NoList"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="收銀機名稱" controlName="ECR_GUI_PeriodQty" [control]="queryForm.controls.ECR_Name"
               [submitted]="submitted"></app-input-text>
-          </div>
+          </div> -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="機台類型" controlName="ECR_Type" [options]="typeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.ECR_Type" [submitted]="submitted"></app-dropdown>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="專櫃編號" controlName="ECR_TLT_NoList" [options]="TLTTALENT_Option"
-              optionLabel="Label" optionValue="No" [control]="queryForm.controls.ECR_TLT_NoList"
-              [submitted]="submitted"></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="櫃位名稱" controlName="ECR_TLT_Name" [control]="queryForm.controls.ECR_TLT_Name"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="機台狀態" controlName="ECR_Status" [options]="statusOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.ECR_Status" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="機台類型"
+              controlName="ECR_Type"
+              [options]="typeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ECR_Type"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number label="發票預設配號數量" controlName="ECR_GUI_PeriodQty"
-              [control]="queryForm.controls.ECR_GUI_PeriodQty" [submitted]="submitted" />
+            <app-multi-select
+              label="專櫃編號/名稱"
+              controlName="ECR_TLT_NoList"
+              [options]="TLTTALENT_Option"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.ECR_TLT_NoList"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <!-- <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="櫃位名稱"
+              controlName="ECR_TLT_Name"
+              [control]="queryForm.controls.ECR_TLT_Name"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div> -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="機台狀態"
+              controlName="ECR_Status"
+              [options]="statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ECR_Status"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              label="發票預設配號數量"
+              controlName="ECR_GUI_PeriodQty"
+              [control]="queryForm.controls.ECR_GUI_PeriodQty"
+              [submitted]="submitted"
+            />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number label="發票安全存量" controlName="ECR_GUI_MinQty"
-              [control]="queryForm.controls.ECR_GUI_MinQty" [submitted]="submitted" />
+            <app-input-number
+              label="發票安全存量"
+              controlName="ECR_GUI_MinQty"
+              [control]="queryForm.controls.ECR_GUI_MinQty"
+              [submitted]="submitted"
+            />
           </div>
         </div>
         <!-- <div> -->
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -57,15 +106,37 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table tableKey="TLS41050" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showCheckBox]="true"
-      [showDelete]="false" dataKey="id" [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]" [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-      [isRowSelectable]="isRowSelectable">
+    <app-table
+      tableKey="TLS41050"
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      [showCheckBox]="true"
+      [showDelete]="false"
+      dataKey="id"
+      [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true"
+      [loading]="loading"
+      [isRowSelectable]="isRowSelectable"
+    >
       <header>
-        <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }"
-          pTooltip="下傳" tooltipPosition="top" pButton icon="pi pi-upload rotate-180" severity="success"
-          class="p-button-rounded p-button-text" [disabled]="selectedItems.length === 0" (click)="onUpload()" />
+        <p-button
+          [ngStyle]="{ width: '35px', height: '35px' }"
+          [style]="{ width: '35px', height: '35px' }"
+          pTooltip="下傳"
+          tooltipPosition="top"
+          pButton
+          icon="pi pi-upload rotate-180"
+          severity="success"
+          class="p-button-rounded p-button-text"
+          [disabled]="selectedItems.length === 0"
+          (click)="onUpload()"
+        />
       </header>
     </app-table>
   </div>

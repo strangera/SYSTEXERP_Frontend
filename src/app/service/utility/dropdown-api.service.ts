@@ -1,3 +1,4 @@
+import { AuthService } from './../system/auth.service';
 // !!! 新版下拉方法
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
@@ -17,6 +18,8 @@ import {
   EcrQuery,
   ENG1001Item,
   IDropdownItem,
+  LogoAccorHosItem,
+  LogoAccorHosQuery,
   Option,
   OrgTreeItem,
   OrgTreeQuery,
@@ -47,7 +50,9 @@ import {
   TalentQuery,
   TalentStatusQuery,
   TalentStoreWayQuery,
+  TALPORDERMDataForShare,
   TALPORDERMQuery,
+  TALPORDERMQueryForShare,
   TblUserOrgidItem,
   TLTTALENTItem,
   TLTTALENTQuery,
@@ -60,7 +65,10 @@ import {
 export class DropdownApiService {
   private readonly apiUrl = environment.ApiUrl;
 
-  constructor(private readonly http: HttpClient) { }
+  constructor(
+    private readonly http: HttpClient,
+    private readonly authService: AuthService
+  ) { }
 
   /**
      * 泛型底層方法：處理所有下拉選單的查詢和轉換
@@ -262,15 +270,15 @@ export class DropdownApiService {
   }
 
   /** 查詢會計科目設定檔(GLS1005) (只取 公司銀行科目) */
-  queryGls1005_BNK_DepositAcc(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryGls1005_BNK_DepositAcc').pipe(
+  queryGls1005_BNK_DepositAcc(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryGls1005_BNK_DepositAcc', 'No', 'Name').pipe(
       shareReplay(1) // 避免重複查詢;
     );
   }
 
   /** 查詢會計科目設定檔(GLS1005) (只取 應收票據科目) */
-  queryGls1005_BNK_CheckInAcc(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryGls1005_BNK_CheckInAcc').pipe(
+  queryGls1005_BNK_CheckInAcc(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryGls1005_BNK_CheckInAcc', 'No', 'Name').pipe(
       shareReplay(1) // 避免重複查詢;
     );
   }
@@ -400,6 +408,19 @@ export class DropdownApiService {
       shareReplay(1)// 避免重複查詢
     );
   }
+
+  /** 查詢品牌對應倉別(queryLOGOaccorHOS) 資料表 */
+  queryLogoAccorHOS(body: LogoAccorHosQuery): Observable<Option[] | null> {
+    return this.queryAndMapDropdownWithParams<LogoAccorHosItem, LogoAccorHosQuery>(
+      '/TLS0000/TLS5000/queryLOGOaccorHOS',
+      'LOGO_No',
+      'LOGO_CH_NAME',
+      body
+    ).pipe(
+      shareReplay(1)
+    );
+  }
+
   // --- POS 相關 (新增) ---
 
   /** 查詢小分類代碼(POS20032) */
@@ -620,6 +641,16 @@ export class DropdownApiService {
   /** 查詢專櫃活動編號資料表下拉選單() */
   queryTALPORDERM_DropDownList(body?: TALPORDERMQuery): Observable<Option[] | null> {
     return this.queryAndMapDropdown<IDropdownItem, TALPORDERMQuery>('/queryTALPORDERM_DropDownList', 'No', 'Name', body).pipe(
+      shareReplay(1)// 避免重複查詢
+    );
+  }
+  queryTALPORDERM_DropDownListShare(body?: TALPORDERMQueryForShare): Observable<Option[] | null> {
+    const request = {
+      ...body,
+      mid: this.authService.currentUserValue?.mid || 0,
+      str_no: this.authService.currentUserValue?.SYS_StoreNo || '',
+    }
+    return this.queryAndMapDropdown<TALPORDERMDataForShare, TALPORDERMQueryForShare>('/Share/queryTALPORDERM_DropDownList', 'pod_no', 'pod_desc', request).pipe(
       shareReplay(1)// 避免重複查詢
     );
   }

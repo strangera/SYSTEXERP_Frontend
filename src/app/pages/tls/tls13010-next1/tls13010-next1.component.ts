@@ -10,6 +10,7 @@ import { LocationOptionsService } from '../../../service/api/dropdownservice/loc
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { ContractFlowService } from '../tls13010/services/contract-flow.service';
@@ -53,8 +54,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   currentRowData: any = null;
   currentCapType: string = '';
 
-  // 檢視模式用
-  isViewMode = false;
+  // 將 CRUDStatus 暴露給模板使用
+  readonly CRUDStatus = CRUDStatus;
 
   // 組織table下拉
   orgOptions: any[] = [];
@@ -116,7 +117,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   get shouldForceEdit(): boolean {
-    return !this.isViewMode; // 檢視模式時關閉常駐編輯
+    return this.crudstatus !== CRUDStatus.Read; // 檢視模式時關閉常駐編輯
   }
 
 
@@ -133,13 +134,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   get deductionAColumns(): ColumnDef[] {
     if (!this._cachedDeductionAColumns ||
       this._lastOrgOptionsLength !== this.orgOptions.length ||
-      this._lastViewMode !== this.isViewMode ||
+      this._lastViewMode !== (this.crudstatus === CRUDStatus.Read) ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
       // console.log('🔄 重新生成 deductionAColumns');
       let columns = FareColumnDefinitions.getDeductionAColumns(this.contractInfoData);
       columns = FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
-      if (this.isViewMode) {
+      if (this.crudstatus === CRUDStatus.Read) {
         columns = FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
       this._cachedDeductionAColumns = columns;
@@ -150,12 +151,12 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   get deductionBColumns(): ColumnDef[] {
     if (!this._cachedDeductionBColumns ||
-      this._lastViewMode !== this.isViewMode ||
+      this._lastViewMode !== (this.crudstatus === CRUDStatus.Read) ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
       // console.log('🔄 重新生成 deductionBColumns');
       let columns = FareColumnDefinitions.getDeductionBColumns(this.contractInfoData);
-      if (this.isViewMode) {
+      if (this.crudstatus === CRUDStatus.Read) {
         columns = FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
       this._cachedDeductionBColumns = columns;
@@ -167,13 +168,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   get deductionCColumns(): ColumnDef[] {
     if (!this._cachedDeductionCColumns ||
       this._lastOrgOptionsLength !== this.orgOptions.length ||
-      this._lastViewMode !== this.isViewMode ||
+      this._lastViewMode !== (this.crudstatus === CRUDStatus.Read) ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
       // console.log('🔄 重新生成 deductionCColumns');
       let columns = FareColumnDefinitions.getDeductionCColumns(this.contractInfoData);
       columns = FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
-      if (this.isViewMode) {
+      if (this.crudstatus === CRUDStatus.Read) {
         columns = FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
       this._cachedDeductionCColumns = columns;
@@ -186,14 +187,14 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     if (!this._cachedDeductionDColumns ||
       this._lastOrgOptionsLength !== this.orgOptions.length ||
       this._lastPayNoOptionsLength !== this.payNoOptions.length ||  // 加這行
-      this._lastViewMode !== this.isViewMode ||
+      this._lastViewMode !== (this.crudstatus === CRUDStatus.Read) ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
       let columns = FareColumnDefinitions.getDeductionDColumns(this.contractInfoData);
       columns = FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
       columns = FareColumnDefinitions.updatePayNoOptionsInColumns(columns, this.payNoOptions); // 加這行
 
-      if (this.isViewMode) {
+      if (this.crudstatus === CRUDStatus.Read) {
         columns = FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
 
@@ -207,14 +208,14 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     if (!this._cachedDeductionEColumns ||
       this._lastOrgOptionsLength !== this.orgOptions.length ||
       this._lastPayNoOptionsLength !== this.payNoOptions.length ||  // 加這行
-      this._lastViewMode !== this.isViewMode ||
+      this._lastViewMode !== (this.crudstatus === CRUDStatus.Read) ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
       let columns = FareColumnDefinitions.getDeductionEColumns(this.contractInfoData);
       columns = FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
       columns = FareColumnDefinitions.updatePayNoOptionsInColumns(columns, this.payNoOptions); // 加這行
 
-      if (this.isViewMode) {
+      if (this.crudstatus === CRUDStatus.Read) {
         columns = FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
 
@@ -227,7 +228,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   private _updateCacheFlags(): void {
     this._lastOrgOptionsLength = this.orgOptions.length;
     this._lastPayNoOptionsLength = this.payNoOptions.length;
-    this._lastViewMode = this.isViewMode;
+    this._lastViewMode = (this.crudstatus === CRUDStatus.Read);
     this._lastContractInfoLength = this.contractInfoData.length;
   }
 
@@ -380,12 +381,15 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   private initializeViewModeFromService(): void {
     const viewModeSub = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
-      this.isViewMode = isViewMode;
+      this.crudstatus = isViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
       // console.log('🔍 Next1 檢視模式狀態更新:', isViewMode);
     });
 
     this.subscriptions.push(viewModeSub);
-    this.isViewMode = this.contractFlowService.isViewMode();
+
+    // 初始化 CRUD 狀態
+    const currentViewMode = this.contractFlowService.isViewMode();
+    this.crudstatus = currentViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
   }
 
   private setupTotalLocationSpace(): void {
@@ -724,7 +728,16 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     */
   private performRealTimeValidation(rowData: any, capType: string): void {
     const allItemsOfType = this.originalFareData[capType] || [];
-    const validationResult = this.fareValidationService.validateSingleItem(rowData, capType, allItemsOfType);
+
+    // 🔥 新增：取得合約日期範圍
+    const contractRange = this.getContractDateRange();
+
+    const validationResult = this.fareValidationService.validateSingleItem(
+      rowData,
+      capType,
+      allItemsOfType,
+      contractRange  // 傳入合約日期範圍
+    );
 
     if (!validationResult.isValid) {
       console.warn(`⚠️ ${capType} 類型項目驗證失敗:`, validationResult.errors);
@@ -1272,7 +1285,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.saveFareDataToWorkflow();
 
     // 🔥 檢視模式：不需要驗證，直接跳轉
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       console.log('🔍 檢視模式：跳過驗證，直接跳轉');
       const contractTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
       if (contractTermType === '1') {
@@ -1310,7 +1323,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     const extras: NavigationExtras = {
       state: { fromRoute: this.router.url },
     };
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.router.navigate(['account/tls/tls13010cru'], extras);
       return;
     }
@@ -1608,6 +1621,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     const allErrors: string[] = [];
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
 
+    // 🔥 新增：取得合約日期範圍
+    const contractRange = this.getContractDateRange();
+
     capTypes.forEach(capType => {
       const typeData = this.originalFareData[capType] || [];
       const selectedItems = typeData.filter(item => item.is_selected);
@@ -1615,7 +1631,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       if (selectedItems.length > 0) {
         console.log(`🔍 驗證 ${capType} 類型，已選項目: ${selectedItems.length} 筆`);
 
-        const validationResult = this.fareValidationService.validateFareTypeData(typeData, capType);
+        const validationResult = this.fareValidationService.validateFareTypeData(
+          typeData,
+          capType,
+          contractRange  // 傳入合約日期範圍
+        );
 
         if (!validationResult.isValid) {
           const typeName = this.getCapTypeName(capType);
@@ -1629,6 +1649,18 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     return {
       isValid: allErrors.length === 0,
       errors: allErrors
+    };
+  }
+
+  /**
+   * 🔥 新增：取得合約日期範圍(用於驗證)
+   */
+  private getContractDateRange() {
+    const contractInfo = this.contractInfoData[0];
+
+    return {
+      tlt_bdate: contractInfo?.tlt_bdate || null,
+      tlt_edate: contractInfo?.tlt_edate || null
     };
   }
 

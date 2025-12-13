@@ -1,24 +1,25 @@
-import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { Tls2d010Service } from '../../../service/api/tls/tls2d010.service';
-import { DropDownListService, IDropdownItem, IAPS1003Item } from './../../../service/utility/dropDownList.service';
+import { formatDate } from '@shared/componentkit/table/table.model';
 import { formatAmount } from '@shared/componentkit/table2/table2.model';
+import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
+import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { environment } from '../../../../environments/environment';
+import { Tls2d010Service } from '../../../service/api/tls/tls2d010.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { DropDownListService, IAPS1003Item, IDropdownItem } from './../../../service/utility/dropDownList.service';
 
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 @Component({
@@ -50,7 +51,7 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     AccNoList: [[]], // 會計科目代號
     org_idList: [[] as number[]], // 組織
     tpy_date: [], // 扣款年月
-    pod_noList: [], // 維護日
+    pod_noList: [[]], // 維護日
     CRT_USR_No: [this.authService.currentUserValue?.user_No],
     GUI_FLAG: [''],
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
@@ -66,22 +67,9 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     { field: 'org_id', header: '組織代號', visible: true },
     { field: 'Org_Name', header: '組織名稱', visible: true },
     { field: 'pod_no', header: '活動名稱', visible: true },
-    {
-      field: 'tpy_date',
-      header: '扣款日期',
-      visible: true,
-      format: (value: string | Date) => {
-        if (!value) return '';
-        const d = typeof value === 'string' ? new Date(value) : value;
-        if (isNaN(d.getTime())) return '';
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        return `${yyyy}-${mm}-${dd}`;
-      }
-    },
+    { field: 'tpy_date', header: '扣款日期', visible: true, format: formatDate },
     { field: 'GUI_FLAG', header: '是否開立發票', visible: true, format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : '' },
-    { field: 'tpy_net', header: '扣款(未稅)', visible: true, format: formatAmount },
+    { field: 'tpy_net', header: '扣款(未稅)', visible: true, format: formatAmount, align: 'right' },
     { field: 'remarks', header: '備註', visible: true },
   ];
 
@@ -185,7 +173,8 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     this.tls2d010Service.queryTLS2D010(payload).subscribe({
       next: (res) => {
         this.data = res?.Data || [];
-        this.totalRecords = res?.Total || this.data.length;
+        // 支援後端回傳不同的總數欄位名稱 (TotalCount / Total / TotalRecords)
+        this.totalRecords = res?.TotalCount ?? res?.Total ?? res?.TotalRecords ?? this.data.length;
       },
       complete: () => {
         this.loading = false;

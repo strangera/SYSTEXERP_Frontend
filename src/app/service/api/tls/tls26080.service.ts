@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { CampaignData, TLS26080Data, TLS26080Detail, TLS26080InsertPayload, TLS26080Query, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
-import { Option, TalentChargeItem } from '@service/utility/dropdown-api.model';
+import { CampaignData, TLS26080Data, TLS26080DetailResult, TLS26080DetailTable, TLS26080InsertPayload, TLS26080KeyInTable, TLS26080Query, TLS26080UpdatePayload, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
+import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
@@ -23,17 +23,13 @@ export class TLS26080Service {
 
   // 儲存資料
   public readonly tltTalentOptions = signal<Option[]>([]);
-  public readonly tltTalentChargeOptions = signal<TalentChargeItem[]>([]);
-
-  public readonly tltIdOptions = signal<Option[]>([
-    ...Array.from({ length: 10 }).map((_, i) => ({ value: i + '', label: i + '' })),
-  ]);
+  public readonly tltTalentChargeOptions = signal<Option[]>([]);
 
   public readonly tltTalentMap = computed(() => {
     return new Map<string, Option>(this.tltTalentOptions().map(item => [item.value, item]));
   });
-  public tltTalentChargeMap = computed(() => {
-    return new Map<string, TalentChargeItem>(this.tltTalentChargeOptions().map(item => [item.tlt_id, item]));
+  public readonly tltTalentChargeMap = computed(() => {
+    return new Map<string, Option>(this.tltTalentChargeOptions().map(item => [item.value, item]));
   });
 
   // 共享資料讀取狀態
@@ -41,14 +37,13 @@ export class TLS26080Service {
   public readonly tltTalentOptionsLoading = signal<boolean>(!1);
   public readonly tltTalentChargeOptionsLoading = signal<boolean>(!1);
 
-  private readonly tltTalentOptionsDebounce = signal<boolean>(!1);
-
   // 下拉選單資料
   public departmentItems = signal<Option[]>([]);
   public capItems = signal<Option[]>([]);
   public podTypeItems = [
     { value: '1', label: '預售' },
     { value: '2', label: '滿千送百' },
+    { value: '3', label: '滿千送百兌回' },
     { value: '8', label: '期間開放折扣' },
   ];
   public podStatusItems = [
@@ -94,6 +89,21 @@ export class TLS26080Service {
     ).subscribe();
   }
 
+  public queryTltTalentCharge(talent_id: number): Observable<Option[]> {
+    this.tltTalentChargeOptionsLoading.set(!0);
+    return this.dropdown.queryTltTalentCharge({ talent_id }).pipe(
+      take(1),
+      tap(res => this.logger.debug(`queryTltTalentCharge:`, [res])),
+      map(res => res?.length && res.map(item => ({
+        ...item,
+        label: `${item.tlt_id} - ${item.tlt_id_desc}`,
+        value: item.tlt_id,
+      }) as unknown as Option) || []),
+      tap(res => this.tltTalentChargeOptions.set(res)),
+      finalize(() => this.tltTalentChargeOptionsLoading.set(!1)),
+    );
+  }
+
   /** 查詢資料 */
   public loadTLS26080(query: TLS26080Query): Observable<BaseQueryResponse<TLS26080Data>> {
     return this.http.post<BaseQueryResponse<TLS26080Data>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080`, query).pipe(
@@ -101,6 +111,27 @@ export class TLS26080Service {
       tap(res => this.logger.debug(`TLS26080查詢結果:`, [res]))
     );
   };
+
+  public insertTLS26080(data: TLS26080InsertPayload): Observable<BaseQueryResponse<any>> {
+    return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/insertTLS26080`, data).pipe(
+      take(1),
+      tap(res => this.logger.debug(`TLS26080新增結果:`, [res]))
+    );
+  };
+
+  public updateTLS26080(query: TLS26080UpdatePayload): Observable<BaseQueryResponse<TLS26080Data>> {
+    return this.http.post<BaseQueryResponse<TLS26080Data>>(`${apiUrl}/TLS0000/TLS2000/updateTLS26080`, query).pipe(
+      take(1),
+      tap(res => this.logger.debug(`TLS26080更新結果:`, [res]))
+    );
+  };
+
+  public deleteTLS26080(idList: string[]): Observable<BaseQueryResponse<unknown>> {
+    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26080`, { idList }).pipe(
+      take(1)
+    );
+  }
+
 
   /** 查詢環友資料 */
   public loadCampaignData(query: any = {}): Observable<BaseQueryResponse<CampaignData>> {
@@ -111,17 +142,10 @@ export class TLS26080Service {
   };
 
   /** 專櫃活動 */
-  public loadTLS26080Detail(query: string): Observable<BaseQueryResponse<TLS26080Detail>> {
-    return this.http.post<BaseQueryResponse<TLS26080Detail>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080_Detail`, { pod_no: query }).pipe(
+  public loadTLS26080Detail(query: string): Observable<BaseQueryResponse<TLS26080DetailTable>> {
+    return this.http.post<BaseQueryResponse<TLS26080DetailTable>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080_Detail`, { pod_no: query }).pipe(
       take(1),
       tap(res => this.logger.debug(`專櫃活動細節查詢結果:`, [res]))
-    );
-  };
-
-  public insertTLS26080(data: TLS26080InsertPayload): Observable<BaseQueryResponse<any>> {
-    return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/insertTLS26080`, data).pipe(
-      take(1),
-      tap(res => this.logger.debug(`TLS26080新增結果:`, [res]))
     );
   };
 
@@ -143,42 +167,27 @@ export class TLS26080Service {
     );
   }
 
-  public uploadFile(file: FormData): Observable<TLS26080Detail[]> {
+  public uploadFile(file: FormData): Observable<TLS26080UploadResult> {
     return this.http.post<TLS26080UploadResponse>(`${apiUrl}/TLS0000/TLS2000/uploadTLS26080`, file).pipe(
       take(1),
-      tap(res => {
-        const data = res.Data;
-        this.logger.debug(`uploadFile:`, [res]);
-        if (data.Success) {
-          this.messageService.successBubble('上傳成功');
-        } else {
-          this.messageService.errorBubble(data.Errors[0], '上傳失敗');
-        }
-        this.dealErrorFilePath(data);
-        this.logger.debug(`上傳檔案結果:`, [file]);
-      }),
       map(res => {
-        const data = res.Data;
-        if (!data.Success) return [];
-        return data.queryTLS26080_DetailResponses.map(v => (<TLS26080Detail>{
-          ...v,
-          tpy_rate_D16: Number(v.tpy_rate_D16.replace('%', '')).toFixed(2),
-          tpy_rate_D17: Number(v.tpy_rate_D17.replace('%', '')).toFixed(2),
-        }));
+        if (res.Status !== '0000') return Object.create(null);
+        const { queryTLS26080_DetailResponses, ...rest } = res.Data;
+        return {
+          ...rest,
+          queryTLS26080_DetailResponses: queryTLS26080_DetailResponses.map(v => (<TLS26080DetailResult>{
+            ...v,
+            tpy_rate_D16: Number(v.tpy_rate_D16.replace('%', '')).toFixed(2),
+            tpy_rate_D17: Number(v.tpy_rate_D17.replace('%', '')).toFixed(2),
+          })),
+        };
       })
     );
   }
 
-  public deleteTLS26080(idList: string[]): Observable<BaseQueryResponse<unknown>> {
-    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26080`, { idList }).pipe(
-      take(1)
-    );
-  }
-
-  private dealErrorFilePath(data: TLS26080UploadResult): void {
+  public dealErrorFilePath(data: TLS26080UploadResult): void {
     const path = data.ErrorFilePath;
-    if (!path || data.Success || !data.ErrorCount) return;
-    window.open(`${apiUrl}${path}`, '_blank', 'noopener noreferrer');
+    if (path && !data.Success) window.open(`${apiUrl}${path}`, '_blank', 'noopener noreferrer');
   }
 
   public downloadXLSXExample(): Observable<Blob> {
@@ -199,9 +208,9 @@ export class TLS26080Service {
     );
   }
 
-  public getTLTTalentOptions(): void {
+  public getTLTTalentOptions(): Observable<Option[]> {
     this.tltTalentOptionsLoading.set(!0);
-    this.dropdown.queryTltTalent().pipe(
+    return this.dropdown.queryTltTalent().pipe(
       take(1),
       map(res => res?.map(item => ({
         ...item,
@@ -212,42 +221,15 @@ export class TLS26080Service {
         this.logger.debug(`getTLTTalentOptions:`, [res]);
       }),
       finalize(() => this.tltTalentOptionsLoading.set(!1))
-    ).subscribe();
+    );
   }
 
-  public getTLTTalentChargeOptions(): void {
-    if (this.tltTalentOptionsDebounce()) return;
-    this.tltTalentOptionsLoading.set(!0);
-    this.tltTalentOptionsDebounce.set(!0);
-    setTimeout(() => this.tltTalentOptionsDebounce.set(!1));
-    this.dropdown.queryTltTalentCharge({ talent_id: null as unknown as number }).pipe(
-      take(1),
-      tap(res => {
-        this.tltTalentChargeOptions.set(res ?? []);
-        this.logger.debug(`getTLTTalentChargeOptions:`, [res]);
-      }),
-      finalize(() => this.tltTalentOptionsLoading.set(!1))
-    ).subscribe();
-  }
-
-  public keyInTLS26080(data: TLS26080Detail, currentTableData: TLS26080Detail[]): Observable<{ success: boolean; data: TLS26080Detail; message?: string; }> {
+  public keyInTLS26080(data: TLS26080KeyInTable, currentTableData: TLS26080KeyInTable[]): Observable<TLS26080UploadResponse> {
     return this.http.post<TLS26080UploadResponse>(`${apiUrl}/TLS0000/TLS2000/keyInTLS26080`, {
       queryTLS26080_DetailResponses: currentTableData,
-      keyInTLS26080: data,
+      keyiInTLS26080: data,
     }).pipe(
       take(1),
-      map(res => {
-        const d = res.Data;
-        if (!d.Success) {
-          this.dealErrorFilePath(d);
-          this.logger.debug(`keyInTLS26080 fail:`, [res]);
-          this.messageService.errorBox(res.Message || '鍵入失敗');
-          return { success: !1, data, message: res.Message };
-        } else {
-          this.logger.debug(`keyInTLS26080 鍵入成功:`, [res]);
-          return { success: !0, data };
-        }
-      }),
       finalize(() => this.logger.debug(`單筆鍵入檢查:`, [data]))
     );
   }

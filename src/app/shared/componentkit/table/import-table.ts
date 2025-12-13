@@ -16,10 +16,10 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 // 自定義的元件，也一同放在這裡
-import { TableExpansionComponent } from './table-expansion/table-expansion.component';
-import { TableCaptionComponent } from './table-caption/table-caption.component';
-import { TableInputComponent } from './table-input/table-input.component';
 import { ImageModule } from 'primeng/image';
+import { TableCaptionComponent } from './table-caption/table-caption.component';
+import { TableExpansionComponent } from './table-expansion/table-expansion.component';
+import { TableInputComponent } from './table-input/table-input.component';
 
 // 將所有需要的模組/元件/指令導出為一個常數陣列
 export const COMMON_IMPORTS = [

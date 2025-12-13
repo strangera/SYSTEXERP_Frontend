@@ -80,5 +80,5 @@
   "javascript.suggest.paths": true,
   "typescript.suggest.paths": true,
   "html.suggest.paths": true,
-  "typescript.referencesCodeLens.enabled": true,
+  "typescript.referencesCodeLens.enabled": false
 }

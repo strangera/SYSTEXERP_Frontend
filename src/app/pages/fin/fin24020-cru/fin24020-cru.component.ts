@@ -1,164 +1,71 @@
-import { NgFor, NgIf } from '@angular/common';
-import { Component, OnInit, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { AsyncPipe, NgIf } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { PanelModule } from 'primeng/panel';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-
-
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-
-// 1.1.4.1 補登進項稅額 CRU
 @Component({
   selector: 'app-fin24020-cru',
   templateUrl: './fin24020-cru.component.html',
-  styleUrl: './fin24020-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarComponent, InputTextComponent, NgFor, ButtonComponent, NgIf, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    NgIf,
+    ReactiveFormsModule,
+    FormsModule,
+    TranslateModule,
+    InputTextComponent,
+    DropdownComponent,
+    InputNumberComponent,
+    AsyncPipe,
+    CalendarComponent,
+    CalendarRangeQuickComponent,
+    InputNumberRangeComponent
+  ]
 })
-export class FIN24020CRUComponent implements OnInit {
-  ProgNo = '';
-  formTitle = '';
-  submitted = false;
-  crudstatus = '';
-
-  //
-  factoryIDOptions: any[] = [];
-  whetherOptions: any[] = [];
-
-  // ----------------------------------------------------------------
+export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    shouldPayID: [, [Validators.maxLength(14)]], // 應付ID
-    establishDate: [], // 立帳日期
-    factoryID: [, [Validators.maxLength(14)]], // 廠客代號
-    vendorName: ['', [Validators.maxLength(64)]], // 廠客名稱
-    shouldPay: [, [Validators.maxLength(10)]], // 應付金額
-    RetinerAmount: [, [Validators.required, Validators.maxLength(10)]], // 保留款金額
-    shouldPayRemain: [, [Validators.maxLength(10)]], // 應付帳款餘額
-    generatedRetinerAmount: [, [Validators.required, Validators.maxLength(10)]], // 已產生保留款
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+    ARS_No: [{ value: null, disabled: true }],
+    CustNo: [{ value: null, disabled: true }],
+    sam_yyymm: [{ value: null, disabled: true }],
+    sam_termno: [{ value: null, disabled: true }],
+    PTA_Date_From: [{ value: null, disabled: true }],
+    ARS_Amt_From: [{ value: null, disabled: false }],
+    PTA_Key: [{ value: null, disabled: true }],
+    NoteDesc: [{ value: null, disabled: false }],
+    ARS_Amt_To: [{ value: null, disabled: false }],
+    PTA_Date_To: [{ value: null, disabled: true }],
   });
-  // ----------------------------------------------------------------
+  VEN_No_ParamOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商代號
+
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private translate: TranslateService,
+    private readonly dropDown: DropdownApiService,
   ) {
-    super();  // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '120015';
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
+    this.initializePage('FIN24020', this.dataForm);
   }
 
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
 
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      refundDate: [], // 保留款退款日期
-      refundAmount: [, [Validators.maxLength(10)]], // 保留款退款金額
-      remark: [, [Validators.maxLength(40)]], // 備註
-    });
-  }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
 
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
 
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
-      return;
-    }
 
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
 
-    this.messageService.unblockUi();
-    this.submitted = false;
   }
 
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }//CRU
-
-  onCancel() {
-    this.router.navigate(['/FIN2000/FIN24020']);
-  }
-  //--------------------------------------------------------------------------------------------------------------
 }

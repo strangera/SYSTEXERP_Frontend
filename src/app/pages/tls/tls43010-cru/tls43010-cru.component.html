@@ -62,13 +62,13 @@
           <app-input-textarea class="col-12" label="備註" controlName="NOT_Note" [control]="dataForm.controls.NOT_Note"
             [submitted]="submitted" styleClass="h-10rem" />
         </div>
-        <app-table-edit [hidden]="hiddenTable()" title="廣告資訊設定" tableKey="TLS43010Detail" [data]="data" class="col-12"
-          [data]="data" [columns]="columns" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
-          (dataChange)="data = $event" [rowValidate]="validateEntireRow" dataStatusField="status"
-          [disabled]="dataForm.controls.NOT_Status.value === '1' || isFormReadable" [loading]="loading"
-          [tableRequired]="dataForm.controls.NOT_DtlLimit.value !== '0'">
-        </app-table-edit>
       </div>
+      <app-table-edit [hidden]="hiddenTable()" title="廣告資訊設定" tableKey="TLS43010Detail" [data]="data"
+        [columns]="columns" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
+        (dataChange)="data = $event" [rowValidate]="validateEntireRow" dataStatusField="status"
+        [disabled]="dataForm.controls.NOT_Status.value === '1' || isFormReadable" [loading]="loading"
+        [tableRequired]="dataForm.controls.NOT_DtlLimit.value !== '0'" [showSort]="true">
+      </app-table-edit>
       <div *ngIf="dataForm.controls.NOT_Status.value !== '1' && !isFormReadable"
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>

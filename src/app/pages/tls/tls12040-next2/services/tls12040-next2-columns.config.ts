@@ -104,6 +104,13 @@ export class TLS12040Next2ColumnsConfig {
       { field: 'cag_taxtype', header: '稅別', editable: true, type: 'dropdown', options: SHARED_DROPDOWN_OPTIONS.cagTaxTypeOption },
       { field: 'sst_amount', header: '單筆交易金額(含)以上', editable: true, type: 'number' },
       { field: 'sst_rate', header: '特價抽成(%)', editable: true, type: 'number', allowDecimal: true, decimalPlaces: 3 },
+      {
+        field: 'remark',
+        header: '折扣摘要',
+        type: 'textarea',
+        editable: false,
+        style: 'max-width: 250px; white-space: pre-wrap; word-break: break-word; text-align: left;'
+      },
       { field: 'cap_saletype2', header: '會員卡集點', editable: true, type: 'checkbox' },
       { field: 'cap_saletype1', header: '滿件送佰', editable: true, type: 'checkbox' },
       { field: 'cap_saletype5', header: '收取商品提貨單', editable: true, type: 'checkbox' }

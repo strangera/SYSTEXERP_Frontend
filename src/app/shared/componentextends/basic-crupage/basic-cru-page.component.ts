@@ -5,6 +5,7 @@ import { UntilDestroy } from '@ngneat/until-destroy';
 import { SystemDataService } from '@service/system/system-data.service';
 import { UserInfo } from '@shared/models/system/userInfo';
 import { FormLabelService } from '@shared/service/form-label.service';
+import { Actions, PermissionGuardService } from '@shared/service/permission-guard.service';
 import { ValidationService } from '@shared/service/validation.service';
 import { ConfirmationService } from 'primeng/api';
 import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
@@ -26,6 +27,7 @@ export abstract class BasicCruPageComponent<T> {
   formLabelService = inject(FormLabelService);
   systemDataService = inject(SystemDataService);
   private valid = inject(ValidationService);
+  private permissionGuard = inject(PermissionGuardService);
 
   protected useReadonlyInsteadOfDisable = false;
   // 權限
@@ -34,6 +36,7 @@ export abstract class BasicCruPageComponent<T> {
   rowdata: T | null = null;
   queryData: any;
   user: UserInfo = this.authService.currentUserValue!;
+  public readonly Actions = Actions;
   // CRU----------------------------------------------------------------
   crudstatus: CRUDStatus = CRUDStatus.Read;
   formTitle = '';
@@ -54,14 +57,14 @@ export abstract class BasicCruPageComponent<T> {
   }
   // ----------------------------------------------------------------
   canAdd(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === '20') || false; // 假設 '20' 是新增的 function_code
+    return this.hasPermission('20');
   }
   canEdit(): boolean {
-    return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === '30') || false; // 假設 '30' 是編輯的 function_code
+    return this.hasPermission('30');
   }
   // 通用的權限檢查方法
-  canPerformAction(action: string): boolean {
-    return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
+  hasPermission(action: string): boolean {
+    return this.permissionGuard.hasPermission(this.ProgNo, action);
   }
   initializePage(progNo: string, form?: FormGroup, options?: { useReadonly?: boolean }) {
     this.formLabelService.clearLabels();

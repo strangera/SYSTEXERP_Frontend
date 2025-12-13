@@ -6,7 +6,9 @@
 
 input {
   width: 100%;
-  padding-right: 30px;
+  padding: 0.5rem 30px 0.5rem 0.75rem !important;  // 與 calendar 一致的 padding，加上 !important 確保優先級
+  line-height: 1.5 !important;  // 確保行高一致
+  font-size: 1rem !important;  // 確保字體大小一致
 }
 
 .copy-button {
@@ -22,20 +24,31 @@ input {
   color: #333333;
 }
 
-// 新增：readonly 樣式
+// 新增：readonly 樣式（與 dropdown 組件保持一致）
 .readonly-field {
   background-color: #f8f9fa !important;
-  border-color: #e9ecef !important;
-  color: #6c757d !important;
-  cursor: default !important;
+  border: 1px solid #e9ecef !important;
+  color: #495057 !important;
+  cursor: text !important;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem !important;  // 確保 readonly 模式的 padding 一致
+  line-height: 1.5 !important;
+  font-size: 1rem !important;
+
+  // 保持 readonly 的灰色背景，即使在 disabled 狀態
+  &[disabled] {
+    background-color: #f8f9fa !important;
+    opacity: 1 !important;
+  }
 
   &:focus {
-    border-color: #e9ecef !important;
-    box-shadow: 0 0 0 0.1rem rgba(0, 123, 255, 0.25) !important;
+    border-color: #80bdff !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15) !important;
+    outline: none !important;
   }
 
   &:hover {
-    border-color: #e9ecef !important;
+    border-color: #adb5bd !important;
   }
 }
 

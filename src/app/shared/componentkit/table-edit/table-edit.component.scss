@@ -57,12 +57,14 @@
         cursor: pointer;
       }
     }
+    .p-datatable-thead > tr > th {
+      background: var(--table-header-bg);
+    }
+    .p-datatable-tfoot > tr > td {
+      background: var(--table-footer-bg);
+    }
   }
   .p-component-overlay {
-    // 轉圈圈的遮罩
-    background-color: rgb(217 217 217 / 40%) !important;
-  }
-  .p-datatable .p-datatable-thead > tr > th {
-    background: var(--table-header-bg);
+    background-color: rgb(217 217 217 / 40%) !important; // 轉圈圈的遮罩
   }
 }

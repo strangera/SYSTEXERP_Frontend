@@ -16,14 +16,14 @@ export interface FIN52080Query {
   AccNo?: string;
   AccCName?: string;
   AccEName?: string;
-  AccDC?: string;
-  Ledger_MD?: string;
+  AccDC?: AccDCType;
+  Ledger_MD?: LedgerMDType;
   ClassNo?: string;
-  ABAT_YN?: string;
-  Voucher_Type?: string;
-  Budget_YN?: string;
-  Org_YN?: string;
-  Input_YN?: string;
+  ABAT_YN?: 'Y' | 'N';
+  Voucher_Type?: VoucherType;
+  Budget_YN?: 'Y' | 'N';
+  Org_YN?: 'Y' | 'N';
+  Input_YN?: 'Y' | 'N';
 }
 
 export interface FIN52080ClassNo {

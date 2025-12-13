@@ -1,26 +1,26 @@
-import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
+import { DatePipe } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
 import { QueryPLUResponse, QueryTLS57040Request, Tls57040Service } from '@service/api/tls/tls57040.service';
+import { DetailData, DetailFooter, QueryTLS57050Request, SummaryData, SummaryFooter, Tls57050Service } from '@service/api/tls/tls57050.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
-import { debounceTime, finalize } from 'rxjs';
-import { yesterday } from '@shared/models/system/query-form.model';
-import { DetailData, QueryTLS57050Request, SummaryData, Tls57050Service } from '@service/api/tls/tls57050.service';
-import { DatePipe } from '@angular/common';
-import { ButtonModule } from 'primeng/button';
-import { HttpResponse } from '@angular/common/http';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { debounceTime, finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-tls57050',
@@ -76,7 +76,7 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
   opData: QueryPLUResponse[] = [];
   opTotalRecords = 0;
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號', mainDataField: true },
+    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
   ];
   opColumns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
@@ -85,6 +85,7 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
     { field: 'PLU_Name', header: '商品名稱' },
   ];
   data: (DetailData[] | SummaryData[]) = [];
+  footerData: (DetailFooter[] | SummaryFooter[]) = [];
   columns: Column[] = [];
   historyRequestBody: QueryTLS57050Request | null = null;
 
@@ -181,6 +182,7 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
           this.historyRequestBody = requestBody;
           this.data = response.Data;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          this.footerData = response.FooterData
         } else {
           this.data = [];
           this.totalRecords = 0;
@@ -201,7 +203,7 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
     this.tls57040Service.queryPLUForDropdown(body).pipe(untilDestroyed(this), debounceTime(300)).subscribe((results) => {
       this.suggestions = [...results.Data.map(item => ({
         ...item,
-        label: `${item.PLU_MagNo} - ${item.PLU_Name}`
+        label: item.PLU_MagNo + '/' + item.PLU_No + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
       }))];
     });
   }

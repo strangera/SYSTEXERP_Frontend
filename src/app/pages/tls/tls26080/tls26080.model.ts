@@ -2,72 +2,78 @@ import { EditColumnExtend } from '@shared/componentkit/table-edit/table-edit.mod
 import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 
 export interface TLS26080Data {
-  act_no: string;              // 活動編號
-  approved_date: Date;         // 核准日期
-  approved_userno: string;     // 核准人員編號
-  approved_usr_name: string;   // 核准人員姓名
-  crt_date: Date;              // 建立日期
-  crt_usr_name: string;        // 建立人員姓名
-  crt_usr_no: string;          // 建立人員編號
   id: number;                  // 主鍵，自動編號
   mid: number;                 // 主檔關聯 ID
-  org_id: string;              // 組織部門 (SYS3100)
-  pod_busdate: Date;           // 活動正檔日期
-  pod_desc: string;            // 活動名稱
-  pod_edate: Date;             // 活動終止日期
-  pod_no: string;              // 活動申請編號
-  pod_sdate: Date;             // 活動起始日期
-  pod_status: '0' | '1' | '9'; // 活動狀態 (0=未核準, 1=已核準, 9=刪除)
-  pod_type: '1' | '2' | '8';   // 活動類型 (1=預售, 2=滿千送百, 8=期間開放折扣)
   str_no: string;              // 店鋪編號
-  upd_date: Date;              // 變更日期
-  upd_usr_name: string;        // 變更人員姓名
+  pod_no: string;              // 活動申請編號 (yyyyMMddsss)
+  pod_type: '1' | '2' | '8';   // 活動類型 (1=預售, 2=滿千送百, 8=期間開放折扣)
+  org_id: string;              // 組織部門 (SYS3100)
+  act_no: string;              // 活動編號 (群組)
+  pod_desc: string;            // 活動名稱
+  pod_sdate: Date;             // 活動起始日期
+  pod_edate: Date;             // 活動終止日期
+  pod_busdate: Date;           // 活動正檔日期
+  pod_back_sdate: Date;        // 兌回起始日期
+  pod_back_edate: Date;        // 兌回結束日期
+  cap_item: string;            // 扣款代碼
+  pod_status: '0' | '1' | '9'; // 活動狀態 (0=未核準, 1=已核準, 9=刪除)
+  approved_userno: string;     // 核准人員編號
+  approved_usr_name: string;   // 核准人員姓名
+  approved_date: Date;         // 核准日期
+  crt_usr_no: string;          // 建立人員編號
+  crt_usr_name: string;        // 建立人員姓名
+  crt_date: Date;              // 建立日期
   upd_usr_no: string;          // 變更人員編號
+  upd_usr_name: string;        // 變更人員姓名
+  upd_date: Date;              // 變更日期
+  CanEdit: boolean;            // 是否可編輯
 }
 
-export type TLS26080Detail = EditColumnExtend & TLS26080DetailPayload;
+export type TLS26080EditTable = Partial<EditColumnExtend> & TLS26080DetailTable & { _err?: boolean; };
+export type TLS26080KeyInTable = Omit<TLS26080DetailTable, 'tpy_rate_D16' | 'tpy_rate_D17'> & { tpy_rate_D16: string; tpy_rate_D17: string; };
 
-export interface TLS26080DetailPayload {
-  id?: number;
-  talent_id: number | string;
-  tlt_id: string;
-  tlt_id_desc?: string;
-  tlt_no: string;
-  tlt_name: string;
-  calc_date_type: string;
-  cap_item_D16: string; // 'D16'
-  tpy_rate_D16: string | number; // '100%' or 0~100
-  cap_item_D17: string; // 'D17'
-  tpy_rate_D17: string | number; // '100%' or 0~100
-  cap_item_3?: string; // 'D16'
-  tpy_rate_3?: string | number; // '100%' or 0~100
-  cap_item_4?: string; // 'D17'
-  tpy_rate_4?: string | number; // '100%' or 0~100
-  pod_no: string;
-  pod_status: string;
-  approved_userno?: string;
-  approved_usr_name?: string;
-  approved_date?: string;
+export interface TLS26080DetailTable {
+  id?: number;                 // 主鍵
+  talent_id: number;           // 專櫃 ID
+  tlt_id: string;              // 抽成類別
+  tlt_id_desc?: string;        // 抽成類別名稱
+  tlt_no: string;              // 專櫃編號
+  tlt_name: string;            // 櫃位名稱
+  calc_date_type: 'Y' | 'N';   // 正檔起日計算 ('Y'=活動起始日至截止日, 'N'=正檔日至截止日)
+  cap_item_D16: string;        // D16
+  tpy_rate_D16: number;        // D16 費用比率 (不含'%')
+  cap_item_D17: string;        // D17
+  tpy_rate_D17: number;        // D17 費用比率 (不含'%')
+  cap_item_3?: string;         // 合約建檔 D16
+  tpy_rate_3?: number;         // 合約建檔 D16 費用比率
+  cap_item_4?: string;         // 合約建檔 D17
+  tpy_rate_4?: number;         // 合約建檔 D17 費用比率
+  pod_no: string;              // 活動編號
+  pod_status: '0' | '1' | '9'; // 活動狀態 (0=未核準, 1=已核準, 9=刪除)
+  approved_usrno?: string;    // 核准人員編號
+  approved_usr_name?: string;  // 核准人員姓名
+  approved_date?: Date;        // 核准日期
 }
 
 export interface TLS26080DetailResult {
-  approved_date?: Date;              // 核准日期
-  approved_userno?: string;          // 核准人員編號
-  approved_usr_name?: string;        // 核准人員姓名
-  calc_date_type: 'Y' | 'N';         // 正檔起日計算 ('Y'=活動起始日至截止日, 'N'=正檔日至截止日)
-  cap_item_D16: string;              // D16
-  cap_item_D17: string;              // D17
   id: number;                        // 主鍵
-  pod_no?: string;                   // 活動申請編號
-  pod_status: '0' | '1' | '9';       // 活動狀態
-  pod_type?: string;                 // 活動類型
   talent_id: number;                 // 專櫃 ID
   tlt_id: string;                    // 抽成類別
   tlt_id_desc: string;               // 抽成類別名稱
-  tlt_name: string;                  // 櫃位名稱
   tlt_no: string;                    // 專櫃編號
+  tlt_name: string;                  // 櫃位名稱
+  calc_date_type: 'Y' | 'N';         // 正檔起日計算 ('Y'=活動起始日至截止日, 'N'=正檔日至截止日)
+  cap_item_D16: string;              // D16
   tpy_rate_D16: string;              // D16 費用比率 (含'%')
+  cap_item_D17: string;              // D17
   tpy_rate_D17: string;              // D17 費用比率 (含'%')
+  pod_no?: string;                   // 活動編號
+  pod_status: '0' | '1' | '9';       // 活動狀態 (0=未核準, 1=已核準, 9=刪除)
+  approved_userno?: string;          // 核准人員編號
+  approved_usr_name?: string;        // 核准人員姓名
+  approved_date?: Date;              // 核准日期
+
+  pod_type?: string;                 // 活動類型
 }
 
 export interface TLS26080InsertPayload {
@@ -77,9 +83,13 @@ export interface TLS26080InsertPayload {
   pod_sdate: Date;            // 活動起始日期
   pod_edate: Date;            // 活動終止日期
   pod_busdate: Date;          // 活動正檔日期
-  pod_back_sdate?: string;      // 兌回起始日期
-  pod_back_edate?: string;      // 兌回結束日期
-  TALPORDERD_VOUCHERDetails: TLS26080DetailPayload[]; // 活動專櫃資料
+  pod_back_sdate: Date;      // 兌回起始日期
+  pod_back_edate: Date;      // 兌回結束日期
+  TALPORDERD_VOUCHERDetails: TLS26080DetailTable[]; // 活動專櫃資料
+}
+
+export interface TLS26080UpdatePayload extends TLS26080InsertPayload {
+
 }
 
 export interface TLS26080Query extends BaseQueryRequest {

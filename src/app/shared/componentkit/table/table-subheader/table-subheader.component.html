@@ -105,9 +105,15 @@
   <ng-template pTemplate="groupheader" let-rowData *ngIf="showGroupheader">
     <tr pRowGroupHeader style="height: 40.8px">
       <td [attr.colspan]="getVisibleHeaderCount" style="font-weight: bold;">
-        <span>
-          會計科目：{{ rowData[groupRowsBy] }} {{ rowData[groupRowsByName] }}
-        </span>
+        <ng-container *ngIf="groupHeaderTemplate; else defaultGroupHeader">
+          <ng-container
+            *ngTemplateOutlet="groupHeaderTemplate; context: { $implicit: rowData, groupRowsBy: groupRowsBy, groupRowsByName: groupRowsByName }"></ng-container>
+        </ng-container>
+        <ng-template #defaultGroupHeader>
+          <span>
+            {{ groupRowsByName }}：{{ rowData[groupRowsBy] }}
+          </span>
+        </ng-template>
       </td>
     </tr>
   </ng-template>
@@ -173,7 +179,7 @@
               </span>
             </ng-container>
             <ng-template #detailLink>
-              <a (click)="detailRow(rowData)">
+              <a (click)="detailRow(rowData, col, rowData[col.field])">
                 {{
                 col.format
                 ? col.format(rowData[col.field], rowIndex, rowData)

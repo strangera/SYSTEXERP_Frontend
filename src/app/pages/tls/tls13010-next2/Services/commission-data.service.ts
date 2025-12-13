@@ -313,6 +313,24 @@ export class CommissionDataService {
   }
 
   /**
+   * 🆕 將後端的小數抽成率轉換為前端的百分比顯示值
+   * 例如: 0.05 → 5, 0.1 → 10
+   */
+  private convertRateToPercentage(rate: number | null | undefined): number {
+    if (rate === null || rate === undefined) return 0;
+    return rate * 100;
+  }
+
+  /**
+   * 🆕 將前端的百分比顯示值轉換為後端的小數抽成率
+   * 例如: 5 → 0.05, 10 → 0.1
+   */
+  private convertPercentageToRate(percentage: number | null | undefined): number {
+    if (percentage === null || percentage === undefined) return 0;
+    return percentage / 100;
+  }
+
+  /**
    * 轉換折扣設定項目
    */
   private convertDiscountItems(chargeDetails: any[], options: CommissionDataLoadOptions): DiscountSettingItem[] {
@@ -329,7 +347,7 @@ export class CommissionDataService {
       cag_barcode: detail.cag_barcode || '',
       tlt_bdate: detail.tlt_bdate ? new Date(detail.tlt_bdate) : new Date(),
       tlt_edate: detail.tlt_edate ? new Date(detail.tlt_edate) : new Date(),
-      cag_charge_rate: detail.cag_charge_rate || 0,
+      cag_charge_rate: this.convertRateToPercentage(detail.cag_charge_rate),  // 🔧 API 的 0.05 → 前端的 5
       _status: 'original',
       is_configured: detail.is_configured || true,
       is_enabled: detail.is_enabled || true
@@ -361,7 +379,7 @@ export class CommissionDataService {
             cag_barcode: existingItem.cag_barcode,
             tlt_bdate: existingItem.tlt_bdate ? new Date(existingItem.tlt_bdate) : contractStartDate,
             tlt_edate: existingItem.tlt_edate ? new Date(existingItem.tlt_edate) : contractEndDate,
-            cag_charge_rate: existingItem.cag_charge_rate || 0,
+            cag_charge_rate: this.convertRateToPercentage(existingItem.cag_charge_rate),  // 🔧 API 的 0.05 → 前端的 5
             _status: 'original',
             is_configured: true,
             is_enabled: true
@@ -401,7 +419,7 @@ export class CommissionDataService {
       tlt_bdate: detail.tlt_bdate ? new Date(detail.tlt_bdate) : new Date(),
       tlt_edate: detail.tlt_edate ? new Date(detail.tlt_edate) : new Date(),
       year_amount: detail.year_amount || 0,
-      extra_rate: detail.extra_rate || 0,
+      extra_rate: this.convertRateToPercentage(detail.extra_rate),  // 🔧 API 的 0.05 → 前端的 5
       _status: 'original'
     }));
   }
@@ -423,7 +441,7 @@ export class CommissionDataService {
         contract_period: '', // 🆕 稍後會由 component 填入
         level_bmount: detail.level_bmount || 0,
         level_eamount: detail.level_eamount || 0,
-        level_charge_rate: detail.level_charge_rate || 0,
+        level_charge_rate: this.convertRateToPercentage(detail.level_charge_rate),  // 🔧 API 的 0.05 → 前端的 5
         charged_id: detail.charged_id || undefined, // 🔑 加入 charged_id
         _status: 'original',
         is_configured: true,
@@ -452,7 +470,7 @@ export class CommissionDataService {
       contract_period: '', // 🆕 稍後會由 component 填入
       level_bmount: existingItem.level_bmount || 0,
       level_eamount: existingItem.level_eamount || 0,
-      level_charge_rate: existingItem.level_charge_rate || 0,
+      level_charge_rate: this.convertRateToPercentage(existingItem.level_charge_rate),  // 🔧 API 的 0.05 → 前端的 5
       charged_id: existingItem.charged_id || undefined, // 🔑 加入 charged_id
       _status: 'original',
       is_configured: existingItem.is_configured ?? true,

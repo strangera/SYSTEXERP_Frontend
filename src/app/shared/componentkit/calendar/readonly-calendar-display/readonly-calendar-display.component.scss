@@ -1,0 +1,43 @@
+// 引用 CalendarComponent.component.scss 中唯讀相關的樣式，或者直接在這裡定義
+// readonly calendar 容器樣式
+.readonly-calendar {
+  position: relative;
+  width: 100%;
+
+  input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: 0.375rem;
+    transition:
+      border-color 0.15s ease-in-out,
+      box-shadow 0.15s ease-in-out;
+  }
+}
+
+// readonly 樣式 - 與其他組件保持一致
+.readonly-field {
+  background-color: #f8f9fa !important;
+  border: 1px solid #e9ecef !important;
+  color: #6c757d !important;
+  cursor: text !important; // 可以選取文字
+  font-weight: 500;
+
+  &:focus {
+    // 保持唯讀元件在 focus 時的樣式一致性 (雖然 readonly input 很少需要 focus)
+    border-color: #80bdff !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15) !important;
+    outline: none !important;
+  }
+
+  &:hover {
+    border-color: #adb5bd !important;
+  }
+
+  // 確保文字可以被選取
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+}

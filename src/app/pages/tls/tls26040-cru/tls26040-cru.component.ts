@@ -20,7 +20,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { Column, formatToSixDigits } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls26040-cru',
@@ -42,7 +42,8 @@ import { Column } from '../../../shared/componentkit/table/table.model';
     InputTextComponent,
     InputNumberComponent,
     DialogComponent,
-    CommonModule
+    CommonModule,
+    ButtonComponent,
   ]
 })
 export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> implements OnInit {
@@ -117,35 +118,42 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
-          this.totalRecords = response.TotalCount;
+          this.totalRecords = this.data.length;
           // 預售總金額加總
           this.totalAmount = this.data.reduce((sum, item) => sum + (item.TXN_TotSaleAmt ?? 0), 0);
+          // 如果資料已經在結帳區塊，則從查詢結果中移除
+          this.data = this.data.filter(item => !this.checkoutData.some(ckItem => ckItem.id === item.id));
         });
     });
   }
 
   // 結帳
   onCheckout(): void {
-    if (this.selectedItems.length === 0 || this.dataForm2.invalid) return;
-
-    this.btnLoading = true;
+    if (this.selectedCheckoutItems.length === 0 || this.dataForm2.invalid) return;
 
     const insertRequest = {
       sad_preorder_date: this.datePipe.transform(this.dataForm2.value.sad_preorder_date, 'yyyy-MM-dd') ?? '',
-      idList: this.selectedItems.map(item => item.id),
+      idList: this.selectedCheckoutItems.map(item => item.id),
       sad_date_start: this.datePipe.transform(this.dataForm.value.sad_date_start, 'yyyy-MM-dd') ?? '',
       sad_date_end: this.datePipe.transform(this.dataForm.value.sad_date_end, 'yyyy-MM-dd') ?? '',
     };
 
-    this.tls26040Service.insertTLS26040(insertRequest)
-      .pipe(finalize(() => this.btnLoading = false))
-      .subscribe(response => {
-        this.messageService.successBubble('結帳成功');
-        // 重新查詢資料
-        this.onSubmit(this.dataForm);
-        // 清空選取項目
-        this.selectedItems = [];
-      });
+    this.confirmationService.confirm({
+      header: `確認結帳 ${this.selectedCheckoutItems.length} 筆資料？`,
+      accept: () => {
+        this.btnLoading = true;
+        this.tls26040Service.insertTLS26040(insertRequest)
+          .pipe(finalize(() => this.btnLoading = false))
+          .subscribe(response => {
+            this.messageService.successBubble('結帳成功');
+            // 重新查詢資料
+            this.onSubmit(this.dataForm);
+            // 清空選取項目
+            this.selectedItems = [];
+            this.selectedCheckoutItems = [];
+          });
+      },
+    });
   }
 
   loadOptions() {
@@ -179,7 +187,7 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
     { field: 'TLT_No', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true, format: formatToSixDigits },
     { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, format: formatAmount },
   ];
 
@@ -201,4 +209,47 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
         this.dialogVisible = true;
       });
   }
+
+  // 取消按鈕
+  reset(): void {
+    this.data = [];
+    this.selectedItems = [];
+  }
+
+  //#region 結帳選定資料
+  checkoutData: TLS26040Data[] = [];
+  selectedCheckoutItems: TLS26040Data[] = [];
+  checkoutColumns: Column[] = [
+    { field: 'id', header: 'ID', visible: false },
+    { field: 'sad_date', header: '預售日期', visible: true, format: formatDate },
+    { field: 'tlt_no', header: '櫃別編號', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true },
+    { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, format: formatAmount },
+  ];
+
+  onAdd() {
+    // 將資料加到TLS26040_Checkout
+    this.checkoutData = [...this.checkoutData, ...this.selectedItems];
+    this.selectedItems = [];
+    // 移除所選的資料
+    this.data = this.data.filter(item => !this.checkoutData.some(ckItem => ckItem.id === item.id));
+  }
+
+  onRemove(event: TLS26040Data[]) {
+    const idsToRemove = new Set(event.map(item => item.id));
+    this.checkoutData = this.checkoutData.filter(item => !idsToRemove.has(item.id));
+    this.selectedCheckoutItems = [];
+    // 把移除的資料加回 data 但重複的id不要加
+    const itemsToAddBack = event.filter(item => !this.data.some(dataItem => dataItem.id === item.id));
+    this.data = [...this.data, ...itemsToAddBack];
+    // 重新排序 data 依預售日期由小至大
+    this.data.sort((a, b) => (a.sad_date! > b.sad_date! ? 1 : -1));
+  }
+
+  isRowSelectable(rowData: TLS26040Data): boolean {
+    if (!this.selectedCheckoutItems) return true;
+    // 如果該列資料已存在於 checkoutData 中，則不可選取
+    return !this.checkoutData.some(item => item.id === rowData.id);
+  }
+  //#endregion
 }

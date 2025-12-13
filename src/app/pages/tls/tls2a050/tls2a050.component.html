@@ -41,8 +41,8 @@
       [showDelete]="false" [showEdit]="false" (detail)="onDetail($event)">
       <header>
         <p-button pButton tooltipPosition="top" pTooltip="匯出Excel" [style.width]="'35px'" [style.height]="'35px'"
-          class="p-button-rounded p-button-text p-button-info" icon="fa fa-file-lines"
-          [disabled]="!canPerformAction('70')" (click)="exportReport()" />
+          class="p-button-rounded p-button-text p-button-info" icon="fa fa-file-lines" [disabled]="!hasPermission('70')"
+          (click)="exportReport()" />
       </header>
     </app-table>
   </div>

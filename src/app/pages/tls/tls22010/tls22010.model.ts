@@ -1,12 +1,5 @@
 import { formatAmount, ReportColumn } from "@shared/componentkit/table-report/table-report.model";
-
-/**
- * 排序欄位結構
- */
-export interface SortBy {
-  field: string;
-  order: number;
-}
+import { SortMeta } from "primeng/api";
 
 /**
  * 主查詢 (queryTLS22010) 的列表資料介面
@@ -69,7 +62,7 @@ export interface TLS22010Query {
   PageIndex: number;
   OrderBy?: string; // <--- 新增欄位 (來自 Swagger)
   Offset?: number; // <--- 新增欄位 (來自 Swagger)
-  SortBy?: SortBy[];
+  SortBy?: SortMeta[];
   TXN_Date: string | null;
   floor_noList?: string[] | null;
   ECR_NoList?: string[] | null;
@@ -83,7 +76,7 @@ export interface TLS22010Query {
 export interface TLS22010DetailQuery {
   PageSize: number;
   PageIndex: number;
-  SortBy?: SortBy[];
+  SortBy?: SortMeta[];
   TXN_Date: string; // 注意：Swagger 文件中這些欄位是 string
   ECR_No: string;
   floor_no: string; // 注意：Swagger 文件中使用 floor_no

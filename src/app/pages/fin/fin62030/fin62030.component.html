@@ -1,8 +1,6 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
     <p-accordionTab
@@ -17,36 +15,65 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
-          <div class="col-12 md:col-12 lg:col-4">
-            <app-input-text
-              label="調撥單號"
-              controlName="dialnumber"
-              [control]="queryForm.controls.dialnumber"
+          <!-- 調撥單號(起) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="調撥單號(起)"
+              controlName="Tran_NoFrom"
+              [control]="queryForm.controls.Tran_NoFrom"
               [submitted]="submitted"
-            ></app-input-text>
+              [options]="tranNoOptions"
+              [optionLabel]="'label'"
+              [optionValue]="'value'"
+            ></app-dropdown>
+          </div>
+          <!-- 調撥單號(迄) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="調撥單號(迄)"
+              controlName="Tran_NoTo"
+              [control]="queryForm.controls.Tran_NoTo"
+              [submitted]="submitted"
+              [options]="tranNoOptions"
+              [optionLabel]="'label'"
+              [optionValue]="'value'"
+            ></app-dropdown>
           </div>
         </div>
-      </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
-      </div>
+      </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table
+    tableKey="FIN62030"
+    dataKey="Tran_No"
+    [data]="data"
+    [columns]="columns"
+    [showCheckBox]="true"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+    [multiSortMeta]="[]"
+    [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [lazy]="true"
+    [loading]="loading"
+    [showDelete]="false"
+    [showManage]="false"
+    [showReportMode]="false"
+  >
+    <header>
+      <p-button
+        label="預覽"
+        (click)="onPreview()"
+        [disabled]="selectedItems.length === 0"
+      />
+    </header>
+  </app-table>
 </div>

@@ -1,8 +1,8 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
-import { environment } from '../../../../environments/environment';
 import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
 // Query request interface for TLS53030
 export interface TLS53030QueryRequest extends BaseQueryRequest {
@@ -58,7 +58,6 @@ export interface TLS53030Data {
 // Detail data result interface for TLS53030 (盤點明細資料)
 export interface TLS53030DetailData {
   id: number;                   // id
-  PLU_PageNum: string;          // 貨架編號
   PLU_MagNo: string;            // 商品管理編號
   PLU_Name: string;             // 商品名稱
   PLU_No: string;               // 國際條碼
@@ -142,8 +141,8 @@ export class TLS53030Service {
     return this.http.post(`${this.apiUrl}/updateTLS53030_Detail`, data);
   }
 
-  // 更新盤點狀態
-  updateTLS53030PSTStatus(data: TLS53030UpdatePSTStatusRequest): Observable<any> {
-    return this.http.post(`${this.apiUrl}/updateTLS53030_PST_Status`, data);
-  }
+  // 更新盤點狀態 已棄用
+  // updateTLS53030PSTStatus(data: TLS53030UpdatePSTStatusRequest): Observable<any> {
+  //   return this.http.post(`${this.apiUrl}/updateTLS53030_PST_Status`, data);
+  // }
 }

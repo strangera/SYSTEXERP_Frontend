@@ -1,137 +1,74 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { CPM12030Request, CPM12030Response, Cpm12030Service } from '@service/api/cpm/cpm12030.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-//
 
 //5.1.2.3 顧客意見子類別維護
 @Component({
   selector: 'app-cpm12030',
   templateUrl: './cpm12030.component.html',
-  styleUrl: './cpm12030.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, TableComponent, TranslateModule]
+  imports: [TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, TranslateModule]
 })
-export class CPM12030Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    subCategoryCode: [], // 子類別編號
-    subCategoryName: ['', [Validators.maxLength(40)]], // 責任單位名稱類別名稱
-    opinionCategory: [], // 客戶意見主類別
+export class CPM12030Component extends BasicQueryPageComponent<CPM12030Response> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    subCategoryCode: [null], // 子類別編號
+    subCategoryName: [null, [Validators.maxLength(40)]], // 責任單位名稱類別名稱
+    opinionCategory: [null], // 客戶意見主類別
+    pageSize: [30],
+    pageIndex: [1],
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+  data: CPM12030Response[] = [];
+  selectedRows: CPM12030Response[] = [];
+  totalRecords = 0;
+  lastQuery: CPM12030Request | null = null;
+  columns: ReportColumn[] = [
+    { field: 'opinionCategoryCode', header: '主類別編號' },
+    { field: 'opinionCategoryName', header: '主類別名稱' },
+    { field: 'subCategoryCode', header: '子類別編號' },
+    { field: 'subCategoryName', header: '子類別名稱' },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    { 'isdelete': false, 'opinionCategoryCode': 'T001', 'opinionCategoryName': '意見反映', 'subCategoryCode': 'D001', 'subCategoryName': '服務' },
-    { 'isdelete': false, 'opinionCategoryCode': 'T001', 'opinionCategoryName': '意見反映', 'subCategoryCode': 'D002', 'subCategoryName': '設備' },
-    { 'isdelete': true, 'opinionCategoryCode': 'T001', 'opinionCategoryName': '意見反映', 'subCategoryCode': 'D003', 'subCategoryName': '商品' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'opinionCategoryCode', header: '主類別編號', visible: true },
-    { field: 'opinionCategoryName', header: '主類別名稱', visible: true },
-    { field: 'subCategoryCode', header: '子類別編號', visible: true },
-    { field: 'subCategoryName', header: '子類別名稱', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  subCategoryCodeOptions: any[] = [
-    { value: 1, label: 'D001/服務' },
-    { value: 2, label: 'D002/設備' },
-    { value: 3, label: 'D003/商品' },
-    { value: 4, label: 'D004/其他' },
-    { value: 5, label: 'D005/廣告業務' },
-  ];
-  opinionCategoryOptions: any[] = [
-    { value: 1, label: '意見反映' },
-    { value: 2, label: '廣告業務' },
-    { value: 3, label: '活動、場地洽談' },
-    { value: 4, label: '承租店櫃' },
-    { value: 5, label: '合作提案' },
-  ];
+  subCategoryCodeOptions = [];
+  opinionCategoryOptions = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
+    public readonly cpm12030Service: Cpm12030Service
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
-
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '510010';
-    this.cruPage = '/CPM1000/CPM12030CRU';
-    //
-
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('CPM12030', 'cpm/cpm12030cru', this.queryForm, (form) => this.onSubmit(form));
   }
-
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.handleSubmit(frm, () => {
+      this.cpm12030Service.queryCPM12030(frm.getRawValue()).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount;
+        this.lastQuery = frm.getRawValue();
+        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+      })
+    })
   }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+  onDelete(selectedItems: CPM12030Response[]) {
+    this.confirmationService.confirm({
+      header: `是否確認刪除 ${selectedItems.length} 筆資料?`,
+      accept: () => {
+        const idList = selectedItems.map(item => item.id);
+        // this.cpm12030Service.deleteCPM12030({ idList }).pipe(untilDestroyed(this)).subscribe(() => {
+        //     this.messageService.successBubble('刪除成功');
+        //     this.onSubmit(this.queryForm);
+        //   });
+      }
+    });
   }
 }

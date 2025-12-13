@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component } from '@angular/core';
 import {
   FormsModule,
@@ -20,6 +21,7 @@ import { FIN15100Service } from '../../../service/api/fin/fin15100.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 
 
@@ -45,7 +47,8 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
     DropdownModule,
     CalendarModule,
     ButtonModule,
-    CalendarComponent
+    CalendarComponent,
+    YearMonthComponent
   ],
 })
 export class FIN15100Component extends BasicQueryPageComponent<any> {
@@ -56,7 +59,7 @@ export class FIN15100Component extends BasicQueryPageComponent<any> {
 
 
   queryForm = this.formBuilder.group({
-    INV_DeclareYM: [null, Validators.required], // 申報年月
+    INV_DeclareYM: ['', Validators.required], // 申報年月
     TXN_Ret_NoS: [null, [Validators.required, Validators.maxLength(20)]], // 退出/折讓單號(起)
     TXN_Ret_NoE: [null, [Validators.required, Validators.maxLength(20)]],   // 退出/折讓單號(迄)
     InvoiceTrack: ['', [Validators.maxLength(2)]],//字軌
@@ -70,6 +73,7 @@ export class FIN15100Component extends BasicQueryPageComponent<any> {
 
   constructor(
     private fin15100Service: FIN15100Service,
+    private datePipe: DatePipe
   ) {
     super();
   }
@@ -81,8 +85,13 @@ export class FIN15100Component extends BasicQueryPageComponent<any> {
       this.queryForm,
       () => this.onSubmit()
     );
-
-
+    // 設定INV_DeclareYM預設值
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11
+    if (currentMonth % 2 !== 0) {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+    this.queryForm.get('INV_DeclareYM')?.setValue(this.datePipe.transform((currentDate), 'yyyyMM'));
   }
 
 
@@ -100,7 +109,7 @@ export class FIN15100Component extends BasicQueryPageComponent<any> {
     const { mid, SYS_StoreNo } = this.getUserInfoFromLocal();
 
     const payload = {
-      INV_DeclareYM: this.toYYYYMM(f.INV_DeclareYM),
+      INV_DeclareYM: f.INV_DeclareYM ?? '',
       TXN_Ret_NoS: f.TXN_Ret_NoS ?? '',
       TXN_Ret_NoE: f.TXN_Ret_NoE ?? '',
       InvoiceTrack: f.InvoiceTrack ?? '',

@@ -11,25 +11,25 @@
             optionLabel="label" optionValue="value" [control]="queryForm.controls.LOGO_No" [submitted]="submitted">
           </app-dropdown>
 
-          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.PLU_MagNo"
-            [submitted]="submitted" optionLabel="PLU_MagNo" optionValue="PLU_MagNo" templateLabel="label"
-            [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
+          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [showOverlay]="false"
+            [control]="queryForm.controls.PLU_MagNo" templateLabel="label" [submitted]="submitted"
+            optionLabel="PLU_MagNo" optionValue="PLU_MagNo" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
             (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
             [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
             [totalRecords]="opTotalRecords">
-            <app-input-text class="col-12 md:col-6" label="商品管理編號" controlName="queryNo"
+            <app-input-text class="col-12 md:col-6" label="管理編號" controlName="queryNo"
               [control]="opForm.controls.queryNo" />
             <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
               [control]="opForm.controls.PLU_Name" />
           </app-dropdown-table>
 
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="國際條碼" controlName="PLU_No"
+          <!-- <app-input-text class="col-12 md:col-6 lg:col-4" label="國際條碼" controlName="PLU_No"
             [control]="queryForm.controls.PLU_No" [submitted]="submitted">
           </app-input-text>
 
           <app-input-text class="col-12 md:col-6 lg:col-4" label="廠商貨號" controlName="PLU_OrgPLUNo"
             [control]="queryForm.controls.PLU_OrgPLUNo" [submitted]="submitted">
-          </app-input-text>
+          </app-input-text> -->
 
           <app-dropdown class="col-12 col-6 lg:col-4" label="大分類代碼" controlName="CAT_LNo"
             [control]="queryForm.controls.CAT_LNo" [options]="CAT_LNoOptions" optionLabel="label" optionValue="No" />

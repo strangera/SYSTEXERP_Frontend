@@ -18,18 +18,20 @@
                         [control]="df().pod_no"
                         [disabled]="!0"
                         [submitted]="submitted"></app-input-text>
-        <app-dropdown class="col-12 md:col-6 lg:col-8"
-                      label="活動名稱"
-                      controlName="pod_desc"
-                      [options]="campaignData()"
-                      optionLabel="CampaignName"
-                      optionValue="CampaignId"
-                      [control]="df().pod_desc"
-                      [loading]="loading"
-                      [submitted]="submitted"></app-dropdown>
-      </div>
-
-      <div class="grid p-fluid">
+        <app-dropdown-table class="col-12 md:col-6 lg:col-8"
+                            label="活動名稱"
+                            controlName="pod_desc"
+                            [formGroup]="campaignForm"
+                            [dialogData]="campaignData()"
+                            [dialogColumns]="campaignColumns"
+                            optionLabel="CampaignName"
+                            optionValue="CampaignId"
+                            [fieldsConfig]="fieldsConfig"
+                            (inputValueChanged)="onAutoCompleteInputChange($event)"
+                            (formValueChanged)="onformValueChanged($event)"
+                            [control]="df().pod_desc"
+                            [loading]="loading"
+                            [submitted]="submitted"></app-dropdown-table>
         <app-dropdown class="col-12 md:col-6 lg:col-4"
                       label="活動類型"
                       controlName="pod_type"
@@ -42,7 +44,8 @@
                       [submitted]="submitted"></app-dropdown>
         <app-calendar-range class="col-12 md:col-6 lg:col-4"
                             calendarType="dateRange"
-                            label="活動日期"
+                            label="活動起始日期"
+                            [disabled]="!0"
                             [startControl]="df().pod_sdate"
                             [endControl]="df().pod_edate"
                             [submitted]="submitted">
@@ -51,9 +54,45 @@
                       label="活動正檔日期"
                       controlName="pod_busdate"
                       [control]="df().pod_busdate"
-                      [disabled]="false"
+                      [disabled]="!1"
                       [submitted]="submitted"></app-calendar>
+        <app-dropdown class="col-12 md:col-6 lg:col-4"
+                      label="活動類型"
+                      controlName="pod_type"
+                      [options]="service.podTypeItems"
+                      optionLabel="label"
+                      optionValue="value"
+                      [disabled]="!0"
+                      [control]="df().pod_type2"
+                      [loading]="loading"
+                      [submitted]="submitted"></app-dropdown>
+        <app-calendar-range class="col-12 md:col-6 lg:col-4"
+                            calendarType="dateRange"
+                            label="活動兌回日期"
+                            [startControl]="df().pod_back_sdate"
+                            [endControl]="df().pod_back_edate"
+                            [submitted]="submitted">
+        </app-calendar-range>
+
+        <!-- 日期驗證錯誤提示 -->
+        @if(dataForm.errors && dataForm.dirty) {
+        <div class="flex align-items-center col-12 md:col-6 lg:col-4">
+          @if(dataForm.errors['invalidBackDateRange']) {
+          <p class="text-red-500 text-sm m-0">
+            <i class="pi pi-exclamation-triangle mr-2"></i>
+            兌回起始日期必須小於兌回結束日期
+          </p>
+          }
+          @if(dataForm.errors['invalidBusDate']) {
+          <p class="text-red-500 text-sm m-0">
+            <i class="pi pi-exclamation-triangle mr-2"></i>
+            活動正檔日期必須在活動起始日期期間內
+          </p>
+          }
+        </div>
+        }
       </div>
+
       @if(!isFormReadable) {
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel"
@@ -89,15 +128,57 @@
                         [tableKey]="'TLS26080_Counter'"
                         [data]="tableData()"
                         (dataChange)="tableData.set($event)"
-                        (fieldChange)="onFieldChange($event)"
+                        (fieldChange)="fieldChanges.set($event)"
+                        [selectedItems]="selectedItems()"
+                        (selectionChange)="selectedItems.set($event)"
+                        [isRowSelectable]="isRowSelectable"
                         [columns]="counterColumns()"
-                        [columnGroup]="counterColumnsGroup()"
-                        [insertDisabled]="isFormReadable"
-                        [defaultInsertData]="defaultInsertData"
+                        [columnGroup]="counterColumnsGroup"
+                        (insert)="displayDialog.set(!0)"
+                        [canInsert]="!1"
+                        [tableRequired]="!0"
+                        [showInsert]="!isFormReadable"
                         [showReorder]="!isFormReadable"
                         [disabled]="isFormReadable"
-                        [loading]="tableLoading()"></app-table-edit>
+                        [loading]="tableLoading()">
+        </app-table-edit>
       </p-panel>
     </div>
   </div>
 </div>
+
+
+<app-dialog [visible]="displayDialog()"
+            header="選擇專櫃"
+            (visibleChange)="displayDialog.set($event)"
+            (save)="saveDialog()"
+            [disable]="!selectedItemsDialog().length">
+  <form [formGroup]="dialogQueryForm">
+    <div class="grid p-fluid">
+      <app-input-text class="col-6"
+                      label="專櫃編號"
+                      controlName="TltNo"
+                      [control]="dqf().No"></app-input-text>
+      <app-input-text class="col-6"
+                      label="專櫃名稱"
+                      controlName="TltName"
+                      [control]="dqf().Name"></app-input-text>
+    </div>
+  </form>
+  <app-table-report tableKey="tls26080_dialogTable"
+                    [showReportMode]="!1"
+                    [showDelete]="!1"
+                    [showCaption]="!1"
+                    [showManage]="!1"
+                    [showCheckBox]="!0"
+                    [data]="filteredDialogData()"
+                    [columns]="dialogColumns()"
+                    [selectedItems]="selectedItemsDialog()"
+                    (selectionChange)="selectedItemsDialog.set($event)"
+                    [isRowSelectable]="isRowSelectable.bind(this)"
+                    [totalRecords]="dialogTotalRecords()"
+                    [loading]="dialogLoading()"
+                    [lastQueryBody]="{}"
+                    [queryFunction]="service.getTLTTalentOptions.bind(service)">
+  </app-table-report>
+</app-dialog>

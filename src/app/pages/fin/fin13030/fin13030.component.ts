@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 
 // Service imports
@@ -8,26 +8,25 @@ import { FIN13030Data, FIN13030GetZeroTaxGUIRequest, FIN13030QueryRequest, FIN13
 import { ValidationService } from '../../../shared/service/validation.service';
 
 // Component imports
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 // PrimeNG imports
-import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
 
 // Model imports
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { DropdownOption } from '../../../shared/models/api/base-api.interface';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 
 @Component({
@@ -185,7 +184,7 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
       return; // 停止執行
     }
 
-    if (this.canPerformAction('20')) { // '新增' 的 function_code 是 "20"
+    if (this.hasPermission('20')) { // '新增' 的 function_code 是 "20"
       // 取得零稅率發票
       const rb: FIN13030GetZeroTaxGUIRequest = {
         INV_GUINo_B: frm.get('INV_GUINo_B')?.value,

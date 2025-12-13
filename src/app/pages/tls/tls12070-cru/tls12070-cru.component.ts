@@ -1,21 +1,21 @@
-import { NgIf } from '@angular/common';
+import { formatDate, NgIf } from '@angular/common';
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls12070Service } from '@service/api/tls/tls12070.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { option } from '@shared/models/sys/sysb000.model';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { Column, formatDate } from '../../../shared/componentkit/table/table.model';
+import { Column, formatDate as tableFormatDate } from '../../../shared/componentkit/table/table.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { Customer_interview } from '../tls12070/tls12070.component';
+
 
 interface WillingDetail {
   id: number; // 主鍵ID
@@ -59,23 +59,7 @@ export class Tls12070CRUComponent extends BasicCruPageComponent<any>
     contact_record: [''], // 洽談重點及交換資料紀錄
     contact_remarks: [''], // 備註
   });
-  //
-  willing_data: WillingDetail[] = [];
-  willing_columns: Column[] = [ //意願報表欄位
-    { field: 'contact_USR_Name', header: '接洽人員', visible: true },
-    { field: 'VEN_Name', header: '廠商名稱', visible: true },
-    { field: 'contact_Date', header: '訪談時間', visible: true, format: formatDate },
-    { field: 'contact_record', header: '洽談重點', visible: true },
-    { field: 'contact_remarks', header: '備註', visible: true },
-    {
-      field: 'willing_level', header: '意願等級', visible: true,
-      format: (value: string) =>
-        this.willing_options.find((option) => option.value === value)?.label ||
-        value
-    },
-  ];
-
-  willing_options: option[] = [
+  willing_options = [
     { label: '?/未確認', value: 'N' },
     { label: 'A/交涉中(基本合意)', value: 'A' },
     { label: 'B/交涉中(反應良好)', value: 'B' },
@@ -83,13 +67,31 @@ export class Tls12070CRUComponent extends BasicCruPageComponent<any>
     { label: 'D/保留', value: 'D' },
     { label: 'F/無意進駐', value: 'F' }
   ]; // 意願等級下拉選單資料
+  //
+  willing_data: WillingDetail[] = [];
+  willing_columns: Column[] = [ //意願報表欄位
+    { field: 'contact_USR_Name', header: '接洽人員', visible: true },
+    { field: 'VEN_Name', header: '廠商名稱', visible: true },
+    { field: 'contact_Date', header: '訪談時間', visible: true, format: tableFormatDate },
+    { field: 'contact_record', header: '洽談重點', visible: true },
+    { field: 'contact_remarks', header: '備註', visible: true },
+    {
+      field: 'willing_level', header: '意願等級', visible: true,
+      format: (value: string) =>
+        this.willing_options.find((option) => option.value === value)?.label ||
+        value,
+      exportFormat: transformOptionsForExport(this.willing_options)
+    },
+  ];
 
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   selectedItems: Customer_interview[] = [];// 多選項目
+
+  //查詢頁查詢條件
+  queryConditions!: any;
   // ----------------------------------------------------------------
   constructor(
-    private readonly dropDownListService: DropDownListService,
     private readonly tls12070Service: Tls12070Service,
   ) {
     super(); // 呼叫父類建構子
@@ -98,8 +100,14 @@ export class Tls12070CRUComponent extends BasicCruPageComponent<any>
   ngOnInit(): void {
     this.initializePage('TLS12070', this.dataForm);
     console.log('讀取資料', this.dataForm.value);
+    console.log('這是前面的查詢條件', this.rowdata);
 
-    // 進來就用id讀取資料
+    const state = this.router.lastSuccessfulNavigation?.extras.state;
+    this.queryConditions = state?.['queryConditions'];
+    console.log('queryConditions: ', this.queryConditions);
+
+
+    // 進來就用id讀取資料/
     const contact_USR_No = this.dataForm.get('contact_USR_No')?.value
     if (contact_USR_No) {
       console.log('取得contact_USR_No', contact_USR_No);
@@ -108,7 +116,14 @@ export class Tls12070CRUComponent extends BasicCruPageComponent<any>
   }
 
   loadDetail(contact_USR_No: string) {
-    this.tls12070Service.queryTLS12070_Detail({ 'contact_USR_No': contact_USR_No }).pipe(untilDestroyed(this)).subscribe({
+    const request = {
+      contact_USR_No: contact_USR_No,
+      contact_Date_Start: formatDate(this.queryConditions.contact_Date_Start, 'yyyy-MM-dd', 'en-US'),
+      contact_Date_End: formatDate(this.queryConditions.contact_Date_End, 'yyyy-MM-dd', 'en-US'),
+    }
+    console.log('意願明細Request: ', request);
+
+    this.tls12070Service.queryTLS12070_Detail(request).pipe(untilDestroyed(this)).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
           this.willing_data = response.Data || [];

@@ -1,0 +1,26 @@
+/* 容器樣式: 確保定位上下文 */
+.fixed {
+  position: fixed;
+  /* PrimeFlex class: bottom-3 (1.5rem), right-3 (1.5rem) */
+}
+
+/* 針對 PrimeNG 按鈕容器的樣式 */
+:host ::ng-deep .p-button {
+  /* 確保按鈕本身是定位容器 */
+  position: relative;
+}
+
+/* 針對 PrimeNG 徽章的樣式 */
+:host ::ng-deep .p-badge {
+  position: absolute; /* 相對於按鈕容器定位 */
+  top: -5px; /* 向上微調 */
+  right: -5px; /* 向右微調 */
+  z-index: 10; /* 確保徽章在按鈕之上 */
+  border: 2px solid white; /* 可選：加個白色邊框讓它更突出 */
+}
+
+/* 讓 SQL 語法區塊在表格內可滾動 */
+pre {
+  word-break: break-all;
+  white-space: pre-wrap; /* 允許自動換行 */
+}

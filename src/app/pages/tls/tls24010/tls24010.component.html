@@ -34,7 +34,7 @@
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
           <app-button type="button" icon="pi pi-file-pdf" label="匯出報表PDF" (click)="onExportPDF(queryForm)"
-            [loading]="btnLoading"></app-button>
+            [loading]="btnLoading" [disabled]="!hasPermission('60')"></app-button>
         </div>
       </form>
     </p-accordionTab>

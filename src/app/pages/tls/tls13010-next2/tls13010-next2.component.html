@@ -3,7 +3,7 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
     <app-button
-      *ngIf="isGeneralCommissionMode && !isViewMode"
+      *ngIf="isGeneralCommissionMode && crudstatus !== CRUDStatus.Read"
       btnType="submit"
       label="確認"
       (click)="onSubmitNext()"
@@ -17,7 +17,7 @@
       btnType="create"
       label="下一步(租金設定)"
       (click)="onGoToNext3()"
-      [disabled]="!isViewMode && !hasCommissionData()"
+      [disabled]="crudstatus === CRUDStatus.Read || !hasCommissionData()"
       [loading]="loading"
     ></app-button>
     <app-button btnType="back" (click)="onClearAndExit()"></app-button>
@@ -94,13 +94,13 @@
               (cancel)="onItemCancel($event)"
               [autoAddRowOnTab]="true"
               [autoAddDetailRowOnTab]="true"
-              [forceEditMode]="!isViewMode"
-              [showCheckBox]="!isViewMode"
-              [showAddButton]="!isViewMode"
-              [showBatchDelete]="!isViewMode"
-              [showDetailAddButton]="!isViewMode"
-              [showDetailAddButton]="!isViewMode"
-              [showDetailBatchDelete]="!isViewMode"
+              [forceEditMode]="crudstatus !== CRUDStatus.Read"
+              [showCheckBox]="crudstatus !== CRUDStatus.Read"
+              [showAddButton]="crudstatus !== CRUDStatus.Read"
+              [showBatchDelete]="crudstatus !== CRUDStatus.Read"
+              [showDetailAddButton]="crudstatus !== CRUDStatus.Read"
+              [showDetailAddButton]="crudstatus !== CRUDStatus.Read"
+              [showDetailBatchDelete]="crudstatus !== CRUDStatus.Read"
               [showActionColumn]="false"
               [showDetailActionColumn]="false"
               (detailEdit)="onDetailEdit($event)"
@@ -113,7 +113,8 @@
               (addDetailItem)="onAddDetailItem($event)"
               (dropdownChange)="onDropdownChange($event)"
               (detailButtonClick)="onDetailButtonClick($event)"
-            ></app-expandable-edit-table>
+            >
+            </app-expandable-edit-table>
           </div>
 
           <!-- 保留：資料載入中的提示 -->
@@ -154,7 +155,7 @@
         (click)="onCancel()"
       ></app-button>
       <app-button
-        *ngIf="isGeneralCommissionMode && !isViewMode"
+        *ngIf="isGeneralCommissionMode && crudstatus !== CRUDStatus.Read"
         btnType="submit"
         label="確認"
         (click)="onSubmitNext()"
@@ -168,7 +169,7 @@
         btnType="create"
         label="下一步(租金設定)"
         (click)="onSubmitNext()"
-        [disabled]="!isViewMode && !hasCommissionData()"
+        [disabled]="crudstatus === CRUDStatus.Read || !hasCommissionData()"
         [loading]="loading"
       ></app-button>
       <app-button btnType="back" (click)="onClearAndExit()"></app-button>

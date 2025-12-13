@@ -15,7 +15,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, map, tap } from 'rxjs';
+import { finalize, tap } from 'rxjs';
 import { FIN53010Data, FIN53010Payload } from './fin53010.model';
 
 @Component({
@@ -115,25 +115,27 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
       const vns = this.qf().VouNoStart.value;
       const vne = this.qf().VouNoEnd.value;
 
-      const payload = <FIN53010Payload>{
+      const raw = <FIN53010Payload>{
         ...this.queryForm.getRawValue(),
         VouNoStart: vns ? String(vns).padEnd(12, '0') : void 0,
         VouNoEnd: vne ? String(vne).padEnd(12, '9') : void 0,
       };
+      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
+      )) as unknown as FIN53010Payload;
 
       this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.logger.debug(`onSubmit:`, [vns, vne, payload]);
       this.service.loadFIN53010(payload).pipe(
-        map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
         tap(res => this.service.getAccDescOptions(res.Data.map(d => d.Remark).filter(Boolean))),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
         next: res => {
+          if (res.Status !== '0000') return;
           this.tableData.set(res.Data || []);
           this.totalRecords.set(res.TotalCount || 0);
-          this.logger.debug(`onSubmit:`, [payload, res]);
         },
-        error: err => this.messageService.errorBubble(err.message || 'FIN53010查詢失敗:'),
       });
     });
   }

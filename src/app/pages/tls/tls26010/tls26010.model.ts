@@ -15,16 +15,28 @@ export interface DependentDataQuery {
 
   tlt_bdate?: string | null; // 需求更新: 專櫃效期之起始日期
   tlt_edate?: string | null; // 需求更新: 專櫃效期之結束日期
+
+  ecr_no?: string | null; // 需求更新: 收銀機號(收銀機號查詢才需要)
+
+  tlt_no?: string | null; // 需求更新: 專櫃編號(收銀機號查詢才需要)
+
+  // 專櫃查詢額外欄位
+  tlt_openflag?: string | null; // 營業狀態 (0=已撤櫃, 1=營運中, 9=核准時合約尚未開始)
+  approve_status?: string | null; // 審核狀態 (1=未審核, 2=已審核, 3=已作廢)
+  tlt_name?: string | null; // 專櫃名稱 (模糊搜尋)
+  ven_no?: string | null; // 廠商編號
 }
 
 export interface TLS26010Query extends BaseQueryRequest {
-  ECR_No: string[];
-  tlt_nos: string[];
-  tlt_no: string;
-  pod_sdate_S?: Date;
-  pod_sdate_E?: Date;
-  pod_edate_S?: Date;
-  pod_edate_E?: Date;
+  building_nos?: string[];
+  floor_nos?: string[];
+  area_nos?: string[];
+  ECR_No?: string[];
+  tlt_nos?: string[];
+  pod_sdate_S?: string;
+  pod_sdate_E?: string;
+  pod_edate_S?: string;
+  pod_edate_E?: string;
 }
 
 export interface EcrItem {
@@ -33,13 +45,13 @@ export interface EcrItem {
   building_name?: string;
   building_no?: string;
   ecr_name: string;
-  ecr_no: string;
+  ECR_No: string;
   ecr_type?: string;
   floor_name?: string;
   floor_no?: string;
   talent_id?: number;
-  tlt_name: string;
-  tlt_no: string;
+  tlt_name: string | null;
+  tlt_no: string | null;
   /** 操作狀態 */
   Status?: ItemOperationStatus;
 }
@@ -54,8 +66,8 @@ export interface TltItem {
   floor_name?: string;
   floor_no?: string;
   talent_id?: number;
-  tlt_name: string;
-  tlt_no: string;
+  tlt_name: string | null;
+  tlt_no: string | null;
   ven_no?: string;
   /** 操作狀態 */
   Status?: ItemOperationStatus;

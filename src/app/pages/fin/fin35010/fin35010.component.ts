@@ -1,28 +1,32 @@
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-// Shared
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { FIN35010QueryRequest, FIN35010Response, Fin35010Service } from '@service/api/fin/fin35010.service';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
-import { AuthService } from '../../../service/system/auth.service';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
+import { UpdateType } from './fin35010.model';
 
 @Component({
   selector: 'app-fin35010',
   templateUrl: './fin35010.component.html',
-  styleUrl: './fin35010.component.scss',
   standalone: true,
   imports: [
+    AsyncPipe,
+    TableReportComponent,
     MenubarComponent,
     ButtonComponent,
     AccordionModule,
@@ -31,246 +35,77 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
     InputNumberRangeComponent,
     DropdownComponent,
     InputTextComponent,
-    CalendarRangeComponent,
-    TableComponent,
     TranslateModule,
+    CalendarRangeQuickComponent,
   ],
 })
-export class FIN35010Component extends BasicQpageComponent implements OnInit {
-  // Form group controls matching the HTML
-  queryForm = this.formBuilder.group({
-    depositSerialNumberStart: [], // 保證金序號
-    depositSerialNumberEnd: [],
-
-    vendorCode: [], // 廠商編號
-    counterCode: [], // 專櫃編號
-    documentType: [], // 單據別
-    amountStart: [], // 金額
-    amountEnd: [],
-
-    receiptDateStart: [], // 收款日期
-    receiptDateEnd: [],
-
-    depositDueDateStart: [], // 保證金到期日
-    depositDueDateEnd: [],
-
-    checkNumber: [], // 支票號碼
-    financialInstitution: [], // 金融機構
-    summary: [], // 摘要
-
-    status: [], // 狀態
-    statusChangeDateStart: [], // 狀態變更日期
-    statusChangeDateEnd: [],
-
-    debitAccount: [], // 收款會計科目(借)
-    creditAccount: [], // 保證金會計科目(貸)
-
-    voucherNumberStart: [], // 傳票編號
-    voucherNumberEnd: [],
-
-    clearingCode: [], // 立沖代號
-    sourceSystem: [], // 來源系統別
-    recruitmentNumberStart: [], // 專櫃招募編號
-    recruitmentNumberEnd: [],
-
-    depositType: [], // 保證金類型
-    organizationCode: [], // 組織代號
-    targetCode: [], // 對象別編號
-    reconciliationKey: [], // 對帳KEY值
+export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response> implements OnInit {
+  public readonly UpdateType = UpdateType;
+  queryForm = this.formBuilder.nonNullable.group({
+    VEN_No: [null], // 廠客代號(下拉), POS2013.VEN_NO
+    VEN_Name: [null, Validators.maxLength(100)], // "廠客名稱, POS2013.VEN_NAME LIKE %%" (input輸入)
+    TLT_Name: [null, Validators.maxLength(100)], // 櫃位名稱(下拉)
+    tlt_bdateStart: [null],// 合約起日(日期範圍)
+    tlt_bdateEnd: [null],// 合約起日(日期範圍)
+    tlt_edateStart: [null],// 合約迄日(日期範圍)
+    tlt_edateEnd: [null],// 合約迄日(日期範圍)
+    Deposit_DateStart: [null], // 收票日期(日期範圍)
+    Deposit_DateEnd: [null], // 收票日期(日期範圍)
+    CHK_ExpireDateStart: [null], // 保證票到期日(日期範圍)
+    CHK_ExpireDateEnd: [null], // 保證票到期日(日期範圍)
+    UPD_DateStart: [null], // 變更日期(日期範圍)
+    UPD_DateEnd: [null], // 變更日期(日期範圍)
+    CHK_No: [null, Validators.maxLength(10)], // 票據編號(input輸入)
+    Status: [null], // 票據狀態(下拉) // 狀態 (0=未繳票 1=已繳票 2=已退票 3=封存)
+    CHK_Type: [null], // 保證票類型(下拉) // 票據種類 (1=支票 2=本票 3=銀行保證函 4=其他)
+    org_id: [null], // 組織代碼(下拉)
+    Remark: [null, Validators.maxLength(160)], // 摘要(input輸入)
+    Deposit_Type: [null], // 保證類別(下拉) // 保證金類型 (1=押金 2=履約保證金 3=施工保證金 4=開業保證金)
+    CHK_Amt: [null, Validators.max(9999999999)], // 金額(數字範圍輸入)
+    pageIndex: [1],
+    pageSize: [30],
   });
-
-  // Dropdown options
-  vendorCodeOptions: any[] = [
-    { value: 1, label: '00000000-1' },
-    { value: 2, label: '00000000-2' },
-    { value: 3, label: '00000000-3' },
-    { value: 4, label: '00000000-4' },
-    { value: 5, label: '00000000-5' },
-    { value: 6, label: '00000000-7' },
-    { value: 7, label: '00000000-8' },
-    { value: 8, label: '00852492-1' },
-    { value: 9, label: '01052878-1' },
-    { value: 10, label: '01508949-1' },
-  ];
-  documentTypeOptions: any[] = [
-    { value: 1, label: '現金' },
-    { value: 2, label: '支票' },
-    { value: 3, label: '商業本票' },
-  ];
-  financialInstitutionOptions: any[] = [
-    { value: 1, label: '000000' },
-    { value: 2, label: '000022' },
-    { value: 3, label: '0040037' },
-    { value: 4, label: '0040059' },
-    { value: 5, label: '0040071' },
-    { value: 6, label: '0040082' },
-    { value: 7, label: '0040093' },
-    { value: 8, label: '0040107' },
-    { value: 9, label: '0040118' },
-    { value: 10, label: '0040129' },
-  ];
-  statusOptions: any[] = [
-    { value: 1, label: '建立' },
-    { value: 2, label: '已退還' },
-    { value: 3, label: '收款挪轉' },
-  ];
-  depositTypeOptions: any[] = [
-    { value: 1, label: '押金' },
-    { value: 2, label: '履約保證金' },
-    { value: 3, label: '施工保證金' },
-  ];
-  organizationCodeOptions: any[] = [
-    { value: 1, label: '全公司' },
-    { value: 2, label: '稽核室' },
-    { value: 3, label: '經營企劃部(停用)' },
-    { value: 4, label: '行政Team(停用)' },
-    { value: 5, label: '公關Team(停用)' },
-    { value: 6, label: '營企Team(停用)' },
-    { value: 7, label: '電子商務team(停用)' },
-    { value: 8, label: '外商Team(停用)' },
-    { value: 9, label: '個資小組' },
-    { value: 10, label: '品牌代理小組(停用)' },
-  ];
-  targetCodeOptions: any[] = [
-    { value: 1, label: '臺南紡織股份有限公司' },
-    { value: 2, label: '統一企業股份有限公司' },
-    { value: 3, label: '統正開發股份有限公司' },
-  ];
-
-  // Table data
-  data: any[] = [];
-
-  filteredData: any[] = [...this.data];
-
-  columns: any[] = [
-    { field: 'guaranteeSequenceNumber', header: '保證金序號', visible: true },
-    { field: 'vendorCode', header: '廠商編號', visible: true },
-    { field: 'dedicatedAccountNumber', header: '專戶編號', visible: true },
-    { field: 'transactionType', header: '單據別', visible: true },
-    { field: 'amount', header: '金額', visible: true },
-    { field: 'receiptDate', header: '收款日期', visible: true },
-    { field: 'guaranteeDueDate', header: '保證金到期日', visible: true },
-    { field: 'voucherNumber', header: '支票號碼', visible: true },
-    { field: 'financialInstitution', header: '金融機構', visible: true },
-    { field: 'ticketDueDate', header: '票據到期日', visible: true },
-    { field: 'summary', header: '摘要', visible: true },
-    { field: 'status', header: '狀態', visible: true },
-    { field: 'statusChangeDate', header: '狀態變更日期', visible: true },
-    {
-      field: 'receiptAccountingSubjectDebit',
-      header: '收款會計科目(借)',
-      visible: true,
-    },
-    {
-      field: 'guaranteeAccountingSubjectCredit',
-      header: '保證金會計科目(貸)',
-      visible: true,
-    },
-    { field: 'clearingCode', header: '立沖代號', visible: true },
-    { field: 'sourceSystem', header: '來源系統別', visible: true },
-    {
-      field: 'dedicatedRecruitmentNumber',
-      header: '專戶招募編號',
-      visible: true,
-    },
-    { field: 'guaranteeCategory', header: '保證金類型', visible: true },
-    { field: 'organizationCode', header: '組織代號', visible: true },
+  VEN_NoOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
+  TLT_NameOptions = this.dropdown.queryTltTalent();
+  org_idOptions = this.dropdown.querySys3100();
+  StatusOptions = getSYS1000Options('ARS4008_Status');
+  CHK_TypeOptions = getSYS1000Options('CHK_Type');
+  Deposit_TypeOptions = getSYS1000Options('Deposit_Type');
+  data: FIN35010Response[] = [];
+  totalRecords = 0;
+  lastQuery: FIN35010QueryRequest | null = null;
+  columns: ReportColumn[] = [
+    { field: 'CHK_No', header: '票據號碼' },
+    { field: 'VEN_No', header: '廠商編號' },
+    { field: 'VEN_Name', header: '廠商名稱' },
+    { field: 'TLT_Name', header: '櫃位名稱' },
+    { field: 'CHK_Amt', header: '金額', format: formatAmount },
+    { field: 'CHK_Type', header: '票據類型', format: (v) => getSYS1000('CHK_Type', v) },
+    { field: 'Deposit_Type', header: '保證類別', format: (v) => getSYS1000('Deposit_Type', v) },
+    { field: 'Status', header: '票據狀態', format: (v) => getSYS1000('ARS4008_Status', v) },
+    { field: 'Remark', header: '摘要' },
+    { field: 'CRT_Date', header: '建檔日期', format: formatDate },
+    { field: 'UPD_Date', header: '變更日期', format: formatDate },
   ];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-    private authService: AuthService,
-    private messageService: NotificationService,
+    public readonly fin35010Service: Fin35010Service,
+    private readonly dropdown: DropdownApiService
   ) {
-    super(); // Call parent constructor
+    super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '130011';
-
-    // Initialize dropdown options
-
-    // Load dropdown options for various fields
-  }
-  onNext(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      this.router.navigate(['/SYS0000/SYS0220CRU']);
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitNext(frm: FormGroup) {
-    // 查詢邏輯
-    this.onNext(frm);
+    this.initializePage('FIN35010', 'fin/fin35010cru', this.queryForm, (v) => this.onSubmit(v));
   }
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN3000/FIN35010CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
-
-  onClearForm() {
-    this.queryForm.reset(); // Reset form
+    this.handleSubmit(frm, () => {
+      this.fin35010Service.queryFIN35010(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount;
+        this.lastQuery = frm.value;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      })
+    });
   }
 }

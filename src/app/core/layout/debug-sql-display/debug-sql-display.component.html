@@ -1,0 +1,60 @@
+<div class="fixed bottom-0 right-0 z-5 p-3" *ngIf="isDebugEnabled()"  
+  style="position: fixed; display: flex; align-items: flex-end; justify-content: flex-end;">
+
+  <div style="position: relative;">
+
+    <p-button (onClick)="onToggle($event, op)" icon="pi pi-database"  
+      styleClass="p-button-rounded p-button-lg p-button-secondary">
+    </p-button>
+
+    <p-badge [value]="sqlCount()" severity="danger" [hidden]="sqlCount() === 0" class="debug-badge-override">
+    </p-badge>
+
+  </div>
+
+  <p-overlayPanel #op [style]="{ width: '70vw', maxWidth: '1200px' }" [showCloseIcon]="true">
+    <ng-template pTemplate="content">
+      <h4 class="mt-0 mb-3">
+        <i class="pi pi-history mr-2"></i> 即時 SQL 執行紀錄 (共 {{ sqlCount() }} 筆)
+      </h4>
+      <p-button icon="pi pi-trash" label="清除全部" (onClick)="onClearHistory()"  
+        styleClass="p-button-danger p-button-sm p-button-outlined" [disabled]="sqlCount() === 0">
+      </p-button>
+      <p-scrollPanel [style]="{width: '100%', height: '400px'}">
+        <p-table [value]="tableData()" selectionMode="single" (onRowSelect)="onRowSelect($event)" [scrollable]="true"
+          responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>#</th>
+              <th [style]="{minWidth: '300px'}">API 請求路徑</th>
+              <th [style]="{minWidth: '900px'}">SQL 語法 (點擊列可複製)</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-sqlDetail let-i="rowIndex">
+            <tr [pSelectableRow]="sqlDetail">
+              <td>{{ i + 1 }}</td>
+              <td>
+                <span class="p-0 m-0 text-xs overflow-auto" style="max-height: 200px; word-break: break-all;">
+                  {{ sqlDetail.apiUrl }}
+                </span>
+              </td>
+              <td>
+                 
+                <pre class="p-0 m-0 text-xs overflow-auto" style="max-height: 200px; white-space: pre-wrap;">
+                {{ sqlDetail.sql }}
+                </pre>
+                 
+              </td>
+               
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="3" class="text-center">目前沒有累積的 SQL 記錄。</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-scrollPanel>
+    </ng-template>
+  </p-overlayPanel>
+</div>

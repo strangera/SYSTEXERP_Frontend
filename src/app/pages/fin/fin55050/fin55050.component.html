@@ -11,75 +11,76 @@
           <!-- 日期(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range calendarType="dateRange" label="日期" [startControl]="queryForm.controls.DateFrom"
-              [endControl]="queryForm.controls.DateTo" [submitted]="submitted">
-            </app-calendar-range>
+              [endControl]="queryForm.controls.DateTo" [submitted]="submitted"></app-calendar-range>
           </div>
 
           <!-- 部門 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="部門" controlName="OrgIdList" [options]="OrgIdListOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.OrgIdList" [submitted]="submitted">
-            </app-multi-select>
+              optionValue="value" [control]="queryForm.controls.OrgIdList" [submitted]="submitted"></app-multi-select>
           </div>
 
-          <!-- 科目代號 -->
+          <!-- 科目代號(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="科目代號" controlName="AccNoList" [options]="AccNoListOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.AccNoList" [submitted]="submitted">
-            </app-multi-select>
+            <app-dropdown-range label="科目代號" controlName="AccNoList" [options]="AccNoListOptions" optionLabel="label"
+              optionValue="value" [startControl]="queryForm.controls.AccNoFrom"
+              [endControl]="queryForm.controls.AccNoTo" [submitted]="submitted"></app-dropdown-range>
           </div>
 
-          <!-- 廠商代號 -->
+          <!-- 廠商代號(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="廠商代號" controlName="VendorNoList" [options]="VendorNoListOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.VendorNoList"
-              [submitted]="submitted">
-            </app-multi-select>
+            <app-dropdown-range label="廠商代號" controlName="VendorNoList" [options]="VendorNoListOptions"
+              optionLabel="label" optionValue="value" [startControl]="queryForm.controls.VendorFrom"
+              [endControl]="queryForm.controls.VendorTo" [submitted]="submitted"></app-dropdown-range>
           </div>
 
           <!-- 立沖代號(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range label="立沖代號(起訖)" controlNameStart="PTAFrom" controlNameEnd="PTATo"
               [startControl]="queryForm.controls.PTAFrom" [endControl]="queryForm.controls.PTATo"
-              [submitted]="submitted">
-            </app-input-text-range>
+              [submitted]="submitted"></app-input-text-range>
           </div>
 
           <!-- 對象別編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="對象別編號" controlName="TargetNoList" [options]="TargetNoListOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.TargetNoList"
-              [submitted]="submitted">
-            </app-multi-select>
+            <app-dropdown label="對象別編號" controlName="TargetNoList" [options]="TargetNoListOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.Target" [submitted]="submitted"></app-dropdown>
           </div>
 
           <!-- 摘要 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="摘要" controlName="Notes" [control]="queryForm.controls.Notes" [submitted]="submitted">
-            </app-input-text>
+            <app-input-text label="摘要" controlName="Notes" [control]="queryForm.controls.Notes"
+              [submitted]="submitted"></app-input-text>
           </div>
 
           <!-- 傳票型態 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="傳票型態" controlName="VouTypeList" [options]="VouTypeListOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.VouTypeList" [submitted]="submitted">
-            </app-multi-select>
+            <app-dropdown label="傳票型態" controlName="VouTypeList" [options]="VouTypeListOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.VoucherType" [submitted]="submitted"></app-dropdown>
           </div>
 
           <!-- 傳票狀態 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="傳票狀態" controlName="VouStatusList" [options]="VouStatusListOptions"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.VouStatusList"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"></app-multi-select>
           </div>
 
           <!-- 是否為對象別 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="是否為對象別" groupname="g1" [control]="queryForm.controls.IsTarget"
-              [options]="[ { label: '全部', value: null },{ label: '是', value: 'Y' }, { label: '否', value: 'N' }]"
-              [submitted]="submitted">
-            </app-radiobutton>
+            <app-radiobutton label="是否為對象別" groupname="g1" [control]="queryForm.controls.IsTarget" [options]="[
+                { label: '全部', value: null },
+                { label: '是', value: 'Y' },
+                { label: '否', value: 'N' },
+              ]" [submitted]="submitted"></app-radiobutton>
+          </div>
+
+          <!-- 報表方式 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton label="報表方式" groupname="g2" [control]="queryForm.controls.ReportMode" [options]="[
+                { label: '只含交易科目', value: '1' },
+                { label: '含無交易科目', value: '2' },
+              ]" [submitted]="submitted"></app-radiobutton>
           </div>
         </div>
 
@@ -95,19 +96,19 @@
 <div class="card">
   <!-- 右上角工具列：匯出 PDF / Excel -->
   <div class="flex justify-content-end gap-2 mb-2">
-    <app-button label="匯出 PDF" icon="pi pi-file-pdf" (click)="onExportPDF()" [loading]="btnLoading"
-      [disabled]="loading || (data.length || 0) === 0">
-    </app-button>
+    <app-button label="匯出 PDF" icon="pi pi-file-pdf" (click)="onExportPDF()" [loading]="PDFBtnLoading"
+      [disabled]="loading || (data.length || 0) === 0"></app-button>
 
-    <app-button label="匯出 Excel" icon="pi pi-file-excel" (click)="onExportXLSX()" [loading]="btnLoading"
-      [disabled]="loading || (data.length || 0) === 0">
-    </app-button>
+    <app-button label="匯出 Excel" icon="pi pi-file-excel" (click)="onExportXLSX()" [loading]="XLSXBtnLoading"
+      [disabled]="loading || (data.length || 0) === 0"></app-button>
   </div>
 
+  <ng-template #accGroupHeader let-row>
+    <span>會計科目：{{ row.AccNo }}</span>
+  </ng-template>
   <app-table-subheader tableKey="FIN55050" dataKey="ID" [data]="data" [columns]="columns" [showCheckBox]="false"
     [showManage]="false" [showDelete]="false" (detail)="onDetail($event)" [multiSortMeta]="[]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
     [loading]="loading" [showSerialNo]="false" [showPaginator]="false" [showReportMode]="false" [groupRowsBy]="'AccNo'"
-    [groupRowsByName]="'AccCName'" [showSort]="false">
-  </app-table-subheader>
+    [groupRowsByName]="'AccCName'" [showSort]="false" [groupHeaderTemplate]="accGroupHeader"></app-table-subheader>
 </div>

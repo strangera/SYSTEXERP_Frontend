@@ -18,14 +18,14 @@
             controlName="vendorShortName" [control]="dataForm.controls.vendorShortName" [submitted]="submitted" />
         </div>
         <app-dropdown class="col-12 md:col-6 lg:col-2" label="品牌代碼/名稱" controlName="LOGO_No"
-          [options]="brandOptions | async" optionLabel="label" optionValue="value" [control]="dataForm.controls.LOGO_No"
+          [options]="filteredLogoOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.LOGO_No"
           [submitted]="submitted" />
         <app-input-number class="col-12 md:col-6 lg:col-2" label="剩餘預算金額" controlName="remainingBudgetAmount"
           [control]="dataForm.controls.remainingBudgetAmount" [useGrouping]="true" [minFractionDigits]="0"
           [maxFractionDigits]="2" [submitted]="submitted" />
 
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="倉庫代碼/名稱" controlName="HOS_No"
-          [options]="warehouseOptions | async" optionLabel="label" optionValue="value"
+          [options]="filteredWarehouseOptions" optionLabel="label" optionValue="value"
           [control]="dataForm.controls.HOS_No" [submitted]="submitted" />
 
         <app-input-number class="col-12 md:col-6 lg:col-4" label="採購金額" controlName="PO_TotalBuyNet"
@@ -73,11 +73,12 @@
   [disable]="selectedItemsDialog.length === 0">
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
     <div class="grid p-fluid">
-      <app-dropdown-table class="col-12" [control]="dialogQueryForm.controls.PLU_MagNo" [submitted]="submitted"
-        templateLabel="label" optionLabel="label" optionValue="PLU_MagNo" [suggestions]="suggestions"
-        [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
-        (formValueChanged)="onformValueChanged($event)" [formGroup]="opForm" [dialogData]="opData"
-        [dialogColumns]="opColumns" [loading]="opLoading" [totalRecords]="opTotalRecords">
+      <app-dropdown-table class="col-12" [showOverlay]="false" [control]="dialogQueryForm.controls.PLU_MagNo"
+        [submitted]="submitted" templateLabel="label" optionLabel="PLU_MagNo" optionValue="PLU_MagNo"
+        [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
+        (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
+        [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
+        [totalRecords]="opTotalRecords">
         <app-input-text class="col-12 md:col-6" label="商品管理編號/國際條碼/廠商貨號" controlName="queryNo"
           [control]="opForm.controls.queryNo" />
         <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"

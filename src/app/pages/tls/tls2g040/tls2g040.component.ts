@@ -1,25 +1,25 @@
+import { AsyncPipe } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { TLS2G040Data, TLS2G040Service } from '@service/api/tls/tls2g040.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { debounceTime, finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { AsyncPipe } from '@angular/common';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { bus_classColumns, bus_sclassColumns, bus_typeColumns, org_idColumns, report_typeOptions, tlt_noColumns } from './tls2g040.model';
-import { debounceTime, finalize } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { TLS2G040Data, TLS2G040Service } from '@service/api/tls/tls2g040.service';
-import { ButtonModule } from 'primeng/button';
-import { HttpResponse } from '@angular/common/http';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 
 // 2.2.16.4 預算日報表
 @Component({
@@ -63,13 +63,13 @@ export class TLS2G040Component extends BasicQueryPageComponent<TLS2G040Data> imp
     this.queryForm.valueChanges.pipe(debounceTime(200)).subscribe(() => {
       this.updateColumns();
     });// 獲取大分類下拉選項
-    this.dropDownListService.queryPOS2003_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
+    this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.CAT_LNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     });
     // 監聽大分類變化
     this.queryForm.controls.bus_type.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
       if (value) {
-        this.dropDownListService.queryPOS20031_DropDownList({ CAT_LNo: [value] }).pipe(untilDestroyed(this)).subscribe(response => {
+        this.dropDownListService.queryTLTBUSCLASS_DropDownList({ bus_type: [value] }).pipe(untilDestroyed(this)).subscribe(response => {
           this.CAT_MNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
           this.queryForm.controls.bus_class.enable();
         });
@@ -82,11 +82,11 @@ export class TLS2G040Component extends BasicQueryPageComponent<TLS2G040Data> imp
     // 監聽中分類變化
     this.queryForm.controls.bus_class.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
       if (value && this.queryForm.controls.bus_type.value) {
-        this.dropDownListService.queryPOS20032_DropDownList({
-          CATList: [
+        this.dropDownListService.queryTLTBUSSCLASS_DropDownList({
+          queryTLTBUSSCLASSInfos: [
             {
-              CAT_LNo: this.queryForm.controls.bus_type.value,
-              CAT_MNo: value
+              bus_type: this.queryForm.controls.bus_type.value,
+              bus_class: value
             }
           ]
         }).pipe(untilDestroyed(this)).subscribe(response => {

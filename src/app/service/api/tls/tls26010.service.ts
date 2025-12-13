@@ -40,8 +40,10 @@ export class TLS26010Service {
   public readonly tableLoading = signal<boolean>(false);
   public readonly approvalStatusLoading = signal<boolean>(false);
 
+  apiUrl: string = environment.ApiUrl + '/TLS0000/TLS2000';
+
   public readonly ecrDataMap = computed(() => {
-    return new Map<string, EcrItem>(this.ecrOptions().map(ecr => ([ecr.ecr_no!, ecr])));
+    return new Map<string, EcrItem>(this.ecrOptions().map(ecr => ([ecr.ECR_No!, ecr])));
   });
 
   public readonly tltDataMap = computed(() => {
@@ -112,16 +114,17 @@ export class TLS26010Service {
   }
 
   /** 取得收銀機號 */
-  public queryECRDropDownList(query: DependentDataQuery & { ecr_type: string; }): void {
+  public loadECRDropDownList(query: DependentDataQuery & { ecr_type: string; }): void {
     this.ecrLoading.set(true);
     this.http.post<BaseQueryResponse<any>>(`${apiUrl}/queryECRDropDownList`, query).pipe(
       take(1),
       tap(res => {
         const mapped = (res.Data ?? []).map(item => ({
           ...item,
+          ECR_No: item.ecr_no, // tls26010的組成都是吃ECR_No，這邊先進行轉換
         }));
         this.ecrOptions.set(mapped);
-        console.log('收銀機號查詢 request 💡:', query);
+        console.log('收銀機號查詢 request :', query);
         console.log(`收銀機號查詢結果:`, res.Data);
       }),
       finalize(() => this.ecrLoading.set(false)),
@@ -129,13 +132,39 @@ export class TLS26010Service {
   }
 
   /** 取得專櫃編號 */
-  public queryTalentDropDownList(query: DependentDataQuery): void {
+  public loadTalentDropDownList(query: DependentDataQuery): void {
     this.tltLoading.set(true);
-    this.http.post<BaseQueryResponse<TltItem>>(`${apiUrl}/queryTalentDropDownList`, query).pipe(
+
+    // 將參數轉換為後端期望的格式（過濾掉 undefined 和 null）
+    const requestBody: {
+      building_nos?: string[];
+      floor_nos?: string[];
+      area_nos?: string[];
+      tlt_openflag?: string | null;
+      approve_status?: string | null;
+      tlt_no?: string | null;
+      tlt_name?: string | null;
+      ven_no?: string | null;
+      tlt_bdate?: string | null;
+      tlt_edate?: string | null;
+    } = {};
+
+    if (query.building_nos?.length) requestBody['building_nos'] = query.building_nos;
+    if (query.floor_nos?.length) requestBody['floor_nos'] = query.floor_nos;
+    if (query.area_nos?.length) requestBody['area_nos'] = query.area_nos;
+    if (query.tlt_openflag) requestBody['tlt_openflag'] = query.tlt_openflag;
+    if (query.approve_status) requestBody['approve_status'] = query.approve_status;
+    if (query.tlt_no) requestBody['tlt_no'] = query.tlt_no;
+    if (query.tlt_name) requestBody['tlt_name'] = query.tlt_name;
+    if (query.ven_no) requestBody['ven_no'] = query.ven_no;
+    if (query.tlt_bdate) requestBody['tlt_bdate'] = query.tlt_bdate;
+    if (query.tlt_edate) requestBody['tlt_edate'] = query.tlt_edate;
+
+    this.http.post<BaseQueryResponse<TltItem>>(`${apiUrl}/queryTalentDropDownList`, requestBody).pipe(
       take(1),
       tap(res => {
-        this.tltOptions.set(res.Data);
-        console.log('專櫃編號查詢 request 💡:', query);
+        this.tltOptions.set(res.Data || []);
+        console.log('專櫃編號查詢 request :', requestBody);
         console.log('專櫃編號查詢 response:', res.Data);
       }),
       finalize(() => this.tltLoading.set(false))
@@ -158,7 +187,7 @@ export class TLS26010Service {
     return this.http.post<TLS26010DetailResponse>(`${apiUrl}/TLS0000/TLS2000/queryTLS26010Detail`, query).pipe(
       take(1),
       tap(res => {
-        console.log('預購活動檔期細節 request 💡:', query);
+        console.log('預購活動檔期細節 request :', query);
         console.log('預購活動檔期細節 response:', res.Data);
       }
       ),
@@ -200,7 +229,7 @@ export class TLS26010Service {
                   ? ApprovalStatus.未核准
                   : ApprovalStatus.已核准,
                 talent_list: data.talent_list.map(t => t.tlt_no!),
-                ecr_list: data.ecr_list.map(e => e.ecr_no!),
+                ecr_list: data.ecr_list.map(e => e.ECR_No!),
               };
               currentData[index] = updatedData;
             }
@@ -227,29 +256,37 @@ export class TLS26010Service {
   }
 
   /** 核准或反核准預購活動 */
-  public loadApproval(data: TLS26010Data, tableData: WritableSignal<TLS26010Data[]>): void {
-    if (this.approvalStatusLoading()) return;
+  public loadApproval(data: TLS26010Data): Observable<BaseQueryResponse<{ Status: ApprovalStatus; }>> {
+    if (this.approvalStatusLoading()) {
+      this.logger.warn('核准/反核准操作進行中，請稍後再試');
+      return of({ Status: 'LOADING', Message: '操作進行中' } as any);
+    }
     this.approvalStatusLoading.set(true);
     const id = data.id;
-    this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
-      `${apiUrl}/TLS0000/TLS2000/${this.approvalCheck(data).api}`, { id }).pipe(
+    const actionInfo = this.approvalCheck(data);
+    this.logger.debug(`執行${actionInfo.confirm}操作:`, { id, data, api: actionInfo.api });
+    return this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
+      `${apiUrl}/TLS0000/TLS2000/${actionInfo.api}`, { id }).pipe(
         take(1),
-        tap(() => tableData.update(currentData => {
-          const index = currentData.findIndex(item => item.id === id);
-          const usr = this.auth.getUserInfo();
-          const approval = this.approvalCheck(data).confirm === '核准';
-          if (index !== -1) {
-            currentData[index].approved_usr_name = approval ? usr!.user_Name : null;
-            currentData[index].approved_date = approval ? new Date() : null;
-            currentData[index].pod_status = approval ? ApprovalStatus.已核准 : ApprovalStatus.未核准;
-          }
-          return currentData;
-        })),
         tap(res => {
-          if (res.Status !== '0000') return void this.messageService.errorBubble(`${this.approvalCheck(data).confirm}失敗: ${res.Message}`);
-          this.messageService.successBubble(`${this.approvalCheck(data).confirm}成功`);
+          this.logger.debug(`${actionInfo.confirm}結果:`, res);
+          if (res.Status !== '0000') return void this.messageService.errorBubble(`${actionInfo.confirm}失敗: ${res.Message}`);
+          this.messageService.successBubble(`${actionInfo.confirm}成功`);
         }),
         finalize(() => this.approvalStatusLoading.set(false))
-      ).subscribe();
+      );
+  }
+
+  //新增的
+  //查ecr dialog
+  queryECRDropDownList(body: any): Observable<any> {
+    {
+      return this.http.post<any>(`${environment.ApiUrl}/queryECRDropDownList`, body);
+    }
+  }
+
+  //查tlt dialog
+  queryTalentDropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryTalentDropDownList`, body);
   }
 }

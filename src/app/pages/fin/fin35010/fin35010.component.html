@@ -1,305 +1,109 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div >
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" label="繳票" (click)="onCreate(UpdateType.Deposit)"></app-button>
+    <app-button btnType="create" label="取消繳票" (click)="onCreate(UpdateType.CancelDeposit)"></app-button>
+    <app-button btnType="create" label="退票" (click)="onCreate(UpdateType.Refund)"></app-button>
+    <app-button btnType="create" label="取消退票" (click)="onCreate(UpdateType.CancelRefund)"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 保證金序號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="保證金序號"
-              controlName="depositSerialNumber"
-              [startControl]="queryForm.controls.depositSerialNumberStart"
-              [endControl]="queryForm.controls.depositSerialNumberEnd"
-              [submitted]="submitted"
-            ></app-input-number-range>
+            <app-dropdown label="廠客代號" controlName="VEN_No" [options]="VEN_NoOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>
           </div>
 
-          <!-- 廠商編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="廠商編號"
-              controlName="vendorCode"
-              [options]="vendorCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.vendorCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-input-text label="廠客名稱" controlName="VEN_Name" [control]="queryForm.controls.VEN_Name"
+              [submitted]="submitted"></app-input-text>
           </div>
 
-          <!-- 專櫃編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="專櫃編號"
-              controlName="counterCode"
-              [control]="queryForm.controls.counterCode"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-dropdown label="櫃位名稱" controlName="TLT_Name" [options]="TLT_NameOptions | async" optionLabel="label"
+              optionValue="label" [control]="queryForm.controls.TLT_Name" [submitted]="submitted"></app-dropdown>
           </div>
 
-          <!-- 單據別 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="單據別"
-              controlName="documentType"
-              [options]="documentTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.documentType"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-calendar-range-quick label="合約起日" controlName="tlt_bdate"
+              [startControl]="queryForm.controls.tlt_bdateStart" [endControl]="queryForm.controls.tlt_bdateEnd"
+              [submitted]="submitted"></app-calendar-range-quick>
           </div>
 
-          <!-- 金額 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="金額"
-              controlName="amount"
-              [startControl]="queryForm.controls.amountStart"
-              [endControl]="queryForm.controls.amountEnd"
-              [submitted]="submitted"
-            ></app-input-number-range>
+            <app-calendar-range-quick label="合約迄日" controlName="tlt_edate"
+              [startControl]="queryForm.controls.tlt_edateStart" [endControl]="queryForm.controls.tlt_edateEnd"
+              [submitted]="submitted"></app-calendar-range-quick>
           </div>
 
-          <!-- 收款日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="收款日期"
-              controlName="receiptDate"
-              [startControl]="queryForm.controls.receiptDateStart"
-              [endControl]="queryForm.controls.receiptDateEnd"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range-quick label="收票日期" controlName="Deposit_Date"
+              [startControl]="queryForm.controls.Deposit_DateStart" [endControl]="queryForm.controls.Deposit_DateEnd"
+              [submitted]="submitted"></app-calendar-range-quick>
           </div>
 
-          <!-- 保證金到期日 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="保證金到期日"
-              controlName="depositDueDate"
-              [startControl]="queryForm.controls.depositDueDateStart"
-              [endControl]="queryForm.controls.depositDueDateEnd"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range-quick label="保證票到期日" controlName="CHK_ExpireDate"
+              [startControl]="queryForm.controls.CHK_ExpireDateStart"
+              [endControl]="queryForm.controls.CHK_ExpireDateEnd" [submitted]="submitted"></app-calendar-range-quick>
           </div>
 
-          <!-- 支票號碼 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="支票號碼"
-              controlName="checkNumber"
-              [control]="queryForm.controls.checkNumber"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-calendar-range-quick label="變更日期" controlName="UPD_Date"
+              [startControl]="queryForm.controls.UPD_DateStart" [endControl]="queryForm.controls.UPD_DateEnd"
+              [submitted]="submitted"></app-calendar-range-quick>
           </div>
 
-          <!-- 金融機構 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="金融機構"
-              controlName="financialInstitution"
-              [options]="financialInstitutionOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.financialInstitution"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-input-text label="票據編號" controlName="CHK_No" [control]="queryForm.controls.CHK_No"
+              [submitted]="submitted"></app-input-text>
           </div>
 
-          <!-- 摘要 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="摘要"
-              controlName="summary"
-              [control]="queryForm.controls.summary"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-dropdown label="票據狀態" controlName="Status" [options]="StatusOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.Status" [submitted]="submitted"></app-dropdown>
           </div>
 
-          <!-- 狀態 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="狀態"
-              controlName="status"
-              [options]="statusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.status"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="保證票類型" controlName="CHK_Type" [options]="CHK_TypeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.CHK_Type" [submitted]="submitted"></app-dropdown>
           </div>
 
-          <!-- 狀態變更日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="狀態變更日期"
-              controlName="statusChangeDate"
-              [startControl]="queryForm.controls.statusChangeDateStart"
-              [endControl]="queryForm.controls.statusChangeDateEnd"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-dropdown label="組織代碼" controlName="org_id" [options]="org_idOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.org_id" [submitted]="submitted"></app-dropdown>
           </div>
 
-          <!-- 收款會計科目(借) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="收款會計科目(借)"
-              controlName="debitAccount"
-              [control]="queryForm.controls.debitAccount"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="摘要" controlName="Remark" [control]="queryForm.controls.Remark"
+              [submitted]="submitted"></app-input-text>
           </div>
 
-          <!-- 保證金會計科目(貸) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="保證金會計科目(貸)"
-              controlName="creditAccount"
-              [control]="queryForm.controls.creditAccount"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-dropdown label="保證類別" controlName="Deposit_Type" [options]="Deposit_TypeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.Deposit_Type" [submitted]="submitted"></app-dropdown>
           </div>
 
-          <!-- 傳票編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="傳票編號"
-              controlName="voucherNumber"
-              [startControl]="queryForm.controls.voucherNumberStart"
-              [endControl]="queryForm.controls.voucherNumberEnd"
-              [submitted]="submitted"
-            ></app-input-number-range>
+            <app-input-number-range [useGrouping]="false" label="金額" controlName="CHK_Amt_Range"
+              [startControl]="queryForm.controls.CHK_Amt" [endControl]="queryForm.controls.CHK_Amt"
+              [submitted]="submitted">
+            </app-input-number-range>
           </div>
 
-          <!-- 立沖代號 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="立沖代號"
-              controlName="clearingCode"
-              [control]="queryForm.controls.clearingCode"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-
-          <!-- 來源系統別 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="來源系統別"
-              controlName="sourceSystem"
-              [control]="queryForm.controls.sourceSystem"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-
-          <!-- 專櫃招募編號 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="專櫃招募編號"
-              controlName="recruitmentNumber"
-              [startControl]="queryForm.controls.recruitmentNumberStart"
-              [endControl]="queryForm.controls.recruitmentNumberEnd"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
-
-          <!-- 保證金類型 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="保證金類型"
-              controlName="depositType"
-              [options]="depositTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.depositType"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-
-          <!-- 組織代號 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="組織代號"
-              controlName="organizationCode"
-              [options]="organizationCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.organizationCode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-
-          <!-- 對象別編號 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="對象別編號"
-              controlName="targetCode"
-              [options]="targetCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.targetCode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-
-          <!-- 對帳KEY值 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="對帳KEY值"
-              controlName="reconciliationKey"
-              [control]="queryForm.controls.reconciliationKey"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table-report dataKey="Id" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [totalRecords]="totalRecords" [loading]="loading" [lastQueryBody]="lastQuery" [showDelete]="false"
+    [queryFunction]="fin35010Service.queryFIN35010.bind(fin35010Service)"></app-table-report>
 </div>

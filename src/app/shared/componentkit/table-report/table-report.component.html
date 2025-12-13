@@ -4,7 +4,7 @@
   [reorderableColumns]="true" (onColReorder)="onColReorder($event)" (onLazyLoad)="onLazyLoad()"
   styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" [selectAll]="isAllSelected"
   (selectAllChange)="onSelectAllChange($event)" (selectionChange)="selectionChange.emit($event)"
-  [rowSelectable]="rowSelectableWrapper" [lazy]="true" [virtualScrollItemSize]="46" [virtualScrollDelay]="0"
+  [rowSelectable]="rowSelectableWrapper" [lazy]="lazy" [virtualScrollItemSize]="46" [virtualScrollDelay]="0"
   [virtualScrollOptions]="{
     inline: true,
     trackBy: trackByFn,
@@ -17,10 +17,11 @@
       [selectedItems]="selectedItems" [tableKey]="tableKey" [showCaption]="showCaption" [showFilter]="showFilter"
       [showReportMode]="showReportMode" [showDelete]="showDelete" [showExcel]="showExcel"
       [showExcelExport]="showExcelExport" [showExcelImport]="showExcelImport" [pageOrientation]="pageOrientation"
-      [pageSizeSetting]="pageSizeSetting" [showCustomExcelImport]="showCustomExcelImport" [DataKeyName]="DataKeyName"
+      [pageSizeSetting]="pageSizeSetting" [showCustomExcelImport]="showCustomExcelImport"
       [exportExcelLoading]="exportExcelLoading" [showPage]="false" (delete)="delete.emit($event)"
       (exportExcel)="exportExcel.emit()" (importExcel)="importExcel.emit($event)" [totalRecords]="dt.totalRecords"
-      [apiUrl]="apiUrl" [customReport]="customReport" (exportEvent)="exportEvent.emit($event)">
+      [apiUrl]="apiUrl" [DataKeyName]="DataKeyName" [PrintRemark]="PrintRemark" [customReport]="customReport"
+      (exportEvent)="exportEvent.emit($event)">
       <header><ng-content select="header"></ng-content></header>
     </app-table-caption>
   </ng-template>
@@ -81,9 +82,10 @@
         <th class="w-1rem" *ngIf="expansionColumns.length">收合/展開</th>
         <th *ngFor="let col of columns" pReorderableColumn pResizableColumn
           [pSortableColumn]="showSort ? col.sortField ?? col.field : undefined"
-          [pSortableColumnDisabled]="col.showSort === false" class="text-center wrap-header" style="min-width: 55px">
+          [pSortableColumnDisabled]="!showSort || !col.showSort" class="text-center wrap-header"
+          style="min-width: 55px">
           {{ col.header }}
-          <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length" [field]="col.field" />
+          <p-sortIcon *ngIf="showSort && col.showSort && data.length" [field]="col.field" />
         </th>
         <th [hidden]="!showManage" class="w-1rem text-center" alignFrozen="right" pFrozenColumn [frozen]="true">
           管理

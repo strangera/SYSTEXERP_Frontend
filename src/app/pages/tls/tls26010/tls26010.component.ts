@@ -2,7 +2,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, effect, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26010Service } from '@service/api/tls/tls26010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -16,13 +16,14 @@ import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { tap } from 'rxjs';
+import { DateUtils } from '../../../core/utils/date-utils';
 import { TLS26010Data, TLS26010Query } from './tls26010.model';
 
 @Component({
   selector: 'app-tls26010',
   templateUrl: './tls26010.component.html',
   styleUrls: ['./tls26010.component.scss'],
-  standalone: !0,
+  standalone: true,
   imports: [
     AccordionModule,
     FormsModule,
@@ -43,7 +44,7 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     sys3A00: new FormControl<string[] | void>(void 0), // 區域
     ecrNos: new FormControl<string[] | void>(void 0), // 收銀機號
     tltNos: new FormControl<string[] | void>(void 0), // 專櫃ID
-    podSdateS: new FormControl<Date | void>(this.service.dateS), // 起始日期(起)
+    podSdateS: new FormControl<Date | void>(void 0), // 起始日期(起)
     podSdateE: new FormControl<Date | void>(void 0), // 起始日期(迄)
     podEdateS: new FormControl<Date | void>(void 0), // 截止日期(起)
     podEdateE: new FormControl<Date | void>(void 0), // 截止日期(迄)
@@ -85,7 +86,6 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
           if (start > end) isValid = !1;
         }
 
-        if (!podSdateS && !podSdateE && !podEdateS && !podEdateE) return { dateRequired: !0 };
         if (!isValid) return { dateRangeInvalid: !0 };
 
         return null;
@@ -101,28 +101,10 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
   private readonly sys3800Signal = toSignal(this.qf().sys3800.valueChanges);
   private readonly sys3900Signal = toSignal(this.qf().sys3900.valueChanges);
   private readonly sys3A00Signal = toSignal(this.qf().sys3A00.valueChanges);
-  private readonly ecrsignal = toSignal(this.qf().ecrNos.valueChanges);
-  private readonly tltsignal = toSignal(this.qf().tltNos.valueChanges);
-  private readonly sdateSSignal = toSignal(this.qf().podSdateS.valueChanges, { initialValue: this.service.dateS });
-  private readonly sdateESignal = toSignal(this.qf().podSdateE.valueChanges);
-  private readonly edateSSignal = toSignal(this.qf().podEdateS.valueChanges);
-  private readonly edateESignal = toSignal(this.qf().podEdateE.valueChanges);
 
   // Table 相關
   public readonly editDisabled = (rowData: TLS26010Data) =>
     (Reflect.has(rowData, 'CanEdit') && rowData.CanEdit == '1') || rowData.pod_status !== ApprovalStatus.未核准;
-  public readonly addButton: AddButton[] = [
-    {
-      label: '核准', icon: 'pi pi-check-circle text-green-500',
-      action: (rowData: TLS26010Data) => this.service.loadApproval(rowData, this.tableData),
-      disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.未核准,
-    },
-    {
-      label: '反核准', icon: 'pi pi-undo text-orange-500',
-      action: (rowData: TLS26010Data) => this.service.loadApproval(rowData, this.tableData),
-      disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.已核准,
-    },
-  ];
 
   // 監聽館別、樓層及區域變化，載入相關資料
   public readonly dependentDataEffect = effect(() => {
@@ -135,33 +117,43 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     const area_nos = Array.isArray(sys3A00Value) ? sys3A00Value.filter((val): val is string => val != null) : [];
 
     this.logger.debug(`dependentDataEffect:`, [building_nos, floor_nos, area_nos]);
-    if (!building_nos?.length && !floor_nos?.length && !area_nos?.length) return;
+
     untracked(() => {
-      this.service.queryECRDropDownList({ building_nos, floor_nos, area_nos, ecr_type: '2' });
-      this.service.queryTalentDropDownList({ building_nos, floor_nos, area_nos });
+      // 如果三個都沒有選擇，不打 API
+      if (!building_nos?.length && !floor_nos?.length && !area_nos?.length) {
+        return;
+      }
+
+      // 收銀機號：只要有任一條件就可以查詢
+      this.service.loadECRDropDownList({ building_nos, floor_nos, area_nos, ecr_type: '2' });
+
+      // 專櫃名稱：只要有任一條件就可以查詢
+      this.service.loadTalentDropDownList({ building_nos, floor_nos, area_nos });
     });
   }, { allowSignalWrites: !0 });
 
-  private readonly queryTLS26010 = computed<TLS26010Query>(() => {
-    const { pageIndex, pageSize, SortBy, ...rest } = this.queryForm.getRawValue();
-    const raw = <TLS26010Query>{
-      ECR_No: this.ecrsignal(),
-      tlt_nos: this.tltsignal(),
-      tlt_no: '',
-      pod_sdate_S: this.sdateSSignal()?.toISOString(),
-      pod_sdate_E: this.sdateESignal()?.toISOString(),
-      pod_edate_S: this.edateSSignal()?.toISOString(),
-      pod_edate_E: this.edateESignal()?.toISOString(),
+  private buildQueryPayload(): TLS26010Query {
+    const { pageIndex, pageSize, SortBy, sys3800, sys3900, sys3A00, ecrNos, tltNos, podSdateS, podSdateE, podEdateS, podEdateE, ...rest } = this.queryForm.getRawValue();
+    const raw = {
+      building_nos: sys3800,
+      floor_nos: sys3900,
+      area_nos: sys3A00,
+      ECR_No: ecrNos,
+      tlt_nos: tltNos,
+      pod_sdate_S: podSdateS ? DateUtils.toDateString(podSdateS) : undefined,
+      pod_sdate_E: podSdateE ? DateUtils.toDateString(podSdateE) : undefined,
+      pod_edate_S: podEdateS ? DateUtils.toDateString(podEdateS) : undefined,
+      pod_edate_E: podEdateE ? DateUtils.toDateString(podEdateE) : undefined,
       pageIndex, pageSize, SortBy,
-    };
+    } as TLS26010Query;
 
     const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
-      v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0)
+      v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
     )) as TLS26010Query;
 
     this.logger.debug(`queryTLS26010:`, [rest, raw, payload]);
     return payload;
-  });
+  }
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.service.sys3800Loading()
@@ -171,6 +163,15 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
       || this.service.tltLoading()
       || this.service.tableLoading()
       || this.service.approvalStatusLoading();
+  });
+
+  // 專櫃選項加上 Label（格式：專櫃編號 - 專櫃名稱）
+  public readonly tltOptionsWithLabel = computed(() => {
+    return this.service.tltOptions().map(item => ({
+      No: item.tlt_no,
+      Name: item.tlt_name,
+      Label: `${item.tlt_no} - ${item.tlt_name}`
+    }));
   });
 
   public readonly columns: (Omit<Column, 'field'> & { field: keyof TLS26010Data; })[] = [
@@ -183,6 +184,37 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     { field: 'approved_date', header: '核准日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
   ];
 
+  public readonly addButton: AddButton[] = [
+    {
+      label: '核准', icon: 'pi pi-check-circle text-green-500',
+      action: (rowData: TLS26010Data) => {
+        this.logger.debug('核准按鈕被點擊:', rowData);
+        this.service.loadApproval(rowData).subscribe({
+          next: (res) => {
+            if (res.Status === '0000') {
+              this.onSubmit(this.queryForm);
+            }
+          }
+        });
+      },
+      disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.未核准,
+    },
+    {
+      label: '反核准', icon: 'pi pi-undo text-orange-500',
+      action: (rowData: TLS26010Data) => {
+        this.logger.debug('反核准按鈕被點擊:', rowData);
+        this.service.loadApproval(rowData).subscribe({
+          next: (res) => {
+            if (res.Status === '0000') {
+              this.onSubmit(this.queryForm);
+            }
+          }
+        });
+      },
+      disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.已核准,
+    },
+  ];
+
   constructor(
     public readonly service: TLS26010Service,
     private readonly datePipe: DatePipe,
@@ -192,31 +224,52 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
   }
 
   public ngOnInit(): void {
-    this.initializePage('TLS26010', '/TLS/TLS26010CRU', this.queryForm, this.onSubmit.bind(this));
+    this.initializePage('TLS26010', '/TLS/TLS26010CRU', this.queryForm, (form) => this.onSubmit(form));
 
-    // 只載入館別和樓層及區域的下拉選單資料
+    // 載入所有下拉選單資料
     this.service.loadSYS3800();
     this.service.loadSYS3900();
     this.service.loadSYS3A00();
-
-    this.service.queryECRDropDownList({ ecr_type: '2' });
+    this.service.loadECRDropDownList({ ecr_type: '2' });
+    this.service.loadTalentDropDownList({}); // 初始載入全部專櫃
   };
 
-  public onSubmit(): void {
-    this.handleSubmit(this.queryForm, () => {
-      this.service.loadTLS26010(this.queryTLS26010()).pipe(
+  public onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      this.service.loadTLS26010(this.buildQueryPayload()).pipe(
         tap(res => {
           this.tableData.set(res.Data ?? []);
           this.totalRecords.set(res.TotalCount ?? 0);
         }),
       ).subscribe();
-      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.queryStateService.setQueryState(this.ProgNo, frm.value);
     });
   };
 
   /** 刪除選中的活動 */
   public onDelete(data: TLS26010Data[]): void {
     this.logger.debug(`刪除活動:`, data);
-    for (const item of data) this.service.deleteTLS26010(item).subscribe();
+    let completedCount = 0;
+    const totalCount = data.length;
+
+    for (const item of data) {
+      this.service.deleteTLS26010(item).subscribe({
+        next: () => {
+          completedCount++;
+          // 當所有刪除操作完成後，重新查詢
+          if (completedCount === totalCount) {
+            this.onSubmit(this.queryForm);
+          }
+        },
+        error: () => {
+          completedCount++;
+          // 即使有錯誤，也要檢查是否所有操作都已完成
+          if (completedCount === totalCount) {
+            this.onSubmit(this.queryForm);
+          }
+        }
+      });
+    }
   }
+
 }

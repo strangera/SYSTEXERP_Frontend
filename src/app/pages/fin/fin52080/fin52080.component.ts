@@ -1,5 +1,4 @@
 import { Component, computed, effect, OnInit, signal } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN52080Service } from '@service/api/fin/fin52080.service';
@@ -8,6 +7,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { TreeDropdownComponent } from '@shared/componentkit/tree-dropdown/tree-dropdown.component';
@@ -15,7 +15,7 @@ import { ValidationService } from '@shared/service/validation.service';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { finalize, map, tap } from 'rxjs';
+import { finalize } from 'rxjs';
 import { AccDCType, FIN52080Data, FIN52080Query, FIN52080Tree, LedgerMDType, VoucherType } from './fin52080.model';
 
 @Component({
@@ -33,6 +33,7 @@ import { AccDCType, FIN52080Data, FIN52080Query, FIN52080Tree, LedgerMDType, Vou
     DropdownComponent,
     InputTextComponent,
     MenubarComponent,
+    RadiobuttonYNComponent,
     TableComponent,
     TreeDropdownComponent,
   ]
@@ -61,9 +62,9 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
     AccEname: new FormControl<string | void>(void 0, [Validators.maxLength(50)]),
     AccDC: new FormControl<AccDCType | void>(void 0),
     Ledger_MD: new FormControl<LedgerMDType | void>(void 0),
-    ClassNo: new FormControl<string[]>([]),
+    ClassNo: new FormControl<string | void>(void 0),
     ABAT_YN: new FormControl<'Y' | 'N' | void>(void 0),
-    Voucher_Type: new FormControl<VoucherType[]>([]),
+    Voucher_Type: new FormControl<VoucherType | void>(void 0),
     Budget_YN: new FormControl<'Y' | 'N' | void>(void 0),
     Org_YN: new FormControl<'Y' | 'N' | void>(void 0),
     rest_value: new FormControl<string | void>(void 0, [Validators.maxLength(10), this.validationService.numberValidator]),
@@ -73,54 +74,13 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
-  private readonly accNoSignal = toSignal(this.qf().AccNo.valueChanges);
-  private readonly classNoSignal = toSignal(this.qf().ClassNo.valueChanges);
-
   public readonly FIN52080Tree = signal<FIN52080Tree[]>([]);
 
   public readonly tableLoading = signal<boolean>(!1);
   public readonly treeLoading = signal<boolean>(!1);
 
-  public tableData = signal<FIN52080Data[]>([]);
-  public readonly totalRecords = computed(() => this.filteredData().length);
-
-  public readonly filteredData = computed(() => {
-    const formValue = this.queryForm.getRawValue();
-    return this.tableData().filter(item => {
-      return (!formValue.AccNo || item.AccNo.includes(formValue.AccNo))
-        && (!formValue.AccCname || item.AccCName.includes(formValue.AccCname))
-        && (!formValue.AccEname || item.AccEName?.includes(formValue.AccEname))
-        && (!formValue.AccDC?.length || formValue.AccDC.includes(item.AccDC))
-        && (!formValue.Ledger_MD?.length || formValue.Ledger_MD.includes(item.Ledger_MD))
-        && (!formValue.ClassNo?.length || formValue.ClassNo.includes(item.ClassNo))
-        && (!formValue.ABAT_YN?.length || formValue.ABAT_YN.includes(item.ABAT_YN))
-        && (!formValue.Voucher_Type?.length || formValue.Voucher_Type.includes(item.Voucher_Type))
-        && (!formValue.Budget_YN?.length || formValue.Budget_YN.includes(item.Budget_YN))
-        && (!formValue.Org_YN?.length || formValue.Org_YN.includes(item.Org_YN))
-        && (!formValue.Input_YN?.length || formValue.Input_YN.includes(item.Input_YN));
-    });
-  });
-
-  /** accNo驗證 綁定classNo用 */
-  public readonly accNoEffect = effect(() => {
-    const accNo = String(this.accNoSignal() ?? 0)?.substring(0, 3);
-    this.qf().ClassNo.setValue([]);
-    // this.logger.debug(`accNoEffect:`, [accNo, this.queryForm.getRawValue()]);
-    if (!accNo) return;
-    const matched = this.service.classNoMap().get(accNo);
-    matched?.length && this.qf().ClassNo.setValue([accNo], { emitEvent: !1 });
-  }, { allowSignalWrites: !0 });
-
-  /** classNo驗證 accNo沒在清單內就清空 */
-  public readonly classNoEffect = effect(() => {
-    const classNo = this.classNoSignal();
-    const current = this.qf().AccNo.value?.substring(0, 3);
-    // this.logger.debug(`classNoEffect:`, [classNo, current, this.queryForm.getRawValue()]);
-    if (!classNo?.length) return;
-
-    const match = this.classNoSignal()?.some(cn => this.service.classNoMap().get(cn) === current);
-    if (!match) this.qf().AccNo.setValue(void 0, { emitEvent: !1 });
-  });
+  public readonly tableData = signal<FIN52080Data[]>([]);
+  public readonly totalRecords = signal<number>(0);
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.tableLoading()
@@ -147,14 +107,53 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
     { field: 'AccNo', header: '科目代號' },
     { field: 'AccCName', header: '科目名稱' },
     { field: 'AccEName', header: '科目英文名稱' },
-    { field: 'AccDC', header: '借/貸', options: this.service.accDCOption, format: v => this.service.accDCOption.find(o => o.No === v)?.Name || v },
-    { field: 'Ledger_MD', header: '統制/明細', options: this.service.ledgerMDOption, format: v => this.service.ledgerMDOption.find(o => o.No === v)?.Name || v },
-    { field: 'ClassNo', header: '三碼代號', options: this.service.classNoOptions(), format: v => this.service.classNoOptions().find(o => o.ClassNo === v)?.ClassCName || v },
-    { field: 'ABAT_YN', header: '是否為沖帳代號', options: this.service.whetherOption, format: v => this.service.whetherOption.find(o => o.No === v)?.Name || v },
-    { field: 'Voucher_Type', header: '傳票格式', options: this.service.voucherTypeOption, format: v => this.service.voucherTypeOption.find(o => o.No === v)?.Name || v },
-    { field: 'Budget_YN', header: '是否為預算科目', options: this.service.whetherOption, format: v => this.service.whetherOption.find(o => o.No === v)?.Name || v },
-    { field: 'Org_YN', header: '是否設定部門代號', options: this.service.whetherOption, format: v => this.service.whetherOption.find(o => o.No === v)?.Name || v },
-    { field: 'Input_YN', header: '是否可輸', options: this.service.whetherOption, format: v => this.service.whetherOption.find(o => o.No === v)?.Name || v },
+    {
+      field: 'AccDC',
+      header: '借/貸',
+      options: this.service.accDCOption,
+      format: v => v === 'D' ? '借' : v === 'C' ? '貸' : v,
+    },
+    {
+      field: 'Ledger_MD',
+      header: '統制/明細',
+      options: this.service.ledgerMDOption,
+      format: v => v === '0' ? '統制' : v === '1' ? '明細' : v,
+    },
+    {
+      field: 'ClassNo',
+      header: '三碼代號',
+      options: this.service.classNoOptions(),
+    },
+    {
+      field: 'ABAT_YN',
+      header: '是否為沖帳代號',
+      options: this.service.whetherOption,
+      format: v => v === 'Y' ? '是' : v === 'N' ? '否' : v,
+    },
+    {
+      field: 'Voucher_Type',
+      header: '傳票格式',
+      options: this.service.voucherTypeOption,
+      format: v => this.service.voucherTypeMap().get(v) || v,
+    },
+    {
+      field: 'Budget_YN',
+      header: '是否為預算科目',
+      options: this.service.whetherOption,
+      format: v => v === 'Y' ? '是' : v === 'N' ? '否' : v,
+    },
+    {
+      field: 'Org_YN',
+      header: '是否設定部門代號',
+      options: this.service.whetherOption,
+      format: v => v === 'Y' ? '是' : v === 'N' ? '否' : v,
+    },
+    {
+      field: 'Input_YN',
+      header: '是否可輸',
+      options: this.service.whetherOption,
+      format: v => v === 'Y' ? '是' : v === 'N' ? '否' : v,
+    },
   ];
 
   constructor(
@@ -165,54 +164,36 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
     super();
   }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.initializePage('FIN52080', '/FIN/FIN52080CRU', this.queryForm, this.onSubmit.bind(this));
 
-    this.service.getClassNos();
-
     this.treeLoading.set(!0);
-    this.service.getFIN52080Tree().pipe(
-      tap(res => this.logger.debug(`init:`, [])),
-      map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
-      finalize(() => this.treeLoading.set(!1)),
-    ).subscribe({
-      next: res => this.FIN52080Tree.set(res.Data || []),
-      error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
-    });
+    this.service.getClassNos();
+    this.service.getFIN52080Tree().pipe(finalize(() => this.treeLoading.set(!1)))
+      .subscribe(res => this.FIN52080Tree.set(res.Data || []));
 
-    this.logger.debug(`init:`, [this.service.classNoOptions(), this.service.classNoMap()]);
+    this.logger.debug(`init:`, [this.service.classNoOptions(), this.FIN52080Tree()]);
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const payload = <FIN52080Query>{
-        ...this.queryForm.getRawValue(),
-        AccNo: this.qf().AccNo.value ?? void 0,
-        AccCname: this.qf().AccCname.value ?? void 0,
-        AccEname: this.qf().AccEname.value ?? void 0,
-        AccDC: this.qf().AccDC.value ?? void 0,
-        Ledger_MD: this.qf().Ledger_MD.value ?? void 0,
-        ABAT_YN: this.qf().ABAT_YN.value ?? void 0,
-        Budget_YN: this.qf().Budget_YN.value ?? void 0,
-        Org_YN: this.qf().Org_YN.value ?? void 0,
-        rest_value: this.qf().rest_value.value ?? void 0,
-        rest_value2: this.qf().rest_value2.value ?? void 0,
-        Input_YN: this.qf().Input_YN.value ?? void 0,
-        ClassNo: (this.qf().ClassNo.value ?? []).join(),
-        Voucher_Type: (this.qf().Voucher_Type.value ?? []).join(),
-      };
+      const raw = <FIN52080Query>{ ...this.queryForm.getRawValue() };
+      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
+      )) as unknown as FIN52080Query;
 
       this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.logger.debug(`onSubmit:`, [this.queryForm.value, payload]);
       this.service.loadFIN52080(payload).pipe(
-        tap(res => this.logger.debug(`onSubmit:`, [payload, res])),
-        map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
-        next: res => this.tableData.set(res.Data || []),
-        error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
+        next: res => {
+          if (res.Status !== '0000') return;
+          this.tableData.set(res.Data || []);
+          this.totalRecords.set(res.TotalCount || 0);
+        },
       });
-
     });
   };
 

@@ -23,7 +23,7 @@
                     [form]="queryForm"></app-button>
         <app-button btnType="submit"
                     [label]="'存檔'"
-                    [disabled]="!qf().ENTRY_TYPE.value"
+                    [disabled]="!qf().ENTRY_TYPE.value || !tableData().length || !canSave()"
                     [loading]="loading"></app-button>
       </div>
     </form>
@@ -32,13 +32,32 @@
 
 
 <div class="card">
+  <!-- <app-table #dt
+             apiUrl="queryTLS21020"
+             class="col-12"
+             [dataKey]="'id'"
+             tableKey="TLS21020Detail"
+             [columns]="columns()"
+             [data]="tableData()"
+             (dataChange)="tableData.set($event)"
+             [selectedItems]="selectedItems()"
+             (selectionChange)="selectedItems.set($event)"
+             [showDelete]="!1"
+             [showFilter]="!1"
+             [showRowEdit]="!0"
+             [alwaysEdit]="!0"
+             [totalRecords]="totalRecords()"
+             (lazyLoadData)="onLazyLoadData($event, queryForm); queryTLS21020()"
+             [lazy]="!0"
+             [loading]="tableLoading()"></app-table> -->
   <app-table-edit #dt
                   class="col-12"
                   tableKey="TLS21020Detail"
-                  [title]="'傳票項目之會計科目設定作業'"
                   [columns]="columns()"
                   [data]="tableData()"
                   (dataChange)="tableData.set($event)"
+                  [selectedItems]="selectedItems()"
+                  (selectionChange)="selectedItems.set($event)"
                   [rowValidate]="validateRow"
                   [tableRequired]="!0"
                   [showReorder]="!1"

@@ -1,62 +1,65 @@
+@if (!card) {
+<p-button class="flex h-full"
+          (onClick)="op.toggle($event)"
+          icon="pi pi-share-alt"
+          label="查看階層圖"
+          [disabled]="disabled"
+          [loading]="loading" />
+} @else {
 <div class="card flex justify-content-center">
-  <p-button
-    (onClick)="op.toggle($event)"
-    icon="pi pi-share-alt"
-    label="查看階層圖"
-  />
-  <p-overlayPanel #op [appendTo]="'body'">
-    <div class="flex flex-column gap-3 w-25rem">
-      <span class="font-medium text-900 block mb-2">{{ listTitle }}</span>
+  <p-button (onClick)="op.toggle($event)"
+            icon="pi pi-share-alt"
+            label="查看階層圖"
+            [disabled]="disabled"
+            [loading]="loading" />
+</div>
+}
 
-      <!-- 展開/收合 按鈕 -->
-      <!-- <div class="flex flex-wrap gap-2 mb-6">
+
+<p-overlayPanel #op
+                [appendTo]="'body'">
+  <div class="flex flex-column gap-3 w-25rem">
+    <span class="font-medium text-900 block mb-2">{{ listTitle }}</span>
+
+    <!-- 展開/收合 按鈕 -->
+    <!-- <div class="flex flex-wrap gap-2 mb-6">
         <p-button icon="pi pi-arrow-up-right-and-arrow-down-left-from-center" (click)="expandAll()" />
         <p-button icon="pi pi-arrow-down-left-and-arrow-up-right-to-center" (click)="collapseAll()" />
       </div> -->
 
-      <div class="font-bold mb-2 flex gap-4">
-        <ng-container *ngFor="let col of Columns; let i = index">
-          <span
-            tabindex="0"
-            (click)="expandToLevel(i + 1)"
-            (keydown)="onKeyDownExpand($event, i + 1)"
-            role="button"
-            class="cursor-pointer text-primary"
-          >
-            {{ col.label }}
-          </span>
-          <span *ngIf="i < Columns.length - 1">/</span>
-        </ng-container>
-      </div>
-      <!-- 樹狀展開層 -->
-      <p-tree
-        [value]="treeData"
-        selectionMode="checkbox"
-        styleClass="w-full md:w-[30rem]"
-        [(selection)]="selectedMembers"
-        [filter]="true"
-        filterPlaceholder="Strict Filter"
-      />
-
-      <!-- 新增全選/取消按鈕 -->
-      <div class="flex flex-wrap gap-2 mb-6" *ngIf="SelectbleCheckBox">
-        <p-button
-          label="全選"
-          icon="pi pi-check-square"
-          (click)="selectAll()"
-        />
-        <p-button
-          label="取消全選"
-          icon="pi pi-times"
-          (click)="clearSelection()"
-        />
-        <p-button
-          label="確定"
-          icon="pi pi-users"
-          (onClick)="sendTreeSelect()"
-          class="align-self-end"
-        />
-      </div>
+    <div class="font-bold mb-2 flex gap-4">
+      <ng-container *ngFor="let col of Columns; let i = index">
+        <span tabindex="0"
+              (click)="expandToLevel(i + 1)"
+              (keydown)="onKeyDownExpand($event, i + 1)"
+              role="button"
+              class="cursor-pointer text-primary">
+          {{ col.label }}
+        </span>
+        <span *ngIf="i < Columns.length - 1">/</span>
+      </ng-container>
     </div>
-  </p-overlayPanel>
-</div>
+    <!-- 樹狀展開層 -->
+    <p-tree [value]="treeData"
+            selectionMode="checkbox"
+            styleClass="w-full md:w-[30rem]"
+            [(selection)]="selectedMembers"
+            [filter]="true"
+            filterPlaceholder="Strict Filter" />
+
+    <!-- 新增全選/取消按鈕 -->
+    <div class="flex flex-wrap gap-2 mb-6"
+         *ngIf="SelectbleCheckBox">
+      <p-button label="全選"
+                icon="pi pi-check-square"
+                (click)="selectAll()" />
+      <p-button label="取消全選"
+                icon="pi pi-times"
+                (click)="clearSelection()" />
+      <p-button label="確定"
+                icon="pi pi-users"
+                (onClick)="sendTreeSelect()"
+                class="align-self-end" />
+    </div>
+  </div>
+</p-overlayPanel>

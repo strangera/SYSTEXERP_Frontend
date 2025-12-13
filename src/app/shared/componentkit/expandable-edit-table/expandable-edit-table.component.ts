@@ -126,6 +126,7 @@ export interface ColumnDef {
   buttonIcon?: string;     // 按鈕圖示
   buttonClass?: string;    // 按鈕樣式
   buttonTooltip?: string;  // 提示文字
+  showCondition?: (rowData: any, allData: any[]) => boolean;  // 按鈕顯示條件函數
 
   defaultValue?: any;  // 預設值
 
@@ -155,6 +156,8 @@ export interface ColumnDef {
 
   allowDecimal?: boolean;  // 是否允許小數點
   decimalPlaces?: number;  // 小數位數，預設2位
+  displayMultiplier?: number;  // 顯示倍率(例如 100 表示 0.2 顯示為 20，用於百分比等場景)
+  useGrouping?: boolean;  // 是否使用千分位分隔符，預設為 true
 
   // 使用語義化的日期格式類型
   dateFormat?: DateFormatType;
@@ -1579,16 +1582,29 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   // 取得數字輸入的設定
   getNumberInputConfig(col: ColumnDef): any {
-    const baseConfig = {
+    // 🔧 優先使用欄位定義的 useGrouping，若未定義則預設為 true
+    const useGrouping = col.useGrouping !== undefined ? col.useGrouping : true;
+
+    const baseConfig: any = {
       mode: 'decimal',
-      useGrouping: true,  // 這是關鍵！確保千分位顯示
-      min: 0
+      useGrouping: useGrouping  // 使用欄位定義的千分位設定
     };
+
+    // 🔧 修復: 只在欄位定義有設定 minValue 時才加入 min，避免刪除時自動填 0
+    if (col.minValue !== undefined) {
+      baseConfig.min = col.minValue;
+    }
+
+    // 🔧 只在欄位定義有設定 maxValue 時才加入 max
+    if (col.maxValue !== undefined) {
+      baseConfig.max = col.maxValue;
+    }
 
     if (col.allowDecimal) {
       return {
         ...baseConfig,
-        minFractionDigits: 0,
+        // 🔧 修復: 不設置 minFractionDigits，避免 Backspace 刪除時自動補 0
+        // minFractionDigits: 0,
         maxFractionDigits: col.decimalPlaces || 2,
         step: col.decimalPlaces === 1 ? 0.1 : 0.01
       };
@@ -1596,7 +1612,8 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
     return {
       ...baseConfig,
-      minFractionDigits: 0,
+      // 🔧 修復: 不設置 minFractionDigits，避免 Backspace 刪除時自動補 0
+      // minFractionDigits: 0,
       maxFractionDigits: 0,
       step: 1
     };
@@ -2130,8 +2147,13 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   //=====================預設值=====================
   getFieldDefaultValue(column: ColumnDef, rowData: any): any {
     // 如果有值就使用現有值
-    const currentValue = rowData[column.field];
+    let currentValue = rowData[column.field];
     if (currentValue !== undefined && currentValue !== null && currentValue !== '') {
+      // 🔑 如果是數字類型且設定了 displayMultiplier，將實際值轉換為顯示值
+      // 例如: 後端的 0.2 → 前端顯示 20 (0.2 × 100)
+      if (column.type === 'number' && column.displayMultiplier && column.displayMultiplier > 0) {
+        currentValue = currentValue * column.displayMultiplier;
+      }
       return currentValue;
     }
 
@@ -2142,6 +2164,27 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
     // 使用靜態預設值
     return column.defaultValue || '';
+  }
+
+  /**
+   * 🔑 取得數字欄位的顯示值（用於唯讀模式顯示）
+   * 如果設定了 displayMultiplier，會將實際值轉換為顯示值
+   * 例如: 後端的 0.2 → 前端顯示 20 (0.2 × 100)
+   */
+  getNumberDisplayValue(column: ColumnDef, rowData: any): number {
+    const actualValue = rowData[column.field];
+
+    // 如果沒有值，返回 0
+    if (actualValue === undefined || actualValue === null || actualValue === '') {
+      return 0;
+    }
+
+    // 如果設定了 displayMultiplier，將實際值轉換為顯示值
+    if (column.displayMultiplier && column.displayMultiplier > 0) {
+      return actualValue * column.displayMultiplier;
+    }
+
+    return actualValue;
   }
 
   // 設定新增項目的預設值
@@ -2266,8 +2309,18 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       numericValue = 0;
     }
 
-    // 自動限制到最大值和最小值（保持原有邏輯）
+    // 🔑 獲取欄位配置（用於倍率轉換和範圍限制）
     const column = this.findColumnByField(fieldName);
+
+    // 🔑 如果設定了 displayMultiplier，將顯示值轉換回實際值
+    // 例如: 使用者輸入 20 → 後端儲存 0.2 (20 ÷ 100)
+    if (column?.displayMultiplier && column.displayMultiplier > 0) {
+      numericValue = numericValue / column.displayMultiplier;
+      console.log(`應用倍率轉換: 顯示值 ${newValue} → 實際值 ${numericValue} (倍率: ${column.displayMultiplier})`);
+    }
+
+    // 自動限制到最大值和最小值（保持原有邏輯）
+    // 注意: maxValue 和 minValue 應該是「實際值」的範圍，不是「顯示值」的範圍
     if (column) {
       if (column.maxValue !== undefined && numericValue > column.maxValue) {
         numericValue = column.maxValue;

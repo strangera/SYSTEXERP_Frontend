@@ -23,9 +23,9 @@ import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
-import { concatMap, finalize, map, Observable, tap } from 'rxjs';
+import { concatMap, finalize, Observable, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailData, FIN52030Payload } from '../fin52030/fin52030.model';
-import { FIN53010Data, FIN53010DetailTable, FIN53010InsertResult, FIN53010UpdateResult, QueryFIN53010Detail } from '../fin53010/fin53010.model';
+import { FIN53010Data, FIN53010DetailTable, FIN53010InsertPayload, FIN53010InsertResult, FIN53010UpdatePayload, FIN53010UpdateResult, QueryFIN53010Detail } from '../fin53010/fin53010.model';
 
 @Component({
   selector: 'app-fin53010-cru',
@@ -193,74 +193,93 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { label: '員工', value: 'user' }
   ];
 
-  public readonly columns = computed<(Omit<EditColumn, 'field'> & { field: keyof FIN53010DetailTable; })[]>(() => [
-    { field: 'SerNo', header: '序號' },
-    {
-      field: 'AccNo',
-      header: '科目代號',
-      type: 'dropdown',
-      required: !0,
-      showClear: !1,
-      options: () => this.service.accNoOptions(),
-      optionLabel: 'value',
-      optionValue: 'value',
-      templateLabel: 'templateLabel',
-    },
-    { field: 'AccCName', header: '科目名稱' },
-    {
-      field: 'DetailNo',
-      header: '廠商/員工代號',
-      type: 'template',
-      templateRef: this.venUsrTemplate(),
-    },
-    { field: 'DetailName', header: '廠商/員工名稱' },
-    {
-      field: 'NoteDesc',
-      header: '摘要',
-      type: 'dropdown',
-      options: (v: FIN53010DetailTable) => this.service.noteDescOptions().find(item => item.value === v.AccNo)?.data ?? [],
-      optionLabel: 'label',
-      optionValue: 'value',
-    },
-    {
-      field: 'AccAmtD',
-      header: '借方金額',
-      type: 'inputNumber',
-      format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
-    },
-    {
-      field: 'AccAmtC',
-      header: '貸方金額',
-      type: 'inputNumber',
-      format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
-    },
-    {
-      field: 'ORG_ID',
-      header: '組織代號',
-      type: 'dropdown',
-      showClear: !1,
-      options: () => this.service.orgNoOptions(),
-      optionLabel: 'label',
-      optionValue: 'value',
-    },
-    {
-      field: 'clearingCode',
-      header: '立沖代號',
-      type: 'dropdown',
-      options: () => [],
-      optionLabel: 'label',
-      optionValue: 'value',
-    },
-    {
-      field: 'ReflNo',
-      header: '對象別編號',
-      type: 'dropdown',
-      options: () => this.service.refNameOptions(),
-      optionLabel: 'label',
-      optionValue: 'value',
-    },
-    { field: 'recKey', header: '對帳KEY值', type: 'input' },
-  ]);
+  public readonly columns = computed<(Omit<EditColumn, 'field'> & { field: keyof FIN53010DetailTable; })[]>(() => {
+    const accMap = this.service.accNoMap();
+    const vendorMap = this.service.vendorMap();
+    const usrMap = this.service.usrMap();
+
+    return [
+      { field: 'SerNo', header: '序號' },
+      {
+        field: 'AccNo',
+        header: '科目代號',
+        type: this.isFormReadable ? void 0 : 'dropdown',
+        required: !0,
+        showClear: !1,
+        options: () => this.service.accNoOptions(),
+        optionLabel: 'value',
+        optionValue: 'value',
+        templateLabel: 'templateLabel',
+      },
+      {
+        field: 'AccCName',
+        header: '科目名稱',
+        format: (v, i, r) => r?.AccNo ? accMap.get(String(r.AccNo))?.label ?? '' : '',
+      },
+      {
+        field: 'DetailNo',
+        header: '廠商/員工代號',
+        type: this.isFormReadable ? void 0 : 'template',
+        templateRef: this.venUsrTemplate(),
+      },
+      {
+        field: 'DetailName',
+        header: '廠商/員工名稱',
+        format: (v, i, r) => r?.DetailNo ? vendorMap.get(String(r.DetailNo))?.['Name']
+          ?? usrMap.get(String(r.DetailNo))?.label ?? '' : '',
+      },
+      {
+        field: 'NoteDesc',
+        header: '摘要',
+        type: this.isFormReadable ? void 0 : 'dropdown',
+        options: (v: FIN53010DetailTable) => this.service.noteDescOptions().find(item => item.value === v.AccNo)?.data ?? [],
+        optionLabel: 'label',
+        optionValue: 'value',
+      },
+      {
+        field: 'AccAmtD',
+        header: '借方金額',
+        type: this.isFormReadable ? void 0 : 'inputNumber',
+        format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
+      },
+      {
+        field: 'AccAmtC',
+        header: '貸方金額',
+        type: this.isFormReadable ? void 0 : 'inputNumber',
+        format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
+      },
+      {
+        field: 'ORG_ID',
+        header: '組織代號',
+        type: this.isFormReadable ? void 0 : 'dropdown',
+        showClear: !1,
+        options: () => this.service.orgNoOptions(),
+        optionLabel: 'label',
+        optionValue: 'value',
+      },
+      {
+        field: 'clearingCode',
+        header: '立沖代號',
+        type: this.isFormReadable ? void 0 : 'dropdown',
+        options: () => [],
+        optionLabel: 'label',
+        optionValue: 'value',
+      },
+      {
+        field: 'ReflNo',
+        header: '對象別編號',
+        type: this.isFormReadable ? void 0 : 'dropdown',
+        options: () => this.service.refNameOptions(),
+        optionLabel: 'label',
+        optionValue: 'value',
+      },
+      {
+        field: 'recKey',
+        header: '對帳KEY值',
+        type: this.isFormReadable ? void 0 : 'input',
+      },
+    ];
+  });
 
   public readonly templateColumns: (Omit<Column, 'field'> & { field: keyof FIN52030Data; })[] = [
     { field: 'TempNo', header: '傳票號碼' },
@@ -290,14 +309,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     if (!this.isFormCreateable) {
       this.tableLoading.set(!0);
       this.service.loadFIN53010Detail(this.rowdata!.id).pipe(
-        map(res => { if (res.Status === '0000') return res; throw new Error('載入傳票明細失敗'); }),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
         next: res => {
+          if (res.Status !== '0000') return;
           this.fin53010DetailData.set(res.Data);
           this.totalRecords.set(res.TotalCount);
         },
-        error: err => this.messageService.errorBubble(err.message || '載入傳票明細失敗'),
       });
     }
   }
@@ -305,7 +323,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const { VouNo, ...d } = this.dataForm.getRawValue();
-      const payload = <any>{
+      const raw = <FIN53010InsertPayload | FIN53010UpdatePayload>{
         ...d,
         Details: this.tableData().map(({ AccAmtD, AccAmtC, NoteDesc, ...rest }, index) => {
           return {
@@ -315,28 +333,31 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
             AccAmt: (AccAmtD ?? 0) + (AccAmtC ?? 0),
             AccDC: AccAmtD ? 'D' : AccAmtC ? 'C' : '',
             ORG_ID: rest.ORG_ID || '100000',
-            VoucherType: d.VoucherType?.padEnd(3, ' ') || 'GL ',
+            VoucherType: (d.VoucherType?.padEnd(3, ' ')) || 'GL ',
             NoteDesc: this.service.noteDescMap().get(String(NoteDesc))?.label ?? NoteDesc,
           };
         }),
-        ...(this.isFormCreateable ? {} : { VouNo }),
+        ...(!this.isFormCreateable && { VouNo }),
       };
+      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
+      )) as unknown as FIN53010InsertPayload | FIN53010UpdatePayload;
 
       this.tableLoading.set(!0);
       const request: Observable<FIN53010InsertResult | FIN53010UpdateResult> = this.isFormCreateable
         ? this.service.insertFIN53010Data({ ...payload, CRT_USR_No: this.user.user_No })
         : this.service.updateFIN53010Data({ ...payload, id: this.rowdata!.id, UPD_USR_No: this.user.user_No });
 
+
+      this.logger.debug(`submit:`, [payload]);
       request.pipe(
-        tap(res => this.logger.debug(`onSubmit:`, [payload, res])),
-        map(res => { if (res.Status === '0000') return res; throw new Error(this.isFormCreateable ? '新增失敗' : '更新失敗'); }),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
-        next: () => {
+        next: res => {
+          if (res.Status !== '0000') return;
           this.onCancel();
           this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功');
         },
-        error: err => this.messageService.errorBubble(err.message || (this.isFormCreateable ? '新增失敗' : '更新失敗')),
       });
     });
   }
@@ -424,14 +445,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.tableLoading.set(!0);
     this.service.deleteFIN53010Data(ids).pipe(
       tap(res => this.logger.debug(`onDelete:`, [ids, res])),
-      map(res => { if (res.Status === '0000') return res; throw new Error('刪除失敗'); }),
       concatMap(() => this.service.loadFIN53010Detail(this.rowdata!.id)),
       tap(res => this.logger.debug(`reload after delete:`, [res])),
-      map(res => { if (res.Status === '0000') return res; throw new Error('載入傳票明細失敗'); }),
       finalize(() => this.tableLoading.set(!1)),
     ).subscribe({
-      next: () => this.messageService.successBubble('刪除成功'),
-      error: err => this.messageService.errorBubble(err.message || '刪除失敗')
+      next: res => {
+        if (res.Status !== '0000') return;
+        this.messageService.successBubble('刪除成功');
+      },
     });
   }
 
@@ -475,13 +496,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.tableLoading.set(!0);
     this.service.getFin52030Detail(this.selectedDetail()[0]?.TempNo, this.df().CompNo.value!, Number(this.user.mid)).pipe(
       tap(res => this.logger.debug(`onApplyTemplate:`, [res])),
-      map(res => { if (res.Status === '0000') return res; throw new Error(res.Message || '取得常用傳票明細失敗'); }),
       finalize(() => {
         this.tableLoading.set(!1);
         this.displayDialog.set(!1);
       }),
     ).subscribe({
       next: res => {
+        if (res.Status !== '0000') return;
         const data = res.Data;
         this.dataForm.patchValue({
           VouType: data.VouType,
@@ -505,7 +526,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           index: v.index,
         })));
       },
-      error: err => this.messageService.errorBubble(err.message || '取得常用傳票明細失敗'),
     });
   }
 

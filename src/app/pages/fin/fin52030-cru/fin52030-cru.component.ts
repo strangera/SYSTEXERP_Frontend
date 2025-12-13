@@ -20,8 +20,8 @@ import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
-import { concatMap, finalize, map, tap } from 'rxjs';
-import { FIN52030Data, FIN52030DetailData, FIN52030DetailTable, VendorList } from '../fin52030/fin52030.model';
+import { concatMap, finalize, tap } from 'rxjs';
+import { FIN52030Data, FIN52030DetailData, FIN52030DetailTable, FIN52030InsertPayload, FIN52030UpdatePayload, VendorList } from '../fin52030/fin52030.model';
 
 @Component({
   selector: 'app-fin52030-cru',
@@ -168,15 +168,16 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     this.tableLoading.set(!0);
     this.service.loadFIN52030Detail(id).pipe(
       tap(res => this.logger.debug(`ngOnInit load detail:`, [res])),
-      map(res => { if (res.Status === '0000') return res; throw new Error('讀取失敗'); }),
       tap(res => this.fin52030DetailData.set(res.Data || Object.create(null))),
       finalize(() => {
         this.tableLoading.set(!1);
         this.initEffect.destroy();
       }),
     ).subscribe({
-      next: res => this.tableData.set(res.Data?.Details || []),
-      error: err => this.messageService.errorBubble(err.message || '讀取失敗'),
+      next: res => {
+        if (res.Status !== '0000') return;
+        this.tableData.set(res.Data?.Details || []);
+      },
     });
   }, { allowSignalWrites: !0 });
 
@@ -279,7 +280,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const d = this.dataForm.getRawValue();
-      const payload = <any>{
+      const raw = <FIN52030InsertPayload | FIN52030UpdatePayload>{
         ...d,
         Details: this.tableData().map(({ AccAmtD, AccAmtC, NoteDesc, ...rest }, index) => ({
           ...rest,
@@ -289,22 +290,24 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
           NoteDesc: this.service.noteDescMap().get(String(NoteDesc))?.label ?? NoteDesc,
         })),
       };
+      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
+      )) as unknown as FIN52030InsertPayload | FIN52030UpdatePayload;
 
       this.tableLoading.set(!0);
+      this.logger.debug(`onSubmit:`, [raw, payload]);
       const request = this.isFormCreateable
         ? this.service.insertFIN52030Data({ ...payload, CRT_USR_No: this.user.user_No })
         : this.service.updateFIN52030Data({ ...payload, id: this.rowdata!.id, UPD_USR_No: this.user.user_No });
 
       request.pipe(
-        tap(res => this.logger.debug(`onSubmit:`, [payload, res])),
-        map(res => { if (res.Status === '0000') return res; throw new Error(this.isFormCreateable ? '新增失敗' : '更新失敗'); }),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
-        next: () => {
+        next: res => {
+          if (res.Status !== '0000') return;
           this.onCancel();
           this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功');
         },
-        error: () => this.messageService.errorBubble(this.isFormCreateable ? '新增失敗' : '更新失敗'),
       });
     });
   }
@@ -378,18 +381,16 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     this.tableLoading.set(!0);
     this.service.deleteFIN52030Data(ids).pipe(
       tap(res => this.logger.debug(`onDelete:`, [ids, res])),
-      map(res => { if (res.Status === '0000') return res; throw new Error('刪除失敗'); }),
       concatMap(() => this.service.loadFIN52030Detail(this.rowdata!.id)),
       tap(res => this.logger.debug(`onDelete reload detail:`, [res])),
-      map(res => { if (res.Status === '0000') return res; throw new Error('讀取失敗'); }),
       finalize(() => this.tableLoading.set(!1)),
     ).subscribe({
       next: res => {
+        if (res.Status !== '0000') return;
         this.fin52030DetailData.set(res.Data || []);
         this.totalRecords.set(res.TotalCount || 0);
         this.messageService.successBubble('刪除成功');
       },
-      error: err => this.messageService.errorBubble(err.message || '刪除失敗'),
     });
   }
 

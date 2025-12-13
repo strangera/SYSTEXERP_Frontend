@@ -180,8 +180,8 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
       // 年營業報表 - 年度格式化 (yyyy)
       year_onedateyy: this.datePipe.transform(formValue.year_onedateyy, 'yyyy'),
       year_onedateyy_c: this.datePipe.transform(formValue.year_onedateyy_c, 'yyyy'),
-      // 中分類處理：將物件陣列轉換成 [[CAT_LNo, No]] 格式
-      bus_class: formValue.bus_class ? formValue.bus_class.map((item: any) => [item.CAT_LNo, item.No]) : null
+      // 中分類處理：將物件陣列轉換成 [[bus_type, No]] 格式
+      bus_class: formValue.bus_class ? formValue.bus_class.map((item: any) => [item.bus_type, item.No]) : null
     };
 
     this.handleSubmit(frm, () => {
@@ -215,18 +215,18 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
       this.area_no_Option = res.Data;
     })
     // 獲取大分類下拉選項
-    this.dropDownListService.queryPOS2003_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
+    this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.bus_type_Option = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     });
     // 監聽大分類變化
     this.queryForm.controls.bus_type.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value: string[] | null) => {
       if (value && value.length > 0) {
-        this.dropDownListService.queryPOS20031_DropDownList({ CAT_LNo: value }).pipe(untilDestroyed(this)).subscribe(response => {
+        this.dropDownListService.queryTLTBUSCLASS_DropDownList({ bus_type: value }).pipe(untilDestroyed(this)).subscribe(response => {
           const groupedData = response.Data.reduce((accumulator, currentItem) => {
-            const groupKey = currentItem.CAT_LNo || '';
+            const groupKey = currentItem.bus_type || '';
             if (!accumulator[groupKey]) {
               accumulator[groupKey] = {
-                CAT_LName: currentItem.CAT_LName,
+                bus_type_name: currentItem.bus_type_name,
                 items: []
               };
             }
@@ -248,9 +248,15 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
       }
     });
     // 獲取組織下拉選項
-    this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
-    })
+    this.dropDownListService.querySYS3100_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.org_id_Option = res.Data.map(item => ({
+          ...item,
+          value: item.No,
+          label: `${item.No} - ${item.Name}`,
+        }));
+      })
 
     // 獲取活動ID選項
     this.dropDownListService.getActivityOptions({

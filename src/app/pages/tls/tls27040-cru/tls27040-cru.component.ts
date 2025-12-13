@@ -36,7 +36,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
 
   initialQueryForm = this.formBuilder.group({
     ECR_No: [null as string | null, [Validators.required, Validators.maxLength(10)]],
-    TXN_No: [null as string | null, [Validators.required, Validators.maxLength(6)]],
+    TXN_No: [null as string | null, [Validators.maxLength(8)]],
     TXN_Date: [null as Date | null, [Validators.required]],
     tableName: [null as string | null, [Validators.required]],
   });
@@ -45,7 +45,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
   POS6118dataForm = this.formBuilder.nonNullable.group({
     tableName: [null as string | null, [Validators.required, Validators.maxLength(64)]],
     ECR_No: [null as string | null, [Validators.required, Validators.maxLength(10)]], // 收銀機號
-    TXN_No: [null as number | null, [Validators.required, Validators.maxLength(6)]], // 交易流水號
+    TXN_No: [null as number | null, [Validators.required, Validators.maxLength(8)]], // 交易流水號
     NCML_TxnDate: [null as Date | null, [Validators.required]], // 銷售日期
     NCML_Date: [new Date(), [Validators.required]], // 請款日期
     TLT_No: [null as string | null, [Validators.required]], // 專櫃編號
@@ -66,7 +66,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
   POS6119dataForm = this.formBuilder.nonNullable.group({
     tableName: [null as string | null, [Validators.required, Validators.maxLength(64)]],
     ECR_No: [null as string | null, [Validators.required, Validators.maxLength(10)]], // 收銀機號
-    TXN_No: [null as number | null, [Validators.required, Validators.maxLength(6)]], // 交易流水號
+    TXN_No: [null as number | null, [Validators.required, Validators.maxLength(8)]], // 交易流水號
     CTBC_TxnTime: [null as Date | null, [Validators.required]], // 銷售日期 (DateTime)
     TLT_No: [null as string | null, [Validators.required]], // 專櫃編號
     CTBC_Date: [new Date(), [Validators.required]],// 請款日期
@@ -85,7 +85,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
   POS6119PdataForm = this.formBuilder.nonNullable.group({
     tableName: [null as string | null, [Validators.required, Validators.maxLength(64)]],
     ECR_No: [null as string | null, [Validators.required, Validators.maxLength(10)]],// 收銀機號
-    TXN_No: [null as number | null, [Validators.required, Validators.maxLength(6)]],// 交易流水號
+    TXN_No: [null as number | null, [Validators.required, Validators.maxLength(8)]],// 交易流水號
     CRD_Type: [null as string | null, [Validators.required, Validators.maxLength(6)]], // 卡別
     CTBC_TxnDate: [null as Date | null, [Validators.required]],// 銷售日期
     TLT_No: [null as string | null, [Validators.required]], // 專櫃編號
@@ -220,7 +220,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
           if (this.isFormCreateable) {
             form.patchValue({
               ECR_No: rawData.ECR_No,
-              TXN_No: Number(rawData.TXN_No),
+              TXN_No: rawData.TXN_No ? Number(rawData.TXN_No) : Number('99999999'), // 無輸交易序號時，給入99999999
               tableName: rawData.tableName,
               // TXN_Date in rawData (this.rowdata) 應該是 TxnDate 屬性
               NCML_TxnDate: rawData.TXN_Date,
@@ -271,7 +271,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
           if (this.isFormCreateable) {
             form.patchValue({
               ECR_No: rawData.ECR_No,
-              TXN_No: Number(rawData.TXN_No),
+              TXN_No: rawData.TXN_No ? Number(rawData.TXN_No) : Number('99999999'), // 無輸交易序號時，給入99999999
               tableName: rawData.tableName,
               CTBC_TxnTime: rawData.TXN_Date, // TXN_Date in rowdata is the Date object
             });
@@ -317,7 +317,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
           if (this.isFormCreateable) {
             form.patchValue({
               ECR_No: rawData.ECR_No,
-              TXN_No: Number(rawData.TXN_No),
+              TXN_No: rawData.TXN_No ? Number(rawData.TXN_No) : Number('99999999'), // 無輸交易序號時，給入99999999
               tableName: rawData.tableName,
               CTBC_TxnDate: rawData.TXN_Date, // TXN_Date in rowdata is the Date object
             });

@@ -13,7 +13,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, map, tap } from 'rxjs';
+import { finalize } from 'rxjs';
 import { ASS2100ENGMeterType, ASS21010Data, ASS21010Payload, EngType } from './ass21010.model';
 
 @Component({
@@ -121,25 +121,21 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
         ...this.queryForm.getRawValue(),
         ...this.usrData(),
       };
-
-      const payload = (Object.keys(raw) as (keyof typeof raw)[]).reduce<Record<string, unknown>>((acc, key) => {
-        const v = raw[key];
-        if (v !== null && v !== void 0 && v !== '' && !(Array.isArray(v) && !v.length)) acc[key] = v;
-        return acc;
-      }, {}) as unknown as ASS21010Payload;
+      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
+      )) as unknown as ASS21010Payload;
 
       this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.logger.debug(`onSubmit:`, [raw, payload]);
       this.service.loadASS21010(payload).pipe(
-        tap(res => this.logger.debug(`onSubmit:`, [raw, payload, res])),
-        map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
         next: res => {
+          if (res.Status !== '0000') return;
           this.tableData.set(res.Data.Data);
           this.totalRecords.set(res.Data.TotalCount || 0);
         },
-        error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
       });
     });
   }
@@ -149,14 +145,13 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
     this.tableLoading.set(!0);
     for (let i = 0; i < data.length; i++) {
       this.service.deleteASS21010({ ...data[i], ...this.usrData() }).pipe(
-        map(res => { if (res.Status === '0000') return res; throw new Error('刪除失敗'); }),
       ).subscribe({
-        next: () => {
+        next: res => {
+          if (res.Status !== '0000') return;
           this.tableData.update(table =>
             table.filter(value => data.some(item => value.ID !== item.ID)));
           this.messageService.successBubble('刪除成功');
         },
-        error: err => this.messageService.errorBubble(err.message || '刪除失敗'),
       });
       if (i === data.length - 1) this.onSubmit();
     }

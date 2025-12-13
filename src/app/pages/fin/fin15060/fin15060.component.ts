@@ -1,21 +1,22 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
 import { DatePipe } from '@angular/common';
-import { FIN15060Service, FIN15060Data, FIN15060QueryRequest, FIN15060PrintRequest } from '../../../service/api/fin/fin15060.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { AccordionModule } from 'primeng/accordion';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { FIN15080Service } from '@service/api/fin/fin15080.service';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { FIN15060Data, FIN15060PrintRequest, FIN15060QueryRequest, FIN15060Service } from '../../../service/api/fin/fin15060.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 @Component({
   selector: 'app-fin15060',
@@ -23,14 +24,25 @@ import { environment } from 'src/environments/environment';
   styleUrl: './fin15060.component.scss',
   standalone: true,
   imports: [
-    MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule,
-    InputTextComponent, DropdownComponent, TableComponent, TranslateModule, CalendarComponent, ButtonModule,
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    TableComponent,
+    TranslateModule,
+    CalendarComponent,
+    ButtonModule,
+    YearMonthComponent,
+    DropdownComponent
   ]
 })
 export class FIN15060Component extends BasicQueryPageComponent<FIN15060Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    INV_YM: ['', [Validators.required, this.validationService.evenMonthValidator]],           // 申報年月
-    STO_TaxNo: ['', [Validators.required, Validators.maxLength(10)]], // 稅籍編號
+    INV_YM: ['', [Validators.required]],           // 申報年月
+    STO_TaxNo: [null, [Validators.required]], // 稅籍編號
     ...createPaginationConfig([{ field: 'INV_GUIDate', order: -1 }])
   });
 
@@ -38,6 +50,7 @@ export class FIN15060Component extends BasicQueryPageComponent<FIN15060Data> imp
   data: FIN15060Data[] = [];
   selectedItems: FIN15060Data[] = [];
   pdfBtnLoding = false;
+  stoTaxNoOptions: any[] = [];
 
   columns: Column[] = [
     { field: 'INV_DeclareYM', header: '所屬年月份', visible: true },
@@ -59,20 +72,44 @@ export class FIN15060Component extends BasicQueryPageComponent<FIN15060Data> imp
 
   constructor(
     private fin15060Service: FIN15060Service,
-    private validationService: ValidationService,
     private datePipe: DatePipe,
+    private fin15080Service: FIN15080Service
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN15060', 'fin/fin15060cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadStoTaxNoOptions(); // 載入稅籍選單
+    // 設定INV_YM預設值
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11
+    if (currentMonth % 2 !== 0) {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+    this.queryForm.get('INV_YM')?.setValue(this.datePipe.transform((currentDate), 'yyyyMM'));
+  }
+
+  /** 載入稅籍下拉 */
+  private loadStoTaxNoOptions(): void {
+    const storeNo = this.authService.currentUserValue?.SYS_StoreNo || '10';
+    const mid = this.authService.currentUserValue?.mid || 0;
+
+    this.fin15080Service.getStoTaxNoOptions({ mid, STO_No: storeNo }).subscribe({
+      next: (opts) => {
+        this.stoTaxNoOptions = opts.filter(x => x.STO_Status === '1');
+      },
+      error: (err) => {
+        console.error('取得稅籍下拉失敗：', err);
+        this.stoTaxNoOptions = [];
+        this.messageService.errorBubble('稅籍清單取得失敗');
+      },
+    });
   }
 
   onSubmit(frm: FormGroup) {
     const fin15060QueryRequest: FIN15060QueryRequest = {
       ...frm.value,
-      INV_YM: this.datePipe.transform(frm.value.INV_YM, 'yyyyMM') ?? ''
     };
     this.handleSubmit(frm, () => {
       this.fin15060Service.queryFIN15060(fin15060QueryRequest)
@@ -88,7 +125,7 @@ export class FIN15060Component extends BasicQueryPageComponent<FIN15060Data> imp
   onExportPdf() {
     this.pdfBtnLoding = true;
     const payload: FIN15060PrintRequest = {
-      INV_YM: this.datePipe.transform(this.queryForm.value.INV_YM, 'yyyyMM')!,
+      INV_YM: this.queryForm.value.INV_YM!,
       STO_TaxNo: this.queryForm.value.STO_TaxNo!
     }
     this.fin15060Service.printFIN15060(payload)

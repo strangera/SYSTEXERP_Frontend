@@ -7,7 +7,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Fin14030Service } from '@service/api/fin/fin14030.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { apiOption } from '@shared/models/sys/sysb000.model';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -16,8 +15,31 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, convertDateToYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { Column } from '../../../shared/componentkit/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+
+// 本期發票月
+const today = new Date();
+let invoiceYear = today.getFullYear();
+let invoiceMonth = today.getMonth() + 1; // JS 月份 0~11
+
+// 如果不是偶數月，就加 1 個月
+if (invoiceMonth % 2 !== 0) {
+  invoiceMonth += 1;
+  if (invoiceMonth > 12) {
+    invoiceMonth = 1;
+    invoiceYear += 1;
+  }
+}
+
+// 將年月轉成 YYYYMM 字串
+export const invoiceDate = invoiceYear.toString() + invoiceMonth.toString().padStart(2, '0');
+
+interface REP_TaxNo_list {
+  No: string,
+  Lable: string,
+  STO_Status: string, // 使否為使用中
+}
 
 //1.1.4.3 形成申報書
 @Component({
@@ -41,20 +63,21 @@ import { YearMonthComponent } from '../fin11020/query-year-month/query-year-mont
     TranslateModule,
     YearMonthComponent]
 })
+
 export class FIN14030Component extends BasicQueryPageComponent<unknown> implements OnInit {
   queryForm = this.formBuilder.group({
     Mid: [this.authService.getUserInfo()?.mid ?? null, [Validators.required]], // section抓
     STO_No: [this.authService.getUserInfo()?.SYS_StoreNo ?? null, [Validators.required]], // section抓
-    REP_GUIYM: [null, Validators.required], //申報年月
+    REP_GUIYM: [invoiceDate, Validators.required], //申報年月
     REP_TaxNo: [null, Validators.required], //稅籍編號
 
     // ...createPaginationConfig([{ field: 'REP_GUIYM', order: 1 }]), // 分頁和排序參數
   });
 
   // ---彈出視窗控制選項---
-  showDialog = false;        // 控制 dialog 開關
-  dialogData: any = {};      // 用來存放送出後的 form 值
-  auditMode: '審核' | '反審核' = '審核'; // 標題用，可根據需求切換
+  // showDialog = false;        // 控制 dialog 開關
+  // dialogData: any = {};      // 用來存放送出後的 form 值
+  // auditMode: '審核' | '反審核' = '審核'; // 標題用，可根據需求切換
 
   totalRecords = 0; // 總記錄數
   data: Record<string, string>[] = [];
@@ -62,7 +85,7 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
 
   pdfUrl: import('@angular/platform-browser').SafeResourceUrl | null = null;
 
-  REP_TaxNo_Options: apiOption[] = []; //稅籍編號 選項
+  REP_TaxNo_Options: REP_TaxNo_list[] = []; //稅籍編號 選項
 
   columns: Column[] = [
     { field: 'field', header: '欄位' }, // 欄位定義
@@ -77,6 +100,7 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
     this.initializePage('FIN14030', '/FIN/FIN14030cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
+
   loadOptions() {
     //取得 稅籍編號 下拉
     this.fin14030Service.queryTDS1003_STO_TaxNo_DropDownList(
@@ -86,11 +110,34 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
       }).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           const taxNos = response.Data?.TDS1003STO_TaxNos ?? [];
-          this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string; REP_BegGUIYM: string; REP_EndGUIYM: string }) => ({
+          this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string; REP_BegGUIYM: string; REP_EndGUIYM: string; STO_Status: string }) => ({
             Label: item.STO_TaxNo + "/" + item.STO_TaxName + "/" + item.REP_BegGUIYM + "~" + item.REP_EndGUIYM,
-            No: item.STO_TaxNo
+            No: item.STO_TaxNo,
+            STO_Status: item.STO_Status
           }));
-          console.log('稅籍編號 options', this.REP_TaxNo_Options);
+          console.log('稅籍編號 options', response);
+
+          // 找出 STO_Status === '1' 的稅籍
+          const active = this.REP_TaxNo_Options.find(x => x.STO_Status === '1');
+
+          // 排序：使用中(1) 的排在未使用中(2) 前面，但保持其他順序
+          this.REP_TaxNo_Options.sort((a, b) => {
+            if (a.STO_Status === '1' && b.STO_Status !== '1') return -1;
+            if (a.STO_Status !== '1' && b.STO_Status === '1') return 1;
+            return 0; // 都一樣就保持原順序
+          });
+
+          console.log('排序後稅籍編號', this.REP_TaxNo_Options);
+
+
+          if (active) { //如果有使用中的設定為稅及編號預設值
+            console.log('當期使用中的稅籍編號', active);
+            this.queryForm.patchValue({
+              REP_TaxNo: active.No as any,
+            });
+          } else {
+            console.log('當期無使用中的稅籍編號', active);
+          }
         },
         error: (error) => {
           console.error('Error loading options:', error);
@@ -112,8 +159,8 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
       // 視窗，可以執行「審核」與「反審核」的功能。
 
       // 這裡彈窗顯示
-      this.dialogData = body;
-      this.auditMode = '審核';   // 或者根據狀態切換 '反審核'
+      // this.dialogData = body;
+      // this.auditMode = '審核';   // 或者根據狀態切換 '反審核'
 
       this.fin14030Service.printFIN14030(body).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
@@ -130,13 +177,16 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
 
             // ⬇️ 用 sanitizer 包裝
             this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(rawUrl);
-            this.showDialog = true;
+            // this.showDialog = true;
             this.loading = false;
           }
         },
         error: () => {
-          this.showDialog = false;
+          // this.showDialog = false;
           this.loading = false;
+
+          // 清空pdf 關掉審核/反審核按鈕
+          this.pdfUrl = null
         },
       });
     });
@@ -155,7 +205,7 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
         const body = {
           ...frm.value,
           Mid: Number(frm.value.Mid),
-          REP_GUIYM: convertDateToYYYYMM(frm.value.REP_GUIYM),
+          REP_GUIYM: this.convertDateToYYYYMM(frm.value.REP_GUIYM),
           REP_AuditStatus: '1' // 0=未審核, 1=已審核
         }
         // 可以用 202406 , 703902231 測試
@@ -168,18 +218,18 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
               this.messageService.successBubble('審核成功');
             } else {
               this.messageService.errorBubble(response.Data.MsgApprove);
-              this.showDialog = false;
+              // this.showDialog = false;
             }
           },
           error: (error) => {
             this.messageService.errorBubble('審核失敗，請稍後再試');
             console.error('審核錯誤:', error);
-            this.showDialog = false;
+            // this.showDialog = false;
           }
         });
       }
     });
-    this.showDialog = false;
+    // this.showDialog = false;
     this.loading = false;
   }
 
@@ -196,7 +246,7 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
         const body = {
           ...frm.value,
           Mid: Number(frm.value.Mid),
-          REP_GUIYM: convertDateToYYYYMM(frm.value.REP_GUIYM),
+          REP_GUIYM: this.convertDateToYYYYMM(frm.value.REP_GUIYM),
           REP_AuditStatus: '0' // 0=未審核, 1=已審核
         }
         // 可以用 202406 , 703902231 測試
@@ -218,7 +268,23 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
         });
       }
     });
-    this.showDialog = false;
+    // this.showDialog = false;
     this.loading = false;
+  }
+
+  convertDateToYYYYMM(value: any): string {
+    if (!value) return '';
+
+    // 若是 YYYYMM 字串 → 直接回傳
+    if (typeof value === 'string' && /^\d{6}$/.test(value)) {
+      return value;
+    }
+
+    // 若是 Date → 格式化
+    if (value instanceof Date) {
+      return value.getFullYear() + String(value.getMonth() + 1).padStart(2, '0');
+    }
+
+    throw new Error('convertDateToYYYYMM: 不支援的日期格式');
   }
 }

@@ -1,48 +1,43 @@
-import { CurrentPageService } from './../../../core/layout/app.menulist/current-page.service';
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule, FormBuilder } from '@angular/forms';
-import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
-import { distinctUntilChanged, map, Observable, Subscription, debounceTime, firstValueFrom, switchMap, of } from 'rxjs';
-import { AuthService } from '@service/system/auth.service';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { ContractFlowService } from '../tls13010/services/contract-flow.service';
-import { Pos2013DropdownOption, TLS13010_DROPDOWN_OPTIONS, TLS13010DropdownService } from '../tls13010/tls13010.dropdown';
-import { BankOptionsService } from '../../../service/api/dropdownservice/bank-option.service';
-import { AutoCompleteOption, AutoCompleteComponent } from '../../../shared/componentkit/app-autocomplete/app-autocomplete.component';
-import { ColumnDef, ExpandableEditTableComponent, SelectorTableColumn } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
-import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
-import { ContractInfo, LocationItem } from '../tls13010/tls13010.model';
-import { DropdownOption } from '../tls13010/tls13010.dropdown';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
 import { NgIf } from '@angular/common';
-import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, NavigationExtras } from '@angular/router';
+import { NegotiatorOptionsService } from '@service/api/dropdownservice/negotiator-options.service';
+import { VendorCategoryOptionsService } from '@service/api/dropdownservice/vendor-category-options.service';
+import { Tls12010Service } from '@service/api/tls/tls12010.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
 import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
-import { VendorCategoryOptionsService } from '@service/api/dropdownservice/vendor-category-options.service';
-import { NegotiatorOptionsService } from '@service/api/dropdownservice/negotiator-options.service';
-import { TLS13010ValidationService } from './validation/tls13010-validation.service';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
+import { InputTextModule } from 'primeng/inputtext';
+import { debounceTime, distinctUntilChanged, firstValueFrom, map, Observable, of, Subscription, switchMap } from 'rxjs';
+import { BankOptionsService } from '../../../service/api/dropdownservice/bank-option.service';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AutoCompleteComponent, AutoCompleteOption } from '../../../shared/componentkit/app-autocomplete/app-autocomplete.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { ColumnDef, ExpandableEditTableComponent, SelectorTableColumn } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { ContractFlowService } from '../tls13010/services/contract-flow.service';
+import { DropdownOption, Pos2013DropdownOption, TLS13010_DROPDOWN_OPTIONS, TLS13010DropdownService } from '../tls13010/tls13010.dropdown';
+import { ContractInfo, LocationItem } from '../tls13010/tls13010.model';
+import { CommissionTypeChangeService } from './services/commission-type-change.service';
+import { TLS13010DataLoaderService } from './services/data-loader.service';
+import { FormStateService } from './services/form-state.service';
+import { LocationDataManagementService } from './services/location-data-management.service';
+import { RentCalculationService } from './services/rent-calculation.service';
+import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
 import { DateValidationService } from './validation/date-validation.service';
 import { EmailValidationService } from './validation/email-validation.service';
-import { TLS13010FormInitService } from './services/tls13010-cru.formInit.service';
-import { LocationDataManagementService } from './services/location-data-management.service';
-import { TLS13010DataLoaderService } from './services/data-loader.service';
-import { RentCalculationService } from './services/rent-calculation.service';
-import { CommissionTypeChangeService } from './services/commission-type-change.service';
-import { FormStateService } from './services/form-state.service';
-import { Tls12010Service } from '@service/api/tls/tls12010.service';
-import { SystemDataService } from '@service/system/system-data.service';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { TLS13010ValidationService } from './validation/tls13010-validation.service';
 
 interface CategoryItem {
   id: number;
@@ -77,11 +72,19 @@ interface CategoryItem {
 })
 export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
   // ========== 核心屬性（取代繼承的部分） ==========
-  isFormReadonly = false;
+  // ========== CRUD 狀態管理 (參考 TLS12040) ==========
+  override crudstatus: CRUDStatus = CRUDStatus.Create;
 
-  // ========== 檢視模式管理 ==========
-  isViewMode = false;
-  private viewModeSubscription?: Subscription;
+  // 將 CRUDStatus 暴露給模板使用
+  readonly CRUDStatus = CRUDStatus;
+
+  // ========== 表單唯讀狀態 (衍生自 crudstatus) ==========
+  get isFormReadonly(): boolean {
+    return this.crudstatus === CRUDStatus.Read;
+  }
+
+  // ========== 資料載入狀態旗標 ==========
+  // ✅ 已移除 isLoadingExistingData flag,因為改用 (optionSelected) 事件,不需要 flag 了
   // 位置選項資料
   locationWithDetailsOptions: DropdownOption[] = [];
   displayLocationData: LocationItem[] = [];
@@ -270,11 +273,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 狀態欄位
     tlt_openflag: [''],
-    cap_saletype1: [''],
-    cap_saletype2: [''],
-    cap_saletype3: [''],
-    cap_saletype4: [''],
-    cap_saletype5: [''],
+    cap_saletype1: ['N'],
+    cap_saletype2: ['N'],
+    cap_saletype3: ['N'],
+    cap_saletype4: ['N'],
+    cap_saletype5: ['N'],
 
     open_deposit: [''],
     open_fees: [0], //準時開業保證金
@@ -333,7 +336,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   constructor(
     // 核心服務
-    private formInitService: TLS13010FormInitService,
+    private tlsBaseService: TlsContractBaseService,
     private locationManagementService: LocationDataManagementService,
     private dataLoaderService: TLS13010DataLoaderService,
 
@@ -353,6 +356,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     private validationService: TLS13010ValidationService,
     private dateValidationService: DateValidationService,
     private emailValidationService: EmailValidationService,
+    private cdr: ChangeDetectorRef,
     // private systemDataService: SystemDataService
   ) { super(); }
 
@@ -367,31 +371,32 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       // 步驟 2: 初始化檢視模式（同步）
       this.initializeViewMode();
 
-      // 步驟 3: 初始化工作流程（同步）
+      // ✅ 步驟 3: 初始化工作流程（同步）- 移到 dropdown 之前，避免阻塞
       this.initializeWorkflow();
 
-      // 步驟 4: 載入所有下拉選單選項（等待完成）
-      await this.loadAllDropdownOptions();
+      // ⚡ 步驟 4: 並行載入下拉選單與資料 - 這是關鍵優化！
+      // 不再等待 dropdown 全部載入完成才載入資料，而是同時進行
+      const [dropdownsLoaded] = await Promise.all([
+        this.loadAllDropdownOptions(),
+        this.loadDataIfNeeded() // 與 dropdown 並行載入
+      ]);
 
-      // 步驟 5: 載入資料（如果需要）（等待完成）
-      await this.loadDataIfNeeded();
-
-      // 步驟 6: 設定監聽器（同步）
+      // 步驟 5: 設定監聽器（同步）
       this.setupListeners();
 
-      // 步驟 7: 設定動態驗證器（同步）
+      // 步驟 6: 設定動態驗證器（同步）
       this.setupDynamicValidators();
 
-      // 步驟 8: 設定表單控制項狀態（同步）
+      // 步驟 7: 設定表單控制項狀態（同步）
       this.setFormControlsState();
 
-      // 步驟 9: 執行初始驗證（同步）
+      // 步驟 8: 執行初始驗證（同步）
       this.performInitialValidation();
 
-      // 步驟 10: 更新 UI（同步）
+      // 步驟 9: 更新 UI（同步）
       this.updateUI();
 
-      console.log(' ========== TLS13010 元件初始化完成 ==========');
+      console.log('✅ ========== TLS13010 元件初始化完成 ==========');
 
     } catch (error) {
       console.error('❌ ========== TLS13010 元件初始化失敗 ==========');
@@ -402,9 +407,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   ngOnDestroy(): void {
     // 清理訂閱
-    if (this.viewModeSubscription) {
-      this.viewModeSubscription.unsubscribe();
-    }
     this.subscriptions.forEach(sub => sub.unsubscribe());
 
     //  清理 FormStateService
@@ -431,9 +433,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.crudstatus = CRUDStatus.Edit;
 
     // 使用 service 取得標題
-    this.formTitle = this.formInitService.getFormTitle(
+    this.formTitle = this.getFormTitle(
       this.contractFlowService.isNewContractMode(),
-      this.isViewMode
+      this.contractFlowService.isViewMode()
     );
 
     console.log('   基本初始化完成');
@@ -447,22 +449,23 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   isFieldReadonly(fieldName: string): boolean {
     return this.formStateService.isFieldReadonly(
       fieldName,
-      this.isViewMode,
+      this.crudstatus === CRUDStatus.Read,
       this.contractFlowService.isNewContractMode()
     );
   }
 
 
   private initializeViewMode(): void {
-    console.log('📝 步驟 2: 初始化檢視模式');
+    console.log('📝 步驟 2: 初始化 CRUD 狀態');
 
-    // 從服務取得檢視模式狀態
-    this.isViewMode = this.contractFlowService.isViewMode();
+    // 從服務取得檢視模式狀態並設定 CRUD 狀態
+    const isViewMode = this.contractFlowService.isViewMode();
+    this.crudstatus = isViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
 
     // 設定檢視模式 UI 監聽
     this.setupViewModeUI();
 
-    console.log(`   檢視模式: ${this.isViewMode ? '是' : '否'}`);
+    console.log(`   CRUD 狀態: ${this.crudstatus}`);
   }
 
   private initializeWorkflow(): void {
@@ -632,7 +635,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 新建模式：設定預設值
     if (this.contractFlowService.isNewContractMode()) {
       console.log('  🆕 新建模式：設定預設值');
-      this.formInitService.setCurrentUserAsNegotiator(this.dataForm);
+      this.tlsBaseService.setCurrentUserAsNegotiator(this.dataForm);
       this.saveToWorkflow();
       console.log('   預設值設定完成');
       return;
@@ -645,11 +648,19 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       return;
     }
 
-    //  關鍵修正：先檢查 session 資料
+    //  🔥 檢視模式策略：優先從 API 載入最新資料（參考 TLS12040）
+    if (this.crudstatus === CRUDStatus.Read) {
+      console.log('  🔍 檢視模式：無條件從 API 載入最新資料');
+      await this.loadContractDetailAsync(String(queryRowData.talent_id));
+      console.log('   資料載入完成');
+      return;
+    }
+
+    //  編輯模式策略：優先使用 session，避免覆蓋未儲存的修改
     const savedFormData = this.contractFlowService.getStep1Data();
 
     if (savedFormData && this.isSessionDataComplete(savedFormData)) {
-      console.log('   Session 資料完整，使用 session（不打 API）');
+      console.log('   編輯模式：Session 資料完整，使用 session（不打 API）');
       // 使用 session 資料填充表單
       this.loadFromSessionData(savedFormData);
       return;
@@ -696,26 +707,42 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
    *  新增：從 session 載入資料
    */
   private loadFromSessionData(sessionData: any): void {
-    console.log('  💾 從 session 載入表單資料');
+    // ✅ check_type 轉換處理
+    if ((!sessionData.check_typeList || sessionData.check_typeList.length === 0) && sessionData.check_type) {
+      const checkTypeStr = String(sessionData.check_type);
+      sessionData.check_typeList = checkTypeStr.split(',').map((x: string) => String(x.trim())).filter((x: string) => x);
+      console.log(`[檢視-Session轉換] "${checkTypeStr}" → [${sessionData.check_typeList.join(', ')}]`);
+    }
 
-    // 填充表單
+    if (sessionData.check_type && Array.isArray(sessionData.check_typeList) && sessionData.check_typeList.length === 0) {
+      const checkTypeStr = String(sessionData.check_type);
+      if (checkTypeStr && checkTypeStr !== '' && checkTypeStr !== 'null' && checkTypeStr !== 'undefined') {
+        sessionData.check_typeList = checkTypeStr.split(',').map((x: string) => String(x.trim())).filter((x: string) => x);
+        console.log(`[檢視-Session強制轉換] "${checkTypeStr}" → [${sessionData.check_typeList.join(', ')}]`);
+      }
+    }
+
+    if (Array.isArray(sessionData.check_typeList) && sessionData.check_typeList.length > 0) {
+      sessionData.check_typeList = sessionData.check_typeList.map((x: any) => String(x));
+    }
+
     this.dataForm.patchValue(sessionData, { emitEvent: false });
 
-    // 載入銀行資訊
     if (sessionData.selectedBankInfo) {
       this.selectedBankInfo = sessionData.selectedBankInfo;
     }
 
-    // 載入位置資料
     if (sessionData.locationInfo && Array.isArray(sessionData.locationInfo)) {
       this.locationData = sessionData.locationInfo;
     }
 
-    // 重新觸發驗證和控制項狀態
-    setTimeout(() => {
+    queueMicrotask(() => {
       this.setFormControlsState();
       this.triggerAllDynamicValidators();
-    }, 100);
+      // ✅ 使用 detectChanges 而不是 markForCheck，確保立即更新視圖
+      this.cdr.detectChanges();
+      console.log(`[檢視-最終表單值] check_typeList:`, this.dataForm.get('check_typeList')?.value);
+    });
   }
 
   private async loadContractDetailAsync(talentId: string): Promise<void> {
@@ -750,10 +777,22 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   private async patchFormWithDetailDataAsync(detailData: any): Promise<void> {
     console.log('    📝 開始填充表單資料');
 
-    // 處理 check_type 轉換
+    // ✅ 處理 check_type 轉換為 check_typeList（強化版）
     if (detailData.check_type && (!detailData.check_typeList || detailData.check_typeList.length === 0)) {
-      detailData.check_typeList = detailData.check_type.split(',').filter((x: string) => x);
-      console.log('     check_type 已轉換');
+      const checkTypeStr = String(detailData.check_type);
+      if (checkTypeStr && checkTypeStr !== '' && checkTypeStr !== 'null' && checkTypeStr !== 'undefined') {
+        detailData.check_typeList = checkTypeStr.split(',').map((x: string) => x.trim()).filter((x: string) => x);
+        console.log(`     check_type "${checkTypeStr}" 已轉換為 check_typeList:`, detailData.check_typeList);
+      }
+    }
+
+    // ✅ 額外防護：如果轉換後仍然是空陣列，但 check_type 有值，再次強制轉換
+    if (detailData.check_type && Array.isArray(detailData.check_typeList) && detailData.check_typeList.length === 0) {
+      const checkTypeStr = String(detailData.check_type);
+      if (checkTypeStr && checkTypeStr !== '' && checkTypeStr !== 'null' && checkTypeStr !== 'undefined') {
+        detailData.check_typeList = checkTypeStr.split(',').map((x: string) => x.trim()).filter((x: string) => x);
+        console.log(`     🔧 [patchForm] 強制轉換 check_type "${checkTypeStr}" 為 check_typeList:`, detailData.check_typeList);
+      }
     }
 
     //  步驟 1: 解析日期字串為 Date 物件（參考 TLS12040）
@@ -763,16 +802,27 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     const cleanedData = this.cleanStringFields(dataWithDates);
 
     //  步驟 3: 根據模式決定如何填充（參考 TLS12040）
-    if (this.isViewMode || this.isFormReadonly) {
+    if (this.crudstatus === CRUDStatus.Read || this.isFormReadonly) {
       console.log('    🔒 Readonly 模式填充');
-      // Readonly 模式：enable → 填充 → disable
+      console.log('     cleanedData.check_typeList:', cleanedData.check_typeList);
+      console.log('     checkTypeOptions:', this.checkTypeOptions);
+      // Readonly 模式：enable → 填充 → 重新建立陣列參照 → disable → 觸發變更檢測
       this.dataForm.enable();
       this.dataForm.patchValue(cleanedData, { emitEvent: false });
+      console.log('     填充後 check_typeList 值:', this.dataForm.get('check_typeList')?.value);
+      // ✅ 關鍵修正：重新建立 checkTypeOptions 陣列參照，觸發 Angular 變更檢測（參考 TLS12040）
+      this.checkTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.checkType];
+      console.log('     ✅ 已重新建立 checkTypeOptions 陣列參照');
       this.dataForm.disable();
+      // ✅ 觸發變更檢測，確保 multi-select 的 readonly 模式正確顯示
+      this.cdr.detectChanges();
+      console.log('     ✅ 已觸發變更檢測');
     } else {
       console.log('    ✏️ 一般模式填充');
+      console.log('     cleanedData.check_typeList:', cleanedData.check_typeList);
       // 一般模式：直接填充
       this.dataForm.patchValue(cleanedData, { emitEvent: false });
+      console.log('     填充後 check_typeList 值:', this.dataForm.get('check_typeList')?.value);
     }
 
     console.log('     表單資料填充完成');
@@ -912,6 +962,13 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       credit_card: data.credit_card || '',
       total_amt_unit: data.total_amt_unit || '',
       total_amt_vendor_unit: data.total_amt_vendor_unit || '',
+
+      // 參加資訊 (checkbox 欄位)
+      cap_saletype1: data.cap_saletype1 || 'N',
+      cap_saletype2: data.cap_saletype2 || 'N',
+      cap_saletype3: data.cap_saletype3 || 'N',
+      cap_saletype4: data.cap_saletype4 || 'N',
+      cap_saletype5: data.cap_saletype5 || 'N',
 
       // 其他欄位
       check_typeList: data.check_type && typeof data.check_type === 'string'
@@ -1064,11 +1121,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       contact_Date: formatDate(detailData.contact_Date),
       tlt_contract_bdate: formatDate(detailData.tlt_contract_bdate),
       tlt_contract_edate: formatDate(detailData.tlt_contract_edate),
-      cap_saletype1: detailData.cap_saletype1 || '',
-      cap_saletype2: detailData.cap_saletype2 || '',
-      cap_saletype3: detailData.cap_saletype3 || '',
-      cap_saletype4: detailData.cap_saletype4 || '',
-      cap_saletype5: detailData.cap_saletype5 || '',
+      cap_saletype1: detailData.cap_saletype1 || 'N',
+      cap_saletype2: detailData.cap_saletype2 || 'N',
+      cap_saletype3: detailData.cap_saletype3 || 'N',
+      cap_saletype4: detailData.cap_saletype4 || 'N',
+      cap_saletype5: detailData.cap_saletype5 || 'N',
       bus_type: detailData.bus_type || '',
       bus_class: detailData.bus_class || '',
       bus_sclass: detailData.bus_sclass || '',
@@ -1131,10 +1188,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     console.log(' 表單資料填充完成');
 
-    // 填充完資料後，更新到 workflow
-    setTimeout(() => {
+    // ✅ 使用 queueMicrotask 替代 setTimeout
+    queueMicrotask(() => {
       this.saveToWorkflow();
-    }, 100);
+    });
   }
 
   private setupListeners(): void {
@@ -1142,88 +1199,92 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     this.setupAutoSave();
     this.setupBusTypeListener();
-    this.setupVendorUniformListener();
+    // this.setupVendorUniformListener(); // ✅ 已改用 HTML 的 (optionSelected)="onVendorOptionSelected($event)" 事件
+    this.setupDateAutoFillListeners();
 
     console.log('   監聽器設定完成');
   }
 
-  private setupVendorUniformListener(): void {
-    //  使用標記追蹤是否為初始載入
-    let skipCount = 0;
-    const SKIP_INITIAL_LOADS = 2; // 跳過前兩次（ngOnInit + patchValue）
+  // ✅ 已移除 setupVendorUniformListener(),改用 HTML 的 (optionSelected)="onVendorOptionSelected($event)" 事件
 
-    const venUniformSubscription = this.dataForm.get('vendor_ven_no')?.valueChanges
-      .subscribe(vendorVenNo => {
-        console.log('📝 vendor_ven_no 變更:', vendorVenNo, '跳過計數:', skipCount);
+  /**
+   * 設定日期自動填充監聽器
+   * 1. 新建模式：回函日期、洽談日期預帶今天，回函截止日預帶今天+15天
+   * 2. 回函日期變更時，自動更新回函截止日（+15天）
+   * 3. 契約起始日/截止日輸入完，營運起始日/截止日預帶相同日期
+   */
+  private setupDateAutoFillListeners(): void {
+    // 1. 監聽新建模式：回函日期、洽談日期預帶今天，回函截止日預帶今天+15天
+    if (this.contractFlowService.isNewContractMode()) {
+      const today = new Date();
+      const todayStr = this.formatDate(today);
 
-        //  跳過初始載入
-        if (skipCount < SKIP_INITIAL_LOADS) {
-          skipCount++;
-          console.log(`⏭️ 跳過第 ${skipCount} 次觸發（初始載入）`);
-          return;
-        }
+      // 預設回函日期為今天
+      if (!this.dataForm.get('feedback_date')?.value) {
+        this.dataForm.patchValue({ feedback_date: todayStr }, { emitEvent: false });
+      }
 
-        //  檢視模式下不執行自動帶入
-        if (this.isViewMode) {
-          console.log('👁️ 檢視模式，不執行自動帶入');
-          return;
-        }
+      // 預設回函截止日為今天+15天（重新創建 Date 物件避免污染）
+      if (!this.dataForm.get('due_date')?.value) {
+        const dueDate = new Date();
+        dueDate.setDate(dueDate.getDate() + 15);
+        this.dataForm.patchValue({ due_date: this.formatDate(dueDate) }, { emitEvent: false });
+      }
 
-        if (vendorVenNo && vendorVenNo.trim()) {
-          const selectedOption = this.pos2013Options.find(opt => opt.value === vendorVenNo);
+      // ✅ 新增：預設洽談日期為今天
+      if (!this.dataForm.get('contact_Date')?.value) {
+        this.dataForm.patchValue({ contact_Date: todayStr }, { emitEvent: false });
+      }
+    }
 
-          if (selectedOption) {
-            console.log('🔄 執行廠商資料自動帶入');
-
-            // A. 帶入廠商基本資料
-            this.dataForm.patchValue({
-              vendor_no: selectedOption.No,
-              ven_no: selectedOption.VEN_No,
-              ven_uniform: selectedOption.No,
-              VEN_Name: selectedOption.Name,
-              VEN_Address: selectedOption.VEN_Address,
-              vendor_acct_name: selectedOption.Name
-            }, { emitEvent: false });
-
-            // B. 使用 DataLoaderService 載入潛在客戶資料
-            this.dataLoaderService.loadPotentialCustomerData(
-              selectedOption.No,
-              this.dataForm
-            ).subscribe({
-              next: (hasData) => {
-                if (hasData) {
-                  this.messageService.successBubble('已自動帶入潛在客戶資料');
-                } else {
-                  this.messageService.infoBubble('查無潛在客戶資料，已帶入廠商基本資料');
-                }
-              },
-              error: () => {
-                this.messageService.warnBubble('查詢潛在客戶資料失敗，僅帶入廠商基本資料');
-              },
-              complete: () => {
-                this.saveToWorkflow();
-              }
-            });
-
-            console.log(' 已帶入廠商基本資料');
+    // 2. 監聽回函日期變更，自動更新回函截止日（+15天）
+    const feedbackDateSub = this.dataForm.get('feedback_date')?.valueChanges
+      .pipe(distinctUntilChanged())
+      .subscribe(feedbackDate => {
+        if (feedbackDate && this.crudstatus !== CRUDStatus.Read) {
+          const date = new Date(feedbackDate);
+          if (!isNaN(date.getTime())) {
+            date.setDate(date.getDate() + 15);
+            this.dataForm.patchValue({ due_date: this.formatDate(date) }, { emitEvent: false });
           }
-        } else {
-          // 清空相關欄位
-          this.dataForm.patchValue({
-            vendor_no: '',
-            ven_no: '',
-            ven_uniform: '',
-            VEN_Name: '',
-            VEN_Address: '',
-          }, { emitEvent: false });
         }
       });
 
-    if (venUniformSubscription) {
-      this.subscriptions.push(venUniformSubscription);
-    }
+    // 3. 監聽契約起始日變更，自動更新營運起始日
+    const contractStartSub = this.dataForm.get('tlt_bdate')?.valueChanges
+      .pipe(distinctUntilChanged())
+      .subscribe(contractStart => {
+        if (contractStart && this.crudstatus !== CRUDStatus.Read) {
+          // 每次契約起始日變更都自動帶入營運起始日
+          this.dataForm.patchValue({ tlt_contract_bdate: contractStart }, { emitEvent: false });
+        }
+      });
+
+    // 4. 監聽契約截止日變更，自動更新營運截止日
+    const contractEndSub = this.dataForm.get('tlt_edate')?.valueChanges
+      .pipe(distinctUntilChanged())
+      .subscribe(contractEnd => {
+        if (contractEnd && this.crudstatus !== CRUDStatus.Read) {
+          // 每次契約截止日變更都自動帶入營運截止日
+          this.dataForm.patchValue({ tlt_contract_edate: contractEnd }, { emitEvent: false });
+        }
+      });
+
+    // 加入訂閱清單
+    if (feedbackDateSub) this.subscriptions.push(feedbackDateSub);
+    if (contractStartSub) this.subscriptions.push(contractStartSub);
+    if (contractEndSub) this.subscriptions.push(contractEndSub);
   }
 
+  /**
+   * 格式化日期為 YYYY-MM-DD
+   */
+  private formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
 
   /**
    * 統一設定表單欄位的 readonly 狀態
@@ -1231,10 +1292,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   private setFormControlsState(): void {
     this.formStateService.setFormControlsState(
       this.dataForm,
-      this.isViewMode,
+      this.crudstatus === CRUDStatus.Read,
       this.contractFlowService.isNewContractMode()
     );
-    this.isFormReadonly = this.isViewMode;
   }
 
   // ==========  表單監聽與自動儲存 ==========
@@ -1466,7 +1526,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   onSubmitNext(): void {
     // 檢視模式：直接導航，不驗證
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.router.navigate(['account/tls/tls13010next1']);
       return;
     }
@@ -1487,8 +1547,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     const extras: NavigationExtras = {
       state: { fromRoute: this.router.url },
     };
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.contractFlowService.clearViewMode();
+      this.contractFlowService.clearTempData();
       this.router.navigate(['account/tls/tls13010'], extras);
       this.messageService.infoBubble('已退出檢視模式');
       return;
@@ -1505,8 +1566,8 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   onClearForm(): void {
     if (confirm('確定要清除所有輸入的資料嗎?此操作無法復原。')) {
-      // 使用 service 重設表單
-      this.formInitService.resetFormToDefaults(this.dataForm);
+      // 使用共用 service 重設表單
+      this.tlsBaseService.resetToDefaults(this.dataForm, 'TLS13010', ['apply_no', 'tlt_no']);
 
       this.locationData = []; // 清除位置資料
       this.contractFlowService.clearTempData();
@@ -1517,7 +1578,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   // ==========  位置表格事件處理 ==========
 
   onAddLocationItem(): void {
-    if (this.isViewMode) return;
+    if (this.crudstatus === CRUDStatus.Read) return;
 
     this.updateDisplayLocationData();
 
@@ -1555,10 +1616,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         // 🔥 發現重複,立即移除這筆資料
         console.log('❌ 發現重複櫃位,準備移除');
 
-        // 延遲一點點確保訊息顯示
-        setTimeout(() => {
+        // ✅ 使用 queueMicrotask 替代 setTimeout,確保訊息顯示後再移除
+        queueMicrotask(() => {
           this.removeLocationItem(String(rowData.id));
-        }, 100);
+        });
 
         return; // 不繼續處理
       }
@@ -1739,7 +1800,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   onBatchDeleteLocation(selectedItems: LocationItem[]): void {
-    if (this.isViewMode) return;
+    if (this.crudstatus === CRUDStatus.Read) return;
 
     const result = this.locationManagementService.processBatchDelete(
       selectedItems,
@@ -1970,20 +2031,20 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 如果已經是檢視模式,立即設定
     if (currentViewMode) {
-      this.isViewMode = true;
+      this.crudstatus = CRUDStatus.Read;
       this.handleViewModeChange(true);
     }
 
     // 訂閱後續變更
-    this.viewModeSubscription = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
+    const viewModeSubscription = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
       console.log('🔍 檢視模式變更:', isViewMode);
-      this.isViewMode = isViewMode;
+      this.crudstatus = isViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
       this.handleViewModeChange(isViewMode);
     });
+    this.subscriptions.push(viewModeSubscription);
   }
 
   private handleViewModeChange(isViewMode: boolean): void {
-    this.isFormReadonly = isViewMode;
     this.formTitle = this.formStateService.handleViewModeChange(
       isViewMode,
       this.dataForm,
@@ -2020,7 +2081,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     }
 
     // 檢查是否為檢視模式
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.messageService.warnBubble('檢視模式下無法修改資料');
       return;
     }
@@ -2051,7 +2112,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   canCopyAddress(): boolean {
     // 只要有公司登記地址且不是檢視模式就可以複製
     const hasAddress = !!this.getCompanyAddress();
-    const canEdit = !this.isViewMode;
+    const canEdit = this.crudstatus !== CRUDStatus.Read;
 
     // console.log('🔍 檢查複製按鈕狀態:', {
     //   hasAddress,
@@ -2116,9 +2177,17 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   getApplyNoPlaceholder(): string {
-    return this.formInitService.getApplyNoPlaceholder(
-      this.contractFlowService.isNewContractMode()
-    );
+    return this.contractFlowService.isNewContractMode() ? "'系統自動產生'" : '';
+  }
+
+  /**
+   * 根據模式取得表單標題
+   */
+  private getFormTitle(isNewMode: boolean, isViewMode: boolean): string {
+    if (isViewMode) {
+      return '檢視合約資料';
+    }
+    return isNewMode ? '新增合約資料' : '編輯合約資料';
   }
 
   private checkRequiredFieldsBeforeSubmit(): boolean {
@@ -2145,15 +2214,27 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.dataForm.patchValue({ ven_uniform: vendorNo }, { emitEvent: false });
     }
 
-    const result = this.formInitService.checkRequiredFields(this.dataForm);
+    // 檢查必填欄位
+    const requiredFields = [
+      'tlt_name', 'bus_type', 'bus_class', 'tlt_bdate', 'tlt_edate',
+      'org_id', 'tlt_contract_bdate', 'tlt_contract_edate',
+      'tlt_term_type', 'comm_comp_type', 'invoice_type'
+    ];
 
-    if (!result.isComplete) {
-      // 🔍 打印缺失的欄位
-      console.log('❌ 缺失的必填欄位:', result.missingFields);
+    const missingFields: string[] = [];
+    requiredFields.forEach(fieldName => {
+      const control = this.dataForm.get(fieldName);
+      if (control && !control.value) {
+        missingFields.push(fieldName);
+      }
+    });
 
-      const missingFieldNames = result.missingFields
+    if (missingFields.length > 0) {
+      console.log('❌ 缺失的必填欄位:', missingFields);
+
+      const missingFieldNames = missingFields
         .map(field => {
-          const displayName = this.formInitService.getFieldDisplayName(field);
+          const displayName = this.tlsBaseService.getFieldDisplayName(field);
           const currentValue = this.dataForm.get(field)?.value;
           console.log(`  - ${field} (${displayName}): 當前值 =`, currentValue);
           return displayName;
@@ -2161,8 +2242,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         .join('、');
 
       this.messageService.warnBubble(`請填寫必填欄位: ${missingFieldNames}`);
-
-      // 🔍 額外的調試信息
       console.log('========== 調試完成 ==========');
       return false;
     }
@@ -2193,7 +2272,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         this.validationService.updatePaymentValidators(this.dataForm);
       });
 
-    //  簡化: 設定預收租金相關監聽
+    // ✅ 設定預收租金相關監聽
     const rentSubscriptions = this.rentCalculationService.setupRentAheadCalculation(
       this.dataForm,
       this.messageService
@@ -2262,23 +2341,88 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   /**
- * 廠商選項被選中
- */
-  onVendorOptionSelected(selectedOption: any): void {
-    console.log('📝 廠商被選中:', selectedOption);
+   * ✨ 廠商變更事件處理 (替代監聽器的優雅方案)
+   * 此方法只在使用者手動操作 dropdown 時觸發,不會在 patchValue 時觸發
+   * @param vendorVenNo - 廠商統一編號 (完整編號, 例如: "00000000-2")
+   */
+  onVendorChange(vendorVenNo: string): void {
+    console.log('📝 使用者變更廠商統一編號:', vendorVenNo);
 
+    if (!vendorVenNo || !vendorVenNo.trim()) {
+      // 清空所有相關欄位(包含潛在客戶欄位)
+      this.dataForm.patchValue({
+        vendor_ven_no: '',
+        vendor_no: '',
+        ven_no: '',
+        ven_uniform: '',
+        VEN_Name: '',
+        VEN_Address: '',
+        vendor_acct_name: '',
+        tlt_name: '',        // 清空專櫃名稱
+        bus_type: '',        // 清空大分類
+        contact_tel: '',     // 清空電話
+        contact_fax: ''      // 清空傳真
+      }, { emitEvent: false });
+      this.saveToWorkflow();
+      return;
+    }
+
+    // 檢查 pos2013Options 是否已載入
+    if (!this.pos2013Options || this.pos2013Options.length === 0) {
+      console.warn('⚠ pos2013Options 尚未載入');
+      return;
+    }
+
+    // 找到選中的廠商資料
+    const selectedOption = this.pos2013Options.find(opt => opt.value === vendorVenNo);
+
+    if (!selectedOption) {
+      console.warn('⚠ 找不到對應的廠商選項');
+      return;
+    }
+
+    console.log('✅ 找到廠商資料:', selectedOption);
+
+    // A. 帶入廠商基本資料
     this.dataForm.patchValue({
       vendor_ven_no: selectedOption.VEN_No,   // "00000000-2" (完整編號)
       vendor_no: selectedOption.No,           // "00000000" (統編)
       ven_no: selectedOption.VEN_No,          // "00000000-2"
       ven_uniform: selectedOption.No,         // "00000000" (統編) - 必填欄位！
       VEN_Name: selectedOption.Name,
-      VEN_Address: selectedOption.VEN_Address
+      VEN_Address: selectedOption.VEN_Address,
+      vendor_acct_name: selectedOption.Name
     }, { emitEvent: false });
 
-    console.log(' 已更新廠商資料，包含 ven_uniform:', this.dataForm.get('ven_uniform')?.value);
+    // 標記為已觸碰
+    this.dataForm.get('ven_no')?.markAsTouched();
+    this.dataForm.get('ven_uniform')?.markAsTouched();
+    this.dataForm.get('VEN_Name')?.markAsTouched();
+    this.dataForm.get('VEN_Address')?.markAsTouched();
+    this.dataForm.get('vendor_acct_name')?.markAsTouched();
 
-    // 觸發儲存
-    this.saveToWorkflow();
+    console.log('✅ 已更新廠商資料，包含 ven_uniform:', this.dataForm.get('ven_uniform')?.value);
+
+    // B. 📞 使用 DataLoaderService 載入潛在客戶資料
+    console.log('🔍 準備載入潛在客戶資料，統編:', selectedOption.No);
+
+    this.dataLoaderService.loadPotentialCustomerData(
+      selectedOption.No,
+      this.dataForm
+    ).subscribe({
+      next: (hasData) => {
+        if (hasData) {
+          this.messageService.successBubble('已自動帶入潛在客戶資料');
+        } else {
+          this.messageService.infoBubble('查無潛在客戶資料，已帶入廠商基本資料');
+        }
+      },
+      error: () => {
+        this.messageService.warnBubble('查詢潛在客戶資料失敗，僅帶入廠商基本資料');
+      },
+      complete: () => {
+        this.saveToWorkflow();
+      }
+    });
   }
 }

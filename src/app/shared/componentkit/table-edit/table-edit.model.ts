@@ -7,17 +7,27 @@ export interface EditColumn {
   format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
   disabled?: (value: any, index?: number, rowData?: any) => boolean;  // 是否禁用 (是否為禁用欄位)
   validate?: ((value: any, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[]; })[];
-  type?: 'input' | 'inputNumber' | 'percent' | 'dropdown' | 'date' | 'template'; // 欄位類型
+  type?: 'input' | 'inputNumber' | 'percent' | 'dropdown' | 'date' | 'template' | 'checkbox'; // 欄位類型
   groupField?: string;
   width?: string;
   textAlign?: 'left' | 'right' | 'center' | 'justify' | 'match-parent' | 'initial' | 'inherit' | 'unset' | 'revert' | 'revert-layer' | 'unset';
+  showSort?: boolean;
+  cellClass?: string | ((rowData: any) => string);
+  /** * 新增: 定義該欄位是否需要加總
+   * 'sum': 數值加總 (最常用)
+   * 'avg': 平均
+   * 'count': 計數 (如果是非數值欄位可能有用)
+   */
+  aggregate?: 'sum' | 'avg' | 'count';
   // inputNumber
   min?: number; // 最小值
   max?: number; // 最大值
-  minLength?: number;
-  maxLength?: number;
+  minLength?: string | number | null;
+  maxLength?: string | number | null;
   minFractionDigits?: number;
   maxFractionDigits?: number;
+  suffix?: string;
+  placeholder?: string; // 提示文字
   // dropdown
   options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
   optionLabel?: string; // 下拉選單 optionLabel
@@ -33,6 +43,15 @@ export interface EditColumn {
   view?: CalendarTypeView;
   minDate?: Date;
   maxDate?: Date;
+  isUserInput?: boolean; // 模板是否當成輸入欄位
+  // Checkbox
+  label?: string;
+  binary?: boolean; // 是否為二元 (true/false) 模式，預設為 true
+  falseValue?: any; // 未選中時的值，預設為 false
+  trueValue?: any;// 選中時的值，預設為 true
+  value?: any; // 是否為群組模式 (不常用於單元格，但保留)
+  // default value generator for new rows
+  defaultValueFunction?: () => any;
   // 事件
   calculate?: (rowData: any, value: any) => Record<string, any>;
   onFocus?: (rowData: any, value: any, col: EditColumn, index: number) => void;

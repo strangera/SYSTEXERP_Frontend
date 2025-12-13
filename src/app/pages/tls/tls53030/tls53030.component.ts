@@ -1,24 +1,24 @@
+import { DatePipe } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import saveAs from 'file-saver';
+import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, AddButton, formatDate, formatAmount } from '../../../shared/componentkit/table/table.model';
 import { TLS53030Data, TLS53030DetailData, TLS53030Service } from '../../../service/api/tls/tls53030.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { DatePipe } from '@angular/common';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
-import { HttpResponse } from '@angular/common/http';
-import saveAs from 'file-saver';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { AddButton, Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls53030',
@@ -163,7 +163,6 @@ export class TLS53030Component extends BasicQueryPageComponent<TLS53030Data> imp
 
   // 展開行設置
   expansionColumns: Column[] = [
-    { field: 'PLU_PageNum', header: '貨架編號', visible: true },
     { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
     { field: 'PLU_Name', header: '商品名稱', visible: true },
     { field: 'PLU_No', header: '國際條碼', visible: true },
@@ -358,6 +357,6 @@ export class TLS53030Component extends BasicQueryPageComponent<TLS53030Data> imp
 
   // 編輯禁用
   editDisabled(rowData: TLS53030Data) {
-    return !['0', '1', '2', '3'].includes(rowData.PST_Status)
+    return !['0', '1', '2', '3'].includes(rowData.PST_Status) || rowData.PST_Type === '尚未盤點'
   }
 }

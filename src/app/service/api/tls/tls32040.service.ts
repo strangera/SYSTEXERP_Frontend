@@ -1,116 +1,175 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
-import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
 
-// 查詢參數 Model
-export interface TLS32040QueryRequest extends BaseQueryRequest {
-  // 報表類型
-  reportType?: string; // 報表類型
-
-  // 日期查詢條件
-  onedatedd?: string; // 日期（日報表）- ISO 格式
-  onedatedd_c?: string; // 比較日期（日報表）- ISO 格式
-  onedateyy?: string; // 年度（週報表）
-  weeks?: string; // 週數
-  startdate?: string; // 開始日期（週報表用）- ISO 格式
-  enddate?: string; // 結束日期（週報表用）- ISO 格式
-  onedateyy_c?: string; // 比較年度（週報表）
-  weeks_c?: string; // 比較週數
-  startdate_c?: string; // 比較開始日期（週報表用）- ISO 格式
-  enddate_c?: string; // 比較結束日期（週報表用）- ISO 格式
-  onedatemm?: string; // 年月（月報表）
-  onedatemm_c?: string; // 比較年月（月報表）
-  halfyear_onedateyy?: string; // 半年報表年度
-  halfyear?: string; // 半年別
-  halfyear_onedateyy_c?: string; // 比較半年報表年度
-  halfyear_c?: string; // 比較半年別
-  year_onedateyy?: string; // 年報表年度
-  year_onedateyy_c?: string; // 比較年報表年度
-  sad_startdate?: string; // 區間開始日期 - ISO 格式
-  sad_enddate?: string; // 區間結束日期 - ISO 格式
-  sad_startdate_c?: string; // 比較區間開始日期 - ISO 格式
-  sad_enddate_c?: string; // 比較區間結束日期 - ISO 格式
-  eventID?: string; // 活動ID
-  event_startdate?: string; // 活動開始日期 - ISO 格式
-  event_enddate?: string; // 活動結束日期 - ISO 格式
-  eventID_c?: string; // 比較活動ID
-  event_startdate_c?: string; // 比較活動開始日期 - ISO 格式
-  event_enddate_c?: string; // 比較活動結束日期 - ISO 格式
-
-  // 合約查詢條件
-  floor?: string; // 樓層
-  region?: string; // 區域
-  bus_type?: string; // 大分類/中分類
-  tlt_kind?: string; // 櫃別
-  tlt_term_type?: string; // 抽成別
-  org_id?: string; // 組織代號
-  tlt_no?: string; // 專櫃編號
-  tax?: boolean; // 是否含稅
+// 主檔 request
+export interface TLS32040Request extends BaseQueryRequest {
+  "ReportType": string, // 日=DAY 周=WEEK 月=MONTH 半年=HALFYEAR 年=YEAR
+  "BaseDateFrom": Date, // 基準日期起
+  "BaseDateTo": Date, // 基準日期訖
+  "CompareDateFrom": Date, // 比較日期起
+  "CompareDateTo": Date, // 比較日期訖
+  "FloorList": string, //樓層（SYS3900） → TLTTALENT_LOCATION.tlt_floor (多選條件（逗號分隔，例如 "1,2,3"）。NULL 或空字串代表不篩選。)
+  "AreaList": string, //區域（SYS3A00） → TLTTALENT_LOCATION.area_no (多選)
+  "BusTypeList": string[], //大分類 → TLTTALENT.bus_type (多選)
+  "BusClassList": { //中分類 → TLTTALENT.bus_class (多選)
+    "BusType": string;
+    "BusClass": string;
+  }[],
+  "TltKindList": string, // 櫃別（SYS1000 TLT_Kind） → TLTTALENT.tlt_kind (多選)
+  "OrgList": string, // 組織 → TLTTALENT.org_id (多選)
+  "TltNoList": string, // 專櫃編號 → TLTTALENT.tlt_no
+  "TermTypeList": string, // 抽成別 → TLTTALENT.tlt_term_type
+  "BuildingList": string, // 館別（SYS3800） → TLTTALENT_LOCATION.tlt_building
+  "AmtTaxMode": string, // 銷售金額是否含稅：'G' = 含稅 (AVN_TotSaleAmt), 'N' = 未稅 (AVN_TotSaleNet). Default: 'G'
+  "ReceFilter": string  // 是否開立業主發票：'A' = 全部 (default), 'Y' = 是, 'N' = 否
 }
 
-// 週報表起訖日期查詢參數 Model
-export interface TLS32040WeekQueryRequest {
-  onedateyy: string; // 年度
-  weeks: string; // 週數
+// 主檔 response
+export interface TLS32040Response extends BaseQueryRequest {
+  "RowType": string, // 列別：'TEAM' / 'TeamSum' / 'BUILDING' / 'TOTAL'
+  "TeamId": string, // 單位代碼（TEAM / 館別 / 總計用)
+  "TeamName": string, // 單位名稱（TEAM / 館別 / 總計顯示用）
+  "OrgId": string, // 樓組代碼
+  "OrgName": string, // 樓組名稱
+  "Base_Target": number, // 本期銷售目標
+  "Base_SaleAmt": number, // 本期銷售金額
+  "Base_AchieveRate": number, // 本期達成率（銷售金額 / 目標）
+  "Base_TxnCnt": number, // 本期交易筆數
+  "Base_AvgTicket": number, // 本期客單價（銷售金額 / 來客數)
+  "Comp_SaleAmt": number, // 上期銷售金額
+  "Comp_TxnCnt": number, // 上期交易筆數
+  "Comp_AvgTicket": number, // 上期客單價
+  "Growth_SaleAmtPct": number, // 成長比(銷售金額成長率)
+  "Diff_SaleAmt": number, // 銷售金額差異（本期 - 上期）
+  "Diff_TxnCnt": number, // 交易筆數差異
+  "Diff_AvgTicket": number, // 客單價差異
+  "Space": number, // 營業坪數（坪）
+  "Base_DaySpaceEff": number // 本期日平均坪效（每坪每日銷售）
 }
 
-// 週報表起訖日期回應 Model
-export interface TLS32040WeekResponse {
-  WeekStart: string; // 週開始日期 - ISO 格式
-  WeekEnd: string; // 週結束日期 - ISO 格式
+// 明細 request
+export interface TLS32040DetailRequest extends BaseQueryRequest {
+  "OrgId": string, // 點擊的樓組 OrgId
+
+  "BaseDateFrom": string, // 基準日期起
+  "BaseDateTo": string, // 基準日期訖
+  "CompareDateFrom": string, // 比較日期起
+  "CompareDateTo": string, // 比較日期訖
+
+  "FloorList": string, //樓層（SYS3900） → TLTTALENT_LOCATION.tlt_floor (多選條件（逗號分隔，例如 "1,2,3"）。NULL 或空字串代表不篩選。)
+  "AreaList": string, //區域（SYS3A00） → TLTTALENT_LOCATION.area_no (多選)
+  "BusTypeList": string[], //大分類 → TLTTALENT.bus_type (多選)
+  "BusClassList": { //中分類 → TLTTALENT.bus_class (多選)
+    "BusType": string;
+    "BusClass": string;
+  }[],
+  "TltKindList": string, // 櫃別（SYS1000 TLT_Kind） → TLTTALENT.tlt_kind (多選)
+  "OrgList": string, // 組織 → TLTTALENT.org_id (多選)
+  "TltNoList": string, // 專櫃編號 → TLTTALENT.tlt_no
+  "TermTypeList": string, // 抽成別 → TLTTALENT.tlt_term_type
+  "BuildingList": string, // 館別（SYS3800） → TLTTALENT_LOCATION.tlt_building
+  "AmtTaxMode": string, // 銷售金額是否含稅：'G' = 含稅 (AVN_TotSaleAmt), 'N' = 未稅 (AVN_TotSaleNet). Default: 'G'
+  "ReceFilter": string  // 是否開立業主發票：'A' = 全部 (default), 'Y' = 是, 'N' = 否
 }
 
-// 查詢結果 Model
-export interface TLS32040Data {
-  id: number; // ID
-  tlt_building: string; // 館別
-  talent_id: string; // 專櫃編號
-  team_name: string; // TEAM名稱
-  division_name: string; // 部門名稱
-  tlt_kind: string; // 櫃別
-  bus_class_name: string; // 大分類名稱
-  budget_now: number; // 當期預算
-  preorder_amt_now: number; // 當期預售金額(含稅)
-  preorder_namt_now: number; // 當期預售金額(未稅)
-  Achievement_rate_now: number; // 目標達成率(含稅)
-  nAchievement_rate_now: number; // 目標達成率(未稅)
-  preorder_custcnt_now: number; // 交易筆數
-  avg_ordervalue_now: number; // 當期客單價(含稅)
-  navg_ordervalue_now: number; // 當期客單價(未稅)
-  preorder_amt_last: number; // 去年同期預售金額(含稅)
-  preorder_namt_last: number; // 去年同期預售金額(未稅)
-  preorder_custcnt_last: number; // 去年同期交易筆數
-  avg_ordervalue_last: number; // 去年同期客單價(含稅)
-  navg_ordervalue_last: number; // 去年同期客單價(未稅)
-  Growth: number; // 成長比(含稅)
-  nGrowth: number; // 成長比(未稅)
-  PerformanceDiff: number; // 業績差異(含稅)
-  nPerformanceDiff: number; // 業績差異(未稅)
-  TransactionsNumber: number; // 交易筆數差異
-  OrdervalueDiff: number; // 客單差異(含稅)
-  nOrdervalueDiff: number; // 客單差異(未稅)
-  tlt_space: number; // 營業坪數
-  MonthlyFloorEffect: number; // 月坪效(含稅)
-  nMonthlyFloorEffect: number; // 月坪效(未稅)
+// 明細 response
+export interface TLS32040DetailResponse extends BaseQueryRequest {
+  "RowType": string, // 列別：'TEAM' / 'TeamSum' / 'BUILDING' / 'TOTAL'
+  "TeamId": string, // 單位代碼（TEAM / 館別 / 總計用)
+  "TeamName": string, // 單位名稱（TEAM / 館別 / 總計顯示用）
+  "OrgId": string, // 樓組代碼
+  "OrgName": string, // 樓組名稱
+  "Space": number, // 營業坪數（坪）
+
+  "Base_Target": number, // 本期銷售目標
+  "Base_SaleAmt": number, // 本期銷售金額
+  "Base_AchieveRate": number, // 本期達成率（銷售金額 / 目標）
+  "Base_TxnCnt": number, // 本期交易筆數
+  "Base_AvgTicket": number, // 本期客單價（銷售金額 / 來客數)
+  "Comp_SaleAmt": number, // 上期銷售金額
+  "Comp_TxnCnt": number, // 上期交易筆數
+  "Comp_AvgTicket": number, // 上期客單價
+  "Growth_SaleAmtPct": number, // 成長比(銷售金額成長率)
+  "Diff_SaleAmt": number, // 銷售金額差異（本期 - 上期）
+  "Diff_TxnCnt": number, // 交易筆數差異
+  "Diff_AvgTicket": number, // 客單價差異
+
+  "Base_DaySpaceEff": number, // 本期日平均坪效（每坪每日銷售）
+  "BaseCustCnt": number, // 本期顧客數（用于計算客單價）
+  "CompCustCnt": number, // 上期顧客數（用于計算客單價）
+  "TotalSpace": number, // 總坪數（用于計算坪效）
+  "BaseDays": number, //基準天數（用于計算坪效）
 }
+
+// 折線圖 request
+export interface TLS32040ChartRequest extends BaseQueryRequest {
+  "Year": number, // 年度 (例如 2025) 必填
+
+  "FloorList": string, //樓層（SYS3900） → TLTTALENT_LOCATION.tlt_floor (多選條件（逗號分隔，例如 "1,2,3"）。NULL 或空字串代表不篩選。)
+  "AreaList": string, //區域（SYS3A00） → TLTTALENT_LOCATION.area_no (多選)
+  "BusTypeList": string, //大分類 → TLTTALENT.bus_type (多選)
+  "BusClassList": string, //中分類 → TLTTALENT.bus_class (多選)
+  "TltKindList": string, // 櫃別（SYS1000 TLT_Kind） → TLTTALENT.tlt_kind (多選)
+  "OrgList": string, // 組織 → TLTTALENT.org_id (多選)
+  "TltNoList": string, // 專櫃編號 → TLTTALENT.tlt_no
+  "TermTypeList": string, // 抽成別 → TLTTALENT.tlt_term_type
+  "BuildingList": string, // 館別（SYS3800） → TLTTALENT_LOCATION.tlt_building
+  "AmtTaxMode": string, // 銷售金額是否含稅：'G' = 含稅 (AVN_TotSaleAmt), 'N' = 未稅 (AVN_TotSaleNet). Default: 'G'
+  "ReceFilter": string  // 是否開立業主發票：'A' = 全部 (default), 'Y' = 是, 'N' = 否
+}
+
+// 折線圖 response
+export interface TLS32040ChartResponse extends BaseQueryRequest {
+  "Building": string, // 館別代碼
+  "BuildingName": string, // 館別名稱
+  "TeamId": string, // 單位代碼（TEAM / 館別 / 總計用)
+  "TeamName": string, // 單位名稱（TEAM / 館別 / 總計顯示用）
+  "OrgId": string, // 樓組代碼
+  "OrgName": string, // 樓組名稱
+  "SaleYear": number, // 年度
+  "SaleMonth": number, // 月份
+  "YearMonth": string, // YYYY-MM
+  "SaleAmt": number// 營業額
+}
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class TLS32040Service {
-  private apiUrl: string = environment.ApiUrl + '/TLS0000/TLS2000';
+  private apiUrl: string = environment.ApiUrl + '/TLS0000/TLS3000';
 
   constructor(private http: HttpClient) { }
 
-  // 查詢組織預售業績總表資料
-  queryTLS32040(data: TLS32040QueryRequest): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/queryTLS32040`, data);
+  // 查詢組織預售業績 總表資料
+  queryTLS32040(data: TLS32040Request): Observable<BaseQueryResponse<TLS32040Response>> {
+    return this.http.post<BaseQueryResponse<TLS32040Response>>(`${this.apiUrl}/queryTLS32040`, data);
   }
 
-  // 查詢週報表起訖日期
-  queryTLS32040Week(data: TLS32040WeekQueryRequest): Observable<BaseQueryResponse<TLS32040WeekResponse>> {
-    return this.http.post<BaseQueryResponse<TLS32040WeekResponse>>(`${this.apiUrl}/queryTLS32040Week`, data);
+  // 查詢組織預售業績 明細資料
+  queryTLS32040Detail(data: TLS32040DetailRequest): Observable<BaseQueryResponse<TLS32040DetailResponse>> {
+    return this.http.post<BaseQueryResponse<TLS32040DetailResponse>>(`${this.apiUrl}/queryTLS32040Detail`, data);
+  }
+
+  // 查詢組織預售業績 總表折線圖
+  queryTLS32040Chart(data: TLS32040ChartRequest): Observable<BaseQueryResponse<TLS32040ChartResponse>> {
+    return this.http.post<BaseQueryResponse<TLS32040ChartResponse>>(`${this.apiUrl}/queryTLS32040Chart`, data);
+  }
+
+  // 查詢組織預售業績 總表PDF
+  exportTLS32040PDF(request: TLS32040Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS32040PDF`, request, {
+      responseType: 'blob'
+    });
+  }
+
+  // 查詢組織預售業績 總表Excel
+  exportTLS32040Excel(request: TLS32040Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS32040Excel`, request, {
+      responseType: 'blob'
+    });
   }
 }

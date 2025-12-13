@@ -5,39 +5,41 @@ import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 export interface QueryFIN24010Request {
-  ACP_No: string,
-  Org_Id: string,
-  ACP_YYYYMM: string,
-  ACP_TermNo: number,
-  AcpAmt_From: number,
-  AcpAmt_To: number,
-  PtaAmt_From: number,
-  PtaAmt_To: number,
-  BalAmt_From: number,
-  BalAmt_To: number,
-  Reserve_From: number,
-  Reserve_To: number,
-  PayType: string,
-  VEN_BNK_No_Param: string,
-  BankAccountNo: string,
-  AccountName: string,
-  CTRLYN: string,
-  CheckTitle: string,
-  ExpectPayDate_From: string,
-  ExpectPayDate_To: string,
-  ACP_Date_From: string,
-  ACP_Date_To: string,
-  VEN_No_Param: string,
-  VEN_Uniform_Param: string,
-  AccNo_Param: string,
-  ACP_SourceNo_Param: string,
-  NoteDesc_Param: string,
-  VouNo_Param: string,
-  VouStatus: string,
-  ACP_Status_Param: string,
-  SubDetailNo_Param: string,
-  HasUnpaid: string,
-  CheckChangedUser: string,
+  ACP_No?: string,
+  Org_Id?: string,
+  ACP_YYYYMM?: string,
+  ACP_TermNo?: number,
+  AcpAmt_From?: number,
+  AcpAmt_To?: number,
+  PtaAmt_From?: number,
+  PtaAmt_To?: number,
+  BalAmt_From?: number,
+  BalAmt_To?: number,
+  Reserve_From?: number,
+  Reserve_To?: number,
+  RetReserve_From?: number, // <-- 缺少
+  RetReserve_To?: number, // <-- 缺少
+  PayType?: string,
+  VEN_BNK_No_Param?: string,
+  BankAccountNo?: string,
+  AccountName?: string,
+  CTRLYN?: string,
+  CheckTitle?: string,
+  ExpectPayDate_From?: string,
+  ExpectPayDate_To?: string,
+  ACP_Date_From?: string,
+  ACP_Date_To?: string,
+  VEN_No_Param?: string,
+  VEN_Uniform_Param?: string,
+  AccNo_Param?: string,
+  ACP_SourceNo_Param?: string,
+  NoteDesc_Param?: string,
+  VouNo_Param?: string,
+  VouStatus?: string,
+  ACP_Status_Param?: string,
+  SubDetailNo_Param?: string,
+  HasUnpaid?: string,
+  CheckChangedUser?: string, // <-- 缺少
 }
 
 export interface QueryFIN24010Response {
@@ -52,10 +54,12 @@ export interface QueryFIN24010Response {
   VEN_Uniform: string,
   AccNo: string,
   ACP_SourceNo: string,
+  NoteDesc: string,
   ACP_Amt: number,
   PTA_Amt: number,
   ACP_Balance: number,
   ACP_ReserveAmt: number,
+  RetReserveAmt: number,
   VEN_PayType: string,
   VEN_BNK_No: string,
   VEN_BNK_BranchNo: string,
@@ -84,6 +88,7 @@ export interface QueryFIN24010Response {
   Diff_BNK_No: string,
   Diff_BankAccountNo: string,
   Diff_AccountName: string,
+  TotalRows: number,
 }
 
 export interface UpdateFIN24010Request {
@@ -96,6 +101,10 @@ export interface UpdateFIN24010Request {
   NoteDesc: string,
   SourceNo: string,
   CtrlYN: string
+}
+
+export interface UpdateFIN24010RemitRequest {
+  ACP_No_List: string[]; // 應付帳款編號清單
 }
 
 @Injectable({
@@ -111,5 +120,9 @@ export class Fin24010Service {
   }
   updateFIN24010(params: UpdateFIN24010Request): Observable<ApiResponse<boolean>> {
     return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/updateFIN24010`, params);
+  }
+  /** 應付帳款維護-異動檢核-更新匯款檔資料 */
+  updateFIN24010Remit(params: UpdateFIN24010RemitRequest): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/updateFIN24010Remit`, params);
   }
 }

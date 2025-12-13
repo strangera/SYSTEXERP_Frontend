@@ -29,6 +29,8 @@
 
     <div class="flex flex-row align-items-center justify-content-center col-flex">
 
+      <app-topbar-version />
+
       <app-topbar-search [funRightsWithLabel]="allFunRightsWithLabel()" (navigateSuccess)="onSearchNavigateSuccess()" />
 
       <app-topbar-favorites />

@@ -12,7 +12,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, map, tap } from 'rxjs';
+import { finalize } from 'rxjs';
 import { FIN71020Data } from './fin71020.model';
 
 @Component({
@@ -129,18 +129,22 @@ export class FIN71020Component extends BasicQueryPageComponent<FIN71020Data> imp
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
+      const raw = { ...this.queryForm.getRawValue() };
+      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
+      ));
+
       this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-      this.service.loadFIN71020({ ...this.queryForm.getRawValue() }).pipe(
-        tap(res => this.logger.debug(`onSubmit:`, [this.queryForm.getRawValue(), res])),
-        map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
+      this.logger.debug(`submit:`, [raw, payload]);
+      this.service.loadFIN71020(payload).pipe(
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
         next: res => {
+          if (res.Status !== '0000') return;
           this.tableData.set(res.Data || []);
           this.totalRecords.set(res.TotalCount || 0);
         },
-        error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
       });
     });
   }

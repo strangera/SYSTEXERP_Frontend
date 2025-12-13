@@ -12,21 +12,22 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatDate } from '@shared/componentkit/table/table.model';
 import { formatAmount } from '@shared/componentkit/table2/table2.model';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs/operators';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
-import { GUI_STATUS_OPTIONS, formatGUIStatus } from './tls2j030.model';
+import { GUI_STATUS_OPTIONS, TLS2J030Data } from './tls2j030.model';
 
 // 2.2.18.3 後台發票換開補登作業
 @Component({
   selector: 'app-tls2j030',
   templateUrl: './tls2j030.component.html',
-  styleUrl: './tls2j030.component.scss',
   standalone: true,
-  imports: [AsyncPipe, NgIf, TableReportComponent, ButtonComponent, DropdownComponent, CalendarRangeComponent, InputTextComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule]
+  imports: [ButtonModule, AsyncPipe, NgIf, TableReportComponent, ButtonComponent, DropdownComponent, CalendarRangeComponent, InputTextComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule]
 })
 export class TLS2J030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -46,27 +47,28 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
   selectedItems: any[] = [];
   isNotECR = false;
   lastQueryBody: any = {};
+  btnLoading2 = false;
   TXN_Uniform_noOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
   GUI_STATS_Options = GUI_STATUS_OPTIONS;
   columns: ReportColumn[] = [
     { field: 'CHG_No', header: '換開編號', visible: true },
-    { field: 'TXN_Date', header: '換開日期', visible: true, format: formatDateToYYYY_MM_DD },
+    { field: 'TXN_Date', header: '換開日期', visible: true, format: formatDate },
     // { field: 'TXN_Date', header: '來源發票日期', visible: true, format: formatDateToYYYY_MM_DD },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true },
-    { field: 'TXN_GUINo', header: '來源發票號碼', visible: true },
-    { field: 'TXN_SaleAmt', header: '來源發票金額', visible: true, format: formatAmount },
-    { field: 'TXN_Net', header: '未稅金額', visible: true, format: formatAmount },
-    { field: 'TXN_SaleNoTax', header: '免稅金額', visible: true, format: formatAmount },
-    { field: 'TXN_Tax', header: '稅額', visible: true, format: formatAmount },
+    { field: 'TXN_GUINo', header: '發票號碼', visible: true },
+    { field: 'TXN_SaleAmt', header: '銷售金額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'TXN_Net', header: '未稅金額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'TXN_SaleNoTax', header: '免稅金額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'TXN_Tax', header: '稅額', visible: true, format: formatAmount, align: 'right' },
     {
       field: 'GUI_Status',
       header: '換開狀態',
       visible: true,
       format: (value) => this.formatStatus(value)
     },
-    { field: 'GUI_CancelDate', header: '刪除日期', visible: true, format: formatDateToYYYY_MM_DD },
-    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateToYYYY_MM_DD },
+    { field: 'GUI_CancelDate', header: '刪除日期', visible: true, format: formatDate },
+    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
     { field: 'CRT_USR_No', header: '建立人員編號', visible: true },
     { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
     { field: 'UPD_Date', header: '變更日期', visible: true },
@@ -75,9 +77,8 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
   ];
 
   formatStatus(value: string | number) {
-    return formatGUIStatus(value);
+    return GUI_STATUS_OPTIONS.find(o => o.value === String(value))?.label ?? String(value);
   }
-
   detailNaturalData: any[] = [];  // 來源發票
   detailChangeData: any[] = [];   // 換開發票
   detailItemData: any[] = [];     // 換開發票明細
@@ -88,6 +89,11 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
     private readonly dropdown: DropdownApiService,
   ) {
     super();
+  }
+
+  // 控制 checkbox 是否可選 - 當 GUI_Status 為 "1" 時不可選
+  isRowSelectable = (rowData: TLS2J030Data): boolean => {
+    return rowData?.GUI_Status !== "1";
   }
 
   ngOnInit(): void {
@@ -180,14 +186,13 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
   private executeDelete(deleteItems: any[]) {
     const payload = {
       selectList: deleteItems.map(item => ({
-        CHG_No: item.CHG_No,
-        TXN_Date: item.TXN_Date,
-        ECR_No: item.ECR_No,
-        TXN_No: item.TXN_No,
-        TXN_GUINo: item.TXN_GUINo
+        CHG_No: item.CHG_No || '',
+        TXN_Date: item.TXN_Date ? new Date(item.TXN_Date).toISOString() : new Date().toISOString(),
+        ECR_No: item.ECR_No || '',
+        TXN_No: Number(item.TXN_No) || 0,
+        TXN_GUINo: item.TXN_GUINo || ''
       }))
     };
-
     this.loading = true;
     this.tls2j030Service.deleteTLS2J030(payload)
       .pipe(
@@ -199,8 +204,8 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
       .subscribe({
         next: (res) => {
           console.log('Delete API Response:', res);
-          if (res?.Status === '0000') {
-            this.messageService.successBubble(`成功刪除 ${deleteItems.length} 筆資料`, '刪除成功');
+          if (res?.Status === '0001' || res?.Message === '成功') {
+            this.messageService.successBubble(`刪除成功 (處理了 ${res?.Data || deleteItems.length} 筆資料)`, '刪除成功');
             this.onSubmit(this.queryForm);
             this.selectedItems = [];
           } else {
@@ -209,4 +214,53 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
         },
       });
   }
+
+  // 匯出 PDF
+  onExportPDF() {
+    if (this.data.length === 0) {
+      this.messageService.warnBubble('沒有資料可以匯出');
+      return;
+    }
+
+    this.btnLoading2 = true;
+
+    const startDate = this.queryForm.value.GUI_INPUTDATE_Start
+      ? formatDateToYYYY_MM_DD(this.queryForm.value.GUI_INPUTDATE_Start)
+      : formatDateToYYYY_MM_DD(new Date());
+
+    const endDate = this.queryForm.value.GUI_INPUTDATE_End
+      ? formatDateToYYYY_MM_DD(this.queryForm.value.GUI_INPUTDATE_End)
+      : formatDateToYYYY_MM_DD(new Date());
+    const exportData = {
+      CHG_No: this.queryForm.value.CHG_No ?? '',
+      GUI_InputDate_Start: startDate,
+      GUI_InputDate_End: endDate,
+      TXN_Date_Start: this.queryForm.value.TXN_Date_Start
+        ? formatDateToYYYY_MM_DD(this.queryForm.value.TXN_Date_Start)
+        : '',
+      TXN_Date_End: this.queryForm.value.TXN_Date_End
+        ? formatDateToYYYY_MM_DD(this.queryForm.value.TXN_Date_End)
+        : '',
+      TXN_GUIBegNo: this.queryForm.value.TXN_GUIBegNo ?? '',
+
+      GUI_Status: this.queryForm.value.GUI_Status ?? '',
+      TXN_Uniform: this.queryForm.value.TXN_Uniform ?? '',
+    };
+
+    this.tls2j030Service.exportTLS2J030PDF(exportData)
+      .pipe(finalize(() => (this.btnLoading2 = false)))
+      .subscribe({
+        next: (blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `發票換開報表_${formatDateToYYYY_MM_DD(new Date())}.pdf`;
+          link.click();
+          window.URL.revokeObjectURL(url);
+
+          this.messageService.successBubble('PDF 匯出成功');
+        },
+      });
+  }
+
 }

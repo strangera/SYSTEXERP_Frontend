@@ -15,7 +15,7 @@ import { Column, createPaginationConfig } from '@shared/componentkit/table/table
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, map, tap } from 'rxjs';
+import { finalize } from 'rxjs';
 import { TLS26080Data, TLS26080Query } from './tls26080.model';
 
 @Component({
@@ -41,11 +41,8 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   public readonly queryForm = this.formBuilder.group({
     pod_no: new FormControl<string | undefined>(undefined, [Validators.maxLength(10)]), // 活動單號
     pod_desc: new FormControl<string | undefined>(undefined, [Validators.maxLength(100)]), // 活動名稱
-    pod_status: new FormControl<ApprovalStatus>(ApprovalStatus.未核准), // 核准狀態
-    org_id: new FormControl<string | undefined>(undefined), // 部門
-    pod_date: new FormControl<{ start: Date | null; end: Date | null; }>({ start: this.service.dateS, end: this.service.dateE }), // 活動起始日期
-    pod_sdate: new FormControl<Date>(this.service.dateS), // 起始日期(起)
-    pod_edate: new FormControl<Date>(this.service.dateE), // 起始日期(迄)
+    pod_sdate: new FormControl<Date | void>(void 0), // 起始日期(起)
+    pod_edate: new FormControl<Date | void>(this.service.dateE), // 起始日期(迄)
     pod_busdate: new FormControl<Date | undefined>(undefined), // 活動正檔日期
     ...createPaginationConfig([{ field: 'pod_no', order: 1 }]), // 分頁和排序參數
   });
@@ -55,18 +52,8 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   public readonly totalRecords = signal(0);
   public readonly selectedItems = signal<TLS26080Data[]>([]);
 
-  public readonly editDisabled = (rowData: TLS26080Data) => {
-    if (!rowData) return !0;
-    const hasCanEditFlag = Object.hasOwn(rowData, 'CanEdit');
-    const notPending = rowData.pod_status !== ApprovalStatus.未核准;
-    return hasCanEditFlag || notPending;
-  };
-  public readonly isRowSelectable = (rowData: TLS26080Data) => {
-    if (!rowData) return !1;
-    const hasCanDeleteFlag = Object.hasOwn(rowData, 'CanDelete');
-    const isPending = rowData.pod_status === ApprovalStatus.未核准;
-    return hasCanDeleteFlag || isPending;
-  };
+  public readonly editDisabled = (rowData: TLS26080Data) => !rowData.CanEdit;
+  public readonly isRowSelectable = (rowData: TLS26080Data) => rowData.pod_status !== ApprovalStatus.刪除;
 
   public readonly columns: (Omit<Column, 'field'> & { field: keyof TLS26080Data; })[] = [
     { field: 'pod_no', header: '活動編號' },
@@ -74,8 +61,8 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     { field: 'pod_sdate', header: '活動起始日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
     { field: 'pod_edate', header: '活動終止日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
     { field: 'pod_busdate', header: '活動正檔日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
-    { field: 'pod_edate', header: '兌回起始日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
-    { field: 'pod_edate', header: '兌回終止日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
+    { field: 'pod_back_sdate', header: '兌回起始日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
+    { field: 'pod_back_edate', header: '兌回終止日期', format: v => this.datePipe.transform(v, 'yyyy/MM/dd') },
     { field: 'pod_status', header: '狀態', format: this.service.approvalStatus.bind(this) },
   ];
 
@@ -106,31 +93,22 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
+      const raw = <TLS26080Query>{ ...this.queryForm.getRawValue() };
+      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
+      )) as unknown as TLS26080Query;
+
       this.tableLoading.set(!0);
-
-      const raw = this.queryForm.getRawValue();
-      const payload = <TLS26080Query>{
-        SortBy: raw.SortBy,
-        PageSize: raw.pageSize,
-        PageIndex: raw.pageIndex,
-        POD_No: raw.pod_no,
-        POD_Desc: raw.pod_desc,
-        POD_SDate_start: raw.pod_sdate,
-        POD_SDate_end: raw.pod_edate,
-        POD_BusDate: raw.pod_busdate,
-      };
-
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.logger.debug(`submit:`, [payload]);
       this.service.loadTLS26080(payload).pipe(
-        tap(res => this.logger.debug(`onSubmit:`, [raw, payload, res])),
-        map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
         finalize(() => this.tableLoading.set(!1))
       ).subscribe({
         next: res => {
+          if (res.Status !== '0000') return;
           this.tableData.set(res.Data || []);
           this.totalRecords.set(res.TotalCount || 0);
         },
-        error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
       });
     });
   }

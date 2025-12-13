@@ -13,7 +13,7 @@ import { ValidationService } from '@shared/service/validation.service';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { finalize, map, tap } from 'rxjs';
+import { finalize } from 'rxjs';
 import { AccDCType, FIN52080Data, FIN52080Query, FIN52080Tree, LedgerMDType, VoucherType } from '../fin52080/fin52080.model';
 
 @Component({
@@ -77,26 +77,27 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
   public readonly tableLoading = signal<boolean>(!1);
   public readonly treeLoading = signal<boolean>(!1);
 
-  /** accNo驗證 綁定classNo用 */
+  /** accNo/classNo 雙向同步 */
   public readonly accNoEffect = effect(() => {
-    const accNo = String(this.accNoSignal() ?? 0)?.substring(0, 3);
-    this.df().ClassNo.setValue(void 0);
-    // this.logger.debug(`accNoEffect:`, [accNo, this.queryForm.getRawValue()]);
-    if (!accNo) return;
-    const matched = this.service.classNoMap().get(accNo);
-    matched?.length && this.df().ClassNo.setValue(accNo, { emitEvent: !1 });
+    const accNo = this.accNoSignal();
+    if (!accNo || accNo.length < 3) return;
+
+    const classNoPrefix = accNo.substring(0, 3);
+    const currentClassNo = this.df().ClassNo.value;
+    if (this.service.classNoMap().has(classNoPrefix) && currentClassNo !== classNoPrefix)
+      this.df().ClassNo.setValue(classNoPrefix, { emitEvent: !1 });
   }, { allowSignalWrites: !0 });
 
-  /** classNo驗證 accNo沒在清單內就清空 */
+  /** classNo 變更時驗證與 accNo 的一致性 */
   public readonly classNoEffect = effect(() => {
     const classNo = this.classNoSignal();
-    const current = this.df().AccNo.value?.substring(0, 3);
-    // this.logger.debug(`classNoEffect:`, [classNo, current, this.queryForm.getRawValue()]);
-    if (!classNo?.length) return;
+    const accNo = this.df().AccNo.value;
+    if (!classNo || !accNo || accNo.length < 3) return;
 
-    const match = this.service.classNoMap().get(classNo) === current;
-    if (!match) this.df().AccNo.setValue('', { emitEvent: !1 });
-  });
+    const accNoPrefix = accNo.substring(0, 3);
+    if (classNo !== accNoPrefix)
+      this.df().AccNo.setValue('', { emitEvent: !1 });
+  }, { allowSignalWrites: !0 });
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.tableLoading()
@@ -115,32 +116,28 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
   public ngOnInit(): void {
     this.initializePage('FIN52080', this.dataForm);
 
-    this.service.getClassNos();
-
     this.treeLoading.set(!0);
-    this.service.getFIN52080Tree().pipe(
-      tap(res => this.logger.debug(`init:`, [this.rowdata])),
-      map(res => { if (res.Status === '0000') return res; throw new Error('查詢失敗'); }),
-      finalize(() => this.treeLoading.set(!1)),
-    ).subscribe({
-      next: res => this.FIN52080Tree.set(res.Data || []),
-      error: err => this.messageService.errorBubble(err.message || '查詢失敗'),
-    });
+    this.service.getClassNos();
+    this.service.getFIN52080Tree().pipe(finalize(() => this.treeLoading.set(!1)))
+      .subscribe(res => this.FIN52080Tree.set(res.Data || []));
+
+    this.logger.debug(`init:`, [this.service.classNoOptions(), this.FIN52080Tree(), this.rowdata]);
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      const payload = <FIN52080Query>{
-        ...this.dataForm.getRawValue(),
-      };
+      const raw = <FIN52080Query>{ ...this.dataForm.getRawValue() };
+      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
+      ));
 
       this.tableLoading.set(!0);
+      this.logger.debug(`onSubmit:`, [raw, payload]);
       this.service.saveFIN52080(payload).pipe(
-        tap(res => this.logger.debug(`onSubmit:`, [payload, res])),
-        map(res => { if (res.Status === '0000') return res; throw new Error('資料儲存失敗'); }),
-        finalize(() => this.tableLoading.set(!1)),
+        finalize(() => this.tableLoading.set(!1))
       ).subscribe({
-        next: () => {
+        next: res => {
+          if (res.Status !== '0000') return;
           this.onCancel();
           this.messageService.successBubble('資料儲存成功');
         }

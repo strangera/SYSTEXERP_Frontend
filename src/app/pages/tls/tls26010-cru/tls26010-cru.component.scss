@@ -1,0 +1,9 @@
+::ng-deep app-table-edit {
+  �W .insert-row td:first-child span.text-blue-500 {
+    font-size: 0 !important;
+  }
+
+  .insert-row td:first-child span.pi-plus {
+    font-size: 1rem !important;
+  }
+}

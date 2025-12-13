@@ -60,9 +60,10 @@ export class FIN52090CRUComponent extends BasicCruPageComponent<unknown> impleme
 
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      const payload = <FIN52090Insert>{
-        ...this.dataForm.getRawValue(),
-      };
+      const raw = <FIN52090Insert>{ ...this.dataForm.getRawValue() };
+      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
+      )) as unknown as FIN52090Insert;
 
       this.saving.set(!0);
       this.service.saveFIN52090Data(payload).pipe(

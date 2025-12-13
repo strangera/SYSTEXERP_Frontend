@@ -1,42 +1,42 @@
-import { Component, OnInit, } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-//
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
-
-//
 import { NgIf } from '@angular/common';
+import { Component, OnInit, } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { ASS11040Response, Ass11040Service } from '@service/api/ass/ass11040.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { PostageChargeService } from './../../../service/basic/postage-charge.service';
 
 //3.1.1.4 品項資料維護作業 CRU
 @Component({
   selector: 'app-ass11040-cru',
   templateUrl: './ass11040-cru.component.html',
-  styleUrl: './ass11040-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [InputTextareaComponent, MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class ASS11040CRUComponent implements OnInit {
-  ProgNo = '';
-  formTitle = '';
-  submitted = false;
-  crudstatus = '';
-
-  //
+export class ASS11040CRUComponent extends BasicCruPageComponent<ASS11040Response> implements OnInit {
+  dataForm = this.formBuilder.nonNullable.group({
+    itemCode: [, [Validators.maxLength(13)]], // 品項代碼
+    itemName: ['', [Validators.maxLength(32)]], // 品項代碼
+    bigCategoryCode: [], // 大分類代碼
+    midCategoryCode: [], // 中分類代碼
+    smlCategoryCode: [], // 小分類代碼
+    itemCategory: [], // 品項類別區分
+    itemUnit: [], // 基本單位
+    packageUnit: [], // 包裝單位
+    warrantyMethod: [], // 保固方式
+    maintenanceMethod: [], // 保養方式
+    illustrate: [,], // 說明
+  });
   warrantyMethodOptions: any[] = [];
-
   bigCategoryCodeOptions: any[] = [
     { value: 1, label: 'A/裝潢工程' },
     { value: 2, label: 'B/其他工程' },
@@ -57,7 +57,6 @@ export class ASS11040CRUComponent implements OnInit {
     { value: 25, label: '機電消防工程' },
     { value: 22, label: '電子產品及零件' },
   ];
-
   itemCategoryOptions: any[] = [
     { value: 1, label: '資產' },
     { value: 2, label: '列管品' },
@@ -74,124 +73,29 @@ export class ASS11040CRUComponent implements OnInit {
     { value: 4, label: '束' },
     { value: 5, label: '盒' },
   ];
-  // ----------------------------------------------------------------
-  dataForm = this.formBuilder.nonNullable.group({
-    itemCode: [, [Validators.maxLength(13)]], // 品項代碼
-    itemName: ['', [Validators.maxLength(32)]], // 品項代碼
-    bigCategoryCode: [], // 大分類代碼
-    midCategoryCode: [], // 中分類代碼
-    smlCategoryCode: [], // 小分類代碼
-    itemCategory: [], // 品項類別區分
-    itemUnit: [], // 基本單位
-    packageUnit: [], // 包裝單位
-    warrantyMethod: [], // 保固方式
-    maintenanceMethod: [], // 保養方式
-    illustrate: [,], // 說明
-  });
-  //
-  // ----------------------------------------------------------------
-  //
-
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private validationService: ValidationService,
-    //
-    //
-    private postageChargeService: PostageChargeService,
-    private itemUnitService: ItemUnitService,
+    private readonly ass11040Service: Ass11040Service
   ) {
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310004';
-    //
-
-    //
-    // ----------------------------------------------------------------
-    //
-    this.postageChargeService.getSystemTypes().subscribe(data => {
-      this.warrantyMethodOptions = data;
-    });
-    //
-    this.itemUnitService.getItemUnits().subscribe(data => {
-      this.itemUnitOptions = data;
-    });
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
+    this.initializePage('ASS11040', this.dataForm);
   }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
+    this.handleSubmit(frm, () => {
+      const params = {
+        ...frm.getRawValue()
+      }
+      const $request = this.isFormCreateable ? this.ass11040Service.insertASS11040(params) : this.ass11040Service.updateASS11040(params);
+      $request.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        this.messageService.successBubble(response.Message);
+        if (this.isFormCreateable) {
+          this.dataForm.reset();
+        } else {
+          this.onCancel();
         }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCancel() {
-    this.router.navigate(['/ASS1000/ASS11040']);
+      })
+    })
   }
 }

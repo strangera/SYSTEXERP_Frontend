@@ -4,23 +4,21 @@
       dropdownIcon="pi pi-cog" pTooltip="過濾欄位" tooltipPosition="top" (onChange)="onFilterChange($event)" />
     <p-button [icon]="IsPrint ? 'pi pi-file' : 'pi pi-times'" [rounded]="true" *ngIf="showReportMode && data.length > 0"
       (click)="toggleVisibility()" [pTooltip]="IsPrint ? '報表模式' : '關閉報表模式'" tooltipPosition="top" [outlined]="!IsPrint"
-      [disabled]="!canPerformAction('50')" />
+      [disabled]="!hasPermission('50')" />
     <div [@toggleButtons]="!IsPrint ? 'visible' : 'hidden'" [ngClass]="IsPrint ? 'hidden' : 'flex'" class="gap-2">
       <p-button *ngIf="showReportPDF" pButton tooltipPosition="top" pTooltip="列印PDF"
         class="p-button-rounded p-button-text p-button-info" icon="fa-regular fa-file-pdf"
-        (click)="customReport ? exportEvent.emit('PDF') : export('PDF')" [disabled]="!canPerformAction('60')" />
+        (click)="customReport ? exportEvent.emit('PDF') : export('PDF')" [disabled]="!hasPermission('60')" />
       <p-button *ngIf="showReportExcel" pButton tooltipPosition="top" pTooltip="匯出Excel"
         class="p-button-rounded p-button-text p-button-info" icon="fa-regular fa-file-lines"
-        (click)="customReport ? exportEvent.emit('Excel') : export('Excel')" [disabled]="!canPerformAction('70')" />
+        (click)="customReport ? exportEvent.emit('Excel') : export('Excel')" [disabled]="!hasPermission('70')" />
     </div>
     <p-button *ngIf="IsPrint && showInsert && !rowEditing && !disabled" (click)="insert.emit()" pTooltip="新增"
       tooltipPosition="top" pButton icon="pi pi-plus" severity="success" class="p-button-rounded p-button-text"
-      [disabled]="insertDisabled" />
-    <!-- || !canPerformAction('20') -->
+      [disabled]="insertDisabled || !hasPermission('20')" />
     <p-button *ngIf="IsPrint && showDelete && !rowEditing && !disabled" (click)="delete.emit(selectedItems)"
       [pTooltip]="deletepTooltip" tooltipPosition="top" pButton [icon]="deleteIcon" severity="danger"
-      class="p-button-text" [rounded]="true" [disabled]="selectedItems?.length <= 0" />
-    <!-- || !canPerformAction('40') -->
+      class="p-button-text" [rounded]="true" [disabled]="selectedItems?.length <= 0 || !hasPermission('40')" />
   </div>
   <div *ngIf="IsPrint" class="flex-grow-1 p-2">
     <ng-content select="header"></ng-content>
@@ -45,6 +43,5 @@
 </div>
 
 <app-table-export [visible]="exportDialog" header="列印選項" (visibleChange)="exportDialog = $event"
-  (save)="exportStatus === 'PDF' ? exportPDFDownload($event, selectedColumns, apiUrl,DataKeyName): exportExcelDownload($event, selectedColumns, apiUrl,DataKeyName)"
-  [pageOrientation]="pageOrientation" [pageSizeSetting]="pageSizeSetting"
-  [exportStatus]="exportStatus"></app-table-export>
+  [pageOrientation]="pageOrientation" [pageSizeSetting]="pageSizeSetting" [exportStatus]="exportStatus" (save)="exportStatus === 'PDF' ? exportPDFDownload($event, selectedColumns, apiUrl,DataKeyName,PrintRemark) :
+  exportExcelDownload($event, selectedColumns, apiUrl,DataKeyName)"></app-table-export>

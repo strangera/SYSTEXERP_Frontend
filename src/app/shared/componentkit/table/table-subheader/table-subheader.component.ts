@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeHtml, SafeUrl } from '@angular/platform-browser';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { SortMeta } from 'primeng/api';
@@ -15,12 +16,14 @@ import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent } from 
 @Component({
   selector: 'app-table-subheader',
   standalone: true,
-  imports: [COMMON_IMPORTS],
+  imports: [CommonModule, ...COMMON_IMPORTS],
   templateUrl: './table-subheader.component.html',
   styleUrl: './table-subheader.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TableSubheaderComponent extends BasicPrintDataComponent implements OnChanges, AfterViewInit {
+  /** 自訂群組表頭顯示 template */
+  @Input() groupHeaderTemplate?: TemplateRef<any>;
   /** table 元件 */
   @ViewChild('dt', { static: false }) dt!: Table;
 
@@ -161,6 +164,7 @@ export class TableSubheaderComponent extends BasicPrintDataComponent implements 
   @Input() showDetail = true;
   /** 明細事件 */
   @Output() detail = new EventEmitter<any>();
+  @Output() detailWithColValue = new EventEmitter<{ row: any, col: Column, value: any }>();
   /** 是否顯示 管理欄位(編輯按鈕) @default true */
   @Input() showEdit = true;
   /** Row禁止編輯條件 @default () => false */
@@ -335,7 +339,12 @@ export class TableSubheaderComponent extends BasicPrintDataComponent implements 
   editRow(rowData: any) { this.edit.emit(rowData); }
 
   // Detail 或 雙擊行 事件
-  detailRow(rowData: any) { this.detail.emit(rowData); }
+  detailRow(rowData: any, col?: Column, value?: any) {
+    if (col && value) {
+      this.detailWithColValue.emit({ row: rowData, col, value });
+    }
+    this.detail.emit(rowData);
+  }
 
   // 欄位Button 選擇 事件
   onSelectButton(rowData: any) { this.selectButton.emit(rowData); }

@@ -1,19 +1,19 @@
 import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { TLS2C040Service } from '../../../service/api/tls/tls2c040.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { FormsModule, ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-tls2c040',
@@ -115,7 +115,14 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
   restructureData(item: any) {
     return {
       ...item._GLS6001,
-      _GLS6002List: item._GLS6002List
+      _GLS6002List: item._GLS6002List?.sort((a: any, b: any) => {
+        // 先以AccDC遞減排序
+        if (b.AccDC !== a.AccDC) {
+          return b.AccDC - a.AccDC;
+        }
+        // 再以SerNo遞增排序
+        return a.SerNo - b.SerNo;
+      })
     }
   }
 }

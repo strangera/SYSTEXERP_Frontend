@@ -1,45 +1,45 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { catchError, firstValueFrom } from 'rxjs';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { Subscription } from 'rxjs';
 import { ActivatedRoute, NavigationExtras } from '@angular/router';
+import { catchError, firstValueFrom, Subscription } from 'rxjs';
 
 // 基礎組件和服務
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ContractFlowService } from '../tls13010/services/contract-flow.service';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { ContractFlowService } from '../tls13010/services/contract-flow.service';
 
 // UI 組件
-import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { NgClass, NgFor, NgIf } from '@angular/common';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { AccordionModule } from 'primeng/accordion';
-import { DialogModule } from 'primeng/dialog';
 import { PrimeTemplate } from 'primeng/api';
 import { Button } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 
 // 模型定義
 import {
+  BaseCommissionCondition,
+  BaseRentHigherCondition,
+  BaseTierCondition,
+  CleanSubmitData,
+  ConditionItem,
   ContractInfo,
   FixedRentCondition,
-  BaseRentHigherCondition,
-  BaseCommissionCondition,
-  GraduatedCommissionCondition,
-  BaseTierCondition,
   GeneralCommissionCondition,
-  ConditionItem,
-  WorkflowStep,
-  CleanSubmitData
+  GraduatedCommissionCondition,
+  WorkflowStep
 } from '../tls13010/tls13010.model';
-import { ConditionDataManager } from './Services/condition-data-manager.service';
-import { TableConfigManager } from './Services/table-config-manager.service';
-import { EventHandlerManager } from './Services/event-handler-manager.service';
 import { TABLE_CONFIGURATIONS, TableConfiguration } from './models/tls13010-next3.model';
+import { ConditionDataManager } from './Services/condition-data-manager.service';
+import { EventHandlerManager } from './Services/event-handler-manager.service';
 import { SmartDateSegmentationService } from './Services/smart-date-manager.service';
+import { TableConfigManager } from './Services/table-config-manager.service';
 import { UpConditionDataManager } from './Services/updated-condition-data-manager.service';
 import { ContractSubmitService } from './SubmitService/contract-submit.service';
 
@@ -72,13 +72,14 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   };
 
   // ===== 狀態管理 =====
-  isViewMode = false;
+  // 將 CRUDStatus 暴露給模板使用
+  readonly CRUDStatus = CRUDStatus;
+
   dataLoaded = false;
   conditionDataLoaded = false;
   showConfirmDialog = false;
 
   // ===== 訂閱管理 =====
-  private viewModeSubscription?: Subscription;
   private subscriptions: Subscription[] = [];
 
   // ===== 表單數據 =====
@@ -192,15 +193,12 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   ngOnDestroy(): void {
     console.log('Next3 組件銷毀前暫存資料');
 
-    if (!this.isViewMode) {
+    if (this.crudstatus !== CRUDStatus.Read) {
       this.saveConditionDataToWorkflow();
     }
 
     // 清理訂閱
     this.subscriptions.forEach(sub => sub.unsubscribe());
-    if (this.viewModeSubscription) {
-      this.viewModeSubscription.unsubscribe();
-    }
   }
 
   // ===== 初始化方法 =====
@@ -222,14 +220,15 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
     const currentViewMode = this.contractFlowService.isViewMode();
     if (currentViewMode) {
-      this.isViewMode = true;
+      this.crudstatus = CRUDStatus.Read;
       this.applyViewModeSettings(true);
     }
 
-    this.viewModeSubscription = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
-      this.isViewMode = isViewMode;
+    const viewModeSubscription = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
+      this.crudstatus = isViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
       this.applyViewModeSettings(isViewMode);
     });
+    this.subscriptions.push(viewModeSubscription);
   }
 
   private applyViewModeSettings(isViewMode: boolean): void {
@@ -300,7 +299,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       commissionType,
       isNewContract: this.contractFlowService.isNewContractMode(),
       currentTalentId: this.currentTalentId,
-      isViewMode: this.isViewMode
+      isViewMode: this.crudstatus === CRUDStatus.Read
     });
 
     // 第一優先：檢查是否有 Next3 暫存資料
@@ -653,7 +652,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
   onTableSave(event: any, commissionType: string): void {
     // 根據 commissionType 轉換為對應的類型標識
-    const typeMap: { [key: string]: string } = {
+    const typeMap: Record<string, string> = {
       '1': 'fixedRent',
       '2': 'baseRentHigher',
       '4': 'baseCommission',
@@ -663,7 +662,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
     const type = typeMap[commissionType] || commissionType;
 
-    const result = this.eventHandlerManager.handleTableSave(event, type, this.isViewMode);
+    const result = this.eventHandlerManager.handleTableSave(event, type, this.crudstatus === CRUDStatus.Read);
 
     if (result.shouldSave && result.modifiedData) {
       event.newData = result.modifiedData;
@@ -675,7 +674,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   }
 
   onTableEdit(event: any, commissionType: string): boolean {
-    const typeMap: { [key: string]: string } = {
+    const typeMap: Record<string, string> = {
       '1': 'fixedRent',
       '2': 'baseRentHigher',
       '4': 'baseCommission',
@@ -684,11 +683,11 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     };
 
     const type = typeMap[commissionType] || commissionType;
-    return this.eventHandlerManager.handleTableEdit(event, type, this.isViewMode);
+    return this.eventHandlerManager.handleTableEdit(event, type, this.crudstatus === CRUDStatus.Read);
   }
 
   onTableCancel(event: any, commissionType: string): void {
-    const typeMap: { [key: string]: string } = {
+    const typeMap: Record<string, string> = {
       '1': 'fixedRent',
       '2': 'baseRentHigher',
       '4': 'baseCommission',
@@ -701,7 +700,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   }
 
   onBatchDelete(selectedItems: any[], commissionType: string): void {
-    const typeMap: { [key: string]: string } = {
+    const typeMap: Record<string, string> = {
       '1': 'fixedRent',
       '2': 'baseRentHigher',
       '4': 'baseCommission',
@@ -711,7 +710,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
     const type = typeMap[commissionType] || commissionType;
 
-    const result = this.eventHandlerManager.handleBatchDelete(selectedItems, type, this.isViewMode);
+    const result = this.eventHandlerManager.handleBatchDelete(selectedItems, type, this.crudstatus === CRUDStatus.Read);
 
     if (result.shouldDelete) {
       // 直接移除新增項目
@@ -789,7 +788,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     };
   }
   onAddFixedRentItem(): void {
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.notificationService.infoBubble('檢視模式下無法新增項目');
       return;
     }
@@ -839,7 +838,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   * 智能新增底租抽成取高者項目
   */
   onAddBaseRentHigherItem(): void {
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.notificationService.infoBubble('檢視模式下無法新增項目');
       return;
     }
@@ -889,7 +888,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
  * 智能新增包底抽成項目
  */
   onAddBaseCommissionItem(): void {
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.notificationService.infoBubble('檢視模式下無法新增項目');
       return;
     }
@@ -939,7 +938,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
    * 智能新增層級抽成項目
    */
   onAddGraduatedItem(): void {
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.notificationService.infoBubble('檢視模式下無法新增項目');
       return;
     }
@@ -980,7 +979,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
    * 智能新增包底加層級項目
    */
   onAddBaseTierItem(): void {
-    if (this.isViewMode) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.notificationService.infoBubble('檢視模式下無法新增項目');
       return;
     }
