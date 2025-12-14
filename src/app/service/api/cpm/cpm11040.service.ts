@@ -47,6 +47,19 @@ export interface DeleteCPM11040Request {
   IdList: number[];           // 要刪除的ID清單
 }
 
+// 歸還設備 Request 介面
+export interface ReturnDeviceRequest {
+  LoanNo: string;             // 借記編號 (必填)
+  ReturnDate: string;         // 歸還日期 (必填)
+  ReturnTime: string;         // 歸還時間 HH:mm (必填)
+}
+
+// 歸還設備 Response 介面
+export interface ReturnDeviceResponse {
+  Message: string;            // 訊息
+  RowsAffected: number;       // 影響的記錄數
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -64,5 +77,10 @@ export class CPM11040Service {
   // 刪除客服設備出借記錄
   deleteCPM11040(req: DeleteCPM11040Request): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteCPM11040`, req);
+  }
+
+  // 歸還設備
+  returnDevice(req: ReturnDeviceRequest): Observable<BaseQueryResponse<ReturnDeviceResponse>> {
+    return this.http.post<BaseQueryResponse<ReturnDeviceResponse>>(`${this.apiUrl}/returnDevice`, req);
   }
 }

@@ -150,21 +150,27 @@
 >
   <form [formGroup]="returnForm">
     <div class="grid p-fluid">
-      <!-- 第一行：歸還編號、歸還日期、歸還時間 -->
-      <div class="col-12 md:col-4 flex align-items-end gap-2">
+      <!-- 第一行：借記編號、歸還日期、歸還時間 -->
+      <div class="col-12 md:col-4">
         <app-input-text
-          class="flex-1"
-          label="歸還編號"
+          label="借記編號"
           controlName="LoanNo"
           [control]="returnForm.controls.LoanNo"
           [submitted]="returnSubmitted"
+          placeholder="必填, 最多14個字"
+          [showButton]="true"
+          buttonLabel="查詢"
+          (clickButton)="onQueryReturn()"
         ></app-input-text>
-        <app-button
-          label="查詢"
-          (click)="onQueryReturn()"
-          class="mb-2"
-        ></app-button>
       </div>
+      <app-input-text
+        class="col-12 md:col-4"
+        label="歸還處理人員"
+        controlName="ReturnUserName"
+        [control]="returnForm.controls.ReturnUserName"
+        [submitted]="returnSubmitted"
+        [readonly]="true"
+      ></app-input-text>
       <app-calendar
         class="col-12 md:col-4"
         label="歸還日期"

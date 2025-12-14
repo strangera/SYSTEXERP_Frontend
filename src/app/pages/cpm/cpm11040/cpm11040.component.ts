@@ -10,8 +10,8 @@ import { CPM11040Data, CPM11040Service } from '../../../service/api/cpm/cpm11040
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
@@ -33,7 +33,8 @@ export class CPM11040Component extends BasicQueryPageComponent<CPM11040Data> imp
 
   // 歸還表單
   returnForm = this.formBuilder.group({
-    LoanNo: ['', [Validators.required, Validators.maxLength(14)]], // 歸還編號
+    LoanNo: ['', [Validators.required, Validators.maxLength(14)]], // 借記編號
+    ReturnUserName: [''], // 歸還處理人員
     ReturnDate: [new Date(), [Validators.required]], // 歸還日期
     ReturnTime: ['', [Validators.required]], // 歸還時間
     ServiceId: [''], // 出借編號
@@ -157,17 +158,22 @@ export class CPM11040Component extends BasicQueryPageComponent<CPM11040Data> imp
   onReturn() {
     this.returnDialogVisible = true;
     this.returnSubmitted = false;
+
+    // 取得當前使用者名稱
+    const currentUser = this.authService.currentUserValue?.user_Name || '';
+
     this.returnForm.reset({
       ReturnDate: new Date(),
-      ReturnTime: ''
+      ReturnTime: '',
+      ReturnUserName: currentUser
     });
   }
 
-  // 查詢鈕 - 根據歸還編號查詢資料
+  // 查詢鈕 - 根據借記編號查詢資料
   onQueryReturn() {
     const loanNo = this.returnForm.get('LoanNo')?.value;
     if (!loanNo) {
-      this.messageService.warnBubble('請輸入歸還編號');
+      this.messageService.warnBubble('請輸入借記編號');
       return;
     }
 
@@ -190,18 +196,26 @@ export class CPM11040Component extends BasicQueryPageComponent<CPM11040Data> imp
       .subscribe(response => {
         if (response.Data && response.Data.length > 0) {
           const data = response.Data[0];
+
+          // 檢查是否已經歸還
+          if (data.LoanStatus === '已歸還') {
+            this.messageService.warnBubble('此借記編號已經歸還');
+            return;
+          }
+
+          // 填充表單資料
           this.returnForm.patchValue({
-            ServiceId: data.LoanNo,
-            ServiceCode: data.ServiceName,
-            LoanDate: data.LoanDate,
-            UserName: data.UserName,
-            LoanPhone: data.LoanPhone,
-            CertType: data.CertTypeName,
-            DeviceName: data.DeviceName
+            ServiceId: data.LoanNo,           // 出借編號
+            ServiceCode: data.ServiceName,     // 服務台位置編號
+            LoanDate: data.LoanDate,           // 出借日期
+            UserName: data.UserName,           // 姓名
+            LoanPhone: data.LoanPhone,         // 連絡電話
+            CertType: data.CertTypeName,       // 證件類型
+            DeviceName: data.DeviceName        // 設備名稱
           });
           this.messageService.successBubble('查詢成功');
         } else {
-          this.messageService.warnBubble('查無資料');
+          this.messageService.warnBubble('查無此借記編號');
         }
       });
   }
@@ -215,19 +229,50 @@ export class CPM11040Component extends BasicQueryPageComponent<CPM11040Data> imp
       return;
     }
 
-    // TODO: 實作歸還 API 呼叫
+    const loanNo = this.returnForm.get('LoanNo')?.value;
+    const returnDate = this.returnForm.get('ReturnDate')?.value;
+    const returnTime = this.returnForm.get('ReturnTime')?.value;
+
+    if (!loanNo || !returnDate || !returnTime) {
+      this.messageService.warnBubble('請填寫借記編號、歸還日期和歸還時間');
+      return;
+    }
+
+    // 格式化日期為 YYYY-MM-DD
+    const formattedDate = returnDate instanceof Date
+      ? returnDate.toISOString().split('T')[0]
+      : returnDate;
+
     this.loading = true;
     this.messageService.blockUi();
 
-    // 這裡需要根據後端 API 實作歸還邏輯
-    // 目前先顯示成功訊息並關閉對話框
-    setTimeout(() => {
-      this.loading = false;
-      this.messageService.unblockUi();
-      this.messageService.successBubble('歸還成功');
-      this.returnDialogVisible = false;
-      this.onSubmit(this.queryForm); // 重新查詢列表
-    }, 1000);
+    // 呼叫歸還 API
+    this.cpm11040Service.returnDevice({
+      LoanNo: loanNo,
+      ReturnDate: formattedDate,
+      ReturnTime: returnTime
+    })
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.messageService.unblockUi();
+        }),
+        untilDestroyed(this)
+      )
+      .subscribe({
+        next: () => {
+          this.messageService.successBubble('歸還成功');
+          this.returnDialogVisible = false;
+          this.returnForm.reset();
+          this.returnSubmitted = false;
+          this.onSubmit(this.queryForm); // 重新查詢列表
+        },
+        error: (error) => {
+          // 處理錯誤訊息
+          const errorMsg = error?.error?.Message || '歸還失敗，請稍後再試';
+          this.messageService.errorBubble(errorMsg);
+        }
+      });
   }
 
   // 取消歸還
