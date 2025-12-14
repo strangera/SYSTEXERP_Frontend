@@ -77,7 +77,8 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     tlt_no: [null as any],
     CAP_Item: [''],
     AccNo: [''],
-    org_id: [{ value: null, disabled: true }],
+    // org_id should be editable in counter mode so users can change or see the org selection.
+    org_id: [null],
     tpy_date: [null],
     GUI_FLAG: [''],
     tpy_net: [null],
@@ -235,6 +236,29 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             }
           });
           // 重新指定陣列引用以觸發 table-edit 的 ngOnChanges，使 UI 立即更新 org_id
+          this.data = Array.isArray(this.data) ? [...this.data] : this.data;
+        }
+      }
+    });
+    // normal → 選專櫃時也同步到 table rows（用於新增多筆時自動帶入 org_id）
+    this.dataFormNormal.get('tlt_no')?.valueChanges.subscribe((selected: any) => {
+      if (selected) {
+        // normalize selected to object when possible
+        let sel: any = selected;
+        if (typeof sel === 'object' && sel.value) sel = sel.value;
+        if (typeof sel === 'string') {
+          const found = this.tlt_noOptions.find(opt => opt.tlt_no === sel || opt.No === sel || opt.value === sel);
+          if (found) sel = found;
+        }
+
+        if (this.data && this.data.length) {
+          this.data.forEach(row => {
+            // 若該列尚未有 tlt_no 或與選擇的 tlt_no 相符，則帶入 org_id
+            if ((row.tlt_no && row.tlt_no.tlt_no === sel.tlt_no) || !row.tlt_no) {
+              row.org_id = sel.org_id ?? '';
+            }
+          });
+          // 重新指定資料引用觸發 table-edit 更新
           this.data = Array.isArray(this.data) ? [...this.data] : this.data;
         }
       }
@@ -409,7 +433,8 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           optionLabel: 'label',
           optionValue: 'No',
           disabled: () => true
-        }, { field: 'org_id', header: '組織代號', type: 'dropdown', width: '15rem', options: this.org_idOptions, optionLabel: 'label', optionValue: 'value' },
+        },
+        // { field: 'org_id', header: '組織代號', type: 'dropdown', width: '15rem', options: this.org_idOptions, optionLabel: 'label', optionValue: 'value' },
         { field: 'GUI_FLAG', header: '是否開立發票', type: 'dropdown', width: '9rem', options: this.GuiFlagOptions, optionLabel: 'label', optionValue: 'value' },
         { field: 'cap_taxtype', header: '課稅別', type: 'dropdown', width: '9rem', options: this.cap_taxtypeOptions, optionLabel: 'label', optionValue: 'value', disabled: () => true },
         { field: 'tpy_net', header: '扣款金額(未稅)', type: 'inputNumber', width: '12rem', textAlign: 'right' },
@@ -464,7 +489,26 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     }
     // normal模式 table-edit tlt_no欄位有新值就自動補 contract_no/contract_subno/org_id
     if (this.currentCreateType === 'normal') {
+      // 取得上方表單選擇的 tlt_no（可能為物件或字串），以便在新增列時帶入 org_id
+      const formTltVal = this.dataFormNormal.get('tlt_no')?.value;
+      let normalizedFormTlt: any = formTltVal;
+      if (normalizedFormTlt && typeof normalizedFormTlt === 'object' && normalizedFormTlt.value) {
+        normalizedFormTlt = normalizedFormTlt.value;
+      }
+      if (typeof normalizedFormTlt === 'string') {
+        const found = this.tlt_noOptions.find(opt => opt.tlt_no === normalizedFormTlt || opt.No === normalizedFormTlt || opt.value === normalizedFormTlt);
+        if (found) normalizedFormTlt = found;
+      }
+
       this.data.forEach(row => {
+        const isNewCandidate = row.status === 'new' || row._isAutoInsertCandidate;
+        const hasNoOrg = row.org_id === null || row.org_id === undefined || row.org_id === '';
+
+        // 若為新增候選列且表單有選 tlt，則先帶入 org_id（避免後續 table 新增時沒帶入）
+        if (isNewCandidate && normalizedFormTlt && normalizedFormTlt.org_id && hasNoOrg) {
+          row.org_id = normalizedFormTlt.org_id;
+        }
+
         if (row.tlt_no && typeof row.tlt_no === 'object') {
           // 若 contract_no/subno/org_id 尚未填入或 tlt_no 有變動就補值
           if (
@@ -476,8 +520,18 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             row.contract_subno = row.tlt_no.contract_subno ?? '';
             row.org_id = row.tlt_no.org_id ?? '';
           }
+        } else {
+          // 若該列尚未選擇 tlt_no，則嘗試從上方表單的 tlt_no 帶入 org_id（讓新增列也能預設組織代號）
+          if (normalizedFormTlt && normalizedFormTlt.org_id) {
+            if (hasNoOrg) {
+              // 只在尚未有 org_id 時帶入，避免覆蓋使用者輸入
+              row.org_id = normalizedFormTlt.org_id;
+            }
+          }
         }
       });
+      // 讓 table-edit 感知資料變更，立即更新 UI
+      this.data = Array.isArray(this.data) ? [...this.data] : this.data;
     }
   }
 
