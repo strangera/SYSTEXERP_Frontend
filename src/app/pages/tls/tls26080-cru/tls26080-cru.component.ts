@@ -817,8 +817,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   /** 檢查是否可進行審核操作 */
   private approvalVal(rowData: TLS26080EditTable): ValidationResult {
-    const currentStatus = rowData.pod_status;
-    const err = rowData._err;
+    const currentStatus = rowData?.pod_status;
+    const err = rowData?._err;
     if (err) return { isValid: !1, errorMessage: ['專櫃資料有誤，無法進行審核操作'] };
     if (currentStatus === '9') return { isValid: !1, errorMessage: ['已作廢資料無法進行審核操作'] };
     return { isValid: !0, errorMessage: [] };
