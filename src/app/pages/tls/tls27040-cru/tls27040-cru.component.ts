@@ -53,6 +53,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
     CRD_Type: [null as string | null, [Validators.required, Validators.maxLength(6)]], // 卡別
     NCML_TxnType: [null as string | null, [Validators.required, Validators.maxLength(2)]], // 交易類別
     NCML_TxnAmt: [null as number | null, [Validators.required, Validators.max(999999999999)]], // 交易金額
+    PRM_NCML_TxnAmt: [null as number | null, [Validators.max(999999999999)]], // 原交易金額
     NCML_CrdNo: [null as string | null, [Validators.maxLength(32)]],  // 卡號
     NCML_TmID: [null as string | null, [Validators.maxLength(8)]], // 收銀機代號
     NCML_BatCloseDate: [null as Date | null, [Validators.required]], // 批次結帳日期
@@ -76,6 +77,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
     CTBC_TmID: [null as string | null, [Validators.required, Validators.maxLength(8)]], // 收銀機代號
     CTBC_TxnCode: [null as string | null, [Validators.required, Validators.maxLength(2)]],// 交易代碼
     CTBC_TxnAmt: [null as number | null, [Validators.required, Validators.max(999999999999)]],// 交易金額
+    PRM_CTBC_TxnAmt: [null as number | null, [Validators.max(999999999999)]], // 原交易金額
     CTBC_PayDate: [null as Date | null, [Validators.required]],// 入帳日
     CTBC_ApprovalCode: [null as string | null, [Validators.maxLength(6)]],// 授權碼
     CTBC_EntryFg: [null as string | null, [Validators.required, Validators.maxLength(2)]],// 輸入狀況
@@ -92,6 +94,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
     CTBC_Date: [new Date(), [Validators.required]], // 請款日期
     CTBC_CrdNo: [null as string | null, [Validators.maxLength(19)]], // 卡號
     CTBC_TxnAmt: [null as number | null, [Validators.required, Validators.max(999999999999)]], // 交易金額
+    PRM_CTBC_TxnAmt: [null as number | null, [Validators.max(999999999999)]], // 原交易金額
     CTBC_TxnType: [null as string | null, [Validators.maxLength(2)]],  // 交易類別
     CTBC_PayDate: [null as Date | null, [Validators.required]], // 入帳日
     CTBC_TmID: [null as string | null, [Validators.maxLength(8)]], // 收銀機代號
@@ -193,6 +196,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
               NCML_PayCrdType: rawData.PayCrdType,
               CRD_Type: rawData.CRD_Type,
               NCML_TxnAmt: rawData.TxnAmt,
+              PRM_NCML_TxnAmt: rawData.TxnAmt, // 儲存原始交易金額
               NCML_CrdNo: rawData.CrdNo,
               NCML_TmID: rawData.TmID,
               NCML_ApprovalCode: rawData.ApprovalCode,
@@ -215,7 +219,12 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
           form.get('tableName')?.disable();
           form.get('ECR_No')?.disable();
           form.get('TXN_No')?.disable();
-
+          const txnNoValue = form.get('TXN_No')?.value;
+          if (Number(txnNoValue) !== 99999999) { // 有指定交易時要disable 銷售日期欄位
+            form.get('NCML_TxnDate')?.disable({ emitEvent: false });
+          } else {
+            form.get('NCML_TxnDate')?.enable({ emitEvent: false });
+          }
           // 在 Create 模式下 (通過 initialQuerySubmit 觸發)
           if (this.isFormCreateable) {
             form.patchValue({
@@ -248,6 +257,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
               CTBC_TmID: rawData.TmID,
               CTBC_TxnCode: rawData.TxnType, // 交易類別碼 (猜測對應 TxnType)
               CTBC_TxnAmt: rawData.TxnAmt,
+              PRM_CTBC_TxnAmt: rawData.TxnAmt, // 儲存原始交易金額
               CTBC_ApprovalCode: rawData.ApprovalCode,
               CTBC_Check: rawData.CheckStatus,
               CTBC_TermNo: rawData.TermNo ?? null,
@@ -267,6 +277,12 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
           form.get('tableName')?.disable();
           form.get('ECR_No')?.disable();
           form.get('TXN_No')?.disable();
+          const txnNoValue = form.get('TXN_No')?.value;
+          if (Number(txnNoValue) !== 99999999) { // 有指定交易時要disable 銷售日期欄位
+            form.get('CTBC_TxnTime')?.disable({ emitEvent: false });
+          } else {
+            form.get('CTBC_TxnTime')?.enable({ emitEvent: false });
+          }
           form.get('TLT_No')?.enable();
           if (this.isFormCreateable) {
             form.patchValue({
@@ -294,6 +310,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
               // CTBC P Fields Mapping
               CTBC_CrdNo: rawData.CrdNo,
               CTBC_TxnAmt: rawData.TxnAmt,
+              PRM_CTBC_TxnAmt: rawData.TxnAmt, // 儲存原始交易金額
               CTBC_TxnType: rawData.TxnType,
               CTBC_TmID: rawData.TmID,
               CTBC_ApprovalCode: rawData.ApprovalCode,
@@ -313,6 +330,12 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
           form.get('tableName')?.disable();
           form.get('ECR_No')?.disable();
           form.get('TXN_No')?.disable();
+          const txnNoValue = form.get('TXN_No')?.value;
+          if (Number(txnNoValue) !== 99999999) { // 有指定交易時要disable 銷售日期欄位
+            form.get('CTBC_TxnDate')?.disable({ emitEvent: false });
+          } else {
+            form.get('CTBC_TxnDate')?.enable({ emitEvent: false });
+          }
           form.get('TLT_No')?.enable();
           if (this.isFormCreateable) {
             form.patchValue({
