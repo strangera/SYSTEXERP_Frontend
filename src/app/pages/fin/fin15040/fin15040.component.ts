@@ -74,6 +74,7 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     AssetType: [null],                                      // 資產註記
     HasUniform: [null],                                     // 是否有統一編號
     PUR_DiscNo: [null],                                         // 折抵代號 (dropdown)
+    INV_Status: [null],                                      // 發票狀態TODO: 待確認欄位名稱
     ...createPaginationConfig([{ field: 'INV_GUIType', order: 1 }, { field: 'INV_GUINumber', order: 1 }])
   });
 
@@ -93,6 +94,7 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     { field: 'INV_GUITrack', header: '字軌', visible: true },
     { field: 'INV_GUINumber', header: '發票號碼', visible: true },
     { field: 'TXN_Date', header: '發票日期', visible: true, format: formatDate },
+    { field: 'INV_Status', header: '發票狀態', visible: true }, //TODO: 待確認欄位名稱
     { field: 'INV_YM1', header: '資料所屬年月', visible: true },
     { field: 'INV_YM2', header: '申報年月', visible: true },
     { field: 'TXN_Uniform', header: '統一編號', visible: true },
@@ -131,6 +133,13 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
   exportOptions: Option[] = [
     { label: 'PDF', value: '0' },
     { label: 'Excel', value: '1' }
+  ];
+
+  // 發票狀態 TODO: value待確認
+  invStatusOptions: Option[] = [
+    { label: '全選', value: '0' },
+    { label: '開立', value: '1' },
+    { label: '作廢', value: '2' }
   ];
   //#endregion
 
