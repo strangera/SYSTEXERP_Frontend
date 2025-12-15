@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
@@ -11,12 +10,14 @@ import { finalize, forkJoin, map } from 'rxjs';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { Tls41040Service } from '../../../service/api/tls/tls41040.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { DropDownListService } from './../../../service/utility/dropDownList.service';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
 
 // ===== 定義 TLS41040 明細型別 =====
 export interface TLS41040Detail {
@@ -72,32 +73,27 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
     NOT_Prn: ['Y'],
     NOT_DtlLimit: ['Y'],
   });
-
-  // 狀態選單
+  TLTTALENT_OPTIONS: IDropdownItem[] = [];
+  ECR_Type_Options: IDropdownItem[] = [];
+  ECR_GrpNoOptions: IDropdownItem[] = [];
+  SYS3700_Options: IDropdownItem[] = [];
+  SYS3800_Options: IDropdownItem[] = [];
+  SYS3A00_Options: IDropdownItem[] = [];
   NOT_Status_Option: any[] = [
     { value: 'A', label: '啟用' },
     { value: 'D', label: '停用' },
   ];
-
-  // Table 欄位
   columns: EditColumn[] = [];
-
-  // 下拉選項
-  SYS3700_Options: { value: string; label: string }[] = [];
-  SYS3800_Options: { value: string; label: string }[] = [];
-  SYS3A00_Options: { value: string; label: string }[] = [];
-  ECR_Type_Options: { value: string; label: string }[] = [];
-  TLTTALENT_OPTIONS: { value: string; label: string }[] = [];
-  ECR_GrpNoOptions: { value: string; label: string }[] = [];
-
-  // 明細資料
   data: TLS41040Detail[] = [];
-  selectedRows: TLS41040Detail[] = [];
+  selectedRows: any[] = [];
+
 
   constructor(
     private locationOptionsService: LocationOptionsService,
     private dropDownListService: DropDownListService,
     private tls41040Service: Tls41040Service
+    ,
+    private cdr: ChangeDetectorRef
   ) {
     super();
   }
@@ -111,8 +107,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
     } else {
       console.warn(' 無主檔 ID，更新會失敗');
     }
-
-    this.loadAndSetupColumns();
+    this.loadDropdownOptions();
 
     this.data = (this.rowdata?.Details ?? []).map((d: TLS41040Detail) => ({
       ...d,
@@ -121,66 +116,149 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
     }));
     this.originalSnapshot = JSON.parse(JSON.stringify(this.data));
   }
-
-
-  // ===== 載入選項並設定 Table 欄位 =====
-  private loadAndSetupColumns() {
-    const ECR_GrpNo$ = this.dropDownListService.queryPOS1002GRM_DropDownList()
-      .pipe(map(res => (res?.Data ?? []).map((it: any) => ({
-        value: it.No,
-        label: `${it.No}-${it.Name}`
-      }))));
-
-    const ECR_Type$ = this.dropDownListService
-      .querySYS1000_DropDownList({ SYS_Type: 'ECR_Type', SYS_Status: 'A' } as any)
-      .pipe(map(res => (res?.Data ?? []).map((it: any) => ({
-        value: it.No ?? it.SYS_Code,
-        label: it.Name ?? it.SYS_Name ?? ''
-      }))));
-
-    const TLTTALENT_OPTIONS$ = this.dropDownListService.queryTLTTALENT_DropDownList()
-      .pipe(map(res => res.Data.map((item: any) => ({
-        value: item.No,
-        label: `${item.No}-${item.Name}`
-      }))));
-
-    const Building_No$ = this.locationOptionsService.getBuildingOptions().pipe(
-      map((res: any[]) => res.map(x => ({ value: x.No ?? x.value, label: x.Name ?? x.label })))
-    );
-
-    const Floor_No$ = this.locationOptionsService.getFloorOptions().pipe(
-      map((res: any[]) => res.map(x => ({ value: x.No ?? x.value, label: x.Name ?? x.label })))
-    );
-
-    const Area_No$ = this.locationOptionsService.getRegionOptions().pipe(
-      map((res: any[]) => res.map(x => ({ value: x.No ?? x.value, label: x.Name ?? x.label })))
-    );
-
+  private loadDropdownOptions(): void {
     forkJoin({
-      TLT_No: TLTTALENT_OPTIONS$,
-      ECR_Type: ECR_Type$,
-      ECR_GrpNo: ECR_GrpNo$,
-      Building_No: Building_No$,
-      Floor_No: Floor_No$,
-      Area_No: Area_No$,
-    }).subscribe(({ TLT_No, ECR_Type, ECR_GrpNo, Building_No, Floor_No, Area_No }) => {
-      this.TLTTALENT_OPTIONS = TLT_No ?? [];
-      this.ECR_Type_Options = ECR_Type ?? [];
-      this.ECR_GrpNoOptions = ECR_GrpNo ?? [];
-      this.SYS3700_Options = Building_No ?? [];
-      this.SYS3800_Options = Floor_No ?? [];
-      this.SYS3A00_Options = Area_No ?? [];
+      // ===== 機台群組 =====
+      ECR_GrpNo: this.dropDownListService
+        .queryPOS1002GRM_DropDownList()
+        .pipe(
+          map(res => (res?.Data ?? []).map((it: any): IDropdownItem => ({
+            No: it.No,
+            Name: it.Name,
+            value: it.No,
+            label: `${it.No}-${it.Name}`,
+          })))
+        ),
 
-      this.columns = [
-        { field: 'TLT_No', header: '專櫃編號', type: 'dropdown', options: this.TLTTALENT_OPTIONS, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
-        { field: 'ECR_Type', header: '機台類型', type: 'dropdown', options: this.ECR_Type_Options, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
-        { field: 'ECR_GrpNo', header: '機台群組編號', type: 'dropdown', options: this.ECR_GrpNoOptions, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isEcrGrpNoSelected(rowData) },
-        { field: 'BUILDING_No', header: '館別', type: 'dropdown', options: this.SYS3700_Options, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
-        { field: 'FLOOR_No', header: '樓層', type: 'dropdown', options: this.SYS3800_Options, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
-        { field: 'Area_No', header: '區域', type: 'dropdown', options: this.SYS3A00_Options, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
-      ];
-    });
+      // ===== 機台類型 =====
+      ECR_Type: this.dropDownListService
+        .querySYS1000_DropDownList({ SYS_Type: 'ECR_Type', SYS_Status: 'A' } as any)
+        .pipe(
+          map(res => (res?.Data ?? []).map((it: any): IDropdownItem => ({
+            No: it.No ?? it.SYS_Code,
+            Name: it.Name ?? it.SYS_Name ?? '',
+            value: it.No ?? it.SYS_Code,
+            label: it.Name ?? it.SYS_Name ?? '',
+          })))
+        ),
+
+      // ===== 專櫃 =====
+      TLT: this.dropDownListService
+        .queryTLTTALENT_DropDownList()
+        .pipe(
+          map(res => (res?.Data ?? []).map((item: any): IDropdownItem => ({
+            No: item.No,
+            Name: item.Name,
+            value: item.No,
+            label: `${item.No}-${item.Name}`,
+          })))
+        ),
+
+      // ===== 館別 =====
+      BUILDING: this.locationOptionsService.getBuildingOptions().pipe(
+        map(res => res.map((x: any): IDropdownItem => ({
+          No: x.No ?? x.value,
+          Name: x.Name ?? x.label,
+          value: x.No ?? x.value,
+          label: x.Name ?? x.label,
+        })))
+      ),
+
+      // ===== 樓層 =====
+      FLOOR: this.locationOptionsService.getFloorOptions().pipe(
+        map(res => res.map((x: any): IDropdownItem => ({
+          No: x.No ?? x.value,
+          Name: x.Name ?? x.label,
+          value: x.No ?? x.value,
+          label: x.Name ?? x.label,
+        })))
+      ),
+
+      // ===== 區域 =====
+      AREA: this.locationOptionsService.getRegionOptions().pipe(
+        map(res => res.map((x: any): IDropdownItem => ({
+          No: x.No ?? x.value,
+          Name: x.Name ?? x.label,
+          value: x.No ?? x.value,
+          label: x.Name ?? x.label,
+        })))
+      ),
+    })
+      .subscribe(res => {
+        this.ECR_GrpNoOptions = res.ECR_GrpNo;
+        this.ECR_Type_Options = res.ECR_Type;
+        this.TLTTALENT_OPTIONS = res.TLT;
+        this.SYS3700_Options = res.BUILDING;
+        this.SYS3800_Options = res.FLOOR;
+        this.SYS3A00_Options = res.AREA;
+        this.loadAndSetupColumns();
+        this.columns = Array.isArray(this.columns) ? [...this.columns] : this.columns;
+        this.data = Array.isArray(this.data) ? [...this.data] : this.data;
+        try { this.cdr.detectChanges(); } catch { /* no-op if not available */ }
+      });
   }
+
+
+  private loadAndSetupColumns(): void {
+    this.columns = [
+      {
+        field: 'TLT_No',
+        header: '專櫃編號',
+        type: 'dropdown',
+        options: this.TLTTALENT_OPTIONS,
+        optionLabel: 'label',
+        optionValue: 'value',
+        disabled: (_value, _index, row) => this.isOtherGroupSelected(row)
+      },
+      {
+        field: 'ECR_Type',
+        header: '機台類型',
+        type: 'dropdown',
+        options: this.ECR_Type_Options,
+        optionLabel: 'label',
+        optionValue: 'value',
+        disabled: (_value, _index, row) => this.isOtherGroupSelected(row)
+      },
+      {
+        field: 'ECR_GrpNo',
+        header: '機台群組編號',
+        type: 'dropdown',
+        options: this.ECR_GrpNoOptions,
+        optionLabel: 'label',
+        optionValue: 'value',
+        disabled: (_value, _index, row) => this.isEcrGrpNoSelected(row)
+      },
+      {
+        field: 'BUILDING_No',
+        header: '館別',
+        type: 'dropdown',
+        options: this.SYS3700_Options,
+        optionLabel: 'label',
+        optionValue: 'value',
+        disabled: (_value, _index, row) => this.isOtherGroupSelected(row)
+      },
+      {
+        field: 'FLOOR_No',
+        header: '樓層',
+        type: 'dropdown',
+        options: this.SYS3800_Options,
+        optionLabel: 'label',
+        optionValue: 'value',
+        disabled: (_value, _index, row) => this.isOtherGroupSelected(row)
+      },
+      {
+        field: 'Area_No',
+        header: '區域',
+        type: 'dropdown',
+        options: this.SYS3A00_Options,
+        optionLabel: 'label',
+        optionValue: 'value',
+        disabled: (_value, _index, row) => this.isOtherGroupSelected(row)
+      },
+    ];
+  }
+
+
 
   // 檢查其他互斥欄位是否有值
   isOtherGroupSelected(rowData: any): boolean {
@@ -188,17 +266,44 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
   }
   // 檢查機台群組編號是否有值
   isEcrGrpNoSelected(rowData: any): boolean {
-    return !!(rowData['ECR_No'] || rowData['TLT_No'] || rowData['ECR_Type'] || rowData['BUILDING_No'] || rowData['FLOOR_No'] || rowData['Area_No']);
+    return !!(
+      (rowData.TLT_No && rowData.TLT_No.trim()) ||
+      (rowData.ECR_Type && rowData.ECR_Type.trim()) ||
+      (rowData.BUILDING_No && rowData.BUILDING_No.trim()) ||
+      (rowData.FLOOR_No && rowData.FLOOR_No.trim()) ||
+      (rowData.Area_No && rowData.Area_No.trim())
+    );
   }
   /** Insert payload */
   private createInsertBody(frm: FormGroup) {
     const raw = frm.getRawValue();
 
-    return {
-      ...raw,
-      Detail: this.data.map(d => {
-        const clone = { ...d };
+    const toIso = (d: any) => {
+      if (d === null || d === undefined || d === '') return null;
+      try {
+        const dt = new Date(d);
+        return isNaN(dt.getTime()) ? null : dt.toISOString();
+      } catch {
+        return null;
+      }
+    };
 
+    return {
+      NOT_DateTime: toIso(raw.NOT_DateTime),
+      NOT_BegDateTime: toIso(raw.NOT_BegDateTime),
+      NOT_EndDateTime: toIso(raw.NOT_EndDateTime),
+      NOT_Status: raw.NOT_Status,
+      NOT_Remark: raw.NOT_Remark,
+      NOT_Desc: raw.NOT_Desc,
+      NOT_DispRt: raw.NOT_DispRt,
+      NOT_DispSpd: raw.NOT_DispSpd,
+      NOT_DispBtn: raw.NOT_DispBtn,
+      NOT_DispCd: raw.NOT_DispCd,
+      NOT_Prn: raw.NOT_Prn,
+      NOT_DtlLimit: raw.NOT_DtlLimit,
+
+      Detail: this.data.map(d => {
+        const clone = { ...d } as any;
         // 群組互斥欄位處理
         if (clone.ECR_GrpNo) {
           clone.TLT_No = '';
@@ -209,8 +314,8 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
         } else {
           clone.ECR_GrpNo = null;
         }
-
         return {
+          NOT_SeqNo: null,
           TLT_No: clone.TLT_No ?? '',
           ECR_Type: clone.ECR_Type ?? '',
           ECR_GrpNo: clone.ECR_GrpNo ?? null,
@@ -225,7 +330,6 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
 
   private createUpdateBody(frm: FormGroup) {
     const raw = frm.getRawValue();
-
     return {
       ID: Number(this.rowdata?.ID ?? 0),
       STO_No: this.rowdata?.STO_No ?? '',
@@ -244,7 +348,6 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
 
       Detail: this.data.map((d) => {
         const clone = { ...d };
-
         let status = clone.status ?? 'original';
 
         if (!clone.NOT_SeqNo) {
@@ -254,7 +357,6 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
         } else if (clone.status === 'modified') {
           status = 'modified';
         }
-
         return {
           ID: clone.ID ?? 0,
           STO_No: clone.STO_No ?? this.rowdata?.STO_No ?? '',
@@ -268,12 +370,9 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
           Area_No: clone.Area_No ?? '',
           status,
         };
-
       }),
-
     };
   }
-
 
   /** 明細資料驗證：互斥 + 唯一 + 至少一欄有值 */
   private validateDetailData(): boolean {
@@ -314,22 +413,15 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
     return true;
   }
   onDataChange(updatedData: TLS41040Detail[]): void {
-    console.log(' onDataChange 觸發', updatedData);
-
     this.data = updatedData.map((row) => {
       const snapshot = this.originalSnapshot.find((x) => x.NOT_SeqNo === row.NOT_SeqNo);
 
-      // 若為新行
       if (!row.NOT_SeqNo || row.NOT_SeqNo === 0) {
         return { ...row, status: 'new' };
       }
-
-      // 若為刪除
       if (row.status === 'deleted') {
         return row;
       }
-
-      // 有快照才比較
       if (snapshot) {
         const changed = Object.keys(row).some((key) => {
           if (['status', 'ID', 'STO_No', 'NOT_DateTime'].includes(key)) return false;
@@ -337,29 +429,32 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
           const newVal = row[key as keyof TLS41040Detail] ?? '';
           return oldVal !== newVal;
         });
-
         if (changed) {
-          console.log(`🔸 第 ${row.NOT_SeqNo} 筆有修改`);
           return { ...row, status: 'modified' };
         }
       }
-
       return { ...row, status: row.status ?? 'original' };
     });
-
-    console.log(' 更新後的 this.data', this.data);
   }
 
   // ===== 儲存 =====
   onSubmit(frm: FormGroup): void {
-    if (!this.validateDetailData()) return;
+    const detailValid = this.validateDetailData();
+    if (!detailValid) return;
+    if (!this.isFormCreateable && !this.isFormEditable) {
+      const hasNew = Array.isArray(this.data) && this.data.some(d => d.status === 'new');
+      if (hasNew) {
+        this.crudstatus = CRUDStatus.Create;
+      } else {
+        this.messageService.errorBubble('目前為檢視模式，請使用「新增」或「編輯」進入可編輯模式後再送出');
+        return;
+      }
+    }
 
     this.handleSubmit(frm, () => {
       this.loading = true;
-
       let body: any;
       let serviceCall;
-
       if (this.isFormCreateable) {
         body = this.createInsertBody(frm);
         serviceCall = this.tls41040Service.insertTLS41040(body);
@@ -367,18 +462,13 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
         body = this.createUpdateBody(frm);
         serviceCall = this.tls41040Service.updateTLS41040(body);
       }
-      console.log('送出 payload.Detail', body.Detail);
-      console.log('🧾 Update Body:', JSON.stringify(body, null, 2));
-
       serviceCall?.pipe(finalize(() => (this.loading = false))).subscribe({
         next: (res) => {
           this.messageService.successBubble(res.Message ?? '成功');
           if (this.isFormEditable) {
             this.originalSnapshot = JSON.parse(JSON.stringify(this.data));
-          }
-          if (this.isFormCreateable) {
-            this.dataForm.reset();
-          } else if (this.isFormEditable) {
+            this.onCancel();
+          } else if (this.isFormCreateable) {
             this.onCancel();
           }
         }
@@ -397,20 +487,16 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
       this.messageService.errorBubble('請先勾選要刪除的明細');
       return;
     }
-
     for (const item of selectedItems) {
       const idx = this.data.findIndex(d => d.NOT_SeqNo === item.NOT_SeqNo);
       if (idx !== -1) {
         this.data[idx] = { ...this.data[idx], status: 'deleted' };
       }
     }
-
-
     this.data = [...this.data];
     this.onDataChange(this.data);
-
     this.selectedRows = [];
-    this.messageService.successBubble('已標記刪除，儲存後會一併更新後端');
+    this.messageService.successBubble('已標記刪除');
   }
 
 

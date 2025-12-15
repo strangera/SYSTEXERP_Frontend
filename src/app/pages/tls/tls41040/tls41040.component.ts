@@ -141,7 +141,7 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS41040', '/TLS/TLS41040CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS41040', '/TLS/TLS41040cru', this.queryForm, (form) => this.onSubmit(form));
 
     this.ECRNoService.getECRNo().subscribe((data) => {
       this.ECRNoOptions = data;
