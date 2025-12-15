@@ -100,6 +100,7 @@ export interface ITLS52030Request {
   HOS_No: string; // 倉庫代碼
   org_id: string | null; // 組織代碼/組織名稱
   ODM_Date: string | Date; // 申請日期
+  APRV_Date: string | Date | null; // 審核(驗收)日期
   ODM_USR_No: string; // 申請人員
   ODM_USR_Name: string; // 申請人員姓名
   ODM_TotalBuyNet: number; // 未稅進價小計

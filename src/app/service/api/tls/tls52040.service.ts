@@ -109,6 +109,7 @@ export interface TLS52040Request {
   RJM_TotalSaleTax?: number; // 售價稅額小計
   RJM_TotalSaleAmt?: number; // 售價合計
   RJM_Remark?: string | null; // 退貨驗收單備註
+  APRV_Date?: string; // 審核日期 (ISO 格式字串)
   APPLY_Date?: string; // 申請日期 (ISO 格式字串)
   APPLY_USR_No?: string; // 申請人員編號
   APPLY_USR_Name?: string; // 申請人員姓名
