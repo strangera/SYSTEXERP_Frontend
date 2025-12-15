@@ -327,16 +327,11 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
         FloorList: (frm.getRawValue().FloorList || []).join(','),
         AreaList: (frm.getRawValue().AreaList || []).join(','),
 
-        // BusTypeList: (frm.getRawValue().BusTypeList), // 之後可能改這個
-        // BusClassList: (frm.getRawValue().BusClassList || []).map((item: any) => ({
-        //   BusType: item.bus_type ?? '',
-        //   BusClass: item.No ?? ''
-        // })),
-
-        BusTypeList: (frm.getRawValue().BusTypeList || []).join(','),
-        BusClassList: (frm.getRawValue().BusClassList || [])
-          .map((x: any) => x.No ?? '')
-          .join(','),
+        BusTypeList: (frm.getRawValue().BusTypeList), // 之後可能改這個
+        BusClassList: (frm.getRawValue().BusClassList || []).map((item: any) => ({
+          BusType: item.bus_type ?? '',
+          BusClass: item.No ?? ''
+        })),
 
         TltKindList: (frm.getRawValue().TltKindList || []).join(','),
         OrgList: (frm.getRawValue().OrgList || []).join(','),
@@ -345,6 +340,7 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
         BuildingList: (frm.getRawValue().BuildingList || []).join(','),
 
       } as TLS32050Request;
+      console.log('查詢請求', formValue);
 
       this.tls32050Service.queryTLS32050(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
 
