@@ -59,6 +59,7 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
     APPLY_USR_No: [{ value: this.user?.user_No, disabled: true }], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
     APPLY_USR_Name: [{ value: this.user?.user_Name, disabled: true }], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
     APPLY_Date: [new Date(), [Validators.required]], // 申請日期
+    APRV_Date: [new Date(), [Validators.required]], // 審核日期
     RJM_Remark: [null as string | null, [Validators.maxLength(200)]],// 進貨驗收單說明
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
   });
@@ -202,6 +203,7 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
         // LOGO_No: formData.LOGO_No,
         HOS_No: formData.HOS_No,
         org_id: this.rowdata?.org_id,
+        APRV_Date: formData.APRV_Date,
         APPLY_Date: formData.APPLY_Date,
         APPLY_USR_No: this.authService.currentUserValue?.user_No || '',
         APPLY_USR_Name: this.authService.currentUserValue?.user_Name || '',
