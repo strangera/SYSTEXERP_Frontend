@@ -18,6 +18,8 @@ import {
   EcrQuery,
   ENG1001Item,
   IDropdownItem,
+  LogoAccorHosItem,
+  LogoAccorHosQuery,
   Option,
   OrgTreeItem,
   OrgTreeQuery,
@@ -406,6 +408,19 @@ export class DropdownApiService {
       shareReplay(1)// 避免重複查詢
     );
   }
+
+  /** 查詢品牌對應倉別(queryLOGOaccorHOS) 資料表 */
+  queryLogoAccorHOS(body: LogoAccorHosQuery): Observable<Option[] | null> {
+    return this.queryAndMapDropdownWithParams<LogoAccorHosItem, LogoAccorHosQuery>(
+      '/TLS0000/TLS5000/queryLOGOaccorHOS',
+      'LOGO_No',
+      'LOGO_CH_NAME',
+      body
+    ).pipe(
+      shareReplay(1)
+    );
+  }
+
   // --- POS 相關 (新增) ---
 
   /** 查詢小分類代碼(POS20032) */

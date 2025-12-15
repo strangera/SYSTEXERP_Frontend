@@ -54,6 +54,8 @@ export interface TLS24010Data {
   talent_id?: number; // 專櫃合約編號
   TXN_GUIPaper?: string; // 補登類別
   type?: string; // 修正類型
+
+  TXN_Ret_No?: string; // 折讓單號
 }
 
 export interface POS5007Data {
@@ -311,8 +313,8 @@ export class Tls24010Service {
    * @param payload 依照 Swagger 規格傳入資料
    * @returns API 回應結果
    */
-  updateTLS24010(payload: UpdateTLS24010Payload): Observable<ApiResponse<number>> {
-    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/updateTLS24010`, payload);
+  updateTLS24010(payload: UpdateTLS24010Payload): Observable<ApiResponse<{ Is_Create_Ret: boolean, TXN_Ret_No: string }>> {
+    return this.http.post<ApiResponse<{ Is_Create_Ret: boolean, TXN_Ret_No: string }>>(`${this.apiUrl}/updateTLS24010`, payload);
   }
 
   /**
@@ -338,5 +340,9 @@ export class Tls24010Service {
       observe: 'response',
       responseType: 'blob'
     });
+  }
+
+  printTLS24010(TXN_Ret_No: string): Observable<ApiResponse<{ Print_URL: string }>> {
+    return this.http.post<ApiResponse<{ Print_URL: string }>>(`${this.apiUrl}/printTLS24010`, { TXN_Ret_No })
   }
 }

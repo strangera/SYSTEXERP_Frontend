@@ -88,15 +88,15 @@
           <app-input-textarea label="通告內容" controlName="NOT_Desc" [control]="dataForm.controls.NOT_Desc"
             [style]="{ height: '100px' }" [submitted]="submitted"></app-input-textarea>
         </div>
-        <app-table #table class="col-12" tableKey="tls41040Detail" dataKey="NOT_SeqNo" [columns]="columns" [data]="data"
-          [showEdit]="false" [showDetail]="false" [showCheckBox]="!isFormReadable" [showInsert]="true"
-          [showDelete]="true" [showRowEdit]="true" (selectionChange)="selectedRows = $event"
-          [selectedItems]="selectedRows" [showCaption]="!isFormReadable" [showManage]="!isFormReadable"
-          [insertRowData]="true" dataStatusField="status" (dataChange)="onDataChange($event)"  [showReportMode]="false"
-          dataStatusField="status" [deleteData]="false" (delete)="onDelete($event)"></app-table>
+
+        <app-table-edit *ngIf="dataForm.controls.NOT_DtlLimit.value === 'Y'" class="col-12" tableKey="tls41040Detail"
+          [columns]="columns" [data]="data" [dataStatusField]="'status'" [disabled]="false" [canInsert]="true"
+          [tableRequired]="true" [selectedItems]="selectedRows" (selectionChange)="selectedRows = $event"
+          (dataChange)="onDataChange($event)" (delete)="onDelete($event)">
+        </app-table-edit>
 
       </div>
-      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit"></app-button>
       </div>

@@ -1,84 +1,200 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <p-fileUpload id="customButton" #fileUpload mode="basic" chooseIcon="pi pi-upload" accept=".xls"
-      (onSelect)="onFileUpload($event);fileUpload.clear()" [auto]="true" chooseLabel="匯入EXCEL" />
-    <app-button label="變價歷史紀錄" (click)="gotoTls51070OS('history')"></app-button>
-    <app-button label="產生標籤檔" (click)="gotoTls51070OS('label')"></app-button>
-    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
+    <p-fileUpload
+      id="customButton"
+      #fileUpload
+      mode="basic"
+      chooseIcon="pi pi-upload"
+      accept=".xls"
+      (onSelect)="onFileUpload($event); fileUpload.clear()"
+      [auto]="true"
+      chooseLabel="匯入EXCEL"
+    />
+    <app-button
+      label="變價歷史紀錄"
+      (click)="gotoTls51070OS('history')"
+    ></app-button>
+    <app-button
+      label="產生標籤檔"
+      (click)="gotoTls51070OS('label')"
+    ></app-button>
+    <app-button
+      btnType="create"
+      (click)="onCreate()"
+      label="{{ 'create' | translate }}"
+    ></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <!-- 商品管理編號 / 國際條碼 / 廠商貨號 (合併查詢) -->
+          <app-dropdown-table
+            class="col-12 md:col-6 lg:col-4"
+            [control]="queryForm.controls.PLU_MagNo"
+            templateLabel="label"
+            [submitted]="submitted"
+            optionLabel="PLU_MagNo"
+            optionValue="PLU_MagNo"
+            [suggestions]="suggestions"
+            [fieldsConfig]="fieldsConfig"
+            (inputValueChanged)="onAutoCompleteInputChange($event)"
+            (formValueChanged)="onformValueChanged($event)"
+            [formGroup]="opForm"
+            [dialogData]="opData"
+            [dialogColumns]="opColumns"
+            [loading]="opLoading"
+            [totalRecords]="opTotalRecords"
+          >
+            <!-- overlayPanel 查詢欄位 -->
+            <app-input-text
+              class="col-12 md:col-6"
+              label="商品管理編號"
+              controlName="PLU_MagNo"
+              [control]="opForm.controls.PLU_MagNo"
+            />
+            <app-input-text
+              class="col-12 md:col-6"
+              label="商品名稱"
+              controlName="PLU_Name"
+              [control]="opForm.controls.PLU_Name"
+            />
+          </app-dropdown-table>
+        </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="商品管理編號" controlName="PLU_MagNo" [control]="queryForm.controls.PLU_MagNo"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="商品名稱"
+              controlName="PLU_Name"
+              [control]="queryForm.controls.PLU_Name"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="商品名稱" controlName="PLU_Name" [control]="queryForm.controls.PLU_Name"
-              [submitted]="submitted"></app-input-text>
+            <app-dropdown
+              label="品牌代碼/名稱"
+              controlName="LOGO_No"
+              [options]="brandOption"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.LOGO_No"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="國際條碼" controlName="PLU_No" [control]="queryForm.controls.PLU_No"
-              [submitted]="submitted"></app-input-text>
+            <app-dropdown
+              label="專櫃編號/名稱"
+              controlName="TLT_NO"
+              [options]="TLT_NO_Option"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.TLT_NO"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商貨號" controlName="PLU_OrgPLUNo" [control]="queryForm.controls.PLU_OrgPLUNo"
-              [submitted]="submitted"></app-input-text>
+            <app-dropdown
+              label="大分類代碼/名稱"
+              controlName="CAT_LNo"
+              [options]="largeOption"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.CAT_LNo"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="品牌代碼/名稱" controlName="LOGO_No" [options]="brandOption" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="中分類代碼/名稱"
+              controlName="CAT_MNo"
+              [options]="middleOption"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.CAT_MNo"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="專櫃編號/名稱" controlName="TLT_NO" [options]="TLT_NO_Option" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.TLT_NO" [submitted]="submitted"></app-dropdown>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="大分類代碼/名稱" controlName="CAT_LNo" [options]="largeOption" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.CAT_LNo" [submitted]="submitted"></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="中分類代碼/名稱" controlName="CAT_MNo" [options]="middleOption" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.CAT_MNo" [submitted]="submitted"></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="小分類代碼/名稱" controlName="CAT_SNo" [options]="smallOption" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.CAT_SNo" [submitted]="submitted"></app-dropdown>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="商品型態" controlName="PLU_Attribute" [options]="attributeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.PLU_Attribute" [submitted]="submitted"></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="商品單位" controlName="PLU_Unit" [options]="unitOptions" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.PLU_Unit" [submitted]="submitted"></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="EC商品狀態" controlName="PLU_ECStatus" [options]="statusOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.PLU_ECStatus" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="小分類代碼/名稱"
+              controlName="CAT_SNo"
+              [options]="smallOption"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.CAT_SNo"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="說明" controlName="PLU_Reserve1" [control]="queryForm.controls.PLU_Reserve1"
-              [submitted]="submitted"></app-input-text>
+            <app-dropdown
+              label="商品型態"
+              controlName="PLU_Attribute"
+              [options]="attributeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.PLU_Attribute"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="系列" controlName="PLU_Reserve3" [control]="queryForm.controls.PLU_Reserve3"
-              [submitted]="submitted"></app-input-text>
+            <app-dropdown
+              label="商品單位"
+              controlName="PLU_Unit"
+              [options]="unitOptions"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.PLU_Unit"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="EC商品狀態"
+              controlName="PLU_ECStatus"
+              [options]="statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.PLU_ECStatus"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="說明"
+              controlName="PLU_Reserve1"
+              [control]="queryForm.controls.PLU_Reserve1"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="系列"
+              controlName="PLU_Reserve3"
+              [control]="queryForm.controls.PLU_Reserve3"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
         <!-- <div> -->
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -89,10 +205,23 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table tableKey="TLS51070" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
-      [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]"
-      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [lazy]="true" [loading]="loading" [isRowSelectable]="isRowSelectable"></app-table>
+    <app-table
+      tableKey="TLS51070"
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      (delete)="onDelete($event)"
+      [showCheckBox]="true"
+      dataKey="id"
+      [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true"
+      [loading]="loading"
+      [isRowSelectable]="isRowSelectable"
+    ></app-table>
   </div>
 </div>

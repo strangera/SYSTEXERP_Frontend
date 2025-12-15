@@ -1,7 +1,6 @@
 import { NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
 import { UntilDestroy } from '@ngneat/until-destroy'; // 引入 UntilDestroy
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS2j030Service } from '@service/api/tls/tls2j030.service';
@@ -76,7 +75,6 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
 
 
   constructor(
-    private route: ActivatedRoute,
     public readonly tls2j030Service: TLS2j030Service,
     private dropDownListService: DropDownListService,
   ) {
@@ -89,10 +87,8 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     this.initializePage('TLS2J030', this.dataForm);
     this.loadItemDropdownOptions();
 
-    const row = this.router.getCurrentNavigation()?.extras?.state?.['rowdata'] as TLS2J030Data;
-
-    if (row?.CHG_No) {
-      this.loadDetails(row.CHG_No);
+    if (!this.isFormCreateable && this.rowdata && this.rowdata.CHG_No) {
+      this.loadDetails(this.rowdata.CHG_No);
       this.isViewMode = true;
     } else {
       this.isViewMode = false;
@@ -196,23 +192,21 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
 
   /** 根據 CHG_No 載入查閱模式的資料 */
   loadDetails(chgNo: string): void {
-    const payload = { PageSize: 0, PageIndex: 0, OrderBy: "", Offset: 0, SortBy: [], CHG_No: chgNo };
+    const payload = { PageSize: 0, PageIndex: 0, CHG_No: chgNo };
     this.loading = true;
 
     forkJoin({
       natural: this.tls2j030Service.queryTLS2J030Detail1(payload),
       change: this.tls2j030Service.queryTLS2J030Detail2(payload),
       item: this.tls2j030Service.queryTLS2J030Detail3(payload),
-    })
-      .pipe(finalize(() => this.loading = false))
-      .subscribe({
-        next: (res) => {
-          // 簡化資料格式化，直接使用一個 helper function
-          this.detailNaturalData = this.formatTxnNoInData(res.natural?.Data ?? []);
-          this.detailChangeData = this.formatTxnNoInData(res.change?.Data ?? []);
-          this.detailItemData = this.formatTxnNoInData(res.item?.Data ?? []);
-        },
-      });
+    }).pipe(finalize(() => this.loading = false)).subscribe({
+      next: (res) => {
+        // 簡化資料格式化，直接使用一個 helper function
+        this.detailNaturalData = this.formatTxnNoInData(res.natural?.Data ?? []);
+        this.detailChangeData = this.formatTxnNoInData(res.change?.Data ?? []);
+        this.detailItemData = this.formatTxnNoInData(res.item?.Data ?? []);
+      },
+    });
   }
 
 

@@ -8,7 +8,9 @@ import { RegionService } from '@service/basic/querySYS3A00.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { DividerModule } from 'primeng/divider';
 import { startWith } from 'rxjs';
 import { TLS32030Data, TLS32030Service } from '../../../service/api/tls/tls32030.service';
@@ -16,25 +18,22 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-
 @Component({
   selector: 'app-tls32030',
   templateUrl: './tls32030.component.html',
   standalone: true,
   imports: [
-    AsyncPipe, NgIf, FormsModule, ReactiveFormsModule, TranslateModule, AccordionModule,
-    MenubarComponent, ButtonComponent, CalendarComponent, CalendarRangeComponent, DividerModule,
-    CalendarRangeQuickComponent, InputNumberComponent, InputTextComponent, DropdownComponent,
-    MultiSelectComponent, RadiobuttonComponent, TableComponent
+    AsyncPipe, NgIf, FormsModule, ReactiveFormsModule, TranslateModule, AccordionModule, ButtonModule,
+    MenubarComponent, ButtonComponent, CalendarComponent, DividerModule,
+    CalendarRangeQuickComponent, InputNumberComponent, DropdownComponent,
+    MultiSelectComponent, RadiobuttonComponent, TableReportComponent
   ]
 })
 export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> implements OnInit {
@@ -74,7 +73,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
   data: TLS32030Data[] = [];
   totalRecords = 0;
   selectedItems: TLS32030Data[] = [];
-
+  btnLoading = false;
   DayTypeOptions = [
     { value: '1', label: '日營業報表' },
     { value: '2', label: '週營業報表' },
@@ -158,13 +157,28 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
   ];
 
   constructor(
-    private tls32030Service: TLS32030Service,
+    public readonly tls32030Service: TLS32030Service,
     private dropdown: DropdownApiService,
     private floorService: FloorService,
     private regionService: RegionService,
-    private dropDownListService: DropDownListService
+    private dropDownListService: DropDownListService,
+    private readonly fileExportService: FileExportService
   ) {
     super();
+  }
+
+  /**
+   * 輔助：將陣列或單一值轉為後端可接受的格式（逗號分隔字串），若無值則回傳 null
+   */
+  private formatListForBackend(list: any[] | string | null | undefined): string | null {
+    if (Array.isArray(list) && list.length > 0) {
+      return list.map(x => String(x)).join(',');
+    }
+    if (typeof list === 'string' && list.trim() !== '') {
+      // 若前端已是逗號分隔字串，傳回原值
+      return list;
+    }
+    return null;
   }
 
   ngOnInit(): void {
@@ -227,6 +241,72 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     this.queryForm.controls.CompareHalfYear.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
 
     // 已移除：初始化時不再自動更新 YM 欄位標頭
+  }
+
+  // 保存最後一次查詢的 request body，供匯出使用
+  historyRequestBody: any | null = null;
+
+  /**
+   * 建立真正要送給後端的匯出 request body。
+   * 後端 service interface 定義為陣列類型；若我們在 query 時將 list 轉為逗號字串
+   *（為了 query 方便或避免空字串），匯出時需要還原成陣列形式。
+   */
+  private buildExportBodyForBackend(original: any): any {
+    if (!original) return original;
+
+    const clone = { ...original };
+
+    const listFields = ['FloorList', 'AreaList', 'BusTypeList', 'BusClassList', 'TltKindList', 'OrgList', 'TltNoList', 'TermTypeList', 'BuildingList'];
+
+    listFields.forEach(f => {
+      const v = clone[f];
+      if (typeof v === 'string' && v.trim() !== '') {
+        // 將逗號分隔字串還原為陣列
+        clone[f] = v.split(',').map(x => x.trim()).filter(x => x !== '');
+      } else if (v == null) {
+        // 後端若期待陣列，傳空陣列會比較保險（可依後端規定調整為 null）
+        clone[f] = [];
+      }
+      // 若已經是陣列，保留原樣
+    });
+
+    return clone;
+  }
+
+  onExportPDF() {
+    if (!this.historyRequestBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
+    }
+
+    const exportBody = this.buildExportBodyForBackend(this.historyRequestBody);
+    console.debug('TLS32030 Export PDF body:', exportBody);
+
+    const export$ = this.tls32030Service.ExportTLS32030PDF(exportBody as any);
+
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this)),
+      '.pdf',
+      (isLoading) => this.btnLoading = isLoading
+    );
+  }
+
+  onExportXLSX() {
+    if (!this.historyRequestBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
+    }
+
+    const exportBody = this.buildExportBodyForBackend(this.historyRequestBody);
+    console.debug('TLS32030 Export XLSX body:', exportBody);
+
+    const export$ = this.tls32030Service.ExportTLS32030Excel(exportBody as any);
+
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this)),
+      '.xlsx',
+      (isLoading) => this.btnLoading = isLoading
+    );
   }
   /**
   * 獲取當前日期是當年的第幾週 (基於 ISO 8601: 星期一為一週開始)
@@ -405,10 +485,8 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     const dateFrom = new Date(yearNum, 0, 1);
     // 2. 結束日期 (次年 1 月 0 日，即該年 12 月 31 日)
     const dateTo = new Date(yearNum + 1, 0, 0);
-
     return { from: dateFrom, to: dateTo };
   }
-
 
   private getWeekRange(yearNum: number, week: number): { from: Date, to: Date } | null {
     if (week < 1) {
@@ -482,11 +560,8 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
       this.queryForm.controls.halfYear.setValue(defaultHalfYear, { emitEvent: false });
       this.queryForm.controls.CompareHalfYear.setValue(defaultHalfYear, { emitEvent: false }); // 同樣半年別
     }
-
     this.calculateDateRanges(defaultType);
-    // 初始化時：已移除欄位群組標頭自動更新的邏輯
   }
-  // 已移除：updateColumnGroupHeader 方法 (不再需要)
 
   onSubmit(form: any): void {
     this.handleSubmit(form, () => {
@@ -514,20 +589,18 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
         AmtTaxMode: formValue.AmtTaxMode ?? null,
         ReceFilter: formValue.ReceFilter ?? null,
 
-        FloorList: formValue.FloorList ?? '',
-        AreaList: formValue.AreaList ?? '',
-        BusTypeList: formValue.BusTypeList ?? '',
-        BusClassList: formValue.BusClassList ?? '',
-        TltKindList: formValue.TltKindList ?? '',
-        OrgList: formValue.OrgList ?? '',
-        TltNoList: formValue.TltNoList ?? '',
-        TermTypeList: formValue.TermTypeList ?? '',
-        BuildingList: formValue.BuildingList ?? ''
+        FloorList: this.formatListForBackend(formValue.FloorList),
+        AreaList: this.formatListForBackend(formValue.AreaList),
+        BusTypeList: this.formatListForBackend(formValue.BusTypeList),
+        BusClassList: this.formatListForBackend(formValue.BusClassList),
+        TltKindList: this.formatListForBackend(formValue.TltKindList),
+        OrgList: this.formatListForBackend(formValue.OrgList),
+        TltNoList: this.formatListForBackend(formValue.TltNoList),
+        TermTypeList: this.formatListForBackend(formValue.TermTypeList),
+        BuildingList: this.formatListForBackend(formValue.BuildingList)
       };
-
-      console.log('送出的查詢 body (TLS32030)', body);
-
-      this.tls32030Service.queryTLS32030(body).pipe(untilDestroyed(this)).subscribe({
+      this.historyRequestBody = body;
+      this.tls32030Service.queryTLS32030(body as any).pipe(untilDestroyed(this)).subscribe({
         next: (res) => {
           this.data = res.Data || [];
           this.totalRecords = (res as any).TotalCount ?? this.data.length;
@@ -537,5 +610,4 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
       });
     });
   }
-
 }

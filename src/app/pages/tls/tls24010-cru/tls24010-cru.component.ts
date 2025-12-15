@@ -388,9 +388,37 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   @ViewChild(Tls24010DiscodeComponent) discodeComp?: Tls24010DiscodeComponent;
   @ViewChild(Tls24010PaynoComponent) paynoComp?: Tls24010PaynoComponent;
   updateTLS24010() {
+    let headerMessage = FIX_TYPE_LABEL[this.type as FIX_TYPE];
+    let confirmMessage = `確定要修正嗎?`;
+
+    // 專門針對「交易資料作廢」類型進行客製化判斷
+    if (this.type === FIX_TYPE.交易資料作廢) {
+      // 確保 rowData 存在且有 TXN_Date
+      const rowData = this.rowdata as TLS24010Data;
+      if (rowData && rowData.TXN_Date) {
+        const orgDate = rowData.TXN_Date;
+        const isCross = this.isCrossPeriod(orgDate);
+
+        if (isCross) {
+          // 跨期：應開立折讓單
+          headerMessage = `開立折讓單`; // 改變標頭
+          confirmMessage = `此筆交易已跨期，需進行開立折讓單作業。確定要開立折讓單嗎?`;
+        } else {
+          // 未跨期：作廢交易資料
+          headerMessage = `作廢交易資料`; // 改變標頭
+          confirmMessage = `此筆交易未跨期，確定要作廢交易資料嗎?`;
+        }
+      } else {
+        // 如果取不到日期，則使用預設的作廢訊息作為 fallback
+        console.error('無法取得交易日期，使用預設作廢訊息。');
+        headerMessage = FIX_TYPE_LABEL[FIX_TYPE.交易資料作廢];
+      }
+    }
+
+    // 呼叫確認服務
     this.messageService.confirm({
-      header: FIX_TYPE_LABEL[this.type as FIX_TYPE],
-      message: `確定要修正嗎?`,
+      header: headerMessage,
+      message: confirmMessage,
       accept: () => {
         this.loading = true;
         const rowData = this.rowdata as TLS24010Data;
@@ -536,6 +564,29 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         }
       }
     });
+  }
+
+  /**
+ * 判斷作廢是否跨期 (模擬後端邏輯)
+ * 根據台灣發票每兩個月一期的規則判斷。
+ * @param orgDateString 原始日期的字串 (例如 'YYYY-MM-DD')
+ * @returns boolean 是否跨期
+ */
+  private isCrossPeriod(orgDateString: string): boolean {
+    // 原始日期
+    const orgDate = new Date(orgDateString);
+    const orgYear = orgDate.getFullYear();
+    // Month 是 0-11，所以不用減 1
+    // (Month / 2) + 1 即可得到期數 (1月-2月是第1期, 3月-4月是第2期, ...)
+    const orgPeriod = Math.floor(orgDate.getMonth() / 2) + 1;
+
+    // 作廢日期 (現在時間)
+    const voidDate = new Date();
+    const voidYear = voidDate.getFullYear();
+    const voidPeriod = Math.floor(voidDate.getMonth() / 2) + 1;
+
+    // 年度或期數不同即為跨期
+    return orgYear !== voidYear || orgPeriod !== voidPeriod;
   }
 }
 

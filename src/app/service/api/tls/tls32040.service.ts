@@ -160,7 +160,16 @@ export class TLS32040Service {
   }
 
   // 查詢組織預售業績 總表PDF
-  exportTLS32040PDF(data: TLS32040Request): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/exportTLS32040PDF`, data);
+  exportTLS32040PDF(request: TLS32040Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS32040PDF`, request, {
+      responseType: 'blob'
+    });
+  }
+
+  // 查詢組織預售業績 總表Excel
+  exportTLS32040Excel(request: TLS32040Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS32040Excel`, request, {
+      responseType: 'blob'
+    });
   }
 }
