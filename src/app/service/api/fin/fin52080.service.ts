@@ -12,13 +12,13 @@ const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
 @Injectable({ providedIn: 'root' })
 export class FIN52080Service {
 
-  public readonly classNoOptions = signal<FIN52080ClassNo[]>([]);
+  public readonly classNoOptions = signal<Option[]>([]);
 
   public readonly classNoLoading = signal<boolean>(!1);
 
   public accNoFilter = /^\d{1,8}$/;
 
-  public readonly classNoMap = computed(() => new Map(this.classNoOptions().map(item => [item.ClassNo, item.ClassCName])));
+  public readonly classNoMap = computed(() => new Map(this.classNoOptions().map(item => [item.value, item])));
   public readonly voucherTypeMap = computed(() => new Map(this.voucherTypeOption.map(item => [item.value, item.label])));
 
   /** 借/貸 */
@@ -100,8 +100,9 @@ export class FIN52080Service {
     this.classNoLoading.set(!0);
     this.http.post<BaseQueryResponse<FIN52080ClassNo>>(`${apiUrl}/queryClassNoDropdown`, {}).pipe(
       take(1),
+      map(res => res.Data.map(item => ({ value: item.ClassNo, label: `${item.ClassNo} - ${item.ClassCName}`, ...item }))),
       tap(res => {
-        this.classNoOptions.set(res.Data);
+        this.classNoOptions.set(res);
         this.logger.debug('查詢ClassNo結果:', [res]);
       }),
       finalize(() => this.classNoLoading.set(!1))
