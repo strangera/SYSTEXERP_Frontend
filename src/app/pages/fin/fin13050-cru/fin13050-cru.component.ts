@@ -9,7 +9,7 @@ import {
   ValidationErrors,
   ValidatorFn,
 } from '@angular/forms';
-import { NgIf } from '@angular/common';
+import { NgIf,DatePipe } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
 
@@ -25,6 +25,8 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { CalenderoneComponent } from '@shared/componentkit/calenderone/calenderone.component';
+import { ActivatedRoute } from '@angular/router';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 /* ---------------------------
  *  進階 Validators（中文化原因）
@@ -262,73 +264,76 @@ Source_Doc_No: [
   constructor(
     private fin13050Service: FIN13050Service,
     private validationService: ValidationService,
+        private readonly datePipe: DatePipe,
+        private readonly route: ActivatedRoute
   ) { super(); }
 
-  ngOnInit(): void {
-    this.initializePage('FIN13050', this.dataForm);
+ngOnInit(): void {
+  this.initializePage('FIN13050', this.dataForm);
 
-    // 帶使用者基本資料
-    const u = this.getUserInfo();
-    this.dataForm.patchValue({
-      mid: Number(u?.mid) || 0,
-      STO_No: u?.SYS_StoreNo ?? '',
-      PUR_Uniform: u?.STR_Uniform ?? '',
+  // 先帶使用者基本資料（你原本的）
+  const u = this.getUserInfo();
+  this.dataForm.patchValue({
+    mid: Number(u?.mid) || 0,
+    STO_No: u?.SYS_StoreNo ?? '',
+    PUR_Uniform: u?.STR_Uniform ?? '',
+  });
+
+  // ❶ 外部帶 GUI_No：直接進檢視模式載入明細
+  this.route.queryParams
+    .pipe(untilDestroyed(this))
+    .subscribe(params => {
+      const guiNo = (params['GUI_No'] ?? '').toString().trim();
+      if (!guiNo) return;
+
+      this.fin13050Service.queryDetailByGUI({ GUI_No: guiNo })
+        .pipe(untilDestroyed(this))
+        .subscribe(res => {
+          const row = Array.isArray(res?.Data) ? res.Data[0] : null;
+          if (!row) {
+            this.messageService.errorBubble(`查無發票資料（GUI_No=${guiNo}）`);
+            return;
+          }
+
+          // patch 明細
+          this.dataForm.patchValue(row as any, { emitEvent: false });
+
+          // ✅ 強制檢視模式
+          this.crudstatus = CRUDStatus.Read;
+          this.updateDisabledState();
+        });
     });
 
-    // 發票日期 -> 自動帶申報年月（偶數月）
-    this.dataForm.get('PUR_GUIDate')?.valueChanges.subscribe((d) => {
+  // 其餘你原本的...
+  this.dataForm.get('PUR_GUIDate')?.valueChanges
+    .pipe(untilDestroyed(this))
+    .subscribe(d => {
       const yyyymm = this.toEvenYYYYMM(d);
       if (yyyymm) this.dataForm.patchValue({ PUR_RepYYYYMM: yyyymm }, { emitEvent: false });
     });
 
-    // 申報年月：使用 ValidationService.evenMonthValidator（值為 Date）
-    const repCtrl = this.dataForm.get('PUR_RepYYYYMM');
-    repCtrl?.addValidators(this.validationService.evenMonthValidator.bind(this.validationService));
-    repCtrl?.updateValueAndValidity({ emitEvent: false });
+  const repCtrl = this.dataForm.get('PUR_RepYYYYMM');
+  repCtrl?.addValidators(this.validationService.evenMonthValidator.bind(this.validationService));
+  repCtrl?.updateValueAndValidity({ emitEvent: false });
 
-    // 下拉
-    this.loadDropdowns();
-    this.loadVendorUniformOptions();
-    this.loadVendorNoOptions(); // ❶ 讀取「廠商編號」下拉
+  this.loadDropdowns();
+  this.loadVendorUniformOptions();
+  this.loadVendorNoOptions();
 
-// 廠商編號選取 -> 只帶入【廠商名稱】，不動統編
-this.dataForm.get('PUR_VenNo')?.valueChanges.subscribe((venNo) => {
-  const picked = this.VendorNoOptions.find(o => o.value === venNo);
-  if (picked) {
-    this.dataForm.patchValue(
-      {
-        PUR_VenName: picked.venName ?? '',
-        // 不要同步統編：保持這行為註解
-        // PUR_VenUniform: picked.venUniform ?? this.dataForm.get('PUR_VenUniform')?.value
-      },
-      { emitEvent: false }
-    );
-  } else {
-    this.dataForm.patchValue({ PUR_VenName: '' }, { emitEvent: false });
-  }
-});
-
-
-    // ❷ 廠商編號選取 -> 自動帶入【廠商名稱】（必要時也可一併帶統編）
-    this.dataForm.get('PUR_VenNo')?.valueChanges.subscribe((venNo) => {
+  // ✅ 只留一個訂閱（不要重複兩次）
+  this.dataForm.get('PUR_VenNo')?.valueChanges
+    .pipe(untilDestroyed(this))
+    .subscribe(venNo => {
       const picked = this.VendorNoOptions.find(o => o.value === venNo);
-      if (picked) {
-        this.dataForm.patchValue(
-          {
-            PUR_VenName: picked.venName ?? '',
-            // 如果也要一併帶統編，取消下一行註解
-            // PUR_VenUniform: picked.venUniform ?? this.dataForm.get('PUR_VenUniform')?.value
-          },
-          { emitEvent: false }
-        );
-      } else {
-        // 清空名稱
-        this.dataForm.patchValue({ PUR_VenName: '' }, { emitEvent: false });
-      }
+      this.dataForm.patchValue(
+        { PUR_VenName: picked?.venName ?? '' },
+        { emitEvent: false }
+      );
     });
 
-    this.updateDisabledState();
-  }
+  this.updateDisabledState();
+}
+
 
   /** 下拉載入 */
   private loadDropdowns(): void {
