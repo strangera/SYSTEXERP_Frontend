@@ -76,8 +76,8 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     ReceFilter: ['A'],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 A:預設全部))
 
     pageSize: [20],
-    pageIndex: [0], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'RowType', order: 1 }]],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    // SortBy: [[{ field: 'RowType', order: 1 }]],
   });
 
   // 日期查詢條件表單
@@ -711,9 +711,13 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     // console.log('比較日期(迄)', compareEnd);
   }
 
-  onDetail1(event: any) {
+  onDetail1(event: TLS32050Response) {
+    // console.log('事件', event)
     const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);
-    this.onDetail(event, queryConditions);
+    if (event.RowType == 'TEAM') // TEAM才會進入明細查詢
+      this.onDetail(event, queryConditions);
+    else
+      console.log('TEAM才會進入明細查詢');
   }
 
   // 算比較表單的週數

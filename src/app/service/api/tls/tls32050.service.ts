@@ -63,8 +63,9 @@ export interface TLS32050DetailRequest extends BaseQueryRequest {
   "BaseDateTo": string, // 基準日期訖
   "CompareDateFrom": string, // 比較日期起
   "CompareDateTo": string, // 比較日期訖
-  "OrgId": string, // 組織 → TLTTALENT.org_id (多選) 
-  "BusClass": string, //中分類 → TLTTALENT.bus_class (多選)
+  "OrgId": string, // 組織 →
+  "BusClass": string, // 中分類 →
+  "TltKind": string, //櫃別 →
   "AmtTaxMode": string, // 銷售金額是否含稅：'G' = 含稅 (AVN_TotSaleAmt), 'N' = 未稅 (AVN_TotSaleNet). Default: 'G'
   "ReceFilter": string  // 是否開立業主發票：'A' = 全部 (default), 'Y' = 是, 'N' = 否
   "FloorList": string, //樓層（SYS3900） → TLTTALENT_LOCATION.tlt_floor (多選條件（逗號分隔，例如 "1,2,3"）。NULL 或空字串代表不篩選。)
