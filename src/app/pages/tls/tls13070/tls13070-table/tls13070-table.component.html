@@ -1,6 +1,6 @@
-<p-table #dt [value]="totalRecords < 30 ? data : virtualData" [scrollable]="true" [dataKey]="dataKey"
-  scrollHeight="700px" [rows]="30" sortMode="multiple" [rowTrackBy]="trackByFn" [resizableColumns]="true"
-  [reorderableColumns]="true" [loading]="isLoading" [totalRecords]="totalRecords"
+<p-table #dt [value]="virtualData" [scrollable]="true" [dataKey]="dataKey" scrollHeight="700px" [rows]="30"
+  sortMode="multiple" [rowTrackBy]="trackByFn" [resizableColumns]="true" [reorderableColumns]="true"
+  [loading]="isLoading" [totalRecords]="totalRecords"
   styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
   [virtualScroll]="totalRecords < 30 ? false : true" [loading]="loading" [virtualScrollItemSize]="24"
   [lazy]="totalRecords < 30 ? false : true" [virtualScrollOptions]="{
@@ -133,12 +133,15 @@
         date:'yyyy/MM/dd'}}</td>
       <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">{{ rowData.contract_term
         }}</td>
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">{{rowData.open_fees|
-        number}}</td>
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">{{rowData.construct_fees|
-        number}}</td>
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">{{rowData.expiration_fees|
-        number}}</td>
+      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">
+        {{(rowData.open_fees ?? 0) | number}}
+      </td>
+      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">
+        {{(rowData.construct_fees ?? 0) | number}}
+      </td>
+      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">
+        {{(rowData.expiration_fees ?? 0) | number}}
+      </td>
       <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">
         {{rowData.tlt_term_type_Name}}</td>
 

@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { SystemDataService } from '@service/system/system-data.service';
+import { FormStatusService } from '@shared/service/form-status.service';
 import { Actions, PermissionGuardService } from '@shared/service/permission-guard.service';
 import { ConfirmationService } from 'primeng/api';
 import { take } from 'rxjs';
@@ -33,6 +34,7 @@ export abstract class BasicQueryPageComponent<T> {
   activatedRoute = inject(ActivatedRoute);
   systemDataService = inject(SystemDataService);
   private permissionGuard = inject(PermissionGuardService);
+  protected formStatusService = inject(FormStatusService);
   public readonly Actions = Actions;
 
   language = navigator.language;
@@ -44,6 +46,7 @@ export abstract class BasicQueryPageComponent<T> {
 
   initializePage(progNo: string, cruPage?: string, queryForm?: FormGroup, onSubmit?: (form: FormGroup) => void) {
     this.ProgNo = progNo.toUpperCase();
+    this.formStatusService.resetStatus(this.ProgNo);
     this.cruPage = cruPage ?? '';
     this.funInfo = this.systemDataService.getUserPermissions(this.ProgNo);
     this.currentPageService.setCurrentProgNo(this.ProgNo);
@@ -52,14 +55,18 @@ export abstract class BasicQueryPageComponent<T> {
     // 通用規則：檢查 previousRoute 是否包含 ProgNo（例如 tls13010），涵蓋 CRU 和所有 next 頁面
     const isFromRelatedRoute = previousRoute.includes(this.ProgNo.toLowerCase());
     if (this.hasPermission(Actions.Query) && isFromRelatedRoute && queryForm) {
-      const query = this.queryStateService.getQueryStateValue(this.ProgNo);
-      if (query) {
-        queryForm?.patchValue(query);
-        queryForm?.patchValue({ pageIndex: 1 });
-        if (onSubmit) {
-          onSubmit(queryForm);
+      // 監聽按鈕截取初始值的狀態
+      this.formStatusService.waitForReady(this.ProgNo).subscribe(() => {
+        console.log('表單已準備好，開始還原查詢狀態');
+        const query = this.queryStateService.getQueryStateValue(this.ProgNo);
+        if (query) {
+          queryForm?.patchValue(query);
+          queryForm?.patchValue({ pageIndex: 1 });
+          if (onSubmit) {
+            onSubmit(queryForm);
+          }
         }
-      }
+      });
     }
   }
   hasPermission(action: string): boolean {

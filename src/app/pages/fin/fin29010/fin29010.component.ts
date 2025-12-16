@@ -4,11 +4,11 @@ import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 // Shared
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Fin29010Request, Fin29010Response, Fin29010Service } from '@service/api/fin/fin29010.service';
+import { Fin29010Data, Fin29010Request, Fin29010Service } from '@service/api/fin/fin29010.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount, formatYYYYMM, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -26,7 +26,7 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
   standalone: true,
   imports: [AsyncPipe, ButtonModule, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TranslateModule]
 })
-export class FIN29010Component extends BasicQueryPageComponent<Fin29010Response> implements OnInit {
+export class FIN29010Component extends BasicQueryPageComponent<Fin29010Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     ACP_YYYYMM_Start: [null], //帳款年月
     ACP_YYYYMM_End: [null], //帳款年月
@@ -34,15 +34,15 @@ export class FIN29010Component extends BasicQueryPageComponent<Fin29010Response>
     ShowIfReserveAmtZero: [true], // 目前保留金額為零是否顯示
     PageSize: [30],
     PageIndex: [1],
-    // SortBy: []
   });
-  data: Fin29010Response[] = [];
+  data: Fin29010Data[] = [];
+  footerData: Fin29010Data | null = null;
   historyRequestBody: Fin29010Request | null = null;
   totalRecords = 0;
   columns: ReportColumn[] = [
     { field: 'VEN_No', header: '廠商編號' },
     { field: 'VEN_Name', header: '廠商名稱' },
-    { field: 'ACP_YYYYMM', header: '年月' },
+    { field: 'ACP_YYYYMM', header: '年月', format: formatYYYYMM },
     { field: 'acp_termno', header: '帳次' },
     { field: 'ACP_Amt', header: '應付金額', format: formatAmount },
     { field: 'ACP_ReserveAmt', header: '保留金額', format: formatAmount },
@@ -73,6 +73,7 @@ export class FIN29010Component extends BasicQueryPageComponent<Fin29010Response>
       this.fin29010Service.queryFIN29010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
         this.totalRecords = res.TotalCount;
         this.data = res.Data;
+        this.footerData = res.footerData;
         this.historyRequestBody = body;
       })
     });
