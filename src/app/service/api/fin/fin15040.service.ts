@@ -28,7 +28,7 @@ export interface FIN15040QueryRequest extends BaseQueryRequest {
   HasUniform?: boolean;          // 是否有統一編號
   PUR_DiscNo?: string;           // 扣抵代號
   SYS_ORIGIN?: string[];         // 系統別
-  INV_Status?: string;           // 發票狀態TODO: 待確認欄位名稱
+  INV_Cancel?: string;           // 發票狀態
 }
 
 export interface FIN15040PrintRequest extends FIN15040QueryRequest {
@@ -52,7 +52,7 @@ export interface FIN15040Data {
   SAL_Type: string;         // 系統別
   Source_Doc_No: string;    // 憑證單號
   AssetType: string;        // 資產註記
-  INV_Status?: string;           // 發票狀態TODO: 待確認欄位名稱
+  INV_Cancel?: string;           // 發票狀態
 }
 
 @Injectable({
