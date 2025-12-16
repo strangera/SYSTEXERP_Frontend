@@ -127,4 +127,11 @@ export class TLS32050Service {
   queryTLS32050Detail(data: TLS32050DetailRequest): Observable<BaseQueryResponse<TLS32050DetailResponse>> {
     return this.http.post<BaseQueryResponse<TLS32050DetailResponse>>(`${this.apiUrl}/queryTLS32050Detail`, data);
   }
+
+  // 匯出 中分類業績 報表
+  exportTLS32050(request: TLS32050Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS32050`, request, {
+      responseType: 'blob'
+    });
+  }
 }
