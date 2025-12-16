@@ -131,7 +131,10 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
     const body = {
       selectList: selectedItems.map(item => ({
         id: item.ID,
-        tableName: item.tableName
+        tableName: item.tableName,
+        TxnAmt: item.TxnAmt,
+        ECR_No: item.ECR_No,
+        TXN_Date: new Date(item.TxnDate),
       })),
     }
     this.tls27040Service.deleteTLS27040(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {

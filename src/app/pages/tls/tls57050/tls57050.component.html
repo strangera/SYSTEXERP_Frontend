@@ -8,9 +8,11 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="顯示方式" controlName="ReportType" [options]="displayModeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.ReportType" [submitted]="submitted" [filter]="false"
-              [showClear]="false"></app-dropdown>
+            <app-dropdown label="顯示方式" controlName="ReportType" [options]="[
+    { value: 1, label: '匯總' },
+    { value: 2, label: '明細' },
+  ]" optionLabel="label" optionValue="value" [control]="queryForm.controls.ReportType" [submitted]="submitted"
+              [filter]="false" [showClear]="false"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="銷售單號" controlName="TXN_SaleNoteNo" [control]="queryForm.controls.TXN_SaleNoteNo"
@@ -22,7 +24,7 @@
               [endControl]="queryForm.controls.TXN_Date_End" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="收銀機號/名稱" controlName="ECR_No" [options]="ECR_NoOptions" optionLabel="label"
+            <app-dropdown label="收銀機號/名稱" controlName="ECR_No" [options]="ECR_NoOptions | async" optionLabel="label"
               optionValue="No" [control]="queryForm.controls.ECR_No" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -30,28 +32,29 @@
               [submitted]="submitted" [useGrouping]="false"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="品牌代碼/名稱" controlName="LOGO_No" [options]="brandCodeOptions" optionLabel="label"
+            <app-dropdown label="品牌代碼/名稱" controlName="LOGO_No" [options]="brandCodeOptions | async" optionLabel="label"
               optionValue="No" [control]="queryForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-table [showOverlay]="false" [control]="queryForm.controls.PLU_MagNo" templateLabel="label"
-              [submitted]="submitted" optionLabel="PLU_MagNo" optionValue="PLU_MagNo" [suggestions]="suggestions"
-              [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
-              (formValueChanged)="onformValueChanged($event)" [formGroup]="opForm" [dialogData]="opData"
-              [dialogColumns]="opColumns" [loading]="opLoading" [totalRecords]="opTotalRecords">
-              <app-input-text class="col-12 md:col-6" label="管理編號" controlName="queryNo"
-                [control]="opForm.controls.queryNo" />
-              <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
-                [control]="opForm.controls.PLU_Name" />
-            </app-dropdown-table>
-          </div>
+          <!-- 商品管理編號/國際條碼/廠商貨號 -->
+          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [showOverlay]="false"
+            [control]="queryForm.controls.PLU_MagNo" templateLabel="label" [submitted]="submitted"
+            optionLabel="PLU_MagNo" optionValue="PLU_MagNo" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
+            (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
+            [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
+            [totalRecords]="opTotalRecords">
+            <app-input-text class="col-12 md:col-6" label="管理編號" controlName="queryNo"
+              [control]="opForm.controls.queryNo" />
+            <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
+              [control]="opForm.controls.PLU_Name" />
+          </app-dropdown-table>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="國際條碼" controlName="PLU_No" [control]="queryForm.controls.PLU_No"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="廠商貨號/名稱" controlName="VEN_No" [control]="queryForm.controls.VEN_No"
-              [submitted]="submitted" optionLabel="label" optionValue="VEN_No" [options]="vendorOptions"></app-dropdown>
+              [submitted]="submitted" optionLabel="label" optionValue="VEN_No"
+              [options]="vendorOptions | async"></app-dropdown>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

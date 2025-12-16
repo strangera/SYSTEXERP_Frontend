@@ -5,89 +5,121 @@
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-      <!-- 讀取合約新增 -->
-      <app-button label="讀取合約新增" (click)="onReadContractAdd()"></app-button>
-      <hr />
       <div class="grid p-fluid">
+        <!-- 收件編號 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number label="收件編號" controlName="Id" [control]="dataForm.controls.Id" [submitted]="submitted"
+            customPlaceholder="系統自動產生"></app-input-number>
+        </div>
         <!-- 收件日期 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar calendarType="dateOne" label="收件日期" controlName="In_Date" [control]="dataForm.controls.In_Date"
             [submitted]="submitted"></app-calendar>
         </div>
-        <!-- 保證金類型 (1=押金 2=履約保證金 3=施工保證金 4=開業保證金) -->
+        <!-- 新增方式 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="保證金類型" controlName="Deposit_Type" [options]="Deposit_TypeOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.Deposit_Type" [submitted]="submitted"></app-dropdown>
-        </div>
-        <!-- 票據種類 (1=支票 2=本票 3=銀行保證函 4=其他) -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="票據種類" controlName="CHK_Type" [options]="CHK_TypeOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.CHK_Type" [submitted]="submitted"></app-dropdown>
-        </div>
-        <!-- 狀態 (0=未繳票 1=已繳票 2=已退票 3=封存) -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="狀態" controlName="Status" [options]="StatusOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.Status" [submitted]="submitted"></app-dropdown>
-        </div>
-        <!-- 票據號碼 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="票據號碼" controlName="CHK_No" [control]="dataForm.controls.CHK_No"
-            [submitted]="submitted"></app-input-text>
-        </div>
-        <!-- 票據金額 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number label="票據金額" controlName="CHK_Amt" [control]="dataForm.controls.CHK_Amt"
-            [submitted]="submitted"></app-input-number>
-        </div>
-        <!-- 支票到期日 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" label="支票到期日" controlName="CHK_ExpireDate"
-            [control]="dataForm.controls.CHK_ExpireDate" [submitted]="submitted"></app-calendar>
-        </div>
-        <!-- 存票/繳票日期 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" label="存票/繳票日期" controlName="Deposit_Date"
-            [control]="dataForm.controls.Deposit_Date" [submitted]="submitted"></app-calendar>
-        </div>
-        <!-- 退票日期 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" label="退票日期" controlName="Return_Date"
-            [control]="dataForm.controls.Return_Date" [submitted]="submitted"></app-calendar>
-        </div>
-        <!-- 廠商編號 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="廠商編號" controlName="VEN_No" [options]="VEN_NoOptions | async" optionLabel="value"
-            templateLabel="label" optionValue="value" [control]="dataForm.controls.VEN_No"
-            [submitted]="submitted"></app-dropdown>
-        </div>
-        <!-- 廠商名稱 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="廠商名稱" controlName="VEN_Name" [control]="dataForm.controls.VEN_Name"
-            [submitted]="submitted"></app-input-text>
-        </div>
-        <!-- 專櫃編號 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="專櫃編號" controlName="TLT_No" [options]="tlt_noOptions | async" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.TLT_No" [submitted]="submitted"></app-dropdown>
-        </div>
-        <!-- 領回日期 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" label="領回日期" controlName="Return_EDate"
-            [control]="dataForm.controls.Return_EDate" [submitted]="submitted"></app-calendar>
-        </div>
-        <!-- 領回人姓名 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="領回人姓名" controlName="Return_Get_Person" [control]="dataForm.controls.Return_Get_Person"
-            [submitted]="submitted"></app-input-text>
+          <app-dropdown label="新增方式" controlName="Data_Source" [options]="[{ label: '手動新增', value: '2' },
+              { label: '讀取合約', value: '1' }]" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.Data_Source" [submitted]="submitted"></app-dropdown>
         </div>
       </div>
-      <div class="grid p-fluid">
-        <!-- 備註 -->
-        <div class="col-12">
-          <app-input-textarea label="備註" controlName="Remark" [control]="dataForm.controls.Remark"
-            [submitted]="submitted"></app-input-textarea>
+      <ng-container *ngIf="dataForm.controls.Data_Source.value === '2'">
+        <hr />
+        <div class="grid p-fluid">
+          <!-- 票據號碼 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="票據號碼" controlName="CHK_No" [control]="dataForm.controls.CHK_No"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <!-- 廠商編號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="廠商編號" controlName="VEN_No" [options]="VEN_NoOptions | async" optionLabel="value"
+              templateLabel="label" optionValue="value" [control]="dataForm.controls.VEN_No"
+              [submitted]="submitted"></app-dropdown>
+          </div>
+          <!-- 廠商名稱 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="廠商名稱" controlName="VEN_Name" [control]="dataForm.controls.VEN_Name"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <!-- 專櫃編號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="專櫃編號" controlName="TLT_No" [options]="tlt_noOptions | async" optionLabel="label"
+              optionValue="value" [control]="dataForm.controls.TLT_No" [submitted]="submitted"></app-dropdown>
+          </div>
+          <!-- 組織代碼 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="組織代碼" controlName="Org_Id" [options]="Org_IdOptions | async" optionLabel="label"
+              optionValue="value" [control]="dataForm.controls.Org_Id" [submitted]="submitted"></app-dropdown>
+          </div>
+          <!-- 合約起始日期 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar calendarType="dateOne" label="合約起始日期" controlName="tlt_bdate"
+              [control]="dataForm.controls.tlt_bdate" [submitted]="submitted"></app-calendar>
+          </div>
+          <!-- 合約終止日期 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar calendarType="dateOne" label="合約終止日期" controlName="tlt_edate"
+              [control]="dataForm.controls.tlt_edate" [submitted]="submitted"></app-calendar>
+          </div>
+          <!-- 票據金額 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number label="票據金額" controlName="CHK_Amt" [control]="dataForm.controls.CHK_Amt"
+              [submitted]="submitted">
+            </app-input-number>
+          </div>
+          <!-- 票據類型 (1=押金 2=履約保證金 3=施工保證金 4=開業保證金) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="票據類型" controlName="Deposit_Type" [options]="Deposit_TypeOptions" optionLabel="label"
+              optionValue="value" [control]="dataForm.controls.Deposit_Type" [submitted]="submitted"></app-dropdown>
+          </div>
+          <!-- 票據種類 (1=支票 2=本票 3=銀行保證函 4=其他) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="票據種類" controlName="CHK_Type" [options]="CHK_TypeOptions" optionLabel="label"
+              optionValue="value" [control]="dataForm.controls.CHK_Type" [submitted]="submitted"></app-dropdown>
+          </div>
+          <!-- 票券狀態 (0=未繳票 1=已繳票 2=已退票 3=封存) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="票券狀態" controlName="Status" [options]="StatusOptions" optionLabel="label"
+              optionValue="value" [control]="dataForm.controls.Status" [submitted]="submitted"></app-dropdown>
+          </div>
+          <!-- 支票到期日 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar calendarType="dateOne" label="支票到期日" controlName="CHK_ExpireDate"
+              [control]="dataForm.controls.CHK_ExpireDate" [submitted]="submitted"></app-calendar>
+          </div>
+          <!-- 繳票日期 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar calendarType="dateOne" label="繳票日期" controlName="Deposit_Date"
+              [control]="dataForm.controls.Deposit_Date" [submitted]="submitted"></app-calendar>
+          </div>
+          <!-- 繳回日期 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar calendarType="dateOne" label="繳回日期" controlName="Return_EDate"
+              [control]="dataForm.controls.Return_EDate" [submitted]="submitted"></app-calendar>
+          </div>
+          <!-- 繳回人 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="繳回人" controlName="Return_Get_Person" [control]="dataForm.controls.Return_Get_Person"
+              [submitted]="submitted"></app-input-text>
+          </div>
         </div>
-      </div>
+        <div class="grid p-fluid">
+          <!-- 備註 -->
+          <div class="col-12">
+            <app-input-textarea label="備註" controlName="Remark" [control]="dataForm.controls.Remark"
+              [submitted]="submitted"></app-input-textarea>
+          </div>
+        </div>
+      </ng-container>
+      <ng-container *ngIf="dataForm.controls.Data_Source.value === '1'">
+        <hr />
+        <app-table-edit [columns]="columns" [data]="data" [disabled]="isFormReadable" [tableRequired]="true"
+          (dataChange)="data=$event" [loading]="loading" [selectedItems]="selectedItems" insertText="讀取合約"
+          [showInsert]="true" (insert)="onReadContractAdd()" (selectionChange)="selectedItems=$event"
+          [isRowSelectable]="isRowSelectable">
+        </app-table-edit>
+      </ng-container>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>

@@ -6,8 +6,8 @@
 <p-inputGroup id="input-number">
   <ng-container *ngIf="minValue === null; else inputNumber">
     <p-inputNumber [inputId]="controlName" [title]="label" [name]="label" [formControl]="control" [readonly]="readonly"
-      [disabled]="disabled" [placeholder]="
-        control.disabled || readonly ? '' : customPlaceholder || placeholder
+      [disabled]="disabled" [placeholder]="customPlaceholder ? customPlaceholder:
+        control.disabled || readonly ? '' : placeholder
       " [showButtons]="showButtons" [max]="max || maxValue" [step]="step" [useGrouping]="useGrouping"
       [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits" [ngClass]="inputNumberClasses"
       [mode]="mode" [maxlength]="maxLength" (onInput)="onInputChange($event)" (onBlur)="onBlur($event)"
@@ -15,8 +15,8 @@
   </ng-container>
   <ng-template #inputNumber>
     <p-inputNumber [inputId]="controlName" [title]="label" [name]="label" [formControl]="control" [readonly]="readonly"
-      [disabled]="disabled" [placeholder]="
-        control.disabled || readonly ? '' : customPlaceholder || placeholder
+      [disabled]="disabled" [placeholder]=" customPlaceholder ? customPlaceholder:
+        control.disabled || readonly ? '' : placeholder
       " [showButtons]="showButtons" [min]="min || minValue" [max]="max || maxValue" [step]="step"
       [useGrouping]="useGrouping" [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
       [ngClass]="inputNumberClasses" [mode]="mode" [maxlength]="maxLength" (onInput)="onInputChange($event)"
