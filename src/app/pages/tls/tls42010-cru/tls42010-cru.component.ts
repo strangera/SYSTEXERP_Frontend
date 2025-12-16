@@ -80,6 +80,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   activeIndex = 0;
   copiedAttributes: Partial<KeyItem> | null = null;
   multiSelectMode = false;
+  readonly CRUDStatus = CRUDStatus;
   selectedKeys: KeyItem[] = []; // shift 多選用
 
   // 主檔 form
