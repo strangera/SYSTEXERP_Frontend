@@ -83,13 +83,13 @@ export interface TLS26080InsertPayload {
   pod_sdate: Date;            // 活動起始日期
   pod_edate: Date;            // 活動終止日期
   pod_busdate: Date;          // 活動正檔日期
-  pod_back_sdate: Date;      // 兌回起始日期
-  pod_back_edate: Date;      // 兌回結束日期
+  pod_back_sdate: Date;       // 兌回起始日期
+  pod_back_edate: Date;       // 兌回結束日期
   TALPORDERD_VOUCHERDetails: TLS26080DetailTable[]; // 活動專櫃資料
 }
 
 export interface TLS26080UpdatePayload extends TLS26080InsertPayload {
-
+  pod_status: '0' | '1' | '9'; // 活動狀態 (0=未核準, 1=已核準, 9=刪除)
 }
 
 export interface TLS26080Query extends BaseQueryRequest {

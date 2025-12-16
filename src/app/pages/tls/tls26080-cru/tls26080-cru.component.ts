@@ -25,7 +25,7 @@ import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fi
 import { PanelModule } from 'primeng/panel';
 import { finalize, map } from 'rxjs';
 import * as XLSX from 'xlsx';
-import { CampaignData, TLS26080Data, TLS26080EditTable, TLS26080InsertPayload, TLS26080KeyInTable } from '../tls26080/tls26080.model';
+import { CampaignData, TLS26080Data, TLS26080EditTable, TLS26080InsertPayload, TLS26080KeyInTable, TLS26080UpdatePayload } from '../tls26080/tls26080.model';
 
 @Component({
   selector: 'app-tls26080-cru',
@@ -292,9 +292,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         this.updateTltIdOptions(talentId);
         return this.fieldChanges.set(void 0);
       });
-    } else if (event.field === 'approval_action') {
-      this.toggleApprovalStatus(rowData);
-      return this.fieldChanges.set(void 0);
+      // } else if (event.field === 'approval_action') {
+      //   this.toggleApprovalStatus(rowData);
+      //   return this.fieldChanges.set(void 0);
     } else return;
   }, { allowSignalWrites: !0 });
 
@@ -477,15 +477,15 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         header: '審核日期',
         format: v => this.datePipe.transform(v, 'YYYY/MM/dd')
       },
-      {
-        field: 'approval_action',
-        header: '審核反審核',
-        type: 'checkbox',
-        trueValue: '1',
-        falseValue: '0',
-        validate: [this.approvalVal.bind(this)],
-        disabled: (v, i, r) => !this.approvalVal(r).isValid,
-      }
+      // {
+      //   field: 'approval_action',
+      //   header: '審核反審核',
+      //   type: 'checkbox',
+      //   trueValue: '1',
+      //   falseValue: '0',
+      //   validate: [this.approvalVal.bind(this)],
+      //   disabled: (v, i, r) => !this.approvalVal(r).isValid,
+      // }
     ];
   });
 
@@ -546,18 +546,22 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       this.tableLoading.set(!0);
       if (!this.dt().validateAndShowErrors()) return void this.tableLoading.set(!1);
 
+      const rowData = this.rowdata;
       const { pod_type2, ...d } = this.dataForm.getRawValue();
       const validTableData = this.tableData().filter(item => !item._isAutoInsertCandidate);
+      this.logger.debug(`beforeSubmit:`, [rowData, d, validTableData]);
+
       if (!validTableData.length) {
         this.tableLoading.set(!1);
         return void this.messageService.errorBubble('請至少新增一筆專櫃資料');
       }
-
-      this.logger.debug(`beforeSubmit:`, [d, validTableData]);
+      if (!rowData) {
+        this.tableLoading.set(!1);
+        return void this.messageService.errorBubble('表單資料有誤，請重新整理頁面');
+      }
 
       const raw = <TLS26080InsertPayload>{
         ...d,
-        pod_status: d.pod_status ?? '0',
         pod_desc: this.selectedCampaign()?.CampaignName ?? d.pod_desc ?? '',
         TALPORDERD_VOUCHERDetails: validTableData.map(item => ({
           ...item,
@@ -576,7 +580,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       )) as unknown as TLS26080InsertPayload;
 
       const request = this.isFormEditable
-        ? this.service.updateTLS26080(payload)
+        ? this.service.updateTLS26080({ ...rowData, ...payload } as TLS26080UpdatePayload)
         : this.service.insertTLS26080(payload);
 
       this.logger.debug(`submit:`, [d, payload]);
