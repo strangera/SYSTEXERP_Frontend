@@ -4,6 +4,7 @@
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
@@ -11,56 +12,67 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
+          <!-- 公司銀行科目代號（必填） -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="公司銀行科目代號"
-              controlName="Accountcode"
+              controlName="CompanyAccNo"
               [options]="AccountcodeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.Accountcode"
+              [control]="queryForm.controls.CompanyAccNo"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+
+          <!-- 兌現日區間 PayDateFrom/PayDateTo -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
               label="兌現日"
-              controlName="generalCode"
-              [startControl]="queryForm.controls.startdate"
-              [endControl]="queryForm.controls.enddate"
+              [startControl]="queryForm.controls.PayDateFrom"
+              [endControl]="queryForm.controls.PayDateTo"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
+
+          <!-- 到期日區間 ExpireDateFrom/ExpireDateTo -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="到期日"
+              [startControl]="queryForm.controls.ExpireDateFrom"
+              [endControl]="queryForm.controls.ExpireDateTo"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+
+          <!-- 票據號碼 ChkNo -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="票據號碼"
-              controlName="Ticketnumber"
-              [control]="queryForm.controls.Ticketnumber"
+              controlName="ChkNo"
+              [control]="queryForm.controls.ChkNo"
               [submitted]="submitted"
             ></app-input-text>
           </div>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
+
+      <div class="grid justify-content-end">
+        <app-button btnType="clear" (clickEvent)="onClearForm()"></app-button>
+        <app-button
+          btnType="query"
+          (clickEvent)="onSubmitQuery(queryForm)"
+          [loading]="loading"
+        ></app-button>
       </div>
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
   <div class="col-12">
     <app-table
