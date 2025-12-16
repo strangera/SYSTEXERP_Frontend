@@ -134,4 +134,11 @@ export class TLS32050Service {
       responseType: 'blob'
     });
   }
+
+  // 匯出 中分類業績 報表
+  exportTLS32050PDF(request: TLS32050Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS32050PDF`, request, {
+      responseType: 'blob'
+    });
+  }
 }
