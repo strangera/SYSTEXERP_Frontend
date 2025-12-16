@@ -36,7 +36,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
   public readonly queryForm = this.formBuilder.group({
     ENTRY_TYPE: new FormControl<EntryType | void>(void 0),
-    ...createPaginationConfig([{ field: 'SEQNO', order: 1 }]),
+    ...createPaginationConfig([{ field: 'AccDC', order: 0 }, { field: 'AccNo', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
