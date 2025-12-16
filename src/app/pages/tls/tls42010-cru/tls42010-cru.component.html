@@ -175,8 +175,9 @@
         </div>
       </div>
 
-      <!-- 底部按鈕 -->
-      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <!-- 底部按鈕（編輯/建立模式可見；檢視模式隱藏） -->
+      <div *ngIf="crudstatus !== CRUDStatus.Read"
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
