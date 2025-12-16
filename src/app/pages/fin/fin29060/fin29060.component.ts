@@ -62,19 +62,17 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
   data: FIN29060Data[] = [];
   lazyBatchSize = 30;
   columns: Column[] = [
-    { field: 'ACP_No', header: '應付帳款編號', visible: true, type: 'detail' },
     { field: 'VendorNo', header: '廠商編號', visible: true },
     { field: 'VendorName', header: '廠商名稱', visible: true },
+    { field: 'ACP_No', header: '應付帳款編號', visible: true, type: 'detail' },
     { field: 'AccNo', header: '會計科目', visible: true },
+    { field: 'Summary', header: '摘要', visible: true },
     { field: 'PostDate', header: '立帳日期', visible: true, format: formatDate },
     { field: 'ACP_Amt', header: '立帳金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
-    { field: 'Summary', header: '摘要', visible: true },
-    { field: 'PayAmt', header: '付款金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
-    { field: 'PayRefDate', header: '開票/匯款日期', visible: true, format: formatDate },
-    { field: 'BalanceAmt', header: '帳款餘額', visible: true, format: formatAmount },
-    { field: 'NotPayAmy', header: '未付金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
     { field: 'PaymentNo', header: '電匯/開票/單號', visible: true },
-    { field: 'VoucherNo', header: '傳票號碼', visible: true, type: 'detail' }
+    { field: 'PayRefDate', header: '開票/匯款日期', visible: true, format: formatDate },
+    { field: 'VoucherNo', header: '傳票號碼', visible: true, type: 'detail' },
+    { field: 'PayAmt', header: '付款金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
   ];
   constructor(
     public readonly fin29060Service: FIN29060Service,
@@ -94,7 +92,15 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
       },
     };
     if (event.col.field === 'ACP_No') {
-      this.router.navigate([`/account/fin/fin24010cru`], extras);
+      const acpNo = event.row?.ACP_No;
+      const handoff = {
+        acpNo,
+        fromRoute: window.location.pathname,
+        ts: Date.now(),
+      };
+      localStorage.setItem('FIN24010_CRU_HANDOFF', JSON.stringify(handoff));
+      localStorage.setItem('FIN24010_CRU_PROGNO', 'FIN24010');
+      window.open('/account/fin/fin24010cru', '_blank', 'noopener');
     } else if (event.col.field === 'VoucherNo') {
       const vouNo = event.row?.VoucherNo;
       const handoff = {
@@ -118,6 +124,7 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
       };
       this.fin29060Service.queryFIN29060(this.lastQueryBody).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe((res) => {
         this.fullData = res.Data;
+        this.totalData = res.totalData || [];
         this.totalRecords = res.TotalCount;
         this.data = this.fullData.slice(0, this.lazyBatchSize);
       });
@@ -127,6 +134,9 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
   private buildExportPayload(): QueryFIN29060Request {
     const raw = this.queryForm.getRawValue();
     return {
+      // 使用 totalRecords 作為 PageSize，向後端請求完整資料頁數
+      PageSize: this.totalRecords || 0,
+      PageIndex: this.totalRecords ? 1 : 0,
       STO_No: raw.STO_No || '',
       VEN_No_From: raw.VEN_No_From || '',
       VEN_No_To: raw.VEN_No_To || '',

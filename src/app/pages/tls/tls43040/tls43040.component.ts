@@ -1,16 +1,15 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { Tls43040Service } from '@service/api/tls/tls43040.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { Column, createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
-import { Tls43040Service } from '@service/api/tls/tls43040.service';
-import { Column } from 'src/app/shared/componentkit/table/table.model'; // Ensure this path is correct
-import { finalize } from 'rxjs';
 
 @Component({
   templateUrl: './tls43040.component.html',
@@ -21,7 +20,7 @@ import { finalize } from 'rxjs';
 export class TLS43040Component extends BasicQueryPageComponent<any> implements OnInit {
 
   queryForm = this.formBuilder.group({
-    ECR_GrpNo: ['', [Validators.maxLength(3)]],// 機台群組編號
+    ECR_GrpNo: ['', [Validators.maxLength(13)]],// 機台群組編號
     ECR_GrpName: ['', [Validators.maxLength(30)]], // 機台群組名稱
     ECR_GrpDesc: ['', [Validators.maxLength(100)]], // 機台群組備註
 
@@ -42,7 +41,6 @@ export class TLS43040Component extends BasicQueryPageComponent<any> implements O
 
   // 展開 (內層 table)
   expansionColumns7: Column[] = [
-    { field: 'ECR_GrpSeqNo', header: '收銀機群組順序號', visible: true },
     { field: 'ECR_GrpNo', header: '收銀機群組編號', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'ECR_Type', header: '機台類型', visible: true },

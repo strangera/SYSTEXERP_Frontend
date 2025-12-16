@@ -76,8 +76,8 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     ReceFilter: ['A'],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 A:預設全部))
 
     pageSize: [20],
-    pageIndex: [0], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'RowType', order: 1 }]],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    // SortBy: [[{ field: 'RowType', order: 1 }]],
   });
 
   // 日期查詢條件表單
@@ -353,56 +353,57 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     })
   }
   onReport(frm: FormGroup, isExcel: boolean) {
-    // Yvv 說先推遲
-    console.log('api準備中');
-    // if (isExcel == false) {
-    //   if (this.dateForm.invalid) {
-    //     this.messageService.errorBubble('基準資料為必填');
-    //     return
-    //   }
-    //   if (this.c_dateForm.invalid) {
-    //     this.messageService.errorBubble('比較資料為必填');
-    //     return
-    //   }
+    if (isExcel == true) {
+      if (this.dateForm.invalid) {
+        this.messageService.errorBubble('基準資料為必填');
+        return
+      }
+      if (this.c_dateForm.invalid) {
+        this.messageService.errorBubble('比較資料為必填');
+        return
+      }
 
-    //   const formValue = {
-    //     ...frm.getRawValue(),
+      const formValue = {
+        ...frm.getRawValue(),
 
-    //     ReportType: this.dateForm.get('reportType')?.value, // 從日期表單抓
-    //     BaseDateFrom: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
-    //     BaseDateTo: formatDate(frm.getRawValue().BaseDateTo, 'yyyy-MM-dd', 'en-US'),
-    //     CompareDateFrom: formatDate(frm.getRawValue().CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
-    //     CompareDateTo: formatDate(frm.getRawValue().CompareDateTo, 'yyyy-MM-dd', 'en-US'),
-    //     FloorList: (frm.getRawValue().FloorList || []).join(','),
-    //     AreaList: (frm.getRawValue().AreaList || []).join(','),
+        // ReportType: this.dateForm.get('reportType')?.value, // 從日期表單抓
+        BaseDateFrom: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
+        BaseDateTo: formatDate(frm.getRawValue().BaseDateTo, 'yyyy-MM-dd', 'en-US'),
+        CompareDateFrom: formatDate(frm.getRawValue().CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
+        CompareDateTo: formatDate(frm.getRawValue().CompareDateTo, 'yyyy-MM-dd', 'en-US'),
+        FloorList: (frm.getRawValue().FloorList || []).join(','),
+        AreaList: (frm.getRawValue().AreaList || []).join(','),
 
-    //     BusTypeList: (frm.getRawValue().BusTypeList || []).join(','), //這邊怪怪的之後可能會改成舊的模式(還是大: "大字串", 中: "中字串")
-    //     BusClassList: (frm.getRawValue().BusClassList || []) //這邊怪怪的之後可能會改成舊的模式
-    //       .map((x: any) => x.No)
-    //       .join(','),
+        BusTypeList: (frm.getRawValue().BusTypeList), // 之後可能改這個
+        BusClassList: (frm.getRawValue().BusClassList || []).map((item: any) => ({
+          BusType: item.bus_type ?? '',
+          BusClass: item.No ?? ''
+        })),
 
-    //     TltKindList: (frm.getRawValue().TltKindList || []).join(','),
-    //     OrgList: (frm.getRawValue().OrgList || []).join(','),
-    //     TltNoList: (frm.getRawValue().TltNoList || []).join(','),
-    //     TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
-    //     BuildingList: (frm.getRawValue().BuildingList || []).join(','),
-    //   }
-    //   this.btnLoading = true;
-    //   this.tls32040Service.exportTLS32040PDF(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
-    //     .subscribe(res => {
-    //       this.messageService.successBubble(res.Message);
-    //       // if (res.Data && res.Data.Print_URL) {
-    //       //   const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-    //       //   window.open(downloadUrl, '_blank');
-    //       // }
-    //       if (res.Data) {
-    //         console.log('api回應', res);
-    //       }
-    //     });
+        TltKindList: (frm.getRawValue().TltKindList || []).join(','),
+        OrgList: (frm.getRawValue().OrgList || []).join(','),
+        TltNoList: (frm.getRawValue().TltNoList || []).join(','),
+        TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
+        BuildingList: (frm.getRawValue().BuildingList || []).join(','),
+      }
+      this.btnLoading = true;
+      this.tls32050Service.exportTLS32050(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
+        .subscribe(blob => {
+          if (blob) {
+            const blobUrl = URL.createObjectURL(blob);
 
-    // } else {
-    //   console.log('api準備中');
-    // }
+            // ⭐ 建議加下載功能
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = 'TLS32050.xlsx'; // 可以依需求改檔名
+            a.click();
+            URL.revokeObjectURL(blobUrl);
+          }
+        });
+
+    } else {
+      console.log('api準備中');
+    }
   }
 
   // #region 日期選單事件
@@ -711,9 +712,13 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     // console.log('比較日期(迄)', compareEnd);
   }
 
-  onDetail1(event: any) {
+  onDetail1(event: TLS32050Response) {
+    // console.log('事件', event)
     const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);
-    this.onDetail(event, queryConditions);
+    if (event.RowType == 'TEAM') // TEAM才會進入明細查詢
+      this.onDetail(event, queryConditions);
+    else
+      console.log('TEAM才會進入明細查詢');
   }
 
   // 算比較表單的週數

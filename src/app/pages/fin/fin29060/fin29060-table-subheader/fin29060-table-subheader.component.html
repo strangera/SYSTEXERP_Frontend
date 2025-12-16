@@ -4,16 +4,12 @@
   </span>
 </p-divider>
 <p-table #dt [value]="virtualData" [columns]="selectedColumns" [totalRecords]="totalRecords" selectionMode="multiple"
-  [dataKey]="dataKey" [rowTrackBy]="trackByRow" [scrollable]="true" scrollHeight="450px" [lazy]="true"
+  [dataKey]="dataKey" [rowTrackBy]="trackByRow" [scrollable]="true" scrollHeight="450px" [lazy]="false"
   [rows]="lazyBatchSize" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
   (onRowReorder)="onRowReorder($event)" tableStyleClass="h-full"
-  styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines p-datatable-striped" [virtualScroll]="true"
-  [virtualScrollItemSize]="46" [virtualScrollDelay]="0" [virtualScrollOptions]="{
-  inline: true,
-  trackBy: trackByFn,
-  autoSize: true,
-  onScroll: onScroll
-}" [loading]="loading && data.length === 0" [groupRowsBy]="groupRowsBy" rowGroupMode="subheader">
+  styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines p-datatable-striped"
+  [virtualScroll]="!groupRowsBy" [virtualScrollItemSize]="46" [virtualScrollDelay]="0"
+  [loading]="loading && data.length === 0" [groupRowsBy]="groupRowsBy" rowGroupMode="subheader">
   <ng-template pTemplate="caption">
     <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
       [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event" [tableKey]="tableKey"
