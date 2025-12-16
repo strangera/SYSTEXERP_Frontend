@@ -88,6 +88,7 @@ export class TLS13070Component extends BasicQueryPageComponent<Tls13070Response>
   lastQueryBody?: Tls13070QueryRequest;
   BUS_TypeOptions = this.dropdown.queryTltBusType();
   VEN_UniformOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
+  Tlt_NoOptions = this.dropdown.queryTltTalent();
   approve_statusOptions = getSYS1000Options('approve_status');
   Area_NoOptions = this.dropdown.querySys3A00();
   FLOOR_NoOptions = this.dropdown.querySys3900();
