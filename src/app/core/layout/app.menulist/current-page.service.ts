@@ -13,4 +13,8 @@ export class CurrentPageService {
   setCurrentProgNo(progNo: string | null) {
     this.progNoSource.next(progNo);
   }
+
+  getCurrentProgNo(): string | null {
+    return this.progNoSource.getValue();
+  }
 }
