@@ -11,7 +11,7 @@ import { Column, formatAmount, formatPercentage } from '@shared/componentkit/tab
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
-import { catchError, finalize, of, switchMap } from 'rxjs';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
@@ -63,6 +63,13 @@ export class Tls32050CRUComponent extends BasicCruPageComponent<TLS32050DetailRe
   totalRecords = 0;
   data: TLS32050DetailResponse[] = [];
   historyRequestBody: TLS32050DetailRequest | null = null; //歷史查詢條件
+
+  TLT_KIND_OPTIONS = [
+    { value: '1', label: '正櫃' },
+    { value: '2', label: '臨時櫃' },
+    { value: '3', label: '特賣會' },
+    { value: '4', label: '虛擬櫃' },
+  ];
 
   columns: Column[] = [
     { field: 'RowType', header: '列別', visible: true },
@@ -226,90 +233,59 @@ export class Tls32050CRUComponent extends BasicCruPageComponent<TLS32050DetailRe
 
   queryTLS32050Detail() {
     this.loading = true; // 開始加載
-    const targetName = this.dataForm.get('TltKindName')?.value ?? '';
+    // const targetName = this.dataForm.get('TltKindName')?.value ?? '';
 
-    console.log('明細組織代號', this.dataForm.get('OrgId')?.value ?? '')
-    console.log('明細中分類', this.dataForm.get('Bus_Class')?.value ?? '')
-    console.log('目前不知道怎麼取專櫃編號', this.dataForm.get('TltNo')?.value ?? '')
+    // console.log('明細組織代號', this.dataForm.get('OrgId')?.value ?? '')
+    // console.log('明細中分類', this.dataForm.get('Bus_Class')?.value ?? '')
+    // console.log('櫃別名稱', this.dataForm.get('TltKindName')?.value ?? '')
 
-    // 1. 查詢專櫃編號下拉選單
-    this.dropDownListService.queryTLTTALENT_DropDownList().pipe(
-      untilDestroyed(this),
-      // 2. 使用 switchMap 處理非同步結果
-      switchMap(res => {
-        const dropdownData: { Name: string; No: string }[] = res.Data ?? [];
+    const tltKindName = this.dataForm.get('TltKindName')?.value ?? '';
 
-        // 找出對應的專櫃編號 (No)
-        const matchingItem = dropdownData.find(item => item.Name === targetName);
-        const tltNo = matchingItem ? matchingItem.No : '';
+    // 🔎 由名稱找對應的編號
+    const tltKindValue =
+      this.TLT_KIND_OPTIONS.find(x => x.label === tltKindName)?.value ?? '';
 
-        // console.log(`目標 Name: ${targetName}, 找到的 TltNo: ${tltNo}`);
+    console.log('櫃別名稱', tltKindName);
+    console.log('櫃別編號', tltKindValue);
 
-        if (!tltNo && targetName) {
-          // 如果目標名稱不為空，但找不到對應的 TltNo
-          console.warn(`找不到 Name 為 "${targetName}" 的對應 TltNo，停止後續查詢。`);
-          this.loading = false;
-          this.data = []; // 清空資料
-          this.totalRecords = 0;
-          // 使用 of() 回傳一個空的 Observable，中斷後續的查詢
-          return of(null);
-        }
+    const request = {
+      BaseDateFrom: formatDate(this.queryConditions.BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
+      BaseDateTo: formatDate(this.queryConditions.BaseDateTo, 'yyyy-MM-dd', 'en-US'),
+      CompareDateFrom: formatDate(this.queryConditions.CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
+      CompareDateTo: formatDate(this.queryConditions.CompareDateTo, 'yyyy-MM-dd', 'en-US'),
 
-        // 3. 建立並發出 TLS32050Detail 請求
-        const request = {
-          BaseDateFrom: formatDate(this.queryConditions.BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
-          BaseDateTo: formatDate(this.queryConditions.BaseDateTo, 'yyyy-MM-dd', 'en-US'),
-          CompareDateFrom: formatDate(this.queryConditions.CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
-          CompareDateTo: formatDate(this.queryConditions.CompareDateTo, 'yyyy-MM-dd', 'en-US'),
+      OrgId: this.dataForm.get('OrgId')?.value ?? '',
+      BusClass: this.dataForm.get('Bus_Class')?.value ?? '',
+      TltKind: tltKindValue ?? '', // <--- **這裡被替換成找到的櫃別編號**
 
-          OrgId: this.dataForm.get('OrgId')?.value ?? '',
-          BusClass: this.dataForm.get('Bus_Class')?.value ?? '',
-          TltNo: tltNo, // <--- **這裡被替換成找到的專櫃編號**
+      AmtTaxMode: ([] as string[]).concat(this.queryConditions.AmtTaxMode || []).join(','),
+      ReceFilter: ([] as string[]).concat(this.queryConditions.ReceFilter || []).join(','),
 
-          AmtTaxMode: ([] as string[]).concat(this.queryConditions.AmtTaxMode || []).join(','),
-          ReceFilter: ([] as string[]).concat(this.queryConditions.ReceFilter || []).join(','),
+      FloorList: ([] as string[]).concat(this.queryConditions.FloorList || []).join(','),
+      AreaList: ([] as string[]).concat(this.queryConditions.AreaList || []).join(','),
 
-          FloorList: ([] as string[]).concat(this.queryConditions.FloorList || []).join(','),
-          AreaList: ([] as string[]).concat(this.queryConditions.AreaList || []).join(','),
+      BusTypeList: this.toArray(this.queryConditions.BusTypeList),
+      BusClassList: this.toArray(this.queryConditions.BusClassList).map((item: any) => ({
+        BusType: item.bus_type ?? '',
+        BusClass: item.No ?? ''
+      })),
 
-          BusTypeList: this.toArray(this.queryConditions.BusTypeList),
-          BusClassList: this.toArray(this.queryConditions.BusClassList).map((item: any) => ({
-            BusType: item.bus_type ?? '',
-            BusClass: item.No ?? ''
-          })),
+      TltKindList: ([] as string[]).concat(this.queryConditions.TltKindList || []).join(','),
+      OrgList: ([] as string[]).concat(this.queryConditions.OrgList || []).join(','),
+      TltNoList: ([] as string[]).concat(this.queryConditions.TltNoList || []).join(','),
+      TermTypeList: ([] as string[]).concat(this.queryConditions.TermTypeList || []).join(','),
+      BuildingList: ([] as string[]).concat(this.queryConditions.BuildingList || []).join(','),
 
-          TltKindList: ([] as string[]).concat(this.queryConditions.TltKindList || []).join(','),
-          OrgList: ([] as string[]).concat(this.queryConditions.OrgList || []).join(','),
-          TltNoList: ([] as string[]).concat(this.queryConditions.TltNoList || []).join(','),
-          TermTypeList: ([] as string[]).concat(this.queryConditions.TermTypeList || []).join(','),
-          BuildingList: ([] as string[]).concat(this.queryConditions.BuildingList || []).join(','),
+    } as TLS32050DetailRequest;
 
-        } as TLS32050DetailRequest;
-
-        console.log('單中分類之營業報表request', request);
-        this.historyRequestBody = request; // 儲存查詢條件
-
-        // 進行第二個 API 呼叫
-        return this.tls32050Service.queryTLS32050Detail(request);
-      }),
-      // 4. 處理第二個 API 呼叫的錯誤 (可選)
-      catchError(err => {
-        console.error('查詢明細時發生錯誤:', err);
-        this.loading = false;
-        return of(null); // 返回 null 以避免程序崩潰
-      }),
-      // 5. 確保在流程結束時關閉 loading 狀態
-      finalize(() => this.loading = false)
-    ).subscribe(res => {
-      // 只有當第二個 API 呼叫成功且 res 不為 null 時才會執行這裡
-      if (res && res.Data) {
-        console.log('單組織之營業報表response', res.Data);
-        this.data = res.Data ?? []; // 查詢資料
-        console.log('明細資料', res.Data);
-        this.totalRecords = res.TotalCount; // 等候端
-      }
-    });
+    this.btnLoading = false;
+    this.tls32050Service.queryTLS32050Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      console.log('單中分類之營業報表response', res.Data);
+      this.data = res.Data ?? [];              // 查詢資料
+      this.historyRequestBody = request;        // 查詢條件
+      this.totalRecords = res.Data.length;
+      console.log('明細資料', res.Data);
+      // this.totalRecords = res.TotalCount;
+    })
   }
-
-
 }

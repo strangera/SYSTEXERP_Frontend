@@ -246,43 +246,15 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
   // 保存最後一次查詢的 request body，供匯出使用
   historyRequestBody: any | null = null;
 
-  /**
-   * 建立真正要送給後端的匯出 request body。
-   * 後端 service interface 定義為陣列類型；若我們在 query 時將 list 轉為逗號字串
-   *（為了 query 方便或避免空字串），匯出時需要還原成陣列形式。
-   */
-  private buildExportBodyForBackend(original: any): any {
-    if (!original) return original;
-
-    const clone = { ...original };
-
-    const listFields = ['FloorList', 'AreaList', 'BusTypeList', 'BusClassList', 'TltKindList', 'OrgList', 'TltNoList', 'TermTypeList', 'BuildingList'];
-
-    listFields.forEach(f => {
-      const v = clone[f];
-      if (typeof v === 'string' && v.trim() !== '') {
-        // 將逗號分隔字串還原為陣列
-        clone[f] = v.split(',').map(x => x.trim()).filter(x => x !== '');
-      } else if (v == null) {
-        // 後端若期待陣列，傳空陣列會比較保險（可依後端規定調整為 null）
-        clone[f] = [];
-      }
-      // 若已經是陣列，保留原樣
-    });
-
-    return clone;
-  }
-
   onExportPDF() {
     if (!this.historyRequestBody) {
       this.messageService.warnBubble('請先執行查詢以產生報表。');
       return;
     }
 
-    const exportBody = this.buildExportBodyForBackend(this.historyRequestBody);
-    console.debug('TLS32030 Export PDF body:', exportBody);
+    console.debug('TLS32030 Export PDF body:', this.historyRequestBody);
 
-    const export$ = this.tls32030Service.ExportTLS32030PDF(exportBody as any);
+    const export$ = this.tls32030Service.ExportTLS32030PDF(this.historyRequestBody as any);
 
     this.fileExportService.executeFileExport(
       export$.pipe(untilDestroyed(this)),
@@ -297,10 +269,9 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
       return;
     }
 
-    const exportBody = this.buildExportBodyForBackend(this.historyRequestBody);
-    console.debug('TLS32030 Export XLSX body:', exportBody);
+    console.debug('TLS32030 Export XLSX body:', this.historyRequestBody);
 
-    const export$ = this.tls32030Service.ExportTLS32030Excel(exportBody as any);
+    const export$ = this.tls32030Service.ExportTLS32030Excel(this.historyRequestBody as any);
 
     this.fileExportService.executeFileExport(
       export$.pipe(untilDestroyed(this)),

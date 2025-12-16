@@ -25,23 +25,15 @@
             >
           </app-input-text>
         </div>
-        <app-table #table class="col-12" dataKey="ID" [columns]="columns" [data]="data" dataStatusField="status"
-          [dataStatusValue]="{
-    Original: 'original',
-    New: 'new',
-    Modified: 'modified',
-    Deleted: 'deleted'
-  }" [showInsert]="!isTableDisabled" [showRowEdit]="!isTableDisabled" [showCheckBox]="!isTableDisabled"
-          [showDelete]="true" [deleteData]="false" (delete)="onDeleteRow($event)" [showEdit]="false"
-          [showDetail]="false" [showCaption]="!isFormReadable" [showManage]="!isFormReadable" [showReportMode]="false"
-          [insertRowData]="true" [disabled]="isTableDisabled" (selectionChange)="selectedRows = $event"
-          [selectedItems]="selectedRows" (dataChange)="data = $event" (rowEditSave)="onRowEdit($event.newData)"
-          (fieldChange)="onFieldChange($event)">
-        </app-table>
+        <app-table-edit *ngIf="dataForm.controls.ECR_DtlLimit.value !== '0'" class="col-12" tableKey="tls43040Detail"
+          [columns]="columns" [data]="visibleData" [dataStatusField]="'status'" [disabled]="false" [canInsert]="true"
+          dataKey="ID" [tableRequired]="true" [selectedItems]="selectedRows" (selectionChange)="selectedRows = $event"
+          (dataChange)="onDataChange($event)" (delete)="onDelete($event)">
+        </app-table-edit>
 
       </div>
 
-      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading" />
       </div>
