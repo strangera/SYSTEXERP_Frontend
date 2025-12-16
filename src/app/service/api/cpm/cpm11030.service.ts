@@ -1,142 +1,141 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 
-export interface Cpm11030Row {
-  Loan_No: string;        // 出借編號
-  Loan_Date: string;      // 出借日期 (yyyy-MM-dd)
-  Service_Id: string;     // 服務台位置
-  USER_NAME: string;      // 借用人姓名
-  Loan_phone: string;     // 電話
-  Loan_USR_Name: string;  // 出借處理人員
-  CertTypeName: string;   // 證件類型(組合過的顯示：代碼-名稱 或純名稱)
-  Cert_No: string;        // 證件編號
-  Device_Name: string;    // 設備名稱
+/** =========================
+ *  API DTOs (依你貼的 Swagger)
+ *  ========================= */
+
+export type SortItem = { field: string; order: number };
+
+export interface QueryCPM11030Request {
+  PageSize: number;
+  PageIndex: number;
+  SortBy?: SortItem[];
+
+  Loan_No?: string;
+  Loan_BDate?: string; // ISO string
+  Loan_EDate?: string; // ISO string
+  User_Name?: string;
+  Loan_USR_No?: string;
+  Loan_Phone?: string;
+  Cert_Type?: string;
+  Cert_No?: string;
+  Device_Name?: string;
+  Device_ID?: string;
+  Service_Id?: string;
 
   [key: string]: any;
 }
 
-export interface Cpm11030Request {
-  PageSize?: number;
-  PageIndex?: number;
-  SortBy?: { field: string; order: number }[];
-
-  OrderBy?: string | null;
-  Offset?: number | null;
-
-  RecordCode?: string;
-  BorrowDateFrom?: string;
-  BorrowDateTo?: string;
-  Name?: string;
-  StaffName?: string;
-  Phone?: string;
-  PaperTypeList?: string[];
-  PaperCode?: string;
-  EquipmentNameList?: string[];
-  DeviceCode?: string;
-  CounterCode?: string;
+export interface QueryCPM11030Row {
+  ID: number;
+  Loan_No: string;
+  Loan_Date: string; // ISO string
+  Loan_Time: string; // string
+  User_Name: string;
+  Loan_Phone: string;
+  Loan_USR_No: string;
+  Cert_Type: string;
+  Cert_No: string;
 
   [key: string]: any;
 }
 
-/** CRU 用 payload（對應你 CSS3001 INSERT 需要的欄位） */
+export interface QueryDailyEquipAvailabilityRequest {
+  Service_Id: string;
+}
+
+export interface DailyEquipAvailabilityRow {
+  Device_ID: string;
+  Device_Name: string;
+  Device_Qty: number;
+}
+
+export interface InsertDailyEquipAvailabilityRequest {
+  CSS_Date: string;     // ISO string
+  Service_Id: string;
+  Device_ID: string;
+  CSS_PriorQty: number;
+  CSS_LendQty: number;
+  CSS_ReturnQty: number;
+  CSS_CurrentQty: number;
+}
+
+/** =========================
+ *  (可選) CPM11030 CRU (若後端有提供)
+ *  ========================= */
 export interface Cpm11030CruPayload {
-  Loan_No?: string;      // 出借編號（Edit 用；Create 可不送，讓後端產生）
-  Loan_Date: string;     // 出借日期 (yyyy-MM-dd)
-  Service_Id: string;    // 服務台位置編號
-  User_Name: string;     // 借用人姓名
-  Cert_Type: string;     // 證件類型代碼 (01/02/03/04/05)
-  Cert_No: string;       // 證件編號
-  Loan_Phone: string;    // 電話
-  Loan_USR_Name: string; // 出借處理人員名稱
-  Device_ID: string;     // 設備編號
-  Device_Name?: string;  // 設備名稱（可由設備下拉帶入）
+  ID?: number;
+  Loan_No?: string;
+  Loan_Date: string;     // ISO / yyyy-MM-dd (依你後端實作)
+  Loan_Time?: string;    // HH:mm:ss
+  Service_Id: string;
+  User_Name: string;
+  Loan_USR_No: string;
+  Loan_Phone: string;
+  Cert_Type: string;
+  Cert_No: string;
+  Device_ID?: string;
+  Device_Name?: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class Cpm11030Service {
-  // Controller 大致假設：/CPM0000/CPM1000
   private apiUrl = `${environment.ApiUrl}/CPM0000/CPM1000`;
 
   constructor(private http: HttpClient) {}
 
-  /** 查詢 設備出借作業 列表 */
-  queryCPM11030(body: Cpm11030Request): Observable<ApiResponse<Cpm11030Row[]>> {
-    // TODO: 後端完成後，改成真正的 http.post
-    // return this.http.post<ApiResponse<Cpm11030Row[]>>(
-    //   `${this.apiUrl}/queryCPM11030`,
-    //   body
-    // );
-
-    const mock: Cpm11030Row[] = [
-      {
-        Loan_No: 'L202512100001',
-        Loan_Date: '2025-12-10',
-        Service_Id: '11A001',
-        USER_NAME: '王小明',
-        Loan_phone: '0912345678',
-        Loan_USR_Name: '管理者',
-        CertTypeName: '身分證',
-        Cert_No: 'A123456789',
-        Device_Name: '愛心輪椅',
-      },
-      {
-        Loan_No: 'L202512100002',
-        Loan_Date: '2025-12-10',
-        Service_Id: '15A001',
-        USER_NAME: '林小美',
-        Loan_phone: '0922333444',
-        Loan_USR_Name: '服務人員A',
-        CertTypeName: '健保卡',
-        Cert_No: '0000123456',
-        Device_Name: '奇哥Joie輕便娃娃車',
-      },
-    ];
-
-    const response: ApiResponse<Cpm11030Row[]> = {
-      Data: mock,
-      TotalCount: mock.length,
-      IsSuccess: true,
-      Message: '',
-    } as any;
-
-    return of(response);
+  /** 列表查詢：/queryCPM11030 */
+  queryCPM11030(body: QueryCPM11030Request): Observable<ApiResponse<QueryCPM11030Row[]>> {
+    return this.http.post<ApiResponse<QueryCPM11030Row[]>>(
+      `${this.apiUrl}/queryCPM11030`,
+      body
+    );
   }
 
-  /** 新增 設備出借作業（CPM11030） */
+  /** 每日設備可出借量：查詢 /queryCPM11030_DailyEquipAvailability */
+  queryCPM11030_DailyEquipAvailability(
+    body: QueryDailyEquipAvailabilityRequest
+  ): Observable<ApiResponse<DailyEquipAvailabilityRow[]>> {
+    return this.http.post<ApiResponse<DailyEquipAvailabilityRow[]>>(
+      `${this.apiUrl}/queryCPM11030_DailyEquipAvailability`,
+      body
+    );
+  }
+
+  /** 每日設備可出借量：新增 /insertCPM11030_DailyEquipAvailability
+   *  Swagger 看起來是「一次新增一筆」，所以這裡提供逐筆送出（forkJoin）
+   */
+  insertCPM11030_DailyEquipAvailability(
+    body: InsertDailyEquipAvailabilityRequest
+  ): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
+      `${this.apiUrl}/insertCPM11030_DailyEquipAvailability`,
+      body
+    );
+  }
+
+  /** 批次儲存（逐筆 insert） */
+  saveDailyEquipAvailabilityBatch(items: InsertDailyEquipAvailabilityRequest[]) {
+    if (!items?.length) {
+      // 讓呼叫端好處理：回一個 forkJoin 空陣列會直接 complete，這裡給個最小保險
+      return forkJoin([]);
+    }
+    return forkJoin(items.map((x) => this.insertCPM11030_DailyEquipAvailability(x)));
+  }
+
+  /** (可選) CPM11030 新增/修改：如果你後端確實有這兩支，就可直接用
+   *  沒有的話，你可以先留著，或改成你實際 endpoint。
+   */
   insertCPM11030(body: Cpm11030CruPayload): Observable<ApiResponse<any>> {
-    // TODO: 後端完成後，改成 http.post：
-    // return this.http.post<ApiResponse<any>>(
-    //   `${this.apiUrl}/insertCPM11030`,
-    //   body
-    // );
-
-    console.log('Mock insertCPM11030 payload:', body);
-    const resp: ApiResponse<any> = {
-      Data: null,
-      IsSuccess: true,
-      Message: 'Mock insert success',
-    } as any;
-    return of(resp);
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/insertCPM11030`, body);
   }
 
-  /** 修改 設備出借作業（CPM11030） */
   updateCPM11030(body: Cpm11030CruPayload): Observable<ApiResponse<any>> {
-    // TODO: 後端完成後，改成 http.post / put：
-    // return this.http.post<ApiResponse<any>>(
-    //   `${this.apiUrl}/updateCPM11030`,
-    //   body
-    // );
-
-    console.log('Mock updateCPM11030 payload:', body);
-    const resp: ApiResponse<any> = {
-      Data: null,
-      IsSuccess: true,
-      Message: 'Mock update success',
-    } as any;
-    return of(resp);
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateCPM11030`, body);
   }
 }
 
