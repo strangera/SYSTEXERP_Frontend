@@ -7,7 +7,7 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <!-- 出借編號（Loan_No：Create 通常後端產生，Edit/Read 顯示） -->
+        <!-- 出借編號 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="出借編號"
@@ -27,7 +27,7 @@
           ></app-input-text>
         </div>
 
-        <!-- 服務台位置編號 -->
+        <!-- 服務台位置編號（不連動） -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="服務台位置編號"
@@ -40,18 +40,18 @@
           ></app-dropdown>
         </div>
 
-        <!-- 出借日期 -->
+        <!-- 異動日期 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar
             calendarType="dateOne"
-            label="出借日期"
+            label="異動日期"
             controlName="Loan_Date"
             [control]="dataForm.controls.Loan_Date"
             [submitted]="submitted"
           ></app-calendar>
         </div>
 
-        <!-- 出借時間 -->
+        <!-- 出借時間（保留顯示，不影響 Daily insert） -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar
             calendarType="timeOne"
@@ -84,12 +84,16 @@
 
         <!-- 證件類型 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
+
+                    <app-dropdown
             label="證件類型"
             controlName="Cert_Type"
+            [options]="counterCodeOptions"
+            optionLabel="label"
+            optionValue="value"
             [control]="dataForm.controls.Cert_Type"
             [submitted]="submitted"
-          ></app-input-text>
+          ></app-dropdown>
         </div>
 
         <!-- 證件編號 -->
@@ -102,17 +106,7 @@
           ></app-input-text>
         </div>
 
-        <!-- 設備名稱 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="設備名稱"
-            controlName="Device_Name"
-            [control]="dataForm.controls.Device_Name"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-
-        <!-- 設備代號 -->
+        <!-- ✅ 設備代號：改 app-input-text（不連動） -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="設備代號"
@@ -120,10 +114,34 @@
             [control]="dataForm.controls.Device_ID"
             [submitted]="submitted"
           ></app-input-text>
+        
+        </div>
+
+        <!-- ✅ 設備名稱：自由輸入（不連動） -->
+        <div class="col-12 md:col-6 lg:col-4">
+
+                              <app-dropdown
+            label="設備名稱"
+            controlName="Device_Name"
+            [options]="counterCodeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.Device_Name"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <!-- ✅ 本日庫存量：不預設 0（必填） -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="本日庫存量"
+            controlName="CSS_CurrentQty"
+            [control]="dataForm.controls.CSS_CurrentQty"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
       </div>
 
-      <!-- 按鈕列：只在非 Read 模式顯示 -->
       <div
         class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
         *ngIf="!isRead"
