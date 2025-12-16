@@ -143,14 +143,11 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
       accept: () => {
         this.btnLoading = true;
         this.tls26040Service.insertTLS26040(insertRequest)
-          .pipe(finalize(() => this.btnLoading = false))
-          .subscribe(response => {
-            this.messageService.successBubble('結帳成功');
-            // 重新查詢資料
-            this.onSubmit(this.dataForm);
-            // 清空選取項目
-            this.selectedItems = [];
-            this.selectedCheckoutItems = [];
+          .pipe(untilDestroyed(this), finalize(() => this.btnLoading = false))
+          .subscribe(() => {
+            this.messageService.successBubble('新增成功');
+            // 返回查詢頁
+            this.onCancel();
           });
       },
     });
