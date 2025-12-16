@@ -7,7 +7,7 @@ import { NotificationService } from '@shared/component/notification-message/noti
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
-import { finalize, map, Observable, take, tap } from 'rxjs';
+import { filter, finalize, map, Observable, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl: string = environment.ApiUrl;
@@ -64,9 +64,7 @@ export class TLS26080Service {
 
   // 核准狀態檢查
   private approvalCheck({ pod_status }: TLS26080Data) {
-    return pod_status === ApprovalStatus.未核准
-      ? { api: `approveTLS26080`, confirm: `核准` }
-      : { api: `disapproveTLS26080`, confirm: `反核准` };
+    return pod_status === ApprovalStatus.未核准 ? 'approveTLS26080' : 'disapproveTLS26080';
   }
 
   constructor(
@@ -150,20 +148,17 @@ export class TLS26080Service {
   };
 
   /** 核准或反核准專櫃活動 */
-  public loadApproval(data: TLS26080Data): Observable<{ newStatus: ApprovalStatus; confirmText: string; }> {
-    const { api, confirm } = this.approvalCheck(data);
-    return this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
-      `${apiUrl}/TLS0000/TLS2000/${api}`, { id: data.id }
-    ).pipe(
+  public loadApproval(data: TLS26080Data): Observable<{ newStatus: ApprovalStatus; }> {
+    const api = this.approvalCheck(data);
+    return this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(`${apiUrl}/TLS0000/TLS2000/${api}`, { id: data.id }).pipe(
       take(1),
+      filter(res => res.Status === '0000'),
       map(() => ({
-        newStatus: confirm === '核准' ? ApprovalStatus.已核准 : ApprovalStatus.未核准,
-        confirmText: confirm
+        newStatus: api === 'approveTLS26080' ? ApprovalStatus.已核准 : ApprovalStatus.未核准
       })),
-      tap(({ confirmText }) => {
-        this.logger.debug(`核准結果:`, [confirmText]);
-        this.messageService.successBubble(`${confirmText}成功`);
-      })
+      tap(() =>
+        this.messageService.successBubble(`${api === 'approveTLS26080' ? '核准' : '反核准'}成功`)
+      )
     );
   }
 

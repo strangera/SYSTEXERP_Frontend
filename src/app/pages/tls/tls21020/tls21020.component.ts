@@ -36,7 +36,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
   public readonly queryForm = this.formBuilder.group({
     ENTRY_TYPE: new FormControl<EntryType | void>(void 0),
-    ...createPaginationConfig([{ field: 'SEQNO', order: 1 }]),
+    ...createPaginationConfig([{ field: 'AccDC', order: 0 }, { field: 'AccNo', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
@@ -202,6 +202,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     },
   ]);
 
+  /** 根據 columnsKeys 動態產生最終欄位 */
   public readonly columns = computed((): EditColumn[] => {
     const keys = this.columnsKeys();
     const all = this.allColumns();
@@ -294,6 +295,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     });
   }
 
+  /** 錯誤檢查 */
   public validateRow = (rowData: TLS21020Data, index?: number): { isValid: boolean, errorMessage: string; } => {
     // Org_ID 必填
     if (this.isEmpty(rowData.Org_ID)) return this.fail('組織代碼必須填寫');

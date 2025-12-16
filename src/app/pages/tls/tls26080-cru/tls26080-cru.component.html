@@ -38,7 +38,7 @@
                       [options]="service.podTypeItems"
                       optionLabel="label"
                       optionValue="value"
-                      [disabled]="true"
+                      [disabled]="!0"
                       [control]="df().pod_type"
                       [loading]="loading"
                       [submitted]="submitted"></app-dropdown>
@@ -102,16 +102,15 @@
                       [mode]="'basic'"
                       [accept]="'.xlsx,.xls,.csv,.ods'"
                       chooseLabel="選擇 Excel 檔案"
-                      [auto]="true"
-                      [customUpload]="true"
+                      [auto]="!0"
+                      [customUpload]="!0"
                       (uploadHandler)="handleUpload($event)"></p-fileUpload>
         <app-button btnType="CSV"
                     label="匯出 Excel 樣本"
                     (click)="onExportExcelTemplate()"></app-button>
         <app-button btnType="submit"
                     label="存檔"
-                    [loading]="loading"
-                    [disabled]="isSubmitDisabled()"></app-button>
+                    [loading]="loading"></app-button>
       </div>
       }
     </form>
@@ -138,7 +137,7 @@
                         [canInsert]="!1"
                         [tableRequired]="!0"
                         [showInsert]="!isFormReadable"
-                        [showReorder]="!isFormReadable"
+                        [showReorder]="!1"
                         [disabled]="isFormReadable"
                         [loading]="tableLoading()">
         </app-table-edit>
