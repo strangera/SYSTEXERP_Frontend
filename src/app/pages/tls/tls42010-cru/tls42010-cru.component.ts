@@ -481,13 +481,17 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   }
   private applyDetail(detailList: any[]) {
     if (!detailList?.length) return;
-
     const validPages = detailList.map(d => Number(d.KB_KeyPage) > 0 ? Number(d.KB_KeyPage) : 1);
     const maxPage = Math.max(...validPages, 1);
 
+    // 建立足夠的頁面格線
     while (this.pages.length < maxPage) {
       this.pages.push(this.buildGrid(this.pages.length));
     }
+
+    // 初始化並同步 pageOriginalNos，使索引對應到後端原始頁碼
+    // 預設為 1..maxPage，之後以 detailList 中的 KB_KeyPage 實際值覆蓋
+    this.pageOriginalNos = Array.from({ length: maxPage }, (_, i) => i + 1);
     detailList.forEach((d: any) => {
       const pageIndex = (Number(d.KB_KeyPage) > 0 ? Number(d.KB_KeyPage) : 1) - 1;
       const scanCode = d.KB_ScanCode;
@@ -531,6 +535,9 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         mergeRight,
         mergeDown
       });
+
+      // 確保原始頁碼映射正確（使用檔案中的 KB_KeyPage 原始值）
+      this.pageOriginalNos[pageIndex] = Number(d.KB_KeyPage) > 0 ? Number(d.KB_KeyPage) : (pageIndex + 1);
     });
 
     const first = this.pages.flat().find(k => k.KB_Func || k.KB_Display1 || k.KB_Display2);
