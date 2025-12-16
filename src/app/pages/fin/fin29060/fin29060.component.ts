@@ -92,7 +92,15 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
       },
     };
     if (event.col.field === 'ACP_No') {
-      this.router.navigate([`/account/fin/fin24010cru`], extras);
+      const acpNo = event.row?.ACP_No;
+      const handoff = {
+        acpNo,
+        fromRoute: window.location.pathname,
+        ts: Date.now(),
+      };
+      localStorage.setItem('FIN24010_CRU_HANDOFF', JSON.stringify(handoff));
+      localStorage.setItem('FIN24010_CRU_PROGNO', 'FIN24010');
+      window.open('/account/fin/fin24010cru', '_blank', 'noopener');
     } else if (event.col.field === 'VoucherNo') {
       const vouNo = event.row?.VoucherNo;
       const handoff = {
@@ -126,6 +134,9 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
   private buildExportPayload(): QueryFIN29060Request {
     const raw = this.queryForm.getRawValue();
     return {
+      // 使用 totalRecords 作為 PageSize，向後端請求完整資料頁數
+      PageSize: this.totalRecords || 0,
+      PageIndex: this.totalRecords ? 1 : 0,
       STO_No: raw.STO_No || '',
       VEN_No_From: raw.VEN_No_From || '',
       VEN_No_To: raw.VEN_No_To || '',
