@@ -19,7 +19,7 @@ import { CellInput } from './table-edit-cell.model';
                  [disabled]="isDisabled()"
                  (ngModelChange)="cellInput.onValueChange(cellInput.rowData, $event, cellInput.col, cellInput.index)"
                  [maxlength]="cellInput.col.maxLength || null"
-                 [style]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
+                 [style]="{'width': cellInput.col.width || '100%', 'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
                  [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
                  (blur)="handleBlur()"(keydown.enter)="handleEnter($event)"
                  [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }" />
