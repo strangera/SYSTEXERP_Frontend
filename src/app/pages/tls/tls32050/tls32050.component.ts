@@ -221,7 +221,8 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
   org_id_Option: IDropdownItem[] = []; // 組織
   tlt_no_id_Option: IDropdownItem[] = []; // 專櫃編號
 
-  btnLoading = false; // PDF excel 讀取進度條
+  btnPDFLoading = false; // PDF 讀取進度條
+  btnExcelLoading = false; // excel 讀取進度條
   platformId = inject(PLATFORM_ID);
 
   constructor(
@@ -353,20 +354,19 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     })
   }
   onReport(frm: FormGroup, isExcel: boolean) {
-    if (isExcel == true) {
-      if (this.dateForm.invalid) {
-        this.messageService.errorBubble('基準資料為必填');
-        return
-      }
-      if (this.c_dateForm.invalid) {
-        this.messageService.errorBubble('比較資料為必填');
-        return
-      }
+    if (this.dateForm.invalid) {
+      this.messageService.errorBubble('基準資料為必填');
+      return
+    }
+    if (this.c_dateForm.invalid) {
+      this.messageService.errorBubble('比較資料為必填');
+      return
+    }
 
+    if (isExcel == true) {
       const formValue = {
         ...frm.getRawValue(),
 
-        // ReportType: this.dateForm.get('reportType')?.value, // 從日期表單抓
         BaseDateFrom: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
         BaseDateTo: formatDate(frm.getRawValue().BaseDateTo, 'yyyy-MM-dd', 'en-US'),
         CompareDateFrom: formatDate(frm.getRawValue().CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
@@ -386,13 +386,11 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
         TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
         BuildingList: (frm.getRawValue().BuildingList || []).join(','),
       }
-      this.btnLoading = true;
-      this.tls32050Service.exportTLS32050(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
+      this.btnExcelLoading = true;
+      this.tls32050Service.exportTLS32050(formValue).pipe(finalize(() => this.btnExcelLoading = false), untilDestroyed(this))
         .subscribe(blob => {
           if (blob) {
             const blobUrl = URL.createObjectURL(blob);
-
-            // ⭐ 建議加下載功能
             const a = document.createElement('a');
             a.href = blobUrl;
             a.download = 'TLS32050.xlsx'; // 可以依需求改檔名
@@ -400,9 +398,41 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
             URL.revokeObjectURL(blobUrl);
           }
         });
-
     } else {
-      console.log('api準備中');
+      const formValue = {
+        ...frm.getRawValue(),
+
+        BaseDateFrom: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
+        BaseDateTo: formatDate(frm.getRawValue().BaseDateTo, 'yyyy-MM-dd', 'en-US'),
+        CompareDateFrom: formatDate(frm.getRawValue().CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
+        CompareDateTo: formatDate(frm.getRawValue().CompareDateTo, 'yyyy-MM-dd', 'en-US'),
+        FloorList: (frm.getRawValue().FloorList || []).join(','),
+        AreaList: (frm.getRawValue().AreaList || []).join(','),
+
+        BusTypeList: (frm.getRawValue().BusTypeList), // 之後可能改這個
+        BusClassList: (frm.getRawValue().BusClassList || []).map((item: any) => ({
+          BusType: item.bus_type ?? '',
+          BusClass: item.No ?? ''
+        })),
+
+        TltKindList: (frm.getRawValue().TltKindList || []).join(','),
+        OrgList: (frm.getRawValue().OrgList || []).join(','),
+        TltNoList: (frm.getRawValue().TltNoList || []).join(','),
+        TermTypeList: (frm.getRawValue().TermTypeList || []).join(','),
+        BuildingList: (frm.getRawValue().BuildingList || []).join(','),
+      }
+      this.btnPDFLoading = true;
+      this.tls32050Service.exportTLS32050PDF(formValue).pipe(finalize(() => this.btnPDFLoading = false), untilDestroyed(this))
+        .subscribe(blob => {
+          if (blob) {
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = 'TLS32050.pdf'; // 可以依需求改檔名
+            a.click();
+            URL.revokeObjectURL(blobUrl);
+          }
+        });
     }
   }
 

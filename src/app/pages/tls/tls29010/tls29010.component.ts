@@ -1,24 +1,24 @@
-import { Tls29010Service } from './../../../service/api/tls/tls29010.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatDate, AddButton } from '../../../shared/componentkit/table/table.model';
-import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { AddButton, Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
+import { Tls29010Service } from './../../../service/api/tls/tls29010.service';
 
 // TALPORDERM (主檔)
 export interface TALPORDERM {
@@ -110,16 +110,20 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     { label: '刪除', value: '9' },
   ];
 
-  // 20251015 更新: 本作業固定操作的活動類型為 8=期間開放折扣
+  // 20251216 更新: 折扣別更改為與tls23020相同
   podTypeOptions = [
-    // { label: '1 預售', value: '1' },
-    // { label: '2 滿千送百(發行)', value: '2' },
-    // { label: '3 滿千送百(兌回)', value: '3' },
-    // { label: '4 會員卡集點-銷售', value: '4' },
-    // { label: '5 會員卡集點-點數', value: '5' },
-    // { label: '6 全館集點-銷售', value: '6' },
-    // { label: '7 全館集點-點數', value: '7' },
-    { label: '8 期間開放折扣', value: '8' }, //新增用這個
+    { value: '000', label: '正品' },
+    { value: '095', label: '95折' },
+    { value: '090', label: '90折' },
+    { value: '085', label: '85折' },
+    { value: '080', label: '80折' },
+    { value: '075', label: '75折' },
+    { value: '070', label: '70折' },
+    { value: '065', label: '65折' },
+    { value: '060', label: '60折' },
+    { value: '055', label: '55折' },
+    { value: '050', label: '50折' },
+    { value: '999', label: '特價' },
   ];
 
   tlt_id_Options = [
