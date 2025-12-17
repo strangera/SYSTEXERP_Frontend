@@ -26,7 +26,7 @@ import {
 @Component({
   selector: 'app-fin63020-cru',
   templateUrl: './fin63020-cru.component.html',
-  styleUrl: './fin63020-cru.component.scss',
+  styleUrls: ['./fin63020-cru.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -44,7 +44,7 @@ import {
 export class FIN63020CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   readonly CRUD = CRUDStatus;
 
-  /** ✅ 給 template 用：修掉 NG9 loading 不存在 */
+  /** ✅ 給 template 用 */
   override loading = false;
 
   /** 下拉選項 */
@@ -53,13 +53,13 @@ export class FIN63020CRUComponent extends BasicCruPageComponent<any> implements 
     { value: 'N', label: 'N/否' },
   ];
 
-  /** SP_FIN63020QueryDetail: StatusFlag 1確認 2拋轉（顯示用） */
+  /** StatusFlag 1確認 2拋轉（顯示用） */
   ticketFlowStatusOptions = [
     { value: '1', label: '1/確認' },
     { value: '2', label: '2/拋轉' },
   ];
 
-  /** APS3006.CHK_Status：0=作廢 1=未異動 2=到期 3=兌現 4=撤票 5=退票 */
+  /** CHK_Status：0=作廢 1=未異動 2=到期 3=兌現 4=撤票 5=退票 */
   chkStatusOptions = [
     { value: '0', label: '0/作廢' },
     { value: '1', label: '1/未異動' },
@@ -69,51 +69,58 @@ export class FIN63020CRUComponent extends BasicCruPageComponent<any> implements 
     { value: '5', label: '5/退票' },
   ];
 
-  /** APS3006.CHK_PickupType：0/1/2 */
+  /** CHK_PickupType：0/1/2 */
   pickupTypeOptions = [
     { value: '0', label: '0/未領' },
     { value: '1', label: '1/已領' },
     { value: '2', label: '2/郵寄' },
   ];
 
-  /** ✅ 表單：對齊 SP_FIN63020QueryDetail / Update / UpdateDetail */
-  dataForm = this.formBuilder.group({
-    // 顯示(多數不可改)
-    CheckNo: [{ value: '' as string, disabled: true }, [Validators.required]],
-    CompanyAccNo: [{ value: '' as string, disabled: true }],
-    CompanyAccName: [{ value: '' as string, disabled: true }],
-    VendorNo: [{ value: '' as string, disabled: true }],
-    VEN_Name: [{ value: '' as string, disabled: true }],
-    IssueDate: [{ value: null as Date | null, disabled: true }],
-    ExpireDate: [{ value: null as Date | null, disabled: true }],
-    CheckAmount: [{ value: null as number | null, disabled: true }],
+  /**
+   * ✅ 表單：完全不做 disable
+   * - 只靠 template 用 isRead / crudstatus 控 readonly
+   */
+dataForm = this.formBuilder.group({
+// 顯示(原本不可改) - 這裡不 disable 了
+CheckNo: ['', [Validators.required, Validators.maxLength(10)]], // @ChkNo varchar(10)
 
-    // ✅ 可編輯（Update 用）
-    CheckTitle: ['' as string, [Validators.required, Validators.maxLength(100)]],
-    NoEndorseYn: ['N' as 'Y' | 'N', [Validators.required]],
-    Remark: ['' as string], // Update: Comment 不可 NULL（空字串OK）
+CompanyAccNo: [''],
+CompanyAccName: [''],
+VendorNo: [''],
+VEN_Name: [''],
+IssueDate: [null as Date | null],
+ExpireDate: [null as Date | null, [Validators.required]], 
+CheckAmount:  ['', [Validators.required]], 
 
-    // 其它顯示欄位（通常不可改）
-    OrgId: [{ value: '' as string, disabled: true }],
-    StatusFlag: [{ value: '' as string, disabled: true }], // 1/2
-    VouNo_paid: [{ value: '' as string, disabled: true }],
+  // 顯示用
+  VoucherNoPaid: [''],
 
-    // ✅ 可編輯（Update 用）
-    CheckStatus: ['' as string, [Validators.required]], // CHK_Status
-    PickupType: ['' as string, [Validators.required]], // CHK_PickupType
-    PickupDate: [null as Date | null], // Update / UpdateDetail
-    PayDate: [null as Date | null],
-    WithdrawDate: [null as Date | null],
+  // 可編輯（Update 用）
+  CheckTitle: ['', [Validators.required, Validators.maxLength(100)]], // @ChkTitle varchar(100)
+  NoEndorseYn: ['N' as 'Y' | 'N', [Validators.required, Validators.maxLength(1)]], // char(1)
+  Remark: ['', [Validators.maxLength(160)]], // @Comment nvarchar(160)（不可 NULL；空字串OK）
 
-    // 顯示欄位
-    ProjectNo: [{ value: '' as string, disabled: true }],
-    PamNo: [{ value: '' as string, disabled: true }],
-    VoucherNo: [{ value: '' as string, disabled: true }],
-    ApCheckAccNo: [{ value: '' as string, disabled: true }],
+  // 顯示欄位（原本不可改）
+  OrgId: [''],
+  StatusFlag: [''], // 1/2
+  VouNo_paid: [''],
 
-    // ✅ UpdateDetail 用
-    PickName: ['' as string], // 領取人姓名
-  });
+  // 可編輯（Update 用）
+  CheckStatus: ['', [Validators.required, Validators.maxLength(1)]], // @Status varchar(1)
+  PickupType: ['', [Validators.required, Validators.maxLength(1)]],  // @PickupType varchar(1)
+  PickupDate: [null as Date | null],
+  PayDate: [null as Date | null],
+  WithdrawDate: [null as Date | null],
+
+  // 顯示欄位
+  ProjectNo: [''],
+  PamNo: [''],
+  VoucherNo: [''],
+  ApCheckAccNo: [''],
+
+  // UpdateDetail 用（你 SP_UpdateDetail 那支若有限制再補）
+  PickName: [''],
+});
 
   constructor(private fin63020Service: Fin63020Service) {
     super();
@@ -121,7 +128,9 @@ export class FIN63020CRUComponent extends BasicCruPageComponent<any> implements 
 
   ngOnInit(): void {
     this.initializePage('FIN63020', this.dataForm);
-    this.updateDisabledState();
+
+    // ✅ 不再呼叫 disable，只保留「Read 模式」給 template 判斷
+    // this.updateDisabledState();  // <- 不需要了（但你想保留也行，我下面給無 disable 版本）
 
     const chkNo =
       (this.rowdata as any)?.CheckNo ||
@@ -131,34 +140,13 @@ export class FIN63020CRUComponent extends BasicCruPageComponent<any> implements 
     if (chkNo) this.loadDetail(String(chkNo));
   }
 
+  /**
+   * ✅ 如果你仍想保留這個方法（不做 disable 版本）
+   * - 只負責「必要時初始化預設值」或「處理 Read 時的 UI flag」
+   */
   private updateDisabledState(): void {
-    if (this.crudstatus === CRUDStatus.Read) {
-      if (!this.useReadonlyInsteadOfDisable) this.dataForm.disable();
-      return;
-    }
-
-    // Edit/Create：先 enable
-    this.dataForm.enable();
-
-    // 但顯示欄位仍 readonly
-    const readonlyKeys: (keyof typeof this.dataForm.controls)[] = [
-      'CheckNo',
-      'CompanyAccNo',
-      'CompanyAccName',
-      'VendorNo',
-      'VEN_Name',
-      'IssueDate',
-      'ExpireDate',
-      'CheckAmount',
-      'OrgId',
-      'StatusFlag',
-      'VouNo_paid',
-      'ProjectNo',
-      'PamNo',
-      'VoucherNo',
-      'ApCheckAccNo',
-    ];
-    readonlyKeys.forEach((k) => this.dataForm.get(k as string)?.disable());
+    // 這裡故意不呼叫 this.dataForm.disable()
+    // Read 模式由 template 用 isRead 去控制 readonly
   }
 
   private loadDetail(chkNo: string): void {
@@ -186,43 +174,46 @@ export class FIN63020CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   private patchFromDetail(d: Fin63020DetailRow): void {
-    this.dataForm.patchValue({
-      CheckNo: d.CheckNo ?? '',
-      CompanyAccNo: d.CompanyAccNo ?? '',
-      CompanyAccName: d.CompanyAccName ?? '',
-      VendorNo: d.VendorNo ?? '',
-      VEN_Name: (d as any).VEN_Name ?? '',
+    this.dataForm.patchValue(
+      {
+        CheckNo: (d as any).CheckNo ?? '',
+        CompanyAccNo: (d as any).CompanyAccNo ?? '',
+        CompanyAccName: (d as any).CompanyAccName ?? '',
+        VendorNo: (d as any).VendorNo ?? '',
+        VEN_Name: (d as any).VEN_Name ?? '',
 
-      IssueDate: this.parseDate(d.IssueDate),
-      ExpireDate: this.parseDate(d.ExpireDate),
-      CheckAmount: (d as any).CheckAmount ?? null,
+        IssueDate: this.parseDate((d as any).IssueDate),
+        ExpireDate: this.parseDate((d as any).ExpireDate),
+        CheckAmount: (d as any).CheckAmount ?? null,
 
-      CheckTitle: (d as any).CheckTitle ?? '',
-      NoEndorseYn: ((d as any).NoEndorseYn ?? 'N') as any,
-      Remark: (d as any).Remark ?? '',
+        VoucherNoPaid: (d as any).VoucherNoPaid ?? '',
 
-      OrgId: d.OrgId ?? '',
-      StatusFlag: (d as any).StatusFlag ?? '',
-      VouNo_paid: (d as any).VouNo_paid ?? (d as any).VouNoPaid ?? '',
+        CheckTitle: (d as any).CheckTitle ?? '',
+        NoEndorseYn: ((d as any).NoEndorseYn ?? 'N') as any,
+        Remark: (d as any).Remark ?? '',
 
-      CheckStatus: (d as any).CheckStatus ?? '',
-      PickupType: (d as any).PickupType ?? '',
-      PickupDate: this.parseDate((d as any).PickupDate),
-      PayDate: this.parseDate((d as any).PayDate),
-      WithdrawDate: this.parseDate((d as any).WithdrawDate),
+        OrgId: (d as any).OrgId ?? '',
+        StatusFlag: (d as any).StatusFlag ?? '',
+        VouNo_paid: (d as any).VouNo_paid ?? (d as any).VouNoPaid ?? '',
 
-      ProjectNo: (d as any).ProjectNo ?? '',
-      PamNo: (d as any).PamNo ?? '',
-      VoucherNo: (d as any).VoucherNo ?? '',
-      ApCheckAccNo: (d as any).ApCheckAccNo ?? '',
+        CheckStatus: (d as any).CheckStatus ?? '',
+        PickupType: (d as any).PickupType ?? '',
+        PickupDate: this.parseDate((d as any).PickupDate),
+        PayDate: this.parseDate((d as any).PayDate),
+        WithdrawDate: this.parseDate((d as any).WithdrawDate),
 
-      PickName: (d as any).PickName ?? '',
-    });
+        ProjectNo: (d as any).ProjectNo ?? '',
+        PamNo: (d as any).PamNo ?? '',
+        VoucherNo: (d as any).VoucherNo ?? '',
+        ApCheckAccNo: (d as any).ApCheckAccNo ?? '',
 
-    this.updateDisabledState();
+        PickName: (d as any).PickName ?? '',
+      },
+      { emitEvent: false }
+    );
   }
 
-  /** Submit：走 SP_FIN63020Update */
+  /** Submit：走 Update */
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const raw = form.getRawValue();
@@ -265,7 +256,7 @@ export class FIN63020CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
-  /** ✅ template 會呼叫：確認領取（SP_FIN63020UpdateDetail） */
+  /** 確認領取（UpdateDetail） */
   onPickupConfirm(): void {
     if (this.isRead) return;
 
@@ -306,7 +297,7 @@ export class FIN63020CRUComponent extends BasicCruPageComponent<any> implements 
             return;
           }
           this.messageService.successBubble('確認領取成功');
-          this.dataForm.patchValue({ PickupType: '1' });
+          this.dataForm.patchValue({ PickupType: '1' }, { emitEvent: false });
         },
         error: () => this.messageService.errorBubble('確認領取失敗'),
         complete: () => {

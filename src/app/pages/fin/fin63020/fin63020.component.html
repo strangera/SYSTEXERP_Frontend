@@ -1,7 +1,8 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-        <app-button
+
+    <app-button
       btnType="create"
       [type]="'button'"
       (clickEvent)="onCreate()"
@@ -21,6 +22,7 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
+          <!-- ===================== 第一列 ===================== -->
           <!-- 票據號碼 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
@@ -44,10 +46,10 @@
             ></app-dropdown>
           </div>
 
-          <!-- 公司銀行科目代號（★必填） -->
+          <!-- 銀行代號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="公司銀行科目代號"
+              label="銀行代號"
               controlName="bankAccountCode"
               [options]="bankAccountCodeOptions"
               optionLabel="label"
@@ -57,18 +59,78 @@
             ></app-dropdown>
           </div>
 
-          <!-- 開票日期 -->
+          <!-- ===================== 第二列 ===================== -->
+          <!-- 客戶銀行帳號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="客戶銀行帳號"
+              controlName="customerBankAccount"
+              [control]="queryForm.controls.customerBankAccount"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <!-- 託收日(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
-              label="開票日期"
+              label="託收日"
               [startControl]="queryForm.controls.issueDateStart"
               [endControl]="queryForm.controls.issueDateEnd"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
 
-          <!-- 到期日 -->
+          <!-- 公司銀行科目代號託收銀行 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="公司銀行科目代號託收銀行"
+              controlName="collectionBankAccountCode"
+              [options]="collectionBankAccountCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.collectionBankAccountCode"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <!-- ===================== 第三列 ===================== -->
+          <!-- 收票日(起訖) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="收票日"
+              [startControl]="queryForm.controls.receiveDateStart"
+              [endControl]="queryForm.controls.receiveDateEnd"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+
+          <!-- 收票業務員代碼 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="收票業務員代碼"
+              controlName="receiveSalesCode"
+              [options]="receiveSalesCodeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.receiveSalesCode"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <!-- 收款單號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="收款單號"
+              controlName="paymentBillNumber"
+              [control]="queryForm.controls.paymentBillNumber"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <!-- ===================== 第四列 ===================== -->
+          <!-- 到期日(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
@@ -79,7 +141,18 @@
             ></app-calendar-range>
           </div>
 
-          <!-- 兌現日 -->
+          <!-- 預兌日(起訖) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="預兌日"
+              [startControl]="queryForm.controls.preCashDateStart"
+              [endControl]="queryForm.controls.preCashDateEnd"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+
+          <!-- 兌現日(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
@@ -90,6 +163,7 @@
             ></app-calendar-range>
           </div>
 
+          <!-- ===================== 第五列 ===================== -->
           <!-- 票面金額 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range
@@ -101,29 +175,33 @@
             ></app-input-number-range>
           </div>
 
-          <!-- 票據抬頭 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="票據抬頭"
-              controlName="billTitle"
-              [control]="queryForm.controls.billTitle"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-
-          <!-- 票據禁止背書轉讓 -->
+          <!-- 票據種類 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="票據禁止背書轉讓"
-              controlName="endorsementProhibited"
-              [options]="endorsementProhibitedOptions"
+              label="票據種類"
+              controlName="billType"
+              [options]="billTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.endorsementProhibited"
+              [control]="queryForm.controls.billType"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
 
+          <!-- 是否客票 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="是否客票"
+              controlName="isCustomerBill"
+              [options]="isCustomerBillOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.isCustomerBill"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <!-- ===================== 第六列 ===================== -->
           <!-- 備註 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
@@ -160,6 +238,20 @@
             ></app-dropdown>
           </div>
 
+          <!-- ===================== 第七列 ===================== -->
+          <!-- 狀態 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="狀態"
+              controlName="status"
+              [options]="statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.status"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
           <!-- 票據狀態 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -173,63 +265,17 @@
             ></app-dropdown>
           </div>
 
-          <!-- 狀態（確認/拋轉） -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="狀態"
-              controlName="status"
-              [options]="statusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.status"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-
-          <!-- 領取狀態 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="領取狀態"
-              controlName="collectionStatus"
-              [options]="collectionStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.collectionStatus"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-
-          <!-- 領取日期 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="領取日期"
-              [startControl]="queryForm.controls.collectionDateStart"
-              [endControl]="queryForm.controls.collectionDateEnd"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
-
-          <!-- 應付票據開票單號 -->
+          <!-- 應收票據會計科目 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-              label="應付票據開票單號"
-              controlName="paymentBillNumber"
-              [control]="queryForm.controls.paymentBillNumber"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-
-          <!-- 應付票據會計科目 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="應付票據會計科目"
+              label="應收票據會計科目"
               controlName="paymentAccount"
               [control]="queryForm.controls.paymentAccount"
               [submitted]="submitted"
             ></app-input-text>
           </div>
 
+          <!-- ===================== 第八列 ===================== -->
           <!-- 傳票號碼 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
@@ -264,18 +310,17 @@
           </div>
         </div>
 
-        <!-- 按鈕列（比照 CPM11030） -->
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <!-- 按鈕列 -->
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button
             btnType="clear"
             [type]="'button'"
             (clickEvent)="onClear(queryForm)"
           ></app-button>
 
-          <app-button
-            btnType="query"
-            [loading]="loading"
-          ></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
