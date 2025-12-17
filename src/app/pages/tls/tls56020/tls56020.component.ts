@@ -194,16 +194,19 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
   // 自動完成輸入
   onAutoCompleteInputChange(event: any) {
     const body = {
-      ...event,
-      VEN_No: '',
-      LOGO_No: '',
-      queryNo: event.PLU_MagNo || '',
-      pageSize: 30,
-      pageIndex: 1,
+      PageSize: 30,
+      PageIndex: 1,
+      OrderBy: '',
+      Offset: 0,
       SortBy: [{ field: 'PLU_MagNo', order: 1 }],
-    }
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
+      queryNo: event.PLU_MagNo || '',
+      PLU_Name: event.PLU_Name || '',
+      LOGO_No: '',
+      HOS_No: '',
+    };
+    this.tls52010Service.queryPOS2004Detail_TLS56020(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      const data = results?.Data ?? [];
+      this.suggestions = [...data.map((item: any) => ({
         ...item,
         label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo,
       }))];
@@ -212,14 +215,19 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
   onformValueChanged(event: IQueryPOS2004DetailRequest) {
     this.opLoading = true;
     const body = {
+      PageSize: 30,
+      PageIndex: 1,
+      OrderBy: '',
+      Offset: 0,
+      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
       queryNo: event.queryNo || '',
       PLU_Name: event.PLU_Name || '',
-      VEN_No: '',
       LOGO_No: '',
+      HOS_No: '',
     };
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.opData = [...results.Data]; // 更新data資料
-      this.opTotalRecords = results.TotalCount;
+    this.tls52010Service.queryPOS2004Detail_TLS56020(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.opData = [...(results?.Data ?? [])]; // 更新data資料
+      this.opTotalRecords = results?.TotalCount ?? 0;
       this.opLoading = false;
     });
   }
