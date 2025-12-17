@@ -1,0 +1,89 @@
+<p-table #dt [columns]="columns" [value]="PaymentDetails" [scrollable]="true" [dataKey]="dataKey" scrollHeight="600px"
+  sortMode="multiple" [rowTrackBy]="trackByFn" rowGroupMode="subheader" groupRowsBy="VEN_NO"
+  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" [loading]="loading">
+  <ng-template pTemplate="caption">
+    <div class="grid align-items-center justify-content-between mx-0">
+      <div class="p-2 w-full">
+        <ng-content select="header"></ng-content>
+      </div>
+    </div>
+  </ng-template>
+  <ng-template pTemplate="header" let-columns>
+    <tr>
+      <th class="w-3rem text-center">序號</th>
+      <th *ngFor="let col of columns" [pSortableColumn]="col.field" class="text-center" style="min-width: 55px">
+        {{ col.header }}
+        <p-sortIcon [field]="col.field" />
+      </th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="groupheader" let-rowData>
+    <tr pRowGroupHeader>
+      <td class="bg-gray-300 font-bold">
+        <span class="ml-2">廠商</span>
+      </td>
+      <td [attr.colspan]="columns.length" class="bg-gray-300 font-bold text-center">
+        <span class="ml-2 font-bold text-blue-700 text-center">{{ rowData.VEN_NO }} / {{ getVenName(rowData.VEN_NO)
+          }}</span>
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="groupfooter" let-rowData>
+    <tr class="font-bold bg-gray-100">
+      <td class="text-center" colspan="4">總計：</td>
+      <td class="text-right font-bold bg-gray-100">{{ getGroupFooterData(rowData.VEN_NO)?.TotalTotAmt | number }}</td>
+      <td class="text-right font-bold bg-gray-100">{{ getGroupFooterData(rowData.VEN_NO)?.TotalTotNet | number }}</td>
+      <td class="text-right font-bold bg-gray-100">{{ getGroupFooterData(rowData.VEN_NO)?.TotalTotTax | number }}</td>
+    </tr>
+    <tr class="font-bold bg-gray-100">
+      <td [attr.colspan]="1 + columns.length">單據資料</td>
+    </tr>
+    <tr class="font-bold bg-gray-100">
+      <td [attr.colspan]="1 + columns.length">
+        <p-table #dt [columns]="subColumns" [value]="getGroupInvoiceDetails(rowData.VEN_NO)" [scrollable]="true"
+          [dataKey]="dataKey" scrollHeight="1000px" [rowTrackBy]="trackByFn"
+          styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped">
+          <ng-template pTemplate="header" let-columns>
+    <tr>
+      <th class="w-3rem text-center">序號</th>
+      <th *ngFor="let col of columns" class="text-center" style="min-width: 55px">
+        {{ col.header }}
+      </th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
+    <tr [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined" [style]="{ height: '20px' }">
+      <td class="text-center w-3rem">{{ rowIndex + 1 }}</td>
+      <td *ngFor="let col of columns" [ngStyle]="{'text-align': col.align ? col.align : 'center'}">
+        <span>
+          {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+        </span>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+</td>
+</tr>
+</ng-template>
+<ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
+  <tr [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined" [style]="{ height: '20px' }">
+    <td class="text-center w-3rem">{{ rowIndex + 1 }}</td>
+    <td *ngFor="let col of columns" [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
+      style="text-overflow: ellipsis; min-width: 55px">
+      <span>
+        {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+      </span>
+    </td>
+  </tr>
+</ng-template>
+<ng-template pTemplate="emptymessage">
+  <tr>
+    <td [attr.colspan]="1 + columns.length">
+      <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
+        查無資料
+      </div>
+    </td>
+  </tr>
+</ng-template>
+</p-table>
