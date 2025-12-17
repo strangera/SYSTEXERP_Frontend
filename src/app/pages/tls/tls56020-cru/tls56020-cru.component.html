@@ -12,20 +12,16 @@
         </div>
       </div>
       <div class="grid p-fluid">
-        <div class="flex col-12 md:col-6 lg:col-4 p-0">
-          <app-dropdown [ngClass]="dataForm.controls.VEN_No.value ? 'col-12 md:col-6' : 'col-12'" label="廠商編號/名稱"
-            controlName="VEN_No" [options]="vendorOptions | async" optionLabel="label" optionValue="VEN_No"
-            [control]="dataForm.controls.VEN_No" [submitted]="submitted" />
-          <app-input-text *ngIf="dataForm.controls.VEN_No.value" class="col-12 md:col-6" label="廠商簡稱"
-            controlName="vendorShortName" [control]="dataForm.controls.vendorShortName" [submitted]="submitted" />
-        </div>
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="品牌代碼/名稱" controlName="LOGO_No"
           [options]="filteredLogoOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.LOGO_No"
           [submitted]="submitted" />
-
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="倉庫代碼/名稱" controlName="HOS_No"
           [options]="filteredWarehouseOptions" optionLabel="label" optionValue="value"
           [control]="dataForm.controls.HOS_No" [submitted]="submitted" />
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="部門編號" controlName="org_id" [options]="departmentOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.org_id" [submitted]="submitted"></app-dropdown>
+        </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="領用類別" controlName="SPM_Type" [options]="issuanceTypeOptions" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.SPM_Type" [submitted]="submitted"></app-dropdown>
@@ -34,10 +30,7 @@
           <app-dropdown label="申請人編號" controlName="APPLY_USR_No" [options]="userOptions" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.APPLY_USR_No" [submitted]="submitted"></app-dropdown>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="部門編號" controlName="org_id" [options]="departmentOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.org_id" [submitted]="submitted"></app-dropdown>
-        </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.APPLY_Date"
             [submitted]="submitted"></app-calendar>
@@ -48,9 +41,9 @@
       <app-table-edit class="col-12" tableKey="TLS52010Detail" [columns]="editColumns" [data]="data"
         (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
         (dataChange)="data = $event;calculateTotals()" [tableRequired]="true" [rowValidate]="validateEntireRow"
-        [disabled]="isFormReadable || !(dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value) ? true : false"
+        [disabled]="isFormReadable || !(dataForm.controls.org_id.value && dataForm.controls.LOGO_No.value) ? true : false"
         (insert)="dialogVisible = true" [showInsert]="isFormCreateable"
-        [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value ? false : true" />
+        [insertDisabled]="dataForm.controls.org_id.value && dataForm.controls.LOGO_No.value ? false : true" />
 
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" />

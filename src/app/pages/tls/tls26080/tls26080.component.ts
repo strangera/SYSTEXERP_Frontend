@@ -11,7 +11,7 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
@@ -66,24 +66,24 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     { field: 'pod_status', header: '狀態', format: this.service.approvalStatus.bind(this) },
   ];
 
-  public readonly addButton = computed((): AddButton[] => {
-    const approval = (rowData: TLS26080Data) => {
-      this.service.loadApproval(rowData).subscribe(this.onSubmit.bind(this));
-    };
+  // public readonly addButton = computed((): AddButton[] => {
+  //   const approval = (rowData: TLS26080Data) => {
+  //     this.service.loadApproval(rowData).subscribe(this.onSubmit.bind(this));
+  //   };
 
-    return [
-      {
-        label: '核准', icon: 'pi pi-check-circle text-green-500',
-        action: approval,
-        disabled: (rowData: TLS26080Data) => rowData.pod_status !== ApprovalStatus.未核准,
-      },
-      {
-        label: '反核准', icon: 'pi pi-undo text-orange-500',
-        action: approval,
-        disabled: (rowData: TLS26080Data) => rowData.pod_status !== ApprovalStatus.已核准,
-      },
-    ];
-  });
+  //   return [
+  //     {
+  //       label: '核准', icon: 'pi pi-check-circle text-green-500',
+  //       action: approval,
+  //       disabled: (rowData: TLS26080Data) => rowData.pod_status !== ApprovalStatus.未核准,
+  //     },
+  //     {
+  //       label: '反核准', icon: 'pi pi-undo text-orange-500',
+  //       action: approval,
+  //       disabled: (rowData: TLS26080Data) => rowData.pod_status !== ApprovalStatus.已核准,
+  //     },
+  //   ];
+  // });
 
   public readonly tableLoading = signal<boolean>(!1);
   public readonly deleteLoading = signal<boolean>(!1);
