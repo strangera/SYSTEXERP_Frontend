@@ -93,7 +93,7 @@ export interface TALPORDERD_OPENDisc {
 
 //活動申請編號 下拉選單
 export interface ACT_NO_type {
-  "POD_NO": string,
+  "act_no": string,
   "POD_DESC": string,
   "pod_sdate": string,
   "pod_edate": string,
@@ -240,7 +240,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       .subscribe(selectedPodNo => {
         // 根據選中的 pod_no，從 act_No_Options 中尋找對應的資料
         const selectedOption = this.act_No_Options.find(
-          option => option.POD_NO === selectedPodNo
+          option => option.act_no === selectedPodNo
         );
 
         if (selectedOption) {
@@ -410,10 +410,10 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     this.tls29010Service.dropdownTLS29010bypodno({ "pod_no": pod_no }).pipe(untilDestroyed(this)).pipe(untilDestroyed(this)).subscribe((response) => {
       this.act_No_Options = response.Data.map((item: ACT_NO_type) => ({
         ...item,
-        Label: item.POD_NO + '-' + item.POD_DESC,
-        // Label: item.POD_NO + '-' + item.POD_DESC + '-' + item.pod_sdate + '-' + item.pod_edate, // 檢查時間用的
+        Label: item.act_no + '-' + item.POD_DESC,
+        // Label: item.act_no + '-' + item.POD_DESC + '-' + item.pod_sdate + '-' + item.pod_edate, // 檢查時間用的
       }));
-      console.log('✨新版活動編號 下拉:', response);
+      console.log('✨pod_no:', pod_no, '對應的 活動編號 下拉:', response.Data);
     });
 
   }

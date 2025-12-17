@@ -74,7 +74,8 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
   queryForm = this.formBuilder.group({
     // TALPORDERM
     pod_no: [null],   // 活動申請編號YYYYMMDDSSS(活動起始日期+流水號)
-    pod_type: [null], // 活動類型(1=預售, 2=滿千送百發行, 3=滿千送百兌回, 4~5=會員卡集點, 6~7=全館集點, 8=期間開放折扣) // 新增規則這裡部定查8
+    // pod_type: [null], // 活動類型(1=預售, 2=滿千送百發行, 3=滿千送百兌回, 4~5=會員卡集點, 6~7=全館集點, 8=期間開放折扣) // 新增規則這裡部定查8
+    cag_barcode: [null],   // 折扣別 (多選) 20251217新增
     pod_sdate: [null], // 活動起始日 (Date)
     pod_edate: [null], // 活動終止日 (Date)
     pod_status: [[]], // 活動狀態(0=未核准, 1=已核准, 9=刪除)
@@ -111,7 +112,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
   ];
 
   // 20251216 更新: 折扣別更改為與tls23020相同
-  podTypeOptions = [];
+  cag_barcode_Options = [];
   tlt_id_Options = [
     { label: '類別0', value: '0' },
     { label: '類別1', value: '1' },
@@ -314,8 +315,8 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
 
     // 折扣別 下拉選單
     this.tls29010Service.dropdownTLS29010bytalentid({ "talent_id": null }).pipe(untilDestroyed(this)).pipe(untilDestroyed(this)).subscribe((response) => {
-      this.podTypeOptions = response.Data;
-      console.log('折扣別 下拉:', this.podTypeOptions);
+      this.cag_barcode_Options = response.Data;
+      console.log('折扣別 下拉:', this.cag_barcode_Options);
     });
   }
 }
