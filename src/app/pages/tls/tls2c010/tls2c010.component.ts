@@ -71,8 +71,11 @@ export class TLS2C010Component extends BasicQueryPageComponent<any> implements O
         })
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
-          this.setColumns(response.Data);
-          this.setData(response.Data);
+          this.setColumns(response.Data.QueryData);
+          this.setData(response.Data.QueryData);
+          if (response.Data.ErrorMsg) {
+            this.messageService.errorBubble(response.Data.ErrorMsg);
+          }
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
           this.cd.detectChanges();
         });
