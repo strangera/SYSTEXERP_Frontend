@@ -49,7 +49,6 @@ import { CampaignData, TLS26080Data, TLS26080EditTable, TLS26080InsertPayload, T
     InputTextComponent,
     MenubarComponent,
     TableComponent,
-    TableEditComponent,
     TableReportComponent,
   ]
 })
@@ -638,14 +637,16 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public toggleApprovalStatus(rowData: TLS26080EditTable[], from?: 'A' | 'R'): void {
     this.logger.debug(`toggleApprovalStatus:`, [rowData]);
-    if (!rowData || rowData.length === 0)
-      return void this.messageService.errorBubble('請先勾選要審核的項目');
+    if (!rowData?.length) return this.messageService.errorBubble('請先勾選要審核的項目');
+
+    const test = !0;
+    this.loading = !0;
 
     // 改成兩顆按鈕處理
-    try {
+    if (!test) try {
       if (from === 'A') {
         if (rowData.some(row => row.pod_status === ApprovalStatus.已核准))
-          return void this.messageService.errorBubble('您選取包含已審核的資料，無法進行審核完成。');
+          return this.messageService.errorBubble('您選取包含已審核的資料，無法進行審核完成。');
 
         this.service.approveApprovalTLS26080(rowData).pipe(
           catchError(err => {
@@ -657,16 +658,15 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         ).subscribe(res => {
           if (res.Status !== '0000') return;
 
-          for (const row of rowData) {
-            this.tableData.update(td => td.map(item => {
-              if (item.tlt_no !== row.tlt_no) return item;
-              item.pod_status = ApprovalStatus.已核准;
-              item.approved_usrno = this.usrData().user_No;
-              item.approved_usr_name = this.usrData().user_Name;
-              item.approved_date = new Date();
-              return item;
-            }));
-          }
+          const updateSet = new Set(rowData.map(row => row.tlt_no));
+          this.tableData.update(td => td.map(item => {
+            if (!updateSet.has(item.tlt_no)) return item;
+            item.pod_status = ApprovalStatus.已核准;
+            item.approved_usrno = this.usrData().user_No;
+            item.approved_usr_name = this.usrData().user_Name;
+            item.approved_date = new Date();
+            return item;
+          }));
           this.messageService.successBubble('審核完成');
         });
 
@@ -675,7 +675,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
       if (from === 'R') {
         if (rowData.some(row => row.pod_status === ApprovalStatus.未核准))
-          return void this.messageService.errorBubble('您選取包含未審核的資料，無法進行反審核。');
+          return this.messageService.errorBubble('您選取包含未審核的資料，無法進行反審核。');
 
         this.service.revokeApprovalTLS26080(rowData).pipe(
           catchError(err => {
@@ -687,48 +687,56 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         ).subscribe(res => {
           if (res.Status !== '0000') return;
 
-          for (const row of rowData) {
-            this.tableData.update(td => td.map(item => {
-              if (item.tlt_no !== row.tlt_no) return item;
-              item.pod_status = ApprovalStatus.未核准;
-              item.approved_usrno = void 0;
-              item.approved_usr_name = void 0;
-              item.approved_date = void 0;
-              return item;
-            }));
-          }
+          const updateSet = new Set(rowData.map(row => row.tlt_no));
+          this.tableData.update(td => td.map(item => {
+            if (!updateSet.has(item.tlt_no)) return item;
+            item.pod_status = ApprovalStatus.未核准;
+            item.approved_usrno = void 0;
+            item.approved_usr_name = void 0;
+            item.approved_date = void 0;
+            return item;
+          }));
           this.messageService.successBubble('反審核完成');
         });
-        return;
       }
+      return;
     } catch (error) {
       this.logger.error(`toggleApprovalStatus error:`, error);
       this.loading = !1;
     }
 
+    else {
+      const usrData = this.usrData();
+      const approvedRows = rowData.filter(row => row.pod_status !== ApprovalStatus.已核准);
+      const unapprovedRows = rowData.filter(row => row.pod_status !== ApprovalStatus.未核准);
 
-    // for (const row of rowData) {
-    //   const targetStatus = row.pod_status === ApprovalStatus.已核准 ? ApprovalStatus.未核准 : ApprovalStatus.已核准;
-    //   this.logger.debug(`updateApprovalStatus:`, [row, targetStatus]);
+      if (from === 'A' && approvedRows.length) {
+        const updateSet = new Set(approvedRows.map(row => row.tlt_no));
+        this.tableData.update(td => td.map(item => {
+          if (!updateSet.has(item.tlt_no)) return item;
+          item.pod_status = ApprovalStatus.已核准;
+          item.approved_usrno = usrData.user_No;
+          item.approved_usr_name = usrData.user_Name;
+          item.approved_date = new Date();
+          return item;
+        }));
+        return;
+      }
 
-    //   this.tableData.update(td => td.map(item => {
-    //     if (item.tlt_no !== row.tlt_no) return item;
-    //     item.pod_status = targetStatus;
+      if (from === 'R' && unapprovedRows.length) {
+        const updateSet = new Set(unapprovedRows.map(row => row.tlt_no));
+        this.tableData.update(td => td.map(item => {
+          if (!updateSet.has(item.tlt_no)) return item;
+          item.pod_status = ApprovalStatus.未核准;
+          item.approved_usrno = void 0;
+          item.approved_usr_name = void 0;
+          item.approved_date = void 0;
+          return item;
+        }));
+      }
 
-    //     // 若變更為已核准,設定審核資訊;若變更為未核准,清除審核資訊
-    //     if (targetStatus === ApprovalStatus.已核准) {
-    //       item.approved_usrno = this.usrData().user_No;
-    //       item.approved_usr_name = this.usrData().user_Name;
-    //       item.approved_date = new Date();
-    //     } else {
-    //       item.approved_usrno = void 0;
-    //       item.approved_usr_name = void 0;
-    //       item.approved_date = void 0;
-    //     }
-
-    //     return item;
-    //   }));
-    // }
+      this.loading = !1;
+    }
   }
 
   public saveDialog(): void {
