@@ -62,14 +62,12 @@ export class Tls55040GoodDataDialogComponent implements OnInit {
 
   constructor(
     public readonly tls55040Service: Tls55040Service,
-    private readonly datePipe: DatePipe,
   ) { }
 
   ngOnInit(): void {
     // 初始載入資料 (如果元件在一開始就被創建)
     this.queryData();
     console.log('初始化資料', this.ODMData);
-
   }
   /**
      *  新增：計算並更新選取單據的總金額到 selectedTotalForm

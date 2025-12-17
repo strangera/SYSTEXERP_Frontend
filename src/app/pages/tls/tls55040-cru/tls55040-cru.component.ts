@@ -176,7 +176,7 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
       { field: 'ADJ_Amt', header: this.isFormCreateable ? '調整金額' : '未稅調整金額', format: formatAmount, max: 9999999999, type: 'inputNumber', aggregate: 'sum', textAlign: 'right' },
     ]
     this.APS3018Columns = [
-      { field: 'TABTYPE', header: '單據別', format: v => getSYS1000('TABTYPE', v), type: this.isFormCreateable ? 'checkbox' : undefined, falseValue: '0', trueValue: '1', label: '抵讓' },
+      { field: 'TABTYPE', header: '單據別', format: v => getSYS1000('TABTYPE', v) },
       {
         field: 'PUR_GUINo', header: '發票/收據編號', type: 'input', validate: [validateDuplicate, validateRequired, validateMaxLength(10), AA00000000], maxLength: 10,
         onBlur: (rowData) => this.toUpperCase(rowData)
@@ -274,7 +274,8 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
   }
   loadVenData(body?: Record<string, string>): void {
     this.vendorTableLoading = true;
-    const queryBody: Tls55040VenQueryBody = { VEN_No: body?.['VEN_No'] || '' };
+    console.log(body);
+    const queryBody: Tls55040VenQueryBody = { VEN_No: body?.['label'] || '' };
     this.tls55040Service.queryTLS55040VenData(queryBody).pipe(untilDestroyed(this), finalize(() => this.vendorTableLoading = false)).subscribe(res => {
       this.vendorTableData = res.Data || [];
       this.vendorTotalRecords = res.TotalCount || 0;
@@ -407,6 +408,23 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
     if (rowData && rowData.PUR_GUINo) {
       rowData.PUR_GUINo = rowData.PUR_GUINo.toUpperCase();
     }
+  }
+
+  onTabTypeChange(event: string): void {
+    this.defaultInsertData = {
+      TABTYPE: event,
+      OTA_TaxType: '1',
+      PUR_VoucherType: '25',
+      PUR_DirectType: '0',
+      PUR_DiscNo: '1',
+    };
+    this.APS3018Data = [
+      ...this.APS3018Data.map(item => ({
+        ...item,
+        TABTYPE: event,
+      }))
+    ];
+    this.cdr.detectChanges();
   }
 }
 export function AA00000000(value: string): { isValid: boolean; errorMessage: string[] } {

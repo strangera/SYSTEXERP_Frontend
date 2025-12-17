@@ -9,20 +9,16 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="子類別編號" controlName="subCategoryCode" [options]="subCategoryCodeOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.subCategoryCode"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="子類別編號" [options]="KIND_SubIDOptions" optionLabel="label" optionValue="value"
+              controlName="KIND_SubID" [control]="queryForm.controls.KIND_SubID" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="子類別名稱" controlName="subCategoryName" [control]="queryForm.controls.subCategoryName"
+            <app-input-text label="子類別名稱" controlName="KIND_SubName" [control]="queryForm.controls.KIND_SubName"
               [submitted]="submitted"></app-input-text>
           </div>
-        </div>
-        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="客戶意見主類別" controlName="opinionCategory" [options]="opinionCategoryOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.opinionCategory"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="客戶意見主類別" controlName="KIND_ID" [options]="KIND_IDOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.KIND_ID" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -34,8 +30,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    (delete)="onDelete($event)" [totalRecords]="totalRecords" [loading]="loading"
-    (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [lastQueryBody]="lastQuery"
-    [showDelete]="false" [queryFunction]="cpm12030Service.queryCPM12030.bind(cpm12030Service)"></app-table-report>
+  <app-table-report dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    (delete)="onDelete($event)" [totalRecords]="totalRecords" [loading]="loading" [showCheckBox]="true"
+    [showDelete]="true" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
+    [lastQueryBody]="lastQuery" [showDelete]="false"
+    [queryFunction]="cpm12030Service.queryCPM12030.bind(cpm12030Service)"></app-table-report>
 </div>
