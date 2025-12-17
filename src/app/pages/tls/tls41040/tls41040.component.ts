@@ -120,7 +120,7 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
 
   expansionColumns7: Column[] = [
     { field: 'TLT_No', header: '專櫃編號', visible: true },
-    { field: 'TLT_Name', header: '專櫃名稱', visible: true },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true },
     { field: 'ECR_Type', header: '機台類別', visible: true, format: (v) => this.getECRTypeLabel(v) },
     { field: 'ECR_GrpNo', header: '機台群組編號', visible: true },
     { field: 'BUILDING_No', header: '館別', visible: true },
