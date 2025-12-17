@@ -15,6 +15,7 @@ export interface ReportColumn {
   align?: 'left' | 'center' | 'right';
   type?: TableTypes; // 欄位類型
   cellClass?: (rowData: any) => string;// 新增動態樣式 Callback，不影響舊邏輯
+  link?: boolean; // 是否為連結
 }
 
 export interface ColumnGroup {
