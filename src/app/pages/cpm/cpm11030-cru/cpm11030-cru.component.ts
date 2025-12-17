@@ -19,6 +19,8 @@ import {
   Cpm11030Service,
   InsertCPM11030Request,
   UpdateCPM11030Request,
+    DropDownListResponse,
+  OptionItem,
 } from '../../../service/api/cpm/cpm11030.service';
 
 @UntilDestroy()
@@ -42,23 +44,25 @@ import {
 })
 export class CPM11030CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   readonly CRUD = CRUDStatus;
+  /** ✅ 服務中心位置編號下拉 */
+  counterCodeOptions: OptionItem[] = [];
 
-  /** 服務中心位置編號（純下拉，不做任何連動） */
-  counterCodeOptions: { value: string; label: string }[] = [
-    { value: '11A001', label: '11A001-服務諮詢台' },
-    { value: '12A001', label: '12A001-VIP室' },
-    { value: '12D001', label: '12D001-總機' },
-    { value: '15A001', label: '15A001-顧客服務中心' },
-  ];
+  /** ✅ 證件類型下拉 */
+  certTypeOptions: OptionItem[] = [];
 
-  /** 證件類型：01身分證,02健保卡,03駕照,04護照,05其他 */
-  certTypeOptions: { value: string; label: string }[] = [
-    { value: '01', label: '01-身分證' },
-    { value: '02', label: '02-健保卡' },
-    { value: '03', label: '03-駕照' },
-    { value: '04', label: '04-護照' },
-    { value: '05', label: '05-其他' },
-  ];
+  /** ✅ 設備名稱下拉 */
+  deviceNameOptions: OptionItem[] = [];
+    private mapDropDownToOptions(resp: DropDownListResponse | null | undefined): OptionItem[] {
+    const rows = Array.isArray(resp?.Data) ? resp!.Data! : [];
+    return rows
+      .filter(x => x && x.No != null && x.Name != null)
+      .map(x => ({
+        value: String(x.No).trim(),
+        label: `${String(x.No).trim()}-${String(x.Name).trim()}`,
+      }));
+  }
+
+
 
   /** 出借狀態：1已出借 2已歸還 */
   loanStatusOptions: { value: string; label: string }[] = [
@@ -103,17 +107,43 @@ ngOnInit(): void {
   this.initializePage('CPM11030', this.dataForm);
   this.updateDisabledState();
 
-  // ✅ Create：預設帶現在日期 + 現在時間
+  // ✅ 先把後端/route 帶回來的值正規化成 Date（給 calendar 顯示用）
+  const rawDate = this.dataForm.get('Loan_Date')?.value as any;
+  const rawTime = this.dataForm.get('Loan_Time')?.value as any;
+
+  const parsedDate =
+    rawDate instanceof Date ? rawDate : rawDate ? new Date(rawDate) : null;
+
+  const parsedTime =
+    rawTime instanceof Date ? rawTime : rawTime ? new Date(rawTime) : null;
+
+  const patch: any = {};
+  if (parsedDate && !isNaN(parsedDate.getTime())) patch.Loan_Date = parsedDate;
+  if (parsedTime && !isNaN(parsedTime.getTime())) patch.Loan_Time = parsedTime;
+
+  if (Object.keys(patch).length) {
+    this.dataForm.patchValue(patch, { emitEvent: false });
+  }
+
+  // ✅ Create：預設帶現在日期 + 現在時間（但「已有值就不覆蓋」）
   if (this.crudstatus === CRUDStatus.Create) {
     const now = new Date();
 
-    const hasDate = this.dataForm.get('Loan_Date')?.value instanceof Date;
-    const hasTime = this.dataForm.get('Loan_Time')?.value instanceof Date;
+    const curDate = this.dataForm.get('Loan_Date')?.value as any;
+    const curTime = this.dataForm.get('Loan_Time')?.value as any;
 
-    this.dataForm.patchValue({
-      Loan_Date: hasDate ? (this.dataForm.get('Loan_Date')?.value as any) : now,
-      Loan_Time: hasTime ? (this.dataForm.get('Loan_Time')?.value as any) : now,
-    });
+    const hasDate =
+      curDate instanceof Date && !isNaN(curDate.getTime());
+    const hasTime =
+      curTime instanceof Date && !isNaN(curTime.getTime());
+
+    this.dataForm.patchValue(
+      {
+        Loan_Date: hasDate ? curDate : now,
+        Loan_Time: hasTime ? curTime : now,
+      },
+      { emitEvent: false }
+    );
   }
 }
 

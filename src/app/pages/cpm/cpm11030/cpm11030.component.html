@@ -81,12 +81,16 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="證件類型"
-              controlName="Cert_Type"
-              [control]="queryForm.controls.Cert_Type"
-              [submitted]="submitted"
-            ></app-input-text>
+
+<app-dropdown
+  label="證件類型"
+  controlName="Cert_Type"
+  [options]="certTypeOptions"
+  optionLabel="label"
+  optionValue="value"
+  [control]="queryForm.controls.Cert_Type"
+  [submitted]="submitted"
+></app-dropdown>
           </div>
         </div>
 
@@ -102,12 +106,15 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="設備名稱"
-              controlName="Device_Name"
-              [control]="queryForm.controls.Device_Name"
-              [submitted]="submitted"
-            ></app-input-text>
+<app-dropdown
+  label="設備名稱"
+  controlName="Device_Name"
+  [options]="deviceNameOptions"
+  optionLabel="label"
+  optionValue="value"
+  [control]="queryForm.controls.Device_Name"
+  [submitted]="submitted"
+></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -123,15 +130,15 @@
         <!-- 第四排 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="服務台位置編號"
-              controlName="Service_Id"
-              [options]="counterCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Service_Id"
-              [submitted]="submitted"
-            ></app-dropdown>
+    <app-dropdown
+  label="服務中心位置編號"
+  controlName="Service_Id"
+  [options]="counterCodeOptions"
+  optionLabel="label"
+  optionValue="value"
+  [control]="queryForm.controls.Service_Id"
+  [submitted]="submitted"
+></app-dropdown>
           </div>
         </div>
 

@@ -97,8 +97,30 @@ export interface UpdateCPM11030Request extends InsertCPM11030Request {
   ID: number;
   Loan_No: string;
 }
+export interface DropDownItem {
+  No: string;
+  Name: string;
+}
 
-@Injectable({ providedIn: 'root' })
+export interface DropDownListResponse {
+  Status?: string;
+  Data?: DropDownItem[];
+  Message?: string;
+  TotalCount?: number;
+  TotalPage?: number;
+  Error?: {
+    Code?: string;
+    Message?: string;
+    Details?: string;
+  };
+  Meta?: {
+    Timestamp?: string;
+    RequestId?: string;
+  };
+}
+
+/** 轉成前端 dropdown options 用 */
+export type OptionItem = { value: string; label: string };@Injectable({ providedIn: 'root' })
 export class Cpm11030Service {
   private apiUrl = `${environment.ApiUrl}/CPM0000/CPM1000`;
 
@@ -180,6 +202,29 @@ export class Cpm11030Service {
       ...rest
     } = input as any;
     return rest as any;
+  }
+   /** ✅ 服務台位置編號：/queryCSS1001_DropDownList */
+  queryCSS1001_DropDownList(body?: any): Observable<DropDownListResponse> {
+    return this.http.post<DropDownListResponse>(
+      `${this.apiUrl}/queryCSS1001_DropDownList`,
+      body ?? {}
+    );
+  }
+
+  /** ✅ 證件類型：/queryCPM11030_SYS1000_DropDownList */
+  queryCPM11030_SYS1000_DropDownList(body?: any): Observable<DropDownListResponse> {
+    return this.http.post<DropDownListResponse>(
+      `${this.apiUrl}/queryCPM11030_SYS1000_DropDownList`,
+      body ?? {}
+    );
+  }
+
+  /** ✅ 設備名稱：/queryCSS2001_DropDownList */
+  queryCSS2001_DropDownList(body?: any): Observable<DropDownListResponse> {
+    return this.http.post<DropDownListResponse>(
+      `${this.apiUrl}/queryCSS2001_DropDownList`,
+      body ?? {}
+    );
   }
 }
 

@@ -38,6 +38,8 @@ import {
   QueryCPM11030Row,
   DailyEquipAvailabilityRow,
   InsertDailyEquipAvailabilityRequest,
+  DropDownListResponse,
+  OptionItem,
 } from '../../../service/api/cpm/cpm11030.service';
 
 type SortItem = { field: string; order: number };
@@ -101,13 +103,23 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
     { field: 'Device_ID', header: '設備代碼' },
     { field: 'Device_Name', header: '設備名稱' },
   ];
+  /** ✅ 服務中心位置編號下拉 */
+  counterCodeOptions: OptionItem[] = [];
 
-  counterCodeOptions: { value: string; label: string }[] = [
-    { value: '11A001', label: '11A001/服務諮詢台' },
-    { value: '12A001', label: '12A001/VIP室' },
-    { value: '12D001', label: '12D001/總機' },
-    { value: '15A001', label: '15A001/顧客服務中心' },
-  ];
+  /** ✅ 證件類型下拉 */
+  certTypeOptions: OptionItem[] = [];
+
+  /** ✅ 設備名稱下拉 */
+  deviceNameOptions: OptionItem[] = [];
+    private mapDropDownToOptions(resp: DropDownListResponse | null | undefined): OptionItem[] {
+    const rows = Array.isArray(resp?.Data) ? resp!.Data! : [];
+    return rows
+      .filter(x => x && x.No != null && x.Name != null)
+      .map(x => ({
+        value: String(x.No).trim(),
+        label: `${String(x.No).trim()}-${String(x.Name).trim()}`,
+      }));
+  }
 
   queryForm = this.formBuilder.group({
     Loan_No: ['' as string],
@@ -230,9 +242,47 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
     const today = new Date();
     this.queryForm.patchValue({ Loan_BDate: today, Loan_EDate: today });
 
-    this.initializePage('CPM11030', '/cpm/cpm11030cru', this.queryForm, (form) =>
-      this.onSubmit(form)
-    );
+    // ✅ 先載入三個下拉（並行）
+    this.loading = true;
+
+    const ddlBody = { Status: '' }; // 你貼 swagger 有 Status，沒有也沒關係
+
+    forkJoin({
+      css1001: this.cpm11030Service.queryCSS1001_DropDownList(ddlBody),
+      sys1000: this.cpm11030Service.queryCPM11030_SYS1000_DropDownList(ddlBody),
+      css2001: this.cpm11030Service.queryCSS2001_DropDownList(ddlBody),
+    })
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: ({ css1001, sys1000, css2001 }) => {
+          this.counterCodeOptions = this.mapDropDownToOptions(css1001);
+          this.certTypeOptions = this.mapDropDownToOptions(sys1000);
+          this.deviceNameOptions = this.mapDropDownToOptions(css2001);
+
+          this.loading = false;
+          this.cdr.detectChanges();
+
+          // ✅ 下拉載入完再初始化頁面（避免初始畫面 options 是空的）
+          this.initializePage('CPM11030', '/cpm/cpm11030cru', this.queryForm, (form) =>
+            this.onSubmit(form)
+          );
+        },
+        error: (err) => {
+          console.error('CPM11030 dropdown load error:', err);
+
+          // 失敗也要讓頁面能用（只是下拉是空的）
+          this.counterCodeOptions = [];
+          this.certTypeOptions = [];
+          this.deviceNameOptions = [];
+
+          this.loading = false;
+          this.cdr.detectChanges();
+
+          this.initializePage('CPM11030', '/cpm/cpm11030cru', this.queryForm, (form) =>
+            this.onSubmit(form)
+          );
+        },
+      });
   }
 
   onSubmit(frm: any) {
