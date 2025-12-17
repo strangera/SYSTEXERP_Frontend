@@ -6,19 +6,28 @@
 
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+
+      <!-- ✅ 第一區：基本資料 -->
       <div class="grid p-fluid">
 
-        <!-- 銀行代號 -->
-        <div class="col-12 md:col-6 lg:col-2">
-          <app-input-text
-            label="銀行代號"
-            controlName="CompanyAccNo"
-            [control]="dataForm.controls.CompanyAccNo"
-            [submitted]="submitted"
-          ></app-input-text>
+     
+    <div
+  class="col-12 md:col-6 lg:col-2"
+  (click)="openBankDialog('company')"
+  style="cursor: pointer;"
+  title="點擊查詢銀行"
+>
+  <div style="pointer-events: none;">
+    <app-input-text
+      label="銀行代號"
+      controlName="CompanyAccNo"
+      [control]="dataForm.controls.CompanyAccNo"
+      [submitted]="submitted"
+    ></app-input-text>
+  </div>
+
         </div>
 
-        <!-- 分行代號 -->
         <div class="col-12 md:col-6 lg:col-2">
           <app-input-text
             label="分行代號"
@@ -27,17 +36,16 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
-                <!-- 銀行名稱 -->
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="銀行名稱"
             controlName="BankName"
-            [control]="dataForm.controls.CompanyAccName"
+            [control]="dataForm.controls.BankName"
             [submitted]="submitted"
           ></app-input-text>
         </div>
 
-        <!-- 帳號 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="帳號"
@@ -46,9 +54,7 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
-         
 
-                <!-- 支票號碼 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="支票號碼"
@@ -57,7 +63,7 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
-                <!-- 支票金額 -->
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="支票金額"
@@ -66,7 +72,7 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
-        <!-- 支票狀態 -->
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="支票狀態"
@@ -79,8 +85,6 @@
           ></app-dropdown>
         </div>
 
-
-               <!-- 收款編號 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="收款編號"
@@ -89,19 +93,29 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
-                <!-- 收款對象(代號) -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="收款對象"
-            controlName="VendorNo"
-            [control]="dataForm.controls.VendorNo"
-            [submitted]="submitted"
-          ></app-input-text>
+
+        <!-- ✅ 收款對象：點這格就開 Dialog -->
+        <div
+          class="col-12 md:col-6 lg:col-4"
+          (click)="openVendorDialog()"
+          style="cursor: pointer;"
+          title="點擊查詢收款對象"
+        >
+          <!-- 讓 click 一定打到外層 wrapper，避免 input 自己吃掉事件 -->
+          <div style="pointer-events: none;">
+            <app-input-text
+              label="收款對象"
+              controlName="VendorNo"
+              [control]="dataForm.controls.VendorNo"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
         </div>
 
+      </div>
 
-
-        <!-- 託收日期 -->
+      <!-- ✅ 第二區：日期區 -->
+      <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar
             calendarType="dateOne"
@@ -112,9 +126,6 @@
           ></app-calendar>
         </div>
 
-
-
-        <!-- 到期日期 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar
             calendarType="dateOne"
@@ -125,9 +136,6 @@
           ></app-calendar>
         </div>
 
-
-
-        <!-- 兌現日期 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar
             calendarType="dateOne"
@@ -138,9 +146,6 @@
           ></app-calendar>
         </div>
 
-
-
-        <!-- 抽票日期（先借用 PickupDate） -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar
             calendarType="dateOne"
@@ -151,10 +156,6 @@
           ></app-calendar>
         </div>
 
-
-
-
-        <!-- 退票日期 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar
             calendarType="dateOne"
@@ -164,51 +165,54 @@
             [submitted]="submitted"
           ></app-calendar>
         </div>
+      </div>
 
+      <!-- ✅ 第三區：託收銀行＋備註 -->
+      <div class="grid p-fluid">
+<div
+  class="col-12 md:col-6 lg:col-2"
+  (click)="openBankDialog('trust')"
+  style="cursor: pointer;"
+  title="點擊查詢託收銀行"
+>
+  <div style="pointer-events: none;">
+    <app-input-text
+      label="託收銀行代號"
+      controlName="TrustBankCode1"
+      [control]="dataForm.controls.TrustBankCode1"
+      [submitted]="submitted"
+    ></app-input-text>
+  </div>
+</div>
 
-
-        <!-- 託收銀行代號(1) -->
-        <div class="col-12 md:col-6 lg:col-2">
-          <app-input-text
-            label="託收銀行代號"
-            controlName="TrustBankCode1"
-            [control]="dataForm.controls.CompanyAccNo"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-
-        <!-- 託收分行代號(2) -->
         <div class="col-12 md:col-6 lg:col-2">
           <app-input-text
             label="託收分行代號"
             controlName="TrustBankCode2"
-            [control]="dataForm.controls.CompanyAccName"
+            [control]="dataForm.controls.TrustBankCode2"
             [submitted]="submitted"
           ></app-input-text>
         </div>
 
-        <!-- 託收銀行全名 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="託收銀行全名"
             controlName="TrustBankFullName"
-            [control]="dataForm.controls.CompanyAccName"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        
-        <!-- 託收帳戶 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="託收帳戶"
-            controlName="TrustAccount"
-            [control]="dataForm.controls.VoucherNo"
+            [control]="dataForm.controls.TrustBankFullName"
             [submitted]="submitted"
           ></app-input-text>
         </div>
 
-                <!-- 備註 -->
-        <div class="col-12 md:col-6 lg:col-8">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="託收帳戶"
+            controlName="TrustAccount"
+            [control]="dataForm.controls.TrustAccount"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-12">
           <app-input-text
             label="備註"
             controlName="Remark"
@@ -216,10 +220,9 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
-
       </div>
 
-      <!-- 按鈕列 -->
+      <!-- ✅ 按鈕列 -->
       <div
         class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
         *ngIf="!isRead"
@@ -227,6 +230,152 @@
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
+
     </form>
   </p-panel>
 </div>
+
+<!-- ✅ Dialog：收款對象(廠商)查詢 -->
+<app-dialog
+  [(visible)]="vendorDialogVisible"
+  header="收款對象查詢"
+  [loading]="vendorLoading"
+  [disable]="vendorSaving"
+  [showFooter]="true"
+  (save)="onVendorSave()"
+  (visibleChange)="onVendorDialogVisibleChange($event)"
+>
+  <form [formGroup]="vendorQueryForm" class="p-fluid">
+    <div class="grid justify-content-center p-fluid">
+
+      <div class="col-12 md:col-8 lg:col-4">
+        <app-input-text
+          label="關鍵字(廠商編號/名稱/統編/簡稱)"
+          controlName="keyword"
+          [control]="vendorQueryForm.controls.keyword"
+          [submitted]="vendorSubmitted"
+        ></app-input-text>
+      </div>
+
+      <div class="col-12 md:col-4 lg:col-2 flex align-items-end justify-content-end">
+        <app-button
+          [type]="'button'"
+          btnType="query"
+          [loading]="vendorLoading"
+          (clickEvent)="onVendorQuery()"
+        ></app-button>
+      </div>
+
+    </div>
+  </form>
+
+  <div class="mt-3">
+    <app-table
+      [tableKey]="'fin63020_vendor_' + vendorTableVer"
+      [dataKey]="'_rowKey'"
+      [title]="undefined"
+      [columns]="vendorColumns"
+      [data]="vendorRows"
+      [loading]="vendorLoading"
+      [showCaption]="false"
+      [showHeader]="true"
+      [showFilter]="false"
+      [showReportMode]="false"
+      [showReportPDF]="false"
+      [showReportExcel]="false"
+      [showExcel]="false"
+      [showExcelExport]="false"
+      [showExcelImport]="false"
+      [showCustomExcelImport]="false"
+      [showInsert]="false"
+      [showDelete]="false"
+      [showManage]="true"
+      [showDetail]="false"
+      [showEdit]="false"
+      [showSerialNo]="false"
+      [showCheckBox]="false"
+      [showPaginator]="false"
+      [scrollable]="true"
+      [showSort]="false"
+      [showRowEdit]="false"
+      [alwaysEdit]="false"
+      [alwaysBlurValidate]="false"
+      [disabled]="vendorSaving"
+      emptyMessage="無資料"
+      (manageClick)="onVendorManageClick($event)"
+      (rowSelect)="onVendorRowSelect($event)"
+    ></app-table>
+  </div>
+</app-dialog>
+<!-- ✅ Dialog：銀行查詢（公司銀行 / 託收銀行共用） -->
+<app-dialog
+  [(visible)]="bankDialogVisible"
+  header="銀行查詢"
+  [loading]="bankLoading"
+  [disable]="bankSaving"
+  [showFooter]="true"
+  (save)="onBankSave()"
+  (visibleChange)="onBankDialogVisibleChange($event)"
+>
+  <form [formGroup]="bankQueryForm" class="p-fluid">
+    <div class="grid justify-content-center p-fluid">
+
+      <div class="col-12 md:col-8 lg:col-4">
+        <app-input-text
+          label="關鍵字(銀行代碼/銀行名稱/帳號/帳戶名稱)"
+          controlName="keyword"
+          [control]="bankQueryForm.controls.keyword"
+          [submitted]="bankSubmitted"
+        ></app-input-text>
+      </div>
+
+      <div class="col-12 md:col-4 lg:col-2 flex align-items-end justify-content-end">
+        <app-button
+          [type]="'button'"
+          btnType="query"
+          [loading]="bankLoading"
+          (clickEvent)="onBankQuery()"
+        ></app-button>
+      </div>
+
+    </div>
+  </form>
+
+  <div class="mt-3">
+    <app-table
+      [tableKey]="'fin63020_bank_' + bankTableVer"
+      [dataKey]="'_rowKey'"
+      [title]="undefined"
+      [columns]="bankColumns"
+      [data]="bankRows"
+      [loading]="bankLoading"
+      [showCaption]="false"
+      [showHeader]="true"
+      [showFilter]="false"
+      [showReportMode]="false"
+      [showReportPDF]="false"
+      [showReportExcel]="false"
+      [showExcel]="false"
+      [showExcelExport]="false"
+      [showExcelImport]="false"
+      [showCustomExcelImport]="false"
+      [showInsert]="false"
+      [showDelete]="false"
+      [showManage]="true"
+      [showDetail]="false"
+      [showEdit]="false"
+      [showSerialNo]="false"
+      [showCheckBox]="false"
+      [showPaginator]="false"
+      [scrollable]="true"
+      [showSort]="false"
+      [showRowEdit]="false"
+      [alwaysEdit]="false"
+      [alwaysBlurValidate]="false"
+      [disabled]="bankSaving"
+      emptyMessage="無資料"
+      (manageClick)="onBankManageClick($event)"
+      (rowSelect)="onBankRowSelect($event)"
+    ></app-table>
+  </div>
+</app-dialog>
