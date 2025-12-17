@@ -36,8 +36,8 @@ export interface TLS24010Data {
   TXN_TaxType: string,
   TXN_TaxFreeCertNo: string,
   GUI_Track: string,
-  TXN_GUIBegNo: string,
-  TXN_GUIEndNo: string,
+  TXN_GUIBegNo: string, // 發票號碼起號
+  TXN_GUIEndNo: string, // 發票號碼訖號
   TXN_CustCnt: number,
   TXN_MemCard: string,
   TXN_Uniform: string,
