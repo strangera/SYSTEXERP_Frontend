@@ -275,6 +275,13 @@ export class Tls52010Service {
     return this.http.post<ApiResponse<IQueryPOS2004DetailResponse[]>>(`${this.apiUrl}/queryPOS2004Detail`, params);
   }
   /**
+   * TLS56020 專用的商品查詢 API（商品管理編號/國際條碼/廠商貨號）
+   * 後端路由: /queryPOS2004Detail_TLS56020
+   */
+  queryPOS2004Detail_TLS56020(params: any): Observable<ApiResponse<IQueryPOS2004DetailResponse[]>> {
+    return this.http.post<ApiResponse<IQueryPOS2004DetailResponse[]>>(`${this.apiUrl}/queryPOS2004Detail_TLS56020`, params);
+  }
+  /**
    * 查詢廠商所有商品 (POS2004 詳細資料)
    * @param params 查詢條件 (VEN_No, LOGO_No, PLU_MagNo, PLU_Name, CAT_LNo, CAT_MNo, CAT_SNo)
    * @returns 包含 IPOS2004DetailData 陣列的 API 響應
