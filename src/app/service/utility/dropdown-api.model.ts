@@ -465,3 +465,19 @@ export interface TlttalentTltSpaceItem {
   LocationNo: string
   TltSpace: number
 }
+
+/** CSS1003 查詢參數 */
+export interface Css1003Query {
+  KIND_ID: string;
+}
+
+/** CSS1005 查詢參數 */
+export interface Css1005Query {
+  ORG_ID: string;
+}
+
+/** CSS 系列通用回傳項 (1002, 1003, 1005) */
+export interface CssDropDownItem {
+  No: string;
+  Name: string;
+}

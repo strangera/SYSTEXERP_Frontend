@@ -14,6 +14,9 @@ import {
   BusClassQuery,
   BusSClassItem,
   BusSClassQuery,
+  Css1003Query,
+  Css1005Query,
+  CssDropDownItem,
   EcrItem,
   EcrQuery,
   ENG1001Item,
@@ -141,7 +144,7 @@ export class DropdownApiService {
    * @param body 請求 body (必填)
    * @returns Observable，包含標準的 Option[] 陣列或 null
    */
-  private queryAndMapDropdownWithParams<T, U>(endpoint: string, noKey: keyof T, nameKey: keyof T, body: U): Observable<Option[] | null> {
+  private queryAndMapDropdownWithParams<T, U>(endpoint: string, noKey: keyof T, nameKey: keyof T, body?: U): Observable<Option[] | null> {
     return this.http.post<ApiResponse<T[]>>(`${this.apiUrl}${endpoint}`, body).pipe(
       map(response => {
         const data = response?.Data;
@@ -652,6 +655,48 @@ export class DropdownApiService {
     }
     return this.queryAndMapDropdown<TALPORDERMDataForShare, TALPORDERMQueryForShare>('/Share/queryTALPORDERM_DropDownList', 'pod_no', 'pod_desc', request).pipe(
       shareReplay(1)// 避免重複查詢
+    );
+  }
+  // --- CSS 相關下拉選單 ---
+
+  /** * 查詢 CSS1002 下拉選單
+   * 無參數，直接回傳 Option[]
+   */
+  queryCss1002(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<CssDropDownItem>(
+      '/queryCSS1002DropDownList',
+      'No',
+      'Name'
+    ).pipe(
+      shareReplay(1)
+    );
+  }
+
+  /** * 查詢 CSS1003 下拉選單
+   * @param body { KIND_ID: string }
+   */
+  queryCss1003(body: Css1003Query): Observable<Option[] | null> {
+    return this.queryAndMapDropdownWithParams<CssDropDownItem, Css1003Query>(
+      '/queryCSS1003DropDownList',
+      'No',
+      'Name',
+      body
+    ).pipe(
+      shareReplay(1)
+    );
+  }
+
+  /** * 查詢 CSS1005 下拉選單
+   * @param body { ORG_ID: string }
+   */
+  queryCss1005(body: Css1005Query = { ORG_ID: '' }): Observable<Option[] | null> {
+    return this.queryAndMapDropdownWithParams<CssDropDownItem, Css1005Query>(
+      '/queryCSS1005DropDownList',
+      'No',
+      'Name',
+      body
+    ).pipe(
+      shareReplay(1)
     );
   }
 }
