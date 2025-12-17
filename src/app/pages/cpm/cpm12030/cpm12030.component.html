@@ -9,16 +9,18 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="子類別編號" [options]="KIND_SubIDOptions" optionLabel="label" optionValue="value"
-              controlName="KIND_SubID" [control]="queryForm.controls.KIND_SubID" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="子類別編號" [options]="KIND_SubIDOptions$ | async" optionLabel="label" optionValue="value"
+              controlName="KIND_SubID" [control]="queryForm.controls.KIND_SubID" [submitted]="submitted">
+            </app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="子類別名稱" controlName="KIND_SubName" [control]="queryForm.controls.KIND_SubName"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="客戶意見主類別" controlName="KIND_ID" [options]="KIND_IDOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.KIND_ID" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="客戶意見主類別" controlName="KIND_ID" [options]="KIND_IDOptions$ | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.KIND_ID" [submitted]="submitted">
+            </app-dropdown>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

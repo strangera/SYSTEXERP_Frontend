@@ -1,11 +1,13 @@
-import { NgIf } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { CPM12030Data, Cpm12030Service } from '@service/api/cpm/cpm12030.service';
+import { CPM12030Data, Cpm12030Service, CSS1004Data } from '@service/api/cpm/cpm12030.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -16,7 +18,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
   selector: 'app-cpm12030-cru',
   templateUrl: './cpm12030-cru.component.html',
   standalone: true,
-  imports: [InputTextareaComponent, MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [TableEditComponent, AsyncPipe, MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class CPM12030CRUComponent extends BasicCruPageComponent<CPM12030Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
@@ -24,18 +26,24 @@ export class CPM12030CRUComponent extends BasicCruPageComponent<CPM12030Data> im
     KIND_ID: [null, [Validators.required, Validators.maxLength(10)]], // 子類別編號
     KIND_SubID: [null, [Validators.required, Validators.maxLength(40)]], // 責任單位名稱類別名稱
     KIND_SubName: [null, [Validators.required]], // 客戶意見主類別
-    remark: [null], // 備註
   });
-  KIND_IDOptions = [
-    { value: 'T001', label: '意見反映' },
-    { value: 'T002', label: '廣告業務' },
-    { value: 'T003', label: '活動、場地洽談' },
-    { value: 'T004', label: '承租店櫃' },
-    { value: 'T005', label: '合作提案' },
+  KIND_IDOptions$ = this.dropdown.queryCss1002();
+  CLASS_IDOptions$ = this.dropdown.queryCss1005();
+  ORG_IDOptions$ = this.dropdown.querySys3100();
+  columns: EditColumn[] = [
+    {
+      field: 'ORG_ID', header: '組織', type: 'dropdown', options: () => this.ORG_IDOptions$, optionsAsync: true, optionLabel: 'label', optionValue: 'value',
+      showClear: false
+    },
+    {
+      field: 'CLASS_ID', header: '責任單位', type: 'dropdown', options: () => this.CLASS_IDOptions$, optionsAsync: true, optionLabel: 'label', optionValue: 'value',
+      showClear: false
+    },
   ];
-
+  data: CSS1004Data[] = [];
   constructor(
-    private readonly cpm12030Service: Cpm12030Service
+    private readonly cpm12030Service: Cpm12030Service,
+    private readonly dropdown: DropdownApiService
   ) {
     super();
   }
