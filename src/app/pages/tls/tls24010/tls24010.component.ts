@@ -196,7 +196,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       let headerMessage: string;
       let confirmMessage: string;
 
-      if (isCross) {
+      if (isCross && rowData.TXN_GUIBegNo !== '0000000000') {
         // 跨期：應開立折讓單
         headerMessage = `開立折讓單`;
         confirmMessage = `此筆交易已跨期，需進行開立折讓單作業。確定要開立折讓單嗎?`;
