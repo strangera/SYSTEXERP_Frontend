@@ -1,11 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import {
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -21,8 +17,8 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 
 import {
   Cpm11030Service,
-  Cpm11030CruPayload,
-  InsertDailyEquipAvailabilityRequest,
+  InsertCPM11030Request,
+  UpdateCPM11030Request,
 } from '../../../service/api/cpm/cpm11030.service';
 
 @UntilDestroy()
@@ -44,54 +40,83 @@ import {
     CalendarComponent,
   ],
 })
-export class CPM11030CRUComponent
-  extends BasicCruPageComponent<any>
-  implements OnInit
-{
+export class CPM11030CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   readonly CRUD = CRUDStatus;
 
-  /** 服務台下拉（你說不要連動，所以只當純下拉） */
+  /** 服務中心位置編號（純下拉，不做任何連動） */
   counterCodeOptions: { value: string; label: string }[] = [
-    { value: '11A001', label: '11A001/服務諮詢台' },
-    { value: '12A001', label: '12A001/VIP室' },
-    { value: '12D001', label: '12D001/總機' },
-    { value: '15A001', label: '15A001/顧客服務中心' },
+    { value: '11A001', label: '11A001-服務諮詢台' },
+    { value: '12A001', label: '12A001-VIP室' },
+    { value: '12D001', label: '12D001-總機' },
+    { value: '15A001', label: '15A001-顧客服務中心' },
   ];
 
-  /** ✅ 用一般 group：讓 CSS_CurrentQty 初始可為 null（不要預設 0） */
+  /** 證件類型：01身分證,02健保卡,03駕照,04護照,05其他 */
+  certTypeOptions: { value: string; label: string }[] = [
+    { value: '01', label: '01-身分證' },
+    { value: '02', label: '02-健保卡' },
+    { value: '03', label: '03-駕照' },
+    { value: '04', label: '04-護照' },
+    { value: '05', label: '05-其他' },
+  ];
+
+  /** 出借狀態：1已出借 2已歸還 */
+  loanStatusOptions: { value: string; label: string }[] = [
+    { value: '1', label: '1-已出借' },
+    { value: '2', label: '2-已歸還' },
+  ];
+
+  /** 依欄位說明：大多 nullable:true，所以不要全部 required（除非你前端想強制） */
   dataForm = this.formBuilder.group({
+    /** Update 用 */
     ID: [null as number | null],
 
-    Loan_No: [{ value: '' as string, disabled: true }], // 顯示用（不一定會用到）
+    /** 顯示用（後端產生；單據規則 YY+MM+DD+SSS） */
+    Loan_No: [{ value: '' as string, disabled: true }],
+
+    /** nullable:true（你要強制必填可加 Validators.required） */
+    Service_Id: ['' as string, [Validators.maxLength(7)]],
+
+    /** 出借日期：string($date-time)（通常必填比較合理，但規格寫 nullable:true 就先不強制） */
     Loan_Date: [null as Date | null, [Validators.required]],
+
+    /** 出借時間：HHMM（nullable:true） */
     Loan_Time: [null as Date | null],
 
-    Service_Id: ['' as string, [Validators.required, Validators.maxLength(7)]], // 你的 DB 是 varchar(7)
-    User_Name: ['' as string, [Validators.maxLength(20)]],
+    /** 出借狀態：1/2（nullable:true） */
+    Loan_Status: ['' as string],
+
+    /** 其他欄位皆 nullable:true */
+    User_Name: ['' as string, [Validators.maxLength(50)]],
+    Cert_Type: ['' as string, [Validators.maxLength(2)]],
+    Cert_No: ['' as string, [Validators.maxLength(50)]],
     Loan_Phone: ['' as string, [Validators.maxLength(20)]],
-    Loan_USR_No: ['' as string, [Validators.maxLength(20)]],
-
-    Cert_Type: ['' as string, [Validators.maxLength(20)]],
-    Cert_No: ['' as string, [Validators.maxLength(20)]],
-
-    /** ✅ 不連動：改自由輸入，並限制長度 2（DB varchar(2)） */
-    Device_ID: ['' as string, [Validators.required, Validators.maxLength(2)]],
-
-    /** ✅ 不連動：設備名稱自由輸入 */
+    Device_ID: ['' as string, [Validators.maxLength(20)]],
     Device_Name: ['' as string, [Validators.maxLength(50)]],
-
-    /** ✅ 不要預設 0：必填、>=0 */
-    CSS_CurrentQty: [null as number | null, [Validators.required, Validators.min(0)]],
   });
 
   constructor(private cpm11030Service: Cpm11030Service) {
     super();
   }
 
-  ngOnInit(): void {
-    this.initializePage('CPM11030', this.dataForm);
-    this.updateDisabledState();
+ngOnInit(): void {
+  this.initializePage('CPM11030', this.dataForm);
+  this.updateDisabledState();
+
+  // ✅ Create：預設帶現在日期 + 現在時間
+  if (this.crudstatus === CRUDStatus.Create) {
+    const now = new Date();
+
+    const hasDate = this.dataForm.get('Loan_Date')?.value instanceof Date;
+    const hasTime = this.dataForm.get('Loan_Time')?.value instanceof Date;
+
+    this.dataForm.patchValue({
+      Loan_Date: hasDate ? (this.dataForm.get('Loan_Date')?.value as any) : now,
+      Loan_Time: hasTime ? (this.dataForm.get('Loan_Time')?.value as any) : now,
+    });
   }
+}
+
 
   private updateDisabledState(): void {
     if (this.crudstatus === CRUDStatus.Read) {
@@ -99,68 +124,69 @@ export class CPM11030CRUComponent
       return;
     }
 
-    // Create/Edit：可編輯，但 Loan_No 不允許改
     this.dataForm.enable();
+
+    // Loan_No 永遠不給改（顯示用）
     this.dataForm.get('Loan_No')?.disable();
 
+    // Edit：ID 通常不給改（但仍需送出）
     if (this.crudstatus === CRUDStatus.Edit) {
       this.dataForm.get('ID')?.disable();
     }
   }
 
+  /** Loan_Date：送 ISO datetime */
   private toIso(d: Date | null | undefined): string {
     const dt = d instanceof Date ? d : new Date();
     return dt.toISOString();
   }
 
-  /** ✅ Create：insertCPM11030_DailyEquipAvailability payload */
-  private buildDailyInsertPayload(raw: any): InsertDailyEquipAvailabilityRequest {
-    return {
-      CSS_Date: this.toIso(raw.Loan_Date),
-      Service_Id: (raw.Service_Id ?? '').trim() || null as any,
-      Device_ID: (raw.Device_ID ?? '').trim() || null as any,
+  /** Loan_Time：依規格送 HHMM（不是 HH:mm:ss） */
+  private toHHMM(t: Date | null | undefined): string {
+    if (!(t instanceof Date)) return '';
+    const hh = String(t.getHours()).padStart(2, '0');
+    const mm = String(t.getMinutes()).padStart(2, '0');
+    return `${hh}${mm}`;
+  }
 
-      CSS_PriorQty: 0,
-      CSS_LendQty: 0,
-      CSS_ReturnQty: 0,
-      CSS_CurrentQty: Number(raw.CSS_CurrentQty),
+  private trimOrEmpty(v: any): string {
+    return (v ?? '').toString().trim();
+  }
+
+  private buildInsertPayload(raw: any): InsertCPM11030Request {
+    return {
+      Service_Id: this.trimOrEmpty(raw.Service_Id),
+      Loan_Date: raw.Loan_Date ? this.toIso(raw.Loan_Date) : '', // nullable:true，但 DTO 是 string：沒值就送空字串
+      Loan_Time: raw.Loan_Time ? this.toHHMM(raw.Loan_Time) : '',
+      Loan_Status: this.trimOrEmpty(raw.Loan_Status),
+
+      User_Name: this.trimOrEmpty(raw.User_Name),
+      Cert_Type: this.trimOrEmpty(raw.Cert_Type),
+      Cert_No: this.trimOrEmpty(raw.Cert_No),
+      Loan_Phone: this.trimOrEmpty(raw.Loan_Phone),
+
+      Device_ID: this.trimOrEmpty(raw.Device_ID),
+      Device_Name: this.trimOrEmpty(raw.Device_Name),
     };
   }
 
-  /** Edit：保留原本 updateCPM11030（如果你後端有） */
-  private toYMD(d: Date | null | undefined): string {
-    const dt = d instanceof Date ? d : new Date();
-    const y = dt.getFullYear();
-    const m = String(dt.getMonth() + 1).padStart(2, '0');
-    const day = String(dt.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  }
-
-  private toHMS(t: Date | null | undefined): string | undefined {
-    if (!t) return undefined;
-    const hh = String(t.getHours()).padStart(2, '0');
-    const mm = String(t.getMinutes()).padStart(2, '0');
-    const ss = String(t.getSeconds()).padStart(2, '0');
-    return `${hh}:${mm}:${ss}`;
-  }
-
-  private buildCpm11030Payload(raw: any): Cpm11030CruPayload {
+  private buildUpdatePayload(raw: any): UpdateCPM11030Request {
     return {
-      ID: raw.ID ?? undefined,
-      Loan_No: raw.Loan_No ?? undefined,
-      Loan_Date: this.toYMD(raw.Loan_Date),
-      Loan_Time: this.toHMS(raw.Loan_Time),
+      ID: Number(raw.ID ?? 0),
+      Loan_No: this.trimOrEmpty(raw.Loan_No),
 
-      Service_Id: (raw.Service_Id ?? '').trim(),
-      User_Name: (raw.User_Name ?? '').trim(),
-      Loan_Phone: (raw.Loan_Phone ?? '').trim(),
-      Loan_USR_No: (raw.Loan_USR_No ?? '').trim(),
+      Service_Id: this.trimOrEmpty(raw.Service_Id),
+      Loan_Date: raw.Loan_Date ? this.toIso(raw.Loan_Date) : '',
+      Loan_Time: raw.Loan_Time ? this.toHHMM(raw.Loan_Time) : '',
+      Loan_Status: this.trimOrEmpty(raw.Loan_Status),
 
-      Cert_Type: (raw.Cert_Type ?? '').trim(),
-      Cert_No: (raw.Cert_No ?? '').trim(),
+      User_Name: this.trimOrEmpty(raw.User_Name),
+      Cert_Type: this.trimOrEmpty(raw.Cert_Type),
+      Cert_No: this.trimOrEmpty(raw.Cert_No),
+      Loan_Phone: this.trimOrEmpty(raw.Loan_Phone),
 
-      Device_ID: (raw.Device_ID ?? '').trim() || undefined,
-      Device_Name: (raw.Device_Name ?? '').trim() || undefined,
+      Device_ID: this.trimOrEmpty(raw.Device_ID),
+      Device_Name: this.trimOrEmpty(raw.Device_Name),
     };
   }
 
@@ -169,52 +195,42 @@ export class CPM11030CRUComponent
       const raw = form.getRawValue();
 
       switch (this.crudstatus) {
-        /** ✅ Create：改打 insertCPM11030_DailyEquipAvailability */
         case CRUDStatus.Create:
-          if (this.canAdd()) {
-            // 保險：避免空值被 Number(null)=0 偷偷變 0
-            if (raw.CSS_CurrentQty == null || raw.CSS_CurrentQty === ('' as any)) {
-              this.dataForm.controls.CSS_CurrentQty?.setErrors({ required: true });
-              this.dataForm.controls.CSS_CurrentQty?.markAsTouched();
-              this.messageService.errorBubble('本日庫存量不可空白');
-              return;
-            }
+          if (!this.canAdd()) return;
 
-            const payload = this.buildDailyInsertPayload(raw);
-
-            this.cpm11030Service
-              .insertCPM11030_DailyEquipAvailability(payload)
-              .pipe(untilDestroyed(this))
-              .subscribe({
-                next: (res: any) => {
-                  if (res?.IsSuccess === false) {
-                    this.messageService.errorBubble(res?.Message ?? '新增失敗');
-                    return;
-                  }
-                  this.messageService.successBubble('新增成功');
-                  this.onCancel();
-                },
-                error: () => this.messageService.errorBubble('新增失敗'),
-              });
-          }
+          this.cpm11030Service
+            .insertCPM11030(this.buildInsertPayload(raw))
+            .pipe(untilDestroyed(this))
+            .subscribe({
+              next: (res: any) => {
+                if (res?.IsSuccess === false) {
+                  this.messageService.errorBubble(res?.Message ?? '新增失敗');
+                  return;
+                }
+                this.messageService.successBubble('新增成功');
+                this.onCancel();
+              },
+              error: () => this.messageService.errorBubble('新增失敗'),
+            });
           break;
 
-        /** Edit：維持原本 updateCPM11030 */
         case CRUDStatus.Edit:
-          if (this.canEdit()) {
-            const payload = this.buildCpm11030Payload(raw);
+          if (!this.canEdit()) return;
 
-            this.cpm11030Service
-              .updateCPM11030(payload)
-              .pipe(untilDestroyed(this))
-              .subscribe({
-                next: () => {
-                  this.messageService.successBubble('更新成功');
-                  this.onCancel();
-                },
-                error: () => this.messageService.errorBubble('更新失敗'),
-              });
-          }
+          this.cpm11030Service
+            .updateCPM11030(this.buildUpdatePayload(raw))
+            .pipe(untilDestroyed(this))
+            .subscribe({
+              next: (res: any) => {
+                if (res?.IsSuccess === false) {
+                  this.messageService.errorBubble(res?.Message ?? '更新失敗');
+                  return;
+                }
+                this.messageService.successBubble('更新成功');
+                this.onCancel();
+              },
+              error: () => this.messageService.errorBubble('更新失敗'),
+            });
           break;
       }
     });

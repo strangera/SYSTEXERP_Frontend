@@ -1,16 +1,17 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, forkJoin, of } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 
 /** =========================
- *  API DTOs (依你貼的 Swagger)
+ *  Common
  *  ========================= */
-
 export type SortItem = { field: string; order: number };
 
+/** =========================
+ *  Query: /queryCPM11030
+ *  ========================= */
 export interface QueryCPM11030Request {
   PageSize: number;
   PageIndex: number;
@@ -34,17 +35,28 @@ export interface QueryCPM11030Request {
 export interface QueryCPM11030Row {
   ID: number;
   Loan_No: string;
-  Loan_Date: string; // ISO string
-  Loan_Time: string; // string
+  Service_Id: string;
+
+  Loan_Date: string;   // ISO datetime
+  Loan_Time: string;   // string
+  Loan_Status: string; // string
+
   User_Name: string;
-  Loan_Phone: string;
-  Loan_USR_No: string;
   Cert_Type: string;
   Cert_No: string;
+  Loan_Phone: string;
+
+  Device_ID: string;
+  Device_Name: string;
+
+  Loan_USR_No?: string;
 
   [key: string]: any;
 }
 
+/** =========================
+ *  Daily Equip Availability
+ *  ========================= */
 export interface QueryDailyEquipAvailabilityRequest {
   Service_Id: string;
 }
@@ -66,21 +78,24 @@ export interface InsertDailyEquipAvailabilityRequest {
 }
 
 /** =========================
- *  CPM11030 CRU
+ *  CRU: insert/update CPM11030
  *  ========================= */
-export interface Cpm11030CruPayload {
-  ID?: number;
-  Loan_No?: string;
-  Loan_Date: string; // yyyy-MM-dd (你 CRU component 這樣送)
-  Loan_Time?: string; // HH:mm:ss
+export interface InsertCPM11030Request {
   Service_Id: string;
+  Loan_Date: string;   // ISO datetime
+  Loan_Time: string;   // string
+  Loan_Status: string; // string
   User_Name: string;
-  Loan_USR_No: string;
-  Loan_Phone: string;
   Cert_Type: string;
   Cert_No: string;
-  Device_ID?: string;
-  Device_Name?: string;
+  Loan_Phone: string;
+  Device_ID: string;
+  Device_Name: string;
+}
+
+export interface UpdateCPM11030Request extends InsertCPM11030Request {
+  ID: number;
+  Loan_No: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -90,9 +105,7 @@ export class Cpm11030Service {
   constructor(private http: HttpClient) {}
 
   /** 列表查詢：/queryCPM11030 */
-  queryCPM11030(
-    body: QueryCPM11030Request
-  ): Observable<ApiResponse<QueryCPM11030Row[]>> {
+  queryCPM11030(body: QueryCPM11030Request): Observable<ApiResponse<QueryCPM11030Row[]>> {
     return this.http.post<ApiResponse<QueryCPM11030Row[]>>(
       `${this.apiUrl}/queryCPM11030`,
       body
@@ -109,7 +122,7 @@ export class Cpm11030Service {
     );
   }
 
-  /** ✅ 每日設備可出借量：新增 /insertCPM11030_DailyEquipAvailability（一次一筆） */
+  /** 每日設備可出借量：新增 /insertCPM11030_DailyEquipAvailability（一次一筆） */
   insertCPM11030_DailyEquipAvailability(
     body: InsertDailyEquipAvailabilityRequest
   ): Observable<ApiResponse<any>> {
@@ -119,44 +132,54 @@ export class Cpm11030Service {
     );
   }
 
-  /**
-   * ✅ 批次儲存（逐筆 insert）
-   * - 回傳一個 ApiResponse，包含每筆結果，前端比較好顯示成功/失敗
-   */
-  saveDailyEquipAvailabilityBatch(
-    items: InsertDailyEquipAvailabilityRequest[]
-  ): Observable<ApiResponse<{ success: number; fail: number; results: ApiResponse<any>[] }>> {
-    if (!items?.length) {
-      return of({
-        IsSuccess: true,
-        Message: 'no items',
-        Data: { success: 0, fail: 0, results: [] },
-      } as any);
-    }
-
-    return forkJoin(items.map((x) => this.insertCPM11030_DailyEquipAvailability(x))).pipe(
-      map((results) => {
-        const success = results.filter((r: any) => r?.IsSuccess === true).length;
-        const fail = results.length - success;
-
-        const resp: ApiResponse<any> = {
-          IsSuccess: fail === 0,
-          Message: fail === 0 ? 'save success' : `save partial fail (${fail})`,
-          Data: { success, fail, results },
-        } as any;
-
-        return resp;
-      })
-    );
-  }
-
-  /** CPM11030 新增/修改 */
-  insertCPM11030(body: Cpm11030CruPayload): Observable<ApiResponse<any>> {
+  /** 新增：/insertCPM11030 */
+  insertCPM11030(body: InsertCPM11030Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/insertCPM11030`, body);
   }
 
-  updateCPM11030(body: Cpm11030CruPayload): Observable<ApiResponse<any>> {
+  /** 更新：/updateCPM11030 */
+  updateCPM11030(body: UpdateCPM11030Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateCPM11030`, body);
+  }
+
+  // ================= 匯出 =================
+
+  /** 匯出 PDF（不分頁） */
+  exportCPM11030PDF(body: QueryCPM11030Request): Observable<HttpResponse<Blob>> {
+    const url = `${this.apiUrl}/exportCPM11030_PDF`;
+    const payload = this.stripPaging(body);
+    return this.http.post(url, payload, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+    }) as Observable<HttpResponse<Blob>>;
+  }
+
+  /** 匯出 Excel（不分頁） */
+  exportCPM11030Excel(body: QueryCPM11030Request): Observable<HttpResponse<Blob>> {
+    const url = `${this.apiUrl}/exportCPM11030_Excel`;
+    const payload = this.stripPaging(body);
+    return this.http.post(url, payload, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+    }) as Observable<HttpResponse<Blob>>;
+  }
+
+  /**
+   * 工具：移除分頁相關欄位（匯出不需要）
+   * - 同時移除大小寫鍵：pageSize/pageIndex/orderBy/offset 與 PageSize/PageIndex/OrderBy/Offset
+   * - 保留 SortBy
+   */
+  private stripPaging<T extends Record<string, any>>(input: T): Omit<T,
+    'PageSize' | 'PageIndex' | 'OrderBy' | 'Offset' |
+    'pageSize' | 'pageIndex' | 'orderBy' | 'offset'
+  > {
+    if (!input) return input as any;
+    const {
+      PageSize, PageIndex, OrderBy, Offset,
+      pageSize, pageIndex, orderBy, offset,
+      ...rest
+    } = input as any;
+    return rest as any;
   }
 }
 

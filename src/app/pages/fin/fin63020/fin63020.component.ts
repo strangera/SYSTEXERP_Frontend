@@ -67,35 +67,50 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
 
   /* ----------------- TableReport 欄位 ----------------- */
   columns: ReportColumn[] = [
-    { field: 'RowNo', header: '序號' },
-    { field: 'CanPickupYn', header: '可領取' },
+
 
     { field: 'CheckNo', header: '票據號碼' },
-    { field: 'VendorNo', header: '廠客代號' },
-    { field: 'CompanyAccNo', header: '公司銀行科目代號' },
 
-    { field: 'IssueDate', header: '開票日', format: (v: any) => this.formatDate(v) },
+    { field: 'VendorNo', header: '廠客代號' },
+    { field: 'VendorName', header: '廠商名稱' },
+
+    { field: 'BankAccNo', header: '全省銀行代號' },
+    { field: 'BankName', header: '銀行名稱' },
+
+    { field: 'IssueDate', header: '託收日期', format: (v: any) => this.formatDate(v) },
+
+    { field: 'AccountCode', header: '科目代號' },
+    { field: 'AccountName', header: '科目名稱' },
+
+    { field: 'ReceiveDate', header: '收票日期', format: (v: any) => this.formatDate(v) },
+    { field: 'ReceiveStaff', header: '收票業務員代碼' },
+
+    { field: 'CheckReceiptNo', header: '收票單號' },
+
     { field: 'ExpireDate', header: '到期日', format: (v: any) => this.formatDate(v) },
     { field: 'PayDate', header: '兌現日', format: (v: any) => this.formatDate(v) },
 
-    { field: 'CheckAmount', header: '票面金額' },
-    { field: 'CheckTitle', header: '票據抬頭' },
-    { field: 'NoEndorseYn', header: '禁止背書轉讓' },
+    { field: 'CheckAmount', header: '票面金額', format: this.moneyFormat },
+
+    { field: 'CheckType', header: '票據種類' },      // 例：支票
+    { field: 'NoEndorseYn', header: '是否客票' },    // 是 / 否
 
     { field: 'Remark', header: '備註' },
+
     { field: 'OrgId', header: '組織代號' },
+    { field: 'OrgName', header: '組織名稱' },
 
-    { field: 'StatusFlag', header: '狀態' },     // 到期/兌現
-    { field: 'CheckStatus', header: '票據狀態' }, // 確認/拋轉
-
-    { field: 'PickupStatus', header: '領取狀態' },
-    { field: 'PickupDate', header: '領取日期', format: (v: any) => this.formatDateTime(v) },
+    { field: 'StatusFlag', header: '狀態' },        // 兌現 / 未兌現
+    { field: 'CheckStatus', header: '票據狀態' },   // 拋轉 / 未拋轉
 
     { field: 'VoucherNo', header: '傳票號碼' },
-    { field: 'VoucherNoPaid', header: '到期傳票號碼' },
   ];
 
-  /* ----------------- 下拉（先沿用你原本假資料） ----------------- */
+  moneyFormat(value: number): string {
+    return value != null ? value.toLocaleString('en-US') : '0'; // ✅ 使用美式格式
+  }
+
+  /* ----------------- 下拉（先沿用假資料） ----------------- */
   vendorCodeOptions: any[] = [
     { value: '00000000-1', label: '00000000-1' },
     { value: '00000000-2', label: '00000000-2' },
@@ -105,6 +120,19 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     { value: '110301', label: '110301' },
     { value: '110302', label: '110302' },
     { value: '110303', label: '110303' },
+  ];
+
+  // ✅ 新增：公司銀行科目代號託收銀行（若你之後要串不同 API，再換成真的 options）
+  collectionBankAccountCodeOptions: any[] = [
+    { value: '110301', label: '110301' },
+    { value: '110302', label: '110302' },
+    { value: '110303', label: '110303' },
+  ];
+
+  // ✅ 新增：收票業務員代碼
+  receiveSalesCodeOptions: any[] = [
+    { value: 'S001', label: 'S001' },
+    { value: 'S002', label: 'S002' },
   ];
 
   endorsementProhibitedOptions: any[] = [
@@ -122,7 +150,6 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     { value: '002', label: '002' },
   ];
 
-  // SP：CheckStatus 0/1/2/3/4/5（你原本只有3個，這邊補齊比較不會卡）
   billStatusOptions: any[] = [
     { value: '0', label: '作廢' },
     { value: '1', label: '未異動' },
@@ -148,42 +175,71 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     { value: 'UNI', label: '統一企業股份有限公司' },
   ];
 
-  /* ----------------- 查詢表單（對齊 SP 參數） ----------------- */
+  // ✅ 新增：票據種類 / 是否客票
+  billTypeOptions: any[] = [
+    { value: 'A', label: 'A' },
+    { value: 'B', label: 'B' },
+  ];
+
+  isCustomerBillOptions: any[] = [
+    { value: 'Y', label: '是' },
+    { value: 'N', label: '否' },
+  ];
+
+  /* ----------------- 查詢表單（依你最新 HTML） ----------------- */
   queryForm = this.formBuilder.group({
-    // 原畫面欄位（你 HTML 用這些 controlName）
-    billNumber: ['' as string],             // ChkNo
-    vendorCode: ['' as string],             // VenNo
-    bankAccountCode: ['' as string, [Validators.required]], // CompanyAccNo ★必填
+    // 第一列
+    billNumber: ['' as string], // 票據號碼
+    vendorCode: ['' as string], // 廠客代號
+    bankAccountCode: ['' as string, [Validators.required]], // 銀行代號(公司銀行科目代號) ★必填
 
-    issueDateStart: [null as Date | null],  // IssueDateFrom
-    issueDateEnd: [null as Date | null],    // IssueDateTo
-    dueDateStart: [null as Date | null],    // ExpireDateFrom
-    dueDateEnd: [null as Date | null],      // ExpireDateTo
-    cashDateStart: [null as Date | null],   // PayDateFrom
-    cashDateEnd: [null as Date | null],     // PayDateTo
+    // 第二列
+    customerBankAccount: ['' as string], // 客戶銀行帳號
+    issueDateStart: [null as Date | null], // 託收日(起)
+    issueDateEnd: [null as Date | null], // 託收日(迄)
+    collectionBankAccountCode: ['' as string], // 公司銀行科目代號託收銀行
 
-    amountStart: [null as number | null],   // AmtFrom
-    amountEnd: [null as number | null],     // AmtTo
+    // 第三列
+    receiveDateStart: [null as Date | null], // 收票日(起)
+    receiveDateEnd: [null as Date | null], // 收票日(迄)
+    receiveSalesCode: ['' as string], // 收票業務員代碼
+    paymentBillNumber: ['' as string], // 收款單號（你原本是 PamNo）
 
-    billTitle: ['' as string],              // ChkTitle
-    endorsementProhibited: ['' as string],  // VenCtrlYN Y/N
-    remarks: ['' as string],                // Comment
+    // 第四列
+    dueDateStart: [null as Date | null], // 到期日(起)
+    dueDateEnd: [null as Date | null], // 到期日(迄)
+    preCashDateStart: [null as Date | null], // 預兌日(起)
+    preCashDateEnd: [null as Date | null], // 預兌日(迄)
+    cashDateStart: [null as Date | null], // 兌現日(起)
+    cashDateEnd: [null as Date | null], // 兌現日(迄)
 
-    organizationCode: ['' as string],       // OrgId
-    eventCode: ['' as string],              // ProjectNo
+    // 第五列
+    amountStart: [null as number | null], // 票面金額(起)
+    amountEnd: [null as number | null], // 票面金額(迄)
+    billType: ['' as string], // 票據種類
+    isCustomerBill: ['' as string], // 是否客票
 
-    billStatus: ['' as string],             // CheckStatus
-    status: ['' as string],                 // Status
+    // 第六列
+    remarks: ['' as string], // 備註
+    organizationCode: ['' as string], // 組織代號
+    eventCode: ['' as string], // 活動代號
 
-    collectionStatus: ['' as string],       // PickupType
-    collectionDateStart: [null as Date | null], // PickupDateFrom
-    collectionDateEnd: [null as Date | null],   // PickupDateTo
+    // 第七列
+    status: ['' as string], // 狀態
+    billStatus: ['' as string], // 票據狀態
+    paymentAccount: ['' as string], // 應收票據會計科目
 
-    paymentBillNumber: ['' as string],      // PamNo
-    paymentAccount: ['' as string],         // ApCheckAccNo
-    voucherNumber: ['' as string],          // VoucherNo
-    targetCode: ['' as string],             // PartyTypeNo（目前 SP 未用，但保留）
-    reconciliationKey: ['' as string],      // ReconKey（SP 未用，但保留）
+    // 第八列
+    voucherNumber: ['' as string], // 傳票號碼
+    targetCode: ['' as string], // 對象別編號
+    reconciliationKey: ['' as string], // 對帳KEY值
+
+    // ✅ 保留你原本有的欄位（HTML 現在沒用到，但不想動 service 的話先留著）
+    billTitle: ['' as string], // 票據抬頭（若你之後要再放回畫面）
+    endorsementProhibited: ['' as string], // 禁止背書轉讓（若你之後要再放回畫面）
+    collectionStatus: ['' as string], // 領取狀態
+    collectionDateStart: [null as Date | null], // 領取日期(起)
+    collectionDateEnd: [null as Date | null], // 領取日期(迄)
 
     ...createPaginationConfig(this.defaultSort),
   });
@@ -196,7 +252,6 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    // ProgNo / cruPage 依你實際路由調整
     this.initializePage('FIN63020', 'fin/fin63020cru', this.queryForm, (form) =>
       this.onSubmit(form)
     );
@@ -248,6 +303,14 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     return cleaned.length ? cleaned : fallback;
   }
 
+  /**
+   * ⚠️ 重要：
+   * 你最新 HTML 多了「客戶銀行帳號 / 收票日 / 預兌日 / 票據種類 / 是否客票 / 收票業務員...」，
+   * 但目前 QueryFIN63020Request(後端) 不一定有對應欄位。
+   *
+   * 所以這裡先「只送你原本已對齊 SP 的那些欄位」，新增欄位先不送到後端（避免 API 因未知欄位報錯）。
+   * 等你給我 SP/Request 欄位名稱，我再把 payload 對應補上。
+   */
   private buildQueryPayload(base: any): QueryFIN63020Request {
     const pageIndex =
       Number.isFinite(base?.pageIndex) && base.pageIndex >= 1 ? base.pageIndex : 1;
@@ -261,6 +324,7 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
       PageSize: pageSize,
       SortBy: sort,
 
+      // ✅ 原本已對齊 SP 的欄位（保持不變）
       ChkNo: (base?.billNumber ?? '').trim() || undefined,
       VenNo: (base?.vendorCode ?? '').trim() || undefined,
 
@@ -294,7 +358,6 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
       Status: (base?.status ?? '').trim() || undefined,
 
       PickupType: (base?.collectionStatus ?? '').trim() || undefined,
-      // SP 是 datetime，這邊用 ISO 最保險
       PickupDateFrom: this.toIso(base?.collectionDateStart),
       PickupDateTo: this.toIso(base?.collectionDateEnd),
 
@@ -380,37 +443,58 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
 
   onClear(frm: any) {
     frm.reset({
+      // 第一列
       billNumber: '',
       vendorCode: '',
       bankAccountCode: '',
 
+      // 第二列
+      customerBankAccount: '',
       issueDateStart: null,
       issueDateEnd: null,
+      collectionBankAccountCode: '',
+
+      // 第三列
+      receiveDateStart: null,
+      receiveDateEnd: null,
+      receiveSalesCode: '',
+      paymentBillNumber: '',
+
+      // 第四列
       dueDateStart: null,
       dueDateEnd: null,
+      preCashDateStart: null,
+      preCashDateEnd: null,
       cashDateStart: null,
       cashDateEnd: null,
 
+      // 第五列
       amountStart: null,
       amountEnd: null,
+      billType: '',
+      isCustomerBill: '',
 
-      billTitle: '',
-      endorsementProhibited: '',
+      // 第六列
       remarks: '',
-
       organizationCode: '',
       eventCode: '',
-      billStatus: '',
-      status: '',
-      collectionStatus: '',
-      collectionDateStart: null,
-      collectionDateEnd: null,
 
-      paymentBillNumber: '',
+      // 第七列
+      status: '',
+      billStatus: '',
       paymentAccount: '',
+
+      // 第八列
       voucherNumber: '',
       targetCode: '',
       reconciliationKey: '',
+
+      // 保留欄位
+      billTitle: '',
+      endorsementProhibited: '',
+      collectionStatus: '',
+      collectionDateStart: null,
+      collectionDateEnd: null,
 
       ...createPaginationConfig(this.defaultSort),
     });
