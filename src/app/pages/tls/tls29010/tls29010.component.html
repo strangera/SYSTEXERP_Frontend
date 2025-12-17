@@ -1,58 +1,115 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
+    <app-button
+      btnType="create"
+      (click)="onCreate()"
+      label="{{ 'create' | translate }}"
+    ></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
-          <!-- <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="活動編號" controlName="pod_no" [control]="queryForm.controls.pod_no"
-              [submitted]="submitted"></app-input-text>
-          </div> -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="專櫃編號" controlName="tlt_no" [options]="tlt_No_Option" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.tlt_no" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="專櫃編號"
+              controlName="tlt_no"
+              [options]="tlt_No_Option"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.tlt_no"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="抽成類別" controlName="tlt_id" [options]="tlt_id_Options" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.tlt_id" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="抽成類別"
+              controlName="tlt_id"
+              [options]="tlt_id_Options"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_id"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="折扣別" controlName="pod_type" [options]="podTypeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.pod_type" [submitted]="submitted">
-            </app-multi-select>
+            <app-multi-select
+              label="折扣別"
+              controlName="cag_barcode"
+              [options]="cag_barcode_Options"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.cag_barcode"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="活動期間" [startControl]="queryForm.controls.pod_sdate"
-              [endControl]="queryForm.controls.pod_edate" [submitted]="submitted" />
+            <app-calendar-range
+              calendarType="dateRange"
+              label="活動期間"
+              [startControl]="queryForm.controls.pod_sdate"
+              [endControl]="queryForm.controls.pod_edate"
+              [submitted]="submitted"
+            />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="活動狀態" controlName="pod_status" [options]="pod_status_Options" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.pod_status" [submitted]="submitted">
-            </app-multi-select>
+            <app-multi-select
+              label="活動狀態"
+              controlName="pod_status"
+              [options]="pod_status_Options"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.pod_status"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="是否使用" controlName="use_flag" [options]="whetherOption" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.use_flag" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="是否使用"
+              controlName="use_flag"
+              [options]="whetherOption"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.use_flag"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="建立人員姓名" controlName="crt_usr_name" [control]="queryForm.controls.crt_usr_name"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="建立人員姓名"
+              controlName="crt_usr_name"
+              [control]="queryForm.controls.crt_usr_name"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="維護日" [startControl]="queryForm.controls.mantain_sdate"
-              [endControl]="queryForm.controls.mantain_edate" [submitted]="submitted" />
+            <app-calendar-range
+              calendarType="dateRange"
+              label="維護日"
+              [startControl]="queryForm.controls.mantain_sdate"
+              [endControl]="queryForm.controls.mantain_edate"
+              [submitted]="submitted"
+            />
           </div>
         </div>
         <!-- <div> -->
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -63,10 +120,25 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table tableKey="TLS29010" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-      (delete)="onDelete($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-      [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'pod_no', order: 1 }]" [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-      [isRowSelectable]="isRowSelectable" [addButton]="addButton" [buttonsLoading]="btnLoading"></app-table>
+    <app-table
+      tableKey="TLS29010"
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+      (delete)="onDelete($event)"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      [showCheckBox]="true"
+      dataKey="id"
+      [multiSortMeta]="[{ field: 'pod_no', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true"
+      [loading]="loading"
+      [isRowSelectable]="isRowSelectable"
+      [addButton]="addButton"
+      [buttonsLoading]="btnLoading"
+    ></app-table>
   </div>
 </div>

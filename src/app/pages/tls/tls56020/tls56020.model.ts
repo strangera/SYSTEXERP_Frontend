@@ -1,4 +1,5 @@
 import { Column } from '@shared/componentkit/table/table.model';
+import { formatDate } from './../../../shared/componentkit/table-report/table-report.model';
 
 /** === 清單：單筆資料 === */
 export interface TLS56020Item {
@@ -194,25 +195,29 @@ export const fmtMoney = (n: number) =>
 /** === 表格欄位設定（主清單） === */
 export const TLS56020_COLUMNS: Column[] = [
   { field: 'SPM_No', header: '領用單編號', visible: true },
+  { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDate },
   { field: 'SPM_Type_Name', header: '領用類別', visible: true },
-  { field: 'SPM_Status_Name', header: '單據狀態', visible: true },
   { field: 'HOS_NAME', header: '倉別', visible: true },
-  { field: 'Org_Name', header: '部門', visible: true },
   { field: 'LOGO_No', header: '品牌', visible: true },
-  { field: 'APPLY_Date', header: '申請日期', visible: true, format: fmtDate },
-  { field: 'APPLY_USR_Name', header: '申請人', visible: true },
-  { field: 'APRV_Date', header: '審核日期', visible: true, format: fmtDate },
-  { field: 'APRV_USR_Name', header: '審核人', visible: true },
-  { field: 'SPM_TotQty', header: '總數量', visible: true },
-  { field: 'SPM_TotBuyAmt', header: '進貨總額', visible: true, format: fmtMoney },
-  { field: 'SPM_TotSaleAmt', header: '售價總額', visible: true, format: fmtMoney },
-  { field: 'VOID_Date', header: '作廢日期', visible: true, format: fmtDate },
-  { field: 'VOID_USR_Name', header: '作廢人', visible: true },
+  { field: 'Org_Name', header: '部門', visible: true },
   { field: 'SPM_Remark', header: '說明', visible: true },
-  { field: 'CRT_Date', header: '建立時間', visible: false, format: fmtDate },
-  { field: 'CRT_USR_Name', header: '建立人', visible: false },
-  { field: 'UPD_Date', header: '更新時間', visible: false, format: fmtDate },
-  { field: 'UPD_USR_Name', header: '更新人', visible: false },
+  { field: 'APPLY_USR_Name', header: '申請人', visible: true },
+  { field: 'APRV_USR_Name', header: '審核人', visible: true },
+  { field: 'APRV_Date', header: '審核日期', visible: true, format: formatDate },
+  { field: 'SPM_Status_Name', header: '單據狀態', visible: true },
+  // { field: 'APPLY_USR_Name', header: '申請人', visible: true },
+  // { field: 'APRV_Date', header: '審核日期', visible: true, format: fmtDate },
+  // { field: 'APRV_USR_Name', header: '審核人', visible: true },
+  // { field: 'SPM_TotQty', header: '總數量', visible: true },
+  // { field: 'SPM_TotBuyAmt', header: '進貨總額', visible: true, format: fmtMoney },
+  // { field: 'SPM_TotSaleAmt', header: '售價總額', visible: true, format: fmtMoney },
+  // { field: 'VOID_Date', header: '作廢日期', visible: true, format: fmtDate },
+  // { field: 'VOID_USR_Name', header: '作廢人', visible: true },
+  // { field: 'SPM_Remark', header: '說明', visible: true },
+  // { field: 'CRT_Date', header: '建立時間', visible: false, format: fmtDate },
+  // { field: 'CRT_USR_Name', header: '建立人', visible: false },
+  // { field: 'UPD_Date', header: '更新時間', visible: false, format: fmtDate },
+  // { field: 'UPD_USR_Name', header: '更新人', visible: false },
 ];
 export const toYmd = (d: any): string | null => {
   if (!d) return null;
