@@ -1,25 +1,27 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { AsyncPipe, NgIf } from '@angular/common';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { IMVDetail, IPOS2022Data, IQueryPOS2004DetailForTLS56040Request, IQueryPOS2004DetailForTLS56040Response, ITLS56040Data, ITLS56040Request, Tls56040Service } from '@service/api/tls/tls56040.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatAmount, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
+import { validateMinNumber, validateRequired } from '@shared/componentkit/table/validate-field.model';
+import { PanelModule } from 'primeng/panel';
+import { TableModule } from "primeng/table";
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { NgIf } from '@angular/common';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Column, createPaginationConfig, formatAmount, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
-import { TranslateModule } from '@ngx-translate/core';
-import { TableModule } from "primeng/table";
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { finalize } from 'rxjs';
-import { IMVDetail, IPOS2022Data, IQueryPOS2004DetailForTLS56040Request, IQueryPOS2004DetailForTLS56040Response, ITLS56040Data, ITLS56040Request, Tls56040Service } from '@service/api/tls/tls56040.service';
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
-import { validateMinNumber, validateRequired } from '@shared/componentkit/table/validate-field.model';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 @Component({
   selector: 'app-tls56040-cru',
@@ -40,7 +42,9 @@ import { validateMinNumber, validateRequired } from '@shared/componentkit/table/
     InputTextareaComponent,
     TableComponent,
     DialogComponent,
-    DropdownTableComponent
+    DropdownTableComponent,
+    AsyncPipe,
+    TableEditComponent
   ]
 })
 export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> implements OnInit {
@@ -57,55 +61,69 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
     APPLY_TotQty: [{ value: 0, disabled: true }], // 數量，readonly，明細加總
     MVM_Status: [{ value: '', disabled: true }], // 狀態
     APPLY_Date: [{ value: new Date(), disabled: true }], // 申請日期，預帶系統日期
-    APPLY_USR_No: [{ value: '', disabled: true }], // 申請人編號，預帶登入人員
+    APPLY_USR_No: [{ value: this.authService.currentUserValue?.user_No, disabled: true }], // 申請人編號，預帶登入人員
     MVM_Remark: [null, [Validators.maxLength(200)]], // 倉別調撥單說明
   });
 
   data: IPOS2022Data[] = []; // 用於表格顯示明細數據
   selectedItems: IPOS2022Data[] = []; // 用於表格選擇項目
   columns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
-    { field: 'PLU_Name', header: '商品名稱', visible: true },
-    { field: 'MVD_BuyPrc', header: '商品進價', visible: true, format: formatAmount },
-    { field: 'NowHaveQty', header: '目前庫存', visible: true },
-    { field: 'APPLY_Qty', header: '數量', visible: true, type: 'inputNumber', validate: [validateRequired, validateMinNumber(1)] },
-    { field: 'APPLY_BuyNet', header: '進價小計', visible: true, format: formatAmount },
-    { field: 'MVD_Remark', header: '單項說明', visible: true, type: 'input' },
+    { field: 'PLU_MagNo', header: '商品管理編號' },
+    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'MVD_BuyPrc', header: '商品進價', format: formatAmount },
+    { field: 'NowHaveQty', header: '目前庫存' },
+    { field: 'APPLY_Qty', header: '數量', type: 'inputNumber', validate: [validateRequired, validateMinNumber(1)] },
+    { field: 'APPLY_BuyNet', header: '進價小計', format: formatAmount },
+    { field: 'MVD_Remark', header: '單項說明', type: 'input' },
   ];
+  editColumns: EditColumn[] = [
+    {
+      field: 'PLU_No', header: '國際條碼',
+      type: 'input',
+      onBlur: (rowData: IPOS2022Data, value: string, col: EditColumn, index: number) => this.onPLU_MagNoBlur(rowData, value, col, index),
+      validate: [validateRequired],
+    },
+    { field: 'PLU_MagNo', header: '商品管理編號', },
+    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'MVD_BuyPrc', header: '商品進價', format: formatAmount },
+    { field: 'NowHaveQty', header: '目前庫存' },
+    { field: 'APPLY_Qty', header: '數量', type: 'inputNumber', validate: [validateRequired, validateMinNumber(1)] },
+    { field: 'APPLY_BuyNet', header: '進價小計', format: formatAmount },
+    { field: 'MVD_Remark', header: '單項說明', type: 'input' },
+  ]
 
-  brandOptions: { label: string; value: string }[] = [];
-  warehouseOptions: { label: string; value: string }[] = [];
-  userOptions: { label: string; value: string }[] = [];
+  brandOptions = this.dropdown.queryPluLogo();
+  warehouseOptions = this.dropdown.queryPos2034();
+  userOptions = this.dropdown.queryTblUser();
 
   constructor(
-    private readonly dropDownListService: DropDownListService,
     private readonly tls56040Service: Tls56040Service,
+    private readonly dropdown: DropdownApiService,
+    private readonly cdr: ChangeDetectorRef,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS56040', this.dataForm);
-    this.loadDropdownOptions();
-    if (this.isFormCreateable) {
-      this.dataForm.patchValue({ APPLY_USR_No: this.authService.currentUserValue?.user_No });
-    } else {
+    if (!this.isFormCreateable) {
       this.tls56040Service.queryPOS2022({ MVM_No: this.rowdata?.MVM_No || '', OUT_HOS_No: this.rowdata?.OUT_HOS_No || '' }).pipe(untilDestroyed(this)).subscribe(response => {
         this.data = response.Data || [];
       });
     }
     this.dataForm.controls['OUT_HOS_No'].valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
       this.validateWarehouseMismatch();
-      this.clearDetailData();
+      [this.data, this.dialogData] = [[], []];
+      this.calculateTotals()
     });
     this.dataForm.controls['IN_HOS_No'].valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
       this.validateWarehouseMismatch();
     });
     this.dataForm.controls['LOGO_No'].valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
-      this.clearDetailData();
+      [this.data, this.dialogData] = [[], []];
+      this.calculateTotals()
     });
   }
-
   private validateWarehouseMismatch(): void {
     const outHosNo = this.dataForm.controls['OUT_HOS_No'].value;
     const inHosNo = this.dataForm.controls['IN_HOS_No'].value;
@@ -117,31 +135,11 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
       }
     }
   }
-
-  private clearDetailData(): void {
-    this.data = [];
-    this.dialogData = [];
-    this.calculateTotals();
-  }
-
-  loadDropdownOptions(): void {
-    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(options => {
-      this.warehouseOptions = options.Data.map(item => ({ label: item.Name, value: item.No }));
-    });
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.brandOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-    });
-    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.userOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-    });
-  }
-
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       if (this.data.length === 0) {
-        this.messageService.errorBubble('明細資料不能為空');
         this.loading = false;
-        return;
+        return this.messageService.errorBubble('明細資料不能為空');
       }
       const payload: ITLS56040Request = {
         id: this.isFormCreateable ? undefined : this.rowdata?.id,
@@ -153,7 +151,7 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
         org_id: this.rowdata?.org_id || null,
         APPLY_Date: frm.getRawValue().APPLY_Date,
         APPLY_USR_No: frm.getRawValue().APPLY_USR_No,
-        APPLY_USR_Name: this.userOptions.find(u => u.value === frm.getRawValue().APPLY_USR_No)?.label?.split(' - ')[1] || '',
+        APPLY_USR_Name: frm.getRawValue().APPLY_USR_Name,
         APPLY_TotQty: this.dataForm.controls.APPLY_TotQty.value || 0,
         APPLY_TotBuyNet: this.dataForm.controls.APPLY_TotBuyNet.value || 0,
         APPLY_TotBuyTax: this.dataForm.controls.APPLY_TotBuyTax.value || 0,
@@ -172,7 +170,7 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
           PLU_Name: item.PLU_Name,
           PLU_StockTaxType: item.PLU_StockTaxType,
           PLU_TaxType: item.PLU_TaxType,
-          MVD_BuyPrc: item.MVD_BuyPrc,
+          MVD_BuyPrc: item.MVD_BuyPrc || 0,
           MVD_SalePrc: item.MVD_SalePrc,
           APPLY_Qty: item.APPLY_Qty,
           APPLY_BuyNet: item.APPLY_BuyNet,
@@ -200,6 +198,88 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
         this.onCancel();
       });
     });
+  }
+  onPLU_MagNoBlur(rowData: IPOS2022Data, value: string, col: EditColumn, index: number) {
+    const outHosNo = this.dataForm.controls.OUT_HOS_No.value;
+    const logoNo = this.dataForm.controls.LOGO_No.value;
+    if (!outHosNo || !logoNo || !value) {
+      return;
+    }
+    const body = {
+      queryNo: value,
+      LOGO_No: logoNo,
+      HOS_No: outHosNo,
+      PLU_Name: null,
+      PageSize: 30,
+      PageIndex: 1
+    };
+    setTimeout(() => {
+      this.tls56040Service.queryPOS2004DetailForTLS56040(body).pipe(untilDestroyed(this)).subscribe((results) => {
+        if (results.Data && results.Data.length > 0) {
+          const newData = results.Data[0];
+          const updatedRow: IPOS2022Data = {
+            ...newData,
+            PLU_MagNo: newData.PLU_MagNo,
+            PLU_Name: newData.PLU_Name,
+            MVD_BuyPrc: newData.PLU_SalePrc_UNI,
+            STK_CurrentQty: newData.NowHaveQty,
+            APPLY_Qty: 1,
+            APPLY_BuyNet: newData.PLU_SalePrc_UNI,
+            MVD_Remark: '',
+            APPLY_BuyAmt: newData.PLU_SalePrc_UNI + (newData.PLU_StockTaxType === '1' ? Math.floor(newData.PLU_SalePrc_UNI * 0.05) : 0),
+            APPLY_BuyTax: newData.PLU_StockTaxType === '1' ? Math.floor(newData.PLU_SalePrc_UNI * 0.05) : 0,
+            APPLY_SaleAmt: newData.PLU_SalePrc * 1,
+          } as IPOS2022Data;
+          if (this.data[index]) { Object.assign(this.data[index], updatedRow); }
+          this.data = [...this.data];
+
+          this.calculateTotals();
+          this.cdr.detectChanges();
+        } else {
+          this.messageService.errorBubble('查無該商品資訊');
+          if (this.data[index]) {
+            Object.assign(this.data[index], {
+              PLU_MagNo: '',
+              PLU_Name: '',
+              PLU_No: '',
+              UNIT_NAME: '',
+              PLU_BoxQty: 0,
+              PLU_StockTaxType: '',
+              PLU_TaxType: '',
+              PLU_SalePrc_UNI: 0,
+              PLU_SalePrc: 0,
+              POD_SubQty: 0,
+              POD_BuyNet: 0,
+              POD_SaleAmt: 0,
+            });
+          }
+          this.data = [...this.data];
+          this.calculateTotals();
+          this.cdr.detectChanges();
+        }
+      });
+    }, 50);
+  }
+  onRowEditSave(event: RowEditSaveEvent) {
+    const editedItem = event.newData;
+    if (editedItem.APPLY_Qty > editedItem.STK_CurrentQty) {
+      this.messageService.errorBubble('調撥數量不能大於目前庫存');
+      return;
+    }
+    this.calculateTotals();
+  }
+
+  calculateTotals(): void {
+    if (!this.data) { return; }
+    this.data.forEach(item => {
+      item.APPLY_BuyNet = (item.MVD_BuyPrc || 0) * (item.APPLY_Qty || 0);
+      item.APPLY_BuyTax = item.PLU_StockTaxType === '1' ? Math.floor((item.APPLY_BuyNet || 0) * 0.05) : 0;
+      item.APPLY_BuyAmt = (item.APPLY_BuyNet || 0) + (item.APPLY_BuyTax || 0);
+      item.APPLY_SaleAmt = (item.PLU_SalePrc || 0) * (item.APPLY_Qty || 0);
+    });
+    const totalQty = this.data.reduce((sum, item) => sum + (item.APPLY_Qty || 0), 0);
+    const totalBuyNet = this.data.reduce((sum, item) => sum + (item.APPLY_BuyNet || 0), 0);
+    this.dataForm.patchValue({ APPLY_TotQty: totalQty, APPLY_TotBuyNet: totalBuyNet });
   }
 
   dialogVisible = false;
@@ -248,7 +328,6 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
       if (existingItem) {
         return existingItem;
       }
-      console.log(item.PLU_SalePrc_UNI, item.APPLY_BuyTax);
       return {
         ...item,
         PLU_MagNo: item.PLU_MagNo,
@@ -270,35 +349,6 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
     this.selectedItemsDialog = [];
     this.selectedItems = [];
     this.calculateTotals();
-  }
-
-  onRowEditSave(event: RowEditSaveEvent) {
-    const editedItem = event.newData;
-    if (!editedItem.APPLY_Qty || editedItem.APPLY_Qty <= 0) {
-      this.messageService.errorBubble('調撥數量需大於0');
-      return;
-    }
-
-    if (editedItem.APPLY_Qty > editedItem.STK_CurrentQty) {
-      this.messageService.errorBubble('調撥數量不能大於目前庫存');
-      return;
-    }
-
-    const buyNet = editedItem.MVD_BuyPrc * editedItem.APPLY_Qty;
-    editedItem.APPLY_BuyNet = buyNet;
-    editedItem.APPLY_BuyTax = editedItem.PLU_StockTaxType === '1' ? Math.floor(buyNet * 0.05) : 0;
-    editedItem.APPLY_BuyAmt = editedItem.APPLY_BuyNet + editedItem.APPLY_BuyTax;
-    editedItem.APPLY_SaleAmt = editedItem.PLU_SalePrc * editedItem.APPLY_Qty;
-    this.calculateTotals();
-  }
-
-  calculateTotals(): void {
-    const totalQty = this.data.reduce((sum, item) => sum + (item.APPLY_Qty || 0), 0);
-    const totalBuyNet = this.data.reduce((sum, item) => sum + (item.APPLY_BuyNet || 0), 0);
-    this.dataForm.patchValue({
-      APPLY_TotQty: totalQty,
-      APPLY_TotBuyNet: totalBuyNet
-    });
   }
 
   opLoading = false;
@@ -334,7 +384,10 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
       HOS_No: this.dataForm.controls.OUT_HOS_No.value
     };
     this.tls56040Service.queryPOS2004DetailForTLS56040(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data];
+      this.suggestions = [...results.Data.map(item => ({
+        ...item,
+        label: item.PLU_MagNo + '/' + item.PLU_No + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
+      }))];
     });
   }
 

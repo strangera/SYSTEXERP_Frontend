@@ -79,7 +79,7 @@ export interface ITLS56040Data {
 export interface IQueryPOS2004DetailForTLS56040Request {
   PageSize: number | null;
   PageIndex: number | null;
-  SortBy: SortMeta[] | null;
+  SortBy?: SortMeta[] | null;
   queryNo: string | null; // 查詢編號 (商品管理編號/國際條碼/廠商貨號)
   PLU_Name: string | null; // 商品名稱 (查詢條件，可選)
   LOGO_No: string | null; // LOGO代碼
@@ -176,6 +176,7 @@ export interface IPOS2022Data {
   APPLY_Qty?: number; // 申請數量
   OUTGODS_QTY?: number; // 調出數量
   Confirm_QTY?: number; // 確認數量
+  PLU_SalePrc?: number; // 售價
   APPLY_BuyNet?: number; // 申請進貨淨額
   APPLY_BuyTax?: number; // 申請進貨稅額
   APPLY_BuyAmt?: number; // 申請進貨金額
