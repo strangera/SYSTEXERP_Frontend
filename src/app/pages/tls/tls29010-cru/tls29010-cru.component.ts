@@ -125,10 +125,10 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
     //20251015 新增 (act_no、pod_desc 欄位)
     act_no: ['', [Validators.maxLength(10), this.validationService.noChineseValidator]], // 活動編號(使用者輸入)
-    pod_desc: ['', [Validators.maxLength(100)]], // 活動名稱(使用者輸入)
+    pod_desc: [{ value: '', disabled: true }], // 活動名稱(使用者輸入)
 
-    pod_sdate: [null as Date | null, [Validators.required]], // 活動起始日 (Date)
-    pod_edate: [null as Date | null, [Validators.required]], // 活動終止日 (Date)
+    pod_sdate: [{ value: null as Date | null, disabled: true }, [Validators.required]], // 活動起始日 (Date)
+    pod_edate: [{ value: null as Date | null, disabled: true }, [Validators.required]], // 活動終止日 (Date)
     org_id: [''], // 組織-部門(SYS3100)
     // pod_busdate: [null], // 活動正檔日期  // 券類才會用到
     // pod_back_sdate: [null], // 活動兌回起始日期
@@ -277,7 +277,6 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     const userInfo = this.authService?.getUserInfo?.();
     if (userInfo) {
       if (this.crudstatus === CRUDStatus.Create) {
-        this.dataForm.get('pod_desc')?.enable();
         this.dataForm.get('str_no')?.setValue(userInfo?.SYS_StoreNo || '') //依照section填寫店號
 
         this.dataForm.get('pod_status')?.setValue('0') //新增模式 [活動狀態] 只能(未審核)
@@ -500,8 +499,42 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
           console.log('合約明細', apiData);
 
-          // 做狀態判斷與更新
-          this.tls29010DetailService.handleRowSave({ oldData, newData });
+          //   // 做狀態判斷與更新
+          //   this.tls29010DetailService.handleRowSave({ oldData, newData });
+
+          // #region 選擇專櫃後，自動代入新版API
+          // 該櫃編存在talent_ID
+          // const res = await this.tls29010Service
+          //   .queryTLTTALENT_CHARGE_DropDownList({ talent_id: newData.talent_id }).pipe(untilDestroyed(this))
+          //   .toPromise();
+          // if (res)
+          //   console.log('新api回應', res);
+
+          this.tls29010Service.queryTLTTALENT_CHARGE_DropDownList({ "talent_id": newData.talent_id }).pipe(untilDestroyed(this)).subscribe((response) => {
+            if (response.Status === '0000') {
+              console.log('取得新下拉資料:', response.Data);
+            } else {
+              this.messageService.infoBubble(`該新下拉無資料`);
+            }
+          });
+
+          // if (res.Status === '0000' && res.Data?.length) {
+          //   // const apiData = res.Data[0];
+
+          //   // // 更新 newData
+          //   // newData.talent_id = apiData.talent_id;
+          //   // newData.tlt_id = apiData.tlt_id;
+          //   // newData.tlt_no = apiData.tlt_no;
+          //   // newData.tlt_name = apiData.tlt_name;
+          //   // newData.cag_barcode = apiData.cag_barcode;
+          //   // newData.tlt_bdate = apiData.tlt_bdate;
+          //   // newData.tlt_edate = apiData.tlt_edate;
+          //   // newData.cag_charge_rate = apiData.cag_charge_rate;
+
+          //   console.log('合約明細', res.Data);
+
+          //   // 做狀態判斷與更新
+          //   // this.tls29010DetailService.handleRowSave({ oldData, newData });
         } else {
           this.messageService.errorBubble('找不到對應的合約資料，移除該筆明細');
           const index = this.opendisc_Detail.indexOf(newData);

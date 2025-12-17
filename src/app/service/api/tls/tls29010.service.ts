@@ -70,4 +70,9 @@ export class Tls29010Service {
   dropdownTLS29010bypodno(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/dropdownTLS29010bypodno`, body);
   }
+
+  // 折扣別 下拉選單
+  dropdownTLS29010bytalentid(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/dropdownTLS29010bytalentid`, body);
+  }
 }
