@@ -306,6 +306,7 @@ export class TableEditComponent implements OnChanges {
     this.cdr.markForCheck();
   }
   /** // !!! 整筆欄位使用，父層使用方法：
+  / * // !!! @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   /* // !!! 1. 宣告 const tableEditComponent = inject(TableEditComponent);
   /* // !!! 1. 或者宣告 @ViewChild('tableEdit') tableEditComponent!: TableEditComponent;
   /* // !!! 2. 在提交呼叫共通元件：const valid = this.tableEditComponent.validateAndShowErrors();
