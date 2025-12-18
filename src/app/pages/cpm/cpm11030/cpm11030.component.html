@@ -81,12 +81,15 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+            <app-multi-select
               label="證件類型"
               controlName="Cert_Type"
+              [options]="certTypeOptions"
+              optionLabel="label"
+              optionValue="value"
               [control]="queryForm.controls.Cert_Type"
               [submitted]="submitted"
-            ></app-input-text>
+            ></app-multi-select>
           </div>
         </div>
 
@@ -102,12 +105,15 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+            <app-multi-select
               label="設備名稱"
               controlName="Device_Name"
+              [options]="deviceNameOptions"
+              optionLabel="label"
+              optionValue="value"
               [control]="queryForm.controls.Device_Name"
               [submitted]="submitted"
-            ></app-input-text>
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -123,15 +129,15 @@
         <!-- 第四排 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="服務台位置編號"
+            <app-multi-select
+              label="服務中心位置編號"
               controlName="Service_Id"
               [options]="counterCodeOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.Service_Id"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
         </div>
 
@@ -206,7 +212,7 @@
   [(visible)]="dailyDialogVisible"
   header="每日設備可出借量維護"
   [loading]="dailyLoading"
-  [disable]="dailySaving"
+  [disable]="dailySaving || dailyLoading || dailyRows.length === 0"
   [showFooter]="true"
   (save)="onDailySave()"
   (visibleChange)="onDailyDialogVisibleChange($event)"
