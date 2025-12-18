@@ -1,149 +1,145 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-//
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
-//5.1.1.7 全館店櫃資訊查詢
 @Component({
   selector: 'app-cpm11070',
   templateUrl: './cpm11070.component.html',
-  styleUrl: './cpm11070.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    CalendarRangeComponent,
+    DropdownComponent,
+    TranslateModule,
+    TableComponent,
+    RadiobuttonComponent,
+    InputTextareaComponent
+  ],
 })
-export class CPM11070Component extends BasicQpageComponent implements OnInit {
-  //
+export class CPM11070Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    counterBrand: [], // 專櫃品牌
-    operatingStatus: [[] as number[]], // 營運狀態
+    A1: ['', [Validators.maxLength(11)]],
+    S1: [null as Date | null, [Validators.required,]],
+    E1: [null as Date | null],
+    S2: [null as Date | null],
+    E2: [null as Date | null],
+    S3: [null as Date | null],
+    E3: [null as Date | null],
+    S4: [null as Date | null],
+    E4: [null as Date | null],
+    S5: [null as Date | null],
+    E5: [null as Date | null],
+    S6: [null],
+    E6: [null],
+    Type1: [''],
+    Type2: [''],
+    Type3: [''],
+    Type4: ['', [Validators.maxLength(400)]],
+    SPACE1: [''],
+    PLE1: ['', [Validators.maxLength(20)]],
+    SPACE2: ['', [Validators.maxLength(20)]],
+    SPACE3: [''],
+    SPACE4: ['', [Validators.maxLength(100)]],
+    USER1: ['', [Validators.maxLength(20)]],
+    USER2: ['', [Validators.maxLength(10)]],
+    USER3: ['', [Validators.maxLength(20)]],
+    USER4: ['', [Validators.maxLength(20)]],
+    USER5: [''],
+    PHONE: ['', [Validators.maxLength(10)]],
+    MOBILE: ['', [Validators.maxLength(10)]],
+    ID_NUMBER: ['', [Validators.maxLength(20)]],
+    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+  selectedItems: any[] = [];
+  totalRecords = 0;
+  data: any[] = [];
+  Type1Options: any[] = [
+    { No: 'L', Name: '遺失' },
+    { No: 'F', Name: '拾獲' },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    {
-      'counterNumber': '000001', 'counterBrand': '小騎士', 'vendorName': '騎士堡公司',
-      'industryType': '娛樂', 'floor': 'B1',
-      'area': 'A區', 'location': 'B1A01',
-      'graph': '觀看平面圖', 'operatingStatus': '營運中'
-    },
-    {
-      'counterNumber': '000002', 'counterBrand': '霹靂布袋戲', 'vendorName': '大霹靂公司',
-      'industryType': '物販', 'floor': 'B1',
-      'area': 'A區', 'location': 'B1A02A0',
-      'graph': '觀看平面圖', 'operatingStatus': '營運中'
-    },
-    // 其他資料
+  Type3Options: any[] = [
+    { Name: '登錄', No: '1' },
+    { Name: '已通知', No: '3' },
+    { Name: '領回', No: '4' },
+    { Name: '轉出', No: '6' },
+  ];
+  Type2Options = getSYS1000Options('LOST_GOODS_TYPE');
+  SPACE3Options: any[] = [ //是否廣播
+    { label: '已廣播', value: 'Y' },
+    { label: '不廣播', value: 'N' },
+    { label: '全部', value: 'A' },
+  ];
+  SPACE1Options = getSYS1000Options('LOCATION');
+  USER5Options: any[] = [
+    { Name: '遊客', No: '1' },
+    { Name: '員工', No: '2' },
   ];
   columns: any[] = [
-    { field: 'counterNumber', header: '專櫃編號', visible: true },
-    { field: 'counterBrand', header: '品牌 (櫃位名稱)', visible: true },
-    { field: 'vendorName', header: '廠商名稱', visible: true },
+    { field: 'VouNo', header: '物品類別', visible: true },
+    { field: 'VouDate', header: '物品敘述', visible: true },
+    { field: 'VouStatus', header: '登錄編號', visible: true },
+    { field: 'Remark', header: '登錄日期', visible: true },
+    { field: 'Remark', header: '通知日期', visible: true },
+    { field: 'Remark', header: '領回日期', visible: true },
+    { field: 'Remark', header: '轉出日期', visible: true },
+    { field: 'Voucher_Name', header: '失物類別', visible: true },
+    { field: 'Voucher_Name', header: '失物狀態', visible: true },
+    { field: 'DetailCount', header: '地點', visible: true },
+    { field: 'VoucherType', header: '服務人員', visible: true },
+    { field: 'AccAmt', header: '遺失者/拾獲者姓名', visible: true },
+    { field: 'AccAmt', header: '電話(夜)', visible: true },
+    { field: 'AccAmt', header: '電話(日)', visible: true },
 
-    // { field: 'phone', header: '專櫃電話號碼', visible: false },  // 需求文件要求移除
-    { field: 'industryType', header: '大分類', visible: true }, //名稱: 大分類 -> 大分類
-    { field: 'floor', header: '樓層', visible: true },
-
-    { field: 'area', header: '區域', visible: true },
-    { field: 'location', header: '位置', visible: true },
-
-    { field: 'graph', header: '平面圖', visible: true },
-    { field: 'operatingStatus', header: '營運狀態', visible: true },
-
-    // { field: 'col11', header: '廠商帳戶名稱', visible: true },
-    // { field: 'col12', header: '付款期限', visible: true },
-    // { field: 'col13', header: '票據抬頭', visible: true },
-    // { field: 'col14', header: '審核狀態', visible: true },
-    // 其他欄位
   ];
-  // ----------------------------------------------------------------
-  systemTypeOptions: any[] = [
-    { value: 1, label: '營運中' },
-    { value: 2, label: '已撤櫃' },
-  ];
-
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
+    // private dropDownListService: DropDownListService,
+    private dropdownApiService: DropdownApiService,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
+
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '510007';
-    this.cruPage = '/CPM1000/CPM11070CRU';
-    //
+    this.initializePage('CPM11070', '/CPM/CPM11070CRU', this.queryForm, (frm) => this.onSubmit(frm));
 
-    //
-    // ----------------------------------------------------------------
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
 
-    this.loading = false;
-    this.messageService.unblockUi();
+      // this.fin54025Service
+      //   .queryFIN54025(payload)
+      //   .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+      //   .subscribe({
+      //     next: (res) => {
+      //       if (res.Status === '0000') {
+      //         this.data = res.Data || [];
+      //         this.totalRecords = res.TotalCount || this.data.length;
+      //       } else {
+      //         this.messageService.errorBubble(res.Message || '查詢失敗');
+      //       }
+      //     },
+      //   });
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
-  }
 }
