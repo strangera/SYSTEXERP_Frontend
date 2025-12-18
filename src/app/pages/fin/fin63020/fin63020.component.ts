@@ -28,6 +28,13 @@ import { Column } from '../../../shared/componentkit/table/table.model';
 // Base
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import {
+  Fin26010Service,
+
+  Aps1002BankDropDownRow,
+
+  ExportFin26010TxtRequest,
+} from '../../../service/api/fin/fin26010.service';
 
 // Service
 import {
@@ -287,6 +294,7 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     private fin63020Service: Fin63020Service,
     private dropDownListService: DropDownListService,
     private dropdownApiService: DropdownApiService,
+    private fin26010Service: Fin26010Service,
     private cdr: ChangeDetectorRef
   ) {
     super();
@@ -298,16 +306,24 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     );
 
     // 公司銀行科目代號（Aps1001）
-    this.dropdownApiService
-      .queryAps1001NoBranch()
-      .pipe(untilDestroyed(this))
-      .subscribe((response) => {
-        const list = Array.isArray(response) ? response : [];
-        this.BankCodeOptions = list.map((item: any) => ({
-          label: `${item.No} - ${item.Name}`,
-          value: item.No,
-        }));
-      });
+
+       this.fin26010Service
+            .queryAPS1002DropDownList()
+            .pipe(untilDestroyed(this))
+            .subscribe({
+              next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
+                const list = Array.isArray(res?.Data) ? res.Data : [];
+                this.BankCodeOptions = list.map((x) => ({
+                  label: `${x.BNK_No}-${x.BNK_BRANCHNAME}`,
+                  value: x.BNK_DepositAccNo,
+                  raw: x,
+                }));
+              },
+              error: (err) => {
+                console.error('載入銀行代號下拉失敗', err);
+                this.BankCodeOptions = [];
+              },
+            });
 
     // 廠客代號（POS2013_DropDownList）
     this.dropDownListService
