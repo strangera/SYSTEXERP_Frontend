@@ -635,25 +635,26 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     //---比較日期---
     let compareStart: Date | null = null;
     let compareEnd: Date | null = null;
-
-    const today = new Date();
-    const yesterday = new Date(today);
     //---
 
     switch (reportType) {
       case 'DAY': // 日報
+        // 1. 取得基準日
         start = this.dateForm.get('onedatedd')?.value ?? null;
         end = start;
 
-        // 比較表單
+        // 2. 計算比較日 (基準日的前一天)
         if (start) {
-          yesterday.setDate(start.getDate() - 1);
-          compareStart = yesterday;
-          compareEnd = yesterday;
+          // 必須 new Date() 避免直接修改到基準日的物件參考
+          const baseDate = new Date(start);
+          const prevDay = new Date(baseDate);
+          prevDay.setDate(baseDate.getDate() - 1);
 
-          console.log('比較日期(日報)', compareStart);
+          compareStart = prevDay;
+          compareEnd = prevDay;
 
-          this.c_dateForm.get('onedatedd')?.setValue(compareStart);
+          // 3. 更新比較表單的顯示數值 (使用 { emitEvent: false } 避免觸發 syncCDateToQueryForm 造成的重複計算)
+          this.c_dateForm.get('onedatedd')?.setValue(compareStart, { emitEvent: false });
         }
         break;
 

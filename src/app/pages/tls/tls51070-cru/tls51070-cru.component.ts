@@ -1,31 +1,31 @@
-import { ValidationService } from '@shared/service/validation.service';
-import { CRUDStatus } from './../../../shared/models/system/CRUDstatus';
-import { v4 as uuidv4 } from 'uuid'; // 引入 uuidv4
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
-import { POS2004 } from '../../../shared/models/tls/tls000.model';
-import { ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
-import { POS2005Detail, POS2020Detail, IMG1001Detail } from './tls51070-cru.module';
-import { dropDown51070 } from './dropDown51070';
-import { Tls51060Service } from '../../../service/api/tls/tls51060.service';
-import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
-import { environment } from '../../../../environments/environment';
-import { firstValueFrom } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
 import { NgIf } from '@angular/common';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { DividerModule } from 'primeng/divider';
-import { ImgUploadComponent } from '../../../shared/componentkit/img-upload/img-upload.component';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { ValidationService } from '@shared/service/validation.service';
+import { DividerModule } from 'primeng/divider';
+import { PanelModule } from 'primeng/panel';
+import { firstValueFrom } from 'rxjs';
+import { v4 as uuidv4 } from 'uuid'; // 引入 uuidv4
+import { environment } from '../../../../environments/environment';
+import { Tls51060Service } from '../../../service/api/tls/tls51060.service';
+import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { ImgUploadComponent } from '../../../shared/componentkit/img-upload/img-upload.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
+import { POS2004 } from '../../../shared/models/tls/tls000.model';
+import { CRUDStatus } from './../../../shared/models/system/CRUDstatus';
+import { dropDown51070 } from './dropDown51070';
+import { IMG1001Detail, POS2005Detail, POS2020Detail } from './tls51070-cru.module';
 
 // 每個欄位對應的區塊名稱
 export type SectionName =
@@ -715,7 +715,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
             console.log('新增取號:', newSeqNo);
 
             // 進行圖片檔更新
-            await this.createImage(newSeqNo); // 傳入圖片
+            await this.createImage(newSeqNo, this.dataForm.get('LOGO_No')?.value || null); // 傳入圖片
             this.onCancel();
           });
         }
@@ -779,7 +779,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
                 console.warn('⚠️ 商品管理碼(PLU_MagNo)為空，無法更新圖片');
                 return;
               }
-              await this.createImage(seqNo);
+              await this.createImage(seqNo, this.dataForm.get('LOGO_No')?.value || null);
               await this.deleteImages();
 
               this.onCancel(); // 儲存後，會返回列表
@@ -927,8 +927,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   async loadDetail(pLU_MagNo: string, pLU_OrderPrc: number): Promise<void> {
     // console.log('接收pLU_MagNo'+ pLU_MagNo+ '接收pLU_OrderPrc' +pLU_OrderPrc)
     if (pLU_MagNo == '') {
-      console.log('讀取pLU_MagNo',this.dataForm.value)
-      if (this.crudstatus !== CRUDStatus.Create){
+      console.log('讀取pLU_MagNo', this.dataForm.value)
+      if (this.crudstatus !== CRUDStatus.Create) {
         this.messageService.infoBubble('商品管理碼為空，不載入明細檔'); //編輯、查看模式如果沒有明細檔就跳出提示
       }
     } else {
@@ -1000,17 +1000,17 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           .then(() => {
             console.log('編輯模式重製完成', this.dataForm.value);
             // 完成後重新讀取選項
-            this.loadCATOptions();  
+            this.loadCATOptions();
             this.isRefreshing = false;
           })
           .catch(() => {
             this.isRefreshing = false;
           });
 
-          // 重製明細檔
-          this.POS2005Data = this.orgPOS2005Data;
-          this.POS2020Data = this.orgPOS2020Data;
-          this.img1001Data = this.orgImg1001Data;
+        // 重製明細檔
+        this.POS2005Data = this.orgPOS2005Data;
+        this.POS2020Data = this.orgPOS2020Data;
+        this.img1001Data = this.orgImg1001Data;
       }
     } else {
       console.log('查看模式無須重製');
@@ -1098,7 +1098,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   };
 
   // #region 圖片更新
-  async createImage(IMG_SeqNo: string) {
+  async createImage(IMG_SeqNo: string, selected_Logo?: string | null) {
     // console.log('本地變更資料', this.files);
 
     if (!IMG_SeqNo) {
@@ -1111,12 +1111,18 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       return;
     }
 
+    if (!selected_Logo) {
+      console.warn('⚠️ 缺少 LOGO_No，無法上傳圖片');
+      return;
+    }
+
     const formData = new FormData();
 
     // 取得必填欄位
     formData.append('IMG_Type', 'POS2004');
     formData.append('IMG_SeqNo', IMG_SeqNo);
-    formData.append('IMG_Remark', 'test');  // 備註先下空test
+    formData.append('IMG_Remark', '51070img');  // 備註先下空test
+    formData.append('LOGO_No', selected_Logo);  // 20251218 規格新增，本作業 圖片匯入需要 品牌代號(必填)
 
     // 加入所有檔案（以 uuid 命名）
     this.files.forEach(file => {
@@ -1143,7 +1149,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       this.messageService.errorBubble('圖片上傳失敗');
     }
   }
-  
+
   private async deleteImages() {
     if (!this.confirmDeleteImages || this.confirmDeleteImages.length === 0) {
       console.info('⚠️ 無需刪除圖片');
@@ -1153,8 +1159,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     const tasks: Promise<any>[] = [];
 
     // ✅ 從目前 img1001Data 中，找出任一筆作為參考值（前提是該批圖片屬性都相同）
-    console.log('img1001Detail目標',this.img1001Detail);
-    console.log('img1001Data目標',this.img1001Data);
+    console.log('img1001Detail目標', this.img1001Detail);
+    console.log('img1001Data目標', this.img1001Data);
     const reference =
       this.img1001Data.find(img => img.IMG_Type && img.IMG_SeqNo) ||
       this.img1001Detail.find(img => img.IMG_Type && img.IMG_SeqNo);
