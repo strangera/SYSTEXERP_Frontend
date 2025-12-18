@@ -124,31 +124,41 @@ export class DropdownCellComponent {
    * @param col 欄位配置
    * @returns 選項陣列
    */
+  // 紀錄上一次的參數物件 (Key: 欄位名, Value: 欄位值)
+  private _lastTriggerValues: Record<string, any> = {};
   public getOptions(rowData: any, col: EditColumn): any[] | undefined {
-    // 1. 如果不是異步，走原本邏輯
     if (!col.optionsAsync) {
       return typeof col.options === 'function' ? col.options(rowData) : col.options;
     }
 
-    // 2. 處理異步 (optionsAsync = true)
-    // 判斷 rowData 是否變動，若變動則需要重新獲取異步資料
-    if (this._lastRowData !== rowData) {
+    // 1. 建立當前依賴欄位的值快照
+    const currentTriggerValues: Record<string, any> = {};
+    if (col.triggerFields) {
+      col.triggerFields.forEach(f => {
+        currentTriggerValues[f] = rowData?.[f];
+      });
+    }
+
+    // 2. 判斷是否需要刷新：rowData 指標變了 OR 任何一個 triggerField 的值變了
+    const triggerChanged = JSON.stringify(this._lastTriggerValues) !== JSON.stringify(currentTriggerValues);
+
+    if (this._lastRowData !== rowData || triggerChanged) {
       this._lastRowData = rowData;
+      this._lastTriggerValues = currentTriggerValues; // 更新快照
+
       const optionsResult = typeof col.options === 'function' ? col.options(rowData) : col.options;
 
-      // 如果 options 回傳的是 Observable (常見於 API 呼叫)
+      // ... 以下維持原有的 Observable subscribe 邏輯 ...
       if (optionsResult && typeof optionsResult.subscribe === 'function') {
         this.internalLoading = true;
         optionsResult.subscribe({
           next: (data: any) => {
             this._resolvedOptions = data;
             this.internalLoading = false;
-            this._isSubscribing = false;
             this.cdr.markForCheck();
           },
           error: () => {
             this.internalLoading = false;
-            this._isSubscribing = false;
             this.cdr.markForCheck();
           }
         });
@@ -159,6 +169,7 @@ export class DropdownCellComponent {
 
     return this._resolvedOptions;
   }
+
   handleEnter(event: Event) {
     event.preventDefault(); // 阻止表單提交
     event.stopPropagation(); // 阻止事件冒泡

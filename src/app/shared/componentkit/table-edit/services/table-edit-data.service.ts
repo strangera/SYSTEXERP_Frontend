@@ -23,18 +23,27 @@ export class TableEditDataService {
   constructor(private tableUtilityService: TableUtilityService) { }
 
   // --- 私有輔助方法 ---
-  private calculateRow(rowData: any, columns: EditColumn[], externalData: any[]): void {
+  private calculateRow(rowData: any, columns: EditColumn[], changedField?: string): void {
     columns.forEach(col => {
       if (col.calculate) {
-        const updates = col.calculate(rowData, rowData[col.field]);
-        for (const key in updates) {
-          if (Object.prototype.hasOwnProperty.call(updates, key)) {
-            rowData[key] = updates[key];
+        if (changedField) {
+          if (col.field === changedField) {
+            const updates = col.calculate(rowData, rowData[col.field]);
+            this.applyUpdates(rowData, updates);
           }
         }
       }
     });
-    // 注意：這裡不發射 dataChange 事件，留給 Component 統一處理
+  }
+
+  private applyUpdates(rowData: any, updates: any) {
+    if (updates) {
+      for (const key in updates) {
+        if (Object.prototype.hasOwnProperty.call(updates, key)) {
+          rowData[key] = updates[key];
+        }
+      }
+    }
   }
 
   private getCleanData(keepDeletedData: boolean, canInsert: boolean): any[] {
@@ -78,7 +87,7 @@ export class TableEditDataService {
         item[dataStatusField] = dataStatusValue.Original;
         item[dataKey] = item[dataKey] ?? `temp-${uuidv4()}`;
       }
-      this.calculateRow(item, columns, data);
+      this.calculateRow(item, columns);
       if (rowValidate) {
         item._rowValidationError = rowValidate(item, index);
       }
@@ -197,15 +206,9 @@ export class TableEditDataService {
 
       this._fullData = [...this._fullData, rowData];
     }
-
+    rowData[col.field] = value;
     // 3. 執行欄位計算
-    if (col.calculate) {
-      const updates = col.calculate(rowData, value);
-      for (const field in updates) {
-        rowData[field] = updates[field];
-      }
-    }
-    this.calculateRow(rowData, columns, this._tableData);
+    this.calculateRow(rowData, columns, col.field);
 
     // 4. 行驗證
     if (rowValidate && !isAutoInsertCandidate) {

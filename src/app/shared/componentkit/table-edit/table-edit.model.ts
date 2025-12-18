@@ -35,6 +35,7 @@ export interface EditColumn {
   optionValue?: string; // 下拉選單 optionValue
   templateLabel?: string; // 模板欄位 label
   showClear?: boolean; // 是否顯示清除按鈕
+  triggerFields?: string[]; /** 下拉連動：當這些欄位的值改變時，觸發 options 重新獲取 (僅適用於 options 為 function 的情況) */
   // date
   timeOnly?: boolean;
   showTime?: boolean;

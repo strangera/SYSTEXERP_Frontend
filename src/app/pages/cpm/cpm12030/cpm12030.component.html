@@ -35,6 +35,6 @@
   <app-table-report dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     (delete)="onDelete($event)" [totalRecords]="totalRecords" [loading]="loading" [showCheckBox]="true"
     [showDelete]="true" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
-    [lastQueryBody]="lastQuery" [showDelete]="false"
+    [lastQueryBody]="lastQuery"
     [queryFunction]="cpm12030Service.queryCPM12030.bind(cpm12030Service)"></app-table-report>
 </div>
