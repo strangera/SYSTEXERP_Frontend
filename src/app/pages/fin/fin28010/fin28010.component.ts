@@ -1,4 +1,5 @@
 
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -9,7 +10,6 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
@@ -18,8 +18,8 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
   selector: 'app-fin28010',
   templateUrl: './fin28010.component.html',
   standalone: true,
-  imports: [CalendarComponent,
-    ButtonModule, InputTextComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [CalendarComponent, DatePipe
+    , ButtonModule, InputTextComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 
 export class FIN28010Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -49,6 +49,7 @@ export class FIN28010Component extends BasicQueryPageComponent<any> implements O
   ];
   constructor(
     private fin28010Service: Fin28010Service,
+    private datePipe: DatePipe,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -57,45 +58,42 @@ export class FIN28010Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('FIN28010', '/FIN/FIN28010CRU', this.queryForm, (frm) => this.onSubmit(frm));
 
   }
+
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      const raw = frm.getRawValue();
+      const v = frm.getRawValue();
+
+      const pageSize = v.PageSize ?? 0;
+      const pageIndex = v.PageIndex ?? 0;
 
       const payload = {
-        PageSize: raw.PageSize,
-        PageIndex: raw.PageIndex,
-        OrderBy: raw.OrderBy ?? '',
-        Offset: (raw.PageIndex - 1) * raw.PageSize,
-        SortBy: raw.SortBy ?? [],
+        PageSize: pageSize,
+        PageIndex: pageIndex,
+        OrderBy: v.OrderBy ?? '',
+        Offset: pageSize && pageIndex ? (pageIndex - 1) * pageSize : 0,
+        SortBy: v.SortBy ?? [],
 
-        WSLIP_NO: raw.WSLIP_NO,
-        Voucher_Date: raw.Voucher_Date
-          ? this.formatDate(raw.Voucher_Date)
-          : null
+        WSLIP_NO: v.WSLIP_NO ?? '',
+        Voucher_Date: v.Voucher_Date
+          ? this.datePipe.transform(v.Voucher_Date, 'yyyy-MM-dd')
+          : ''
       };
 
       this.btnLoading = true;
 
-      this.fin28010Service
-        .queryFIN28010(payload)
-        .pipe(finalize(() => (this.btnLoading = false)))
-        .subscribe({
-          next: (res) => {
-            if (res.Status === '0000') {
-              this.data = res.Data ?? [];
-              this.totalRecords = res.TotalCount ?? this.data.length;
-            } else {
-              this.messageService.errorBubble(res.Message || '查詢失敗');
-            }
+      this.fin28010Service.queryFIN28010(payload).subscribe({
+        next: (res: any) => {
+          this.btnLoading = false;
+          if (res.Status === '0000' || res.Status === '200') {
+            this.data = res.Data ?? [];
+            this.totalRecords = res.TotalCount ?? 0;
+          } else {
+            this.messageService?.errorBubble?.(res.Message || '查詢失敗');
           }
-        });
+        },
+
+      });
     });
-  }
-  private formatDate(date: Date): string {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, '0');
-    const d = String(date.getDate()).padStart(2, '0');
-    return `${y}/${m}/${d}`;
   }
 
 }
