@@ -480,6 +480,8 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
       // **********************************************
     });
   }
+
+  // 商品管理編號 / 國際條碼 / 廠商貨號 (合併查詢表單)
   onformValueChanged(event: IQueryPOS2004DetailRequest) {
     this.opLoading = true;
     const body = {
@@ -493,5 +495,10 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
       this.opTotalRecords = results.TotalCount;
       this.opLoading = false;
     });
+  }
+
+  //用戶匯入大量圖檔
+  userInputIMGs() {
+    this.messageService.infoBubble('開發中');
   }
 }
