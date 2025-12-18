@@ -5,19 +5,25 @@ import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { map } from 'rxjs/operators';
 
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
-// ✅ table-report
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+// ✅ app-table（你貼的 TableComponent）
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
 
 // Base
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -28,9 +34,113 @@ import {
   ApiResponse,
   Fin63020Service,
   QueryFIN63020Request,
-  QueryFIN63020Row,
   SortItem,
 } from '../../../service/api/fin/fin63020.service';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+
+export interface QueryFIN63020Row {
+  CanPickupYn?: string; // 只是顯示用：可勾選=空白，不可勾選=X
+  CheckNo?: string;
+  VendorNo?: string;
+  VEN_Name?: string;
+
+  CompanyAccNo?: string;
+  CompanyAccName?: string;
+
+  IssueDate?: string | null;
+  ExpireDate?: string | null;
+  PayDate?: string | null;
+
+  CheckAmount?: number | null;
+  CheckTitle?: string;
+
+  NoEndorseYn?: string;
+  Remark?: string;
+
+  OrgId?: string;
+  Org_Name?: string;
+
+  CheckStatus?: string;
+  StatusFlag?: string;
+
+  PickupStatus?: string; // 0 未領 / 1 已領 / 2 郵寄
+  PickupDate?: string | null;
+
+  VoucherNoIssued?: string | null;
+  VoucherNoPaid?: string | null;
+
+  [key: string]: any;
+}
+
+/** ✅ 3筆假資料（序號 Table 元件自己有，不另外給 RowNo） */
+const MOCK_ROWS: QueryFIN63020Row[] = [
+  {
+    CheckNo: 'CHK0000001',
+    VendorNo: 'VEN0001',
+    VEN_Name: '測試廠商A',
+    CompanyAccNo: '11010000000001',
+    CompanyAccName: '台銀-活存',
+    IssueDate: '2025-12-01',
+    ExpireDate: '2025-12-31',
+    PayDate: null,
+    CheckAmount: 125000,
+    CheckTitle: '測試票據抬頭A',
+    NoEndorseYn: 'N',
+    Remark: '假資料：未領，可勾',
+    OrgId: 'ORG01',
+    Org_Name: '總公司',
+    StatusFlag: '1',
+    CheckStatus: '2',
+    PickupStatus: '0',
+    PickupDate: null,
+    VoucherNoIssued: 'VCH0001',
+    VoucherNoPaid: null,
+  },
+  {
+    CheckNo: 'CHK0000002',
+    VendorNo: 'VEN0002',
+    VEN_Name: '測試廠商B',
+    CompanyAccNo: '11010000000001',
+    CompanyAccName: '台銀-活存',
+    IssueDate: '2025-11-15',
+    ExpireDate: '2025-12-15',
+    PayDate: '2025-12-10',
+    CheckAmount: 88000,
+    CheckTitle: '測試票據抬頭B',
+    NoEndorseYn: 'Y',
+    Remark: '假資料：已領，不可勾',
+    OrgId: 'ORG02',
+    Org_Name: '分公司',
+    StatusFlag: '2',
+    CheckStatus: '3',
+    PickupStatus: '1',
+    PickupDate: '2025-12-12',
+    VoucherNoIssued: 'VCH0002',
+    VoucherNoPaid: 'VCHPAID0002',
+  },
+  {
+    CheckNo: 'CHK0000003',
+    VendorNo: 'VEN0003',
+    VEN_Name: '測試廠商C',
+    CompanyAccNo: '11010000000002',
+    CompanyAccName: '華南-活存',
+    IssueDate: '2025-12-05',
+    ExpireDate: '2026-01-05',
+    PayDate: null,
+    CheckAmount: 56000,
+    CheckTitle: '測試票據抬頭C',
+    NoEndorseYn: 'N',
+    Remark: '假資料：郵寄，不可勾',
+    OrgId: 'ORG01',
+    Org_Name: '總公司',
+    StatusFlag: '1',
+    CheckStatus: '1',
+    PickupStatus: '2',
+    PickupDate: '2025-12-18',
+    VoucherNoIssued: null,
+    VoucherNoPaid: null,
+  },
+];
 
 @UntilDestroy()
 @Component({
@@ -45,99 +155,150 @@ import {
     TranslateModule,
     MenubarComponent,
     AccordionModule,
+    ButtonModule,
+    DialogModule,
+
     InputTextComponent,
     DropdownComponent,
     CalendarRangeComponent,
+    CalendarComponent,
     InputNumberRangeComponent,
     ButtonComponent,
-    TableReportComponent,
+
+    TableComponent,
   ],
 })
 export class FIN63020Component extends BasicQueryPageComponent<any> {
   /* ----------------- 列表狀態 ----------------- */
   data: QueryFIN63020Row[] = [];
   totalRecords = 0;
-  viewTotalRecords = 0;
   selectedItems: QueryFIN63020Row[] = [];
   lastQueryBody: any = null;
-  footerData: any = undefined;
-  tableVer = 0;
+
+  btnLoading = false;
+
+  /** ✅ dialog */
+  pickupDialogVisible = false;
+
+  /** ✅ dialog form */
+  pickupForm = this.formBuilder.group({
+    PickName: ['', [Validators.required, Validators.maxLength(20)]],
+    PickupDate: [new Date() as Date | null, Validators.required], // 預設今天
+  });
 
   readonly defaultSort: SortItem[] = [{ field: 'CheckNo', order: 1 }];
 
-  /* ----------------- TableReport 欄位 ----------------- */
-  columns: ReportColumn[] = [
+  // ====== 顯示轉換 ======
+  private yesNoText(v: any): string {
+    const s = String(v ?? '').toUpperCase();
+    if (s === 'Y') return '是';
+    if (s === 'N') return '否';
+    return s;
+  }
 
+  private statusFlagText(v: any): string {
+    const s = String(v ?? '');
+    if (s === '1') return '確認';
+    if (s === '2') return '拋轉';
+    return s;
+  }
 
-    { field: 'CheckNo', header: '票據號碼' },
+  private checkStatusText(v: any): string {
+    const s = String(v ?? '');
+    if (s === '2') return '到期';
+    if (s === '3') return '兌現';
+    if (s === '0') return '作廢';
+    if (s === '1') return '未異動';
+    if (s === '4') return '撤票';
+    if (s === '5') return '退票';
+    return s;
+  }
 
+  private pickupStatusText(v: any): string {
+    const s = String(v ?? '');
+    if (s === '0') return '未領';
+    if (s === '1') return '已領';
+    if (s === '2') return '郵寄';
+    return s;
+  }
+
+  moneyFormat(value: any): string {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return '0';
+    return n.toLocaleString('en-US');
+  }
+
+  /** ✅ 勾選條件：PickupStatus === '0' 才能勾選 */
+  isRowSelectable = (row: QueryFIN63020Row) => String(row?.PickupStatus ?? '') === '0';
+
+  /** ✅ columns：加一欄 CanPickupYn 顯示 X（不可勾選） */
+  columns: Column[] = [
+    {
+      field: 'CanPickupYn',
+      header: '可勾選',
+      align: 'center',
+      format: (_v: any, _i: number, row: QueryFIN63020Row) =>
+        this.isRowSelectable(row) ? '' : 'X',
+    } as any,
+
+    {
+      field: 'CheckNo',
+      header: '票據號碼',
+    },
     { field: 'VendorNo', header: '廠客代號' },
-    { field: 'VendorName', header: '廠商名稱' },
+    { field: 'VEN_Name', header: '廠商名稱' },
 
-    { field: 'BankAccNo', header: '全省銀行代號' },
-    { field: 'BankName', header: '銀行名稱' },
+    { field: 'CompanyAccNo', header: '科目代號' },
+    { field: 'CompanyAccName', header: '科目名稱' },
 
-    { field: 'IssueDate', header: '託收日期', format: (v: any) => this.formatDate(v) },
-
-    { field: 'AccountCode', header: '科目代號' },
-    { field: 'AccountName', header: '科目名稱' },
-
-    { field: 'ReceiveDate', header: '收票日期', format: (v: any) => this.formatDate(v) },
-    { field: 'ReceiveStaff', header: '收票業務員代碼' },
-
-    { field: 'CheckReceiptNo', header: '收票單號' },
-
+    { field: 'IssueDate', header: '開票日', format: (v: any) => this.formatDate(v) },
     { field: 'ExpireDate', header: '到期日', format: (v: any) => this.formatDate(v) },
     { field: 'PayDate', header: '兌現日', format: (v: any) => this.formatDate(v) },
 
-    { field: 'CheckAmount', header: '票面金額', format: this.moneyFormat },
+    { field: 'CheckAmount', header: '票面金額', align: 'right', format: (v: any) => this.moneyFormat(v) },
+    { field: 'CheckTitle', header: '票據抬頭' },
 
-    { field: 'CheckType', header: '票據種類' },      // 例：支票
-    { field: 'NoEndorseYn', header: '是否客票' },    // 是 / 否
-
+    { field: 'NoEndorseYn', header: '票據禁止背書轉讓', format: (v: any) => this.yesNoText(v) },
     { field: 'Remark', header: '備註' },
 
     { field: 'OrgId', header: '組織代號' },
-    { field: 'OrgName', header: '組織名稱' },
+    { field: 'Org_Name', header: '組織名稱' },
 
-    { field: 'StatusFlag', header: '狀態' },        // 兌現 / 未兌現
-    { field: 'CheckStatus', header: '票據狀態' },   // 拋轉 / 未拋轉
+    { field: 'StatusFlag', header: '狀態', format: (v: any) => this.statusFlagText(v) },
+    { field: 'CheckStatus', header: '票據狀態', format: (v: any) => this.checkStatusText(v) },
 
-    { field: 'VoucherNo', header: '傳票號碼' },
+    { field: 'PickupStatus', header: '領取狀態', format: (v: any) => this.pickupStatusText(v) },
+    { field: 'PickupDate', header: '領取日期', format: (v: any) => this.formatDate(v) },
+
+    { field: 'VoucherNoIssued', header: '傳票號碼' },
+    { field: 'VoucherNoPaid', header: '兌現傳票號碼' },
   ];
 
-  moneyFormat(value: number): string {
-    return value != null ? value.toLocaleString('en-US') : '0'; // ✅ 使用美式格式
-  }
-
-  /* ----------------- 下拉（先沿用假資料） ----------------- */
-  vendorCodeOptions: any[] = [
-    { value: '00000000-1', label: '00000000-1' },
-    { value: '00000000-2', label: '00000000-2' },
-  ];
-
-  bankAccountCodeOptions: any[] = [
-    { value: '110301', label: '110301' },
-    { value: '110302', label: '110302' },
-    { value: '110303', label: '110303' },
-  ];
-
-  // ✅ 新增：公司銀行科目代號託收銀行（若你之後要串不同 API，再換成真的 options）
-  collectionBankAccountCodeOptions: any[] = [
-    { value: '110301', label: '110301' },
-    { value: '110302', label: '110302' },
-    { value: '110303', label: '110303' },
-  ];
-
-  // ✅ 新增：收票業務員代碼
-  receiveSalesCodeOptions: any[] = [
-    { value: 'S001', label: 'S001' },
-    { value: 'S002', label: 'S002' },
-  ];
+  /* ----------------- 下拉 options ----------------- */
+  VendorNoOptions: any[] = [];
+  BankCodeOptions: any[] = [];
 
   endorsementProhibitedOptions: any[] = [
     { value: 'Y', label: '是' },
     { value: 'N', label: '否' },
+  ];
+
+  billStatusOptions: any[] = [
+    { value: '0', label: '作廢' },
+    { value: '1', label: '未異動' },
+    { value: '3', label: '兌現' },
+    { value: '4', label: '撤票' },
+  ];
+
+  statusOptions: any[] = [
+    { value: '1', label: '確認' },
+    { value: '2', label: '拋轉' },
+  ];
+
+  pickupTypeOptions: any[] = [
+    { value: '0', label: '未領' },
+    { value: '1', label: '已領' },
+    { value: '2', label: '郵寄' },
   ];
 
   organizationCodeOptions: any[] = [
@@ -150,102 +311,57 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     { value: '002', label: '002' },
   ];
 
-  billStatusOptions: any[] = [
-    { value: '0', label: '作廢' },
-    { value: '1', label: '未異動' },
-    { value: '2', label: '到期' },
-    { value: '3', label: '兌現' },
-    { value: '4', label: '撤票' },
-    { value: '5', label: '退票' },
-  ];
-
-  statusOptions: any[] = [
-    { value: '1', label: '確認' },
-    { value: '2', label: '拋轉' },
-  ];
-
-  collectionStatusOptions: any[] = [
-    { value: '0', label: '未領' },
-    { value: '1', label: '已領' },
-    { value: '2', label: '郵寄' },
-  ];
-
   targetCodeOptions: any[] = [
     { value: 'TNN', label: '臺南紡織股份有限公司' },
     { value: 'UNI', label: '統一企業股份有限公司' },
   ];
 
-  // ✅ 新增：票據種類 / 是否客票
-  billTypeOptions: any[] = [
-    { value: 'A', label: 'A' },
-    { value: 'B', label: 'B' },
-  ];
-
-  isCustomerBillOptions: any[] = [
-    { value: 'Y', label: '是' },
-    { value: 'N', label: '否' },
-  ];
-
-  /* ----------------- 查詢表單（依你最新 HTML） ----------------- */
+  /* ----------------- 查詢表單 ----------------- */
   queryForm = this.formBuilder.group({
-    // 第一列
-    billNumber: ['' as string], // 票據號碼
-    vendorCode: ['' as string], // 廠客代號
-    bankAccountCode: ['' as string, [Validators.required]], // 銀行代號(公司銀行科目代號) ★必填
+    billNumber: ['' as string],
+    vendorCode: ['' as string],
+    bankAccountCode: ['' as string, Validators.required],
 
-    // 第二列
-    customerBankAccount: ['' as string], // 客戶銀行帳號
-    issueDateStart: [null as Date | null], // 託收日(起)
-    issueDateEnd: [null as Date | null], // 託收日(迄)
-    collectionBankAccountCode: ['' as string], // 公司銀行科目代號託收銀行
+    issueDateStart: [null as Date | null],
+    issueDateEnd: [null as Date | null],
 
-    // 第三列
-    receiveDateStart: [null as Date | null], // 收票日(起)
-    receiveDateEnd: [null as Date | null], // 收票日(迄)
-    receiveSalesCode: ['' as string], // 收票業務員代碼
-    paymentBillNumber: ['' as string], // 收款單號（你原本是 PamNo）
+    dueDateStart: [null as Date | null],
+    dueDateEnd: [null as Date | null],
 
-    // 第四列
-    dueDateStart: [null as Date | null], // 到期日(起)
-    dueDateEnd: [null as Date | null], // 到期日(迄)
-    preCashDateStart: [null as Date | null], // 預兌日(起)
-    preCashDateEnd: [null as Date | null], // 預兌日(迄)
-    cashDateStart: [null as Date | null], // 兌現日(起)
-    cashDateEnd: [null as Date | null], // 兌現日(迄)
+    cashDateStart: [null as Date | null],
+    cashDateEnd: [null as Date | null],
 
-    // 第五列
-    amountStart: [null as number | null], // 票面金額(起)
-    amountEnd: [null as number | null], // 票面金額(迄)
-    billType: ['' as string], // 票據種類
-    isCustomerBill: ['' as string], // 是否客票
+    amountStart: [null as number | null],
+    amountEnd: [null as number | null],
 
-    // 第六列
-    remarks: ['' as string], // 備註
-    organizationCode: ['' as string], // 組織代號
-    eventCode: ['' as string], // 活動代號
+    billTitle: ['' as string],
+    endorsementProhibited: ['' as string],
+    remarks: ['' as string],
 
-    // 第七列
-    status: ['' as string], // 狀態
-    billStatus: ['' as string], // 票據狀態
-    paymentAccount: ['' as string], // 應收票據會計科目
+    organizationCode: ['' as string],
+    eventCode: ['' as string],
 
-    // 第八列
-    voucherNumber: ['' as string], // 傳票號碼
-    targetCode: ['' as string], // 對象別編號
-    reconciliationKey: ['' as string], // 對帳KEY值
+    billStatus: ['' as string],
+    status: ['' as string],
 
-    // ✅ 保留你原本有的欄位（HTML 現在沒用到，但不想動 service 的話先留著）
-    billTitle: ['' as string], // 票據抬頭（若你之後要再放回畫面）
-    endorsementProhibited: ['' as string], // 禁止背書轉讓（若你之後要再放回畫面）
-    collectionStatus: ['' as string], // 領取狀態
-    collectionDateStart: [null as Date | null], // 領取日期(起)
-    collectionDateEnd: [null as Date | null], // 領取日期(迄)
+    pickupType: ['' as string],
+    pickupDateStart: [null as Date | null],
+    pickupDateEnd: [null as Date | null],
+
+    pamNo: ['' as string],
+    apCheckAccNo: ['' as string],
+    voucherNumber: ['' as string],
+
+    partyTypeNo: ['' as string],
+    reconKey: ['' as string],
 
     ...createPaginationConfig(this.defaultSort),
   });
 
   constructor(
     private fin63020Service: Fin63020Service,
+    private dropDownListService: DropDownListService,
+    private dropdownApiService: DropdownApiService,
     private cdr: ChangeDetectorRef
   ) {
     super();
@@ -255,26 +371,171 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     this.initializePage('FIN63020', 'fin/fin63020cru', this.queryForm, (form) =>
       this.onSubmit(form)
     );
+
+    // 公司銀行科目代號（Aps1001）
+    this.dropdownApiService
+      .queryAps1001NoBranch()
+      .pipe(untilDestroyed(this))
+      .subscribe((response) => {
+        const list = Array.isArray(response) ? response : [];
+        this.BankCodeOptions = list.map((item: any) => ({
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+        }));
+      });
+
+    // 廠客代號（POS2013_DropDownList）
+    this.dropDownListService
+      .queryPOS2013_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        const rows = Array.isArray(res?.Data) ? res.Data : [];
+        this.VendorNoOptions = rows.map((x: any) => ({
+          label: `${x.No} - ${x.Name}`,
+          value: x.No,
+        }));
+      });
+
+    // ✅ 預載假資料測試（你要的 3 筆）
+    this.loadMock();
   }
 
-  /* ----------------- 小工具 ----------------- */
+  /** ✅ 點明細 */
+/** ✅ 點明細（進 CRU） */
+/** ✅ 點明細 */
+override onDetail(row: QueryFIN63020Row) {
+  const chkNo = String(row?.CheckNo ?? '').trim();
+  if (!chkNo) return;
+
+  this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
+    queryParams: { ChkNo: chkNo },
+    state: {
+      crudstatus: CRUDStatus.Read,
+      rowdata: row,
+      fromRoute: this.router.url,
+      queryConditions: { ChkNo: chkNo },
+    },
+  });
+}
+
+/** ✅ 點編輯 */
+override onEdit(row: QueryFIN63020Row) {
+  const chkNo = String(row?.CheckNo ?? '').trim();
+  if (!chkNo) return;
+
+  this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
+    queryParams: { ChkNo: chkNo },
+    state: {
+      crudstatus: CRUDStatus.Edit,
+      rowdata: row,
+      fromRoute: this.router.url,
+      queryConditions: { ChkNo: chkNo },
+    },
+  });
+}
+
+
+  /** ✅ 按「支票領取」：有勾選才開 dialog */
+  onPickup(): void {
+    const chkNoList = this.getSelectedChkNoList();
+    if (!chkNoList.length) {
+      this.messageService.errorBubble('請先勾選「領取狀態=未領(0)」的資料');
+      return;
+    }
+
+    // reset dialog form（日期預設今天）
+    this.pickupForm.reset({
+      PickName: '',
+      PickupDate: new Date(),
+    });
+
+    this.pickupDialogVisible = true;
+    this.cdr.detectChanges();
+  }
+
+  /** ✅ Dialog 送出 */
+  onPickupConfirm(): void {
+    this.pickupForm.markAllAsTouched();
+    if (this.pickupForm.invalid) return;
+
+    const chkNoList = this.getSelectedChkNoList();
+    if (!chkNoList.length) {
+      this.messageService.errorBubble('請先勾選「領取狀態=未領(0)」的資料');
+      return;
+    }
+
+    const pickName = String(this.pickupForm.value.PickName ?? '').trim();
+    const pickupDate = this.toYmd(this.pickupForm.value.PickupDate as any);
+
+    this.btnLoading = true;
+
+    // ✅ 你 service 若已經有這支：updateFIN63020Detail(body)
+    this.fin63020Service
+      .updateFIN63020Detail({
+        PickName: pickName,
+        PickupDate: pickupDate,
+        ChkNoList: chkNoList,
+      } as any)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: any) => {
+          if (res?.IsSuccess === false) {
+            this.messageService.errorBubble(res?.Message ?? '支票領取失敗');
+            return;
+          }
+
+          this.messageService.successBubble('支票領取成功');
+          this.pickupDialogVisible = false;
+
+          // ✅ 前端立即更新(把被領取的改成已領 + 日期)
+          this.data = this.data.map((r) => {
+            const no = String(r?.CheckNo ?? '').trim();
+            if (chkNoList.includes(no)) {
+              return { ...r, PickupStatus: '1', PickupDate: pickupDate };
+            }
+            return r;
+          });
+
+          // 清勾選
+          this.selectedItems = [];
+          this.cdr.detectChanges();
+        },
+        error: () => this.messageService.errorBubble('支票領取失敗'),
+        complete: () => {
+          this.btnLoading = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  onPickupCancel(): void {
+    this.pickupDialogVisible = false;
+  }
+
+  /** ✅ 只抓「可勾選」(PickupStatus=0) 的 CheckNo */
+  private getSelectedChkNoList(): string[] {
+    const list = Array.isArray(this.selectedItems) ? this.selectedItems : [];
+    return list
+      .filter((r) => this.isRowSelectable(r))
+      .map((r) => String(r?.CheckNo ?? '').trim())
+      .filter(Boolean);
+  }
+
+  /* ----------------- 下面查詢邏輯保留你的，略微調整 parse & mock ----------------- */
+
+  private loadMock(): void {
+    this.data = [...MOCK_ROWS];
+    this.totalRecords = this.data.length;
+    this.loading = false;
+    this.cdr.detectChanges();
+  }
+
   private formatDate(val: any): string {
     if (!val) return '';
     const d = new Date(val);
     if (isNaN(d.getTime())) return String(val);
     return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(
       d.getDate()
-    ).padStart(2, '0')}`;
-  }
-
-  private formatDateTime(val: any): string {
-    if (!val) return '';
-    const d = new Date(val);
-    if (isNaN(d.getTime())) return String(val);
-    return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(
-      d.getDate()
-    ).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(
-      d.getMinutes()
     ).padStart(2, '0')}`;
   }
 
@@ -288,13 +549,6 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     return `${y}-${m}-${day}`;
   }
 
-  private toIso(d: Date | string | null | undefined): string | undefined {
-    if (!d) return undefined;
-    const dt = d instanceof Date ? d : new Date(d);
-    if (isNaN(dt.getTime())) return undefined;
-    return dt.toISOString();
-  }
-
   private normalizeSort(input: any, fallback: SortItem[]): SortItem[] {
     const asArr = Array.isArray(input) ? input : [];
     const cleaned = asArr
@@ -303,19 +557,11 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     return cleaned.length ? cleaned : fallback;
   }
 
-  /**
-   * ⚠️ 重要：
-   * 你最新 HTML 多了「客戶銀行帳號 / 收票日 / 預兌日 / 票據種類 / 是否客票 / 收票業務員...」，
-   * 但目前 QueryFIN63020Request(後端) 不一定有對應欄位。
-   *
-   * 所以這裡先「只送你原本已對齊 SP 的那些欄位」，新增欄位先不送到後端（避免 API 因未知欄位報錯）。
-   * 等你給我 SP/Request 欄位名稱，我再把 payload 對應補上。
-   */
   private buildQueryPayload(base: any): QueryFIN63020Request {
     const pageIndex =
       Number.isFinite(base?.pageIndex) && base.pageIndex >= 1 ? base.pageIndex : 1;
     const pageSize =
-      Number.isFinite(base?.pageSize) && base.pageSize > 0 ? base.pageSize : 30;
+      Number.isFinite(base?.pageSize) && base?.pageSize > 0 ? base.pageSize : 30;
 
     const sort = this.normalizeSort(base?.SortBy, this.defaultSort);
 
@@ -324,11 +570,9 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
       PageSize: pageSize,
       SortBy: sort,
 
-      // ✅ 原本已對齊 SP 的欄位（保持不變）
       ChkNo: (base?.billNumber ?? '').trim() || undefined,
       VenNo: (base?.vendorCode ?? '').trim() || undefined,
 
-      // ★必填：對齊 SP 的 @CompanyAccNo
       CompanyAccNo: String(base?.bankAccountCode ?? '').trim(),
 
       IssueDateFrom: this.toYmd(base?.issueDateStart),
@@ -357,19 +601,18 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
       CheckStatus: (base?.billStatus ?? '').trim() || undefined,
       Status: (base?.status ?? '').trim() || undefined,
 
-      PickupType: (base?.collectionStatus ?? '').trim() || undefined,
-      PickupDateFrom: this.toIso(base?.collectionDateStart),
-      PickupDateTo: this.toIso(base?.collectionDateEnd),
+      PickupType: (base?.pickupType ?? '').trim() || undefined,
+      PickupDateFrom: this.toYmd(base?.pickupDateStart),
+      PickupDateTo: this.toYmd(base?.pickupDateEnd),
 
-      PamNo: (base?.paymentBillNumber ?? '').trim() || undefined,
-      ApCheckAccNo: (base?.paymentAccount ?? '').trim() || undefined,
+      PamNo: (base?.pamNo ?? '').trim() || undefined,
+      ApCheckAccNo: (base?.apCheckAccNo ?? '').trim() || undefined,
       VoucherNo: (base?.voucherNumber ?? '').trim() || undefined,
 
-      PartyTypeNo: (base?.targetCode ?? '').trim() || undefined,
-      ReconKey: (base?.reconciliationKey ?? '').trim() || undefined,
+      PartyTypeNo: (base?.partyTypeNo ?? '').trim() || undefined,
+      ReconKey: (base?.reconKey ?? '').trim() || undefined,
     };
 
-    // 清掉空值
     Object.keys(payload).forEach((k) => {
       const v = (payload as any)[k];
       if (v === '' || v == null) delete (payload as any)[k];
@@ -378,14 +621,41 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     return payload;
   }
 
-  /* ✅ 給 table-report 用 */
+  private parseQueryResponse(res: any): { rows: QueryFIN63020Row[]; total: number } {
+    const data = res?.Data;
+
+    if (Array.isArray(data)) {
+      const total = Number(res?.TotalCount ?? res?.totalCount ?? data.length) || data.length;
+      return { rows: data, total };
+    }
+
+    if (data && typeof data === 'object') {
+      const innerArr =
+        (Array.isArray(data?.Data) && data.Data) ||
+        (Array.isArray(data?.Items) && data.Items) ||
+        (Array.isArray(data?.List) && data.List) ||
+        null;
+
+      if (innerArr) {
+        const total =
+          Number(data?.TotalCount ?? res?.TotalCount ?? innerArr.length) || innerArr.length;
+        return { rows: innerArr, total };
+      }
+
+      const maybeRow: QueryFIN63020Row = { ...(data as any) };
+      const total = Number(res?.TotalCount ?? data?.TotalCount ?? 1) || 1;
+      return { rows: [maybeRow], total };
+    }
+
+    return { rows: [], total: 0 };
+  }
+
+  /** ✅ 你的 queryFunction 先保留（但本頁改用 app-table 可不需要） */
   public queryFIN63020ForReport = (body: any) =>
     this.fin63020Service.queryFIN63020(this.buildQueryPayload(body || {})).pipe(
-      map((res: ApiResponse<QueryFIN63020Row[] | QueryFIN63020Row>) => {
-        const src = (res as any)?.Data;
-        const rows: QueryFIN63020Row[] = Array.isArray(src) ? src : src ? [src] : [];
-        const totalCount = Number((res as any)?.TotalCount ?? rows.length) || rows.length;
-        return { Data: rows, TotalCount: totalCount, GrandTotal: null };
+      map((res: ApiResponse<any>) => {
+        const parsed = this.parseQueryResponse(res);
+        return { Data: parsed.rows, TotalCount: parsed.total, GrandTotal: null };
       })
     );
 
@@ -404,28 +674,17 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     this.loading = true;
     this.data = [];
     this.selectedItems = [];
-    this.footerData = undefined;
     this.totalRecords = 0;
-    this.viewTotalRecords = 0;
-    this.tableVer++;
 
     this.fin63020Service
       .queryFIN63020(payload)
       .pipe(untilDestroyed(this))
       .subscribe({
-        next: (response: ApiResponse<QueryFIN63020Row[]>) => {
-          const rows: QueryFIN63020Row[] = Array.isArray(response?.Data) ? response.Data : [];
-
-          this.data = rows;
-          const realTotal = Number((response as any)?.TotalCount ?? rows.length) || rows.length;
-
-          setTimeout(() => {
-            this.totalRecords = realTotal;
-            this.viewTotalRecords = realTotal;
-            this.lastQueryBody = { ...payload };
-          });
-
-          this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+        next: (res: ApiResponse<any>) => {
+          const parsed = this.parseQueryResponse(res);
+          this.data = parsed.rows;
+          this.totalRecords = parsed.total;
+          this.lastQueryBody = { ...payload };
           this.loading = false;
           this.cdr.detectChanges();
         },
@@ -433,8 +692,6 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
           console.error('FIN63020 query API error:', err);
           this.data = [];
           this.totalRecords = 0;
-          this.viewTotalRecords = 0;
-          this.footerData = undefined;
           this.loading = false;
           this.cdr.detectChanges();
         },
@@ -443,58 +700,40 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
 
   onClear(frm: any) {
     frm.reset({
-      // 第一列
       billNumber: '',
       vendorCode: '',
       bankAccountCode: '',
 
-      // 第二列
-      customerBankAccount: '',
       issueDateStart: null,
       issueDateEnd: null,
-      collectionBankAccountCode: '',
-
-      // 第三列
-      receiveDateStart: null,
-      receiveDateEnd: null,
-      receiveSalesCode: '',
-      paymentBillNumber: '',
-
-      // 第四列
       dueDateStart: null,
       dueDateEnd: null,
-      preCashDateStart: null,
-      preCashDateEnd: null,
       cashDateStart: null,
       cashDateEnd: null,
 
-      // 第五列
       amountStart: null,
       amountEnd: null,
-      billType: '',
-      isCustomerBill: '',
 
-      // 第六列
+      billTitle: '',
+      endorsementProhibited: '',
       remarks: '',
+
       organizationCode: '',
       eventCode: '',
 
-      // 第七列
-      status: '',
       billStatus: '',
-      paymentAccount: '',
+      status: '',
 
-      // 第八列
+      pickupType: '',
+      pickupDateStart: null,
+      pickupDateEnd: null,
+
+      pamNo: '',
+      apCheckAccNo: '',
       voucherNumber: '',
-      targetCode: '',
-      reconciliationKey: '',
 
-      // 保留欄位
-      billTitle: '',
-      endorsementProhibited: '',
-      collectionStatus: '',
-      collectionDateStart: null,
-      collectionDateEnd: null,
+      partyTypeNo: '',
+      reconKey: '',
 
       ...createPaginationConfig(this.defaultSort),
     });
@@ -502,8 +741,7 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     this.submitted = false;
     this.data = [];
     this.totalRecords = 0;
-    this.viewTotalRecords = 0;
-    this.footerData = undefined;
+    this.selectedItems = [];
     this.lastQueryBody = null;
   }
 }
