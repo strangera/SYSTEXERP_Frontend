@@ -38,7 +38,7 @@ export interface QueryUnremittedPAMRequest {
   /** 建立日期(迄) */
   D_Date_End?: string | null;
   /** 匯款來源單號 (模糊搜尋) */
-  WSLIP_NO?: string | null;
+  PAM_No?: string | null;
 }
 
 /**
@@ -66,9 +66,9 @@ export interface ConfirmRemitRequest {
   /** 匯款日期 */
   RMT_Date: string;
   /** 銀行ID (APS1002.id) */
-  BNK_ID: number;
+  BNK_id: number;
   /** 匯款來源單號列表 */
-  WSLIP_NOList: string[];
+  PAM_NoList: string[];
 }
 
 /**
@@ -76,7 +76,7 @@ export interface ConfirmRemitRequest {
  */
 export interface DeleteRemitRequest {
   /** 匯款來源單號列表 */
-  WSLIP_NOList: string[];
+  PAM_NoList: string[];
 }
 
 // ==================== Response 介面 ====================
@@ -92,7 +92,7 @@ export interface QueryFIN25020Response {
   /** 匯款日期 */
   RMT_Date: string | null;
   /** 銀行ID */
-  BNK_ID: number | null;
+  BNK_id: number | null;
   /** 銀行帳戶名稱 */
   BNK_AccName: string | null;
   /** 轉傳票狀態 */
@@ -110,7 +110,7 @@ export interface QueryFIN25020Response {
  */
 export interface QueryUnremittedPAMResponse {
   /** 匯款來源單號 */
-  WSLIP_NO: string;
+  PAM_No: string;
   /** 建立日期 */
   D_Date: string;
   /** 是否形成電匯 (Y/N) */
@@ -125,6 +125,9 @@ export interface QueryUnremittedPAMResponse {
 export interface QueryBankAccountResponse {
   /** 銀行ID (APS1002.id) */
   id: number;
+
+  BNK_id: string;
+
   /** 銀行代號 */
   BNK_No: string;
   /** 銀行名稱 */

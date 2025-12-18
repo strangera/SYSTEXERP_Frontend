@@ -1,10 +1,12 @@
 import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { PanelModule } from 'primeng/panel';
 import { DialogModule } from 'primeng/dialog';
-import { FIN25020Data } from '../fin25020/fin25020.component';
+import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
+import { FIN25020Service, QueryBankAccountResponse, QueryUnremittedPAMResponse } from '../../../service/api/fin/fin25020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -13,14 +15,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
-
-// 定義匯款來源單號資料介面
-export interface TransferSourceData {
-  SourceNo: string;
-  SourceDate: string;
-  VendorName: string;
-  Amount: number;
-}
+import { FIN25020Data } from '../fin25020/fin25020.component';
 
 //1.2.5.2 形成電匯明細資料 CRU
 @Component({
@@ -47,47 +42,46 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
   dataForm = this.formBuilder.nonNullable.group({
     CreateDate: [{ value: new Date(), disabled: true }, [Validators.required]], // 建立日期（系統日期，不可修改）
     TransferDate: [new Date(), [Validators.required]], // 匯款日期（預設系統日期，可修改）
-    BankCode: ['', [Validators.required, Validators.maxLength(8)]], // 銀行代號
-    BankName: [''], // 銀行名稱（自動帶入，唯讀）
+    BNK_id: [null as number | null, [Validators.required]],
     TransferSourceNo: ['', [Validators.required, Validators.maxLength(20)]], // 匯款來源單號
   });
 
-  // 銀行下拉選項 (模擬資料)
-  bankOptions: { label: string; value: string; name: string }[] = [
-    { label: '004 - 台灣銀行', value: '004', name: '台灣銀行' },
-    { label: '007 - 第一銀行', value: '007', name: '第一銀行' },
-    { label: '012 - 台北富邦銀行', value: '012', name: '台北富邦銀行' },
-    { label: '013 - 國泰世華銀行', value: '013', name: '國泰世華銀行' },
-    { label: '017 - 兆豐國際商銀', value: '017', name: '兆豐國際商銀' },
-  ];
-
-  // 匯款來源單號下拉選項 (模擬資料 - 未匯款的資料)
-  transferSourceOptions: { label: string; value: string }[] = [
-    { label: 'PAY20140106001', value: 'PAY20140106001' },
-    { label: 'PAY20140106002', value: 'PAY20140106002' },
-    { label: 'PAY20140107001', value: 'PAY20140107001' },
-    { label: 'PAY20140107002', value: 'PAY20140107002' },
-  ];
+  // 銀行下拉選項 (從 API 載入)
+  bankOptions: (QueryBankAccountResponse & { displayLabel: string })[] = [];
 
   // 匯款來源單號查詢對話框
   showTransferSourceDialog = false;
   transferSourceQueryForm = this.formBuilder.group({
-    SourceNo: [''],
+    PAM_No: [''],
+    D_Date_Start: [null],
+    D_Date_End: [null],
   });
-  transferSourceData: TransferSourceData[] = [];
+  transferSourceData: QueryUnremittedPAMResponse[] = [];
   transferSourceColumns: Column[] = [
-    { field: 'SourceNo', header: '匯款來源單號', visible: true },
-    { field: 'SourceDate', header: '單據日期', visible: true },
-    { field: 'VendorName', header: '廠商名稱', visible: true },
-    { field: 'Amount', header: '金額', visible: true },
+    { field: 'PAM_No', header: '匯款來源單號', visible: true },
+    {
+      field: 'D_Date', header: '建立日期', visible: true, format: (value: string) => {
+        if (!value) return '';
+        const date = new Date(value);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}/${month}/${day}`;
+      }
+    },
+    { field: 'Remit_Status', header: '是否形成電匯', visible: true },
+    // { field: 'ItemCount', header: '筆數', visible: true },
   ];
 
-  constructor() {
+  constructor(private readonly fin25020Service: FIN25020Service) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN25020', this.dataForm);
+
+    // 載入銀行帳戶選項
+    this.loadBankAccounts();
 
     // 新增模式固定，因為這是「形成」的功能
     if (!this.isFormCreateable) {
@@ -96,11 +90,18 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
     }
   }
 
-  onBankChange(event: { value: string }): void {
-    const selectedBank = this.bankOptions.find(bank => bank.value === event.value);
-    if (selectedBank) {
-      this.dataForm.patchValue({ BankName: selectedBank.name });
-    }
+  // 載入銀行帳戶選項
+  loadBankAccounts(): void {
+    this.fin25020Service.queryBankAccount({})
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        // 格式化顯示: BNK_id - BNK_AccName
+        this.bankOptions = response.Data.map(item => ({
+          ...item,
+          displayLabel: `${item.BNK_id || item.id} - ${item.BNK_AccName}`
+        }));
+        console.log('Bank Options:', this.bankOptions);
+      });
   }
 
   // 開啟匯款來源單號查詢對話框
@@ -111,41 +112,17 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
 
   // 載入匯款來源單號資料
   loadTransferSourceData(): void {
-    // 這裡之後會串接真實的 API
-    // const queryValue = this.transferSourceQueryForm.value;
-    // this.fin25020Service.queryUnpaidTransferSource(queryValue)
-    //   .pipe(untilDestroyed(this))
-    //   .subscribe(response => {
-    //     this.transferSourceData = response.Data;
-    //   });
+    const queryValue = this.transferSourceQueryForm.value;
 
-    // 目前使用模擬資料 - 未匯款的匯款來源單
-    this.transferSourceData = [
-      {
-        SourceNo: 'PAY20140106001',
-        SourceDate: '2014-01-06',
-        VendorName: '台灣電力公司',
-        Amount: 50000,
-      },
-      {
-        SourceNo: 'PAY20140106002',
-        SourceDate: '2014-01-06',
-        VendorName: '中華電信',
-        Amount: 30000,
-      },
-      {
-        SourceNo: 'PAY20140107001',
-        SourceDate: '2014-01-07',
-        VendorName: '自來水公司',
-        Amount: 15000,
-      },
-      {
-        SourceNo: 'PAY20140107002',
-        SourceDate: '2014-01-07',
-        VendorName: '台灣中油',
-        Amount: 80000,
-      },
-    ];
+    this.fin25020Service.queryUnremittedPAM({
+      PAM_No: queryValue.PAM_No || null,
+      D_Date_Start: queryValue.D_Date_Start || null,
+      D_Date_End: queryValue.D_Date_End || null,
+    })
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.transferSourceData = response.Data;
+      });
   }
 
   // 查詢匯款來源單號
@@ -154,9 +131,9 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
   }
 
   // 選擇匯款來源單號（雙擊）
-  onSelectTransferSource(data: TransferSourceData): void {
+  onSelectTransferSource(data: QueryUnremittedPAMResponse): void {
     this.dataForm.patchValue({
-      TransferSourceNo: data.SourceNo,
+      TransferSourceNo: data.PAM_No,
     });
     this.showTransferSourceDialog = false;
   }
@@ -165,35 +142,31 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
     this.handleSubmit(frm, () => {
       const formValue = frm.getRawValue();
 
-      // 確認形成 - 更新匯款日期及匯款銀行
-      // const confirmRequest = {
-      //   TransferDate: formValue.TransferDate,
-      //   BankCode: formValue.BankCode,
-      //   BankName: formValue.BankName,
-      //   TransferSourceNo: formValue.TransferSourceNo,
-      // };
-      //
-      // this.fin25020Service.confirmTransfer(confirmRequest)
-      //   .pipe(untilDestroyed(this))
-      //   .subscribe({
-      //     next: () => {
-      //       this.messageService.successBubble('形成電匯明細成功');
-      //       this.loading = false;
-      //       this.onCancel();
-      //     },
-      //     error: () => {
-      //       this.loading = false;
-      //     }
-      //   });
+      // 準備 API 請求參數
+      const confirmRequest = {
+        RMT_Date: formValue.TransferDate, // 匯款日期
+        BNK_id: formValue.BNK_id, // 銀行ID
+        PAM_NoList: [formValue.TransferSourceNo] // 匯款來源單號列表
+      };
 
-      // 目前使用模擬確認形成
-      console.log('確認形成電匯明細:', formValue);
-      this.messageService.successBubble('形成電匯明細成功');
-      this.loading = false;
-      // 成功後回到列表頁
-      setTimeout(() => {
-        this.onCancel();
-      }, 1000);
+      this.fin25020Service.confirmRemit(confirmRequest)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => this.loading = false)
+        )
+        .subscribe({
+          next: () => {
+            this.messageService.successBubble('形成電匯明細成功');
+            // 成功後回到列表頁
+            setTimeout(() => {
+              this.onCancel();
+            }, 500);
+          },
+          error: () => {
+            // 錯誤處理已由 interceptor 處理
+            this.loading = false;
+          }
+        });
     });
   }
 }

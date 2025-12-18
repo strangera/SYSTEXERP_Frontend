@@ -15,14 +15,14 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 
 // 定義資料介面 (對應後端 Response)
 export interface FIN25020Data {
   WSLIP_NO: string;
   D_Date: string | null;
   RMT_Date: string | null;
-  BNK_ID: number | null;
+  BNK_id: number | null;
   BNK_AccName: string | null;
   VouStatus: string | null;
   VouNo: string | null;
@@ -59,7 +59,7 @@ export class FIN25020Component extends BasicQueryPageComponent<FIN25020Data> imp
     D_Date_End: [null], // 建立日期迄
     RMT_Date_Start: [null], // 匯款日期起
     RMT_Date_End: [null], // 匯款日期迄
-    BNK_ID: [''], // 銀行ID
+    BNK_id: [''], // 銀行ID
     BNK_AccName: ['', [Validators.maxLength(40)]], // 銀行帳戶名稱
     VouStatus: [''], // 轉傳票狀態
     ...createPaginationConfig([{ field: 'WSLIP_NO', order: 1 }]), // 分頁和排序參數
@@ -83,12 +83,28 @@ export class FIN25020Component extends BasicQueryPageComponent<FIN25020Data> imp
     { field: 'WSLIP_NO', header: '匯款來源單號', visible: true },
     { field: 'D_Date', header: '建立日期', visible: true, format: formatDate },
     { field: 'RMT_Date', header: '匯款日期', visible: true, format: formatDate },
-    { field: 'BNK_ID', header: '銀行ID', visible: true },
+    { field: 'BNK_id', header: '銀行ID', visible: true },
     { field: 'BNK_AccName', header: '銀行帳戶名稱', visible: true },
     { field: 'VouStatus', header: '轉傳票狀態', visible: true },
     { field: 'VouNo', header: '傳票號碼', visible: true },
-    { field: 'RemitCount', header: '匯款筆數', visible: true },
-    { field: 'TotalRemitAmt', header: '匯款總金額', visible: true },
+    // { field: 'RemitCount', header: '匯款筆數', visible: true },
+    // { field: 'TotalRemitAmt', header: '匯款總金額', visible: true },
+  ];
+
+  // 管理欄位自定義按鈕
+  addButton: AddButton[] = [
+    {
+      label: '匯出PDF',
+      icon: 'pi pi-file-pdf text-red-500',
+      displayText: '',
+      action: (rowData: FIN25020Data) => this.onExportPDF(rowData)
+    },
+    {
+      label: '匯出Excel',
+      icon: 'pi pi-file-excel text-green-500',
+      displayText: '',
+      action: (rowData: FIN25020Data) => this.onExportExcel(rowData)
+    }
   ];
 
   constructor(
@@ -112,7 +128,7 @@ export class FIN25020Component extends BasicQueryPageComponent<FIN25020Data> imp
         RMT_Date_Start: formValue.RMT_Date_Start,
         RMT_Date_End: formValue.RMT_Date_End,
         WSLIP_NO: formValue.WSLIP_NO,
-        BNK_ID: formValue.BNK_ID,
+        BNK_id: formValue.BNK_id,
         BNK_AccName: formValue.BNK_AccName,
         VouStatus: formValue.VouStatus,
         // 分頁參數
@@ -135,13 +151,33 @@ export class FIN25020Component extends BasicQueryPageComponent<FIN25020Data> imp
     });
   }
 
+  override onDetail(data: FIN25020Data) {
+    // 呼叫 queryRemitDetail API 取得明細資料
+    this.fin25020Service.queryRemitDetail({ WSLIP_NO: data.WSLIP_NO })
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        console.log('電匯明細資料:', response.Data);
+        // TODO: 跳轉到檢視頁面，傳遞明細資料
+        // this.router.navigate(['/fin/fin25020detail'], { state: { data: response.Data, header: data } });
+        this.messageService.infoBubble('檢視功能尚未實作完整頁面');
+      });
+  }
+
   onDelete(selectedItems: FIN25020Data[]) {
+    // 檢查是否有已轉傳票的資料
+    const hasTransferred = selectedItems.some(item => item.VouStatus === '已轉');
+
+    if (hasTransferred) {
+      this.messageService.errorBubble('只能刪除未轉傳票的資料');
+      return;
+    }
+
     this.confirmationService.confirm({
       header: `是否確認刪除 ${selectedItems.length} 筆資料？`,
       accept: () => {
         const wslipNoList = selectedItems.map(item => item.WSLIP_NO);
 
-        this.fin25020Service.deleteRemit({ WSLIP_NOList: wslipNoList })
+        this.fin25020Service.deleteRemit({ PAM_NoList: wslipNoList })
           .pipe(untilDestroyed(this))
           .subscribe(() => {
             this.messageService.successBubble('刪除成功');
@@ -149,5 +185,51 @@ export class FIN25020Component extends BasicQueryPageComponent<FIN25020Data> imp
           });
       }
     });
+  }
+
+  /**
+   * 匯出單筆資料為 PDF
+   */
+  onExportPDF(rowData: FIN25020Data) {
+    this.messageService.infoBubble(`正在匯出 PDF: ${rowData.WSLIP_NO}`);
+
+    // TODO: 實作 PDF 匯出邏輯
+    // 可以呼叫 API 或使用前端 PDF 產生工具
+    // 範例:
+    // this.fin25020Service.exportPDF(rowData.WSLIP_NO)
+    //   .pipe(untilDestroyed(this))
+    //   .subscribe(blob => {
+    //     // 下載檔案
+    //     const url = window.URL.createObjectURL(blob);
+    //     const link = document.createElement('a');
+    //     link.href = url;
+    //     link.download = `${rowData.WSLIP_NO}.pdf`;
+    //     link.click();
+    //   });
+  }
+
+  /**
+   * 匯出單筆資料為 Excel
+   */
+  onExportExcel(rowData: FIN25020Data) {
+    this.messageService.infoBubble(`正在匯出 Excel: ${rowData.WSLIP_NO}`);
+
+    // TODO: 實作 Excel 匯出邏輯
+    // 可以呼叫 API 或使用前端 Excel 產生工具
+    // 範例:
+    // this.fin25020Service.exportExcel(rowData.WSLIP_NO)
+    //   .pipe(untilDestroyed(this))
+    //   .subscribe(blob => {
+    //     // 下載檔案
+    //     const url = window.URL.createObjectURL(blob);
+    //     const link = document.createElement('a');
+    //     link.href = url;
+    //     link.download = `${rowData.WSLIP_NO}.xlsx`;
+    //     link.click();
+    //   });
+  }
+
+  isRowSelectable(rowData: FIN25020Data): boolean {
+    return rowData.VouStatus !== '已轉';
   }
 }

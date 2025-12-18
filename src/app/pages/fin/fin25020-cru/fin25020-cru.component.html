@@ -26,49 +26,35 @@
       <div class="grid p-fluid">
         <app-dropdown
           class="col-12 md:col-6 lg:col-4"
-          label="銀行代號"
-          controlName="BankCode"
+          label="銀行帳戶"
+          controlName="BNK_id"
           [options]="bankOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="dataForm.controls.BankCode"
+          optionLabel="displayLabel"
+          optionValue="BNK_id"
+          [control]="dataForm.controls.BNK_id"
           [submitted]="submitted"
           [showClear]="true"
           [filter]="true"
         />
-        <app-input-text
+        <div
           class="col-12 md:col-6 lg:col-4"
-          label="銀行名稱"
-          controlName="BankName"
-          [control]="dataForm.controls.BankName"
-          [submitted]="submitted"
-          [readonly]="true"
-        />
-      </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
+          (click)="openTransferSourceDialog()"
+          (keydown.enter)="openTransferSourceDialog()"
+          (keydown.space)="openTransferSourceDialog()"
+          tabindex="0"
+          style="cursor: pointer"
+        >
+          <app-input-text
             label="匯款來源單號"
             controlName="TransferSourceNo"
-            [options]="transferSourceOptions"
-            optionLabel="label"
-            optionValue="value"
             [control]="dataForm.controls.TransferSourceNo"
             [submitted]="submitted"
-            [showClear]="true"
-            [filter]="true"
+            [readonly]="true"
+            [customPlaceholder]="'點擊選擇匯款來源單號'"
           />
-          <div class="mt-2">
-            <app-button
-              btnType="submit"
-              label="查詢匯款來源單號"
-              icon="pi pi-search"
-              (click)="openTransferSourceDialog()"
-              severity="secondary"
-            ></app-button>
-          </div>
         </div>
       </div>
+      <div class="grid p-fluid"></div>
 
       <div
         class="grid justify-content-end gap-2 m-0 mt-3 border-top-1 surface-border pt-3"
@@ -76,11 +62,10 @@
         <app-button btnType="cancel" (click)="onCancel()" />
         <app-button
           btnType="submit"
-          label="確認形成"
+          label="確認"
           icon="pi pi-check"
           [loading]="loading"
           (click)="onSubmit(dataForm)"
-          severity="success"
         />
       </div>
     </form>
@@ -99,12 +84,26 @@
   <form [formGroup]="transferSourceQueryForm">
     <div class="grid p-fluid mb-3">
       <app-input-text
-        class="col-12 md:col-6"
+        class="col-12 md:col-4"
         label="匯款來源單號"
-        controlName="SourceNo"
-        [control]="transferSourceQueryForm.controls.SourceNo"
+        controlName="PAM_No"
+        [control]="transferSourceQueryForm.controls.PAM_No"
       />
-      <div class="col-12 md:col-6 flex align-items-end">
+      <app-calendar
+        class="col-12 md:col-3"
+        calendarType="dateOne"
+        label="建立日期(起)"
+        controlName="D_Date_Start"
+        [control]="transferSourceQueryForm.controls.D_Date_Start"
+      />
+      <app-calendar
+        class="col-12 md:col-3"
+        calendarType="dateOne"
+        label="建立日期(迄)"
+        controlName="D_Date_End"
+        [control]="transferSourceQueryForm.controls.D_Date_End"
+      />
+      <div class="col-12 md:col-2 flex align-items-end">
         <app-button
           btnType="query"
           (click)="onQueryTransferSource()"
@@ -115,10 +114,15 @@
 
   <app-table
     tableKey="TransferSourceQuery"
-    dataKey="SourceNo"
+    dataKey="PAM_No"
     [data]="transferSourceData"
     [columns]="transferSourceColumns"
+    [showManage]="false"
+    [showFilter]="false"
+    [showDelete]="false"
     [showCheckBox]="false"
+    [showCaption]="false"
+    (detail)="onSelectTransferSource($event)"
   ></app-table>
 
   <ng-template pTemplate="footer">

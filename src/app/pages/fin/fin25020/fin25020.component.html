@@ -44,8 +44,8 @@
           <app-input-text
             class="col-12 md:col-6 lg:col-4"
             label="銀行ID"
-            controlName="BNK_ID"
-            [control]="queryForm.controls.BNK_ID"
+            controlName="BNK_id"
+            [control]="queryForm.controls.BNK_id"
             [submitted]="submitted"
           ></app-input-text>
           <app-input-text
@@ -86,7 +86,12 @@
     (edit)="onEdit($event)"
     (detail)="onDetail($event)"
     (delete)="onDelete($event)"
+    [showEdit]="false"
     [showCheckBox]="true"
+    [showReportMode]="false"
+    [showReportExcel]="false"
+    [showReportPDF]="false"
+    [addButton]="addButton"
     [multiSortMeta]="[{ field: 'WSLIP_NO', order: 1 }]"
     [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
@@ -94,6 +99,7 @@
     [loading]="loading"
     [showDelete]="true"
     [selectedItems]="selectedItems"
+    [isRowSelectable]="isRowSelectable"
     (selectionChange)="selectedItems = $event"
   ></app-table>
 </div>
