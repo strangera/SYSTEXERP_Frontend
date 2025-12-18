@@ -439,7 +439,7 @@
     [showEdit]="false"
     [showManage]="true"
     [showReportMode]="false"
-    [queryFunction]="tls32040Service.queryTLS32040.bind(tls32040Service)"
+    [queryFunction]="tls32060Service.queryTLS32060.bind(tls32060Service)"
     [loading]="loading"
   >
     <header>
@@ -447,34 +447,22 @@
         <p-button
           styleClass="p-2"
           label="各櫃業績總表.PDF"
-          [loading]="btnLoading"
+          [loading]="btnPDFLoading"
           icon="pi pi-file"
           (click)="onReport(queryForm, false)"
           [disabled]="data.length === 0"
-          [loading]="btnLoading"
+          [loading]="btnPDFLoading"
         ></p-button>
         <p-button
           styleClass="p-2"
           label="各櫃業績總表.XLSX"
-          [loading]="btnLoading"
+          [loading]="btnExcelLoading"
           icon="pi pi-file"
           (click)="onReport(queryForm, true)"
           [disabled]="data.length === 0"
-          [loading]="btnLoading"
+          [loading]="btnExcelLoading"
         ></p-button>
       </div>
     </header>
   </app-table-report>
 </div>
-<!--規格沒有先取消-->
-<!-- <ng-container *ngIf="dateForm.controls.reportType.value === '5'">
-  <div class="card">
-    <p-chart
-      type="line"
-      [data]="chartData"
-      [options]="chart_options"
-      [loading]="btnChartLoading"
-      class="h-[30rem]"
-    />
-  </div>
-</ng-container> -->
