@@ -1,16 +1,21 @@
 import { NgIf } from '@angular/common';
-import { Component, OnInit, } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { DialogModule } from 'primeng/dialog';
 import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
+import { FIN25020Service, QueryBankAccountResponse, QueryUnremittedPAMResponse } from '../../../service/api/fin/fin25020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
+import { FIN25020Data } from '../fin25020/fin25020.component';
 
 //1.2.5.2 形成電匯明細資料 CRU
 @Component({
@@ -18,119 +23,150 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
   templateUrl: './fin25020-cru.component.html',
   styleUrl: './fin25020-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputNumberComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [
+    MenubarComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarComponent,
+    InputTextComponent,
+    DropdownComponent,
+    ButtonComponent,
+    NgIf,
+    TranslateModule,
+    DialogModule,
+    TableComponent
+  ]
 })
-export class FIN25020CRUComponent implements OnInit {
-  ProgNo = '';
-  formTitle = '';
-  submitted = false;
-  crudstatus = '';
-
-  // ----------------------------------------------------------------
+export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    buildDate: [, [Validators.required]], // 建立日期
-    transferDate: [, [Validators.required]], // 匯款日期
-    bankCode: [, [Validators.required, Validators.maxLength(8)]], // 銀行代號
-    transferSource: [, [Validators.required, Validators.maxLength(12)]], //匯款來源單號
+    CreateDate: [{ value: new Date(), disabled: true }, [Validators.required]], // 建立日期（系統日期，不可修改）
+    TransferDate: [new Date(), [Validators.required]], // 匯款日期（預設系統日期，可修改）
+    BNK_id: [null as number | null, [Validators.required]],
+    TransferSourceNo: ['', [Validators.required, Validators.maxLength(20)]], // 匯款來源單號
   });
-  //
-  // ----------------------------------------------------------------
-  //
-  transferSourceOptions: any[] = [
-    { value: 1, label: 'D20140106001/2014/0106/Y' },
-    { value: 2, label: 'D20140106002/2014/0106/Y' },
-    { value: 3, label: 'D20140106003/2014/0106/Y' },
+
+  // 銀行下拉選項 (從 API 載入)
+  bankOptions: (QueryBankAccountResponse & { displayLabel: string })[] = [];
+
+  // 匯款來源單號查詢對話框
+  showTransferSourceDialog = false;
+  transferSourceQueryForm = this.formBuilder.group({
+    PAM_No: [''],
+    D_Date_Start: [null],
+    D_Date_End: [null],
+  });
+  transferSourceData: QueryUnremittedPAMResponse[] = [];
+  transferSourceColumns: Column[] = [
+    { field: 'PAM_No', header: '匯款來源單號', visible: true },
+    {
+      field: 'D_Date', header: '建立日期', visible: true, format: (value: string) => {
+        if (!value) return '';
+        const date = new Date(value);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}/${month}/${day}`;
+      }
+    },
+    { field: 'Remit_Status', header: '是否形成電匯', visible: true },
+    // { field: 'ItemCount', header: '筆數', visible: true },
   ];
 
-  whetherOptions: any[] = [];
-
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private translate: TranslateService,
-  ) {
-    super();  // 呼叫父類建構子
+  constructor(private readonly fin25020Service: FIN25020Service) {
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '120018';
-    //
-    // ----------------------------------------------------------------
-    //
-    // ----------------------------------------------------------------
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
+    this.initializePage('FIN25020', this.dataForm);
 
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
+    // 載入銀行帳戶選項
+    this.loadBankAccounts();
 
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
+    // 新增模式固定，因為這是「形成」的功能
+    if (!this.isFormCreateable) {
+      // 如果不是新增模式，導回列表頁
+      this.onCancel();
     }
   }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
+
+  // 載入銀行帳戶選項
+  loadBankAccounts(): void {
+    this.fin25020Service.queryBankAccount({})
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        // 格式化顯示: BNK_id - BNK_AccName
+        this.bankOptions = response.Data.map(item => ({
+          ...item,
+          displayLabel: `${item.BNK_id || item.id} - ${item.BNK_AccName}`
+        }));
+        console.log('Bank Options:', this.bankOptions);
+      });
   }
 
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
+  // 開啟匯款來源單號查詢對話框
+  openTransferSourceDialog(): void {
+    this.showTransferSourceDialog = true;
+    this.loadTransferSourceData();
   }
 
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
+  // 載入匯款來源單號資料
+  loadTransferSourceData(): void {
+    const queryValue = this.transferSourceQueryForm.value;
 
-    if (this.dataForm.invalid) {
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
+    this.fin25020Service.queryUnremittedPAM({
+      PAM_No: queryValue.PAM_No || null,
+      D_Date_Start: queryValue.D_Date_Start || null,
+      D_Date_End: queryValue.D_Date_End || null,
+    })
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.transferSourceData = response.Data;
+      });
   }
 
-  submitForm(frm: FormGroup) {
-    this.onSubmit(frm);
+  // 查詢匯款來源單號
+  onQueryTransferSource(): void {
+    this.loadTransferSourceData();
   }
 
-  onCancel() {
-    this.router.navigate(['/FIN2000/FIN25020']);
+  // 選擇匯款來源單號（雙擊）
+  onSelectTransferSource(data: QueryUnremittedPAMResponse): void {
+    this.dataForm.patchValue({
+      TransferSourceNo: data.PAM_No,
+    });
+    this.showTransferSourceDialog = false;
+  }
+
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const formValue = frm.getRawValue();
+
+      // 準備 API 請求參數
+      const confirmRequest = {
+        RMT_Date: formValue.TransferDate, // 匯款日期
+        BNK_id: formValue.BNK_id, // 銀行ID
+        PAM_NoList: [formValue.TransferSourceNo] // 匯款來源單號列表
+      };
+
+      this.fin25020Service.confirmRemit(confirmRequest)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => this.loading = false)
+        )
+        .subscribe({
+          next: () => {
+            this.messageService.successBubble('形成電匯明細成功');
+            // 成功後回到列表頁
+            setTimeout(() => {
+              this.onCancel();
+            }, 500);
+          },
+          error: () => {
+            // 錯誤處理已由 interceptor 處理
+            this.loading = false;
+          }
+        });
+    });
   }
 }
