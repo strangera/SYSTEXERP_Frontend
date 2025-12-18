@@ -72,75 +72,6 @@ export interface QueryFIN63020Row {
   [key: string]: any;
 }
 
-/** ✅ 3筆假資料（序號 Table 元件自己有，不另外給 RowNo） */
-const MOCK_ROWS: QueryFIN63020Row[] = [
-  {
-    CheckNo: 'CHK0000001',
-    VendorNo: 'VEN0001',
-    VEN_Name: '測試廠商A',
-    CompanyAccNo: '11010000000001',
-    CompanyAccName: '台銀-活存',
-    IssueDate: '2025-12-01',
-    ExpireDate: '2025-12-31',
-    PayDate: null,
-    CheckAmount: 125000,
-    CheckTitle: '測試票據抬頭A',
-    NoEndorseYn: 'N',
-    Remark: '假資料：未領，可勾',
-    OrgId: 'ORG01',
-    Org_Name: '總公司',
-    StatusFlag: '1',
-    CheckStatus: '2',
-    PickupStatus: '0',
-    PickupDate: null,
-    VoucherNoIssued: 'VCH0001',
-    VoucherNoPaid: null,
-  },
-  {
-    CheckNo: 'CHK0000002',
-    VendorNo: 'VEN0002',
-    VEN_Name: '測試廠商B',
-    CompanyAccNo: '11010000000001',
-    CompanyAccName: '台銀-活存',
-    IssueDate: '2025-11-15',
-    ExpireDate: '2025-12-15',
-    PayDate: '2025-12-10',
-    CheckAmount: 88000,
-    CheckTitle: '測試票據抬頭B',
-    NoEndorseYn: 'Y',
-    Remark: '假資料：已領，不可勾',
-    OrgId: 'ORG02',
-    Org_Name: '分公司',
-    StatusFlag: '2',
-    CheckStatus: '3',
-    PickupStatus: '1',
-    PickupDate: '2025-12-12',
-    VoucherNoIssued: 'VCH0002',
-    VoucherNoPaid: 'VCHPAID0002',
-  },
-  {
-    CheckNo: 'CHK0000003',
-    VendorNo: 'VEN0003',
-    VEN_Name: '測試廠商C',
-    CompanyAccNo: '11010000000002',
-    CompanyAccName: '華南-活存',
-    IssueDate: '2025-12-05',
-    ExpireDate: '2026-01-05',
-    PayDate: null,
-    CheckAmount: 56000,
-    CheckTitle: '測試票據抬頭C',
-    NoEndorseYn: 'N',
-    Remark: '假資料：郵寄，不可勾',
-    OrgId: 'ORG01',
-    Org_Name: '總公司',
-    StatusFlag: '1',
-    CheckStatus: '1',
-    PickupStatus: '2',
-    PickupDate: '2025-12-18',
-    VoucherNoIssued: null,
-    VoucherNoPaid: null,
-  },
-];
 
 @UntilDestroy()
 @Component({
@@ -397,7 +328,7 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
       });
 
     // ✅ 預載假資料測試（你要的 3 筆）
-    this.loadMock();
+   
   }
 
   /** ✅ 點明細 */
@@ -523,12 +454,7 @@ override onEdit(row: QueryFIN63020Row) {
 
   /* ----------------- 下面查詢邏輯保留你的，略微調整 parse & mock ----------------- */
 
-  private loadMock(): void {
-    this.data = [...MOCK_ROWS];
-    this.totalRecords = this.data.length;
-    this.loading = false;
-    this.cdr.detectChanges();
-  }
+
 
   private formatDate(val: any): string {
     if (!val) return '';
