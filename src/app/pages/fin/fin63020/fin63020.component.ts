@@ -164,13 +164,7 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
 
   /** ✅ columns：加一欄 CanPickupYn 顯示 X（不可勾選） */
   columns: Column[] = [
-    {
-      field: 'CanPickupYn',
-      header: '可勾選',
-      align: 'center',
-      format: (_v: any, _i: number, row: QueryFIN63020Row) =>
-        this.isRowSelectable(row) ? '' : 'X',
-    } as any,
+
 
     {
       field: 'CheckNo',
@@ -186,7 +180,7 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     { field: 'ExpireDate', header: '到期日', format: (v: any) => this.formatDate(v) },
     { field: 'PayDate', header: '兌現日', format: (v: any) => this.formatDate(v) },
 
-    { field: 'CheckAmount', header: '票面金額', align: 'right', format: (v: any) => this.moneyFormat(v) },
+    { field: 'CheckAmount', header: '票面金額', format: (v: any) => this.moneyFormat(v) },
     { field: 'CheckTitle', header: '票據抬頭' },
 
     { field: 'NoEndorseYn', header: '票據禁止背書轉讓', format: (v: any) => this.yesNoText(v) },
