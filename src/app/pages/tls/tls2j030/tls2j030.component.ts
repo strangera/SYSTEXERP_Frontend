@@ -112,17 +112,17 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
       this.isNotECR = true;
       return;
     }
-    // this.tls2j030Service.queryEcrNo(ip).subscribe({
-    //   next: (res: any) => {
-    //     this.isNotECR = (res.Data === null);
+    this.tls2j030Service.queryEcrNo(ip).subscribe({
+      next: (res: any) => {
+        this.isNotECR = (res.Data === null);
 
-    //     if (this.isNotECR) {
-    //       this.queryForm.disable();
-    //     } else {
-    //       this.queryForm.enable();
-    //     }
-    //   }
-    // });
+        if (this.isNotECR) {
+          this.queryForm.disable();
+        } else {
+          this.queryForm.enable();
+        }
+      }
+    });
 
   }
 

@@ -9,7 +9,7 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
+import { finalize, of } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -32,12 +32,33 @@ export class CPM12030CRUComponent extends BasicCruPageComponent<CPM12030Data> im
   ORG_IDOptions$ = this.dropdown.querySys3100();
   columns: EditColumn[] = [
     {
-      field: 'ORG_ID', header: '組織', type: 'dropdown', options: () => this.ORG_IDOptions$, optionsAsync: true, optionLabel: 'label', optionValue: 'value',
-      showClear: false
+      field: 'ORG_ID',
+      header: '組織',
+      type: 'dropdown',
+      options: () => this.ORG_IDOptions$,
+      optionsAsync: true,
+      optionLabel: 'label',
+      optionValue: 'value',
+      showClear: false,
+      calculate: () => {
+        return { 'CLASS_ID': null };
+      }
     },
     {
-      field: 'CLASS_ID', header: '責任單位', type: 'dropdown', options: () => this.CLASS_IDOptions$, optionsAsync: true, optionLabel: 'label', optionValue: 'value',
-      showClear: false
+      field: 'CLASS_ID',
+      header: '責任單位',
+      type: 'dropdown',
+      optionsAsync: true,
+      triggerFields: ['ORG_ID'],
+      options: (rowData: CSS1004Data) => {
+        if (!rowData?.ORG_ID) {
+          return of([]);
+        }
+        return this.dropdown.queryCss1005({ ORG_ID: rowData.ORG_ID });
+      },
+      optionLabel: 'label',
+      optionValue: 'value',
+      showClear: false,
     },
   ];
   data: CSS1004Data[] = [];
@@ -50,11 +71,21 @@ export class CPM12030CRUComponent extends BasicCruPageComponent<CPM12030Data> im
 
   ngOnInit(): void {
     this.initializePage('CPM12030', this.dataForm);
+    if (!this.isFormCreateable && this.rowdata) {
+      const id = this.rowdata.ID;
+      this.cpm12030Service.queryCPM12030Detail({ ID: id }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        this.data = response.Data
+      });
+    }
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const params = {
-        ...frm.getRawValue()
+        ID: this.isFormCreateable ? undefined : frm.get('ID')?.value,
+        KIND_ID: frm.get('KIND_ID')?.value,
+        KIND_SubID: frm.get('KIND_SubID')?.value,
+        KIND_SubName: frm.get('KIND_SubName')?.value,
+        CLASS_IDs: this.data.map(item => item.CLASS_ID)
       }
       const $request = this.isFormCreateable ? this.cpm12030Service.createCPM12030(params) : this.cpm12030Service.updateCPM12030(params);
       $request.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {

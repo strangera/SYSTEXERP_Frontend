@@ -12,12 +12,11 @@ export interface QueryFIN63020Request {
   PageIndex: number;
   SortBy?: SortItem[];
 
-  // 對齊 SP_FIN63020Query
-  ChkNo?: string; // 票據號碼
-  VenNo?: string; // 廠客代號
-  CompanyAccNo: string; // 公司銀行科目代號（必填）
+  ChkNo?: string;
+  VenNo?: string;
+  CompanyAccNo: string;
 
-  IssueDateFrom?: string; // yyyy-MM-dd
+  IssueDateFrom?: string;
   IssueDateTo?: string;
   ExpireDateFrom?: string;
   ExpireDateTo?: string;
@@ -28,16 +27,17 @@ export interface QueryFIN63020Request {
   AmtTo?: number;
 
   ChkTitle?: string;
-  VenCtrlYN?: string; // Y / N
+  VenCtrlYN?: string;
   Comment?: string;
 
   OrgId?: string;
   ProjectNo?: string;
 
-  CheckStatus?: string; // 0/1/2/3/4/5
-  Status?: string; // 1=確認 2=拋轉
-  PickupType?: string; // 0/1/2
-  PickupDateFrom?: string; // ISO 或 yyyy-MM-ddTHH:mm:ss
+  CheckStatus?: string; // 0~5（顯示用）
+  Status?: string;      // 1=確認 2=拋轉（列表顯示用）
+  PickupType?: string;
+
+  PickupDateFrom?: string;
   PickupDateTo?: string;
 
   PamNo?: string;
@@ -65,15 +65,15 @@ export interface QueryFIN63020Row {
   CheckAmount: number;
   CheckTitle: string;
 
-  NoEndorseYn: string; // 顯示：是/否
+  NoEndorseYn: string;
   Remark: string;
 
   OrgId: string;
 
-  StatusFlag: string; // 顯示：到期/兌現
-  CheckStatus: string; // 顯示：確認/拋轉
+  StatusFlag: string;
+  CheckStatus: string;
 
-  PickupStatus: string; // 顯示：未領/已領/郵寄
+  PickupStatus: string;
   PickupDate: string | null;
 
   VoucherNo: string | null;
@@ -88,12 +88,12 @@ export interface Fin63020QueryDetailRequest {
 }
 
 export interface Fin63020DetailRow {
-  // 上半部
   CheckNo: string;
   CompanyAccNo: string;
   CompanyAccName: string;
   VendorNo: string;
   VEN_Name: string;
+
   IssueDate: string | null;
   ExpireDate: string | null;
   CheckAmount: number | null;
@@ -102,26 +102,24 @@ export interface Fin63020DetailRow {
   NoEndorseYn: 'Y' | 'N' | null;
   Remark: string | null;
 
-  // 下半部
   OrgId: string | null;
 
-  /** 票據狀態(流程)：1確認2拋轉（SP 的 StatusFlag） */
+  /** 1=確認 2=拋轉 */
   StatusFlag: '1' | '2' | null;
 
-  VouNo_paid?: string | null; // 已拋轉的傳票編號
-  CheckStatus?: string | null; // CHK_Status(0~5)
+  VouNo_paid?: string | null;
+  CheckStatus?: string | null;
 
-  PickupType?: string | null; // 0/1/2
+  PickupType?: '0' | '1' | '2' | null;
   PickupDate?: string | null;
   PayDate?: string | null;
   WithdrawDate?: string | null;
 
   ProjectNo?: string | null;
   PamNo?: string | null;
-  VoucherNo?: string | null; // VouNo_issued
+  VoucherNo?: string | null;
   ApCheckAccNo?: string | null;
 
-  // UpdateDetail 用（你 SP_FIN63020QueryDetail 目前沒 select，但 CRU 會留欄位）
   PickName?: string | null;
 
   [key: string]: any;
@@ -129,15 +127,15 @@ export interface Fin63020DetailRow {
 
 /** ========== Update (主檔更新) ========== */
 export interface Fin63020UpdateRequest {
-  ChkNo: string;
-  ChkTitle: string;
-  Comment: string; // 備註（SP 要求不可 NULL，空字串 OK）
+  CheckNo: string;
+  CheckTitle: string;
+  Remark: string;
 
   NoEndorseYn: 'Y' | 'N';
-  Status: string; // 0~5 (CHK_Status)
-  PickupType: string; // 0/1/2
+  StatusFlag: '1' | '2';
+  PickupType: '0' | '1' | '2';
 
-  PickupDate: string | null; // 'yyyy-MM-dd HH:mm:ss'
+  PickupDate: string | null;
   PayDate: string | null;
   WithdrawDate: string | null;
 
@@ -147,7 +145,7 @@ export interface Fin63020UpdateRequest {
 /** ========== UpdateDetail (領取更新) ========== */
 export interface Fin63020UpdateDetailRequest {
   ChkNo: string;
-  PickupDate: string; // 'yyyy-MM-dd HH:mm:ss' 或 'yyyy-MM-dd'
+  PickupDate: string;
   UPD_USRNo: string;
   UPD_USRName: string;
   PickName: string;
@@ -157,12 +155,12 @@ export interface Fin63020UpdateDetailRequest {
 
 @Injectable({ providedIn: 'root' })
 export class Fin63020Service {
-  // ⚠️ 路徑請依你們後端 Controller 實際調整
-  private apiUrl = `${environment.ApiUrl}/FIN6000/FIN63020`;
+  /** 對齊 Swagger：/FIN0000/NTS1000 */
+  private apiUrl = `${environment.ApiUrl}/FIN0000/NTS1000`;
 
   constructor(private http: HttpClient) {}
 
-  /** 列表查詢：SP_FIN63020Query */
+  /** 查詢列表 */
   queryFIN63020(
     body: QueryFIN63020Request
   ): Observable<ApiResponse<QueryFIN63020Row[]>> {
@@ -172,7 +170,7 @@ export class Fin63020Service {
     );
   }
 
-  /** 明細查詢：SP_FIN63020QueryDetail */
+  /** 查詢明細 */
   queryFIN63020Detail(
     body: Fin63020QueryDetailRequest
   ): Observable<ApiResponse<Fin63020DetailRow>> {
@@ -182,7 +180,7 @@ export class Fin63020Service {
     );
   }
 
-  /** 更新主檔：SP_FIN63020Update */
+  /** 更新票據主檔（編輯模式） */
   updateFIN63020(
     body: Fin63020UpdateRequest
   ): Observable<ApiResponse<any>> {
@@ -192,7 +190,7 @@ export class Fin63020Service {
     );
   }
 
-  /** 領取更新：SP_FIN63020UpdateDetail */
+  /** 支票領取更新 */
   updateFIN63020Detail(
     body: Fin63020UpdateDetailRequest
   ): Observable<ApiResponse<any>> {
@@ -200,6 +198,21 @@ export class Fin63020Service {
       `${this.apiUrl}/updateFIN63020Detail`,
       body
     );
+  }
+
+  /** 匯出 Excel */
+  exportFIN63020(body: QueryFIN63020Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportFIN63020`, body, {
+      responseType: 'blob',
+    });
+  }
+
+  /** 匯出 PDF */
+  exportFIN63020PDF(body: QueryFIN63020Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportFIN63020PDF`, body, {
+      responseType: 'blob',
+      headers: { Accept: 'application/pdf' },
+    });
   }
 }
 

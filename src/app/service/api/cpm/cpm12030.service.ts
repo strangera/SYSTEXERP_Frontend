@@ -33,6 +33,7 @@ export interface CSS1004Data {
   ID: number;
   mid?: number;
   SYS_StoreNo?: string;
+  ORG_ID?: string;
   KIND_SubID: string;
   CLASS_ID: string;
   CRT_Date?: string;
@@ -76,8 +77,8 @@ export class Cpm12030Service {
   }
 
   /** 查詢明細 (單筆) */
-  queryCPM12030Detail(body: { ID: number }): Observable<ApiResponse<CPM12030Data>> {
-    return this.http.post<ApiResponse<CPM12030Data>>(`${this.apiUrl}/queryCPM12030Detail`, body);
+  queryCPM12030Detail(body: { ID: number }): Observable<ApiResponse<CSS1004Data[]>> {
+    return this.http.post<ApiResponse<CSS1004Data[]>>(`${this.apiUrl}/queryCPM12030Detail`, body);
   }
 
   /** 修改 */

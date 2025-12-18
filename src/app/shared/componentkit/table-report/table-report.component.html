@@ -118,8 +118,9 @@
           <p-image [src]="tableUtility.getImage(rowData[col.field])" alt="Image" width="50" [preview]="true" />
         </ng-container>
         <ng-container *ngIf="col.type === 'button'">
-          <p-button [label]="col.buttonLabel" severity="info" (click)="selectButton.emit(rowData)"
-            [disabled]="col.disabled ? col.disabled(rowData) : false"></p-button>
+          <p-button [label]="col.buttonLabel ?? rowData?.[col.field]" severity="info"
+            (click)="selectButton.emit(rowData)" [disabled]="col.disabled ? col.disabled(rowData) : false"
+            [link]="col.link"></p-button>
         </ng-container>
         <ng-container *ngIf="col.type === 'html'">
           <div [innerHTML]="sanitizer.bypassSecurityTrustHtml(rowData[col.field])" class="html-cell"></div>

@@ -10,8 +10,9 @@
         <div class="grid p-fluid">
           <!-- 查詢年月(起訖) - 必填 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="查詢年月" [startControl]="queryForm.controls.startdate"
-              [endControl]="queryForm.controls.enddate" [submitted]="submitted">
+            <app-calendar-range calendarOneType="dateMonthOne" calendarType="dateRange" label="查詢年月"
+              [startControl]="queryForm.controls.startdate" [endControl]="queryForm.controls.enddate"
+              [submitted]="submitted">
             </app-calendar-range>
           </div>
 
