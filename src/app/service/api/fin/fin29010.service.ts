@@ -1,7 +1,7 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 export interface Fin29010Request {
@@ -12,6 +12,11 @@ export interface Fin29010Request {
 }
 
 export interface Fin29010Response {
+  data: Fin29010Data[],
+  total: Fin29010Data;
+}
+
+export interface Fin29010Data {
   VEN_No: string,
   VEN_Name: string,
   ACP_YYYYMM: string,
@@ -30,8 +35,16 @@ export class Fin29010Service {
 
   constructor(private http: HttpClient) { }
 
-  queryFIN29010(data: Fin29010Request): Observable<ApiResponse<Fin29010Response[]>> {
-    return this.http.post<ApiResponse<Fin29010Response[]>>(`${this.apiUrl}/queryFIN29010`, data);
+  queryFIN29010(data: Fin29010Request): Observable<any> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/queryFIN29010`, data).pipe(
+      map(response => {
+        return {
+          ...response,
+          Data: response.Data.data,
+          footerData: response.Data.total
+        };
+      })
+    );
   }
 
   exportFIN29010PDF(

@@ -32,7 +32,7 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
   @Input() endMaxDate: Date | undefined | null = null;
   @Input() disabled = false;  // ← 新增
   // 自訂義
-  calendarOneType: 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne' = 'dateOne';
+  @Input() calendarOneType: 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne' = 'dateOne';
   // 觸發事件
   @Output() startDateChange = new EventEmitter<any>();
 
@@ -48,7 +48,10 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
     const config = this.calendarConfig[this.calendarType];
     this.placeholder = config.placeholder;
     this.placeholder2 = config.placeholder;
-    this.calendarOneType = config.calendarOneType as 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne';
+    // 20251218 因 fin29040 需求 調整 
+    if (!this.calendarOneType) {
+      this.calendarOneType = config.calendarOneType as 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne';
+    }
     this.checkRequiredValidator(this.startControl, 0);
     this.checkRequiredValidator(this.endControl, 1);
   }

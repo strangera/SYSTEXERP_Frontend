@@ -220,9 +220,18 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="TLS32030" dataKey="TltNo" [data]="data" [columns]="columns" [columnGroup]="columnGroup"
-    [showCheckBox]="false" [showDelete]="false" [showManage]="false" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [multiSortMeta]="[{ field: 'TltNo', order: -1 }]"
-    [totalRecords]="totalRecords" [lazy]="true" [loading]="loading" (lazyLoadData)="onLazyLoadData($event, queryForm)">
-  </app-table>
+  <app-table-report dataKey="TltNo" [data]="data" [columns]="columns" [columnGroup]="columnGroup" [showDelete]="false"
+    [showManage]="false" [totalRecords]="totalRecords" [loading]="loading" [lazy]="true"
+    [queryFunction]="tls32030Service.queryTLS32030.bind(tls32030Service)">
+    <header>
+      <div class="flex justify-content-end align-items-center gap-2">
+        <p-button styleClass="p-2" label="產出銷售排名分析報表.PDF" [loading]="btnLoading" icon="pi pi-file"
+          (click)="onExportPDF()" [disabled]="!historyRequestBody || data.length === 0"
+          [loading]="btnLoading"></p-button>
+        <p-button styleClass="p-2" label="產出銷售排名分析報表.XLSX" [loading]="btnLoading" icon="pi pi-file"
+          (click)="onExportXLSX()" [disabled]="!historyRequestBody || data.length === 0"
+          [loading]="btnLoading"></p-button>
+      </div>
+    </header>
+  </app-table-report>
 </div>

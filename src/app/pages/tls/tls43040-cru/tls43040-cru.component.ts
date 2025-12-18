@@ -1,27 +1,41 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin, map } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
 import { Sys0110Service } from '@service/api/sys/sys0110.service';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 import { Tls43040Service } from '@service/api/tls/tls43040.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 
 // 只用到欄位
 interface SYS1000 {
   SYS_Type: string;
   SYS_Code: string;
   SYS_Name: string;
+}
+
+// 機台群組明細介面
+export interface TLS43040Detail {
+  ID?: number | string;
+  ECR_GrpSeqNo?: number;
+  ECR_No?: string;
+  ECR_Type?: string;
+  TLT_No?: string;
+  BUILDING_No?: string;
+  FLOOR_No?: string;
+  Area_No?: string;
+  status?: string;
 }
 
 @UntilDestroy()
@@ -39,7 +53,8 @@ interface SYS1000 {
     DropdownComponent,
     ButtonComponent,
     TranslateModule,
-    TableComponent,
+    TableEditComponent,
+    CommonModule,
   ],
 })
 export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -75,12 +90,12 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
   TLTTALENT_OPTIONS: { label: string; No: string; Name?: string }[] = [];
 
   isTableDisabled = false; // 控制 table 是否禁用
-
+  private previousEcrDtlLimit: string | null = null; // 記錄上一次的選項值
 
   // 表格
-  data: any[] = [];
-  selectedRows: any[] = [];
-  columns: Column[] = [];
+  data: TLS43040Detail[] = [];
+  selectedRows: TLS43040Detail[] = [];
+  columns: EditColumn[] = [];
 
   ngOnInit(): void {
     this.initializePage('TLS43040', this.dataForm);
@@ -88,10 +103,16 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
     console.log('選擇的資料 rowdata:', this.rowdata);
     console.log('選擇的資料的Details ECR_Details:', this.rowdata?.ECR_Details);
     console.log('表格資料data:', this.data);
-    this.data = this.rowdata?.ECR_Details ?? [];
+    this.data = (this.rowdata?.ECR_Details ?? []).map((item: TLS43040Detail) => ({
+      ...item,
+      status: 'original'
+    }));
     console.log('表格資料data:', this.data);
-    // 初始值檢查
-    this.onEcrDtlLimitChange(this.dataForm.controls.ECR_DtlLimit.value);
+
+    // 設定初始值，但不清空資料
+    const initialValue = this.dataForm.controls.ECR_DtlLimit.value;
+    this.previousEcrDtlLimit = initialValue;
+    this.isTableDisabled = initialValue === "0";
 
     // 監聽下拉選單變化
     this.dataForm.controls.ECR_DtlLimit.valueChanges
@@ -127,6 +148,7 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
       map((res: any) => (res?.Data ?? []).map((i: any) => ({
         ...i,
         label: `${i.No}-${i.Name}`,
+        value: i.No,
         No: i.No,
       })))
     );
@@ -151,7 +173,7 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
         this.columns = [
           { field: 'ECR_No', header: '收銀機號', type: 'dropdown', options: this.POS1002_ECR_Options, optionLabel: 'label', optionValue: 'value' },
           { field: 'ECR_Type', header: '機台類型', type: 'dropdown', options: this.SYS1000_ECRType_Options, optionLabel: 'label', optionValue: 'value' },
-          { field: 'TLT_No', header: '專櫃編號', type: 'dropdown', options: this.TLTTALENT_OPTIONS, optionLabel: 'label', optionValue: 'No' },
+          { field: 'TLT_No', header: '專櫃編號', type: 'dropdown', options: this.TLTTALENT_OPTIONS, optionLabel: 'label', optionValue: 'value' },
           { field: 'BUILDING_No', header: '館別代碼', type: 'dropdown', options: this.SYS3700_Options, optionLabel: 'label', optionValue: 'value' },
           { field: 'FLOOR_No', header: '樓層代碼', type: 'dropdown', options: this.SYS3900_Options, optionLabel: 'label', optionValue: 'value' },
           { field: 'Area_No', header: '區域', type: 'dropdown', options: this.SYS3A00_Options, optionLabel: 'label', optionValue: 'value' },
@@ -163,12 +185,26 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
   onEcrDtlLimitChange(value: string) {
     this.isTableDisabled = value === "0";
     console.log("ECR_DtlLimit 選擇:", value, "→ tableDisabled:", this.isTableDisabled);
+
+    // 只有在真正切換選項時才清空表格資料（排除初始化）
+    if (this.previousEcrDtlLimit !== null && this.previousEcrDtlLimit !== value) {
+      console.log("選項已改變，清空表格資料");
+      this.resetTable();
+    }
+
+    this.previousEcrDtlLimit = value;
   }
 
 
   onSubmit(form: FormGroup): void {
     if (form.valid) {
       const raw = form.getRawValue();
+
+      // 驗證：若選擇「符合明細設定的機台才列入群組」或「不符合明細設定的機台才列入群組」，需至少有一筆明細
+      if ((raw.ECR_DtlLimit === '1' || raw.ECR_DtlLimit === '2') && this.visibleData.length === 0) {
+        this.messageService.errorBubble('請至少新增一筆明細資料');
+        return;
+      }
 
       const payload = {
         ID: this.isFormCreateable ? 0 : Number(this.rowdata?.ID ?? 0),
@@ -240,41 +276,54 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
     this.data = [];
     this.selectedRows = [];
   }
-  onInsertRow(newRow: any) {
-    newRow.status = 'new';
-    this.data.push(newRow);
+
+  onDataChange(updatedData: TLS43040Detail[]): void {
+    // 保留所有被標記為刪除的資料
+    const deletedItems = this.data.filter(d => d.status === 'deleted');
+
+    // 處理更新的資料（排除已經是 deleted 狀態的）
+    const processedData = updatedData
+      .filter(row => row.status !== 'deleted')
+      .map((row) => {
+        if (!row.ID || row.ID === 0 || typeof row.ID === 'string') {
+          return { ...row, status: 'new' };
+        }
+        return { ...row, status: row.status ?? 'modified' };
+      });
+
+    // 合併時使用 Map 去重，優先保留 processedData 中的資料
+    const dataMap = new Map<number | string, TLS43040Detail>();
+
+    // 先加入被刪除的資料
+    deletedItems.forEach(item => {
+      const key = item.ID ?? `temp_${Math.random()}`;
+      dataMap.set(key, item);
+    });
+
+    // 再加入處理後的資料（會覆蓋相同 ID 的項目）
+    processedData.forEach(item => {
+      const key = item.ID ?? `temp_${Math.random()}`;
+      dataMap.set(key, item);
+    });
+
+    this.data = Array.from(dataMap.values());
   }
 
-  onRowEdit(rowData: any) {
-    const target = this.data.find(d => d.ID === rowData.ID);
-    if (target) {
-      Object.assign(target, rowData);
+  onDelete(selectedItems: TLS43040Detail[]): void {
+    if (!selectedItems || selectedItems.length === 0) {
+      this.messageService.errorBubble('請先勾選要刪除的明細');
+      return;
     }
-
-    if (rowData.status !== 'new' && rowData.status !== 'deleted') {
-      rowData.status = 'modified';
-    }
-
-    console.log('修改明細:', rowData);
-  }
-
-  onDeleteRow(selectedItems: any[]) {
     for (const item of selectedItems) {
-      item.status = 'deleted';
+      const idx = this.data.findIndex(d => d.ID === item.ID);
+      if (idx !== -1) {
+        this.data[idx] = { ...this.data[idx], status: 'deleted' };
+      }
     }
-    this.data = this.data.filter(d => !selectedItems.includes(d));
     this.data = [...this.data];
-    console.log('刪除的項目:', selectedItems);
-  }
-
-
-
-  onFieldChange(e: any) {
-    const row = e.rowData;
-    if (row.status !== 'new' && row.status !== 'deleted') {
-      row.status = 'modified';
-    }
-    console.log('欄位變更 → 自動設狀態 Modified:', row);
+    // 不需要調用 onDataChange，因為我們已經直接更新了 this.data
+    this.selectedRows = [];
+    this.messageService.successBubble('已標記刪除');
   }
 
   get visibleData() {

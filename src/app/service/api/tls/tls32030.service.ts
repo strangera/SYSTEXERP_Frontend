@@ -83,4 +83,18 @@ export class TLS32030Service {
       request
     );
   }
+  ExportTLS32030PDF(request: TLS32030QueryRequest): Observable<import('@angular/common/http').HttpResponse<Blob>> {
+    return this.http.post(
+      `${this.apiUrl}/exportTLS32030PDF`,
+      request,
+      { observe: 'response', responseType: 'blob' }
+    );
+  }
+  ExportTLS32030Excel(request: TLS32030QueryRequest): Observable<import('@angular/common/http').HttpResponse<Blob>> {
+    return this.http.post(
+      `${this.apiUrl}/exportTLS32030Excel`,
+      request,
+      { observe: 'response', responseType: 'blob' }
+    );
+  }
 }

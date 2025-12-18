@@ -17,9 +17,9 @@
             [options]="warehouseOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.HOS_NoList" [submitted]="submitted"></app-multi-select>
           <!-- 商品管理編號/國際條碼/廠商貨號 -->
-          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.queryNo"
-            templateLabel="label" [submitted]="submitted" optionLabel="PLU_MagNo" optionValue="PLU_MagNo"
-            [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
+          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [showOverlay]="false"
+            [control]="queryForm.controls.queryNo" templateLabel="label" [submitted]="submitted" optionLabel="PLU_MagNo"
+            optionValue="PLU_MagNo" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
             (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
             [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
             [totalRecords]="opTotalRecords">
@@ -73,7 +73,17 @@
 </div>
 <div class="card">
   <app-table tableKey="TLS2A020" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [showCheckBox]="false" dataKey="id" [multiSortMeta]="[{ field: 'VEN_No', order: 1 }]" [totalRecords]="totalRecords"
+    [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'VEN_No', order: 1 }]" [totalRecords]="totalRecords"
     [lazy]="true" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="true"
-    [loading]="loading" [showDelete]="false"></app-table>
+    [loading]="loading" [showDelete]="false" (selectionChange)="onSelectionChange($event)"
+    [selectedItems]="selectedItems" [buttonsLoading]="btnLoading" [isRowSelectable]="isRowSelectable">
+    <header>
+      <div class="flex align-items-center gap-2">
+        <p-button label="單據審核" [style]="{ height: '35px' }" pTooltip="僅限【已申請】單據" tooltipPosition="top" [rounded]="true"
+          severity="help" [loading]="auditLoading" (click)="onAuditClick()" [disabled]="!canAuditSelected()" />
+        <p-button label="領用" [style]="{ height: '35px' }" pTooltip="僅限【已審核】單據" tooltipPosition="top" [rounded]="true"
+          severity="success" [loading]="issueLoading" (click)="onIssueClick()" [disabled]="!canIssueSelected()" />
+      </div>
+    </header>
+  </app-table>
 </div>

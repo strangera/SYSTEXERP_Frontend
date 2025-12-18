@@ -80,6 +80,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   activeIndex = 0;
   copiedAttributes: Partial<KeyItem> | null = null;
   multiSelectMode = false;
+  readonly CRUDStatus = CRUDStatus;
   selectedKeys: KeyItem[] = []; // shift 多選用
 
   // 主檔 form
@@ -117,6 +118,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   yCount = 5;
   pages: KeyItem[][] = [];   // 每頁獨立存 keys
   pageOriginalNos: number[] = []; // 對應每個 pages 索引的原始頁碼（傳給後端）
+  pageSavedFlags: boolean[] = []; // 對應 page 是否已存在於後端（true: 已儲存；false: 新增但未儲存）
   selected?: KeyItem;
 
   // ---------------- Tab Options ----------------
@@ -278,6 +280,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     this.pages = [this.buildGrid(0)];
     // 初始化原始頁碼映射（第一頁原始為 1）
     this.pageOriginalNos = [1];
+    this.pageSavedFlags = [false];
     this.selected = this.pages[0][0];
     this.loadDropdowns();
 
@@ -413,6 +416,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     this.pages.push(this.buildGrid(newPageIndex));
     // 新增頁面時，同步原始頁碼（使用目前的 index + 1 作為原始頁碼）
     this.pageOriginalNos.push(newPageIndex + 1);
+    // 新增頁面尚未存到後端
+    this.pageSavedFlags.push(false);
     setTimeout(() => {
       this.activeIndex = newPageIndex;
       this.dataForm.controls.activePage.setValue(newPageIndex);
@@ -435,8 +440,31 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       header: '刪除確認',
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
+        // 若此頁尚未儲存到後端，直接在前端移除，不呼叫 API
+        const isSaved = !!this.rowdata?.ID && !!this.pageSavedFlags[this.activeIndex];
+        if (!isSaved) {
+          // 直接在前端移除頁面
+          this.pages.splice(this.activeIndex, 1);
+          if (this.pageOriginalNos && this.pageOriginalNos.length > this.activeIndex) {
+            this.pageOriginalNos.splice(this.activeIndex, 1);
+          }
+          if (this.pageSavedFlags && this.pageSavedFlags.length > this.activeIndex) {
+            this.pageSavedFlags.splice(this.activeIndex, 1);
+          }
+          if (this.activeIndex >= this.pages.length) {
+            this.activeIndex = this.pages.length - 1;
+          }
+          this.dataForm.controls.activePage.setValue(this.activeIndex);
+          const currentPage = this.pages[this.activeIndex];
+          if (currentPage?.length) {
+            this.selectKey(currentPage[0]);
+          }
+          this.messageService.successBubble('頁面已刪除');
+          return;
+        }
+
+        // 已儲存的頁面則呼叫後端刪除
         this.loading = true;
-        // 使用原始頁碼陣列的值，若不存在則 fallback 為 activeIndex + 1
         const origPageNo = this.pageOriginalNos[this.activeIndex] ?? (this.activeIndex + 1);
         const payload = {
           MID: this.rowdata?.ID ?? 0,
@@ -453,6 +481,9 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
                 // 同步原始頁碼陣列
                 if (this.pageOriginalNos && this.pageOriginalNos.length > this.activeIndex) {
                   this.pageOriginalNos.splice(this.activeIndex, 1);
+                }
+                if (this.pageSavedFlags && this.pageSavedFlags.length > this.activeIndex) {
+                  this.pageSavedFlags.splice(this.activeIndex, 1);
                 }
 
                 // 調整活動頁面索引
@@ -481,13 +512,19 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   }
   private applyDetail(detailList: any[]) {
     if (!detailList?.length) return;
-
     const validPages = detailList.map(d => Number(d.KB_KeyPage) > 0 ? Number(d.KB_KeyPage) : 1);
     const maxPage = Math.max(...validPages, 1);
 
+    // 建立足夠的頁面格線
     while (this.pages.length < maxPage) {
       this.pages.push(this.buildGrid(this.pages.length));
     }
+
+    // 初始化並同步 pageOriginalNos，使索引對應到後端原始頁碼
+    // 預設為 1..maxPage，之後以 detailList 中的 KB_KeyPage 實際值覆蓋
+    this.pageOriginalNos = Array.from({ length: maxPage }, (_, i) => i + 1);
+    // 初始化 saved flags：預設為 false，若 detailList 中有對應頁則設為 true
+    this.pageSavedFlags = Array.from({ length: maxPage }, () => false);
     detailList.forEach((d: any) => {
       const pageIndex = (Number(d.KB_KeyPage) > 0 ? Number(d.KB_KeyPage) : 1) - 1;
       const scanCode = d.KB_ScanCode;
@@ -531,6 +568,11 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         mergeRight,
         mergeDown
       });
+
+      // 確保原始頁碼映射正確（使用檔案中的 KB_KeyPage 原始值）
+      this.pageOriginalNos[pageIndex] = Number(d.KB_KeyPage) > 0 ? Number(d.KB_KeyPage) : (pageIndex + 1);
+      // 標記此頁為已儲存
+      this.pageSavedFlags[pageIndex] = true;
     });
 
     const first = this.pages.flat().find(k => k.KB_Func || k.KB_Display1 || k.KB_Display2);

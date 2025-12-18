@@ -1,21 +1,25 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { TLS57020Request, Tls57020Service, Tls57020TableReportData } from '@service/api/tls/tls57020.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
+import { TableReportComponent } from './tls57020-table-report/tls57020-table-report.component';
+import { formatAmount, formatDate, ReportColumn } from './tls57020-table-report/tls57020-table-report.model';
 
 @Component({
   selector: 'app-tls57020',
   templateUrl: './tls57020.component.html',
-  styleUrls: ['./tls57020.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -23,124 +27,81 @@ import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
     FormsModule,
     ReactiveFormsModule,
     DropdownComponent,
-    InputTextComponent,
     ButtonComponent,
-    TableComponent,
     TranslateModule,
+    TableReportComponent,
+    ButtonModule,
+    AsyncPipe,
+    CalendarComponent,
+    DatePipe
   ],
 })
-export class TLS57020Component {
-  ProgNo: string = '250041';
-  funInfo?: FunsrightInfo;
-
-
-
-  loading: boolean = false;
-  submitted: boolean = false;
-
+export class TLS57020Component extends BasicQueryPageComponent<Tls57020TableReportData> implements OnInit {
   queryForm = this.formBuilder.group({
-    vendorCode: [],
-    purchaseYearMonth: [],
+    VEN_No: [null],
+    ACP_YYYYMM: [new Date('2025-01-01'), [Validators.required]],
   });
-
-  // Dropdown options
-  vendorOptions: any[] = [];
-  // Table data
-  data: any[] = [
-
+  VEN_NoOptions = this.dropdown.queryPos2013({ VEN_Flag: '' })
+  data: Tls57020TableReportData | null = null;
+  historyRequestBody: TLS57020Request | null = null;
+  columns: ReportColumn[] = [
+    { field: 'TABTYPE', header: '單據種類' },
+    { field: 'PUR_GUINo', header: '發票/收據號碼' },
+    { field: 'PUR_GUIDate', header: '單據日期', format: formatDate },
+    { field: 'PUR_TotAmt', header: '發票總額', format: formatAmount, align: 'right' },
+    { field: 'PUR_TotNet', header: '未稅金額', format: formatAmount, align: 'right' },
+    { field: 'PUR_TotTax', header: '稅額', format: formatAmount, align: 'right' },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'documentType', header: '單據種類', visible: true },
-    { field: 'invoiceNumber', header: '發票收錄號碼', visible: true },
-    { field: 'documentDate', header: '單據日期', visible: true },
-    { field: 'totalInvoiceAmount', header: '發票總額', visible: true },
-    { field: 'amountExcludingTax', header: '未稅金額', visible: true },
-    { field: 'taxAmount', header: '稅額', visible: true },
+  subColumns: ReportColumn[] = [
+    { field: 'EVENT_TYPE', header: '單據別' },
+    { field: 'EVENT_No', header: '單號' },
+    { field: 'EVENT_DATE', header: '單據日期', format: formatDate },
+    { field: 'EVENT_Net', header: '未稅金額', format: formatAmount, align: 'right' },
+    { field: 'EVENT_Tax', header: '稅額', format: formatAmount, align: 'right' },
+    { field: 'EVENT_Amt', header: '應稅金額', format: formatAmount, align: 'right' },
+    { field: 'ADJ_Amt', header: '調整金額', format: formatAmount, align: 'right' },
   ];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-  ) { }
+    private readonly dropdown: DropdownApiService,
+    private readonly tls57020Service: Tls57020Service,
+    private readonly datePipe: DatePipe,
+    private readonly fileExportService: FileExportService
+  ) { super(); }
 
   ngOnInit(): void {
-    // Initialize dropdown options
-    //
-  }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
+    this.initializePage('TLS57020');
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
+    this.handleSubmit(frm, () => {
+      const body = {
+        ACP_YYYYMM: this.datePipe.transform(frm.value.ACP_YYYYMM, 'yyyyMM')!,
+        VEN_No: frm.value.VEN_No,
       };
-      this.router.navigate(['/demoCRU'], extras);
-    }
+      this.tls57020Service.queryTLS57020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+        this.data = res.Data;
+        this.historyRequestBody = body;
+      });
+    });
   }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
+  btnLoading = false;
+  onExportPDF() {
+    if (!this.historyRequestBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
     }
+    const export$ = this.tls57020Service.exportTLS57020PDF(this.historyRequestBody);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading);
   }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
+  onExportXLSX() {
+    if (!this.historyRequestBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
+    }
+    const export$ = this.tls57020Service.exportTLS57020Excel(this.historyRequestBody);
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading
+    );
   }
 }

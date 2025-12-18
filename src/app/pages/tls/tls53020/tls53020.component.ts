@@ -82,11 +82,14 @@ export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> {
     { label: '初盤', value: '1' },
     { label: '複盤', value: '2' },
     { label: '抽盤', value: '3' },
+    { label: '尚未盤點', value: '0' },
   ];
 
   columns: Column[] = [
     { field: 'PST_No', header: '盤點單編號', visible: true },
-    { field: 'LOGO_CH_NAME', header: '品牌', visible: true },
+    { field: 'LOGO_No', header: '品牌代碼', visible: true },
+    { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
+    { field: 'HOS_No', header: '倉別代碼', visible: true },
     { field: 'HOS_NAME', header: '倉別', visible: true },
     {
       field: 'PST_Date',

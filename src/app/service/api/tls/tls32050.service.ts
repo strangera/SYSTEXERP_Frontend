@@ -15,8 +15,11 @@ export interface TLS32050Request extends BaseQueryRequest {
 
   "FloorList": string, //樓層（SYS3900） → TLTTALENT_LOCATION.tlt_floor (多選條件（逗號分隔，例如 "1,2,3"）。NULL 或空字串代表不篩選。)
   "AreaList": string, //區域（SYS3A00） → TLTTALENT_LOCATION.area_no (多選)
-  "BusTypeList": string, //大分類 → TLTTALENT.bus_type (多選)
-  "BusClassList": string, //中分類 → TLTTALENT.bus_class (多選)
+  "BusTypeList": string[], //大分類 → TLTTALENT.bus_type (多選)
+  "BusClassList": { //中分類 → TLTTALENT.bus_class (多選)
+    "BusType": string;
+    "BusClass": string;
+  }[],
   "TltKindList": string, // 櫃別（SYS1000 TLT_Kind） → TLTTALENT.tlt_kind (多選)
   "OrgList": string, // 組織 → TLTTALENT.org_id (多選)
   "TltNoList": string, // 專櫃編號 → TLTTALENT.tlt_no
@@ -60,13 +63,18 @@ export interface TLS32050DetailRequest extends BaseQueryRequest {
   "BaseDateTo": string, // 基準日期訖
   "CompareDateFrom": string, // 比較日期起
   "CompareDateTo": string, // 比較日期訖
-  "OrgId": string, // 組織 → TLTTALENT.org_id (多選) 
-  "BusClass": string, //中分類 → TLTTALENT.bus_class (多選)
+  "OrgId": string, // 組織 →
+  "BusClass": string, // 中分類 →
+  "TltKind": string, //櫃別 →
   "AmtTaxMode": string, // 銷售金額是否含稅：'G' = 含稅 (AVN_TotSaleAmt), 'N' = 未稅 (AVN_TotSaleNet). Default: 'G'
   "ReceFilter": string  // 是否開立業主發票：'A' = 全部 (default), 'Y' = 是, 'N' = 否
   "FloorList": string, //樓層（SYS3900） → TLTTALENT_LOCATION.tlt_floor (多選條件（逗號分隔，例如 "1,2,3"）。NULL 或空字串代表不篩選。)
   "AreaList": string, //區域（SYS3A00） → TLTTALENT_LOCATION.area_no (多選)
-  "BusTypeList": string, //大分類 → TLTTALENT.bus_type (多選)
+  "BusTypeList": string[], //大分類 → TLTTALENT.bus_type (多選)
+  "BusClassList": { //中分類 → TLTTALENT.bus_class (多選)
+    "BusType": string;
+    "BusClass": string;
+  }[],
   "TltKindList": string, // 櫃別（SYS1000 TLT_Kind） → TLTTALENT.tlt_kind (多選)
   "TltNoList": string, // 專櫃編號 → TLTTALENT.tlt_no
   "TermTypeList": string, // 抽成別 → TLTTALENT.tlt_term_type
@@ -118,5 +126,19 @@ export class TLS32050Service {
   // 查詢中分類業績 明細表
   queryTLS32050Detail(data: TLS32050DetailRequest): Observable<BaseQueryResponse<TLS32050DetailResponse>> {
     return this.http.post<BaseQueryResponse<TLS32050DetailResponse>>(`${this.apiUrl}/queryTLS32050Detail`, data);
+  }
+
+  // 匯出 中分類業績 報表
+  exportTLS32050(request: TLS32050Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS32050`, request, {
+      responseType: 'blob'
+    });
+  }
+
+  // 匯出 中分類業績 報表
+  exportTLS32050PDF(request: TLS32050Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS32050PDF`, request, {
+      responseType: 'blob'
+    });
   }
 }

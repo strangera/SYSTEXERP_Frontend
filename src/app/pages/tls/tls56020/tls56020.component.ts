@@ -1,14 +1,17 @@
+import { AsyncPipe, NgIf, NgStyle } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls52010Service } from '@service/api/tls/tls52010.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AccordionModule } from 'primeng/accordion';
+import { Button } from 'primeng/button';
 import { finalize, map } from 'rxjs/operators';
 import { Tls56020Service } from '../../../service/api/tls/tls56020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -23,6 +26,11 @@ import {
   TLS56020_COLUMNS,
   buildTLS56020QueryBody,
 } from './tls56020.model';
+export enum POStatus {
+  已申請 = '1',
+  已審核 = '2',
+  已領用 = '3',
+}
 
 interface IQueryPOS2004DetailRequest {
   queryNo?: string;
@@ -44,6 +52,9 @@ interface IQueryPOS2004DetailResponse {
   styleUrls: ['./tls56020.component.scss'],
   standalone: true,
   imports: [
+    NgStyle,
+    NgIf,
+    AsyncPipe,
     MenubarComponent,
     ButtonComponent,
     AccordionModule,
@@ -57,6 +68,7 @@ interface IQueryPOS2004DetailResponse {
     MultiSelectComponent,
     DropdownTableComponent,
     InputNumberComponent,
+    Button
   ],
 })
 export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> implements OnInit {
@@ -86,14 +98,15 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
     { label: '贈品領用', value: '1' },
     { label: '公關活動', value: '2' },
   ];
-  issuanceNoteStatusOptions: { label: string; value: string }[] = [
-    { label: '已申請', value: '1' },
-    { label: '已審核', value: '2' },
-    { label: '已領用', value: '3' },
-    { label: '已作廢', value: '9' },
-  ];
-  userOptions: { label: string; value: string }[] = [];
 
+  btnLoading = false;
+  selectedItems: TLS56020Item[] = [];
+  selectedCount = 0;
+  auditLoading = false; // 單據審核 loading
+  issueLoading = false; // 領用 loading
+
+  userOptions: { label: string; value: string }[] = [];
+  issuanceNoteStatusOptions = getSYS1000Options('SPM_Status');
   // 清單
   data: TLS56020Item[] = [];
   totalRecords = 0;
@@ -194,16 +207,19 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
   // 自動完成輸入
   onAutoCompleteInputChange(event: any) {
     const body = {
-      ...event,
-      VEN_No: '',
-      LOGO_No: '',
-      queryNo: event.PLU_MagNo || '',
-      pageSize: 30,
-      pageIndex: 1,
+      PageSize: 30,
+      PageIndex: 1,
+      OrderBy: '',
+      Offset: 0,
       SortBy: [{ field: 'PLU_MagNo', order: 1 }],
-    }
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
+      queryNo: event.PLU_MagNo || event.queryNo || '',
+      PLU_Name: event.PLU_Name || '',
+      LOGO_No: (this.queryForm.controls.LOGO_NoList.value || [])[0] ?? '',
+      HOS_No: (this.queryForm.controls.HOS_NoList.value || [])[0] ?? '',
+    };
+    this.tls52010Service.queryPOS2004Detail_TLS56020(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      const data = results?.Data ?? [];
+      this.suggestions = [...data.map((item: any) => ({
         ...item,
         label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo,
       }))];
@@ -212,15 +228,75 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
   onformValueChanged(event: IQueryPOS2004DetailRequest) {
     this.opLoading = true;
     const body = {
-      queryNo: event.queryNo || '',
+      PageSize: 30,
+      PageIndex: 1,
+      OrderBy: '',
+      Offset: 0,
+      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
+      queryNo: (event as any).queryNo || (event as any).PLU_MagNo || '',
       PLU_Name: event.PLU_Name || '',
-      VEN_No: '',
-      LOGO_No: '',
+      LOGO_No: (this.queryForm.controls.LOGO_NoList.value || [])[0] ?? '',
+      HOS_No: (this.queryForm.controls.HOS_NoList.value || [])[0] ?? '',
     };
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.opData = [...results.Data]; // 更新data資料
-      this.opTotalRecords = results.TotalCount;
+    this.tls52010Service.queryPOS2004Detail_TLS56020(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.opData = [...(results?.Data ?? [])]; // 更新data資料
+      this.opTotalRecords = results?.TotalCount ?? 0;
       this.opLoading = false;
     });
+  }
+  canAuditSelected(): boolean {
+    return (
+      this.selectedItems.length > 0 &&
+      this.selectedItems.every(x => x.SPM_Status === POStatus.已申請)
+    );
+  }
+  canIssueSelected(): boolean {
+    return (
+      this.selectedItems.length > 0 &&
+      this.selectedItems.every(x => x.SPM_Status === POStatus.已審核)
+    );
+  }
+
+  onAuditClick() {
+    this.auditLoading = true;
+    this.batchStatusChange(POStatus.已審核);
+  }
+
+  onIssueClick() {
+    this.issueLoading = true;
+    this.batchStatusChange(POStatus.已領用);
+  }
+  onSelectionChange(items: TLS56020Item[]) {
+    this.selectedItems = items;
+    this.selectedCount = items.length;
+  }
+
+  isRowSelectable(rowData: TLS56020Item): boolean {
+    return rowData?.SPM_Status !== POStatus.已領用;
+  }
+
+  batchStatusChange(targetStatus: POStatus) {
+    const payload = {
+      DetailList: this.selectedItems.map(item => ({
+        SPM_No: item.SPM_No,
+        SPM_Status: targetStatus,
+      })),
+    };
+
+    this.tls56020Service.updateStatusTLS56020(payload)
+      .pipe(finalize(() => this.resetButtonLoading()))
+      .subscribe({
+        next: () => {
+          this.messageService.successBubble('狀態更新成功');
+          this.selectedItems = [];
+          this.selectedCount = 0;
+          this.onSubmit(this.queryForm);
+        },
+
+      });
+  }
+  resetButtonLoading() {
+    this.auditLoading = false;
+    this.issueLoading = false;
   }
 }

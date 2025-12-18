@@ -1,23 +1,24 @@
-import { saveAs } from 'file-saver';
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { IQueryData, IQueryRequest, TLS2E080Service } from '@service/api/tls/tls2e080.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { saveAs } from 'file-saver';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize, map } from 'rxjs';
+import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { IQueryData, IQueryRequest, TLS2E080Service } from '@service/api/tls/tls2e080.service';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { getSYS1000Options } from '@service/system/sys1000.service';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { AsyncPipe } from '@angular/common';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { finalize, map } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ButtonModule } from 'primeng/button';
 import { Tls2e080TableReportComponent } from './tls2e080-table-report/tls2e080-table-report.component';
 
 // 2.2.14.8 專櫃對帳單
@@ -73,7 +74,7 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
     { field: 'money_type_name', header: '結帳方式', visible: true },
     { field: 'sam_termno', header: '帳次', visible: true },
     { field: 'tlt_term_type_name', header: '抽成方式', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true, type: 'button', link: true },
     { field: 'contract_no', header: '契約編號', visible: true },
     { field: 'contract_subno', header: '版次', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
@@ -174,5 +175,46 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
         const blob = new Blob([response.body], { type: 'application/zip' });
         return { blob, filename };
       }), untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(data => { saveAs(data.blob, data.filename); });
+  }
+
+  onSelectButton(event: IQueryData) {
+    const selectedItems = [event]
+    const body = {
+      exportList: selectedItems.map(item => {
+        let sam_yyymm_string = '';
+        if (item.sam_yyymm) {
+          const date = new Date(item.sam_yyymm);
+          // 格式化為 yyyyMM
+          const year = date.getFullYear();
+          const month = (date.getMonth() + 1).toString().padStart(2, '0');
+          sam_yyymm_string = `${year}${month}`;
+        }
+        // 假設 sam_yyymm 格式為 'YYYYMM'，例如 '202509'
+        const year = parseInt(sam_yyymm_string.substring(0, 4), 10);
+        const month = parseInt(sam_yyymm_string.substring(4, 6), 10) - 1; // 月份從0開始，所以要減1
+        // 啟始日：設定為該月的第一天
+        const sad_date_Start = new Date(year, month, 1);
+        // 結束日：透過設定為下個月的第一天，再往前推一天，來取得該月的最後一天
+        const sad_date_End = new Date(year, month + 1, 0);
+
+        return {
+          talent_id: item.talent_id,
+          sam_yyymm: item.sam_yyymm,
+          sad_date_Start: sad_date_Start,
+          sad_date_End: sad_date_End,
+          money_type: item.money_type,
+          money_type_name: item.money_type_name,
+          sam_termno: item.sam_termno,
+          tlt_term_type: item.tlt_term_type,
+          tlt_term_type_name: item.tlt_term_type_name
+        };
+      })
+    };
+    this.tls2e080Service.PrintTLS2E080PDF(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+      const url = res.Data?.url || '';
+      if (url) {
+        window.open(environment.ApiUrl + url);
+      }
+    });
   }
 }

@@ -35,7 +35,8 @@
         </div>
         <div *ngIf="isFormCreateable" class="col-12 md:col-6 lg:col-3">
           <app-dropdown label="單據種類" controlName="TABTYPE" [options]="TABTYPEOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.TABTYPE" [submitted]="submitted"></app-dropdown>
+            optionValue="value" [control]="dataForm.controls.TABTYPE" [submitted]="submitted"
+            (valueChange)="onTabTypeChange($event)"></app-dropdown>
         </div>
         <div class="col-12" *ngIf="isFormCreateable">
           <app-button label="匯入當月驗收單" (click)="onImport()" [disabled]="!dataForm.valid" />
@@ -104,7 +105,7 @@
   </p-panel>
 </div>
 
-<app-tls55040-good-data-dialog [(visible)]="ODMVisible" [venNo]="dataForm.controls.VEN_No.value"
+<app-tls55040-good-data-dialog *ngIf="ODMVisible" [(visible)]="ODMVisible" [venNo]="dataForm.controls.VEN_No.value"
   [acpYYYYMM]="datePipe.transform(dataForm.controls.ACP_YYYYMM.value, 'yyyyMM')" [existingDocs]="APS30181Data"
   (itemsImported)="onImportItems($event)">
 </app-tls55040-good-data-dialog>

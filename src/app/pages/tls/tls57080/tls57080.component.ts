@@ -197,7 +197,7 @@ export class TLS57080Component extends BasicQueryPageComponent<QueryTLS57080Deta
   opForm2 = this.formBuilder.group({
     PLU_No: [null, [Validators.maxLength(20)]], // 國際條碼
     PLU_Name: [null, [Validators.maxLength(60)]], // 商品名稱
-    LOGO_No: [null, [Validators.maxLength(60)]], // 品牌代號
+    LOGO_No: [null, [Validators.maxLength(60)]], // 品牌代碼
     ...createPaginationConfig([{ field: 'PLU_No', order: 1 }]), // 分頁和排序參數
   });
   suggestions2: QueryPOS2005PLUNoResponse[] = [];

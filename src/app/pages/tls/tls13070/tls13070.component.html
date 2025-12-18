@@ -12,13 +12,14 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="大分類代號" controlName="bus_typeList" [options]="BUS_TypeOptions | async"
+            <app-multi-select label="大分類代號" controlName="bus_typeList" [options]="BUS_TypeOptions | async"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.bus_typeList"
-              [submitted]="submitted"></app-dropdown>
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="專櫃編號" controlName="tlt_noList" [control]="queryForm.controls.tlt_noList"
-              [submitted]="submitted"></app-input-text>
+            <app-multi-select label="專櫃編號" controlName="tlt_noList" [control]="queryForm.controls.tlt_noList"
+              [submitted]="submitted" [options]="Tlt_NoOptions | async" optionLabel="label"
+              optionValue="value"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="櫃位名稱" controlName="tlt_name" [control]="queryForm.controls.tlt_name"

@@ -38,7 +38,7 @@
                       [options]="service.podTypeItems"
                       optionLabel="label"
                       optionValue="value"
-                      [disabled]="true"
+                      [disabled]="!0"
                       [control]="df().pod_type"
                       [loading]="loading"
                       [submitted]="submitted"></app-dropdown>
@@ -102,16 +102,15 @@
                       [mode]="'basic'"
                       [accept]="'.xlsx,.xls,.csv,.ods'"
                       chooseLabel="選擇 Excel 檔案"
-                      [auto]="true"
-                      [customUpload]="true"
+                      [auto]="!0"
+                      [customUpload]="!0"
                       (uploadHandler)="handleUpload($event)"></p-fileUpload>
         <app-button btnType="CSV"
                     label="匯出 Excel 樣本"
                     (click)="onExportExcelTemplate()"></app-button>
         <app-button btnType="submit"
                     label="存檔"
-                    [loading]="loading"
-                    [disabled]="isSubmitDisabled()"></app-button>
+                    [loading]="loading"></app-button>
       </div>
       }
     </form>
@@ -124,7 +123,7 @@
     <div class="col-12">
       <p-panel header="專櫃資料"
                class="line-height-3 m-0 mb-3">
-        <app-table-edit #dt
+        <!-- <app-table-edit #dt
                         [tableKey]="'TLS26080_Counter'"
                         [data]="tableData()"
                         (dataChange)="tableData.set($event)"
@@ -138,10 +137,53 @@
                         [canInsert]="!1"
                         [tableRequired]="!0"
                         [showInsert]="!isFormReadable"
-                        [showReorder]="!isFormReadable"
+                        [showReorder]="!1"
                         [disabled]="isFormReadable"
-                        [loading]="tableLoading()">
-        </app-table-edit>
+                        [loading]="tableLoading()"></app-table-edit> -->
+        <app-table #dt
+                   [tableKey]="'TLS26080_Counter'"
+                   [dataKey]="'id'"
+                   [data]="tableData()"
+                   (dataChange)="tableData.set($event)"
+                   (fieldChange)="fieldChanges.set($event)"
+                   [selectedItems]="selectedItems()"
+                   (selectionChange)="selectedItems.set($event)"
+                   [isRowSelectable]="isRowSelectable"
+                   [columns]="counterColumns()"
+                   [columnGroup]="counterColumnsGroup"
+                   [showInsert]="!isFormReadable"
+                   [showDelete]="!isFormReadable"
+                   [showEdit]="!isFormReadable"
+                   [showCheckBox]="!isFormReadable"
+                   [showRowEdit]="!isFormReadable"
+                   [alwaysEdit]="!isFormReadable"
+                   (insert)="displayDialog.set(!0)"
+                   [disabled]="isFormReadable"
+                   (delete)="onDelete()"
+                   (lazyLoadData)="onLazyLoadData($event, dataForm); service.loadTLS26080Detail(df().pod_no.value ?? '')"
+                   [lazy]="!0"
+                   [loading]="tableLoading()">
+          <header>
+            <div class="flex align-items-center mb-4">
+              <p-button label="審核/反審核"
+                        severity="primary"
+                        (click)="toggleApprovalStatus(selectedItems(), 'A'); loading = !0"
+                        [disabled]="!selectedItems().length"
+                        [ngStyle]="{ height: '18px',
+                                     fontSize: '12px',
+                                     padding: '0 4px',
+                                     marginRight: '7px' }"></p-button>
+              <p-button label="反審核"
+                        severity="danger"
+                        (click)="toggleApprovalStatus(selectedItems(), 'R'); loading = !0"
+                        [disabled]="!selectedItems().length"
+                        [ngStyle]="{ height: '18px',
+                                     fontSize: '12px',
+                                     padding: '0 4px',
+                                     marginRight: '7px' }"></p-button>
+            </div>
+          </header>
+        </app-table>
       </p-panel>
     </div>
   </div>

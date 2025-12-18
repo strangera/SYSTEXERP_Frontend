@@ -36,8 +36,8 @@ export interface TLS24010Data {
   TXN_TaxType: string,
   TXN_TaxFreeCertNo: string,
   GUI_Track: string,
-  TXN_GUIBegNo: string,
-  TXN_GUIEndNo: string,
+  TXN_GUIBegNo: string, // 發票號碼起號
+  TXN_GUIEndNo: string, // 發票號碼訖號
   TXN_CustCnt: number,
   TXN_MemCard: string,
   TXN_Uniform: string,
@@ -54,6 +54,8 @@ export interface TLS24010Data {
   talent_id?: number; // 專櫃合約編號
   TXN_GUIPaper?: string; // 補登類別
   type?: string; // 修正類型
+
+  TXN_Ret_No?: string; // 折讓單號
 }
 
 export interface POS5007Data {

@@ -1,21 +1,20 @@
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 // Shared
+import { TranslateModule } from '@ngx-translate/core';
+import { APS1002, FIN21010Response, Fin21010Service } from '@service/api/fin/fin21010.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { apiOption } from '@shared/models/sys/sysb000.model';
+import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column } from '@shared/componentkit/table/table.model';
-import { apiOption } from '@shared/models/sys/sysb000.model';
-import { APS1002, FIN21010Response, Fin21010Service } from '@service/api/fin/fin21010.service';
 
 //1.2.1.1 公司銀行資料維護
 @Component({
@@ -23,7 +22,7 @@ import { APS1002, FIN21010Response, Fin21010Service } from '@service/api/fin/fin
   templateUrl: './fin21010.component.html',
   styleUrl: './fin21010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, InputTextComponent, InputNumberComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, InputTextComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
 })
 export class FIN21010Component extends BasicQueryPageComponent<APS1002> implements OnInit {
   // 查詢
@@ -214,7 +213,7 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
       this.BNK_AccType_Option = list.map((item: any) => ({
         No: item.No, // 存款代號 代號
         Name: item.Name, // 存款代號 名稱
-        
+
       }));
       console.log('SYS1000.BNK_ACCTYPE 存款代號:', this.BNK_AccType_Option);
     });
@@ -249,17 +248,17 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
     });
 
     // 查 APS1004 -- 下拉選單(
-      // No: BNK_NO+BNK_BRANCHNO銀行代碼、
-      // Name: 銀行名稱BNK_BRANCHNAME
-      // ) 範圍: 全找
-      this.dropdownApiService.queryAps1001({"SearchKeyword": ""}).pipe(untilDestroyed(this)).subscribe((response) => {
-        const list = Array.isArray(response) ? response : [];
-        this.APS1004_Option = list.map((item: any) => ({
-          No: item.No, // 全省銀行 代碼
-          Name: item.Name, // 全省銀行 名稱
-          Label: item.No + '-' + item.Name, // 代號+名稱
-        }));
-        console.log('全省銀行代碼:', this.APS1004_Option);
-      });
+    // No: BNK_NO+BNK_BRANCHNO銀行代碼、
+    // Name: 銀行名稱BNK_BRANCHNAME
+    // ) 範圍: 全找
+    this.dropdownApiService.queryAps1001({ "SearchKeyword": "" }).pipe(untilDestroyed(this)).subscribe((response) => {
+      const list = Array.isArray(response) ? response : [];
+      this.APS1004_Option = list.map((item: any) => ({
+        No: item.No, // 全省銀行 代碼
+        Name: item.Name, // 全省銀行 名稱
+        Label: item.No + '-' + item.Name, // 代號+名稱
+      }));
+      console.log('全省銀行代碼:', this.APS1004_Option);
+    });
   }
 }

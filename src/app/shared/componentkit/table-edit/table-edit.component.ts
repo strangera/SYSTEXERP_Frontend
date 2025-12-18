@@ -86,6 +86,7 @@ export class TableEditComponent implements OnChanges {
   @Input() showDelete = true;                 // 是否顯示 刪除按鈕
   @Output() delete = new EventEmitter<any>(); // 刪除事件
   @Input() showInsert = false;                // 是否顯示 新增按鈕
+  @Input() insertText = '';               // 新增按鈕文字
   @Input() insertDisabled = false;            // 新增按鈕是否禁用
   @Output() insert = new EventEmitter<any>(); // 新增事件
   // Header(右) 相關
@@ -254,22 +255,18 @@ export class TableEditComponent implements OnChanges {
     this.tableDataEmpty = false;
     if ((col as any).isUserInput === true && rowData._isAutoInsertCandidate) {
       rowData._isAutoInsertCandidate = false;
-      // 標示這筆為 New（避免共通把它當成舊資料）
-      rowData[this.dataStatusField] = this.dataStatusValue.New;
+      rowData[this.dataStatusField] = this.dataStatusValue.New;// 標示這筆為 New（避免共通把它當成舊資料）
     }
-    this.validationService.validateField(rowData, col, value, this._tableData);
-    // 執行所有狀態轉換、計算、驗證和自動新增邏輯
+    // 1. 先更新 rowData 當下的值 (這很重要，否則 Service 拿不到最新值去計算)
+    rowData[col.field] = value;
+    // 2. 呼叫 Service 進行「該欄位」引發的計算與狀態更新
     const { shouldInsertNewRow, cleanData } = this.dataService.updateRowOnValueChange(
       rowData, value, col, index,
-      this.columns,
-      this.dataKey,
-      this.dataStatusField,
-      this.dataStatusValue,
-      this.keepDeletedData,
-      this.canInsert,
-      this.rowValidate,
-      this.defaultInsertData
+      this.columns, this.dataKey, this.dataStatusField, this.dataStatusValue,
+      this.keepDeletedData, this.canInsert, this.rowValidate, this.defaultInsertData
     );
+    // 3. 執行驗證 (計算完後驗證才準確)
+    this.validationService.validateField(rowData, col, value, this._tableData);
     // 確保空表時也能插入新增行（這是舊邏輯，保持在 Component 端）
     if (this._tableData.length === 0 && this.canInsert) {
       this.insertRow();

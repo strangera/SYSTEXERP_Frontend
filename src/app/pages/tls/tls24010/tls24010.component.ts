@@ -29,7 +29,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { STORE_WAY, TLS24010_EDIT_TYPE } from '../tls24010-cru/tls24010-cru.model';
 import { AddButton, formatDateToYYYY_MM_DD } from './../../../shared/componentkit/table/table.model';
-import { columns, FIX_TYPE, TXN_GUIPaperOptions, txnStatusOptions } from './tls24010.model';
+import { C_columns, columns, FIX_TYPE, TXN_GUIPaperOptions, txnStatusOptions } from './tls24010.model';
 // 交易補登作業
 @Component({
   selector: 'app-tls24010',
@@ -138,7 +138,22 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         this.totalRecords = res.TotalCount;
         this.isTXN_GUIPaper = frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C';
         if (frm.get('TXN_GUIPaper')?.value === 'C') {
-          this.addButton = [];
+          this.addButton = [
+            {
+              label: '列印折讓單',
+              icon: 'pi pi-print',
+              action: (rowdata: TLS24010Data) => {
+                if (!rowdata.TXN_Ret_No) {
+                  this.messageService.errorBubble('無折讓單號，無法列印折讓單');
+                  return;
+                }
+                this.tls24010Service.printTLS24010(rowdata?.TXN_Ret_No || '').pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+                  window.open(environment.ApiUrl + res.Data.Print_URL, '_blank');
+                  this.onSubmit(this.queryForm);
+                })
+              },
+            }
+          ];
         } else {
           this.addButton = [
             {
@@ -172,9 +187,29 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   // 編輯補登資料
   onEditData(rowData: TLS24010Data, type: string): void {
     if (type === FIX_TYPE.交易資料作廢) {
+      // 1. 取得原始交易日期
+      const orgDate = rowData.TXN_Date; // 假設 TXN_Date 格式為 'YYYY-MM-DD'，可以直接被 new Date() 解析
+
+      // 2. 判斷是否跨期
+      const isCross = this.isCrossPeriod(orgDate);
+
+      let headerMessage: string;
+      let confirmMessage: string;
+
+      if (isCross && rowData.TXN_GUIBegNo !== '00000000') {
+        // 跨期：應開立折讓單
+        headerMessage = `開立折讓單`;
+        confirmMessage = `此筆交易已跨期，需進行開立折讓單作業。確定要開立折讓單嗎?`;
+      } else {
+        // 未跨期：作廢交易資料
+        headerMessage = `作廢交易資料`;
+        confirmMessage = `此筆交易未跨期，確定要作廢交易資料嗎?`;
+      }
+
+      // 3. 呼叫確認服務
       this.messageService.confirm({
-        header: '作廢交易資料',
-        message: '確定要作廢交易資料嗎?',
+        header: headerMessage,
+        message: confirmMessage,
         accept: () => {
           const data = {
             Store_way: rowData.store_way || '',
@@ -336,6 +371,15 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       this.cdr.markForCheck();
       form.get('ECR_No')?.setValue(null);
       form.get('TXN_No')?.setValue(null);
+      this.columns = columns;
+    } else if (value === 'C') {
+      form.get('ECR_No')?.setValidators(null);
+      form.get('TXN_No')?.setValidators([Validators.maxLength(8), Validators.max(99999999)]);
+      form.updateValueAndValidity();
+      this.cdr.markForCheck();
+      form.get('ECR_No')?.setValue(null);
+      form.get('TXN_No')?.setValue(null);
+      this.columns = C_columns;
     } else {
       // 移除必填驗證規則，保留其他規則
       form.get('ECR_No')?.setValidators(null);
@@ -344,6 +388,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       this.cdr.markForCheck();
       form.get('ECR_No')?.setValue(null);
       form.get('TXN_No')?.setValue(null);
+      this.columns = columns;
     }
   }
   btnLoading = false;
@@ -412,5 +457,28 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     }
 
     return `download${defaultExtension}`;
+  }
+
+  /**
+ * 判斷作廢是否跨期 (模擬後端邏輯)
+ * 根據台灣發票每兩個月一期的規則判斷。
+ * @param orgDateString 原始日期的字串 (例如 'YYYY-MM-DD')
+ * @returns boolean 是否跨期
+ */
+  private isCrossPeriod(orgDateString: string): boolean {
+    // 原始日期
+    const orgDate = new Date(orgDateString);
+    const orgYear = orgDate.getFullYear();
+    // Month 是 0-11，所以不用減 1
+    // (Month / 2) + 1 即可得到期數 (1月-2月是第1期, 3月-4月是第2期, ...)
+    const orgPeriod = Math.floor(orgDate.getMonth() / 2) + 1;
+
+    // 作廢日期 (現在時間)
+    const voidDate = new Date();
+    const voidYear = voidDate.getFullYear();
+    const voidPeriod = Math.floor(voidDate.getMonth() / 2) + 1;
+
+    // 年度或期數不同即為跨期
+    return orgYear !== voidYear || orgPeriod !== voidPeriod;
   }
 }

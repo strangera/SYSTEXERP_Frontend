@@ -415,7 +415,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
 
-  // 管理編號表單邏輯
+  // #region 商品管理編號/國際條碼/廠商貨號 
   opLoading = false;
   opForm = this.formBuilder.group({
     PLU_MagNo: ['', [Validators.maxLength(20)]],   // ← 新增這行（關鍵修正）
@@ -449,6 +449,35 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
         ...item,
         label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo,
       }))];
+
+      // **********************************************
+      // 2. 新增邏輯：檢查是否有精確匹配的單一結果
+      //    (假設使用者在欄位中輸入的內容，會精確匹配到 suggestions 的其中一項，
+      //     且通常只有一個結果時，代表精確命中。)
+      const inputVal = event.PLU_MagNo || '';
+
+      // 找到完全匹配 PLU_MagNo 或 PLU_No 或 PLU_OrgPLUNo 的項目
+      const exactMatch = results.Data.find(
+        item => item.PLU_MagNo === inputVal || item.PLU_No === inputVal || item.PLU_OrgPLUNo === inputVal
+      );
+
+      if (exactMatch && results.Data.length === 1) {
+        // 如果精確匹配到一個項目，則更新主查詢表單的其他欄位
+        console.log('精確匹配，同步欄位:', exactMatch);
+        this.queryForm.patchValue({
+          PLU_MagNo: exactMatch.PLU_MagNo || '',
+          PLU_No: exactMatch.PLU_No || '',
+          PLU_OrgPLUNo: exactMatch.PLU_OrgPLUNo || '',
+        });
+      } else if (!inputVal) {
+        // 如果輸入欄位清空了，也清空 queryForm 的相關欄位
+        this.queryForm.patchValue({
+          PLU_MagNo: '',
+          PLU_No: '',
+          PLU_OrgPLUNo: '',
+        });
+      }
+      // **********************************************
     });
   }
   onformValueChanged(event: IQueryPOS2004DetailRequest) {

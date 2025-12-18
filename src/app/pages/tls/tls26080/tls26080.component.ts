@@ -66,6 +66,25 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     { field: 'pod_status', header: '狀態', format: this.service.approvalStatus.bind(this) },
   ];
 
+  // public readonly addButton = computed((): AddButton[] => {
+  //   const approval = (rowData: TLS26080Data) => {
+  //     this.service.loadApproval(rowData).subscribe(this.onSubmit.bind(this));
+  //   };
+
+  //   return [
+  //     {
+  //       label: '核准', icon: 'pi pi-check-circle text-green-500',
+  //       action: approval,
+  //       disabled: (rowData: TLS26080Data) => rowData.pod_status !== ApprovalStatus.未核准,
+  //     },
+  //     {
+  //       label: '反核准', icon: 'pi pi-undo text-orange-500',
+  //       action: approval,
+  //       disabled: (rowData: TLS26080Data) => rowData.pod_status !== ApprovalStatus.已核准,
+  //     },
+  //   ];
+  // });
+
   public readonly tableLoading = signal<boolean>(!1);
   public readonly deleteLoading = signal<boolean>(!1);
 

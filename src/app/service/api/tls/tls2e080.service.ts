@@ -78,4 +78,8 @@ export class TLS2E080Service {
   queryTLS2E080(params: IQueryRequest): Observable<ApiResponse<IQueryData[]>> {
     return this.http.post<ApiResponse<IQueryData[]>>(`${this.apiUrl}/queryTLS2E080`, params);
   }
+
+  PrintTLS2E080PDF(data: IExportPDFRequest): Observable<ApiResponse<{ url: string }>> {
+    return this.http.post<ApiResponse<{ url: string }>>(`${this.apiUrl}/printTLS2E080PDF`, data);
+  }
 }

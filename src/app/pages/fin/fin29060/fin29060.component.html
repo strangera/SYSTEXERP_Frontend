@@ -71,7 +71,7 @@
     <app-fin29060-table-subheader [data]="data" [columns]="columns" [totalRecords]="totalRecords"
       [lastQueryBody]="lastQueryBody" [queryFunction]="fin29060Service.queryFIN29060.bind(fin29060Service)"
       [lazyBatchSize]="lazyBatchSize" [showManage]="false" (dataChange)="data = $event" [groupRowsBy]="'VendorNo'"
-      [fullData]="fullData" [groupRowsByName]="'廠商編號'" [showSubTotal]="true" [showTotal]="true"
+      [fullData]="fullData" [totalData]="totalData" [groupRowsByName]="'廠商編號'" [showSubTotal]="true" [showTotal]="true"
       (detailWithColValue)="onDetailWithColValue($event)">
       <header>
         <div class="flex justify-content-end align-items-center gap-2">

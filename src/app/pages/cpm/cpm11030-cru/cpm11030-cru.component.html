@@ -7,115 +7,134 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            [useGrouping]="false"
-            label="記錄編號"
-            controlName="recordCode"
-            [control]="dataForm.controls.recordCode"
-            [submitted]="submitted">
-          </app-input-number>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar-range
-            calendarType="dateRange"
-            label="出借日期"
-            [startControl]="dataForm.controls.borrowDateFrom"
-            [endControl]="dataForm.controls.borrowDateTo"
-            [submitted]="submitted">
-          </app-calendar-range>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
+
+        <!-- 紀錄編號（後端給，Edit/Read 顯示用） -->
+        <div class="col-12 md:col-6 lg:col-4" *ngIf="crudstatus !== CRUD.Create">
           <app-input-text
-            label="姓名"
-            controlName="name"
-            [control]="dataForm.controls.name"
-            [submitted]="submitted">
-          </app-input-text>
+            label="紀錄編號"
+            controlName="Loan_No"
+            [control]="dataForm.controls.Loan_No"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
-      </div>
 
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="出借處理人員"
-            controlName="staffName"
-            [control]="dataForm.controls.staffName"
-            [submitted]="submitted">
-          </app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            [useGrouping]="false"
-            label="連絡電話"
-            controlName="phone"
-            [control]="dataForm.controls.phone"
-            [submitted]="submitted">
-          </app-input-number>
-        </div>
+        <!-- 服務中心位置編號 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
-            label="證件類型"
-            controlName="paperType"
-            [options]="paperTypeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.paperType"
-            [submitted]="submitted">
-          </app-dropdown>
-        </div>
-      </div>
-
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            [useGrouping]="false"
-            label="證件編號"
-            controlName="paperCode"
-            [control]="dataForm.controls.paperCode"
-            [submitted]="submitted">
-          </app-input-number>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="設備名稱"
-            controlName="equipmentName"
-            [options]="equipmentNameOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.equipmentName"
-            [submitted]="submitted">
-          </app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            [useGrouping]="false"
-            label="設備編號"
-            controlName="deviceCode"
-            [control]="dataForm.controls.deviceCode"
-            [submitted]="submitted">
-          </app-input-number>
-        </div>
-      </div>
-
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="服務台位置編號"
-            controlName="counterCode"
+            label="服務中心位置編號"
+            controlName="Service_Id"
             [options]="counterCodeOptions"
             optionLabel="label"
             optionValue="value"
-            [control]="dataForm.controls.counterCode"
-            [submitted]="submitted">
-          </app-dropdown>
+            [control]="dataForm.controls.Service_Id"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
+
+        <!-- 出借日期 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="出借日期"
+            controlName="Loan_Date"
+            [control]="dataForm.controls.Loan_Date"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+
+        <!-- 出借時間 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="timeOne"
+            label="出借時間"
+            controlName="Loan_Time"
+            [control]="dataForm.controls.Loan_Time"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+
+        <!-- 出借狀態 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="出借狀態"
+            controlName="Loan_Status"
+            [options]="loanStatusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.Loan_Status"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <!-- 借用人姓名 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="借用人姓名"
+            controlName="User_Name"
+            [control]="dataForm.controls.User_Name"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <!-- 證件類型 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="證件類型"
+            controlName="Cert_Type"
+            [options]="certTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.Cert_Type"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <!-- 證件編號 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="證件編號"
+            controlName="Cert_No"
+            [control]="dataForm.controls.Cert_No"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <!-- 連絡電話 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="連絡電話"
+            controlName="Loan_Phone"
+            [control]="dataForm.controls.Loan_Phone"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <!-- 設備代碼 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="設備代碼"
+            controlName="Device_ID"
+            [control]="dataForm.controls.Device_ID"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <!-- 設備名稱 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="設備名稱"
+            controlName="Device_Name"
+            [control]="dataForm.controls.Device_Name"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
       </div>
 
-      <!-- 按鈕列：只在非 Read 模式顯示 -->
       <div
         class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
-        *ngIf="!isFormReadable">
+        *ngIf="!isRead"
+      >
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit"></app-button>
       </div>
