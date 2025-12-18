@@ -155,7 +155,6 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     { value: '3', label: '月營業報表' },
     { value: '4', label: '半年營業報表' },
     { value: '5', label: '年營業報表' },
-    // { value: '6', label: '區間營業報表' }, //本作業不使用
   ];
 
   totalRecords = 0;
@@ -170,7 +169,7 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     { field: 'OrgId', header: '樓組代碼', visible: true },
     { field: 'OrgName', header: '樓組名稱', visible: true },
     // { field: 'TltKindName', header: '櫃別名稱', visible: true },
-    { field: 'Bus_Class', header: '中分類代碼', visible: true },
+    { field: 'BusClass', header: '中分類代碼', visible: true },
     { field: 'BusClassName', header: '中分類名稱', visible: true },
     { field: 'BusSClass', header: '小分類代碼', visible: true },
     { field: 'BusSClassName', header: '小分類名稱', visible: true },
@@ -374,6 +373,7 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
       const formValue = {
         ...frm.getRawValue(),
 
+        ReportType: this.dateForm.get('reportType')?.value, // 從日期表單抓(本作業API需要)
         BaseDateFrom: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
         BaseDateTo: formatDate(frm.getRawValue().BaseDateTo, 'yyyy-MM-dd', 'en-US'),
         CompareDateFrom: formatDate(frm.getRawValue().CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
@@ -409,6 +409,7 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
       const formValue = {
         ...frm.getRawValue(),
 
+        ReportType: this.dateForm.get('reportType')?.value, // 從日期表單抓(本作業API需要)
         BaseDateFrom: formatDate(frm.getRawValue().BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
         BaseDateTo: formatDate(frm.getRawValue().BaseDateTo, 'yyyy-MM-dd', 'en-US'),
         CompareDateFrom: formatDate(frm.getRawValue().CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
