@@ -123,8 +123,8 @@ export const finRoutes: Routes = [
   // { path: 'fin25010', loadComponent: () => import('./fin25010/fin25010.component').then(m => m.FIN25010Component),data:{progNo:'FIN25010'} },
   // { path: 'fin25010cru', loadComponent: () => import('./fin25010-cru/fin25010-cru.component').then(m => m.FIN25010CRUComponent),data: { progNo: 'FIN25010'} },
   // 形成電匯明細資料
-  // { path: 'fin25020', loadComponent: () => import('./fin25020/fin25020.component').then(m => m.FIN25020Component),data:{progNo:'FIN25020'} },
-  // { path: 'fin25020cru', loadComponent: () => import('./fin25020-cru/fin25020-cru.component').then(m => m.FIN25020CRUComponent),data: { progNo: 'FIN25020'} },
+  { path: 'fin25020', loadComponent: () => import('./fin25020/fin25020.component').then(m => m.FIN25020Component), data: { progNo: 'FIN25020' } },
+  { path: 'fin25020cru', loadComponent: () => import('./fin25020-cru/fin25020-cru.component').then(m => m.FIN25020CRUComponent), data: { progNo: 'FIN25020' } },
   // 匯款銀行
   { path: 'fin26010', loadComponent: () => import('./fin26010/fin26010.component').then(m => m.FIN26010Component), data: { progNo: 'FIN26010' } },
   { path: 'fin26010cru', loadComponent: () => import('./fin26010-cru/fin26010-cru.component').then(m => m.FIN26010CRUComponent), data: { progNo: 'FIN26010' } },

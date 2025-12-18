@@ -3,7 +3,6 @@ import { Injectable, signal } from '@angular/core';
 import { FIN52010DataResponse, FIN52010UpdatePayload, FIN52010UpdateResult, GLS1005Option } from '@pages/fin/fin52010/fin52010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
 import { finalize, map, Observable, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -39,8 +38,8 @@ export class FIN52010Service {
     );
   }
 
-  public updateFIN52010Data(payload: FIN52010UpdatePayload): Observable<BaseQueryResponse<FIN52010UpdateResult>> {
-    return this.http.post<BaseQueryResponse<FIN52010UpdateResult>>(`${apiUrl}/updateFIN52010`, payload).pipe(
+  public updateFIN52010Data(payload: FIN52010UpdatePayload): Observable<FIN52010UpdateResult> {
+    return this.http.post<FIN52010UpdateResult>(`${apiUrl}/updateFIN52010`, payload).pipe(
       take(1),
       tap(res => this.logger.debug('更新FIN52010結果:', [res])),
     );
@@ -63,7 +62,7 @@ export class FIN52010Service {
     this.orgUsrLoading.set(!0);
     this.dropdownApi.queryTblUserOrgid().pipe(
       take(1),
-      map(res => res ?? []),
+      map(res => (res ?? []).map(item => ({ value: item['Org_ID'], label: `${item['Org_ID']} - ${item['Org_Name']}` }))),
       tap(res => this.orgUsrOptions.set(res)),
       finalize(() => {
         this.orgUsrLoading.set(!1);

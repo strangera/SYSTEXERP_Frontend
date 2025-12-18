@@ -5,7 +5,6 @@ import { FIN52010Service } from '@service/api/fin/fin52010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
@@ -27,7 +26,6 @@ import { FIN52010Data, FIN52010UpdatePayload } from './fin52010.model';
     TranslateModule,
     ButtonComponent,
     CalendarComponent,
-    CalendarRangeComponent,
     DropdownComponent,
     InputTextComponent,
     MenubarComponent,
@@ -37,10 +35,8 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
 
   public readonly dataForm = this.formBuilder.nonNullable.group({
     AccYear: new FormControl<string | void>(void 0, [Validators.required]),
-    OpenDate: new FormControl<Date | void>(void 0, [Validators.required]),
-    OriOpenDate: new FormControl<string | void>(void 0),
-    CloseDate: new FormControl<Date | void>(void 0, [Validators.required]),
-    OriCloseDate: new FormControl<string | void>(void 0),
+    OpenDate: new FormControl<string | void>(void 0, [Validators.required]),
+    CloseDate: new FormControl<string | void>(void 0, [Validators.required]),
     DefaultVouDate: new FormControl<Date | void>(void 0),
     ORG_ID: new FormControl<string | void>(void 0, [Validators.required]),
     AccNoTotPL: new FormControl<string | void>(void 0, [Validators.required]),
@@ -76,10 +72,8 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
     if (orgLoading || gls1005Loading) return;
     this.dataForm.patchValue({
       ...rest,
-      OpenDate: OpenDate ? new Date(+OpenDate.slice(0, 4), +OpenDate.slice(4, 6) - 1, 1) : void 0,
-      CloseDate: CloseDate ? new Date(+CloseDate.slice(0, 4), +CloseDate.slice(4, 6) - 1, 1) : void 0,
-      OriOpenDate: OpenDate,
-      OriCloseDate: CloseDate,
+      OpenDate: OpenDate,
+      CloseDate: CloseDate,
       // advanceExpenseAccNo: res.advanceExpenseAccNo,
       // billTransferCon: res.billTransferCon as 'N' | 'Y',
     });
@@ -119,14 +113,8 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
 
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      const { OriOpenDate, OriCloseDate, ...rest } = this.dataForm.value;
-      const raw = <FIN52010UpdatePayload>{
-        ...rest,
-        AccYear: this.df().AccYear.value,
-        OpenDate: OriOpenDate,
-        CloseDate: OriCloseDate,
-        CompNo: this.user!.CompNo,
-      };
+      const data = this.dataForm.getRawValue();
+      const raw = <FIN52010UpdatePayload>{ ...data, CompNo: this.user!.CompNo };
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
         v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       ));
@@ -136,8 +124,11 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
       this.service.updateFIN52010Data(payload).pipe(
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
-        next: () => this.messageService.successBubble('更新成功'),
-        error: () => this.messageService.errorBubble('更新失敗'),
+        next: res => {
+          this.tableData.set(res.Data);
+          this.messageService.successBubble(res.Message || '更新成功');
+        },
+        error: res => this.messageService.errorBubble(res.Message || '更新失敗'),
       });
     });
   };

@@ -4,6 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -32,7 +33,8 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     RadiobuttonComponent,
     InputTextareaComponent,
     PanelModule,
-    NgIf
+    NgIf,
+    CalendarComponent
   ],
 })
 export class CPM11070CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -56,7 +58,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<any> implements 
     Type4: ['', [Validators.maxLength(400)]],
     SPACE1: [''],
     PLE1: ['', [Validators.maxLength(20)]],
-    SPACE2: ['', [Validators.maxLength(20)]],
+    SPACE2: [{ value: this.user?.user_No, disabled: true }],
     SPACE3: [''],
     SPACE4: ['', [Validators.maxLength(100)]],
     USER1: ['', [Validators.maxLength(20)]],
@@ -64,6 +66,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<any> implements 
     USER3: ['', [Validators.maxLength(20)]],
     USER4: ['', [Validators.maxLength(20)]],
     USER5: [''],
+    USER6: [''],
     PHONE: ['', [Validators.maxLength(10)]],
     MOBILE: ['', [Validators.maxLength(10)]],
     ID_NUMBER: ['', [Validators.maxLength(20)]],
@@ -90,6 +93,10 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<any> implements 
   USER5Options: any[] = [
     { Name: '遊客', No: '1' },
     { Name: '員工', No: '2' },
+  ];
+  USER6Options: any[] = [
+    { Name: '男性', No: '1' },
+    { Name: '女性', No: '2' },
   ];
   columns: any[] = [
     { field: 'VouNo', header: '物品類別', visible: true },

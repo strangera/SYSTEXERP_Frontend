@@ -15,9 +15,6 @@ export const cpmRoutes: Routes = [
   { path: 'cpm11070', loadComponent: () => import('./cpm11070/cpm11070.component').then(m => m.CPM11070Component), data: { progNo: 'CPM11070' } }, // 全館店櫃資訊查詢
   { path: 'cpm11070cru', loadComponent: () => import('./cpm11070-cru/cpm11070-cru.component').then(m => m.CPM11070CRUComponent), data: { progNo: 'CPM11070' } },
   { path: 'cpm11080', loadComponent: () => import('./cpm11080/cpm11080.component').then(m => m.CPM11080Component), data: { progNo: 'CPM11080' } }, // 總機廣播服務
-  // { path: 'cpm11090', loadComponent: () => import('./cpm11090/cpm11090.component').then(m => m.Cpm11090Component),data: {progNo:'Cpm11090'} }, // 尋人登錄作業
-  // { path: 'cpm11070', loadComponent: () => import('./cpm11070/cpm11070.component').then(m => m.CPM11070Component),data: {progNo:'CPM11070'} }, // 全館店櫃資訊查詢
-  // { path: 'cpm11080', loadComponent: () => import('./cpm11080/cpm11080.component').then(m => m.Cpm11080Component),data: {progNo:'Cpm11080'} }, // 總機廣播服務
   { path: 'cpm11090', loadComponent: () => import('./cpm11090/cpm11090.component').then(m => m.Cpm11090Component), data: { progNo: 'Cpm11090' } }, // 尋人登錄作業
   { path: 'cpm11090cru', loadComponent: () => import('./cpm11090cru/cpm11090cru.component').then(m => m.CPM11090CRUComponent), data: { progNo: 'Cpm11090' } }, // 尋人登錄作業
   // { path: 'cpm11100', loadComponent: () => import('./cpm11100/cpm11100.component').then(m => m.Cpm11100Component),data: {progNo:'Cpm11100'} }, // 全館店櫃資訊查詢
