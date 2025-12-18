@@ -9,12 +9,15 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="顧客意見責任單位編號" controlName="opinionCode" [options]="opinionCodeOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.opinionCode"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="組織代碼" controlName="ORG_ID" [options]="ORG_IDOptions$ | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ORG_ID" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="責任單位名稱" controlName="unitName" [control]="queryForm.controls.unitName"
+            <app-dropdown label="類別代碼" controlName="CLASS_CODE" [options]="CLASS_CODEOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.CLASS_CODE" [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="責任單位名稱" controlName="CLASS_NAME" [control]="queryForm.controls.CLASS_NAME"
               [submitted]="submitted"></app-input-text>
           </div>
         </div>
@@ -27,8 +30,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    (delete)="onDelete($event)" [totalRecords]="totalRecords" [loading]="loading"
-    (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [lastQueryBody]="lastQuery"
-    [showDelete]="false" [queryFunction]="cpm12020Service.queryCPM12020.bind(cpm12020Service)"></app-table-report>
+  <app-table-report dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    (delete)="onDelete($event)" [totalRecords]="totalRecords" [loading]="loading" [showDelete]="true"
+    [showCheckBox]="true" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
+    [lastQueryBody]="lastQuery" [showDelete]="true"
+    [queryFunction]="cpm12020Service.queryCPM12020.bind(cpm12020Service)"></app-table-report>
 </div>
