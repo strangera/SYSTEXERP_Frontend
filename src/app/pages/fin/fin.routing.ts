@@ -135,8 +135,8 @@ export const finRoutes: Routes = [
   // { path: 'fin27020', loadComponent: () => import('./fin27020/fin27020.component').then(m => m.FIN27020Component),data:{progNo:'FIN27020'} },
   // { path: 'fin27020cru', loadComponent: () => import('./fin27020-cru/fin27020-cru.component').then(m => m.FIN27020CRUComponent),data: { progNo: 'FIN27020'} },
   // 形成電匯付款傳票
-  // { path: 'fin28010', loadComponent: () => import('./fin28010/fin28010.component').then(m => m.FIN28010Component),data:{progNo:'FIN28010'} },
-  // { path: 'fin28010cru', loadComponent: () => import('./fin28010-cru/fin28010-cru.component').then(m => m.FIN28010CRUComponent),data: { progNo: 'FIN28010'} },
+  { path: 'fin28010', loadComponent: () => import('./fin28010/fin28010.component').then(m => m.FIN28010Component), data: { progNo: 'FIN28010' } },
+  { path: 'fin28010cru', loadComponent: () => import('./fin28010-cru/fin28010-cru.component').then(m => m.FIN28010CRUComponent), data: { progNo: 'FIN28010' } },
   // 形成開票付款傳票
   // { path: 'fin28020', loadComponent: () => import('./fin28020/fin28020.component').then(m => m.FIN28020Component),data:{progNo:'FIN28020'} },
   // { path: 'fin28020cru', loadComponent: () => import('./fin28020-cru/fin28020-cru.component').then(m => m.FIN28020CRUComponent),data: { progNo: 'FIN28020'} },
@@ -331,7 +331,7 @@ export const finRoutes: Routes = [
   { path: 'fin63020', loadComponent: () => import('./fin63020/fin63020.component').then(m => m.FIN63020Component), data: { progNo: 'FIN63020' } },
   { path: 'fin63020cru', loadComponent: () => import('./fin63020-cru/fin63020-cru.component').then(m => m.FIN63020CRUComponent), data: { progNo: 'FIN63020' } },
   // 應付票據兌現作業
-  { path: 'fin63040', loadComponent: () => import('./fin63040/fin63040.component').then(m => m.FIN63040Component),data:{progNo:'FIN63040'} },
+  { path: 'fin63040', loadComponent: () => import('./fin63040/fin63040.component').then(m => m.FIN63040Component), data: { progNo: 'FIN63040' } },
   // { path: 'fin63040cru', loadComponent: () => import('./fin63040-cru/fin63040-cru.component').then(m => m.FIN63040CRUComponent),data: { progNo: 'FIN63040'} },
   // 應付票據撤票作業
   // { path: 'fin63050', loadComponent: () => import('./fin63050/fin63050.component').then(m => m.FIN63050Component),data:{progNo:'FIN63050'} },
