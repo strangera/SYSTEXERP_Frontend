@@ -57,6 +57,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public readonly dt = viewChild.required<TableEditComponent>('dt');
   public readonly fileUpload = viewChild.required<FileUpload>('fileUpload');
 
+  private fieldChangeDebounceTimer: ReturnType<typeof setTimeout> | void = void 0;
+
   private readonly usrData = computed(() => ({
     ...this.authService.currentUserValue,
   }));
@@ -152,47 +154,26 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     this.logger.debug(`isSubmitDisabled:`, [this.dataForm.valid, data]);
 
     // 基本表單驗證
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble('表單資料有誤，請確認後再送出');
-      return !0;
-    }
+    if (this.dataForm.invalid) return !0;
 
     // 至少要有一筆專櫃資料
-    if (!data.length) {
-      this.messageService.errorBubble('請至少新增一筆專櫃資料');
-      return !0;
-    };
+    if (!data.length) return !0;
 
     // 驗證表格資料的必填欄位和數值範圍
     return data.some(item => {
-      if (!item.tlt_no || !item.calc_date_type) {
-        this.messageService.errorBubble('專櫃編號及計算天數類型為必填欄位，請確認後再送出');
-        return !0;
-      };
+      if (!item.tlt_no || !item.calc_date_type) return !0;
 
       // 檢查 tpy_rate_D16 和 tpy_rate_D17 是否有值
-      if (item.tpy_rate_D16 === void 0 || item.tpy_rate_D16 === null) {
-        this.messageService.errorBubble('D16 費用比率為必填欄位，請確認後再送出');
-        return !0;
-      }
-      if (item.tpy_rate_D17 === void 0 || item.tpy_rate_D17 === null) {
-        this.messageService.errorBubble('D17 費用比率為必填欄位，請確認後再送出');
-        return !0;
-      }
+      if (item.tpy_rate_D16 === void 0 || item.tpy_rate_D16 === null) return !0;
+      if (item.tpy_rate_D17 === void 0 || item.tpy_rate_D17 === null) return !0;
 
       const rate_D16 = Number(item.tpy_rate_D16);
       const rate_D17 = Number(item.tpy_rate_D17);
-      if (isNaN(rate_D16) || isNaN(rate_D17)) {
-        this.messageService.errorBubble('D16 和 D17 費用比率必須為有效的數字，請確認後再送出');
-        return !0;
-      }
+      if (isNaN(rate_D16) || isNaN(rate_D17)) return !0;
 
       const basisPoint_D16 = Math.round(rate_D16 * 100);
       const basisPoint_D17 = Math.round(rate_D17 * 100);
-      if (basisPoint_D16 < 0 || basisPoint_D16 > 1e4 || basisPoint_D17 < 0 || basisPoint_D17 > 1e4) {
-        this.messageService.errorBubble('D16 和 D17 費用比率必須介於 0% 到 100% 之間，請確認後再送出');
-        return !0;
-      }
+      if (basisPoint_D16 < 0 || basisPoint_D16 > 1e4 || basisPoint_D17 < 0 || basisPoint_D17 > 1e4) return !0;
 
       return !1;
     });
@@ -252,76 +233,16 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     const event = this.fieldChanges();
     const index = event?.index;
     if (!event || index === void 0) return;
+    if (this.fieldChangeDebounceTimer !== void 0) clearTimeout(this.fieldChangeDebounceTimer);
 
-    const tableData = untracked(() => this.tableData());
-    const rowData = event?.rowData;
-    const talentId = tableData[index ?? 0]?.talent_id;
-    this.logger.debug(`fieldChangeEffect:`, [event, tableData, this.tltIdList()]);
+    this.fieldChangeDebounceTimer = setTimeout(() => {
+      const tableData = untracked(() => this.tableData());
+      const rowData = event?.rowData;
+      const talentId = tableData[index ?? 0]?.talent_id;
+      this.logger.debug(`fieldChangeEffect:`, [event, tableData, this.tltIdList()]);
 
-    switch (event.field) {
-      case 'tlt_no': {
-        if (!this.duplicateVal(event.value, rowData).isValid) {
-          rowData.tlt_no = tableData[event.index ?? 0].tlt_no;
-          return;
-        };
-        const payload = {
-          ...rowData,
-          tpy_rate_D16: String(rowData.tpy_rate_D16),
-          tpy_rate_D17: String(rowData.tpy_rate_D17),
-          tlt_id: '0',
-          tlt_id_desc: '',
-          tlt_no: event.value,
-          tlt_name: this.service.tltTalentMap().get(event.value)?.['Name'] || '',
-        };
-        const keyInData: TLS26080KeyInTable[] = tableData.map((td, ti) => {
-          if (ti === index) return payload;
-          return {
-            ...td,
-            tpy_rate_D16: String(String(payload.tpy_rate_D16 ?? td.tpy_rate_D16).split('%')[0]),
-            tpy_rate_D17: String(String(payload.tpy_rate_D17 ?? td.tpy_rate_D17).split('%')[0]),
-          };
-        }).filter(td => td.id !== 0 && td.id !== void 0);
-        this.logger.debug(`keyin payload:`, [payload, keyInData]);
-
-        this.service.keyInTLS26080(payload, keyInData).subscribe(res => {
-          rowData._err = !1;
-          if (res.Status !== '0000') {
-            rowData._err = !0;
-            this.messageService.errorBubble(res.Message);
-            return;
-          };
-
-          const next = res.Data.queryTLS26080_DetailResponses.pop();
-          if (!next) return;
-          this.logger.debug(`keyin:`, [next]);
-
-          this.tableData.update(td => {
-            this.updateTltIdOptions(next.talent_id);
-
-            return td.map((t, i) => {
-              if (i !== index) return t;
-              const currentTltId = this.tltIdList().get(next.talent_id)?.find(c => c.value === next.tlt_id);
-              return {
-                ...t,
-                talent_id: next.talent_id,
-                tlt_id: currentTltId?.value ?? next.tlt_id,
-                tlt_id_desc: currentTltId?.['tlt_id_desc'] ?? next.tlt_id_desc,
-              };
-            });
-          });
-          this.logger.debug(`keyin updated tableData:`, [this.tableData()]);
-          this.updateTltIdOptions(talentId);
-          return this.fieldChanges.set(void 0);
-        });
-        break;
-      }
-
-      case 'approval_action': {
-        this.toggleApprovalStatus([rowData]);
-        return this.fieldChanges.set(void 0);
-      }
-      default: return;
-    }
+      this.executeFieldChange(event, index, tableData, rowData, talentId);
+    }, 300);
   }, { allowSignalWrites: !0 });
 
   /** 根據選擇的活動更新表單 */
@@ -406,20 +327,20 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         type: this.isFormReadable ? void 0 : 'dropdown',
         showClear: !1,
         options: this.service.tltTalentOptions(),
-        optionLabel: 'No',
+        optionLabel: 'label',
         optionValue: 'No',
         templateLabel: 'label',
         validate: [validateRequired, this.duplicateVal.bind(this)],
         disabled: (r) => r.pod_status !== '0',
       },
-      {
-        field: 'tlt_name',
-        header: '專櫃名稱',
-        format: (v, i, r) => {
-          const opts = tltOpts;
-          return opts?.find(opt => opt.value === r.tlt_no)?.['Name'] ?? '';
-        }
-      },
+      // {
+      //   field: 'tlt_name',
+      //   header: '專櫃名稱',
+      //   format: (v, i, r) => {
+      //     const opts = tltOpts;
+      //     return opts?.find(opt => opt.value === r.tlt_no)?.['Name'] ?? '';
+      //   }
+      // },
       {
         field: 'tlt_id',
         header: '抽成類別',
@@ -431,14 +352,14 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         validate: [validateRequired],
         disabled: (r) => r.pod_status !== '0',
       },
-      {
-        field: 'tlt_id_desc',
-        header: '抽成類別名稱',
-        format: (v, i, r) => {
-          const opts = tltIdMap.get(r.talent_id);
-          return opts?.find(opt => opt.value === r.tlt_id)?.['tlt_id_desc'] ?? '';
-        }
-      },
+      // {
+      //   field: 'tlt_id_desc',
+      //   header: '抽成類別名稱',
+      //   format: (v, i, r) => {
+      //     const opts = tltIdMap.get(r.talent_id);
+      //     return opts?.find(opt => opt.value === r.tlt_id)?.['tlt_id_desc'] ?? '';
+      //   }
+      // },
       {
         field: 'calc_date_type',
         header: '預售起日計算',
@@ -598,7 +519,48 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       const validTableData = this.tableData().filter(item => !item._isAutoInsertCandidate);
 
       this.logger.debug(`beforeSubmit:`, [rowData, d, validTableData]);
-      if (this.isSubmitDisabled()) return void this.tableLoading.set(!1);
+
+      // 驗證邏輯與錯誤提示
+      if (this.dataForm.invalid) {
+        this.messageService.errorBubble('表單資料有誤，請確認後再送出');
+        return void this.tableLoading.set(!1);
+      }
+
+      if (!validTableData.length) {
+        this.messageService.errorBubble('請至少新增一筆專櫃資料');
+        return void this.tableLoading.set(!1);
+      }
+
+      // 逐筆驗證表格資料
+      for (const item of validTableData) {
+        if (!item.tlt_no || !item.calc_date_type) {
+          this.messageService.errorBubble('專櫃編號及計算天數類型為必填欄位，請確認後再送出');
+          return void this.tableLoading.set(!1);
+        }
+
+        if (item.tpy_rate_D16 === void 0 || item.tpy_rate_D16 === null) {
+          this.messageService.errorBubble('D16 費用比率為必填欄位，請確認後再送出');
+          return void this.tableLoading.set(!1);
+        }
+        if (item.tpy_rate_D17 === void 0 || item.tpy_rate_D17 === null) {
+          this.messageService.errorBubble('D17 費用比率為必填欄位，請確認後再送出');
+          return void this.tableLoading.set(!1);
+        }
+
+        const rate_D16 = Number(item.tpy_rate_D16);
+        const rate_D17 = Number(item.tpy_rate_D17);
+        if (isNaN(rate_D16) || isNaN(rate_D17)) {
+          this.messageService.errorBubble('D16 和 D17 費用比率必須為有效的數字，請確認後再送出');
+          return void this.tableLoading.set(!1);
+        }
+
+        const basisPoint_D16 = Math.round(rate_D16 * 100);
+        const basisPoint_D17 = Math.round(rate_D17 * 100);
+        if (basisPoint_D16 < 0 || basisPoint_D16 > 1e4 || basisPoint_D17 < 0 || basisPoint_D17 > 1e4) {
+          this.messageService.errorBubble('D16 和 D17 費用比率必須介於 0% 到 100% 之間，請確認後再送出');
+          return void this.tableLoading.set(!1);
+        }
+      }
 
       const raw = <TLS26080InsertPayload>{
         ...d,
@@ -867,6 +829,79 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     });
 
     this.fileUpload().clear();
+  }
+
+  private executeFieldChange(
+    event: FieldChangeEvent<TLS26080EditTable>,
+    index: number,
+    tableData: TLS26080EditTable[],
+    rowData: TLS26080EditTable,
+    talentId: number
+  ): void {
+    switch (event.field) {
+      case 'tlt_no': {
+        if (!this.duplicateVal(event.value, rowData).isValid) {
+          rowData.tlt_no = tableData[event.index ?? 0].tlt_no;
+          return;
+        };
+        const payload = {
+          ...rowData,
+          tpy_rate_D16: String(rowData.tpy_rate_D16),
+          tpy_rate_D17: String(rowData.tpy_rate_D17),
+          tlt_id: '0',
+          tlt_id_desc: '',
+          tlt_no: event.value,
+          tlt_name: this.service.tltTalentMap().get(event.value)?.['Name'] || '',
+        };
+        const keyInData: TLS26080KeyInTable[] = tableData.map((td, ti) => {
+          if (ti === index) return payload;
+          return {
+            ...td,
+            tpy_rate_D16: String(String(payload.tpy_rate_D16 ?? td.tpy_rate_D16).split('%')[0]),
+            tpy_rate_D17: String(String(payload.tpy_rate_D17 ?? td.tpy_rate_D17).split('%')[0]),
+          };
+        }).filter(td => td.id !== 0 && td.id !== void 0);
+        this.logger.debug(`keyin payload:`, [payload, keyInData]);
+
+        this.service.keyInTLS26080(payload, keyInData).subscribe(res => {
+          rowData._err = !1;
+          if (res.Status !== '0000') {
+            rowData._err = !0;
+            this.messageService.errorBubble(res.Message);
+            return;
+          };
+
+          const next = res.Data.queryTLS26080_DetailResponses.pop();
+          if (!next) return;
+          this.logger.debug(`keyin:`, [next]);
+
+          this.tableData.update(td => {
+            this.updateTltIdOptions(next.talent_id);
+
+            return td.map((t, i) => {
+              if (i !== index) return t;
+              const currentTltId = this.tltIdList().get(next.talent_id)?.find(c => c.value === next.tlt_id);
+              return {
+                ...t,
+                talent_id: next.talent_id,
+                tlt_id: currentTltId?.value ?? next.tlt_id,
+                tlt_id_desc: currentTltId?.['tlt_id_desc'] ?? next.tlt_id_desc,
+              };
+            });
+          });
+          this.logger.debug(`keyin updated tableData:`, [this.tableData()]);
+          this.updateTltIdOptions(talentId);
+          return this.fieldChanges.set(void 0);
+        });
+        break;
+      }
+
+      case 'approval_action': {
+        this.toggleApprovalStatus([rowData]);
+        return this.fieldChanges.set(void 0);
+      }
+      default: return;
+    }
   }
 
   public onExportExcelTemplate(): void {
