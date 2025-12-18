@@ -17,8 +17,8 @@
     <div class="grid align-items-center justify-content-between mx-0">
       <div class="caption-left button-group flex gap-2 py-2">
         <p-button *ngIf="showInsert && !disabled" (click)="insert.emit()" [label]="insertText" pTooltip="新增"
-          styleClass="py-2" tooltipPosition="top" icon="pi pi-plus" severity="success" [disabled]="insertDisabled"
-          [rounded]="true" />
+          [styleClass]="'py-2 ' + (insertText ? 'insert-button' : '')" tooltipPosition="top" icon="pi pi-plus"
+          severity="success" [disabled]="insertDisabled" [rounded]="true" />
         <p-button *ngIf="showDelete && !disabled" (click)="deleteRow(selectedItems)" pTooltip="刪除" tooltipPosition="top"
           pButton icon="pi pi-trash" severity="danger" class="p-button-text" [rounded]="true"
           [disabled]="selectedItems?.length <= 0" />

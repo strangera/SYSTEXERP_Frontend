@@ -86,7 +86,7 @@ export class TableEditComponent implements OnChanges {
   @Input() showDelete = true;                 // 是否顯示 刪除按鈕
   @Output() delete = new EventEmitter<any>(); // 刪除事件
   @Input() showInsert = false;                // 是否顯示 新增按鈕
-  @Input() insertText = '';               // 新增按鈕文字
+  @Input() insertText: string | undefined;               // 新增按鈕文字
   @Input() insertDisabled = false;            // 新增按鈕是否禁用
   @Output() insert = new EventEmitter<any>(); // 新增事件
   // Header(右) 相關
