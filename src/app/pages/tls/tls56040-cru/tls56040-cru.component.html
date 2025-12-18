@@ -44,18 +44,10 @@
             [style]="{ height: '100px' }" [submitted]="submitted"></app-input-textarea>
         </div>
       </div>
-      <app-table dataKey="PLU_MagNo" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
-        [showCheckBox]="isFormCreateable" (selectionChange)="selectedItems = $event" [showEdit]="false"
-        [showDetail]="false" [showInsert]="true" (insert)="dialogVisible = true" [showRowEdit]="true"
-        (delete)="calculateTotals()" [deleteData]="true" [showManage]="!isFormReadable" [showReportMode]="false"
-        [insertDisabled]="dataForm.controls.OUT_HOS_No.value && dataForm.controls.LOGO_No.value ? false : true"
-        (rowEditSave)="onRowEditSave($event)" [showCaption]="isFormCreateable" (dataChange)="data = $event"></app-table>
-
-
       <app-table-edit class="col-12" [columns]="editColumns" [data]="data" (selectionChange)="selectedItems = $event"
         [selectedItems]="selectedItems" (dataChange)="data = $event;calculateTotals()" [tableRequired]="true"
-        [disabled]="isFormReadable || dataForm.controls.OUT_HOS_No.value && dataForm.controls.LOGO_No.value ? false : true"
-        (insert)="dialogVisible = true"
+        [disabled]="isFormReadable || !(dataForm.controls.OUT_HOS_No.value && dataForm.controls.LOGO_No.value) ? true : false"
+        (insert)="dialogVisible = true" [loading]="loading"
         [showInsert]="dataForm.controls.OUT_HOS_No.value && dataForm.controls.LOGO_No.value ? true : false"
         [insertDisabled]="dataForm.controls.OUT_HOS_No.value && dataForm.controls.LOGO_No.value ? false : true" />
 

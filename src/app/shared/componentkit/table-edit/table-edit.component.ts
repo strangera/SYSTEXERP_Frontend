@@ -311,6 +311,10 @@ export class TableEditComponent implements OnChanges {
   /* // !!! 1. 或者宣告 @ViewChild('tableEdit') tableEditComponent!: TableEditComponent;
   /* // !!! 2. 在提交呼叫共通元件：const valid = this.tableEditComponent.validateAndShowErrors();
   /* // !!! 3. 使用 valid 來判斷是否通過
+      if (!valid) {
+        this.loading = false;
+        return;
+      }
 /** 執行完整的驗證並處理錯誤提示
    * @returns {boolean} 整個表格是否有效
    */
