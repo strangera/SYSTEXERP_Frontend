@@ -2,21 +2,21 @@
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { finalize, map } from 'rxjs/operators';
 
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
 
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
@@ -28,18 +28,21 @@ import { Column, RowEditSaveEvent } from '../../../shared/componentkit/table/tab
 // ✅ table-report
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { forkJoin, of } from 'rxjs';
+import { forkJoin } from 'rxjs';
+
+// ✅ multi-select
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 
 // Service & 型別
 import {
   ApiResponse,
   Cpm11030Service,
+  DailyEquipAvailabilityRow,
+  DropDownListResponse,
+  InsertDailyEquipAvailabilityRequest,
+  OptionItem,
   QueryCPM11030Request,
   QueryCPM11030Row,
-  DailyEquipAvailabilityRow,
-  InsertDailyEquipAvailabilityRequest,
-  DropDownListResponse,
-  OptionItem,
 } from '../../../service/api/cpm/cpm11030.service';
 
 type SortItem = { field: string; order: number };
@@ -74,6 +77,7 @@ type DailyRow = {
     CalendarComponent,
     TableComponent,
     TableReportComponent,
+    MultiSelectComponent,
   ],
 })
 export class CPM11030Component extends BasicQueryPageComponent<any> {
@@ -103,24 +107,26 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
     { field: 'Device_ID', header: '設備代碼' },
     { field: 'Device_Name', header: '設備名稱' },
   ];
-  /** ✅ 服務中心位置編號下拉 */
+
+  /** ✅ 下拉 options（Query + Dialog 共享） */
   counterCodeOptions: OptionItem[] = [];
-
-  /** ✅ 證件類型下拉 */
   certTypeOptions: OptionItem[] = [];
-
-  /** ✅ 設備名稱下拉 */
   deviceNameOptions: OptionItem[] = [];
-    private mapDropDownToOptions(resp: DropDownListResponse | null | undefined): OptionItem[] {
+
+  private mapDropDownToOptions(resp: DropDownListResponse | null | undefined): OptionItem[] {
     const rows = Array.isArray(resp?.Data) ? resp!.Data! : [];
     return rows
-      .filter(x => x && x.No != null && x.Name != null)
-      .map(x => ({
-        value: String(x.No).trim(),
-        label: `${String(x.No).trim()}-${String(x.Name).trim()}`,
-      }));
+      .filter((x) => x && x.No != null && x.Name != null)
+      .map((x) => {
+        const no = String(x.No).trim();
+        const name = String(x.Name).trim();
+        return { value: no, label: `${no}-${name}` };
+      });
   }
 
+  // =========================
+  // ✅ Query Form：MultiSelect 都用 string[]
+  // =========================
   queryForm = this.formBuilder.group({
     Loan_No: ['' as string],
     Loan_BDate: [null as Date | null],
@@ -128,11 +134,14 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
     User_Name: ['' as string],
     Loan_USR_No: ['' as string],
     Loan_Phone: ['' as string],
-    Cert_Type: ['' as string],
+
+    // ✅ MultiSelect => array
+    Cert_Type: [[] as string[]],
+    Device_Name: [[] as string[]],
+    Service_Id: [[] as string[]],
+
     Cert_No: ['' as string],
-    Device_Name: ['' as string],
     Device_ID: ['' as string],
-    Service_Id: ['' as string],
     ...createPaginationConfig(this.defaultSort),
   });
 
@@ -145,6 +154,7 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
   dailySubmitted = false;
   dailyTableVer = 0;
 
+  // ✅ Dialog 的 Service_Id 是「單選字串」
   dailyForm = this.formBuilder.group({
     Service_Id: ['' as string, [Validators.required, Validators.maxLength(20)]],
     CSS_Date: [null as Date | null, [Validators.required]],
@@ -159,10 +169,7 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
     { field: 'Device_Qty', header: '可借出量', visible: true, type: 'inputNumber' } as any,
   ];
 
-  constructor(
-    private cpm11030Service: Cpm11030Service,
-    private cdr: ChangeDetectorRef
-  ) {
+  constructor(private cpm11030Service: Cpm11030Service, private cdr: ChangeDetectorRef) {
     super();
   }
 
@@ -191,6 +198,17 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
     return cleaned.length ? cleaned : fallback;
   }
 
+  private asStringArray(v: any): string[] {
+    if (Array.isArray(v)) return v.map((x) => String(x ?? '').trim());
+    if (v == null || v === '') return [];
+    return [String(v).trim()];
+  }
+
+  private cleanArray(arr: string[]): string[] | undefined {
+    const cleaned = (arr ?? []).map((x) => String(x).trim()).filter((x) => !!x);
+    return cleaned.length ? cleaned : undefined;
+  }
+
   private buildQueryPayload(base: any): QueryCPM11030Request {
     const pageIndex =
       Number.isFinite(base?.pageIndex) && base.pageIndex >= 1 ? base.pageIndex : 1;
@@ -211,16 +229,20 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
       User_Name: (base?.User_Name ?? '').trim() || undefined,
       Loan_USR_No: (base?.Loan_USR_No ?? '').trim() || undefined,
       Loan_Phone: (base?.Loan_Phone ?? '').trim() || undefined,
-      Cert_Type: (base?.Cert_Type ?? '').trim() || undefined,
+
       Cert_No: (base?.Cert_No ?? '').trim() || undefined,
-      Device_Name: (base?.Device_Name ?? '').trim() || undefined,
       Device_ID: (base?.Device_ID ?? '').trim() || undefined,
-      Service_Id: (base?.Service_Id ?? '').trim() || undefined,
+
+      // ✅ MultiSelect => array
+      Cert_Type: this.cleanArray(this.asStringArray(base?.Cert_Type)) as any,
+      Device_Name: this.cleanArray(this.asStringArray(base?.Device_Name)) as any,
+      Service_Id: this.cleanArray(this.asStringArray(base?.Service_Id)) as any,
     };
 
     Object.keys(payload).forEach((k) => {
       const v = (payload as any)[k];
       if (v === '' || v == null) delete (payload as any)[k];
+      if (Array.isArray(v) && v.length === 0) delete (payload as any)[k];
     });
 
     return payload;
@@ -238,53 +260,44 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
       })
     );
 
+  // =========================
+  // ✅ ngOnInit
+  // =========================
   ngOnInit(): void {
+    this.initializePage('CPM11030', '/cpm/cpm11030cru', this.queryForm, (form) => this.onSubmit(form));
+
     const today = new Date();
-    this.queryForm.patchValue({ Loan_BDate: today, Loan_EDate: today });
+    this.queryForm.patchValue({ Loan_BDate: today, Loan_EDate: today }, { emitEvent: false });
 
-    // ✅ 先載入三個下拉（並行）
+    // ✅ 下拉：用 service 共用快取（Query/CRU 都共用，不會各打一次）
     this.loading = true;
-
-    const ddlBody = { Status: '' }; // 你貼 swagger 有 Status，沒有也沒關係
-
-    forkJoin({
-      css1001: this.cpm11030Service.queryCSS1001_DropDownList(ddlBody),
-      sys1000: this.cpm11030Service.queryCPM11030_SYS1000_DropDownList(ddlBody),
-      css2001: this.cpm11030Service.queryCSS2001_DropDownList(ddlBody),
-    })
-      .pipe(untilDestroyed(this))
+    this.cpm11030Service
+      .getDropdownsOnce()
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        }),
+        untilDestroyed(this)
+      )
       .subscribe({
         next: ({ css1001, sys1000, css2001 }) => {
           this.counterCodeOptions = this.mapDropDownToOptions(css1001);
           this.certTypeOptions = this.mapDropDownToOptions(sys1000);
           this.deviceNameOptions = this.mapDropDownToOptions(css2001);
-
-          this.loading = false;
-          this.cdr.detectChanges();
-
-          // ✅ 下拉載入完再初始化頁面（避免初始畫面 options 是空的）
-          this.initializePage('CPM11030', '/cpm/cpm11030cru', this.queryForm, (form) =>
-            this.onSubmit(form)
-          );
         },
         error: (err) => {
           console.error('CPM11030 dropdown load error:', err);
-
-          // 失敗也要讓頁面能用（只是下拉是空的）
           this.counterCodeOptions = [];
           this.certTypeOptions = [];
           this.deviceNameOptions = [];
-
-          this.loading = false;
-          this.cdr.detectChanges();
-
-          this.initializePage('CPM11030', '/cpm/cpm11030cru', this.queryForm, (form) =>
-            this.onSubmit(form)
-          );
         },
       });
   }
 
+  // =========================
+  // 查詢
+  // =========================
   onSubmit(frm: any) {
     this.submitted = true;
 
@@ -347,11 +360,14 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
       User_Name: '',
       Loan_USR_No: '',
       Loan_Phone: '',
-      Cert_Type: '',
+
+      // ✅ MultiSelect => []
+      Cert_Type: [],
+      Device_Name: [],
+      Service_Id: [],
+
       Cert_No: '',
-      Device_Name: '',
       Device_ID: '',
-      Service_Id: '',
       ...createPaginationConfig(this.defaultSort),
     });
 
@@ -363,17 +379,13 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
   }
 
   // ================= 匯出 =================
-
   private getExportPayload(): QueryCPM11030Request {
-    // 優先用 lastQueryBody（跟 table-report 一致）
     if (this.lastQueryBody) return { ...(this.lastQueryBody as QueryCPM11030Request) };
-    // 沒有 lastQueryBody 就用目前表單
     return this.buildQueryPayload(this.queryForm.getRawValue());
   }
 
   private getFilenameFromContentDisposition(cd?: string | null, fallback = 'export'): string {
     if (!cd) return fallback;
-    // 例：attachment; filename="xxx.xlsx"
     const m = /filename\*?=(?:UTF-8'')?["']?([^"';\n]+)["']?/i.exec(cd);
     if (!m?.[1]) return fallback;
     try {
@@ -442,19 +454,26 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
       });
   }
 
-  /* ----------------- Daily Dialog（你原本的 그대로） ----------------- */
+  /* ----------------- Daily Dialog ----------------- */
   openDailyDialog() {
     this.dailyDialogVisible = true;
 
     const today = new Date();
-    const svc = (this.queryForm.getRawValue()?.Service_Id ?? '').trim();
 
-    this.dailyForm.patchValue({
-      CSS_Date: today,
-      Service_Id: svc,
-    });
+    // ✅ Query 的 Service_Id 是 string[]；Dialog 需要 string
+    const svcArr = this.asStringArray(this.queryForm.getRawValue()?.Service_Id);
+    const svc = (svcArr?.[0] ?? '').trim();
 
-    this.onDailyQuery();
+    this.dailyForm.patchValue(
+      {
+        CSS_Date: today,
+        Service_Id: svc,
+      },
+      { emitEvent: false }
+    );
+
+    // 有選到才查，避免空字串去打 API
+    if (svc) this.onDailyQuery();
   }
 
   onDailyDialogVisibleChange(visible: boolean) {
@@ -478,6 +497,8 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
     }
 
     const raw = this.dailyForm.getRawValue();
+
+    // ✅ Dialog 的 Service_Id 是字串
     const Service_Id = (raw.Service_Id ?? '').trim();
 
     this.dailyLoading = true;
@@ -513,10 +534,18 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
       });
   }
 
-  onDailyRowEditSave(e: RowEditSaveEvent) {}
+  onDailyRowEditSave(_e: RowEditSaveEvent) {}
+
+  private closeDailyDialog() {
+    this.dailyDialogVisible = false;
+    this.onDailyDialogVisibleChange(false); // 確保 reset
+    this.cdr.detectChanges();
+  }
 
   onDailySave() {
     this.dailySubmitted = true;
+
+    if (!this.dailyRows || this.dailyRows.length === 0) return;
 
     if (this.dailyForm.invalid) {
       this.dailyForm.markAllAsTouched();
@@ -524,10 +553,12 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
     }
 
     const raw = this.dailyForm.getRawValue();
+
+    // ✅ Dialog 的 Service_Id 是字串
     const Service_Id = (raw.Service_Id ?? '').trim();
     const CSS_Date = this.toIso(raw.CSS_Date) ?? new Date().toISOString();
 
-    const items: InsertDailyEquipAvailabilityRequest[] = (this.dailyRows ?? []).map((r) => {
+    const items: InsertDailyEquipAvailabilityRequest[] = this.dailyRows.map((r) => {
       const prior = Number(this.dailyPriorQtyMap.get(r.Device_ID) ?? 0);
       const current = Number.isFinite(r.Device_Qty as any) ? Number(r.Device_Qty) : 0;
 
@@ -545,27 +576,22 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
     this.dailySaving = true;
 
     const calls = items.map((x) => this.cpm11030Service.insertCPM11030_DailyEquipAvailability(x));
-    const req$ = calls.length
-      ? forkJoin(calls).pipe(
-          map((results) => {
-            const success = results.filter((r: any) => r?.IsSuccess === true).length;
-            const fail = results.length - success;
-            return { success, fail, results };
-          })
-        )
-      : of({ success: 0, fail: 0, results: [] as any[] });
 
-    req$.pipe(untilDestroyed(this)).subscribe({
-      next: ({ fail }) => {
-        this.dailySaving = false;
-        if (fail === 0) this.dailyDialogVisible = false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('insertCPM11030_DailyEquipAvailability error:', err);
-        this.dailySaving = false;
-        this.cdr.detectChanges();
-      },
-    });
+    forkJoin(calls)
+      .pipe(
+        finalize(() => {
+          this.dailySaving = false;
+          this.cdr.detectChanges();
+        }),
+        untilDestroyed(this)
+      )
+      .subscribe({
+        next: () => {
+          this.closeDailyDialog();
+        },
+        error: (err) => {
+          console.error('insertCPM11030_DailyEquipAvailability error:', err);
+        },
+      });
   }
 }

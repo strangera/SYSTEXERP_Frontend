@@ -95,7 +95,7 @@ export class CPM11030CRUComponent extends BasicCruPageComponent<any> implements 
     Cert_Type: ['' as string, [Validators.maxLength(2)]],
     Cert_No: ['' as string, [Validators.maxLength(50)]],
     Loan_Phone: ['' as string, [Validators.maxLength(20)]],
-    Device_ID: ['' as string, [Validators.maxLength(20)]],
+    Device_ID: ['' as string, [Validators.maxLength(2)]],
     Device_Name: ['' as string, [Validators.maxLength(50)]],
   });
 
@@ -107,15 +107,30 @@ ngOnInit(): void {
   this.initializePage('CPM11030', this.dataForm);
   this.updateDisabledState();
 
+  // ✅ 下拉：跟 Query 共用同一份快取（只會真的打一次）
+  this.cpm11030Service
+    .getDropdownsOnce()
+    .pipe(untilDestroyed(this))
+    .subscribe({
+      next: ({ css1001, sys1000, css2001 }) => {
+        this.counterCodeOptions = this.mapDropDownToOptions(css1001);
+        this.certTypeOptions = this.mapDropDownToOptions(sys1000);
+        this.deviceNameOptions = this.mapDropDownToOptions(css2001);
+      },
+      error: (err) => {
+        console.error('CPM11030 CRU dropdown load error:', err);
+        this.counterCodeOptions = [];
+        this.certTypeOptions = [];
+        this.deviceNameOptions = [];
+      },
+    });
+
   // ✅ 先把後端/route 帶回來的值正規化成 Date（給 calendar 顯示用）
   const rawDate = this.dataForm.get('Loan_Date')?.value as any;
   const rawTime = this.dataForm.get('Loan_Time')?.value as any;
 
-  const parsedDate =
-    rawDate instanceof Date ? rawDate : rawDate ? new Date(rawDate) : null;
-
-  const parsedTime =
-    rawTime instanceof Date ? rawTime : rawTime ? new Date(rawTime) : null;
+  const parsedDate = rawDate instanceof Date ? rawDate : rawDate ? new Date(rawDate) : null;
+  const parsedTime = rawTime instanceof Date ? rawTime : rawTime ? new Date(rawTime) : null;
 
   const patch: any = {};
   if (parsedDate && !isNaN(parsedDate.getTime())) patch.Loan_Date = parsedDate;
@@ -132,10 +147,8 @@ ngOnInit(): void {
     const curDate = this.dataForm.get('Loan_Date')?.value as any;
     const curTime = this.dataForm.get('Loan_Time')?.value as any;
 
-    const hasDate =
-      curDate instanceof Date && !isNaN(curDate.getTime());
-    const hasTime =
-      curTime instanceof Date && !isNaN(curTime.getTime());
+    const hasDate = curDate instanceof Date && !isNaN(curDate.getTime());
+    const hasTime = curTime instanceof Date && !isNaN(curTime.getTime());
 
     this.dataForm.patchValue(
       {
@@ -146,6 +159,7 @@ ngOnInit(): void {
     );
   }
 }
+
 
 
   private updateDisabledState(): void {
