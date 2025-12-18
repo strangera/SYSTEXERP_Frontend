@@ -1,6 +1,7 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, forkJoin } from 'rxjs';
+import { shareReplay } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 
@@ -98,18 +99,64 @@ export interface UpdateCPM11030Request extends InsertCPM11030Request {
   Loan_No: string;
 }
 
+export interface DropDownItem {
+  No: string;
+  Name: string;
+}
+
+export interface DropDownListResponse {
+  Status?: string;
+  Data?: DropDownItem[];
+  Message?: string;
+  TotalCount?: number;
+  TotalPage?: number;
+  Error?: {
+    Code?: string;
+    Message?: string;
+    Details?: string;
+  };
+  Meta?: {
+    Timestamp?: string;
+    RequestId?: string;
+  };
+}
+
+/** 轉成前端 dropdown options 用 */
+export type OptionItem = { value: string; label: string };
+
 @Injectable({ providedIn: 'root' })
 export class Cpm11030Service {
   private apiUrl = `${environment.ApiUrl}/CPM0000/CPM1000`;
+  private DLapiUrl = `${environment.ApiUrl}`;
+
+  /** ✅ 下拉快取：Query/CRU 共用同一份（只會真的打一次） */
+  private dropdownOnce$?: Observable<{
+    css1001: DropDownListResponse;
+    sys1000: DropDownListResponse;
+    css2001: DropDownListResponse;
+  }>;
 
   constructor(private http: HttpClient) {}
 
+  /** ✅ 給 Query/CRU 共用的下拉（只打一次） */
+  getDropdownsOnce(): Observable<{
+    css1001: DropDownListResponse;
+    sys1000: DropDownListResponse;
+    css2001: DropDownListResponse;
+  }> {
+    if (!this.dropdownOnce$) {
+      this.dropdownOnce$ = forkJoin({
+        css1001: this.queryCSS1001_DropDownList(),
+        sys1000: this.queryCPM11030_SYS1000_DropDownList(),
+        css2001: this.queryCSS2001_DropDownList(),
+      }).pipe(shareReplay(1));
+    }
+    return this.dropdownOnce$;
+  }
+
   /** 列表查詢：/queryCPM11030 */
   queryCPM11030(body: QueryCPM11030Request): Observable<ApiResponse<QueryCPM11030Row[]>> {
-    return this.http.post<ApiResponse<QueryCPM11030Row[]>>(
-      `${this.apiUrl}/queryCPM11030`,
-      body
-    );
+    return this.http.post<ApiResponse<QueryCPM11030Row[]>>(`${this.apiUrl}/queryCPM11030`, body);
   }
 
   /** 每日設備可出借量：查詢 /queryCPM11030_DailyEquipAvailability */
@@ -126,10 +173,7 @@ export class Cpm11030Service {
   insertCPM11030_DailyEquipAvailability(
     body: InsertDailyEquipAvailabilityRequest
   ): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(
-      `${this.apiUrl}/insertCPM11030_DailyEquipAvailability`,
-      body
-    );
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/insertCPM11030_DailyEquipAvailability`, body);
   }
 
   /** 新增：/insertCPM11030 */
@@ -169,17 +213,35 @@ export class Cpm11030Service {
    * - 同時移除大小寫鍵：pageSize/pageIndex/orderBy/offset 與 PageSize/PageIndex/OrderBy/Offset
    * - 保留 SortBy
    */
-  private stripPaging<T extends Record<string, any>>(input: T): Omit<T,
-    'PageSize' | 'PageIndex' | 'OrderBy' | 'Offset' |
-    'pageSize' | 'pageIndex' | 'orderBy' | 'offset'
+  private stripPaging<T extends Record<string, any>>(input: T): Omit<
+    T,
+    | 'PageSize'
+    | 'PageIndex'
+    | 'OrderBy'
+    | 'Offset'
+    | 'pageSize'
+    | 'pageIndex'
+    | 'orderBy'
+    | 'offset'
   > {
     if (!input) return input as any;
-    const {
-      PageSize, PageIndex, OrderBy, Offset,
-      pageSize, pageIndex, orderBy, offset,
-      ...rest
-    } = input as any;
+    const { PageSize, PageIndex, OrderBy, Offset, pageSize, pageIndex, orderBy, offset, ...rest } = input as any;
     return rest as any;
+  }
+
+  /** ✅ 服務台位置編號：/queryCSS1001_DropDownList */
+  queryCSS1001_DropDownList(body?: any): Observable<DropDownListResponse> {
+    return this.http.post<DropDownListResponse>(`${this.DLapiUrl}/queryCSS1001_DropDownList`, body ?? {});
+  }
+
+  /** ✅ 證件類型：/queryCPM11030_SYS1000_DropDownList */
+  queryCPM11030_SYS1000_DropDownList(body?: any): Observable<DropDownListResponse> {
+    return this.http.post<DropDownListResponse>(`${this.DLapiUrl}/queryCPM11030_SYS1000_DropDownList`, body ?? {});
+  }
+
+  /** ✅ 設備名稱：/queryCSS2001_DropDownList */
+  queryCSS2001_DropDownList(body?: any): Observable<DropDownListResponse> {
+    return this.http.post<DropDownListResponse>(`${this.DLapiUrl}/queryCSS2001_DropDownList`, body ?? {});
   }
 }
 

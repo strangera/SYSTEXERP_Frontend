@@ -205,6 +205,48 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       });
     }, 50);
   }
+  // 載入明細（參考 TLS53010 的寫法），避免 form valueChanges 把資料清掉
+  loadDetailData() {
+    if (!this.rowdata) { return; }
+    const payload = {
+      MID: 0,
+      SPM_No: (this.rowdata as any).SPM_No,
+      SYS_StoreNo: (this.rowdata as any).SYS_StoreNo || '',
+      HOS_No: (this.rowdata as any).HOS_No || this.dataForm.controls.HOS_No.value || '',
+      pageSize: 100,
+      pageIndex: 1,
+      SortBy: []
+    };
+    this.tls56020Service.queryPOS2024(payload).pipe(untilDestroyed(this)).subscribe((res: any) => {
+      const rows = res?.Data || [];
+      this.data = rows.map((d: any, idx: number) => ({
+        PO_No: d.PO_No ?? (this.rowdata as any).SPM_No ?? '',
+        HOS_No: d.HOS_No ?? payload.HOS_No ?? '',
+        id: d.id || d.POS2017_ID || 0,
+        POD_SeqNo: d.POD_SeqNo ?? (idx + 1),
+        PLU_MagNo: d.PLU_MagNo,
+        PLU_Name: d.PLU_Name,
+        PLU_No: d.PLU_No,
+        PLU_Unit: d.PLU_Unit,
+        UNIT_NAME: d.UNIT_NAME || d.PLU_Unit,
+        PLU_BoxQty: d.PLU_BoxQty || 0,
+        PLU_StockTaxType: d.PLU_StockTaxType || '',
+        PLU_TaxType: d.PLU_TaxType || '',
+        PLU_SalePrc_UNI: d.PLU_SalePrc_UNI ?? d.POD_BuyPrc ?? 0,
+        PLU_SalePrc: d.PLU_SalePrc ?? d.POD_SalePrc ?? 0,
+        POD_SubQty: d.POD_SubQty ?? d.SPD_ConfirmQty ?? 0,
+        POD_BuyNet: d.POD_BuyNet ?? d.SPD_BuyNet ?? 0,
+        POD_BuyTax: d.POD_BuyTax ?? d.SPD_BuyTax ?? 0,
+        POD_BuyAmt: d.POD_BuyAmt ?? d.SPD_BuyAmt ?? 0,
+        POD_SaleAmt: d.POD_SaleAmt ?? d.SPD_SaleAmt ?? 0,
+        POD_Remark: d.POD_Remark ?? d.SPD_Remark ?? '',
+        _TABLE_KEY: d._TABLE_KEY ?? `r${idx}`
+      } as IPOS2004DetailData));
+      this.originalData = [...this.data];
+      this.calculateTotals();
+      this.cdr.detectChanges();
+    });
+  }
 
   constructor(
     private readonly dropDownListService: DropDownListService,
@@ -278,6 +320,10 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       // d. 初始化過濾：根據表單現有值進行雙向過濾
       this.filterWarehouseOptions(LOGO_No.value, { initialLoad: true });
       this.filterLogoOptions(HOS_No.value, { initialLoad: true });
+      // 若為編輯或檢視模式，讀取明細資料（放在 forkJoin 完成後，避免 form.valueChanges 把資料清掉）
+      if (!this.isFormCreateable && this.rowdata) {
+        this.loadDetailData();
+      }
     });
 
     // 2. 監聽表單欄位變化
