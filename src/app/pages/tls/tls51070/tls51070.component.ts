@@ -496,4 +496,9 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
       this.opLoading = false;
     });
   }
+
+  //用戶匯入大量圖檔
+  userInputIMGs() {
+    this.messageService.infoBubble('開發中');
+  }
 }
