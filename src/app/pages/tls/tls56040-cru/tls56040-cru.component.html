@@ -11,7 +11,7 @@
             [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="品牌代碼" controlName="LOGO_No" [options]="brandOptions" optionLabel="label"
+          <app-dropdown label="品牌代碼" controlName="LOGO_No" [options]="brandOptions | async" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
@@ -23,11 +23,11 @@
             [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="調出倉別" controlName="OUT_HOS_No" [options]="warehouseOptions" optionLabel="label"
+          <app-dropdown label="調出倉別" controlName="OUT_HOS_No" [options]="warehouseOptions | async" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.OUT_HOS_No" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="調入倉別" controlName="IN_HOS_No" [options]="warehouseOptions" optionLabel="label"
+          <app-dropdown label="調入倉別" controlName="IN_HOS_No" [options]="warehouseOptions | async" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.IN_HOS_No" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
@@ -36,7 +36,8 @@
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="申請人編號/姓名" controlName="APPLY_USR_No" [control]="dataForm.controls.APPLY_USR_No"
-            [submitted]="submitted" [options]="userOptions" optionLabel="label" optionValue="value"></app-dropdown>
+            [submitted]="submitted" [options]="userOptions | async" optionLabel="label"
+            optionValue="value"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-textarea label="倉別調撥單說明" controlName="MVM_Remark" [control]="dataForm.controls.MVM_Remark"
@@ -49,6 +50,15 @@
         (delete)="calculateTotals()" [deleteData]="true" [showManage]="!isFormReadable" [showReportMode]="false"
         [insertDisabled]="dataForm.controls.OUT_HOS_No.value && dataForm.controls.LOGO_No.value ? false : true"
         (rowEditSave)="onRowEditSave($event)" [showCaption]="isFormCreateable" (dataChange)="data = $event"></app-table>
+
+
+      <app-table-edit class="col-12" [columns]="editColumns" [data]="data" (selectionChange)="selectedItems = $event"
+        [selectedItems]="selectedItems" (dataChange)="data = $event;calculateTotals()" [tableRequired]="true"
+        [disabled]="isFormReadable || dataForm.controls.OUT_HOS_No.value && dataForm.controls.LOGO_No.value ? false : true"
+        (insert)="dialogVisible = true"
+        [showInsert]="dataForm.controls.OUT_HOS_No.value && dataForm.controls.LOGO_No.value ? true : false"
+        [insertDisabled]="dataForm.controls.OUT_HOS_No.value && dataForm.controls.LOGO_No.value ? false : true" />
+
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading" />
@@ -61,11 +71,11 @@
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
     <div class="grid p-fluid">
       <div class="col-12 md:col-6">
-        <app-dropdown-table [control]="dialogQueryForm.controls.queryNo" [submitted]="submitted" optionLabel="PLU_MagNo"
-          optionValue="PLU_MagNo" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
+        <app-dropdown-table [control]="dialogQueryForm.controls.queryNo" [submitted]="submitted" templateLabel="label"
+          optionLabel="PLU_MagNo" optionValue="PLU_MagNo" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
           (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
           [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
-          [totalRecords]="opTotalRecords">
+          [totalRecords]="opTotalRecords" [showOverlay]="false">
           <app-input-text class="col-12 md:col-6" label="商品管理編號/國際條碼" controlName="queryNo"
             [control]="opForm.controls.queryNo" />
           <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"

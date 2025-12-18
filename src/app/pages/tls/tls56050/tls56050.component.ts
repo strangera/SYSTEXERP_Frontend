@@ -53,10 +53,10 @@ export class TLS56050Component extends BasicQueryPageComponent<ITLS56050Response
     APPLY_USR: [this.authService.currentUserValue?.user_No, [Validators.maxLength(8)]],            // varchar(8)
     APRV_Date_Start: [null],                            // datetime，預設無驗證
     APRV_Date_End: [null],                              // datetime，預設無驗證
-    APRV_USR: [''],          // varchar(8)
+    APRV_USR: [null],          // varchar(8)
     OUTGODS_Date_Start: [null],                                 // datetime，預設無驗證
     OUTGODS_Date_End: [null],                                 // datetime，預設無驗證
-    OUTGODS_USR: [''],          // varchar(8)
+    OUTGODS_USR: [null],          // varchar(8)
     ...createPaginationConfig([{ field: 'MVM_No', order: 1 }]),  // 分頁與排序參數，不需加驗證
   });
   totalRecords = 0;
@@ -164,7 +164,10 @@ export class TLS56050Component extends BasicQueryPageComponent<ITLS56050Response
       SortBy: [{ field: 'PLU_MagNo', order: 1 }],
     }
     this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data];
+      this.suggestions = [...results.Data.map(item => ({
+        ...item,
+        label: item.PLU_MagNo + '/' + item.PLU_No + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
+      }))];
     });
   }
   onformValueChanged(event: IQueryPOS2004DetailRequest) {

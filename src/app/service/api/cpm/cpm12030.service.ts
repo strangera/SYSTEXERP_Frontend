@@ -29,6 +29,20 @@ export interface CPM12030Data {
   UPD_USR_Name: string;
 }
 
+export interface CSS1004Data {
+  ID: number;
+  mid?: number;
+  SYS_StoreNo?: string;
+  KIND_SubID: string;
+  CLASS_ID: string;
+  CRT_Date?: string;
+  CRT_USR_No?: string;
+  CRT_USR_Name?: string;
+  UPD_Date?: string;
+  UPD_USR_No?: string;
+  UPD_USR_Name?: string;
+}
+
 export interface CreateCPM12030Request {
   KIND_ID: string;
   KIND_SubID: string;

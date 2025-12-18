@@ -153,6 +153,7 @@
 </div>
 
 <!-- 列表 -->
+<!-- 列表 -->
 <div class="card">
   <app-table-report
     [tableKey]="'cpm11030_' + tableVer"
@@ -161,7 +162,7 @@
     [data]="data"
     [totalRecords]="viewTotalRecords"
     [loading]="loading"
-    [showManage]="false"
+    [showManage]="true"
     [showFilter]="true"
     [showExcel]="false"
     [footerData]="footerData"
@@ -174,9 +175,32 @@
     (selectionChange)="selectedItems = $event"
     [showDetail]="true"
     (detail)="onDetail($event)"
-  ></app-table-report>
-</div>
+  >
+    <header>
+      <div class="flex justify-content-end align-items-center w-full">
+        <div class="flex gap-2">
+          <p-button
+            styleClass="p-2"
+            label="匯出PDF"
+            [loading]="btnLoading"
+            icon="pi pi-file-pdf"
+            (click)="onExportPDF()"
+            [disabled]="data.length === 0"
+          ></p-button>
 
+          <p-button
+            styleClass="p-2"
+            label="匯出Excel"
+            [loading]="btnLoading"
+            icon="pi pi-file-excel"
+            (click)="onExportXLSX()"
+            [disabled]="data.length === 0"
+          ></p-button>
+        </div>
+      </div>
+    </header>
+  </app-table-report>
+</div>
 <!-- Dialog：每日設備可出借量維護 -->
 <app-dialog
   [(visible)]="dailyDialogVisible"

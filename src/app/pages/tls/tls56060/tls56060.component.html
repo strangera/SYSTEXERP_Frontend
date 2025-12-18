@@ -18,19 +18,18 @@
               optionValue="value" [control]="queryForm.controls.IN_HOS_NoList"
               [submitted]="submitted"></app-multi-select>
           </div>
-          <!-- 管理碼 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-table [control]="queryForm.controls.queryNo" [submitted]="submitted" optionLabel="PLU_MagNo"
-              optionValue="PLU_MagNo" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
-              (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
-              [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
-              [totalRecords]="opTotalRecords">
-              <app-input-text class="col-12 md:col-6" label="管理編號" controlName="queryNo"
-                [control]="opForm.controls.queryNo" />
-              <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
-                [control]="opForm.controls.PLU_Name" />
-            </app-dropdown-table>
-          </div>
+          <!-- 商品管理編號/國際條碼/廠商貨號 -->
+          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [showOverlay]="false"
+            [control]="queryForm.controls.queryNo" templateLabel="label" [submitted]="submitted" optionLabel="PLU_MagNo"
+            optionValue="PLU_MagNo" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
+            (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
+            [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
+            [totalRecords]="opTotalRecords">
+            <app-input-text class="col-12 md:col-6" label="管理編號" controlName="queryNo"
+              [control]="opForm.controls.queryNo" />
+            <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
+              [control]="opForm.controls.PLU_Name" />
+          </app-dropdown-table>
           <!-- 申請人員 (對應CRT_USR_No) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="申請人編號/名稱" controlName="CRT_USR_No" [options]="userOptions" optionLabel="label"

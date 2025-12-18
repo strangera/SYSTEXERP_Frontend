@@ -30,6 +30,7 @@ export interface EditColumn {
   placeholder?: string; // 提示文字
   // dropdown
   options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
+  optionsAsync?: boolean; // options 是否為異步數據
   optionLabel?: string; // 下拉選單 optionLabel
   optionValue?: string; // 下拉選單 optionValue
   templateLabel?: string; // 模板欄位 label

@@ -1,13 +1,16 @@
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { CPM12030Data, CPM12030Request, Cpm12030Service } from '@service/api/cpm/cpm12030.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
+import { finalize, Observable, of, startWith, switchMap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -17,7 +20,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
   selector: 'app-cpm12030',
   templateUrl: './cpm12030.component.html',
   standalone: true,
-  imports: [TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, TranslateModule]
+  imports: [AsyncPipe, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, TranslateModule]
 })
 export class CPM12030Component extends BasicQueryPageComponent<CPM12030Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -43,26 +46,25 @@ export class CPM12030Component extends BasicQueryPageComponent<CPM12030Data> imp
     { field: 'UPD_USR_No', header: '修改人員' },
     { field: 'UPD_USR_Name', header: '修改人員名稱' },
   ];
-  KIND_SubIDOptions = [
-    { value: 'D001', label: '服務' },
-    { value: 'D002', label: '設備' },
-    { value: 'D003', label: '商品' },
-    { value: 'D004', label: '其他' },
-    { value: 'D005', label: '廣告業務' },
-    { value: 'D006', label: '活動、場地洽談' },
-    { value: 'D007', label: '承租店櫃' },
-    { value: 'D008', label: '合作提案' },
-  ];
-  KIND_IDOptions = [
-    { value: 'T001', label: '意見反映' },
-    { value: 'T002', label: '廣告業務' },
-    { value: 'T003', label: '活動、場地洽談' },
-    { value: 'T004', label: '承租店櫃' },
-    { value: 'T005', label: '合作提案' },
-  ];
+  KIND_IDOptions$ = this.dropdown.queryCss1002();
+  // 子類別選單 (連動 KIND_ID)
+  KIND_SubIDOptions$: Observable<Option[] | null> = this.queryForm.controls.KIND_ID.valueChanges.pipe(
+    untilDestroyed(this), startWith(this.queryForm.controls.KIND_ID.value), switchMap(kindId => {
+      // 當主類別改變，清空子類別已選值
+      if (this.queryForm.controls.KIND_SubID.value) {
+        this.queryForm.controls.KIND_SubID.setValue(null);
+      }
+      if (!kindId) {
+        return of([]); // 若沒選主類別，子類別選單為空
+      }
+      // 呼叫 CSS1003 (帶 KIND_ID 參數)
+      return this.dropdown.queryCss1003({ KIND_ID: kindId });
+    })
+  );
 
   constructor(
-    public readonly cpm12030Service: Cpm12030Service
+    public readonly cpm12030Service: Cpm12030Service,
+    private readonly dropdown: DropdownApiService,
   ) {
     super();
   }

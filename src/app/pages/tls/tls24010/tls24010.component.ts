@@ -29,7 +29,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { STORE_WAY, TLS24010_EDIT_TYPE } from '../tls24010-cru/tls24010-cru.model';
 import { AddButton, formatDateToYYYY_MM_DD } from './../../../shared/componentkit/table/table.model';
-import { columns, FIX_TYPE, TXN_GUIPaperOptions, txnStatusOptions } from './tls24010.model';
+import { C_columns, columns, FIX_TYPE, TXN_GUIPaperOptions, txnStatusOptions } from './tls24010.model';
 // 交易補登作業
 @Component({
   selector: 'app-tls24010',
@@ -196,7 +196,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       let headerMessage: string;
       let confirmMessage: string;
 
-      if (isCross) {
+      if (isCross && rowData.TXN_GUIBegNo !== '00000000') {
         // 跨期：應開立折讓單
         headerMessage = `開立折讓單`;
         confirmMessage = `此筆交易已跨期，需進行開立折讓單作業。確定要開立折讓單嗎?`;
@@ -371,6 +371,15 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       this.cdr.markForCheck();
       form.get('ECR_No')?.setValue(null);
       form.get('TXN_No')?.setValue(null);
+      this.columns = columns;
+    } else if (value === 'C') {
+      form.get('ECR_No')?.setValidators(null);
+      form.get('TXN_No')?.setValidators([Validators.maxLength(8), Validators.max(99999999)]);
+      form.updateValueAndValidity();
+      this.cdr.markForCheck();
+      form.get('ECR_No')?.setValue(null);
+      form.get('TXN_No')?.setValue(null);
+      this.columns = C_columns;
     } else {
       // 移除必填驗證規則，保留其他規則
       form.get('ECR_No')?.setValidators(null);
@@ -379,6 +388,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       this.cdr.markForCheck();
       form.get('ECR_No')?.setValue(null);
       form.get('TXN_No')?.setValue(null);
+      this.columns = columns;
     }
   }
   btnLoading = false;

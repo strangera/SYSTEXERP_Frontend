@@ -3,7 +3,6 @@ import { ChangeDetectorRef, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { map } from 'rxjs/operators';
-
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
 import { TranslateModule } from '@ngx-translate/core';
@@ -29,6 +28,7 @@ import { Column, RowEditSaveEvent } from '../../../shared/componentkit/table/tab
 // ✅ table-report
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { forkJoin, of } from 'rxjs';
 
 // Service & 型別
 import {
@@ -84,28 +84,24 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
   footerData: any = undefined;
   tableVer = 0;
 
+  btnLoading = false;
+
   readonly defaultSort: SortItem[] = [{ field: 'Loan_Date', order: -1 }];
 
-  /* ----------------- ✅ TableReport 欄位定義（你 HTML 有用 columns） ----------------- */
   columns: ReportColumn[] = [
-    { field: 'Loan_No', header: '出借編號' },
-    {
-      field: 'Loan_Date',
-      header: '出借日期',
-      format: (v: string) => this.formatDate(v),
-    },
+    { field: 'Loan_No', header: '紀錄編號' },
+    { field: 'Loan_Date', header: '出借日期', format: (v: string) => this.formatDate(v) },
     { field: 'Loan_Time', header: '出借時間' },
-    { field: 'Service_Id', header: '服務台位置' },
+    { field: 'Service_Id', header: '服務中心位置編號' },
+    { field: 'Loan_Status', header: '出借狀態' },
     { field: 'User_Name', header: '借用人姓名' },
-    { field: 'Loan_Phone', header: '連絡電話' },
-    { field: 'Loan_USR_No', header: '出借處理人員(工號)' },
     { field: 'Cert_Type', header: '證件類型' },
     { field: 'Cert_No', header: '證件編號' },
+    { field: 'Loan_Phone', header: '連絡電話' },
+    { field: 'Device_ID', header: '設備代碼' },
     { field: 'Device_Name', header: '設備名稱' },
-    { field: 'Device_ID', header: '設備代號' },
   ];
 
-  /* ----------------- ✅ 服務台下拉（你 HTML 有用 counterCodeOptions） ----------------- */
   counterCodeOptions: { value: string; label: string }[] = [
     { value: '11A001', label: '11A001/服務諮詢台' },
     { value: '12A001', label: '12A001/VIP室' },
@@ -113,7 +109,6 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
     { value: '15A001', label: '15A001/顧客服務中心' },
   ];
 
-  /* ----------------- 查詢表單（對齊 API 欄位） ----------------- */
   queryForm = this.formBuilder.group({
     Loan_No: ['' as string],
     Loan_BDate: [null as Date | null],
@@ -144,10 +139,10 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
   });
 
   dailyRows: DailyRow[] = [];
-  private dailyPriorQtyMap = new Map<string, number>(); // Device_ID -> prior qty
+  private dailyPriorQtyMap = new Map<string, number>();
 
   dailyColumns: Column[] = [
-    { field: 'Device_ID', header: '設備代號', visible: true, readonly: true } as any,
+    { field: 'Device_ID', header: '設備代碼', visible: true, readonly: true } as any,
     { field: 'Device_Name', header: '設備名稱', visible: true, readonly: true } as any,
     { field: 'Device_Qty', header: '可借出量', visible: true, type: 'inputNumber' } as any,
   ];
@@ -219,7 +214,7 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
     return payload;
   }
 
-  /* ✅ 給 table-report 用 */
+  /** ✅ 給 table-report 用 */
   public queryCPM11030ForReport = (body: any) =>
     this.cpm11030Service.queryCPM11030(this.buildQueryPayload(body || {})).pipe(
       map((res: ApiResponse<QueryCPM11030Row[] | QueryCPM11030Row>) => {
@@ -317,7 +312,87 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
     this.footerData = undefined;
   }
 
-  /* ----------------- Daily Dialog ----------------- */
+  // ================= 匯出 =================
+
+  private getExportPayload(): QueryCPM11030Request {
+    // 優先用 lastQueryBody（跟 table-report 一致）
+    if (this.lastQueryBody) return { ...(this.lastQueryBody as QueryCPM11030Request) };
+    // 沒有 lastQueryBody 就用目前表單
+    return this.buildQueryPayload(this.queryForm.getRawValue());
+  }
+
+  private getFilenameFromContentDisposition(cd?: string | null, fallback = 'export'): string {
+    if (!cd) return fallback;
+    // 例：attachment; filename="xxx.xlsx"
+    const m = /filename\*?=(?:UTF-8'')?["']?([^"';\n]+)["']?/i.exec(cd);
+    if (!m?.[1]) return fallback;
+    try {
+      return decodeURIComponent(m[1]);
+    } catch {
+      return m[1];
+    }
+  }
+
+  private downloadBlob(blob: Blob, filename: string) {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  onExportPDF() {
+    if (!this.data?.length) return;
+
+    const payload = this.getExportPayload();
+    this.btnLoading = true;
+
+    this.cpm11030Service
+      .exportCPM11030PDF(payload)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          const cd = res.headers?.get('content-disposition');
+          const filename = this.getFilenameFromContentDisposition(cd, 'CPM11030.pdf');
+          this.downloadBlob(res.body as Blob, filename.endsWith('.pdf') ? filename : `${filename}.pdf`);
+          this.btnLoading = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('exportCPM11030_PDF error:', err);
+          this.btnLoading = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  onExportXLSX() {
+    if (!this.data?.length) return;
+
+    const payload = this.getExportPayload();
+    this.btnLoading = true;
+
+    this.cpm11030Service
+      .exportCPM11030Excel(payload)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          const cd = res.headers?.get('content-disposition');
+          const filename = this.getFilenameFromContentDisposition(cd, 'CPM11030.xlsx');
+          this.downloadBlob(res.body as Blob, filename.endsWith('.xlsx') ? filename : `${filename}.xlsx`);
+          this.btnLoading = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          console.error('exportCPM11030_Excel error:', err);
+          this.btnLoading = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  /* ----------------- Daily Dialog（你原本的 그대로） ----------------- */
   openDailyDialog() {
     this.dailyDialogVisible = true;
 
@@ -366,9 +441,7 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
         next: (res: ApiResponse<DailyEquipAvailabilityRow[]>) => {
           const rows = Array.isArray(res?.Data) ? res.Data : [];
 
-          rows.forEach((r) =>
-            this.dailyPriorQtyMap.set(r.Device_ID, Number(r.Device_Qty ?? 0))
-          );
+          rows.forEach((r) => this.dailyPriorQtyMap.set(r.Device_ID, Number(r.Device_Qty ?? 0)));
 
           this.dailyRows = rows.map((r) => ({
             _rowKey: `${Service_Id}_${r.Device_ID}`,
@@ -390,9 +463,7 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
       });
   }
 
-  onDailyRowEditSave(e: RowEditSaveEvent) {
-    // 留空：你要即時驗證再加
-  }
+  onDailyRowEditSave(e: RowEditSaveEvent) {}
 
   onDailySave() {
     this.dailySubmitted = true;
@@ -423,20 +494,28 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
 
     this.dailySaving = true;
 
-    this.cpm11030Service
-      .saveDailyEquipAvailabilityBatch(items)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: () => {
-          this.dailySaving = false;
-          this.dailyDialogVisible = false;
-          this.cdr.detectChanges();
-        },
-        error: (err) => {
-          console.error('insertCPM11030_DailyEquipAvailability error:', err);
-          this.dailySaving = false;
-          this.cdr.detectChanges();
-        },
-      });
+    const calls = items.map((x) => this.cpm11030Service.insertCPM11030_DailyEquipAvailability(x));
+    const req$ = calls.length
+      ? forkJoin(calls).pipe(
+          map((results) => {
+            const success = results.filter((r: any) => r?.IsSuccess === true).length;
+            const fail = results.length - success;
+            return { success, fail, results };
+          })
+        )
+      : of({ success: 0, fail: 0, results: [] as any[] });
+
+    req$.pipe(untilDestroyed(this)).subscribe({
+      next: ({ fail }) => {
+        this.dailySaving = false;
+        if (fail === 0) this.dailyDialogVisible = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('insertCPM11030_DailyEquipAvailability error:', err);
+        this.dailySaving = false;
+        this.cdr.detectChanges();
+      },
+    });
   }
 }

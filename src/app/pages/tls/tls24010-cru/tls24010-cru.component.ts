@@ -399,7 +399,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         const orgDate = rowData.TXN_Date;
         const isCross = this.isCrossPeriod(orgDate);
 
-        if (isCross) {
+        if (isCross && rowData.TXN_GUIBegNo !== '00000000') {
           // 跨期：應開立折讓單
           headerMessage = `開立折讓單`; // 改變標頭
           confirmMessage = `此筆交易已跨期，需進行開立折讓單作業。確定要開立折讓單嗎?`;

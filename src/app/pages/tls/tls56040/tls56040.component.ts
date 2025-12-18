@@ -142,6 +142,7 @@ export class TLS56040Component extends BasicQueryPageComponent<ITLS56040Data> im
     });
   }
   // 管理編號
+  // 管理編號
   opLoading = false;
   opForm = this.formBuilder.group({
     queryNo: ['', [Validators.maxLength(20)]], // 管理編號
@@ -171,7 +172,10 @@ export class TLS56040Component extends BasicQueryPageComponent<ITLS56040Data> im
       SortBy: [{ field: 'PLU_MagNo', order: 1 }],
     }
     this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data];
+      this.suggestions = [...results.Data.map(item => ({
+        ...item,
+        label: item.PLU_MagNo + '/' + item.PLU_No + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
+      }))];
     });
   }
   onformValueChanged(event: IQueryPOS2004DetailRequest) {
