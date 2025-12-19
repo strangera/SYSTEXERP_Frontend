@@ -558,6 +558,7 @@ export class FIN63040Component
         complete: () => {
           this.btnLoading = false;
           this.cdr.detectChanges();
+          this.onSubmit(this.queryForm);
         },
       });
   }
