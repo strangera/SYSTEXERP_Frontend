@@ -129,7 +129,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       },
       {
         field: 'ABAT_YN',
-        header: '是否專案應收',
+        header: '立沖科目',
         format: (v: 'Y' | 'N') => Maps.YN.get(v) || v,
       },
       {
@@ -253,7 +253,10 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       const data = this.tableData().filter(v => !v._isAutoInsertCandidate);
       for (const item of data) {
         const validation = this.validateRow(item);
-        if (!validation.isValid) return this.messageService.errorBubble(validation.errorMessage);
+        if (!validation.isValid) return void (() => {
+          this.loading = !1;
+          this.messageService.errorBubble(validation.errorMessage);
+        })();
       }
 
       const payload: TLS21020UpdateQuery[] = data.map(item => ({
