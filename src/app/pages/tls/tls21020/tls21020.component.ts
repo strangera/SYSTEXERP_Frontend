@@ -180,7 +180,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         templateLabel: 'label',
         validate: [this.ABATValidator],
         // disabled: v => v.ABAT_YN === 'N',
-        // disabled: (v, i, r) => r.ABAT_YN === 'N',
+        disabled: (v, i, r) => r.ABAT_YN === 'N',
       },
       {
         field: 'PAY_days',
