@@ -67,9 +67,9 @@
             [style]="{ height: '100px' }" [submitted]="submitted"></app-input-textarea>
         </div>
       </div>
-      <app-table dataKey="PLU_MagNo" [columns]="columns" [data]="data" [showManage]="!isFormReadable"
-        [showRowEdit]="true" (rowEditSave)="onRowEditSave($event)" [showCaption]="false" [showEdit]="false"
-        [showInsert]="false" [showDetail]="false" [showDelete]="false" (dataChange)="data = $event"></app-table>
+      <app-table-edit [columns]="editColumns" [data]="data" [showCheckBox]="false" [loading]="loading"
+        (dataChange)="onTableDataChange($event)" [tableRequired]="true" [disabled]="isFormReadable" [showInsert]="false"
+        [showDelete]="false" [canInsert]="false" />
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading" label="儲存"></app-button>

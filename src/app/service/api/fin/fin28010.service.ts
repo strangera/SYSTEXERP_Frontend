@@ -14,5 +14,7 @@ export class Fin28010Service {
   queryFIN28010(params: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/queryFIN28010`, params);
   }
-
+  insertFIN28010(params: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/insertFIN28010`, params);
+  }
 }

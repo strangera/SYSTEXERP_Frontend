@@ -117,9 +117,9 @@ export class LoginComponent implements OnInit {
       const href = window.location.href;
       console.log('[getRedirectFromPreLoginOrLocation] href:', href);
 
-      // ✅ 1. 嘗試用 URL 物件取出（大小寫都支援）
+      // 1. 嘗試用 URL 物件取出（大小寫都支援）
       const u = new URL(href);
-      let direct =
+      const direct =
         u.searchParams.get('redirectURL') ||
         u.searchParams.get('redirecturl') ||
         u.searchParams.get('redirect') ||
@@ -136,7 +136,7 @@ export class LoginComponent implements OnInit {
         }
       }
 
-      // ✅ 2. fallback：直接用 regex 抓，容錯性最高
+      // 2. fallback：直接用 regex 抓，容錯性最高
       const match = href.match(/[?&](redirecturl|redirectURL|redirect)=([^&#]+)/i);
       if (match && match[2]) {
         const decoded = decodeURIComponent(match[2].replace(/\+/g, '%20'));
@@ -144,7 +144,7 @@ export class LoginComponent implements OnInit {
         return decoded;
       }
 
-      // ✅ 3. 再讀 localStorage 備份
+      // 3. 再讀 localStorage 備份
       const raw = localStorage.getItem(this.URL_KEY);
       if (raw) {
         const q = raw.indexOf('?');
@@ -191,7 +191,7 @@ export class LoginComponent implements OnInit {
 
     this.loading = true;
 
-    // ✅ 關鍵：登入時要求 AuthService 先不要自動導頁
+    // 關鍵：登入時要求 AuthService 先不要自動導頁
     this.authService.login(this.loginForm.value as userLogin, { skipNavigate: true })
       .pipe(first(), untilDestroyed(this))
       .subscribe({
@@ -228,10 +228,9 @@ export class LoginComponent implements OnInit {
 
           this.loading = false;
         },
-        error: (err) => {
-          this.notemessage.errorBubble(err.message || '登入失敗，請檢查網路或系統狀態');
+        error: () => {
           this.loginForm.patchValue({ password: '' }); // 清空密碼
-          this.loading = false; // 🔑 必須關閉 loading 狀態，否則按鈕會一直轉
+          this.loading = false; // 必須關閉 loading 狀態，否則按鈕會一直轉
         }
       });
   }

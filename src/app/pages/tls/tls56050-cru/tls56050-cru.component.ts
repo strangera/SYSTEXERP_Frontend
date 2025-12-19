@@ -1,5 +1,5 @@
 import { NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -7,8 +7,9 @@ import { ITLS56050Detail, ITLS56050Request, ITLS56050Response, Tls56050Service }
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { MessageService } from 'primeng/api';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
@@ -33,8 +34,8 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     CalendarComponent,
     NgIf,
     TranslateModule,
-    TableComponent,
     InputTextareaComponent,
+    TableEditComponent
   ],
   providers: [MessageService]
 })
@@ -60,26 +61,49 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
   });
 
   data: ITLS56050Detail[] = [];
-  columns: Column[] = [
-    // { field: 'MVD_SeqNo', header: '項次', visible: true },
-    { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
-    { field: 'PLU_No', header: '國際條碼', visible: true },
-    { field: 'PLU_Name', header: '商品名稱', visible: true },
-    { field: 'MVD_BuyPrc', header: '進單價', visible: true },
-    { field: 'NowHaveQty', header: '目前庫存', visible: true },
-    { field: 'APPLY_Qty', header: '調撥申請數量', visible: true },
-    { field: 'OUTGODS_QTY', header: '發貨量', visible: true, type: 'inputNumber' },
-    { field: 'OUTGODS_BuyNet', header: '發貨未稅進價小計', visible: true },
-    // { field: 'PLU_StockTaxType', header: '稅別', visible: true },
-    // { field: 'OUTGODS_BuyTax', header: '調撥發貨進價稅額', visible: true },
-    // { field: 'OUTGODS_BuyAmt', header: '調撥發貨進價合計', visible: true },
-    // { field: 'OUTGODS_SaleAmt', header: '調撥發貨售價小計', visible: true },
-    { field: 'MVD_Remark', header: '單項說明', visible: true, type: 'input' },
+  editColumns: EditColumn[] = [
+    { field: 'PLU_MagNo', header: '商品管理編號' },
+    { field: 'PLU_No', header: '國際條碼' },
+    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'MVD_BuyPrc', header: '進單價' },
+    { field: 'NowHaveQty', header: '目前庫存' },
+    { field: 'APPLY_Qty', header: '調撥申請數量' },
+    {
+      field: 'OUTGODS_QTY',
+      header: '發貨量',
+      type: 'inputNumber',
+      min: 0,
+      // 當發貨量改變時觸發計算
+      calculate: (rowData: any, value: number) => {
+        const outgodsQty = value || 0;
+        const buyPrice = rowData.MVD_BuyPrc || 0;
+        const salePrice = rowData.MVD_SalePrc || 0;
+        // 1. 計算未稅進價小計
+        const buyNet = buyPrice * outgodsQty;
+        // 2. 計算稅額 (應稅 '1' 算 5%)
+        let buyTax = 0;
+        if (rowData.PLU_StockTaxType === '1') {
+          buyTax = Math.floor(buyNet * 0.05);
+        }
+        // 3. 計算含稅總額與售價總額
+        const buyAmt = buyNet + buyTax;
+        const saleAmt = salePrice * outgodsQty;
+        return {
+          OUTGODS_BuyNet: buyNet,
+          OUTGODS_BuyTax: buyTax,
+          OUTGODS_BuyAmt: buyAmt,
+          OUTGODS_SaleAmt: saleAmt
+        };
+      }, validate: [validateRequired]
+    },
+    { field: 'OUTGODS_BuyNet', header: '發貨未稅進價小計' },
+    { field: 'MVD_Remark', header: '單項說明', type: 'input' },
   ];
 
   brandOptions: { label: string; value: string }[] = [];
   warehouseOptions: { label: string; value: string }[] = [];
   userOptions: { label: string; value: string }[] = [];
+  dataChanged = false;
 
   constructor(
     private readonly tls56050Service: Tls56050Service,
@@ -142,45 +166,6 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
       this.userOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
     });
   }
-  dataChanged = false;
-  onRowEditSave(event: RowEditSaveEvent): void {
-    this.dataChanged = true;
-    // 取得被編輯的那一列資料的參考，以便直接修改它
-    // 使用 MVD_SeqNo 作為唯一識別碼來找到對應的物件
-    const editedItem = this.data.find(item => item.MVD_SeqNo === event.newData.MVD_SeqNo);
-
-    // 檢查是否成功找到該筆資料
-    if (editedItem) {
-      // 從 newData 取得使用者輸入的發貨數量
-      const outgodsQty = event.newData.OUTGODS_QTY;
-
-      // 使用原始資料 (oldData 或 editedItem) 中的單價來計算小計
-      const buyPrice = editedItem.MVD_BuyPrc;
-      const salePrice = editedItem.MVD_SalePrc;
-
-      // 計算發貨相關小計
-      const buyNet = buyPrice * outgodsQty;
-      editedItem.OUTGODS_QTY = outgodsQty; // 更新發貨數量
-      editedItem.OUTGODS_BuyNet = buyNet; // 更新發貨未稅進價小計
-
-      // 根據商品稅別重新計算稅額
-      if (editedItem.PLU_StockTaxType === '1') { // 應稅
-        editedItem.OUTGODS_BuyTax = Math.floor(buyNet * 0.05);
-      } else { // 免稅
-        editedItem.OUTGODS_BuyTax = 0;
-      }
-
-      // 計算總金額
-      editedItem.OUTGODS_BuyAmt = editedItem.OUTGODS_BuyNet + editedItem.OUTGODS_BuyTax;
-      editedItem.OUTGODS_SaleAmt = salePrice * outgodsQty;
-    }
-
-    // 重新計算所有列的總計
-    this.calculateTotals();
-
-    // 觸發 Angular 變更偵測，讓表格重新渲染
-    this.data = [...this.data];
-  }
 
   calculateTotals(): void {
     const totalQty = this.data.reduce((sum, item) => sum + (item.OUTGODS_QTY || 0), 0);
@@ -207,8 +192,14 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
       this.isComponentReady = true; // 顯示元件，觸發重建和 ngOnInit
     }, 0);
   }
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
+      const valid = this.tableEditComponent.validateAndShowErrors();
+      if (!valid) {
+        this.loading = false;
+        return;
+      }
       const rawFormValue = frm.getRawValue();
       const payload: ITLS56050Request = {
         id: this.rowdata?.id,
@@ -266,5 +257,11 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
       this.messageService.successBubble(response.Message);
       this.onCancel();
     });
+  }
+
+  onTableDataChange(newData: any[]): void {
+    this.data = newData;
+    this.dataChanged = true; // 標記已修改，禁用確認發貨按鈕
+    this.calculateTotals();  // 重新計算主檔總計
   }
 }

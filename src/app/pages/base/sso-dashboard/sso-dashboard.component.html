@@ -129,7 +129,8 @@
         <small *ngIf="form.errors?.['passwordsMismatch']" class="p-error block">密碼與確認密碼不符。</small>
       </div>
     </div>
-    <div class="flex justify-content-end gap-2">
+    <div class="flex gap-2" [class.justify-content-between]="noClose" [class.justify-content-end]="!noClose">
+      <p-button label="登出" severity="secondary" (onClick)="authService.logout()" *ngIf="noClose" />
       <p-button label="取消" severity="secondary" (onClick)="visible = false" *ngIf="!noClose" />
       <p-button label="確定" [loading]="formButtonLoading" type="submit" />
     </div>
