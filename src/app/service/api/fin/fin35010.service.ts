@@ -4,8 +4,15 @@ import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { ApiResponse } from '../fin/fin26010.service';
 
-/** 查詢主列表 Request 介面 (繼承分頁及排序欄位) */
-export interface FIN35010QueryRequest {
+/** 通用分頁排序介面 */
+export interface PaginationSort {
+  PageSize?: number;
+  PageIndex?: number;
+  SortBy?: { field: string; order: number }[];
+}
+
+/** 查詢主列表 Request (整合分頁) */
+export interface FIN35010QueryRequest extends PaginationSort {
   VEN_No?: string;
   VEN_Name?: string;
   TLT_Name?: string;
@@ -29,14 +36,14 @@ export interface FIN35010QueryRequest {
   Remark?: string;
 }
 
-/** 查詢主列表 Response Item 介面 */
+/** 查詢主列表 Response Item */
 export interface FIN35010Response {
   Id: number;
   CHK_No: string;
   VEN_No: string;
   VEN_Name: string;
   TLT_Name: string;
-  Amount: number; // 註：Swagger 顯示 Amount
+  CHK_Amt: number; // 修正：Swagger 為 CHK_Amt
   CHK_Type: string;
   GuaranteeCategory: string;
   Status: string;
@@ -45,7 +52,7 @@ export interface FIN35010Response {
   UPD_Date: string;
 }
 
-/** 查詢明細 Response 介面 (用於查詢單一項目) */
+/** 查詢明細 Response */
 export interface FIN35010DetailResponse {
   Id: number;
   STO_No: string;
@@ -73,19 +80,41 @@ export interface FIN35010DetailResponse {
   Remark: string;
 }
 
-/** 新增 Request 介面 (同明細欄位，但包含 update_type) */
-export interface FIN35010InsertRequest extends FIN35010DetailResponse {
-  update_type: string;
+/** 查詢專櫃 Request */
+export interface FIN35010TLTRequest {
+  Deposit_Type?: string;
+  query_date?: string;
+  tlt_no?: string;
+  ven_no?: string;
+  org_id?: string;
 }
 
-/** 更新 Request 介面 (同明細欄位，但包含 update_type) */
-export interface FIN35010UpdateRequest extends FIN35010DetailResponse {
-  update_type: string;
+/** 查詢專櫃 Response Item */
+export interface FIN35010TLTResponse {
+  STO_No: string;
+  Deposit_Mode: string;
+  Data_Source: string;
+  In_Date: string;
+  Deposit_Type: string;
+  CHK_Type: string;
+  Status: string;
+  CHK_Amt: number;//
+  VEN_No: string;//
+  VEN_Name: string;//
+  tlt_no: string; //
+  talent_id: number;
+  org_id: string;
+  TLT_Name: string;
+  tlt_bdate: string;//
+  tlt_edate: string;//
+  CRT_Date: string;
+  CRT_USR_No: string;
+  CRT_USR_Name: string;
 }
 
-/** 新增/更新/刪除操作回傳的 ID */
-export interface FIN35010ModifyResult {
-  Id: number;
+/** 新增/更新 Request (需包含 update_type) */
+export interface FIN35010ModifyRequest extends Partial<FIN35010DetailResponse> {
+  update_type: string;
 }
 
 @Injectable({
@@ -96,37 +125,33 @@ export class Fin35010Service {
 
   constructor(private http: HttpClient) { }
 
-  /**
-   * 查詢存入保證金主列表
-   * @param body 查詢條件
-   */
+  /** 1. 查詢主列表 */
   queryFIN35010(body: FIN35010QueryRequest): Observable<ApiResponse<FIN35010Response[]>> {
     return this.http.post<ApiResponse<FIN35010Response[]>>(`${this.apiUrl}/queryFIN35010`, body);
   }
 
-  /**
-   * 查詢存入保證金明細
-   * @param body 包含 Id 的請求
-   */
+  /** 2. 查詢明細 */
   queryFIN35010Detail(body: { Id: number }): Observable<ApiResponse<FIN35010DetailResponse>> {
     return this.http.post<ApiResponse<FIN35010DetailResponse>>(`${this.apiUrl}/queryFIN35010Detail`, body);
   }
 
-  /**
-   * 新增存入保證金資料
-   * @param body 包含新增資料的陣列
-   */
-  insertFIN35010(body: FIN35010InsertRequest): Observable<ApiResponse<FIN35010ModifyResult[]>> {
-    // 註：Swagger 回傳的 Data 是 FIN35010ModifyResult[]
-    return this.http.post<ApiResponse<FIN35010ModifyResult[]>>(`${this.apiUrl}/insertFIN35010`, body);
+  /** 3. 查詢專櫃 (Swagger 新增) */
+  queryFIN35010TLTTALENT(body: FIN35010TLTRequest): Observable<ApiResponse<FIN35010TLTResponse[]>> {
+    return this.http.post<ApiResponse<FIN35010TLTResponse[]>>(`${this.apiUrl}/queryFIN35010TLTTALENT`, body);
   }
 
-  /**
-   * 更新存入保證金資料
-   * @param body 包含更新資料的陣列
-   */
-  updateFIN35010(body: FIN35010UpdateRequest): Observable<ApiResponse<FIN35010ModifyResult[]>> {
-    // 註：Swagger 回傳的 Data 是 FIN35010ModifyResult[]
-    return this.http.post<ApiResponse<FIN35010ModifyResult[]>>(`${this.apiUrl}/updateFIN35010`, body);
+  /** 4. 單筆新增 */
+  insertFIN35010(body: FIN35010ModifyRequest): Observable<ApiResponse<{ Id: number }[]>> {
+    return this.http.post<ApiResponse<{ Id: number }[]>>(`${this.apiUrl}/insertFIN35010`, body);
+  }
+
+  /** 5. 批次新增 (Swagger 新增) */
+  insertListFIN35010(body: { List: FIN35010ModifyRequest[] }): Observable<ApiResponse<{ Id: number }[]>> {
+    return this.http.post<ApiResponse<{ Id: number }[]>>(`${this.apiUrl}/insertListFIN35010`, body);
+  }
+
+  /** 6. 更新 */
+  updateFIN35010(body: FIN35010ModifyRequest): Observable<ApiResponse<{ Id: number }[]>> {
+    return this.http.post<ApiResponse<{ Id: number }[]>>(`${this.apiUrl}/updateFIN35010`, body);
   }
 }

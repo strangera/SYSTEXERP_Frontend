@@ -1,21 +1,21 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Column, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { ITLS56060Detail, ITLS56060Request, ITLS56060Response, Tls56060Service } from '@service/api/tls/tls56060.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ITLS56060Detail, ITLS56060Request, ITLS56060Response, Tls56060Service } from '@service/api/tls/tls56060.service';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 @Component({
   selector: 'app-tls56060-cru',
@@ -32,8 +32,8 @@ import { ITLS56060Detail, ITLS56060Request, ITLS56060Response, Tls56060Service }
     CalendarComponent,
     NgIf,
     TranslateModule,
-    TableComponent,
     InputTextareaComponent,
+    TableEditComponent
   ]
 })
 export class TLS56060CRUComponent extends BasicCruPageComponent<ITLS56060Response> implements OnInit {
@@ -60,22 +60,51 @@ export class TLS56060CRUComponent extends BasicCruPageComponent<ITLS56060Respons
   });
 
   data: ITLS56060Detail[] = []; // 用於表格顯示明細數據
-  columns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
-    { field: 'PLU_Name', header: '商品名稱', visible: true },
-    { field: 'PLU_No', header: '國際條碼', visible: true },
-    { field: 'MVD_BuyPrc', header: '商品進價', visible: true },
-    { field: 'NowHaveQty', header: '目前庫存', visible: true },
-    { field: 'APPLY_Qty', header: '調撥申請量', visible: true },
-    { field: 'OUTGODS_QTY', header: '發貨量', visible: true },
-    { field: 'Confirm_QTY', header: '驗收量', visible: true, type: 'inputNumber' },
-    { field: 'Confirm_BuyNet', header: '進價小計', visible: true },
-    { field: 'MVD_Remark', header: '單項說明', visible: true, type: 'input' },
+  editColumns: EditColumn[] = [
+    { field: 'PLU_MagNo', header: '商品管理編號' },
+    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'PLU_No', header: '國際條碼' },
+    { field: 'MVD_BuyPrc', header: '商品進價' },
+    { field: 'NowHaveQty', header: '目前庫存' },
+    { field: 'APPLY_Qty', header: '調撥申請量' },
+    { field: 'OUTGODS_QTY', header: '發貨量' },
+    {
+      field: 'Confirm_QTY',
+      header: '驗收量',
+      type: 'inputNumber',
+      min: 0,
+      // 當驗收量改變時，自動計算相關欄位
+      calculate: (rowData: any, value: number) => {
+        const confirmQty = value || 0;
+        const buyPrice = rowData.MVD_BuyPrc || 0;
+        const salePrice = rowData.MVD_SalePrc || 0;
+        // 1. 計算驗收未稅進價小計
+        const buyNet = buyPrice * confirmQty;
+        // 2. 計算驗收進價稅額 (應稅 '1' 算 5%)
+        let buyTax = 0;
+        if (rowData.PLU_StockTaxType === '1') {
+          buyTax = Math.floor(buyNet * 0.05);
+        }
+        // 3. 計算驗收含稅總額與售價總額
+        const buyAmt = buyNet + buyTax;
+        const saleAmt = salePrice * confirmQty;
+        // 返回物件，app-table-edit 會自動 patch 這些值到該列資料中
+        return {
+          Confirm_BuyNet: buyNet,
+          Confirm_BuyTax: buyTax,
+          Confirm_BuyAmt: buyAmt,
+          Confirm_SaleAmt: saleAmt
+        };
+      }
+    },
+    { field: 'Confirm_BuyNet', header: '進價小計' },
+    { field: 'MVD_Remark', header: '單項說明', type: 'input' },
   ];
 
   brandOptions: { label: string; value: string }[] = [];
   warehouseOptions: { label: string; value: string }[] = [];
   userOptions: { label: string; value: string }[] = [];
+  dataChanged = false; // 標記資料是否有變更
 
   constructor(
     private readonly tls56060Service: Tls56060Service,
@@ -101,6 +130,7 @@ export class TLS56060CRUComponent extends BasicCruPageComponent<ITLS56060Respons
       this.dataForm.get('Confirm_DATE')?.setValue(new Date());
       this.dataForm.get('Confirm_USR_No')?.setValue(this.authService.currentUserValue?.user_No || '');
     }
+    this.loading = true;
     this.tls56060Service.getTLS56060Info(MVM_No).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
       const masterData = response.Data.TLS56060Data;
       const detailsData = response.Data.detail_TLS56060;
@@ -142,44 +172,10 @@ export class TLS56060CRUComponent extends BasicCruPageComponent<ITLS56060Respons
       this.userOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
     });
   }
-  dataChanged = false; // 標記資料是否有變更
-  onRowEditSave(event: RowEditSaveEvent): void {
-    this.dataChanged = true;
-    // 取得被編輯的那一列資料的參考，以便直接修改它
-    // 使用 MVD_SeqNo 作為唯一識別碼來找到對應的物件
-    const editedItem = this.data.find(item => item.MVD_SeqNo === event.newData.MVD_SeqNo);
-
-    // 檢查是否成功找到該筆資料
-    if (editedItem) {
-      // 從 newData 取得使用者輸入的發貨數量
-      const confirmQty = event.newData.Confirm_QTY || 0;
-
-      // 使用原始資料 (oldData 或 editedItem) 中的單價來計算小計
-      const buyPrice = editedItem.MVD_BuyPrc;
-      const salePrice = editedItem.MVD_SalePrc;
-
-      // 計算發貨相關小計
-      const buyNet = buyPrice * confirmQty;
-      editedItem.Confirm_QTY = confirmQty; // 更新發貨數量
-      editedItem.Confirm_BuyNet = buyNet; // 更新發貨未稅進價小計
-
-      // 根據商品稅別重新計算稅額
-      if (editedItem.PLU_StockTaxType === '1') { // 應稅
-        editedItem.Confirm_BuyTax = Math.floor(buyNet * 0.05);
-      } else { // 免稅
-        editedItem.Confirm_BuyTax = 0;
-      }
-
-      // 計算總金額
-      editedItem.Confirm_BuyAmt = editedItem.Confirm_BuyNet + editedItem.Confirm_BuyTax;
-      editedItem.Confirm_SaleAmt = salePrice * confirmQty;
-    }
-
-    // 重新計算所有列的總計
-    this.calculateTotals();
-
-    // 觸發 Angular 變更偵測，讓表格重新渲染
-    this.data = [...this.data];
+  onTableDataChange(newData: any[]): void {
+    this.data = newData;
+    this.dataChanged = true; // 標記已修改，禁用確認收貨按鈕
+    this.calculateTotals();  // 重新計算主檔 Form 的加總
   }
 
   calculateTotals(): void {

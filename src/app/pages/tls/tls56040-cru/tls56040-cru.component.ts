@@ -1,5 +1,5 @@
 import { AsyncPipe, NgIf } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -11,8 +11,9 @@ import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropd
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateDuplicate } from '@shared/componentkit/table-edit/validate-field.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatAmount, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
 import { validateMinNumber, validateRequired } from '@shared/componentkit/table/validate-field.model';
 import { PanelModule } from 'primeng/panel';
 import { TableModule } from "primeng/table";
@@ -81,13 +82,13 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
       field: 'PLU_No', header: '國際條碼',
       type: 'input',
       onBlur: (rowData: IPOS2022Data, value: string, col: EditColumn, index: number) => this.onPLU_MagNoBlur(rowData, value, col, index),
-      validate: [validateRequired],
+      validate: [validateRequired, validateDuplicate],
     },
     { field: 'PLU_MagNo', header: '商品管理編號', },
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'MVD_BuyPrc', header: '商品進價', format: formatAmount },
     { field: 'NowHaveQty', header: '目前庫存' },
-    { field: 'APPLY_Qty', header: '數量', type: 'inputNumber', validate: [validateRequired, validateMinNumber(1)] },
+    { field: 'APPLY_Qty', header: '數量', type: 'inputNumber', validate: [validateRequired, validateMinNumber(1), validateTransferQty] },
     { field: 'APPLY_BuyNet', header: '進價小計', format: formatAmount },
     { field: 'MVD_Remark', header: '單項說明', type: 'input' },
   ]
@@ -107,7 +108,8 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
   ngOnInit(): void {
     this.initializePage('TLS56040', this.dataForm);
     if (!this.isFormCreateable) {
-      this.tls56040Service.queryPOS2022({ MVM_No: this.rowdata?.MVM_No || '', OUT_HOS_No: this.rowdata?.OUT_HOS_No || '' }).pipe(untilDestroyed(this)).subscribe(response => {
+      this.loading = true;
+      this.tls56040Service.queryPOS2022({ MVM_No: this.rowdata?.MVM_No || '', OUT_HOS_No: this.rowdata?.OUT_HOS_No || '' }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.data = response.Data || [];
       });
     }
@@ -135,11 +137,13 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
       }
     }
   }
-  onSubmit(frm: FormGroup) {
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
+  onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      if (this.data.length === 0) {
+      const valid = this.tableEditComponent.validateAndShowErrors();
+      if (!valid) {
         this.loading = false;
-        return this.messageService.errorBubble('明細資料不能為空');
+        return;
       }
       const payload: ITLS56040Request = {
         id: this.isFormCreateable ? undefined : this.rowdata?.id,
@@ -251,6 +255,7 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
               POD_SubQty: 0,
               POD_BuyNet: 0,
               POD_SaleAmt: 0,
+              NowHaveQty: 0
             });
           }
           this.data = [...this.data];
@@ -260,15 +265,6 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
       });
     }, 50);
   }
-  onRowEditSave(event: RowEditSaveEvent) {
-    const editedItem = event.newData;
-    if (editedItem.APPLY_Qty > editedItem.STK_CurrentQty) {
-      this.messageService.errorBubble('調撥數量不能大於目前庫存');
-      return;
-    }
-    this.calculateTotals();
-  }
-
   calculateTotals(): void {
     if (!this.data) { return; }
     this.data.forEach(item => {
@@ -281,7 +277,6 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
     const totalBuyNet = this.data.reduce((sum, item) => sum + (item.APPLY_BuyNet || 0), 0);
     this.dataForm.patchValue({ APPLY_TotQty: totalQty, APPLY_TotBuyNet: totalBuyNet });
   }
-
   dialogVisible = false;
   dialogQueryForm = this.formBuilder.group({
     queryNo: ['', [Validators.maxLength(20)]], // 商品管理編號
@@ -415,4 +410,11 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
   isRowSelectable(event: IPOS2022Data): boolean {
     return !this.data || !this.data.some((item: IPOS2022Data) => item.PLU_MagNo === event.PLU_MagNo);
   }
+}
+// 調撥數量不能大於目前庫存
+export function validateTransferQty(value: string, rowData: any): { isValid: boolean; errorMessage: string[] } {
+  return {
+    isValid: rowData.APPLY_Qty <= rowData.STK_CurrentQty,
+    errorMessage: [`調撥數量不能大於目前庫存`, '資料錯誤'],
+  };
 }

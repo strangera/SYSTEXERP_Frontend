@@ -1,8 +1,11 @@
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { CPM12020Request, CPM12020Response, Cpm12020Service } from '@service/api/cpm/cpm12020.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
@@ -17,12 +20,13 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
   selector: 'app-cpm12020',
   templateUrl: './cpm12020.component.html',
   standalone: true,
-  imports: [TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, TranslateModule]
+  imports: [AsyncPipe, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, TranslateModule]
 })
 export class CPM12020Component extends BasicQueryPageComponent<CPM12020Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    opinionCode: [null], // 顧客意見責任單位編號
-    unitName: [null, [Validators.maxLength(40)]], // 責任單位名稱類別名稱
+    ORG_ID: [null], // 組織代碼
+    CLASS_CODE: [null, [Validators.maxLength(40)]], // 類別代碼
+    CLASS_NAME: [null, [Validators.maxLength(40)]], // 責任單位名稱
     pageSize: [30],
     pageIndex: [1],
   });
@@ -31,18 +35,15 @@ export class CPM12020Component extends BasicQueryPageComponent<CPM12020Response>
   totalRecords = 0;
   lastQuery: CPM12020Request | null = null;
   columns: ReportColumn[] = [
-    { field: 'opinionCode', header: '顧客意見責任單位編號' },
-    { field: 'unitName', header: '責任單位名稱類別名稱' },
+    { field: 'ORG_ID', header: '組織代號' },
+    { field: 'CLASS_CODE', header: '類別代號' },
+    { field: 'CLASS_NAME', header: '責任單位名稱' },
   ];
-  opinionCodeOptions = [
-    { value: 1, label: 'X001/營運部' },
-    { value: 2, label: 'X002/行銷部' },
-    { value: 3, label: 'X003/管理部' },
-    { value: 4, label: 'X004/經企部' },
-    { value: 5, label: 'X005/財政部' },
-  ];
+  CLASS_CODEOptions = getSYS1000Options('T211')
+  ORG_IDOptions$ = this.dropdown.querySys3100();
   constructor(
-    public readonly cpm12020Service: Cpm12020Service
+    public readonly cpm12020Service: Cpm12020Service,
+    private readonly dropdown: DropdownApiService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -64,11 +65,11 @@ export class CPM12020Component extends BasicQueryPageComponent<CPM12020Response>
     this.confirmationService.confirm({
       header: `是否確認刪除 ${selectedItems.length} 筆資料?`,
       accept: () => {
-        const idList = selectedItems.map(item => item.id);
-        // this.cpm12020Service.deleteCPM12020({ idList }).pipe(untilDestroyed(this)).subscribe(() => {
-        //     this.messageService.successBubble('刪除成功');
-        //     this.onSubmit(this.queryForm);
-        //   });
+        const idList = selectedItems.map(item => item.ID);
+        this.cpm12020Service.deleteCPM12020({ idList }).pipe(untilDestroyed(this)).subscribe(() => {
+          this.messageService.successBubble('刪除成功');
+          this.onSubmit(this.queryForm);
+        });
       }
     });
   }

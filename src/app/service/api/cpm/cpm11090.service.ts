@@ -31,24 +31,50 @@ export interface QueryCPM11090Response {
   IsFinished: string;
 }
 
+/** 明細結果 Interface (編輯/檢視用) */
+export interface QueryDetailResponse {
+  ID: number,
+  MID: number,
+  STO_NO: string,
+  SEQ_ID: string,
+  BY_MISSING_PEOPLE: string,
+  SalutationCode: string,
+  SalutationName: string,
+  COLLECTION_SITES: string,
+  MISSING_PEOPLE: string,
+  RelationsCode: string,
+  RelationsName: string,
+  REC_DATE: Date,
+  BROADCAST_YN: string,
+  BROADCAST_SITUAATION: string,
+  BROADCAST_DATE: string,
+  IsFinished: boolean,
+  CRT_Date: string,
+  CRT_USR_No: string,
+  CRT_USR_Name: string,
+  UPD_Date: string,
+  UPD_USR_No: string,
+  UPD_USR_Name: string
+}
+
 /** 新增資料 Interface */
 export interface InsertCPM11090Request {
-  by_MISSING_PEOPLE: string;
-  salutation?: string;
-  collectioN_SITES: string;
-  missinG_PEOPLE?: string;
-  relations?: string;
-  reC_DATE: string | Date;
+  by_MISSING_PEOPLE: string; // 被尋人姓名
+  salutation?: string;       // 被尋人稱謂
+  collectioN_SITES: string;  // 集合地點
+  missinG_PEOPLE?: string;   // 尋人者
+  relations?: string;        // 與被尋人關係
+  reC_DATE: string | Date;   // 登錄日期
 }
 
 /** 編輯資料 Interface */
 export interface UpdateCPM11090Request {
-  seQ_ID: string;
-  by_MISSING_PEOPLE: string;
-  salutation?: string;
-  collectioN_SITES: string;
-  missinG_PEOPLE?: string;
-  relations?: string;
+  seQ_ID: string;             // 登錄編號
+  by_MISSING_PEOPLE: string;  // 被尋人姓名
+  salutation?: string;        // 被尋人稱謂
+  collectioN_SITES: string;   // 集合地點
+  missinG_PEOPLE?: string;    // 尋人者
+  relations?: string;         // 與被尋人關係
 }
 
 @Injectable({
@@ -74,6 +100,14 @@ export class Cpm11090Service {
         };
       })
     );
+  }
+
+  /**
+   * 取得單筆明細 (用於編輯畫面初始化)
+   * @param seQ_ID 登錄編號
+   */
+  getCPM11090Detail(seQ_ID: string): Observable<ApiResponse<QueryDetailResponse>> {
+    return this.http.post<ApiResponse<QueryDetailResponse>>(`${this.apiUrl}/getCPM11090Detail`, { seQ_ID });
   }
 
   /** * 新增尋人廣播

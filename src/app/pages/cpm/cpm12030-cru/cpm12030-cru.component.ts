@@ -1,5 +1,5 @@
 import { AsyncPipe, NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -8,6 +8,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize, of } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -42,7 +43,8 @@ export class CPM12030CRUComponent extends BasicCruPageComponent<CPM12030Data> im
       showClear: false,
       calculate: () => {
         return { 'CLASS_ID': null };
-      }
+      },
+      validate: [validateRequired]
     },
     {
       field: 'CLASS_ID',
@@ -59,6 +61,7 @@ export class CPM12030CRUComponent extends BasicCruPageComponent<CPM12030Data> im
       optionLabel: 'label',
       optionValue: 'value',
       showClear: false,
+      validate: [validateRequired]
     },
   ];
   data: CSS1004Data[] = [];
@@ -78,8 +81,14 @@ export class CPM12030CRUComponent extends BasicCruPageComponent<CPM12030Data> im
       });
     }
   }
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      const valid = this.tableEditComponent.validateAndShowErrors();
+      if (!valid) {
+        this.loading = false;
+        return;
+      }
       const params = {
         ID: this.isFormCreateable ? undefined : frm.get('ID')?.value,
         KIND_ID: frm.get('KIND_ID')?.value,

@@ -28,7 +28,6 @@ import { EntryType, TLS21020Data, TLS21020Query, TLS21020UpdateQuery } from './t
     ButtonComponent,
     DropdownComponent,
     MenubarComponent,
-    // TableComponent,
     TableEditComponent,
   ],
 })
@@ -46,15 +45,6 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   public readonly totalRecords = signal<number>(0);
   public readonly tableLoading = signal<boolean>(!1);
   public readonly selectedItems = signal<TLS21020Data[]>([]);
-
-  public readonly canSave = computed(() => {
-    for (const item of this.tableData()) {
-      if (item._isAutoInsertCandidate) continue;
-      const validation = this.validateRow(item);
-      if (!validation.isValid) return !1;
-    }
-    return !0;
-  });
 
   /** 根據 ENTRY_TYPE 動態調整欄位顯示與查詢 */
   public readonly entryTypeEffect = effect(() => {
@@ -117,90 +107,97 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     AccNotes: !0,
     // PAY_No: !1,
   });
-  private readonly allColumns = computed((): EditColumn[] => [
-    {
-      field: 'AccDC',
-      header: '借/貸',
-      format: (v: 'D' | 'C') => this.AccDCMap.get(v) || v,
-    },
-    { field: 'ItemDesc', header: '項目名稱' },
-    {
-      field: 'AccNo',
-      header: '會計科目',
-      type: 'dropdown',
-      options: this.service.GLS1005Options,
-      optionLabel: 'label',
-      optionValue: 'value',
-      showClear: !1,
-    },
-    {
-      field: 'ABAT_YN',
-      header: '是否專案應收',
-      format: (v: 'Y' | 'N') => Maps.YN.get(v) || v,
-    },
-    {
-      field: 'Org_ID',
-      header: '組織代碼',
-      type: 'dropdown',
-      options: this.service.SYS3100Options,
-      optionLabel: 'label',
-      optionValue: 'value',
-      validate: [validateRequired],
-      format: (v: string) => this.service.SYS3100Map().get(v)?.label || v,
-      showClear: !1,
-    },
-    {
-      field: 'AccNotes',
-      header: '傳票備註',
-      type: 'input',
-      width: '100%', /** @describe 先100 太寬再改 */
-    },
-    {
-      field: 'ObjectNo',
-      header: '是否依合約拆立組織',
-      type: 'dropdown',
-      format: (v: 'Y' | 'N') => Maps.YN.get(v) || v,
-      options: this.service.getYNOptions,
-      optionLabel: 'label',
-      optionValue: 'value',
-      width: '4rem',
-      showClear: !1,
-    },
-    {
-      field: 'RelatedPartyAccNo',
-      header: '區分關係人會科',
-      groupField: 'RelatedPartyAcc',
-      type: 'dropdown',
-      options: this.service.GLS1005Options,
-      optionLabel: 'label',
-      optionValue: 'value',
-      format: (v: string) => this.service.GLS1005Map().get(v)?.label || v || null,
-    },
-    {
-      field: 'VEN_No',
-      header: '應收廠商',
-      groupField: 'Vendor',
-      type: 'dropdown',
-      options: this.service.POS2013Options,
-      optionValue: 'value',
-      templateLabel: 'label',
-      // disabled: v => v.ABAT_YN === 'N',
-      disabled: (v, i, r) => r.ABAT_YN === 'N',
-    },
-    {
-      field: 'PAY_days',
-      header: '付款天數',
-      type: 'inputNumber',
-      // disabled: v => v.ABAT_YN === 'N',
-      disabled: (v, i, r) => r.ABAT_YN === 'N',
-      width: '4rem',
-    },
-    {
-      field: 'PAY_No',
-      header: '付款別編號',
-      type: 'input',
-    },
-  ]);
+  private readonly allColumns = computed((): EditColumn[] => {
+
+
+    return [
+      {
+        field: 'AccDC',
+        header: '借/貸',
+        format: (v: 'D' | 'C') => this.AccDCMap.get(v) || v,
+      },
+      { field: 'ItemDesc', header: '項目名稱' },
+      {
+        field: 'AccNo',
+        header: '會計科目',
+        type: 'dropdown',
+        options: this.service.GLS1005Options,
+        optionLabel: 'label',
+        optionValue: 'value',
+        validate: [validateRequired],
+        showClear: !1,
+      },
+      {
+        field: 'ABAT_YN',
+        header: '是否專案應收',
+        format: (v: 'Y' | 'N') => Maps.YN.get(v) || v,
+      },
+      {
+        field: 'Org_ID',
+        header: '組織代碼',
+        type: 'dropdown',
+        options: this.service.SYS3100Options,
+        optionLabel: 'label',
+        optionValue: 'value',
+        validate: [validateRequired],
+        format: (v: string) => this.service.SYS3100Map().get(v)?.label || v,
+        showClear: !1,
+      },
+      {
+        field: 'AccNotes',
+        header: '傳票備註',
+        type: 'input',
+        width: '100%', /** @describe 先100 太寬再改 */
+      },
+      {
+        field: 'ObjectNo',
+        header: '是否依合約拆立組織',
+        type: 'dropdown',
+        format: (v: 'Y' | 'N') => Maps.YN.get(v) || v,
+        options: this.service.getYNOptions,
+        optionLabel: 'label',
+        optionValue: 'value',
+        width: '4rem',
+        showClear: !1,
+      },
+      {
+        field: 'RelatedPartyAccNo',
+        header: '區分關係人會科',
+        groupField: 'RelatedPartyAcc',
+        type: 'dropdown',
+        options: this.service.GLS1005Options,
+        optionLabel: 'label',
+        optionValue: 'value',
+        format: (v: string) => this.service.GLS1005Map().get(v)?.label || v || null,
+      },
+      {
+        field: 'VEN_No',
+        header: '應收廠商',
+        groupField: 'Vendor',
+        type: 'dropdown',
+        options: this.service.POS2013Options,
+        optionValue: 'value',
+        templateLabel: 'label',
+        validate: [this.ABATValidator],
+        // disabled: v => v.ABAT_YN === 'N',
+        // disabled: (v, i, r) => r.ABAT_YN === 'N',
+      },
+      {
+        field: 'PAY_days',
+        header: '付款天數',
+        type: 'inputNumber',
+        validate: [this.ABATValidator],
+        // disabled: v => v.ABAT_YN === 'N',
+        // disabled: (v, i, r) => r.ABAT_YN === 'N',
+        width: '4rem',
+      },
+      {
+        field: 'PAY_No',
+        header: '付款別編號',
+        type: 'input',
+      },
+    ];
+  });
 
   /** 根據 columnsKeys 動態產生最終欄位 */
   public readonly columns = computed((): EditColumn[] => {
@@ -254,6 +251,11 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       if (!ENTRY_TYPE) return void (this.loading = !1);
 
       const data = this.tableData().filter(v => !v._isAutoInsertCandidate);
+      for (const item of data) {
+        const validation = this.validateRow(item);
+        if (!validation.isValid) return this.messageService.errorBubble(validation.errorMessage);
+      }
+
       const payload: TLS21020UpdateQuery[] = data.map(item => ({
         ...item,
         ObjectNo: item.ObjectNo === 'Y' ? 'Y' : 'N',
@@ -297,20 +299,23 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
   /** 錯誤檢查 */
   public validateRow = (rowData: TLS21020Data, index?: number): { isValid: boolean, errorMessage: string; } => {
-    // Org_ID 必填
+    // 必填欄位檢查
     if (this.isEmpty(rowData.Org_ID)) return this.fail('組織代碼必須填寫');
+    if (this.isEmpty(rowData.AccDC)) return this.fail('借/貸必須填寫');
+    if (this.isEmpty(rowData.ItemDesc)) return this.fail('項目名稱必須填寫');
+    if (this.isEmpty(rowData.AccNo)) return this.fail('會計科目必須填寫');
 
-    // ABAT_YN 為 Y 時，VEN_No 必填
-    if (rowData.ABAT_YN !== 'N')
+    // ABAT_YN 相關檢查
+    if (rowData.ABAT_YN === 'Y') {
       if (this.isEmpty(rowData.VEN_No)) return this.fail('應收廠商必須填寫');
+      if (this.validateValue(rowData.PAY_days)) return this.warn('付款天數必須為大於等於0的整數');
+      if (this.isEmpty(rowData.PAY_days)) return this.warn('付款天數必須填寫');
+    }
 
-    // 可選欄位警告檢查
-    if (this.validateValue(rowData.PAY_days)) return this.warn('付款天數必須為大於等於0的整數');
-    if (this.isEmpty(rowData.PAY_days)) return this.warn('付款天數必須填寫');
-    if (this.isEmpty(rowData.PAY_No)) return this.warn('付款別編號必須填寫');
-    if (this.isEmpty(rowData.AccNotes)) return this.warn('傳票備註必須填寫');
-    if (this.isEmpty(rowData.AccNo)) return this.warn('會計科目必須填寫');
-    if (this.isEmpty(rowData.RelatedPartyAccNo)) return this.warn('區分關係人會科必須填寫');
+    // 選填欄位檢查
+    if (this.isEmpty(rowData.PAY_No)) return this.warn('付款別編號建議填寫');
+    if (this.isEmpty(rowData.AccNotes)) return this.warn('傳票備註建議填寫');
+    if (this.isEmpty(rowData.RelatedPartyAccNo)) return this.warn('區分關係人會科建議填寫');
 
     // 檢查重複 (AccDC, ItemDesc, AccNo)
     const rows = this.tableData();
@@ -325,8 +330,14 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         return this.fail('會計科目與項目描述必須唯一');
     }
 
-    return { isValid: !0, errorMessage: '' };
+    return this.warn('');
   };
+
+  private ABATValidator(value: any, rowData: any, data: any[], field: string, header: string) {
+    return (rowData?.ABAT_YN === 'Y' && this.isEmpty(value))
+      ? { isValid: !1, errorMessage: [`${header ?? '此欄位'}為必填欄位`] }
+      : { isValid: !0, errorMessage: [''] };
+  }
 
   /** 檢查型別 */
   private validateValue<T>(value: T): boolean {

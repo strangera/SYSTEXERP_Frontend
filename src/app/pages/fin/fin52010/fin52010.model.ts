@@ -39,7 +39,8 @@ export interface FIN52010UpdatePayload {
   AccYear?: string;
 }
 
-export interface FIN52010UpdateResult {
+export type FIN52010UpdateResult = Omit<BaseQueryResponse<_FIN52010UpdateResult>, 'Data'> & { Data: _FIN52010UpdateResult; };
+interface _FIN52010UpdateResult {
   CompNo: string;
   OpenDate: string;
   CloseDate: string;

@@ -34,6 +34,9 @@
       .p-button-icon {
         font-size: 1.5em;
       }
+      .button-group .insert-button {
+        width: auto !important;
+      }
     }
     .invalid-row {
       color: var(--red-500) !important;

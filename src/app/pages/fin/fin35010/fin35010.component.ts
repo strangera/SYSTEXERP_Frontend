@@ -1,4 +1,4 @@
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -61,7 +61,8 @@ export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response>
     org_id: [null], // 組織代碼(下拉)
     Remark: [null, Validators.maxLength(160)], // 摘要(input輸入)
     Deposit_Type: [null], // 保證類別(下拉) // 保證金類型 (1=押金 2=履約保證金 3=施工保證金 4=開業保證金)
-    CHK_Amt: [null, Validators.max(9999999999)], // 金額(數字範圍輸入)
+    CHK_AmtFrom: [null, Validators.max(9999999999)], // 金額(數字範圍輸入)
+    CHK_AmtTo: [null, Validators.max(9999999999)], // 金額(數字範圍輸入)
     pageIndex: [1],
     pageSize: [30],
   });
@@ -85,12 +86,14 @@ export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response>
     { field: 'Status', header: '票據狀態', format: (v) => getSYS1000('ARS4008_Status', v) },
     { field: 'Remark', header: '摘要' },
     { field: 'CRT_Date', header: '建檔日期', format: formatDate },
+    { field: 'CreateDate', header: '建檔日期', format: formatDate },
     { field: 'UPD_Date', header: '變更日期', format: formatDate },
   ];
 
   constructor(
     public readonly fin35010Service: Fin35010Service,
-    private readonly dropdown: DropdownApiService
+    private readonly dropdown: DropdownApiService,
+    private readonly datePipe: DatePipe
   ) {
     super();
   }
@@ -100,12 +103,42 @@ export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response>
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.fin35010Service.queryFIN35010(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      const rawValue = frm.value;
+      const body: FIN35010QueryRequest = {
+        ...rawValue,
+        // 組織代碼
+        OrgId: rawValue.org_id,
+
+        // 合約起日
+        TLT_BDateFrom: this.datePipe.transform(rawValue.tlt_bdateStart, 'yyyy-MM-dd'),
+        TLT_BDateTo: this.datePipe.transform(rawValue.tlt_bdateEnd, 'yyyy-MM-dd'),
+
+        // 合約迄日
+        TLT_EDateFrom: this.datePipe.transform(rawValue.tlt_edateStart, 'yyyy-MM-dd'),
+        TLT_EDateTo: this.datePipe.transform(rawValue.tlt_edateEnd, 'yyyy-MM-dd'),
+
+        // 收票日期
+        DepositDateFrom: this.datePipe.transform(rawValue.Deposit_DateStart, 'yyyy-MM-dd'),
+        DepositDateTo: this.datePipe.transform(rawValue.Deposit_DateEnd, 'yyyy-MM-dd'),
+
+        // 到期日
+        CHK_ExpireDateFrom: this.datePipe.transform(rawValue.CHK_ExpireDateStart, 'yyyy-MM-dd'),
+        CHK_ExpireDateTo: this.datePipe.transform(rawValue.CHK_ExpireDateEnd, 'yyyy-MM-dd'),
+
+        // 變更日期
+        UPD_DateFrom: this.datePipe.transform(rawValue.UPD_DateStart, 'yyyy-MM-dd'),
+        UPD_DateTo: this.datePipe.transform(rawValue.UPD_DateEnd, 'yyyy-MM-dd'),
+      };
+
+      this.fin35010Service.queryFIN35010(body).pipe(
+        finalize(() => this.loading = false),
+        untilDestroyed(this)
+      ).subscribe(res => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
-        this.lastQuery = frm.value;
-        this.queryStateService.setQueryState(this.ProgNo, frm.value);
-      })
+        this.lastQuery = body;
+        this.queryStateService.setQueryState(this.ProgNo, body);
+      });
     });
   }
 }

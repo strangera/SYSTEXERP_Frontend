@@ -86,7 +86,7 @@ export class TableEditComponent implements OnChanges {
   @Input() showDelete = true;                 // 是否顯示 刪除按鈕
   @Output() delete = new EventEmitter<any>(); // 刪除事件
   @Input() showInsert = false;                // 是否顯示 新增按鈕
-  @Input() insertText = '';               // 新增按鈕文字
+  @Input() insertText: string | undefined;               // 新增按鈕文字
   @Input() insertDisabled = false;            // 新增按鈕是否禁用
   @Output() insert = new EventEmitter<any>(); // 新增事件
   // Header(右) 相關
@@ -306,10 +306,15 @@ export class TableEditComponent implements OnChanges {
     this.cdr.markForCheck();
   }
   /** // !!! 整筆欄位使用，父層使用方法：
+  / * // !!! @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   /* // !!! 1. 宣告 const tableEditComponent = inject(TableEditComponent);
   /* // !!! 1. 或者宣告 @ViewChild('tableEdit') tableEditComponent!: TableEditComponent;
   /* // !!! 2. 在提交呼叫共通元件：const valid = this.tableEditComponent.validateAndShowErrors();
   /* // !!! 3. 使用 valid 來判斷是否通過
+      if (!valid) {
+        this.loading = false;
+        return;
+      }
 /** 執行完整的驗證並處理錯誤提示
    * @returns {boolean} 整個表格是否有效
    */
