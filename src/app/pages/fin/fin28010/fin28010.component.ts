@@ -7,7 +7,7 @@ import { Fin28010Service } from '@service/api/fin/fin28010.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -24,14 +24,13 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 
 export class FIN28010Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    WSLIP_NO: ['', [Validators.maxLength(12)]],
-    Voucher_Date: [null as Date | null, [Validators.required,]],
+    WSLIP_NO: ['', [Validators.maxLength(15)]],
+    VouDate: [null as Date | null, [Validators.required,]],
     ...createPaginationConfig([{ field: 'AccNo', order: 1 }]),
   });
   selectedItems: any[] = [];
   totalRecords = 0;
   data: any[] = [];
-  btnLoading = false;
   selectAll = false;
   get selectedCount(): number {
     return this.selectedItems?.length ?? 0;
@@ -42,8 +41,8 @@ export class FIN28010Component extends BasicQueryPageComponent<any> implements O
     { field: 'VEN_No', header: '廠商編號', visible: true },
     { field: 'VEN_Name', header: '廠商名稱', visible: true },
     { field: 'NoteDesc', header: '摘要', visible: true },
-    { field: 'd_amt', header: '借方金額', visible: true },
-    { field: 'c_amt', header: '貸方金額', visible: true },
+    { field: 'd_amt', header: '借方金額', visible: true, format: formatAmount },
+    { field: 'c_amt', header: '貸方金額', visible: true, format: formatAmount },
     { field: 'org_id', header: '組織代號', visible: true },
     { field: 'PTA', header: '立沖代號', visible: true },
   ];
@@ -62,28 +61,21 @@ export class FIN28010Component extends BasicQueryPageComponent<any> implements O
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       const v = frm.getRawValue();
-
-      const pageSize = v.PageSize ?? 0;
-      const pageIndex = v.PageIndex ?? 0;
-
       const payload = {
-        PageSize: pageSize,
-        PageIndex: pageIndex,
-        OrderBy: v.OrderBy ?? '',
-        Offset: pageSize && pageIndex ? (pageIndex - 1) * pageSize : 0,
-        SortBy: v.SortBy ?? [],
-
-        WSLIP_NO: v.WSLIP_NO ?? '',
-        Voucher_Date: v.Voucher_Date
-          ? this.datePipe.transform(v.Voucher_Date, 'yyyy-MM-dd')
-          : ''
+        PageSize: 20,
+        PageIndex: 1,
+        OrderBy: '',
+        Offset: 0,
+        SortBy: [{ field: 'AccNo', order: 1 }],
+        WSLIP_NO: v.WSLIP_NO || '',
+        VouDate: this.datePipe.transform(v.VouDate, 'yyyy-MM-dd') || ''
       };
 
-      this.btnLoading = true;
+      this.loading = true;
+      this.messageService.blockUi();
 
       this.fin28010Service.queryFIN28010(payload).subscribe({
         next: (res: any) => {
-          this.btnLoading = false;
           if (res.Status === '0000' || res.Status === '200') {
             this.data = res.Data ?? [];
             this.totalRecords = res.TotalCount ?? 0;
@@ -92,6 +84,10 @@ export class FIN28010Component extends BasicQueryPageComponent<any> implements O
           }
         },
 
+        complete: () => {
+          this.loading = false;
+          this.messageService.unblockUi();
+        }
       });
     });
   }

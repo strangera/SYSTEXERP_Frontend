@@ -11,8 +11,8 @@
         <div class="grid p-fluid">
           <app-input-text class="col-12 md:col-6 lg:col-4" label="匯款單號" controlName="WSLIP_NO"
             [control]="queryForm.controls.WSLIP_NO" [submitted]="submitted"></app-input-text>
-          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="傳票日期" controlName="Voucher_Date"
-            [control]="queryForm.controls.Voucher_Date" [submitted]="submitted" />
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="傳票日期" controlName="VouDate"
+            [control]="queryForm.controls.VouDate" [submitted]="submitted" />
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
