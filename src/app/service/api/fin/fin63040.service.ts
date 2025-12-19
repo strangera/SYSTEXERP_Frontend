@@ -123,7 +123,7 @@ export interface QueryFIN63040DetailResult {
 export interface UpdateFIN63040Request {
   CheckNo: string;
   CheckTitle: string;
-  Remark: string;
+  Remark?: string;
   NoEndorseYn: string; // Y/N
   StatusFlag: string;  // 1/2
   PickupType: string;  // 0/1/2
