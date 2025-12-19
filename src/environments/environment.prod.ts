@@ -3,8 +3,8 @@ export const environment = {
   production: true,
   showDebugToggleInMenu: false,
   version: '@@BUILD_VERSION@@', // 手動設定的預設值
-  BaseUrl: '/TSRD_WEBAPIDEV',
-  ApiUrl: '/TSRD_WEBAPIDEV',
+  BaseUrl: '/TSRD_WEBAPI',
+  ApiUrl: '/TSRD_WEBAPI',
   PasswordKey: '8a9zx@a1231sdl!aafohc.u',
   PasswordIV: '12523648',
   APIKey:
