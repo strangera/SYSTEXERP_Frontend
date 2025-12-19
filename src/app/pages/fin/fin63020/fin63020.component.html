@@ -48,6 +48,8 @@
               [control]="queryForm.controls.bankAccountCode"
               [submitted]="submitted"
             ></app-dropdown>
+
+
           </div>
 
           <!-- 第2列 -->
@@ -270,6 +272,7 @@
 <!-- ✅ 列表：改用 app-table 才有內建 checkbox + isRowSelectable -->
 <div class="card">
   <app-table
+    #finTable
     [tableKey]="'FIN63020_TABLE'"
     [dataKey]="'CheckNo'"
     [columns]="columns"
@@ -283,9 +286,13 @@
     [isRowSelectable]="isRowSelectable"
     [showManage]="true"
     [showDetail]="true"
+    [showReportMode]="false"
+    [showDelete]="false"
     [showEdit]="true"
     (edit)="onEdit($event)"
     (detail)="onDetail($event)"
+    [lazy]="true"
+   
   >
 
    <header>
