@@ -65,6 +65,7 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
   data: FIN21010Response[] = [];
   columns: Column[] = [
     { field: 'BNK_No', header: '銀行代碼', visible: true },
+    { field: 'AccCName', header: '公司銀行科目中文名稱', visible: true },
     // {
     //   field: 'BNK_BranchNo',
     //   header: '銀行分行代號',
@@ -101,10 +102,10 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
       header: '應收票據科目',
       visible: false,
     },
-    // { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate},
+    // { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate },
     // { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
     // { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
-    // { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDate},
+    // { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
     // { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
     // { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
   ];
@@ -131,7 +132,7 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
         next: (response) => {
           if (response.Status === '0000') {
             this.data = response.Data || [];
-            console.log('Result', this.data);
+            console.log('Result', response);
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
           } else {
@@ -147,7 +148,6 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
         },
       });
 
-      console.log('查詢API待提供');
       this.loading = false;
     });
   }
@@ -234,6 +234,7 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
       this.GLS1005_BNK_CheckInAccNo_Option = list.map((item: any) => ({
         No: item.No, // 應付票據科目 代號
         Name: item.Name, // 應付票據科目 名稱
+        Label: item.No + '-' + item.Name, // 代碼+名稱
       }));
       console.log('應付票據科目:', this.GLS1005_BNK_CheckInAccNo_Option);
     });
@@ -243,6 +244,7 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
       this.GLS1005_BNK_CheckOutAccNo_Option = list.map((item: any) => ({
         No: item.No, // 應收票據科目 代號
         Name: item.Name, // 應收票據科目 名稱
+        Label: item.No + '-' + item.Name, // 代碼+名稱
       }));
       console.log('應收票據科目:', this.GLS1005_BNK_CheckOutAccNo_Option);
     });

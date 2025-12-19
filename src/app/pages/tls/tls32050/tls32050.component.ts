@@ -347,7 +347,7 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
 
         this.data = res.Data ?? [];                           // 查詢資料
         this.historyRequestBody = formValue;                  // 查詢條件
-        this.totalRecords = res.TotalCount;              // 等候端
+        this.totalRecords = res.Data.length;              // 等候端
         console.log('主查詢結果', res.Data);
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })
