@@ -88,7 +88,6 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
       header: '初盤',
       format: formatAmount,
       type: 'inputNumber',
-      disabled: () => this.rowdata?.PST_Status !== '1',
       placeholder: '請輸入數量',
       calculate: (row) => {
         if (this.crudstatus !== CRUDStatus.Edit) return {};
@@ -98,9 +97,23 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
           return {};
         }
 
-        return {
-          'DIFF_Qty': row.PST_Qty1 - row.SYS_STOCK_QTY,
-        };
+        // 狀態1(初盤)：用初盤計算差異量
+        if (this.rowdata?.PST_Status === '1') {
+          return {
+            'DIFF_Qty': row.PST_Qty1 - row.SYS_STOCK_QTY,
+          };
+        }
+
+        // 狀態2(複盤)或3(抽盤)：若複盤無值，則用初盤計算差異量
+        if (['2', '3'].includes(this.rowdata?.PST_Status || '')) {
+          if (row.PST_Qty2 === null || row.PST_Qty2 === undefined) {
+            return {
+              'DIFF_Qty': row.PST_Qty1 - row.SYS_STOCK_QTY,
+            };
+          }
+        }
+
+        return {};
       }
     },
     {
@@ -108,7 +121,7 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
       header: '複盤',
       format: formatAmount,
       type: 'inputNumber',
-      disabled: () => this.rowdata?.PST_Status !== '2',
+      disabled: () => !['2', '3'].includes(this.rowdata?.PST_Status || ''),
       placeholder: '請輸入數量',
       calculate: (row) => {
         if (this.crudstatus !== CRUDStatus.Edit) return {};
@@ -118,9 +131,16 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
           return {};
         }
 
-        return {
-          'DIFF_Qty': row.PST_Qty2 - row.SYS_STOCK_QTY,
-        };
+        // 狀態2(複盤)或3(抽盤)：若複盤有值，則用複盤計算差異量
+        if (['2', '3'].includes(this.rowdata?.PST_Status || '')) {
+          if (row.PST_Qty2 !== null && row.PST_Qty2 !== undefined) {
+            return {
+              'DIFF_Qty': row.PST_Qty2 - row.SYS_STOCK_QTY,
+            };
+          }
+        }
+
+        return {};
       }
     },
     {
@@ -138,9 +158,16 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
           return {};
         }
 
-        return {
-          'DIFF_Qty': row.PST_Qty3 - row.SYS_STOCK_QTY,
-        };
+        // 狀態3(抽盤)：若複盤無值，則用抽盤計算差異量
+        if (this.rowdata?.PST_Status === '3') {
+          if (row.PST_Qty2 === null || row.PST_Qty2 === undefined) {
+            return {
+              'DIFF_Qty': row.PST_Qty3 - row.SYS_STOCK_QTY,
+            };
+          }
+        }
+
+        return {};
       }
     },
     { field: 'DIFF_Qty', header: '差異量', format: formatAmount },
