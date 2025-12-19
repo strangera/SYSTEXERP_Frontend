@@ -217,4 +217,22 @@ export class FIN25020Service {
   deleteRemit(params: DeleteRemitRequest): Observable<ApiResponse<number>> {
     return this.http.post<ApiResponse<number>>(`${this.apiUrl}/deleteRemit`, params);
   }
+
+  /**
+   * 匯出 PDF (形成電匯明細資料)
+   */
+  exportFIN25020ToPdf(params: { WSLIP_NO: string }): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportFIN25020ToPdf`, params, {
+      responseType: 'blob'
+    });
+  }
+
+  /**
+   * 匯出 Excel (形成電匯明細資料)
+   */
+  exportFIN25020ToExcel(params: { WSLIP_NO: string }): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportFIN25020ToExcel`, params, {
+      responseType: 'blob'
+    });
+  }
 }

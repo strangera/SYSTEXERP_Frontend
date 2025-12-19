@@ -15,7 +15,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, formatDate } from '../../../shared/componentkit/table/table.model';
 
 // 定義資料介面 (對應後端 Response)
 export interface FIN25020Data {
@@ -62,7 +62,9 @@ export class FIN25020Component extends BasicQueryPageComponent<FIN25020Data> imp
     BNK_id: [''], // 銀行ID
     BNK_AccName: ['', [Validators.maxLength(40)]], // 銀行帳戶名稱
     VouStatus: [''], // 轉傳票狀態
-    ...createPaginationConfig([{ field: 'WSLIP_NO', order: 1 }]), // 分頁和排序參數
+    pageSize: [20], // 每頁筆數 (小寫,配合 onLazyLoadData)
+    pageIndex: [1], // 頁碼 (小寫,配合 onLazyLoadData)
+    SortBy: [[{ field: 'WSLIP_NO', order: 1 }]], // 排序參數
   });
 
   totalRecords = 0;
@@ -121,7 +123,7 @@ export class FIN25020Component extends BasicQueryPageComponent<FIN25020Data> imp
     this.handleSubmit(frm, () => {
       const formValue = frm.value;
 
-      // 準備 API 請求參數
+      // 準備 API 請求參數 (表單用小寫,後端用大寫)
       const queryParams = {
         D_Date_Start: formValue.D_Date_Start,
         D_Date_End: formValue.D_Date_End,
@@ -131,11 +133,10 @@ export class FIN25020Component extends BasicQueryPageComponent<FIN25020Data> imp
         BNK_id: formValue.BNK_id,
         BNK_AccName: formValue.BNK_AccName,
         VouStatus: formValue.VouStatus,
-        // 分頁參數
-        PageIndex: formValue.PageIndex,
-        PageSize: formValue.PageSize,
-        SortField: formValue.SortField,
-        SortOrder: formValue.SortOrder,
+        // 分頁和排序參數 (轉換為大寫給後端)
+        PageIndex: formValue.pageIndex,
+        PageSize: formValue.pageSize,
+        SortBy: formValue.SortBy,
       };
 
       this.fin25020Service.queryFIN25020(queryParams)
@@ -151,17 +152,6 @@ export class FIN25020Component extends BasicQueryPageComponent<FIN25020Data> imp
     });
   }
 
-  override onDetail(data: FIN25020Data) {
-    // 呼叫 queryRemitDetail API 取得明細資料
-    this.fin25020Service.queryRemitDetail({ WSLIP_NO: data.WSLIP_NO })
-      .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        console.log('電匯明細資料:', response.Data);
-        // TODO: 跳轉到檢視頁面，傳遞明細資料
-        // this.router.navigate(['/fin/fin25020detail'], { state: { data: response.Data, header: data } });
-        this.messageService.infoBubble('檢視功能尚未實作完整頁面');
-      });
-  }
 
   onDelete(selectedItems: FIN25020Data[]) {
     // 檢查是否有已轉傳票的資料
@@ -193,19 +183,18 @@ export class FIN25020Component extends BasicQueryPageComponent<FIN25020Data> imp
   onExportPDF(rowData: FIN25020Data) {
     this.messageService.infoBubble(`正在匯出 PDF: ${rowData.WSLIP_NO}`);
 
-    // TODO: 實作 PDF 匯出邏輯
-    // 可以呼叫 API 或使用前端 PDF 產生工具
-    // 範例:
-    // this.fin25020Service.exportPDF(rowData.WSLIP_NO)
-    //   .pipe(untilDestroyed(this))
-    //   .subscribe(blob => {
-    //     // 下載檔案
-    //     const url = window.URL.createObjectURL(blob);
-    //     const link = document.createElement('a');
-    //     link.href = url;
-    //     link.download = `${rowData.WSLIP_NO}.pdf`;
-    //     link.click();
-    //   });
+    this.fin25020Service.exportFIN25020ToPdf({ WSLIP_NO: rowData.WSLIP_NO })
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (blob) => {
+          this.downloadFile(blob, `FIN25020_${rowData.WSLIP_NO}.pdf`);
+          this.messageService.successBubble('PDF 匯出成功');
+        },
+        error: (error) => {
+          console.error('PDF 匯出失敗:', error);
+          this.messageService.errorBubble('PDF 匯出失敗');
+        }
+      });
   }
 
   /**
@@ -214,19 +203,30 @@ export class FIN25020Component extends BasicQueryPageComponent<FIN25020Data> imp
   onExportExcel(rowData: FIN25020Data) {
     this.messageService.infoBubble(`正在匯出 Excel: ${rowData.WSLIP_NO}`);
 
-    // TODO: 實作 Excel 匯出邏輯
-    // 可以呼叫 API 或使用前端 Excel 產生工具
-    // 範例:
-    // this.fin25020Service.exportExcel(rowData.WSLIP_NO)
-    //   .pipe(untilDestroyed(this))
-    //   .subscribe(blob => {
-    //     // 下載檔案
-    //     const url = window.URL.createObjectURL(blob);
-    //     const link = document.createElement('a');
-    //     link.href = url;
-    //     link.download = `${rowData.WSLIP_NO}.xlsx`;
-    //     link.click();
-    //   });
+    this.fin25020Service.exportFIN25020ToExcel({ WSLIP_NO: rowData.WSLIP_NO })
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (blob) => {
+          this.downloadFile(blob, `FIN25020_${rowData.WSLIP_NO}.xlsx`);
+          this.messageService.successBubble('Excel 匯出成功');
+        },
+        error: (error) => {
+          console.error('Excel 匯出失敗:', error);
+          this.messageService.errorBubble('Excel 匯出失敗');
+        }
+      });
+  }
+
+  /**
+   * 下載檔案通用方法
+   */
+  private downloadFile(blob: Blob, fileName: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    window.URL.revokeObjectURL(url);
   }
 
   isRowSelectable(rowData: FIN25020Data): boolean {

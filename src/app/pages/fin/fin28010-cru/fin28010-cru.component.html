@@ -6,22 +6,20 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <!-- 傳票編號 -->
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text label="傳票編號" controlName="VouNo" [control]="dataForm.controls.VouNo"
+          <app-input-text label="傳票編號" controlName="WSLIP_NO" [control]="dataForm.controls.WSLIP_NO"
             [submitted]="submitted"></app-input-text>
         </div>
-
-        <!-- 傳票種類 -->
+        <!-- 傳票種類 (1/2/3 對應中文) -->
         <div class="col-12 md:col-6 lg:col-3">
-          <app-dropdown label="傳票種類" controlName="SrcSheetType" [options]="srcSheetTypeOptions" optionLabel="Name"
-            optionValue="No" [control]="dataForm.controls.SrcSheetType" [submitted]="submitted"></app-dropdown>
+          <app-dropdown label="傳票種類" controlName="VouType" [options]="vouTypeOptions" optionLabel="Name"
+            optionValue="No" [control]="dataForm.controls.VouType" [submitted]="submitted"></app-dropdown>
         </div>
 
-        <!-- 傳票型態 -->
+        <!-- 傳票型態 (RM 等，來自 SYS1000 entry_type) -->
         <div class="col-12 md:col-6 lg:col-3">
-          <app-dropdown label="傳票型態" controlName="VouType" [options]="vouTypeOptions" optionLabel="Name"
-            optionValue="No" [control]="dataForm.controls.VouType" [submitted]="submitted"></app-dropdown>
+          <app-dropdown label="傳票型態" controlName="VoucherType" [options]="srcSheetTypeOptions" optionLabel="Name"
+            optionValue="No" [control]="dataForm.controls.VoucherType" [submitted]="submitted"></app-dropdown>
         </div>
 
         <!-- 傳票日期 -->
@@ -34,16 +32,12 @@
           <app-input-text label="傳票摘要" controlName="Remark" [control]="dataForm.controls.Remark"
             [submitted]="submitted"></app-input-text>
         </div>
-        <!-- 結帳單號 -->
-        <div class="col-12 md:col-6 lg:col-3">
-          <app-dropdown label="補發票" controlName="INV_YN" [options]="INV_YNOptions" optionLabel="Name" optionValue="No"
-            [control]="dataForm.controls.INV_YN" [submitted]="submitted"></app-dropdown>
-        </div>
-        <!-- 傳票狀態 -->
-        <div class="col-12 md:col-6 lg:col-3">
+
+
+        <!-- <div class="col-12 md:col-6 lg:col-3">
           <app-dropdown label="傳票狀態" controlName="PostFlag" [options]="postFlagOptions" optionLabel="Name"
             optionValue="No" [control]="dataForm.controls.PostFlag" [submitted]="submitted"></app-dropdown>
-        </div>
+        </div> -->
         <!-- 建立人員 -->
         <div class="col-12 md:col-6 lg:col-3">
           <app-input-text label="建立人員" controlName="CRT_USR_No" [control]="dataForm.controls.CRT_USR_No"
@@ -54,26 +48,17 @@
           <app-calendar label="建立日期" controlName="CRT_Date" [control]="dataForm.controls.CRT_Date"
             [submitted]="submitted"></app-calendar>
         </div>
-        <!-- 修改人員 -->
-        <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text label="修改人員" controlName="UPD_USR_No" [control]="dataForm.controls.UPD_USR_No"
-            [submitted]="submitted"></app-input-text>
-        </div>
-        <!-- 修改日期 -->
-        <div class="col-12 md:col-6 lg:col-3">
-          <app-calendar label="修改日期" controlName="UPD_Date" [control]="dataForm.controls.UPD_Date"
-            [submitted]="submitted"></app-calendar>
-        </div>
       </div>
+
       <!-- 編輯資料 table -->
       <div class="col-12">
         <app-table-edit tableKey="TLS2C040Edit" [columns]="editColumns" [data]="editData"
           (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [tableRequired]="true"
-          [disabled]="isFormReadable" [showInsert]="false" [canInsert]="false" [showCheckBox]="false"
-          [showDelete]="false" [footerData]="editFooterData" />
+          [disabled]="false" [showInsert]="false" [canInsert]="false" [showCheckBox]="false" [showDelete]="false"
+          [footerData]="editFooterData" />
       </div>
 
-      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>

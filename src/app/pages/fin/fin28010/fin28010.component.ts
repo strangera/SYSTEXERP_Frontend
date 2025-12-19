@@ -77,8 +77,21 @@ export class FIN28010Component extends BasicQueryPageComponent<any> implements O
       this.fin28010Service.queryFIN28010(payload).subscribe({
         next: (res: any) => {
           if (res.Status === '0000' || res.Status === '200') {
-            this.data = res.Data ?? [];
-            this.totalRecords = res.TotalCount ?? 0;
+            const details = res.Data ?? [];
+
+            if (!details.length) {
+              this.messageService?.warnBubble?.('查無資料');
+              return;
+            }
+
+            const header = details[0];
+            const queryConditions = {
+              form: frm.getRawValue(),
+              details,
+            };
+
+            // 直接進入 CRU 顯示欄位與明細表
+            this.onDetail(header, queryConditions);
           } else {
             this.messageService?.errorBubble?.(res.Message || '查詢失敗');
           }

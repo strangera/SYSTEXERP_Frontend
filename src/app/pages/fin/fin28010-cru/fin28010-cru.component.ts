@@ -1,16 +1,18 @@
-import { NgIf } from '@angular/common';
+import { DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { Fin28010Service } from '@service/api/fin/fin28010.service';
 import { IDropdownItem } from '@service/utility/dropdown-api.model';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { formatAmount } from '@shared/componentkit/table/table.model';
 import { validateRequired } from '@shared/componentkit/table/validate-field.model';
 import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -35,25 +37,22 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     CalendarComponent,
     TranslateModule,
     TableEditComponent,
-    CustomFooterTableComponent
+    CustomFooterTableComponent,
+    DatePipe
   ]
 })
 export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    INV_YN: [''],                                      // 是否補發票
-    VouNo: [''],                    // 傳票編號
-    VouType: [''],                    // 傳票種類
-    SrcSheetType: [''],                // 傳票型態
+    WSLIP_NO: [{ value: '系統自動產生', disabled: true }],  // 匯款單號
+    INV_YN: ['N'],                     // 補發票與否
+    VouType: ['3'],                    // 傳票種類
     VouDate: [''],                     // 傳票日期
     Remark: [''],                         // 傳票摘要
-    No: [''],                       // 結帳單號
-    PostFlag: [''],                     // 傳票狀態
+    PostFlag: ['1'],                     // 傳票狀態
     CRT_USR_No: [''],                // 建立人員
     CRT_Date: [''],                  // 建立日期
-    UPD_USR_No: [''],                // 修改人員
-    UPD_Date: [''],                  // 修改日期
+    VoucherType: ['RM'],              // 傳票種類
   });
-
 
   // 傳票型態
   vouTypeOptions: IDropdownItem[] = [
@@ -77,16 +76,16 @@ export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements 
   editData: any[] = [];
   selectedItems: any[] = [];
   editFooterData = {
-    debitAmount: 0, // 借方總金額
-    creditAmount: 0, // 貸方總金額
+    d_amt: 0, // 借方總金額
+    c_amt: 0, // 貸方總金額
   }
 
   editColumns: EditColumn[] = [
-    { field: 'AccNo', header: '科目代號' },
-    { field: 'AccNotes', header: '科目名稱' },
+    { field: 'dc', header: '借/貸' },
+    { field: 'AccNo', header: '會計科目' },
     { field: 'NoteDesc', header: '摘要', type: 'input', validate: [validateRequired], width: '250px' },
     {
-      field: 'debitAmount', header: '借方金額',
+      field: 'd_amt', header: '借方金額',
       format: (v, i, r) => {
         if (r?.AccDC) {
           // 一般資料行
@@ -98,54 +97,54 @@ export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements 
       },
     },
     {
-      field: 'creditAmount', header: '貸方金額',
+      field: 'c_amt', header: '貸方金額',
       format: (v, i, r) => {
         if (r?.AccDC) {
-          // 一般資料行
           return r.AccDC === 'C' ? formatAmount(r.AccAmt) : '0';
         } else {
-          // footer 資料
           return v ? formatAmount(v) : '0';
         }
       }
     },
-    { field: 'ORG_ID', header: '組織代碼' },
-    { field: 'ProjectNo', header: '活動代號' },
+    { field: 'org_id', header: '組織代碼' },
+    { field: 'VEN_No', header: '廠商/員工編號' },
     { field: 'PTA', header: '立沖代號' }
   ];
   detailData: any[] = [];
   totalRecords = 0;
   detailFooterData: any[] = [];
 
-  detailColumns: Column[] = [
-    { field: 'VOUNO', header: '應收帳款代號', visible: true },
-    { field: 'SrcSheetType', header: '專案代號', visible: true },
-    { field: 'org_id', header: '組織代碼', visible: true },
-    { field: 'org_name', header: '組織名稱', visible: true },
-    { field: 'CustomerNo', header: '客戶代碼', visible: true },
-    { field: 'DetailNo', header: '廠商代碼', visible: true },
-    { field: 'VouType', header: '傳票類型', visible: true },
-    { field: 'sam_yyymm', header: '年月', visible: true },
-    { field: 'sam_termno', header: '帳次', visible: true },
-    { field: 'ar_amt', header: '應收帳款金額', visible: true, isTotal: true, format: formatAmount },
-    { field: 'pta_amt', header: '沖帳金額', visible: true, format: formatAmount },
-    { field: 'accno', header: '會計科目', visible: true },
-    { field: 'ent_date', header: '立帳日期', visible: true },
-    { field: 'perget_date', header: '預計收款日期', visible: true },
-    { field: 'SrcVouNo', header: '原始憑證', visible: true },
-    { field: 'notedesc', header: '備註', visible: true }
-  ];
-  //#endregion
 
   constructor(
 
-    private dropDownListService: DropDownListService
+    private dropDownListService: DropDownListService,
+    private fin28010Service: Fin28010Service,
+    private datePipe: DatePipe,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN28010', this.dataForm);
+
+    // 只開放「傳票摘要」欄位可編輯，其餘維持唯讀
+    this.dataForm.get('Remark')?.enable({ emitEvent: false });
+
+    const details = this.queryData?.details as any[] | undefined;
+    if (Array.isArray(details) && details.length) {
+      this.editData = details;
+      this.editFooterData = {
+        d_amt: details.reduce((sum, r) => sum + (Number(r.d_amt) || 0), 0),
+        c_amt: details.reduce((sum, r) => sum + (Number(r.c_amt) || 0), 0),
+      };
+      this.totalRecords = details.length;
+    }
+
+    // 將查詢畫面輸入的傳票日期帶入 CRU 顯示
+    const queryForm = this.queryData?.form as { VouDate?: any } | undefined;
+    if (queryForm?.VouDate) {
+      this.dataForm.patchValue({ VouDate: queryForm.VouDate });
+    }
 
     // 載入傳票種類
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'entry_type' })
@@ -157,23 +156,74 @@ export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   onSubmit(frm: FormGroup): void {
-    this.handleSubmit(frm, () => {
+    this.submitted = true;
+    this.loading = true;
+    this.messageService.blockUi();
 
+    if (frm.invalid) {
+      // 這個畫面目前沒有額外的 ReactiveForm 驗證規則
+      this.loading = false;
+      this.messageService.unblockUi();
+      return;
+    }
 
-      // this.fin54025Service
-      //   .queryFIN54025(payload)
-      //   .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-      //   .subscribe({
-      //     next: (res) => {
-      //       if (res.Status === '0000') {
-      //         this.data = res.Data || [];
-      //         this.totalRecords = res.TotalCount || this.data.length;
-      //       } else {
-      //         this.messageService.errorBubble(res.Message || '查詢失敗');
-      //       }
-      //     },
-      //   });
-    });
+    const formValue = frm.getRawValue();
+    // 以查詢時輸入的日期為主
+    const queryForm = this.queryData?.form as { VouDate?: any } | undefined;
+    const queryVouDate = queryForm?.VouDate ?? null;
+
+    if (!queryVouDate) {
+      this.messageService.errorBubble('查詢的傳票日期不存在，請返回查詢頁重新查詢');
+      this.loading = false;
+      this.messageService.unblockUi();
+      return;
+    }
+
+    const queryVouDateObj = typeof queryVouDate === 'string' ? new Date(queryVouDate) : queryVouDate;
+    const vouDateString = this.datePipe.transform(queryVouDateObj, 'yyyy-MM-dd');
+
+    const rows = (this.editData || []).filter(r => !r._isAutoInsertCandidate);
+
+    const payload = {
+      WSLIP_NO: formValue.WSLIP_NO,
+      VouDate: vouDateString,
+      VouType: formValue.VouType,
+      PostFlag: formValue.PostFlag,
+      VoucherType: formValue.VoucherType,
+      INV_YN: formValue.INV_YN,
+      Remark: formValue.Remark || '',
+      GLS3002List: rows.map(r => ({
+        dc: r.dc || '',
+        AccNo: r.AccNo || '',
+        d_amt: Number(r.d_amt) || 0,
+        c_amt: Number(r.c_amt) || 0,
+        org_id: r.org_id || '',
+        VEN_No: r.VEN_No || '',
+        NoteDesc: r.NoteDesc || '',
+        PTA: r.PTA || '',
+      })),
+    };
+
+    this.fin28010Service.insertFIN28010(payload)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.loading = false;
+          this.submitted = false;
+          this.messageService.unblockUi();
+        }),
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.Status === '0000' || res.Status === '0001') {
+            this.messageService.successBubble(res.Message || '儲存成功');
+            this.onCancel();
+          } else {
+            this.messageService.errorBubble(res.Message || '儲存失敗');
+          }
+        },
+
+      });
   }
 
 }

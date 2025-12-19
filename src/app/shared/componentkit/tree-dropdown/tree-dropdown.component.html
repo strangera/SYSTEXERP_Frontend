@@ -1,17 +1,17 @@
-@if (!card) {
+@if (!card()) {
 <p-button class="flex h-full"
           (onClick)="op.toggle($event)"
           icon="pi pi-share-alt"
           label="查看階層圖"
-          [disabled]="disabled"
-          [loading]="loading" />
+          [disabled]="disabled()"
+          [loading]="loading()" />
 } @else {
 <div class="card flex justify-content-center">
   <p-button (onClick)="op.toggle($event)"
             icon="pi pi-share-alt"
             label="查看階層圖"
-            [disabled]="disabled"
-            [loading]="loading" />
+            [disabled]="disabled()"
+            [loading]="loading()" />
 </div>
 }
 
@@ -19,7 +19,7 @@
 <p-overlayPanel #op
                 [appendTo]="'body'">
   <div class="flex flex-column gap-3 w-25rem">
-    <span class="font-medium text-900 block mb-2">{{ listTitle }}</span>
+    <span class="font-medium text-900 block mb-2">{{ listTitle() }}</span>
 
     <!-- 展開/收合 按鈕 -->
     <!-- <div class="flex flex-wrap gap-2 mb-6">
@@ -28,28 +28,31 @@
       </div> -->
 
     <div class="font-bold mb-2 flex gap-4">
-      <ng-container *ngFor="let col of Columns; let i = index">
-        <span tabindex="0"
-              (click)="expandToLevel(i + 1)"
-              (keydown)="onKeyDownExpand($event, i + 1)"
-              role="button"
-              class="cursor-pointer text-primary">
-          {{ col.label }}
-        </span>
-        <span *ngIf="i < Columns.length - 1">/</span>
-      </ng-container>
+      @for (col of columns(); track $index) {
+      <span tabindex="0"
+            (click)="expandToLevel($index + 1)"
+            (keydown)="onKeyDownExpand($event, $index + 1)"
+            role="button"
+            class="cursor-pointer text-primary">
+        {{ col.label }}
+      </span>
+      @if ($index < columnsLength())
+        {
+        <span>/</span> }
+        }
     </div>
     <!-- 樹狀展開層 -->
-    <p-tree [value]="treeData"
+    <p-tree [value]="treeData()"
             selectionMode="checkbox"
             styleClass="w-full md:w-[30rem]"
-            [(selection)]="selectedMembers"
-            [filter]="true"
+            [selection]="selectedMembers()"
+            (selectionChange)="onSelectionChange($event)"
+            [filter]="!0"
             filterPlaceholder="Strict Filter" />
 
     <!-- 新增全選/取消按鈕 -->
-    <div class="flex flex-wrap gap-2 mb-6"
-         *ngIf="SelectbleCheckBox">
+    @if (selectbleCheckBox()) {
+    <div class="flex flex-wrap gap-2 mb-6">
       <p-button label="全選"
                 icon="pi pi-check-square"
                 (click)="selectAll()" />
@@ -61,5 +64,6 @@
                 (onClick)="sendTreeSelect()"
                 class="align-self-end" />
     </div>
+    }
   </div>
 </p-overlayPanel>
