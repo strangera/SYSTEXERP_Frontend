@@ -38,11 +38,12 @@
         />
         <div
           class="col-12 md:col-6 lg:col-4"
-          (click)="openTransferSourceDialog()"
-          (keydown.enter)="openTransferSourceDialog()"
-          (keydown.space)="openTransferSourceDialog()"
-          tabindex="0"
-          style="cursor: pointer"
+          [class.cursor-pointer]="!isFormReadable"
+          (click)="!isFormReadable && openTransferSourceDialog()"
+          (keydown.enter)="!isFormReadable && openTransferSourceDialog()"
+          (keydown.space)="!isFormReadable && openTransferSourceDialog()"
+          [attr.tabindex]="isFormReadable ? null : 0"
+          [style.cursor]="isFormReadable ? 'default' : 'pointer'"
         >
           <app-input-text
             label="匯款來源單號"
@@ -50,23 +51,42 @@
             [control]="dataForm.controls.TransferSourceNo"
             [submitted]="submitted"
             [readonly]="true"
-            [customPlaceholder]="'點擊選擇匯款來源單號'"
+            [customPlaceholder]="isFormReadable ? '' : '點擊選擇匯款來源單號'"
           />
         </div>
       </div>
       <div class="grid p-fluid"></div>
 
+      <!-- 檢視模式：顯示電匯明細表格 -->
+      <!-- @if (isFormReadable) {
+        <div class="mt-3">
+          <h3 class="mb-2">電匯明細資料</h3>
+          <app-table
+            tableKey="RemitDetail"
+            dataKey="VEN_No"
+            [data]="remitDetailData"
+            [columns]="remitDetailColumns"
+            [showManage]="false"
+            [showFilter]="false"
+            [showDelete]="false"
+            [showCheckBox]="false"
+          ></app-table>
+        </div>
+      } -->
+
       <div
         class="grid justify-content-end gap-2 m-0 mt-3 border-top-1 surface-border pt-3"
       >
         <app-button btnType="cancel" (click)="onCancel()" />
-        <app-button
-          btnType="submit"
-          label="確認"
-          icon="pi pi-check"
-          [loading]="loading"
-          (click)="onSubmit(dataForm)"
-        />
+        @if (!isFormReadable) {
+          <app-button
+            btnType="submit"
+            label="確認"
+            icon="pi pi-check"
+            [loading]="loading"
+            (click)="onSubmit(dataForm)"
+          />
+        }
       </div>
     </form>
   </p-panel>

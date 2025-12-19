@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { DialogModule } from 'primeng/dialog';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { FIN25020Service, QueryBankAccountResponse, QueryUnremittedPAMResponse } from '../../../service/api/fin/fin25020.service';
+import { FIN25020Service, QueryBankAccountResponse, QueryRemitDetailResponse, QueryUnremittedPAMResponse } from '../../../service/api/fin/fin25020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -73,7 +73,23 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
     // { field: 'ItemCount', header: '筆數', visible: true },
   ];
 
-  constructor(private readonly fin25020Service: FIN25020Service) {
+  // 檢視模式：電匯明細資料
+  remitDetailData: QueryRemitDetailResponse[] = [];
+  remitDetailColumns: Column[] = [
+    { field: 'VEN_No', header: '廠商編號', visible: true },
+    { field: 'VEN_Name', header: '廠商名稱', visible: true },
+    { field: 'ACP_Amt', header: '帳款金額', visible: true },
+    { field: 'RMT_Amt', header: '匯款金額', visible: true },
+    { field: 'RMT_Fee', header: '匯款手續費', visible: true },
+    { field: 'CASH_BACK_AMT', header: '現金回饋金額', visible: true },
+    { field: 'COMP_WIRE_FEE', header: '公司支付電匯手續費', visible: true },
+    { field: 'BANK_DESC', header: '匯款銀行資訊', visible: true },
+    { field: 'RMT_BnkAccName', header: '匯款銀行帳戶名稱', visible: true },
+  ];
+
+  constructor(
+    private readonly fin25020Service: FIN25020Service
+  ) {
     super();
   }
 
@@ -83,11 +99,35 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
     // 載入銀行帳戶選項
     this.loadBankAccounts();
 
-    // 新增模式固定，因為這是「形成」的功能
-    if (!this.isFormCreateable) {
+    // 檢查是否為檢視模式（使用 BasicCruPageComponent 的 rowdata 和 crudstatus）
+    if (this.isFormReadable && this.rowdata) {
+      // 檢視模式：載入電匯明細
+      const headerData = this.rowdata as FIN25020Data;
+      this.loadRemitDetail(headerData);
+      // 將表單設為唯讀
+      this.dataForm.disable();
+    } else if (!this.isFormCreateable) {
+      // 新增模式固定，因為這是「形成」的功能
       // 如果不是新增模式，導回列表頁
       this.onCancel();
     }
+  }
+
+  // 載入電匯明細資料（檢視模式）
+  loadRemitDetail(headerData: FIN25020Data): void {
+    this.fin25020Service.queryRemitDetail({ WSLIP_NO: headerData.WSLIP_NO })
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.remitDetailData = response.Data;
+
+        // 填入表單資料（header 資訊）
+        this.dataForm.patchValue({
+          TransferSourceNo: headerData.WSLIP_NO,
+          CreateDate: headerData.D_Date ? new Date(headerData.D_Date) : new Date(),
+          TransferDate: headerData.RMT_Date ? new Date(headerData.RMT_Date) : new Date(),
+          BNK_id: headerData.BNK_id
+        });
+      });
   }
 
   // 載入銀行帳戶選項
