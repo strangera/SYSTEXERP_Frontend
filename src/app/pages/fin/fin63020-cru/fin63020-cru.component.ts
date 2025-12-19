@@ -95,7 +95,7 @@ export class FIN63020CRUComponent extends BasicCruPageComponent<any> implements 
 
     // --- ✅ 可更新欄位（依 Swagger updateFIN63020Request）---
     CheckTitle: ['', [Validators.required, Validators.maxLength(100)]],
-    Remark: ['', [Validators.required, Validators.maxLength(160)]],
+    Remark: ['', [ Validators.maxLength(160)]],
 
     NoEndorseYn: ['' as any, [Validators.required, Validators.maxLength(1)]],
     StatusFlag: ['' as any, [Validators.required, Validators.maxLength(1)]],

@@ -82,9 +82,10 @@
   </p-accordion>
 </div>
 
-<!-- ✅ 列表：app-table + checkbox + 可勾選條件 -->
+<!-- ✅ 列表：lazy=true + #finTable（套用 FIN63020 的排序修正） -->
 <div class="card">
   <app-table
+    #finTable
     [tableKey]="'FIN63040_TABLE'"
     [dataKey]="'CheckNo'"
     [columns]="columns"
@@ -99,10 +100,13 @@
     [showManage]="true"
     [showDetail]="true"
     [showEdit]="true"
+        [showReportMode]="false"
+    [showDelete]="false"
+    [lazy]="true"
     (edit)="onEdit($event)"
     (detail)="onDetail($event)"
   >
-      <header>
+    <header>
       <div class="flex justify-content-between align-items-center w-full">
         <div></div>
 
