@@ -54,6 +54,7 @@ const today = new Date();
     ButtonModule,
   ]
 })
+// 各櫃業績報表
 export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     BaseDateFrom: [today],  //交易日期開始

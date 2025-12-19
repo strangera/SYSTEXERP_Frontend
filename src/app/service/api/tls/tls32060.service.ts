@@ -79,10 +79,7 @@ export class TLS32060Service {
     return this.http.post<BaseQueryResponse<TLS32060Response>>(`${this.apiUrl}/queryTLS32060`, data);
   }
 
-  // // 查詢中分類業績 明細表
-  // queryTLS32050Detail(data: TLS32050DetailRequest): Observable<BaseQueryResponse<TLS32050DetailResponse>> {
-  //   return this.http.post<BaseQueryResponse<TLS32050DetailResponse>>(`${this.apiUrl}/queryTLS32060Detail`, data);
-  // }
+  // 查詢中分類業績 明細表(本作業無須明細)
 
   // 匯出 各櫃業績 報表
   exportTLS32060(request: TLS32060Request): Observable<Blob> {
