@@ -45,7 +45,9 @@ import {
 } from '../../../service/api/fin/fin63020.service';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { HttpResponse } from '@angular/common/http';
-
+import { AfterViewInit, ViewChild } from '@angular/core';
+import { TablePageEvent, TableLazyLoadEvent } from 'primeng/table';
+import { SortMeta } from 'primeng/api';
 export interface QueryFIN63020Row {
   CanPickupYn?: string; // 只是顯示用：可勾選=空白，不可勾選=X
   CheckNo?: string;
@@ -315,7 +317,7 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
               next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
                 const list = Array.isArray(res?.Data) ? res.Data : [];
                 this.BankCodeOptions = list.map((x) => ({
-                  label: `${x.BNK_No}-${x.BNK_BRANCHNAME}`,
+                  label: `${x.BNK_DepositAccNo}-${x.BNK_BRANCHNAME}`,
                   value: x.BNK_DepositAccNo,
                   raw: x,
                 }));
@@ -622,6 +624,7 @@ override onEdit(row: QueryFIN63020Row) {
           this.data = parsed.rows;
           this.totalRecords = parsed.total;
           this.lastQueryBody = { ...payload };
+           this._currentSortBy = payload.SortBy ?? this.defaultSort; 
           this.loading = false;
           this.cdr.detectChanges();
         },
@@ -776,4 +779,113 @@ override onEdit(row: QueryFIN63020Row) {
         complete: () => (this.btnLoading = false),
       });
   }
+  override onLazyLoadData(e: any) {
+  // e = { pageIndex, pageSize, SortBy }
+  const raw = this.queryForm.getRawValue();
+  const payload = this.buildQueryPayload({
+    ...raw,
+    pageIndex: e?.pageIndex,
+    pageSize: e?.pageSize,
+    SortBy: e?.SortBy,
+  });
+
+  this.loading = true;
+  this.fin63020Service
+    .queryFIN63020(payload)
+    .pipe(untilDestroyed(this))
+    .subscribe({
+      next: (res: ApiResponse<any>) => {
+        const parsed = this.parseQueryResponse(res);
+        this.data = parsed.rows;
+        this.totalRecords = parsed.total;
+        this.lastQueryBody = { ...payload };
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.data = [];
+        this.totalRecords = 0;
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+    });
+}
+  @ViewChild('finTable') finTable!: TableComponent;
+
+ngAfterViewInit(): void {
+  setTimeout(() => {
+    try {
+      (this.finTable as any).IsPrint = true;
+    } catch {}
+
+    const dt: any = (this.finTable as any).dt;
+
+    if (dt?.onLazyLoad) {
+      dt.onLazyLoad.pipe(untilDestroyed(this)).subscribe((e: any) => {
+        const pageSize = Number(e?.rows ?? 30);
+        const first = Number(e?.first ?? 0);
+        const pageIndex = Math.floor(first / pageSize) + 1;
+
+        this.fireQueryByPage(pageIndex, pageSize, e?.multiSortMeta);
+      });
+    }
+  });
+}
+private _currentSortBy: SortItem[] = this.defaultSort;
+
+private readonly _allowSortFields = new Set(
+  this.columns.map(c => c.field).filter(Boolean) as string[]
+);
+
+private fireQueryByPage(pageIndex: number, pageSize: number, sortMeta?: any) {
+  const raw = this.queryForm.getRawValue();
+
+  // 1) 轉 sortMeta -> SortItem，但只接受 columns 裡存在的欄位
+  let sortBy: SortItem[] | undefined;
+
+  if (Array.isArray(sortMeta) && sortMeta.length) {
+    const filtered = sortMeta
+      .filter((s: any) => this._allowSortFields.has(String(s?.field)))
+      .map((s: any) => ({ field: String(s.field), order: Number(s.order) || 1 }));
+
+    if (filtered.length) sortBy = filtered;
+  }
+
+  // 2) 如果 table 給了奇怪的 ID，就沿用上一個 sort（避免跳掉）
+  if (!sortBy || !sortBy.length) {
+    sortBy = this._currentSortBy?.length ? this._currentSortBy : this.defaultSort;
+  }
+
+  const payload = this.buildQueryPayload({
+    ...raw,
+    pageIndex,
+    pageSize,
+    SortBy: sortBy,
+  });
+
+  // 3) 記住本次 sort，下一頁沿用
+  this._currentSortBy = payload.SortBy ?? this.defaultSort;
+
+  this.loading = true;
+  this.fin63020Service.queryFIN63020(payload)
+    .pipe(untilDestroyed(this))
+    .subscribe({
+      next: (res: ApiResponse<any>) => {
+        const parsed = this.parseQueryResponse(res);
+        this.data = parsed.rows;
+        this.totalRecords = parsed.total;
+        this.lastQueryBody = { ...payload };
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.data = [];
+        this.totalRecords = 0;
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+    });
+}
+
+
 }
