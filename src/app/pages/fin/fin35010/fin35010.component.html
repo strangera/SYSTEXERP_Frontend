@@ -23,7 +23,7 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="櫃位名稱" controlName="TLT_Name" [options]="TLT_NameOptions | async" optionLabel="label"
-              optionValue="label" [control]="queryForm.controls.TLT_Name" [submitted]="submitted"></app-dropdown>
+              optionValue="Name" [control]="queryForm.controls.TLT_Name" [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -88,7 +88,7 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range [useGrouping]="false" label="金額" controlName="CHK_Amt_Range"
-              [startControl]="queryForm.controls.CHK_Amt" [endControl]="queryForm.controls.CHK_Amt"
+              [startControl]="queryForm.controls.CHK_AmtFrom" [endControl]="queryForm.controls.CHK_AmtTo"
               [submitted]="submitted">
             </app-input-number-range>
           </div>

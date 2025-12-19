@@ -23,7 +23,7 @@
             [control]="dataForm.controls.Data_Source" [submitted]="submitted"></app-dropdown>
         </div>
       </div>
-      <ng-container *ngIf="dataForm.controls.Data_Source.value === '2'">
+      <ng-container *ngIf="dataForm.controls.Data_Source.value === '2' || !isFormCreateable">
         <hr />
         <div class="grid p-fluid">
           <!-- 票據號碼 -->
@@ -33,7 +33,7 @@
           </div>
           <!-- 廠商編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="廠商編號" controlName="VEN_No" [options]="VEN_NoOptions | async" optionLabel="value"
+            <app-dropdown label="廠商編號" controlName="VEN_No" [options]="VEN_NoOptions$ | async" optionLabel="value"
               templateLabel="label" optionValue="value" [control]="dataForm.controls.VEN_No"
               [submitted]="submitted"></app-dropdown>
           </div>
@@ -44,12 +44,12 @@
           </div>
           <!-- 專櫃編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="專櫃編號" controlName="TLT_No" [options]="tlt_noOptions | async" optionLabel="label"
+            <app-dropdown label="專櫃編號" controlName="TLT_No" [options]="tlt_noOptions$ | async" optionLabel="label"
               optionValue="value" [control]="dataForm.controls.TLT_No" [submitted]="submitted"></app-dropdown>
           </div>
           <!-- 組織代碼 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="組織代碼" controlName="Org_Id" [options]="Org_IdOptions | async" optionLabel="label"
+            <app-dropdown label="組織代碼" controlName="Org_Id" [options]="Org_IdOptions$ | async" optionLabel="label"
               optionValue="value" [control]="dataForm.controls.Org_Id" [submitted]="submitted"></app-dropdown>
           </div>
           <!-- 合約起始日期 -->
@@ -112,11 +112,11 @@
           </div>
         </div>
       </ng-container>
-      <ng-container *ngIf="dataForm.controls.Data_Source.value === '1'">
+      <ng-container *ngIf="dataForm.controls.Data_Source.value === '1' && isFormCreateable">
         <hr />
         <app-table-edit [columns]="columns" [data]="data" [disabled]="isFormReadable" [tableRequired]="true"
           (dataChange)="data=$event" [loading]="loading" [selectedItems]="selectedItems" insertText="讀取合約"
-          [showInsert]="true" (insert)="onReadContractAdd()" (selectionChange)="selectedItems=$event"
+          [showInsert]="true" (insert)="dialogVisible = true" (selectionChange)="selectedItems=$event"
           [isRowSelectable]="isRowSelectable">
         </app-table-edit>
       </ng-container>
@@ -127,3 +127,36 @@
     </form>
   </p-panel>
 </div>
+
+<app-dialog [visible]="dialogVisible" header="選擇商品明細" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
+  [disable]="selectedItemsDialog.length === 0">
+  <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
+    <div class="grid p-fluid">
+      <app-dropdown class="col-12 col-6 lg:col-4" label="票據類型" controlName="Deposit_Type"
+        [control]="dialogQueryForm.controls.Deposit_Type" [options]="Deposit_TypeOptions" optionLabel="label"
+        optionValue="value" />
+      <app-calendar class="col-12 col-6 lg:col-4" calendarType="dateOne" label="專櫃合約日期" controlName="query_date"
+        [control]="dialogQueryForm.controls.query_date" [submitted]="submitted"></app-calendar>
+      <app-dropdown class="col-12 col-6 lg:col-4" label="專櫃編號/名稱" controlName="tlt_no"
+        [control]="dialogQueryForm.controls.tlt_no" [options]="tlt_noOptions$ | async" optionLabel="label"
+        optionValue="value" />
+      <app-dropdown class="col-12 col-6 lg:col-4" label="廠商編號/名稱" controlName="ven_no"
+        [control]="dialogQueryForm.controls.ven_no" [options]="VEN_NoOptions$ | async" optionLabel="label"
+        optionValue="value" />
+      <app-dropdown class="col-12 col-6 lg:col-4" label="組織編號/名稱" controlName="org_id"
+        [control]="dialogQueryForm.controls.org_id" [options]="Org_IdOptions$ | async" optionLabel="label"
+        optionValue="value" />
+    </div>
+    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <app-button btnType="clear" [form]="dialogQueryForm"></app-button>
+      <app-button btnType="query" [loading]="dialogLoading"></app-button>
+    </div>
+  </form>
+  <hr />
+  <app-table-report dataKey="talent_id" [data]="dialogData" [columns]="dialogColumns" [showDelete]="false"
+    [selectedItems]="selectedItemsDialog" [showCaption]="false" (selectionChange)="selectedItemsDialog = $event"
+    [showManage]="false" [showCheckBox]="true" [isRowSelectable]="isRowSelectable.bind(this)"
+    [totalRecords]="totalRecords" [loading]="dialogLoading" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="fin35010Service.queryFIN35010TLTTALENT.bind(fin35010Service)">
+  </app-table-report>
+</app-dialog>

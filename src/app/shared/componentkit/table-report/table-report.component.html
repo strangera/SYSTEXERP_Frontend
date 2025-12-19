@@ -82,10 +82,10 @@
         <th class="w-1rem" *ngIf="expansionColumns.length">收合/展開</th>
         <th *ngFor="let col of columns" pReorderableColumn pResizableColumn
           [pSortableColumn]="showSort ? col.sortField ?? col.field : undefined"
-          [pSortableColumnDisabled]="!showSort || !col.showSort" class="text-center wrap-header"
+          [pSortableColumnDisabled]="!showSort || col.showSort === false" class="text-center wrap-header"
           style="min-width: 55px">
           {{ col.header }}
-          <p-sortIcon *ngIf="showSort && col.showSort && data.length" [field]="col.field" />
+          <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length" [field]="col.field" />
         </th>
         <th [hidden]="!showManage" class="w-1rem text-center" alignFrozen="right" pFrozenColumn [frozen]="true">
           管理
