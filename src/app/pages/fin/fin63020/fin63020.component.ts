@@ -13,10 +13,10 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
@@ -26,26 +26,23 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { Column } from '../../../shared/componentkit/table/table.model';
 
 // Base
+import {
+  Aps1002BankDropDownRow,
+  Fin26010Service
+} from '../../../service/api/fin/fin26010.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import {
-  Fin26010Service,
-
-  Aps1002BankDropDownRow,
-
-  ExportFin26010TxtRequest,
-} from '../../../service/api/fin/fin26010.service';
 
 // Service
+import { HttpResponse } from '@angular/common/http';
+import { ViewChild } from '@angular/core';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import {
   ApiResponse,
   Fin63020Service,
   QueryFIN63020Request,
   SortItem,
 } from '../../../service/api/fin/fin63020.service';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { HttpResponse } from '@angular/common/http';
-
 export interface QueryFIN63020Row {
   CanPickupYn?: string; // 只是顯示用：可勾選=空白，不可勾選=X
   CheckNo?: string;
@@ -308,23 +305,23 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
 
     // 公司銀行科目代號（Aps1001）
 
-       this.fin26010Service
-            .queryAPS1002DropDownList()
-            .pipe(untilDestroyed(this))
-            .subscribe({
-              next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
-                const list = Array.isArray(res?.Data) ? res.Data : [];
-                this.BankCodeOptions = list.map((x) => ({
-                  label: `${x.BNK_No}-${x.BNK_BRANCHNAME}`,
-                  value: x.BNK_DepositAccNo,
-                  raw: x,
-                }));
-              },
-              error: (err) => {
-                console.error('載入銀行代號下拉失敗', err);
-                this.BankCodeOptions = [];
-              },
-            });
+    this.fin26010Service
+      .queryAPS1002DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
+          const list = Array.isArray(res?.Data) ? res.Data : [];
+          this.BankCodeOptions = list.map((x) => ({
+            label: `${x.BNK_DepositAccNo}-${x.BNK_BRANCHNAME}`,
+            value: x.BNK_DepositAccNo,
+            raw: x,
+          }));
+        },
+        error: (err) => {
+          console.error('載入銀行代號下拉失敗', err);
+          this.BankCodeOptions = [];
+        },
+      });
 
     // 廠客代號（POS2013_DropDownList）
     this.dropDownListService
@@ -339,42 +336,42 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
       });
 
     // ✅ 預載假資料測試（你要的 3 筆）
-   
+
   }
 
   /** ✅ 點明細 */
-/** ✅ 點明細（進 CRU） */
-/** ✅ 點明細 */
-override onDetail(row: QueryFIN63020Row) {
-  const chkNo = String(row?.CheckNo ?? '').trim();
-  if (!chkNo) return;
+  /** ✅ 點明細（進 CRU） */
+  /** ✅ 點明細 */
+  override onDetail(row: QueryFIN63020Row) {
+    const chkNo = String(row?.CheckNo ?? '').trim();
+    if (!chkNo) return;
 
-  this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
-    queryParams: { ChkNo: chkNo },
-    state: {
-      crudstatus: CRUDStatus.Read,
-      rowdata: row,
-      fromRoute: this.router.url,
-      queryConditions: { ChkNo: chkNo },
-    },
-  });
-}
+    this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
+      queryParams: { ChkNo: chkNo },
+      state: {
+        crudstatus: CRUDStatus.Read,
+        rowdata: row,
+        fromRoute: this.router.url,
+        queryConditions: { ChkNo: chkNo },
+      },
+    });
+  }
 
-/** ✅ 點編輯 */
-override onEdit(row: QueryFIN63020Row) {
-  const chkNo = String(row?.CheckNo ?? '').trim();
-  if (!chkNo) return;
+  /** ✅ 點編輯 */
+  override onEdit(row: QueryFIN63020Row) {
+    const chkNo = String(row?.CheckNo ?? '').trim();
+    if (!chkNo) return;
 
-  this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
-    queryParams: { ChkNo: chkNo },
-    state: {
-      crudstatus: CRUDStatus.Edit,
-      rowdata: row,
-      fromRoute: this.router.url,
-      queryConditions: { ChkNo: chkNo },
-    },
-  });
-}
+    this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
+      queryParams: { ChkNo: chkNo },
+      state: {
+        crudstatus: CRUDStatus.Edit,
+        rowdata: row,
+        fromRoute: this.router.url,
+        queryConditions: { ChkNo: chkNo },
+      },
+    });
+  }
 
 
   /** ✅ 按「支票領取」：有勾選才開 dialog */
@@ -446,6 +443,7 @@ override onEdit(row: QueryFIN63020Row) {
         complete: () => {
           this.btnLoading = false;
           this.cdr.detectChanges();
+          this.onSubmit(this.queryForm);
         },
       });
   }
@@ -622,6 +620,7 @@ override onEdit(row: QueryFIN63020Row) {
           this.data = parsed.rows;
           this.totalRecords = parsed.total;
           this.lastQueryBody = { ...payload };
+          this._currentSortBy = payload.SortBy ?? this.defaultSort;
           this.loading = false;
           this.cdr.detectChanges();
         },
@@ -681,56 +680,56 @@ override onEdit(row: QueryFIN63020Row) {
     this.selectedItems = [];
     this.lastQueryBody = null;
   }
-   private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
-      if (!contentDisposition) return `download${defaultExtension}`;
-  
-      const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
-      if (filenameStarMatch && filenameStarMatch.length > 1) {
-        const encodedFilename = filenameStarMatch[1];
-        try {
-          const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
-          return decoded;
-        } catch {
-          return encodedFilename;
-        }
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
+    if (!contentDisposition) return `download${defaultExtension}`;
+
+    const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
+    if (filenameStarMatch && filenameStarMatch.length > 1) {
+      const encodedFilename = filenameStarMatch[1];
+      try {
+        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
+        return decoded;
+      } catch {
+        return encodedFilename;
       }
-  
-      const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
-      if (filenameMatch && filenameMatch.length > 1) {
-        try {
-          return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
-        } catch {
-          return filenameMatch[1];
-        }
-      }
-  
-      return `download${defaultExtension}`;
     }
-        private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
-          const contentDisposition = response.headers.get('Content-Disposition');
-          const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
-          const blob = response.body;
-      
-          if (blob && blob.size > 0) {
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-          } else {
-            this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
-          }
-        }
-      // ========= 匯出 =========
+
+    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
+    if (filenameMatch && filenameMatch.length > 1) {
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      } catch {
+        return filenameMatch[1];
+      }
+    }
+
+    return `download${defaultExtension}`;
+  }
+  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
+  // ========= 匯出 =========
   onExportPDF() {
     if (!this.lastQueryBody) {
       this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
       return;
     }
-  
+
     const exportBody = { ...this.lastQueryBody };
     delete exportBody.pageIndex;
     delete exportBody.pageSize;
@@ -738,9 +737,9 @@ override onEdit(row: QueryFIN63020Row) {
     delete exportBody.PageSize;
     delete exportBody.Offset;
     delete exportBody.OrderBy;
-  
+
     this.btnLoading = true;
-  
+
     this.fin63020Service
       .exportFIN63020PDF(exportBody)
       .pipe(untilDestroyed(this))
@@ -750,13 +749,13 @@ override onEdit(row: QueryFIN63020Row) {
         complete: () => (this.btnLoading = false),
       });
   }
-  
+
   onExportXLSX() {
     if (!this.lastQueryBody) {
       this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
       return;
     }
-  
+
     const exportBody = { ...this.lastQueryBody };
     delete exportBody.pageIndex;
     delete exportBody.pageSize;
@@ -764,9 +763,9 @@ override onEdit(row: QueryFIN63020Row) {
     delete exportBody.PageSize;
     delete exportBody.Offset;
     delete exportBody.OrderBy;
-  
+
     this.btnLoading = true;
-  
+
     this.fin63020Service
       .exportFIN63020Excel(exportBody)
       .pipe(untilDestroyed(this))
@@ -776,4 +775,113 @@ override onEdit(row: QueryFIN63020Row) {
         complete: () => (this.btnLoading = false),
       });
   }
+  override onLazyLoadData(e: any) {
+    // e = { pageIndex, pageSize, SortBy }
+    const raw = this.queryForm.getRawValue();
+    const payload = this.buildQueryPayload({
+      ...raw,
+      pageIndex: e?.pageIndex,
+      pageSize: e?.pageSize,
+      SortBy: e?.SortBy,
+    });
+
+    this.loading = true;
+    this.fin63020Service
+      .queryFIN63020(payload)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: ApiResponse<any>) => {
+          const parsed = this.parseQueryResponse(res);
+          this.data = parsed.rows;
+          this.totalRecords = parsed.total;
+          this.lastQueryBody = { ...payload };
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.data = [];
+          this.totalRecords = 0;
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
+  @ViewChild('finTable') finTable!: TableComponent;
+
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      try {
+        (this.finTable as any).IsPrint = true;
+      } catch { }
+
+      const dt: any = (this.finTable as any).dt;
+
+      if (dt?.onLazyLoad) {
+        dt.onLazyLoad.pipe(untilDestroyed(this)).subscribe((e: any) => {
+          const pageSize = Number(e?.rows ?? 30);
+          const first = Number(e?.first ?? 0);
+          const pageIndex = Math.floor(first / pageSize) + 1;
+
+          this.fireQueryByPage(pageIndex, pageSize, e?.multiSortMeta);
+        });
+      }
+    });
+  }
+  private _currentSortBy: SortItem[] = this.defaultSort;
+
+  private readonly _allowSortFields = new Set(
+    this.columns.map(c => c.field).filter(Boolean) as string[]
+  );
+
+  private fireQueryByPage(pageIndex: number, pageSize: number, sortMeta?: any) {
+    const raw = this.queryForm.getRawValue();
+
+    // 1) 轉 sortMeta -> SortItem，但只接受 columns 裡存在的欄位
+    let sortBy: SortItem[] | undefined;
+
+    if (Array.isArray(sortMeta) && sortMeta.length) {
+      const filtered = sortMeta
+        .filter((s: any) => this._allowSortFields.has(String(s?.field)))
+        .map((s: any) => ({ field: String(s.field), order: Number(s.order) || 1 }));
+
+      if (filtered.length) sortBy = filtered;
+    }
+
+    // 2) 如果 table 給了奇怪的 ID，就沿用上一個 sort（避免跳掉）
+    if (!sortBy || !sortBy.length) {
+      sortBy = this._currentSortBy?.length ? this._currentSortBy : this.defaultSort;
+    }
+
+    const payload = this.buildQueryPayload({
+      ...raw,
+      pageIndex,
+      pageSize,
+      SortBy: sortBy,
+    });
+
+    // 3) 記住本次 sort，下一頁沿用
+    this._currentSortBy = payload.SortBy ?? this.defaultSort;
+
+    this.loading = true;
+    this.fin63020Service.queryFIN63020(payload)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: ApiResponse<any>) => {
+          const parsed = this.parseQueryResponse(res);
+          this.data = parsed.rows;
+          this.totalRecords = parsed.total;
+          this.lastQueryBody = { ...payload };
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.data = [];
+          this.totalRecords = 0;
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+
 }
