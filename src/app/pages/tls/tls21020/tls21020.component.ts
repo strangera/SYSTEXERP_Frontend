@@ -299,27 +299,23 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
   /** 錯誤檢查 */
   public validateRow = (rowData: TLS21020Data, index?: number): { isValid: boolean, errorMessage: string; } => {
-    // Org_ID 必填
-    if (this.isEmpty(rowData.Org_ID)) return this.fail('組織代碼必須填寫');
-
     // 必填欄位檢查
+    if (this.isEmpty(rowData.Org_ID)) return this.fail('組織代碼必須填寫');
     if (this.isEmpty(rowData.AccDC)) return this.fail('借/貸必須填寫');
     if (this.isEmpty(rowData.ItemDesc)) return this.fail('項目名稱必須填寫');
     if (this.isEmpty(rowData.AccNo)) return this.fail('會計科目必須填寫');
 
-    // ABAT_YN 為 Y 時，VEN_No 必填
-    if (rowData.ABAT_YN === 'Y')
-      if (this.isEmpty(rowData.VEN_No)) return this.fail('應收廠商必須填寫');
-
-    // 可選欄位警告檢查
+    // ABAT_YN 相關檢查
     if (rowData.ABAT_YN === 'Y') {
+      if (this.isEmpty(rowData.VEN_No)) return this.fail('應收廠商必須填寫');
       if (this.validateValue(rowData.PAY_days)) return this.warn('付款天數必須為大於等於0的整數');
       if (this.isEmpty(rowData.PAY_days)) return this.warn('付款天數必須填寫');
     }
-    if (this.isEmpty(rowData.PAY_No)) return this.warn('付款別編號必須填寫');
-    if (this.isEmpty(rowData.AccNotes)) return this.warn('傳票備註必須填寫');
-    if (this.isEmpty(rowData.AccNo)) return this.warn('會計科目必須填寫');
-    if (this.isEmpty(rowData.RelatedPartyAccNo)) return this.warn('區分關係人會科必須填寫');
+
+    // 選填欄位檢查
+    if (this.isEmpty(rowData.PAY_No)) return this.warn('付款別編號建議填寫');
+    if (this.isEmpty(rowData.AccNotes)) return this.warn('傳票備註建議填寫');
+    if (this.isEmpty(rowData.RelatedPartyAccNo)) return this.warn('區分關係人會科建議填寫');
 
     // 檢查重複 (AccDC, ItemDesc, AccNo)
     const rows = this.tableData();
@@ -334,13 +330,13 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         return this.fail('會計科目與項目描述必須唯一');
     }
 
-    return { isValid: !0, errorMessage: '' };
+    return this.warn('');
   };
 
   private ABATValidator(value: any, rowData: any, data: any[], field: string, header: string) {
     return (rowData?.ABAT_YN === 'Y' && this.isEmpty(value))
-      ? { isValid: !1, errorMessage: [header ? `${header}必須填寫` : '此欄位必須填寫'] }
-      : { isValid: !0, errorMessage: [] };
+      ? { isValid: !1, errorMessage: [`${header ?? '此欄位'}為必填欄位`] }
+      : { isValid: !0, errorMessage: [''] };
   }
 
   /** 檢查型別 */
