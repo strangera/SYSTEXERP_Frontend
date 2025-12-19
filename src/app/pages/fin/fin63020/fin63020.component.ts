@@ -293,15 +293,28 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     private dropDownListService: DropDownListService,
     private dropdownApiService: DropdownApiService,
     private fin26010Service: Fin26010Service,
+    
     private cdr: ChangeDetectorRef
   ) {
     super();
   }
+ngOnInit(): void {
+  this.initializePage('FIN63020', 'fin/fin63020cru', this.queryForm, (form) =>
+    this.onSubmit(form)
+  );
 
-  ngOnInit(): void {
-    this.initializePage('FIN63020', 'fin/fin63020cru', this.queryForm, (form) =>
-      this.onSubmit(form)
-    );
+  // ✅ 1. 還原查詢條件（不管從哪頁回來）
+  const saved = this.queryStateService.getQueryStateValue('FIN63020');
+  if (saved?.formValue) {
+    this.queryForm.patchValue(saved.formValue, { emitEvent: false });
+    this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
+    this.lastQueryBody = saved.lastQueryBody ?? null;
+
+    // ✅ 自動重查（回來就看到資料）
+    Promise.resolve().then(() => this.onSubmit(this.queryForm));
+  }
+
+
 
     // 公司銀行科目代號（Aps1001）
 
@@ -345,7 +358,7 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
   override onDetail(row: QueryFIN63020Row) {
     const chkNo = String(row?.CheckNo ?? '').trim();
     if (!chkNo) return;
-
+ this.saveQueryState();
     this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
       queryParams: { ChkNo: chkNo },
       state: {
@@ -361,7 +374,7 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
   override onEdit(row: QueryFIN63020Row) {
     const chkNo = String(row?.CheckNo ?? '').trim();
     if (!chkNo) return;
-
+ this.saveQueryState();
     this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
       queryParams: { ChkNo: chkNo },
       state: {
@@ -623,6 +636,7 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
           this._currentSortBy = payload.SortBy ?? this.defaultSort;
           this.loading = false;
           this.cdr.detectChanges();
+            this.saveQueryState();
         },
         error: (err: any) => {
           console.error('FIN63020 query API error:', err);
@@ -633,7 +647,13 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
         },
       });
   }
-
+private saveQueryState(): void {
+  this.queryStateService.setQueryState('FIN63020', {
+    formValue: this.queryForm.getRawValue(),
+    currentSortBy: this._currentSortBy,
+    lastQueryBody: this.lastQueryBody,
+  });
+}
   onClear(frm: any) {
     frm.reset({
       billNumber: '',
@@ -872,6 +892,7 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
           this.totalRecords = parsed.total;
           this.lastQueryBody = { ...payload };
           this.loading = false;
+          this.saveQueryState();
           this.cdr.detectChanges();
         },
         error: () => {

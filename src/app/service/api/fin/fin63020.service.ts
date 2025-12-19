@@ -138,7 +138,7 @@ export interface Fin63020DetailRow {
 export interface Fin63020UpdateRequest {
   CheckNo: string;
   CheckTitle: string;
-  Remark: string;
+  Remark?: string;
 
   NoEndorseYn: 'Y' | 'N';
   StatusFlag: '1' | '2';
