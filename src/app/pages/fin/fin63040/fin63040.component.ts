@@ -228,36 +228,59 @@ export class FIN63040Component
   ) {
     super();
   }
+private saveQueryState(): void {
+  this.queryStateService.setQueryState(this.ProgNo, {
+    formValue: this.queryForm.getRawValue(),
+    currentSortBy: this._currentSortBy,
+    lastQueryBody: this.lastQueryBody,
+  });
+}
+ngOnInit(): void {
+  this.initializePage('FIN63040', 'fin/fin63040cru', this.queryForm, (form) =>
+    this.onSubmit(form)
+  );
 
-  ngOnInit(): void {
-    this.initializePage('FIN63040', 'fin/fin63040cru', this.queryForm, (form) =>
-      this.onSubmit(form)
-    );
+  // ✅ 允許排序欄位白名單（避免變 ID）
+  this._allowSortFields = new Set(
+    this.columns.map((c) => c.field).filter(Boolean) as string[]
+  );
 
-    // ✅ 允許排序欄位白名單（避免變 ID）
-    this._allowSortFields = new Set(
-      this.columns.map((c) => c.field).filter(Boolean) as string[]
-    );
+  // ✅ 1) 從 QueryStateService 還原（不管從哪頁回來）
+  const saved = this.queryStateService.getQueryStateValue(this.ProgNo);
+  if (saved?.formValue) {
+    this.queryForm.patchValue(saved.formValue, { emitEvent: false });
+    this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
+    this.lastQueryBody = saved.lastQueryBody ?? null;
 
-    // 公司銀行科目代號下拉
-    this.fin26010Service
-      .queryAPS1002DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
-          const list = Array.isArray(res?.Data) ? res.Data : [];
-          this.BankCodeOptions = list.map((x) => ({
-            label: `${x.BNK_DepositAccNo}-${x.BNK_BRANCHNAME}`,
-            value: x.BNK_DepositAccNo,
-            raw: x,
-          }));
-        },
-        error: (err) => {
-          console.error('載入銀行代號下拉失敗', err);
-          this.BankCodeOptions = [];
-        },
-      });
+    // ✅ 回來就看到資料：自動重查
+    Promise.resolve().then(() => this.onSubmit(this.queryForm));
   }
+
+  // ✅ 2) 若你仍想保留「從 CRU 回來帶 ChkNo」這種一次性狀態，可以補這段（可選）
+  const state = history.state as any;
+  if (state?.queryConditions) {
+    this.queryForm.patchValue(state.queryConditions, { emitEvent: false });
+  }
+
+  // 公司銀行科目代號下拉
+  this.fin26010Service
+    .queryAPS1002DropDownList()
+    .pipe(untilDestroyed(this))
+    .subscribe({
+      next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
+        const list = Array.isArray(res?.Data) ? res.Data : [];
+        this.BankCodeOptions = list.map((x) => ({
+          label: `${x.BNK_DepositAccNo}-${x.BNK_BRANCHNAME}`,
+          value: x.BNK_DepositAccNo,
+          raw: x,
+        }));
+      },
+      error: (err) => {
+        console.error('載入銀行代號下拉失敗', err);
+        this.BankCodeOptions = [];
+      },
+    });
+}
 
   /* ----------------- ✅ lazy load：接管排序/分頁 ----------------- */
   @ViewChild('finTable') finTable!: TableComponent;
@@ -390,6 +413,7 @@ export class FIN63040Component
           this.totalRecords = parsed.total;
           this.lastQueryBody = { ...payload };
           this.loading = false;
+          this.saveQueryState();
           this.cdr.detectChanges();
         },
         error: () => {
@@ -431,7 +455,7 @@ export class FIN63040Component
 
           // ✅ 記住第一頁排序（讓第二頁沿用，不被 ID 蓋掉）
           this._currentSortBy = payload.SortBy ?? this.defaultSort;
-
+ this.saveQueryState();
           this.loading = false;
           this.cdr.detectChanges();
         },
@@ -463,13 +487,15 @@ export class FIN63040Component
     this.lastQueryBody = null;
 
     this._currentSortBy = this.defaultSort; // ✅ reset sort
+    this.queryStateService.clearQueryState(this.ProgNo);
+
   }
 
   /* ----------------- 進 CRU ----------------- */
   override onDetail(row: QueryFIN63040Row) {
     const chkNo = String(row?.CheckNo ?? '').trim();
     if (!chkNo) return;
-
+this.saveQueryState();
     this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
       queryParams: { ChkNo: chkNo },
       state: {
@@ -484,7 +510,7 @@ export class FIN63040Component
   override onEdit(row: QueryFIN63040Row) {
     const chkNo = String(row?.CheckNo ?? '').trim();
     if (!chkNo) return;
-
+this.saveQueryState();
     this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
       queryParams: { ChkNo: chkNo },
       state: {
