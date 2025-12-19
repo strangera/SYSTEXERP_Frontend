@@ -65,6 +65,7 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
   data: FIN21010Response[] = [];
   columns: Column[] = [
     { field: 'BNK_No', header: '銀行代碼', visible: true },
+    { field: 'AccCName', header: '公司銀行科目中文名稱', visible: true },
     // {
     //   field: 'BNK_BranchNo',
     //   header: '銀行分行代號',
@@ -101,10 +102,10 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
       header: '應收票據科目',
       visible: false,
     },
-    // { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate},
+    // { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate },
     // { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
     // { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
-    // { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDate},
+    // { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
     // { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
     // { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
   ];
@@ -147,7 +148,6 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
         },
       });
 
-      console.log('查詢API待提供');
       this.loading = false;
     });
   }
