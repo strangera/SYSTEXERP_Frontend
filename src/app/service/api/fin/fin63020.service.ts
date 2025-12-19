@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -8,44 +8,53 @@ export type SortItem = { field: string; order: number };
 
 /** ========== Query (列表) ========== */
 export interface QueryFIN63020Request {
-  PageSize: number;
-  PageIndex: number;
-  SortBy?: SortItem[];
+  PageSize?: number | null;
+  PageIndex?: number | null;
+  SortBy?: SortItem[] | null;
 
-  ChkNo?: string;
-  VenNo?: string;
-  CompanyAccNo: string;
+  ChkNo?: string | null;
+  VenNo?: string | null;
+  CompanyAccNo?: string | null;
 
-  IssueDateFrom?: string;
-  IssueDateTo?: string;
-  ExpireDateFrom?: string;
-  ExpireDateTo?: string;
-  PayDateFrom?: string;
-  PayDateTo?: string;
+  IssueDateFrom?: string | null;
+  IssueDateTo?: string | null;
+  ExpireDateFrom?: string | null;
+  ExpireDateTo?: string | null;
+  PayDateFrom?: string | null;
+  PayDateTo?: string | null;
 
-  AmtFrom?: number;
-  AmtTo?: number;
+  AmtFrom?: number | null;
+  AmtTo?: number | null;
 
-  ChkTitle?: string;
-  VenCtrlYN?: string;
-  Comment?: string;
+  ChkTitle?: string | null;
+  VenCtrlYN?: string | null;
+  Comment?: string | null;
 
-  OrgId?: string;
-  ProjectNo?: string;
+  OrgId?: string | null;
+  ProjectNo?: string | null;
 
-  CheckStatus?: string; // 0~5（顯示用）
-  Status?: string;      // 1=確認 2=拋轉（列表顯示用）
-  PickupType?: string;
+  CheckStatus?: string | null;
+  Status?: string | null;
+  PickupType?: string | null;
 
-  PickupDateFrom?: string;
-  PickupDateTo?: string;
+  PickupDateFrom?: string | null;
+  PickupDateTo?: string | null;
 
-  PamNo?: string;
-  ApCheckAccNo?: string;
-  VoucherNo?: string;
+  PamNo?: string | null;
+  ApCheckAccNo?: string | null;
+  VoucherNo?: string | null;
 
-  PartyTypeNo?: string;
-  ReconKey?: string;
+  PartyTypeNo?: string | null;
+  ReconKey?: string | null;
+
+  // 兼容你們 BasicQueryPageComponent / table-report 可能帶的小寫 key
+  pageSize?: number | null;
+  pageIndex?: number | null;
+  orderBy?: string | null;
+  offset?: number | null;
+
+  OrderBy?: string | null;
+  Offset?: number | null;
 
   [key: string]: any;
 }
@@ -161,9 +170,7 @@ export class Fin63020Service {
   constructor(private http: HttpClient) {}
 
   /** 查詢列表 */
-  queryFIN63020(
-    body: QueryFIN63020Request
-  ): Observable<ApiResponse<QueryFIN63020Row[]>> {
+  queryFIN63020(body: QueryFIN63020Request): Observable<ApiResponse<QueryFIN63020Row[]>> {
     return this.http.post<ApiResponse<QueryFIN63020Row[]>>(
       `${this.apiUrl}/queryFIN63020`,
       body
@@ -171,9 +178,7 @@ export class Fin63020Service {
   }
 
   /** 查詢明細 */
-  queryFIN63020Detail(
-    body: Fin63020QueryDetailRequest
-  ): Observable<ApiResponse<Fin63020DetailRow>> {
+  queryFIN63020Detail(body: Fin63020QueryDetailRequest): Observable<ApiResponse<Fin63020DetailRow>> {
     return this.http.post<ApiResponse<Fin63020DetailRow>>(
       `${this.apiUrl}/queryFIN63020Detail`,
       body
@@ -181,38 +186,58 @@ export class Fin63020Service {
   }
 
   /** 更新票據主檔（編輯模式） */
-  updateFIN63020(
-    body: Fin63020UpdateRequest
-  ): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(
-      `${this.apiUrl}/updateFIN63020`,
-      body
-    );
+  updateFIN63020(body: Fin63020UpdateRequest): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateFIN63020`, body);
   }
 
   /** 支票領取更新 */
-  updateFIN63020Detail(
-    body: Fin63020UpdateDetailRequest
-  ): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(
-      `${this.apiUrl}/updateFIN63020Detail`,
-      body
-    );
+  updateFIN63020Detail(body: Fin63020UpdateDetailRequest): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateFIN63020Detail`, body);
   }
 
-  /** 匯出 Excel */
-  exportFIN63020(body: QueryFIN63020Request): Observable<Blob> {
-    return this.http.post(`${this.apiUrl}/exportFIN63020`, body, {
-      responseType: 'blob',
-    });
+  /** 匯出 Excel（不分頁） */
+  exportFIN63020Excel(body: QueryFIN63020Request): Observable<HttpResponse<Blob>> {
+    const url = `${this.apiUrl}/exportFIN63020`;
+    const payload = this.stripPaging(body);
+
+    return this.http.post(url, payload, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+    }) as Observable<HttpResponse<Blob>>;
   }
 
-  /** 匯出 PDF */
-  exportFIN63020PDF(body: QueryFIN63020Request): Observable<Blob> {
-    return this.http.post(`${this.apiUrl}/exportFIN63020PDF`, body, {
-      responseType: 'blob',
-      headers: { Accept: 'application/pdf' },
-    });
+  /** 匯出 PDF（不分頁） */
+  exportFIN63020PDF(body: QueryFIN63020Request): Observable<HttpResponse<Blob>> {
+    const url = `${this.apiUrl}/exportFIN63020PDF`;
+    const payload = this.stripPaging(body);
+
+    return this.http.post(url, payload, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+      headers: new HttpHeaders({ Accept: 'application/pdf' }),
+    }) as Observable<HttpResponse<Blob>>;
+  }
+
+  /**
+   * - 同時移除大小寫鍵：pageSize/pageIndex/orderBy/offset 與 PageSize/PageIndex/OrderBy/Offset
+   * - 保留 SortBy（讓後端可依前端排序）
+   */
+  private stripPaging<T extends Record<string, any>>(
+    input: T
+  ): Omit<
+    T,
+    | 'PageSize' | 'PageIndex' | 'OrderBy' | 'Offset'
+    | 'pageSize' | 'pageIndex' | 'orderBy' | 'offset'
+  > {
+    if (!input) return input as any;
+
+    const {
+      PageSize, PageIndex, OrderBy, Offset,
+      pageSize, pageIndex, orderBy, offset,
+      ...rest
+    } = input as any;
+
+    return rest as any;
   }
 }
 
