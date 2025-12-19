@@ -1,5 +1,4 @@
-import { NgFor, NgIf } from '@angular/common';
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, output, signal } from '@angular/core';
 import { TreeNode } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
@@ -11,16 +10,15 @@ type Column = { value: string; label: string; };
   selector: 'app-tree-dropdown',
   templateUrl: './tree-dropdown.component.html',
   styleUrls: ['./tree-dropdown.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
     Button,
-    NgFor,
-    NgIf,
     OverlayPanelModule,
     TreeModule,
   ],
 })
-export class TreeDropdownComponent implements OnInit {
+export class TreeDropdownComponent {
   // 扁平化導入的資料
   // members = [
   //   // department > role > member (其他細項)
@@ -30,11 +28,11 @@ export class TreeDropdownComponent implements OnInit {
   //   { id: '4', department: 'Department B', role: 'Examiner', name: 'Bernardo Dominic', email: 'bernardo@email.com', phone: '0944444444' },
   //   { id: '5', department: 'Department B', role: 'Reviewer', name: 'Elwin Sharvill', email: 'elwin@email.com', phone: '0955555555' },
   // ];
-  @Input() members: any[] = []; // 允許外部傳入成員資料
+  readonly members = input<any[]>([], { alias: 'members' }); // 允許外部傳入成員資料
 
-  @Input() card = true; // 是否顯示卡片樣式
-  @Input() loading = false; // 是否顯示載入中
-  @Input() disabled = false; // 按鍵是否禁用
+  card = input<boolean>(!0); // 是否顯示卡片樣式
+  loading = input<boolean>(!1); // 是否顯示載入中
+  disabled = input<boolean>(!1); // 按鍵是否禁用
 
   //外部提供顯示名稱
   // Columns = [
@@ -42,37 +40,46 @@ export class TreeDropdownComponent implements OnInit {
   //   { 'value': 'role', 'label': '角色' },
   //   { 'value': 'member', 'label': '成員' }
   // ];
-  @Input() Columns: Column[] = []; //Columns前兩欄是父節點，最後一個是末端葉節點
-  @Input() LeaveColumnLabel = ''; // 子節點顯示名稱
-  @Input() onlySendLeaf? = true; // 是否只送葉節點資料，預設為 true
-  @Input() SelectbleCheckBox = true; // 能否選擇checkbox
+  columns = input<Column[]>([], { alias: 'Columns' }); //Columns前兩欄是父節點，最後一個是末端葉節點
+  columnsLength = computed(() => this.columns().length - 1); // 欄位數量
+  leaveColumnLabel = input<string>('', { alias: 'LeaveColumnLabel' }); // 子節點顯示名稱
+  onlySendLeaf = input<boolean>(!0); // 是否只送葉節點資料，預設為 !0
+  selectbleCheckBox = input<boolean>(!0, { alias: 'SelectbleCheckBox' }); // 能否選擇checkbox
   // @Input() buttonTitle = '查看階層圖'; // 按鍵名稱
-  @Input() listTitle = '階層圖'; // 階層圖名稱
+  listTitle = input<string>('階層圖'); // 階層圖名稱
 
-  @Output() confirmSelected = new EventEmitter<any[]>(); // 確定送出所選成員
+  confirmSelected = output<any[]>(); // 確定送出所選成員
 
-  isAllExpanded = false;  //全部展開
-  selectedMembers: any[] = [];  //記錄勾選項目
-  treeData: any[] = []; // member資料先轉換成數狀
+  isAllExpanded = signal<boolean>(!1);  //全部展開
+  selectedMembers = signal<any[]>([]);  //記錄勾選項目
 
-  ngOnInit() {
-    // this.treeData = this.groupByDepartment();
-    this.treeData = this.buildTreeFromFlatData();
-  }
+  // protected readonly treeData = computed(() => this.groupByDepartment()); // 舊的三層樹狀寫法
+  protected readonly treeData = computed(() => this.buildTreeFromFlatData());
+
+  public readonly resetSelectionEffect = effect(() => {
+    // 資料源或欄位變動時，清除舊的節點參考以避免選取不同步
+    this.members();
+    this.columns();
+    this.selectedMembers.set([]);
+  }, { allowSignalWrites: !0 });
 
   // 將扁平化資料轉成樹狀(3層)
   groupByDepartment(): any[] {
-    if (this.Columns.length < 3) {
+    const columns = this.columns();
+
+    if (columns.length < 3) {
       console.error('Columns 至少需要三個欄位（兩層父節點 + 一層葉節點）');
       return [];
     }
 
-    const [firstKey, secondKey] = this.Columns.slice(0, 2).map(c => c.value);
-    const leafKeys = this.Columns.slice(2).map(c => c.value);
+    const [firstKey, secondKey] = columns.slice(0, 2).map(c => c.value);
+    const leafKeys = columns.slice(2).map(c => c.value);
 
     const grouped: any = {};
 
-    this.members.forEach(member => {
+    const members = this.members();
+
+    members.forEach(member => {
       const firstVal = member[firstKey];
       const secondVal = member[secondKey];
 
@@ -93,7 +100,7 @@ export class TreeDropdownComponent implements OnInit {
         let memberIndex = 0;
 
         const memberNodes = (members as any[]).map((member) => {
-          const labelFromLeaveColumn = member[this.LeaveColumnLabel];
+          const labelFromLeaveColumn = member[this.leaveColumnLabel()];
           const leafLabel = labelFromLeaveColumn !== undefined && labelFromLeaveColumn !== null
             ? labelFromLeaveColumn
             : leafKeys.map(k => member[k]).join(' / ');
@@ -103,7 +110,7 @@ export class TreeDropdownComponent implements OnInit {
             label: leafLabel,
             data: member,
             icon: 'pi pi-user',
-            leaf: true
+            leaf: !0
           };
         });
 
@@ -126,77 +133,75 @@ export class TreeDropdownComponent implements OnInit {
     return result;
   }
   // 將扁平化資料轉成樹狀(4層或以上)
-  buildTreeFromFlatData(): TreeNode[] {
+  private buildTreeFromFlatData(): TreeNode[] {
+    const members = this.members();
+    const columns = this.columns();
+    const columnsLength = columns.length;
+    const leaveColumnLabel = this.leaveColumnLabel();
+    const selectbleCheckBox = this.selectbleCheckBox();
+
+    if (!members.length || !columnsLength) return [];
+
     const buildRecursive = (data: any[], depth: number): TreeNode[] => {
-      const currentKey = this.Columns[depth]?.value;
+      const currentKey = columns[depth]?.value;
       if (!currentKey) return [];
 
       // 顯式定義 grouped 的型別，避免 group 推斷為 unknown
-      const grouped: Record<string, any[]> = data.reduce((acc, item) => {
+      const grouped: Record<string, any[]> = Object.create(null);
+      for (const item of data) {
         const key = item[currentKey];
-        if (!acc[key]) acc[key] = [];
-        acc[key].push(item);
-        return acc;
-      }, {} as Record<string, any[]>);
+        (grouped[key] ??= []).push(item);
+      }
 
       return Object.entries(grouped).map(([key, group], index) => {
-        const node: TreeNode = {
-          key: `${depth}-${index}-${key}`,
-          label: key,
-          children: []
-        };
 
-        if (depth === this.Columns.length - 1) {
+        if (depth === columnsLength - 1) {
           // 已達最後一層，視為葉節點
           const dataItem = group[0]; // 預設用第一筆資料當作代表，可自訂合併邏輯
-          const label = dataItem?.[this.LeaveColumnLabel] || key;
+          const label = dataItem?.[leaveColumnLabel] || key;
 
-          node.label = label;
-          node.data = dataItem;
-          node.icon = 'pi pi-user';
-          node.leaf = true;
-          delete node.children; // 移除 children 屬性避免干擾 PrimeNG 樹結構
-
-          // 是否可選，依 SelectbleCheckBox 決定
-          node.selectable = this.SelectbleCheckBox;
-        } else {
-          node.selectable = false; // 這是關鍵
-          node.children = buildRecursive(group, depth + 1);
-          node.icon = 'pi pi-folder';
+          return {
+            key: `${depth}-${index}-${key}`,
+            label,
+            data: dataItem,
+            icon: 'pi pi-user',
+            leaf: !0,
+            selectable: selectbleCheckBox // 是否可選，依 SelectbleCheckBox 決定
+          };
         }
 
-        return node;
+        return {
+          key: `${depth}-${index}-${key}`,
+          label: key,
+          children: buildRecursive(group, depth + 1),
+          icon: 'pi pi-folder',
+          selectable: !1 // 這是關鍵
+        };
       });
     };
 
-    return buildRecursive(this.members, 0);
+    return buildRecursive(members, 0);
   }
 
 
   get columnsLabel(): string {
-    return this.Columns.map(col => col.label).join(' / ');
+    return this.columns().map(col => col.label).join(' / ');
   }
 
   //展開全部
   expandAll() {
-    this.treeData.forEach((node) => {
-      this.expandRecursive(node, true);
-    });
+    this.treeData().forEach(node => this.expandRecursive(node, !0));
   }
 
   //收闔全部
   collapseAll() {
-    this.treeData.forEach((node) => {
-      this.expandRecursive(node, false);
-    });
+    this.treeData().forEach(node => this.expandRecursive(node, !1));
   }
 
   // 展開樹狀至目標層級（層級從0開始）
   expandToLevel(level: number) {
     // console.log('level', level);
-    this.treeData.forEach(node => {
-      this.expandToLevelRecursive(node, 0, level - 1);
-    });
+    this.treeData().forEach(node => this.expandToLevelRecursive(node, 0, level - 1));
   }
 
   // 只能展開到 maxLevel 層，超過就不展開
@@ -222,9 +227,9 @@ export class TreeDropdownComponent implements OnInit {
   // 全選所有節點(包含父節點與leaf節點)
   selectAll() {
     const selected: TreeNode[] = [];
-    this.collectAllNodes(this.treeData, selected);
-    this.selectedMembers = [...selected];
-    console.log('selectedMembers (全選所有節點):', this.selectedMembers);
+    this.collectAllNodes(this.treeData(), selected);
+    this.selectedMembers.set(selected);
+    console.log('selectedMembers (全選所有節點):', this.selectedMembers());
   }
 
   // 遞迴收集所有節點 (包括有子節點的父節點)
@@ -239,13 +244,21 @@ export class TreeDropdownComponent implements OnInit {
 
   // 清空選擇
   clearSelection() {
-    this.selectedMembers = [];
+    this.selectedMembers.set([]);
+  }
+
+  onSelectionChange(event: any) {
+    this.selectedMembers.set(event);
+    // console.log('onSelectionChange:', [event, this.selectedMembers()]);
   }
 
   // 送出元件
   sendTreeSelect() {
-    if (this.onlySendLeaf) {
-      const invited = this.selectedMembers
+    const selected = this.selectedMembers();
+    if (!selected.length) return this.confirmSelected.emit([]);
+
+    if (this.onlySendLeaf()) {
+      const invited = selected
         .filter(node => node.leaf)
         .map(node => node.data); // 直接取原始 member 資料
 
@@ -253,7 +266,7 @@ export class TreeDropdownComponent implements OnInit {
       this.confirmSelected.emit(invited);
     } else {
       //回傳所有節點內容(等待 調整)
-      this.confirmSelected.emit(this.selectedMembers);
+      this.confirmSelected.emit(selected);
     }
   }
 
