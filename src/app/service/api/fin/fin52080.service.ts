@@ -58,20 +58,6 @@ export class FIN52080Service {
     { value: 'E', label: '應收保證票據' }
   ];
 
-  private readonly LeaveLabel = 'T_Name';
-  private readonly listTitle = '科目圖';
-  private readonly treeColumn = [
-    { value: 'T10Label', label: '大分類' },
-    { value: 'T20Label', label: '中分類' },
-    { value: 'T30Label', label: '小分類' },
-  ];
-
-  public readonly TreeElements = {
-    treeColumn: this.treeColumn,
-    LeaveLabel: this.LeaveLabel,
-    listTitle: this.listTitle,
-  };
-
   constructor(
     private readonly http: HttpClient,
     private readonly logger: NGXLogger,

@@ -77,6 +77,20 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
   public readonly tableLoading = signal<boolean>(!1);
   public readonly treeLoading = signal<boolean>(!1);
 
+  private readonly leaveLabel = 'T_Name';
+  private readonly listTitle = '科目圖';
+  private readonly treeColumn = [
+    { value: 'T10Label', label: '大分類' },
+    { value: 'T20Label', label: '中分類' },
+    { value: 'T30Label', label: '小分類' },
+  ];
+
+  public readonly treeElements = {
+    treeColumn: this.treeColumn,
+    listTitle: this.listTitle,
+    leaveLabel: this.leaveLabel,
+  };
+
   /** accNo/classNo 雙向同步 */
   public readonly accNoEffect = effect(() => {
     const accNo = this.accNoSignal();
@@ -126,7 +140,7 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      const raw = <FIN52080Query>{ ...this.dataForm.getRawValue() };
+      const raw = <FIN52080Query>this.dataForm.getRawValue();
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
         v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       ));

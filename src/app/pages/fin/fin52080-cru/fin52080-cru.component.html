@@ -114,18 +114,17 @@
       @if (!isFormReadable) {
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-tree-dropdown [members]="FIN52080Tree()"
-                           [Columns]="service.TreeElements.treeColumn"
-                           [LeaveColumnLabel]="service.TreeElements.LeaveLabel"
+                           [Columns]="treeElements.treeColumn"
+                           [LeaveColumnLabel]="treeElements.leaveLabel"
+                           [listTitle]="treeElements.listTitle"
                            (confirmSelected)="onLevelSelected($event)"
                            [SelectbleCheckBox]="!1"
                            [card]="!1"
-                           [loading]="treeLoading()"
-                           [listTitle]="service.TreeElements.listTitle"></app-tree-dropdown>
+                           [loading]="treeLoading()"></app-tree-dropdown>
         <app-button btnType="cancel"
                     [form]="dataForm"></app-button>
         <app-button btnType="submit"
-                    [loading]="loading"
-                    [disabled]="dataForm.invalid"></app-button>
+                    [loading]="loading"></app-button>
       </div>
       }
     </form>

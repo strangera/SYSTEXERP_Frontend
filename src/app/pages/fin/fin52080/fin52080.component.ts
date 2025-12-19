@@ -15,7 +15,7 @@ import { ValidationService } from '@shared/service/validation.service';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
 import { AccDCType, FIN52080Data, FIN52080Query, FIN52080Tree, LedgerMDType, VoucherType } from './fin52080.model';
 
 @Component({
@@ -156,6 +156,20 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
     },
   ];
 
+  private readonly leaveLabel = 'T_Name';
+  private readonly listTitle = '科目圖';
+  private readonly treeColumn = [
+    { value: 'T10Label', label: '大分類' },
+    { value: 'T20Label', label: '中分類' },
+    { value: 'T30Label', label: '小分類' },
+  ];
+
+  public readonly treeElements = {
+    treeColumn: this.treeColumn,
+    listTitle: this.listTitle,
+    leaveLabel: this.leaveLabel,
+  };
+
   constructor(
     public readonly service: FIN52080Service,
     private readonly validationService: ValidationService,
@@ -169,8 +183,10 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
 
     this.treeLoading.set(!0);
     this.service.getClassNos();
-    this.service.getFIN52080Tree().pipe(finalize(() => this.treeLoading.set(!1)))
-      .subscribe(res => this.FIN52080Tree.set(res.Data || []));
+    this.service.getFIN52080Tree().pipe(
+      map(res => res.Data || []),
+      finalize(() => this.treeLoading.set(!1)),
+    ).subscribe(res => this.FIN52080Tree.set(res));
 
     this.logger.debug(`init:`, [this.service.classNoOptions(), this.FIN52080Tree()]);
   }
