@@ -186,7 +186,7 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
     this.loading = true;
 
     if (this.urlItems.length > 0 && item === this.urlItems[0]) {
-      // 🔁 內部系統流程
+      // 內部系統流程
       this.subscriptions.push(
         this.ssoDashboardService.Inner().pipe(
           untilDestroyed(this),
@@ -204,14 +204,13 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
         })
       );
     } else {
-      // ✅ 外部系統流程
       const userNo = this.user?.user_No || '';
       if (!userNo) {
         this.messageService.errorBubble('找不到登入使用者資訊');
         return;
       }
 
-      // ➊ 讀取 preLoginUrlOnce 的 redirect（若沒有就空字串）
+      // 讀取 preLoginUrlOnce 的 redirect（若沒有就空字串）
       const redirect = this.getRedirectFromPreLogin();
 
       this.subscriptions.push(
@@ -256,11 +255,6 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
     }
     return '';
   }
-
-
-
-
-
 
   onSubmit(frm: FormGroup): void {
     frm.markAllAsTouched();
