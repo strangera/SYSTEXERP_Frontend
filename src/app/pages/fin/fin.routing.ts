@@ -181,9 +181,9 @@ export const finRoutes: Routes = [
   // 收款沖帳維護
   // { path: 'fin32030', loadComponent: () => import('./fin32030/fin32030.component').then(m => m.FIN32030Component),data:{progNo:'FIN32030'} },
   // { path: 'fin32030cru', loadComponent: () => import('./fin32030-cru/fin32030-cru.component').then(m => m.FIN32030CRUComponent),data: { progNo: 'FIN32030'} },
-  // 拋轉收款沖帳傳票
-  // { path: 'fin33010', loadComponent: () => import('./fin33010/fin33010.component').then(m => m.FIN33010Component),data:{progNo:'FIN33010'} },
-  // { path: 'fin33010cru', loadComponent: () => import('./fin33010-cru/fin33010-cru.component').then(m => m.FIN33010CRUComponent),data: { progNo: 'FIN33010'} },
+  //拋轉收款沖帳傳票
+  { path: 'fin33010', loadComponent: () => import('./fin33010/fin33010.component').then(m => m.FIN33010Component), data: { progNo: 'FIN33010' } },
+  { path: 'fin33010cru', loadComponent: () => import('./fin33010-cru/fin33010-cru.component').then(m => m.FIN33010CRUComponent), data: { progNo: 'FIN33010' } },
   // 應收帳款明細表
   { path: 'fin34010', loadComponent: () => import('./fin34010/fin34010.component').then(m => m.FIN34010Component), data: { progNo: 'FIN34010' } },
   // 客戶收款明細表
@@ -332,7 +332,7 @@ export const finRoutes: Routes = [
   { path: 'fin63020cru', loadComponent: () => import('./fin63020-cru/fin63020-cru.component').then(m => m.FIN63020CRUComponent), data: { progNo: 'FIN63020' } },
   // 應付票據兌現作業
   { path: 'fin63040', loadComponent: () => import('./fin63040/fin63040.component').then(m => m.FIN63040Component), data: { progNo: 'FIN63040' } },
-  { path: 'fin63040cru', loadComponent: () => import('./fin63040-cru/fin63040-cru.component').then(m => m.FIN63040CRUComponent),data: { progNo: 'FIN63040'} },
+  { path: 'fin63040cru', loadComponent: () => import('./fin63040-cru/fin63040-cru.component').then(m => m.FIN63040CRUComponent), data: { progNo: 'FIN63040' } },
   // 應付票據撤票作業
   { path: 'fin63050', loadComponent: () => import('./fin63050/fin63050.component').then(m => m.FIN63050Component), data: { progNo: 'FIN63050' } },
   { path: 'fin63050cru', loadComponent: () => import('./fin63050-cru/fin63050-cru.component').then(m => m.FIN63050CRUComponent), data: { progNo: 'FIN63050' } },

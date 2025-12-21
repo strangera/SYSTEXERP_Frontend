@@ -1,134 +1,107 @@
+
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-//
-
-//1.3.3.1 拋轉收款沖帳傳票
+import { Fin28010Service } from '@service/api/fin/fin28010.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 @Component({
-    selector: 'app-fin33010',
-    templateUrl: './fin33010.component.html',
-    styleUrl: './fin33010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-fin33010',
+  templateUrl: './fin33010.component.html',
+  standalone: true,
+  imports: [CalendarComponent
+    , ButtonModule, InputTextComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, ButtonComponent, TranslateModule]
 })
-export class FIN33010Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    receive_ID: [, [Validators.required]], // 收款單號
-    summons_Date: [, [Validators.required]], // 傳票日期
-  });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '序號', visible: true },
-    { field: 'col2', header: '科目代號', visible: true },
-    { field: 'col3', header: '科目名稱', visible: true },
-    { field: 'col4', header: '廠商代號', visible: true },
-    { field: 'col5', header: '摘要', visible: true },
-    { field: 'col6', header: '借方金額', visible: true },
-    { field: 'col7', header: '貸方金額', visible: true },
-    { field: 'col8', header: '組織代號', visible: true },
-    { field: 'col9', header: '立沖代號', visible: true },
-    { field: 'col10', header: '活動代號', visible: true },
-    { field: 'col11', header: '對象別編號', visible: true },
-    { field: 'col12', header: '對帳KEY值', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  receiveOptions: any[] = [
-    { value: 1, label: 'R20150105002/20150105/ /N' },
-    { value: 2, label: 'R20150301001/20150301/應收帳款-聯合調整 /N' },
-  ];
 
+export class FIN33010Component extends BasicQueryPageComponent<any> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    WSLIP_NO: ['', [Validators.maxLength(15)]],
+    VouDate: [null as Date | null, [Validators.required,]],
+    ...createPaginationConfig([{ field: 'AccNo', order: 1 }]),
+  });
+  selectedItems: any[] = [];
+  totalRecords = 0;
+  data: any[] = [];
+  selectAll = false;
+  get selectedCount(): number {
+    return this.selectedItems?.length ?? 0;
+  }
+  columns: any[] = [
+    { field: 'AccNo', header: '科目代號', visible: true },
+    { field: 'AccCName', header: '會計科目名稱', visible: true },
+    { field: 'VEN_No', header: '廠商編號', visible: true },
+    { field: 'VEN_Name', header: '廠商名稱', visible: true },
+    { field: 'NoteDesc', header: '摘要', visible: true },
+    { field: 'd_amt', header: '借方金額', visible: true, format: formatAmount },
+    { field: 'c_amt', header: '貸方金額', visible: true, format: formatAmount },
+    { field: 'org_id', header: '組織代號', visible: true },
+    { field: 'PTA', header: '立沖代號', visible: true },
+  ];
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
+    private fin28010Service: Fin28010Service,
+    private datePipe: DatePipe,
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '130006';
-    this.cruPage = '/FIN3000/FIN33010CRU';
-    //
-    // ----------------------------------------------------------------
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('FIN33010', '/FIN/FIN33010CRU', this.queryForm, (frm) => this.onSubmit(frm));
+
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const v = frm.getRawValue();
+      const payload = {
+        PageSize: 20,
+        PageIndex: 1,
+        OrderBy: '',
+        Offset: 0,
+        SortBy: [{ field: 'AccNo', order: 1 }],
+        WSLIP_NO: v.WSLIP_NO || '',
+        VouDate: this.datePipe.transform(v.VouDate, 'yyyy-MM-dd') || ''
+      };
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
+      this.loading = true;
+      this.messageService.blockUi();
 
-    this.loading = false;
-    this.messageService.unblockUi();
+      this.fin28010Service.queryFIN28010(payload).subscribe({
+        next: (res: any) => {
+          if (res.Status === '0000' || res.Status === '200') {
+            const details = res.Data ?? [];
+
+            if (!details.length) {
+              this.messageService?.warnBubble?.('查無資料');
+              return;
+            }
+
+            const header = details[0];
+            const queryConditions = {
+              form: frm.getRawValue(),
+              details,
+            };
+
+            // 直接進入 CRU 顯示欄位與明細表
+            this.onDetail(header, queryConditions);
+          } else {
+            this.messageService?.errorBubble?.(res.Message || '查詢失敗');
+          }
+        },
+
+        complete: () => {
+          this.loading = false;
+          this.messageService.unblockUi();
+        }
+      });
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
-  }
 }
