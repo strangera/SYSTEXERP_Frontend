@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN35010DetailResponse, FIN35010ModifyRequest, FIN35010Response, Fin35010Service, FIN35010TLTRequest, FIN35010TLTResponse } from '@service/api/fin/fin35010.service';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -13,9 +13,9 @@ import { InputNumberComponent } from "@shared/componentkit/input-number/input-nu
 import { InputTextareaComponent } from "@shared/componentkit/input-textarea/input-textarea.component";
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatDate } from '@shared/componentkit/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -31,15 +31,15 @@ import { UpdateType } from '../fin35010/fin35010.model';
   standalone: true,
   imports: [DialogComponent, TableEditComponent, AsyncPipe, TableReportComponent, MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarComponent, NgIf, TranslateModule, InputNumberComponent, InputTextareaComponent]
 })
-export class FIN35010CRUComponent extends BasicCruPageComponent<FIN35010Response | string> implements OnInit {
+export class FIN35010CRUComponent extends BasicCruPageComponent<FIN35010Response> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     Id: [{ value: null as number | null, disabled: true }], // 新增 Id 欄位用於更新/讀取
     In_Date: [new Date() as Date | null, [Validators.required]],
-    Data_Source: ['2'], // 新增 Data_Source (用於判斷合約轉入)
-    STO_No: [null as string | null], // 新增 STO_No
-    Deposit_Mode: ['1' as string | null], // 新增 Deposit_Mode (可能需要根據 DepositTypeOptions 設置初始值)
+    Data_Source: [{ value: '2', disabled: true }, [Validators.required]], // 新增 Data_Source (用於判斷合約轉入)
+    STO_No: [this.authService.currentUserValue?.SYS_StoreNo, [Validators.required]], // 新增 STO_No
+    Deposit_Mode: ['1' as string | null, [Validators.required]], // 新增 Deposit_Mode (可能需要根據 DepositTypeOptions 設置初始值)
     Deposit_Type: [null as string | null, [Validators.required]], // 保證類別
-    CHK_Type: [null as string | null, [Validators.required]],
+    CHK_Type: [null as string | null],
     Status: [{ value: '0', disabled: true }, [Validators.required]],
     CHK_No: [null as string | null, [Validators.required, Validators.maxLength(10)]],
     CHK_Amt: [null as number | null, [Validators.required, Validators.max(9999999999)]],
@@ -57,7 +57,7 @@ export class FIN35010CRUComponent extends BasicCruPageComponent<FIN35010Response
     Return_EDate: [null as Date | null],
     Return_Get_Person: [null as string | null, [Validators.maxLength(50)]],
     Remark: [null as string | null, [Validators.maxLength(160)]],
-    update_type: [null as UpdateType | null], // 根據 UpdateType 決定要送出的異動狀態
+    update_type: ['1' as UpdateType | null], // 根據 UpdateType 決定要送出的異動狀態
   });
 
   VEN_NoOptions$ = this.dropdown.queryPos2013({ VEN_Flag: '' });
@@ -69,31 +69,14 @@ export class FIN35010CRUComponent extends BasicCruPageComponent<FIN35010Response
   CHK_TypeOptions = getSYS1000Options('CHK_Type');// 票據種類 (1=支票 2=本票 3=銀行保證函 4=其他)
   StatusOptions = getSYS1000Options('ARS4008_Status');// (0=未繳票 1=已繳票 2=已退票 3=封存)
   columns: EditColumn[] = [
-    {
-      field: 'VEN_No', header: '廠商編號', type: 'dropdown', optionsAsync: true, options: () => this.VEN_NoOptions$, optionLabel: 'value', optionValue: 'value', templateLabel: 'label',
-      calculate: (rowData: FIN35010DetailResponse) => {
-        return { 'VEN_Name': this.venNoResolvedOptions?.find(opt => opt.value === rowData.VEN_No)?.['Name'] || '' };
-      }, validate: [validateRequired]
-    },
-    { field: 'VEN_Name', header: '廠商名稱', type: 'input', disabled: () => true },
-    {
-      field: 'TLT_No', header: '專櫃編號', type: 'dropdown', optionsAsync: true, options: () => this.tlt_noOptions$, optionLabel: 'value', optionValue: 'value', templateLabel: 'label',
-      calculate: (rowData: FIN35010DetailResponse) => {
-        const selectedTalent = this.tltNoResolvedOptions?.find(opt => opt.tlt_no === rowData.TLT_No);
-        return {
-          'Talent_Id': selectedTalent?.talent_id ? +selectedTalent.talent_id : null,
-          'Org_Id': selectedTalent?.org_id || null,
-          'TLT_Name': selectedTalent?.tlt_name || null,
-          'tlt_bdate': selectedTalent?.tlt_bdate ? new Date(selectedTalent.tlt_bdate) : null,
-          'tlt_edate': selectedTalent?.tlt_edate ? new Date(selectedTalent.tlt_edate) : null,
-        };
-      }, validate: [validateRequired]
-    },
-    { field: 'TLT_Name', header: '專櫃名稱', type: 'input', disabled: () => true },
-    { field: 'tlt_bdate', header: '合約起始日期', type: 'date', disabled: () => true },
-    { field: 'tlt_edate', header: '合約終止日期', type: 'date', disabled: () => true },
-    { field: 'Deposit_Type', header: '票據類型', type: 'dropdown', options: () => this.Deposit_TypeOptions, optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
-    { field: 'CHK_Amt', header: '票據金額', type: 'inputNumber', validate: [validateRequired] },
+    { field: 'VEN_No', header: '廠商編號' },
+    { field: 'VEN_Name', header: '廠商名稱' },
+    { field: 'TLT_No', header: '專櫃編號' },
+    { field: 'TLT_Name', header: '專櫃名稱' },
+    { field: 'tlt_bdate', header: '合約起始日期', format: formatDate },
+    { field: 'tlt_edate', header: '合約終止日期', format: formatDate },
+    { field: 'CHK_Type', header: '票據種類', format: (v) => getSYS1000('CHK_Type', v) },
+    { field: 'CHK_Amt', header: '票據金額', format: formatAmount },
   ];
   data: FIN35010DetailResponse[] = [];
   selectedItems: FIN35010DetailResponse[] = [];
@@ -107,17 +90,26 @@ export class FIN35010CRUComponent extends BasicCruPageComponent<FIN35010Response
 
   ngOnInit(): void {
     this.initializePage('FIN35010', this.dataForm);
-    if (this.isFormCreateable && this.rowdata) {
-      switch (this.rowdata) {
-        case UpdateType.Deposit: this.formTitle = '新增【繳票】資訊'; break;
-        case UpdateType.CancelDeposit: this.formTitle = '新增【取消繳票】資訊'; break;
-        case UpdateType.Refund: this.formTitle = '新增【退票】資訊'; break;
-        case UpdateType.CancelRefund: this.formTitle = '新增【取消退票】資訊'; break;
+    if (this.rowdata) {
+      switch (this.rowdata?.update_type) {
+        case UpdateType.Deposit: this.formTitle = '新增【繳票】資訊'; this.dataForm.disable(); break;
+        case UpdateType.CancelDeposit: this.formTitle = '新增【取消繳票】資訊'; this.dataForm.disable(); break;
+        case UpdateType.Refund: this.formTitle = '新增【退票】資訊'; this.dataForm.disable(); break;
+        case UpdateType.CancelRefund: this.formTitle = '新增【取消退票】資訊'; this.dataForm.disable(); break;
         default: break;
       }
     }
+    if (this.isFormCreateable && this.rowdata) {
+      this.dataForm.patchValue(this.rowdata as FIN35010Response);
+      if (this.rowdata.Data_Source === '1') {
+        this.dataForm.controls.Deposit_Mode.disable();
+        this.dataForm.controls.Status.disable();
+        this.dataForm.controls.CHK_Amt.disable();
+        this.dataForm.controls.CHK_Type.disable();
+      }
+    }
     // 2. 處理讀取明細
-    if (!this.isFormCreateable && this.rowdata && typeof this.rowdata !== 'string') {
+    if (!this.isFormCreateable && this.rowdata) {
       const body = { Id: (this.rowdata as FIN35010Response).Id };
       this.fin35010Service.queryFIN35010Detail(body).pipe(untilDestroyed(this)).subscribe(res => {
         this.dataForm.patchValue({
@@ -176,7 +168,7 @@ export class FIN35010CRUComponent extends BasicCruPageComponent<FIN35010Response
     if (dataSource === '1') {
       const disableFields: (keyof typeof this.dataForm.controls)[] = [
         'Deposit_Mode', 'In_Date', 'Deposit_Type', 'CHK_Type', 'VEN_No',
-        'VEN_Name', 'TLT_No', 'Talent_Id', 'Org_Id', 'Return_EDate'
+        'TLT_No'
       ];
       disableFields.forEach(controlName => this.dataForm.get(controlName)?.disable());
     }
@@ -185,14 +177,13 @@ export class FIN35010CRUComponent extends BasicCruPageComponent<FIN35010Response
     this.handleSubmit(frm, () => {
       // 取得當前商店編號
       const stoNo = this.authService.currentUserValue?.SYS_StoreNo ?? '';
-      // 取得動作類型 (來自 rowdata 或狀態)
-      const updateType = this.isFormCreateable ? (this.rowdata as string) : undefined;
-
+      const rawValue = frm.getRawValue();
       // --- 情況 A：如果是批次模式 (Table 有資料) ---
       if (this.isFormCreateable && this.data && this.data.length > 0) {
         const listBody: FIN35010ModifyRequest[] = this.data.map(item => ({
           ...item,
-          update_type: updateType!,
+          ...rawValue,
+          update_type: this.rowdata?.update_type || '0',
           STO_No: stoNo,
           // 確保 Table 中的日期格式正確
           In_Date: this.datePipe.transform(item.In_Date, 'yyyy-MM-dd') || '',
@@ -202,24 +193,32 @@ export class FIN35010CRUComponent extends BasicCruPageComponent<FIN35010Response
           Return_EDate: this.datePipe.transform(item.Return_EDate, 'yyyy-MM-dd') || undefined,
           // 確保數字型別
           CHK_Amt: Number(item.CHK_Amt) || 0,
+          // 專櫃相關
           Talent_Id: item.Talent_Id ? Number(item.Talent_Id) : undefined,
+          TLT_No: item.TLT_No,
+          Org_Id: item.Org_Id,
+          TLT_Name: item.TLT_Name,
+          TLT_BDate: item.tlt_bdate,
+          tlt_bdate: item.tlt_bdate,
+          TLT_EDate: item.tlt_edate,
+          tlt_edate: item.tlt_edate,
+          CHK_Type: item.CHK_Type,
+          VEN_No: item.VEN_No,
+          VEN_Name: item.VEN_Name,
         }));
 
-        this.fin35010Service.insertListFIN35010({ List: listBody })
-          .pipe(finalize(() => this.loading = false), untilDestroyed(this))
-          .subscribe(res => {
-            this.messageService.successBubble(res.Message || '批次新增成功');
-            this.onCancel(); // 回上一頁
-          });
+        this.fin35010Service.insertListFIN35010({ List: listBody }).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+          this.messageService.successBubble(res.Message || '批次新增成功');
+          this.onCancel(); // 回上一頁
+        });
         return; // 結束，不執行下方的單筆邏輯
       }
 
       // --- 情況 B：單筆模式 (一般新增或更新) ---
-      const rawValue = frm.getRawValue();
       const formattedBody: FIN35010ModifyRequest = {
         ...rawValue,
         Id: this.isFormCreateable ? undefined : rawValue.Id,
-        update_type: updateType,
+        update_type: this.rowdata?.update_type || '0',
         STO_No: stoNo,
         In_Date: this.datePipe.transform(rawValue.In_Date, 'yyyy-MM-dd') || '',
         CHK_ExpireDate: this.datePipe.transform(rawValue.CHK_ExpireDate, 'yyyy-MM-dd') || undefined,
@@ -247,13 +246,13 @@ export class FIN35010CRUComponent extends BasicCruPageComponent<FIN35010Response
   dialogColumns: ReportColumn[] = [
     { field: 'tlt_no', header: '專櫃編號' },
     { field: 'TLT_Name', header: '專櫃名稱' },
-    { field: 'tlt_bdate', header: '合約起始日期' },
-    { field: 'tlt_edate', header: '合約終止日期' },
+    { field: 'tlt_bdate', header: '合約起始日期', format: formatDate },
+    { field: 'tlt_edate', header: '合約終止日期', format: formatDate },
     { field: 'org_id', header: '組織編號' },
     { field: 'VEN_No', header: '廠商編號' },
     { field: 'VEN_Name', header: '廠商名稱' },
-    { field: 'Deposit_Type', header: '票據類型' },
-    { field: 'CHK_Amt', header: '金額' },
+    { field: 'CHK_Type', header: '票據種類', format: (v) => getSYS1000('CHK_TYPE', v) },
+    { field: 'CHK_Amt', header: '票據金額', format: formatAmount },
   ];
   totalRecords = 0;
   lastQueryBody: FIN35010TLTRequest | null = null;
@@ -262,16 +261,22 @@ export class FIN35010CRUComponent extends BasicCruPageComponent<FIN35010Response
   }
   dialogQueryForm = this.formBuilder.group({
     Deposit_Type: [null as string | null],
-    query_date: [null as string | null],
+    query_date: [null as string | null, [Validators.required]],
     tlt_no: [null as string | null],
     ven_no: [null as string | null],
     org_id: [null as string | null],
     pageIndex: [1],
     pageSize: [30],
   })
+  dialogSubmitted = false;
   dialogLoading = false;
   onQuery(frm: FormGroup) {
+    this.dialogSubmitted = true;
     this.dialogLoading = true;
+    if (frm?.invalid) {
+      this.dialogLoading = false;
+      return;
+    }
     const rawValue = frm.getRawValue();
     const body: FIN35010TLTRequest = {
       ...rawValue,
@@ -316,8 +321,8 @@ export class FIN35010CRUComponent extends BasicCruPageComponent<FIN35010Response
       Talent_Id: item.talent_id,
       Org_Id: item.org_id,
       TLT_Name: item.TLT_Name,
-      TLT_BDate: item.tlt_bdate, // TLTResponse 是 tlt_bdate -> DetailResponse 是 TLT_BDate
-      TLT_EDate: item.tlt_edate,
+      tlt_bdate: item.tlt_bdate, // TLTResponse 是 tlt_bdate -> DetailResponse 是 TLT_BDate
+      tlt_edate: item.tlt_edate,
       Return_EDate: '',
       Return_Get_Person: '',
       Remark: ''

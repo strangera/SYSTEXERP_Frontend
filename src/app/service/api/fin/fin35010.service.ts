@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { UpdateType } from '@pages/fin/fin35010/fin35010.model';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { ApiResponse } from '../fin/fin26010.service';
@@ -45,11 +46,15 @@ export interface FIN35010Response {
   TLT_Name: string;
   CHK_Amt: number; // 修正：Swagger 為 CHK_Amt
   CHK_Type: string;
+  Deposit_Type: string;
+  CRT_Date: string;
   GuaranteeCategory: string;
   Status: string;
   Remark: string;
   CreateDate: string;
   UPD_Date: string;
+  update_type: UpdateType;
+  Data_Source: string;
 }
 
 /** 查詢明細 Response */
@@ -73,8 +78,10 @@ export interface FIN35010DetailResponse {
   Talent_Id: number;
   Org_Id: string;
   TLT_Name: string;
-  TLT_BDate: string;
-  TLT_EDate: string;
+  TLT_BDate?: string;
+  tlt_bdate: string;
+  TLT_EDate?: string;
+  tlt_edate: string;
   Return_EDate: string;
   Return_Get_Person: string;
   Remark: string;
@@ -87,6 +94,9 @@ export interface FIN35010TLTRequest {
   tlt_no?: string;
   ven_no?: string;
   org_id?: string;
+  PageSize: number;
+  PageIndex: number;
+  SortBy?: { field: string; order: number }[];
 }
 
 /** 查詢專櫃 Response Item */

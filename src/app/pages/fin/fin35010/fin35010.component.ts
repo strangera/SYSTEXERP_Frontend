@@ -8,7 +8,7 @@ import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -40,7 +40,6 @@ import { UpdateType } from './fin35010.model';
   ],
 })
 export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response> implements OnInit {
-  public readonly UpdateType = UpdateType;
   queryForm = this.formBuilder.nonNullable.group({
     VEN_No: [null], // 廠客代號(下拉), POS2013.VEN_NO
     VEN_Name: [null, Validators.maxLength(100)], // "廠客名稱, POS2013.VEN_NAME LIKE %%" (input輸入)
@@ -86,8 +85,41 @@ export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response>
     { field: 'Status', header: '票據狀態', format: (v) => getSYS1000('ARS4008_Status', v) },
     { field: 'Remark', header: '摘要' },
     { field: 'CRT_Date', header: '建檔日期', format: formatDate },
-    { field: 'CreateDate', header: '建檔日期', format: formatDate },
     { field: 'UPD_Date', header: '變更日期', format: formatDate },
+  ];
+  addButton: AddButton[] = [
+    {
+      label: '繳票',
+      icon: 'pi pi-check-circle text-green-600',
+      action: (rowData: FIN35010Response) => {
+        this.onEdit({ ...rowData, update_type: UpdateType.Deposit });
+      },
+      disabled: (rowData: FIN35010Response) => rowData.Status !== '0'
+    },
+    {
+      label: '取消繳票',
+      icon: 'pi pi-undo text-red-600',
+      action: (rowData: FIN35010Response) => {
+        this.onEdit({ ...rowData, update_type: UpdateType.CancelDeposit });
+      },
+      disabled: (rowData: FIN35010Response) => rowData.Status !== '1'
+    },
+    {
+      label: '退票',
+      icon: 'pi pi-directions-alt text-blue-600',
+      action: (rowData: FIN35010Response) => {
+        this.onEdit({ ...rowData, update_type: UpdateType.Refund });
+      },
+      disabled: (rowData: FIN35010Response) => rowData.Status !== '0'
+    },
+    {
+      label: '取消退票',
+      icon: 'pi pi-history text-gray-600',
+      action: (rowData: FIN35010Response) => {
+        this.onEdit({ ...rowData, update_type: UpdateType.CancelRefund });
+      },
+      disabled: (rowData: FIN35010Response) => rowData.Status !== '2'
+    },
   ];
 
   constructor(
@@ -140,5 +172,9 @@ export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response>
         this.queryStateService.setQueryState(this.ProgNo, body);
       });
     });
+  }
+
+  onCreateData_Source(Data_Source: string): void {
+    this.onCreate({ Data_Source: Data_Source });
   }
 }

@@ -1,10 +1,8 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" label="繳票" (click)="onCreate(UpdateType.Deposit)"></app-button>
-    <app-button btnType="create" label="取消繳票" (click)="onCreate(UpdateType.CancelDeposit)"></app-button>
-    <app-button btnType="create" label="退票" (click)="onCreate(UpdateType.Refund)"></app-button>
-    <app-button btnType="create" label="取消退票" (click)="onCreate(UpdateType.CancelRefund)"></app-button>
+    <app-button btnType="create" label="手動新增" (click)="onCreateData_Source('2')"></app-button>
+    <app-button btnType="create" label="讀取合約" (click)="onCreateData_Source('1')"></app-button>
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
@@ -105,5 +103,5 @@
 <div class="card">
   <app-table-report dataKey="Id" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [totalRecords]="totalRecords" [loading]="loading" [lastQueryBody]="lastQuery" [showDelete]="false"
-    [queryFunction]="fin35010Service.queryFIN35010.bind(fin35010Service)"></app-table-report>
+    [addButton]="addButton" [queryFunction]="fin35010Service.queryFIN35010.bind(fin35010Service)"></app-table-report>
 </div>
