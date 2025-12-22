@@ -68,7 +68,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   @ViewChild(Tls24010Pos5007Component) pos5007Comp?: Tls24010Pos5007Component;
   @ViewChild(Tls24010Pos5008Component) pos5008Comp?: Tls24010Pos5008Component;
   type?: string;
-  TXN_GUIPaper?: string; // 補登類別 補原機台='E' 手開二聯式發票='2'
+  TXN_GUIPaper?: string; // 補登類別 補原機台='E' 手開發票='2'
   TLT_Name?: string; //專櫃名稱
   store_way?: string // 1為專櫃 2=自營
   talent_id?: number; //專櫃編號

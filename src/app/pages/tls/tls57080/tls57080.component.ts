@@ -69,8 +69,6 @@ export class TLS57080Component extends BasicQueryPageComponent<QueryTLS57080Deta
     { field: 'qty', header: '異動量' },
     { field: 'StockQty', header: '庫存量' },
     { field: 'GUINO', header: '發票號碼' },
-    { field: 'PLU_NO', header: '國際條碼' },
-    { field: 'PLU_Name', header: '品牌' },
     { field: 'TRN_BuyPrc', header: '進單價(未稅)', format: (v) => formatAmountWithDecimals(v, 2) },
     { field: 'TRN_SalePrc', header: '售單價(含稅)', format: (v) => formatAmountWithDecimals(v, 2) },
     { field: 'TRN_BuyAmt', header: '期初成本', format: (v) => formatAmountWithDecimals(v, 2) },

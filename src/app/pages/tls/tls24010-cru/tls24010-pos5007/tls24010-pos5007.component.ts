@@ -32,7 +32,7 @@ import { STORE_WAY } from '../tls24010-cru.model';
 })
 export class Tls24010Pos5007Component implements OnChanges {
   @Input() type?: string;
-  @Input() TXN_GUIPaper?: string // 補登類別 補原機台='E' 手開二聯式發票='2'
+  @Input() TXN_GUIPaper?: string // 補登類別 補原機台='E' 手開發票='2'
   @Input() TLT_No?: string//專櫃編號
   @Input() TLT_Name?: string//專櫃名稱
   @Input() TXN_Date?: string//專櫃名稱
