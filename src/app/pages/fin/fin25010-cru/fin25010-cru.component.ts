@@ -74,7 +74,6 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<any> implements 
   data: QueryAddFIN25010Response[] = [];
   selectedItems: QueryAddFIN25010Response[] = [];
   totalRecords = 0;
-  // TODO: 欄位的顯示排序格式待確認
   columns: Column[] = [
     { field: 'ID', header: 'ID', hidden: true },
     { field: 'acp_no', header: '應收/付帳款編號' },
@@ -91,7 +90,6 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<any> implements 
     { field: 'ACP_YYYYMM', header: '應付帳款年月' },
     { field: 'ACP_TERMNO', header: '帳款帳次' },
     { field: 'Remit_Status', header: '是否形成電匯', format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : value }
-    // TODO: 待回傳 APAR_No
   ];
 
   constructor(
@@ -133,11 +131,10 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   onGenerate() {
-    // TODO: 空字串欄位待確認
     const aps3009Items = this.selectedItems.map(item => ({
       ID: item.ID,
       VEN_No: item.ven_no,
-      APAR_No: '',
+      APAR_No: item.acp_no,
       ACP_YYYYMM: item.ACP_YYYYMM,
       acp_termno: Number(item.ACP_TERMNO),
       ACP_Amt: Number(item.ACP_Amt),

@@ -68,7 +68,6 @@ export interface QueryAddFIN25010Response {
   ACP_YYYYMM?: string;         // 應付帳款年月
   ACP_TERMNO?: string;         // 帳款帳次
   Remit_Status?: string;       // 是否形成電匯(Y/N)
-  // TODO: 待回傳 APAR_No
 }
 
 // 新增 APS3009 資料表 Request
