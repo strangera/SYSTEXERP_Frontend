@@ -1,17 +1,19 @@
 // commission-data.service.ts - 修正版本，確保 cap_saletype 同步
 import { Injectable } from '@angular/core';
-import { Observable, firstValueFrom, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
-import { TLS13010Service } from '@service/api/tls/tls13010.service';
-import { ContractFlowService } from './../../tls13010/services/contract-flow.service';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
+import { TLS13010Service } from '@service/api/tls/tls13010.service';
+import { firstValueFrom, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { ContractFlowService } from './../../tls13010/services/contract-flow.service';
+
+import { DateUtils } from 'src/app/core/utils/date-utils';
 import {
-  CommissionItem,
-  DiscountSettingItem,
   AnnualPerformanceItem,
+  ChargeSettingApiItem,
+  CommissionItem,
   DiscountLevelItem,
-  WorkflowStep,
-  ChargeSettingApiItem
+  DiscountSettingItem,
+  WorkflowStep
 } from './../../tls13010/tls13010.model';
 
 // 資料載入結果介面
@@ -152,9 +154,28 @@ export class CommissionDataService {
 
     console.log('📦 使用暫存抽成資料');
 
-    const processedData = savedData.map((item: { _status: any; }) => ({
+    // 🔑 正規化日期欄位，避免時區問題
+    const processedData = savedData.map((item: CommissionItem) => ({
       ...item,
-      _status: item._status || 'original'
+      _status: item._status || 'original',
+      // 正規化折扣設定日期
+      discountSettingItems: item.discountSettingItems?.map((d: DiscountSettingItem) => ({
+        ...d,
+        tlt_bdate: DateUtils.toDateString(d.tlt_bdate),
+        tlt_edate: DateUtils.toDateString(d.tlt_edate)
+      })),
+      // 正規化年度業績日期
+      annualPerformanceItems: item.annualPerformanceItems?.map((a: AnnualPerformanceItem) => ({
+        ...a,
+        tlt_bdate: DateUtils.toDateString(a.tlt_bdate),
+        tlt_edate: DateUtils.toDateString(a.tlt_edate)
+      })),
+      // detailItems 也需要同步正規化
+      detailItems: item.detailItems?.map((d: any) => ({
+        ...d,
+        tlt_bdate: DateUtils.toDateString(d.tlt_bdate),
+        tlt_edate: DateUtils.toDateString(d.tlt_edate)
+      }))
     }));
 
     const validation = this.validateCommissionData(processedData);
@@ -345,8 +366,8 @@ export class CommissionDataService {
       _source: 'api',  // 🆕 標記為 API 來的資料
       selected: true,
       cag_barcode: detail.cag_barcode || '',
-      tlt_bdate: detail.tlt_bdate ? new Date(detail.tlt_bdate) : new Date(),
-      tlt_edate: detail.tlt_edate ? new Date(detail.tlt_edate) : new Date(),
+      tlt_bdate: DateUtils.toDateString(detail.tlt_bdate),
+      tlt_edate: DateUtils.toDateString(detail.tlt_edate),
       cag_charge_rate: this.convertRateToPercentage(detail.cag_charge_rate),  // 🔧 API 的 0.05 → 前端的 5
       _status: 'original',
       is_configured: detail.is_configured || true,
@@ -360,8 +381,8 @@ export class CommissionDataService {
    */
   private buildCompleteDiscountItems(existingDetails: any[], options: CommissionDataLoadOptions): DiscountSettingItem[] {
     const result: DiscountSettingItem[] = [];
-    const contractStartDate = options.contractStartDate ? new Date(options.contractStartDate) : new Date();
-    const contractEndDate = options.contractEndDate ? new Date(options.contractEndDate) : new Date();
+    const contractStartDate = DateUtils.toDateString(options.contractStartDate);
+    const contractEndDate = DateUtils.toDateString(options.contractEndDate);
 
     const isNewContractWithoutData = existingDetails.length === 0;
 
@@ -377,8 +398,8 @@ export class CommissionDataService {
             _source: 'api',  // 🆕 API 來的資料
             selected: true,
             cag_barcode: existingItem.cag_barcode,
-            tlt_bdate: existingItem.tlt_bdate ? new Date(existingItem.tlt_bdate) : contractStartDate,
-            tlt_edate: existingItem.tlt_edate ? new Date(existingItem.tlt_edate) : contractEndDate,
+            tlt_bdate: existingItem.tlt_bdate ? DateUtils.toDateString(existingItem.tlt_bdate) : contractStartDate,
+            tlt_edate: existingItem.tlt_edate ? DateUtils.toDateString(existingItem.tlt_edate) : contractEndDate,
             cag_charge_rate: this.convertRateToPercentage(existingItem.cag_charge_rate),  // 🔧 API 的 0.05 → 前端的 5
             _status: 'original',
             is_configured: true,
@@ -416,8 +437,8 @@ export class CommissionDataService {
     return yearDetails.map(detail => ({
       id: detail.id || this.generateTempId(),
       selected: true,
-      tlt_bdate: detail.tlt_bdate ? new Date(detail.tlt_bdate) : new Date(),
-      tlt_edate: detail.tlt_edate ? new Date(detail.tlt_edate) : new Date(),
+      tlt_bdate: DateUtils.toDateString(detail.tlt_bdate),
+      tlt_edate: DateUtils.toDateString(detail.tlt_edate),
       year_amount: detail.year_amount || 0,
       extra_rate: this.convertRateToPercentage(detail.extra_rate),  // 🔧 API 的 0.05 → 前端的 5
       _status: 'original'

@@ -22,6 +22,7 @@ import { FareDataService } from './Services/fare-data.service';
 import { FareDefaultsService } from './Services/fare-defaults.service';
 import { FareStatusService } from './Services/fare-status.service';
 import { FareValidationService } from './Services/fare-validation.service';
+import { DateUtils } from 'src/app/core/utils/date-utils';
 
 
 // 介面定義
@@ -380,6 +381,23 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   private initializeViewModeFromService(): void {
+    // 🔑 優先從 workflowStatus 恢復 crudStatus (支援頁面重新整理)
+    const workflowStatus = this.contractFlowService.getCurrentStatus();
+    if (workflowStatus?.crudStatus) {
+      this.crudstatus = workflowStatus.crudStatus;
+      console.log(`   從 workflowStatus 恢復 CRUD 狀態: ${this.crudstatus}`);
+
+      // 同步 isViewMode 狀態
+      const isViewMode = this.crudstatus === CRUDStatus.Read;
+      this.contractFlowService.setViewMode(isViewMode);
+    } else {
+      // fallback: 初始化 CRUD 狀態
+      const currentViewMode = this.contractFlowService.isViewMode();
+      this.crudstatus = currentViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
+      console.log(`   從 isViewMode 推斷 CRUD 狀態: ${this.crudstatus}`);
+    }
+
+    // 監聽檢視模式變更
     const viewModeSub = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
       this.crudstatus = isViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
       // console.log('🔍 Next1 檢視模式狀態更新:', isViewMode);
@@ -387,9 +405,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     this.subscriptions.push(viewModeSub);
 
-    // 初始化 CRUD 狀態
-    const currentViewMode = this.contractFlowService.isViewMode();
-    this.crudstatus = currentViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
+    console.log(`   最終 CRUD 狀態: ${this.crudstatus}`);
   }
 
   private setupTotalLocationSpace(): void {
@@ -417,10 +433,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       contract_subno: step1Data?.contract_subno || this.currentContractData?.contract_subno || '',
       tlt_term_type: (step1Data?.tlt_term_type || this.currentContractData?.tlt_term_type || '3').toString().trim(),
       comm_comp_type: step1Data?.comm_comp_type || this.currentContractData?.comm_comp_type || '2',
-      tlt_bdate: step1Data?.tlt_bdate || this.currentContractData?.tlt_bdate || '',
-      tlt_edate: step1Data?.tlt_edate || this.currentContractData?.tlt_edate || '',
-      tlt_contract_bdate: step1Data?.tlt_contract_bdate || this.currentContractData?.tlt_contract_bdate || '',
-      tlt_contract_edate: step1Data?.tlt_contract_edate || this.currentContractData?.tlt_contract_edate || ''
+      // 🔑 正規化日期欄位，避免時區問題
+      tlt_bdate: DateUtils.toDateString(step1Data?.tlt_bdate || this.currentContractData?.tlt_bdate),
+      tlt_edate: DateUtils.toDateString(step1Data?.tlt_edate || this.currentContractData?.tlt_edate),
+      tlt_contract_bdate: DateUtils.toDateString(step1Data?.tlt_contract_bdate || this.currentContractData?.tlt_contract_bdate),
+      tlt_contract_edate: DateUtils.toDateString(step1Data?.tlt_contract_edate || this.currentContractData?.tlt_contract_edate)
     };
 
     this.contractInfoData = [{

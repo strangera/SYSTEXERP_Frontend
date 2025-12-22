@@ -24,7 +24,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 
 export class FIN28010Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    WSLIP_NO: ['', [Validators.maxLength(15)]],
+    WSLIP_NO: ['', [Validators.required, Validators.maxLength(15)]],
     VouDate: [null as Date | null, [Validators.required,]],
     ...createPaginationConfig([{ field: 'AccNo', order: 1 }]),
   });

@@ -58,9 +58,9 @@
       <div class="grid p-fluid"></div>
 
       <!-- 檢視模式：顯示電匯明細表格 -->
-      <!-- @if (isFormReadable) {
+      @if (isFormReadable) {
         <div class="mt-3">
-          <h3 class="mb-2">電匯明細資料</h3>
+          <!-- <h3 class="mb-2">電匯明細資料</h3> -->
           <app-table
             tableKey="RemitDetail"
             dataKey="VEN_No"
@@ -70,9 +70,10 @@
             [showFilter]="false"
             [showDelete]="false"
             [showCheckBox]="false"
+            [showCaption]="false"
           ></app-table>
         </div>
-      } -->
+      }
 
       <div
         class="grid justify-content-end gap-2 m-0 mt-3 border-top-1 surface-border pt-3"

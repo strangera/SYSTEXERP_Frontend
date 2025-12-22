@@ -1,6 +1,8 @@
-import { FareItem } from './../../tls13010/tls13010.model';
 import { Injectable } from '@angular/core';
+import { DateUtils } from 'src/app/core/utils/date-utils';
+import { FareItem } from './../../tls13010/tls13010.model';
 import { FareDefaultsService } from './fare-defaults.service';
+
 
 /**
  * 扣款資料管理服務
@@ -22,7 +24,7 @@ export class FareDataService {
    */
   processAPIData(
     faresByType: any,
-    isNewContract: boolean = false,
+    isNewContract = false,
     contractInfo?: any,
     totalLocationSpace?: number
   ): Record<string, FareItem[]> {
@@ -167,7 +169,10 @@ export class FareDataService {
             cap_type: item.cap_type,
             _status: validStatus,
             _originalSelected: item._originalSelected,
-            _originalData: item._originalData || { ...item }
+            _originalData: item._originalData || { ...item },
+            // 🔑 正規化日期欄位，避免時區問題
+            cap_fmonth_begin: DateUtils.toDateString(item.cap_fmonth_begin),
+            cap_fmonth_end: DateUtils.toDateString(item.cap_fmonth_end)
           };
 
           // 🔥 新增：補充缺少的預設值

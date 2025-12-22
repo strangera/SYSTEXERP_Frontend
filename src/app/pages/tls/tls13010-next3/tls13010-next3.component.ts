@@ -218,17 +218,35 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   private setupViewModeUI(): void {
     console.log('設定檢視模式 UI 監聽');
 
-    const currentViewMode = this.contractFlowService.isViewMode();
-    if (currentViewMode) {
-      this.crudstatus = CRUDStatus.Read;
-      this.applyViewModeSettings(true);
+    // 🔑 優先從 workflowStatus 恢復 crudStatus (支援頁面重新整理)
+    const workflowStatus = this.contractFlowService.getCurrentStatus();
+    if (workflowStatus?.crudStatus) {
+      this.crudstatus = workflowStatus.crudStatus;
+      console.log(`   從 workflowStatus 恢復 CRUD 狀態: ${this.crudstatus}`);
+
+      // 同步 isViewMode 狀態
+      const isViewMode = this.crudstatus === CRUDStatus.Read;
+      this.contractFlowService.setViewMode(isViewMode);
+      this.applyViewModeSettings(isViewMode);
+    } else {
+      // fallback: 初始化 CRUD 狀態
+      const currentViewMode = this.contractFlowService.isViewMode();
+      this.crudstatus = currentViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
+      console.log(`   從 isViewMode 推斷 CRUD 狀態: ${this.crudstatus}`);
+
+      if (currentViewMode) {
+        this.applyViewModeSettings(true);
+      }
     }
 
+    // 監聽檢視模式變更
     const viewModeSubscription = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
       this.crudstatus = isViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
       this.applyViewModeSettings(isViewMode);
     });
     this.subscriptions.push(viewModeSubscription);
+
+    console.log(`   最終 CRUD 狀態: ${this.crudstatus}`);
   }
 
   private applyViewModeSettings(isViewMode: boolean): void {

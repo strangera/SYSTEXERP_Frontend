@@ -1,6 +1,7 @@
 // tls13010.model.ts - 修正版，配合後端 CleanContractRequest 結構
 
 import { AutoCompleteOption } from "@shared/componentkit/app-autocomplete/app-autocomplete.component";
+import { CRUDStatus } from "@shared/models/system/CRUDstatus";
 
 // ========== 1. 保留原有的前端邏輯介面（不變） ==========
 export enum WorkflowStep {
@@ -19,6 +20,7 @@ export interface WorkflowStatus {
   contractId: string | null;
   lastModified: Date;
   isNewContract?: boolean;
+  crudStatus?: CRUDStatus; // 🔑 新增: 保存 CRUD 狀態,用於頁面重新整理後恢復
 }
 
 // ========== 2. 修正：配合後端的清理後提交模型 ==========
@@ -509,8 +511,8 @@ export interface DiscountSettingItem {
   id?: number | string;
   selected: boolean;
   cag_barcode: string;
-  tlt_bdate: Date;
-  tlt_edate: Date;
+  tlt_bdate: Date | string;
+  tlt_edate: Date | string;
   cag_charge_rate?: number;
   _status?: 'original' | 'modified' | 'new' | 'deleted';
   _source?: 'api' | 'new';
@@ -526,8 +528,8 @@ export interface DiscountSettingItem {
 export interface AnnualPerformanceItem {
   id?: number | string;
   selected: boolean;
-  tlt_bdate: Date;
-  tlt_edate: Date;
+  tlt_bdate: Date | string;
+  tlt_edate: Date | string;
   year_amount: number;
   extra_rate: number;
   _status?: 'original' | 'modified' | 'new' | 'deleted';

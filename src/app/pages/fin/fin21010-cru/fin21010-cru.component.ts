@@ -36,21 +36,21 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
     BNK_AccNo: [null, [Validators.required, Validators.maxLength(20), this.validationService.numberValidator]],  // 帳號
     BNK_AccName: [null, [Validators.required, Validators.maxLength(80)]],      // 帳戶名稱
 
-    BNK_BranchNo: ['', [Validators.required, Validators.maxLength(3), this.validationService.noChineseValidator]],     // 銀行分行代號
+    BNK_BranchNo: ['', [Validators.required, Validators.maxLength(4), this.validationService.noChineseValidator]],     // 銀行分行代號
     BNK_AccType: [null, [Validators.required, Validators.maxLength(2), this.validationService.noChineseValidator]],      // 存款代號 (SYS1000.BNK_ACCTYPE)
     BNK_AccStatus: ['0', [Validators.required, Validators.maxLength(1), this.validationService.noChineseValidator]],     // 帳戶狀態 (0=正常)
 
     BNK_DepositAccNo: [null, [Validators.maxLength(14), this.validationService.noChineseValidator]],  // 公司銀行科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME" (accNo like '1103%')
-    BNK_CheckInAccNo: [null, [Validators.maxLength(14), this.validationService.noChineseValidator]],  // 應付票據科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME" (ClassNo 211 0r 212)
-    BNK_CheckOutAccNo: [null, [Validators.maxLength(14), this.validationService.noChineseValidator]], // 應收票據科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME" (ClassNo 112 or 113)
+    BNK_CheckInAccNo: [null, [Validators.maxLength(14), this.validationService.noChineseValidator]],  // 應收票據科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME" (ClassNo 112 or 113)
+    BNK_CheckOutAccNo: [null, [Validators.maxLength(14), this.validationService.noChineseValidator]], // 應付票據科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME" (ClassNo 211 0r 212)
   });
 
   APS1004_Option: apiOption[] = []; // 先用 查詢銀行+分行資料表(APS1001 JOIN APS1004)
 
   // -----------看要不要由GLS1005_Option去mapping---------------------
   GLS1005_BNK_DepositAccNo_Option: apiOption[] = []; // 公司銀行科目  (accNo like '1103%')
-  GLS1005_BNK_CheckInAccNo_Option: apiOption[] = []; // 應付票據科目  (ClassNo 211 0r 212)
-  GLS1005_BNK_CheckOutAccNo_Option: apiOption[] = []; // 應收票據科目 (ClassNo 112 or 113)
+  GLS1005_BNK_CheckInAccNo_Option: apiOption[] = []; // 應收票據科目 (ClassNo 112 or 113)
+  GLS1005_BNK_CheckOutAccNo_Option: apiOption[] = []; // 應付票據科目  (ClassNo 211 0r 212)
   // ----------------------------------------------------------------
 
   BNK_AccType_Option: apiOption[] = []; // SYS1000.BNK_ACCTYPE 存款代號 -- 下拉選單
@@ -89,7 +89,7 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
 
     if (bnkNoFull !== '') {
       const str = String(bnkNoFull);
-      branchControl.setValue(str.substring(3, 6)); //最後一碼不要
+      branchControl.setValue(str.substring(3, 7)); // 改成末四碼
     }
   }
 
@@ -165,22 +165,22 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
 
     this.dropdownApiService.queryGls1005_BNK_CheckInAcc().pipe(untilDestroyed(this)).subscribe((response) => {
       const list = Array.isArray(response) ? response : [];
-      this.GLS1005_BNK_CheckInAccNo_Option = list.map((item: any) => ({
+      this.GLS1005_BNK_CheckOutAccNo_Option = list.map((item: any) => ({
         No: item.No, // 應付票據科目 代號
         Name: item.Name, // 應付票據科目 名稱
         Label: item.No + '-' + item.Name, // 代號+名稱
       }));
-      console.log('⭐ 應付票據科目:', this.GLS1005_BNK_CheckInAccNo_Option);
+      console.log('⭐ 應付票據科目:', this.GLS1005_BNK_CheckOutAccNo_Option);
     });
 
     this.dropdownApiService.queryGls1005_BNK_CheckOutAcc().pipe(untilDestroyed(this)).subscribe((response) => {
       const list = Array.isArray(response) ? response : [];
-      this.GLS1005_BNK_CheckOutAccNo_Option = list.map((item: any) => ({
+      this.GLS1005_BNK_CheckInAccNo_Option = list.map((item: any) => ({
         No: item.No, // 應收票據科目 代號
         Name: item.Name, // 應收票據科目 名稱
         Label: item.No + '-' + item.Name, // 代號+名稱
       }));
-      console.log('⭐ 應收票據科目:', this.GLS1005_BNK_CheckOutAccNo_Option);
+      console.log('⭐ 應收票據科目:', this.GLS1005_BNK_CheckInAccNo_Option);
     });
 
     // 查 APS1004 -- 下拉選單(
