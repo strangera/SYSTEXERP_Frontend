@@ -4,206 +4,99 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="廠客編號"
-              controlName="VEN_No"
-              [options]="venderOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.VEN_No"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="廠客編號" controlName="VEN_No" [options]="venderOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.VEN_No" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="廠客簡稱"
-              controlName="VEN_ShortName"
-              [control]="queryForm.controls.VEN_ShortName"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="廠客簡稱" controlName="VEN_ShortName" [control]="queryForm.controls.VEN_ShortName"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="郵遞區號"
-              controlName="VEN_Post"
-              [control]="queryForm.controls.VEN_Post"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-text label="郵遞區號" controlName="VEN_Post" [control]="queryForm.controls.VEN_Post"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="郵寄地址"
-              controlName="VEN_Address"
-              [control]="queryForm.controls.VEN_Address"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="郵寄地址" controlName="VEN_Address" [control]="queryForm.controls.VEN_Address"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="聯絡人"
-              controlName="VEN_Boss"
-              [control]="queryForm.controls.VEN_Boss"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="聯絡人" controlName="VEN_Boss" [control]="queryForm.controls.VEN_Boss"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="電話"
-              controlName="VEN_Tel"
-              [control]="queryForm.controls.VEN_Tel"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-text label="電話" controlName="VEN_Tel" [control]="queryForm.controls.VEN_Tel"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="廠商傳真"
-              controlName="VEN_Fax"
-              [control]="queryForm.controls.VEN_Fax"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-text label="廠商傳真" controlName="VEN_Fax" [control]="queryForm.controls.VEN_Fax"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="統一編號"
-              controlName="VEN_Uniform"
-              [control]="queryForm.controls.VEN_Uniform"
-              [options]="VEN_UniformOptions"
-              optionLabel="label"
-              optionValue="value"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="統一編號" controlName="VEN_Uniform" [control]="queryForm.controls.VEN_Uniform"
+              [options]="VEN_UniformOptions" optionLabel="label" optionValue="value"
+              [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="郵電負擔模式"
-              controlName="VEN_RemitFeeMode"
-              [control]="queryForm.controls.VEN_RemitFeeMode"
-              [options]="remitFeeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="郵電負擔模式" controlName="VEN_RemitFeeMode" [control]="queryForm.controls.VEN_RemitFeeMode"
+              [options]="remitFeeOptions" optionLabel="label" optionValue="value"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="貼現廠商"
-              controlName="VEN_DiscYN"
-              [options]="VEN_DiscYNOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.VEN_DiscYN"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="貼現廠商" controlName="VEN_DiscYN" [options]="VEN_DiscYNOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.VEN_DiscYN" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="禁止背書轉讓"
-              controlName="VEN_CTRLYN"
-              [options]="VEN_CTRLYNOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.VEN_CTRLYN"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="禁止背書轉讓" controlName="VEN_CTRLYN" [options]="VEN_CTRLYNOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.VEN_CTRLYN" [submitted]="submitted"></app-multi-select>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="付款方式"
-              controlName="VEN_PayType"
-              [options]="VEN_PayTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.VEN_PayType"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="付款方式" controlName="VEN_PayType" [options]="VEN_PayTypeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.VEN_PayType" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="廠商匯款銀行代號"
-              controlName="VEN_BNK_No"
-              [control]="queryForm.controls.VEN_BNK_No"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-text label="廠商匯款銀行代號" controlName="VEN_BNK_No" [control]="queryForm.controls.VEN_BNK_No"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="廠商銀行帳號"
-              controlName="VEN_BankAccountNo"
-              [control]="queryForm.controls.VEN_BankAccountNo"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-text label="廠商銀行帳號" controlName="VEN_BankAccountNo"
+              [control]="queryForm.controls.VEN_BankAccountNo" [submitted]="submitted"></app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="廠商帳戶名稱"
-              controlName="VEN_AccountName"
-              [control]="queryForm.controls.VEN_AccountName"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="廠商帳戶名稱" controlName="VEN_AccountName" [control]="queryForm.controls.VEN_AccountName"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="付款期限"
-              controlName="VEN_PayConditionDay"
-              [control]="queryForm.controls.VEN_PayConditionDay"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-text label="付款期限" controlName="VEN_PayConditionDay"
+              [control]="queryForm.controls.VEN_PayConditionDay" [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="票據抬頭"
-              controlName="VEN_CheckTitle"
-              [control]="queryForm.controls.VEN_CheckTitle"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="票據抬頭" controlName="VEN_CheckTitle" [control]="queryForm.controls.VEN_CheckTitle"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="審核狀態"
-              controlName="VEN_Status"
-              [options]="approvalOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.VEN_Status"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="審核狀態" controlName="VEN_Status" [options]="approvalOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.VEN_Status" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -213,20 +106,8 @@
 </div>
 
 <div class="card">
-  <app-table
-    tableKey="TLS2A020"
-    [data]="data"
-    [columns]="columns"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [showCheckBox]="false"
-    dataKey="id"
-    [multiSortMeta]="[{ field: 'VEN_No', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [showManage]="true"
-    [loading]="loading"
-    [showDelete]="false"
-  ></app-table>
+  <app-table tableKey="TLS2A020" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [showCheckBox]="false" dataKey="id" [multiSortMeta]="[{ field: 'VEN_No', order: 1 }]" [totalRecords]="totalRecords"
+    [lazy]="true" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="true"
+    [loading]="loading" [showDelete]="false"></app-table>
 </div>
