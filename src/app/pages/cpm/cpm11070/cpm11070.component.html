@@ -8,75 +8,81 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="登錄編號" controlName="A1"
-            [control]="queryForm.controls.A1" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="登錄編號" controlName="SeqId"
+            [control]="queryForm.controls.SeqId" [submitted]="submitted"></app-input-text>
         </div>
 
         <div class="grid p-fluid">
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="登錄日期" [startControl]="queryForm.controls.S1"
-            [endControl]="queryForm.controls.E1" calendarType="dateRange" [submitted]="submitted"></app-calendar-range>
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="遺失日期" [startControl]="queryForm.controls.S2"
-            [endControl]="queryForm.controls.E2" calendarType="dateRange" [submitted]="submitted"></app-calendar-range>
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="拾獲日期" [startControl]="queryForm.controls.S3"
-            [endControl]="queryForm.controls.E3" calendarType="dateRange" [submitted]="submitted"></app-calendar-range>
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="通知日期" [startControl]="queryForm.controls.S4"
-            [endControl]="queryForm.controls.E4" calendarType="dateRange" [submitted]="submitted"></app-calendar-range>
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="領回日期" [startControl]="queryForm.controls.S5"
-            [endControl]="queryForm.controls.E5" calendarType="dateRange" [submitted]="submitted"></app-calendar-range>
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="轉出日期" [startControl]="queryForm.controls.S6"
-            [endControl]="queryForm.controls.E6" calendarType="dateRange" [submitted]="submitted"></app-calendar-range>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="登錄日期"
+            [startControl]="queryForm.controls.RecDateFrom" [endControl]="queryForm.controls.RecDateTo"
+            calendarType="dateRange" [submitted]="submitted"></app-calendar-range>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="遺失日期"
+            [startControl]="queryForm.controls.LostDateFrom" [endControl]="queryForm.controls.LostDateTo"
+            calendarType="dateRange" [submitted]="submitted"></app-calendar-range>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="拾獲日期"
+            [startControl]="queryForm.controls.FindDateFrom" [endControl]="queryForm.controls.FindDateTo"
+            calendarType="dateRange" [submitted]="submitted"></app-calendar-range>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="通知日期"
+            [startControl]="queryForm.controls.MsgDateFrom" [endControl]="queryForm.controls.MsgDateTo"
+            calendarType="dateRange" [submitted]="submitted"></app-calendar-range>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="領回日期"
+            [startControl]="queryForm.controls.ReceiveDateFrom" [endControl]="queryForm.controls.ReceiveDateTo"
+            calendarType="dateRange" [submitted]="submitted"></app-calendar-range>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="轉出日期"
+            [startControl]="queryForm.controls.TransDateFrom" [endControl]="queryForm.controls.TransDateTo"
+            calendarType="dateRange" [submitted]="submitted"></app-calendar-range>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="失物類型" controlName="Type1" [options]="Type1Options" optionLabel="Name" optionValue="No"
-              [control]="queryForm.controls.Type1" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="失物類型" controlName="DocType" [options]="Type1Options" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.DocType" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="物品類別" controlName="Type2" [options]="Type2Options" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.Type2" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="物品類別" controlName="Goods" [options]="Type2Options" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.Goods" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="失物狀態" controlName="Type3" [options]="Type3Options" optionLabel="Name" optionValue="No"
-              [control]="queryForm.controls.Type3" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="失物狀態" controlName="SeqType" [options]="Type3Options" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.SeqType" [submitted]="submitted"></app-dropdown>
           </div>
-          <app-input-textarea class="col-12" label="物品敘述" controlName="Type4" [control]="queryForm.controls.Type4"
+          <app-input-textarea class="col-12" label="物品敘述" controlName="Notes" [control]="queryForm.controls.Notes"
             [submitted]="submitted"></app-input-textarea>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="地點" controlName="SPACE1" [options]="SPACE1Options" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.SPACE1" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="地點" controlName="LocationKeyword" [options]="SPACE1Options" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.LocationKeyword" [submitted]="submitted"></app-dropdown>
           </div>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="服務人員" controlName="PLE1"
-            [control]="queryForm.controls.PLE1" [submitted]="submitted"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="登錄者" controlName="SPACE2"
-            [control]="queryForm.controls.SPACE2" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="服務人員" controlName="ServiceUser"
+            [control]="queryForm.controls.ServiceUser" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="登錄者" controlName="KEY_USER"
+            [control]="queryForm.controls.KEY_USER" [submitted]="submitted"></app-input-text>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="是否廣播" controlName="SPACE3" [control]="queryForm.controls.SPACE3"
+            <app-radiobutton label="是否廣播" controlName="BroadcastFilter" [control]="queryForm.controls.BroadcastFilter"
               [options]="SPACE3Options" [submitted]="submitted"></app-radiobutton>
           </div>
-          <app-input-textarea class="col-12" label="通知/廣播情況" controlName="SPACE4" [control]="queryForm.controls.SPACE4"
-            [submitted]="submitted"></app-input-textarea>
+          <app-input-textarea class="col-12" label="通知/廣播情況" controlName="BroadcastSituation"
+            [control]="queryForm.controls.BroadcastSituation" [submitted]="submitted"></app-input-textarea>
         </div>
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="領回人姓名" controlName="USER1"
-            [control]="queryForm.controls.USER1" [submitted]="submitted"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="領回人聯絡電話" controlName="USER2"
-            [control]="queryForm.controls.USER2" [submitted]="submitted"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="報失者/拾獲者姓名" controlName="USER3"
-            [control]="queryForm.controls.USER3" [submitted]="submitted"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="協助顧客領回處理人員" controlName="USER4"
-            [control]="queryForm.controls.USER4" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="領回人姓名" controlName="RecaptionName"
+            [control]="queryForm.controls.RecaptionName" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="領回人聯絡電話" controlName="RecaptionPhone"
+            [control]="queryForm.controls.RecaptionPhone" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="報失者/拾獲者姓名" controlName="RegistrantKeyword"
+            [control]="queryForm.controls.RegistrantKeyword" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="協助顧客領回處理人員" controlName="ProcessingUser"
+            [control]="queryForm.controls.ProcessingUser" [submitted]="submitted"></app-input-text>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="報失者/拾獲者身分別" controlName="USER5" [options]="USER5Options" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.USER5" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="報失者/拾獲者身分別" controlName="IdentityKind" [options]="USER5Options" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.IdentityKind" [submitted]="submitted"></app-dropdown>
           </div>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="電話" controlName="PHONE"
-            [control]="queryForm.controls.PHONE" [submitted]="submitted"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="手機" controlName="MOBILE"
-            [control]="queryForm.controls.MOBILE" [submitted]="submitted"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="證件號碼" controlName="ID_NUMBER"
-            [control]="queryForm.controls.ID_NUMBER" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="電話" controlName="Tel"
+            [control]="queryForm.controls.Tel" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="手機" controlName="MobilePhone"
+            [control]="queryForm.controls.MobilePhone" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="證件號碼" controlName="IdNo"
+            [control]="queryForm.controls.IdNo" [submitted]="submitted"></app-input-text>
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -91,10 +97,10 @@
 
 <div class="card">
   <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" [showDelete]="false" [showReportMode]="false"
-    (detail)="onDetail($event)" dataKey="SeqNo" [multiSortMeta]="[{ field: 'VouNo', order: 1 }]"
+    (detail)="onDetail($event)" dataKey="SeqId" [multiSortMeta]="[{ field: 'SeqId', order: 1 }]"
     [totalRecords]="totalRecords" [showCheckBox]="true"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showExcel]="false" [showManage]="false">
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showExcel]="false" [showManage]="true">
 
   </app-table>
 </div>
