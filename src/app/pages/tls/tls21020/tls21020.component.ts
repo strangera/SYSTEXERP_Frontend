@@ -1,4 +1,4 @@
-import { Component, computed, effect, OnInit, signal, untracked } from '@angular/core';
+import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -116,9 +116,6 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     // PAY_No: !1,
   });
   private readonly allColumns = computed((): EditColumn[] => {
-    const keys = untracked(() => this.columnsKeys());
-    this.logger.debug(`allColumns:`, [keys]);
-
     return [
       {
         field: 'AccDC',
@@ -135,6 +132,18 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         optionValue: 'value',
         validate: [this.validator.bind(this)],
         showClear: !1,
+        calculate: (rowData: TLS21020Data, value: string) => {
+          const accData = this.service.GLS1005Map().get(value);
+          const ABAT_YN = accData?.['ABAT_YN'] || 'N';
+          const updates: Partial<TLS21020Data> = { ABAT_YN };
+
+          if (ABAT_YN === 'N') {
+            updates.VEN_No = void 0;
+            updates.PAY_days = void 0;
+          }
+
+          return updates;
+        },
       },
       {
         field: 'ABAT_YN',
@@ -307,33 +316,32 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
   /** 錯誤檢查 */
   public validateRow = (rowData: TLS21020Data, index?: number): { isValid: boolean, errorMessage: string; } => {
-    for (const [key, label, isRequired] of this.validatorField) {
-      // 跳過新行與未顯示欄位
-      if (rowData._isAutoInsertCandidate || !this.columns().some(col => col.field === key)) continue;
+    // 重複性檢查
+    const rows = this.tableData();
+    const { AccDC, AccNo, ItemDesc, ABAT_YN, VEN_No, PAY_days } = rowData;
+    const duplicateKey = `${AccDC}|${AccNo}|${ItemDesc}`;
+
+    for (const item of rows) {
+      if (item === rowData) continue;
+      const key = `${item.AccDC}|${item.AccNo}|${item.ItemDesc}`;
+      if (key === duplicateKey) return this.fail('會計科目與項目描述必須唯一');
+    }
+
+    // 立沖科目檢查
+    if (ABAT_YN === 'Y') {
+      if (this.isEmpty(VEN_No)) return this.fail('應收廠商必須填寫');
+      if (this.validateValue(PAY_days)) return this.warn('付款天數必須為大於等於0的整數');
+      if (this.isEmpty(PAY_days)) return this.warn('付款天數必須填寫');
+    }
+
+    // 欄位級別驗證
+    const col = this.columns().some(col => this.validatorField.some(([key]) => col.field === key));
+    if (col) for (const [key, label, isRequired] of this.validatorField) {
       const value = rowData[key];
-      // 立沖科目檢查
-      if (rowData.ABAT_YN === 'Y') {
-        if (this.isEmpty(rowData.VEN_No)) return this.fail('應收廠商必須填寫');
-        if (this.validateValue(rowData.PAY_days)) return this.warn('付款天數必須為大於等於0的整數');
-        if (this.isEmpty(rowData.PAY_days)) return this.warn('付款天數必須填寫');
-      }
       // 必填檢查
       if (isRequired && this.isEmpty(value)) return this.fail(`${label}為必填欄位`);
       // 選填檢查
       if (!isRequired && this.isEmpty(value)) return this.warn(`${label}建議填寫`);
-    }
-
-    // 檢查重複 (AccDC, ItemDesc, AccNo)
-    const rows = this.tableData();
-    const rowIndex = rows.indexOf(rowData);
-    if (rowIndex === -1) return this.fail('找不到該列資料');
-
-    const { AccDC, ItemDesc, AccNo } = rowData;
-    for (let i = 0; i < rows.length; i++) {
-      if (i === rowIndex) continue;
-      const item = rows[i];
-      if (item.AccDC === AccDC && item.ItemDesc === ItemDesc && item.AccNo === AccNo)
-        return this.fail('會計科目與項目描述必須唯一');
     }
 
     return this.warn('');
