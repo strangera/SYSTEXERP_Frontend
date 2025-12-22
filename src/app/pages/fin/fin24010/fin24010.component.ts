@@ -137,6 +137,7 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
         this.data = response.Data;
         this.totalRecords = response.TotalCount;
         this.lastQueryBody = body;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
   }

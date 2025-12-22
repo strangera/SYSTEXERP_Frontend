@@ -105,10 +105,13 @@ export class FIN24010CRUComponent extends BasicCruPageComponent<QueryFIN24010Res
   ngOnInit(): void {
     this.initializePage('FIN24010', this.dataForm);
     this.route.queryParams.pipe(untilDestroyed(this)).subscribe(params => {
-      const body = { ACP_No: params['acpid'] }
-      this.fin24010Service.queryFIN24010(body).pipe(untilDestroyed(this)).subscribe(response => {
-        this.dataForm.patchValue(response.Data[0] as any);
-      })
+      const acpId = params['acpid'];
+      if (acpId) {
+        const body = { ACP_No: params['acpid'] }
+        this.fin24010Service.queryFIN24010(body).pipe(untilDestroyed(this)).subscribe(response => {
+          this.dataForm.patchValue(response.Data[0] as any);
+        })
+      }
     });
   }
 
