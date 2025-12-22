@@ -46,7 +46,7 @@
         <th *ngIf="_tableData.length && showReorder" rowspan="2" class="w-1rem text-center"></th>
         <!-- 序號變成變數名稱 -->
         <th [attr.colspan]="
-            _tableData.length === 1 && canInsert ? (disabled ? 1 : 2) : 1
+            _tableData.length === 1 && canInsert ? (disabled ? 1 : (showCheckBox && !disabled && data.length) ? 2 : 1) : 1
           " rowspan="2" class="w-1rem text-center">
           {{ serialName }}
         </th>
