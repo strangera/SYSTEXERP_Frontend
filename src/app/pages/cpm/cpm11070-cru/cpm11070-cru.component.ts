@@ -2,6 +2,7 @@ import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { CPM11070DetailData, CPM11070Service } from '@service/api/cpm/cpm11070.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
@@ -37,39 +38,30 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     CalendarComponent
   ],
 })
-export class CPM11070CRUComponent extends BasicCruPageComponent<any> implements OnInit {
+export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailData> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    A1: [{ value: '系統自動產生', disabled: true }],
-    S1: [null as Date | null, [Validators.required,]],
-    E1: [null as Date | null],
-    S2: [null as Date | null],
-    E2: [null as Date | null],
-    S3: [null as Date | null],
-    E3: [null as Date | null],
-    S4: [null as Date | null],
-    E4: [null as Date | null],
-    S5: [null as Date | null],
-    E5: [null as Date | null],
-    S6: [null],
-    E6: [null],
-    Type1: [''],
-    Type2: [''],
-    Type3: [''],
-    Type4: ['', [Validators.maxLength(400)]],
-    SPACE1: [''],
-    PLE1: ['', [Validators.maxLength(20)]],
-    SPACE2: [{ value: this.user?.user_No, disabled: true }],
-    SPACE3: [''],
-    SPACE4: ['', [Validators.maxLength(100)]],
-    USER1: ['', [Validators.maxLength(20)]],
-    USER2: ['', [Validators.maxLength(10)]],
-    USER3: ['', [Validators.maxLength(20)]],
-    USER4: ['', [Validators.maxLength(20)]],
-    USER5: [''],
-    USER6: [''],
-    PHONE: ['', [Validators.maxLength(10)]],
-    MOBILE: ['', [Validators.maxLength(10)]],
-    ID_NUMBER: ['', [Validators.maxLength(20)]],
+    SEQ_ID: [{ value: '系統自動產生', disabled: true }],
+    REC_DATE: [null as Date | null, [Validators.required,]],
+    LOST_DATE: [null as Date | null],
+    OFF_DATE: [null as Date | null],
+    MSG_DATE: [null as Date | null],
+    RECEIVE_DATE: [null as Date | null],
+    Identity_KIND: [''],
+    LOCATION: [''],
+    SEQ_TYPE: [''],
+    SEX: [''],
+    GOODS: [''],
+    BROADCAST_DATE: ['', [Validators.maxLength(400)]],
+    BROADCAST_YN: [''],
+    KEY_USER: ['', [Validators.maxLength(20)]],
+    OTHER_GOODS: ['', [Validators.maxLength(20)]],
+    REGISTRANT: ['', [Validators.maxLength(10)]],
+    TEL: ['', [Validators.maxLength(10)]],
+    MOBILE_PHONE: ['', [Validators.maxLength(10)]],
+    ADDRESS: ['', [Validators.maxLength(100)]],
+    RECAPTION_NAME: ['', [Validators.maxLength(10)]],
+    RECAPTION_PHONE: ['', [Validators.maxLength(10)]],
+    PROCESSING_USER: ['', [Validators.maxLength(20)]],
   });
   selectedItems: any[] = [];
   totalRecords = 0;
@@ -118,6 +110,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<any> implements 
   constructor(
     // private dropDownListService: DropDownListService,
     private dropdownApiService: DropdownApiService,
+    private readonly cpm11070Service: CPM11070Service,
   ) {
     super();
   }
@@ -125,6 +118,53 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<any> implements 
 
   ngOnInit(): void {
     this.initializePage('CPM11070', this.dataForm);
+
+    // 若是從列表以 編輯/檢視 進入，依 SeqId 撈取明細
+    const seqId = (this.rowdata as any)?.SeqId ?? (this.rowdata as any)?.SEQ_ID;
+    if (seqId) {
+      this.cpm11070Service.queryCPM11070Detail({ SeqId: seqId }).subscribe(res => {
+        if (res.Status !== '0000' || !res.Data) {
+          this.messageService.errorBubble(res.Message || '載入明細失敗');
+          return;
+        }
+
+        const d = res.Data;
+
+        // 將明細資料帶入表單，日期欄位轉成 Date 物件
+        this.dataForm.patchValue({
+          SEQ_ID: d.SEQ_ID,
+          REC_DATE: d.REC_DATE ? new Date(d.REC_DATE) : null,
+          LOST_DATE: d.LOST_DATE ? new Date(d.LOST_DATE) : null,
+          OFF_DATE: d.OFF_DATE ? new Date(d.OFF_DATE) : null,
+          MSG_DATE: d.MSG_DATE ? new Date(d.MSG_DATE) : null,
+          RECEIVE_DATE: d.RECEIVE_DATE ? new Date(d.RECEIVE_DATE) : null,
+          Identity_KIND: d.Identity_KIND,
+          LOCATION: d.LOCATION,
+          SEQ_TYPE: d.SEQ_TYPE,
+          SEX: d.SEX,
+          GOODS: d.GOODS,
+          BROADCAST_DATE: d.BROADCAST_DATE,
+          BROADCAST_YN: d.BROADCAST_YN,
+          KEY_USER: d.KEY_USER,
+          OTHER_GOODS: d.OTHER_GOODS,
+          REGISTRANT: d.REGISTRANT,
+          TEL: d.TEL,
+          MOBILE_PHONE: d.MOBILE_PHONE,
+          ADDRESS: d.ADDRESS,
+          RECAPTION_NAME: d.RECAPTION_NAME,
+          RECAPTION_PHONE: d.RECAPTION_PHONE,
+          PROCESSING_USER: d.PROCESSING_USER,
+        });
+      });
+    }
+  }
+
+  onMarkReceived(): void {
+    console.log('CPM11070CRU 已領回 clicked');
+  }
+
+  onRebroadcast(): void {
+    console.log('CPM11070CRU 重新廣播 clicked');
   }
 
   onSubmit(frm: FormGroup): void {

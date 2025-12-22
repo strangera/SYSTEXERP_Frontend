@@ -1,11 +1,16 @@
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { CPM11070Data, CPM11070Service, QueryCPM11070Request } from '../../../service/api/cpm/cpm11070.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -34,43 +39,43 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     InputTextareaComponent
   ],
 })
-export class CPM11070Component extends BasicQueryPageComponent<any> implements OnInit {
+export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    A1: ['', [Validators.maxLength(11)]],
-    S1: [null as Date | null, [Validators.required,]],
-    E1: [null as Date | null],
-    S2: [null as Date | null],
-    E2: [null as Date | null],
-    S3: [null as Date | null],
-    E3: [null as Date | null],
-    S4: [null as Date | null],
-    E4: [null as Date | null],
-    S5: [null as Date | null],
-    E5: [null as Date | null],
-    S6: [null],
-    E6: [null],
-    Type1: [''],
-    Type2: [''],
-    Type3: [''],
-    Type4: ['', [Validators.maxLength(400)]],
-    SPACE1: [''],
-    PLE1: ['', [Validators.maxLength(20)]],
-    SPACE2: ['', [Validators.maxLength(20)]],
-    SPACE3: [''],
-    SPACE4: ['', [Validators.maxLength(100)]],
-    USER1: ['', [Validators.maxLength(20)]],
-    USER2: ['', [Validators.maxLength(10)]],
-    USER3: ['', [Validators.maxLength(20)]],
-    USER4: ['', [Validators.maxLength(20)]],
-    USER5: [''],
-    PHONE: ['', [Validators.maxLength(10)]],
-    MOBILE: ['', [Validators.maxLength(10)]],
-    ID_NUMBER: ['', [Validators.maxLength(20)]],
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+    SeqId: ['', [Validators.maxLength(11)]],
+    RecDateFrom: [null as Date | null, [Validators.required,]],
+    RecDateTo: [null as Date | null],
+    LostDateFrom: [null as Date | null],
+    LostDateTo: [null as Date | null],
+    FindDateFrom: [null as Date | null],
+    FindDateTo: [null as Date | null],
+    MsgDateFrom: [null as Date | null],
+    MsgDateTo: [null as Date | null],
+    ReceiveDateFrom: [null as Date | null],
+    ReceiveDateTo: [null as Date | null],
+    TransDateFrom: [null as Date | null],
+    TransDateTo: [null as Date | null],
+    DocType: [''],
+    Goods: [''],
+    SeqType: [''],
+    Notes: ['', [Validators.maxLength(400)]],
+    LocationKeyword: [''],
+    ServiceUser: ['', [Validators.maxLength(20)]],
+    KEY_USER: ['', [Validators.maxLength(20)]],
+    BroadcastFilter: [''],
+    BroadcastSituation: ['', [Validators.maxLength(100)]],
+    RecaptionName: ['', [Validators.maxLength(20)]],
+    RecaptionPhone: ['', [Validators.maxLength(10)]],
+    RegistrantKeyword: ['', [Validators.maxLength(20)]],
+    ProcessingUser: ['', [Validators.maxLength(20)]],
+    IdentityKind: [''],
+    Tel: ['', [Validators.maxLength(10)]],
+    MobilePhone: ['', [Validators.maxLength(10)]],
+    IdNo: ['', [Validators.maxLength(20)]],
+    ...createPaginationConfig([{ field: 'SeqId', order: 1 }]),
   });
-  selectedItems: any[] = [];
+  selectedItems: CPM11070Data[] = [];
   totalRecords = 0;
-  data: any[] = [];
+  data: CPM11070Data[] = [];
   Type1Options: any[] = [
     { No: 'L', Name: '遺失' },
     { No: 'F', Name: '拾獲' },
@@ -93,25 +98,27 @@ export class CPM11070Component extends BasicQueryPageComponent<any> implements O
     { Name: '員工', No: '2' },
   ];
   columns: any[] = [
-    { field: 'VouNo', header: '物品類別', visible: true },
-    { field: 'VouDate', header: '物品敘述', visible: true },
-    { field: 'VouStatus', header: '登錄編號', visible: true },
-    { field: 'Remark', header: '登錄日期', visible: true },
-    { field: 'Remark', header: '通知日期', visible: true },
-    { field: 'Remark', header: '領回日期', visible: true },
-    { field: 'Remark', header: '轉出日期', visible: true },
-    { field: 'Voucher_Name', header: '失物類別', visible: true },
-    { field: 'Voucher_Name', header: '失物狀態', visible: true },
-    { field: 'DetailCount', header: '地點', visible: true },
-    { field: 'VoucherType', header: '服務人員', visible: true },
-    { field: 'AccAmt', header: '遺失者/拾獲者姓名', visible: true },
-    { field: 'AccAmt', header: '電話(夜)', visible: true },
-    { field: 'AccAmt', header: '電話(日)', visible: true },
+    { field: 'GoodsType', header: '物品類別', visible: true },
+    { field: 'GoodsDesc', header: '物品敘述', visible: true },
+    { field: 'SeqId', header: '登錄編號', visible: true },
+    { field: 'RecDate', header: '登錄日期', visible: true, format: formatDate },
+    { field: 'MsgDate', header: '通知日期', visible: true, format: formatDate },
+    { field: 'ReceiveDate', header: '領回日期', visible: true, format: formatDate },
+    { field: 'OffDate', header: '轉出日期', visible: true, format: formatDate },
+    { field: 'DocTypeName', header: '失物類別', visible: true },
+    { field: 'SeqStatusName', header: '失物狀態', visible: true },
+    { field: 'Location', header: '地點', visible: true },
+    { field: 'ServiceUser', header: '服務人員', visible: true },
+    { field: 'Registrant', header: '遺失者/拾獲者姓名', visible: true },
+    { field: 'Tel', header: '電話(夜)', visible: true },
+    { field: 'Mobile', header: '電話(日)', visible: true },
 
   ];
   constructor(
     // private dropDownListService: DropDownListService,
     private dropdownApiService: DropdownApiService,
+    private readonly cpm11070Service: CPM11070Service,
+    private readonly datePipe: DatePipe,
   ) {
     super();
   }
@@ -124,21 +131,64 @@ export class CPM11070Component extends BasicQueryPageComponent<any> implements O
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
+      const raw = frm.getRawValue();
 
+      const format = (d: Date | null) => d ? this.datePipe.transform(d, 'yyyy-MM-dd') ?? undefined : undefined;
 
-      // this.fin54025Service
-      //   .queryFIN54025(payload)
-      //   .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-      //   .subscribe({
-      //     next: (res) => {
-      //       if (res.Status === '0000') {
-      //         this.data = res.Data || [];
-      //         this.totalRecords = res.TotalCount || this.data.length;
-      //       } else {
-      //         this.messageService.errorBubble(res.Message || '查詢失敗');
-      //       }
-      //     },
-      //   });
+      const payload: QueryCPM11070Request = {
+        // 分頁與排序（後端欄位需大寫開頭）
+        PageSize: raw.PageSize ?? raw.pageSize ?? 20,
+        PageIndex: raw.PageIndex ?? raw.pageIndex ?? 1,
+        SortBy: raw.SortBy ?? [],
+        OrderBy: '',
+        Offset: 0,
+
+        // 查詢條件
+        SeqId: raw.SeqId ?? undefined,
+        RecDateFrom: format(raw.RecDateFrom),
+        RecDateTo: format(raw.RecDateTo),
+        LostDateFrom: format(raw.LostDateFrom),
+        LostDateTo: format(raw.LostDateTo),
+        FindDateFrom: format(raw.FindDateFrom),
+        FindDateTo: format(raw.FindDateTo),
+        MsgDateFrom: format(raw.MsgDateFrom),
+        MsgDateTo: format(raw.MsgDateTo),
+        ReceiveDateFrom: format(raw.ReceiveDateFrom),
+        ReceiveDateTo: format(raw.ReceiveDateTo),
+        TransDateFrom: format(raw.TransDateFrom),
+        TransDateTo: format(raw.TransDateTo),
+        DocType: raw.DocType ?? undefined,
+        Goods: raw.Goods ?? undefined,
+        SeqType: raw.SeqType ?? undefined,
+        Notes: raw.Notes ?? undefined,
+        LocationKeyword: raw.LocationKeyword ?? undefined,
+        ServiceUser: raw.ServiceUser ?? undefined,
+        KEY_USER: raw.KEY_USER ?? undefined,
+        BroadcastFilter: raw.BroadcastFilter ?? undefined,
+        BroadcastSituation: raw.BroadcastSituation ?? undefined,
+        RecaptionName: raw.RecaptionName ?? undefined,
+        RecaptionPhone: raw.RecaptionPhone ?? undefined,
+        RegistrantKeyword: raw.RegistrantKeyword ?? undefined,
+        ProcessingUser: raw.ProcessingUser ?? undefined,
+        IdentityKind: raw.IdentityKind ?? undefined,
+        Tel: raw.Tel ?? undefined,
+        MobilePhone: raw.MobilePhone ?? undefined,
+        IdNo: raw.IdNo ?? undefined,
+      };
+
+      this.cpm11070Service
+        .queryCPM11070(payload)
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe({
+          next: (res) => {
+            this.data = res.Data || [];
+            this.totalRecords = res.TotalCount || this.data.length;
+            this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+          },
+          error: () => {
+            this.messageService.errorBubble('查詢失敗');
+          },
+        });
     });
   }
 
