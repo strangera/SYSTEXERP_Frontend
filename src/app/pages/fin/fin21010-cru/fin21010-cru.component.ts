@@ -36,7 +36,7 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
     BNK_AccNo: [null, [Validators.required, Validators.maxLength(20), this.validationService.numberValidator]],  // 帳號
     BNK_AccName: [null, [Validators.required, Validators.maxLength(80)]],      // 帳戶名稱
 
-    BNK_BranchNo: ['', [Validators.required, Validators.maxLength(3), this.validationService.noChineseValidator]],     // 銀行分行代號
+    BNK_BranchNo: ['', [Validators.required, Validators.maxLength(4), this.validationService.noChineseValidator]],     // 銀行分行代號
     BNK_AccType: [null, [Validators.required, Validators.maxLength(2), this.validationService.noChineseValidator]],      // 存款代號 (SYS1000.BNK_ACCTYPE)
     BNK_AccStatus: ['0', [Validators.required, Validators.maxLength(1), this.validationService.noChineseValidator]],     // 帳戶狀態 (0=正常)
 
@@ -89,7 +89,7 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
 
     if (bnkNoFull !== '') {
       const str = String(bnkNoFull);
-      branchControl.setValue(str.substring(3, 6)); //最後一碼不要
+      branchControl.setValue(str.substring(3, 7)); // 改成末四碼
     }
   }
 
