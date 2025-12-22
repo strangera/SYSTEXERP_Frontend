@@ -26,6 +26,21 @@ export interface FIN25010Data {
   WSLIP_NO?: string;         // 匯款單號
 }
 
+// 查詢下拉選單 Request
+export interface QueryDropFIN25010Request extends BaseQueryRequest {
+  ACP_ExpectPayDate_b?: string;  // 收/付款日(起)
+  ACP_ExpectPayDate_e?: string;  // 收/付款日(迄)
+  Remit_Status?: string;         // 是否形成電匯(Y/N)
+  PAM_No?: string;               // 匯款來源單號
+}
+
+// 查詢下拉選單 Response
+export interface QueryDropFIN25010Response {
+  PAM_No?: string;               // 匯款來源單號
+  D_Date?: string;               // 建立日期
+  Remit_Status?: string;         // 是否形成電匯(Y/N)
+}
+
 // 查詢產生電匯付款資料 新增查詢Request
 export interface QueryAddFIN25010Request extends BaseQueryRequest {
   ACP_ExpectPayDate?: string;  // 收/付款日
@@ -51,6 +66,9 @@ export interface QueryAddFIN25010Response {
   RMT_TYPE?: string;           // 付款方式(1:電匯,2:開票,3:現金)
   ORG_ID?: string;             // 組織代碼(SYS3100)
   ACP_YYYYMM?: string;         // 應付帳款年月
+  ACP_TERMNO?: string;         // 帳款帳次
+  Remit_Status?: string;       // 是否形成電匯(Y/N)
+  // TODO: 待回傳 APAR_No
 }
 
 // 新增 APS3009 資料表 Request
@@ -65,8 +83,8 @@ export interface APS3009Item {
   VEN_No?: string;            // 廠客代號
   APAR_No?: string;           // 應收/應付單號
   ACP_YYYYMM?: string;        // 應付帳款年月
-  acp_termno?: string;        // 帳款帳次
-  ACP_Amt?: string;           // 帳款金額
+  acp_termno?: number;        // 帳款帳次
+  ACP_Amt?: number;           // 帳款金額
   PTA_Date?: string;          // 沖帳日期
   NoteDesc?: string;          // 摘要(傳票上的摘要)
   IN_TYPE?: string;           // 資料來源別(1=應付, 2=應收, 3=保留款)
@@ -84,6 +102,11 @@ export class FIN25010Service {
   // 查詢
   queryFIN25010(req: QueryFIN25010Request): Observable<BaseQueryResponse<FIN25010Data>> {
     return this.http.post<BaseQueryResponse<FIN25010Data>>(`${this.apiUrl}/queryFIN25010`, req);
+  }
+
+  // 查詢下拉選單
+  queryDropFIN25010(req: QueryDropFIN25010Request): Observable<BaseQueryResponse<QueryDropFIN25010Response>> {
+    return this.http.post<BaseQueryResponse<QueryDropFIN25010Response>>(`${this.apiUrl}/query_dropFIN25010`, req);
   }
 
   // 新增頁面-查詢產生電匯付款資料

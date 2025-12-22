@@ -39,19 +39,30 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 })
 export class FIN25010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    ACP_ExpectPayDate: [null, Validators.required],  // 收/付款日
-    ven_no_b: [null],  // 廠客代號(起)
-    ven_no_e: [null],  // 廠客代號(迄)
-    ACP_No: [null, Validators.maxLength(14)],    // 應付帳款ID
-    IN_TYPE: [null],   // 傳票型態
-    RMT_TYPE: [null],  // 付款方式
+    ACP_ExpectPayDate: [null, Validators.required], // 收/付款日
+    ven_no_b: [null], // 廠客代號(起)
+    ven_no_e: [null], // 廠客代號(迄)
+    ACP_No: [null, Validators.maxLength(14)], // 應付帳款ID
+    IN_TYPE: [null], // 傳票型態
+    RMT_TYPE: [null], // 付款方式
     ...createPaginationConfig([])
   });
 
   // 廠客代號選項
   venNoOptions: any[] = [];
   // 傳票型態選項
-  inTypeOptions: any[] = [];
+  inTypeOptions: any[] = [
+    { label: 'AS - 贊助金傳票', value: 'AS' },
+    { label: 'AT - 電匯EDI傳票', value: 'AT' },
+    { label: 'BT - 銀行資金調撥傳票', value: 'BT' },
+    { label: 'CA - 零用金拋轉傳票', value: 'CA' },
+    { label: 'CH - 票據兌現傳票', value: 'CH' },
+    { label: 'CM - 支票沖轉傳票', value: 'CM' },
+    { label: 'CR - 退票沖轉票據傳票', value: 'CR' },
+    { label: 'CT - 開票傳票', value: 'CT' },
+    { label: 'CW - 撤票沖轉票據傳票', value: 'CW' },
+    { label: 'DB - 存出保證金傳票收回拋轉', value: 'DB' }
+  ];
   // 付款方式選項
   rmtTypeOptions = [
     { label: '電匯', value: '1' },
@@ -63,6 +74,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<any> implements 
   data: QueryAddFIN25010Response[] = [];
   selectedItems: QueryAddFIN25010Response[] = [];
   totalRecords = 0;
+  // TODO: 欄位的顯示排序格式待確認
   columns: Column[] = [
     { field: 'ID', header: 'ID', hidden: true },
     { field: 'acp_no', header: '應收/付帳款編號' },
@@ -72,11 +84,14 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<any> implements 
     { field: 'PTA_Date', header: '預計付款日期', format: formatDate },
     { field: 'NoteDesc', header: '摘要' },
     { field: 'ACCNO', header: '會計科目' },
-    { field: 'ACP_STATUS', header: '應付帳款狀態', format: (value: any) => value === '0' ? '作廢' : value === '2' ? '建立' : value },
+    { field: 'ACP_STATUS', header: '應付帳款狀態', format: (value: string) => value === '0' ? '作廢' : value === '2' ? '建立' : value },
     { field: 'IN_TYPE', header: '資料來源別' },
-    { field: 'RMT_TYPE', header: '付款方式', format: (value: any) => this.rmtTypeOptions.find(x => x.value === value)?.label || value },
+    { field: 'RMT_TYPE', header: '付款方式', format: (value: string) => this.rmtTypeOptions.find(x => x.value === value)?.label || value },
     { field: 'ORG_ID', header: '組織代碼' },
-    { field: 'ACP_YYYYMM', header: '應付帳款年月' }
+    { field: 'ACP_YYYYMM', header: '應付帳款年月' },
+    { field: 'ACP_TERMNO', header: '帳款帳次' },
+    { field: 'Remit_Status', header: '是否形成電匯', format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : value }
+    // TODO: 待回傳 APAR_No
   ];
 
   constructor(
@@ -115,19 +130,6 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<any> implements 
           value: x.VEN_No
         }));
       });
-    // 載入傳票型態選項
-    this.inTypeOptions = [
-      { label: 'AS - 贊助金傳票', value: 'AS' },
-      { label: 'AT - 電匯EDI傳票', value: 'AT' },
-      { label: 'BT - 銀行資金調撥傳票', value: 'BT' },
-      { label: 'CA - 零用金拋轉傳票', value: 'CA' },
-      { label: 'CH - 票據兌現傳票', value: 'CH' },
-      { label: 'CM - 支票沖轉傳票', value: 'CM' },
-      { label: 'CR - 退票沖轉票據傳票', value: 'CR' },
-      { label: 'CT - 開票傳票', value: 'CT' },
-      { label: 'CW - 撤票沖轉票據傳票', value: 'CW' },
-      { label: 'DB - 存出保證金傳票收回拋轉', value: 'DB' }
-    ]
   }
 
   onGenerate() {
@@ -137,16 +139,15 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<any> implements 
       VEN_No: item.ven_no,
       APAR_No: '',
       ACP_YYYYMM: item.ACP_YYYYMM,
-      acp_termno: '',
-      ACP_Amt: Number(item.ACP_Amt).toString(),
+      acp_termno: Number(item.ACP_TERMNO),
+      ACP_Amt: Number(item.ACP_Amt),
       PTA_Date: this.datePipe.transform(item.PTA_Date, 'yyyy-MM-dd') || '',
-      NoteDesc: item.NoteDesc || '',
-      IN_TYPE: item.IN_TYPE || '',
-      RMT_TYPE: item.RMT_TYPE || '',
-      Remit_Status: ''
+      NoteDesc: item.NoteDesc,
+      IN_TYPE: item.IN_TYPE,
+      RMT_TYPE: item.RMT_TYPE,
+      Remit_Status: item.Remit_Status
     }));
 
-    // TODO: D_Date 欄位待確認
     const request = {
       D_Date: new Date().toISOString().split('T')[0],  // 建立日期
       APS3009: aps3009Items
