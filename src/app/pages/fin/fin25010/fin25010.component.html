@@ -16,14 +16,50 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
-          <!-- 匯款來源單號 -->
+          <!-- 匯款來源單號 TODO: 一些屬性待修正-->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="匯款來源單號"
-              controlName="PAM_No"
+            <app-dropdown-table
               [control]="queryForm.controls.PAM_No"
               [submitted]="submitted"
-            ></app-input-text>
+              optionLabel="pamNo"
+              templateLabel="label"
+              [suggestions]="pamNoSuggestions"
+              [fieldsConfig]="pamNoFieldsConfig"
+              (inputValueChanged)="onAutoCompleteInputChange($event)"
+              [formGroup]="pamNoOpForm"
+              (formValueChanged)="onFormValueChanged($event)"
+              [dialogData]="pamNoOpData"
+              [dialogColumns]="pamNoOpColumns"
+              [loading]="pamNoLoading"
+              [totalRecords]="pamNoOpTotalRecords"
+            >
+              <app-calendar-range
+                class="col-12"
+                label="收/付款日"
+                controlName="ACP_ExpectPayDate_b"
+                [startControl]="pamNoOpForm.controls.ACP_ExpectPayDate_b"
+                [endControl]="pamNoOpForm.controls.ACP_ExpectPayDate_e"
+              />
+              <app-dropdown
+                class="col-6"
+                label="是否形成電匯"
+                controlName="Remit_Status"
+                [control]="pamNoOpForm.controls.Remit_Status"
+                [options]="[
+                  { label: '是', value: 'Y' },
+                  { label: '否', value: 'N' },
+                ]"
+                optionLabel="label"
+                optionValue="value"
+                [editable]="false"
+              />
+              <app-input-text
+                class="col-6"
+                label="匯款來源單號"
+                controlName="PAM_No"
+                [control]="pamNoOpForm.controls.PAM_No"
+              />
+            </app-dropdown-table>
           </div>
           <!-- 建立日期(起迄) -->
           <div class="col-12 md:col-6 lg:col-4">
@@ -55,6 +91,8 @@
                 { label: '是', value: 'Y' },
                 { label: '否', value: 'N' },
               ]"
+              optionLabel="label"
+              optionValue="value"
               [submitted]="submitted"
               [editable]="false"
             ></app-dropdown>
