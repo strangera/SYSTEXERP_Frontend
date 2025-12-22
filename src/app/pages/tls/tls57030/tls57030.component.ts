@@ -1,12 +1,18 @@
-import { Component, HostListener, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { TLS57030Service } from '../../../service/api/tls/tls57030.service';
+import { QueryTLS57030Request, TLS57030Detail, TLS57030Service } from '../../../service/api/tls/tls57030.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -32,137 +38,132 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
     InputNumberComponent,
     ButtonComponent,
     TranslateModule,
-    TableReportComponent
+    TableReportComponent,
+    AsyncPipe,
+    DropdownTableComponent
   ],
 })
-export class TLS57030Component extends BasicQueryPageComponent<any> implements OnInit {
+export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    HOS_No: [''],
-    LOGO_No: [''],
-    PLU_MagNo: [''],
-    PLU_No: [''],
-    PLU_OrgPLUNo: [''],
+    HOS_No: [null],
+    LOGO_No: [null],
+    PLU_MagNo: [null, [Validators.maxLength(20)]],
+    PLU_No: [null as string | null],
+    PLU_OrgPLUNo: [null, [Validators.maxLength(30)]],
     STK_Date: [new Date()],
-    radiolist: [1],
-    DisplayRowNumber: [20],
+    ShowStockRange: ['1'],
+    DisplayRowNumber: [30],
+    PageSize: [30],
+    PageIndex: [1]
   });
 
-  warehouseOptions: any[] = [];
-  brandCodeOptions: any[] = [];
-  managementIDOptions: any[] = [];
+  warehouseOptions = this.dropdown.queryPos2034();
+  brandCodeOptions = this.dropdown.queryPluLogo();
   stockRangeOptions = [
-    { value: 1, label: '全顯示' },
-    { value: 2, label: '僅顯示不為零庫存' },
-    { value: 3, label: '僅顯示零庫存' },
-    { value: 4, label: '僅顯示負庫存' }
+    { value: '1', label: '全顯示' },
+    { value: '2', label: '僅顯示不為零庫存' },
+    { value: '3', label: '僅顯示零庫存' },
+    { value: '4', label: '僅顯示負庫存' }
   ];
 
-  data: any[] = [];
+  data: TLS57030Detail[] = [];
   totalRecords = 0;
-  historyRequestBody: any;
+  historyRequestBody: QueryTLS57030Request | null = null;
   columnGroup = [{ field: '合計', header: '合計' }];
-  scrollLock = false;
-
-  columns = [
-    { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
-    { field: 'HOS_NAME', header: '倉別', visible: true },
-    { field: 'PLU_MagNo', header: '管理編號', visible: true },
-    { field: 'PLU_Name', header: '商品名稱', visible: true },
-    { field: 'PLU_No', header: '國際條碼', visible: true },
-    { field: 'MID', header: '廠商編號', visible: true },
-    { field: 'CAT_LName', header: '大分類', visible: true },
-    { field: 'CAT_MName', header: '中分類', visible: true },
-    { field: 'CAT_SName', header: '小分類', visible: true },
-    { field: 'PLU_OrderPrc', header: '進價(未稅)', visible: true, format: formatAmount },
-    { field: 'PLU_SalePrc', header: '售價(含稅)', visible: true, format: formatAmount },
-    { field: 'sumCount', header: '數量合計', visible: true, format: formatAmount },
-    { field: 'sumPLU_OrderPrc', header: '進價(未稅)', visible: true, groupField: '合計' },
-    { field: 'sumPLU_SalePrc', header: '售價(含稅)', visible: true, groupField: '合計' },
+  columns: ReportColumn[] = [
+    { field: 'LOGO_CH_NAME', header: '品牌名稱' },
+    { field: 'HOS_NAME', header: '倉別' },
+    { field: 'PLU_MagNo', header: '管理編號' },
+    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'PLU_No', header: '國際條碼' },
+    { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
+    { field: 'CAT_LName', header: '大分類' },
+    { field: 'CAT_MName', header: '中分類' },
+    { field: 'CAT_SName', header: '小分類' },
+    { field: 'PLU_OrderPrc', header: '進價(未稅)', format: formatAmount },
+    { field: 'PLU_SalePrc', header: '售價(含稅)', format: formatAmount },
+    { field: 'STK_CurrentQty', header: '數量合計', format: formatAmount },
+    { field: 'sumPLU_OrderPrc', header: '進價(未稅)', groupField: '合計', format: formatAmount },
+    { field: 'sumPLU_SalePrc', header: '售價(含稅)', groupField: '合計', format: formatAmount },
   ];
 
   constructor(
-    public readonly tls57030Service: TLS57030Service
+    public readonly tls57030Service: TLS57030Service,
+    private readonly dropdown: DropdownApiService,
+    private readonly tls52010Service: Tls52010Service,
+    private readonly datePipe: DatePipe
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS57030');
-
-    this.queryForm.get('DisplayRowNumber')?.valueChanges.subscribe(value => {
-      if (value && this.historyRequestBody) {
-        this.historyRequestBody.PageSize = value;
-        this.historyRequestBody.DisplayRowNumber = value;
-      }
-    });
   }
 
-  onSubmit(frm: FormGroup, event?: any) {
+  onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const formValue = frm.getRawValue();
-      const pageIndex = event?.pageIndex ?? 1;
-      const pageSize = event?.pageSize ?? formValue.DisplayRowNumber ?? 20;
-
-      const requestBody = {
-        PageSize: pageSize,
-        PageIndex: pageIndex,
-        OrderBy: '',
-        Offset: 0,
-        SortBy: [],
-        HOS_No: formValue.HOS_No ?? '',
-        LOGO_No: formValue.LOGO_No ?? '',
-        PLU_MagNo: formValue.PLU_MagNo ?? '',
-        PLU_No: formValue.PLU_No ?? '',
-        PLU_OrgPLUNo: formValue.PLU_OrgPLUNo ?? '',
-        STK_Date: formValue.STK_Date ?? null,
-        ShowStockRange: (formValue.radiolist ?? 1).toString(),
-        DisplayRowNumber: pageSize.toString(),
-      };
-
-      if (pageIndex === 1) {
-        this.data = [];
+      const body = {
+        ...frm.value,
+        STK_Date: this.datePipe.transform(frm.value.StartDate, 'yyyy-MM-dd'),
+        DisplayRowNumber: String(frm.value.DisplayRowNumber) || '30',
+        PageSize: frm.value.DisplayRowNumber || 30
       }
 
-      this.loading = true;
-      this.tls57030Service.queryTLS57030(requestBody)
-        .pipe(finalize(() => this.loading = false))
-        .subscribe({
-          next: res => {
-            if (res?.Status === '0000' && res.Data) {
-              this.data = pageIndex === 1 ? res.Data : [...this.data, ...res.Data];
-              this.totalRecords = res.TotalCount ?? this.data.length;
-              this.historyRequestBody = requestBody;
-              console.log(`第 ${pageIndex} 頁載入完成，共 ${this.data.length} 筆`);
-            }
-          }
-        });
+      this.tls57030Service.queryTLS57030(body).pipe(finalize(() => this.loading = false)).subscribe(res => {
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount ?? this.data.length;
+        this.historyRequestBody = body;
+      });
+    });
+  }
+  // 管理編號
+  suggestions: IQueryPOS2004DetailResponse[] = [];
+  fieldsConfig: FieldsConfig[] = [
+    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
+  ];
+  onAutoCompleteInputChange(event: any) {
+    const inputString = event.PLU_MagNo || '';
+
+    // 邏輯：檢查目前的輸入內容是否精準匹配 suggestions 中的某個 PLU_MagNo
+    // 如果不匹配，則將 PLU_No 清空，避免帶到舊的或錯誤的編號
+    const matchedItem = this.suggestions.find(s => s.PLU_MagNo === inputString);
+    if (!matchedItem) {
+      this.queryForm.controls.PLU_No.setValue('');
+    } else {
+      this.queryForm.controls.PLU_No.setValue(matchedItem.PLU_No);
+    }
+
+    const body = {
+      ...event,
+      VEN_No: '',
+      LOGO_No: '',
+      queryNo: inputString,
+      pageSize: 30,
+      pageIndex: 1,
+      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
+    }
+
+    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.suggestions = results.Data.map(item => ({
+        ...item,
+        label: `${item.PLU_MagNo} - ${item.PLU_Name} - ${item.PLU_No} - ${item.PLU_OrgPLUNo}`,
+      }));
+
+      // API 回傳後再次檢查，如果輸入的值剛好匹配到結果清單中的唯一一筆，就自動帶入
+      const exactMatch = this.suggestions.find(item => item.PLU_MagNo === inputString);
+      if (exactMatch) {
+        this.queryForm.controls.PLU_No.setValue(exactMatch.PLU_No);
+      }
     });
   }
 
-  // 加載滾動事件，不動原邏輯
-  @HostListener('window:scroll', [])
-  onScroll(): void {
-    if (this.scrollLock || this.loading) return;
-
-    const scrollTop = window.scrollY || document.documentElement.scrollTop;
-    const windowHeight = window.innerHeight;
-    const docHeight = document.documentElement.scrollHeight;
-
-    if (scrollTop + windowHeight >= docHeight - 200) {
-      const currentCount = this.data.length;
-      const total = this.totalRecords;
-
-      if (currentCount >= total) return;
-
-      this.scrollLock = true; //
-      const nextPage = (this.historyRequestBody?.PageIndex ?? 1) + 1;
-      const pageSize = this.queryForm.value.DisplayRowNumber ?? 20;
-
-      console.log(`準備載入第 ${nextPage} 頁`);
-
-      this.onSubmit(this.queryForm, { pageIndex: nextPage, pageSize });
-
-      setTimeout(() => (this.scrollLock = false), 1000);
+  // 當使用者「選擇」一筆商品時觸發
+  onPLUSelect(event: IQueryPOS2004DetailResponse) {
+    if (event) {
+      // 當選中商品時，自動將該商品的 PLU_No 填入 queryForm
+      this.queryForm.patchValue({
+        PLU_No: event.PLU_No,
+      });
     }
   }
 }
