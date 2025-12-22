@@ -15,17 +15,11 @@
           <!-- 管理編號 -->
           <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.PLU_MagNo"
             templateLabel="label" [submitted]="submitted" optionLabel="PLU_MagNo" optionValue="PLU_MagNo"
-            [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
-            (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
-            [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
-            [totalRecords]="opTotalRecords">
-            <app-input-text class="col-12 md:col-6" label="管理編號" controlName="queryNo"
-              [control]="opForm.controls.queryNo" />
-            <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
-              [control]="opForm.controls.PLU_Name" />
+            [suggestions]="suggestions" [fieldsConfig]="fieldsConfig" [showOverlay]="false"
+            (inputValueChanged)="onAutoCompleteInputChange($event)" (select)="onPLUSelect($event)">
           </app-dropdown-table>
           <!-- 國際條碼 -->
-          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.PLU_No"
+          <!-- <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.PLU_No"
             templateLabel="label" [submitted]="submitted" optionLabel="PLU_No" optionValue="PLU_No"
             [suggestions]="suggestions2" [fieldsConfig]="fieldsConfig2"
             (inputValueChanged)="onAutoCompleteInputChange2($event)" (formValueChanged)="onformValueChanged2($event)"
@@ -37,7 +31,7 @@
               [control]="opForm2.controls.PLU_Name" />
             <app-input-text class="col-12 md:col-4" label="品牌代碼" controlName="LOGO_No"
               [control]="opForm2.controls.LOGO_No" />
-          </app-dropdown-table>
+          </app-dropdown-table> -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="倉別" controlName="HOS_No" [options]="HOS_NoOptions | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.HOS_No" [submitted]="submitted"></app-dropdown>

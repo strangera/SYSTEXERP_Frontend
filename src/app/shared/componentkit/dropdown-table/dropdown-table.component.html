@@ -5,9 +5,9 @@
         <label [for]="field.field">{{ field.header }}
           <span *ngIf="isRequired" class="text-red-500">*</span>
         </label>
-        <p-autoComplete [formControl]="control" [id]="field.field" [optionLabel]="optionLabel"  
+        <p-autoComplete [formControl]="control" [id]="field.field" [optionLabel]="optionLabel"
           (click)="onFocusAndInitialLoad($event)" (input)="onInputChange()" (onFocus)="onFocusAndInitialLoad($event)"
-          (onSelect)="onValueChange($event)" [suggestions]="suggestions"   [optionValue]="optionValue"
+          (onSelect)="onValueChange($event)" [suggestions]="suggestions" [optionValue]="optionValue"
           [placeholder]="control.disabled ? '' : placeholder">
           <ng-template let-options pTemplate="item">
             <div class="flex align-items-center gap-2">
@@ -15,24 +15,27 @@
             </div>
           </ng-template>
         </p-autoComplete>
-        <app-control-messages [onerror]="submitted || (control.touched && control.invalid)"  
+        <app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
           [control]="control"></app-control-messages>
       </ng-container>
-      <ng-template #elseBlock>
+
+      <ng-container *ngIf="!field.mainDataField">
         <label for="{{ field.field }}">{{ field.header }}</label>
         <input type="text" pInputText [disabled]="true" [value]="getFieldValue(field)" />
-      </ng-template>
+      </ng-container>
     </div>
   </ng-container>
 </div>
 
 <p-overlayPanel #op [style]="{'max-width': '700px'}" [appendTo]="'body'">
-  <form [formGroup]="formGroup" class="grid p-fluid">
-    <ng-content />
-    <app-table class="col-12" [dataKey]="optionValue" [data]="dialogData" [selectedItems]="selectedItems"  
-      (select)="onSelectionChange($event)" [columns]="dialogColumns" [showHeader]="false" [showPage]="false"  
-      [showCheckBox]="true" selectionMode="single" [showManage]="false" scrollHeight="200px" [loading]="loading"  
-      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, formGroup)" [lazy]="lazy"  
-      [showCaption]="false" />
-  </form>
+  <ng-container *ngIf="showOverlay && formGroup">
+    <form [formGroup]="formGroup" class="grid p-fluid">
+      <ng-content />
+      <app-table class="col-12" [dataKey]="optionValue" [data]="dialogData" [selectedItems]="selectedItems"
+        (select)="onSelectionChange($event)" [columns]="dialogColumns" [showHeader]="false" [showPage]="false"
+        [showCheckBox]="true" selectionMode="single" [showManage]="false" scrollHeight="200px" [loading]="loading"
+        [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, formGroup)" [lazy]="lazy"
+        [showCaption]="false" />
+    </form>
+  </ng-container>
 </p-overlayPanel>

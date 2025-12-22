@@ -40,7 +40,7 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   @Input() showOverlay = true;// 控制是否顯示 Overlay Panel，預設為 true (打開)
   @ViewChild('op') op: OverlayPanel | undefined;
   private destroy$ = new Subject<void>();      // 訂閱，為了監聽表單改變
-  @Input() formGroup!: FormGroup;          // 下拉要輸入的form 必填
+  @Input() formGroup?: FormGroup;          // 下拉要輸入的form 必填
   @Input() dialogData: any = [];           // 下拉table 的資料 必填
   @Input() loading = false;
   selectedItems: any;
@@ -54,9 +54,14 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   private initialLoadDone = false;
   ngOnInit(): void {
     this.updateControlState(this.control);
-    this.formGroup.valueChanges.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(value => {
-      this.formValueChanged.emit(value);
-    });
+    if (this.formGroup) {
+      this.formGroup.valueChanges.pipe(
+        debounceTime(300),
+        takeUntil(this.destroy$)
+      ).subscribe(value => {
+        this.formValueChanged.emit(value);
+      });
+    }
 
     // 訂閱 inputChangeSubject，並應用 debounceTime
     this.inputChangeSubject.pipe(
@@ -133,7 +138,7 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
 
     this.op?.hide();
     this.selectedItems = [];
-    this.formGroup.reset();
+    this.formGroup?.reset();
   }
 
   onLazyLoadData(event: LazyLoadEvent, dataForm: FormGroup) {
@@ -151,8 +156,9 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
     }
     // 如果表格資料為空，且尚未載入過，則發送一次空的查詢請求，讓父元件載入所有資料
     if (!this.initialLoadDone && (!this.dialogData || this.dialogData.length === 0)) {
-      // 發出一個空值事件，讓父元件觸發初始載入 (loadVenData())
-      this.formValueChanged.emit(this.formGroup.value);
+      // 修改：如果沒有 formGroup，就傳空物件或目前的 control 值
+      const emitValue = this.formGroup ? this.formGroup.value : { [this.optionLabel]: this.control.value };
+      this.formValueChanged.emit(emitValue);
     }
     this.initialLoadDone = true;
   }
