@@ -301,7 +301,7 @@ export const finRoutes: Routes = [
   // 總帳報表-部門科目明細表
   { path: 'fin55110', loadComponent: () => import('./fin55110/fin55110.component').then(m => m.FIN55110Component), data: { progNo: 'FIN55110' } },
   // 總帳報表-資產負債表
-  // { path: 'fin55120', loadComponent: () => import('./fin55120/fin55120.component').then(m => m.FIN55120Component),data:{progNo:'FIN55120'} },
+  { path: 'fin55120', loadComponent: () => import('./fin55120/fin55120.component').then(m => m.FIN55120Component), data: { progNo: 'FIN55120' } },
   // 總帳報表-資產負債比較表
   // { path: 'fin55130', loadComponent: () => import('./fin55130/fin55130.component').then(m => m.FIN55130Component),data:{progNo:'FIN55130'} },
   // 支票號碼維護
