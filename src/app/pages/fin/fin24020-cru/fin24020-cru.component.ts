@@ -12,6 +12,8 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateRequired } from '@shared/componentkit/table/validate-field.model';
 import { PanelModule } from 'primeng/panel';
 
 @Component({
@@ -37,19 +39,25 @@ import { PanelModule } from 'primeng/panel';
 })
 export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    ARS_No: [{ value: null, disabled: true }],
-    CustNo: [{ value: null, disabled: true }],
-    sam_yyymm: [{ value: null, disabled: true }],
-    sam_termno: [{ value: null, disabled: true }],
-    PTA_Date_From: [{ value: null, disabled: true }],
-    ARS_Amt_From: [{ value: null, disabled: false }],
-    PTA_Key: [{ value: null, disabled: true }],
-    NoteDesc: [{ value: null, disabled: false }],
-    ARS_Amt_To: [{ value: null, disabled: false }],
-    PTA_Date_To: [{ value: null, disabled: true }],
+    ARS_No: [""],
+    CustNo: [""],
+    sam_yyymm: [""],
+    sam_termno: [""],
+    PTA_Date_From: [""],
+    ARS_Amt_From: [""],
+    PTA_Key: [""],
+    NoteDesc: [""],
+    ARS_Amt_To: [""],
+    PTA_Date_To: [""],
   });
   VEN_No_ParamOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商代號
 
+  editColumns: EditColumn[] = [
+    { field: 'dc', header: '保留款退款日期', type: 'input' },
+    { field: 'dc', header: '保留款退款金額', type: 'input' },
+    { field: 'NoteDesc', header: '備註', type: 'input', validate: [validateRequired], width: '250px' },
+
+  ];
   constructor(
     private readonly dropDown: DropdownApiService,
   ) {
