@@ -55,6 +55,7 @@ import { C_columns, columns, FIX_TYPE, TXN_GUIPaperOptions, txnStatusOptions } f
 })
 export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> implements OnInit {
   @ViewChild('menu') menu?: Menu;
+  TXN_Date_Label = '銷售日期';
   queryForm = this.formBuilder.nonNullable.group({
     TXN_GUIPaper: ['E', [Validators.required]],/*補登類別 → TXN_GUIPaper */
     TXN_Date: [null as Date | null, [Validators.required]],    /*銷售日期 → POS5006.TXN_Date */
@@ -372,6 +373,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       form.get('ECR_No')?.setValue(null);
       form.get('TXN_No')?.setValue(null);
       this.columns = columns;
+      this.TXN_Date_Label = '銷售日期';
     } else if (value === 'C') {
       form.get('ECR_No')?.setValidators(null);
       form.get('TXN_No')?.setValidators([Validators.maxLength(8), Validators.max(99999999)]);
@@ -380,6 +382,17 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       form.get('ECR_No')?.setValue(null);
       form.get('TXN_No')?.setValue(null);
       this.columns = C_columns;
+      this.TXN_Date_Label = '折讓單日期';
+    } else if (value === 'R') {
+      // 移除必填驗證規則，保留其他規則
+      form.get('ECR_No')?.setValidators(null);
+      form.get('TXN_No')?.setValidators([Validators.maxLength(8), Validators.max(99999999)]);
+      form.updateValueAndValidity();
+      this.cdr.markForCheck();
+      form.get('ECR_No')?.setValue(null);
+      form.get('TXN_No')?.setValue(null);
+      this.columns = columns;
+      this.TXN_Date_Label = '作廢日期';
     } else {
       // 移除必填驗證規則，保留其他規則
       form.get('ECR_No')?.setValidators(null);
@@ -389,6 +402,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       form.get('ECR_No')?.setValue(null);
       form.get('TXN_No')?.setValue(null);
       this.columns = columns;
+      this.TXN_Date_Label = '銷售日期';
     }
   }
   btnLoading = false;
