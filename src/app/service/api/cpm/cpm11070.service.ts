@@ -122,5 +122,24 @@ export class CPM11070Service {
     const url = `${this.apiUrl}/queryCPM11070Detail`;
     return this.http.post<ApiResponse<CPM11070DetailData>>(url, req);
   }
-
+  createCPM11070(req: any): Observable<ApiResponse<null>> {
+    const url = `${this.apiUrl}/createCPM11070`;
+    return this.http.post<ApiResponse<null>>(url, req);
+  }
+  updateCPM11070(req: any): Observable<ApiResponse<null>> {
+    const url = `${this.apiUrl}/updateCPM11070`;
+    return this.http.post<ApiResponse<null>>(url, req);
+  }
+  finishedCPM11070(req: any): Observable<ApiResponse<null>> {
+    const url = `${this.apiUrl}/finishedCPM11070`;
+    return this.http.post<ApiResponse<null>>(url, req);
+  }
+  broadcastCPM11070(req: any): Observable<ApiResponse<null>> {
+    const url = `${this.apiUrl}/broadcastCPM11070`;
+    return this.http.post<ApiResponse<null>>(url, req);
+  }
+  exportCPM11070Excel(req: QueryCPM11070Request): Observable<Blob> {
+    const url = `${this.apiUrl}/exportCPM11070Excel`;
+    return this.http.post(url, req, { responseType: 'blob' });
+  }
 }
