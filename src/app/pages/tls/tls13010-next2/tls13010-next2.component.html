@@ -168,7 +168,7 @@
         *ngIf="!isGeneralCommissionMode"
         btnType="create"
         label="下一步(租金設定)"
-        (click)="onSubmitNext()"
+        (click)="onGoToNext3()"
         [disabled]="crudstatus === CRUDStatus.Read || !hasCommissionData()"
         [loading]="loading"
       ></app-button>

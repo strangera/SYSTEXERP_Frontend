@@ -458,14 +458,26 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   private initializeViewMode(): void {
     console.log('📝 步驟 2: 初始化 CRUD 狀態');
 
-    // 從服務取得檢視模式狀態並設定 CRUD 狀態
-    const isViewMode = this.contractFlowService.isViewMode();
-    this.crudstatus = isViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
+    // 🔑 優先從 workflowStatus 恢復 crudStatus (支援頁面重新整理)
+    const workflowStatus = this.contractFlowService.getCurrentStatus();
+    if (workflowStatus?.crudStatus) {
+      this.crudstatus = workflowStatus.crudStatus;
+      console.log(`   從 workflowStatus 恢復 CRUD 狀態: ${this.crudstatus}`);
+
+      // 同步 isViewMode 狀態
+      const isViewMode = this.crudstatus === CRUDStatus.Read;
+      this.contractFlowService.setViewMode(isViewMode);
+    } else {
+      // fallback: 從服務取得檢視模式狀態並設定 CRUD 狀態
+      const isViewMode = this.contractFlowService.isViewMode();
+      this.crudstatus = isViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
+      console.log(`   從 isViewMode 推斷 CRUD 狀態: ${this.crudstatus}`);
+    }
 
     // 設定檢視模式 UI 監聽
     this.setupViewModeUI();
 
-    console.log(`   CRUD 狀態: ${this.crudstatus}`);
+    console.log(`   最終 CRUD 狀態: ${this.crudstatus}`);
   }
 
   private initializeWorkflow(): void {
