@@ -68,6 +68,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   isViewMode = false;
   queryLoading = false;
 
+  @ViewChild('changeEdit') tableChangeEdit!: TableEditComponent;
   @ViewChild('detailEdit') tableDetailEdit!: TableEditComponent;
 
   // 儲存 TDS1010 項目對應，用於動態生成下拉選單
@@ -352,6 +353,13 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
 
   /** 送出 (簡化了重複的錯誤判斷，將其提取到 private 方法) */
   onSubmit(frm: FormGroup): void {
+    // 先執行兩個 table-edit 的欄位/列驗證
+    const changeValid = this.tableChangeEdit?.validateAndShowErrors() ?? true;
+    const detailValid = this.tableDetailEdit?.validateAndShowErrors() ?? true;
+    if (!changeValid || !detailValid) {
+      return;
+    }
+
     // 統一進行所有前置驗證
     const { warnings, errors } = this.validateBeforeSubmit();
 
