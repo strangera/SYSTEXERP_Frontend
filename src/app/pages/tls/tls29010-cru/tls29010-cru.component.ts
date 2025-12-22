@@ -23,7 +23,7 @@ import { ColumnDef, ExpandableEditTableComponent } from '@shared/componentkit/ex
 import { Tls29010Service } from '../../../service/api/tls/tls29010.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
+import { option } from '../../../shared/models/sys/sysb000.model';
 
 import { DropDownListService } from '@service/utility/dropDownList.service';
 
@@ -116,23 +116,13 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.group({
     id: [{ value: null, disabled: true }], // 主鍵，自動編號
-    mid: [{ value: null, disabled: true }], // 主檔關聯 ID
-    str_no: [{ value: '', disabled: true }], // 店部編號 // 20251015 此欄位不顯示調整
     // --先選 專櫃活動設定主檔TALPORDERM--
-    //欄位用這些就好
     pod_no: [{ value: '系統產生代碼', disabled: true }], // 活動申請編號 (YYYYMMDDSSS)
     pod_type: ['', [Validators.required]], // 活動類型(1=預售, 2=滿千送百發行, 3=滿千送百兌回, 4~5=會員卡集點, 6~7=全館集點, 8=期間開放折扣)
 
-    //20251015 新增 (act_no、pod_desc 欄位)
-    act_no: [null], // 活動編號(使用者輸入)
     pod_desc: [{ value: '', disabled: true }], // 活動名稱(使用者輸入)
-
     pod_sdate: [{ value: null as Date | null, disabled: true }, [Validators.required]], // 活動起始日 (Date)
     pod_edate: [{ value: null as Date | null, disabled: true }, [Validators.required]], // 活動終止日 (Date)
-    org_id: [''], // 組織-部門(SYS3100)
-    // pod_busdate: [null], // 活動正檔日期  // 券類才會用到
-    // pod_back_sdate: [null], // 活動兌回起始日期
-    // pod_back_edate: [null], // 活動兌回終止日期
     pod_status: ['', Validators.required], // 活動狀態(0=未核准, 1=已核准, 9=刪除)
 
     // 核准不會再新增進行
@@ -163,10 +153,8 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     { label: '刪除', value: '9' },
   ];
 
-  // 有8 不能重複
   act_No_Options: ACT_NO_type[] = []; // 活動申請編號下拉選單
   tlt_No_Option: { value: string, label: string }[] = [];  // 專櫃編號下拉
-  orgOptions: apiOption[] = []; // 組織部門下拉選單
 
   //主檔下拉 --之後由後端api提供
 
@@ -270,14 +258,11 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     const userInfo = this.authService?.getUserInfo?.();
     if (userInfo) {
       if (this.crudstatus === CRUDStatus.Create) {
-        this.dataForm.get('str_no')?.setValue(userInfo?.SYS_StoreNo || '') //依照section填寫店號
-
         this.dataForm.get('pod_status')?.setValue('0') //新增模式 [活動狀態] 只能(未審核)
         this.dataForm.get('pod_status')?.disable();
         this.dataForm.get('approved_userno')?.disable();
         this.dataForm.get('approved_usr_name')?.disable();
         this.dataForm.get('approved_date')?.disable();
-        // this.dataForm.get('act_no')?.disable();
 
         // 新增 活動類型只能選8號
         this.dataForm.get('pod_type')?.setValue('8') //新增模式 只能選 8 期間開放折扣
@@ -331,33 +316,44 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     switch (this.crudstatus) {
       case CRUDStatus.Create:
         if (this.canAdd()) {
-          // console.log('insert', body);
-          console.log('insert', JSON.stringify(body, null, 2));
-          this.tls29010Service.insertTLS29010(body).pipe(untilDestroyed(this)).subscribe(() => {
-            this.messageService.successBubble('新增成功');
+          const userInfo = this.authService?.getUserInfo?.();
+          const request = {
+            ...body,
+            "str_no": userInfo?.SYS_StoreNo || ''
+          }
 
-            // 取出要保留的欄位值 --- 20251007 調整重設邏輯，避免多次新增造成的數值變成null
-            const keepValues = {
-              str_no: this.dataForm.get('str_no')?.value,
-              pod_type: this.dataForm.get('pod_type')?.value,
-              pod_status: this.dataForm.get('pod_status')?.value,
-            };
+          // console.log('insert', request);
 
-            // reset 其他欄位
-            this.dataForm.reset();
+          console.log('insert', JSON.stringify(request, null, 2));
+          // this.tls29010Service.insertTLS29010(request).pipe(untilDestroyed(this)).subscribe(() => {
+          //   this.messageService.successBubble('新增成功');
 
-            // 把保留欄位的值重新設回去
-            this.dataForm.patchValue(keepValues);
-          });
+          //   // 取出要保留的欄位值 --- 20251007 調整重設邏輯，避免多次新增造成的數值變成null
+          //   const keepValues = {
+          //     pod_type: this.dataForm.get('pod_type')?.value,
+          //     pod_status: this.dataForm.get('pod_status')?.value,
+          //   };
+
+          //   // reset 其他欄位
+          //   this.dataForm.reset();
+
+          //   // 把保留欄位的值重新設回去
+          //   this.dataForm.patchValue(keepValues);
+          // });
         }
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
-          console.log('update:', JSON.stringify(body, null, 2));
-          this.tls29010Service.updateTLS29010(body).pipe(untilDestroyed(this)).subscribe(() => {
-            // this.messageService.successBubble('更新成功');
-            this.onCancel(); // 儲存後，會返回列表
-          });
+          const userInfo = this.authService?.getUserInfo?.();
+          const request = {
+            ...body,
+            "str_no": userInfo?.SYS_StoreNo || ''
+          }
+          console.log('update:', JSON.stringify(request, null, 2));
+          // this.tls29010Service.updateTLS29010(request).pipe(untilDestroyed(this)).subscribe(() => {
+          //   // this.messageService.successBubble('更新成功');
+          //   this.onCancel(); // 儲存後，會返回列表
+          // });
         }
         break;
     }
@@ -391,20 +387,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
           this.tlt_No_Option
         );
     });
-
-    // 部門編號(SYS3100)
-    this.dropDownListService
-      .querySYS3100_DropDownList().pipe(untilDestroyed(this)).pipe(untilDestroyed(this)).subscribe((response) => {
-        this.orgOptions = response.Data.map((item: apiOption) => ({
-          No: item.No,
-          Name: item.Name,
-          Label: item.No + '-' + item.Name,
-        }));
-
-        // console.log('部門編號 下拉:', response.Data);
-      });
     //折扣別
-
     const pod_no = this.dataForm.get('pod_no')?.value || "";
     // 活動編號，下拉選單
     this.tls29010Service.dropdownTLS29010bypodno({ "pod_no": pod_no }).pipe(untilDestroyed(this)).pipe(untilDestroyed(this)).subscribe((response) => {

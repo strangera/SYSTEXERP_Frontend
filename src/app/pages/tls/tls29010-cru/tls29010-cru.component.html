@@ -6,7 +6,7 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-8">
+        <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="活動申請編號"
             controlName="pod_no"
@@ -14,33 +14,7 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
-      </div>
-      <hr />
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="部門代碼"
-            controlName="org_id"
-            [options]="orgOptions"
-            optionLabel="Label"
-            optionValue="No"
-            [control]="dataForm.controls.org_id"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-      </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="活動編號"
-            controlName="act_no"
-            [options]="act_No_Options"
-            optionLabel="Label"
-            optionValue="POD_NO"
-            [control]="dataForm.controls.act_no"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="活動名稱"
@@ -49,6 +23,8 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
+      </div>
+      <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar-range
             calendarType="dateRange"
@@ -58,8 +34,6 @@
             [submitted]="submitted"
           />
         </div>
-      </div>
-      <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="活動狀態"

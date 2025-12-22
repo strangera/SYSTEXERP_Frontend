@@ -43,8 +43,8 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
     // BNK_BranchNo: [null],     // 銀行分行代號
     // BNK_AccStatus: ['0'],     // 帳戶狀態 (0=正常)
 
-    BNK_CheckInAccNo: [null],                       // 應付票據科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME" (ClassNo 211 0r 212)
-    BNK_CheckOutAccNo: [null],                      // 應收票據科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME" (ClassNo 112 or 113)
+    BNK_CheckInAccNo: [null],                       // 應收票據科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME" (ClassNo 211 0r 212)
+    BNK_CheckOutAccNo: [null],                      // 應付票據科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME" (ClassNo 112 or 113)
     //分頁查詢
     ...createPaginationConfig([{ field: 'BNK_No', order: 1 }]), // 分頁和排序參數
   });
@@ -56,8 +56,8 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
 
   // -----------看要不要由GLS1005_Option去mapping---------------------
   GLS1005_BNK_DepositAccNo_Option: apiOption[] = []; // 公司銀行科目  (accNo like '1103%')
-  GLS1005_BNK_CheckInAccNo_Option: apiOption[] = []; // 應付票據科目  (ClassNo 211 0r 212)
-  GLS1005_BNK_CheckOutAccNo_Option: apiOption[] = []; // 應收票據科目 (ClassNo 112 or 113)
+  GLS1005_BNK_CheckInAccNo_Option: apiOption[] = []; // 應收票據科目 (ClassNo 112 or 113)
+  GLS1005_BNK_CheckOutAccNo_Option: apiOption[] = []; // 應付票據科目  (ClassNo 211 0r 212)
   // ----------------------------------------------------------------
 
   BNK_AccType_Option: apiOption[] = []; // SYS1000.BNK_ACCTYPE 存款代號 -- 下拉選單
@@ -88,12 +88,12 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
     },
     {
       field: 'BNK_CheckInAccNo',
-      header: '應付票據科目',
+      header: '應收票據科目',
       visible: true,
     },
     {
       field: 'BNK_CheckOutAccNo',
-      header: '應收票據科目',
+      header: '應付票據科目',
       visible: true,
     },
     // { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate },
@@ -225,22 +225,23 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
 
     this.dropdownApiService.queryGls1005_BNK_CheckInAcc().pipe(untilDestroyed(this)).subscribe((response) => {
       const list = Array.isArray(response) ? response : [];
-      this.GLS1005_BNK_CheckInAccNo_Option = list.map((item: any) => ({
+      this.GLS1005_BNK_CheckOutAccNo_Option = list.map((item: any) => ({
         No: item.No, // 應付票據科目 代號
         Name: item.Name, // 應付票據科目 名稱
         Label: item.No + '-' + item.Name, // 代碼+名稱
       }));
-      console.log('應付票據科目:', this.GLS1005_BNK_CheckInAccNo_Option);
+      console.log('應收票據科目:', this.GLS1005_BNK_CheckOutAccNo_Option);
+
     });
 
     this.dropdownApiService.queryGls1005_BNK_CheckOutAcc().pipe(untilDestroyed(this)).subscribe((response) => {
       const list = Array.isArray(response) ? response : [];
-      this.GLS1005_BNK_CheckOutAccNo_Option = list.map((item: any) => ({
+      this.GLS1005_BNK_CheckInAccNo_Option = list.map((item: any) => ({
         No: item.No, // 應收票據科目 代號
         Name: item.Name, // 應收票據科目 名稱
         Label: item.No + '-' + item.Name, // 代碼+名稱
       }));
-      console.log('應收票據科目:', this.GLS1005_BNK_CheckOutAccNo_Option);
+      console.log('應付票據科目:', this.GLS1005_BNK_CheckInAccNo_Option);
     });
 
     // 查 APS1004 -- 下拉選單(
