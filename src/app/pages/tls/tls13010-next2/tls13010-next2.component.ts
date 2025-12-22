@@ -245,7 +245,8 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       .map(d => {
         const startDate = this.formatDateString(d.tlt_bdate).replace(/-/g, '/');
         const endDate = this.formatDateString(d.tlt_edate).replace(/-/g, '/');
-        const rate = d.cag_charge_rate || 0;  // 🔑 已經是百分比格式，不需要乘以 100
+        // 🔑 修正浮點數精度問題：使用 toFixed 並移除尾隨的零
+        const rate = (d.cag_charge_rate || 0).toFixed(2).replace(/\.?0+$/, '');
         return `${d.cag_barcode}-(${startDate}-${endDate})-${rate}`;
       });
 
