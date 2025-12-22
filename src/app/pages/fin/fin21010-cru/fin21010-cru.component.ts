@@ -89,7 +89,7 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
 
     if (bnkNoFull !== '') {
       const str = String(bnkNoFull);
-      branchControl.setValue(str.substring(3, 6)); //最後一碼不要
+      branchControl.setValue(str.substring(3, 7)); // 改成末四碼
     }
   }
 
