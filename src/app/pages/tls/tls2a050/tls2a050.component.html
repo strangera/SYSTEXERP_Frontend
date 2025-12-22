@@ -35,15 +35,15 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table tableKey="TLS2a050" [showManage]="true" [data]="data" [columns]="columns" [columnGroup]="columnGroup"
-      [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]" [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [showReportMode]="false"
+    <app-table-report tableKey="TLS2a050" [data]="data" [columns]="columns" [columnGroup]="columnGroup"
+      [totalRecords]="totalRecords" [footerData]="footerData" [lazy]="true" [lastQueryBody]="lastQueryBody"
+      [queryFunction]="queryTLS2A050ForReport" [loading]="loading" [showManage]="true" [showReportMode]="false"
       [showDelete]="false" [showEdit]="false" (detail)="onDetail($event)">
       <header>
         <p-button pButton tooltipPosition="top" pTooltip="匯出Excel" [style.width]="'35px'" [style.height]="'35px'"
           class="p-button-rounded p-button-text p-button-info" icon="fa fa-file-lines" [disabled]="!hasPermission('70')"
           (click)="exportReport()" />
       </header>
-    </app-table>
+    </app-table-report>
   </div>
 </div>

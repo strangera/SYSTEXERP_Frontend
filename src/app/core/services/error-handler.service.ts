@@ -70,7 +70,7 @@ export class ErrorHandlerService {
       case 504:
         userFriendlyMessage = backendMessage || '伺服器內部發生錯誤。請稍後再試，或聯繫系統管理員。';
         notificationDetails = userFriendlyMessage;
-        notificationHeader = 'OH 失敗!!!';
+        notificationHeader = '系統錯誤';
         break;
       default:
         // 處理其他所有錯誤

@@ -97,6 +97,16 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
     { Name: '遊客', No: '1' },
     { Name: '員工', No: '2' },
   ];
+  // 判斷是否為已結案(已領回/已轉出)案件
+  private isClosed(row: CPM11070Data): boolean {
+    const status = row.SeqStatusName?.trim();
+    return status === '領回' || status === '已領回' || status === '轉出' || status === '已轉出';
+  }
+
+  // 提供給 table 綁定用：已結案則停用編輯按鈕
+  editDisabled = (row: CPM11070Data): boolean => {
+    return this.isClosed(row);
+  };
   columns: any[] = [
     { field: 'GoodsType', header: '物品類別', visible: true },
     { field: 'GoodsDesc', header: '物品敘述', visible: true },
@@ -115,7 +125,6 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
 
   ];
   constructor(
-    // private dropDownListService: DropDownListService,
     private dropdownApiService: DropdownApiService,
     private readonly cpm11070Service: CPM11070Service,
     private readonly datePipe: DatePipe,
@@ -128,6 +137,15 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
     this.initializePage('CPM11070', '/CPM/CPM11070CRU', this.queryForm, (frm) => this.onSubmit(frm));
 
   }
+
+  override onEdit(data: CPM11070Data, queryConditions?: any): void {
+    if (this.isClosed(data)) {
+      this.messageService.errorBubble('已轉出或已領回資料不可編輯');
+      return;
+    }
+    super.onEdit(data, queryConditions);
+  }
+
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
@@ -185,11 +203,78 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
             this.totalRecords = res.TotalCount || this.data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
           },
-          error: () => {
-            this.messageService.errorBubble('查詢失敗');
-          },
         });
     });
+  }
+
+  // 匯出「未領取報表」Excel
+  onExportUnreceivedReport(): void {
+    const raw = this.queryForm.getRawValue();
+
+    const format = (d: Date | null) => d ? this.datePipe.transform(d, 'yyyy-MM-dd') ?? undefined : undefined;
+
+    if (!raw.RecDateFrom) {
+      this.messageService.errorBubble('「登錄日期(起)」為必填');
+      return;
+    }
+
+    const payload: QueryCPM11070Request = {
+      PageSize: 0,
+      PageIndex: 0,
+      SortBy: raw.SortBy ?? [],
+      OrderBy: '',
+      Offset: 0,
+
+      SeqId: raw.SeqId ?? undefined,
+      RecDateFrom: format(raw.RecDateFrom),
+      RecDateTo: format(raw.RecDateTo),
+      LostDateFrom: format(raw.LostDateFrom),
+      LostDateTo: format(raw.LostDateTo),
+      FindDateFrom: format(raw.FindDateFrom),
+      FindDateTo: format(raw.FindDateTo),
+      MsgDateFrom: format(raw.MsgDateFrom),
+      MsgDateTo: format(raw.MsgDateTo),
+      ReceiveDateFrom: format(raw.ReceiveDateFrom),
+      ReceiveDateTo: format(raw.ReceiveDateTo),
+      TransDateFrom: format(raw.TransDateFrom),
+      TransDateTo: format(raw.TransDateTo),
+      DocType: raw.DocType ?? undefined,
+      Goods: raw.Goods ?? undefined,
+      SeqType: raw.SeqType ?? undefined,
+      Notes: raw.Notes ?? undefined,
+      LocationKeyword: raw.LocationKeyword ?? undefined,
+      ServiceUser: raw.ServiceUser ?? undefined,
+      KEY_USER: raw.KEY_USER ?? undefined,
+      BroadcastFilter: raw.BroadcastFilter ?? undefined,
+      BroadcastSituation: raw.BroadcastSituation ?? undefined,
+      RecaptionName: raw.RecaptionName ?? undefined,
+      RecaptionPhone: raw.RecaptionPhone ?? undefined,
+      RegistrantKeyword: raw.RegistrantKeyword ?? undefined,
+      ProcessingUser: raw.ProcessingUser ?? undefined,
+      IdentityKind: raw.IdentityKind ?? undefined,
+      Tel: raw.Tel ?? undefined,
+      MobilePhone: raw.MobilePhone ?? undefined,
+      IdNo: raw.IdNo ?? undefined,
+    };
+
+    this.loading = true;
+
+    this.cpm11070Service
+      .exportCPM11070Excel(payload)
+      .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+      .subscribe({
+        next: (blob) => {
+          const excelBlob = new Blob([blob], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          });
+          const url = window.URL.createObjectURL(excelBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `CPM11070_未領取報表_${this.datePipe.transform(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+        },
+      });
   }
 
 }

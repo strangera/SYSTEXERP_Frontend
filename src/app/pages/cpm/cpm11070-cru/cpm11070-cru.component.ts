@@ -1,6 +1,7 @@
 import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { CPM11070DetailData, CPM11070Service } from '@service/api/cpm/cpm11070.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
@@ -10,6 +11,7 @@ import { InputTextareaComponent } from '@shared/componentkit/input-textarea/inpu
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -42,20 +44,21 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
   dataForm = this.formBuilder.nonNullable.group({
     SEQ_ID: [{ value: '系統自動產生', disabled: true }],
     REC_DATE: [null as Date | null, [Validators.required,]],
-    LOST_DATE: [null as Date | null],
+    LOST_DATE: [null as Date | null, [Validators.required,]],
     OFF_DATE: [null as Date | null],
     MSG_DATE: [null as Date | null],
     RECEIVE_DATE: [null as Date | null],
+    DocType: ['', [Validators.required,]],
     Identity_KIND: [''],
     LOCATION: [''],
     SEQ_TYPE: [''],
-    SEX: [''],
-    GOODS: [''],
+    SEX: ['', [Validators.required,]],
+    GOODS: ['', [Validators.required,]],
     BROADCAST_DATE: ['', [Validators.maxLength(400)]],
     BROADCAST_YN: [''],
-    KEY_USER: ['', [Validators.maxLength(20)]],
-    OTHER_GOODS: ['', [Validators.maxLength(20)]],
-    REGISTRANT: ['', [Validators.maxLength(10)]],
+    KEY_USER: [{ value: this.user?.user_No, disabled: true }, [Validators.required,]],
+    OTHER_GOODS: ['', [Validators.required, Validators.maxLength(20)]],
+    REGISTRANT: ['', [Validators.required, Validators.maxLength(10)]],
     TEL: ['', [Validators.maxLength(10)]],
     MOBILE_PHONE: ['', [Validators.maxLength(10)]],
     ADDRESS: ['', [Validators.maxLength(100)]],
@@ -90,25 +93,9 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
     { Name: '男性', No: '1' },
     { Name: '女性', No: '2' },
   ];
-  columns: any[] = [
-    { field: 'VouNo', header: '物品類別', visible: true },
-    { field: 'VouDate', header: '物品敘述', visible: true },
-    { field: 'VouStatus', header: '登錄編號', visible: true },
-    { field: 'Remark', header: '登錄日期', visible: true },
-    { field: 'Remark', header: '通知日期', visible: true },
-    { field: 'Remark', header: '領回日期', visible: true },
-    { field: 'Remark', header: '轉出日期', visible: true },
-    { field: 'Voucher_Name', header: '失物類別', visible: true },
-    { field: 'Voucher_Name', header: '失物狀態', visible: true },
-    { field: 'DetailCount', header: '地點', visible: true },
-    { field: 'VoucherType', header: '服務人員', visible: true },
-    { field: 'AccAmt', header: '遺失者/拾獲者姓名', visible: true },
-    { field: 'AccAmt', header: '電話(夜)', visible: true },
-    { field: 'AccAmt', header: '電話(日)', visible: true },
+  RebroadcastLoading = false;
 
-  ];
   constructor(
-    // private dropDownListService: DropDownListService,
     private dropdownApiService: DropdownApiService,
     private readonly cpm11070Service: CPM11070Service,
   ) {
@@ -118,8 +105,6 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
 
   ngOnInit(): void {
     this.initializePage('CPM11070', this.dataForm);
-
-    // 若是從列表以 編輯/檢視 進入，依 SeqId 撈取明細
     const seqId = (this.rowdata as any)?.SeqId ?? (this.rowdata as any)?.SEQ_ID;
     if (seqId) {
       this.cpm11070Service.queryCPM11070Detail({ SeqId: seqId }).subscribe(res => {
@@ -127,26 +112,24 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
           this.messageService.errorBubble(res.Message || '載入明細失敗');
           return;
         }
-
         const d = res.Data;
-
-        // 將明細資料帶入表單，日期欄位轉成 Date 物件
         this.dataForm.patchValue({
           SEQ_ID: d.SEQ_ID,
           REC_DATE: d.REC_DATE ? new Date(d.REC_DATE) : null,
-          LOST_DATE: d.LOST_DATE ? new Date(d.LOST_DATE) : null,
+          LOST_DATE: d.LOST_DATE ? new Date(d.LOST_DATE) : (d.FIND_DATE ? new Date(d.FIND_DATE) : null),
           OFF_DATE: d.OFF_DATE ? new Date(d.OFF_DATE) : null,
           MSG_DATE: d.MSG_DATE ? new Date(d.MSG_DATE) : null,
           RECEIVE_DATE: d.RECEIVE_DATE ? new Date(d.RECEIVE_DATE) : null,
+          DocType: d.DocType,
           Identity_KIND: d.Identity_KIND,
           LOCATION: d.LOCATION,
           SEQ_TYPE: d.SEQ_TYPE,
           SEX: d.SEX,
           GOODS: d.GOODS,
-          BROADCAST_DATE: d.BROADCAST_DATE,
+          BROADCAST_DATE: d.NOTES,
           BROADCAST_YN: d.BROADCAST_YN,
           KEY_USER: d.KEY_USER,
-          OTHER_GOODS: d.OTHER_GOODS,
+          OTHER_GOODS: d.OTHER_GOODS || d.SERVICE_USER,
           REGISTRANT: d.REGISTRANT,
           TEL: d.TEL,
           MOBILE_PHONE: d.MOBILE_PHONE,
@@ -160,30 +143,180 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
   }
 
   onMarkReceived(): void {
-    console.log('CPM11070CRU 已領回 clicked');
+    const raw = this.dataForm.getRawValue();
+    const requiredFields = [
+      { value: raw.RECEIVE_DATE, label: '領回日期' },
+      { value: raw.RECAPTION_NAME, label: '領回人姓名' },
+      { value: raw.RECAPTION_PHONE, label: '領回人聯絡電話' },
+      { value: raw.PROCESSING_USER, label: '協助顧客領回處理人員' },
+    ];
+
+    for (const field of requiredFields) {
+      if (field.value === null || field.value === undefined || field.value === '') {
+        this.messageService.errorBubble(`「${field.label}」為必填`);
+        return;
+      }
+    }
+    const payload = {
+      SEQ_ID: raw.SEQ_ID,
+      RECEIVE_DATE: raw.RECEIVE_DATE,
+      RECAPTION_NAME: raw.RECAPTION_NAME,
+      RECAPTION_PHONE: raw.RECAPTION_PHONE,
+      PROCESSING_USER: raw.PROCESSING_USER,
+    };
+
+    this.cpm11070Service.finishedCPM11070(payload)
+      .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+      .subscribe({
+        next: (res) => {
+          if (res.Status === '0000') {
+            this.messageService.successBubble(res.Message || '已標記為已領回');
+            this.onCancel();
+          } else {
+            const errMsg = (res.Data as unknown as string) || res.Message || '已領回失敗';
+            this.messageService.errorBubble(errMsg);
+          }
+        },
+      });
   }
 
   onRebroadcast(): void {
-    console.log('CPM11070CRU 重新廣播 clicked');
+    const raw = this.dataForm.getRawValue();
+    const seqId = raw.SEQ_ID;
+
+    if (!seqId || seqId === '系統自動產生') {
+      this.messageService.errorBubble('尚未產生登錄編號，無法重新廣播');
+      return;
+    }
+
+    this.RebroadcastLoading = true;
+    this.cpm11070Service.broadcastCPM11070({ SEQ_ID: String(seqId) })
+      .pipe(untilDestroyed(this), finalize(() => (this.RebroadcastLoading = false)))
+      .subscribe({
+        next: (res) => {
+          if (res.Status === '0000') {
+            this.messageService.successBubble(res.Message || '重新廣播成功');
+            this.onCancel();
+          } else {
+            const errMsg = (res.Data as unknown as string) || res.Message || '重新廣播失敗';
+            this.messageService.errorBubble(errMsg);
+          }
+        },
+      });
   }
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
+      const raw = frm.getRawValue();
 
+      if (this.isFormCreateable) {
+        const payload = {
+          REC_DATE: raw.REC_DATE,
+          LOCATION: raw.LOCATION,
+          DocType: raw.DocType,
+          LOST_OR_FIND_DATE: raw.LOST_DATE,
+          GOODS: raw.GOODS,
+          OFF_DATE: raw.OFF_DATE,
+          BROADCAST_YN: raw.BROADCAST_YN,
+          SERVICE_USER: raw.OTHER_GOODS,
+          MSG_DATE: raw.MSG_DATE,
+          NOTES: raw.BROADCAST_DATE,
+          RECEIVE_DATE: raw.RECEIVE_DATE,
+          RECAPTION_NAME: raw.RECAPTION_NAME,
+          RECAPTION_PHONE: raw.RECAPTION_PHONE,
+          PROCESSING_USER: raw.PROCESSING_USER,
+          REGISTRANT: raw.REGISTRANT,
+          Identity_KIND: raw.Identity_KIND,
+          SEX: raw.SEX,
+          TEL: raw.TEL,
+          MOBILE_PHONE: raw.MOBILE_PHONE,
+          ADDRESS: raw.ADDRESS,
+        };
 
-      // this.fin54025Service
-      //   .queryFIN54025(payload)
-      //   .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-      //   .subscribe({
-      //     next: (res) => {
-      //       if (res.Status === '0000') {
-      //         this.data = res.Data || [];
-      //         this.totalRecords = res.TotalCount || this.data.length;
-      //       } else {
-      //         this.messageService.errorBubble(res.Message || '查詢失敗');
-      //       }
-      //     },
-      //   });
+        this.cpm11070Service.createCPM11070(payload)
+          .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+          .subscribe({
+            next: (res) => {
+              if (res.Status === '0000') {
+                this.messageService.successBubble(res.Message || '新增成功');
+                this.onCancel();
+              } else {
+                const errMsg = (res.Data as unknown as string) || res.Message || '新增失敗';
+                this.messageService.errorBubble(errMsg);
+              }
+            },
+          });
+        return;
+      }
+
+      // 編輯：updateCPM11070
+      if (this.isFormEditable) {
+        // 狀態對應的日期檢查
+        const seqType = raw.SEQ_TYPE;
+        if (seqType === '3' && !raw.MSG_DATE) {
+          this.messageService.errorBubble('已通知狀態時，必須填寫通知日期');
+          this.loading = false;
+          return;
+        }
+        if (seqType === '4' && !raw.RECEIVE_DATE) {
+          this.messageService.errorBubble('已領回狀態時，必須填寫領回日期');
+          this.loading = false;
+          return;
+        }
+        if (seqType === '6' && !raw.OFF_DATE) {
+          this.messageService.errorBubble('轉出狀態時，必須填寫轉出日期');
+          this.loading = false;
+          return;
+        }
+
+        const locationLabel = this.SPACE1Options.find(opt => opt.value === raw.LOCATION)?.label ?? raw.LOCATION;
+
+        let notes: string = raw.BROADCAST_DATE || '';
+        if (seqType === '6' && raw.OFF_DATE) {
+          const off = raw.OFF_DATE as Date;
+          const y = off.getFullYear();
+          const m = String(off.getMonth() + 1).padStart(2, '0');
+          const d = String(off.getDate()).padStart(2, '0');
+          const appendText = `${y}/${m}/${d}已轉出`;
+          if (!notes?.includes(appendText)) {
+            notes = notes ? `${notes}\n${appendText}` : appendText;
+          }
+        }
+
+        const updatePayload = {
+          SEQ_ID: raw.SEQ_ID,
+          LOCATION: locationLabel,
+          OFF_DATE: raw.OFF_DATE,
+          SERVICE_USER: raw.OTHER_GOODS,
+          MSG_DATE: raw.MSG_DATE,
+          BROADCAST_YN: raw.BROADCAST_YN,
+          NOTES: notes,
+          RECEIVE_DATE: raw.RECEIVE_DATE,
+          RECAPTION_NAME: raw.RECAPTION_NAME,
+          RECAPTION_PHONE: raw.RECAPTION_PHONE,
+          PROCESSING_USER: raw.PROCESSING_USER,
+          REGISTRANT: raw.REGISTRANT,
+          Identity_KIND: raw.Identity_KIND,
+          SEX: raw.SEX,
+          TEL: raw.TEL,
+          MOBILE_PHONE: raw.MOBILE_PHONE,
+          ADDRESS: raw.ADDRESS,
+        };
+
+        this.cpm11070Service.updateCPM11070(updatePayload)
+          .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+          .subscribe({
+            next: (res) => {
+              if (res.Status === '0000') {
+                this.messageService.successBubble(res.Message || '修改成功');
+                this.onCancel();
+              } else {
+                const errMsg = (res.Data as unknown as string) || res.Message || '修改失敗';
+                this.messageService.errorBubble(errMsg);
+              }
+            },
+          });
+      }
     });
   }
 
