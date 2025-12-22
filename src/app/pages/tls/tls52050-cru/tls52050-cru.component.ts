@@ -111,7 +111,25 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     { field: 'PLU_OrderPrc', header: '調整前進價', groupField: 'OrderPrc' },
     { field: 'MAM_OrderPrc', header: '調整後進價', type: 'inputNumber', groupField: 'OrderPrc', width: '100px', maxLength: 8, minFractionDigits: 2, maxFractionDigits: 2, validate: [validateRequired, validateMinNumber(1)] },
     { field: 'PLU_SalePrc', header: '調整前售價', groupField: 'SalePrc' },
-    { field: 'MAM_UnitPrc', header: '調整後售價', type: 'inputNumber', groupField: 'SalePrc', width: '100px', maxLength: 8, validate: [validateRequired, validateMinNumber(1)] },
+    {
+      field: 'MAM_UnitPrc', header: '調整後售價', type: 'inputNumber', groupField: 'SalePrc', width: '100px', maxLength: 8, validate: [validateRequired, validateMinNumber(1)],
+      calculate: (rowData: any, value: number): Record<string, any> => {
+        if (value >= 0) {
+          const salePrc = value;
+          // 判斷折數是否大於 1，若是則除以 100 (例如 77 轉為 0.77)
+          let prcRate = rowData.PLU_OrderPrcRate || 0;
+          if (prcRate > 1) {
+            prcRate = prcRate / 100;
+          }
+
+          const calculatedCost = (salePrc / 1.05) * prcRate;
+          return {
+            'MAM_OrderPrc': this.roundToTwo(calculatedCost)
+          }
+        }
+        return {};
+      }
+    },
     { field: 'MAD_Remark', header: '單項說明', type: 'input', width: '120px', maxLength: 200 }
   ];
   columnGroup = columnGroup;
@@ -431,6 +449,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     this.data = [...this.data, ...this.selectedItemsDialog.map(item => ({
       ID: 0,
       PLU_MagNo: item.PLU_MagNo,
+      PLU_No: item.PLU_No,
       PLU_Name: item.PLU_Name,
       CAT_LNo: item.CAT_LNo,
       CAT_LName: item.CAT_LName,
