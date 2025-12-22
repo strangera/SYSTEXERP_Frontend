@@ -108,14 +108,14 @@ export class FIN63050Component extends BasicQueryPageComponent<Fin63050ListData>
   }
   dialogVisible = false;
   RemarkOptions = [
-    { label: '存款不足', value: '1' },
-    { label: '簽章不符', value: '2' },
-    { label: '支票掛失', value: '3' },
-    { label: '拒絕往來戶', value: '4' },
-    { label: '金額或文字模糊', value: '5' },
-    { label: '日期問題', value: '6' },
-    { label: '支票塗改', value: '7' },
-    { label: '印章問題', value: '8' },
+    { label: '存款不足', value: '存款不足' },
+    { label: '簽章不符', value: '簽章不符' },
+    { label: '支票掛失', value: '支票掛失' },
+    { label: '拒絕往來戶', value: '拒絕往來戶' },
+    { label: '金額或文字模糊', value: '金額或文字模糊' },
+    { label: '日期問題', value: '日期問題' },
+    { label: '支票塗改', value: '支票塗改' },
+    { label: '印章問題', value: '印章問題' },
   ]
   dialogQueryForm = this.formBuilder.group({
     WithdrawDate: this.formBuilder.nonNullable.control(new Date(), [Validators.required]),
