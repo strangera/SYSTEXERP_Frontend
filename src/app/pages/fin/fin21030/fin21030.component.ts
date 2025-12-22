@@ -1,19 +1,20 @@
 
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
+import { Fin21030Service } from 'src/app/service/api/fin/fin21030.service';
+import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
-import { Fin21030Service } from 'src/app/service/api/fin/fin21030.service';
 
 //1.2.1.3 廠客資料維護
 @Component({
@@ -130,17 +131,17 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
     { field: 'VEN_PayConditionDay', header: '付款期限(天數)', visible: true },
     { field: 'VEN_CheckTitle', header: '票據抬頭', visible: true },
     { field: 'VEN_Status', header: '審核狀態', visible: true, format: (value: string) => this.VEN_STATUS_MAP[value] || value, },
-    { field: 'Approved_Date', header: '審核日期', visible: true, format: (v: any) => this.formatDate(v), },
+    { field: 'Approved_Date', header: '審核日期', visible: true, format: formatDate },
     { field: 'VEN_DiscYN', header: '貼現廠商', visible: true, format: (value: string) => this.VEN_YN_MAP[value] || value, },
     { field: 'VEN_CTRLYN', header: '禁止背書轉讓', visible: true, format: (value: string) => this.VEN_YN_MAP[value] || value, },
-    { field: 'VEN_DiscDateB', header: '貼現起日', visible: true, format: (v: any) => this.formatDate(v), },
-    { field: 'VEN_DiscDateE', header: '貼現迄日', visible: true, format: (v: any) => this.formatDate(v), },
+    { field: 'VEN_DiscDateB', header: '貼現起日', visible: true, format: formatDate },
+    { field: 'VEN_DiscDateE', header: '貼現迄日', visible: true, format: formatDate },
     { field: 'GUI_ID_WIRE', header: '匯款統一編號', visible: true },
     { field: 'VEN_Remark', header: '備註', visible: true },
-    { field: 'CRT_Date', header: '建立日期', visible: true, format: (v: any) => this.formatDate(v), },
+    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
     { field: 'CRT_USR_No', header: '建立人員', visible: true },
     { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
-    { field: 'UPD_Date', header: '變更日期', visible: true, format: (v: any) => this.formatDate(v), },
+    { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDate },
     { field: 'UPD_USR_No', header: '變更人員', visible: true },
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
   ];
@@ -196,6 +197,7 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
       next: (res) => {
         this.data = res?.Data || [];
         this.totalRecords = res?.TotalCount || 0;
+        this.queryStateService.setQueryState(this.ProgNo, payload);
         this.loading = false;
         this.messageService.unblockUi();
       },

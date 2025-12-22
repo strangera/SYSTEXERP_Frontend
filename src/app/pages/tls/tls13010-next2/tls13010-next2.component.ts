@@ -21,6 +21,7 @@ import { CommissionDataService } from './Services/commission-data.service';
 import { CommissionTableService } from './Services/commission-table.service';
 import { CommissionValidationService } from './Services/commission-validation.service';
 import { TLS13010Next2ColumnsConfig } from './Services/tls13010-next2-columns.config';
+import { DateUtils } from 'src/app/core/utils/date-utils';
 
 @Component({
   selector: 'app-tls13010-next2',
@@ -99,14 +100,29 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   // === 初始化方法 ===
   private setupViewMode(): void {
-    // 初始化 CRUD 狀態
-    const currentViewMode = this.contractFlowService.isViewMode();
-    this.crudstatus = currentViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
+    // 🔑 優先從 workflowStatus 恢復 crudStatus (支援頁面重新整理)
+    const workflowStatus = this.contractFlowService.getCurrentStatus();
+    if (workflowStatus?.crudStatus) {
+      this.crudstatus = workflowStatus.crudStatus;
+      console.log(`   從 workflowStatus 恢復 CRUD 狀態: ${this.crudstatus}`);
 
+      // 同步 isViewMode 狀態
+      const isViewMode = this.crudstatus === CRUDStatus.Read;
+      this.contractFlowService.setViewMode(isViewMode);
+    } else {
+      // fallback: 初始化 CRUD 狀態
+      const currentViewMode = this.contractFlowService.isViewMode();
+      this.crudstatus = currentViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
+      console.log(`   從 isViewMode 推斷 CRUD 狀態: ${this.crudstatus}`);
+    }
+
+    // 監聽檢視模式變更
     const subscription = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
       this.crudstatus = isViewMode ? CRUDStatus.Read : CRUDStatus.Edit;
     });
     this.subscriptions.push(subscription);
+
+    console.log(`   最終 CRUD 狀態: ${this.crudstatus}`);
   }
 
   private initializeColumns(): void {
@@ -229,7 +245,8 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       .map(d => {
         const startDate = this.formatDateString(d.tlt_bdate).replace(/-/g, '/');
         const endDate = this.formatDateString(d.tlt_edate).replace(/-/g, '/');
-        const rate = d.cag_charge_rate || 0;  // 🔑 已經是百分比格式，不需要乘以 100
+        // 🔑 修正浮點數精度問題：使用 toFixed 並移除尾隨的零
+        const rate = (d.cag_charge_rate || 0).toFixed(2).replace(/\.?0+$/, '');
         return `${d.cag_barcode}-(${startDate}-${endDate})-${rate}`;
       });
 
@@ -410,10 +427,11 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       VEN_Name: step1Data?.VEN_Name || currentData?.VEN_Name || '',
       ven_uniform: step1Data?.ven_uniform || currentData?.ven_uniform || '',
       contract_subno: step1Data?.contract_subno || currentData?.contract_subno || '',
-      tlt_bdate: step1Data?.tlt_bdate || currentData?.tlt_bdate || '',
-      tlt_edate: step1Data?.tlt_edate || currentData?.tlt_edate || '',
-      tlt_contract_bdate: step1Data?.tlt_contract_bdate || currentData?.tlt_contract_bdate || '',
-      tlt_contract_edate: step1Data?.tlt_contract_edate || currentData?.tlt_contract_edate || '',
+      // 🔑 正規化日期欄位，避免時區問題
+      tlt_bdate: DateUtils.toDateString(step1Data?.tlt_bdate || currentData?.tlt_bdate),
+      tlt_edate: DateUtils.toDateString(step1Data?.tlt_edate || currentData?.tlt_edate),
+      tlt_contract_bdate: DateUtils.toDateString(step1Data?.tlt_contract_bdate || currentData?.tlt_contract_bdate),
+      tlt_contract_edate: DateUtils.toDateString(step1Data?.tlt_contract_edate || currentData?.tlt_contract_edate),
       tlt_term_type: (step1Data?.tlt_term_type || currentData?.tlt_term_type || '3').toString()
     }];
   }
@@ -1473,8 +1491,16 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     const step1Data = this.contractFlowService.getStep1Data();
     const fieldName = type === 'start' ? 'tlt_bdate' : 'tlt_edate';
 
+    console.log(`🔍 getContractDate(${type}):`, {
+      fieldName,
+      step1Data_value: step1Data?.[fieldName],
+      step1Data_type: typeof step1Data?.[fieldName]
+    });
+
     if (step1Data?.[fieldName]) {
-      return this.formatDateString(step1Data[fieldName]);
+      const result = this.formatDateString(step1Data[fieldName]);
+      console.log(`  ✅ 返回日期: ${result}`);
+      return result;
     }
 
     // 修正預設日期計算
@@ -1484,7 +1510,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       defaultDate.setFullYear(defaultDate.getFullYear() + 1);
       defaultDate.setDate(defaultDate.getDate() - 1); // 確保是前一天
     }
-    return this.formatLocalDateString(defaultDate);
+    const result = this.formatLocalDateString(defaultDate);
+    console.log(`  ⚠️ 使用預設日期: ${result}`);
+    return result;
   }
 
   private formatLocalDateString(date: Date): string {
@@ -1812,6 +1840,13 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     const contractStartDate = this.parseContractDate(this.getContractDate('start'));
     const contractEndDate = this.parseContractDate(this.getContractDate('end'));
 
+    console.log('🔍 開始驗證所有日期:', {
+      合約起始日: this.formatDateString(contractStartDate),
+      合約終止日: this.formatDateString(contractEndDate),
+      合約起始日_timestamp: contractStartDate.getTime(),
+      合約終止日_timestamp: contractEndDate.getTime()
+    });
+
     this.commissionData.forEach((commissionItem, idx) => {
       if (commissionItem._status === 'deleted') return;
 
@@ -1823,12 +1858,21 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         commissionItem.discountSettingItems
           .filter(d => d._status !== 'deleted' && d.selected)
           .forEach(discount => {
+            console.log(`  檢查折扣設定 ${discount.cag_barcode}:`, {
+              起始日: this.formatDateString(discount.tlt_bdate),
+              終止日: this.formatDateString(discount.tlt_edate),
+              起始日_原始值: discount.tlt_bdate,
+              終止日_原始值: discount.tlt_edate
+            });
+
             const isValid = this.checkDateRange(
               discount.tlt_bdate,
               discount.tlt_edate,
               contractStartDate,
               contractEndDate
             );
+
+            console.log(`    驗證結果: ${isValid ? '✅ 通過' : '❌ 失敗'}`);
 
             discount._hasValidationError = !isValid;
             if (!isValid) {
@@ -1907,22 +1951,45 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
     const start = this.parseContractDate(startDate);
     const end = this.parseContractDate(endDate);
+    const contractStart = new Date(contractStartDate);
+    const contractEnd = new Date(contractEndDate);
+
+    // 🔑 關鍵修正：統一歸零時間部分，避免時區問題
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    contractStart.setHours(0, 0, 0, 0);
+    contractEnd.setHours(0, 0, 0, 0);
+
+    console.log('🔍 checkDateRange 比較:', {
+      起始日: this.formatDateString(start),
+      終止日: this.formatDateString(end),
+      合約起始日: this.formatDateString(contractStart),
+      合約終止日: this.formatDateString(contractEnd),
+      起始日_timestamp: start.getTime(),
+      終止日_timestamp: end.getTime(),
+      合約起始日_timestamp: contractStart.getTime(),
+      合約終止日_timestamp: contractEnd.getTime()
+    });
 
     // 檢查起始日不可早於合約起始日
-    if (start < contractStartDate) {
+    if (start.getTime() < contractStart.getTime()) {
+      console.log('  ❌ 起始日早於合約起始日');
       return false;
     }
 
     // 檢查終止日不可晚於合約終止日
-    if (end > contractEndDate) {
+    if (end.getTime() > contractEnd.getTime()) {
+      console.log('  ❌ 終止日晚於合約終止日');
       return false;
     }
 
     // 檢查起始日不可晚於終止日
-    if (start > end) {
+    if (start.getTime() > end.getTime()) {
+      console.log('  ❌ 起始日晚於終止日');
       return false;
     }
 
+    console.log('  ✅ 日期範圍有效');
     return true;
   }
 
@@ -2046,9 +2113,11 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     this.ensureAllDiscountsHaveLevels();
 
     // 🔑 先驗證所有日期欄位並標記錯誤項目
-    const hasDateErrors = this.validateAllDatesBeforeSubmit();
-    if (hasDateErrors) {
-      this.notificationService.errorBubble('部分項目日期超出合約期間，請檢查標記為紅色的項目');
+    const dateValidation = this.validateAllDatesBeforeSubmit();
+    if (dateValidation.hasErrors) {
+      this.notificationService.errorBubble(
+        `日期驗證失敗：${dateValidation.errorSummary}\n請檢查標記為紅色的項目`
+      );
       return;
     }
 

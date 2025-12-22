@@ -1,18 +1,19 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { NgIf } from '@angular/common';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { AccordionModule } from 'primeng/accordion';
+import { PanelModule } from 'primeng/panel';
 import { Fin21030Service } from 'src/app/service/api/fin/fin21030.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
 @Component({
   selector: 'app-fin21030-cru',
@@ -67,10 +68,9 @@ export class FIN21030CRUComponent extends BasicCruPageComponent<any> implements 
     { id: 2, roleCode: 'USER', roleName: 'User' },
     { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
   ];
-  remitFeeOptions = [
-    { value: '1', label: '廠商負擔' },
-    { value: '2', label: '公司負擔' }
-  ];
+
+  remitFeeOptions = getSYS1000Options('VEN_RemitFeeMode');
+
   // ====== Table / Options ======
   approvalOptions: { label: string; value: string }[] = [
     { label: '未審核', value: '0' },
@@ -128,12 +128,11 @@ export class FIN21030CRUComponent extends BasicCruPageComponent<any> implements 
         VEN_DiscDateE: raw.VEN_DiscDateE ? new Date(raw.VEN_DiscDateE).toISOString() : null,
         GUI_ID_WIRE: raw.GUI_ID_WIRE || '',
       };
-
-      console.log('送出的 payload:', payload);
-
       this.fin21030Service.updateFIN21030(payload).subscribe({
         next: res => {
           console.log('更新成功', res);
+          this.messageService.successBubble('更新成功');
+          this.onCancel();
         },
 
       });

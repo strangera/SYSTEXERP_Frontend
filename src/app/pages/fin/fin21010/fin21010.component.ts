@@ -43,8 +43,8 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
     // BNK_BranchNo: [null],     // 銀行分行代號
     // BNK_AccStatus: ['0'],     // 帳戶狀態 (0=正常)
 
-    BNK_CheckInAccNo: [null],                       // 應付票據科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME" (ClassNo 211 0r 212)
-    BNK_CheckOutAccNo: [null],                      // 應收票據科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME" (ClassNo 112 or 113)
+    BNK_CheckInAccNo: [null],                       // 應收票據科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME" (ClassNo 211 0r 212)
+    BNK_CheckOutAccNo: [null],                      // 應付票據科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME" (ClassNo 112 or 113)
     //分頁查詢
     ...createPaginationConfig([{ field: 'BNK_No', order: 1 }]), // 分頁和排序參數
   });
@@ -56,8 +56,8 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
 
   // -----------看要不要由GLS1005_Option去mapping---------------------
   GLS1005_BNK_DepositAccNo_Option: apiOption[] = []; // 公司銀行科目  (accNo like '1103%')
-  GLS1005_BNK_CheckInAccNo_Option: apiOption[] = []; // 應付票據科目  (ClassNo 211 0r 212)
-  GLS1005_BNK_CheckOutAccNo_Option: apiOption[] = []; // 應收票據科目 (ClassNo 112 or 113)
+  GLS1005_BNK_CheckInAccNo_Option: apiOption[] = []; // 應收票據科目 (ClassNo 112 or 113)
+  GLS1005_BNK_CheckOutAccNo_Option: apiOption[] = []; // 應付票據科目  (ClassNo 211 0r 212)
   // ----------------------------------------------------------------
 
   BNK_AccType_Option: apiOption[] = []; // SYS1000.BNK_ACCTYPE 存款代號 -- 下拉選單
@@ -65,46 +65,41 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
   data: FIN21010Response[] = [];
   columns: Column[] = [
     { field: 'BNK_No', header: '銀行代碼', visible: true },
-    // {
-    //   field: 'BNK_BranchNo',
-    //   header: '銀行分行代號',
-    //   visible: true,
-    //   format: (value: string) =>
-    //     this.APS1004_Option?.find((opt) => opt.BNK_BranchNo === value)?.BNK_BranchName || value //看這裡之後要帶不帶名稱
-    // },
+    { field: 'Bank_Name', header: '銀行名稱', visible: true },
+    { field: 'AccCName', header: '公司銀行科目中文名稱', visible: true },
+
     { field: 'BNK_AccNo', header: '帳號', visible: true },
+    { field: 'BNK_AccName', header: '帳戶名稱', visible: true },
     {
       field: 'BNK_AccType', header: '存款代號', visible: true,
       format: (value: string) =>
         this.BNK_AccType_Option.find((option) => option.No === value)?.Name ||
         value,
     },
-    { field: 'BNK_AccName', header: '帳戶名稱', visible: true },
     // {
-    //   field: 'BNK_AccStatus',
-    //   header: '帳戶狀態',
-    //   visible: true,
-    //   format: (value: string) => (value === '0' ? '正常' : value)
+    //   field: 'SYS_Name',
+    //   header: 'EDI用戶代號',
+    //   visible: false,
     // },
     {
       field: 'BNK_DepositAccNo',
       header: '公司銀行科目',
-      visible: false,
+      visible: true,
     },
     {
       field: 'BNK_CheckInAccNo',
-      header: '應付票據科目',
-      visible: false,
+      header: '應收票據科目',
+      visible: true,
     },
     {
       field: 'BNK_CheckOutAccNo',
-      header: '應收票據科目',
-      visible: false,
+      header: '應付票據科目',
+      visible: true,
     },
-    // { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate},
+    // { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate },
     // { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
     // { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
-    // { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDate},
+    // { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
     // { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
     // { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
   ];
@@ -131,7 +126,7 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
         next: (response) => {
           if (response.Status === '0000') {
             this.data = response.Data || [];
-            console.log('Result', this.data);
+            console.log('Result', response);
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
           } else {
@@ -147,7 +142,6 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
         },
       });
 
-      console.log('查詢API待提供');
       this.loading = false;
     });
   }
@@ -231,20 +225,23 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
 
     this.dropdownApiService.queryGls1005_BNK_CheckInAcc().pipe(untilDestroyed(this)).subscribe((response) => {
       const list = Array.isArray(response) ? response : [];
-      this.GLS1005_BNK_CheckInAccNo_Option = list.map((item: any) => ({
+      this.GLS1005_BNK_CheckOutAccNo_Option = list.map((item: any) => ({
         No: item.No, // 應付票據科目 代號
         Name: item.Name, // 應付票據科目 名稱
+        Label: item.No + '-' + item.Name, // 代碼+名稱
       }));
-      console.log('應付票據科目:', this.GLS1005_BNK_CheckInAccNo_Option);
+      console.log('應收票據科目:', this.GLS1005_BNK_CheckOutAccNo_Option);
+
     });
 
     this.dropdownApiService.queryGls1005_BNK_CheckOutAcc().pipe(untilDestroyed(this)).subscribe((response) => {
       const list = Array.isArray(response) ? response : [];
-      this.GLS1005_BNK_CheckOutAccNo_Option = list.map((item: any) => ({
+      this.GLS1005_BNK_CheckInAccNo_Option = list.map((item: any) => ({
         No: item.No, // 應收票據科目 代號
         Name: item.Name, // 應收票據科目 名稱
+        Label: item.No + '-' + item.Name, // 代碼+名稱
       }));
-      console.log('應收票據科目:', this.GLS1005_BNK_CheckOutAccNo_Option);
+      console.log('應付票據科目:', this.GLS1005_BNK_CheckInAccNo_Option);
     });
 
     // 查 APS1004 -- 下拉選單(

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
+import { DateUtils } from 'src/app/core/utils/date-utils';
 import {
   // 新增：導入清理後的資料模型
   CleanSubmitData,
@@ -606,6 +607,18 @@ export class ContractFlowService {
   setViewMode(isViewMode: boolean): void {
     this.isViewModeSubject.next(isViewMode);
     console.log('🔍 設定檢視模式:', isViewMode);
+
+    // 🔑 同步更新 workflowStatus 的 crudStatus
+    const currentStatus = this.workflowStatusSubject.value;
+    const newCrudStatus = isViewMode ? 'Read' : 'Edit';
+    const updatedStatus: WorkflowStatus = {
+      ...currentStatus,
+      crudStatus: newCrudStatus as any,
+      lastModified: new Date()
+    };
+    this.workflowStatusSubject.next(updatedStatus);
+    console.log('📝 已更新 workflowStatus.crudStatus:', newCrudStatus);
+
     this.persistViewMode(isViewMode);
   }
 
@@ -795,7 +808,16 @@ export class ContractFlowService {
       formData.talent_id = targetTalentId as string;
     }
 
-    this.contractData.step1 = formData;
+    // 🔑 正規化日期欄位，避免時區問題
+    const normalizedFormData = {
+      ...formData,
+      tlt_bdate: DateUtils.toDateString(formData.tlt_bdate),
+      tlt_edate: DateUtils.toDateString(formData.tlt_edate),
+      tlt_contract_bdate: DateUtils.toDateString(formData.tlt_contract_bdate),
+      tlt_contract_edate: DateUtils.toDateString(formData.tlt_contract_edate)
+    };
+
+    this.contractData.step1 = normalizedFormData;
     this.contractData.metadata.lastModified = new Date();
     this.contractData.metadata.version += 1;
 

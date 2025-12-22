@@ -85,7 +85,7 @@ export class FIN63040CRUComponent extends BasicCruPageComponent<any> implements 
 
     // --- ✅ 可更新（對齊 updateFIN63040Request） ---
     CheckTitle: ['', [Validators.required, Validators.maxLength(100)]],
-    Remark: ['', [Validators.required, Validators.maxLength(160)]],
+    Remark: ['', [ Validators.maxLength(160)]],
 
     NoEndorseYn: ['' as any, [Validators.required, Validators.maxLength(1)]],
     StatusFlag: ['' as any, [Validators.required, Validators.maxLength(1)]],
@@ -174,7 +174,7 @@ export class FIN63040CRUComponent extends BasicCruPageComponent<any> implements 
           this.patchFromDetail(d);
           this.applyCrudDisabledState();
         },
-        error: () => this.notificationService.errorBubble('查詢明細失敗'),
+        error: () => {this.notificationService.errorBubble('查詢明細失敗'), this.loading = false;} ,
         complete: () => {
           this.loading = false;
           this.notificationService.unblockUi();
@@ -242,11 +242,11 @@ export class FIN63040CRUComponent extends BasicCruPageComponent<any> implements 
       }
 
       const raw = this.dataForm.getRawValue();
-
+const remark = String(raw.Remark ?? '').trim();
       const payload: UpdateFIN63040Request = {
         CheckNo: String(raw.CheckNo ?? '').trim(),
         CheckTitle: String(raw.CheckTitle ?? '').trim(),
-        Remark: String(raw.Remark ?? '').trim(),
+         ...(remark ? { Remark: remark } : {}), // ✅ 空白就不送
         NoEndorseYn: String(raw.NoEndorseYn ?? '').trim(),
         StatusFlag: String(raw.StatusFlag ?? '').trim(),
         PickupType: String(raw.PickupType ?? '').trim(),
@@ -256,10 +256,10 @@ export class FIN63040CRUComponent extends BasicCruPageComponent<any> implements 
         WithdrawDate: this.toYMD(raw.WithdrawDate),
       };
 
-      if (!payload.CheckNo || !payload.CheckTitle || !payload.Remark) {
-        this.notificationService.errorBubble('必填欄位請填寫完整');
-        return;
-      }
+if (!payload.CheckNo || !payload.CheckTitle) {
+  this.notificationService.errorBubble('必填欄位請填寫完整');
+  return;
+}
 
       this.notificationService.blockUi();
       this.loading = true;
@@ -278,7 +278,7 @@ export class FIN63040CRUComponent extends BasicCruPageComponent<any> implements 
             this.notificationService.successBubble('更新成功');
             this.onCancel();
           },
-          error: () => this.notificationService.errorBubble('更新失敗'),
+          error: () => {this.notificationService.errorBubble('更新失敗'), this.loading = false;}  ,
           complete: () => {
             this.loading = false;
             this.notificationService.unblockUi();

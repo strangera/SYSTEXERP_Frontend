@@ -58,6 +58,7 @@ export interface FIN21010Request extends BaseQueryRequest {
 export interface FIN21010Response {
   id: number;
   BNK_DepositAccNo: string;
+  Bank_Name: string; // 銀行名稱(新增)
   AccCName: string;
   BNK_No: string;
   BNK_AccNo: string;
@@ -75,24 +76,24 @@ export class Fin21010Service {
 
   private apiUrl = environment.ApiUrl + '/FIN0000/APS1000';
   constructor(private http: HttpClient) { }
-  
-    // 查詢 APS1002 資料表
-    queryFIN21010(data: FIN21010Request): Observable<BaseQueryResponse<FIN21010Response>> {
-      return this.http.post<BaseQueryResponse<FIN21010Response>>(`${this.apiUrl}/queryFIN21010`, data);
-    }
-  
-    // 新增 APS1002 資料
-    insertFIN21010(body: any): Observable<any> {
-      return this.http.post<any>(`${this.apiUrl}/insertFIN21010`, body);
-    }
 
-    // 修改 APS1002 資料
-    updateFIN21010(body: any): Observable<any> {
-      return this.http.post<any>(`${this.apiUrl}/updateFIN21010`, body);
-    }
+  // 查詢 APS1002 資料表
+  queryFIN21010(data: FIN21010Request): Observable<BaseQueryResponse<FIN21010Response>> {
+    return this.http.post<BaseQueryResponse<FIN21010Response>>(`${this.apiUrl}/queryFIN21010`, data);
+  }
 
-    // 刪除 APS1002 資料
-    deleteFIN21010(body: any): Observable<any> {
-      return this.http.post<any>(`${this.apiUrl}/deleteFIN21010`, body);
-    }
+  // 新增 APS1002 資料
+  insertFIN21010(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/insertFIN21010`, body);
+  }
+
+  // 修改 APS1002 資料
+  updateFIN21010(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateFIN21010`, body);
+  }
+
+  // 刪除 APS1002 資料
+  deleteFIN21010(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deleteFIN21010`, body);
+  }
 }

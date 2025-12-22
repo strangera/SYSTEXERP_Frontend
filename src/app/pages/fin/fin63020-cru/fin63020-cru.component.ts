@@ -95,7 +95,7 @@ export class FIN63020CRUComponent extends BasicCruPageComponent<any> implements 
 
     // --- ✅ 可更新欄位（依 Swagger updateFIN63020Request）---
     CheckTitle: ['', [Validators.required, Validators.maxLength(100)]],
-    Remark: ['', [Validators.required, Validators.maxLength(160)]],
+    Remark: ['', [ Validators.maxLength(160)]],
 
     NoEndorseYn: ['' as any, [Validators.required, Validators.maxLength(1)]],
     StatusFlag: ['' as any, [Validators.required, Validators.maxLength(1)]],
@@ -263,12 +263,11 @@ export class FIN63020CRUComponent extends BasicCruPageComponent<any> implements 
     }
 
     const raw = this.dataForm.getRawValue();
-
+const remark = String(raw.Remark ?? '').trim();
     const payload: Fin63020UpdateRequest = {
       CheckNo: String(raw.CheckNo ?? '').trim(),
       CheckTitle: String(raw.CheckTitle ?? '').trim(),
-      Remark: String(raw.Remark ?? '').trim(),
-
+      ...(remark ? { Remark: remark } : {}), // ← 這裡讓 Remark 變成 optional
       NoEndorseYn: raw.NoEndorseYn as 'Y' | 'N',
       StatusFlag: raw.StatusFlag as '1' | '2',
       PickupType: raw.PickupType as '0' | '1' | '2',

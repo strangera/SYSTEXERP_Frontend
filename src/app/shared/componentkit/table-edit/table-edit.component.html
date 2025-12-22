@@ -110,6 +110,9 @@
           [pSortableColumn]="showSort ? col.field : undefined"
           [pSortableColumnDisabled]="!showSort || col.showSort === false" class="text-center">
           {{ col.header }}
+          <span *ngIf="validationService.isRequired(col)" class="text-red-500">
+            *
+          </span>
           <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length" [field]="col.field" />
         </th>
       </tr>
@@ -188,7 +191,7 @@
         <span class="font-bold">{{ footerSummaryLabel }}</span>
       </td>
       <ng-container *ngFor="let col of columns; let i = index">
-        <td *ngIf="i >= tableUtilityService.getFirstAggregateIndex(columns, footerData)"  
+        <td *ngIf="i >= tableUtilityService.getFirstAggregateIndex(columns, footerData)"
           [style]="{ 'text-align': col.textAlign || 'center' }">
           <span class="font-bold">
             {{
@@ -207,7 +210,7 @@
         <span class="font-bold">{{ footerSummaryLabel }}</span>
       </td>
       <ng-container *ngFor="let col of columns; let i = index">
-        <td *ngIf="i >= tableUtilityService.getFirstCalculatedAggregateIndex(columns, _calculatedFooterData)"  
+        <td *ngIf="i >= tableUtilityService.getFirstCalculatedAggregateIndex(columns, _calculatedFooterData)"
           [style]="{ 'text-align': col.textAlign || 'center' }">
           <span class="font-bold">
             {{
