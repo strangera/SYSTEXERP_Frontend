@@ -5,7 +5,7 @@ import { Column, formatAmount, formatDate, formatYN } from "@shared/componentkit
 export const TLTNoEditColumn: Column[] = [
   { field: 'TXN_Date', header: '銷售日期', format: formatDate },
   { field: 'ECR_No', header: '收銀機號' },
-  { field: 'TXN_No', header: '交易序號', format: (value: string) => value.padStart(8, '0') },
+  { field: 'TXN_No', header: '交易序號', format: (value: any) => (value?.toString() ?? '').padStart(8, '0') },
   { field: 'PRM_TLT_No', header: '原專櫃編號' },
   { field: 'PRM_TLT_Name', header: '原專櫃名稱' },
   { field: 'TLT_No', header: '修正後專櫃編號' },
@@ -18,7 +18,7 @@ export const TLTNoEditColumn: Column[] = [
 export const DiscCodeEditColumn: Column[] = [
   { field: 'TXN_Date', header: '銷售日期', format: formatDate },
   { field: 'ECR_No', header: '收銀機號' },
-  { field: 'TXN_No', header: '交易序號', format: (value: string) => value.padStart(8, '0') },
+  { field: 'TXN_No', header: '交易序號', format: (value: any) => (value?.toString() ?? '').padStart(8, '0') },
   { field: 'TLT_No', header: '專櫃編號' },
   { field: 'TLT_Name', header: '專櫃名稱' },
   { field: 'tlt_id_desc', header: '商品抽成類別' },
@@ -34,7 +34,7 @@ export const DiscCodeEditColumn: Column[] = [
 export const TLTIdEditColumn: Column[] = [
   { field: 'TXN_Date', header: '銷售日期', format: formatDate },
   { field: 'ECR_No', header: '收銀機號' },
-  { field: 'TXN_No', header: '交易序號', format: (value: string) => value.padStart(8, '0') },
+  { field: 'TXN_No', header: '交易序號', format: (value: any) => (value?.toString() ?? '').padStart(8, '0') },
   { field: 'TLT_No', header: '專櫃編號' },
   { field: 'TLT_Name', header: '專櫃名稱' },
   { field: 'TXN_Qty', header: '數量' },
@@ -52,7 +52,7 @@ export const TLTIdEditColumn: Column[] = [
 export const PayNoEditColumn: Column[] = [
   { field: 'TXN_Date', header: '銷售日期', format: formatDate },
   { field: 'ECR_No', header: '收銀機號' },
-  { field: 'TXN_No', header: '交易序號', format: (value: string) => value.padStart(8, '0') },
+  { field: 'TXN_No', header: '交易序號', format: (value: any) => (value?.toString() ?? '').padStart(8, '0') },
   { field: 'TLT_No', header: '專櫃編號' },
   { field: 'TLT_Name', header: '專櫃名稱' },
   { field: 'PRM_PAY_Name', header: '原付款別' },
@@ -68,7 +68,7 @@ export const PayNoEditColumn: Column[] = [
 export const PreOrderEditColumn: Column[] = [
   { field: 'TXN_Date', header: '銷售日期', format: formatDate },
   { field: 'ECR_No', header: '收銀機號' },
-  { field: 'TXN_No', header: '交易序號', format: (value: string) => value.padStart(8, '0') },
+  { field: 'TXN_No', header: '交易序號', format: (value: any) => (value?.toString() ?? '').padStart(8, '0') },
   { field: 'TLT_No', header: '專櫃編號' },
   { field: 'TLT_Name', header: '專櫃名稱' },
   { field: 'PRM_TXN_PreOrder', header: '原預售交易', format: formatYN, exportFormat: [{ 'Y': '是', 'N': '否' }] },
@@ -83,7 +83,7 @@ export const PreOrderEditColumn: Column[] = [
 export const VoidEditColumn: Column[] = [
   { field: 'ORG_TXN_Date', header: '原銷售日期', format: formatDate },
   { field: 'ORG_ECR_No', header: '原收銀機號' },
-  { field: 'ORG_TXN_No', header: '原交易序號', format: (value: string) => value.padStart(8, '0') },
+  { field: 'ORG_TXN_No', header: '原交易序號', format: (value: any) => (value?.toString() ?? '').padStart(8, '0') },
   { field: 'TLT_No', header: '專櫃編號' },
   { field: 'TLT_Name', header: '專櫃名稱' },
   { field: 'TXN_GUITrack', header: '字軌' },
