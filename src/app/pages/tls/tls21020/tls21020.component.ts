@@ -1,4 +1,4 @@
-import { Component, computed, effect, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, OnInit, signal, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -10,10 +10,10 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { createPaginationConfig, Maps } from '@shared/componentkit/table/table.model';
-import { validateRequired } from '@shared/componentkit/table/validate-field.model';
+import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { concatMap, finalize } from 'rxjs';
+import { concatMap, finalize, Observable } from 'rxjs';
 import { EntryType, TLS21020Data, TLS21020Query, TLS21020UpdateQuery } from './tls21020.model';
 
 @Component({
@@ -87,8 +87,16 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         });
         break;
     }
-    this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-    this.queryTLS21020();
+    this.tableLoading.set(!0);
+    this.queryTLS21020().pipe(
+      finalize(() => this.tableLoading.set(!1)),
+    ).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        this.tableData.set(res.Data || []);
+        this.totalRecords.set(res.TotalCount || 0);
+      },
+    });
   }, { allowSignalWrites: !0 });
 
   private readonly AccDCMap = new Map<'D' | 'C', '借' | '貸'>([['D', '借'], ['C', '貸']]);
@@ -108,7 +116,8 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     // PAY_No: !1,
   });
   private readonly allColumns = computed((): EditColumn[] => {
-
+    const keys = untracked(() => this.columnsKeys());
+    this.logger.debug(`allColumns:`, [keys]);
 
     return [
       {
@@ -124,7 +133,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         options: this.service.GLS1005Options,
         optionLabel: 'label',
         optionValue: 'value',
-        validate: [validateRequired],
+        validate: [this.validator.bind(this)],
         showClear: !1,
       },
       {
@@ -139,7 +148,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         options: this.service.SYS3100Options,
         optionLabel: 'label',
         optionValue: 'value',
-        validate: [validateRequired],
+        validate: [this.validator.bind(this)],
         format: (v: string) => this.service.SYS3100Map().get(v)?.label || v,
         showClear: !1,
       },
@@ -147,6 +156,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         field: 'AccNotes',
         header: '傳票備註',
         type: 'input',
+        validate: [this.validator.bind(this)],
         width: '100%', /** @describe 先100 太寬再改 */
       },
       {
@@ -168,6 +178,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         options: this.service.GLS1005Options,
         optionLabel: 'label',
         optionValue: 'value',
+        validate: [this.validator.bind(this)],
         format: (v: string) => this.service.GLS1005Map().get(v)?.label || v || null,
       },
       {
@@ -178,7 +189,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         options: this.service.POS2013Options,
         optionValue: 'value',
         templateLabel: 'label',
-        validate: [this.ABATValidator],
+        validate: [this.validator.bind(this)],
         // disabled: v => v.ABAT_YN === 'N',
         disabled: (v, i, r) => r.ABAT_YN === 'N',
       },
@@ -186,7 +197,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         field: 'PAY_days',
         header: '付款天數',
         type: 'inputNumber',
-        validate: [this.ABATValidator],
+        validate: [this.validator.bind(this)],
         // disabled: v => v.ABAT_YN === 'N',
         // disabled: (v, i, r) => r.ABAT_YN === 'N',
         width: '4rem',
@@ -195,6 +206,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         field: 'PAY_No',
         header: '付款別編號',
         type: 'input',
+        validate: [this.validator.bind(this)],
       },
     ];
   });
@@ -216,6 +228,14 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   private readonly fail = (msg: string) => ({ isValid: !1, errorMessage: msg });
   private readonly warn = (msg: string) => ({ isValid: !0, errorMessage: msg });
   private readonly isEmpty = (v: unknown) => !v?.toString().trim();
+  private readonly validatorField: [keyof TLS21020Data, string, boolean][] = [
+    ['AccNo', '會計科目', !0],
+    ['Org_ID', '組織代碼', !0],
+    ['AccNotes', '傳票備註', !1],
+    ['RelatedPartyAccNo', '區分關係人會科', !1],
+    ['PAY_days', '付款天數', !1],
+    ['PAY_No', '付款別編號', !1],
+  ];
 
   public readonly defaultInsertData: Partial<TLS21020Data> = {
     AccDC: 'D',
@@ -247,16 +267,14 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const ENTRY_TYPE = this.entryTypeSignal();
-      if (!ENTRY_TYPE) return void (this.loading = !1);
-
       const data = this.tableData().filter(v => !v._isAutoInsertCandidate);
       for (const item of data) {
-        const validation = this.validateRow(item);
-        if (!validation.isValid) return void (() => {
-          this.loading = !1;
-          this.messageService.errorBubble(validation.errorMessage);
-        })();
+        const { isValid, errorMessage } = this.validateRow(item);
+        if (isValid) continue;
+
+        this.loading = !1;
+        this.messageService.errorBubble(errorMessage);
+        return;
       }
 
       const payload: TLS21020UpdateQuery[] = data.map(item => ({
@@ -265,10 +283,9 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       }));
 
       this.tableLoading.set(!0);
-      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-      this.logger.debug(`submit:`, [ENTRY_TYPE, this.tableData(), payload]);
+      this.logger.debug(`submit:`, [this.queryForm.getRawValue(), this.tableData(), payload]);
       this.service.updateTLS21020(payload).pipe(
-        concatMap(() => this.service.queryTLS21020({ ENTRY_TYPE, pageSize: 1e5 })),
+        concatMap(() => this.queryTLS21020()),
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
         next: res => {
@@ -281,44 +298,30 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     });
   }
 
-  public queryTLS21020(): void {
-    this.tableLoading.set(!0);
-    const raw = <TLS21020Query>{ ...this.queryForm.getRawValue(), pageSize: 1e5 };
-    const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
-      v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
-    )) as unknown as TLS21020Query;
-
+  public queryTLS21020(): Observable<BaseQueryResponse<TLS21020Data>> {
+    const payload = <TLS21020Query>{ ...this.queryForm.getRawValue(), pageSize: 1e5 };
+    this.queryStateService.setQueryState(this.ProgNo, payload);
     this.logger.debug(`queryTLS21020:`, [payload]);
-    this.service.queryTLS21020(payload).pipe(
-      finalize(() => this.tableLoading.set(!1)),
-    ).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        this.tableData.set(res.Data || []);
-        this.totalRecords.set(res.TotalCount || 0);
-      },
-    });
+    return this.service.queryTLS21020(payload);
   }
 
   /** 錯誤檢查 */
   public validateRow = (rowData: TLS21020Data, index?: number): { isValid: boolean, errorMessage: string; } => {
-    // 必填欄位檢查
-    if (this.isEmpty(rowData.Org_ID)) return this.fail('組織代碼必須填寫');
-    if (this.isEmpty(rowData.AccDC)) return this.fail('借/貸必須填寫');
-    if (this.isEmpty(rowData.ItemDesc)) return this.fail('項目名稱必須填寫');
-    if (this.isEmpty(rowData.AccNo)) return this.fail('會計科目必須填寫');
-
-    // ABAT_YN 相關檢查
-    if (rowData.ABAT_YN === 'Y') {
-      if (this.isEmpty(rowData.VEN_No)) return this.fail('應收廠商必須填寫');
-      if (this.validateValue(rowData.PAY_days)) return this.warn('付款天數必須為大於等於0的整數');
-      if (this.isEmpty(rowData.PAY_days)) return this.warn('付款天數必須填寫');
+    for (const [key, label, isRequired] of this.validatorField) {
+      // 跳過新行與未顯示欄位
+      if (rowData._isAutoInsertCandidate || !this.columns().some(col => col.field === key)) continue;
+      const value = rowData[key];
+      // 立沖科目檢查
+      if (rowData.ABAT_YN === 'Y') {
+        if (this.isEmpty(rowData.VEN_No)) return this.fail('應收廠商必須填寫');
+        if (this.validateValue(rowData.PAY_days)) return this.warn('付款天數必須為大於等於0的整數');
+        if (this.isEmpty(rowData.PAY_days)) return this.warn('付款天數必須填寫');
+      }
+      // 必填檢查
+      if (isRequired && this.isEmpty(value)) return this.fail(`${label}為必填欄位`);
+      // 選填檢查
+      if (!isRequired && this.isEmpty(value)) return this.warn(`${label}建議填寫`);
     }
-
-    // 選填欄位檢查
-    if (this.isEmpty(rowData.PAY_No)) return this.warn('付款別編號建議填寫');
-    if (this.isEmpty(rowData.AccNotes)) return this.warn('傳票備註建議填寫');
-    if (this.isEmpty(rowData.RelatedPartyAccNo)) return this.warn('區分關係人會科建議填寫');
 
     // 檢查重複 (AccDC, ItemDesc, AccNo)
     const rows = this.tableData();
@@ -336,11 +339,24 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     return this.warn('');
   };
 
-  private ABATValidator(value: any, rowData: any, data: any[], field: string, header: string) {
-    return (rowData?.ABAT_YN === 'Y' && this.isEmpty(value))
-      ? { isValid: !1, errorMessage: [`${header ?? '此欄位'}為必填欄位`] }
-      : { isValid: !0, errorMessage: [''] };
-  }
+  /** 欄位級別驗證 */
+  private readonly validator = (value: unknown, rowData: TLS21020Data, data: TLS21020Data[], field: keyof TLS21020Data, header: string) => {
+    for (const [key, label, isRequired] of this.validatorField) {
+      // 跳過非該欄位
+      if (field !== key) continue;
+      // 立沖科目檢查
+      if (field === 'ABAT_YN' && value === 'Y') {
+        if (this.isEmpty(rowData.VEN_No)) return { isValid: !1, errorMessage: ['應收廠商必須填寫'] };
+        if (this.validateValue(rowData.PAY_days)) return { isValid: !1, errorMessage: ['付款天數必須為大於等於0的整數'] };
+        if (this.isEmpty(rowData.PAY_days)) return { isValid: !0, errorMessage: ['付款天數建議填寫'] };
+      }
+      // 必填檢查
+      if (isRequired && this.isEmpty(value)) return { isValid: !1, errorMessage: [`${label}為必填欄位`] };
+      // 選填檢查
+      if (!isRequired && this.isEmpty(value)) return { isValid: !0, errorMessage: [`${label}建議填寫`] };
+    }
+    return { isValid: !0, errorMessage: [''] };
+  };
 
   /** 檢查型別 */
   private validateValue<T>(value: T): boolean {
