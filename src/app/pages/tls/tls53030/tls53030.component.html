@@ -3,50 +3,91 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <!-- 盤點單編號 -->
-            <app-input-text label="盤點單編號" controlName="PST_No" [control]="queryForm.controls.PST_No"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="盤點單編號"
+              controlName="PST_No"
+              [control]="queryForm.controls.PST_No"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <!-- 倉庫代碼/名稱 -->
-            <app-multi-select label="倉庫代碼/名稱" controlName="HOS_No" [options]="hosOptions"
-              [control]="queryForm.controls.HOS_No" [submitted]="submitted" optionLabel="label"
-              optionValue="value"></app-multi-select>
+            <app-multi-select
+              label="倉庫代碼/名稱"
+              controlName="HOS_No"
+              [options]="hosOptions"
+              [control]="queryForm.controls.HOS_No"
+              [submitted]="submitted"
+              optionLabel="label"
+              optionValue="value"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <!-- 品牌代碼/名稱 -->
-            <app-multi-select label="品牌代碼/名稱" controlName="LOGO_No" [options]="logoOptions"
-              [control]="queryForm.controls.LOGO_No" [submitted]="submitted" optionLabel="label"
-              optionValue="value"></app-multi-select>
+            <app-multi-select
+              label="品牌代碼/名稱"
+              controlName="LOGO_No"
+              [options]="logoOptions"
+              [control]="queryForm.controls.LOGO_No"
+              [submitted]="submitted"
+              optionLabel="label"
+              optionValue="value"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <!-- 盤點基準日期（起訖） -->
-            <app-calendar-range label="盤點基準日期" calendarType="dateRange"
-              [startControl]="queryForm.controls.PST_DateStart" [endControl]="queryForm.controls.PST_DateEnd"
-              [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range
+              label="盤點基準日期"
+              calendarType="dateRange"
+              [startControl]="queryForm.controls.PST_DateStart"
+              [endControl]="queryForm.controls.PST_DateEnd"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <!-- 盤點狀態 -->
-            <app-multi-select label="盤點狀態" controlName="PST_Status" [options]="pstStatusOptions"
-              [control]="queryForm.controls.PST_Status" [submitted]="submitted" optionLabel="label"
-              optionValue="value"></app-multi-select>
+            <app-multi-select
+              label="盤點狀態"
+              controlName="PST_Status"
+              [options]="pstStatusOptions"
+              [control]="queryForm.controls.PST_Status"
+              [submitted]="submitted"
+              optionLabel="label"
+              optionValue="value"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="顯示差異" controlName="showDifference" [control]="queryForm.controls.showDiff"
-              [options]="showDiffOptions" [submitted]="submitted"></app-radiobutton>
+            <app-radiobutton
+              label="顯示差異"
+              controlName="showDifference"
+              [control]="queryForm.controls.showDiff"
+              [options]="showDiffOptions"
+              [submitted]="submitted"
+            ></app-radiobutton>
           </div>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -55,11 +96,22 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS53030" dataKey="PST_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-    (detail)="onDetail($event)" [showDelete]="false" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [multiSortMeta]="[{ field: 'PST_No', order: -1 }]"
-    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading" [addButton]="addButton" [expansionColumns]="expansionColumns" [expansionLoadFn]="loadDetails"
-    [expansionDataKey]="'PLU_MagNo'" [editDisabled]="editDisabled">
-  </app-table>
+  <app-table
+    tableKey="TLS53030"
+    dataKey="PST_No"
+    [data]="data"
+    [columns]="columns"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    [showDelete]="false"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+    [multiSortMeta]="[{ field: 'PST_No', order: -1 }]"
+    [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [lazy]="true"
+    [loading]="loading"
+    [addButton]="addButton"
+    [editDisabled]="editDisabled"
+  ></app-table>
 </div>

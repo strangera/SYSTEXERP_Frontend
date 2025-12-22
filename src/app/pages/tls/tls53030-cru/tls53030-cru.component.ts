@@ -171,6 +171,7 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
       }
     },
     { field: 'DIFF_Qty', header: '差異量', format: formatAmount },
+    { field: 'PST_Remark', header: '備註' },
   ];
   //#endregion
 
