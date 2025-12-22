@@ -30,7 +30,7 @@
             [suggestions]="suggestions2" [fieldsConfig]="fieldsConfig2"
             (inputValueChanged)="onAutoCompleteInputChange2($event)" (formValueChanged)="onformValueChanged2($event)"
             [formGroup]="opForm2" [dialogData]="opData2" [dialogColumns]="opColumns2" [loading]="opLoading2"
-            [totalRecords]="opTotalRecords2">
+            [totalRecords]="opTotalRecords2" [showOverlay]="false">
             <app-input-text class="col-12 md:col-4" label="國際條碼" controlName="PLU_No"
               [control]="opForm2.controls.PLU_No" />
             <app-input-text class="col-12 md:col-4" label="商品名稱" controlName="PLU_Name"

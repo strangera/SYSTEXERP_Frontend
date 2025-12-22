@@ -48,11 +48,11 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 })
 export class TLS57080Component extends BasicQueryPageComponent<QueryTLS57080DetailsApiResponse> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    StartDate: [null as Date | null, [Validators.required]],
-    EndDate: [null as Date | null, [Validators.required]],
+    StartDate: [new Date('2025/01/01') as Date | null, [Validators.required]],
+    EndDate: [new Date('2025/06/09') as Date | null, [Validators.required]],
     PLU_MagNo: [null, [Validators.maxLength(20)]],
-    PLU_No: [null, [Validators.required, Validators.maxLength(20)]],
-    HOS_No: [null, [Validators.maxLength(4)]],
+    PLU_No: ['3605970363222', [Validators.required, Validators.maxLength(20)]],
+    HOS_No: ['0001', [Validators.maxLength(4)]],
     PLU_Name: [null, [Validators.maxLength(50)]],
   });
   HOS_NoOptions = this.dropdown.queryPos2034();
@@ -69,6 +69,8 @@ export class TLS57080Component extends BasicQueryPageComponent<QueryTLS57080Deta
     { field: 'qty', header: '異動量' },
     { field: 'StockQty', header: '庫存量' },
     { field: 'GUINO', header: '發票號碼' },
+    { field: 'PLU_NO', header: '國際條碼' },
+    { field: 'PLU_Name', header: '品牌' },
     { field: 'TRN_BuyPrc', header: '進單價(未稅)', format: (v) => formatAmountWithDecimals(v, 2) },
     { field: 'TRN_SalePrc', header: '售單價(含稅)', format: (v) => formatAmountWithDecimals(v, 2) },
     { field: 'TRN_BuyAmt', header: '期初成本', format: (v) => formatAmountWithDecimals(v, 2) },
