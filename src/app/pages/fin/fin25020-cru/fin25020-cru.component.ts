@@ -78,12 +78,13 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
   remitDetailColumns: Column[] = [
     { field: 'VEN_No', header: '廠商編號', visible: true },
     { field: 'VEN_Name', header: '廠商名稱', visible: true },
-    { field: 'ACP_Amt', header: '帳款金額', visible: true },
+    { field: 'ACP_Amt', header: '收/付金額', visible: true },
     { field: 'RMT_Amt', header: '匯款金額', visible: true },
-    { field: 'RMT_Fee', header: '匯款手續費', visible: true },
-    { field: 'CASH_BACK_AMT', header: '現金回饋金額', visible: true },
-    { field: 'COMP_WIRE_FEE', header: '公司支付電匯手續費', visible: true },
-    { field: 'BANK_DESC', header: '匯款銀行資訊', visible: true },
+    { field: 'RMT_Fee', header: '廠商負擔匯款手續費', visible: true },
+    { field: 'CASH_BACK_AMT', header: '廠商負擔電匯手續費回饋收入', visible: true },
+    { field: 'COMP_WIRE_FEE', header: '公司負擔匯款手續費', visible: true },
+    { field: 'BANK_DESC', header: '匯款銀行代號', visible: true },
+    { field: 'RMT_BnkAccNo ', header: '銀行帳號', visible: true },
     { field: 'RMT_BnkAccName', header: '匯款銀行帳戶名稱', visible: true },
   ];
 
