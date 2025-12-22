@@ -65,42 +65,36 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
   data: FIN21010Response[] = [];
   columns: Column[] = [
     { field: 'BNK_No', header: '銀行代碼', visible: true },
+    { field: 'Bank_Name', header: '銀行名稱', visible: true },
     { field: 'AccCName', header: '公司銀行科目中文名稱', visible: true },
-    // {
-    //   field: 'BNK_BranchNo',
-    //   header: '銀行分行代號',
-    //   visible: true,
-    //   format: (value: string) =>
-    //     this.APS1004_Option?.find((opt) => opt.BNK_BranchNo === value)?.BNK_BranchName || value //看這裡之後要帶不帶名稱
-    // },
+
     { field: 'BNK_AccNo', header: '帳號', visible: true },
+    { field: 'BNK_AccName', header: '帳戶名稱', visible: true },
     {
       field: 'BNK_AccType', header: '存款代號', visible: true,
       format: (value: string) =>
         this.BNK_AccType_Option.find((option) => option.No === value)?.Name ||
         value,
     },
-    { field: 'BNK_AccName', header: '帳戶名稱', visible: true },
     // {
-    //   field: 'BNK_AccStatus',
-    //   header: '帳戶狀態',
-    //   visible: true,
-    //   format: (value: string) => (value === '0' ? '正常' : value)
+    //   field: 'SYS_Name',
+    //   header: 'EDI用戶代號',
+    //   visible: false,
     // },
     {
       field: 'BNK_DepositAccNo',
       header: '公司銀行科目',
-      visible: false,
+      visible: true,
     },
     {
       field: 'BNK_CheckInAccNo',
       header: '應付票據科目',
-      visible: false,
+      visible: true,
     },
     {
       field: 'BNK_CheckOutAccNo',
       header: '應收票據科目',
-      visible: false,
+      visible: true,
     },
     // { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate },
     // { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
