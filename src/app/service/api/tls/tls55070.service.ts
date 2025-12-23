@@ -1,7 +1,7 @@
 // src/app/service/api/tls/tls55070.service.ts
-import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
-import { Observable, map, forkJoin } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { Observable, forkJoin, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 // === 泛用下拉 ===
@@ -17,7 +17,7 @@ export interface SimpleDropResp {
 @Injectable({ providedIn: 'root' })
 export class TLS55070Service {
   private apiUrl = environment.ApiUrl;
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // === 查詢 ===
   queryTLS55070(body: any): Observable<any> {
@@ -39,10 +39,10 @@ export class TLS55070Service {
   private stripForExport<T extends Record<string, any>>(input: T): T {
     if (!input) return input;
     const clone: any = { ...input };
-    delete clone.OrderBy;  delete clone.orderBy;
-    delete clone.Offset;   delete clone.offset;
+    delete clone.OrderBy; delete clone.orderBy;
+    delete clone.Offset; delete clone.offset;
     delete clone.PageSize; delete clone.pageSize;
-    delete clone.PageIndex;delete clone.pageIndex;
+    delete clone.PageIndex; delete clone.pageIndex;
     return clone;
   }
 
@@ -59,19 +59,19 @@ export class TLS55070Service {
   /** 2) 品牌（LOGO）：這裡用你現場有的標準「單一下拉」API。
    *   若你已經有 /queryPOS1002_DropDownList，就用它；若沒有，維持原本那支即可。
    */
-  queryPOS1002_DropDownList(): Observable<SimpleDropResp> {
-    const url = `${this.apiUrl}/queryPOS1002_DropDownList`;
+  queryPLULOGO_DropDownList(): Observable<SimpleDropResp> {
+    const url = `${this.apiUrl}/queryPLULOGO_DropDownList`;
     return this.http.post<SimpleDropResp>(url, {});
   }
 
   /** 將 LOGO + 倉別一次取回（避免在 component 內各自訂閱造成重複打） */
   getLogoAndHosOptions(): Observable<{
     logoOptions: Array<{ label: string; value: string }>;
-    hosOptions:  Array<{ label: string; value: string }>;
+    hosOptions: Array<{ label: string; value: string }>;
   }> {
     return forkJoin({
-      logo: this.queryPOS1002_DropDownList(),
-      hos:  this.queryPOS2034_DropDownList(),
+      logo: this.queryPLULOGO_DropDownList(),
+      hos: this.queryPOS2034_DropDownList(),
     }).pipe(
       map(({ logo, hos }) => {
         const toOptions = (rows?: SimpleDropRow[]) =>
@@ -82,7 +82,7 @@ export class TLS55070Service {
 
         return {
           logoOptions: toOptions(logo?.Data),
-          hosOptions:  toOptions(hos?.Data),   // ★ 倉別走 POS2034
+          hosOptions: toOptions(hos?.Data),   // ★ 倉別走 POS2034
         };
       })
     );
