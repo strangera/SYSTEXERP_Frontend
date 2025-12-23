@@ -126,12 +126,15 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   statusFlagOptions = [
     { value: '1', label: '外交官零稅' },
     { value: '2', label: '事後登錄' },
-    { value: '3', label: '預售' },
+    // { value: '3', label: '預售' },
   ];
   txnStatusOptions: any[] = [
     { value: '1', label: '正常交易' },
-    { value: '2', label: '作廢' },
-    { value: '3', label: '退貨' },
+    { value: '2', label: '作廢交易' },
+    { value: '3', label: '退貨交易' },
+    { value: '4', label: '預售交易' },
+    { value: '5', label: '預售解約' },
+    { value: '6', label: '預售退貨' },
   ];
   BUILDING_NO_Options: any[] = [];
   floorOptions: any[] = [];
