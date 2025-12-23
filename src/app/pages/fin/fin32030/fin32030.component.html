@@ -1,15 +1,12 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div >
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button
+      [type]="'button'"
+      label="應收未收查詢"
+      (clickEvent)="onOpenARDialog()"
+    ></app-button>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
     <p-accordionTab
@@ -24,76 +21,163 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="收款單號"
-              controlName="receive_ID"
-              [control]="queryForm.controls.receive_ID"
-              [submitted]="submitted"
-            ></app-input-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="收款日期"
-              [startControl]="queryForm.controls.receive_Date_From"
-              [endControl]="queryForm.controls.receive_Date_To"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="業務員代號"
-              controlName="salesperson_Code"
-              [options]="salesCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.salesperson_Code"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="收款單號"
+            controlName="RCV_No"
+            [control]="queryForm.controls.RCV_No"
+            [submitted]="submitted"
+          ></app-input-text>
+          <app-calendar-range
+            class="col-12 md:col-6 lg:col-4"
+            calendarType="dateRange"
+            label="收款日期"
+            [startControl]="queryForm.controls.DateFrom"
+            [endControl]="queryForm.controls.DateTo"
+            [submitted]="submitted"
+          ></app-calendar-range>
+          <app-input-number-range
+            class="col-12 md:col-6 lg:col-4"
+            [useGrouping]="false"
+            label="應收金額"
+            [startControl]="queryForm.controls.AmtFrom"
+            [endControl]="queryForm.controls.AmtTo"
+            [submitted]="submitted"
+          ></app-input-number-range>
         </div>
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="傳票單號"
-              [startControl]="queryForm.controls.summons_ID_From"
-              [endControl]="queryForm.controls.summons_ID_To"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="備註"
-              controlName="remark"
-              [control]="queryForm.controls.remark"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="傳票單號起"
+            controlName="VouFrom"
+            [control]="queryForm.controls.VouFrom"
+            [submitted]="submitted"
+          ></app-input-text>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="傳票單號迄"
+            controlName="VouTo"
+            [control]="queryForm.controls.VouTo"
+            [submitted]="submitted"
+          ></app-input-text>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="備註"
+            controlName="Remark"
+            [control]="queryForm.controls.Remark"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table
+    tableKey="FIN32030"
+    dataKey="RCV_No"
+    [data]="data"
+    [columns]="columns"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    [showEdit]="true"
+    [showCheckBox]="false"
+    [showReportMode]="false"
+    [showReportExcel]="false"
+    [showReportPDF]="false"
+    [showDelete]="false"
+    [showEdit]="false"
+    [multiSortMeta]="[{ field: 'RCV_No', order: 1 }]"
+    [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [lazy]="true"
+    [loading]="loading"
+  ></app-table>
 </div>
+
+<!-- 應收未收查詢 Dialog -->
+<p-dialog
+  header="應收未收查詢"
+  [(visible)]="arDialogVisible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '90vw', maxWidth: '1200px' }"
+>
+  <form [formGroup]="arQueryForm" class="p-fluid mb-3">
+    <div class="grid">
+      <div class="col-12 md:col-6 lg:col-3">
+        <app-input-text
+          label="組織編號"
+          controlName="STO_No"
+          [control]="arQueryForm.controls.STO_No"
+        ></app-input-text>
+      </div>
+
+      <div class="col-12 md:col-6 lg:col-3">
+        <app-input-text
+          label="廠客代號"
+          controlName="VEN_No"
+          [control]="arQueryForm.controls.VEN_No"
+        ></app-input-text>
+      </div>
+
+      <div class="col-12 md:col-6 lg:col-6">
+        <app-calendar-range
+          calendarType="dateRange"
+          label="立帳日期"
+          [startControl]="arQueryForm.controls.DateFrom"
+          [endControl]="arQueryForm.controls.DateTo"
+        ></app-calendar-range>
+      </div>
+    </div>
+
+    <div class="flex justify-content-end gap-2 mt-2">
+      <p-button
+        label="查詢"
+        icon="pi pi-search"
+        [loading]="arDialogLoading"
+        (onClick)="onARDialogSubmit()"
+      ></p-button>
+    </div>
+  </form>
+
+  <!-- AR Dialog Table -->
+  <app-table
+    tableKey="FIN32030_AR_DIALOG"
+    dataKey="ARS_ID"
+    [data]="arDialogData"
+    [columns]="arDialogColumns"
+    [totalRecords]="arDialogTotalRecords"
+    [loading]="arDialogLoading"
+    [showCheckBox]="true"
+    [selectionMode]="'multiple'"
+    [(selectedItems)]="arSelectedItems"
+    [showSerialNo]="true"
+    [showManage]="false"
+    [showReportMode]="false"
+    [showReportExcel]="false"
+    [showReportPDF]="false"
+    [showDelete]="false"
+    [lazy]="true"
+    (lazyLoadData)="onLazyLoadData($event, arQueryForm); onARDialogSubmit()"
+  ></app-table>
+
+  <!-- <ng-template pTemplate="footer">
+    <div class="flex justify-content-end gap-2">
+      <p-button
+        label="取消"
+        severity="secondary"
+        (onClick)="onARDialogCancel()"
+      ></p-button>
+
+      <p-button label="確認選擇" (onClick)="onARDialogConfirm()"></p-button>
+    </div>
+  </ng-template> -->
+</p-dialog>

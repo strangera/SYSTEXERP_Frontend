@@ -1,23 +1,20 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { finalize } from 'rxjs';
+import { FIN32030Service, QueryFIN32030ARResponse, QueryFIN32030Response } from '../../../service/api/fin/fin32030.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-//
+import { Column, formatAmountWithFraction, formatDate } from '../../../shared/componentkit/table/table.model';
 
 //1.3.2.3 收款沖帳維護
 @Component({
@@ -25,110 +22,195 @@ import { TranslateModule } from '@ngx-translate/core';
   templateUrl: './fin32030.component.html',
   styleUrl: './fin32030.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarRangeComponent, DropdownComponent, InputNumberRangeComponent, InputTextComponent, TableComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    DialogModule,
+    ButtonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeComponent,
+    InputNumberRangeComponent,
+    InputTextComponent,
+    TableComponent,
+    TranslateModule
+  ]
 })
-export class FIN32030Component extends BasicQpageComponent implements OnInit {
-  //
+export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Response> implements OnInit {
   queryForm = this.formBuilder.group({
-    receive_ID: [, [Validators.maxLength(12)]], // 收款單號
-    receive_Date_From: [], // 收款日期
-    receive_Date_To: [], // 收款日期
-    salesperson_Code: [], // 業務員代號
-    summons_ID_From: [, [this.validationService.numberValidator, Validators.max(99999999999)]], // 傳票單號
-    summons_ID_To: [, [this.validationService.numberValidator, Validators.max(99999999999)]], // 傳票單號
-    remark: ['', [Validators.maxLength(30)]], // 備註
+    RCV_No: ['', [Validators.maxLength(20)]], // 收款單號
+    DateFrom: [null], // 收款日期起
+    DateTo: [null], // 收款日期迄
+    AmtFrom: [null, [Validators.min(0)]], // 應收金額起
+    AmtTo: [null, [Validators.min(0)]], // 應收金額迄
+    VouFrom: ['', [Validators.maxLength(20)]], // 傳票單號起
+    VouTo: ['', [Validators.maxLength(20)]], // 傳票單號迄
+    Remark: ['', [Validators.maxLength(100)]], // 備註
+    pageSize: [20], // 每頁筆數 (小寫,配合 onLazyLoadData)
+    pageIndex: [1], // 頁碼 (小寫,配合 onLazyLoadData)
+    SortBy: [[{ field: 'RCV_No', order: 1 }]], // 排序參數
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+
+  totalRecords = 0;
+  data: QueryFIN32030Response[] = [];
+
+  // AR Dialog (應收未收查詢)
+  arDialogVisible = false;
+  arDialogLoading = false;
+  arDialogData: QueryFIN32030ARResponse[] = [];
+  arDialogTotalRecords = 0;
+  arSelectedItems: QueryFIN32030ARResponse[] = [];
+
+  // AR Dialog 查詢表單
+  arQueryForm = this.formBuilder.group({
+    STO_No: ['', [Validators.maxLength(20)]], // 組織編號
+    VEN_No: ['', [Validators.maxLength(20)]], // 廠客代號
+    DateFrom: [null], // 立帳日期起
+    DateTo: [null], // 立帳日期迄
+    pageSize: [20],
+    pageIndex: [1],
+    SortBy: [[{ field: 'VEN_No', order: 1 }]],
+  });
+
+  // AR Dialog 欄位定義
+  arDialogColumns: Column[] = [
+    { field: 'ARS_ID', header: '應收ID', visible: true },
+    { field: 'VEN_No', header: '廠客代號', visible: true },
+    { field: 'VEN_Name', header: '廠客名稱', visible: true },
+    { field: 'ARS_Amt', header: '應收金額', visible: true, format: formatAmountWithFraction, style: 'text-right' },
+    { field: 'ARS_Date', header: '立帳日', visible: true, format: formatDate },
+    { field: 'PaidAmt', header: '已收款金額', visible: true, format: formatAmountWithFraction, style: 'text-right' },
+    { field: 'UnpaidAmt', header: '未收款金額', visible: true, format: formatAmountWithFraction, style: 'text-right' },
+    { field: 'PTA_Date', header: '預計收款日', visible: true, format: formatDate },
+    { field: 'NoteDesc', header: '摘要', visible: true },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '收款單號', visible: true },
-    { field: 'col2', header: '收款日期', visible: true },
-    { field: 'col3', header: '業務員代號', visible: true },
-    { field: 'col4', header: '傳票單號', visible: true },
-    { field: 'col5', header: '備註', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  salesCodeOptions: any[] = [
-    { value: 1, label: '001/阮湘晴' },
+
+  columns: Column[] = [
+    { field: 'RCV_No', header: '收款單號', visible: true },
+    { field: 'RCV_Date', header: '收款日期', visible: true, format: formatDate },
+    { field: 'Sales_Id', header: '業務員代號', visible: true },
+    { field: 'VouNo', header: '傳票號碼', visible: true },
+    { field: 'TotalAmount', header: '總金額', visible: true, format: formatAmountWithFraction, style: 'text-right' },
+    { field: 'Remark', header: '備註', visible: true },
   ];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
+    private readonly fin32030Service: FIN32030Service,
+    private readonly cdr: ChangeDetectorRef
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '130005';
-    this.cruPage = '/FIN3000/FIN32030CRU';
-    //
-    // ----------------------------------------------------------------
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('FIN32030', 'fin/fin32030cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(frm, () => {
+      const formValue = frm.value;
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+      // 準備 API 請求參數 (表單用小寫,後端用大寫)
+      const queryParams = {
+        RCV_No: formValue.RCV_No || null,
+        DateFrom: formValue.DateFrom || null,
+        DateTo: formValue.DateTo || null,
+        AmtFrom: formValue.AmtFrom || null,
+        AmtTo: formValue.AmtTo || null,
+        VouFrom: formValue.VouFrom || null,
+        VouTo: formValue.VouTo || null,
+        Remark: formValue.Remark || null,
+        // 分頁和排序參數 (轉換為大寫給後端)
+        PageIndex: formValue.pageIndex,
+        PageSize: formValue.pageSize,
+        SortBy: formValue.SortBy,
+      };
+
+      this.fin32030Service.queryFIN32030(queryParams)
+        .pipe(
+          finalize(() => this.loading = false),
+          untilDestroyed(this)
+        )
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, formValue);
+        });
+    });
+  }
+
+  /** 打開應收未收查詢 Dialog */
+  onOpenARDialog() {
+    // 重置表單
+    this.arQueryForm.reset({
+      STO_No: '',
+      VEN_No: '',
+      DateFrom: null,
+      DateTo: null,
+      pageSize: 20,
+      pageIndex: 1,
+      SortBy: [{ field: 'VEN_No', order: 1 }],
+    });
+
+    // 清空資料
+    this.arDialogData = [];
+    this.arDialogTotalRecords = 0;
+    this.arSelectedItems = [];
+
+    // 打開 Dialog
+    this.arDialogVisible = true;
+    this.cdr.detectChanges();
+  }
+
+  /** AR Dialog 查詢 */
+  onARDialogSubmit() {
+    if (this.arQueryForm.invalid) {
+      this.arQueryForm.markAllAsTouched();
+      return;
     }
 
-    this.loading = false;
-    this.messageService.unblockUi();
+    const formValue = this.arQueryForm.value;
+
+    const queryParams = {
+      STO_No: formValue.STO_No || undefined,
+      VEN_No: formValue.VEN_No || undefined,
+      DateFrom: formValue.DateFrom || undefined,
+      DateTo: formValue.DateTo || undefined,
+      PageIndex: formValue.pageIndex ?? 1,
+      PageSize: formValue.pageSize ?? 20,
+      SortBy: formValue.SortBy || undefined,
+    };
+
+    this.arDialogLoading = true;
+
+    this.fin32030Service.queryFIN32030AR(queryParams)
+      .pipe(
+        finalize(() => this.arDialogLoading = false),
+        untilDestroyed(this)
+      )
+      .subscribe(response => {
+        this.arDialogData = response.Data;
+        this.arDialogTotalRecords = response.TotalCount;
+        this.cdr.detectChanges();
+      });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+  /** AR Dialog 取消 */
+  onARDialogCancel() {
+    this.arDialogVisible = false;
   }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
+  /** AR Dialog 確認選擇 */
+  onARDialogConfirm() {
+    if (!this.arSelectedItems || this.arSelectedItems.length === 0) {
+      this.messageService.errorBubble('請先勾選應收帳款資料');
+      return;
     }
-  }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
+    // TODO: 這裡可以將選中的應收帳款資料傳遞給主頁面或進行其他處理
+    // 例如：導航到新增/編輯頁面並帶入選中的應收帳款資料
+    this.messageService.successBubble(`已選擇 ${this.arSelectedItems.length} 筆應收帳款`);
 
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+    this.arDialogVisible = false;
   }
 }
