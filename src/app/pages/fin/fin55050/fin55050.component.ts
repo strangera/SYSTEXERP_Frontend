@@ -8,6 +8,7 @@ import {
   FIN55050Service
 } from '../../../service/api/fin/fin55050.service';
 
+import { Location } from '@angular/common';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -26,7 +27,6 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-
 export interface FIN55050Data {
   AccNo: string;
   AccCName: string;
@@ -66,6 +66,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   constructor(
     private fin55050Service: FIN55050Service,
     private dropDownListService: DropDownListService,
+    private location: Location
   ) {
     super();
   }
@@ -223,8 +224,10 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
       this.messageService?.warnBubble?.('寫入交接資料失敗。');
     }
 
+    const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55050cru');
+    const finalUrl = `${window.location.origin}${externalUrl}`;
     // 開新分頁
-    window.open('/account/fin/fin55050cru', '_blank', 'noopener');
+    window.open(finalUrl, '_blank', 'noopener');
   }
 
   loadOptions() {

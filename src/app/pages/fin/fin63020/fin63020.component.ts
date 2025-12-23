@@ -232,13 +232,11 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
   ];
 
   organizationCodeOptions: any[] = [
-    { value: 'ALL', label: '全公司' },
-    { value: 'AUDIT', label: '稽核室' },
+
   ];
 
   eventCodeOptions: any[] = [
-    { value: '001', label: '001' },
-    { value: '002', label: '002' },
+
   ];
 
   targetCodeOptions: any[] = [
@@ -302,6 +300,31 @@ ngOnInit(): void {
   this.initializePage('FIN63020', 'fin/fin63020cru', this.queryForm, (form) =>
     this.onSubmit(form)
   );
+      // 獲取組織下拉選項
+    this.dropDownListService.querySYS3100_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.organizationCodeOptions = res.Data.map(item => ({
+          ...item,
+          value: item.No,
+          label: `${item.No} - ${item.Name}`,
+        }));
+      })
+          // 活動
+          this.dropDownListService.getActivityOptions({
+            mid: 0,
+            str_no: '10',
+            pod_type: ['1', '2', '8'],
+            pod_status: '1',
+          })
+            .pipe(untilDestroyed(this))
+            .subscribe(response => {
+              this.eventCodeOptions = response?.Data?.map((item: any) => ({
+                label: `${item.pod_no} - ${item.pod_desc}`,
+                value: item.pod_no,
+              })) ?? [];
+            });
+
 
   // ✅ 1. 還原查詢條件（不管從哪頁回來）
   const saved = this.queryStateService.getQueryStateValue('FIN63020');

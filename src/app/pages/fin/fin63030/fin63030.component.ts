@@ -1,0 +1,606 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { CommonModule } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
+import {
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  ViewChild,
+} from '@angular/core';
+import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+
+import {
+  ApiResponse,
+  Fin63030Service,
+  QueryFIN63030Request,
+  QueryFIN63030Row,
+  SortItem,
+  FIN63030TransVoucherRequest,
+} from '../../../service/api/fin/fin63030.service';
+
+import { Fin26010Service, Aps1002BankDropDownRow } from '../../../service/api/fin/fin26010.service';
+
+@UntilDestroy()
+@Component({
+  selector: 'app-fin63030',
+  templateUrl: './fin63030.component.html',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+
+    MenubarComponent,
+    AccordionModule,
+    ButtonModule,
+    DialogModule,
+
+    InputTextComponent,
+    DropdownComponent,
+    CalendarRangeComponent,
+    // CalendarComponent,
+    ButtonComponent,
+
+    TableComponent,
+  ],
+})
+export class FIN63030Component extends BasicQueryPageComponent<any> implements AfterViewInit {
+  data: QueryFIN63030Row[] = [];
+  totalRecords = 0;
+  lastQueryBody: any = null;
+
+  btnLoading = false;
+
+  /** ✅ Dialog：到期拋轉傳票 */
+  transVoucherDialogVisible = false;
+
+  readonly defaultSort: SortItem[] = [
+    { field: 'ExpireDate', order: 1 },
+    { field: 'CheckNo', order: 1 },
+  ];
+
+  /** ✅ columns（對應 SP select 欄位） */
+columns: Column[] = [
+  { field: 'CheckNo', header: '票據號碼' },
+  { field: 'VendorNo', header: '廠客代號' },
+  { field: 'VEN_Name', header: '廠客名稱' },
+
+  { field: 'CompanyAccNo', header: '公司銀行科目代號' },
+  { field: 'CompanyAccName', header: '公司銀行科目名稱' },
+
+  { field: 'IssueDate', header: '開票日' },
+  { field: 'ExpireDate', header: '到期日' },
+  { field: 'PayDate', header: '兌現日' },
+
+  { field: 'CheckAmount', header: '票面金額', format: (v: any) => this.moneyFormat(v) },
+
+  { field: 'CheckTitle', header: '票據抬頭' },
+  { field: 'Remark', header: '備註' },
+
+  // 後端註解：狀態：顯示為2=到期,3=兌現
+  { field: 'CheckStatus', header: '狀態' },
+
+  // 後端註解：票據狀態：顯示 (1=確認, 2=拋轉)
+  { field: 'StatusFlag', header: '票據狀態' },
+
+  // 後端註解：兌現傳票號碼（你要顯示「到期傳票」也行，但語意建議照後端）
+  { field: 'VoucherNoPaid', header: '兌現傳票號碼' },
+];
+
+
+  /** 下拉 */
+  CompanyAccNoOptions: any[] = [];     // 查詢：CompanyAccNo = BNK_DepositAccNo
+  CompanyBankNoOptions: any[] = [];    // Dialog：BNK_No（銀行代號）
+  checkStatusOptions: any[] = [
+    { value: '1', label: '未異動' },
+    { value: '2', label: '到期' },
+    { value: '3', label: '兌現' },
+  ];
+
+  /** 查詢表單 */
+  queryForm = this.formBuilder.group({
+    CompanyAccNo: ['' as string, Validators.required],
+    ExpireDateFrom: [null as Date | null],
+    ExpireDateTo: [null as Date | null],
+    ChkNo: ['' as string],
+    VouNoPaid: ['' as string],
+    CheckStatus: ['' as string],
+
+    ...createPaginationConfig(this.defaultSort),
+  });
+
+  /** Dialog 表單：到期拋轉（✅ 對齊後端：ExpireDate 必填；BNK_No/ChkNo 可空） */
+  transVoucherForm = this.formBuilder.group({
+    BNK_No: ['' as string],                                   // ✅ 後端非必填（你UI要必填也可以改回 required）
+    ChkNo: ['' as string],                                    // 可空
+    ExpireDateFrom: [null as Date | null, Validators.required], // 必填
+    ExpireDateTo: [null as Date | null, Validators.required],   // 必填
+  });
+
+  constructor(
+    private fin63030Service: Fin63030Service,
+    private fin26010Service: Fin26010Service,
+    private cdr: ChangeDetectorRef
+  ) {
+    super();
+  }
+
+  ngOnInit(): void {
+    this.initializePage('FIN63030', 'fin/fin63030cru', this.queryForm, (form) => this.onSubmit(form));
+
+    // ✅ 還原查詢條件
+    const saved = this.queryStateService.getQueryStateValue('FIN63030');
+    if (saved?.formValue) {
+      this.queryForm.patchValue(saved.formValue, { emitEvent: false });
+      this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
+      this.lastQueryBody = saved.lastQueryBody ?? null;
+
+      Promise.resolve().then(() => this.onSubmit(this.queryForm));
+    }
+
+    // ✅ 公司銀行科目下拉（APS1002）
+    this.fin26010Service
+      .queryAPS1002DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
+          const list = Array.isArray(res?.Data) ? res.Data : [];
+
+          const accNameOf = (x: any) =>
+            String(x?.BNK_BRANCHNAME ?? x?.BNK_AccName ?? x?.BNK_Accname ?? '').trim();
+
+          // 查詢下拉：用 BNK_DepositAccNo
+          this.CompanyAccNoOptions = list.map((x: any) => ({
+            label: `${x.BNK_DepositAccNo}-${accNameOf(x)}`,
+            value: x.BNK_DepositAccNo,
+            raw: x,
+          }));
+
+          // Dialog 下拉：用 BNK_No（公司銀行代號）
+          this.CompanyBankNoOptions = list.map((x: any) => ({
+            label: `${x.BNK_No}-${x.BNK_DepositAccNo}-${accNameOf(x)}`,
+            value: x.BNK_No,
+            raw: x,
+          }));
+        },
+        error: (err) => {
+          console.error('載入公司銀行下拉失敗', err);
+          this.CompanyAccNoOptions = [];
+          this.CompanyBankNoOptions = [];
+        },
+      });
+  }
+
+  moneyFormat(value: any): string {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return '0';
+    return n.toLocaleString('en-US');
+  }
+
+  private toYmd(d: Date | string | null | undefined): string | undefined {
+    if (!d) return undefined;
+    const dt = d instanceof Date ? d : new Date(d);
+    if (isNaN(dt.getTime())) return undefined;
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const day = String(dt.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  private normalizeSort(input: any, fallback: SortItem[]): SortItem[] {
+    const asArr = Array.isArray(input) ? input : [];
+    const cleaned = asArr
+      .filter((x) => x && typeof x.field === 'string' && typeof x.order === 'number')
+      .map((x) => ({ field: String(x.field), order: x.order as number }));
+    return cleaned.length ? cleaned : fallback;
+  }
+
+  private buildQueryPayload(base: any): QueryFIN63030Request {
+    const pageIndex =
+      Number.isFinite(base?.pageIndex) && base.pageIndex >= 1 ? base.pageIndex : 1;
+    const pageSize =
+      Number.isFinite(base?.pageSize) && base?.pageSize > 0 ? base.pageSize : 30;
+
+    const sort = this.normalizeSort(base?.SortBy, this.defaultSort);
+
+    const payload: QueryFIN63030Request = {
+      PageIndex: pageIndex,
+      PageSize: pageSize,
+      SortBy: sort,
+
+      CompanyAccNo: String(base?.CompanyAccNo ?? '').trim(),
+      ExpireDateFrom: this.toYmd(base?.ExpireDateFrom),
+      ExpireDateTo: this.toYmd(base?.ExpireDateTo),
+      ChkNo: (base?.ChkNo ?? '').trim() || undefined,
+      VouNoPaid: (base?.VouNoPaid ?? '').trim() || undefined,
+      CheckStatus: (base?.CheckStatus ?? '').trim() || undefined,
+    };
+
+    // 清空值移除
+    Object.keys(payload).forEach((k) => {
+      const v = (payload as any)[k];
+      if (v === '' || v == null) delete (payload as any)[k];
+    });
+
+    return payload;
+  }
+
+  private parseQueryResponse(res: any): { rows: QueryFIN63030Row[]; total: number } {
+    const data = res?.Data;
+
+    if (Array.isArray(data)) {
+      const total =
+        Number(res?.TotalCount ?? res?.totalCount ?? data?.[0]?.TotalCount ?? data.length) || data.length;
+      return { rows: data, total };
+    }
+
+    if (data && typeof data === 'object') {
+      const innerArr =
+        (Array.isArray(data?.Data) && data.Data) ||
+        (Array.isArray(data?.Items) && data.Items) ||
+        (Array.isArray(data?.List) && data.List) ||
+        null;
+
+      if (innerArr) {
+        const total =
+          Number(data?.TotalCount ?? res?.TotalCount ?? innerArr?.[0]?.TotalCount ?? innerArr.length) || innerArr.length;
+        return { rows: innerArr, total };
+      }
+
+      const maybeRow: QueryFIN63030Row = { ...(data as any) };
+      const total = Number(res?.TotalCount ?? data?.TotalCount ?? 1) || 1;
+      return { rows: [maybeRow], total };
+    }
+
+    return { rows: [], total: 0 };
+  }
+
+  onSubmit(frm: any) {
+    this.submitted = true;
+
+    if (this.queryForm.invalid) {
+      this.queryForm.markAllAsTouched();
+      return;
+    }
+
+    const raw = this.queryForm.getRawValue();
+    const payload = this.buildQueryPayload(raw);
+    payload.PageIndex = 1;
+
+    this.loading = true;
+    this.data = [];
+    this.totalRecords = 0;
+
+    this.fin63030Service
+      .queryFIN63030(payload)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: ApiResponse<any>) => {
+          const parsed = this.parseQueryResponse(res);
+          this.data = parsed.rows;
+          this.totalRecords = parsed.total;
+
+          this.lastQueryBody = { ...payload };
+          this._currentSortBy = payload.SortBy ?? this.defaultSort;
+
+          this.loading = false;
+          this.saveQueryState();
+          this.cdr.detectChanges();
+        },
+        error: (err: any) => {
+          console.error('FIN63030 query API error:', err);
+          this.data = [];
+          this.totalRecords = 0;
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  private saveQueryState(): void {
+    this.queryStateService.setQueryState('FIN63030', {
+      formValue: this.queryForm.getRawValue(),
+      currentSortBy: this._currentSortBy,
+      lastQueryBody: this.lastQueryBody,
+    });
+  }
+
+  onClear(frm: any) {
+    frm.reset({
+      CompanyAccNo: '',
+      ExpireDateFrom: null,
+      ExpireDateTo: null,
+      ChkNo: '',
+      VouNoPaid: '',
+      CheckStatus: '',
+      ...createPaginationConfig(this.defaultSort),
+    });
+
+    this.submitted = false;
+    this.data = [];
+    this.totalRecords = 0;
+    this.lastQueryBody = null;
+  }
+
+  /** =======================
+   *  ✅ Dialog：到期拋轉（✅ 對齊後端）
+   *  ======================= */
+  openTransVoucherDialog(): void {
+    this.transVoucherForm.reset({
+      BNK_No: '',
+      ChkNo: '',
+      ExpireDateFrom: null,
+      ExpireDateTo: null,
+    });
+
+    this.transVoucherDialogVisible = true;
+    this.cdr.detectChanges();
+  }
+
+  closeTransVoucherDialog(): void {
+    this.transVoucherDialogVisible = false;
+  }
+
+  onTransVoucherConfirm(): void {
+    this.submitted = true;
+    this.transVoucherForm.markAllAsTouched();
+    if (this.transVoucherForm.invalid) return;
+
+    const bnkNo = String(this.transVoucherForm.value.BNK_No ?? '').trim();
+    const chkNo = String(this.transVoucherForm.value.ChkNo ?? '').trim();
+    const expireFrom = this.toYmd(this.transVoucherForm.value.ExpireDateFrom as any);
+    const expireTo = this.toYmd(this.transVoucherForm.value.ExpireDateTo as any);
+
+    if (!expireFrom || !expireTo) {
+      this.messageService.errorBubble('到期日區間為必填');
+      return;
+    }
+
+    /** ✅ 後端 TransVoucherFIN63030Request 只有這些欄位（不要多送 CRT_USR_No / CRT_USR_Name） */
+    const body: FIN63030TransVoucherRequest = {
+      ExpireDateFrom: expireFrom,
+      ExpireDateTo: expireTo,
+      ChkNo: chkNo || undefined,
+      BNK_No: bnkNo || undefined,
+    };
+
+    this.btnLoading = true;
+
+    this.fin63030Service
+      .transVoucherFIN63030(body)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: any) => {
+          // ✅ 後端成功：ReturnCode=0000；失敗：BadRequest + ReturnCode=9998
+          const code = res?.ResponseBase?.ReturnCode ?? res?.ReturnCode;
+          const msg = res?.ResponseBase?.ReturnMessage ?? res?.ReturnMessage;
+
+          if (code && code !== '0000') {
+            this.messageService.errorBubble(msg ?? '到期拋轉失敗');
+            return;
+          }
+
+          this.messageService.successBubble(msg ?? '到期拋轉成功');
+          this.transVoucherDialogVisible = false;
+
+          // ✅ 成功後重查
+          this.onSubmit(this.queryForm);
+        },
+        error: (err: any) => {
+          // BadRequest(400) 也會到這裡（依你們 interceptor）
+          const api = err?.error;
+          const msg =
+            api?.ResponseBase?.ReturnMessage ??
+            api?.ReturnMessage ??
+            '到期拋轉失敗';
+          console.error(err);
+          this.messageService.errorBubble(msg);
+          this.btnLoading = false;
+        },
+        complete: () => {
+          this.btnLoading = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  /** =======================
+   *  ✅ 匯出（保留你原本）
+   *  ======================= */
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
+    if (!contentDisposition) return `download${defaultExtension}`;
+
+    const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
+    if (filenameStarMatch && filenameStarMatch.length > 1) {
+      const encodedFilename = filenameStarMatch[1];
+      try {
+        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
+        return decoded;
+      } catch {
+        return encodedFilename;
+      }
+    }
+
+    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
+    if (filenameMatch && filenameMatch.length > 1) {
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      } catch {
+        return filenameMatch[1];
+      }
+    }
+
+    return `download${defaultExtension}`;
+  }
+
+  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
+
+  onExportPDF() {
+    if (!this.lastQueryBody) {
+      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+      return;
+    }
+
+    const exportBody = { ...this.lastQueryBody };
+    delete exportBody.pageIndex;
+    delete exportBody.pageSize;
+    delete exportBody.PageIndex;
+    delete exportBody.PageSize;
+    delete exportBody.Offset;
+    delete exportBody.OrderBy;
+
+    this.btnLoading = true;
+    this.fin63030Service
+      .exportFIN63030PDF(exportBody)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (resp) => this.handleFileExport(resp, '.pdf'),
+        error: (err) => {
+          console.error(err);
+          this.messageService.errorBubble('匯出失敗');
+        },
+        complete: () => (this.btnLoading = false),
+      });
+  }
+
+  onExportXLSX() {
+    if (!this.lastQueryBody) {
+      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+      return;
+    }
+
+    const exportBody = { ...this.lastQueryBody };
+    delete exportBody.pageIndex;
+    delete exportBody.pageSize;
+    delete exportBody.PageIndex;
+    delete exportBody.PageSize;
+    delete exportBody.Offset;
+    delete exportBody.OrderBy;
+
+    this.btnLoading = true;
+    this.fin63030Service
+      .exportFIN63030Excel(exportBody)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (resp) => this.handleFileExport(resp, '.xlsx'),
+        error: (err) => {
+          console.error(err);
+          this.messageService.errorBubble('匯出失敗');
+        },
+        complete: () => (this.btnLoading = false),
+      });
+  }
+
+  /** =======================
+   *  ✅ lazy load + sort（沿用你原本）
+   *  ======================= */
+  @ViewChild('finTable') finTable!: TableComponent;
+
+  ngAfterViewInit(): void {
+    setTimeout(() => {
+      try {
+        (this.finTable as any).IsPrint = true;
+      } catch {}
+
+      const dt: any = (this.finTable as any).dt;
+
+      if (dt?.onLazyLoad) {
+        dt.onLazyLoad.pipe(untilDestroyed(this)).subscribe((e: any) => {
+          const pageSize = Number(e?.rows ?? 30);
+          const first = Number(e?.first ?? 0);
+          const pageIndex = Math.floor(first / pageSize) + 1;
+
+          this.fireQueryByPage(pageIndex, pageSize, e?.multiSortMeta);
+        });
+      }
+    });
+  }
+
+  private _currentSortBy: SortItem[] = this.defaultSort;
+
+  private readonly _allowSortFields = new Set(
+    this.columns.map(c => c.field).filter(Boolean) as string[]
+  );
+
+  private fireQueryByPage(pageIndex: number, pageSize: number, sortMeta?: any) {
+    const raw = this.queryForm.getRawValue();
+
+    let sortBy: SortItem[] | undefined;
+    if (Array.isArray(sortMeta) && sortMeta.length) {
+      const filtered = sortMeta
+        .filter((s: any) => this._allowSortFields.has(String(s?.field)))
+        .map((s: any) => ({ field: String(s.field), order: Number(s.order) || 1 }));
+      if (filtered.length) sortBy = filtered;
+    }
+
+    if (!sortBy || !sortBy.length) {
+      sortBy = this._currentSortBy?.length ? this._currentSortBy : this.defaultSort;
+    }
+
+    const payload = this.buildQueryPayload({
+      ...raw,
+      pageIndex,
+      pageSize,
+      SortBy: sortBy,
+    });
+
+    this._currentSortBy = payload.SortBy ?? this.defaultSort;
+
+    this.loading = true;
+    this.fin63030Service.queryFIN63030(payload)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: ApiResponse<any>) => {
+          const parsed = this.parseQueryResponse(res);
+          this.data = parsed.rows;
+          this.totalRecords = parsed.total;
+          this.lastQueryBody = { ...payload };
+          this.loading = false;
+          this.saveQueryState();
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.data = [];
+          this.totalRecords = 0;
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+      });
+  }
+}

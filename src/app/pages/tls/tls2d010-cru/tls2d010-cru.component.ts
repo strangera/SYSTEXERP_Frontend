@@ -469,9 +469,26 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   // ===== normal: 扣款項目切換 =====
   onCAP_ItemChange(selectedCAP_Item: string): void {
     const selected = this.FilterCAP_ItemOptions.find(opt => opt.value === selectedCAP_Item);
+
+    let accValue: string | null = null;
+    if (selected && selected.data?.AccNo) {
+      const accNoCode = String(selected.data.AccNo).trim();
+      const accOption = this.AccNoOptions.find(opt => {
+        const optValue = opt.value != null ? String(opt.value).trim() : null;
+        const optNo = opt.No != null ? String(opt.No).trim() : null;
+        return optValue === accNoCode || optNo === accNoCode;
+      });
+
+      if (accOption) {
+        accValue = (accOption.value != null ? String(accOption.value) : (accOption.No != null ? String(accOption.No) : accNoCode));
+      } else {
+        accValue = accNoCode;
+      }
+    }
+
     this.dataFormNormal.patchValue(selected ? {
       CAP_Name: selected.data.CAP_Name,
-      AccNo: selected.data.AccNo,
+      AccNo: accValue,
       GUI_FLAG: selected.data.GUI_FLAG,
       cap_taxtype: selected.data.CAP_TaxType != null ? String(selected.data.CAP_TaxType) : selected.data.CAP_TaxType
     } : { CAP_Name: null, AccNo: null, GUI_FLAG: null, cap_taxtype: null });
