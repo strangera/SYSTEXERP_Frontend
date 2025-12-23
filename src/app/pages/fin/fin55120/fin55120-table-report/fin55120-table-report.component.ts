@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { FIN55120DetailItem } from '@service/api/fin/fin55120.service';
 import { ButtonModule } from 'primeng/button';
@@ -19,7 +19,7 @@ import { ReportColumn } from './fin55120-table-report.model';
   styleUrls: ['./fin55120-table-report.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Fin55120TableReportComponent implements OnChanges {
+export class Fin55120TableReportComponent {
   @ViewChild('dt') public dt!: Table;
   @Input({ required: true }) totalRecords = 0;        // 用來儲存總筆數
   @Input({ required: true }) data: FIN55120DetailItem[] = [];        // 用來儲存查詢結果
@@ -38,12 +38,6 @@ export class Fin55120TableReportComponent implements OnChanges {
   constructor(
     public readonly tableUtility: Fin55120TableReportUtilityService,
   ) {
-  }
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['data']) {
-      this.groupTotals = {};
-      this.updateGroupTotals(this.data); // 計算當前頁面資料的小計
-    }
   }
   trackByFn(index: number, item: any) {
     return this.dataKey && item?.[this.dataKey] || index;
@@ -121,55 +115,86 @@ export class Fin55120TableReportComponent implements OnChanges {
     // 對小計值應用格式化
     return col.format ? col.format(total) : total;
   }
+  shouldShowClassRow(data: any[], index: number): boolean {
+    if (!data || index < 0) return false;
 
-  // 對新載入的資料進行增量計算，並更新 groupTotals。
-  updateGroupTotals(newData: any[]): void {
-    if (!this.groupRowsBy || !this.columns.some(col => col.isSubTotal)) {
-      return;
-    }
+    const currentAccNo = data[index]?.AccNo;
+    if (!currentAccNo) return false;
 
-    // 1. 找出作為分組依據的欄位定義
-    const groupColumn = this.columns.find(col => col.field === this.groupRowsBy);
-    // 檢查分組欄位是否存在且具有 format 函式
-    const useFormatterForGroupKey = groupColumn && groupColumn.format;
+    // 第一筆資料一定要顯示分類頭
+    if (index === 0) return true;
 
-    newData.forEach(row => {
-      const rawValue = row[this.groupRowsBy!];
-      let groupKey: string;
+    // 取得當前前兩碼與上一筆前兩碼
+    const currentPrefix = currentAccNo.substring(0, 2);
+    const prevPrefix = data[index - 1]?.AccNo?.substring(0, 2);
 
-      if (useFormatterForGroupKey) {
-        // 【已修正】使用欄位定義中的 format 函式來產生分組鍵
-        groupKey = String(groupColumn!.format!(rawValue) ?? '').trim() || 'UNKNOWN_GROUP';
+    // 如果這兩筆的大群組 (groupName) 不同，也要重新顯示分類頭
+    const currentGroup = data[index]?.groupName;
+    const prevGroup = data[index - 1]?.groupName;
+
+    return currentPrefix !== prevPrefix || currentGroup !== prevGroup;
+  }
+  /**
+ * 判斷是否該顯示「中類小計」 (AccNo 前兩碼分類結束)
+ */
+  shouldShowClassFooter(data: any[], index: number): boolean {
+    if (!data || index < 0) return false;
+    const currentPrefix = data[index]?.AccNo?.substring(0, 2);
+    const nextPrefix = data[index + 1]?.AccNo?.substring(0, 2);
+    const currentGroup = data[index]?.groupName;
+    const nextGroup = data[index + 1]?.groupName;
+
+    // 如果是最後一筆，或是下一筆的前兩碼/大群組變了，就顯示小計
+    return (index === data.length - 1) || (currentPrefix !== nextPrefix) || (currentGroup !== nextGroup);
+  }
+
+  /**
+   * 動態計算當前 AccNo 前兩碼分類的 Balance 總和
+   */
+  calculateClassBalanceTotal(data: any[], currentIndex: number): number {
+    const currentPrefix = data[currentIndex]?.AccNo?.substring(0, 2);
+    const currentGroup = data[currentIndex]?.groupName;
+
+    let total = 0;
+    // 往回找，直到前兩碼不同或群組不同為止
+    for (let i = currentIndex; i >= 0; i--) {
+      const item = data[i];
+      if (item.AccNo?.substring(0, 2) === currentPrefix && item.groupName === currentGroup) {
+        total += (Number(item.Balance) || 0);
       } else {
-        // 【已修正】如果沒有 format 函式或找不到欄位定義，退回到安全轉換
-        groupKey = String(rawValue ?? '').trim() || 'UNKNOWN_GROUP';
+        break;
       }
+    }
+    return total;
+  }
+  /**
+ * 動態計算當前 AccNo 前兩碼分類的 Pct 總和 (累加該分類所有項目的百分比)
+ */
+  calculateClassPctTotal(data: any[], currentIndex: number): number {
+    const currentPrefix = data[currentIndex]?.AccNo?.substring(0, 2);
+    const currentGroup = data[currentIndex]?.groupName;
 
-      // 如果 groupKey 為 'UNKNOWN_GROUP' 且原始值為 undefined/null，可以選擇跳過
-      if (groupKey === 'UNKNOWN_GROUP' && (rawValue === undefined || rawValue === null)) {
-        return;
+    let total = 0;
+    for (let i = currentIndex; i >= 0; i--) {
+      const item = data[i];
+      if (item.AccNo?.substring(0, 2) === currentPrefix && item.groupName === currentGroup) {
+        // 使用 Number() 轉換，確保可以進行數學運算
+        total += (Number(item.Pct) || 0);
+      } else {
+        break;
       }
+    }
+    return total;
+  }
 
-      // 初始化該群組的總計物件
-      if (!this.groupTotals[groupKey]) {
-        this.groupTotals[groupKey] = {};
-      }
+  // 新增跳窗方法
+  openDetail(rowData: any) {
+    if (!rowData.AccNo) return;
 
-      // 進行增量加總
-      this.columns.forEach(col => {
-        if (col.isSubTotal) {
-          const field = col.field;
-          const rawVal = row[field];
+    // 這裡設定你想開啟的網址，例如傳遞科目代碼作為參數
+    const url = `#/your-route-path?accNo=${rowData.AccNo}`;
 
-          // 只有當數值真正存在時才進行加總
-          if (rawVal !== null && rawVal !== undefined && rawVal !== '') {
-            const value = Number(rawVal);
-            if (!isNaN(value)) {
-              this.groupTotals[groupKey][field] = (this.groupTotals[groupKey][field] || 0) + value;
-            }
-          }
-        }
-      });
-    });
+    // 使用 window.open 開啟新分頁
+    window.open(url, '_blank');
   }
 }

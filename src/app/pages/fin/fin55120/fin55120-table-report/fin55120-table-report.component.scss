@@ -60,4 +60,22 @@
   .wrap-header {
     white-space: normal; /* 讓文字可以正常換行 */
   }
+  .report-link {
+    color: #2196f3; // 藍色字體
+    text-decoration: none; // 預設不加底線，讓報表乾淨點
+    cursor: pointer; // 變成小手圖示
+    font-weight: 500;
+    transition:
+      color 0.2s,
+      text-decoration 0.2s;
+
+    &:hover {
+      color: #1565c0; // 懸停時變深藍
+      text-decoration: underline; // 懸停時顯示下底線，讓使用者確定這可以點
+    }
+
+    &:active {
+      color: #0d47a1; // 點擊瞬間顏色
+    }
+  }
 }

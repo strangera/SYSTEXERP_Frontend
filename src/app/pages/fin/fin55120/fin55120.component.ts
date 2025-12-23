@@ -45,10 +45,10 @@ export class FIN55120Component extends BasicQueryPageComponent<FIN55120DetailIte
   columns: ReportColumn[] = [
     // { field: 'ItemTitle', header: '項目名稱' },
     { field: 'AccNo', header: '科目代號' },
-    { field: 'AccCName', header: '科目名稱' },
-    { field: 'Balance', header: '金額', isSubTotal: true, format: formatAmount },
-    { field: 'BalanceTotal', header: '合計', isSubTotal: true, format: formatAmount },
-    { field: 'Pct', header: '百分比', isSubTotal: true, format: (v) => v + '%' },
+    { field: 'AccCName', header: '科目名稱', align: 'left' },
+    { field: 'Balance', header: '金額', isSubTotal: true, format: formatAmount, align: 'right' },
+    { field: 'BalanceTotal', header: '合計', isSubTotal: true, format: formatAmount, align: 'right' },
+    { field: 'Pct', header: '百分比', isSubTotal: true, format: (v) => v + '%', align: 'right' },
   ];
 
   constructor(

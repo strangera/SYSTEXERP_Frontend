@@ -22,8 +22,13 @@
   </ng-template>
 
   <ng-template pTemplate="groupfooter" let-rowData>
-    <tr class="font-semibold bg-gray-50 border-bottom-1 border-gray-200">
-      <td *ngFor="let col of columns" [ngStyle]="{'text-align': col.align || 'center'}" class="py-2">
+    <tr class="font-semibold bg-gray-50">
+      <td *ngFor="let col of columns" [ngStyle]="{
+          'text-align': col.align || 'center',
+          'border-top': (col.field === 'Balance' || col.field === 'Pct' || col.field === 'BalanceTotal')
+                         ? '2px solid #3b82f6' : ''
+        }" class="py-2">
+
         <ng-container
           *ngIf="col.field === 'Balance' || col.field === 'Pct' || col.field === 'BalanceTotal'; else otherCell">
           <span class="text-blue-700 font-bold">
@@ -36,14 +41,53 @@
             {{ rowData.ItemTitle }} 小計：
           </span>
         </ng-template>
+
       </td>
     </tr>
   </ng-template>
 
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns">
+    <tr *ngIf="shouldShowClassRow(data, rowIndex)" class="bg-white">
+      <td [attr.colspan]="columns.length" class="py-2 pl-4 border-bottom-1 border-gray-100">
+        <div class="flex align-items-center">
+          <span class="font-bold text-700" style="color: #495057;">
+            {{ rowData.ClassCName }}
+          </span>
+        </div>
+      </td>
+    </tr>
+
     <tr [style]="{ height: '28px' }">
-      <td *ngFor="let col of columns" [ngStyle]="{'text-align': col.align ? col.align : 'center'}">
-        {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+      <ng-container *ngFor="let col of columns">
+        <td *ngIf="col.field === 'AccNo' || col.field === 'AccCName'; else regularCell"
+          [ngStyle]="{'text-align': col.align ? col.align : 'center'}" class="report-link"
+          (click)="openDetail(rowData)">
+          {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+        </td>
+        <ng-template #regularCell>
+          <td [ngStyle]="{'text-align': col.align ? col.align : 'center'}">
+            {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+          </td>
+        </ng-template>
+      </ng-container>
+    </tr>
+    <tr *ngIf="shouldShowClassFooter(data, rowIndex)" class="bg-blue-50/30">
+      <td *ngFor="let col of columns" [ngStyle]="{
+          'text-align': col.align || 'center',
+          'border-top': (col.field === 'Balance' || col.field === 'BalanceTotal' || col.field === 'Pct') ? '1px solid #93c5fd' : ''
+        }" class="py-1">
+
+        <span *ngIf="col.field === 'AccNo'" class="text-500 text-sm font-medium italic pl-4">
+          {{ rowData.ClassCName }} 合計
+        </span>
+
+        <span *ngIf="col.field === 'BalanceTotal'" class="font-bold text-blue-600">
+          {{ calculateClassBalanceTotal(data, rowIndex) | number:'1.0-0' }}
+        </span>
+
+        <span *ngIf="col.field === 'Pct'" class="font-bold text-blue-600">
+          {{ calculateClassPctTotal(data, rowIndex) | number:'1.2-2' }}%
+        </span>
       </td>
     </tr>
   </ng-template>

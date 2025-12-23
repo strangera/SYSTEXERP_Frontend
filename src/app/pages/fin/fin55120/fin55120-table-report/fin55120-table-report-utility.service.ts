@@ -1,30 +1,10 @@
 // table-utility.service.ts
 import { Injectable } from '@angular/core';
-import { ReportColumn } from './fin55120-table-report.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class Fin55120TableReportUtilityService {
-  // 計算分組欄位跨度
-  getColumnSpan(columns: ReportColumn[], groupField: string): number {
-    return columns.filter(col => col.groupField === groupField).length;
-  }
-
-  // 判斷是否應該渲染分組標題
-  shouldRenderGroupHeader(col: ReportColumn, index: number, columns: ReportColumn[]): boolean {
-    if (!col.groupField) {
-      return false;
-    }
-    const currentGroup = col.groupField;
-    for (let i = 0; i < index; i++) {
-      const prev = columns[i];
-      if (prev.groupField === currentGroup) {
-        return false;
-      }
-    }
-    return true;
-  }
   /**
    * 判斷當前行是否為該分組的最後一筆。
    * @param rowData 當前行資料。
