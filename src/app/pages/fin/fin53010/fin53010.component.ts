@@ -117,8 +117,8 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
 
       const raw = <FIN53010Payload>{
         ...this.queryForm.getRawValue(),
-        VouNoStart: vns ? String(vns).padEnd(12, '0') : void 0,
-        VouNoEnd: vne ? String(vne).padEnd(12, '9') : void 0,
+        VouNoStart: String(vns ?? ''),
+        VouNoEnd: String(vne ?? ''),
       };
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
         v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
