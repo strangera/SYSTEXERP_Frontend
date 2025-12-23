@@ -76,31 +76,28 @@
       </div>
       <hr />
       <!-- 折扣別維護 -->
-      <app-expandable-edit-table
-        #detailTable
-        [mainColumns]="TALPORDERD_OPENDisc_Detail_Columns"
-        [data]="filteredDetail"
-        [loading]="expandDetailLoading"
-        detailKey=""
-        dataKey="id"
-        [showCheckBox]="true"
-        [showPaginator]="false"
-        [showAddButton]="true"
-        [showDetailTabs]="false"
-        [showDetailAddButton]="false"
-        [readonly]="crudstatus === 'Read'"
-        [defaultNewItem]="defaultNewDetail"
-        (save)="onRowSaveDetail($event)"
-        (cancel)="onRowCancelDetail($event)"
-        (batchDelete)="onBatchDeleteDetail($event)"
-        (addMainItem)="onAddPotentialCustomerDetail()"
-      ></app-expandable-edit-table>
+      <app-table-edit
+        class="col-12"
+        tableKey="TLS29010Detail"
+        [columns]="TALPORDERD_OPENDisc_Detail_Columns"
+        [data]="opendisc_Detail"
+        (selectionChange)="selectedItems = $event"
+        [selectedItems]="selectedItems"
+        [keepDeletedData]="true"
+        (dataChange)="onDataChange($event)"
+        [tableRequired]="true"
+        [disabled]="isFormReadable"
+      />
 
       <div
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         *ngIf="!isFormReadable"
       >
-        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button
+          btnType="cancel"
+          [form]="dataForm"
+          (clickEvent)="onReset()"
+        ></app-button>
         <app-button btnType="submit"></app-button>
       </div>
     </form>
