@@ -132,16 +132,10 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
         optionValue: 'value',
         validate: [this.validator.bind(this)],
         showClear: !1,
-        calculate: (rowData: TLS21020Data, value: string) => {
-          const accData = this.service.GLS1005Map().get(value);
-          const ABAT_YN = accData?.['ABAT_YN'] || 'N';
+        calculate: (_d: TLS21020Data, v: string) => {
+          const ABAT_YN = this.service.GLS1005Map().get(v)?.['ABAT_YN'] || 'N';
           const updates: Partial<TLS21020Data> = { ABAT_YN };
-
-          if (ABAT_YN === 'N') {
-            updates.VEN_No = void 0;
-            updates.PAY_days = void 0;
-          }
-
+          if (ABAT_YN === 'N') { updates.VEN_No = void 0; updates.PAY_days = void 0; }
           return updates;
         },
       },
