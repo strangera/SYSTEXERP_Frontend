@@ -61,25 +61,24 @@ export class FIN25010Component extends BasicQueryPageComponent<FIN25010Data> imp
   ];
 
   //#region 匯款來源單號 查詢式dropdown table
-  // TODO: 待測試
-  pamNoSuggestions: QueryDropFIN25010Response[] = [];
-  pamNoOpData: QueryDropFIN25010Response[] = [];
-  pamNoOpTotalRecords = 0;
-  pamNoLoading = false;
+  suggestions: QueryDropFIN25010Response[] = [];
+  opData: QueryDropFIN25010Response[] = [];
+  opTotalRecords = 0;
+  opLoading = false;
 
-  pamNoOpForm = this.formBuilder.group({
-    ACP_ExpectPayDate_b: [null],
-    ACP_ExpectPayDate_e: [null],
+  opForm = this.formBuilder.group({
+    PTA_Date_b: [null],
+    PTA_Date_e: [null],
     Remit_Status: [null],
     PAM_No: [null, Validators.maxLength(12)],
     ...createPaginationConfig([])
   });
 
-  pamNoFieldsConfig: FieldsConfig[] = [
-    { field: 'pamNo', header: '匯款來源單號', mainDataField: true }
+  fieldsConfig: FieldsConfig[] = [
+    { field: '', header: '匯款來源單號', mainDataField: true }
   ];
 
-  pamNoOpColumns: Column[] = [
+  opColumns: Column[] = [
     { field: 'PAM_No', header: '匯款來源單號' },
     { field: 'D_Date', header: '建立日期', format: formatDate },
     { field: 'Remit_Status', header: '是否形成電匯', format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : value }
@@ -88,22 +87,22 @@ export class FIN25010Component extends BasicQueryPageComponent<FIN25010Data> imp
   // auto complete 查詢事件
   onAutoCompleteInputChange(event: Record<string, string>): void {
     this.fin25010Service.queryDropFIN25010(event).pipe(untilDestroyed(this)).subscribe((results) => {
-      // this.pamNoSuggestions = [...results.Data.map(item => ({
-      //   ...item,
-      //   label: item.pamNo + ' - ' + item.TltName + ' - ' + item.ApplyNo + ' - ' + item.LocationNo + ' (面積:' + item.TltSpace + ')',
-      // }))];
-      console.log('results', results);
+      this.suggestions = [...results.Data.map(item => ({
+        ...item,
+        label: item.PAM_No,
+      }))];
     });
   }
 
   // overlay panel 查詢事件
   onFormValueChanged(event: Record<string, string>): void {
-    this.pamNoLoading = true;
-    this.fin25010Service.queryDropFIN25010(event).pipe(untilDestroyed(this), finalize(() => this.pamNoLoading = false)).subscribe((results) => {
-      // this.pamNoOpData = results.Data;
-      // this.pamNoOpTotalRecords = results.TotalCount;
-      console.log('results', results);
-    });
+    this.opLoading = true;
+    this.fin25010Service.queryDropFIN25010(event)
+      .pipe(untilDestroyed(this), finalize(() => this.opLoading = false))
+      .subscribe((results) => {
+        this.opData = results.Data;
+        this.opTotalRecords = results.TotalCount;
+      });
   }
   //#endregion
 

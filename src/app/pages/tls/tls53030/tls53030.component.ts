@@ -6,11 +6,10 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import saveAs from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, Observable } from 'rxjs';
-import { TLS53030Data, TLS53030DetailData, TLS53030Service } from '../../../service/api/tls/tls53030.service';
+import { finalize } from 'rxjs';
+import { TLS53030Data, TLS53030Service } from '../../../service/api/tls/tls53030.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -18,7 +17,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls53030',
@@ -161,20 +160,6 @@ export class TLS53030Component extends BasicQueryPageComponent<TLS53030Data> imp
     state[action] = loading;
   }
 
-  // 展開行設置
-  expansionColumns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
-    { field: 'PLU_Name', header: '商品名稱', visible: true },
-    { field: 'PLU_No', header: '國際條碼', visible: true },
-    // { field: 'PLU_Unit', header: '單位代碼', visible: true },
-    { field: 'UNIT_NAME', header: '單位', visible: true },
-    { field: 'SYS_STOCK_QTY', header: '庫存量', visible: true, format: formatAmount },
-    { field: 'PST_Qty1', header: '初盤', visible: true, format: formatAmount },
-    { field: 'PST_Qty2', header: '複盤', visible: true, format: formatAmount },
-    { field: 'PST_Qty3', header: '抽盤', visible: true, format: formatAmount },
-    { field: 'DIFF_Qty', header: '差異量', visible: true, format: formatAmount },
-  ];
-
   constructor(
     private tls53030Service: TLS53030Service,
     private datePipe: DatePipe,
@@ -284,17 +269,6 @@ export class TLS53030Component extends BasicQueryPageComponent<TLS53030Data> imp
           console.error('匯出失敗:', err);
         }
       });
-  }
-
-  // 載入明細資料
-  loadDetails = (rowData: TLS53030Data): Observable<BaseQueryResponse<TLS53030DetailData>> => {
-    const request = {
-      MID: rowData.MID || 0,
-      PST_No: rowData.PST_No || '',
-      SYS_StoreNo: rowData.SYS_StoreNo || '',
-      HOS_No: rowData.HOS_No || ''
-    };
-    return this.tls53030Service.queryTLS53030Detail(request);
   }
 
   // 結案盤點單

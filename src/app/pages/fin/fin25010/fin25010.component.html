@@ -16,35 +16,36 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
-          <!-- 匯款來源單號 TODO: 一些屬性待修正-->
+          <!-- 匯款來源單號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown-table
               [control]="queryForm.controls.PAM_No"
-              [submitted]="submitted"
-              optionLabel="pamNo"
               templateLabel="label"
-              [suggestions]="pamNoSuggestions"
-              [fieldsConfig]="pamNoFieldsConfig"
+              [submitted]="submitted"
+              optionLabel="PAM_No"
+              optionValue="PAM_No"
+              [suggestions]="suggestions"
+              [fieldsConfig]="fieldsConfig"
               (inputValueChanged)="onAutoCompleteInputChange($event)"
-              [formGroup]="pamNoOpForm"
+              [formGroup]="opForm"
               (formValueChanged)="onFormValueChanged($event)"
-              [dialogData]="pamNoOpData"
-              [dialogColumns]="pamNoOpColumns"
-              [loading]="pamNoLoading"
-              [totalRecords]="pamNoOpTotalRecords"
+              [dialogData]="opData"
+              [dialogColumns]="opColumns"
+              [loading]="opLoading"
+              [totalRecords]="opTotalRecords"
             >
               <app-calendar-range
                 class="col-12"
                 label="收/付款日"
-                controlName="ACP_ExpectPayDate_b"
-                [startControl]="pamNoOpForm.controls.ACP_ExpectPayDate_b"
-                [endControl]="pamNoOpForm.controls.ACP_ExpectPayDate_e"
+                controlName="PTA_Date_b"
+                [startControl]="opForm.controls.PTA_Date_b"
+                [endControl]="opForm.controls.PTA_Date_e"
               />
               <app-dropdown
                 class="col-6"
                 label="是否形成電匯"
                 controlName="Remit_Status"
-                [control]="pamNoOpForm.controls.Remit_Status"
+                [control]="opForm.controls.Remit_Status"
                 [options]="[
                   { label: '是', value: 'Y' },
                   { label: '否', value: 'N' },
@@ -57,7 +58,7 @@
                 class="col-6"
                 label="匯款來源單號"
                 controlName="PAM_No"
-                [control]="pamNoOpForm.controls.PAM_No"
+                [control]="opForm.controls.PAM_No"
               />
             </app-dropdown-table>
           </div>
