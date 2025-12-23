@@ -40,14 +40,14 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
   dataForm = this.fb.nonNullable.group({
     vendorUID: ['', [Validators.required]], // 廠商統一編號（必填）
     vendorCName: ['', [Validators.required, Validators.maxLength(60)]], // 廠商名稱(中文)
-    vendorEName: ['', [Validators.maxLength(60)]], // 廠商名稱(英文)
+    vendorEName: ['', [Validators.maxLength(60), Validators.pattern(/^[A-Za-z0-9 .,\-()]*$/)]], // 廠商名稱(英文) 只允許英文與數字及常用符號
     brand: ['', [Validators.maxLength(30)]], // 品牌
     bus_type: [''], // 業腫
     VEN_Boss: ['', [Validators.required, Validators.maxLength(12)]], // 聯絡人
     VEN_BossTel: ['', [Validators.required, Validators.maxLength(18)]], // 聯絡人電話(O)
     VEN_BossTitle: ['', [Validators.maxLength(15)]], // 聯絡人稱謂
     VEN_BossMobile: ['', [Validators.maxLength(15)]], // 聯絡人手機
-    VEN_BossEmail: ['', [Validators.maxLength(60)]], // 聯絡人電子郵件
+    VEN_BossEmail: ['', [Validators.maxLength(60), Validators.pattern(/^[A-Za-z0-9._%+-@]*$/)]], // 聯絡人電子郵件 只允許英文與常用符號
     VEN_Addr: ['', [Validators.maxLength(100)]], // 公司地址
     VEN_BossFax: ['', [Validators.maxLength(18)]], // 聯絡人傳真
     contact_Date: [null, [Validators.required]], // 訪談日期（必填）
