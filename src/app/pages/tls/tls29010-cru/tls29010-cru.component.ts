@@ -122,13 +122,13 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   ];
 
   podTypeOptions = [
-    { label: '1 預售', value: '1' },
-    { label: '2 滿千送百(發行)', value: '2' },
-    { label: '3 滿千送百(兌回)', value: '3' },
-    { label: '4 會員卡集點-銷售', value: '4' },
-    { label: '5 會員卡集點-點數', value: '5' },
-    { label: '6 全館集點-銷售', value: '6' },
-    { label: '7 全館集點-點數', value: '7' },
+    // { label: '1 預售', value: '1' },
+    // { label: '2 滿千送百(發行)', value: '2' },
+    // { label: '3 滿千送百(兌回)', value: '3' },
+    // { label: '4 會員卡集點-銷售', value: '4' },
+    // { label: '5 會員卡集點-點數', value: '5' },
+    // { label: '6 全館集點-銷售', value: '6' },
+    // { label: '7 全館集點-點數', value: '7' },
     { label: '8 期間開放折扣', value: '8' }, //新增用這個
   ];
 
@@ -250,7 +250,6 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         this.dataForm.get('approved_date')?.disable();
 
         // 新增 活動類型只能選8號
-        this.dataForm.get('pod_type')?.setValue('8') //新增模式 只能選 8 期間開放折扣
         this.dataForm.get('pod_type')?.disable();
       } else {
         this.dataForm.get('pod_desc')?.disable();
@@ -451,11 +450,29 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     this.opendisc_Detail = [...newData];
   }
 
-  // 輔助方法：清空該列資料
+  // 輔助方法：清空該列資料(專櫃API無資料時使用)
   private clearRowData(row: TALPORDERD_OPENDisc) {
-    row.talent_id = 0;
-    row.tlt_id = '';
-    row.cag_barcode = '';
+    // 尋找原始資料庫中對應的資料 (對應 TLS29010 的 ID 或序號)
+    const originalRow = this.originalData.find(ori => ori.id === row.id);
+
+    if (originalRow && (row.status === 'original' || row.status === 'modified')) {
+      // 1. 若狀態為 original 或 modified，則依照 originalData 進行重製
+      row.talent_id = originalRow.talent_id;
+      row.tlt_id = originalRow.tlt_id;
+      row.cag_barcode = originalRow.cag_barcode;
+      row.tlt_no = originalRow.tlt_no;
+      row.use_flag = originalRow.use_flag || 'Y'; // 規格書提及預設為 Y 
+
+      // 重製後狀態應回到原始狀態 (或交由 TableEditComponent 自動處理)
+      row.status = 'original';
+    } else {
+      // 2. 其他狀態 (如 added) 則設為空值或預設值 
+      row.talent_id = 0;
+      row.tlt_no = '';
+      row.tlt_id = '';
+      row.cag_barcode = '';
+      row.use_flag = 'Y'; // 依規格書，新增列預設使用為 Y 
+    }
   }
 
   onReset(): void {

@@ -94,7 +94,8 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
 
   // 20251016 核准按鈕  (狀態不是未審核都不能點)
   addButton: AddButton[] = [
-    { label: '核准', icon: 'pi pi-check-circle text-green-500', action: (rowData: TALPORDERM) => { this.statusChange(rowData, '已核准'); }, disabled: (rowData: TALPORDERM) => rowData.pod_status !== '0' }, // 審核
+    { label: '核准', icon: 'pi pi-check-circle text-green-500', action: (rowData: TALPORDERM) => { this.statusChange(rowData); }, disabled: (rowData: TALPORDERM) => rowData.pod_status !== '0' }, // 審核
+    { label: '反核准', icon: 'pi pi-check-circle text-green-500', action: (rowData: TALPORDERM) => { this.statusUnChange(rowData); }, disabled: (rowData: TALPORDERM) => rowData.pod_status !== '1' }, // 反審核
   ]
   // 表格
   // ----------------------------------------------------------------
@@ -280,7 +281,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
   }
 
   // 20251016 核准按鈕狀態切換
-  statusChange(rowData: TALPORDERM, status: string) {
+  statusChange(rowData: TALPORDERM) {
     this.btnLoading = true;
 
     const apprPod_no = rowData.pod_no;
@@ -295,6 +296,27 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
       });
     } else {
       this.messageService.errorBox('核准失敗，請重新操作')
+    }
+
+    this.btnLoading = false;
+  }
+
+  // 20251016 反核准按鈕狀態切換
+  statusUnChange(rowData: TALPORDERM) {
+    this.btnLoading = true;
+
+    const apprPod_no = rowData.pod_no;
+    if (apprPod_no) {
+      const body = {
+        pod_no: rowData.pod_no,
+      }
+      console.log('反核准資料', body)
+      this.tls29010Service.unapprTLS29010(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
+        this.messageService.successBubble(response.Message);
+        this.onSubmit(this.queryForm);
+      });
+    } else {
+      this.messageService.errorBox('反核准失敗，請重新操作')
     }
 
     this.btnLoading = false;
