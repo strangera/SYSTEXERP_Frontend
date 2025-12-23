@@ -116,7 +116,7 @@ export class TableConfigManager {
         editable: true,
         autoWidth: true,
         allowDecimal: true,
-        decimalPlaces: 2, displayMultiplier: 100
+        // decimalPlaces: 2, displayMultiplier: 100
       }
     ];
   }
@@ -137,7 +137,7 @@ export class TableConfigManager {
         editable: true,
         autoWidth: true,
         allowDecimal: true,
-        decimalPlaces: 2, displayMultiplier: 100
+        // decimalPlaces: 2, displayMultiplier: 100
       }
     ];
   }
@@ -159,7 +159,7 @@ export class TableConfigManager {
         editable: true,
         autoWidth: true,
         allowDecimal: true,
-        decimalPlaces: 2, displayMultiplier: 100
+        // decimalPlaces: 2, displayMultiplier: 100
       }
     ];
   }
@@ -182,7 +182,7 @@ export class TableConfigManager {
         editable: true,
         autoWidth: true,
         allowDecimal: true,
-        decimalPlaces: 2, displayMultiplier: 100
+        // decimalPlaces: 2, displayMultiplier: 100
       }
     ];
   }
