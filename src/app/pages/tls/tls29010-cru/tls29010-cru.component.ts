@@ -1,4 +1,3 @@
-import { ValidationService } from '@shared/service/validation.service';
 import { Tls29010DetailService } from './tls29010-detail.service';
 // --Commonly used imports--
 import { Component, OnInit, ViewChild, } from '@angular/core';
@@ -117,13 +116,13 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   dataForm = this.formBuilder.group({
     id: [{ value: null, disabled: true }], // 主鍵，自動編號
     // --先選 專櫃活動設定主檔TALPORDERM--
-    pod_no: [{ value: '系統產生代碼', disabled: true }], // 活動申請編號 (YYYYMMDDSSS)
-    pod_type: ['', [Validators.required]], // 活動類型(1=預售, 2=滿千送百發行, 3=滿千送百兌回, 4~5=會員卡集點, 6~7=全館集點, 8=期間開放折扣)
+    pod_no: [{ value: '系統產生代碼', disabled: true }], // YYYYMMDDSSS(活動起始日期+流水號)
+    pod_type: ['8', [Validators.required]], // 固定寫入8
 
     pod_desc: [{ value: '', disabled: true }], // 活動名稱(使用者輸入)
     pod_sdate: [{ value: null as Date | null, disabled: true }, [Validators.required]], // 活動起始日 (Date)
     pod_edate: [{ value: null as Date | null, disabled: true }, [Validators.required]], // 活動終止日 (Date)
-    pod_status: ['', Validators.required], // 活動狀態(0=未核准, 1=已核准, 9=刪除)
+    pod_status: ['', Validators.required], // 活動建立=0 /核准=1 /反核准=0 /刪除=9
 
     // 核准不會再新增進行
     approved_userno: [{ value: null, disabled: true }], // 核准人員編號
@@ -148,12 +147,12 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   ];
 
   pod_status_Options = [
-    { label: '未核准', value: '0' },
-    { label: '已核准', value: '1' },
+    { label: '核准', value: '1' },
+    { label: '反核准', value: '0' },
     { label: '刪除', value: '9' },
   ];
 
-  act_No_Options: ACT_NO_type[] = []; // 活動申請編號下拉選單
+  act_No_Options: ACT_NO_type[] = []; // 折扣別下拉
   tlt_No_Option: { value: string, label: string }[] = [];  // 專櫃編號下拉
 
   //主檔下拉 --之後由後端api提供
@@ -162,25 +161,24 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   opendisc_Detail: TALPORDERD_OPENDisc[] = [];
   //欄位資訊
   TALPORDERD_OPENDisc_Detail_Columns: ColumnDef[] = [
-    // { field: 'talent_id', header: '合約編號系統', type: 'number', editable: false, autoWidth: true }, // 不用顯示 內容與主檔案一致 *
+    { field: 'talent_id', header: '專櫃契約編號', type: 'number', editable: false, autoWidth: true }, // 依據專櫃編號，由前端傳給後端儲存
     //---要使用的---
     // [專櫃編號] 帶出 下面這坨
-    { field: 'tlt_no', header: '專櫃編號', type: 'dropdown', editable: true, autoWidth: true, options: [] }, //(專櫃編號_專櫃名稱，下拉選單)用[專櫃編號] 帶出 [專櫃名稱]、[抽成類別]、[折數]、[抽成率] * ([TALPORDERD])
-    { field: 'tlt_id', header: '抽成類別', type: 'text', editable: false, autoWidth: true }, // 抽成類別(0-9) *
-    { field: 'cag_barcode', header: '折數條碼', type: 'text', editable: false, autoWidth: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 *
-    { field: 'cag_charge_rate', header: '抽成率', type: 'text', editable: false, autoWidth: true, hidden: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 * (*為一組，用id,mid 對應) 只有顯示，不會存到明細
-    { field: 'use_flag', header: '是否使用', type: 'dropdown', editable: true, autoWidth: true, options: this.whetherOption }, // 本作業維護
+    { field: 'tlt_no', header: '專櫃編號/名稱', type: 'dropdown', editable: true, autoWidth: true, options: [] }, //(專櫃編號_專櫃名稱，下拉選單)用[專櫃編號] 帶出 [專櫃名稱]、[抽成類別]、[折數]、[抽成率] * ([TALPORDERD])
+    { field: 'tlt_id', header: '抽成類別', type: 'text', editable: false, autoWidth: true }, // 下拉選單：依據專櫃編號，顯示對應抽成類別(0-9) *
+    { field: 'cag_barcode', header: '抽成類別', type: 'text', editable: false, autoWidth: true }, // 下拉選單：依據專櫃編號，排除當初所設定折扣別，去(TLTTALENT_CHARGED)撈 *
+    { field: 'use_flag', header: '是否使用', type: 'dropdown', editable: true, autoWidth: true, options: this.whetherOption }, // 下拉選單：是/否
+    { field: 'pod_no', header: '活動編號', type: 'number', editable: false, autoWidth: true }, // 系統預設（與TALPORDERM相同活動編號）
   ];
   // 預設新項目模板
   defaultNewDetail: any = {
-    pod_no: '', //自動設設為和主檔一致
+
     talent_id: 0, // 合約編號系統
     tlt_id: '', // 折扣別
-    // --SA指定的顯示項目--
     tlt_no: '', // 抽成類別
     cag_barcode: '000', // 折數條碼
-    cag_charge_rate: 0, // 折數條碼 //依照專櫃編號 進行變動
     use_flag: 'Y', // 是否使用
+    pod_no: '', //自動設設為和主檔一致
 
     status: 'new', // 新增狀態
     CanDel: true,
@@ -207,7 +205,6 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     private tls29010Service: Tls29010Service,
     private tls29010DetailService: Tls29010DetailService,
     private dropDownListService: DropDownListService,
-    private validationService: ValidationService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -294,7 +291,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     const mainPodNo = this.dataForm.get('pod_no')?.value;
     const processedDetail = this.opendisc_Detail.map(item => {
       const cleaned = Object.fromEntries(
-        Object.entries(item).filter(([key, _]) => key !== '')
+        Object.entries(item).filter(([key,]) => key !== '')
       );
 
       if (item.status === 'new') {
