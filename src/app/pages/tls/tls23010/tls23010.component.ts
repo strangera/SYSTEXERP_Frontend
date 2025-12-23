@@ -160,8 +160,11 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   carrierTypeOptions = getSYS1000Options('TXN_GUI_CarrType');
   txnStatusOptions: any[] = [
     { value: '1', label: '正常交易' },
-    { value: '2', label: '作廢' },
-    { value: '3', label: '退貨' },
+    { value: '2', label: '作廢交易' },
+    { value: '3', label: '退貨交易' },
+    { value: '4', label: '預售交易' },
+    { value: '5', label: '預售解約' },
+    { value: '6', label: '預售退貨' },
   ];
   cashierOptions: any[] = [];
   ECRNoOptions: any[] = [];
