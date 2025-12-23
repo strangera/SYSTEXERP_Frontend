@@ -73,6 +73,33 @@ export class LocationOptionsService {
       );
   }
 
+  //營業型態（帶排序） - 接受 SYS_Type 參數，返回帶 Sort 欄位的選項，用於 Next2 折扣別排序
+  querySYS1000_DropDownListWithSort(sysType: string): Observable<any[]> {
+    const requestBody = {
+      SYS_Type: sysType
+    };
+
+    return this.http
+      .post<any>(`${this.apiUrl}/querySYS1000_DropDownListWithSort`, requestBody)
+      .pipe(
+        map((res) => {
+          // 先按照 Sort 欄位排序，然後轉換為選項格式
+          const sortedData = (res?.Data || [])
+            .sort((a: any, b: any) => {
+              const sortA = a.Sort ?? Number.MAX_SAFE_INTEGER;
+              const sortB = b.Sort ?? Number.MAX_SAFE_INTEGER;
+              return sortA - sortB;
+            });
+
+          return sortedData.map((x: any) => ({
+            label: `${x.No} - ${x.Name}`,
+            value: x.No,
+            sort: x.Sort // 保留排序資訊
+          }));
+        })
+      );
+  }
+
   // 位置代碼選項 - 包含自動帶入用的館別、樓層、區域資訊
   getLocationWithDetailsOptions(searchParams?: any): Observable<any[]> {
     console.log('🔍 LocationService 收到原始參數:', searchParams);

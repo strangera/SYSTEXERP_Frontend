@@ -80,7 +80,7 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
     { field: 'CANCEL_TXN_No', header: '作廢序號' },
     { field: 'Close_Date', header: '結帳日期', format: formatDate },
     { field: 'Close_Ecr_No', header: '結帳機號' },
-    { field: 'Close_Txn_No', header: '結帳序號' }
+    { field: 'Close_Txn_No', header: '結帳序號', format: formatToSixDigits }
   ];
 
   // 下拉選單選項

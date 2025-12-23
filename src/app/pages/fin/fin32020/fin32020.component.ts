@@ -11,21 +11,21 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { map } from 'rxjs/operators';
 
 // UI
 import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonModule } from 'primeng/button';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 // 共用
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -36,13 +36,13 @@ import {
 
 // Service & 型別
 import {
-  FIN32020Service,
-  Fin32020Row,
-  Fin32020QueryRequest,
   ApiResponse,
+  FIN32020Service,
+  Fin32020QueryRequest,
+  Fin32020Row,
 } from '../../../service/api/fin/fin32020.service';
 
-type SortItem = { field: string; order: number };
+interface SortItem { field: string; order: number }
 
 @UntilDestroy()
 @Component({
@@ -72,8 +72,7 @@ type SortItem = { field: string; order: number };
  */
 export class FIN32020Component
   extends BasicQueryPageComponent<Fin32020Row>
-  implements OnInit
-{
+  implements OnInit {
   /* ----------------- 主表狀態 ----------------- */
   data: Fin32020Row[] = [];
   totalRecords = 0;       // 後端真實總筆數
@@ -130,16 +129,7 @@ export class FIN32020Component
 
   /* ----------------- LifeCycle ----------------- */
   ngOnInit(): void {
-    this.ProgNo = 'FIN32020';
-    this.cruPage = '/fin/fin32020cru';
-
-    // 回到查詢頁時如果有歷史條件就自動帶入 + 查一次
-    this.initializePage(
-      this.ProgNo,
-      this.cruPage,
-      this.queryForm,
-      (form) => this.onSubmit(form)
-    );
+    this.initializePage('FIN32030', 'fin/fin32030cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   /* ----------------- Utility ----------------- */
@@ -192,11 +182,11 @@ export class FIN32020Component
     const orderBy =
       sort && sort.length
         ? sort
-            .map((s) => {
-              const dir = s.order === -1 ? 'DESC' : 'ASC';
-              return `${s.field} ${dir}`;
-            })
-            .join(', ')
+          .map((s) => {
+            const dir = s.order === -1 ? 'DESC' : 'ASC';
+            return `${s.field} ${dir}`;
+          })
+          .join(', ')
         : null;
 
     const req: Fin32020QueryRequest = {
@@ -237,8 +227,8 @@ export class FIN32020Component
           const rows: Fin32020Row[] = Array.isArray(src)
             ? src
             : src
-            ? [src]
-            : [];
+              ? [src]
+              : [];
           const totalCount =
             Number((res as any)?.TotalCount ?? rows.length) ||
             rows.length;
@@ -277,7 +267,6 @@ export class FIN32020Component
     });
 
     payload.PageIndex = 1;
-    payload.Offset = 0;
 
     this.loading = true;
     this.data = [];

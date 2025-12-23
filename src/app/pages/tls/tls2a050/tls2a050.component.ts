@@ -192,6 +192,7 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
           header: '帳差 (實收-系統)',
           visible: true,
           groupField: name,
+          format: formatAmount,
           align: 'right',
           type: 'html',
         },
