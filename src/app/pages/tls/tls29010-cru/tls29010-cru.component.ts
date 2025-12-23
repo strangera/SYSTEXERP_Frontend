@@ -174,7 +174,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       type: 'input',
       width: '150px',
       validate: [validateRequired],
-      disabled: () => true,
+      // disabled: () => true,
     },
     {
       field: 'use_flag', // 下拉選單：是/否
