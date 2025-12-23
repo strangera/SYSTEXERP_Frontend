@@ -164,8 +164,15 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
+      const rawSortBy = Array.isArray(form.value.SortBy) ? form.value.SortBy as any[] : [];
+      const mappedSortBy = rawSortBy.map(s => ({
+        ...s,
+        field: this.mapSortFieldForBackend(s.field as string | undefined),
+      }));
+
       const params = {
         ...form.value,
+        SortBy: mappedSortBy,
         willing_level: form.value.willing_level || null,
         contact_Datestart: form.value.contact_Datestart
           ? new Date(form.value.contact_Datestart).toISOString()
@@ -194,6 +201,18 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
           },
         });
     });
+  }
+  private mapSortFieldForBackend(field: string | undefined): string | undefined {
+    switch (field) {
+      case 'building_no_name':
+        return 'building_no';
+      case 'bus_type_name':
+        return 'bus_type';
+      case 'willing_level_name':
+        return 'willing_level';
+      default:
+        return field;
+    }
   }
   override initializePage(
     progNo: string,
