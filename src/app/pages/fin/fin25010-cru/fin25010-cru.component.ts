@@ -39,19 +39,19 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 })
 export class FIN25010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    ACP_ExpectPayDate: [null, Validators.required], // 收/付款日
+    ACP_ExpectPayDate: [new Date(), Validators.required], // 收/付款日
     ven_no_b: [null], // 廠客代號(起)
     ven_no_e: [null], // 廠客代號(迄)
-    ACP_No: [null, Validators.maxLength(14)], // 應付帳款ID
-    IN_TYPE: [null], // 傳票型態
-    RMT_TYPE: [null], // 付款方式
+    ACP_No: [null, Validators.maxLength(14)], // 應收/付ID
+    Voucher_Kind: [null], // 傳票型態
+    VEN_PayType: [null], // 付款方式
     ...createPaginationConfig([])
   });
 
   // 廠客代號選項
   venNoOptions: any[] = [];
   // 傳票型態選項
-  inTypeOptions: any[] = [
+  voucherKindOptions: any[] = [
     { label: 'AS - 贊助金傳票', value: 'AS' },
     { label: 'AT - 電匯EDI傳票', value: 'AT' },
     { label: 'BT - 銀行資金調撥傳票', value: 'BT' },
@@ -64,9 +64,8 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<any> implements 
     { label: 'DB - 存出保證金傳票收回拋轉', value: 'DB' }
   ];
   // 付款方式選項
-  rmtTypeOptions = [
+  venPayTypeOptions = [
     { label: '電匯', value: '1' },
-    { label: '開票', value: '2' },
     { label: '現金', value: '3' },
   ];
 
@@ -75,21 +74,17 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<any> implements 
   selectedItems: QueryAddFIN25010Response[] = [];
   totalRecords = 0;
   columns: Column[] = [
-    { field: 'ID', header: 'ID', hidden: true },
-    { field: 'acp_no', header: '應收/付帳款編號' },
     { field: 'ven_no', header: '廠客代號' },
+    { field: 'ven_name', header: '廠客名稱' },
+    { field: 'IN_TYPE', header: '資料來源別', format: (value: string) => value === '1' ? '應付' : value === '2' ? '應收' : value === '3' ? '保留款' : value },
     { field: 'ACP_Amt', header: '付款金額', format: formatAmount },
+    { field: 'acp_no', header: '應收/付ID' },
     { field: 'acp_DATE', header: '立帳日期', format: formatDate },
-    { field: 'PTA_Date', header: '預計付款日期', format: formatDate },
-    { field: 'NoteDesc', header: '摘要' },
+    { field: 'PTA_Date', header: '預計收/付款日', format: formatDate },
+    { field: 'NoteDesc', header: '備註' },
     { field: 'ACCNO', header: '會計科目' },
-    { field: 'ACP_STATUS', header: '應付帳款狀態', format: (value: string) => value === '0' ? '作廢' : value === '2' ? '建立' : value },
-    { field: 'IN_TYPE', header: '資料來源別' },
-    { field: 'RMT_TYPE', header: '付款方式', format: (value: string) => this.rmtTypeOptions.find(x => x.value === value)?.label || value },
-    { field: 'ORG_ID', header: '組織代碼' },
-    { field: 'ACP_YYYYMM', header: '應付帳款年月' },
-    { field: 'ACP_TERMNO', header: '帳款帳次' },
-    { field: 'Remit_Status', header: '是否形成電匯', format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : value }
+    { field: 'ACP_STATUS', header: '狀態', format: (value: string) => value === '0' ? '作廢' : value === '2' ? '建立' : value },
+    { field: 'ORG_ID', header: '組織代號' },
   ];
 
   constructor(
@@ -133,6 +128,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<any> implements 
   onGenerate() {
     const aps3009Items = this.selectedItems.map(item => ({
       ID: item.ID,
+      RMT_TYPE: item.RMT_TYPE,
       VEN_No: item.ven_no,
       APAR_No: item.acp_no,
       ACP_YYYYMM: item.ACP_YYYYMM,
@@ -141,7 +137,6 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<any> implements 
       PTA_Date: this.datePipe.transform(item.PTA_Date, 'yyyy-MM-dd') || '',
       NoteDesc: item.NoteDesc,
       IN_TYPE: item.IN_TYPE,
-      RMT_TYPE: item.RMT_TYPE,
       Remit_Status: item.Remit_Status
     }));
 

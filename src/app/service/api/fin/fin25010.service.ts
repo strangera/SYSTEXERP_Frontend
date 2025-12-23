@@ -28,8 +28,8 @@ export interface FIN25010Data {
 
 // 查詢下拉選單 Request
 export interface QueryDropFIN25010Request extends BaseQueryRequest {
-  ACP_ExpectPayDate_b?: string;  // 收/付款日(起)
-  ACP_ExpectPayDate_e?: string;  // 收/付款日(迄)
+  PTA_Date_b?: string;  // 收/付款日(起)
+  PTA_Date_e?: string;  // 收/付款日(迄)
   Remit_Status?: string;         // 是否形成電匯(Y/N)
   PAM_No?: string;               // 匯款來源單號
 }
@@ -47,27 +47,31 @@ export interface QueryAddFIN25010Request extends BaseQueryRequest {
   ven_no_b?: string;           // 廠客代號(起)
   ven_no_e?: string;           // 廠客代號(迄)
   ACP_No?: string;             // 應付帳款ID
-  IN_TYPE?: string;            // 傳票型態
-  RMT_TYPE?: string;           // 付款方式(1:電匯,2:開票,3:現金)
+  Voucher_Kind?: string;     // 傳票型態
+  VEN_PayType?: string;       // 付款方式
 }
 
 // 查詢產生電匯付款資料 新增查詢Response
 export interface QueryAddFIN25010Response {
-  ID: number;                  // ID
-  acp_no?: string;             // 應收/付帳款編號 (單據別+YYYYMMDD+XXXX)
-  ven_no?: string;             // 廠客代號
-  ACP_Amt?: string;            // 付款金額
-  acp_DATE?: string;           // 立帳日期
-  PTA_Date?: string;           // 預計付款日期 ACP_ExpectPayDate
-  NoteDesc?: string;           // 摘要(傳票上的摘要)
-  ACCNO?: string;              // 會計科目
-  ACP_STATUS?: string;         // 應付帳款狀態(0=作廢 2=建立)
-  IN_TYPE?: string;            // 資料來源別
-  RMT_TYPE?: string;           // 付款方式(1:電匯,2:開票,3:現金)
-  ORG_ID?: string;             // 組織代碼(SYS3100)
-  ACP_YYYYMM?: string;         // 應付帳款年月
-  ACP_TERMNO?: string;         // 帳款帳次
-  Remit_Status?: string;       // 是否形成電匯(Y/N)
+  // 隱藏欄位
+  ID: number;
+  IN_TYPE?: string;
+  VEN_PayType?: string;
+  ACP_YYYYMM?: string;
+  ACP_TERMNO?: string;
+  Remit_Status?: string;
+  // 顯示欄位
+  ven_no?: string;
+  ven_name?: string;
+  RMT_TYPE?: string;
+  ACP_Amt?: string;
+  acp_no?: string;
+  acp_DATE?: string;
+  PTA_Date?: string;
+  NoteDesc?: string;
+  ACCNO?: string;
+  ACP_STATUS?: string;
+  ORG_ID?: string;
 }
 
 // 新增 APS3009 資料表 Request
