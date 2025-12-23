@@ -290,7 +290,11 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       this.fullLogoOptions = Array.from(uniqueLogoNos).map(([value, label]) => ({
         value: value,
         label: `${value} - ${label}`,
-      }));
+      })).sort((a, b) => {
+        const valA = String(a.value);
+        const valB = String(b.value);
+        return valA.localeCompare(valB, undefined, { numeric: true, sensitivity: 'base' });
+      });
 
       // c. 儲存所有倉別選項 (直接使用 queryPos2034 的結果)
       this.fullWarehouseOptions = warehouse || [];

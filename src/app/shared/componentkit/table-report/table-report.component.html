@@ -213,7 +213,7 @@
       <td [hidden]="!showManage" class="text-center" alignFrozen="right" pFrozenColumn [frozen]="true"></td>
     </tr>
   </ng-template>
-  <ng-template pTemplate="summary">
+  <ng-template pTemplate="summary" *ngIf="showSummary">
     <div class="flex align-items-center justify-content-between p-2">
       <div [style.min-width.px]="150" class="flex align-items-center">
         <span *ngIf="selectedItems.length" [@fadeInOut] class="block" style="line-height: normal;">
