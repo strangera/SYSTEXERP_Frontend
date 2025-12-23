@@ -10,7 +10,11 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <!-- 第1列 -->
           <div class="col-12 md:col-6 lg:col-4">
@@ -47,7 +51,7 @@
           <!-- 第2列 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-              label="到期傳票編號"
+              label="兌現傳票號碼"
               controlName="VouNoPaid"
               [control]="queryForm.controls.VouNoPaid"
               [submitted]="submitted"
@@ -67,7 +71,9 @@
           </div>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <!-- ✅ 票據到期拋轉傳票 -->
           <app-button
             [type]="'button'"
@@ -80,8 +86,6 @@
             [type]="'button'"
             (clickEvent)="onClear(queryForm)"
           ></app-button>
-
-       
 
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
