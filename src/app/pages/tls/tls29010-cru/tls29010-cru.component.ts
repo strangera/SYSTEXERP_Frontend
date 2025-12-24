@@ -163,9 +163,13 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       validate: [validateRequired, this.validateUniqueTLT_NO.bind(this)],
     },
     {
-      field: 'tlt_id', // 下拉選單：依據專櫃編號，顯示對應抽成類別(0-9)
-      header: '抽成類別',
+      field: 'tlt_id',
+      header: '抽成類別', // 抽成別(0-9)，排除掉已選項目
       width: '150px',
+      type: 'dropdown', // 修改為 dropdown
+      options: (rowData: any) => rowData.tlt_ID_Option || this.tlt_ID_Option, // 優先使用動態選單
+      optionLabel: 'label',
+      optionValue: 'value',
       validate: [validateRequired],
       disabled: (value, index, rowData) => this.is_tltNo_GroupSelected(rowData), // 沒有選專櫃編號就disabled
     },
@@ -174,7 +178,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       header: '折扣別',
       width: '150px',
       type: 'dropdown',
-      options: this.cag_barcode_Options,
+      options: (rowData: any) => rowData._barcodeOptions || [],
       optionLabel: 'label',
       optionValue: 'value',
       validate: [validateRequired],
@@ -305,6 +309,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
           const userInfo = this.authService?.getUserInfo?.();
           const request = {
             ...body,
+            "pod_no": null,
             "str_no": userInfo?.SYS_StoreNo || ''
           }
 
@@ -350,8 +355,8 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
   loadOption() {
     // 活動編號(新增request空物件即可，修改代入原有的)
-    // const pod = this.dataForm.get('pod_no')?.value || "";
-    const pod = "";
+    const pod = this.dataForm.get('pod_no')?.value || "";
+    // const pod = "";
     this.tls29010Service.dropdownTLS29010bypodno({ "pod_no": pod }).pipe(untilDestroyed(this)).subscribe(res => {
       this.act_no_Options = res.Data.map((item: { act_no: string; POD_DESC: string; }) => ({
         ...item,
@@ -359,6 +364,11 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       }));
       console.log('pod: ', pod, ' ,活動編號 下拉:', this.act_no_Options);
     });
+    // 抽成別
+    // this.tls29010Service.queryTLTTALENT_CHARGED({ "talent_id": "" }).pipe(untilDestroyed(this)).subscribe(res => {
+    //   this.tlt_ID_Option = res.Data;
+    //   console.log('抽成別 下拉:', res);
+    // });
     // 專櫃編號
     this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.tlt_No_Option = res.Data.map(item => ({
@@ -369,18 +379,6 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
       // 更新專櫃編號欄位 (tlt_no)
       this.updateColumnOptions('tlt_no', this.tlt_No_Option);
-    });
-    //折扣別
-    const talent_id = this.dataForm.get('talent_id')?.value || "";
-    console.log('折扣別條件', talent_id);
-    // 折扣別，下拉選單
-    this.tls29010Service.dropdownTLS29010bytalentid({ "talent_id": talent_id }).pipe(untilDestroyed(this)).pipe(untilDestroyed(this)).subscribe((response) => {
-      this.cag_barcode_Options = response.Data;
-      // console.log('✨pod_no:', pod_no, '對應的 折扣別 下拉:', response.Data);
-      console.log('✨ 折扣別 下拉:', this.cag_barcode_Options);
-
-      // 更新折扣別欄位 (cag_barcode) -> 這裡對應你表格定義中的 field: 'cag_barcode'
-      this.updateColumnOptions('cag_barcode', this.cag_barcode_Options);
     });
   }
 
@@ -426,7 +424,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       // 條件：這一列是新的，或者 tlt_no 與之前不同
       if (currentRow.tlt_no && (!oldRow || currentRow.tlt_no !== oldRow.tlt_no)) {
         try {
-          // 呼叫 API 取得該專櫃的詳細合約資料
+          // 1. 取得專櫃詳細合約資料 (queryTLTTALENT_Data: talent_id中繼站)
           const res = await this.tls29010Service
             .queryTLTTALENT_Data({ tlt_no: currentRow.tlt_no })
             .pipe(untilDestroyed(this))
@@ -437,19 +435,36 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
             console.log('API 回傳的專櫃合約資料:', apiData);
 
-            // 自動填充該列的其他欄位
+            // 這邊調抓talent_id
             currentRow.talent_id = apiData.talent_id;
-            currentRow.tlt_id = apiData.tlt_id;
-            currentRow.tlt_no = apiData.tlt_no;
-            currentRow.cag_barcode = apiData.cag_barcode;
-            currentRow.tlt_bdate = apiData.tlt_bdate;
-            currentRow.tlt_edate = apiData.tlt_edate;
+            // currentRow.tlt_id = apiData.tlt_id;
+            // currentRow.tlt_no = apiData.tlt_no;
+            // currentRow.cag_barcode = apiData.cag_barcode;
+            // currentRow.tlt_bdate = apiData.tlt_bdate;
+            // currentRow.tlt_edate = apiData.tlt_edate;
 
             // 如果是剛選定專櫃，通常預設將「是否使用」設為 'Y'
             if (!currentRow.use_flag) {
               currentRow.use_flag = 'Y';
             }
 
+            // 邏輯 B: 有 talent_id 查詢該專櫃專屬的「抽成別」「折扣別」下拉選單
+            if (currentRow.talent_id) {
+              console.log('點選talent_id:', currentRow.talent_id);
+              // 折扣別
+              const barcodeRes = await this.tls29010Service
+                .queryTLTTALENT_CHARGE_DropDownList({ talent_id: currentRow.talent_id.toString() })
+                .pipe(untilDestroyed(this))
+                .toPromise();
+
+              if (barcodeRes.Status === '0000') {
+                console.log('取得折扣別、抽成別資料:', barcodeRes.Data);
+                // 將選項儲存在該行物件中 (例如自定義一個 _barcodeOptions 屬性)
+                (currentRow as any)._barcodeOptions = barcodeRes.Data;
+              } else {
+                this.messageService.errorBubble(`取得折扣別下拉選單失敗: ${barcodeRes.Message}`);
+              }
+            }
             console.log(`已更新專櫃 ${currentRow.tlt_no} 的合約資料`, apiData);
           } else {
             // 若查無資料，可考慮清空相關欄位
