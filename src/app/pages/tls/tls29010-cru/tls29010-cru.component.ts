@@ -58,6 +58,16 @@ export interface TALPORDERD_OPENDisc {
   status: string; // 狀態 (原始: 'orginal', 新增: 'new', 編輯: 'modified', 刪除: 'deleted')
 }
 
+// 活動編號選單內容介面
+export interface ActNoOption {
+  act_no: string;
+  POD_DESC: string;
+  pod_sdate: string;
+  pod_edate: string;
+
+  Label?: string; //作為標示
+}
+
 @Component({
   selector: 'app-tls29010-cru',
   templateUrl: './tls29010-cru.component.html',
@@ -94,7 +104,8 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     pod_no: [{ value: '系統產生代碼', disabled: true }], // YYYYMMDDSSS(活動起始日期+流水號)
     pod_type: ['8', [Validators.required]], // 固定寫入8
 
-    pod_desc: [{ value: '', disabled: true }], // 活動名稱(使用者輸入)
+    act_no: [''], // 活動編號
+    pod_desc: [''], // 活動名稱(使用者輸入)，開放下拉
     pod_sdate: [{ value: null as Date | null, disabled: true }, [Validators.required]], // 活動起始日 (Date)
     pod_edate: [{ value: null as Date | null, disabled: true }, [Validators.required]], // 活動終止日 (Date)
     pod_status: ['', Validators.required], // 活動建立=0 /核准=1 /反核准=0 /刪除=9
@@ -127,9 +138,10 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     { label: '刪除', value: '9' },
   ];
 
-  pod_no_Options: { value: string, label: string }[] = []; // 活動申請編號
+  act_no_Options: ActNoOption[] = []; // 活動編號
   cag_barcode_Options: { value: string, label: string }[] = []; // 折扣別下拉
   tlt_No_Option: { value: string, label: string }[] = [];  // 專櫃編號下拉
+  tlt_ID_Option: { value: string, label: string }[] = [];  // 抽成類別下拉
 
   //主檔資料備份 用於比對是否更動
   originalData: TALPORDERD_OPENDisc[] = []; // 明細檔 備份
@@ -153,7 +165,6 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     {
       field: 'tlt_id', // 下拉選單：依據專櫃編號，顯示對應抽成類別(0-9)
       header: '抽成類別',
-      type: 'inputNumber',
       width: '150px',
       validate: [validateRequired],
       disabled: (value, index, rowData) => this.is_tltNo_GroupSelected(rowData), // 沒有選專櫃編號就disabled
@@ -200,37 +211,35 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       this.loadDetailData(pod_no); //讀取明細檔
     }
 
-    // pod_no 變更時寫入dataform對應的活動名稱(pod_desc)與起訖日期(pod_sdate、pod_edate)
-    // this.dataForm.get('pod_no')?.valueChanges
-    //   .pipe(untilDestroyed(this)) // 使用直到銷毀的操作符，避免記憶體洩漏
-    //   .subscribe(selectedPodNo => {
-    //     // 根據選中的 pod_no，從 cag_barcode_Options 中尋找對應的資料
-    //     const selectedOption = this.cag_barcode_Options.find(
-    //       option => option.act_no === selectedPodNo
-    //     );
+    // 活動編號act_no 變更時寫入dataform對應的活動名稱(pod_desc)與起訖日期(pod_sdate、pod_edate)
+    this.dataForm.get('act_no')?.valueChanges
+      .pipe(untilDestroyed(this)) // 使用直到銷毀的操作符，避免記憶體洩漏
+      .subscribe(selectedActNo => {
+        // 根據選中的 act_no cag_barcode_Options 中尋找對應的資料
+        const selectedOption = this.act_no_Options.find(
+          option => option.act_no === selectedActNo
+        );
 
-    //     if (selectedOption) {
-    //       // 找到了對應的活動資料，更新 dataForm 中的其他欄位
-    //       this.dataForm.patchValue({
-    //         // 活動名稱
-    //         pod_desc: selectedOption.POD_DESC,
-    //         // 活動起始日期 (注意：如果您的表單控制項是 Date 類型，您可能需要轉換字串)
-    //         // 假設 pod_sdate 和 pod_edate 在您的 dataForm 中預期是 Date 類型
-    //         pod_sdate: new Date(selectedOption.pod_sdate),
-    //         pod_edate: new Date(selectedOption.pod_edate),
-    //       });
-    //     } else {
-    //       // 如果選擇的值為 null 或在 options 中找不到，可以選擇清空或保持不變
-    //       this.dataForm.patchValue({
-    //         pod_desc: null,
-    //         pod_sdate: null,
-    //         pod_edate: null,
-    //       });
+        if (selectedOption) {
+          // 找到了對應的活動資料，更新 dataForm 中的其他欄位
+          this.dataForm.patchValue({
+            // 活動名稱
+            pod_desc: selectedOption.POD_DESC,
+            pod_sdate: new Date(selectedOption.pod_sdate),
+            pod_edate: new Date(selectedOption.pod_edate),
+          });
+        } else {
+          // 如果選擇的值為 null 或在 options 中找不到，可以選擇清空或保持不變
+          this.dataForm.patchValue({
+            pod_desc: null,
+            pod_sdate: null,
+            pod_edate: null,
+          });
 
-    //       // (可選) 清空明細資料
-    //       this.opendisc_Detail = [];
-    //     }
-    //   });
+          // (可選) 清空明細資料
+          this.opendisc_Detail = [];
+        }
+      });
 
     //新增模式pod_desc才可以填寫，否則與其他欄位一樣都設為disabled
     const userInfo = this.authService?.getUserInfo?.();
@@ -340,6 +349,16 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   }
 
   loadOption() {
+    // 活動編號(新增request空物件即可，修改代入原有的)
+    // const pod = this.dataForm.get('pod_no')?.value || "";
+    const pod = "";
+    this.tls29010Service.dropdownTLS29010bypodno({ "pod_no": pod }).pipe(untilDestroyed(this)).subscribe(res => {
+      this.act_no_Options = res.Data.map((item: { act_no: string; POD_DESC: string; }) => ({
+        ...item,
+        Label: `${item.act_no} - ${item.POD_DESC}`
+      }));
+      console.log('pod: ', pod, ' ,活動編號 下拉:', this.act_no_Options);
+    });
     // 專櫃編號
     this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.tlt_No_Option = res.Data.map(item => ({
@@ -348,13 +367,13 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       }));
       // console.log('專櫃編號 下拉:', this.tlt_No_Option);
 
-      // this.TALPORDERD_OPENDisc_Detail_Columns = TLS29010CRUComponent.updateTlt_No_OptionInColumns(this.TALPORDERD_OPENDisc_Detail_Columns, this.tlt_No_Option);
       // 更新專櫃編號欄位 (tlt_no)
       this.updateColumnOptions('tlt_no', this.tlt_No_Option);
     });
     //折扣別
     const talent_id = this.dataForm.get('talent_id')?.value || "";
-    // 活動編號，下拉選單
+    console.log('折扣別條件', talent_id);
+    // 折扣別，下拉選單
     this.tls29010Service.dropdownTLS29010bytalentid({ "talent_id": talent_id }).pipe(untilDestroyed(this)).pipe(untilDestroyed(this)).subscribe((response) => {
       this.cag_barcode_Options = response.Data;
       // console.log('✨pod_no:', pod_no, '對應的 折扣別 下拉:', response.Data);
