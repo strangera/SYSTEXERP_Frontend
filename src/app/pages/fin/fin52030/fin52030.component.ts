@@ -11,7 +11,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
+import { finalize, tap } from 'rxjs';
 import { FIN52030Data, FIN52030Payload } from './fin52030.model';
 
 @Component({
@@ -47,8 +47,8 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
   public readonly totalRecords = signal<number>(0);
 
   public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52030Data; })[] = [
-    { field: 'TempNo', header: '傳票號碼' },
-    { field: 'TempName', header: '傳票代號' },
+    { field: 'TempNo', header: '常用傳票代碼' },
+    { field: 'TempName', header: '常用傳票名稱' },
     { field: 'VouType', header: '傳票類型', format: v => this.service.vouTypeOptions().find(option => option.value === v)?.label ?? v },
     { field: 'DetailCount', header: '明細筆數' },
   ];
@@ -98,5 +98,16 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
         },
       });
     });
+  }
+
+  public onDelete(event: FIN52030Data[]): void {
+    this.logger.debug(`onDelete:`, [event]);
+    this.service.deleteFIN52030Data(event.map(item => item.id)).pipe(
+      tap(res => {
+        if (res.Status === '0000') this.messageService.successBubble('刪除成功');
+        else this.messageService.errorBubble(`刪除失敗: ${res.Message}`);
+      }),
+      finalize(() => this.onSubmit()),
+    ).subscribe();
   }
 }
