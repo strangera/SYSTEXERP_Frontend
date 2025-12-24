@@ -58,16 +58,15 @@ export interface TALPORDERD_OPENDisc {
   status: string; // 狀態 (原始: 'orginal', 新增: 'new', 編輯: 'modified', 刪除: 'deleted')
 }
 
-//活動申請編號 下拉選單
-export interface ACT_NO_type {
-  "act_no": string,
-  "POD_DESC": string,
-  "pod_sdate": string,
-  "pod_edate": string,
+// 活動編號選單內容介面
+export interface ActNoOption {
+  act_no: string;
+  POD_DESC: string;
+  pod_sdate: string;
+  pod_edate: string;
 
-  "Label"?: string, // 前端 顯示用(POD_NO+POD_DESC)
+  Label?: string; //作為標示
 }
-
 
 @Component({
   selector: 'app-tls29010-cru',
@@ -105,7 +104,8 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     pod_no: [{ value: '系統產生代碼', disabled: true }], // YYYYMMDDSSS(活動起始日期+流水號)
     pod_type: ['8', [Validators.required]], // 固定寫入8
 
-    pod_desc: [{ value: '', disabled: true }], // 活動名稱(使用者輸入)
+    act_no: [''], // 活動編號
+    pod_desc: [''], // 活動名稱(使用者輸入)，開放下拉
     pod_sdate: [{ value: null as Date | null, disabled: true }, [Validators.required]], // 活動起始日 (Date)
     pod_edate: [{ value: null as Date | null, disabled: true }, [Validators.required]], // 活動終止日 (Date)
     pod_status: ['', Validators.required], // 活動建立=0 /核准=1 /反核准=0 /刪除=9
@@ -138,8 +138,10 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     { label: '刪除', value: '9' },
   ];
 
-  act_No_Options: ACT_NO_type[] = []; // 折扣別下拉
+  act_no_Options: ActNoOption[] = []; // 活動編號
+  cag_barcode_Options: { value: string, label: string }[] = []; // 折扣別下拉
   tlt_No_Option: { value: string, label: string }[] = [];  // 專櫃編號下拉
+  tlt_ID_Option: { value: string, label: string }[] = [];  // 抽成類別下拉
 
   //主檔資料備份 用於比對是否更動
   originalData: TALPORDERD_OPENDisc[] = []; // 明細檔 備份
@@ -161,20 +163,26 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       validate: [validateRequired, this.validateUniqueTLT_NO.bind(this)],
     },
     {
-      field: 'tlt_id', // 下拉選單：依據專櫃編號，顯示對應抽成類別(0-9)
-      header: '抽成類別',
-      type: 'inputNumber',
+      field: 'tlt_id',
+      header: '抽成類別', // 抽成別(0-9)，排除掉已選項目
       width: '150px',
+      type: 'dropdown', // 修改為 dropdown
+      options: (rowData: any) => rowData.tlt_ID_Option || this.tlt_ID_Option, // 優先使用動態選單
+      optionLabel: 'label',
+      optionValue: 'value',
       validate: [validateRequired],
-      disabled: () => true,
+      disabled: (value, index, rowData) => this.is_tltNo_GroupSelected(rowData), // 沒有選專櫃編號就disabled
     },
     {
       field: 'cag_barcode', // 下拉選單：依據專櫃編號，排除當初所設定折扣別，去(TLTTALENT_CHARGED)撈
       header: '折扣別',
-      type: 'input',
       width: '150px',
+      type: 'dropdown',
+      options: (rowData: any) => rowData._barcodeOptions || [],
+      optionLabel: 'label',
+      optionValue: 'value',
       validate: [validateRequired],
-      // disabled: () => true,
+      disabled: (value, index, rowData) => this.is_tltNo_GroupSelected(rowData), // 沒有選專櫃編號就disabled
     },
     {
       field: 'use_flag', // 下拉選單：是/否
@@ -207,13 +215,13 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       this.loadDetailData(pod_no); //讀取明細檔
     }
 
-    // pod_no 變更時寫入dataform對應的活動名稱(pod_desc)與起訖日期(pod_sdate、pod_edate)
-    this.dataForm.get('pod_no')?.valueChanges
+    // 活動編號act_no 變更時寫入dataform對應的活動名稱(pod_desc)與起訖日期(pod_sdate、pod_edate)
+    this.dataForm.get('act_no')?.valueChanges
       .pipe(untilDestroyed(this)) // 使用直到銷毀的操作符，避免記憶體洩漏
-      .subscribe(selectedPodNo => {
-        // 根據選中的 pod_no，從 act_No_Options 中尋找對應的資料
-        const selectedOption = this.act_No_Options.find(
-          option => option.act_no === selectedPodNo
+      .subscribe(selectedActNo => {
+        // 根據選中的 act_no cag_barcode_Options 中尋找對應的資料
+        const selectedOption = this.act_no_Options.find(
+          option => option.act_no === selectedActNo
         );
 
         if (selectedOption) {
@@ -221,8 +229,6 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
           this.dataForm.patchValue({
             // 活動名稱
             pod_desc: selectedOption.POD_DESC,
-            // 活動起始日期 (注意：如果您的表單控制項是 Date 類型，您可能需要轉換字串)
-            // 假設 pod_sdate 和 pod_edate 在您的 dataForm 中預期是 Date 類型
             pod_sdate: new Date(selectedOption.pod_sdate),
             pod_edate: new Date(selectedOption.pod_edate),
           });
@@ -303,6 +309,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
           const userInfo = this.authService?.getUserInfo?.();
           const request = {
             ...body,
+            "pod_no": null,
             "str_no": userInfo?.SYS_StoreNo || ''
           }
 
@@ -347,6 +354,21 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   }
 
   loadOption() {
+    // 活動編號(新增request空物件即可，修改代入原有的)
+    const pod = this.dataForm.get('pod_no')?.value || "";
+    // const pod = "";
+    this.tls29010Service.dropdownTLS29010bypodno({ "pod_no": pod }).pipe(untilDestroyed(this)).subscribe(res => {
+      this.act_no_Options = res.Data.map((item: { act_no: string; POD_DESC: string; }) => ({
+        ...item,
+        Label: `${item.act_no} - ${item.POD_DESC}`
+      }));
+      console.log('pod: ', pod, ' ,活動編號 下拉:', this.act_no_Options);
+    });
+    // 抽成別
+    // this.tls29010Service.queryTLTTALENT_CHARGED({ "talent_id": "" }).pipe(untilDestroyed(this)).subscribe(res => {
+    //   this.tlt_ID_Option = res.Data;
+    //   console.log('抽成別 下拉:', res);
+    // });
     // 專櫃編號
     this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.tlt_No_Option = res.Data.map(item => ({
@@ -355,28 +377,19 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       }));
       // console.log('專櫃編號 下拉:', this.tlt_No_Option);
 
-      // 更新欄位的 options
-      this.TALPORDERD_OPENDisc_Detail_Columns = TLS29010CRUComponent.updateTlt_No_OptionInColumns(this.TALPORDERD_OPENDisc_Detail_Columns, this.tlt_No_Option);
+      // 更新專櫃編號欄位 (tlt_no)
+      this.updateColumnOptions('tlt_no', this.tlt_No_Option);
     });
-    //折扣別
-    const pod_no = this.dataForm.get('pod_no')?.value || "";
-    // 活動編號，下拉選單
-    this.tls29010Service.dropdownTLS29010bypodno({ "pod_no": pod_no }).pipe(untilDestroyed(this)).pipe(untilDestroyed(this)).subscribe((response) => {
-      this.act_No_Options = response.Data.map((item: ACT_NO_type) => ({
-        ...item,
-        Label: item.act_no + '-' + item.POD_DESC,
-        // Label: item.act_no + '-' + item.POD_DESC + '-' + item.pod_sdate + '-' + item.pod_edate, // 檢查時間用的
-      }));
-      console.log('✨pod_no:', pod_no, '對應的 活動編號 下拉:', response.Data);
-    });
-
   }
 
   // 更新欄位的 專櫃編號
-  static updateTlt_No_OptionInColumns(columns: EditColumn[], tlt_No_Option: any[]): EditColumn[] {
-    const col = columns.find(c => c.field === 'tlt_no');
-    if (col) col.options = tlt_No_Option;
-    return columns;
+  private updateColumnOptions(fieldName: string, options: any[]) {
+    const col = this.TALPORDERD_OPENDisc_Detail_Columns.find(c => c.field === fieldName);
+    if (col) {
+      col.options = options;
+      // 確保觸發 Angular 變更偵測，重新分配參考
+      this.TALPORDERD_OPENDisc_Detail_Columns = [...this.TALPORDERD_OPENDisc_Detail_Columns];
+    }
   }
 
   //讀取明細檔
@@ -411,7 +424,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       // 條件：這一列是新的，或者 tlt_no 與之前不同
       if (currentRow.tlt_no && (!oldRow || currentRow.tlt_no !== oldRow.tlt_no)) {
         try {
-          // 呼叫 API 取得該專櫃的詳細合約資料
+          // 1. 取得專櫃詳細合約資料 (queryTLTTALENT_Data: talent_id中繼站)
           const res = await this.tls29010Service
             .queryTLTTALENT_Data({ tlt_no: currentRow.tlt_no })
             .pipe(untilDestroyed(this))
@@ -422,19 +435,36 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
             console.log('API 回傳的專櫃合約資料:', apiData);
 
-            // 自動填充該列的其他欄位
+            // 這邊調抓talent_id
             currentRow.talent_id = apiData.talent_id;
-            currentRow.tlt_id = apiData.tlt_id;
-            currentRow.tlt_no = apiData.tlt_no;
-            currentRow.cag_barcode = apiData.cag_barcode;
-            currentRow.tlt_bdate = apiData.tlt_bdate;
-            currentRow.tlt_edate = apiData.tlt_edate;
+            // currentRow.tlt_id = apiData.tlt_id;
+            // currentRow.tlt_no = apiData.tlt_no;
+            // currentRow.cag_barcode = apiData.cag_barcode;
+            // currentRow.tlt_bdate = apiData.tlt_bdate;
+            // currentRow.tlt_edate = apiData.tlt_edate;
 
             // 如果是剛選定專櫃，通常預設將「是否使用」設為 'Y'
             if (!currentRow.use_flag) {
               currentRow.use_flag = 'Y';
             }
 
+            // 邏輯 B: 有 talent_id 查詢該專櫃專屬的「抽成別」「折扣別」下拉選單
+            if (currentRow.talent_id) {
+              console.log('點選talent_id:', currentRow.talent_id);
+              // 折扣別
+              const barcodeRes = await this.tls29010Service
+                .queryTLTTALENT_CHARGE_DropDownList({ talent_id: currentRow.talent_id.toString() })
+                .pipe(untilDestroyed(this))
+                .toPromise();
+
+              if (barcodeRes.Status === '0000') {
+                console.log('取得折扣別、抽成別資料:', barcodeRes.Data);
+                // 將選項儲存在該行物件中 (例如自定義一個 _barcodeOptions 屬性)
+                (currentRow as any)._barcodeOptions = barcodeRes.Data;
+              } else {
+                this.messageService.errorBubble(`取得折扣別下拉選單失敗: ${barcodeRes.Message}`);
+              }
+            }
             console.log(`已更新專櫃 ${currentRow.tlt_no} 的合約資料`, apiData);
           } else {
             // 若查無資料，可考慮清空相關欄位
@@ -445,10 +475,9 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         }
       }
     }
-
-    // 最後更新元件內的資料狀態
     this.opendisc_Detail = [...newData];
   }
+
 
   // 輔助方法：清空該列資料(專櫃API無資料時使用)
   private clearRowData(row: TALPORDERD_OPENDisc) {
@@ -504,5 +533,10 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       isValid: !duplicate,
       errorMessage: duplicate ? ['專櫃編號不可重複'] : []
     };
+  }
+
+  // 明細disabled判斷(專櫃編號沒選就disabled)
+  is_tltNo_GroupSelected(rowData: TALPORDERD_OPENDisc): boolean {
+    return !rowData || !rowData.tlt_no;
   }
 }
