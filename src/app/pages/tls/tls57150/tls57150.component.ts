@@ -1,39 +1,39 @@
+import { DatePipe } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize, debounceTime } from 'rxjs';
-import { DatePipe } from '@angular/common';
-import { ButtonModule } from 'primeng/button';
-import { HttpResponse } from '@angular/common/http';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox'; // 引入 Checkbox 模組
+import { debounceTime, finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 // TLS57150 專屬匯入
 import {
-  QueryTLS57150Request,
-  QueryTLS57150DetailResponse,
-  QueryTLS57150SummaryResponse,
   QueryTLS57150DetailGrandTotal,
+  QueryTLS57150DetailResponse,
+  QueryTLS57150DetailSubTotal,
+  QueryTLS57150Request,
+  QueryTLS57150SummaryResponse,
   QueryTLS57150SummaryTotal,
-  Tls57150Service,
-  QueryTLS57150DetailSubTotal
+  Tls57150Service
 } from '@service/api/tls/tls57150.service';
 
 // 引入商品下拉表格所需的組件和服務
+import { QueryPLUResponse, Tls57040Service } from '@service/api/tls/tls57040.service'; // 假設使用 Tls57040Service 查詢 PLU
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { QueryPLUResponse, Tls57040Service } from '@service/api/tls/tls57040.service'; // 假設使用 Tls57040Service 查詢 PLU
 import { RadioButtonModule } from 'primeng/radiobutton';
 
 @Component({
@@ -163,7 +163,7 @@ export class TLS57150Component extends BasicQueryPageComponent<QueryTLS57150Deta
         { field: 'PST_Date', header: '盤點日期', visible: true, format: formatDate },
         { field: 'PST_NO', header: '盤點單號', visible: true },
         { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
-        { field: 'PLU_Name', header: '品名', visible: true },
+        { field: 'PLU_Name', header: '商品名稱', visible: true },
         { field: 'DIFF_Qty', header: '盤差數量', visible: true, isSubTotal: true },
         { field: 'DIFF_AMT', header: '盤差成本', visible: true, format: (v) => formatAmountWithDecimals(v), isSubTotal: true },
         { field: 'DIFF_SalePrc', header: '盤差售價', visible: true, format: (v) => formatAmountWithDecimals(v), isSubTotal: true },

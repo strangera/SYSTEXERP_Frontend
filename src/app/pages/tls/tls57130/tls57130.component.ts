@@ -47,7 +47,7 @@ export class TLS57130Component extends BasicQueryPageComponent<Tls57130DataItem>
     { field: 'LOGO_No', header: '品牌代碼' },
     { field: 'LOGO_CH_NAME', header: '品牌名稱' },
     { field: 'PLU_MagNo', header: '商品管理編號' },
-    { field: 'PLU_Name', header: '品名' },
+    { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_NO', header: '國際條碼' },
     { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
     { field: 'TotTXN_TotGUI', header: '總銷售金額(發票金額)', format: formatAmount },

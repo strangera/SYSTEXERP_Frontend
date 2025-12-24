@@ -129,7 +129,7 @@ export class TLS57100Component extends BasicQueryPageComponent<QueryTLS57100Deta
         { field: 'ODM_Type', header: '單據類型', visible: true, showSort: true },
         { field: 'ODM_Status', header: '單據狀態', visible: true, showSort: true },
         { field: 'PLU_MagNo', header: '商品管理編號', visible: true, showSort: true },
-        { field: 'PLU_Name', header: '品名', visible: true, showSort: true },
+        { field: 'PLU_Name', header: '商品名稱', visible: true, showSort: true },
         { field: 'ODD_ConfirmQty', header: '數量', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
         { field: 'ODD_SalePrc', header: '售價', visible: true, showSort: true, format: formatAmount, isSubTotal: true },
         { field: 'ODD_SaleAmt', header: '售價小計', visible: true, showSort: true, format: formatAmount, isSubTotal: true },

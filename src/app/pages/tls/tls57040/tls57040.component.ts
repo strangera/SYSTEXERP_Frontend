@@ -54,7 +54,7 @@ export class TLS57040Component extends BasicQueryPageComponent<QueryTLS57040Resp
     { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
     { field: 'PLU_No', header: '國際條碼', visible: true },
     { field: 'PLU_OrgPLUNo', header: '廠商貨號', visible: true },
-    { field: 'PLU_Name', header: '品名', visible: true },
+    { field: 'PLU_Name', header: '商品名稱', visible: true },
     { field: 'PLU_Reserve2', header: '規格說明', visible: true },
     { field: 'STK_CurrentQty', header: '庫存數量', visible: true, format: formatAmount },
     { field: 'PLU_SalePrc', header: '售價', visible: true, format: formatAmount },
