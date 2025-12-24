@@ -25,7 +25,7 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="收款對象(廠客)"
+              label="廠客代號"
               controlName="venNo"
               [options]="vendorOptions"
               optionLabel="label"
@@ -34,20 +34,9 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="客戶銀行帳號"
-              controlName="custBankAccNo"
-              [control]="queryForm.controls.custBankAccNo"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-
-          <!-- 第2列 -->
-          <div class="col-12 md:col-6 lg:col-4">
+       <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
-              label="票面銀行代號"
+              label="銀行代號"
               controlName="bankKeyList"
               [options]="bankKeyOptions"
               
@@ -57,10 +46,30 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="客戶銀行帳號"
+              controlName="custBankAccNo"
+              [control]="queryForm.controls.custBankAccNo"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+                <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="託收日"
+              [startControl]="queryForm.controls.colleDateFrom"
+              [endControl]="queryForm.controls.colleDateTo"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+
+     
+   
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
-              label="託收帳戶-公司銀行科目"
+              label="公司銀行科目代號"
               controlName="companyAccNoList"
               [options]="companyAccOptions"
               

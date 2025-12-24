@@ -34,6 +34,10 @@ import {
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+import {
+  Aps1002BankDropDownRow,
+  Fin26010Service
+} from '../../../service/api/fin/fin26010.service';
 
 @UntilDestroy()
 @Component({
@@ -194,6 +198,7 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
     private fin64010Service: Fin64010Service,
     private dropDownListService: DropDownListService,
     private dropdownApiService: DropdownApiService,
+    private fin26010Service: Fin26010Service,
     private cdr: ChangeDetectorRef
   ) {
     super();
@@ -233,6 +238,15 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
           value: x.No,
         }));
       });
+          this.dropdownApiService.queryAps1001({ "SearchKeyword": "" }).pipe(untilDestroyed(this)).subscribe((response) => {
+            const list = Array.isArray(response) ? response : [];
+            this.bankKeyOptions = list.map((item: any) => ({
+              value: item.No, // 全省銀行 代碼
+             
+              label: item.No + '-' + item.Name, // 代號+名稱
+            }));
+            console.log('全省銀行代碼:', this.bankKeyOptions);
+          });
 
     /**
      * 4) 票面銀行代號(多選)：
@@ -240,36 +254,31 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
      *    這裡先用 dropdownApiService 取（實際 endpoint 你若不同再替換）
      */
     // TODO: 請依你實際 API 名稱替換
-    if ((this.dropdownApiService as any)?.queryAPS1004_BankKey_DropDownList) {
-      (this.dropdownApiService as any).queryAPS1004_BankKey_DropDownList()
-        .pipe(untilDestroyed(this))
-        .subscribe((res: any) => {
-          const rows = Array.isArray(res?.Data) ? res.Data : [];
-          this.bankKeyOptions = rows.map((x: any) => ({
-            value: String(x.BNK_Key ?? x.No ?? ''),
-            label: String(x.Name ?? x.BNK_Name ?? x.BNK_BranchName ?? x.BNK_Key ?? ''),
-            raw: x,
-          })).filter((x: any) => x.value);
-        });
-    }
+
 
     /**
      * 5) 公司銀行科目(多選)：APS1002.BNK_DepositAccNo
      *    這裡先用 dropdownApiService 取（實際 endpoint 你若不同再替換）
      */
-    // TODO: 請依你實際 API 名稱替換
-    if ((this.dropdownApiService as any)?.queryAPS1002_DepositAccNo_DropDownList) {
-      (this.dropdownApiService as any).queryAPS1002_DepositAccNo_DropDownList()
-        .pipe(untilDestroyed(this))
-        .subscribe((res: any) => {
-          const rows = Array.isArray(res?.Data) ? res.Data : [];
-          this.companyAccOptions = rows.map((x: any) => ({
-            value: String(x.BNK_DepositAccNo ?? x.No ?? ''),
-            label: `${x.BNK_DepositAccNo ?? x.No} - ${x.BNK_AccName ?? x.Name ?? ''}`,
-            raw: x,
-          })).filter((x: any) => x.value);
-        });
-    }
+
+        this.fin26010Service
+          .queryAPS1002DropDownList()
+          .pipe(untilDestroyed(this))
+          .subscribe({
+            next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
+              const list = Array.isArray(res?.Data) ? res.Data : [];
+              this.companyAccOptions = list.map((x) => ({
+                label: `${x.BNK_DepositAccNo}-${x.BNK_BRANCHNAME}`,
+                value: x.BNK_DepositAccNo,
+                raw: x,
+              }));
+            },
+            error: (err) => {
+              console.error('載入銀行代號下拉失敗', err);
+              this.companyAccOptions = [];
+            },
+          });
+    
 
     /**
      * 6) 收票業務員(多選)：Sales_Id
