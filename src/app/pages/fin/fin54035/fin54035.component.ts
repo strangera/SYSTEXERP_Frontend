@@ -6,6 +6,7 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, tap } from 'rxjs';
@@ -23,6 +24,7 @@ import { FIN54030Data } from '../fin54030/fin54030.model';
     TranslateModule,
     ButtonComponent,
     CalendarComponent,
+    InputNumberComponent,
     MenubarComponent,
   ]
 })
@@ -44,6 +46,7 @@ export class FIN54035Component extends BasicQueryPageComponent<FIN54030Data> imp
     const data = this.tableData();
     if (!data?.TargetYM?.length) return;
     const ym = new Date(+data.TargetYM.slice(0, 4), +data.TargetYM.slice(4, 6) - 1, 1);
+    ym.setMonth(ym.getMonth() + 1);
     this.logger.debug(`data`, [data, ym]);
 
     this.queryForm.patchValue({
