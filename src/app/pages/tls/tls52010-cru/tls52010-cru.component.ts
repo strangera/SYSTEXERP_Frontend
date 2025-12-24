@@ -254,7 +254,10 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         this.originalData = [...this.data];
       });
       this.vendorOptions.subscribe(options => {
-        this.dataForm.controls.vendorShortName.setValue(options?.find(opt => opt.value === this.dataForm.controls.VEN_No.value)?.['ShortName'] ?? '');
+        const shortName = options?.find(opt => opt.value === this.dataForm.controls.VEN_No.value)?.['ShortName'];
+        this.dataForm.controls.vendorShortName.setValue(
+          shortName ? `廠商簡稱: ${shortName}` : ''
+        );
         this.ShortName = options?.find(opt => opt.value === this.dataForm.controls.VEN_No.value)?.['ShortName'] ?? '';
       });
       this.GetBudgetAmount();
@@ -311,7 +314,10 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     // 2. 監聽表單欄位變化
     // 監聽廠商編號變化 (邏輯不變)
     VEN_No.valueChanges.pipe(withLatestFrom(this.vendorOptions), untilDestroyed(this)).subscribe(([vendorNo, options]) => {
-      this.dataForm.controls.vendorShortName.setValue(options?.find(opt => opt.value === vendorNo)?.['ShortName'] ?? '', { emitEvent: false });
+      const shortName = options?.find(opt => opt.value === this.dataForm.controls.VEN_No.value)?.['ShortName'];
+      this.dataForm.controls.vendorShortName.setValue(
+        shortName ? `廠商簡稱: ${shortName}` : ''
+      );
       this.calculateTotals();
       [this.data, this.selectedItems, this.dialogData] = [[], [], []];
     });
@@ -734,8 +740,14 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   ShortName? = '';
   remainingBudgetAmount = 0;
   onReset() {
-    this.dataForm.controls.vendorShortName.setValue(this.ShortName, { emitEvent: false });
+    // 加上「廠商簡稱: 」前綴，並處理 null/undefined 的情況
+    const displayShortName = this.ShortName ? `廠商簡稱: ${this.ShortName}` : '';
+    this.dataForm.controls.vendorShortName.setValue(displayShortName, { emitEvent: false });
+
+    // 如果剩餘預算也需要格式化（例如加上 $ 符號或「金額: 」），也可以比照辦理
     this.dataForm.controls.remainingBudgetAmount.setValue(this.remainingBudgetAmount, { emitEvent: false });
+
+    // 還原資料列表
     this.data = [...this.originalData];
   }
 }
