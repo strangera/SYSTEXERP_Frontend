@@ -31,7 +31,7 @@
           </div>
 
           <!-- 商品管理編號/國際條碼/廠商貨號 -->
-          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.queryNo"
+          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.PLU_MagNo"
             [showOverlay]="false" templateLabel="label" [submitted]="submitted" optionLabel="PLU_MagNo"
             optionValue="PLU_MagNo" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
             (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"

@@ -51,14 +51,13 @@ interface IPLULOGOItem {
 export class TLS56010Component extends BasicQueryPageComponent<any> implements OnInit {
 
   queryForm = this.formBuilder.group({
-    queryNo: [null, [Validators.maxLength(20)]], // 查詢編號 input
+    PLU_MagNo: [null, [Validators.maxLength(20)]], // 查詢編號 input
     CAT_LNo: [null],
     CAT_MNo: [null],
     CAT_SNo: [null],
     generalCode: [null],
     LOGO_No: [null],
     tltCode: [null],
-    PLU_MagNo: [null as string | null],
     PLU_Name: [null],
     isSafetyStock: [false],
     // 預設排序：PLU_MagNo asc
@@ -286,6 +285,11 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
         ...(nonEmpty(v.PLU_MagNo) ? { PLU_MagNo: v.PLU_MagNo.trim() } : {}),
         ...(toArr(v.LOGO_No).length ? { LOGO_No: toArr(v.LOGO_No) } : {}),
         isSafetyStock: !!v.isSafetyStock,
+        CAT_LNo: v.CAT_LNo,
+        CAT_MNo: v.CAT_MNo,
+        CAT_SNo: v.CAT_SNo,
+        PLU_MagNo: v.PLU_MagNo,
+        LOGO_No: v.LOGO_No,
       };
 
       // // 小防呆：若所有條件都空，避免打到後端直接噴錯
