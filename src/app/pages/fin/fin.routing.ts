@@ -336,8 +336,8 @@ export const finRoutes: Routes = [
   // { path: 'fin63060', loadComponent: () => import('./fin63060/fin63060.component').then(m => m.FIN63060Component),data:{progNo:'FIN63060'} },
   // { path: 'fin63060cru', loadComponent: () => import('./fin63060-cru/fin63060-cru.component').then(m => m.FIN63060CRUComponent),data: { progNo: 'FIN63060'} },
   // 應收票據維護作業
-  // { path: 'fin64010', loadComponent: () => import('./fin64010/fin64010.component').then(m => m.FIN64010Component),data:{progNo:'FIN64010'} },
-  // { path: 'fin64010cru', loadComponent: () => import('./fin64010-cru/fin64010-cru.component').then(m => m.FIN64010CRUComponent),data: { progNo: 'FIN64010'} },
+  { path: 'fin64010', loadComponent: () => import('./fin64010/fin64010.component').then(m => m.FIN64010Component),data:{progNo:'FIN64010'} },
+  { path: 'fin64010cru', loadComponent: () => import('./fin64010-cru/fin64010-cru.component').then(m => m.FIN64010CRUComponent),data: { progNo: 'FIN64010'} },
   // 應收票據託收作業
   // { path: 'fin64020', loadComponent: () => import('./fin64020/fin64020.component').then(m => m.FIN64020Component),data:{progNo:'FIN64020'} },
   // { path: 'fin64020cru', loadComponent: () => import('./fin64020-cru/fin64020-cru.component').then(m => m.FIN64020CRUComponent),data: { progNo: 'FIN64020'} },
