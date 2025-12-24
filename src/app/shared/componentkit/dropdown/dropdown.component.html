@@ -36,6 +36,6 @@
 
 <app-control-messages [hidden]="!showErrorMessage" [onerror]="submitted || (control.touched && control.invalid)"
   [control]="control" [errorForGroup]="errorForGroup"></app-control-messages>
-<small *ngIf="helpMsg" [id]="controlName">
+<small *ngIf="helpMsg || showErrorMessage" [id]="controlName">
   {{helpMsg}}
 </small>

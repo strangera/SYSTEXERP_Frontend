@@ -110,7 +110,7 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
         { field: 'GUINO', header: '發票號碼' },
         { field: 'PLU_MagNo', header: '商品管理編號' },
         { field: 'PLU_No', header: '國際條碼' },
-        { field: 'PLU_Name', header: '品名' },
+        { field: 'PLU_Name', header: '商品名稱' },
         { field: 'TXN_Qty', header: '數量' },
         { field: 'PLU_SalePrc', header: '銷售定價', format: formatAmount },
         { field: 'TXN_SaleAmt', header: '銷售金額', format: formatAmount },

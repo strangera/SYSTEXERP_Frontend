@@ -230,7 +230,7 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
         Name: item.Name, // 應付票據科目 名稱
         Label: item.No + '-' + item.Name, // 代碼+名稱
       }));
-      console.log('應收票據科目:', this.GLS1005_BNK_CheckOutAccNo_Option);
+      console.log('應付票據科目:', this.GLS1005_BNK_CheckOutAccNo_Option);
 
     });
 
@@ -241,7 +241,7 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
         Name: item.Name, // 應收票據科目 名稱
         Label: item.No + '-' + item.Name, // 代碼+名稱
       }));
-      console.log('應付票據科目:', this.GLS1005_BNK_CheckInAccNo_Option);
+      console.log('應收票據科目:', this.GLS1005_BNK_CheckInAccNo_Option);
     });
 
     // 查 APS1004 -- 下拉選單(

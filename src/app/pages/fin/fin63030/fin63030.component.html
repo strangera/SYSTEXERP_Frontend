@@ -1,0 +1,207 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <!-- 第1列 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="公司銀行科目代號"
+              controlName="CompanyAccNo"
+              [options]="CompanyAccNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.CompanyAccNo"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="到期日"
+              [startControl]="queryForm.controls.ExpireDateFrom"
+              [endControl]="queryForm.controls.ExpireDateTo"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="票據號碼"
+              controlName="ChkNo"
+              [control]="queryForm.controls.ChkNo"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <!-- 第2列 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="兌現傳票號碼"
+              controlName="VouNoPaid"
+              [control]="queryForm.controls.VouNoPaid"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="狀態"
+              controlName="CheckStatus"
+              [options]="checkStatusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.CheckStatus"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+        </div>
+
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <!-- ✅ 票據到期拋轉傳票 -->
+          <app-button
+            [type]="'button'"
+            label="票據到期抛轉傳票"
+            (clickEvent)="openTransVoucherDialog()"
+          ></app-button>
+
+          <app-button
+            btnType="clear"
+            [type]="'button'"
+            (clickEvent)="onClear(queryForm)"
+          ></app-button>
+
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<!-- ✅ 列表 -->
+<div class="card">
+  <app-table
+    #finTable
+    [tableKey]="'FIN63030_TABLE'"
+    [dataKey]="'CheckNo'"
+    [columns]="columns"
+    [data]="data"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [showSerialNo]="true"
+    [showCheckBox]="false"
+    [showManage]="false"
+    [showDetail]="false"
+    [showReportMode]="false"
+    [showDelete]="false"
+    [showEdit]="false"
+    [lazy]="true"
+  >
+    <header>
+      <div class="flex justify-content-between align-items-center w-full">
+        <div></div>
+
+        <div class="flex gap-2">
+          <p-button
+            styleClass="p-2"
+            label="匯出票據到期作業報表.PDF"
+            [loading]="btnLoading"
+            icon="pi pi-file"
+            (click)="onExportPDF()"
+            [disabled]="data.length === 0"
+          ></p-button>
+
+          <p-button
+            styleClass="p-2"
+            label="匯出票據到期作業報表.XLSX"
+            [loading]="btnLoading"
+            icon="pi pi-file"
+            (click)="onExportXLSX()"
+            [disabled]="data.length === 0"
+          ></p-button>
+        </div>
+      </div>
+    </header>
+  </app-table>
+</div>
+
+<!-- ✅ 票據到期拋轉傳票 Dialog -->
+<p-dialog
+  header="票據到期抛轉傳票"
+  [(visible)]="transVoucherDialogVisible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '560px' }"
+>
+  <form [formGroup]="transVoucherForm" class="p-fluid">
+    <div class="grid">
+      <div class="col-12">
+        <app-dropdown
+          label="公司銀行代號"
+          controlName="BNK_No"
+          [options]="CompanyBankNoOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="transVoucherForm.controls.BNK_No"
+          [submitted]="submitted"
+        ></app-dropdown>
+      </div>
+
+      <div class="col-12">
+        <app-input-text
+          label="票據號碼"
+          controlName="ChkNo"
+          [control]="transVoucherForm.controls.ChkNo"
+          [submitted]="submitted"
+        ></app-input-text>
+      </div>
+
+      <div class="col-12">
+        <app-calendar-range
+          calendarType="dateRange"
+          label="到期日"
+          [startControl]="transVoucherForm.controls.ExpireDateFrom"
+          [endControl]="transVoucherForm.controls.ExpireDateTo"
+          [submitted]="submitted"
+        ></app-calendar-range>
+      </div>
+
+      <div class="col-12 text-600">
+        ※ 到期日為必填；票據號碼可空（空=整批）；狀態僅會處理「未異動(1)」的票據
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-end gap-2">
+      <p-button
+        label="離開"
+        severity="secondary"
+        (onClick)="closeTransVoucherDialog()"
+      ></p-button>
+
+      <p-button
+        label="到期拋轉"
+        [loading]="btnLoading"
+        (onClick)="onTransVoucherConfirm()"
+      ></p-button>
+    </div>
+  </ng-template>
+</p-dialog>

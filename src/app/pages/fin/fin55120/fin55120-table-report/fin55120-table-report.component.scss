@@ -1,0 +1,81 @@
+:host ::ng-deep {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    border: 5px solid transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #9f9f9f;
+    border-radius: 12px;
+    border: 2px solid var(--surface-d);
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #949494;
+  }
+
+  .p-datatable {
+    .p-datatable-header {
+      background: transparent;
+      border: none;
+      padding: 0;
+      .button-group {
+        .p-button {
+          width: 35px !important;
+          height: 35px !important;
+        }
+      }
+      .p-button-icon {
+        font-size: 1.5em;
+      }
+    }
+    .p-datatable-wrapper {
+      border: 1px solid var(--surface-d);
+    }
+    .p-component-overlay {
+      background-color: rgb(217 217 217 / 40%) !important;
+    }
+  }
+  .no-wrap {
+    white-space: nowrap;
+    div {
+      display: inline;
+    }
+  }
+  .group-header {
+    background-color: var(--table-header-bg-group) !important;
+  }
+  .p-datatable .p-datatable-thead > tr > th {
+    background: var(--table-header-bg);
+  }
+
+  .p-datatable.p-datatable-sm .p-datatable-tfoot > tr > td {
+    background: var(--table-footer-bg);
+  }
+  .wrap-header {
+    white-space: normal; /* 讓文字可以正常換行 */
+  }
+  .report-link {
+    color: #2196f3; // 藍色字體
+    text-decoration: none; // 預設不加底線，讓報表乾淨點
+    cursor: pointer; // 變成小手圖示
+    font-weight: 500;
+    transition:
+      color 0.2s,
+      text-decoration 0.2s;
+
+    &:hover {
+      color: #1565c0; // 懸停時變深藍
+      text-decoration: underline; // 懸停時顯示下底線，讓使用者確定這可以點
+    }
+
+    &:active {
+      color: #0d47a1; // 點擊瞬間顏色
+    }
+  }
+}

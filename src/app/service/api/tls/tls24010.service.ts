@@ -198,6 +198,10 @@ export interface UpdateTLS24010Payload {
     Talent_ID: number;
     TXN_PreOrder: string;
   };
+  VoidEdit?: {
+    Void_Date: string,
+    Void_Time: string
+  }
 }
 
 export interface QueryPOS2004ForUpdatePayload {
@@ -246,6 +250,13 @@ export interface TltInfo {
   Name: string;
   store_way: string;
   talent_id: number;
+}
+
+export interface DeleteTLS24010Payload {
+  SYS_StoreNo: string,
+  TXN_Date: string,
+  ECR_No: string,
+  TXN_No: number
 }
 
 @Injectable({
@@ -344,5 +355,9 @@ export class Tls24010Service {
 
   printTLS24010(TXN_Ret_No: string): Observable<ApiResponse<{ Print_URL: string }>> {
     return this.http.post<ApiResponse<{ Print_URL: string }>>(`${this.apiUrl}/printTLS24010`, { TXN_Ret_No })
+  }
+
+  deleteTLS24010(payload: DeleteTLS24010Payload): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/deleteTLS24010`, payload);
   }
 }

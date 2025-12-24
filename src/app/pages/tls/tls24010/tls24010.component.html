@@ -42,9 +42,18 @@
 </div>
 <div class="card">
   <app-table-report dataKey="TXN_No" tableKey="TLS24010Table" [lastQueryBody]="historyRequestBody" [data]="data"
-    [columns]="columns" [totalRecords]="totalRecords" [showDelete]="false" [showReportMode]="false" [showEdit]="false"
+    [columns]="columns" [totalRecords]="totalRecords" [showReportMode]="false" [showEdit]="false" [showDelete]="false"
     [queryFunction]="tableQueryFunction" groupRowsBy="ODM_No" [loading]="loading" [addButton]="addButton"
     (detail)="onDetailData($event)">
   </app-table-report>
 </div>
 <p-menu #menu [model]="items" [popup]="true" styleClass="w-auto" />
+<ng-template #customTimeTemp let-ctx="data">
+  <div class="flex flex-column gap-2 mt-4">
+    <label for="Void_Date" class="font-bold block">作廢日期</label>
+    <p-calendar inputId="Void_Date" [(ngModel)]="ctx.selectedDate" [showTime]="true" [timeOnly]="false"
+      [showSeconds]="false" hourFormat="24" appendTo="body" styleClass="w-full" dateFormat="yy/mm/dd" view="date"
+      placeholder="請選擇作廢日期">
+    </p-calendar>
+  </div>
+</ng-template>

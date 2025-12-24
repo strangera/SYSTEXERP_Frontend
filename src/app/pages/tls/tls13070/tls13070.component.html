@@ -26,9 +26,9 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="廠商統一編號" controlName="ven_uniform_List" [options]="VEN_UniformOptions | async"
+            <app-multi-select label="廠商統一編號" controlName="ven_uniform_List" [options]="VEN_UniformOptions | async"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.ven_uniform_List"
-              [submitted]="submitted"></app-dropdown>
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range [useGrouping]="false" label="版本編號"
@@ -37,26 +37,28 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="合約狀態" controlName="approve_status_List" [options]="approve_statusOptions"
+            <app-multi-select label="合約狀態" controlName="approve_status_List" [options]="approve_statusOptions"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.approve_status_List"
-              [submitted]="submitted"></app-dropdown>
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="區域" controlName="area_no_List" [options]="Area_NoOptions | async" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.area_no_List" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="區域" controlName="area_no_List" [options]="Area_NoOptions | async"
+              optionLabel="Name" optionValue="No" [control]="queryForm.controls.area_no_List"
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="樓層" controlName="tlt_floor_List" [options]="FLOOR_NoOptions | async" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.tlt_floor_List" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="樓層" controlName="tlt_floor_List" [options]="FLOOR_NoOptions | async"
+              optionLabel="Name" optionValue="No" [control]="queryForm.controls.tlt_floor_List"
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="洽談者" controlName="contact_USR_No_List" [options]="contact_USR_NoOptions | async"
+            <app-multi-select label="洽談者" controlName="contact_USR_No_List" [options]="contact_USR_NoOptions | async"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.contact_USR_No_List"
-              [submitted]="submitted"></app-dropdown>
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="組織" controlName="org_id_List" [options]="org_idOptions | async" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.org_id_List" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="組織" controlName="org_id_List" [options]="org_idOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.org_id_List" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="營運狀況" controlName="tlt_openflag_List" [options]="tlt_openflagListOptions"

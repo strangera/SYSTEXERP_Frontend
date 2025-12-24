@@ -15,7 +15,7 @@
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar
-            label="收/付款日"
+            label="預計收/付款日"
             controlName="ACP_ExpectPayDate"
             [control]="dataForm.controls.ACP_ExpectPayDate"
             [submitted]="submitted"
@@ -34,7 +34,7 @@
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
-            label="應付帳款ID"
+            label="應收/付ID"
             controlName="ACP_No"
             [control]="dataForm.controls.ACP_No"
             [submitted]="submitted"
@@ -43,9 +43,9 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="傳票型態"
-            controlName="IN_TYPE"
-            [control]="dataForm.controls.IN_TYPE"
-            [options]="inTypeOptions"
+            controlName="Voucher_Kind"
+            [control]="dataForm.controls.Voucher_Kind"
+            [options]="voucherKindOptions"
             optionLabel="label"
             optionValue="value"
             [submitted]="submitted"
@@ -55,11 +55,11 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="付款方式"
-            controlName="RMT_TYPE"
-            [options]="rmtTypeOptions"
+            controlName="VEN_PayType"
+            [options]="venPayTypeOptions"
             optionLabel="label"
             optionValue="value"
-            [control]="dataForm.controls.RMT_TYPE"
+            [control]="dataForm.controls.VEN_PayType"
             [submitted]="submitted"
             [editable]="false"
           ></app-dropdown>

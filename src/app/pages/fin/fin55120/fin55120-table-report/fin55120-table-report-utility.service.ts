@@ -1,0 +1,40 @@
+// table-utility.service.ts
+import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class Fin55120TableReportUtilityService {
+  /**
+   * 判斷當前行是否為該分組的最後一筆。
+   * @param rowData 當前行資料。
+   * @param rowIndex 當前行索引。
+   * @returns 如果是最後一筆則回傳 true，否則為 false。
+   */
+  isGroupLastRow(rowData: any, rowIndex: number, groupRowsBy: string, data: any): boolean {
+    // 1. 確保 rowData 存在，並且有分組欄位 (雖然 HTML 應該已經檢查過 rowData)
+    if (!rowData || !groupRowsBy) {
+      return false; // 或者根據邏輯回傳 true
+    }
+
+    // 取得當前行和下一行在分組依據欄位上的值
+    const currentRowGroupValue = rowData[groupRowsBy];
+
+    // 檢查是否為最後一行
+    if (rowIndex === data.length - 1) {
+      return true;
+    }
+
+    // 安全存取下一行資料 (使用 ?. 運算子)
+    const nextRow = data[rowIndex + 1];
+    const nextRowGroupValue = nextRow?.[groupRowsBy];
+
+    // 如果下一行不存在或下一行的分組值未定義，則視為當前分組的最後一筆
+    if (!nextRow || nextRowGroupValue === undefined) {
+      return true;
+    }
+
+    // 如果當前行的分組值與下一行不同，表示當前行是該分組的最後一筆
+    return currentRowGroupValue !== nextRowGroupValue;
+  }
+}

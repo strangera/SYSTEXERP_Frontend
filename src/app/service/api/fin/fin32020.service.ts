@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 
 /** 後端 queryFIN32020Response 對應 */
 export interface Fin32020Row {
@@ -40,20 +41,13 @@ export interface Fin32020DetailRow {
 }
 
 /** 查詢 Request：對應 queryFIN32020Request */
-export interface Fin32020QueryRequest {
+export interface Fin32020QueryRequest extends BaseQueryRequest {
   ADJ_No?: string | null;         // 調整單號
   ADJ_Date_From?: string | null;  // 調整日期起 yyyy-MM-dd
   ADJ_Date_To?: string | null;    // 調整日期迄 yyyy-MM-dd
   Remark?: string | null;         // 備註 (模糊)
   VouNo_From?: string | null;     // 傳票編號起
   VouNo_To?: string | null;       // 傳票編號迄
-
-  PageIndex?: number;
-  PageSize?: number;
-  SortBy?: { field: string; order: number }[];
-  OrderBy?: string | null;
-  Offset?: number | null;
-
   [key: string]: any;
 }
 
@@ -87,12 +81,11 @@ export interface Fin32020ARSRow {
 }
 
 /** 查詢應收帳款資料 Request：對應 queryFIN32020GetARSRequest */
-export interface Fin32020GetARSRequest {
+export interface Fin32020GetARSRequest extends BaseQueryRequest {
   VEN_No?: string | null;
   ARS_Date_From?: string | null;
   ARS_Date_To?: string | null;
-  PageIndex?: number;
-  PageSize?: number;
+
 }
 
 @Injectable({ providedIn: 'root' })
@@ -100,7 +93,7 @@ export class FIN32020Service {
   /** 對應 FIN32020Controller */
   private apiUrl = `${environment.ApiUrl}/FIN0000/ARS1000`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /** 查詢應收帳款調整作業列表：/queryFIN32020 */
   queryFIN32020(
@@ -162,3 +155,4 @@ export class FIN32020Service {
 }
 
 export { ApiResponse };
+

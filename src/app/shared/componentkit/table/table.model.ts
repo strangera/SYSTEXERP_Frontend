@@ -298,6 +298,19 @@ export const formatDateToYYYY_MM_DD = (value: string | Date): string | null => {
 
   return `${year}-${month}-${day}`;
 };
+// formatDateToHH_MM_SS：輸出為 HH:MM:SS（避免 toISOString 造成減一天）
+export const formatDateToHH_MM_SS = (value: string | Date): string | null => {
+  if (!value) return null;
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (isNaN(date.getTime())) return '';
+
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${hours}:${minutes}:${seconds}`;
+}
 // addDaysToDate：增加天數後的日期
 export const addDaysToDate = (date: Date, days: number): Date => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 
@@ -358,7 +371,8 @@ export type TableTypes =
   'dropdownTable' |
   'dropdownTableTemplate' |
   'template' |
-  'detail';
+  'detail' |
+  'link';
 
 /** 可以用來做轉換的 Map */
 export const Maps = {

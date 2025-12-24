@@ -89,13 +89,13 @@ export class CommissionDataService {
     }
   }
   /**
-   * 載入折扣選項 - 使用現代語法
+   * 載入折扣選項 - 使用帶排序的 API
    */
   async loadDiscountOptions(): Promise<any[]> {
     try {
-      // 使用 firstValueFrom 替代 toPromise
+      // 使用帶排序的 API，返回的資料已經按照 Sort 欄位排序
       const options = await firstValueFrom(
-        this.locationOptionsService.getPaperTypeOptions('T102').pipe(
+        this.locationOptionsService.querySYS1000_DropDownListWithSort('T102').pipe(
           catchError(error => {
             console.error('載入折扣選項時發生錯誤:', error);
             return of([]);
@@ -103,7 +103,7 @@ export class CommissionDataService {
         )
       );
 
-      console.log('✅ 折扣選項載入完成:', options?.length || 0);
+      console.log('✅ 折扣選項載入完成（已按 Sort 排序）:', options?.length || 0);
       return options || [];
     } catch (error) {
       console.error('❌ 載入折扣選項失敗:', error);
@@ -427,7 +427,24 @@ export class CommissionDataService {
       }
     });
 
-    return result;
+    // 🔑 排序邏輯：
+    // 1. 第一優先：selected 為 true 的排在前面
+    // 2. 第二優先：在相同 selected 狀態下，按照 Sort 欄位排序
+    return result.sort((a, b) => {
+      // 先比較 selected 狀態
+      const aSelected = a.selected ? 1 : 0;
+      const bSelected = b.selected ? 1 : 0;
+
+      if (aSelected !== bSelected) {
+        return bSelected - aSelected; // selected 為 true 的排在前面
+      }
+
+      // selected 狀態相同時，按照 cag_barcode 在 discountOptions 中的順序（已按 Sort 排序）
+      const aIndex = options.discountOptions.findIndex(opt => opt.value === a.cag_barcode);
+      const bIndex = options.discountOptions.findIndex(opt => opt.value === b.cag_barcode);
+
+      return aIndex - bIndex;
+    });
   }
 
   /**

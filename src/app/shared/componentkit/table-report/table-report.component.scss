@@ -176,4 +176,21 @@
   .wrap-header {
     white-space: normal; /* 讓文字可以正常換行 */
   }
+  .link-active {
+    color: #2196f3; /* PrimeNG Primary Blue */
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .link-active:hover {
+    text-decoration: underline;
+  }
+
+  /* 禁用連結時的樣式 (例如期初餘額) */
+  .link-disabled {
+    color: inherit;
+    font-weight: normal;
+    cursor: default;
+  }
 }

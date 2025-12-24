@@ -822,6 +822,27 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   /**
+   * 🔑 排序折扣項目：先按 selected，再按 discountOptions 的順序（Sort）
+   */
+  private sortDiscountItems(items: any[]): any[] {
+    return items.sort((a, b) => {
+      // 先比較 selected 狀態
+      const aSelected = a.selected ? 1 : 0;
+      const bSelected = b.selected ? 1 : 0;
+
+      if (aSelected !== bSelected) {
+        return bSelected - aSelected; // selected 為 true 的排在前面
+      }
+
+      // selected 狀態相同時，按照 cag_barcode 在 discountOptions 中的順序
+      const aIndex = this.discountOptions.findIndex(opt => opt.value === a.cag_barcode);
+      const bIndex = this.discountOptions.findIndex(opt => opt.value === b.cag_barcode);
+
+      return aIndex - bIndex;
+    });
+  }
+
+  /**
    * 強制同步當前標籤的數據（避免數據遺失）
    */
   private forceSyncCurrentTabData(commissionItem: CommissionItem): void {
@@ -839,18 +860,20 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     // 根據標籤類型同步到對應數組
     switch (currentTab) {
       case 'discount':
-        commissionItem.discountSettingItems = currentTabItems.map(item => ({
-          id: item.id,
-          _source: item._source,  // 🔑 加這個
-          selected: item.selected !== undefined ? item.selected : false,  // 🔑 修正：確保 false 值被正確保留
-          cag_barcode: item.cag_barcode || '',
-          tlt_bdate: this.ensureValidDate(item.tlt_bdate),
-          tlt_edate: this.ensureValidDate(item.tlt_edate),
-          cag_charge_rate: item.cag_charge_rate || 0,
-          _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
-          is_configured: item.is_configured || false,
-          is_enabled: item.is_enabled || false
-        }));
+        commissionItem.discountSettingItems = this.sortDiscountItems(
+          currentTabItems.map(item => ({
+            id: item.id,
+            _source: item._source,  // 🔑 加這個
+            selected: item.selected !== undefined ? item.selected : false,  // 🔑 修正：確保 false 值被正確保留
+            cag_barcode: item.cag_barcode || '',
+            tlt_bdate: this.ensureValidDate(item.tlt_bdate),
+            tlt_edate: this.ensureValidDate(item.tlt_edate),
+            cag_charge_rate: item.cag_charge_rate || 0,
+            _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
+            is_configured: item.is_configured || false,
+            is_enabled: item.is_enabled || false
+          }))
+        );
         break;
 
       case 'annual':
@@ -866,22 +889,24 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         break;
 
       case 'level':
-        commissionItem.discountLevelItems = currentTabItems.map(item => ({
-          id: item.id,
-          _source: item._source,  // 🔑 加這個
-          selected: item.selected !== undefined ? item.selected : false,  // 🔑 修正：確保 false 值被正確保留
-          cag_barcode: item.cag_barcode || '',
-          contract_period: item.contract_period || '',  // 🔑 加這個
-          level_bmount: item.level_bmount || 0,
-          level_eamount: item.level_eamount || 0,
-          level_charge_rate: item.level_charge_rate || 0,
-          charged_id: item.charged_id,  // 🔑 加這個（最重要！）
-          tlt_bdate: item.tlt_bdate,  // 🔑 保留日期
-          tlt_edate: item.tlt_edate,  // 🔑 保留日期
-          _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
-          is_configured: item.is_configured || false,
-          is_enabled: item.is_enabled || false
-        }));
+        commissionItem.discountLevelItems = this.sortDiscountItems(
+          currentTabItems.map(item => ({
+            id: item.id,
+            _source: item._source,  // 🔑 加這個
+            selected: item.selected !== undefined ? item.selected : false,  // 🔑 修正：確保 false 值被正確保留
+            cag_barcode: item.cag_barcode || '',
+            contract_period: item.contract_period || '',  // 🔑 加這個
+            level_bmount: item.level_bmount || 0,
+            level_eamount: item.level_eamount || 0,
+            level_charge_rate: item.level_charge_rate || 0,
+            charged_id: item.charged_id,  // 🔑 加這個（最重要！）
+            tlt_bdate: item.tlt_bdate,  // 🔑 保留日期
+            tlt_edate: item.tlt_edate,  // 🔑 保留日期
+            _status: item._status || (this.hasValidId(item) ? 'original' : 'new'),
+            is_configured: item.is_configured || false,
+            is_enabled: item.is_enabled || false
+          }))
+        );
         break;
     }
   }
@@ -1035,6 +1060,11 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
           _canDelete: canDelete
         };
       });
+
+    // 🔑 如果是 discount 或 level 標籤，需要排序
+    if (currentTab === 'discount' || currentTab === 'level') {
+      commissionItem.detailItems = this.sortDiscountItems(commissionItem.detailItems);
+    }
 
     console.log('📊 過濾結果:', {
       原始數量: sourceArray.length,

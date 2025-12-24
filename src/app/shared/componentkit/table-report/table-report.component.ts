@@ -90,12 +90,15 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   groupTotals: Record<string, Record<string, number>> = {}; // 用於儲存每個群組的總計
   @Input() subTotalData: any;    // (小計)頁尾資料
   @Output() selectButton = new EventEmitter<any>();    // 選擇 按鈕事件
+  @Input() showSummary = true; // 是否顯示 總計欄位
   // expansion 收合展開
   @Input() expansionColumns: ReportColumn[] = [];
   @Input() expansionDataKey = 'details';
   @Input() expansionMultiSortMeta = [{ field: this.expansionDataKey, order: 1 }];
   @Input() expansionLoadFn?: (rowData: any) => Observable<any>;
   expandedRows: Record<string, boolean> = {};
+  // 連結
+  @Output() linkClick = new EventEmitter<{ rowData: any, field: string }>();
 
   // 底層匯出
   @Input() apiUrl?: string;                         // table API URL (可選)

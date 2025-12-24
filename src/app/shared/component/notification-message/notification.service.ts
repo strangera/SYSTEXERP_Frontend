@@ -1,15 +1,17 @@
-import { Injectable } from '@angular/core';
+import { Injectable, TemplateRef } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs';
 interface Message {
   severity: 'info' | 'success' | 'warn' | 'error';
   summary: string;
   detail: string;
 }
-interface ConfirmOptions {
+export interface ConfirmOptions {
   header?: string;
   message?: string;
-  accept?: () => void;
+  accept?: (data?: any) => void;
   reject?: () => void;
+  contentTemplate?: TemplateRef<any>;
+  templateContext?: any;
   type?: 'confirm' | 'update' | 'delete'; // 添加类型
   showIcon?: boolean; // 新增是否顯示圖示的屬性
   extraButtons?: {

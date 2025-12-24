@@ -1,6 +1,6 @@
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
-import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -16,6 +16,7 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { AccordionModule } from 'primeng/accordion';
 import { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { CalendarModule } from 'primeng/calendar';
 import { Menu, MenuModule } from 'primeng/menu';
 import { finalize, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -28,7 +29,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { STORE_WAY, TLS24010_EDIT_TYPE } from '../tls24010-cru/tls24010-cru.model';
-import { AddButton, formatDateToYYYY_MM_DD } from './../../../shared/componentkit/table/table.model';
+import { AddButton, formatDateToHH_MM_SS, formatDateToYYYY_MM_DD } from './../../../shared/componentkit/table/table.model';
 import { C_columns, columns, FIX_TYPE, TXN_GUIPaperOptions, txnStatusOptions } from './tls24010.model';
 // 交易補登作業
 @Component({
@@ -50,7 +51,8 @@ import { C_columns, columns, FIX_TYPE, TXN_GUIPaperOptions, txnStatusOptions } f
     TranslateModule,
     TableReportComponent,
     AsyncPipe,
-    AutoCompleteComponent
+    AutoCompleteComponent,
+    CalendarModule
   ],
 })
 export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> implements OnInit {
@@ -85,7 +87,8 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     public readonly tls24010Service: Tls24010Service,
     private readonly tLS41010Service: TLS41010Service,
     private readonly cdr: ChangeDetectorRef,
-    private readonly validation: ValidationService
+    private readonly validation: ValidationService,
+    private readonly datePipe: DatePipe
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS24010', 'tls/tls24010cru', this.queryForm, (form) => this.onSubmit(form));
@@ -185,12 +188,12 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   onDetailData(rowdata: TLS24010Data): void {
     this.onDetail(rowdata, this.historyRequestBody);
   }
+  @ViewChild('customTimeTemp') customTimeTemp!: TemplateRef<any>;
   // 編輯補登資料
   onEditData(rowData: TLS24010Data, type: string): void {
     if (type === FIX_TYPE.交易資料作廢) {
       // 1. 取得原始交易日期
       const orgDate = rowData.TXN_Date; // 假設 TXN_Date 格式為 'YYYY-MM-DD'，可以直接被 new Date() 解析
-
       // 2. 判斷是否跨期
       const isCross = this.isCrossPeriod(orgDate);
 
@@ -206,12 +209,32 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         headerMessage = `作廢交易資料`;
         confirmMessage = `此筆交易未跨期，確定要作廢交易資料嗎?`;
       }
-
+      const contextObj = { data: { selectedDate: new Date() } };
       // 3. 呼叫確認服務
       this.messageService.confirm({
         header: headerMessage,
         message: confirmMessage,
-        accept: () => {
+        contentTemplate: isCross && rowData.TXN_GUIBegNo !== '00000000' ? undefined : this.customTimeTemp, // 丟入 HTML 樣板
+        templateContext: isCross && rowData.TXN_GUIBegNo !== '00000000' ? undefined : contextObj,         // 丟入資料空間
+        accept: (result) => {
+          const selectedDate = result?.selectedDate;
+          if (!selectedDate) return;
+          // --- 新增日期卡控邏輯 ---
+          const txnDate = new Date(rowData.TXN_Date);
+          const today = new Date();
+          // 將時間部分歸零，只比較日期 (避免因為幾點幾分導致判斷錯誤)
+          const compareSelected = new Date(selectedDate).setHours(0, 0, 0, 0);
+          const compareTxn = new Date(txnDate).setHours(0, 0, 0, 0);
+          const compareToday = new Date(today).setHours(0, 0, 0, 0);
+          if (compareSelected < compareTxn) {
+            this.messageService.errorBubble('作廢日期不可早於交易日期');
+            return;
+          }
+          if (compareSelected > compareToday) {
+            this.messageService.errorBubble('作廢日期不可晚於今日');
+            return;
+          }
+          this.loading = true;
           const data = {
             Store_way: rowData.store_way || '',
             SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
@@ -221,6 +244,10 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
             POS5006_ID: rowData.ID || 0,
             TXN_Remark: rowData.TXN_Remark || '',
             EditType: TLS24010_EDIT_TYPE.交易資料作廢,
+            VoidEdit: {
+              Void_Date: formatDateToYYYY_MM_DD(selectedDate) || '',
+              Void_Time: formatDateToHH_MM_SS(selectedDate) || '',
+            }
           }
           this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
             this.messageService.successBubble(res.Message);
@@ -255,6 +282,26 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
             }
           }
         ]
+      });
+    } else if (type === FIX_TYPE.刪除交易) {
+      if (!rowData) return;
+      const txnDate = this.datePipe.transform(rowData.TXN_Date, 'yyyy-MM-dd')
+      if (!txnDate) return;
+      const body = {
+        SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
+        TXN_Date: txnDate,
+        ECR_No: rowData.ECR_No,
+        TXN_No: Number(rowData.TXN_No),
+      };
+      this.messageService.confirm({
+        header: '刪除交易',
+        message: '確定要刪除交易嗎?',
+        accept: () => {
+          this.tls24010Service.deleteTLS24010(body).pipe(untilDestroyed(this)).subscribe(res => {
+            this.messageService.successBubble(res.Message);
+            this.onSubmit(this.queryForm);
+          })
+        }
       });
     } else {
       this.onEdit({
@@ -295,9 +342,14 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.預售交易修正),
       },
       {
-        label: '交易資料作廢', icon: 'pi pi-trash',
+        label: '交易資料作廢', icon: 'pi pi-times-circle',
         disabled: !this.hasPermission(Actions.InvalidateTransaction),
         command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.交易資料作廢),
+      },
+      {
+        label: '刪除', icon: 'pi pi-trash',
+        disabled: !this.hasPermission(Actions.Delete) || (this.selectedRowData?.GUI_Track === '00' && this.selectedRowData?.TXN_GUIBegNo === '00000000'),
+        command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.刪除交易),
       },
     ];
   }
@@ -355,7 +407,6 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       }
     });
   }
-
   get checkTXN_GUIPaper(): boolean {
     return this.queryForm.get('TXN_GUIPaper')?.value === 'R' ||
       this.queryForm.get('TXN_GUIPaper')?.value === 'C' ||

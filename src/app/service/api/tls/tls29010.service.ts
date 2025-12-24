@@ -63,6 +63,11 @@ export class Tls29010Service {
     return this.http.post<any>(`${this.apiUrl}/apprTLS29010`, body);
   }
 
+  // 反審核 主檔
+  unapprTLS29010(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/unapprTLS29010`, body);
+  }
+
   // ---dropDown下拉---
 
   // ---20251216 SA新增需求---

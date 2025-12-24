@@ -1,10 +1,11 @@
 import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { formatTimeToHHMMSS } from '@shared/componentkit/table/table.model';
+import { formatDateToHH_MM_SS, formatDateToYYYY_MM_DD, formatTimeToHHMMSS } from '@shared/componentkit/table/table.model';
+import { CalendarModule } from 'primeng/calendar';
 import { DividerModule } from 'primeng/divider';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -61,7 +62,8 @@ import { Tls24010TltnoComponent } from './tls24010-tltno/tls24010-tltno.componen
     Tls24010PaynoComponent,
     Tls24010TltidComponent,
     Tls24010TltnoComponent,
-    Tls24010DiscodeComponent
+    Tls24010DiscodeComponent,
+    CalendarModule
   ],
 })
 export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | unknown> implements OnInit {
@@ -390,14 +392,17 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   updateTLS24010() {
     let headerMessage = FIX_TYPE_LABEL[this.type as FIX_TYPE];
     let confirmMessage = `確定要修正嗎?`;
+    const contextObj = { data: { selectedDate: new Date() } };
+    const rowData = this.rowdata as TLS24010Data;
+    const orgDate = rowData.TXN_Date;
+    let isCross;
 
     // 專門針對「交易資料作廢」類型進行客製化判斷
     if (this.type === FIX_TYPE.交易資料作廢) {
       // 確保 rowData 存在且有 TXN_Date
       const rowData = this.rowdata as TLS24010Data;
       if (rowData && rowData.TXN_Date) {
-        const orgDate = rowData.TXN_Date;
-        const isCross = this.isCrossPeriod(orgDate);
+        isCross = this.isCrossPeriod(orgDate);
 
         if (isCross && rowData.TXN_GUIBegNo !== '00000000') {
           // 跨期：應開立折讓單
@@ -419,9 +424,27 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     this.messageService.confirm({
       header: headerMessage,
       message: confirmMessage,
-      accept: () => {
+      contentTemplate: this.type === FIX_TYPE.交易資料作廢 ? isCross && rowData.TXN_GUIBegNo !== '00000000' ? undefined : this.customTimeTemp : undefined, // 丟入 HTML 樣板
+      templateContext: this.type === FIX_TYPE.交易資料作廢 ? isCross && rowData.TXN_GUIBegNo !== '00000000' ? undefined : contextObj : undefined,         // 丟入資料空間
+      accept: (result) => {
+        const selectedDate = result?.selectedDate;
+        if (!selectedDate) return;
+        // --- 新增日期卡控邏輯 ---
+        const txnDate = new Date(rowData.TXN_Date);
+        const today = new Date();
+        // 將時間部分歸零，只比較日期 (避免因為幾點幾分導致判斷錯誤)
+        const compareSelected = new Date(selectedDate).setHours(0, 0, 0, 0);
+        const compareTxn = new Date(txnDate).setHours(0, 0, 0, 0);
+        const compareToday = new Date(today).setHours(0, 0, 0, 0);
+        if (compareSelected < compareTxn) {
+          this.messageService.errorBubble('作廢日期不可早於交易日期');
+          return;
+        }
+        if (compareSelected > compareToday) {
+          this.messageService.errorBubble('作廢日期不可晚於今日');
+          return;
+        }
         this.loading = true;
-        const rowData = this.rowdata as TLS24010Data;
         const body = {
           Store_way: this.store_way || '',
           SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
@@ -556,6 +579,10 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
           const data = {
             ...body,
             EditType: TLS24010_EDIT_TYPE.交易資料作廢,
+            VoidEdit: {
+              Void_Date: formatDateToYYYY_MM_DD(selectedDate) || '',
+              Void_Time: formatDateToHH_MM_SS(selectedDate) || '',
+            }
           }
           this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
             this.messageService.successBubble(res.Message);
@@ -565,6 +592,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       }
     });
   }
+  @ViewChild('customTimeTemp') customTimeTemp!: TemplateRef<any>;
 
   /**
  * 判斷作廢是否跨期 (模擬後端邏輯)

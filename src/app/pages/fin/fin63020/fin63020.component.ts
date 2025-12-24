@@ -24,7 +24,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 // ✅ app-table（你貼的 TableComponent）
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
-
+import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
 // Base
 import {
   Aps1002BankDropDownRow,
@@ -232,18 +232,15 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
   ];
 
   organizationCodeOptions: any[] = [
-    { value: 'ALL', label: '全公司' },
-    { value: 'AUDIT', label: '稽核室' },
+
   ];
 
   eventCodeOptions: any[] = [
-    { value: '001', label: '001' },
-    { value: '002', label: '002' },
+
   ];
 
   targetCodeOptions: any[] = [
-    { value: 'TNN', label: '臺南紡織股份有限公司' },
-    { value: 'UNI', label: '統一企業股份有限公司' },
+
   ];
 
   /* ----------------- 查詢表單 ----------------- */
@@ -293,6 +290,7 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     private dropDownListService: DropDownListService,
     private dropdownApiService: DropdownApiService,
     private fin26010Service: Fin26010Service,
+    private fin55050Service: FIN55050Service,
     
     private cdr: ChangeDetectorRef
   ) {
@@ -302,6 +300,31 @@ ngOnInit(): void {
   this.initializePage('FIN63020', 'fin/fin63020cru', this.queryForm, (form) =>
     this.onSubmit(form)
   );
+      // 獲取組織下拉選項
+    this.dropDownListService.querySYS3100_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.organizationCodeOptions = res.Data.map(item => ({
+          ...item,
+          value: item.No,
+          label: `${item.No} - ${item.Name}`,
+        }));
+      })
+          // // 活動
+          // this.dropDownListService.getActivityOptions({
+          //   mid: 0,
+          //   str_no: '10',
+          //   pod_type: ['1', '2', '8'],
+          //   pod_status: '1',
+          // })
+          //   .pipe(untilDestroyed(this))
+          //   .subscribe(response => {
+          //     this.eventCodeOptions = response?.Data?.map((item: any) => ({
+          //       label: `${item.pod_no} - ${item.pod_desc}`,
+          //       value: item.pod_no,
+          //     })) ?? [];
+          //   });
+
 
   // ✅ 1. 還原查詢條件（不管從哪頁回來）
   const saved = this.queryStateService.getQueryStateValue('FIN63020');
@@ -314,9 +337,27 @@ ngOnInit(): void {
     Promise.resolve().then(() => this.onSubmit(this.queryForm));
   }
 
+    // 載入活動代碼下拉選單
+    this.dropDownListService.queryTALPORDERM_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        const rows = Array.isArray(res?.Data) ? res.Data : [];
+        this.eventCodeOptions = rows.map((x: any) => ({
+          label: `${x.No} - ${x.Name}`,
+          value: x.No,
+        }));
+      });
 
-
+          this.fin55050Service.queryGLS1016_DropDownList()
+            .pipe(untilDestroyed(this))
+            .subscribe(response => {
+              this.targetCodeOptions = response.Data?.map((item: any) => ({
+                label: `${item.No} - ${item.Name}`,
+                value: item.No,
+              })) ?? [];
+            });
     // 公司銀行科目代號（Aps1001）
+
 
     this.fin26010Service
       .queryAPS1002DropDownList()
@@ -352,8 +393,6 @@ ngOnInit(): void {
 
   }
 
-  /** ✅ 點明細 */
-  /** ✅ 點明細（進 CRU） */
   /** ✅ 點明細 */
   override onDetail(row: QueryFIN63020Row) {
     const chkNo = String(row?.CheckNo ?? '').trim();

@@ -14,7 +14,6 @@ import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { Tls13070TableComponent } from './tls13070-table/tls13070-table.component';
@@ -28,7 +27,6 @@ import { Tls13070TableComponent } from './tls13070-table/tls13070-table.componen
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    DropdownComponent,
     InputTextComponent,
     InputNumberRangeComponent,
     CalendarRangeComponent,

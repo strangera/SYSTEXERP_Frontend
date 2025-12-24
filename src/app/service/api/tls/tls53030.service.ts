@@ -68,6 +68,7 @@ export interface TLS53030DetailData {
   PST_Qty2: number;             // 複盤數量
   PST_Qty3: number;             // 抽盤數量
   DIFF_Qty: number;             // 差異量
+  PST_Remark: string;           // 備註
 }
 
 // Update detail request interface for TLS53030
