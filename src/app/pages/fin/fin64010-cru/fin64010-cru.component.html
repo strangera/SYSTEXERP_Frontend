@@ -1,1 +1,300 @@
-<p>fin64010-cru works!</p>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+
+      <!-- 基本資料 -->
+      <div class="grid p-fluid">
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="票據號碼(支票號碼)"
+            controlName="CHK_No"
+            [control]="dataForm.controls.CHK_No"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="收款對象(廠客)"
+            controlName="VEN_No"
+            [options]="vendorOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.VEN_No"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="廠商名稱"
+            controlName="VEN_Name"
+            [control]="dataForm.controls.VEN_Name"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="銀行代號(全省銀行代號)"
+            controlName="BNK_Key"
+            [options]="bankKeyOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.BNK_Key"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="票面銀行名稱"
+            controlName="BNK_Name"
+            [control]="dataForm.controls.BNK_Name"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="分行名稱"
+            controlName="BNK_BranchName"
+            [control]="dataForm.controls.BNK_BranchName"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="帳號(票據上的帳號)"
+            controlName="BNK_AccNo"
+            [control]="dataForm.controls.BNK_AccNo"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="託收帳戶(公司銀行資料-非支票存款)"
+            controlName="COL_BNK_id"
+            [options]="colleAccountOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.COL_BNK_id"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="託收銀行名稱"
+            controlName="CHK_BNK_AccName"
+            [control]="dataForm.controls.CHK_BNK_AccName"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+      </div>
+
+      <!-- 日期/金額 -->
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="票面金額"
+            controlName="CHK_Amt"
+            [control]="dataForm.controls.CHK_Amt"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="收票日(建檔日)"
+            controlName="CHK_ReceDate"
+            [control]="dataForm.controls.CHK_ReceDate"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="到期日"
+            controlName="CHK_ExpireDate"
+            [control]="dataForm.controls.CHK_ExpireDate"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="預兌日"
+            controlName="CHK_PreDate"
+            [control]="dataForm.controls.CHK_PreDate"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="託收日(狀態=託收必填)"
+            controlName="CHK_ColleDate"
+            [control]="dataForm.controls.CHK_ColleDate"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="兌現日(狀態=兌現必填)"
+            controlName="CHK_CashDate"
+            [control]="dataForm.controls.CHK_CashDate"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="退票日(狀態=退票必填)"
+            controlName="CHK_BackDate"
+            [control]="dataForm.controls.CHK_BackDate"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+      </div>
+
+      <!-- 屬性/狀態 -->
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="票據種類"
+            controlName="CHK_Type"
+            [options]="chkTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.CHK_Type"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="是否客票"
+            controlName="Ticket_YN"
+            [options]="ticketYNOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.Ticket_YN"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="票據狀態"
+            controlName="CHK_Status"
+            [options]="chkStatusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.CHK_Status"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="狀態(建立/確認/拋轉)"
+            controlName="Tran_Status_Name"
+            [control]="dataForm.controls.Tran_Status_Name"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="票據狀態名稱"
+            controlName="CHK_Status_Name"
+            [control]="dataForm.controls.CHK_Status_Name"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="傳票號碼"
+            controlName="VouNo"
+            [control]="dataForm.controls.VouNo"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="組織代號"
+            controlName="ORG_ID"
+            [options]="orgOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.ORG_ID"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="活動代號"
+            controlName="ProjectNo"
+            [options]="projectOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.ProjectNo"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="收款單號"
+            controlName="RCV_No"
+            [control]="dataForm.controls.RCV_No"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-12 lg:col-12">
+          <app-input-text
+            label="備註"
+            controlName="CHK_Comment"
+            [control]="dataForm.controls.CHK_Comment"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+
+      <div class="mt-2 text-red-500" *ngIf="!isFormReadable && !isEditable">
+        ※ 此票據已拋轉/已兌現/已退票，依規格不可再修改。
+      </div>
+
+      <!-- ✅ 修正：用 base 的 isFormReadable -->
+      <div
+        class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
+        *ngIf="!isFormReadable && isEditable"
+      >
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
+      </div>
+
+    </form>
+  </p-panel>
+</div>
