@@ -25,8 +25,7 @@
     <tr class="font-semibold bg-gray-50">
       <td *ngFor="let col of columns" [ngStyle]="{
           'text-align': col.align || 'center',
-          'border-top': (col.field === 'Balance' || col.field === 'Pct' || col.field === 'BalanceTotal')
-                         ? '2px solid #3b82f6' : ''
+          'border-top': '2px solid #3b82f6'
         }" class="py-2">
 
         <ng-container
@@ -38,7 +37,7 @@
 
         <ng-template #otherCell>
           <span *ngIf="col.field === 'AccNo'" class="text-600 italic">
-            {{ rowData.ItemTitle }} 小計：
+            {{ rowData.ItemTitle }} 合計：
           </span>
         </ng-template>
 

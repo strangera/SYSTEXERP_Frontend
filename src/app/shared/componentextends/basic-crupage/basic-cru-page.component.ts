@@ -79,7 +79,9 @@ export abstract class BasicCruPageComponent<T> {
     }
 
     const state = this.router.lastSuccessfulNavigation?.extras.state;
-    this.previousRoute = state?.['fromRoute'] || this.activatedRoute.snapshot.queryParams['fromRoute'] || document.referrer || '/account/dashboard';
+    if (!this.previousRoute) {
+      this.previousRoute = state?.['fromRoute'] || this.activatedRoute.snapshot.queryParams['fromRoute'] || document.referrer || '/account/dashboard';
+    }
     this.rowdata = state?.['rowdata'];
     this.queryData = state?.['queryConditions']
     console.log(state?.['rowdata'])
@@ -143,7 +145,7 @@ export abstract class BasicCruPageComponent<T> {
     // 確保返回正確的查詢頁面
     const queryPageRoute = this.previousRoute?.includes('account/')
       ? this.previousRoute
-      : `/account/${this.ProgNo.toLowerCase()}`;
+      : `/account/${this.ProgNo.toLowerCase().slice(0, 3)}/${this.ProgNo.toLowerCase()}`;
 
     const extras: NavigationExtras = {
       state: { fromRoute: this.router.url },

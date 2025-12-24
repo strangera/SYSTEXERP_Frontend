@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component, Input, OnInit, ChangeDetectorRef } from '@angular/core';
-import { Column } from '../table.model';
-import { TableModule } from 'primeng/table';
+import { CommonModule, NgFor, NgIf } from '@angular/common';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { PrimeTemplate, SortMeta } from 'primeng/api';
-import { NgFor, NgIf, CommonModule } from '@angular/common';
+import { TableModule } from 'primeng/table';
+import { Column } from '../table.model';
 import { expandAnimation } from './table-expansion.model';
 
 @Component({

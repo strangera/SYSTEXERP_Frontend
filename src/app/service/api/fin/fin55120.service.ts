@@ -77,4 +77,99 @@ export class Fin55120Service {
       responseType: 'blob'
     });
   }
+  /**
+   * 1.5.4.5 報表查詢(分類帳-15550-FIN55050)
+   */
+  queryFIN55050(request: QueryFIN55050Request): Observable<ApiResponse<FIN55050Item[]>> {
+    return this.http.post<ApiResponse<FIN55050Item[]>>(
+      `${this.apiUrl}/queryFIN55050`,
+      request
+    );
+  }
+
+  /**
+   * 查詢分類帳明細 (FIN55050Detail)
+   */
+  queryFIN55050Detail(request: QueryFIN55050DetailRequest): Observable<ApiResponse<FIN55050DetailResponseData>> {
+    return this.http.post<ApiResponse<FIN55050DetailResponseData>>(
+      `${this.apiUrl}/queryFIN55050Detail`,
+      request
+    );
+  }
+
+  /** 匯出明細 PDF */
+  exportFIN55050DetailPDF(body: { VouNo: string }): Observable<HttpResponse<Blob>> {
+    const url = `${this.apiUrl}/exportFIN55050DetailPDF`;
+    return this.http.post(url, body, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+    }) as Observable<HttpResponse<Blob>>;
+  }
+}
+
+export interface QueryFIN55050Request {
+  DateFrom: string;
+  DateTo: string;
+  AccNoFrom: string;
+  AccNoTo: string;
+  PageSize?: number;
+  PageIndex?: number;
+}
+
+/**
+ * 分類帳明細 (Row 內層資料)
+ */
+export interface FIN55050Detail {
+  VouNo: string;
+  Ven_Name: string;
+  VouStatus: string;
+  ORG_ID: string;
+  Org_Name: string;
+  ProjectNo: string;
+  PTA: string;
+  NoteDesc: string;
+  AccAmt_D: number;
+  AccAmt_C: number;
+  OpeningBal: number;
+}
+
+/**
+ * 分類帳主表項目 (Data 陣列內容)
+ */
+export interface FIN55050Item {
+  AccNo: string;
+  AccCName: string;
+  VouDate: string;
+  _Details: FIN55050Detail[];
+  displayDetails: FIN55050Detail[];
+  lastDetail: FIN55050Detail | null;
+}
+/**
+ * 1.5.4.6 查詢分類帳明細 (Voucher Detail)
+ */
+export interface QueryFIN55050DetailRequest {
+  VouNo: string;
+}
+
+export interface VoucherDetailRow {
+  VouDate: string;
+  VouNo: string;
+  UPD_Date: string;
+  VouType_Name: string;
+  VouStatus: string;
+  VoucherType_Name: string;
+  ACCNO: string;
+  AccCName: string;
+  Org_Name: string;
+  NoteDesc: string;
+  AccAmt_D: number;
+  AccAmt_C: number;
+  Ven_Name: string;
+  Remark: string;
+}
+
+export interface FIN55050DetailResponseData {
+  _VoucherDetails: VoucherDetailRow[];
+  SUM_AccAmt_D: number;
+  SUM_AccAmt_C: number;
 }

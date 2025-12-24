@@ -1,5 +1,5 @@
 import { animate, style, transition, trigger } from '@angular/animations'; // 1. 引入動畫相關函式
-import { TableTypes } from "../table/table.model";
+import { TableTypes } from '../table/table.model';
 
 export interface ReportColumn {
   field: string;     // 欄位名稱 (資料的欄位名稱)
@@ -16,6 +16,7 @@ export interface ReportColumn {
   type?: TableTypes; // 欄位類型
   cellClass?: (rowData: any) => string;// 新增動態樣式 Callback，不影響舊邏輯
   link?: boolean; // 是否為連結
+  linkDisabled?: (rowData: any) => boolean;
 }
 
 export interface ColumnGroup {

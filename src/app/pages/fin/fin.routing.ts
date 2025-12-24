@@ -302,6 +302,8 @@ export const finRoutes: Routes = [
   { path: 'fin55110', loadComponent: () => import('./fin55110/fin55110.component').then(m => m.FIN55110Component), data: { progNo: 'FIN55110' } },
   // 總帳報表-資產負債表
   { path: 'fin55120', loadComponent: () => import('./fin55120/fin55120.component').then(m => m.FIN55120Component), data: { progNo: 'FIN55120' } },
+  { path: 'fin55120cru', loadComponent: () => import('./fin55120/fin55120cru/fin55120cru.component').then(m => m.Fin55120cruComponent), data: { progNo: 'FIN55120' } },
+  { path: 'fin55120detail', loadComponent: () => import('./fin55120/fin55120-detail/fin55120-detail.component').then(m => m.Fin55120DetailComponent), data: { progNo: 'FIN55120' } },
   // 總帳報表-資產負債比較表
   // { path: 'fin55130', loadComponent: () => import('./fin55130/fin55130.component').then(m => m.FIN55130Component),data:{progNo:'FIN55130'} },
   // 支票號碼維護
@@ -330,9 +332,9 @@ export const finRoutes: Routes = [
   // 應付票據維護作業
   { path: 'fin63020', loadComponent: () => import('./fin63020/fin63020.component').then(m => m.FIN63020Component), data: { progNo: 'FIN63020' } },
   { path: 'fin63020cru', loadComponent: () => import('./fin63020-cru/fin63020-cru.component').then(m => m.FIN63020CRUComponent), data: { progNo: 'FIN63020' } },
-    // 應付票據到期作業
+  // 應付票據到期作業
   { path: 'fin63030', loadComponent: () => import('./fin63030/fin63030.component').then(m => m.FIN63030Component), data: { progNo: 'FIN63030' } },
-  
+
   // 應付票據兌現作業
   { path: 'fin63040', loadComponent: () => import('./fin63040/fin63040.component').then(m => m.FIN63040Component), data: { progNo: 'FIN63040' } },
   { path: 'fin63040cru', loadComponent: () => import('./fin63040-cru/fin63040-cru.component').then(m => m.FIN63040CRUComponent), data: { progNo: 'FIN63040' } },

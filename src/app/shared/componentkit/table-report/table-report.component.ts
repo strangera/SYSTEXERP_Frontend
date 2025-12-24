@@ -97,6 +97,8 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() expansionMultiSortMeta = [{ field: this.expansionDataKey, order: 1 }];
   @Input() expansionLoadFn?: (rowData: any) => Observable<any>;
   expandedRows: Record<string, boolean> = {};
+  // 連結
+  @Output() linkClick = new EventEmitter<{ rowData: any, field: string }>();
 
   // 底層匯出
   @Input() apiUrl?: string;                         // table API URL (可選)

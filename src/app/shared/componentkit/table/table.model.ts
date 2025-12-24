@@ -358,7 +358,8 @@ export type TableTypes =
   'dropdownTable' |
   'dropdownTableTemplate' |
   'template' |
-  'detail';
+  'detail' |
+  'link';
 
 /** 可以用來做轉換的 Map */
 export const Maps = {

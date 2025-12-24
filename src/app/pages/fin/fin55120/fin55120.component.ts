@@ -50,6 +50,7 @@ export class FIN55120Component extends BasicQueryPageComponent<FIN55120DetailIte
     { field: 'BalanceTotal', header: '合計', isSubTotal: true, format: formatAmount, align: 'right' },
     { field: 'Pct', header: '百分比', isSubTotal: true, format: (v) => v + '%', align: 'right' },
   ];
+  YM: Date | null = null;
 
   constructor(
     public readonly fin55120Service: Fin55120Service,
@@ -76,6 +77,7 @@ export class FIN55120Component extends BasicQueryPageComponent<FIN55120DetailIte
         this.A_TotalData = response.Data.TotalData.filter(x => x.groupName === 'A')[0];
         this.L_TotalData = response.Data.TotalData.filter(x => x.groupName !== 'A')[0];
         this.totalRecords = response.TotalCount;
+        this.YM = frm.value.YM;
         this.lastQueryBody = body;
       });
     });

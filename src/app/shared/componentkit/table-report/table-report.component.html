@@ -125,6 +125,12 @@
         <ng-container *ngIf="col.type === 'html'">
           <div [innerHTML]="sanitizer.bypassSecurityTrustHtml(rowData[col.field])" class="html-cell"></div>
         </ng-container>
+        <ng-container *ngIf="col.type === 'link'">
+          <span [ngClass]="(col.linkDisabled && col.linkDisabled(rowData)) ? 'link-disabled' : 'link-active'"
+            (click)="!(col.linkDisabled && col.linkDisabled(rowData)) && linkClick.emit({rowData: rowData, field: col.field})">
+            {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+          </span>
+        </ng-container>
         <span *ngIf="!col.type">
           {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
         </span>

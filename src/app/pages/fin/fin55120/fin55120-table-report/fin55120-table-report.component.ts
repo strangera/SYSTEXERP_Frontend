@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe, Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { FIN55120DetailItem } from '@service/api/fin/fin55120.service';
@@ -35,8 +35,11 @@ export class Fin55120TableReportComponent {
   @Input() groupRowsBy?: string;    // (小計)群組欄位
   groupTotals: Record<string, Record<string, number>> = {}; // 用於儲存每個群組的總計
   @Input() subTotalData: any;    // (小計)頁尾資料
+  @Input() YM: Date | null = null;
   constructor(
     public readonly tableUtility: Fin55120TableReportUtilityService,
+    private readonly location: Location,
+    private readonly datePipe: DatePipe
   ) {
   }
   trackByFn(index: number, item: any) {
@@ -188,13 +191,43 @@ export class Fin55120TableReportComponent {
   }
 
   // 新增跳窗方法
+  // 新增跳窗方法
   openDetail(rowData: any) {
     if (!rowData.AccNo) return;
 
-    // 這裡設定你想開啟的網址，例如傳遞科目代碼作為參數
-    const url = `#/your-route-path?accNo=${rowData.AccNo}`;
+    let dateFrom = '';
+    let dateTo = '';
 
-    // 使用 window.open 開啟新分頁
-    window.open(url, '_blank');
+    if (this.YM instanceof Date) {
+      // 取得該日期的年份與月份
+      const year = this.YM.getFullYear();
+      const month = this.YM.getMonth();
+
+      // 1. 計算該月第一天 (yyyy-MM-01)
+      const firstDay = new Date(year, month, 1);
+
+      // 2. 計算該月最後一天
+      // new Date(year, month + 1, 0) 會自動跳回該月的最後一天
+      const lastDay = new Date(year, month + 1, 0);
+
+      // 3. 使用 datePipe 格式化為 yyyy-MM-dd
+      dateFrom = this.datePipe.transform(firstDay, 'yyyy-MM-dd') || '';
+      dateTo = this.datePipe.transform(lastDay, 'yyyy-MM-dd') || '';
+    }
+
+    // 4. 組建查詢參數
+    const params = new URLSearchParams();
+    params.set('accNo', rowData.AccNo);
+
+    if (dateFrom && dateTo) {
+      params.set('dateFrom', dateFrom);
+      params.set('dateTo', dateTo);
+    }
+
+    // 5. 取得完整網址並開啟
+    const externalUrl = this.location.prepareExternalUrl(`/account/fin/fin55120cru?${params.toString()}`);
+    const finalUrl = `${window.location.origin}${externalUrl}`;
+
+    window.open(finalUrl, '_blank', 'noopener,noreferrer');
   }
 }
