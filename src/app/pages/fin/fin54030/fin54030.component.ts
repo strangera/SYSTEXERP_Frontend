@@ -85,6 +85,7 @@ export class FIN54030Component extends BasicQueryPageComponent<FIN54030Data> imp
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
+      this.logger.debug(`關帳:`, []);
       if (!this.qf().TargetYM.value?.length) return this.messageService.errorBubble('請選擇目標年月');
 
       this.tableLoading.set(!0);
@@ -92,7 +93,7 @@ export class FIN54030Component extends BasicQueryPageComponent<FIN54030Data> imp
       this.logger.debug(`onSubmit:`, [this.qf().TargetYM.value]);
       this.qf().CntPostFlag1.value! > 0
         ? (() => { this.messageService.errorBubble('已建立傳票大於0，不允許關帳'); this.tableLoading.set(!1); })()
-        : this.service.closeFIN54030(this.qf().TargetYM.value!, '1').pipe(
+        : this.service.closeFIN54030(this.qf().TargetYM.value!, 1).pipe(
           finalize(() => this.tableLoading.set(!1)),
         ).subscribe({
           next: res => {
