@@ -23,8 +23,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
 import { concatMap, finalize, Observable, tap } from 'rxjs';
-import { FIN52030Data, FIN52030DetailData, FIN52030Payload } from '../fin52030/fin52030.model';
-import { FIN53010Data, FIN53010DetailTable, FIN53010InsertPayload, FIN53010InsertResult, FIN53010UpdatePayload, FIN53010UpdateResult, QueryFIN53010Detail } from '../fin53010/fin53010.model';
+import { FIN52030Data, FIN52030DetailData } from '../fin52030/fin52030.model';
+import { FIN53010Data, FIN53010DetailTable, FIN53010InsertPayload, FIN53010InsertResult, FIN53010Payload, FIN53010UpdatePayload, FIN53010UpdateResult, QueryFIN53010Detail } from '../fin53010/fin53010.model';
 import { TableEditComponent } from './table-edit/table-edit.component';
 
 @Component({
@@ -473,8 +473,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }
 
   public getVocherTemplate(): void {
-    const payload: FIN52030Payload = {
-      ...(this.df().VouType.value ? { VouType: this.df().VouType.value as FIN52030Payload['VouType'] } : {}),
+    const payload: FIN53010Payload = {
+      ...(this.df().VouType.value ? { VouType: this.df().VouType.value as FIN53010Payload['VouType'] } : {}),
       // ...(this.isFormCreateable ? { CRT_USR_No: this.user.user_No } : {}),
       // ...(!this.isFormCreateable ? { UPD_USR_No: this.user.user_No } : {}),
     };
