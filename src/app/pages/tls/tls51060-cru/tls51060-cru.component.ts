@@ -1,28 +1,26 @@
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { ValidationService } from '@shared/service/validation.service';
+import { NgIf } from '@angular/common';
 import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { apiOption, Sysb300m } from '../../../shared/models/sys/sysb000.model';
-import { PluLogo } from '../../../shared/models/tls/tls000.model';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
+import { PanelModule } from 'primeng/panel';
 import { Tls51060Service } from '../../../service/api/tls/tls51060.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { apiOption, Sysb300m } from '../../../shared/models/sys/sysb000.model';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { PluLogo } from '../../../shared/models/tls/tls000.model';
 //
 
 // 2.5.1.6 品牌設定作業  CRU
 @Component({
   selector: 'app-tls51060-cru',
   templateUrl: './tls51060-cru.component.html',
-  styleUrl: './tls51060-cru.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, InputNumberComponent, DropdownComponent, NgIf, TranslateModule]
 })
@@ -41,7 +39,7 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
     // VEN_No: ['', [Validators.maxLength(16)]], // 廠商編號 保留目前不使用
 
     // 20251014: 新增 專櫃編號欄位
-    TLT_No: ['',[this.validationService.noChineseValidator, Validators.maxLength(12)]], // 專櫃編號
+    TLT_No: ['', [this.validationService.noChineseValidator, Validators.maxLength(12)]], // 專櫃編號
 
     CanDel: [null],  //能否刪除(僅顯示) 卡控
   });
@@ -54,7 +52,6 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
   constructor(
     private tls51060Service: Tls51060Service,
     private validationService: ValidationService,
-    private dropDownListService: DropDownListService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -68,7 +65,8 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
     const canDelValue = this.dataForm.get('CanDel')?.value as unknown as boolean;
     if (canDelValue === false) {
       this.dataForm.get('LOGO_No')?.disable();            // 品牌代碼不可編輯
-      this.dataForm.get('PLU_OrderPrcRate')?.disable();   // 標準進貨折數不可編輯
+      //!!! Issue【標準進貨折數】同原系統不可反黑，需可開放修改
+      // this.dataForm.get('PLU_OrderPrcRate')?.disable();   // 標準進貨折數不可編輯
     }
   }
 
@@ -144,7 +142,7 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
           Label: item.No + '-' + item.Name, // 組合成顯示用的Label
         }));
         console.log('專櫃編號代碼:', response.Data);
-      });    
+      });
     }
   }
 }
