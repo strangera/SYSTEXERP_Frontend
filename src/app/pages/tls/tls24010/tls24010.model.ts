@@ -38,6 +38,7 @@ export enum FIX_TYPE {
   付款別修正 = '04',
   交易資料作廢 = '06',
   預售交易修正 = '07',
+  刪除交易 = '08',
 }
 export const FIX_TYPE_LABEL: Record<FIX_TYPE, string> = {
   [FIX_TYPE.專櫃編號修正]: '專櫃編號修正',
@@ -46,4 +47,5 @@ export const FIX_TYPE_LABEL: Record<FIX_TYPE, string> = {
   [FIX_TYPE.付款別修正]: '付款別修正',
   [FIX_TYPE.交易資料作廢]: '交易資料作廢',
   [FIX_TYPE.預售交易修正]: '預售交易修正',
+  [FIX_TYPE.刪除交易]: '刪除交易',
 };

@@ -1,4 +1,4 @@
-import { NgFor, NgIf } from '@angular/common';
+import { NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ConfirmationService, MessageService, PrimeTemplate } from 'primeng/api';
@@ -6,7 +6,7 @@ import { Button, ButtonDirective } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
-import { NotificationService } from './notification.service';
+import { ConfirmOptions, NotificationService } from './notification.service';
 
 @UntilDestroy()
 @Component({
@@ -14,9 +14,10 @@ import { NotificationService } from './notification.service';
   templateUrl: './notification-message.component.html',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ConfirmDialogModule, PrimeTemplate, NgIf, Button, ToastModule, DialogModule, ButtonDirective, NgFor],
+  imports: [ConfirmDialogModule, PrimeTemplate, NgIf, Button, ToastModule, DialogModule, ButtonDirective, NgFor, NgTemplateOutlet],
 })
 export class NotificationMessageComponent implements OnInit {
+  currentConfirmOpts?: ConfirmOptions;
   msgBoxHeader = '';
   msgBoxMessage = '';
   msgBoxDisplay = false;
@@ -52,6 +53,7 @@ export class NotificationMessageComponent implements OnInit {
     this.notificationService.confirmMsg$.pipe(untilDestroyed(this)).subscribe((opts) => {
       this.showIcon = opts.showIcon === true; // 只有明確設定為 true 時才顯示圖示
       this.extraButtons = opts.extraButtons || [];
+      this.currentConfirmOpts = opts;
       this.confirmationService.confirm({
         header: opts.header,
         message: opts.message,
@@ -151,5 +153,13 @@ export class NotificationMessageComponent implements OnInit {
   onExtraButtonClick(btn: { label: string; action: () => void }) {
     btn.action();
     this.confirmationService.close();
+  }
+
+  onConfirmAccept() {
+    this.confirmationService.close();
+    if (this.currentConfirmOpts?.accept) {
+      const resultData = this.currentConfirmOpts.templateContext ? this.currentConfirmOpts.templateContext.data : null;
+      this.currentConfirmOpts.accept(resultData);
+    }
   }
 }
