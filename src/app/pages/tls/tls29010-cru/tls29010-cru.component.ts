@@ -156,7 +156,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       type: 'inputNumber',
       width: '150px',
       validate: [validateRequired],
-      disabled: () => true,
+      disabled: (value, index, rowData) => this.is_tltNo_GroupSelected(rowData), // 沒有選專櫃編號就disabled
     },
     {
       field: 'cag_barcode', // 下拉選單：依據專櫃編號，排除當初所設定折扣別，去(TLTTALENT_CHARGED)撈
@@ -167,7 +167,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       optionLabel: 'label',
       optionValue: 'value',
       validate: [validateRequired],
-      // disabled: () => true,
+      disabled: (value, index, rowData) => this.is_tltNo_GroupSelected(rowData), // 沒有選專櫃編號就disabled
     },
     {
       field: 'use_flag', // 下拉選單：是/否
@@ -353,9 +353,9 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       this.updateColumnOptions('tlt_no', this.tlt_No_Option);
     });
     //折扣別
-    const pod_no = this.dataForm.get('pod_no')?.value || "";
+    const talent_id = this.dataForm.get('talent_id')?.value || "";
     // 活動編號，下拉選單
-    this.tls29010Service.dropdownTLS29010bytalentid({ "pod_no": pod_no }).pipe(untilDestroyed(this)).pipe(untilDestroyed(this)).subscribe((response) => {
+    this.tls29010Service.dropdownTLS29010bytalentid({ "talent_id": talent_id }).pipe(untilDestroyed(this)).pipe(untilDestroyed(this)).subscribe((response) => {
       this.cag_barcode_Options = response.Data;
       // console.log('✨pod_no:', pod_no, '對應的 折扣別 下拉:', response.Data);
       console.log('✨ 折扣別 下拉:', this.cag_barcode_Options);
@@ -366,11 +366,6 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   }
 
   // 更新欄位的 專櫃編號
-  // static updateTlt_No_OptionInColumns(columns: EditColumn[], tlt_No_Option: any[]): EditColumn[] {
-  //   const col = columns.find(c => c.field === 'tlt_no');
-  //   if (col) col.options = tlt_No_Option;
-  //   return columns;
-  // }
   private updateColumnOptions(fieldName: string, options: any[]) {
     const col = this.TALPORDERD_OPENDisc_Detail_Columns.find(c => c.field === fieldName);
     if (col) {
@@ -446,10 +441,9 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         }
       }
     }
-
-    // 最後更新元件內的資料狀態
     this.opendisc_Detail = [...newData];
   }
+
 
   // 輔助方法：清空該列資料(專櫃API無資料時使用)
   private clearRowData(row: TALPORDERD_OPENDisc) {
@@ -505,5 +499,10 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       isValid: !duplicate,
       errorMessage: duplicate ? ['專櫃編號不可重複'] : []
     };
+  }
+
+  // 明細disabled判斷(專櫃編號沒選就disabled)
+  is_tltNo_GroupSelected(rowData: TALPORDERD_OPENDisc): boolean {
+    return !rowData || !rowData.tlt_no;
   }
 }
