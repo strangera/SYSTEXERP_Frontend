@@ -22,7 +22,6 @@ export const finRoutes: Routes = [
   { path: 'fin11070', loadComponent: () => import('./fin11070/fin11070.component').then(m => m.FIN11070Component), data: { progNo: 'FIN11070' } },
   // 二電退貨發票號碼清空重新上送作業
   { path: 'fin11080', loadComponent: () => import('./fin11080/fin11080.component').then(m => m.FIN11080Component), data: { progNo: 'FIN11080' } },
-  { path: 'fin11080cru', loadComponent: () => import('./fin11080-cru/fin11080-cru.component').then(m => m.FIN11080CRUComponent), data: { progNo: 'FIN11080' } },
   // 非業主收銀機二聯式電子發票配號作業
   { path: 'fin11090', loadComponent: () => import('./fin11090/fin11090.component').then(m => m.FIN11090Component), data: { progNo: 'FIN11090' } },
   // 電子發票配號作業
@@ -127,7 +126,6 @@ export const finRoutes: Routes = [
   { path: 'fin25020cru', loadComponent: () => import('./fin25020-cru/fin25020-cru.component').then(m => m.FIN25020CRUComponent), data: { progNo: 'FIN25020' } },
   // 匯款銀行
   { path: 'fin26010', loadComponent: () => import('./fin26010/fin26010.component').then(m => m.FIN26010Component), data: { progNo: 'FIN26010' } },
-  { path: 'fin26010cru', loadComponent: () => import('./fin26010-cru/fin26010-cru.component').then(m => m.FIN26010CRUComponent), data: { progNo: 'FIN26010' } },
   // 產生開票付款資料
   // { path: 'fin27010', loadComponent: () => import('./fin27010/fin27010.component').then(m => m.FIN27010Component),data:{progNo:'FIN27010'} },
   // { path: 'fin27010cru', loadComponent: () => import('./fin27010-cru/fin27010-cru.component').then(m => m.FIN27010CRUComponent),data: { progNo: 'FIN27010'} },
@@ -228,7 +226,6 @@ export const finRoutes: Routes = [
   // { path: 'fin51010cru', loadComponent: () => import('./fin51010-cru/fin51010-cru.component').then(m => m.FIN51010CRUComponent),data: { progNo: 'FIN51010'} },
   // 基本資料作業-總帳參數維護
   { path: 'fin52010', loadComponent: () => import('./fin52010/fin52010.component').then(m => m.FIN52010Component), data: { progNo: 'FIN52010' } },
-  { path: 'fin52010cru', loadComponent: () => import('./fin52010-cru/fin52010-cru.component').then(m => m.FIN52010CRUComponent), data: { progNo: 'FIN52010' } },
   // 基本資料作業-傳票型態設定維護
   { path: 'fin52020', loadComponent: () => import('./fin52020/fin52020.component').then(m => m.FIN52020Component), data: { progNo: 'FIN52020' } },
   { path: 'fin52020cru', loadComponent: () => import('./fin52020-cru/fin52020-cru.component').then(m => m.FIN52020CRUComponent), data: { progNo: 'FIN52020' } },
@@ -258,16 +255,12 @@ export const finRoutes: Routes = [
   { path: 'fin53010cru', loadComponent: () => import('./fin53010-cru/fin53010-cru.component').then(m => m.FIN53010CRUComponent), data: { progNo: 'FIN53010' } },
   // 傳票過帳作業-傳票過帳
   { path: 'fin54020', loadComponent: () => import('./fin54020/fin54020.component').then(m => m.FIN54020Component), data: { progNo: 'FIN54020' } },
-  { path: 'fin54020cru', loadComponent: () => import('./fin54020-cru/fin54020-cru.component').then(m => m.FIN54020CRUComponent), data: { progNo: 'FIN54020' } },
   // 傳票過帳作業-傳票反過帳
   { path: 'fin54025', loadComponent: () => import('./fin54025/fin54025.component').then(m => m.FIN54025Component) },
-  { path: 'fin54025CRU', loadComponent: () => import('./fin54025-cru/fin54025-cru.component').then(m => m.FIN54025CRUComponent), data: { progNo: 'FIN54025' } },
   // 傳票關帳作業-關帳作業
   { path: 'fin54030', loadComponent: () => import('./fin54030/fin54030.component').then(m => m.FIN54030Component), data: { progNo: 'FIN54030' } },
-  { path: 'fin54030cru', loadComponent: () => import('./fin54030-cru/fin54030-cru.component').then(m => m.FIN54030CRUComponent), data: { progNo: 'FIN54030' } },
   // 傳票關帳作業-反關帳作業
-  { path: 'fin54035', loadComponent: () => import('./fin54035/fin54035.component').then(m => m.FIN54035Component) },
-  { path: 'fin54035CRU', loadComponent: () => import('./fin54035-cru/fin54035-cru.component').then(m => m.FIN54035CRUComponent), data: { progNo: 'FIN54035' } },
+  { path: 'fin54035', loadComponent: () => import('./fin54035/fin54035.component').then(m => m.FIN54035Component), data: { progNo: 'FIN54035' } },
   // 年結作業-過帳資料年結處理作業
   // { path: 'fin54040', loadComponent: () => import('./fin54040/fin54040.component').then(m => m.FIN54040Component),data:{progNo:'FIN54040'} },
   // { path: 'fin54040cru', loadComponent: () => import('./fin54040-cru/fin54040-cru.component').then(m => m.FIN54040CRUComponent),data: { progNo: 'FIN54040'} },
@@ -281,10 +274,8 @@ export const finRoutes: Routes = [
   { path: 'fin55020', loadComponent: () => import('./fin55020/fin55020.component').then(m => m.FIN55020Component), data: { progNo: 'FIN55020' } },
   // 總帳報表-立沖科目餘額表
   { path: 'fin55030', loadComponent: () => import('./fin55030/fin55030.component').then(m => m.FIN55030Component), data: { progNo: 'FIN55030' } },
-  { path: 'fin55030cru', loadComponent: () => import('./fin55030-cru/fin55030-cru.component').then(m => m.FIN55030CRUComponent), data: { progNo: 'FIN55030' } },
   // 總帳報表-立沖科目明細表
   { path: 'fin55040', loadComponent: () => import('./fin55040/fin55040.component').then(m => m.FIN55040Component), data: { progNo: 'FIN55040' } },
-  { path: 'fin55040cru', loadComponent: () => import('./fin55040-cru/fin55040-cru.component').then(m => m.FIN55040CRUComponent), data: { progNo: 'FIN55040' } },
   // 總帳報表-分類帳
   { path: 'fin55050', loadComponent: () => import('./fin55050/fin55050.component').then(m => m.FIN55050Component), data: { progNo: 'FIN55050' } },
   { path: 'fin55050cru', loadComponent: () => import('./fin55050-cru/fin55050-cru.component').then(m => m.FIN55050CRUComponent), data: { progNo: 'FIN55050' } },
@@ -361,7 +352,6 @@ export const finRoutes: Routes = [
   // { path: 'fin65010cru', loadComponent: () => import('./fin65010-cru/fin65010-cru.component').then(m => m.FIN65010CRUComponent),data: { progNo: 'FIN65010'} },
   // 零用金參數維護
   { path: 'fin71010', loadComponent: () => import('./fin71010/fin71010.component').then(m => m.FIN71010Component), data: { progNo: 'FIN71010' } },
-  { path: 'fin71010cru', loadComponent: () => import('./fin71010-cru/fin71010-cru.component').then(m => m.FIN71010CRUComponent), data: { progNo: 'FIN71010' } },
   // 保管人及額度設定作業
   { path: 'fin71020', loadComponent: () => import('./fin71020/fin71020.component').then(m => m.FIN71020Component), data: { progNo: 'FIN71020' } },
   { path: 'fin71020cru', loadComponent: () => import('./fin71020-cru/fin71020-cru.component').then(m => m.FIN71020CRUComponent), data: { progNo: 'FIN71020' } },
