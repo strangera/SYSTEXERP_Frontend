@@ -1,7 +1,7 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onCreate()"></app-button>
+    <!-- <app-button btnType="create" (click)="onCreate()"></app-button> -->
   </div>
   <p-accordion>
     <p-accordionTab
@@ -69,7 +69,8 @@
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     [lazy]="true"
     [loading]="loading"
-    [showDelete]="true"
+    [showDelete]="false"
+    [showEdit]="false"
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
   ></app-table>
