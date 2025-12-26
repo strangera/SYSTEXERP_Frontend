@@ -140,6 +140,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
   act_no_Options: ActNoOption[] = []; // 活動編號
   cag_barcode_Options: { value: string, label: string }[] = []; // 折扣別下拉
+  allBarcodeOptions: any[] = []; // 儲存所有專櫃的折扣別選項
   tlt_No_Option: { value: string, label: string }[] = [];  // 專櫃編號下拉
   tlt_ID_Option: { value: string, label: string }[] = [];  // 抽成類別下拉
 
@@ -167,7 +168,8 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       header: '抽成類別', // 抽成別(0-9)，排除掉已選項目
       width: '150px',
       type: 'dropdown', // 修改為 dropdown
-      options: (rowData: any) => rowData.tlt_ID_Option || this.tlt_ID_Option, // 優先使用動態選單
+      // 改為從 rowData 讀取專屬的抽成別選項
+      options: (rowData: any) => rowData._tltIdOptions || [],
       optionLabel: 'label',
       optionValue: 'value',
       validate: [validateRequired],
@@ -178,6 +180,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       header: '折扣別',
       width: '150px',
       type: 'dropdown',
+      // 從 rowData 讀取專屬的折扣別選項
       options: (rowData: any) => rowData._barcodeOptions || [],
       optionLabel: 'label',
       optionValue: 'value',
@@ -365,10 +368,10 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       console.log('pod: ', pod, ' ,活動編號 下拉:', this.act_no_Options);
     });
     // 抽成別
-    // this.tls29010Service.queryTLTTALENT_CHARGED({ "talent_id": "" }).pipe(untilDestroyed(this)).subscribe(res => {
-    //   this.tlt_ID_Option = res.Data;
-    //   console.log('抽成別 下拉:', res);
-    // });
+    this.tls29010Service.dropdownTLS29010bytalentid({ "talent_id": "" }).pipe(untilDestroyed(this)).subscribe(res => {
+      this.allBarcodeOptions = res.Data;
+      console.log('所有抽成別 下拉:', res);
+    });
     // 專櫃編號
     this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.tlt_No_Option = res.Data.map(item => ({
@@ -414,12 +417,13 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
   // #region 明細檔操作
   async onDataChange(newData: TALPORDERD_OPENDisc[]): Promise<void> {
-    // this.opendisc_Detail = newData;
-
     // 找出哪一列的 tlt_no 發生了變動 (且變動後的值不為空)
     for (let i = 0; i < newData.length; i++) {
       const currentRow = newData[i];
       const oldRow = this.opendisc_Detail[i];
+
+      // console.log(`檢查第 ${i} 列:`, currentRow);
+      // console.log(`檢查第 ${i} 列 currentRow.talent_id:`, currentRow.talent_id);
 
       // 條件：這一列是新的，或者 tlt_no 與之前不同
       if (currentRow.tlt_no && (!oldRow || currentRow.tlt_no !== oldRow.tlt_no)) {
@@ -432,42 +436,54 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
           if (res.Status === '0000' && res.Data?.length) {
             const apiData = res.Data[0];
-
-            console.log('API 回傳的專櫃合約資料:', apiData);
-
-            // 這邊調抓talent_id
             currentRow.talent_id = apiData.talent_id;
-            // currentRow.tlt_id = apiData.tlt_id;
-            // currentRow.tlt_no = apiData.tlt_no;
-            // currentRow.cag_barcode = apiData.cag_barcode;
-            // currentRow.tlt_bdate = apiData.tlt_bdate;
-            // currentRow.tlt_edate = apiData.tlt_edate;
+            if (!currentRow.use_flag) currentRow.use_flag = 'Y';
 
-            // 如果是剛選定專櫃，通常預設將「是否使用」設為 'Y'
-            if (!currentRow.use_flag) {
-              currentRow.use_flag = 'Y';
-            }
-
-            // 邏輯 B: 有 talent_id 查詢該專櫃專屬的「抽成別」「折扣別」下拉選單
             if (currentRow.talent_id) {
-              console.log('點選talent_id:', currentRow.talent_id);
-              // 折扣別
-              const barcodeRes = await this.tls29010Service
+              // 取得該專櫃「目前已設定」的折扣/抽成資料 (用來排除)
+              const existRes = await this.tls29010Service
                 .queryTLTTALENT_CHARGE_DropDownList({ talent_id: currentRow.talent_id.toString() })
-                .pipe(untilDestroyed(this))
-                .toPromise();
+                .pipe(untilDestroyed(this)).toPromise();
 
-              if (barcodeRes.Status === '0000') {
-                console.log('取得折扣別、抽成別資料:', barcodeRes.Data);
-                // 將選項儲存在該行物件中 (例如自定義一個 _barcodeOptions 屬性)
-                (currentRow as any)._barcodeOptions = barcodeRes.Data;
-              } else {
-                this.messageService.errorBubble(`取得折扣別下拉選單失敗: ${barcodeRes.Message}`);
+              if (existRes.Status === '0000') {
+                console.log('專櫃已設定折扣/抽成資料', existRes.Data);
+                const existingData = existRes.Data; // 這是要排除的對象
+
+                // --- 處理 抽成別 (去重並格式化) ---
+                const tltMap = new Map();
+                existingData.forEach((item: any) => {
+                  if (!tltMap.has(item.tlt_id)) {
+                    tltMap.set(item.tlt_id, {
+                      label: `${item.tlt_id} - ${item.tlt_id_desc}`,
+                      value: item.tlt_id
+                    });
+                  }
+                });
+                (currentRow as any)._tltIdOptions = Array.from(tltMap.values());
+
+                // --- 處理 折扣別 (執行排除邏輯) ---
+                // 從「全量清單」中排除掉「已設定清單」中的 barcode
+                const excludedBarcodes = existingData.map((e: any) => e.cag_barcode);
+
+                console.log('要排除的折扣別(barcode)', excludedBarcodes);
+
+                (currentRow as any)._barcodeOptions = this.allBarcodeOptions.filter(opt =>
+                  // 1. 必須符合該專櫃的抽成別 (若有需要依據 tlt_id 過濾)
+                  // 2. 不在已設定的清單內
+                  !excludedBarcodes.includes(opt.value)
+                );
+
+                // 選擇性功能：如果 API 回傳只有一筆，可以自動幫 User 帶入預設值
+                if ((currentRow as any)._tltIdOptions.length === 1) {
+                  currentRow.tlt_id = (currentRow as any)._tltIdOptions[0].value;
+                }
+
+                console.log('抽成別選單', (currentRow as any)._tltIdOptions);
+                console.log('折扣別選單', (currentRow as any)._barcodeOptions);
+
               }
             }
-            console.log(`已更新專櫃 ${currentRow.tlt_no} 的合約資料`, apiData);
           } else {
-            // 若查無資料，可考慮清空相關欄位
             this.clearRowData(currentRow);
           }
         } catch (error) {
