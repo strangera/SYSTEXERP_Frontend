@@ -94,12 +94,20 @@
         tableKey="TLS29010Detail"
         [columns]="TALPORDERD_OPENDisc_Detail_Columns"
         [data]="opendisc_Detail"
+        dataKey="_tempId"
         (selectionChange)="selectedItems = $event"
         [selectedItems]="selectedItems"
         [keepDeletedData]="true"
         (dataChange)="onDataChange($event)"
         [tableRequired]="true"
         [disabled]="isFormReadable"
+        dataStatusField="status"
+        [dataStatusValue]="{
+          Original: 'original',
+          New: 'new',
+          Modified: 'modified',
+          Deleted: 'deleted',
+        }"
       />
 
       <div
