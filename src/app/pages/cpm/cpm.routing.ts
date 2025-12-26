@@ -28,7 +28,7 @@ export const cpmRoutes: Routes = [
   { path: 'cpm12040cru', loadComponent: () => import('./cpm12040-cru/cpm12040-cru.component').then(m => m.CPM12040CRUComponent), data: { progNo: 'CPM12040' } },
   // { path: 'cpm12050', loadComponent: () => import('./cpm12050/cpm12050.component').then(m => m.CPM12050Component),data: {progNo:'CPM12050'} }, // 顧客意見管理作業
   // { path: 'cpm12050cru', loadComponent: () => import('./cpm12050-cru/cpm12050-cru.component').then(m => m.CPM12050CRUComponent), data: {progNo:'CPM12050'} },
-  // { path: 'cpm12060', loadComponent: () => import('./cpm12060/cpm12060.component').then(m => m.CPM12060Component),data: {progNo:'CPM12060'} }, // 顧客意見處理狀況表
+  { path: 'cpm12060', loadComponent: () => import('./cpm12060/cpm12060.component').then(m => m.CPM12060Component), data: { progNo: 'CPM12060' } }, // 顧客意見處理狀況表
   { path: 'cpm12070', loadComponent: () => import('./cpm12070/cpm12070.component').then(m => m.CPM12070Component), data: { progNo: 'CPM12070' } }, // 顧客意見類別統計表
   { path: 'cpm13010', loadComponent: () => import('./cpm13010/cpm13010.component').then(m => m.CPM13010Component), data: { progNo: 'CPM13010' } }, // 停車費折抵補登作業
   { path: 'cpm13010cru', loadComponent: () => import('./cpm13010-cru/cpm13010-cru.component').then(m => m.CPM13010CRUComponent), data: { progNo: 'CPM13010' } },
