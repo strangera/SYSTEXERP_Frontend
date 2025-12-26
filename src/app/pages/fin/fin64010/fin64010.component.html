@@ -17,8 +17,8 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="票據號碼"
-              controlName="chkNo"
-              [control]="queryForm.controls.chkNo"
+              controlName="ChkNo"
+              [control]="queryForm.controls.ChkNo"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -26,90 +26,106 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="廠客代號"
-              controlName="venNo"
+              controlName="VenNo"
               [options]="vendorOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.venNo"
+              [control]="queryForm.controls.VenNo"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
-       <div class="col-12 md:col-6 lg:col-4">
+
+          <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="銀行代號"
-              controlName="bankKeyList"
-              [options]="bankKeyOptions"
-              
+              controlName="BankNoList"
+              [options]="bankNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.bankKeyList"
+              [control]="queryForm.controls.BankNoList"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="客戶銀行帳號"
-              controlName="custBankAccNo"
-              [control]="queryForm.controls.custBankAccNo"
+              controlName="CustBankAccNo"
+              [control]="queryForm.controls.CustBankAccNo"
               [submitted]="submitted"
             ></app-input-text>
           </div>
-                <div class="col-12 md:col-6 lg:col-4">
+
+          <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
               label="託收日"
-              [startControl]="queryForm.controls.colleDateFrom"
-              [endControl]="queryForm.controls.colleDateTo"
+              [startControl]="queryForm.controls.ColleDateFrom"
+              [endControl]="queryForm.controls.ColleDateTo"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
-
-     
-   
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="公司銀行科目代號"
-              controlName="companyAccNoList"
+              controlName="CompanyAccNoList"
               [options]="companyAccOptions"
-              
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.companyAccNoList"
+              [control]="queryForm.controls.CompanyAccNoList"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
 
+          <!-- 第2列 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="收票業務員"
-              controlName="salesIdList"
-              [options]="salesOptions"
-              
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.salesIdList"
+            <app-input-text
+              label="公司代號"
+              controlName="CompNo"
+              [control]="queryForm.controls.CompNo"
               [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-
-          <!-- 第3列：日期區 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="託收日"
-              [startControl]="queryForm.controls.colleDateFrom"
-              [endControl]="queryForm.controls.colleDateTo"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            ></app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
               label="收票日"
-              [startControl]="queryForm.controls.receDateFrom"
-              [endControl]="queryForm.controls.receDateTo"
+              [startControl]="queryForm.controls.ReceDateFrom"
+              [endControl]="queryForm.controls.ReceDateTo"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="收票業務員"
+              controlName="SalesIdList"
+              [options]="salesOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.SalesIdList"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+
+          <!-- 第3列 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="收款單號"
+              controlName="RcvNo"
+              [control]="queryForm.controls.RcvNo"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="到期日"
+              [startControl]="queryForm.controls.ExpireDateFrom"
+              [endControl]="queryForm.controls.ExpireDateTo"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
@@ -117,9 +133,9 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
-              label="到期日"
-              [startControl]="queryForm.controls.expireDateFrom"
-              [endControl]="queryForm.controls.expireDateTo"
+              label="預兌日"
+              [startControl]="queryForm.controls.PreDateFrom"
+              [endControl]="queryForm.controls.PreDateTo"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
@@ -128,85 +144,74 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
-              label="預兌日"
-              [startControl]="queryForm.controls.preDateFrom"
-              [endControl]="queryForm.controls.preDateTo"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
               label="兌現日"
-              [startControl]="queryForm.controls.cashDateFrom"
-              [endControl]="queryForm.controls.cashDateTo"
+              [startControl]="queryForm.controls.PayDateFrom"
+              [endControl]="queryForm.controls.PayDateTo"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range
-             
               label="票面金額"
-              [startControl]="queryForm.controls.amtFrom"
-              [endControl]="queryForm.controls.amtTo"
+              [startControl]="queryForm.controls.AmtFrom"
+              [endControl]="queryForm.controls.AmtTo"
               [submitted]="submitted"
             ></app-input-text-range>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="票據種類"
+              controlName="ChkType"
+              [options]="chkTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ChkType"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <!-- 第5列 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="票據種類"
-              controlName="chkType"
-              [options]="chkTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.chkType"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
               label="是否客票"
-              controlName="ticketYN"
+              controlName="TicketYN"
               [options]="ticketYNOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.ticketYN"
+              [control]="queryForm.controls.TicketYN"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-              label="收款單號"
-              controlName="rcvNo"
-              [control]="queryForm.controls.rcvNo"
+              label="備註"
+              controlName="Comment"
+              [control]="queryForm.controls.Comment"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="票據抬頭"
+              controlName="ChkTitle"
+              [control]="queryForm.controls.ChkTitle"
               [submitted]="submitted"
             ></app-input-text>
           </div>
 
           <!-- 第6列 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="備註"
-              controlName="comment"
-              [control]="queryForm.controls.comment"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="組織代號"
-              controlName="orgId"
+              controlName="OrgId"
               [options]="orgOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.orgId"
+              [control]="queryForm.controls.OrgId"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -214,11 +219,23 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="活動代號"
-              controlName="projectNo"
+              controlName="ProjectNo"
               [options]="projectOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.projectNo"
+              [control]="queryForm.controls.ProjectNo"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="狀態"
+              controlName="TranStatus"
+              [options]="tranStatusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.TranStatus"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -226,24 +243,12 @@
           <!-- 第7列 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="狀態"
-              controlName="tranStatus"
-              [options]="tranStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.tranStatus"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
               label="票據狀態"
-              controlName="chkStatus"
+              controlName="ChkStatus"
               [options]="chkStatusOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.chkStatus"
+              [control]="queryForm.controls.ChkStatus"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -251,40 +256,15 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="傳票號碼"
-              controlName="vouNo"
-              [control]="queryForm.controls.vouNo"
+              controlName="VouNo"
+              [control]="queryForm.controls.VouNo"
               [submitted]="submitted"
             ></app-input-text>
           </div>
-
-          <!-- 第8列 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="票據抬頭"
-              controlName="chkTitle"
-              [control]="queryForm.controls.chkTitle"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="公司代號(取科目名稱用)"
-              controlName="compNo"
-              [control]="queryForm.controls.compNo"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button
-            btnType="clear"
-            [type]="'button'"
-            (clickEvent)="onClear(queryForm)"
-          ></app-button>
-
+          <app-button btnType="clear" [type]="'button'" (clickEvent)="onClear(queryForm)"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
@@ -305,10 +285,11 @@
     [showCheckBox]="false"
     [showManage]="true"
     [showDetail]="true"
+        [showReportMode]="false"
+    [showDelete]="false"
     [showEdit]="true"
     [lazy]="true"
     (edit)="onEdit($event)"
     (detail)="onDetail($event)"
-  >
-  </app-table>
+  ></app-table>
 </div>
