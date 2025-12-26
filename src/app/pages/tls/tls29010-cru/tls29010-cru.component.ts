@@ -284,33 +284,27 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     }
 
     // 2. 清理並格式化明細資料 (只送出後端需要的欄位)
-    const rawValue = frm.getRawValue();
-    // 判斷 pod_no 是否為提示字串，如果是則轉為 null
-    const finalPodNo = rawValue.pod_no === '系統產生代碼' ? null : rawValue.pod_no;
-
     console.log('送出前項目:', this.opendisc_Detail);
 
-    const processedDetail = this.opendisc_Detail.map(item => {
-      // 建立一個乾淨的物件，只包含介面定義的欄位
-      const cleanItem: any = {
-        id: item.status === 'new' ? 0 : item.id,
-        talent_id: item.talent_id,
-        tlt_id: item.tlt_id,
-        tlt_no: item.tlt_no,
-        cag_barcode: item.cag_barcode,
-        use_flag: item.use_flag || 'Y',
-        pod_no: finalPodNo, // 確保主檔送出的是 null
-        // 增加防呆：如果 item.status 不存在，根據 id 判斷是 new 還是 modified
-        status: item.status || (item.id ? 'modified' : 'new')
-      };
+    const processedDetail = this.opendisc_Detail
+      .map(item => {
+        // 建立乾淨的 API 物件
+        return {
+          // 如果是 new，ID 送 0；其餘送原 ID
+          id: item.status === 'new' ? 0 : item.id,
+          talent_id: item.talent_id,
+          tlt_no: item.tlt_no,
+          tlt_id: item.tlt_id,
+          cag_barcode: item.cag_barcode,
+          use_flag: item.use_flag,
+          pod_no: frm.get('pod_no')?.value === '系統產生代碼' ? null : frm.get('pod_no')?.value,
+          status: item.status // 直接採用 TableEditComponent 幫我們標記好的狀態
+        };
+      });
 
-      return cleanItem;
-    });
-
-    const formValue = frm.getRawValue();
     const body = {
-      ...formValue,
-      TALPORDERD_OPENDisc: processedDetail,
+      ...frm.getRawValue(),
+      TALPORDERD_OPENDisc: processedDetail
     };
 
     // ... 後續 switch (this.crudstatus) 邏輯 ...
@@ -407,123 +401,117 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   }
 
   //讀取明細檔
-  async loadDetailData(pod_no: string): Promise<void> {
-    console.log('要求pod_no資料:', pod_no);
-    this.tls29010Service.queryTLS29010_Detail({ "POD_No": pod_no }).pipe(untilDestroyed(this)).subscribe((response) => {
-      if (response.Status === '0000') {
-        // 填充明細資料
-        this.opendisc_Detail = response.Data.map((item: any) => ({
-          ...item,
-          status: 'original', // 有明細資料，讀取明細狀態設定為 'original';
-        }));
-        // 深拷貝原始明細資料備份
-        this.originalData = this.opendisc_Detail.map(item => ({ ...item }));
-
-        console.log('取得明細資料:', this.opendisc_Detail);
-      } else {
-        this.messageService.infoBubble(`該主檔無明細資料`);
-      }
-    });
+  loadDetailData(pod_no: string): void {
+    this.tls29010Service.queryTLS29010_Detail({ POD_No: pod_no })
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        if (res.Status === '0000') {
+          this.opendisc_Detail = res.Data.map((item: any) => ({
+            ...item,
+            status: 'original',
+            _tempId: `id_${Math.random().toString(36).substr(2, 9)}` // 產生前端唯一識別碼
+          }));
+          this.originalData = JSON.parse(JSON.stringify(this.opendisc_Detail));
+        }
+      });
   }
 
   // #region 明細檔操作
   async onDataChange(newData: TALPORDERD_OPENDisc[]): Promise<void> {
-    // 遍歷當前表格的所有資料
-    for (let i = 0; i < newData.length; i++) {
-      const currentRow = newData[i];
-      /// 使用深拷貝後的 original 參考進行比對，或者與目前 state 比對
-      const oldRow = this.opendisc_Detail[i];
+    // 1. 建立舊狀態的深拷貝快照，用於精準比對變更
+    const previousState = JSON.parse(JSON.stringify(this.opendisc_Detail));
 
-      // 1. 狀態防呆：確保每一列都有 status
-      if (!currentRow.status) {
-        currentRow.status = 'new';
+    // 2. 使用 for...of 配合 entries() 同時取得 index 與 row
+    for (const [i, currentRow] of newData.entries()) {
+      const oldRow = previousState[i];
+
+      // 確保新增加的行也有唯一識別碼，解決「改 A 動到 B」
+      if (!(currentRow as any)._tempId) {
+        (currentRow as any)._tempId = `new_${Math.random().toString(36).substr(2, 9)}`;
       }
 
-      // 檢查專櫃編號是否真的改變了
-      // 這裡建議加上 console.log 觀察 currentRow.tlt_no 與 oldRow.tlt_no 是否已經變為一致
+      // 比對專櫃編號是否真的改變了
       const isTltNoChanged = !oldRow || currentRow.tlt_no !== oldRow.tlt_no;
 
       if (isTltNoChanged) {
-        console.log('狀態變更， isTltNoChanged', currentRow);
-        // --- 重置該列所有關聯欄位 (關鍵步驟) ---
-        // 當專櫃一換，立即清空舊專櫃的 ID 與下拉選單內容，避免畫面殘留舊選單
+        console.log(`第 ${i} 列專櫃變更:`, currentRow.tlt_no);
+
+        // 執行重置邏輯
         currentRow.talent_id = 0;
         currentRow.tlt_id = '';
         currentRow.cag_barcode = '';
         (currentRow as any)._tltIdOptions = [];
         (currentRow as any)._barcodeOptions = [];
 
-        // 如果專櫃編號被清空，則不繼續執行 API 抓取
-        if (!currentRow.tlt_no) {
-          continue;
+        if (currentRow.tlt_no) {
+          // 抓取新專櫃的下拉選單資料
+          await this.fetchTltDetails(currentRow);
         }
-
-        try {
-          // 3. 重新抓取新專櫃 (002) 的合約資料
-          const res = await this.tls29010Service
-            .queryTLTTALENT_Data({ tlt_no: currentRow.tlt_no })
-            .pipe(untilDestroyed(this))
-            .toPromise();
-
-          if (res.Status === '0000' && res.Data?.length) {
-            const apiData = res.Data[0];
-            currentRow.talent_id = apiData.talent_id;
-
-            // 4. 抓取新專櫃的折扣/抽成下拉選單
-            if (currentRow.talent_id) {
-              const existRes = await this.tls29010Service
-                .queryTLTTALENT_CHARGE_DropDownList({ talent_id: currentRow.talent_id.toString() })
-                .pipe(untilDestroyed(this)).toPromise();
-
-              if (existRes.Status === '0000') {
-                const existingData = existRes.Data;
-
-                console.log('專櫃編號:', currentRow.tlt_no, '，取得抽成/折扣資料:', existingData);
-
-                // 更新該列專屬的「抽成別」選單
-                const tltMap = new Map();
-                existingData.forEach((item: any) => {
-                  if (!tltMap.has(item.tlt_id)) {
-                    tltMap.set(item.tlt_id, {
-                      label: `${item.tlt_id} - ${item.tlt_id_desc}`,
-                      value: item.tlt_id
-                    });
-                  }
-                });
-                (currentRow as any)._tltIdOptions = Array.from(tltMap.values());
-
-                // 更新該列專屬的「折扣別」選單 (執行排除邏輯)
-                const excludedBarcodes = existingData.map((e: any) => e.cag_barcode);
-                (currentRow as any)._barcodeOptions = this.allBarcodeOptions.filter(opt =>
-                  !excludedBarcodes.includes(opt.value)
-                );
-
-                console.log('排除項目', excludedBarcodes)
-
-                // 只有一筆時自動帶入新值
-                if ((currentRow as any)._tltIdOptions.length === 1) {
-                  currentRow.tlt_id = (currentRow as any)._tltIdOptions[0].value;
-                }
-
-                console.log('抽成別選單:', (currentRow as any)._tltIdOptions);
-                console.log('折扣別選單:', (currentRow as any)._barcodeOptions);
-              }
-            }
-          } else {
-            this.clearRowData(currentRow);
-          }
-        } catch (error) {
-          console.error('更新專櫃資料失敗', error);
-          this.clearRowData(currentRow);
-        }
-      } else {
-        console.log('狀態變更2', currentRow);
       }
     }
 
-    // 【最重要的一步】：斷開引用同步，確保下次觸發時 oldRow 拿到的會是這次處理完的狀態
-    // 這樣下次變更時，oldRow 才會維持「舊值」直到比對完成
-    this.opendisc_Detail = JSON.parse(JSON.stringify(newData));
+    // 3. 斷開引用同步回組件，確保下次觸發時 oldRow 為正確的舊值
+    this.opendisc_Detail = [...newData];
+  }
+  // 封裝 API 抓取邏輯
+  private async fetchTltDetails(row: any) {
+    try {
+      const res = await this.tls29010Service.queryTLTTALENT_Data({ tlt_no: row.tlt_no }).toPromise();
+      if (res.Status === '0000' && res.Data?.length) {
+        row.talent_id = res.Data[0].talent_id;
+        // ... 續接抓取 DropDownList 邏輯 ...
+        if (res.Status === '0000' && res.Data?.length) {
+          const apiData = res.Data[0];
+          row.talent_id = apiData.talent_id;
+
+          // 4. 抓取新專櫃的折扣/抽成下拉選單
+          if (row.talent_id) {
+            const existRes = await this.tls29010Service
+              .queryTLTTALENT_CHARGE_DropDownList({ talent_id: row.talent_id.toString() })
+              .pipe(untilDestroyed(this)).toPromise();
+
+            if (existRes.Status === '0000') {
+              const existingData = existRes.Data;
+
+              console.log('專櫃編號:', row.tlt_no, '，取得抽成/折扣資料:', existingData);
+
+              // 更新該列專屬的「抽成別」選單
+              const tltMap = new Map();
+              existingData.forEach((item: any) => {
+                if (!tltMap.has(item.tlt_id)) {
+                  tltMap.set(item.tlt_id, {
+                    label: `${item.tlt_id} - ${item.tlt_id_desc}`,
+                    value: item.tlt_id
+                  });
+                }
+              });
+              (row as any)._tltIdOptions = Array.from(tltMap.values());
+
+              // 更新該列專屬的「折扣別」選單 (執行排除邏輯)
+              const excludedBarcodes = existingData.map((e: any) => e.cag_barcode);
+              (row as any)._barcodeOptions = this.allBarcodeOptions.filter(opt =>
+                !excludedBarcodes.includes(opt.value)
+              );
+
+              console.log('排除項目', excludedBarcodes)
+
+              // 只有一筆時自動帶入新值
+              if ((row as any)._tltIdOptions.length === 1) {
+                row.tlt_id = (row as any)._tltIdOptions[0].value;
+              }
+
+              console.log('抽成別選單:', (row as any)._tltIdOptions);
+              console.log('折扣別選單:', (row as any)._barcodeOptions);
+            }
+          }
+        } else {
+          this.clearRowData(row);
+        }
+
+      }
+    } catch (e) {
+      console.error('抓取失敗', e);
+    }
   }
 
 
