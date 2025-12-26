@@ -15,88 +15,99 @@ export interface QueryFIN64010Request {
   ChkNo?: string | null;
   VenNo?: string | null;
 
-  /** 多選：全省銀行代號(BNK_No+BNK_BranchNo) */
+  /** 銀行代號(多選) */
   BankNoList?: string | null;
 
   /** 客戶銀行帳號：ARS4004.BNK_AccNo */
   CustBankAccNo?: string | null;
 
-  /** 託收日起迄（以最新託收日優先） */
+  /** 託收日(起/迄) */
   ColleDateFrom?: string | null;
   ColleDateTo?: string | null;
 
-  /** 多選：APS1002.BNK_DepositAccNo */
+  /** 公司銀行科目代號(多選)：APS1002.BNK_DepositAccNo */
   CompanyAccNoList?: string | null;
 
-  /** 公司代號：GLS1005 取科目名稱 */
+  /** 公司代號 */
   CompNo?: string | null;
 
+  /** 收票日(起/迄) */
   ReceDateFrom?: string | null;
   ReceDateTo?: string | null;
 
-  /** 多選：收票業務員代碼 */
+  /** 收票業務員代碼(多選) */
   SalesIdList?: string | null;
 
+  /** 收款單號(模糊) */
   RcvNo?: string | null;
 
+  /** 到期日(起/迄) */
   ExpireDateFrom?: string | null;
   ExpireDateTo?: string | null;
 
+  /** 預兌日(起/迄) */
   PreDateFrom?: string | null;
   PreDateTo?: string | null;
 
-  CashDateFrom?: string | null;
-  CashDateTo?: string | null;
+  /** 兌現日(起/迄) */
+  PayDateFrom?: string | null;
+  PayDateTo?: string | null;
 
+  /** 票面金額(起/迄) */
   AmtFrom?: number | null;
   AmtTo?: number | null;
 
-  ChkType?: string | null;   // 1/2/3
-  TicketYN?: string | null;  // Y/N
+  /** 票據種類(1/2/3) */
+  ChkType?: string | null;
 
+  /** 是否客票(Y/N) */
+  TicketYN?: string | null;
+
+  /** 備註 */
   Comment?: string | null;
 
+  /** 組織代號 */
   OrgId?: string | null;
+
+  /** 活動代號 */
   ProjectNo?: string | null;
 
+  /** 票據抬頭 */
   ChkTitle?: string | null;
 
-  TranStatus?: string | null; // 0/1/2
-  ChkStatus?: string | null;  // 0~5
+  /** 狀態(0/1/2) */
+  TranStatus?: string | null;
 
+  /** 票據狀態(0~5) */
+  ChkStatus?: string | null;
+
+  /** 傳票號碼(模糊) */
   VouNo?: string | null;
-
-  // 兼容
-  pageSize?: number | null;
-  pageIndex?: number | null;
-  orderBy?: string | null;
-  offset?: number | null;
-
-  OrderBy?: string | null;
-  Offset?: number | null;
 
   [key: string]: any;
 }
 
 export interface QueryFIN64010Row {
-  SEQ_NO?: number;
-  ID?: number; // ARS4004.ID
+  TotalCount?: number;
+  RowNo?: string;
 
-  CHK_No?: string;
+  ID?: number;
+
+  CheckNo?: string;
 
   VEN_No?: string;
   VEN_Name?: string;
 
-  BNK_No?: string;    // 全省銀行代號（票面銀行：BNK_No+BNK_BranchNo）
-  BNK_Name?: string;  // 銀行名稱
+  BNK_No?: string;
+  BNK_Name?: string;
 
   CHK_ColleDate?: string | null;
 
   AccNo?: string;
   AccName?: string;
 
-  BNK_AccNo?: string;     // 公司銀行科目代號（ARS4004.CHK_BNK_No）
-  BNK_AccName?: string;   // 託收銀行科目名稱（APS1002）
+  BNK_AccNo?: string;
+  BNK_AccName?: string;
 
   CHK_ReceDate?: string | null;
   Sales_Id?: string | null;
@@ -132,38 +143,39 @@ export interface QueryFIN64010Row {
 
 /** ========== Detail (明細) ========== */
 export interface QueryFIN64010DetailRequest {
-  Id: number;       // ARS4004.id
-  CompNo?: string;  // optional
+  Id: number;
 }
 
+/** 依你貼的 FIN64010Response.queryFIN64010DetailResponse */
 export interface FIN64010DetailRow {
   id: number;
-  mid?: number;
-  STO_No?: string;
+  mid: number;
+  STO_No: string;
 
   CHK_No?: string;
-
   VEN_No?: string;
   VEN_Name?: string;
 
-  BNK_No?: string; // 票面銀行全省代號(可視為 BNK_Key)
+  BNK_No?: string;
   BNK_Name?: string;
+
+  CHK_BNK_No?: string;
   BNK_BranchName?: string;
 
-  BNK_AccNo?: string; // 客戶銀行帳號
   CHK_ColleDate?: string | null;
 
-  CHK_BNK_No?: string; // 託收銀行代號(含分行)
-  CHK_BNK_AccName?: string; // 託收銀行名稱(APS1002 AccName)
+  BNK_AccNo?: string;      // 客戶銀行(帳號)
+  BNK_AccName?: string;    // 託收銀行名稱(注意後端命名)
 
   CHK_ReceDate?: string | null;
+
   Sales_Id?: string | null;
   Sales_Name?: string | null;
 
   CHK_ExpireDate?: string | null;
   RCV_No?: string | null;
-  CHK_PreDate?: string | null;
 
+  CHK_PreDate?: string | null;
   CHK_CashDate?: string | null;
 
   CHK_Amt?: number | null;
@@ -196,32 +208,24 @@ export interface FIN64010DetailRow {
   ObjectType?: string | null;
   ObjectKey?: string | null;
 
-  /** 前端用：回填 update 必填 */
-  BNK_Key?: string | null;     // = BNK_No + BNK_BranchNo（這裡可直接用 BNK_No 欄位當 key）
-  COL_BNK_id?: string | null;  // 託收帳戶 APS1002.BNK_id（需由下拉選取）
-
   [key: string]: any;
 }
 
 /** ========== Update ========== */
+/** 依你貼的後端 updateFIN64010Request：沒有 UPD_USR_No/UPD_USR_Name */
 export interface FIN64010UpdateRequest {
   Id: number;
 
   BNK_Key: string;
   BNK_AccNo: string;
-
   CHK_No: string;
   CHK_Amt: number;
-
   CHK_ExpireDate: string;
   CHK_ReceDate: string;
-
   VEN_No: string;
+  CHK_Status: string;
+  COL_BNK_id: string;
 
-  CHK_Status: string;     // 0~5
-  COL_BNK_id: string;     // APS1002.BNK_id
-
-  // optional
   CHK_Type?: string | null;
   Ticket_YN?: string | null;
   CHK_Comment?: string | null;
@@ -230,12 +234,9 @@ export interface FIN64010UpdateRequest {
   RCV_No?: string | null;
   CHK_PreDate?: string | null;
 
-  CHK_ColleDate?: string | null; // Status=2 required
-  CHK_CashDate?: string | null;  // Status=3 required
-  CHK_BackDate?: string | null;  // Status=5 required
-
-  UPD_USR_No: string;
-  UPD_USR_Name: string;
+  CHK_ColleDate?: string | null;
+  CHK_CashDate?: string | null;
+  CHK_BackDate?: string | null;
 
   [key: string]: any;
 }
@@ -253,8 +254,8 @@ export class Fin64010Service {
     );
   }
 
-  queryFIN64010Detail(body: QueryFIN64010DetailRequest): Observable<ApiResponse<FIN64010DetailRow>> {
-    return this.http.post<ApiResponse<FIN64010DetailRow>>(
+  queryFIN64010Detail(body: QueryFIN64010DetailRequest): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(
       `${this.apiUrl}/queryFIN64010Detail`,
       body
     );
@@ -264,12 +265,20 @@ export class Fin64010Service {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateFIN64010`, body);
   }
 
-  /** 若你未來要做匯出，可以直接沿用 FIN63020 的做法 */
-  exportFIN64010PDF?(body: QueryFIN64010Request): Observable<HttpResponse<Blob>> {
-    const url = `${this.apiUrl}/exportFIN64010PDF`;
-    const payload = this.stripPaging(body);
+  exportFIN64010(body: QueryFIN64010Request): Observable<HttpResponse<Blob>> {
+    const url = `${this.apiUrl}/exportFIN64010`;
+    return this.http.post(url, this.stripPaging(body), {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+      headers: new HttpHeaders({
+        Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      }),
+    }) as Observable<HttpResponse<Blob>>;
+  }
 
-    return this.http.post(url, payload, {
+  exportFIN64010PDF(body: QueryFIN64010Request): Observable<HttpResponse<Blob>> {
+    const url = `${this.apiUrl}/exportFIN64010PDF`;
+    return this.http.post(url, this.stripPaging(body), {
       observe: 'response',
       responseType: 'blob' as 'json',
       headers: new HttpHeaders({ Accept: 'application/pdf' }),
@@ -278,19 +287,9 @@ export class Fin64010Service {
 
   private stripPaging<T extends Record<string, any>>(
     input: T
-  ): Omit<
-    T,
-    | 'PageSize' | 'PageIndex' | 'OrderBy' | 'Offset'
-    | 'pageSize' | 'pageIndex' | 'orderBy' | 'offset'
-  > {
+  ): Omit<T, 'PageSize' | 'PageIndex' | 'OrderBy' | 'Offset' | 'pageSize' | 'pageIndex' | 'orderBy' | 'offset'> {
     if (!input) return input as any;
-
-    const {
-      PageSize, PageIndex, OrderBy, Offset,
-      pageSize, pageIndex, orderBy, offset,
-      ...rest
-    } = input as any;
-
+    const { PageSize, PageIndex, OrderBy, Offset, pageSize, pageIndex, orderBy, offset, ...rest } = input as any;
     return rest as any;
   }
 }
