@@ -424,8 +424,8 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     this.messageService.confirm({
       header: headerMessage,
       message: confirmMessage,
-      contentTemplate: this.type === FIX_TYPE.交易資料作廢 ? isCross && rowData.TXN_GUIBegNo !== '00000000' ? undefined : this.customTimeTemp : undefined, // 丟入 HTML 樣板
-      templateContext: this.type === FIX_TYPE.交易資料作廢 ? isCross && rowData.TXN_GUIBegNo !== '00000000' ? undefined : contextObj : undefined,         // 丟入資料空間
+      contentTemplate: this.type === FIX_TYPE.交易資料作廢 ? this.customTimeTemp : undefined, // 丟入 HTML 樣板
+      templateContext: this.type === FIX_TYPE.交易資料作廢 ? contextObj : undefined,         // 丟入資料空間
       accept: (result) => {
         const selectedDate = result?.selectedDate;
         if (!selectedDate) return;
