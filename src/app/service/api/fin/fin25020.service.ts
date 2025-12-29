@@ -166,6 +166,8 @@ export interface QueryRemitDetailResponse {
   BANK_DESC: string | null;
   /** 匯款銀行帳戶名稱 */
   RMT_BnkAccName: string | null;
+  /**銀行帳號*/
+  RMT_BnkAccNo: string | null;
 }
 
 @Injectable({

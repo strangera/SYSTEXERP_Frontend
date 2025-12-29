@@ -84,7 +84,7 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
     { field: 'CASH_BACK_AMT', header: '廠商負擔電匯手續費回饋收入', visible: true },
     { field: 'COMP_WIRE_FEE', header: '公司負擔匯款手續費', visible: true },
     { field: 'BANK_DESC', header: '匯款銀行代號', visible: true },
-    { field: 'RMT_BnkAccNo ', header: '銀行帳號', visible: true },
+    { field: 'RMT_BnkAccNo', header: '銀行帳號', visible: true },
     { field: 'RMT_BnkAccName', header: '匯款銀行帳戶名稱', visible: true },
   ];
 
