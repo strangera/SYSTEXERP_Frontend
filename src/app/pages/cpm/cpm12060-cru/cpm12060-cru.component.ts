@@ -41,6 +41,7 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
 
   dataForm = this.formBuilder.nonNullable.group({
+    ID: [null], // 主鍵識別碼
     SEQ_ID: ['', [Validators.required, Validators.maxLength(20)]], // 單號
     CUST_NAME: ['', [Validators.required, Validators.maxLength(60)]], // 客戶名稱
     SEX: ['', [Validators.required, Validators.maxLength(2)]], // 性別
@@ -97,14 +98,15 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
   ngOnInit(): void {
     this.initializePage('CPM12060', this.dataForm);
     // 載入主檔資料
-    const id = 1; //目前沒給，先用預設的
+    const id = this.dataForm.get('ID')?.value;
+    if (!id) return;
     this.loading = true; // 開啟載入狀態
     this.cpm12060Service.queryCPM12060_Main({ ID: id })
       .pipe(untilDestroyed(this))
       .subscribe(response => {
         // console.log('主檔資料:', response.Data);
         this.mainTableData = response.Data ? [...response.Data] : [];
-        console.log('主檔資料已更新至變數:', this.mainTableData);
+        console.log('主檔資料:', this.mainTableData);
       });
 
     // 載入明細資料
@@ -114,7 +116,7 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
         // console.log('明細資料:', response.Data);
         // 同樣賦值給明細變數
         this.detailTableData = response.Data ? [...response.Data] : [];
-        console.log('明細資料已更新至變數:', this.detailTableData);
+        console.log('明細資料:', this.detailTableData);
       });
   }
 
