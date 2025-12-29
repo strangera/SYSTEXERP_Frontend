@@ -69,13 +69,26 @@
 
       <app-table-edit
         class="col-12"
-        tableKey="CPM12060Detail"
-        [columns]="editColumns"
-        [data]="data"
-        (selectionChange)="selectedItems = $event"
-        [selectedItems]="selectedItems"
+        tableKey="CPM12060_Main"
+        dataKey="ID"
+        [data]="mainTableData"
+        [columns]="mainColumns"
+        (selectionChange)="selectedMainItems = $event"
+        [selectedItems]="selectedMainItems"
         [keepDeletedData]="true"
-        (dataChange)="onDataChange($event)"
+        [tableRequired]="true"
+        [disabled]="isFormReadable"
+      />
+
+      <app-table-edit
+        class="col-12"
+        tableKey="CPM12060_Detail"
+        dataKey="SEQ_ID"
+        [data]="detailTableData"
+        [columns]="detailColumns"
+        (selectionChange)="selectedDetailItems = $event"
+        [selectedItems]="selectedDetailItems"
+        [keepDeletedData]="true"
         [tableRequired]="true"
         [disabled]="isFormReadable"
       />
@@ -84,11 +97,7 @@
         *ngIf="!isFormReadable"
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
       >
-        <app-button
-          btnType="cancel"
-          [form]="dataForm"
-          (clickEvent)="onReset()"
-        />
+        <app-button btnType="cancel" [form]="dataForm" />
         <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>
