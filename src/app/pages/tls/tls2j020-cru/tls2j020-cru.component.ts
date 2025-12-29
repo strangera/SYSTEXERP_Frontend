@@ -41,6 +41,7 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
   editCHGItemOptions: any[] = []; // 編輯模式下的品項名稱選項
   Item_TaxTypeOptions = [{ label: '免稅', value: '0' }, { label: '應稅', value: '1' }];
   data: any[] = [];
+  private initialTableData: any[] = [];
   selectedItems: any[] = [];
   totalRecords = 0;
   createColumns: EditColumn[] = [
@@ -117,7 +118,10 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
     });
     if (this.isFormCreateable) {
       this.formTitle = '新增大分類換開品項';
-      this.tls2j020Service.queryTLS2J020_add({}).subscribe(res => this.data = res.Data);
+      this.tls2j020Service.queryTLS2J020_add({}).subscribe(res => {
+        this.data = res.Data;
+        this.initialTableData = this.cloneTableData(this.data);
+      });
     }
     else if (this.isFormEditable && this.rowdata) {
       this.formTitle = '編輯大分類換開品項';
@@ -132,6 +136,7 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
     this.tls2j020Service.dropdownTLS2J020editCHG_ItemName({ ID: rowData.TDS1009_id }).pipe(untilDestroyed(this)).subscribe(res => {
       this.editCHGItemOptions = res.Data;
       this.data = [{ ...rowData, bus_type_label: rowData.bus_type + '-' + rowData.bus_type_name, }];
+      this.initialTableData = this.cloneTableData(this.data);
     });
   }
   /** 查詢*/
@@ -141,7 +146,8 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
       if (!valid) {
         this.loading = false;
         return;
-      };
+      }
+
       const v = form.value;
       if (this.isFormCreateable) {
         this.insertData(v.bus_type);
@@ -151,6 +157,19 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
+  private cloneTableData(source: any[]): any[] {
+    return source ? source.map(item => ({ ...item })) : [];
+  }
+
+  onCancelDetail(): void {
+    this.selectedItems = [];
+    if (this.initialTableData && this.initialTableData.length > 0) {
+      this.data = this.cloneTableData(this.initialTableData);
+    } else {
+      this.data = [];
+    }
+  }
+
   /** 新增資料 */
   insertData(busType: string) {
     const requestBody = {
@@ -158,10 +177,12 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
       TLS2J020_Detail: this.selectedItems
     };
     this.loading = true;
-    this.tls2j020Service.insertTLS2J020(requestBody).pipe(finalize(() => (this.loading = false)), untilDestroyed(this)).subscribe(res => {
-      this.messageService.successBubble('新增成功');
-      this.onCancel();
-    });
+    this.tls2j020Service.insertTLS2J020(requestBody)
+      .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
+      .subscribe(res => {
+        this.messageService.successBubble('新增成功');
+        this.onCancel();
+      });
   }
 
   /** 更新資料 */
@@ -174,9 +195,11 @@ export class TLS2J020CRUComponent extends BasicCruPageComponent<any> implements 
       CHG_ItemName: updateItem.CHG_ItemName.trim(),  // 使用後端期望的 Pascal Case
       Item_TaxType: updateItem.Item_TaxType.trim(),  // 使用後端期望的 Pascal Case
     };
-    this.tls2j020Service.updateTLS2J020(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-      this.messageService.successBubble('更新成功');
-      this.onCancel();
-    });
+    this.tls2j020Service.updateTLS2J020(requestBody)
+      .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+      .subscribe(res => {
+        this.messageService.successBubble('更新成功');
+        this.onCancel();
+      });
   }
 }

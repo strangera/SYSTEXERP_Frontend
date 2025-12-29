@@ -1,6 +1,6 @@
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { validateMaxNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { Column, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 
 // 換開狀態選項
@@ -147,11 +147,11 @@ export const COLUMNS_CHANGE_EDIT: EditColumn[] = [
   { field: 'TXN_Date', header: '發票日期', type: 'date', validate: [validateRequired], width: '150px', },
   { field: 'TXN_GUIPaper', header: '發票聯式', type: 'dropdown', options: GUI_PAPER_OPTIONS, optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
   { field: 'PLU_TaxType', header: '稅別', type: 'dropdown', options: getSYS1000Options('PLU_TaxType'), calculate: (row) => calculateNetTax(row), optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
-  { field: 'TXN_SaleTax', header: '應稅發票金額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: (v: any, i?: number, row?: any) => String(row?.['PLU_TaxType']) === '0', minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
-  { field: 'TXN_SaleNoTax', header: '免稅發票金額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: (v: any, i?: number, row?: any) => String(row?.['PLU_TaxType']) === '1', minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
-  { field: 'TXN_Net', header: '未稅發票金額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: () => true, minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
-  { field: 'TXN_Tax', header: '稅額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: () => true, minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
-  { field: 'TXN_SaleAmt', header: '銷售發票金額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: () => true, },
+  { field: 'TXN_SaleTax', header: '應稅發票金額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: (v: any, i?: number, row?: any) => String(row?.['PLU_TaxType']) === '0', minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
+  { field: 'TXN_SaleNoTax', header: '免稅發票金額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: (v: any, i?: number, row?: any) => String(row?.['PLU_TaxType']) === '1', minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
+  { field: 'TXN_Net', header: '未稅發票金額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: () => true, minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
+  { field: 'TXN_Tax', header: '稅額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: () => true, minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
+  { field: 'TXN_SaleAmt', header: '銷售發票金額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: () => true, max: 999999999999, validate: [validateMaxNumber(999999999999)] },
   { field: 'TXN_Uniform', header: '統一編號', type: 'input', maxLength: 8 },
   { field: 'INV_NoneTax', header: '零稅註記', type: 'dropdown', options: INV_NONETAX_OPTIONS, calculate: (row) => calculateNetTax(row), optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
   { field: 'BusTaxExmpCard', header: '免徵營業稅證明卡卡號', type: 'input', disabled: (v, i, row) => row['INV_NoneTax'] !== '1', validate: [validateBusTaxExmpCardRequired] },
@@ -181,8 +181,8 @@ export const COLUMNS_CHANGE_VIEW: Column[] = [
 export const COLUMNS_DETAIL_EDIT: EditColumn[] = [
   { field: 'bus_type_name', header: '大分類名稱', type: 'dropdown', width: '100%', validate: [validateRequired] },
   { field: 'INV_ItemName', header: '項目名稱', type: 'dropdown', width: '100%', validate: [validateRequired] },
-  { field: 'INV_Qty', header: '數量', type: 'inputNumber', min: 1, minFractionDigits: 0, maxFractionDigits: 3, validate: [validateRequired], defaultValueFunction: () => 1 },
-  { field: 'INV_SaleAmt', header: '發票金額', type: 'inputNumber', minFractionDigits: 0, maxFractionDigits: 2, validate: [validateRequired] },
+  { field: 'INV_Qty', header: '數量', type: 'inputNumber', min: 1, minFractionDigits: 0, maxFractionDigits: 3, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)], defaultValueFunction: () => 1 },
+  { field: 'INV_SaleAmt', header: '發票金額', type: 'inputNumber', minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
 ];
 /** 查看模式用的商品明細欄位（用於 app-table） */
 export const COLUMNS_DETAIL_VIEW: Column[] = [

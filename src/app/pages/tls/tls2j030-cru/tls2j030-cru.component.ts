@@ -376,6 +376,15 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     this.handleSubmit(frm, () => this.insertData());
   }
 
+  /** 取消：清空換開發票與商品明細 table 資料 */
+  onCancelDetail(): void {
+    // 表單本身由 app-button 的 [form] 機制還原初始值
+    // 這裡專責處理下方兩個編輯 table 的資料：重置為初始一筆可編輯列
+    this.data = [];
+    this.sourceInvoiceData = null;
+    this.initializeEditData();
+  }
+
   /** 集中驗證邏輯，返回錯誤和警告 */
   private validateBeforeSubmit(): { warnings: string[], errors: string[] } {
     const warnings: string[] = [];

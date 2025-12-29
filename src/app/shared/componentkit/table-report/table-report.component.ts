@@ -143,10 +143,11 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (this._loading || !this.queryFunction || !this.lastQueryBody || this.data.length >= this.totalRecords || !this.lazy) {
       return; // 如果正在載入、沒有查詢函式、沒有查詢條件或已載入全部資料，則退出
     }
+    const pageSize = this.lastQueryBody?.pageSize || this.lastQueryBody?.PageSize || 30;
     const body = {
       ...this.lastQueryBody,
-      pageIndex: Math.floor(this.data.length / (this.lastQueryBody?.pageSize || 30)) + 1,
-      pageSize: this.lastQueryBody?.pageSize || 30, // 使用 pageSize 變數
+      pageIndex: Math.floor(this.data.length / pageSize) + 1,
+      pageSize, // 使用 pageSize 變數
     };
     this._loading = true;
     this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => this._loading = false)).subscribe(res => {
@@ -169,17 +170,17 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       const lastSort = event.multiSortMeta[event.multiSortMeta.length - 1];
       this.dt.multiSortMeta = [lastSort];
     }
-    // 取得 pageSize，若 lastQueryBody 或其 pageSize 不存在，則預設為 30
-    const pageSize = this.lastQueryBody?.pageSize || 30;
+    // 取得 pageSize，支援 pageSize / PageSize，若不存在則預設為 30
+    const pageSize = this.lastQueryBody?.pageSize || this.lastQueryBody?.PageSize || 30;
 
-    // 判斷是否需要重新查詢：將 30 改為 pageSize
-    if (!this.queryFunction || !this.lastQueryBody || this.data.length < pageSize || !this.showSort) {
+    // 判斷是否需要重新查詢
+    if (!this.queryFunction || !this.lastQueryBody || !this.showSort) {
       return;
     }
     const body = {
       ...this.lastQueryBody,
       pageIndex: 1, // 重新排序時，總是從第一頁開始
-      pageSize: pageSize, // 使用 pageSize 變數
+      pageSize, // 使用 pageSize 變數
       SortBy: this.dt.multiSortMeta ?? undefined // 這裡現在只包含最新的單一排序
     };
     this.loading = true;
@@ -229,7 +230,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (this._loading || !this.lazy) {
       return;
     }
-    const pageSize = this.lastQueryBody?.pageSize || 30;
+    const pageSize = this.lastQueryBody?.pageSize || this.lastQueryBody?.PageSize || 30;
     if (this.data.length >= this.totalRecords || this.data.length < pageSize) {
       this.virtualData = [...this.data];
       return;
