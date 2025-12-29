@@ -1,9 +1,8 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
@@ -11,103 +10,125 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
+
+          <!-- 廠客代號：range -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
+            <app-input-text-range
               label="廠客代號"
-              [startControl]="queryForm.controls.startFactoryID"
-              [endControl]="queryForm.controls.endFactoryID"
+              [startControl]="queryForm.controls.VEN_No_From"
+              [endControl]="queryForm.controls.VEN_No_To"
               [submitted]="submitted"
-            ></app-input-number-range>
+            ></app-input-text-range>
           </div>
+
+          <!-- 科目代號：同 FIN64010 下拉風格 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="科目代號"
+              controlName="AccNoList"
+              [options]="accNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.AccNoList"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+<div class="col-12 md:col-6 lg:col-4">
+  <app-multi-select
+    label="月結天數"
+    controlName="MoneyTypeList"
+    [options]="moneyTypeOptions"
+    optionLabel="label"
+    optionValue="value"
+    [control]="queryForm.controls.MoneyTypeList"
+    [submitted]="submitted"
+  ></app-multi-select>
+</div>
+
+       
+
+          <!-- 立帳日期 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
               label="立帳日期"
-              [startControl]="queryForm.controls.startEstablishDate"
-              [endControl]="queryForm.controls.endEstablishfDate"
+              [startControl]="queryForm.controls.ARS_Date_From"
+              [endControl]="queryForm.controls.ARS_Date_To"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
+
+          <!-- 收款日期 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
               label="收款日期"
-              [startControl]="queryForm.controls.receive_Date_From"
-              [endControl]="queryForm.controls.receive_Date_To"
+              [startControl]="queryForm.controls.RCV_Date_From"
+              [endControl]="queryForm.controls.RCV_Date_To"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
-        </div>
-        <div class="grid p-fluid">
+
+          <!-- 調整日期 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
               label="調整日期"
-              [startControl]="queryForm.controls.adjust_Date_From"
-              [endControl]="queryForm.controls.adjust_Date_To"
+              [startControl]="queryForm.controls.ADJ_Date_From"
+              [endControl]="queryForm.controls.ADJ_Date_To"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="科目代號"
-              [startControl]="queryForm.controls.startSubjectID"
-              [endControl]="queryForm.controls.endSubjectID"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
-        </div>
-        <hr />
-        <div class="grid p-fluid">
+   <!-- ✅ 1) 帳款餘額為零是否顯示（有作用） -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
-              label="應付金額是否顯示"
-              groupname="systemtyperadio"
-              [control]="queryForm.controls.display"
-              [options]="showUpOptions"
+              [label]="'帳款餘額為零是否顯示'"
+              [groupname]="'ShowZeroBalance'"
+              [control]="queryForm.controls.ShowZeroBalance"
+              [options]="showOptions"
               [submitted]="submitted"
             ></app-radiobutton>
           </div>
+
+          <!-- ✅ 2) 應付金額是否顯示（保留：無作用） -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
-              label="帳款餘額為零是否顯示"
-              groupname="showUp"
-              [control]="queryForm.controls.showUp"
-              [options]="showUpOptions"
+              [label]="'應付金額是否顯示'"
+              [groupname]="'ShowPayAmount'"
+              [control]="queryForm.controls.ShowPayAmount"
+              [options]="showOptions"
               [submitted]="submitted"
             ></app-radiobutton>
           </div>
         </div>
-        <hr />
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [type]="'button'" (clickEvent)="onClear(queryForm)"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
-  <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table
+    #finTable
+    [tableKey]="'FIN34020_TABLE'"
+    [dataKey]="'ARS_No'"
+    [columns]="columns"
+    [data]="data"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [showSerialNo]="true"
+    [showCheckBox]="false"
+    [showManage]="false"
+    [showDetail]="false"
+    [showReportMode]="false"
+    [showDelete]="false"
+    [showEdit]="false"
+    [lazy]="true"
+  ></app-table>
 </div>
