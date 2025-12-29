@@ -30,6 +30,30 @@ export interface fin55030response {
   PTA2: number;
 }
 
+// 明細 Row
+export interface FIN55030Detail {
+  VouDate: string;
+  VouNo: string;
+  ORG_ID: string;
+  AccNo: string;
+  AccCName: string;
+  Org_Name: string;
+  DetailNo: string;
+  VEN_Name: string;
+  NoteDesc: string;
+  PTA: string;
+  PTA1: number;
+  PTA2: number;
+}
+
+// 巢狀父資料（包含 data 與 summary）
+export interface FIN55030Data {
+  AccNo: string;
+  AccCName: string;
+  data: FIN55030Detail[];
+  summary: { PTA1_Total: number; PTA2_Total: number; };
+}
+
 
 @Injectable({
   providedIn: 'root'

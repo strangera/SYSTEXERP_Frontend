@@ -24,6 +24,12 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { fin55030request, fin55030response, Fin55030Service } from './../../../service/api/fin/fin55030.service';
 
+export interface GroupedFIN55030Detail extends fin55030response {
+  AccNo: string;
+  AccCName: string;
+  VouDate: string;
+}
+
 @Component({
   selector: 'app-fin55030',
   templateUrl: './fin55030.component.html',
@@ -144,11 +150,11 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
       console.log('立沖科目餘額表查詢請求', formValue);
 
       this.fin55030Service.queryFIN55030(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data ?? [];               // 查詢資料
+        // this.data = res.Data ?? [];               // 查詢資料
         console.log('查詢', res);
-        console.log('查詢結果', this.data);
-        this.totalRecords = res.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        // console.log('查詢結果', this.data);
+        // this.totalRecords = res.TotalCount;
+        // this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })
     });
   }
