@@ -3,12 +3,13 @@
     {{ title }}
   </span>
 </p-divider>
-<p-table #dt [value]="virtualData" [columns]="selectedColumns" [totalRecords]="totalRecords" selectionMode="multiple"
-  [dataKey]="dataKey" [rowTrackBy]="trackByRow" [scrollable]="true" scrollHeight="450px" [lazy]="false"
+<p-table #dt [value]="virtualData" [columns]="selectedColumns" [totalRecords]="totalRecords"
+  [(selection)]="selectedItems" [selectionMode]="showCheckBox && IsPrint ? selectionMode : null" [dataKey]="dataKey"
+  [rowTrackBy]="trackByRow" [scrollable]="true" [scrollHeight]="data.length ? '450px' : '200px'" [lazy]="false"
   [rows]="lazyBatchSize" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
-  (onRowReorder)="onRowReorder($event)" tableStyleClass="h-full"
+  (selectionChange)="onSelectionChange($event)" (onRowReorder)="onRowReorder($event)" tableStyleClass="h-full"
   styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines p-datatable-striped"
-  [virtualScroll]="!groupRowsBy" [virtualScrollItemSize]="46" [virtualScrollDelay]="0"
+  [virtualScroll]="enableVirtualScroll && !groupRowsBy" [virtualScrollItemSize]="46" [virtualScrollDelay]="0"
   [loading]="loading && data.length === 0" [groupRowsBy]="groupRowsBy" rowGroupMode="subheader">
   <ng-template pTemplate="caption">
     <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
@@ -57,6 +58,9 @@
       <tr>
         <th *ngIf="!showSubTotal && data.length && showReorder" class="w-1rem"></th>
         <th class="w-1rem">序號</th>
+        <th class="w-1rem" *ngIf="IsPrint && showCheckBox && selectionMode === 'multiple'">
+          <p-tableHeaderCheckbox />
+        </th>
         <th *ngFor="let col of columns" pReorderableColumn class="text-center wrap-header">
           {{ col.header }}
         </th>
@@ -108,6 +112,10 @@
           <span class="pi pi-bars" pReorderableRowHandle></span>
         </td>
         <td class="text-center">{{ rowIndex + 1 }}</td>
+        <td *ngIf="IsPrint && showCheckBox && selectionMode === 'multiple'">
+          <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
+            [value]="rowData" />
+        </td>
         <td *ngFor="let col of columns" class="text-center" style="text-overflow: ellipsis; min-width: 55px;"
           [ngClass]="col.style">
           <!-- 連結到cruPage Read -->

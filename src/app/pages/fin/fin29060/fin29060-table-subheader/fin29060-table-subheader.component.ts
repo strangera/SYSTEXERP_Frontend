@@ -137,6 +137,14 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   @Input() addButton: AddButton[] = [];
   /** 按鈕們 loading @default false */
   @Input() buttonsLoading = false;
+
+  // select 選擇Row相關（支援外部勾選與 selection 綁定）
+  @Input() showCheckBox = false;
+  @Input() selectionMode: 'multiple' | 'single' | null | undefined = 'multiple';
+  @Input() selectedItems: any[] = [];
+  @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true;
+  @Output() selectionChange = new EventEmitter<any>();
+  @Output() selectedItemsChange = new EventEmitter<any>();
   // body
   /** 是否顯示 排序欄位 @default false */
   @Input() showReorder = false;
@@ -159,6 +167,9 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   @Input() lazy = true;
   /** Lazy 加載事件 */
   @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>();
+
+  /** 是否啟用 PrimeNG virtualScroll，預設啟用（與 groupRowsBy 搭配） */
+  @Input() enableVirtualScroll = true;
 
   // 其他
   /** table 無資料時顯示文字 @default '查無資料' */
@@ -225,6 +236,14 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
       this.showSubTotal = this.showSubTotal || this.columns.some(c => c.isSubTotal);
       this.showTotal = this.showTotal || this.columns.some(c => c.isTotal);
     }
+  }
+
+  // 資料勾選
+  onSelectionChange(event: any) {
+    const selected = Array.isArray(event) ? event : event ? [event] : [];
+    this.selectedItems = selected.filter((item: any) => this.isRowSelectable(item));
+    this.selectionChange.emit(this.selectedItems);
+    this.selectedItemsChange.emit(this.selectedItems);
   }
 
   loadMoreData() {
@@ -494,7 +513,12 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
     if (!this.showSubTotal && this.data.length && this.showReorder) {
       count += 1;
     }
+    // 序號欄
     count += 1;
+    // 勾選欄
+    if (this.showCheckBox && this.selectionMode === 'multiple') {
+      count += 1;
+    }
     const visibleColumnCount = this.tableUtilityService.getVisibleColumnCount(this.selectedColumns);
     count += visibleColumnCount;
     if (this.showManage) count += 1;

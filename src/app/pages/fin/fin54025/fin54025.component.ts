@@ -1,22 +1,21 @@
-
+import { Location, NgIf, NgStyle } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { createPaginationConfig, formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonModule } from 'primeng/button';
-import { NgStyle, NgIf } from '@angular/common';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
-import { Fin54025Service } from '@service/api/fin/fin54025.service';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Fin54025Service } from '@service/api/fin/fin54025.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { createPaginationConfig, formatAmount, formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
+import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { Fin29060TableSubheaderComponent } from '../fin29060/fin29060-table-subheader/fin29060-table-subheader.component';
 
 @Component({
   selector: 'app-fin54025',
@@ -24,15 +23,15 @@ import { finalize } from 'rxjs';
   styleUrl: './fin54025.component.scss',
   standalone: true,
   imports: [DropdownComponent, NgStyle,
-    NgIf, ButtonModule, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberRangeComponent, CalendarRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+    NgIf, ButtonModule, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberRangeComponent, CalendarRangeComponent, ButtonComponent, Fin29060TableSubheaderComponent, TranslateModule]
 })
 
 export class FIN54025Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     VouDateFrom: [new Date(), [Validators.required]],
     VouDateTo: [new Date(), [Validators.required]],
-    VouNoFrom: ['', [Validators.maxLength(12)]],
-    VouNoTo: ['', [Validators.maxLength(12)]],
+    VouNoFrom: [null, [Validators.maxLength(12)]],
+    VouNoTo: [null, [Validators.maxLength(12)]],
     VoucherType: [''],
     ...createPaginationConfig([{ field: 'VouNo', order: 1 }]),
   });
@@ -40,18 +39,21 @@ export class FIN54025Component extends BasicQueryPageComponent<any> implements O
   totalRecords = 0;
   data: any[] = [];
   btnLoading = false;
+  lazyBatchSize = 20;
+  lastQueryBody: any = null;
   selectAll = false;
   get selectedCount(): number {
     return this.selectedItems?.length ?? 0;
   }
   columns: any[] = [
-    { field: 'VouNo', header: '傳票號碼', visible: true },
+    { field: 'VouNo', header: '傳票號碼', visible: true, type: 'detail' },
     { field: 'Voucher_Name', header: '傳票種類', visible: true },
     { field: 'VouDate', header: '傳票日期', visible: true },
     { field: 'VouStatus', header: '傳票狀態', visible: true },
     { field: 'Remark', header: '傳票摘要', visible: true },
     { field: 'VoucherType', header: '傳票型態', visible: true },
-    { field: 'AccAmt', header: '傳票金額', visible: true },
+    { field: 'VoucherTypeName', header: '傳票型態名稱', visible: true },
+    { field: 'AccAmt', header: '傳票金額', visible: true, format: formatAmount, style: 'text-right' },
     { field: 'DetailCount', header: '明細筆數', visible: true },
   ];
 
@@ -59,7 +61,8 @@ export class FIN54025Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private dropDownListService: DropDownListService,
-    private fin54025Service: Fin54025Service
+    public readonly fin54025Service: Fin54025Service,
+    private readonly location: Location,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -67,7 +70,10 @@ export class FIN54025Component extends BasicQueryPageComponent<any> implements O
   ngOnInit(): void {
     this.initializePage('FIN54025', '/FIN/FIN54025CRU', this.queryForm, (frm) => this.onSubmit(frm));
     this.dropDownListService.queryGLS1010_DropDownList().subscribe((res) => {
-      this.Subpoenastatus = res.Data;
+      this.Subpoenastatus = (res?.Data || []).map((item: any) => ({
+        ...item,
+        DisplayName: `${item.No}-${item.Name}`,
+      }));
     });
   }
   /** 點擊「過帳」 */
@@ -83,9 +89,9 @@ export class FIN54025Component extends BasicQueryPageComponent<any> implements O
     const commonPart = {
       VouDateFrom: v.VouDateFrom ? formatDateToYYYY_MM_DD(v.VouDateFrom) : '',
       VouDateTo: v.VouDateTo ? formatDateToYYYY_MM_DD(v.VouDateTo) : '',
-      VouNoFrom: v.VouNoFrom?.trim() || '',
-      VouNoTo: v.VouNoTo?.trim() || '',
-      VoucherType: v.VoucherType?.trim() || '',
+      VouNoFrom: (v.VouNoFrom ?? '').toString().trim(),
+      VouNoTo: (v.VouNoTo ?? '').toString().trim(),
+      VoucherType: (v.VoucherType ?? '').toString().trim(),
     };
 
     // 判斷是否為全選
@@ -107,6 +113,8 @@ export class FIN54025Component extends BasicQueryPageComponent<any> implements O
         next: (res) => {
           if (res.Status === '0000') {
             this.messageService.successBubble('反過帳成功');
+            this.selectedItems = [];
+            this.selectAll = false;
             this.onSubmit(this.queryForm); // 反過帳後重新查詢
           } else {
             this.messageService.errorBubble(res.Message || '反過帳失敗');
@@ -118,17 +126,24 @@ export class FIN54025Component extends BasicQueryPageComponent<any> implements O
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       const v = frm.value;
-      const payload = {
-        ...v,
+      const basePayload = {
         VouDateFrom: v.VouDateFrom ? formatDateToYYYY_MM_DD(v.VouDateFrom) : '',
         VouDateTo: v.VouDateTo ? formatDateToYYYY_MM_DD(v.VouDateTo) : '',
-        VouNoFrom: v.VouNoFrom?.trim() || '',
-        VouNoTo: v.VouNoTo?.trim() || '',
-        VoucherType: v.VoucherType?.trim() || '',
+        VouNoFrom: (v.VouNoFrom ?? '').toString().trim(),
+        VouNoTo: (v.VouNoTo ?? '').toString().trim(),
+        VoucherType: (v.VoucherType ?? '').toString().trim(),
+        SortBy: v.SortBy,
+      };
+
+      const pageSize = this.lazyBatchSize;
+      this.lastQueryBody = {
+        ...basePayload,
+        pageIndex: 1,
+        pageSize,
       };
 
       this.fin54025Service
-        .queryFIN54025(payload)
+        .queryFIN54025(this.lastQueryBody)
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
         .subscribe({
           next: (res) => {
@@ -141,6 +156,22 @@ export class FIN54025Component extends BasicQueryPageComponent<any> implements O
           },
         });
     });
+  }
+
+  onDetailWithColValue(event: { row: any; col: any; value: any }) {
+    if (event.col.field === 'VouNo') {
+      const vouNo = event.row?.VouNo;
+      const handoff = {
+        vouNo,
+        fromRoute: window.location.pathname,
+        ts: Date.now(),
+      };
+      localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
+      localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050');
+      const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55050cru');
+      const finalUrl = `${window.location.origin}${externalUrl}`;
+      window.open(finalUrl, '_blank', 'noopener');
+    }
   }
 
 }

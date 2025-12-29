@@ -18,7 +18,7 @@
               [endControl]="queryForm.controls.VouNoTo" [submitted]="submitted"></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="傳票型態" controlName="VoucherType" [options]="Subpoenastatus" optionLabel="Name"
+            <app-dropdown label="傳票型態" controlName="VoucherType" [options]="Subpoenastatus" optionLabel="DisplayName"
               optionValue="No" [control]="queryForm.controls.VoucherType" [submitted]="submitted"></app-dropdown>
           </div>
 
@@ -30,23 +30,28 @@
       </form>
     </p-accordionTab>
   </p-accordion>
+
 </div>
 <div class="card">
-  <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" [showDelete]="false" (detail)="onDetail($event)"
-    [showReportMode]="false"[showManage]="false"dataKey="SeqNo" [multiSortMeta]="[{ field: 'VouNo', order: 1 }]" [totalRecords]="totalRecords" [showCheckBox]="true"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showExcel]="false"
-    >
-    <header>
-      <div class="flex align-items-center mb-5">
-        <p-button label="過帳" severity="success" (click)="onReview(selectedItems)" [disabled]="selectedCount === 0"
-          [ngStyle]="{
-            height: '16px',
-            fontSize: '16px',
-            padding: '0 2px',
-            marginRight: '7px',
-          }"></p-button>
-      </div>
-    </header>
-  </app-table>
+  <div class="col-12">
+    <app-fin29060-table-subheader tableKey="FIN54020" dataKey="SeqNo" [data]="data" [columns]="columns"
+      [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody"
+      [queryFunction]="fin54020Service.queryFIN54020.bind(fin54020Service)" [lazyBatchSize]="lazyBatchSize"
+      [enableVirtualScroll]="false" [showManage]="false" [showSubTotal]="false" [showTotal]="false"
+      [showGroupheader]="false" [showCheckBox]="true" [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event" (dataChange)="data = $event"
+      (detailWithColValue)="onDetailWithColValue($event)">
+      <header>
+        <div class="flex align-items-center mb-5">
+          <p-button label="過帳" severity="success" (click)="onReview(selectedItems)" [disabled]="selectedCount === 0"
+            [ngStyle]="{
+        height: '16px',
+        fontSize: '16px',
+        padding: '0 2px',
+        marginRight: '7px',
+      }"></p-button>
+        </div>
+      </header>
+    </app-fin29060-table-subheader>
+  </div>
 </div>

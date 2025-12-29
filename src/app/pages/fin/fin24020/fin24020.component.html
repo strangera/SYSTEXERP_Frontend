@@ -9,42 +9,42 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="應收ID" controlName="ARS_No"
-              [control]="queryForm.controls.ARS_No" [submitted]="submitted"></app-input-number>
+            <app-input-number [useGrouping]="false" label="應收ID" controlName="ACP_No"
+              [control]="queryForm.controls.ACP_No" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="廠商編號" controlName="CustNo" [options]="VEN_No_ParamOptions | async" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.CustNo" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="廠商編號" controlName="VEN_No" [options]="VEN_No_ParamOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateMonthOne" label="帳款年月" [control]="queryForm.controls.sam_yyymm"
+            <app-calendar calendarType="dateMonthOne" label="帳款年月" [control]="queryForm.controls.ACP_YYYYMM"
               [submitted]="submitted"></app-calendar>
           </div>
         </div>
 
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="帳款帳次" controlName="sam_termno"
-              [control]="queryForm.controls.sam_termno" [submitted]="submitted"></app-input-number>
+            <app-input-number [useGrouping]="false" label="帳款帳次" controlName="Acp_TermNo"
+              [control]="queryForm.controls.Acp_TermNo" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick calendarType="dateRange" label="退保留款日期"
-              [startControl]="queryForm.controls.PTA_Date_From" [endControl]="queryForm.controls.PTA_Date_To"
+              [startControl]="queryForm.controls.RetDate_From" [endControl]="queryForm.controls.RetDate_To"
               [submitted]="submitted"></app-calendar-range-quick>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="退保留款金額" [startControl]="queryForm.controls.ARS_Amt_From"
-              [endControl]="queryForm.controls.ARS_Amt_To" [submitted]="submitted"></app-input-number-range>
+            <app-input-number-range label="退保留款金額" [startControl]="queryForm.controls.RetAmt_From"
+              [endControl]="queryForm.controls.RetAmt_To" [submitted]="submitted"></app-input-number-range>
           </div>
         </div>
 
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="是否產生付款資料" controlName="PTA_Key" [options]="PTA_KeyOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.PTA_Key" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="是否產生付款資料" controlName="PayGenerated" [options]="PTA_KeyOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.PayGenerated" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="備註" controlName="NoteDesc" [control]="queryForm.controls.NoteDesc"
+            <app-input-text label="備註" controlName="Remark" [control]="queryForm.controls.Remark"
               [submitted]="submitted"></app-input-text>
           </div>
         </div>
@@ -58,9 +58,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report apiUrl="queryFIN32010" tableKey="FIN32010query" dataKey="RowNo" [lastQueryBody]="lastQueryBody"
+  <app-table-report apiUrl="queryFIN24020" tableKey="FIN24020query" dataKey="RowNo" [lastQueryBody]="lastQueryBody"
     [showReportMode]="false" [totalRecords]="totalRecords" [data]="data" (edit)="onEdit($event)"
     (detail)="onDetail($event)" [columns]="columns" [loading]="loading" [showDelete]="false"
-    [editDisabled]="editDisabledByVouNo"
-    [queryFunction]="fin32010Service.queryFIN32010.bind(fin32010Service)"></app-table-report>
+    [editDisabled]="editDisabledByVouNo" [queryFunction]="queryFIN24020WithStatusLabel.bind(this)"></app-table-report>
 </div>

@@ -1,8 +1,9 @@
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Fin32010Service } from '@service/api/fin/fin32010.service';
+import { Fin24020Service } from '@service/api/fin/fin24020.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -13,6 +14,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize, map } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -28,30 +30,16 @@ import { formatAmount } from './../../../shared/componentkit/table-report/table-
 })
 export class FIN24020Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    ARS_No: [null, [Validators.maxLength(14)]],
-    ORG_ID: [null, [Validators.maxLength(20)]],
-    sam_yyymm: ["", [Validators.maxLength(6)]],
-    sam_termno: [null, [Validators.max(99)]],
-    ARS_Amt_From: [null, [Validators.max(9999999999)]],
-    ARS_Amt_To: [null, [Validators.max(9999999999)]],
-    PTA_Amt_From: [null, [Validators.max(9999999999)]],
-    PTA_Amt_To: [null, [Validators.max(9999999999)]],
-    BalAmt_From: [null, [Validators.max(9999999999)]],
-    BalAmt_To: [null, [Validators.max(9999999999)]],
-    PTA_Date_From: [null],
-    PTA_Date_To: [null],
-    ARS_Date_From: [null],
-    ARS_Date_To: [null],
-    CustNo: [null],
-    Uniform_No: [null, [Validators.maxLength(16)]],
-    AccNo: [null, [Validators.maxLength(50)]],
-    ARS_SourceNo: [null, [Validators.maxLength(80)]],
-    VouNo: ["", [Validators.maxLength(12)]],
-    PostFlag: [null, [Validators.maxLength(100)]],
-    ARS_Status: [null],
-    SubDetailNo: [""],
-    NoteDesc: [null, [Validators.maxLength(160)]],
-    PTA_Key: [null]
+    ACP_No: [null, [Validators.maxLength(14)]],
+    VEN_No: [null],
+    ACP_YYYYMM: [null],
+    Acp_TermNo: [null, [Validators.maxLength(2)]],
+    RetDate_To: [null],
+    RetDate_From: [null],
+    RetAmt_To: [null],
+    RetAmt_From: [null],
+    PayGenerated: [null],
+    Remark: [null, [Validators.maxLength(200)]],
   });
   // 表格
   // ----------------------------------------------------------------
@@ -62,14 +50,14 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
   data: any[] = [];
   lastQueryBody: any | null = null;
   columns: ReportColumn[] = [
-    // { field: 'RowNo', header: '序號', visible: false },
-    { field: 'ARS_ID', header: '應收ID' },
-    { field: 'ARS_Amt', header: '廠商編號', format: formatAmount },
-    { field: 'PTA_Amt', header: '帳款年月', format: formatAmount },
-    { field: 'ARS_BalAmt', header: '帳款帳次', format: formatAmount },
-    { field: 'ARS_Date', header: '退保留款日期', format: formatDate },
-    { field: 'PTA_Date', header: '退保留款金額', format: formatDate },
-    { field: 'CustInfo', header: '是否產生付款資料' },
+    { field: 'ACP_No', header: '應付ID' },
+    { field: 'VEN_No', header: '廠商編號' },
+    { field: 'VEN_Name', header: '廠商名稱' },
+    { field: 'ACP_YYYYMM', header: '應付帳款年月', format: formatDate },
+    { field: 'acp_termno', header: '帳次', format: formatAmount },
+    { field: 'ACP_ReserveAmt', header: '退保留款金額', format: formatAmount },
+    { field: 'RET_Date', header: '退保留款日期', format: formatDate },
+    { field: 'STATUS', header: '是否產生付款資料' },
     { field: 'NoteDesc', header: '備註' },
   ];
   VEN_No_ParamOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商代號
@@ -81,7 +69,7 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private readonly dropDown: DropdownApiService,
     private readonly datePipe: DatePipe,
-    public readonly fin32010Service: Fin32010Service,
+    public readonly fin24020Service: Fin24020Service,
   ) {
     super();
   }
@@ -95,16 +83,54 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('FIN24020', 'fin/FIN24020cru', this.queryForm, (form) => this.onSubmit(form));
 
   }
+
+  // 包一層，讓所有查詢(畫面及 table-report)都會把 STATUS 代碼轉成中文
+  queryFIN24020WithStatusLabel(body: any) {
+    return this.fin24020Service.queryFIN24020(body).pipe(
+      map((res: any) => {
+        const rows = res?.Data ?? [];
+        const mappedRows = rows.map((r: any) => ({
+          ...r,
+          STATUS: this.PTA_KeyOptions.find(opt => String(opt.value) === String(r.STATUS))?.label ?? r.STATUS
+        }));
+        return { ...res, Data: mappedRows };
+      })
+    );
+  }
+
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      const body: any = {
+        PageSize: this.pageSize,
+        PageIndex: this.pageIndex,
+        pageSize: this.pageSize,
+        pageIndex: this.pageIndex,
+        Offset: 0,
+        OrderBy: this.sortBy ?? '',
+        SortBy: this.sortBy
+          ? [{ field: this.sortBy, order: 1 }]
+          : [],
 
-      // this.fin32010Service.queryFIN32010()
-      //   .pipe(finalize(() => this.loading = false), untilDestroyed(this))
-      //   .subscribe(response => {
+        ACP_No: frm.value.ACP_No ?? '',
+        VEN_No: frm.value.VEN_No ?? '',
+        ACP_YYYYMM: frm.value.ACP_YYYYMM ?? '',
+        Acp_TermNo: frm.value.Acp_TermNo ?? null,
+        RetDate_From: frm.value.RetDate_From ?? null,
+        RetDate_To: frm.value.RetDate_To ?? null,
+        RetAmt_From: frm.value.RetAmt_From ?? null,
+        RetAmt_To: frm.value.RetAmt_To ?? null,
+        PayGenerated: frm.value.PayGenerated ?? '',
+        Remark: frm.value.Remark ?? ''
+      };
 
-      //     this.totalRecords = response.TotalCount ?? 0;
-
-      //   });
+      this.queryFIN24020WithStatusLabel(body)
+        .pipe(finalize(() => this.loading = false), untilDestroyed(this))
+        .subscribe(response => {
+          const rows = response.Data ?? [];
+          this.data = rows;
+          this.totalRecords = response.TotalCount ?? 0;
+          this.lastQueryBody = body;
+        });
     });
   }
 
