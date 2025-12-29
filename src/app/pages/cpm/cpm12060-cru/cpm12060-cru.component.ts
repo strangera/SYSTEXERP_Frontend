@@ -3,6 +3,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { Cpm12060Service } from '@service/api/cpm/cpm12060.service';
 import { CalenderoneComponent } from '@shared/componentkit/calenderone/calenderone.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { option } from '@shared/models/sys/sysb000.model';
@@ -88,7 +89,8 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
   selectedItems: CPM11020DetailItem[] = [];
 
   constructor(
-    private readonly cpm11020Service: CPM11010Service
+    private readonly cpm11020Service: CPM11010Service,
+    private readonly cpm12060Service: Cpm12060Service,
   ) {
     super();
   }
@@ -111,6 +113,21 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
     //       serviceLocationColumn.options = this.serviceLocationOptions;
     //     }
     //   });
+
+    // 載入主檔資料
+    const id = 1; //目前沒給，先用預設的
+    this.cpm12060Service.queryCPM12060_Main({ ID: id })
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        console.log('主檔資料:', response.Data);
+      });
+
+    // 載入明細資料
+    this.cpm12060Service.queryCPM12060_Detail({ ID: id })
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        console.log('明細資料:', response.Data);
+      });
 
     if (!this.isFormCreateable) {
       this.loadDetailData();
