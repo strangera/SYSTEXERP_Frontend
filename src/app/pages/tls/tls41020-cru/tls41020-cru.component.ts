@@ -144,11 +144,15 @@ export class TLS41020CRUComponent
       }
 
       //  將日期轉為 ISO 字串（去除毫秒部分）
-      const toISOStringWithoutMs = (value: any): string =>
-        value ? new Date(value).toISOString().split('.')[0] : '';
+     const toDateOnly = (value: any): string => {
+  if (!value) return '';
+  const d = value instanceof Date ? value : new Date(value);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
 
-      payload.EDC_BegDate = toISOStringWithoutMs(payload.EDC_BegDate);
-      payload.EDC_EndDate = toISOStringWithoutMs(payload.EDC_EndDate);
+      payload.EDC_BegDate = toDateOnly(payload.EDC_BegDate);
+      payload.EDC_EndDate = toDateOnly(payload.EDC_EndDate);
 
       switch (this.crudstatus) {
         case CRUDStatus.Create:
