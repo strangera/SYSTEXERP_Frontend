@@ -67,19 +67,37 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
   // 1. 在原有的 columns 下方新增主檔與明細的欄位定義
   mainColumns: EditColumn[] = [
     { field: 'SEQ_ID', header: '單號' },
+    { field: 'KIND_ID', header: '客戶意見類別代號' },
+    { field: 'KIND_ID_SUB', header: '客戶意見子類別代號' },
     { field: 'CUST_NAME', header: '客戶名稱' },
     { field: 'SEX', header: '性別' },
-    { field: 'CONTACT_TEL', header: '電話' },
-    { field: 'COMPLAIN_NOTES', header: '意見內容' },
-    { field: 'STATUS', header: '狀態' },
-    { field: 'ANSWER', header: '處理回覆' }
+    { field: 'CONTACT_ADDR', header: '聯絡住址' },
+    { field: 'CONTACT_TEL', header: '聯絡電話' },
+    { field: 'CELL_PHONE', header: '行動電話' },
+    { field: 'E_MAIL', header: '電子郵件' },
+    { field: 'COMPLAIN_NOTES', header: '客戶提供意見內容' },
+    { field: 'COMPLAIN_DATE', header: '提供日期' },
+    { field: 'SUGG_SOURCE', header: '客戶意見來源別' },
+    { field: 'SUGG_SOURCE_OTHER', header: '客戶意見來源別:其他' },
+    { field: 'ORG_ID', header: '處理單位' },
+    { field: 'MEMBER_ID', header: '會員編號' },
+    { field: 'STATUS', header: '狀態', options: this.statusOptions, optionLabel: 'label', optionValue: 'value' },
+    { field: 'CRT_Date', header: '建立日期' },
+    { field: 'CRT_USR_No', header: '建立者編號' },
+    { field: 'CRT_USR_Name', header: '建立者姓名' },
+    { field: 'ANSWER', header: '處理回覆' },
+    { field: 'ANSWER_DATE', header: '回覆日期' },
+    { field: 'ANSWER_NAME', header: '回覆人員' }
   ];
 
   detailColumns: EditColumn[] = [
-    { field: 'CRT_USR_Name', header: '處理人員' },
     { field: 'ANSWER', header: '處理內容' },
     { field: 'ANSWER_DATE', header: '處理時間', format: formatDateTime },
-    { field: 'UPD_USR_Name', header: '最後更新人' }
+    { field: 'ANSWER_ID', header: '處理人員編號' },
+    { field: 'CRT_Date', header: '建立日期', format: formatDateTime },
+    { field: 'CRT_USR_Name', header: '建立者姓名' },
+    { field: 'UPD_Date', header: '更新日期', format: formatDateTime },
+    { field: 'UPD_USR_Name', header: '更新者姓名' }
   ];
 
   // 2. 新增存放資料的變數
