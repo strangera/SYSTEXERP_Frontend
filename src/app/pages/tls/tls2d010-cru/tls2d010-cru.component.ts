@@ -1,5 +1,5 @@
 import { formatDate, NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -7,6 +7,7 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
 import { forkJoin } from 'rxjs';
 import { Tls2d010Service } from '../../../service/api/tls/tls2d010.service';
@@ -32,6 +33,8 @@ import { DropDownListService, IAPS1003Item, IDropdownItem, ITalentOption } from 
   ],
 })
 export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
+  @ViewChild('counterTable') counterTable?: TableEditComponent;
+  @ViewChild('normalTable') normalTable?: TableEditComponent;
   private setTableRowMapping(row: any) {
     if (!row.CAP_Item) return;
 
@@ -106,6 +109,19 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     remarks: [''],
   });
 
+  /** 本地取消：清空表單下方的扣款項目清單（table 資料） */
+  onLocalCancel(mode: 'counter' | 'normal'): void {
+    // 保持表單 reset 由共用按鈕處理，這裡只負責清表格
+    this.data = [];
+    this.selectedItems = [];
+    // 更新總金額（特別是專櫃模式的 totalCash 顯示）
+    try {
+      this.updateTotalCash();
+    } catch {
+      // 忽略錯誤，避免因尚未初始化造成例外
+    }
+  }
+
   constructor(
     private dropDownListService: DropDownListService,
     private tls2d010Service: Tls2d010Service
@@ -175,13 +191,12 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       this.currentCreateType = rowdata.type;
       const form = this.currentCreateType === 'counter' ? this.dataFormCounter : this.dataFormNormal;
 
-      // 共用初始化
+      // 共用初始化（同時會依 crudstatus 處理表單狀態）
       this.initializePage('TLS2D010', form);
 
-      // ===== 判斷 detail 模式 =====
-      if (rowdata.mode === 'detail') {
+      // 判斷是否為檢視模式：沿用共用 CRUD 狀態
+      if (this.crudstatus === CRUDStatus.Read) {
         this.isDetailMode = true;
-        form.disable(); // 表單直接唯讀
       }
 
       // counter模式補齊所有table-edit行欄位
@@ -414,11 +429,22 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   private loadAndSetupColumns(): void {
     if (this.currentCreateType === 'counter') {
       this.columnsCounter = [
-        { field: 'tpy_date', header: '扣款日期', type: 'date', width: '12rem' },
-        // 明確指定 optionLabel/optionValue，讓 p-dropdown 與 row value 的比對一致
-        { field: 'CAP_Type', header: '扣款類型', type: 'dropdown', width: '12rem', options: this.CAP_TypeOptions, optionLabel: 'label', optionValue: 'value' },
         {
-          field: 'CAP_Item', header: '扣款項目', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'value', options: (row: any) => {
+          field: 'tpy_date',
+          header: '扣款日期',
+          type: 'date',
+          width: '8rem',
+          validate: [
+            (value: any, rowData: any, data: any[], field: string, header: string) => {
+              const isValid = !!value;
+              return { isValid, errorMessage: isValid ? [] : [`${header}為必填`] };
+            }
+          ]
+        },
+        // 明確指定 optionLabel/optionValue，讓 p-dropdown 與 row value 的比對一致
+        { field: 'CAP_Type', header: '扣款類型', type: 'dropdown', width: '10rem', options: this.CAP_TypeOptions, optionLabel: 'label', optionValue: 'value' },
+        {
+          field: 'CAP_Item', header: '扣款項目', type: 'dropdown', width: '10rem', optionLabel: 'label', optionValue: 'value', options: (row: any) => {
             return this.CAP_ItemOptions
               .filter(item => item.CAP_Type === row.CAP_Type)
               .map(item => ({ value: item.CAP_Item, label: `${item.CAP_Item}-${item.CAP_Name}`, data: item }));
@@ -428,16 +454,16 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           field: 'AccNo',
           header: '會計科目',
           type: 'dropdown',
-          width: '10rem',
+          width: '20rem',
           options: this.AccNoOptions,
           optionLabel: 'label',
           optionValue: 'No',
           disabled: () => true
         },
         // { field: 'org_id', header: '組織代號', type: 'dropdown', width: '15rem', options: this.org_idOptions, optionLabel: 'label', optionValue: 'value' },
-        { field: 'GUI_FLAG', header: '是否開立發票', type: 'dropdown', width: '9rem', options: this.GuiFlagOptions, optionLabel: 'label', optionValue: 'value' },
-        { field: 'cap_taxtype', header: '課稅別', type: 'dropdown', width: '9rem', options: this.cap_taxtypeOptions, optionLabel: 'label', optionValue: 'value', disabled: () => true },
-        { field: 'tpy_net', header: '扣款金額(未稅)', type: 'inputNumber', width: '12rem', textAlign: 'right' },
+        { field: 'GUI_FLAG', header: '是否開立發票', type: 'dropdown', width: '6rem', options: this.GuiFlagOptions, optionLabel: 'label', optionValue: 'value' },
+        { field: 'cap_taxtype', header: '課稅別', type: 'dropdown', width: '6rem', options: this.cap_taxtypeOptions, optionLabel: 'label', optionValue: 'value', disabled: () => true },
+        { field: 'tpy_net', header: '扣款金額(未稅)', type: 'inputNumber', width: '10rem', textAlign: 'right' },
         { field: 'remarks', header: '備註', type: 'input', width: '12rem' },
       ];
     } else {
@@ -448,7 +474,18 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         { field: 'contract_subno', header: '版次', type: 'input', width: '15rem', disabled: () => true },
         { field: 'org_id', header: '組織代號/名稱', type: 'dropdown', width: '15rem', options: this.org_idOptions, optionLabel: 'label', optionValue: 'value' },
         { field: 'pod_no', header: '活動代碼/名稱', type: 'dropdown', options: this.pod_noOptions, optionLabel: 'label', optionValue: 'value', width: '10rem' },
-        { field: 'tpy_date', header: '扣款日期', type: 'date', width: '12rem' },
+        {
+          field: 'tpy_date',
+          header: '扣款日期',
+          type: 'date',
+          width: '12rem',
+          validate: [
+            (value: any, rowData: any, data: any[], field: string, header: string) => {
+              const isValid = !!value;
+              return { isValid, errorMessage: isValid ? [] : [`${header}為必填`] };
+            }
+          ]
+        },
         { field: 'tpy_net', header: '扣款金額(未稅)', type: 'inputNumber', width: '12rem', textAlign: 'right' },
         { field: 'remarks', header: '備註', type: 'input', width: '12rem' },
       ];
@@ -669,6 +706,26 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       return; // 檢視模式下不做任何動作
     }
     this.submitted = true;
+
+    // 先檢查表單必填欄位（包含 normal 模式的扣款日期）
+    const currentForm = this.currentCreateType === 'counter' ? this.dataFormCounter : this.dataFormNormal;
+    if (currentForm.invalid) {
+      this.messageService.errorBubble('請填寫必填欄位');
+      return;
+    }
+
+    // 再檢查 table-edit 內的欄位（例如扣款日期）
+    const tableComp = this.currentCreateType === 'counter' ? this.counterTable : this.normalTable;
+    if (tableComp && !tableComp.validateAndShowErrors()) {
+      return;
+    }
+
+    // 下方列表需至少一筆實際資料（排除自動候選列）
+    const hasDetail = Array.isArray(this.data) && this.data.some(r => !r._isAutoInsertCandidate);
+    if (!hasDetail) {
+      this.messageService.errorBubble('明細列表至少需一筆資料');
+      return;
+    }
 
     // 判斷是否為更新
     const mainRow = this.data?.find(row => row.tlt_no) || this.data[0];

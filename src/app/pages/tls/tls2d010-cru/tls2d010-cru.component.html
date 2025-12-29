@@ -39,12 +39,13 @@
             [control]="dataFormCounter.controls.tlt_contract_edate" [submitted]="submitted"></app-input-text>
         </div>
       </div>
-      <app-table-edit title="新增專櫃扣款" tableKey="TLSD010Detail" [data]="data" class="col-12" [columns]="columnsCounter"
-        (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
-        (dataChange)="onCounterDataChange($event)" dataStatusField="status" [loading]="loading"
-        [tableRequired]="true"></app-table-edit>
+      <app-table-edit #counterTable title="新增專櫃扣款" tableKey="TLSD010Detail" [data]="data" class="col-12"
+        [columns]="columnsCounter" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
+        (dataChange)="onCounterDataChange($event)" dataStatusField="status" [loading]="loading" [tableRequired]="true"
+        [disabled]="isDetailMode" [showCheckBox]="!isDetailMode" [showDelete]="!isDetailMode"
+        [canInsert]="!isDetailMode" [showInsert]="!isDetailMode"></app-table-edit>
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataFormCounter" />
+        <app-button btnType="cancel" [form]="dataFormCounter" (clickEvent)="onLocalCancel('counter')" />
         <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>
@@ -109,14 +110,15 @@
       </div>
 
       <!-- table-edit -->
-      <app-table-edit title="新增扣款" tableKey="TLSD010Detail" [data]="data" class="col-12" [columns]="columnsNormal"
-        (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
-        (dataChange)="onCounterDataChange($event)" dataStatusField="status" [loading]="loading"
-        [tableRequired]="true"></app-table-edit>
+      <app-table-edit #normalTable title="新增扣款" tableKey="TLSD010Detail" [data]="data" class="col-12"
+        [columns]="columnsNormal" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
+        (dataChange)="onCounterDataChange($event)" dataStatusField="status" [loading]="loading" [tableRequired]="true"
+        [disabled]="isDetailMode" [showCheckBox]="!isDetailMode" [showDelete]="!isDetailMode"
+        [canInsert]="!isDetailMode" [showInsert]="!isDetailMode"></app-table-edit>
 
       <!-- 按鈕 -->
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataFormNormal" />
+        <app-button btnType="cancel" [form]="dataFormNormal" (clickEvent)="onLocalCancel('normal')" />
         <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>

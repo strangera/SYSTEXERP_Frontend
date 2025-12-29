@@ -161,7 +161,36 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
   }
 
   onSubmit(frm: FormGroup) {
-    const payload = { ...frm.value };
+    const formValue = frm.value;
+    const payload: any = { ...formValue };
+
+    // 專櫃編號：MultiSelect 綁的是 talent_id，需要轉成後端要的 tlt_no
+    if (Array.isArray(payload.tlt_noList) && payload.tlt_noList.length) {
+      payload.tlt_noList = payload.tlt_noList
+        .map((val: any) => {
+          const match = this.tlt_noOptions.find(opt =>
+            opt?.value === val || opt?.No === val || (opt as any)?.tlt_no === val
+          );
+          return match?.No ?? val;
+        })
+        .filter((val: any) => val !== null && val !== undefined && val !== '');
+    }
+
+    // 分頁欄位：後端使用 PageSize/PageIndex/Offset
+    const pageSize = Number(formValue.pageSize ?? 20);
+    const pageIndex = Number(formValue.pageIndex ?? 1);
+    payload.PageSize = pageSize;
+    payload.PageIndex = pageIndex;
+    payload.Offset = (pageIndex - 1) * pageSize;
+
+    if (!Array.isArray(payload.SortBy) || !payload.SortBy.length) {
+      payload.SortBy = [{ field: 'tlt_no', order: 1 }];
+    }
+
+    // 給可能使用的 OrderBy
+    if (!payload.OrderBy && payload.SortBy[0]?.field) {
+      payload.OrderBy = payload.SortBy[0].field;
+    }
     // 若 tpy_date 有值且為 Date，轉成 yyyy-MM-dd 字串
     if (payload.tpy_date instanceof Date) {
       const yyyy = payload.tpy_date.getFullYear();

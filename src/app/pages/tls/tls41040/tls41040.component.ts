@@ -152,14 +152,30 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
   onSubmit(frm: FormGroup) {
     const frmValue = frm.value;
     this.handleSubmit(frm, () => {
+      // 將查詢日期統一轉為：
+      //  開始日 = 當天 00:00:00
+      //  結束日 = (使用者選的結束日 + 1 天) 00:00:00
+      //  以配合後端常見的「>= 開始日 且 < 結束日」條件，
+      //  讓使用者選 25 號時，可以查到 25 號整天的資料。
+      const beg = frmValue.NOT_BegDateTime ? new Date(frmValue.NOT_BegDateTime) : null;
+      const end = frmValue.NOT_EndDateTime ? new Date(frmValue.NOT_EndDateTime) : null;
+
+      if (beg && !isNaN(beg.getTime())) {
+        beg.setHours(0, 0, 0, 0);
+      }
+      if (end && !isNaN(end.getTime())) {
+        end.setHours(0, 0, 0, 0);
+        end.setDate(end.getDate() + 1); // 往後推一天，後端用 < end 時會包含使用者選的那一天
+      }
+
       const payload = {
         PageSize: frmValue?.pageSize || 10,
         PageIndex: (frmValue?.pageIndex ?? 1),
         SortBy: frmValue?.SortBy || [{ field: 'NOT_SeqNo', order: 1 }],
         STO_No: '10',
         ECR_No: frmValue.ECR_No || '',
-        NOT_BegDateTime: frmValue.NOT_BegDateTime,
-        NOT_EndDateTime: frmValue.NOT_EndDateTime,
+        NOT_BegDateTime: beg,
+        NOT_EndDateTime: end,
         NOT_Status: frmValue.NOT_Status || '',
         NOT_Remark: frmValue.NOT_Remark || ''
       };

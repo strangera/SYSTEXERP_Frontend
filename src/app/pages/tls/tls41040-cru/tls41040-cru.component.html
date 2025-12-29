@@ -81,7 +81,7 @@
             [submitted]="submitted" [options]="[
               { value: 'Y', label: '是' },
               { value: 'N', label: '否' },
-            ]" (valueChange)="dataForm.controls.NOT_DtlLimit.setValue($event)"></app-radiobutton>
+            ]" (valueChange)="onNotDtlLimitChange($event)"></app-radiobutton>
         </div>
 
         <div class="col-12 md:col-6 lg:col-12">
