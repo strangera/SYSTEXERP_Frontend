@@ -13,7 +13,6 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
@@ -34,6 +33,8 @@ import {
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+
+import { Fin26010Service, Aps1002BankDropDownRow } from '../../../service/api/fin/fin26010.service';
 
 @UntilDestroy()
 @Component({
@@ -65,13 +66,13 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
   totalRecords = 0;
   lastQueryBody: any = null;
 
-  readonly defaultSort: SortItem[] = [{ field: 'CHK_No', order: 1 }];
+  readonly defaultSort: SortItem[] = [{ field: 'CheckNo', order: 1 }];
   private _currentSortBy: SortItem[] = this.defaultSort;
 
   columns: Column[] = [
-    { field: 'CHK_No', header: '票據號碼' },
+    { field: 'CheckNo', header: '票據號碼' },
     { field: 'VEN_No', header: '廠客代號' },
-    { field: 'VEN_Name', header: '廠商名稱' },
+    { field: 'VEN_Name', header: '廠客名稱' },
 
     { field: 'BNK_No', header: '票面銀行代號' },
     { field: 'BNK_Name', header: '票面銀行名稱' },
@@ -82,7 +83,7 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
     { field: 'AccName', header: '科目名稱' },
 
     { field: 'BNK_AccNo', header: '公司銀行科目代號' },
-    { field: 'BNK_AccName', header: '託收銀行名稱' },
+    { field: 'BNK_AccName', header: '公司銀行科目名稱' },
 
     { field: 'CHK_ReceDate', header: '收票日', format: (v: any) => this.formatDate(v) },
     { field: 'Sales_Id', header: '收票業務員' },
@@ -110,8 +111,8 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
 
   // 下拉 options
   vendorOptions: any[] = [];
-  bankKeyOptions: any[] = [];      // 票面銀行(多選)：value=BNK_No+BNK_BranchNo
-  companyAccOptions: any[] = [];   // 公司銀行科目(多選)：value=BNK_DepositAccNo
+  bankNoOptions: any[] = [];       // 銀行代號(多選) value=BNK_No
+  companyAccOptions: any[] = [];   // 公司銀行科目(多選)：BNK_DepositAccNo
   salesOptions: any[] = [];        // 業務員(多選)
   orgOptions: any[] = [];
   projectOptions: any[] = [];
@@ -142,50 +143,51 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
     { value: '5', label: '退票' },
   ];
 
+  /** ✅ 查詢表單：欄位命名直接對齊後端 Request */
   queryForm = this.formBuilder.group({
-    chkNo: ['' as string],
-    venNo: ['' as string],
+    ChkNo: ['' as string],
+    VenNo: ['' as string],
 
-    bankKeyList: [[] as string[]],        // 多選
-    custBankAccNo: ['' as string],
+    BankNoList: [[] as string[]],        // 多選(前端陣列) → 送出 join(',')
+    CustBankAccNo: ['' as string],
 
-    colleDateFrom: [null as Date | null],
-    colleDateTo: [null as Date | null],
+    ColleDateFrom: [null as Date | null],
+    ColleDateTo: [null as Date | null],
 
-    companyAccNoList: [[] as string[]],   // 多選(APS1002.BNK_DepositAccNo)
-    compNo: ['' as string],
+    CompanyAccNoList: [[] as string[]],  // 多選(前端陣列) → 送出 join(',')
+    CompNo: ['' as string],
 
-    receDateFrom: [null as Date | null],
-    receDateTo: [null as Date | null],
+    ReceDateFrom: [null as Date | null],
+    ReceDateTo: [null as Date | null],
 
-    salesIdList: [[] as string[]],        // 多選
-    rcvNo: ['' as string],
+    SalesIdList: [[] as string[]],       // 多選(前端陣列) → 送出 join(',')
+    RcvNo: ['' as string],
 
-    expireDateFrom: [null as Date | null],
-    expireDateTo: [null as Date | null],
+    ExpireDateFrom: [null as Date | null],
+    ExpireDateTo: [null as Date | null],
 
-    preDateFrom: [null as Date | null],
-    preDateTo: [null as Date | null],
+    PreDateFrom: [null as Date | null],
+    PreDateTo: [null as Date | null],
 
-    cashDateFrom: [null as Date | null],
-    cashDateTo: [null as Date | null],
+    PayDateFrom: [null as Date | null],
+    PayDateTo: [null as Date | null],
 
-    amtFrom: [null as number | null],
-    amtTo: [null as number | null],
+    AmtFrom: [null as number | null],
+    AmtTo: [null as number | null],
 
-    chkType: ['' as string],
-    ticketYN: ['' as string],
+    ChkType: ['' as string],
+    TicketYN: ['' as string],
 
-    comment: ['' as string],
-    orgId: ['' as string],
-    projectNo: ['' as string],
+    Comment: ['' as string],
+    OrgId: ['' as string],
+    ProjectNo: ['' as string],
 
-    chkTitle: ['' as string],
+    ChkTitle: ['' as string],
 
-    tranStatus: ['' as string],
-    chkStatus: ['' as string],
+    TranStatus: ['' as string],
+    ChkStatus: ['' as string],
 
-    vouNo: ['' as string],
+    VouNo: ['' as string],
 
     ...createPaginationConfig(this.defaultSort),
   });
@@ -194,25 +196,40 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
     private fin64010Service: Fin64010Service,
     private dropDownListService: DropDownListService,
     private dropdownApiService: DropdownApiService,
+    private fin26010Service: Fin26010Service,
     private cdr: ChangeDetectorRef
   ) {
     super();
   }
 
   ngOnInit(): void {
+    // ✅ 路由請依你專案實際路由：這裡統一用 fin/fin64010-cru
     this.initializePage('FIN64010', 'fin/fin64010cru', this.queryForm, (form) => this.onSubmit(form));
 
-    // 1) 組織
+    // 1) 銀行代號(多選) - 你目前用 queryAps1001，這裡沿用：value=No, label=No-Name
+    this.dropdownApiService.queryAps1001({ SearchKeyword: '' })
+      .pipe(untilDestroyed(this))
+      .subscribe((response: any) => {
+        const list = Array.isArray(response) ? response : (Array.isArray(response?.Data) ? response.Data : []);
+        this.bankNoOptions = list.map((x: any) => ({
+          value: String(x.No ?? ''),
+          label: `${x.No ?? ''} - ${x.Name ?? ''}`,
+          raw: x,
+        })).filter((x: any) => x.value);
+      });
+
+    // 2) 組織
     this.dropDownListService.querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
-        this.orgOptions = (res?.Data ?? []).map((x: any) => ({
+        const rows = Array.isArray(res?.Data) ? res.Data : [];
+        this.orgOptions = rows.map((x: any) => ({
           label: `${x.No} - ${x.Name}`,
           value: x.No,
         }));
       });
 
-    // 2) 活動
+    // 3) 活動
     this.dropDownListService.queryTALPORDERM_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
@@ -223,69 +240,46 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
         }));
       });
 
-    // 3) 廠客
+    // 4) 廠客
     this.dropDownListService.queryPOS2013_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
         const rows = Array.isArray(res?.Data) ? res.Data : [];
         this.vendorOptions = rows.map((x: any) => ({
-          label: `${x.No} - ${x.Name}`,
-          value: x.No,
+          label: `${x.VEN_No} - ${x.Name}`,
+          value: x.VEN_No,
         }));
       });
 
-    /**
-     * 4) 票面銀行代號(多選)：
-     *    你規格是：BNK_No+BNK_BranchNo (全省銀行代號) → APS1004(分行) → APS1001(銀行名)
-     *    這裡先用 dropdownApiService 取（實際 endpoint 你若不同再替換）
-     */
-    // TODO: 請依你實際 API 名稱替換
-    if ((this.dropdownApiService as any)?.queryAPS1004_BankKey_DropDownList) {
-      (this.dropdownApiService as any).queryAPS1004_BankKey_DropDownList()
-        .pipe(untilDestroyed(this))
-        .subscribe((res: any) => {
-          const rows = Array.isArray(res?.Data) ? res.Data : [];
-          this.bankKeyOptions = rows.map((x: any) => ({
-            value: String(x.BNK_Key ?? x.No ?? ''),
-            label: String(x.Name ?? x.BNK_Name ?? x.BNK_BranchName ?? x.BNK_Key ?? ''),
+    // 5) 公司銀行科目代號(多選) APS1002.BNK_DepositAccNo，且你之前需求：排除 BNK_AccType='1'
+    this.fin26010Service.queryAPS1002DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
+          const list = Array.isArray(res?.Data) ? res.Data : [];
+          const filtered = list.filter((x: any) => String((x as any)?.BNK_AccType ?? '') !== '1');
+          this.companyAccOptions = filtered.map((x: any) => ({
+            label: `${x.BNK_DepositAccNo}-${x.ACCCNAME}`,
+            value: x.BNK_DepositAccNo,
             raw: x,
-          })).filter((x: any) => x.value);
-        });
-    }
+          }));
+        },
+        error: () => (this.companyAccOptions = []),
+      });
 
-    /**
-     * 5) 公司銀行科目(多選)：APS1002.BNK_DepositAccNo
-     *    這裡先用 dropdownApiService 取（實際 endpoint 你若不同再替換）
-     */
-    // TODO: 請依你實際 API 名稱替換
-    if ((this.dropdownApiService as any)?.queryAPS1002_DepositAccNo_DropDownList) {
-      (this.dropdownApiService as any).queryAPS1002_DepositAccNo_DropDownList()
-        .pipe(untilDestroyed(this))
-        .subscribe((res: any) => {
-          const rows = Array.isArray(res?.Data) ? res.Data : [];
-          this.companyAccOptions = rows.map((x: any) => ({
-            value: String(x.BNK_DepositAccNo ?? x.No ?? ''),
-            label: `${x.BNK_DepositAccNo ?? x.No} - ${x.BNK_AccName ?? x.Name ?? ''}`,
-            raw: x,
-          })).filter((x: any) => x.value);
-        });
-    }
-
-    /**
-     * 6) 收票業務員(多選)：Sales_Id
-     *    若你有 ARS1001 下拉，就接這裡
-     */
-    // TODO: 請依你實際 API 名稱替換
+    // 6) 收票業務員(多選) - 若你專案有這支就接
     if ((this.dropDownListService as any)?.queryARS1001_Sales_DropDownList) {
       (this.dropDownListService as any).queryARS1001_Sales_DropDownList()
         .pipe(untilDestroyed(this))
         .subscribe((res: any) => {
           const rows = Array.isArray(res?.Data) ? res.Data : [];
-          this.salesOptions = rows.map((x: any) => ({
-            value: String(x.No ?? x.Sales_Id ?? ''),
-            label: `${x.No ?? x.Sales_Id} - ${x.Name ?? x.User_Name ?? ''}`,
-            raw: x,
-          })).filter((x: any) => x.value);
+          this.salesOptions = rows
+            .map((x: any) => ({
+              value: String(x.No ?? x.Sales_Id ?? ''),
+              label: `${x.No ?? x.Sales_Id} - ${x.Name ?? x.User_Name ?? ''}`,
+              raw: x,
+            }))
+            .filter((x: any) => x.value);
         });
     }
 
@@ -295,7 +289,6 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
       this.queryForm.patchValue(saved.formValue, { emitEvent: false });
       this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
       this.lastQueryBody = saved.lastQueryBody ?? null;
-
       Promise.resolve().then(() => this.onSubmit(this.queryForm));
     }
   }
@@ -331,66 +324,63 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
     return cleaned.length ? cleaned : fallback;
   }
 
-  private buildQueryPayload(base: any): QueryFIN64010Request {
-    const pageIndex =
-      Number.isFinite(base?.pageIndex) && base.pageIndex >= 1 ? base.pageIndex : 1;
-    const pageSize =
-      Number.isFinite(base?.pageSize) && base?.pageSize > 0 ? base.pageSize : 30;
-
-    const sort = this.normalizeSort(base?.SortBy, this.defaultSort);
+  private buildQueryPayload(raw: any): QueryFIN64010Request {
+    const pageIndex = Number.isFinite(raw?.pageIndex) && raw.pageIndex >= 1 ? raw.pageIndex : 1;
+    const pageSize = Number.isFinite(raw?.pageSize) && raw.pageSize > 0 ? raw.pageSize : 30;
+    const sort = this.normalizeSort(raw?.SortBy, this.defaultSort);
 
     const payload: QueryFIN64010Request = {
       PageIndex: pageIndex,
       PageSize: pageSize,
       SortBy: sort,
 
-      ChkNo: (base?.chkNo ?? '').trim() || undefined,
-      VenNo: (base?.venNo ?? '').trim() || undefined,
+      ChkNo: (raw?.ChkNo ?? '').trim() || undefined,
+      VenNo: (raw?.VenNo ?? '').trim() || undefined,
 
-      BankNoList: Array.isArray(base?.bankKeyList) && base.bankKeyList.length ? base.bankKeyList.join(',') : undefined,
-      CustBankAccNo: (base?.custBankAccNo ?? '').trim() || undefined,
+      BankNoList: Array.isArray(raw?.BankNoList) && raw.BankNoList.length ? raw.BankNoList.join(',') : undefined,
+      CustBankAccNo: (raw?.CustBankAccNo ?? '').trim() || undefined,
 
-      ColleDateFrom: this.toYmd(base?.colleDateFrom),
-      ColleDateTo: this.toYmd(base?.colleDateTo),
+      ColleDateFrom: this.toYmd(raw?.ColleDateFrom),
+      ColleDateTo: this.toYmd(raw?.ColleDateTo),
 
-      CompanyAccNoList: Array.isArray(base?.companyAccNoList) && base.companyAccNoList.length ? base.companyAccNoList.join(',') : undefined,
-      CompNo: (base?.compNo ?? '').trim() || undefined,
+      CompanyAccNoList: Array.isArray(raw?.CompanyAccNoList) && raw.CompanyAccNoList.length ? raw.CompanyAccNoList.join(',') : undefined,
+      CompNo: (raw?.CompNo ?? '').trim() || undefined,
 
-      ReceDateFrom: this.toYmd(base?.receDateFrom),
-      ReceDateTo: this.toYmd(base?.receDateTo),
+      ReceDateFrom: this.toYmd(raw?.ReceDateFrom),
+      ReceDateTo: this.toYmd(raw?.ReceDateTo),
 
-      SalesIdList: Array.isArray(base?.salesIdList) && base.salesIdList.length ? base.salesIdList.join(',') : undefined,
+      SalesIdList: Array.isArray(raw?.SalesIdList) && raw.SalesIdList.length ? raw.SalesIdList.join(',') : undefined,
+      RcvNo: (raw?.RcvNo ?? '').trim() || undefined,
 
-      RcvNo: (base?.rcvNo ?? '').trim() || undefined,
+      ExpireDateFrom: this.toYmd(raw?.ExpireDateFrom),
+      ExpireDateTo: this.toYmd(raw?.ExpireDateTo),
 
-      ExpireDateFrom: this.toYmd(base?.expireDateFrom),
-      ExpireDateTo: this.toYmd(base?.expireDateTo),
+      PreDateFrom: this.toYmd(raw?.PreDateFrom),
+      PreDateTo: this.toYmd(raw?.PreDateTo),
 
-      PreDateFrom: this.toYmd(base?.preDateFrom),
-      PreDateTo: this.toYmd(base?.preDateTo),
+      PayDateFrom: this.toYmd(raw?.PayDateFrom),
+      PayDateTo: this.toYmd(raw?.PayDateTo),
 
-      CashDateFrom: this.toYmd(base?.cashDateFrom),
-      CashDateTo: this.toYmd(base?.cashDateTo),
+      AmtFrom: raw?.AmtFrom == null || raw?.AmtFrom === '' ? undefined : Number(raw.AmtFrom),
+      AmtTo: raw?.AmtTo == null || raw?.AmtTo === '' ? undefined : Number(raw.AmtTo),
 
-      AmtFrom: base?.amtFrom == null || base?.amtFrom === '' ? undefined : Number(base.amtFrom),
-      AmtTo: base?.amtTo == null || base?.amtTo === '' ? undefined : Number(base.amtTo),
+      ChkType: (raw?.ChkType ?? '').trim() || undefined,
+      TicketYN: (raw?.TicketYN ?? '').trim() || undefined,
 
-      ChkType: (base?.chkType ?? '').trim() || undefined,
-      TicketYN: (base?.ticketYN ?? '').trim() || undefined,
+      Comment: (raw?.Comment ?? '').trim() || undefined,
 
-      Comment: (base?.comment ?? '').trim() || undefined,
+      OrgId: (raw?.OrgId ?? '').trim() || undefined,
+      ProjectNo: (raw?.ProjectNo ?? '').trim() || undefined,
 
-      OrgId: (base?.orgId ?? '').trim() || undefined,
-      ProjectNo: (base?.projectNo ?? '').trim() || undefined,
+      ChkTitle: (raw?.ChkTitle ?? '').trim() || undefined,
 
-      ChkTitle: (base?.chkTitle ?? '').trim() || undefined,
+      TranStatus: (raw?.TranStatus ?? '').trim() || undefined,
+      ChkStatus: (raw?.ChkStatus ?? '').trim() || undefined,
 
-      TranStatus: (base?.tranStatus ?? '').trim() || undefined,
-      ChkStatus: (base?.chkStatus ?? '').trim() || undefined,
-
-      VouNo: (base?.vouNo ?? '').trim() || undefined,
+      VouNo: (raw?.VouNo ?? '').trim() || undefined,
     };
 
+    // 清掉空值
     Object.keys(payload).forEach((k) => {
       const v = (payload as any)[k];
       if (v === '' || v == null) delete (payload as any)[k];
@@ -400,32 +390,9 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
   }
 
   private parseQueryResponse(res: any): { rows: QueryFIN64010Row[]; total: number } {
-    const data = res?.Data;
-
-    if (Array.isArray(data)) {
-      const total = Number(res?.TotalCount ?? res?.totalCount ?? data.length) || data.length;
-      return { rows: data, total };
-    }
-
-    if (data && typeof data === 'object') {
-      const innerArr =
-        (Array.isArray(data?.Data) && data.Data) ||
-        (Array.isArray(data?.Items) && data.Items) ||
-        (Array.isArray(data?.List) && data.List) ||
-        null;
-
-      if (innerArr) {
-        const total =
-          Number(data?.TotalCount ?? res?.TotalCount ?? innerArr.length) || innerArr.length;
-        return { rows: innerArr, total };
-      }
-
-      const maybeRow: QueryFIN64010Row = { ...(data as any) };
-      const total = Number(res?.TotalCount ?? data?.TotalCount ?? 1) || 1;
-      return { rows: [maybeRow], total };
-    }
-
-    return { rows: [], total: 0 };
+    const rows = Array.isArray(res?.Data) ? (res.Data as QueryFIN64010Row[]) : [];
+    const total = Number(res?.TotalCount ?? rows.length) || rows.length;
+    return { rows, total };
   }
 
   public queryFIN64010ForReport = (body: any) =>
@@ -440,23 +407,23 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
     this.submitted = true;
 
     const raw = this.queryForm.getRawValue();
-    const payload = this.buildQueryPayload(raw);
-    payload.PageIndex = 1;
+    const payload = this.buildQueryPayload({ ...raw, pageIndex: 1 });
 
     this.loading = true;
     this.data = [];
     this.totalRecords = 0;
 
-    this.fin64010Service
-      .queryFIN64010(payload)
+    this.fin64010Service.queryFIN64010(payload)
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (res: ApiResponse<any>) => {
           const parsed = this.parseQueryResponse(res);
           this.data = parsed.rows;
           this.totalRecords = parsed.total;
+
           this.lastQueryBody = { ...payload };
           this._currentSortBy = payload.SortBy ?? this.defaultSort;
+
           this.loading = false;
           this.saveQueryState();
           this.cdr.detectChanges();
@@ -481,48 +448,46 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
 
   onClear(frm: any) {
     frm.reset({
-      chkNo: '',
-      venNo: '',
-      bankKeyList: [],
-      custBankAccNo: '',
+      ChkNo: '',
+      VenNo: '',
+      BankNoList: [],
+      CustBankAccNo: '',
 
-      colleDateFrom: null,
-      colleDateTo: null,
+      ColleDateFrom: null,
+      ColleDateTo: null,
 
-      companyAccNoList: [],
-      compNo: '',
+      CompanyAccNoList: [],
+      CompNo: '',
 
-      receDateFrom: null,
-      receDateTo: null,
+      ReceDateFrom: null,
+      ReceDateTo: null,
 
-      salesIdList: [],
-      rcvNo: '',
+      SalesIdList: [],
+      RcvNo: '',
 
-      expireDateFrom: null,
-      expireDateTo: null,
+      ExpireDateFrom: null,
+      ExpireDateTo: null,
 
-      preDateFrom: null,
-      preDateTo: null,
+      PreDateFrom: null,
+      PreDateTo: null,
 
-      cashDateFrom: null,
-      cashDateTo: null,
+      PayDateFrom: null,
+      PayDateTo: null,
 
-      amtFrom: null,
-      amtTo: null,
+      AmtFrom: null,
+      AmtTo: null,
 
-      chkType: '',
-      ticketYN: '',
+      ChkType: '',
+      TicketYN: '',
 
-      comment: '',
-      orgId: '',
-      projectNo: '',
+      Comment: '',
+      OrgId: '',
+      ProjectNo: '',
+      ChkTitle: '',
 
-      chkTitle: '',
-
-      tranStatus: '',
-      chkStatus: '',
-
-      vouNo: '',
+      TranStatus: '',
+      ChkStatus: '',
+      VouNo: '',
 
       ...createPaginationConfig(this.defaultSort),
     });
@@ -577,8 +542,7 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
     });
 
     this.loading = true;
-    this.fin64010Service
-      .queryFIN64010(payload)
+    this.fin64010Service.queryFIN64010(payload)
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (res: ApiResponse<any>) => {
@@ -586,6 +550,7 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
           this.data = parsed.rows;
           this.totalRecords = parsed.total;
           this.lastQueryBody = { ...payload };
+          this._currentSortBy = payload.SortBy ?? this.defaultSort;
           this.loading = false;
           this.saveQueryState();
           this.cdr.detectChanges();
@@ -603,51 +568,34 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
 
   ngAfterViewInit(): void {
     setTimeout(() => {
-      try {
-        (this.finTable as any).IsPrint = true;
-      } catch {}
-
+      try { (this.finTable as any).IsPrint = true; } catch {}
       const dt: any = (this.finTable as any).dt;
-
       if (dt?.onLazyLoad) {
         dt.onLazyLoad.pipe(untilDestroyed(this)).subscribe((e: any) => {
           const pageSize = Number(e?.rows ?? 30);
           const first = Number(e?.first ?? 0);
           const pageIndex = Math.floor(first / pageSize) + 1;
-
           this.fireQueryByPage(pageIndex, pageSize, e?.multiSortMeta);
         });
       }
     });
   }
 
-  private readonly _allowSortFields = new Set(
-    this.columns.map(c => c.field).filter(Boolean) as string[]
-  );
+  private readonly _allowSortFields = new Set(this.columns.map(c => c.field).filter(Boolean) as string[]);
 
   private fireQueryByPage(pageIndex: number, pageSize: number, sortMeta?: any) {
     const raw = this.queryForm.getRawValue();
 
     let sortBy: SortItem[] | undefined;
-
     if (Array.isArray(sortMeta) && sortMeta.length) {
       const filtered = sortMeta
         .filter((s: any) => this._allowSortFields.has(String(s?.field)))
         .map((s: any) => ({ field: String(s.field), order: Number(s.order) || 1 }));
       if (filtered.length) sortBy = filtered;
     }
+    if (!sortBy || !sortBy.length) sortBy = this._currentSortBy?.length ? this._currentSortBy : this.defaultSort;
 
-    if (!sortBy || !sortBy.length) {
-      sortBy = this._currentSortBy?.length ? this._currentSortBy : this.defaultSort;
-    }
-
-    const payload = this.buildQueryPayload({
-      ...raw,
-      pageIndex,
-      pageSize,
-      SortBy: sortBy,
-    });
-
+    const payload = this.buildQueryPayload({ ...raw, pageIndex, pageSize, SortBy: sortBy });
     this._currentSortBy = payload.SortBy ?? this.defaultSort;
 
     this.loading = true;
