@@ -4,21 +4,23 @@
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+    <form [formGroup]="mainForm" id="mainForm" (ngSubmit)="onSubmit(mainForm)">
       <div class="grid p-fluid">
         <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="單號"
           controlName="SEQ_ID"
-          [control]="dataForm.controls.SEQ_ID"
+          [control]="mainForm.controls.SEQ_ID"
           [submitted]="submitted"
+          [readonly]="true"
         />
         <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="客戶名稱"
           controlName="CUST_NAME"
-          [control]="dataForm.controls.CUST_NAME"
+          [control]="mainForm.controls.CUST_NAME"
           [submitted]="submitted"
+          [readonly]="true"
         />
         <app-dropdown
           class="col-12 md:col-6 lg:col-4"
@@ -27,24 +29,117 @@
           [options]="SEXOptions"
           optionLabel="label"
           optionValue="value"
-          [control]="dataForm.controls.SEX"
+          [control]="mainForm.controls.SEX"
           [submitted]="submitted"
+          [readonly]="true"
         ></app-dropdown>
       </div>
+
       <div class="grid p-fluid">
-        <!-- <app-calendar
-          calendarType="dateOne"
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="聯絡電話"
+          controlName="CONTACT_TEL"
+          [control]="mainForm.controls.CONTACT_TEL"
+          [submitted]="submitted"
+          [readonly]="true"
+        />
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="行動電話"
+          controlName="CELL_PHONE"
+          [control]="mainForm.controls.CELL_PHONE"
+          [submitted]="submitted"
+          [readonly]="true"
+        />
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="電子郵件"
+          controlName="E_MAIL"
+          [control]="mainForm.controls.E_MAIL"
+          [submitted]="submitted"
+          [readonly]="true"
+        />
+        <app-input-text
+          class="col-12"
+          label="聯絡住址"
+          controlName="CONTACT_ADDR"
+          [control]="mainForm.controls.CONTACT_ADDR"
+          [submitted]="submitted"
+          [readonly]="true"
+        />
+      </div>
+      <div class="grid p-fluid">
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="客戶意見類別"
+          controlName="KIND_ID"
+          [control]="mainForm.controls.KIND_ID"
+          [submitted]="submitted"
+          [readonly]="true"
+        />
+
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="客戶意見子類別"
+          controlName="KIND_ID_SUB"
+          [control]="mainForm.controls.KIND_ID_SUB"
+          [submitted]="submitted"
+          [readonly]="true"
+        />
+      </div>
+
+      <div class="grid p-fluid">
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="客戶意見來源別"
+          controlName="SUGG_SOURCE"
+          [control]="mainForm.controls.SUGG_SOURCE"
+          [submitted]="submitted"
+          [readonly]="true"
+        />
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="客戶意見來源別:其他"
+          controlName="SUGG_SOURCE_OTHER"
+          [control]="mainForm.controls.SUGG_SOURCE_OTHER"
+          [submitted]="submitted"
+          [readonly]="true"
+        />
+        <app-calendar
+          class="col-12 md:col-6 lg:col-4"
           label="提供日期"
           controlName="COMPLAIN_DATE"
-          [control]="dataForm.controls.COMPLAIN_DATE"
+          [control]="mainForm.controls.COMPLAIN_DATE"
           [submitted]="submitted"
-        ></app-calendar> -->
+          [readonly]="true"
+        ></app-calendar>
+        <app-input-text
+          class="col-12"
+          label="客戶提供意見內容"
+          controlName="COMPLAIN_NOTES"
+          [control]="mainForm.controls.COMPLAIN_NOTES"
+          [submitted]="submitted"
+          [readonly]="true"
+        />
+      </div>
+
+      <div class="grid p-fluid">
         <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="處理單位"
           controlName="ORG_ID"
-          [control]="dataForm.controls.ORG_ID"
+          [control]="mainForm.controls.ORG_ID"
           [submitted]="submitted"
+          [readonly]="true"
+        />
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="會員編號"
+          controlName="MEMBER_ID"
+          [control]="mainForm.controls.MEMBER_ID"
+          [submitted]="submitted"
+          [readonly]="true"
         />
         <app-dropdown
           class="col-12 md:col-6 lg:col-4"
@@ -53,45 +148,84 @@
           [options]="statusOptions"
           optionLabel="label"
           optionValue="value"
-          [control]="dataForm.controls.STATUS"
+          [control]="mainForm.controls.STATUS"
           [submitted]="submitted"
+          [readonly]="true"
         ></app-dropdown>
       </div>
-      <div class="grid p-fluid">
+
+      <div class="grid p-fluid mt-3">
         <app-input-text
           class="col-12 md:col-6 lg:col-4"
-          label="處理-時"
-          controlName="ANSWER_DATE_MM"
-          [control]="dataForm.controls.ANSWER_DATE_MM"
+          label="處理回覆"
+          controlName="ANSWER"
+          [control]="mainForm.controls.ANSWER"
           [submitted]="submitted"
+          [readonly]="true"
+        />
+
+        <app-calendar
+          class="col-12 md:col-6 lg:col-4"
+          label="回覆日期"
+          controlName="ANSWER_DATE"
+          [control]="mainForm.controls.ANSWER_DATE"
+          [submitted]="submitted"
+          [readonly]="true"
+        ></app-calendar>
+
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="回覆人員"
+          controlName="ANSWER_NAME"
+          [control]="mainForm.controls.ANSWER_NAME"
+          [submitted]="submitted"
+          [readonly]="true"
         />
       </div>
 
-      <app-table-edit
-        class="col-12"
-        tableKey="CPM12060_Main"
-        dataKey="ID"
-        [data]="mainTableData"
-        [columns]="mainColumns"
-        (selectionChange)="selectedMainItems = $event"
-        [selectedItems]="selectedMainItems"
-        [keepDeletedData]="true"
-        [tableRequired]="true"
-        [disabled]="isFormReadable"
-      />
+      <div class="grid p-fluid mt-3">
+        <app-calendar
+          class="col-12 md:col-6 lg:col-4"
+          label="建立日期"
+          controlName="CRT_Date"
+          [control]="mainForm.controls.CRT_Date"
+          [submitted]="submitted"
+          [readonly]="true"
+        ></app-calendar>
 
-      <app-table-edit
-        class="col-12"
-        tableKey="CPM12060_Detail"
-        dataKey="SEQ_ID"
-        [data]="detailTableData"
-        [columns]="detailColumns"
-        (selectionChange)="selectedDetailItems = $event"
-        [selectedItems]="selectedDetailItems"
-        [keepDeletedData]="true"
-        [tableRequired]="true"
-        [disabled]="isFormReadable"
-      />
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="建立者編號"
+          controlName="CRT_USR_No"
+          [control]="mainForm.controls.CRT_USR_No"
+          [submitted]="submitted"
+          [readonly]="true"
+        />
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="建立者姓名"
+          controlName="CRT_USR_Name"
+          [control]="mainForm.controls.CRT_USR_Name"
+          [submitted]="submitted"
+          [readonly]="true"
+        />
+      </div>
+
+      <div class="mt-4">
+        <h5>顧客意見明細</h5>
+        <app-table-edit
+          class="col-12"
+          tableKey="CPM12060_Detail"
+          dataKey="SEQ_ID"
+          [data]="detailTableData"
+          [columns]="detailColumns"
+          (selectionChange)="selectedDetailItems = $event"
+          [selectedItems]="selectedDetailItems"
+          [keepDeletedData]="true"
+          [tableRequired]="true"
+          [disabled]="isFormReadable"
+        />
+      </div>
 
       <div
         *ngIf="!isFormReadable"

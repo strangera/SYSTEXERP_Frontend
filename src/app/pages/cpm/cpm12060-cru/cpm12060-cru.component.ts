@@ -3,13 +3,13 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { CPM12060Data, Cpm12060Service, detail12060Data, main12060Data } from '@service/api/cpm/cpm12060.service';
+import { Cpm12060Service, detail12060Data } from '@service/api/cpm/cpm12060.service';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { CalenderoneComponent } from '@shared/componentkit/calenderone/calenderone.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { formatDateTime } from '@shared/componentkit/table/table.model';
 import { option } from '@shared/models/sys/sysb000.model';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
 import { CPM11020Data } from '../../../service/api/cpm/cpm11020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -34,7 +34,8 @@ import { EditColumn } from '../../../shared/componentkit/table-edit/table-edit.m
     TranslateModule,
     TableEditComponent,
     DropdownComponent,
-    CalenderoneComponent
+    CalenderoneComponent,
+    CalendarComponent
   ]
 })
 export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> implements OnInit {
@@ -51,6 +52,32 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
     ANSWER_DATE_MM: ['', [Validators.maxLength(4)]], // 處理-時
   });
 
+  // 獨立的主檔顯示表單 (唯讀參考)
+  mainForm = this.formBuilder.nonNullable.group({
+    SEQ_ID: [null as any], // 單號
+    KIND_ID: [''], // 客戶意見類別代號
+    KIND_ID_SUB: [''], // 客戶意見子類別代號
+    CUST_NAME: [''], // 客戶名稱
+    SEX: [''], // 性別
+    CONTACT_ADDR: [''], // 聯絡住址
+    CONTACT_TEL: [''], // 聯絡電話
+    CELL_PHONE: [''], // 行動電話
+    E_MAIL: [''], // 電子郵件
+    COMPLAIN_NOTES: [''], // 客戶提供意見內容
+    COMPLAIN_DATE: [null as Date | string | null], // 提供日期
+    SUGG_SOURCE: [''], // 客戶意見來源別
+    SUGG_SOURCE_OTHER: [''], // 客戶意見來源別:其他
+    ORG_ID: [''], // 處理單位
+    MEMBER_ID: [''], // 會員編號
+    STATUS: [''], // 狀態
+    CRT_Date: [null as Date | string | null], // 建立日期
+    CRT_USR_No: [''], // 建立者編號
+    CRT_USR_Name: [''], // 建立者姓名
+    ANSWER: [''], // 處理回覆
+    ANSWER_DATE: [null as Date | string | null], // 回覆日期
+    ANSWER_NAME: [''], // 回覆人員
+  });
+
   // 處理狀態 下拉選單
   statusOptions: option[] = [
     { label: '已建立', value: 'S' },
@@ -64,32 +91,6 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
     { label: '女', value: 'F' },
   ]
 
-  // 1. 在原有的 columns 下方新增主檔與明細的欄位定義
-  mainColumns: EditColumn[] = [
-    { field: 'SEQ_ID', header: '單號' },
-    { field: 'KIND_ID', header: '客戶意見類別代號' },
-    { field: 'KIND_ID_SUB', header: '客戶意見子類別代號' },
-    { field: 'CUST_NAME', header: '客戶名稱' },
-    { field: 'SEX', header: '性別' },
-    { field: 'CONTACT_ADDR', header: '聯絡住址' },
-    { field: 'CONTACT_TEL', header: '聯絡電話' },
-    { field: 'CELL_PHONE', header: '行動電話' },
-    { field: 'E_MAIL', header: '電子郵件' },
-    { field: 'COMPLAIN_NOTES', header: '客戶提供意見內容' },
-    { field: 'COMPLAIN_DATE', header: '提供日期' },
-    { field: 'SUGG_SOURCE', header: '客戶意見來源別' },
-    { field: 'SUGG_SOURCE_OTHER', header: '客戶意見來源別:其他' },
-    { field: 'ORG_ID', header: '處理單位' },
-    { field: 'MEMBER_ID', header: '會員編號' },
-    { field: 'STATUS', header: '狀態', options: this.statusOptions, optionLabel: 'label', optionValue: 'value' },
-    { field: 'CRT_Date', header: '建立日期' },
-    { field: 'CRT_USR_No', header: '建立者編號' },
-    { field: 'CRT_USR_Name', header: '建立者姓名' },
-    { field: 'ANSWER', header: '處理回覆' },
-    { field: 'ANSWER_DATE', header: '回覆日期' },
-    { field: 'ANSWER_NAME', header: '回覆人員' }
-  ];
-
   detailColumns: EditColumn[] = [
     { field: 'ANSWER', header: '處理內容' },
     { field: 'ANSWER_DATE', header: '處理時間', format: formatDateTime },
@@ -101,9 +102,7 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
   ];
 
   // 2. 新增存放資料的變數
-  mainTableData: main12060Data[] = [];
   detailTableData: detail12060Data[] = [];
-  selectedMainItems: main12060Data[] = [];
   selectedDetailItems: detail12060Data[] = [];
   displayDialog = false;
 
@@ -122,9 +121,10 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
     this.cpm12060Service.queryCPM12060_Main({ ID: id })
       .pipe(untilDestroyed(this))
       .subscribe(response => {
-        // console.log('主檔資料:', response.Data);
-        this.mainTableData = response.Data ? [...response.Data] : [];
-        console.log('主檔資料:', this.mainTableData);
+        if (response?.Data && response.Data.length > 0) {
+          this.mainForm.patchValue(response.Data[0]);
+          console.log('主檔表格:', this.mainForm.value);
+        }
       });
 
     // 載入明細資料
@@ -136,54 +136,6 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
         this.detailTableData = response.Data ? [...response.Data] : [];
         console.log('明細資料:', this.detailTableData);
       });
-  }
-
-  // loadDetailData(): void {
-  //   const id = this.rowdata?.ID;
-  //   if (!id) return;
-
-  //   this.cpm11020Service.queryCPM11020Detail({ ID: id })
-  //     .pipe(untilDestroyed(this))
-  //     .subscribe(response => {
-  //       if (response.Data) {
-  //         const detail = response.Data;
-
-  //         // 儲存原始主表單資料
-  //         this.originalMainData = {
-  //           Device_ID: detail.MainData.Device_ID,
-  //           Device_Name: detail.MainData.Device_Name,
-  //           Device_TotQty: detail.MainData.Device_TotQty.toString(),
-  //         };
-
-  //         // 填充主表單資料
-  //         // this.dataForm.patchValue(this.originalMainData);
-
-  //         // 填充明細資料
-  //         if (detail.Details && detail.Details.length > 0) {
-  //           this.data = [...detail.Details];
-  //           this.originalData = [...detail.Details];
-  //         }
-  //       }
-  //     });
-  // }
-
-  // 3. 實作查詢方法
-  onDetail(event: CPM12060Data) {
-    this.displayDialog = true;
-    this.loading = true;
-
-    const req = { ID: Number(event.SEQ_ID) }; // 根據介面定義
-
-    // 同時取得主檔與明細
-    this.cpm12060Service.queryCPM12060_Main(req).subscribe(res => {
-      this.mainTableData = res.Data; // app-table-edit 通常接收陣列
-    });
-
-    this.cpm12060Service.queryCPM12060_Detail(req).pipe(
-      finalize(() => this.loading = false)
-    ).subscribe(res => {
-      this.detailTableData = res.Data;
-    });
   }
 
   onSubmit(dataForm: FormGroup): void {
