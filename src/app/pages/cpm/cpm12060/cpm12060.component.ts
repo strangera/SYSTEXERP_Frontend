@@ -101,7 +101,7 @@ export class CPM12060Component extends BasicQueryPageComponent<CPM12060Data> imp
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
 
-          console.log('查詢結果:', this.data);
+          console.log('查詢結果:', response.Data);
         });
     });
   }
