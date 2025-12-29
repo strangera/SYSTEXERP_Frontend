@@ -499,38 +499,36 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
   }
 
   /** 點明細 */
-  override onDetail(row: QueryFIN64010Row) {
-    const id = Number(row?.ID);
-    if (!Number.isFinite(id)) return;
+override onEdit(row: QueryFIN64010Row) {
+  const id = Number((row as any)?.ID ?? (row as any)?.Id ?? (row as any)?.id);
+  if (!Number.isFinite(id) || id <= 0) return;
 
-    this.saveQueryState();
-    this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
-      queryParams: { Id: id },
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: row,
-        fromRoute: this.router.url,
-        queryConditions: { Id: id },
-      },
-    });
-  }
+  this.saveQueryState();
+  this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
+    queryParams: { Id: id }, // ✅ 統一用 Id
+    state: {
+      crudstatus: CRUDStatus.Edit,
+      rowdata: row, // ✅ 把整列也帶過去，CRU 可用來補欄位
+      fromRoute: this.router.url,
+    },
+  });
+}
 
-  /** 點編輯 */
-  override onEdit(row: QueryFIN64010Row) {
-    const id = Number(row?.ID);
-    if (!Number.isFinite(id)) return;
+override onDetail(row: QueryFIN64010Row) {
+  const id = Number((row as any)?.ID ?? (row as any)?.Id ?? (row as any)?.id);
+  if (!Number.isFinite(id) || id <= 0) return;
 
-    this.saveQueryState();
-    this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
-      queryParams: { Id: id },
-      state: {
-        crudstatus: CRUDStatus.Edit,
-        rowdata: row,
-        fromRoute: this.router.url,
-        queryConditions: { Id: id },
-      },
-    });
-  }
+  this.saveQueryState();
+  this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
+    queryParams: { Id: id },
+    state: {
+      crudstatus: CRUDStatus.Read,
+      rowdata: row,
+      fromRoute: this.router.url,
+    },
+  });
+}
+
 
   override onLazyLoadData(e: any) {
     const raw = this.queryForm.getRawValue();

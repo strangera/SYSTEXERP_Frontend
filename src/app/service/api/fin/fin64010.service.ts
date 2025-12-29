@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
@@ -164,8 +165,8 @@ export interface FIN64010DetailRow {
 
   CHK_ColleDate?: string | null;
 
-  BNK_AccNo?: string;      // 客戶銀行(帳號)
-  BNK_AccName?: string;    // 託收銀行名稱(注意後端命名)
+  BNK_AccNo?: string; // 票據上的帳號(後端 Update 必填)
+  BNK_AccName?: string;
 
   CHK_ReceDate?: string | null;
 
@@ -208,32 +209,38 @@ export interface FIN64010DetailRow {
   ObjectType?: string | null;
   ObjectKey?: string | null;
 
+  // 你後端 update 需要的欄位，detail 不一定會回，但先保留相容
+  BNK_Key?: string | null;
+  COL_BNK_id?: string | null;
+
   [key: string]: any;
 }
 
 /** ========== Update ========== */
-/** 依你貼的後端 updateFIN64010Request：沒有 UPD_USR_No/UPD_USR_Name */
+/** ✅ 完全對齊你後端 updateFIN64010Request（BNK_Key / BNK_AccNo / COL_BNK_id 必填） */
 export interface FIN64010UpdateRequest {
   Id: number;
 
-  BNK_Key: string;
-  BNK_AccNo: string;
-  CHK_No: string;
-  CHK_Amt: number;
-  CHK_ExpireDate: string;
-  CHK_ReceDate: string;
-  VEN_No: string;
-  CHK_Status: string;
-  COL_BNK_id: string;
+  BNK_Key: string;     // 票面銀行(必填)
+  BNK_AccNo: string;   // 票據上的帳號(必填)
+  COL_BNK_id: string;  // 託收帳戶(必填)
+
+  CHK_No: string;      // 必填
+  CHK_Amt: number;     // 必填
+  CHK_ExpireDate: string; // 必填
+  CHK_ReceDate: string;   // 必填
+  VEN_No: string;      // 必填
+  CHK_Status: string;  // 必填
 
   CHK_Type?: string | null;
   Ticket_YN?: string | null;
   CHK_Comment?: string | null;
+
   ORG_ID?: string | null;
   ProjectNo?: string | null;
   RCV_No?: string | null;
-  CHK_PreDate?: string | null;
 
+  CHK_PreDate?: string | null;
   CHK_ColleDate?: string | null;
   CHK_CashDate?: string | null;
   CHK_BackDate?: string | null;
