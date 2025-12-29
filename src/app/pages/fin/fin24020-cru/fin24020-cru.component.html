@@ -7,36 +7,37 @@
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="應收ID" controlName="ARS_No" [control]="dataForm.controls.ARS_No"
+          <app-input-number [useGrouping]="false" label="應付ID" controlName="ACP_No" [control]="dataForm.controls.ACP_No"
             [submitted]="submitted"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateMonthOne" label="立帳日期" [control]="dataForm.controls.sam_yyymm"
+          <app-calendar calendarType="dateMonthOne" label="立帳日期" [control]="dataForm.controls.ACP_Date"
             [submitted]="submitted"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="廠商編號" controlName="CustNo" [options]="VEN_No_ParamOptions | async" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.CustNo" [submitted]="submitted"></app-dropdown>
-        </div>
-
-      </div>
-
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="應付金額" controlName="sam_termno"
-            [control]="dataForm.controls.sam_termno" [submitted]="submitted"></app-input-number>
+          <app-dropdown label="廠商編號" controlName="VEN_No" [options]="VEN_No_ParamOptions | async" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="保留後金額" controlName="sam_termno"
-            [control]="dataForm.controls.sam_termno" [submitted]="submitted"></app-input-number>
+          <app-dropdown label="廠商名稱" controlName="VEN_Name" [options]="VEN_No_ParamOptions | async" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.VEN_Name" [submitted]="submitted"></app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number [useGrouping]="false" label="應付金額" controlName="ACP_Amt"
+            [control]="dataForm.controls.ACP_Amt" [submitted]="submitted"></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number [useGrouping]="false" label="保留款金額" controlName="ACP_ReserveAmt"
+            [control]="dataForm.controls.ACP_ReserveAmt" [submitted]="submitted"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number [useGrouping]="false" label="應付帳款餘額" controlName="sam_termno"
             [control]="dataForm.controls.sam_termno" [submitted]="submitted"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="已產生保留款" controlName="sam_termno"
-            [control]="dataForm.controls.sam_termno" [submitted]="submitted"></app-input-number>
+          <app-input-number [useGrouping]="false" label="已產生保留款" controlName="sam" [control]="dataForm.controls.sam"
+            [submitted]="submitted"></app-input-number>
         </div>
 
       </div>

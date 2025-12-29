@@ -1,4 +1,4 @@
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, Location } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NavigationExtras } from '@angular/router';
@@ -78,6 +78,7 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
     public readonly fin29060Service: FIN29060Service,
     private readonly dropdown: DropdownApiService,
     private readonly fileExportService: FileExportService,
+    private readonly location: Location,
   ) { super(); }
 
   ngOnInit(): void {
@@ -100,7 +101,9 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
       };
       localStorage.setItem('FIN24010_CRU_HANDOFF', JSON.stringify(handoff));
       localStorage.setItem('FIN24010_CRU_PROGNO', 'FIN24010');
-      window.open('/account/fin/fin24010cru', '_blank', 'noopener');
+      const externalUrl = this.location.prepareExternalUrl(`/account/fin/fin24010cru?acpid=${encodeURIComponent(acpNo ?? '')}`);
+      const finalUrl = `${window.location.origin}${externalUrl}`;
+      window.open(finalUrl, '_blank', 'noopener');
     } else if (event.col.field === 'VoucherNo') {
       const vouNo = event.row?.VoucherNo;
       const handoff = {
@@ -110,7 +113,9 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
       };
       localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
       localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050');
-      window.open('/account/fin/fin55050cru', '_blank', 'noopener');
+      const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55050cru');
+      const finalUrl = `${window.location.origin}${externalUrl}`;
+      window.open(finalUrl, '_blank', 'noopener');
     }
   }
 
