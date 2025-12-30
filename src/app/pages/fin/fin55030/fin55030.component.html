@@ -120,6 +120,7 @@
       [lazyBatchSize]="lazyBatchSize"
       [showManage]="false"
       (dataChange)="data = $event"
+      (detail)="onDetail($event)"
       [groupRowsBy]="'AccNo'"
       [fullData]="fullData"
       [totalData]="totalData"

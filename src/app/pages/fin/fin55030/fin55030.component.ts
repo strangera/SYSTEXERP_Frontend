@@ -1,4 +1,4 @@
-import { AsyncPipe, formatDate } from '@angular/common';
+import { AsyncPipe, formatDate, Location } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -26,6 +26,12 @@ import { Fin29060TableSubheaderComponent } from '../fin29060/fin29060-table-subh
 import { FIN55030Data, FIN55030Detail, fin55030request, fin55030response, Fin55030Service } from './../../../service/api/fin/fin55030.service';
 
 export interface GroupedFIN55030Detail extends fin55030response {
+  AccNo: string;
+  AccCName: string;
+  VouDate: string;
+}
+
+export interface GroupedFIN55050Detail extends FIN55030Detail {
   AccNo: string;
   AccCName: string;
   VouDate: string;
@@ -78,10 +84,8 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
   });
   columns: Column[] = [
     // AccNo 設定為 visible: false 但保留，因為 HTML [groupRowsBy]="'AccNo'" 需要它
-    { field: 'AccNo', header: '科目代號', visible: true },
-    { field: 'AccCName', header: '科目名稱', visible: true },
     { field: 'VouDate', header: '傳票日期', visible: true, format: tableFormatDate },
-    { field: 'VouNo', header: '傳票號碼', visible: true },
+    { field: 'VouNo', header: '傳票號碼', visible: true, type: 'detail' },
     { field: 'ORG_ID', header: '部門名稱', visible: true },
     { field: 'DetailNo', header: '廠商代號', visible: true },
     { field: 'PTA', header: '立沖編號', visible: true },
@@ -120,6 +124,7 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
     private dropDownListService: DropDownListService,
     private fin55050Service: FIN55050Service,
     public fin55030Service: Fin55030Service,
+    private location: Location
   ) {
     super(); // 呼叫父類建構子
   }
@@ -202,18 +207,13 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
           flattenedList.sort((a, b) => a.AccNo.localeCompare(b.AccNo));
 
           this.fullData = flattenedList;
-          // 確保 totalRecords 是所有明細的總筆數，而非科目數
-          this.totalRecords = flattenedList.length;
-
-          // 這裡的 totalData 通常是指報表最後的總合計，可選
-          this.totalData = (res as any).totalData || [];
+          // 改為直接賦值：
+          this.data = [...this.fullData];
+          this.totalRecords = this.fullData.length;
 
           console.log('API回應', res);
           console.log('巢狀資料', nestedData);
           console.log('2. 攤平後總明細筆數:', flattenedList.length);
-
-          // 初始顯示
-          this.data = this.fullData.slice(0, this.lazyBatchSize);
         });
     });
   }
@@ -242,6 +242,36 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
     }
   }
 
+  /** 清單 → 明細（CRU）：使用 localStorage 交接資料 */
+  override onDetail(row: GroupedFIN55050Detail) {
+    const vouNo = row?.VouNo;
+    if (!vouNo) {
+      this.messageService?.warnBubble?.('無法開啟，缺少傳票號碼。');
+      return;
+    }
+
+    // 儲存交接資料到 localStorage（含 ProgNo）
+    try {
+      const handoff = {
+        vouNo,
+        fromRoute: window.location.pathname,
+        ts: Date.now(),
+      };
+      localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
+      localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050'); // ✅ 存 ProgNo
+      console.log('[FIN55050] 已儲存 handoff:', handoff);
+    } catch (err) {
+      console.error('[FIN55050] handoff save failed:', err);
+      this.messageService?.warnBubble?.('寫入交接資料失敗。');
+    }
+
+    const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55050cru');
+    const finalUrl = `${window.location.origin}${externalUrl}`;
+    // 開新分頁
+    window.open(finalUrl, '_blank', 'noopener');
+  }
+
+  // 下載pdf/excel
   private downloadFile(blob: Blob, type: string, fileName: string) {
     const newBlob = new Blob([blob], { type });
     const url = URL.createObjectURL(newBlob);
