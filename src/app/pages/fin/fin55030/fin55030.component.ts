@@ -78,8 +78,6 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
   });
   columns: Column[] = [
     // AccNo 設定為 visible: false 但保留，因為 HTML [groupRowsBy]="'AccNo'" 需要它
-    { field: 'AccNo', header: '科目代號', visible: true },
-    { field: 'AccCName', header: '科目名稱', visible: true },
     { field: 'VouDate', header: '傳票日期', visible: true, format: tableFormatDate },
     { field: 'VouNo', header: '傳票號碼', visible: true },
     { field: 'ORG_ID', header: '部門名稱', visible: true },
