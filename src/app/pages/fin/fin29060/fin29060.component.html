@@ -1,59 +1,101 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-range label="廠商代號" [startControl]="queryForm.controls.VEN_No_From"
-              [endControl]="queryForm.controls.VEN_No_To" [submitted]="submitted" [options]="VendorNoOptions | async"
-              optionLabel="label" optionValue="value" />
+            <app-dropdown-range
+              label="廠商代號"
+              [startControl]="queryForm.controls.VEN_No_From"
+              [endControl]="queryForm.controls.VEN_No_To"
+              [submitted]="submitted"
+              [options]="VendorNoOptions | async"
+              optionLabel="label"
+              optionValue="value"
+            />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="立帳日期" [startControl]="queryForm.controls.ODM_Date_From"
-              [endControl]="queryForm.controls.ODM_Date_To" [submitted]="submitted">
-            </app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              label="立帳日期"
+              [startControl]="queryForm.controls.ODM_Date_From"
+              [endControl]="queryForm.controls.ODM_Date_To"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="開票/匯款日期"
-              [startControl]="queryForm.controls.PayRefDate_From" [endControl]="queryForm.controls.PayRefDate_To"
-              [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              label="開票/匯款日期"
+              [startControl]="queryForm.controls.PayRefDate_From"
+              [endControl]="queryForm.controls.PayRefDate_To"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-range label="會計科目代號" [startControl]="queryForm.controls.AccNo_From"
-              [endControl]="queryForm.controls.AccNo_To" [submitted]="submitted" [options]="AccNoOptions | async"
-              optionLabel="label" optionValue="value" />
+            <app-dropdown-range
+              label="會計科目代號"
+              [startControl]="queryForm.controls.AccNo_From"
+              [endControl]="queryForm.controls.AccNo_To"
+              [submitted]="submitted"
+              [options]="AccNoOptions | async"
+              optionLabel="label"
+              optionValue="value"
+            />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="摘要" controlName="ACP_Desc" [control]="queryForm.controls.ACP_Desc"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="摘要"
+              controlName="ACP_Desc"
+              [control]="queryForm.controls.ACP_Desc"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
 
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="未付款是否顯示" groupname="ShowUnpaid" [control]="queryForm.controls.ShowUnpaid" [options]="[
+            <app-radiobutton
+              label="未付款是否顯示"
+              groupname="ShowUnpaid"
+              [control]="queryForm.controls.ShowUnpaid"
+              [options]="[
                 { label: '顯示', value: 1 },
-                { label: '不顯示', value: 0 }
-              ]" [submitted]="submitted">
-            </app-radiobutton>
+                { label: '不顯示', value: 0 },
+              ]"
+              [submitted]="submitted"
+            ></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="帳款餘額為零是否顯示" groupname="ShowZeroBalance"
-              [control]="queryForm.controls.ShowZeroBalance" [options]="[
-               { label: '顯示', value: 1 },
-                { label: '不顯示', value: 0 }
-              ]" [submitted]="submitted">
-            </app-radiobutton>
+            <app-radiobutton
+              label="帳款餘額為零是否顯示"
+              groupname="ShowZeroBalance"
+              [control]="queryForm.controls.ShowZeroBalance"
+              [options]="[
+                { label: '顯示', value: 1 },
+                { label: '不顯示', value: 0 },
+              ]"
+              [submitted]="submitted"
+            ></app-radiobutton>
           </div>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -67,18 +109,41 @@
       <span>廠商編號：{{ row.VendorNo }}</span>
     </ng-template>
 
-
-    <app-fin29060-table-subheader [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-      [lastQueryBody]="lastQueryBody" [queryFunction]="fin29060Service.queryFIN29060.bind(fin29060Service)"
-      [lazyBatchSize]="lazyBatchSize" [showManage]="false" (dataChange)="data = $event" [groupRowsBy]="'VendorNo'"
-      [fullData]="fullData" [totalData]="totalData" [groupRowsByName]="'廠商編號'" [showSubTotal]="true" [showTotal]="true"
-      (detailWithColValue)="onDetailWithColValue($event)">
+    <app-fin29060-table-subheader
+      [data]="data"
+      [columns]="columns"
+      [totalRecords]="totalRecords"
+      [lastQueryBody]="lastQueryBody"
+      [queryFunction]="fin29060Service.queryFIN29060.bind(fin29060Service)"
+      [lazyBatchSize]="lazyBatchSize"
+      [showManage]="false"
+      (dataChange)="data = $event"
+      [groupRowsBy]="'VendorNo'"
+      [fullData]="fullData"
+      [totalData]="totalData"
+      [groupRowsByName]="'廠商編號'"
+      [showSubTotal]="true"
+      [showTotal]="true"
+      (detailWithColValue)="onDetailWithColValue($event)"
+    >
       <header>
         <div class="flex justify-content-end align-items-center gap-2">
-          <p-button styleClass="p-2" label="廠商付款明細表.PDF" icon="pi pi-file" (click)="onExportPDF()"
-            [disabled]="data.length === 0" [loading]="pdfBtnLoading"></p-button>
-          <p-button styleClass="p-2" label="廠商付款明細表.XLSX" icon="pi pi-file" (click)="onExportExcel()"
-            [disabled]="data.length === 0" [loading]="excelBtnLoading"></p-button>
+          <p-button
+            styleClass="p-2"
+            label="廠商付款明細表.PDF"
+            icon="pi pi-file"
+            (click)="onExportPDF()"
+            [disabled]="data.length === 0"
+            [loading]="pdfBtnLoading"
+          ></p-button>
+          <p-button
+            styleClass="p-2"
+            label="廠商付款明細表.XLSX"
+            icon="pi pi-file"
+            (click)="onExportExcel()"
+            [disabled]="data.length === 0"
+            [loading]="excelBtnLoading"
+          ></p-button>
         </div>
       </header>
     </app-fin29060-table-subheader>

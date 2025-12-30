@@ -128,6 +128,7 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
         pageSize: this.lazyBatchSize,
       };
       this.fin29060Service.queryFIN29060(this.lastQueryBody).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe((res) => {
+        console.log('29060 res', res);
         this.fullData = res.Data;
         this.totalData = res.totalData || [];
         this.totalRecords = res.TotalCount;

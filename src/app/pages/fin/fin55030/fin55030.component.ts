@@ -10,7 +10,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate as tableFormatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
@@ -22,7 +22,14 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { fin55030request, fin55030response, Fin55030Service } from './../../../service/api/fin/fin55030.service';
+import { Fin29060TableSubheaderComponent } from '../fin29060/fin29060-table-subheader/fin29060-table-subheader.component';
+import { FIN55030Data, FIN55030Detail, fin55030request, fin55030response, Fin55030Service } from './../../../service/api/fin/fin55030.service';
+
+export interface GroupedFIN55030Detail extends fin55030response {
+  AccNo: string;
+  AccCName: string;
+  VouDate: string;
+}
 
 @Component({
   selector: 'app-fin55030',
@@ -37,6 +44,7 @@ import { fin55030request, fin55030response, Fin55030Service } from './../../../s
     MultiSelectComponent,
     MenubarComponent,
     FormsModule,
+    Fin29060TableSubheaderComponent,
     ReactiveFormsModule,
     CalendarRangeComponent,
     DropdownComponent,
@@ -69,13 +77,16 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
     ...createPaginationConfig([{ field: 'PTA', order: 1 }]),
   });
   columns: Column[] = [
-    { field: 'VouDate', header: '傳票日期', visible: true },
+    // AccNo 設定為 visible: false 但保留，因為 HTML [groupRowsBy]="'AccNo'" 需要它
+    { field: 'AccNo', header: '科目代號', visible: true },
+    { field: 'AccCName', header: '科目名稱', visible: true },
+    { field: 'VouDate', header: '傳票日期', visible: true, format: tableFormatDate },
     { field: 'VouNo', header: '傳票號碼', visible: true },
     { field: 'ORG_ID', header: '部門名稱', visible: true },
     { field: 'DetailNo', header: '廠商代號', visible: true },
     { field: 'PTA', header: '立沖編號', visible: true },
-    { field: 'PTA1', header: '借方金額(餘額)', visible: true },
-    { field: 'PTA2', header: '貸方金額(餘額)', visible: true }
+    { field: 'PTA1', header: '借方金額(餘額)', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
+    { field: 'PTA2', header: '貸方金額(餘額)', visible: true, format: formatAmount, isSubTotal: true, isTotal: true }
   ];
   data: fin55030response[] = [];
   totalRecords = 0;
@@ -97,12 +108,18 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
   btn_pdf_Loading = false;
   btn_excel_Loading = false;
 
+  // 新增屬性以支援 subheader 功能
+  lastQueryBody: any = null;
+  fullData: fin55030response[] = [];
+  totalData: any[] = []; // 視後端回傳格式而定
+  lazyBatchSize = 30;
+
   constructor(
     private dropdown: DropdownApiService,
     public readonly fin55070Service: Fin55070Service,
     private dropDownListService: DropDownListService,
     private fin55050Service: FIN55050Service,
-    private fin55030Service: Fin55030Service,
+    public fin55030Service: Fin55030Service,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -133,51 +150,109 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
       });
   }
 
+  // 新增點擊明細處理 (參考 29060)
+  onDetailWithColValue(event: { row: any; col: any; value: any }) {
+    if (event.col.field === 'VouNo') {
+      // 範例：導向傳票維護介面
+      const vouNo = event.row?.VouNo;
+      const handoff = { vouNo, fromRoute: window.location.pathname, ts: Date.now() };
+      localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
+      // ... 導向邏輯
+    }
+  }
+
+  // fin55030.component.ts
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       const rawValue = frm.getRawValue();
       const formValue = {
         ...rawValue,
         VouDate_Start: formatDate(rawValue.VouDate_Start, 'yyyy-MM-dd', 'en-US'),
-        VouDate_End: formatDate(rawValue.VouDate_End, 'yyyy-MM-dd', 'en-US')
+        VouDate_End: formatDate(rawValue.VouDate_End, 'yyyy-MM-dd', 'en-US'),
+        pageIndex: 1,
+        pageSize: this.lazyBatchSize
       } as fin55030request;
-      console.log('立沖科目餘額表查詢請求', formValue);
 
-      this.fin55030Service.queryFIN55030(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data ?? [];               // 查詢資料
-        console.log('查詢', res);
-        console.log('查詢結果', this.data);
-        this.totalRecords = res.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-      })
+      this.lastQueryBody = formValue;
+
+      this.fin55030Service.queryFIN55030(formValue)
+        .pipe(finalize(() => this.loading = false), untilDestroyed(this))
+        .subscribe(res => {
+          // 假設後端回傳的是 FIN55030Data[] (巢狀)
+          const nestedData = (res.Data as unknown as FIN55030Data[]) ?? [];
+
+
+          // 進行資料攤平處理
+          const flattenedList: FIN55030Detail[] = [];
+          nestedData.forEach((group, index) => {
+            // 檢查每個科目下的明細筆數
+            console.log(`科目[${index}] ${group.AccNo} 的明細筆數:`, group.data?.length);
+            if (group.data && group.data.length > 0) {
+              group.data.forEach(detail => {
+                flattenedList.push({
+                  ...detail,
+                  AccNo: group.AccNo,       // 將父層的科目代號帶入明細
+                  AccCName: group.AccCName  // 將父層的科目名稱帶入明細
+                });
+              });
+            }
+          });
+
+          // 攤平後進行排序確保分組正確
+          flattenedList.sort((a, b) => a.AccNo.localeCompare(b.AccNo));
+
+          this.fullData = flattenedList;
+          // 確保 totalRecords 是所有明細的總筆數，而非科目數
+          this.totalRecords = flattenedList.length;
+
+          // 這裡的 totalData 通常是指報表最後的總合計，可選
+          this.totalData = (res as any).totalData || [];
+
+          console.log('API回應', res);
+          console.log('巢狀資料', nestedData);
+          console.log('2. 攤平後總明細筆數:', flattenedList.length);
+
+          // 初始顯示
+          this.data = this.fullData.slice(0, this.lazyBatchSize);
+        });
     });
   }
 
-  // 列印 PDF 或 Excel
+  // 修改後的列印邏輯，使用最後一次查詢的 Body
   printPDF(isPDF: boolean) {
-    const rawValue = this.queryForm.getRawValue();
-    const formValue = {
-      ...rawValue,
-      VouDate_Start: formatDate(rawValue.VouDate_Start, 'yyyy-MM-dd', 'en-US'),
-      VouDate_End: formatDate(rawValue.VouDate_End, 'yyyy-MM-dd', 'en-US')
-    }
+    if (!this.lastQueryBody) return;
+
+    // 如果要列印全部，需要調整 PageSize
+    const exportPayload = {
+      ...this.lastQueryBody,
+      PageIndex: 1,
+      PageSize: this.totalRecords
+    };
 
     if (isPDF) {
       this.btn_pdf_Loading = true;
-      this.fin55030Service.exportFIN55030PDF(formValue).pipe(finalize(() => this.btn_pdf_Loading = false))
-        .subscribe(blob => {
-          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-          const url = URL.createObjectURL(pdfBlob);
-          window.open(url, '_blank');
-        });
+      this.fin55030Service.exportFIN55030PDF(exportPayload)
+        .pipe(finalize(() => this.btn_pdf_Loading = false))
+        .subscribe(blob => this.downloadFile(blob, 'application/pdf', '立沖科目餘額表.pdf'));
     } else {
       this.btn_excel_Loading = true;
-      this.fin55030Service.exportFIN55030Excel(formValue).pipe(finalize(() => this.btn_excel_Loading = false))
-        .subscribe(blob => {
-          const excelBlob = new Blob([blob], { type: 'application/vnd.ms-excel' });
-          const url = URL.createObjectURL(excelBlob);
-          window.open(url, '_blank');
-        });
+      this.fin55030Service.exportFIN55030Excel(exportPayload)
+        .pipe(finalize(() => this.btn_excel_Loading = false))
+        .subscribe(blob => this.downloadFile(blob, 'application/vnd.ms-excel', '立沖科目餘額表.xlsx'));
+    }
+  }
+
+  private downloadFile(blob: Blob, type: string, fileName: string) {
+    const newBlob = new Blob([blob], { type });
+    const url = URL.createObjectURL(newBlob);
+    if (type === 'application/pdf') {
+      window.open(url, '_blank');
+    } else {
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.click();
     }
   }
 }
+
