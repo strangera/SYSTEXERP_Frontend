@@ -10,20 +10,28 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
-
           <!-- 廠客代號：range -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
+            <app-dropdown-range
               label="廠客代號"
+              controlName="VEN_No_From"
               [startControl]="queryForm.controls.VEN_No_From"
               [endControl]="queryForm.controls.VEN_No_To"
               [submitted]="submitted"
-            ></app-input-text-range>
+              [options]="vendorOptions"
+              optionLabel="label"
+              optionValue="value"
+            >
+            </app-dropdown-range>
           </div>
 
-          <!-- 科目代號：同 FIN64010 下拉風格 -->
+          <!-- 科目代號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="科目代號"
@@ -35,19 +43,19 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
-<div class="col-12 md:col-6 lg:col-4">
-  <app-multi-select
-    label="月結天數"
-    controlName="MoneyTypeList"
-    [options]="moneyTypeOptions"
-    optionLabel="label"
-    optionValue="value"
-    [control]="queryForm.controls.MoneyTypeList"
-    [submitted]="submitted"
-  ></app-multi-select>
-</div>
 
-       
+          <!-- 月結天數 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="月結天數"
+              controlName="MoneyTypeList"
+              [options]="moneyTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.MoneyTypeList"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
 
           <!-- 立帳日期 -->
           <div class="col-12 md:col-6 lg:col-4">
@@ -81,7 +89,19 @@
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
-   <!-- ✅ 1) 帳款餘額為零是否顯示（有作用） -->
+
+          <!-- ✅ 是否顯示應收金額（對應後端 ShowARSAmount string(1)） -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton
+              [label]="'是否顯示應收金額'"
+              [groupname]="'ShowARSAmount'"
+              [control]="queryForm.controls.ShowARSAmount"
+              [options]="showOptions"
+              [submitted]="submitted"
+            ></app-radiobutton>
+          </div>
+
+          <!-- ✅ 帳款餘額為零是否顯示（對應後端 ShowZeroBalance string(1)） -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               [label]="'帳款餘額為零是否顯示'"
@@ -91,21 +111,16 @@
               [submitted]="submitted"
             ></app-radiobutton>
           </div>
-
-          <!-- ✅ 2) 應付金額是否顯示（保留：無作用） -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              [label]="'應付金額是否顯示'"
-              [groupname]="'ShowPayAmount'"
-              [control]="queryForm.controls.ShowPayAmount"
-              [options]="showOptions"
-              [submitted]="submitted"
-            ></app-radiobutton>
-          </div>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear" [type]="'button'" (clickEvent)="onClear(queryForm)"></app-button>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button
+            btnType="clear"
+            [type]="'button'"
+            (clickEvent)="onClear(queryForm)"
+          ></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
