@@ -217,7 +217,18 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
           raw: x,
         })).filter((x: any) => x.value);
       });
-
+//收票業務員代碼 下拉選單
+    this.fin64010Service.queryARS1001_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe((res: any) => {
+        const rows = Array.isArray(res?.Data) ? res.Data : [];
+        this.salesOptions = rows
+          .map((x: any) => ({
+      label: `${x.No} - ${x.Name}`,
+          value: x.No,
+          }))
+          .filter((x: any) => x.value);
+      });
     // 2) 組織
     this.dropDownListService.querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
@@ -267,21 +278,7 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
         error: () => (this.companyAccOptions = []),
       });
 
-    // 6) 收票業務員(多選) - 若你專案有這支就接
-    if ((this.dropDownListService as any)?.queryARS1001_Sales_DropDownList) {
-      (this.dropDownListService as any).queryARS1001_Sales_DropDownList()
-        .pipe(untilDestroyed(this))
-        .subscribe((res: any) => {
-          const rows = Array.isArray(res?.Data) ? res.Data : [];
-          this.salesOptions = rows
-            .map((x: any) => ({
-              value: String(x.No ?? x.Sales_Id ?? ''),
-              label: `${x.No ?? x.Sales_Id} - ${x.Name ?? x.User_Name ?? ''}`,
-              raw: x,
-            }))
-            .filter((x: any) => x.value);
-        });
-    }
+  
 
     // 還原查詢條件
     const saved = this.queryStateService.getQueryStateValue('FIN64010');
