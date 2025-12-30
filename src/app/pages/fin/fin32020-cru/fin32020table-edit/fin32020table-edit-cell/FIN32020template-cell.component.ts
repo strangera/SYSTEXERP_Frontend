@@ -4,8 +4,8 @@ import { ChangeDetectionStrategy, Component, Input, inject } from '@angular/core
 import { InputTextModule } from 'primeng/inputtext';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { TooltipModule } from 'primeng/tooltip';
-import { TableUtilityService } from '../services/fin32020table-edit-utility.service'; // 🎯 引入服務
 import { EditColumn } from '../fin32020table-edit.model';
+import { TableUtilityService } from '../services/fin32020table-edit-utility.service'; // 🎯 引入服務
 import { FIN32020CellInput } from './FIN32020table-edit-cell.model';
 
 @Component({

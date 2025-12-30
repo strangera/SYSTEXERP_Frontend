@@ -4,7 +4,6 @@ import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angul
 import { AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { InputTextModule } from 'primeng/inputtext';
 import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
-import { TableRowSelectEvent } from 'primeng/table';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
@@ -128,13 +127,32 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
     return '';
   }
 
-  onSelectionChange(event: TableRowSelectEvent) {
-    this.selectedItems = event.data;
-    this.select.emit(event.data);
-    this.suggestions = [...this.dialogData]
+  onSelectionChange(event: any) {
+    console.log('dropdown-table selectionChange event =', event);
+    const rowData = Array.isArray(event) ? event[0] : event;
+    if (!rowData) {
+      return;
+    }
+    this.handleRowSelected(rowData);
+  }
 
-    // 【修改處】當 optionValue 為空時，設定完整的物件
-    this.control.setValue(this.optionValue ? this.selectedItems[this.optionValue] : this.selectedItems);
+  // 直接點整列（itemClick）時觸發
+  onRowClick(rowData: any) {
+    console.log('dropdown-table rowClick rowData =', rowData);
+    if (!rowData) {
+      return;
+    }
+    this.handleRowSelected(rowData);
+  }
+
+  private handleRowSelected(rowData: any) {
+    console.log('dropdown-table handleRowSelected rowData =', rowData);
+    this.selectedItems = rowData;
+    this.select.emit(rowData);
+    this.suggestions = [...this.dialogData];
+
+    // 當 optionValue 為空時，設定完整的物件
+    this.control.setValue(this.optionValue ? rowData[this.optionValue] : rowData);
 
     this.op?.hide();
     this.selectedItems = [];

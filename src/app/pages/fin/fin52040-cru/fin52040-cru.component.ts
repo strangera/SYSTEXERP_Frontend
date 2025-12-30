@@ -1,22 +1,22 @@
-import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { apiOption } from '../../../shared/models/sys/sysb000.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { ValidationService } from '@shared/service/validation.service';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { DropdownTableComponent } from '@shared/componentkit/dropdown-table/dropdown-table.component';
-import { FIN52040Service } from '@service/api/fin/fin52040.service';
+import { Component, OnInit, } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { FIN52040Service } from '@service/api/fin/fin52040.service';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { DropdownTableComponent } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { ValidationService } from '@shared/service/validation.service';
+import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { apiOption } from '../../../shared/models/sys/sysb000.model';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 /** GLS1016 對象別設定檔 */
 export interface GLS1016 {
@@ -176,10 +176,10 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
       );
     }
   }
-  
+
   onformValueChanged(event: any) {
     console.log('變更表單為', event);
-    this.opData = this.rawOpData.filter((item:any) => {
+    this.opData = this.rawOpData.filter((item: any) => {
       return (!event.VEN_No || item.VEN_No.includes(event.VEN_No)) &&
         (!event.VEN_Name || item.VEN_Name.includes(event.VEN_Name));
     });
