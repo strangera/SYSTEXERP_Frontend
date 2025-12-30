@@ -23,15 +23,9 @@ import { InputNumberRangeComponent } from '../../../shared/componentkit/input-nu
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Fin29060TableSubheaderComponent } from '../fin29060/fin29060-table-subheader/fin29060-table-subheader.component';
-import { FIN55030Data, FIN55030Detail, fin55030request, fin55030response, Fin55030Service } from './../../../service/api/fin/fin55030.service';
+import { FIN55030Detail, fin55030request, fin55030response, Fin55030Service } from './../../../service/api/fin/fin55030.service';
 
-export interface GroupedFIN55030Detail extends fin55030response {
-  AccNo: string;
-  AccCName: string;
-  VouDate: string;
-}
-
-export interface GroupedFIN55050Detail extends FIN55030Detail {
+export interface GroupedFIN55030Detail extends FIN55030Detail {
   AccNo: string;
   AccCName: string;
   VouDate: string;
@@ -78,17 +72,18 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
     PTA_End: [''],
     SubDetailNo: [''], // 對象別編號 GLS3002.SubDetailNo (目前都是null)
     PostFlag: [''], // 傳票狀態 GLS3001.PostFlag (0.作廢 1.建立 2.確認 3.過帳)
-    IsSubDetail: [true], // 是否為對象別(是-->IS NOT NULL, 否-->IS NULL)
+    IsSubDetail: [null], // 是否為對象別(是-->IS NOT NULL, 否-->IS NULL)
 
-    ...createPaginationConfig([{ field: 'PTA', order: 1 }]),
+    ...createPaginationConfig([{ field: 'AccNo', order: 1 }]), // 用AccNo排序
   });
   columns: Column[] = [
     // AccNo 設定為 visible: false 但保留，因為 HTML [groupRowsBy]="'AccNo'" 需要它
     { field: 'VouDate', header: '傳票日期', visible: true, format: tableFormatDate },
     { field: 'VouNo', header: '傳票號碼', visible: true, type: 'detail' },
-    { field: 'ORG_ID', header: '部門名稱', visible: true },
     { field: 'DetailNo', header: '廠商代號', visible: true },
+    { field: 'ORG_ID', header: '部門名稱', visible: true },
     { field: 'PTA', header: '立沖編號', visible: true },
+    { field: 'NoteDesc', header: '摘要', visible: true },
     { field: 'PTA1', header: '借方金額(餘額)', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
     { field: 'PTA2', header: '貸方金額(餘額)', visible: true, format: formatAmount, isSubTotal: true, isTotal: true }
   ];
@@ -183,9 +178,8 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
       this.fin55030Service.queryFIN55030(formValue)
         .pipe(finalize(() => this.loading = false), untilDestroyed(this))
         .subscribe(res => {
-          // 假設後端回傳的是 FIN55030Data[] (巢狀)
-          const nestedData = (res.Data as unknown as FIN55030Data[]) ?? [];
-
+          // 讀取巢狀資料
+          const nestedData = res.Data ?? [];
 
           // 進行資料攤平處理
           const flattenedList: FIN55030Detail[] = [];
@@ -243,7 +237,7 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
   }
 
   /** 清單 → 明細（CRU）：使用 localStorage 交接資料 */
-  override onDetail(row: GroupedFIN55050Detail) {
+  override onDetail(row: GroupedFIN55030Detail) {
     const vouNo = row?.VouNo;
     if (!vouNo) {
       this.messageService?.warnBubble?.('無法開啟，缺少傳票號碼。');

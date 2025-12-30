@@ -460,12 +460,16 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           this.POS2020Data = [...this.POS2020Data];
         }
 
-        // 重新查詢專櫃編號選單
-        this.tls51070Service.queryTLTTALENT_DropDownList({ "VEN_No": value }).pipe(untilDestroyed(this)).subscribe((response) => {
+        // 重新查詢 自營 專櫃編號選單(queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList)
+        // this.tls51070Service.queryTLTTALENT_DropDownList({ "VEN_No": value }).pipe(untilDestroyed(this)).subscribe((response) => { //廠商編號 > 專櫃編號
+        this.tls51070Service.queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => { //自營(全帶入)
+          // this.tls51070Service.queryTLTTALENT_ByStoreWay2AndApprove2WithVenNo_DropDownList({ "VEN_No": value }).pipe(untilDestroyed(this)).subscribe((response) => { //自營(廠商編號)
           this.TLT_NO_Option = response.Data.map((item: any) => ({
             No: item.No, // 專櫃編號代碼
             Label: item.No + '-' + item.Name, // 組合成顯示用的Label
           }));
+
+          // this.messageService.infoBubble('廠商編號變更、已重新設定專櫃編號')
           console.log('專櫃編號代碼:', response.Data);
 
           //重製 專櫃編號 內容
@@ -826,7 +830,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     });
 
     // 查詢 專櫃編號 _1的情況重新篩選 _當response(有選到 廠商代碼 就刷新)
-    this.tls51070Service.queryTLTTALENT_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
+    this.tls51070Service.queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.TLT_NO_Option = response.Data.map((item: any) => ({
         No: item.No, // 專櫃編號代碼
         Label: item.No + '-' + item.Name, // 組合成顯示用的Label
