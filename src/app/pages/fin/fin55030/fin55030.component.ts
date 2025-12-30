@@ -78,9 +78,9 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
     PTA_End: [''],
     SubDetailNo: [''], // 對象別編號 GLS3002.SubDetailNo (目前都是null)
     PostFlag: [''], // 傳票狀態 GLS3001.PostFlag (0.作廢 1.建立 2.確認 3.過帳)
-    IsSubDetail: [true], // 是否為對象別(是-->IS NOT NULL, 否-->IS NULL)
+    IsSubDetail: [null], // 是否為對象別(是-->IS NOT NULL, 否-->IS NULL)
 
-    ...createPaginationConfig([{ field: 'PTA', order: 1 }]),
+    ...createPaginationConfig([{ field: 'AccNo', order: 1 }]), // 用AccNo排序
   });
   columns: Column[] = [
     // AccNo 設定為 visible: false 但保留，因為 HTML [groupRowsBy]="'AccNo'" 需要它
