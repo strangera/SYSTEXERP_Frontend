@@ -13,17 +13,19 @@
             controlName="ENG_YYMM"
             [control]="dataForm.controls.ENG_YYMM"
             [submitted]="submitted"
+            [readonly]="isFormReadable"
           ></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="能源類型"
-            controlName="EngTypes"
+            controlName="ENG_Type"
             [options]="ENG_Type_Option"
             optionLabel="label"
             optionValue="value"
             [control]="dataForm.controls.ENG_Type"
             [submitted]="submitted"
+            [readonly]="isFormReadable"
           ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
@@ -35,54 +37,120 @@
             optionValue="No"
             [control]="dataForm.controls.ENG_MeterNo"
             [submitted]="submitted"
+            [readonly]="isFormReadable"
           ></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            calendarType="dateOne"
-            label="上次抄錶日"
-            controlName="ENG_LastReadingDate"
-            [control]="dataForm.controls.ENG_LastReadingDate"
-            [submitted]="submitted"
-            [readonly]="true"
-          ></app-calendar>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            label="上次抄錶度數"
-            controlName="ENG_CurrentReading_Last"
-            [control]="dataForm.controls.ENG_CurrentReading_Last"
-            [maxFractionDigits]="4"
-            [submitted]="submitted"
-            [readonly]="true"
-          ></app-input-number>
         </div>
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar
             calendarType="dateOne"
-            label="本次抄錶日"
+            label="抄表日期"
             controlName="ENG_Date"
             [control]="dataForm.controls.ENG_Date"
             [submitted]="submitted"
+            [readonly]="isFormReadable"
           ></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
-            label="本次抄錶度數"
-            controlName="ENG_CurrentReading"
-            [control]="dataForm.controls.ENG_CurrentReading"
+            label="使用度數"
+            controlName="UsageAmount"
+            [control]="dataForm.controls.UsageAmount"
             [maxFractionDigits]="4"
             [submitted]="submitted"
+            [readonly]="isFormReadable"
           ></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="本次結算金額"
+          <app-input-number
+            label="結算金額"
             controlName="ENG_Amount"
             [control]="dataForm.controls.ENG_Amount"
+            [maxFractionDigits]="2"
             [submitted]="submitted"
+            [readonly]="isFormReadable"
+          ></app-input-number>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="匯入檔案名稱"
+            controlName="ENG_ImpFileName"
+            [control]="dataForm.controls.ENG_ImpFileName"
+            [submitted]="submitted"
+            [readonly]="true"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="結算狀態"
+            controlName="ENG_Status"
+            [options]="ENG_Status_Option"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.ENG_Status"
+            [submitted]="submitted"
+            [readonly]="true"
+          ></app-dropdown>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="建立日期"
+            controlName="CRT_Date"
+            [control]="dataForm.controls.CRT_Date"
+            [submitted]="submitted"
+            [readonly]="true"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="建立人員"
+            controlName="CRT_USR_No"
+            [control]="dataForm.controls.CRT_USR_No"
+            [submitted]="submitted"
+            [readonly]="true"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="建立人員名稱"
+            controlName="CRT_USR_Name"
+            [control]="dataForm.controls.CRT_USR_Name"
+            [submitted]="submitted"
+            [readonly]="true"
+          ></app-input-text>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="變更日期"
+            controlName="UPD_Date"
+            [control]="dataForm.controls.UPD_Date"
+            [submitted]="submitted"
+            [readonly]="true"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="變更人員"
+            controlName="UPD_USR_No"
+            [control]="dataForm.controls.UPD_USR_No"
+            [submitted]="submitted"
+            [readonly]="true"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="變更人員名稱"
+            controlName="UPD_USR_Name"
+            [control]="dataForm.controls.UPD_USR_Name"
+            [submitted]="submitted"
+            [readonly]="true"
           ></app-input-text>
         </div>
       </div>

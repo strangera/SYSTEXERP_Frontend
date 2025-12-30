@@ -77,17 +77,17 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
     ENG_YYMM: ['' as string | Date, [Validators.required, Validators.maxLength(6)]], // 結算年月
     ENG_Type: ['', [Validators.required, Validators.maxLength(3)]], // 能源類型
     ENG_MeterNo: ['', [Validators.required, Validators.maxLength(5)]], // 錶號
-    ENG_Date: ['' as string | Date], // 本次抄錶日
-    ENG_CurrentReading: [0, [Validators.max(9999999999)]], // 本次抄錶度數 (最多小數後4位)
-    ENG_Amount: [0, [Validators.max(9999999999)]], // 本次結算金額
-    CRT_Date: [''], // 建立日期
-    CRT_USR_No: [''], // 建立人員代碼 (隱藏)
-    CRT_USR_Name: [''], // 建立人員姓名 (隱藏)
-    UPD_Date: [''], // 變更日期 (隱藏)
-    UPD_USR_No: [''], // 變更人員代碼 (隱藏)
-    UPD_USR_Name: [''], // 變更人員姓名 (隱藏)
-    ENG_LastReadingDate: [null as string | Date | null], // 上次抄錶日
-    ENG_CurrentReading_Last: [0, [Validators.max(9999999999)]], // 上次抄錶度數
+    ENG_Date: ['' as string | Date], // 抄表日期
+    UsageAmount: [0, [Validators.max(9999999999)]], // 使用度數 (最多小數後4位)
+    ENG_Amount: [0, [Validators.max(9999999999)]], // 結算金額
+    ENG_ImpFileName: [''], // 匯入檔案名稱
+    ENG_Status: ['0'], // 結算狀態 (預設為 0:未結算)
+    CRT_Date: [''], // 建立日期 (預設當前日期)
+    CRT_USR_No: [''], // 建立人員代碼
+    CRT_USR_Name: [''], // 建立人員姓名
+    UPD_Date: [''], // 變更日期
+    UPD_USR_No: [''], // 變更人員代碼
+    UPD_USR_Name: [''], // 變更人員姓名
   });
 
   //
@@ -109,166 +109,83 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
   ngOnInit(): void {
     this.initializePage('ASS21030', this.dataForm);
     this.loadOptions();
-    this.setupMeterNoListener(); // 設置錶號監聽
+    this.setupEditPermissions(); // 設置編輯權限
+    this.setDefaultValues(); // 設置預設值
+    this.formatDateFields(); // 格式化日期欄位
 
     console.log('取得資料', this.dataForm.value);
   }
 
-  // 監聽錶號變更,自動帶入上次抄表資料
-  setupMeterNoListener() {
-    this.dataForm.controls.ENG_MeterNo.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe(meterNo => {
-        if (meterNo) {
-          if (this.crudstatus === CRUDStatus.Create) {
-            // 新增模式: 取得最新一筆
-            this.fetchLatestReading(meterNo);
-          } else if (this.crudstatus === CRUDStatus.Edit) {
-            // 編輯模式: 取得上一期
-            this.fetchPreviousReading(meterNo);
-          }
-        } else {
-          // 清空錶號時，也清空上次抄表資料
-          this.dataForm.patchValue({
-            ENG_LastReadingDate: null,
-            ENG_CurrentReading_Last: 0
-          });
-        }
+  // 設置預設值 (僅新增模式)
+  setDefaultValues() {
+    if (this.crudstatus === CRUDStatus.Create) {
+      this.dataForm.patchValue({
+        CRT_Date: this.getCurrentDateString(),
+        CRT_USR_No: this.authService.currentUserValue?.user_No || '',
+        CRT_USR_Name: this.authService.currentUserValue?.user_Name || ''
       });
+    }
+  }
 
-    // 監聽能源類型變更，如果已選擇錶號則重新取得資料
-    this.dataForm.controls.ENG_Type.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe(() => {
-        const meterNo = this.dataForm.controls.ENG_MeterNo.value;
-        if (meterNo) {
-          if (this.crudstatus === CRUDStatus.Create) {
-            this.fetchLatestReading(meterNo);
-          } else if (this.crudstatus === CRUDStatus.Edit) {
-            this.fetchPreviousReading(meterNo);
-          }
-        }
-      });
+  // 格式化日期欄位為 YYYY/MM/DD 格式
+  formatDateFields() {
+    const crtDate = this.dataForm.controls.CRT_Date.value;
+    const updDate = this.dataForm.controls.UPD_Date.value;
 
-    // 監聽結算年月變更，如果是編輯模式且已選擇錶號則重新取得資料
-    this.dataForm.controls.ENG_YYMM.valueChanges
+    if (crtDate && typeof crtDate === 'string' && crtDate.includes('-')) {
+      this.dataForm.controls.CRT_Date.setValue(this.formatDateStringToDisplay(crtDate));
+    }
+
+    if (updDate && typeof updDate === 'string' && updDate.includes('-')) {
+      this.dataForm.controls.UPD_Date.setValue(this.formatDateStringToDisplay(updDate));
+    }
+  }
+
+  // 取得當前日期字串 (YYYY/MM/DD)
+  private getCurrentDateString(): string {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}/${month}/${day}`;
+  }
+
+  // 將 ISO 日期字串或 datetime 字串轉換為 YYYY/MM/DD 格式
+  private formatDateStringToDisplay(dateStr: string): string {
+    if (!dateStr) return '';
+
+    // 處理可能的格式: "2021-05-29", "2021-05-29 20:09:31", "2021-05-29T20:09:31"
+    const datePart = dateStr.split(' ')[0].split('T')[0]; // 取得日期部分
+    const [year, month, day] = datePart.split('-');
+
+    return `${year}/${month}/${day}`;
+  }
+
+  // 設置編輯權限：僅結算狀態=0時允許修改使用度數和結算金額
+  setupEditPermissions() {
+    // 監聽結算狀態變更
+    this.dataForm.controls.ENG_Status.valueChanges
       .pipe(untilDestroyed(this))
-      .subscribe(() => {
-        if (this.crudstatus === CRUDStatus.Edit) {
-          const meterNo = this.dataForm.controls.ENG_MeterNo.value;
-          if (meterNo) {
-            this.fetchPreviousReading(meterNo);
-          }
-        }
+      .subscribe(status => {
+        this.updateFieldPermissions(status);
       });
   }
 
-  // 取得最新抄表記錄 (新增時使用)
-  fetchLatestReading(meterNo: string) {
-    const mid = this.dataForm.controls.Mid.value;
-    const engType = this.dataForm.controls.ENG_Type.value;
+  // 根據結算狀態更新欄位權限
+  updateFieldPermissions(status: string) {
+    const isSettled = status === '1'; // 已結算
 
-    // 確保有必要的參數
-    if (!engType) {
-      this.messageService.warnBubble('請先選擇能源類型');
-      return;
+    if (this.crudstatus === CRUDStatus.Edit) {
+      if (isSettled) {
+        // 已結算時，禁用編輯
+        this.dataForm.controls.UsageAmount.disable();
+        this.dataForm.controls.ENG_Amount.disable();
+      } else {
+        // 未結算時，允許編輯
+        this.dataForm.controls.UsageAmount.enable();
+        this.dataForm.controls.ENG_Amount.enable();
+      }
     }
-
-    const requestBody = {
-      Mid: mid,
-      ENG_Type: engType,
-      ENG_MeterNo: meterNo
-    };
-
-    this.ass21030Service.getLatestReading(requestBody)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (response) => {
-          if (response.Status === '0000' && response.Data) {
-            // 自動帶入最新抄表資料
-            this.dataForm.patchValue({
-              ENG_LastReadingDate: response.Data.ENG_LastReadingDate,
-              ENG_CurrentReading_Last: response.Data.ENG_LastReading
-            });
-            console.log('已自動帶入最新抄表記錄:', response.Data);
-          } else {
-            // 沒有歷史記錄,清空欄位
-            this.dataForm.patchValue({
-              ENG_LastReadingDate: null,
-              ENG_CurrentReading_Last: 0
-            });
-            console.log('查無該錶號的歷史抄表記錄');
-          }
-        },
-        error: (error) => {
-          console.error('取得最新抄表記錄失敗:', error);
-          // 清空欄位
-          this.dataForm.patchValue({
-            ENG_LastReadingDate: null,
-            ENG_CurrentReading_Last: 0
-          });
-        }
-      });
-  }
-
-  // 取得上一期抄表記錄 (編輯時使用)
-  fetchPreviousReading(meterNo: string) {
-    const mid = this.dataForm.controls.Mid.value;
-    const engType = this.dataForm.controls.ENG_Type.value;
-    const engYYMM = this.dataForm.controls.ENG_YYMM.value;
-
-    // 確保有必要的參數
-    if (!engType || !engYYMM || engYYMM === '') {
-      console.log('缺少必要參數');
-      return;
-    }
-
-    // 將 Date 物件轉換為 YYYYMM 格式字串
-    let formattedYYMM = '';
-    if (engYYMM instanceof Date) {
-      const year = engYYMM.getFullYear();
-      const month = String(engYYMM.getMonth() + 1).padStart(2, '0');
-      formattedYYMM = `${year}${month}`;
-    } else if (typeof engYYMM === 'string') {
-      formattedYYMM = engYYMM;
-    }
-
-    const requestBody = {
-      Mid: mid,
-      ENG_Type: engType,
-      ENG_MeterNo: meterNo,
-      CurrentYYMM: formattedYYMM
-    };
-
-    this.ass21030Service.getPreviousReading(requestBody)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (response) => {
-          if (response.Status === '0000' && response.Data) {
-            // 自動帶入上一期抄表資料
-            this.dataForm.patchValue({
-              ENG_LastReadingDate: response.Data.ENG_PreviousReadingDate,
-              ENG_CurrentReading_Last: response.Data.ENG_PreviousReading
-            });
-            console.log('已自動帶入上一期抄表記錄:', response.Data);
-          } else {
-            // 沒有上一期記錄,清空欄位
-            this.dataForm.patchValue({
-              ENG_LastReadingDate: null,
-              ENG_CurrentReading_Last: 0
-            });
-            console.log('查無上一期抄表記錄');
-          }
-        },
-        error: (error) => {
-          console.error('取得上一期抄表記錄失敗:', error);
-          // 清空欄位
-          this.dataForm.patchValue({
-            ENG_LastReadingDate: null,
-            ENG_CurrentReading_Last: 0
-          });
-        }
-      });
   }
 
   onSubmit(frm: FormGroup) {
@@ -278,32 +195,6 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
     if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
-    }
-
-    // 新增模式下的額外驗證
-    if (this.crudstatus === CRUDStatus.Create) {
-      // 驗證本次抄表度數不可小於上次抄表度數
-      const currentReading = this.dataForm.controls.ENG_CurrentReading.value;
-      const lastReading = this.dataForm.controls.ENG_CurrentReading_Last.value;
-      if (currentReading < lastReading) {
-        this.messageService.warnBubble('本次抄表度數不可小於上次抄表度數');
-        this.messageService.unblockUi();
-        return;
-      }
-
-      // 驗證本次抄表日期不可小於上次抄表日期
-      const currentDate = this.dataForm.controls.ENG_Date.value;
-      const lastDate = this.dataForm.controls.ENG_LastReadingDate.value;
-      if (currentDate && lastDate) {
-        const currentDateTime = currentDate instanceof Date ? currentDate.getTime() : new Date(currentDate).getTime();
-        const lastDateTime = lastDate instanceof Date ? lastDate.getTime() : new Date(lastDate).getTime();
-
-        if (currentDateTime < lastDateTime) {
-          this.messageService.warnBubble('本次抄表日期不可小於上次抄表日期');
-          this.messageService.unblockUi();
-          return;
-        }
-      }
     }
 
     const formValue = frm.getRawValue();
@@ -369,4 +260,5 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
       console.log('能源表號代號:', response.Data);
     });
   }
+
 }

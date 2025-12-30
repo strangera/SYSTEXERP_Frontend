@@ -6,7 +6,9 @@ import { ASS21030Service } from '@service/api/ass/ass21030.service';
 import { formatYYYYMM } from '@shared/componentkit/table2/table2.model';
 import { apiOption } from '@shared/models/tls/tls000.model';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
+import { finalize, Observable, of } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -18,9 +20,18 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { CustomFooterTableComponent } from '../../../shared/componentkit/custom-footer-table/customFooterTable.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate, formatOptionLabel } from '../../../shared/componentkit/table/table.model';
 import { option } from '../../../shared/models/sys/sysb000.model';
+
+// 分攤設定介面
+export interface ApportionmentSetting {
+  TLT_No: string; // 專櫃編號
+  TLT_Name: string; // 專櫃名稱
+  ENG_Rate: number; // 比率(%)
+  ENG_Remark?: string; // 備註
+}
 
 // ENG2001 抄錶明細檔
 export interface ENG2001 {
@@ -47,6 +58,8 @@ export interface ENG2001 {
   UPD_USR_Name?: string; // 變更人員姓名
 
   CanDel?: boolean;  //能否刪除(僅顯示)
+
+  ApportionmentSettings?: ApportionmentSetting[]; // 分攤設定
 }
 @Component({
   selector: 'app-ass21030',
@@ -56,6 +69,7 @@ export interface ENG2001 {
   imports: [
     MenubarComponent,
     ButtonComponent,
+    ButtonModule,
     InputTextComponent,
     InputNumberComponent,
     AccordionModule,
@@ -69,6 +83,7 @@ export interface ENG2001 {
     FileUploadModule,
     InputTextComponent,
     TableComponent,
+    CustomFooterTableComponent,
     TranslateModule]
 
 })
@@ -105,17 +120,18 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
 
   data: ENG2001[] = [];
   columns: Column[] = [
-    { field: 'ENG_Type', header: '能源類型', visible: true, options: this.ENG_Type_Option },
+    { field: 'ENG_Type', header: '能源類型', visible: true, options: this.ENG_Type_Option, format: (value) => formatOptionLabel(value, this.ENG_Type_Option) },
     { field: 'ENG_MeterNo', header: '錶號', visible: true },
     { field: 'Location_No', header: '位置編號', visible: true },
     { field: 'TLT_No', header: '專櫃編號', visible: true },
+    { field: 'TLT_Name', header: '專櫃名稱', visible: true },
     { field: 'ENG_YYMM', header: '結算年月', visible: true, format: formatYYYYMM },
-    { field: 'ENG_CurrentReading_Last', header: '上期抄錶度', visible: true },
-    { field: 'ENG_CurrentReading', header: '本期抄錶度', visible: true },
-    { field: 'UsageAmount', header: '使用度數', visible: true }, // 090: 後端新增欄位
+    { field: 'UsageAmount', header: '使用度數', visible: true },
     { field: 'ENG_Date', header: '抄表日期', visible: true, format: formatDate },
+    { field: 'ENG_Status', header: '結算狀態', visible: true, options: this.ENG_Status_Option, format: (value) => formatOptionLabel(value, this.ENG_Status_Option) },
     { field: 'ENG_ImpFileName', header: '匯入檔案名稱', visible: true },
     { field: 'ENG_Remarks', header: '備註', visible: false },
+
 
     { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
     { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
@@ -126,6 +142,16 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
   ];
 
   selectedItems: ENG2001[] = [];// 多選項目
+
+  btnPDFLoading = false; // PDF 讀取進度條
+  btnExcelLoading = false; // Excel 讀取進度條
+
+  // 展開詳細資料的欄位定義 (分攤設定)
+  expansionColumns: Column[] = [
+    { field: 'TLT_No', header: '專櫃編號', visible: true },
+    { field: 'TLT_Name', header: '專櫃名稱', visible: true },
+    { field: 'ENG_Rate', header: '比率(%)', visible: true, format: formatAmount }
+  ];
 
   // ----------------------------------------------------------------
   constructor(private ass21030Service: ASS21030Service) {
@@ -284,5 +310,66 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
   downloadErrorFile(filePath: string) {
     window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
+
+  // 匯出 PDF
+  onExportPDF(frm: FormGroup) {
+    // 取出原始值
+    const formValue = { ...frm.value };
+
+    // 假設 ENG_YYMM 是 Date 物件，就轉成 YYYYMM
+    if (formValue.ENG_YYMM instanceof Date) {
+      const year = formValue.ENG_YYMM.getFullYear();
+      const month = String(formValue.ENG_YYMM.getMonth() + 1).padStart(2, '0');
+      formValue.ENG_YYMM = `${year}${month}`;
+    }
+
+    this.btnPDFLoading = true;
+    this.ass21030Service.exportASS21030PDF(formValue)
+      .pipe(finalize(() => this.btnPDFLoading = false), untilDestroyed(this))
+      .subscribe(blob => {
+        if (blob) {
+          const blobUrl = URL.createObjectURL(blob);
+          window.open(blobUrl, '_blank');
+        }
+      });
+  }
+
+  // 匯出 Excel
+  onExportExcel(frm: FormGroup) {
+    // 取出原始值
+    const formValue = { ...frm.value };
+
+    // 假設 ENG_YYMM 是 Date 物件，就轉成 YYYYMM
+    if (formValue.ENG_YYMM instanceof Date) {
+      const year = formValue.ENG_YYMM.getFullYear();
+      const month = String(formValue.ENG_YYMM.getMonth() + 1).padStart(2, '0');
+      formValue.ENG_YYMM = `${year}${month}`;
+    }
+
+    this.btnExcelLoading = true;
+    this.ass21030Service.exportASS21030(formValue)
+      .pipe(finalize(() => this.btnExcelLoading = false), untilDestroyed(this))
+      .subscribe(blob => {
+        if (blob) {
+          const blobUrl = URL.createObjectURL(blob);
+
+          // 建立下載連結
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = 'ASS21030_能源抄表作業.xlsx';
+          a.click();
+          URL.revokeObjectURL(blobUrl);
+        }
+      });
+  }
+
+  // 載入展開詳細資料 (分攤設定)
+  loadDetails = (rowData: ENG2001): Observable<any> => {
+    // 直接從 rowData 的 ApportionmentSettings 取得資料
+    if (rowData.ApportionmentSettings && Array.isArray(rowData.ApportionmentSettings)) {
+      return of({ Data: rowData.ApportionmentSettings });
+    }
+    return of({ Data: [] });
+  };
 
 }

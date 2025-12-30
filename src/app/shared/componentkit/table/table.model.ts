@@ -381,3 +381,17 @@ export const Maps = {
     ['N', '否'],
   ]),
 };
+
+/**
+ * 根據 options 將值轉換為顯示文字
+ * @param value 原始值
+ * @param options 選項陣列，格式為 { value: string, label: string }[]
+ * @returns 對應的 label 或原始值
+ */
+export const formatOptionLabel = (value: any, options: { value: string; label: string }[] | undefined): string => {
+  if (!options || options.length === 0 || value === null || value === undefined) {
+    return value?.toString() || '';
+  }
+  const option = options.find(opt => opt.value === value?.toString());
+  return option ? option.label : value?.toString() || '';
+};
