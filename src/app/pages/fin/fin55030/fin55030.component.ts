@@ -202,18 +202,13 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
           flattenedList.sort((a, b) => a.AccNo.localeCompare(b.AccNo));
 
           this.fullData = flattenedList;
-          // 確保 totalRecords 是所有明細的總筆數，而非科目數
-          this.totalRecords = flattenedList.length;
-
-          // 這裡的 totalData 通常是指報表最後的總合計，可選
-          this.totalData = (res as any).totalData || [];
+          // 改為直接賦值：
+          this.data = [...this.fullData];
+          this.totalRecords = this.fullData.length;
 
           console.log('API回應', res);
           console.log('巢狀資料', nestedData);
           console.log('2. 攤平後總明細筆數:', flattenedList.length);
-
-          // 初始顯示
-          this.data = this.fullData.slice(0, this.lazyBatchSize);
         });
     });
   }
