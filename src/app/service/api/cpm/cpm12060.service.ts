@@ -14,6 +14,7 @@ export interface QueryCPM12060Request {
 }
 
 export interface CPM12060Data {
+  ID: number; // 主鍵識別碼
   SEQ_ID: string; // 單號
   CUST_NAME: string; // 客戶名稱
   SEX: string; // 性別(代碼檔)

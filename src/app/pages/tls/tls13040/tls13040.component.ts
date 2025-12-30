@@ -148,7 +148,7 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
       format: (value: any) => this.getLabelFromOptions(value, this.BUILDING_NO_Options),
     },
     { field: 'floor_desc', header: '樓層', visible: true },
-    { field: 'area_no', header: '區域', visible: true },
+    { field: 'area_desc', header: '區域', visible: true },
 
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'location_no', header: '位置編號', visible: true },

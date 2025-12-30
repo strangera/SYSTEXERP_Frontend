@@ -475,6 +475,23 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
       });
     });
   }
+
+  /** 切換「是否限制播放條件」時的處理 */
+  onNotDtlLimitChange(value: string): void {
+    this.dataForm.controls.NOT_DtlLimit.setValue(value);
+
+    // 選擇「否」時，視為不再使用任何明細條件
+    if (value === 'N') {
+      if (this.isFormCreateable) {
+        // 新增模式：直接清空明細
+        this.data = [];
+      } else if (this.isFormEditable) {
+        // 編輯模式：將現有明細標記為刪除，讓後端同步刪除
+        this.data = this.data.map(d => ({ ...d, status: 'deleted' }));
+      }
+      this.selectedRows = [];
+    }
+  }
   validateEntireRow(rowData: any) {
     if (!rowData.TLT_No && !rowData.ECR_Type && !rowData.ECR_GrpNo && !rowData.BUILDING_No && !rowData.FLOOR_No && !rowData.Area_No) {
       return { isValid: false, errorMessage: '至少其中一個有值' };

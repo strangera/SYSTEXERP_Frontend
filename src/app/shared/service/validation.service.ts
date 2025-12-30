@@ -13,9 +13,9 @@ export class ValidationService {
       required: '必填',
       pattern: '格式錯誤，請重新輸入。',
       invalidNumber: '只能輸入數字',
-      email: '「電子郵件」，格式錯誤，請重新輸入。',
+      email: '「電子郵件」格式錯誤，請重新輸入。',
       invalidCreditCard: 'Is invalid credit card number',
-      invalidEmailAddress: '「電子郵件」，格式錯誤，請重新輸入。',
+      invalidEmailAddress: '「電子郵件」格式錯誤，請重新輸入。',
       invalidPassword: `密碼無效。密碼長度至少為 6 個字元，且必須包含一個數字。`,
       minlength: `最短長度為 ${validatorValue.requiredLength}`,
       maxlength: `最長長度為 ${validatorValue.requiredLength}`,
@@ -82,21 +82,24 @@ export class ValidationService {
     return null;
   }
   // 電子信箱
-  emailValidator(control: { value: string | null; }) {
+  emailValidator(control: { value: string | null; }): ValidationErrors | null {
     // [驗證]
-    // 非必填，若有輸入值，檢核輸入資料需為英數字含特殊符號並檢查是否有@符號
-    // 長度限制40個字元，非必填，若有輸入值，檢核輸入資料需為英數字含特殊符號並檢查是否有@符號
+    // 非必填,若有輸入值,檢核輸入資料需為英數字含特殊符號並檢查是否有@符號
+    // 長度限制40個字元,非必填,若有輸入值,檢核輸入資料需為英數字含特殊符號並檢查是否有@符號
     // [回傳]
-    // 若檢核有誤，顯示提示訊息:「電子郵件」，格式錯誤，請重新輸入。
-    // RFC 2822 compliant regex
-    if (control.value !== null) {
-      if (
-        !control.value.match(
-          /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/
-        )
-      ) {
-        return { invalidEmailAddress: true };
-      }
+    // 若檢核有誤,顯示提示訊息:「電子郵件」,格式錯誤,請重新輸入。
+    const value = control.value;
+
+    // 如果值為 null 或空字串,則不進行驗證
+    if (value === null || value === '') {
+      return null;
+    }
+
+    // RFC 2822 compliant regex - 檢查電子郵件格式
+    const emailRegex = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i;
+
+    if (!emailRegex.test(value)) {
+      return { invalidEmailAddress: true };
     }
 
     return null;

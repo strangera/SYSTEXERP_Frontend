@@ -30,7 +30,7 @@ export class TLS46030Component extends BasicQueryPageComponent<any> implements O
     ECR_SchNo: [''], // 排程編號
     ECR_SchDate_Start: [null], // 設定啟用日期(起)
     ECR_SchDate_End: [null], // 設定啟用日期(訖)
-    ECR_SchStatus: [''], // 排程狀態
+    ECR_SchStatus: [null], // 排程狀態
     ECR_No: [''], // 收銀機編號
     ECR_SchFinTime_Start: [null], // 排程作業完成時間(起)
     ECR_SchFinTime_End: [null], // 排程作業完成時間(訖)
@@ -105,14 +105,30 @@ export class TLS46030Component extends BasicQueryPageComponent<any> implements O
   }
 
   onSubmit(frm: FormGroup) {
-    this.tls46030Service.queryTLS46030(frm.value).subscribe({
+    const frmValue = frm.value as any;
+
+    const payload = {
+      PageSize: frmValue.pageSize ?? 10,
+      PageIndex: frmValue.pageIndex ?? 1,
+      OrderBy: '',
+      Offset: 0,
+      SortBy: frmValue.SortBy ?? [{ field: 'ECR_SchNo', order: 1 }],
+      ECR_SchNo: frmValue.ECR_SchNo ?? '',
+      ECR_SchDate_Start: frmValue.ECR_SchDate_Start ?? null,
+      ECR_SchDate_End: frmValue.ECR_SchDate_End ?? null,
+      ECR_SchStatus: frmValue.ECR_SchStatus ?? '',
+      ECR_No: frmValue.ECR_No ?? '',
+      ECR_SchFinTime_Start: frmValue.ECR_SchFinTime_Start ?? null,
+      ECR_SchFinTime_End: frmValue.ECR_SchFinTime_End ?? null,
+      ECR_FLD_ID: frmValue.ECR_FLD_ID ?? '',
+    };
+
+    this.tls46030Service.queryTLS46030(payload).subscribe({
       next: (res) => {
         this.data = res?.Data || [];
         this.totalRecords = res?.TotalCount ?? this.data.length;
       },
-      error: (err) => {
-        console.error('查詢 TLS46030 失敗:', err);
-      }
+
     });
   }
 

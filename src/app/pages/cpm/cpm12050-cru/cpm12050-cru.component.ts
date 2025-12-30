@@ -1,220 +1,215 @@
 import { NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
-import { AuthService } from '../../../service/system/auth.service';
+import { finalize } from 'rxjs';
+import { CPM12050Data, CPM12050Service, InsertCPM12050DetailRequest, InsertCPM12050Request } from '../../../service/api/cpm/cpm12050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
 
-//5.1.2.5 顧客意見管理作業 CRU
 @Component({
   selector: 'app-cpm12050-cru',
   templateUrl: './cpm12050-cru.component.html',
-  styleUrl: './cpm12050-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [
+    NgIf,
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    InputTextareaComponent,
+    DropdownComponent,
+    TranslateModule,
+    TableEditComponent
+  ]
 })
-export class CPM12050CRUComponent implements OnInit {
-  ProgNo = '';
-  formTitle = '';
-  submitted = false;
-  crudstatus = '';
-
-  // ----------------------------------------------------------------
+export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    opinionCode: [, [Validators.required]], // 客戶意見編號
-    customerName: ['', [Validators.maxLength(20)]], // 顧客姓名
-    handlingSituation: [], // 處理情況
-    gender: [], // 性別
-    opinionCategory: [, [Validators.required]], // 客戶意見類別
-    opinionSource: [[] as number[], [Validators.required]], // 客戶意見來源別
-    subOpinionSource: [[] as number[], [Validators.required]], // 客戶意見子類別
-    //
-    contactAddress: ['', [Validators.maxLength(100)]], // 聯絡住址
-    contactPhone: [, [Validators.maxLength(30)]], // 聯絡電話
-    cellPhone: [, [Validators.maxLength(10)]], // 行動電話
-    email: ['', [Validators.maxLength(100)]], // 電子信箱
-    pieces: [, [Validators.maxLength(20)]], // 件號
-    //
-    emailContent: [, [Validators.required]], // 顧客意見內容
-    //
-    responsibleUnit: [, [Validators.required]], // 責任單位
-    builder: ['', [Validators.required, Validators.maxLength(10)]], // 建檔人員
-    receiveDate: [, [Validators.required]], // 接件日期
-    notifyDate: [], // 通知相關單位處理日期
-    object: ['', [Validators.maxLength(10)]], // 對象
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+    KIND_ID: [null, Validators.required],           // 意見類型（必填）
+    KIND_ID_SUB: [null, Validators.required],       // 意見子類型（必填）
+    SUGG_SOURCE: [null, Validators.required],       // 建議來源（必填）
+    ORG_ID_QUERY: [null, Validators.required],                     // 組織(查詢責任單位用)
+    ORG_ID: [null, Validators.required],            // 責任單位（必填）
+    COMPLAIN_NOTES: [null, [Validators.required, Validators.maxLength(1000)]],    // 顧客意見內容（必填）
+    CUST_NAME: [null, Validators.maxLength(20)],                              // 客戶姓名
+    SEX: [null],                                    // 性別
+    CONTACT_ADDR: [null],                           // 聯絡地址
+    CONTACT_TEL: [null, Validators.maxLength(30)],                            // 聯絡電話
+    CELL_PHONE: [null, Validators.maxLength(30)],                             // 手機號碼
+    E_MAIL: [null, [Validators.email, Validators.maxLength(100)]],                                 // Email
+    SUGG_SOURCE_OTHER: [null],                      // 其他建議來源
+    MEMBER_ID: [null],                              // 會員編號
+    CRT_USR_No: [null],                                 // 建檔人編號
+    CRT_USR_Name: [null]                                // 建檔人姓名
   });
-  // ----------------------------------------------------------------
-  handlingOptions: any[] = [
-    { value: 1, label: '已建單' },
-    { value: 2, label: '已派單' },
-    { value: 3, label: '處理中' },
-    { value: 4, label: '結案' },
+
+  //#region 下拉選單
+  // 性別選項
+  sexOptions = [
+    { label: '男', value: 'M' },
+    { label: '女', value: 'F' }
+  ];
+  // 意見類型選項
+  kindIdOptions: any[] = [];
+  // 意見子類型選項
+  kindIdSubOptions: any[] = [];
+  // 建議來源選項
+  suggSourceOptions = [
+    { label: 'WEB', value: 'WEB' },
+    { label: 'APP', value: 'APP' },
+  ];
+  // 組織選項
+  orgIdQueryOptions: any[] = [];
+  // 責任單位選項
+  orgIdOptions: any[] = [];
+  //#endregion
+
+  // 編輯table設定
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
+  data: InsertCPM12050DetailRequest[] = [];
+  columns: EditColumn[] = [
+    {
+      field: 'ANSWER',
+      header: '回覆內容',
+      type: 'input',
+      validate: [validateRequired]
+    },
+    {
+      field: 'ANSWER_ID',
+      header: '回覆人員編號',
+      type: 'input',
+      validate: [validateRequired]
+    },
+    {
+      field: 'CRT_USR_No',
+      header: '使用者編號',
+      type: 'input',
+      validate: [validateRequired]
+    },
+    {
+      field: 'CRT_USR_Name',
+      header: '使用者名稱',
+      type: 'input',
+      validate: [validateRequired]
+    }
   ];
 
-  genderOptions: any[] = [
-    { value: 1, label: '男' },
-    { value: 2, label: '女' },
-  ];
-
-  opinionCategoryOptions: any[] = [
-    { value: 1, label: '意見反映' },
-    { value: 2, label: '廣告業務' },
-    { value: 3, label: '活動、場地洽談' },
-    { value: 4, label: '承租店櫃' },
-    { value: 5, label: '合作提案' },
-  ];
-
-  opinionSourceOptions: any[] = [
-    { value: 1, label: '現場' },
-    { value: 2, label: '來電' },
-    { value: 3, label: 'E-mail' },
-    { value: 4, label: '社群網站' },
-    { value: 5, label: '郵寄信函' },
-  ];
-
-  responsibleUnitOptions: any[] = [
-    { value: 1, label: 'X001/營運部' },
-    { value: 2, label: 'X002/行銷部' },
-    { value: 3, label: 'X003/管理部' },
-    { value: 4, label: 'X004/經企部' },
-    { value: 5, label: 'X005/財務部' },
-  ];
-
-  //
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private validationService: ValidationService,
-    //
+    private cpm12050Service: CPM12050Service,
+    private dropDownListService: DropDownListService,
+    private dropdownApiService: DropdownApiService
   ) {
-    super();  // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '510012';
-    //
-
-    //
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
+    this.initializePage('CPM12050', this.dataForm);
+    this.loadOptions();
+    // 帶回明細資料
+    if (this.rowdata) {
+      this.cpm12050Service.queryCPM12050Detail({
+        ID: this.rowdata.ID,
+        SEQ_ID: this.rowdata.SEQ_ID!
+      })
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data
+        });
     }
-
-    console.log(this.accordionTabCss);
   }
 
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
+  onSubmit(form: FormGroup): void {
+    const formValue = form.getRawValue();
+    this.handleSubmit(form, () => {
+      const valid = this.tableEditComponent.validateAndShowErrors();
+      if (!valid) {
+        this.loading = false;
+        return;
+      }
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            const insertRequest: InsertCPM12050Request = {
+              ...formValue,
+            }
+            const insertDetailRequest: InsertCPM12050DetailRequest[] = this.data;
 
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      // counterPosition: [], // 所屬服務台位置
-      // allocateNumber: [, [this.validationService.numberValidator]], // 分配設備數量
+            console.log('insert', insertRequest, insertDetailRequest);
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            // TODO:
+          }
+          break;
+      }
     });
   }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
+
+  loadOptions() {
+    // 獲取組織下拉選項
+    this.dropDownListService.querySYS3100_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.orgIdQueryOptions = res.Data.map(item => ({
+          ...item,
+          value: item.No,
+          label: `${item.No} - ${item.Name}`,
+        }));
+      })
+    // 獲取意見類型下拉選項
+    this.dropDownListService.queryCSS1002DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.kindIdOptions = this.kindIdOptions.concat(
+          res.Data.map(item => ({
+            value: item.No,
+            label: `${item.No} - ${item.Name}`,
+          }))
+        );
+      })
   }
 
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
+  onOrgQueryChange(orgId: string) {
+    if (!orgId) {
+      this.orgIdOptions = [];
+      this.dataForm.patchValue({ ORG_ID: null });
+      return
+    };
+    this.dropdownApiService.queryCss1005({ ORG_ID: orgId })
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.orgIdOptions = res || [];
+      });
   }
 
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
+  onKindChange(kindId: string) {
+    if (!kindId) {
+      this.kindIdSubOptions = [];
+      this.dataForm.patchValue({ KIND_ID_SUB: null });
       return;
     }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }//CRU
-
-  onCancel() {
-    this.router.navigate(['/CPM1000/CPM12050']);
+    this.dropDownListService.queryCSS1003DropDownList(kindId)
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.kindIdSubOptions = res.Data.map(item => ({
+          value: item.No,
+          label: `${item.No} - ${item.Name}`,
+        }));
+      })
   }
 }

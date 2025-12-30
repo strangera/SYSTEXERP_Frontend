@@ -575,4 +575,12 @@ export class DropDownListService {
   queryTDS1010_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTDS1010_DropDown`, {});
   }
+  // 查詢 CSS1002 下拉選單
+  queryCSS1002DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryCSS1002DropDownList`, {});
+  }
+  // 查詢 CSS1003 下拉選單
+  queryCSS1003DropDownList(KIND_ID: string): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryCSS1003DropDownList`, { KIND_ID });
+  }
 }

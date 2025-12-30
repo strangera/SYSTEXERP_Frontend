@@ -214,8 +214,8 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       this.messageService.confirm({
         header: headerMessage,
         message: confirmMessage,
-        contentTemplate: isCross && rowData.TXN_GUIBegNo !== '00000000' ? undefined : this.customTimeTemp, // 丟入 HTML 樣板
-        templateContext: isCross && rowData.TXN_GUIBegNo !== '00000000' ? undefined : contextObj,         // 丟入資料空間
+        contentTemplate: this.customTimeTemp, // 丟入 HTML 樣板
+        templateContext: contextObj,         // 丟入資料空間
         accept: (result) => {
           const selectedDate = result?.selectedDate;
           if (!selectedDate) return;
@@ -345,13 +345,19 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         label: '交易資料作廢', icon: 'pi pi-times-circle',
         disabled: !this.hasPermission(Actions.InvalidateTransaction),
         command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.交易資料作廢),
-      },
-      {
-        label: '刪除', icon: 'pi pi-trash',
-        disabled: !this.hasPermission(Actions.Delete) || (this.selectedRowData?.GUI_Track === '00' && this.selectedRowData?.TXN_GUIBegNo === '00000000'),
-        command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.刪除交易),
-      },
+      }
     ];
+    const TXN_GUIPaper = this.queryForm.controls.TXN_GUIPaper.value;
+    // 補原機台、手開發票才有刪除
+    if (TXN_GUIPaper === 'E' || TXN_GUIPaper === '2') {
+      this.items.push({
+        label: '刪除', icon: 'pi pi-trash',
+        // todo: Bugbug: 若有發票號碼, MIG4001.TXN_GUINO沒有資料，可刪除
+        // 無發票時可刪除(GUI_Track === '00' && TXN_GUIBegNo === '00000000'時)
+        disabled: !this.hasPermission(Actions.Delete) || !(this.selectedRowData?.GUI_Track === '00' && this.selectedRowData?.TXN_GUIBegNo === '00000000'),
+        command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.刪除交易), // 00000000
+      });
+    }
   }
 
   openModal(rowdata: TLS24010Data, event?: Event): void {
@@ -413,6 +419,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       this.queryForm.get('TXN_GUIPaper')?.value === 'M';
   }
   onTXNGuipaperChanged(value: string): void {
+    this.data = [];
     this.submitted = false;
     const form = this.queryForm;
     if (value === 'M' && form) {

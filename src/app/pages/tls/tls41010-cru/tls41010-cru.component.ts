@@ -216,10 +216,10 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     });
     this.dropDownListService.queryPOS10015_DropDownList().subscribe(option => {
       this.ECR_SrvIP_Option = option.Data.map(item => ({
-        label: `${item.Name}`, // 顯示用
-        value: item.Name,
+        label: `${item.Name}`, // 下拉顯示 IP
+        value: item.No,        // 實際值使用代碼(例如 DEVAP / TEST01)
         No: item.No,
-        Name: item.Name
+        Name: item.Name,
       }));
     });
 
