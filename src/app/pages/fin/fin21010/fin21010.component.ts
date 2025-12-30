@@ -22,7 +22,9 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
   templateUrl: './fin21010.component.html',
   styleUrl: './fin21010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, InputTextComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, InputTextComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent,
+    // MultiSelectComponent,
+    InputTextComponent, TableComponent, TranslateModule]
 })
 export class FIN21010Component extends BasicQueryPageComponent<APS1002> implements OnInit {
   // 查詢
@@ -66,6 +68,11 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
   columns: Column[] = [
     { field: 'BNK_No', header: '銀行代碼', visible: true },
     { field: 'Bank_Name', header: '銀行名稱', visible: true },
+    {
+      field: 'BNK_DepositAccNo',
+      header: '公司銀行科目',
+      visible: true,
+    },
     { field: 'AccCName', header: '公司銀行科目中文名稱', visible: true },
 
     { field: 'BNK_AccNo', header: '帳號', visible: true },
@@ -81,19 +88,25 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
     //   header: 'EDI用戶代號',
     //   visible: false,
     // },
-    {
-      field: 'BNK_DepositAccNo',
-      header: '公司銀行科目',
-      visible: true,
-    },
+
     {
       field: 'BNK_CheckInAccNo',
       header: '應收票據科目',
       visible: true,
     },
     {
+      field: 'BNK_CheckInAccNo',
+      header: '應收票據名稱',
+      visible: true,
+    },
+    {
       field: 'BNK_CheckOutAccNo',
       header: '應付票據科目',
+      visible: true,
+    },
+    {
+      field: 'BNK_CheckOutAccNo',
+      header: '應付票據名稱',
       visible: true,
     },
     // { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate },

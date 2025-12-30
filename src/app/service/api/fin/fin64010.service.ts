@@ -8,6 +8,33 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 export type SortItem = { field: string; order: number };
 
 /** ========== Query (清單) ========== */
+export interface IDropdownItem {
+  value?: string;
+  tlt_building?: string;
+  tlt_floor?: string;
+  area_no?: string;
+  No: string; // 唯一值
+  Name: string; // 用於顯示的名稱
+  ShortName?: string; // 用於顯示的簡稱
+  VEN_No?: string;  // 廠商編號
+  HOS_No?: string; // 品牌編號
+  store_way?: string;
+  talent_id?: number;
+  PAY_Type?: string;
+  label?: string; // 用於顯示的標籤
+  CAT_LNo?: string;
+  CAT_LName?: string;
+  CAT_MNo?: string;
+  CAT_MName?: string;
+  items?: IDropdownItem[];
+  ECR_TmplNo?: string; // 環境變數編號 模板編號
+  ECR_TmplName?: string; // 環境變數編號 模板備註
+  bus_type?: string;
+  bus_type_name?: string;
+  PAY_OverPay?: string;
+  CHG_ItemName_List?: string;
+}
+
 export interface QueryFIN64010Request {
   PageSize?: number | null;
   PageIndex?: number | null;
@@ -251,6 +278,7 @@ export interface FIN64010UpdateRequest {
 @Injectable({ providedIn: 'root' })
 export class Fin64010Service {
   private apiUrl = `${environment.ApiUrl}/FIN0000/NTS1000`;
+  private DLapiUrl = `${environment.ApiUrl}`;
 
   constructor(private http: HttpClient) {}
 
@@ -298,6 +326,10 @@ export class Fin64010Service {
     if (!input) return input as any;
     const { PageSize, PageIndex, OrderBy, Offset, pageSize, pageIndex, orderBy, offset, ...rest } = input as any;
     return rest as any;
+  }
+//收票業務員代碼 下拉選單
+  queryARS1001_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.DLapiUrl}/queryARS1001DropDownList`, {});
   }
 }
 
