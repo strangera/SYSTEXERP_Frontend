@@ -462,7 +462,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
         // 重新查詢 自營 專櫃編號選單(queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList)
         // this.tls51070Service.queryTLTTALENT_DropDownList({ "VEN_No": value }).pipe(untilDestroyed(this)).subscribe((response) => { //廠商編號 > 專櫃編號
-        this.tls51070Service.queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => { //自營(無搜尋機制)
+        this.tls51070Service.queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => { //自營(全帶入)
+          // this.tls51070Service.queryTLTTALENT_ByStoreWay2AndApprove2WithVenNo_DropDownList({ "VEN_No": value }).pipe(untilDestroyed(this)).subscribe((response) => { //自營(廠商編號)
           this.TLT_NO_Option = response.Data.map((item: any) => ({
             No: item.No, // 專櫃編號代碼
             Label: item.No + '-' + item.Name, // 組合成顯示用的Label

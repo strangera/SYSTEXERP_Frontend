@@ -117,9 +117,9 @@ export class Tls51070Service {
     return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList`, body);
   }
 
-  // 查詢 專櫃主檔(TLTTALENT) 設定檔
-  queryTLTTALENT_DropDownList(body: any): Observable<any> {
-    return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_DropDownList`, body);
+  // 查詢 專櫃主檔(TLTTALENT) 設定檔 (VEN_No篩選)
+  queryTLTTALENT_ByStoreWay2AndApprove2WithVenNo_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLTTALENT_ByStoreWay2AndApprove2WithVenNo_DropDownList`, body);
   }
 
   // 查詢 廠商(POS2013) 設定檔

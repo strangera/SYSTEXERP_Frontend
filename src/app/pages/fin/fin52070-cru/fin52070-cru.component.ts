@@ -1,19 +1,19 @@
-import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { ValidationService } from '@shared/service/validation.service';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Fin52070Service } from '@service/api/fin/fin52070.service';
+import { Component, OnInit, } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Fin52070Service } from '@service/api/fin/fin52070.service';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { ValidationService } from '@shared/service/validation.service';
+import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 export interface GLS1005 {
   ClassNo: string, // 三碼代號
@@ -30,29 +30,30 @@ export interface GLS1005 {
 }
 
 // 科目中類GLS1003 格式
-export interface ClassAttr{
+export interface ClassAttr {
   ClassNo: string, // 大類代碼
   ClassCName: string, // 大類代碼
+  Label?: string, // 編輯頁顯示內容
 }
 
 @Component({
-    selector: 'app-fin52070-cru',
-    templateUrl: './fin52070-cru.component.html',
-    styleUrl: './fin52070-cru.component.scss',
-    standalone: true,
-    imports: [
-      MenubarComponent,
-      ButtonComponent,
-      PanelModule,
-      FormsModule,
-      ReactiveFormsModule,
-      InputTextComponent,
-      DropdownComponent,
-      DialogComponent,
-      NgIf, 
-      TranslateModule,
-      TableComponent
-    ]
+  selector: 'app-fin52070-cru',
+  templateUrl: './fin52070-cru.component.html',
+  styleUrl: './fin52070-cru.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    DialogComponent,
+    NgIf,
+    TranslateModule,
+    TableComponent
+  ]
 })
 // 科目三碼代號維護
 export class FIN52070CRUComponent extends BasicCruPageComponent<GLS1005> implements OnInit {
@@ -60,7 +61,7 @@ export class FIN52070CRUComponent extends BasicCruPageComponent<GLS1005> impleme
   dataForm = this.formBuilder.nonNullable.group({
     // 科目三碼代號維護
     ClassNo: ['', [Validators.required, Validators.maxLength(14), this.validationService.numberValidator]], //  三碼代號
-    ClassCName: ['', [Validators.required,  Validators.maxLength(100)]], // 三碼名稱
+    ClassCName: ['', [Validators.required, Validators.maxLength(100)]], // 三碼名稱
     ClassEname: ['', [Validators.maxLength(100), this.validationService.noChineseValidator]], // 三碼英文名稱 (非必填)
     ParentClass: ['', [Validators.required, Validators.maxLength(3), this.validationService.numberValidator]], //  中類代碼
   });
@@ -126,13 +127,17 @@ export class FIN52070CRUComponent extends BasicCruPageComponent<GLS1005> impleme
   }
 
   //讀取下拉
-    loadOption() {
-      this.fin52070Service.queryParentClassDropdown({}).pipe(untilDestroyed(this)).subscribe({
-        next: (response) => {
-          console.log('中下拉 response', response);
-          this.ClassAttr_Option = response.Data;
-        },
-        error: () => { this.loading = false; },
-      });
-    }  
+  loadOption() {
+    this.fin52070Service.queryParentClassDropdown({}).pipe(untilDestroyed(this)).subscribe({
+      next: (response) => {
+        this.ClassAttr_Option = response.Data.map((item: any) => ({
+          ...item,
+          Label: item.ClassNo + '-' + item.ClassCName, // 組合成顯示用的Label
+        }));
+
+        console.log('中類 下拉', this.ClassAttr_Option);
+      },
+      error: () => { this.loading = false; },
+    });
+  }
 }
