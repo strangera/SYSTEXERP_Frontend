@@ -289,51 +289,54 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       }
 
       // ==========================================================
-      // 2. 計算支付總金額 (TXN_PayAmt 總計)
-      const totalPayAmt = pos5008Data.reduce((sum, item) => sum + (Number(item.TXN_PayAmt) || 0), 0);
-      // 溢收
-      const overpayPayments = pos5008Data.filter(item => item.PAY_OverPay === 'Y');
-      // 非溢收
-      const strictPayments = pos5008Data.filter(item => item.PAY_OverPay !== 'Y');
-      if (overpayPayments.length === 0) {
-        if (totalSaleAmt !== totalPayAmt) {// 條件 Case 1: 沒有任何允許溢收的支付項目 (全部為 'N')
-          return this.messageService.errorBubble(
-            `支付總額 ( ${totalPayAmt} ) 必須與銷售總金額 ( ${totalSaleAmt} ) 一致。請調整金額。`,
-            '支付金額必須相等'
-          );
-        }
-      } else {
-        // 條件 Case 2: 存在允許溢收的支付項目 (至少一個為 'Y')
-        // 2a.  (Y 支付總額)
-        const totalOverpayAmt = overpayPayments.reduce((sum, item) => sum + (Number(item.TXN_PayAmt) || 0), 0);
-        // 2b. (N 支付總額)
-        const totalStrictPayAmt = strictPayments.reduce((sum, item) => sum + (Number(item.TXN_PayAmt) || 0), 0);
-        // 2c. 計算剩餘銷售餘額 (可能是負數，表示已經溢收)
-        const remainingSaleAmt = totalSaleAmt - totalOverpayAmt; // 總銷售 - 總溢收
-        if (remainingSaleAmt > 0) {
-          // N支付總額必須等於剩餘銷售餘額。
-          if (remainingSaleAmt > totalStrictPayAmt) {
-            return this.messageService.errorBubble(
-              `銷售金額尚有 ${remainingSaleAmt - totalStrictPayAmt} 元未付清。請確保所有支付的總額 ( ${totalPayAmt} ) 完全一致。`,
-              '支付不足以補齊差額'
-            );
-          } else if (remainingSaleAmt < totalStrictPayAmt) {
-            return this.messageService.errorBubble(
-              `銷售金額已超過 ${totalStrictPayAmt - remainingSaleAmt} 元。請確保所有支付的總額 ( ${totalPayAmt} ) 完全一致。`,
-              '支付不可溢收，超出差額'
-            )
-          }
-        } else if (remainingSaleAmt <= 0) {
-          // 剩餘銷售餘額 <= 0：表示 'Y' 支付已付清或已溢收。
-          // 嚴格比對的支付總額必須為 0 (不能再貢獻金額)。
-          if (totalStrictPayAmt > 0) {
-            this.messageService.errorBubble(
-              `支付金額已足夠或已溢出。請調整支付金額。`,
-              '支付金額已足夠或已溢出');
-            return;
-          }
-        }
-      }
+      // #region 金額判斷先mark起來，改後端判斷，沒問題的話可以刪掉這段 By Jolin
+      // // 2. 計算支付總金額 (TXN_PayAmt 總計)
+      // const totalPayAmt = pos5008Data.reduce((sum, item) => sum + (Number(item.TXN_PayAmt) || 0), 0);
+      // // 溢收
+      // const overpayPayments = pos5008Data.filter(item => item.PAY_OverPay === 'Y');
+      // // 非溢收
+      // const strictPayments = pos5008Data.filter(item => item.PAY_OverPay !== 'Y');
+      // if (overpayPayments.length === 0) {
+      //   if (totalSaleAmt !== totalPayAmt) {// 條件 Case 1: 沒有任何允許溢收的支付項目 (全部為 'N')
+      //     return this.messageService.errorBubble(
+      //       `支付總額 ( ${totalPayAmt} ) 必須與銷售總金額 ( ${totalSaleAmt} ) 一致。請調整金額。`,
+      //       '支付金額必須相等'
+      //     );
+      //   }
+      // } else {
+      //   // 條件 Case 2: 存在允許溢收的支付項目 (至少一個為 'Y')
+      //   // 2a.  (Y 支付總額)
+      //   const totalOverpayAmt = overpayPayments.reduce((sum, item) => sum + (Number(item.TXN_PayAmt) || 0), 0);
+      //   // 2b. (N 支付總額)
+      //   const totalStrictPayAmt = strictPayments.reduce((sum, item) => sum + (Number(item.TXN_PayAmt) || 0), 0);
+      //   // 2c. 計算剩餘銷售餘額 (可能是負數，表示已經溢收)
+      //   const remainingSaleAmt = totalSaleAmt - totalOverpayAmt; // 總銷售 - 總溢收
+      //   if (remainingSaleAmt > 0) {
+      //     // N支付總額必須等於剩餘銷售餘額。
+      //     if (remainingSaleAmt > totalStrictPayAmt) {
+      //       return this.messageService.errorBubble(
+      //         `銷售金額尚有 ${remainingSaleAmt - totalStrictPayAmt} 元未付清。請確保所有支付的總額 ( ${totalPayAmt} ) 完全一致。`,
+      //         '支付不足以補齊差額'
+      //       );
+      //     } else if (remainingSaleAmt < totalStrictPayAmt) {
+      //       return this.messageService.errorBubble(
+      //         `銷售金額已超過 ${totalStrictPayAmt - remainingSaleAmt} 元。請確保所有支付的總額 ( ${totalPayAmt} ) 完全一致。`,
+      //         '支付不可溢收，超出差額'
+      //       )
+      //     }
+      //   } else if (remainingSaleAmt <= 0) {
+      //     // 剩餘銷售餘額 <= 0：表示 'Y' 支付已付清或已溢收。
+      //     // 嚴格比對的支付總額必須為 0 (不能再貢獻金額)。
+      //     if (totalStrictPayAmt > 0) {
+      //       this.messageService.errorBubble(
+      //         `支付金額已足夠或已溢出。請調整支付金額。`,
+      //         '支付金額已足夠或已溢出');
+      //       return;
+      //     }
+      //   }
+      // }
+      // #endregion
+
       // === 支付邏輯卡控結束，如果成功則繼續執行 confirm ===
       this.messageService.confirm({
         header: '確認',
