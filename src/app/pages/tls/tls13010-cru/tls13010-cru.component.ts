@@ -1211,6 +1211,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     this.setupAutoSave();
     this.setupBusTypeListener();
+    this.setupBusClassListener(); // 新增：監聽中分類變更
     // this.setupVendorUniformListener(); // ✅ 已改用 HTML 的 (optionSelected)="onVendorOptionSelected($event)" 事件
     this.setupDateAutoFillListeners();
 
@@ -1344,6 +1345,55 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
           }
         },
         error: (err) => console.error('❌ 載入中分類失敗:', err)
+      });
+
+    if (subscription) {
+      this.subscriptions.push(subscription);
+    }
+  }
+
+  /**
+   * 監聽中分類變更，自動載入小分類選項
+   */
+  private setupBusClassListener(): void {
+    const subscription = this.dataForm.get('bus_class')?.valueChanges
+      .pipe(
+        distinctUntilChanged(),
+        switchMap(busClass => {
+          const busType = this.dataForm.get('bus_type')?.value;
+
+          // 清空小分類選項
+          this.tls13010DropdownService.clearBusSClassOptions();
+
+          // 如果中分類或大分類為空，返回空陣列
+          if (!busClass || !busType) {
+            return of([]);
+          }
+
+          // 載入小分類選項
+          console.log('🔄 載入小分類選項 - 大分類:', busType, '中分類:', busClass);
+          return this.tls13010DropdownService.loadBusSClassOptions(busType, busClass);
+        })
+      )
+      .subscribe({
+        next: (options: DropdownOption[]) => {
+          console.log('✅ 小分類選項已載入:', options.length, '個');
+
+          const currentBusSClass = this.dataForm.get('bus_sclass')?.value;
+          const validBusSClass = options.find((opt: DropdownOption) => opt.value === currentBusSClass);
+
+          // 如果當前小分類值無效，清空
+          if (currentBusSClass && !validBusSClass) {
+            console.warn('⚠️ 當前小分類無效，已清空');
+            this.dataForm.patchValue({
+              bus_sclass: ''
+            }, { emitEvent: false });
+          }
+        },
+        error: (err) => {
+          console.error('❌ 載入小分類失敗:', err);
+          this.messageService.warnBubble('載入小分類選項失敗');
+        }
       });
 
     if (subscription) {
