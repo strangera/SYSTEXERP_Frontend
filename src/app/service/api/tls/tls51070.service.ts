@@ -69,7 +69,7 @@ export class Tls51070Service {
       headers: { 'Content-Type': 'application/json' },
       body: body
     });
-}
+  }
 
   // --- 標籤檔 ---
 
@@ -80,7 +80,7 @@ export class Tls51070Service {
 
   //產生標籤檔資料
   exportLabel(data: any[]): Observable<string> {
-      return this.http.post(`${environment.ApiUrl}/ExportLabel/ExportLabel`, data, {
+    return this.http.post(`${environment.ApiUrl}/ExportLabel/ExportLabel`, data, {
       responseType: 'text'  // 後端回傳的是純文字
     });
   }
@@ -110,6 +110,11 @@ export class Tls51070Service {
   // 查詢 品牌代碼(PLULOGO) 設定檔
   queryPLULOGO_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/queryPLULOGO_DropDownList`, body);
+  }
+
+  // 查詢 自營 專櫃主檔(TLTTALENT) 設定檔
+  queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList`, body);
   }
 
   // 查詢 專櫃主檔(TLTTALENT) 設定檔

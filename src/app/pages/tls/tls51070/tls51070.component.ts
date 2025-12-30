@@ -336,7 +336,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
       });
 
     // 查詢 專櫃編號
-    this.tls51070Service.queryTLTTALENT_DropDownList({}).subscribe((response) => {
+    this.tls51070Service.queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList({}).subscribe((response) => {
       this.TLT_NO_Option = response.Data.map((item: any) => ({
         No: item.No, // 專櫃編號代碼
         Label: item.No + '-' + item.Name, // 組合成顯示用的Label
