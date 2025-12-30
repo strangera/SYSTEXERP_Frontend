@@ -19,6 +19,7 @@ export interface fin55030request {
   IsSubDetail: boolean;
 }
 
+// 攤平後的
 export interface fin55030response {
   VouDate: string;
   VouNo: string;
@@ -64,8 +65,8 @@ export class Fin55030Service {
   constructor(private http: HttpClient) { }
 
   // 查詢 gls3003 資料表
-  queryFIN55030(body: fin55030request): Observable<ApiResponse<fin55030response[]>> {
-    return this.http.post<ApiResponse<fin55030response[]>>(`${this.apiUrl}/queryFIN55030`, body);
+  queryFIN55030(body: fin55030request): Observable<ApiResponse<FIN55030Data[]>> {
+    return this.http.post<ApiResponse<FIN55030Data[]>>(`${this.apiUrl}/queryFIN55030`, body);
   }
 
   // 匯出 gls3003 資料表 (PDF)
