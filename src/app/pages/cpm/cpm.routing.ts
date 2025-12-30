@@ -26,8 +26,8 @@ export const cpmRoutes: Routes = [
   { path: 'cpm12030cru', loadComponent: () => import('./cpm12030-cru/cpm12030-cru.component').then(m => m.CPM12030CRUComponent), data: { progNo: 'CPM12030' } },
   { path: 'cpm12040', loadComponent: () => import('./cpm12040/cpm12040.component').then(m => m.CPM12040Component), data: { progNo: 'CPM12040' } }, // 顧客意見來源維護
   { path: 'cpm12040cru', loadComponent: () => import('./cpm12040-cru/cpm12040-cru.component').then(m => m.CPM12040CRUComponent), data: { progNo: 'CPM12040' } },
-  // { path: 'cpm12050', loadComponent: () => import('./cpm12050/cpm12050.component').then(m => m.CPM12050Component),data: {progNo:'CPM12050'} }, // 顧客意見管理作業
-  // { path: 'cpm12050cru', loadComponent: () => import('./cpm12050-cru/cpm12050-cru.component').then(m => m.CPM12050CRUComponent), data: {progNo:'CPM12050'} },
+  { path: 'cpm12050', loadComponent: () => import('./cpm12050/cpm12050.component').then(m => m.CPM12050Component), data: { progNo: 'CPM12050' } }, // 顧客意見管理作業
+  { path: 'cpm12050cru', loadComponent: () => import('./cpm12050-cru/cpm12050-cru.component').then(m => m.CPM12050CRUComponent), data: { progNo: 'CPM12050' } },
   { path: 'cpm12060', loadComponent: () => import('./cpm12060/cpm12060.component').then(m => m.CPM12060Component), data: { progNo: 'CPM12060' } }, // 顧客意見處理狀況表
   { path: 'cpm12060cru', loadComponent: () => import('./cpm12060-cru/cpm12060-cru.component').then(m => m.CPM12060CRUComponent), data: { progNo: 'CPM12060' } }, // 顧客意見處理狀況表CRU
   { path: 'cpm12070', loadComponent: () => import('./cpm12070/cpm12070.component').then(m => m.CPM12070Component), data: { progNo: 'CPM12070' } }, // 顧客意見類別統計表
