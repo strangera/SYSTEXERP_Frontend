@@ -31,6 +31,14 @@ export interface IDropdownItem {
   PAY_OverPay?: string;
   CHG_ItemName_List?: string;
 }
+// APS3001 下拉選單 Item
+export interface IAPS3001Item {
+  ACP_No: string;
+  VEN_No: string;
+  VEN_Name: string;
+  ACP_Amt: number;
+  ACP_Date: string; // yyyy-MM-dd
+}
 
 export interface TLTTALENT_TLT_SPACE extends IDropdownItem {
   TalentId: number,
@@ -583,4 +591,12 @@ export class DropDownListService {
   queryCSS1003DropDownList(KIND_ID: string): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryCSS1003DropDownList`, { KIND_ID });
   }
+  // 查詢 APS3001 下拉選單
+  queryAPS3001_DropDownList(): Observable<ApiResponse<IAPS3001Item[]>> {
+    return this.http.post<ApiResponse<IAPS3001Item[]>>(
+      `${this.apiUrl}/QueryAPS3001DropDownList`,
+      {}
+    );
+  }
+
 }
