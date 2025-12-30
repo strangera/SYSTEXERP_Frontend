@@ -348,14 +348,24 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       }
     ];
     const TXN_GUIPaper = this.queryForm.controls.TXN_GUIPaper.value;
-    // 補原機台、手開發票才有刪除
-    if (TXN_GUIPaper === 'E' || TXN_GUIPaper === '2') {
+    if (TXN_GUIPaper === 'E' || TXN_GUIPaper === '2') { // 補原機台、手開發票才有刪除
       this.items.push({
-        label: '刪除', icon: 'pi pi-trash',
-        // todo: Bugbug: 若有發票號碼, MIG4001.TXN_GUINO沒有資料，可刪除
-        // 無發票時可刪除(GUI_Track === '00' && TXN_GUIBegNo === '00000000'時)
-        disabled: !this.hasPermission(Actions.Delete) || !(this.selectedRowData?.GUI_Track === '00' && this.selectedRowData?.TXN_GUIBegNo === '00000000'),
-        command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.刪除交易), // 00000000
+        label: '刪除',
+        icon: 'pi pi-trash',
+        disabled: (() => {
+          // 沒有刪除權限，一定 disable
+          if (!this.hasPermission(Actions.Delete)) {
+            return true;
+          }
+          const row = this.selectedRowData!;
+          // 無發票狀態：GUI_Track === '00' 且 TXN_GUIBegNo === '00000000' → 可以刪除
+          if (row.GUI_Track === '00' && row.TXN_GUIBegNo === '00000000') {
+            return false;
+          }
+          // 有發票或其他狀態：依據 IsCanDel 欄位決定
+          return !row.IsCanDel;
+        })(),
+        command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.刪除交易),
       });
     }
   }
