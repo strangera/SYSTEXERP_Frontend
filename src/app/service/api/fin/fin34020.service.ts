@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -75,7 +75,7 @@ export interface QueryFIN34020Row {
 
 @Injectable({ providedIn: 'root' })
 export class Fin34020Service {
-  /** ✅ 新 API：/FIN0000/ARS1000/queryFIN34020 */
+  /** ✅ /FIN0000/ARS1000 */
   private apiUrl = `${environment.ApiUrl}/FIN0000/ARS1000`;
 
   constructor(private http: HttpClient) {}
@@ -85,6 +85,44 @@ export class Fin34020Service {
       `${this.apiUrl}/queryFIN34020`,
       body
     );
+  }
+
+  /** ✅ 匯出 Excel（後端：exportFIN34020） */
+  exportFIN34020Excel(body: QueryFIN34020Request): Observable<HttpResponse<Blob>> {
+    const url = `${this.apiUrl}/exportFIN34020`;
+    const payload = this.stripPaging(body);
+
+    return this.http.post(url, payload, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+    }) as Observable<HttpResponse<Blob>>;
+  }
+
+  /** ✅ 匯出 PDF（後端：exportFIN34020PDF） */
+  exportFIN34020PDF(body: QueryFIN34020Request): Observable<HttpResponse<Blob>> {
+    const url = `${this.apiUrl}/exportFIN34020PDF`;
+    const payload = this.stripPaging(body);
+
+    return this.http.post(url, payload, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+      headers: new HttpHeaders({ Accept: 'application/pdf' }),
+    }) as Observable<HttpResponse<Blob>>;
+  }
+
+  /** ✅ 匯出時移除分頁欄位 */
+  private stripPaging<T extends Record<string, any>>(
+    input: T
+  ): Omit<T, 'PageSize' | 'PageIndex' | 'pageSize' | 'pageIndex' | 'OrderBy' | 'Offset' | 'orderBy' | 'offset'> {
+    if (!input) return input as any;
+
+    const {
+      PageSize, PageIndex, OrderBy, Offset,
+      pageSize, pageIndex, orderBy, offset,
+      ...rest
+    } = input as any;
+
+    return rest as any;
   }
 }
 

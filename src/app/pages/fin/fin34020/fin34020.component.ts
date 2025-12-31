@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import {
   AfterViewInit,
   ChangeDetectorRef,
@@ -70,6 +71,9 @@ export class FIN34020Component
   data: QueryFIN34020Row[] = [];
   totalRecords = 0;
   lastQueryBody: any = null;
+
+  /** ✅ 匯出按鈕 loading（跟 FIN63030 一樣共用） */
+  btnLoading = false;
 
   readonly defaultSort: SortItem[] = [
     { field: 'VEN_No', order: 1 },
@@ -234,7 +238,6 @@ export class FIN34020Component
 
   /** ✅ 後端 ShowARSAmount / ShowZeroBalance 是 string(1) */
   private boolToFlag(v: any): string | undefined {
-    // 常見後端用法：Y / N（你要改成 '1'/'0' 也可以）
     if (v === true) return '1';
     if (v === false) return '0';
     return undefined;
@@ -272,7 +275,6 @@ export class FIN34020Component
           ? raw.MoneyTypeList.join(',')
           : undefined,
 
-      // ✅ 後端要 string(1)
       ShowARSAmount: this.boolToFlag(raw?.ShowARSAmount),
       ShowZeroBalance: this.boolToFlag(raw?.ShowZeroBalance),
     };
@@ -372,6 +374,115 @@ export class FIN34020Component
     this.lastQueryBody = null;
   }
 
+  /** =======================
+   * ✅ 匯出 helpers（照 FIN63030）
+   * ======================= */
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
+    if (!contentDisposition) return `download${defaultExtension}`;
+
+    const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
+    if (filenameStarMatch && filenameStarMatch.length > 1) {
+      const encodedFilename = filenameStarMatch[1];
+      try {
+        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
+        return decoded;
+      } catch {
+        return encodedFilename;
+      }
+    }
+
+    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
+    if (filenameMatch && filenameMatch.length > 1) {
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+        // eslint-disable-next-line no-empty
+      } catch {
+        return filenameMatch[1];
+      }
+    }
+
+    return `download${defaultExtension}`;
+  }
+
+  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
+
+  onExportPDF() {
+    if (!this.lastQueryBody) {
+      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+      return;
+    }
+
+    // 匯出：移除分頁（保守再刪一次）
+    const exportBody = { ...this.lastQueryBody };
+    delete exportBody.pageIndex;
+    delete exportBody.pageSize;
+    delete exportBody.PageIndex;
+    delete exportBody.PageSize;
+    delete exportBody.Offset;
+    delete exportBody.OrderBy;
+
+    this.btnLoading = true;
+    this.fin34020Service
+      .exportFIN34020PDF(exportBody)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (resp) => this.handleFileExport(resp, '.pdf'),
+        error: (err) => {
+          console.error(err);
+          this.messageService.errorBubble('匯出失敗');
+        },
+        complete: () => (this.btnLoading = false),
+      });
+  }
+
+  onExportXLSX() {
+    if (!this.lastQueryBody) {
+      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+      return;
+    }
+
+    const exportBody = { ...this.lastQueryBody };
+    delete exportBody.pageIndex;
+    delete exportBody.pageSize;
+    delete exportBody.PageIndex;
+    delete exportBody.PageSize;
+    delete exportBody.Offset;
+    delete exportBody.OrderBy;
+
+    this.btnLoading = true;
+    this.fin34020Service
+      .exportFIN34020Excel(exportBody)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (resp) => this.handleFileExport(resp, '.xlsx'),
+        error: (err) => {
+          console.error(err);
+          this.messageService.errorBubble('匯出失敗');
+        },
+        complete: () => (this.btnLoading = false),
+      });
+  }
+
+  /** =======================
+   *  ✅ lazy load + sort（你原本）
+   * ======================= */
   override onLazyLoadData(e: any) {
     const raw = this.queryForm.getRawValue();
     const payload = this.buildQueryPayload({
