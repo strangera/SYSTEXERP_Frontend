@@ -25,7 +25,7 @@ import { InputNumberRangeComponent } from '../../../shared/componentkit/input-nu
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 import { CashierService } from '@service/basic/queryPOS2001.service';
-import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { TLS55070Service } from '../../../service/api/tls/tls55070.service';
@@ -176,9 +176,9 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
   constructor(
     private tls55070Service: TLS55070Service,
     private ECRNoService: ECRNoService,
-    private counterNameService: CounterNameService,
     private cashierService: CashierService,
-    private validationService: ValidationService
+    private validationService: ValidationService,
+    private dropDownListService: DropDownListService
   ) {
     super();
   }
@@ -201,14 +201,15 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
 
     // 其它下拉（各打一支即可）
     this.ECRNoService.getECRNo().subscribe((data) => (this.ECRNoOptions = data));
-    this.counterNameService.getCounters().subscribe((res) => {
-      this.CounterOptions =
-        res?.map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        })) || [];
-    });
+    this.dropDownListService.queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList()
+      .subscribe((res) => {
+        this.CounterOptions =
+          res?.Data.map((x: any) => ({
+            label: x.Name,
+            formLabel: `${x.No} - ${x.Name}`,
+            value: x.No,
+          })) || [];
+      });
     this.cashierService.getCashierOptions().subscribe((res) => {
       this.cashierOptions =
         res?.map((x: any) => ({
