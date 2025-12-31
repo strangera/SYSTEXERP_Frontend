@@ -24,7 +24,7 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 export class FIN33010Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     RCV_No: ['', [Validators.required, Validators.maxLength(15)]],
-    VouDate: [null as Date | null, [Validators.required,]],
+    VouDate: [new Date() as Date | null, [Validators.required]],
     ...createPaginationConfig([{ field: 'AccNo', order: 1 }]),
   });
   selectedItems: any[] = [];

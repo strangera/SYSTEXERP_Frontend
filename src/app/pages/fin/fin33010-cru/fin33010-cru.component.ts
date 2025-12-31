@@ -4,8 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin33010Service } from '@service/api/fin/fin33010.service';
-import { IDropdownItem } from '@service/utility/dropdown-api.model';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
@@ -73,6 +72,8 @@ export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements 
     { No: 'Y', Name: '補發票' },
     { No: 'N', Name: '不補發票' }
   ];
+  // 組織代碼下拉
+  Org_IdOptions: IDropdownItem[] = [];
   editData: any[] = [];
   selectedItems: any[] = [];
   editFooterData = {
@@ -108,11 +109,23 @@ export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements 
         }
       }
     },
-    { field: 'Org_Id', header: '組織代碼' },
+    {
+      field: 'Org_Id',
+      header: '組織代碼',
+      type: 'dropdown',
+      width: '15rem',
+      options: () => this.Org_IdOptions,
+      optionLabel: 'label',
+      optionValue: 'value',
+      // 僅當 DC 為 'D' 時可編輯
+      disabled: (value, index, rowData) => (rowData?.dc || rowData?.DC) !== 'D',
+      format: (value: string) =>
+        this.Org_IdOptions.find((option) => option.value === value || option.No === value)?.label || value,
+    },
     { field: 'PTA', header: '立沖代號' },
     { field: '?', header: '活動代號' },
     { field: '?', header: '對象別編號' },
-    { field: '?', header: '對帳KEY值' }
+
   ];
   detailData: any[] = [];
   totalRecords = 0;
@@ -155,6 +168,22 @@ export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements 
       .pipe(untilDestroyed(this))
       .subscribe(response => {
         this.srcSheetTypeOptions = response.Data;
+      });
+
+    // 載入組織代碼下拉選單 (SYS3100)
+    this.dropDownListService.querySYS3100_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.Org_IdOptions = (response.Data || []).map(item => ({
+          ...item,
+          value: item.No,
+          label: `${item.No}-${item.Name}`,
+        }));
+
+        // 重新指定一次資料參考，讓 TableEdit 以已載入的 Org_IdOptions 重算顯示文字
+        if (this.editData && this.editData.length) {
+          this.editData = [...this.editData];
+        }
       });
 
   }
