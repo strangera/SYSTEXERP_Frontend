@@ -7,14 +7,13 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
 import { CPM12050Data, CPM12050Service } from '../../../service/api/cpm/cpm12050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
@@ -30,7 +29,6 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    CalendarComponent,
     DropdownComponent,
     TableComponent,
     TranslateModule,
@@ -113,6 +111,21 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
     { field: 'UPD_Date', header: '異動時間', visible: true, format: formatDate }
   ]
 
+  addButton: AddButton[] = [
+    {
+      label: '派單',
+      displayText: '派單',
+      icon: '',
+      action: (rowData: CPM12050Data) => this.onDispatch(rowData),
+    },
+    {
+      label: '結案',
+      displayText: '結案',
+      icon: '',
+      action: (rowData: CPM12050Data) => this.onClose(rowData),
+    },
+  ];
+
   constructor(
     private cpm12050Service: CPM12050Service,
     private validationService: ValidationService,
@@ -179,5 +192,15 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
   expansionLoadFn = (rowData: CPM12050Data): Observable<any> => {
     return this.cpm12050Service.queryCPM12050Detail({ ID: rowData.ID, SEQ_ID: rowData.SEQ_ID! });
   };
+
+  // 派單
+  onDispatch(rowData: CPM12050Data) {
+
+  }
+
+  // 結案
+  onClose(rowData: CPM12050Data) {
+
+  }
 
 }
