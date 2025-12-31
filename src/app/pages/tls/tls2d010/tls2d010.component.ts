@@ -21,6 +21,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService, IAPS1003Item, IDropdownItem } from './../../../service/utility/dropDownList.service';
 
+import { FileExportService } from '@shared/service/file-export.service';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 @Component({
   selector: 'app-tls2d010',
@@ -93,6 +94,7 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     private tls2d010Service: Tls2d010Service,
     private dropDownListService: DropDownListService,
     public sharedDropdownService: SharedDropdownService,
+    private readonly fileExportService: FileExportService,
   ) {
     super();
   }
@@ -218,6 +220,11 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     this.tls2d010Service.deleteTLS2D010({ idList }).subscribe(() => {
       this.onSubmit(this.queryForm);
     });
+  }
+  btnLoading = false;
+  downloadTemplate() {
+    const export$ = this.tls2d010Service.downloadTLS2D010Template();
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading);
   }
 
   /** 匯入 Excel 並產生錯誤檔 */
