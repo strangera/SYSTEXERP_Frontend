@@ -1,22 +1,22 @@
+import { CommonModule, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { TLS2D040Service } from '@service/api/tls/tls2-d040.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { CheckboxModule } from 'primeng/checkbox';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { FormsModule, ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { TLS2D040Service } from '@service/api/tls/tls2-d040.service';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { CommonModule, DatePipe } from '@angular/common';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { CheckboxModule } from 'primeng/checkbox';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 
 @Component({
   selector: 'app-tls2d040',
@@ -35,13 +35,13 @@ import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-t
     RadiobuttonComponent,
     CommonModule,
     CheckboxModule,
-    CustomFooterTableComponent
+    CustomFooterTableComponent,
   ]
 })
 export class TLS2D040Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     tlt_no: [[]],             // 專櫃編號
-    source_type: [[]],        // 來源系統別
+    source_type: [[]],        // 扣款來源
     CAP_Item: [[]],           // 扣款代碼
     AccNo: [[]],              // 會計科目
     tpy_bdate: [new Date(), Validators.required],          // 扣款年月(起)
@@ -70,7 +70,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
   //#region 下拉選單資料
   // 專櫃編號
   tltNoOptions: any[] = [];
-  // 來源系統別
+  // 扣款來源
   sourceTypeOptions: any[] = [
     { Name: '1-合約扣款', No: '1' },
     { Name: '2-人工扣款', No: '2' },
@@ -194,7 +194,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
     this.dropDownListService.queryPOS2013_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(response => {
-        this.VenNoOptions = response.Data.map((item: any) => ({ Name: `${item.No}-${item.Name}`, No: item.No }));
+        this.VenNoOptions = response.Data.map((item: any) => ({ Name: `${item.VEN_No}-${item.Name}`, No: item.VEN_No }));
       });
   }
 
@@ -340,7 +340,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
         this.columns = [
           { field: 'tlt_no', header: '專櫃編號' },
           { field: 'tlt_name', header: '專櫃名稱' },
-          { field: 'source_type', header: '來源系統別', format: (value: any) => this.sourceTypeOptions.find(item => item.No === value)?.Name || value },
+          { field: 'source_type', header: '扣款來源', format: (value: any) => this.sourceTypeOptions.find(item => item.No === value)?.Name || value },
           { field: 'CAP_Item', header: '扣款代碼' },
           { field: 'CAP_Name', header: '扣款名稱' },
           { field: 'org_id', header: '組織代碼' },
