@@ -53,9 +53,9 @@ type SortItem = { field: string; order: number };
     CalendarRangeComponent,
     InputTextComponent,
     DropdownComponent,
-    MultiSelectComponent,
+    // MultiSelectComponent,
 
-    TableReportComponent,
+    // TableReportComponent,
   ],
 })
 export class TLS25030Component extends BasicQueryPageComponent<any> {
