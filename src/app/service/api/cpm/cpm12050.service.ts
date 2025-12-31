@@ -97,6 +97,53 @@ export interface InsertCPM12050DetailRequest {
   USR_NO?: string;           // 使用者編號
   USR_NAME?: string;         // 使用者名稱
 }
+
+// 修改客戶意見主檔 Request
+export interface UpdateCPM12050Request {
+  ID: number;                // 主鍵ID
+  KIND_ID?: string;          // 意見類型
+  KIND_ID_SUB?: string;      // 意見類型子類
+  CUST_NAME?: string;        // 客戶姓名
+  SEX?: string;              // 性別
+  CONTACT_ADDR?: string;     // 聯絡地址
+  CONTACT_TEL?: string;      // 聯絡電話
+  CELL_PHONE?: string;       // 手機號碼
+  E_MAIL?: string;           // Email
+  COMPLAIN_NOTES?: string;   // 顧客意見內容
+  SUGG_SOURCE?: string;      // 建議來源
+  SUGG_SOURCE_OTHER?: string; // 其他建議來源
+  ORG_ID?: string;           // 責任單位
+  MEMBER_ID?: string;        // 會員編號
+  STATUS?: string;           // 處理狀況
+  USR_NO?: string;           // 使用者編號
+  USR_NAME?: string;         // 使用者名稱
+}
+
+// 修改客戶意見明細 Request
+export interface UpdateCPM12050DetailRequest {
+  ID: number;                // 主鍵ID
+  SEQ_ID?: string;           // 客戶意見編號
+  ANSWER?: string;           // 回覆內容
+  ANSWER_ID?: string;        // 回覆人員編號
+  USR_NO?: string;           // 使用者編號
+  USR_NAME?: string;         // 使用者名稱
+}
+
+// 派單 Request
+export interface DispatchCPM12050Request {
+  ID: number;                // 主鍵ID
+  USR_NO?: string;           // 使用者編號
+  USR_NAME?: string;         // 使用者名稱
+}
+
+// 結案 Request
+export interface CloseCPM12050Request {
+  ID: number;                // 主鍵ID
+  CLOSE_MEMO?: string;       // 結案備註
+  USR_NO?: string;           // 使用者編號
+  USR_NAME?: string;         // 使用者名稱
+}
+
 // 查詢客戶意見明細 Request
 export interface QueryCPM12050DetailRequest {
   ID: number;                // 主鍵ID
@@ -144,7 +191,27 @@ export class CPM12050Service {
   }
 
   // 明細新增
-  insertCPM12050Detail(req: InsertCPM12050DetailRequest): Observable<any> {
+  insertCPM12050Detail(req: InsertCPM12050DetailRequest[]): Observable<any> {
     return this.http.post(`${this.apiUrl}/insertCPM12050Detail`, req);
+  }
+
+  // 主檔修改
+  updateCPM12050(req: UpdateCPM12050Request): Observable<any> {
+    return this.http.post(`${this.apiUrl}/updateCPM12050`, req);
+  }
+
+  // 明細修改
+  updateCPM12050Detail(req: UpdateCPM12050DetailRequest[]): Observable<any> {
+    return this.http.post(`${this.apiUrl}/updateCPM12050Detail`, req);
+  }
+
+  // 派單
+  dispatchCPM12050(req: DispatchCPM12050Request): Observable<any> {
+    return this.http.post(`${this.apiUrl}/dispatchCPM12050`, req);
+  }
+
+  // 結案
+  closeCPM12050(req: CloseCPM12050Request): Observable<any> {
+    return this.http.post(`${this.apiUrl}/closeCPM12050`, req);
   }
 }

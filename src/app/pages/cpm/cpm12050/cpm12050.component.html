@@ -87,7 +87,7 @@
             ></app-dropdown>
           </div>
           <!-- 聯絡電話 -->
-          <div class="col-12 md: col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="聯絡電話"
               controlName="CONTACT_TEL"
@@ -96,7 +96,7 @@
             ></app-input-text>
           </div>
           <!-- 手機號碼 -->
-          <div class="col-12 md: col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="手機號碼"
               controlName="CELL_PHONE"
@@ -159,7 +159,7 @@
             ></app-input-text>
           </div>
           <!-- 接件日期(起迄) -->
-          <div class="col-12 md: col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
               label="接件日期"
@@ -199,5 +199,46 @@
     expansionDataKey="details"
     [expansionColumns]="expansionColumns"
     [expansionLoadFn]="expansionLoadFn"
+    [addButton]="addButton"
   ></app-table>
 </div>
+
+<app-dialog
+  [visible]="dialogVisible"
+  header="結案"
+  (visibleChange)="dialogVisible = $event"
+  (save)="saveDialog()"
+  [disable]="closeForm.invalid"
+>
+  <form [formGroup]="closeForm" id="closeForm">
+    <div class="grid p-fluid">
+      <!-- 使用者編號 -->
+      <div class="col-12 md:col-6">
+        <app-input-text
+          label="使用者編號"
+          controlName="USR_NO"
+          [control]="closeForm.controls.USR_NO"
+          [submitted]="submitted"
+        ></app-input-text>
+      </div>
+      <!-- 使用者名稱 -->
+      <div class="col-12 md:col-6">
+        <app-input-text
+          label="使用者名稱"
+          controlName="USR_NAME"
+          [control]="closeForm.controls.USR_NAME"
+          [submitted]="submitted"
+        ></app-input-text>
+      </div>
+      <!-- 結案備註 -->
+      <div class="col-12">
+        <app-input-textarea
+          label="結案備註"
+          controlName="CLOSE_MEMO"
+          [control]="closeForm.controls.CLOSE_MEMO"
+          [submitted]="submitted"
+        ></app-input-textarea>
+      </div>
+    </div>
+  </form>
+</app-dialog>
