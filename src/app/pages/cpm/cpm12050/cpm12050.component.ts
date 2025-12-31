@@ -84,6 +84,7 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
 
   // 組織選項
   orgIdQueryOptions: any[] = [];
+
   // 責任單位選項
   orgIdOptions: any[] = [];
   //#endregion
@@ -92,6 +93,7 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
   data: CPM12050Data[] = [];
   selectedItems: CPM12050Data[] = [];
   totalRecords = 0;
+
   columns: Column[] = [
     { field: 'ID', header: '序號', hidden: true },
     { field: 'SEQ_ID', header: '客戶意見編號', visible: true },
@@ -119,18 +121,20 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
       displayText: '派單',
       icon: '',
       action: (rowData: CPM12050Data) => this.onDispatch(rowData),
+      disabled: (rowData: CPM12050Data) => rowData.STATUS !== 'S'
     },
     {
       label: '結案',
       displayText: '結案',
       icon: '',
       action: (rowData: CPM12050Data) => this.onClose(rowData),
+      disabled: (rowData: CPM12050Data) => rowData.STATUS === 'Z'
     },
   ];
 
   // Dialog相關
   dialogVisible = false;
-  selectedRowData?: CPM12050Data;
+  selectedRowDataId = 0;
   closeForm = this.formBuilder.group({
     USR_NO: [''],          // 使用者編號
     USR_NAME: [''],        // 使用者名稱
@@ -235,12 +239,12 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
     });
     this.closeForm.controls.USR_NO.disable();
     this.closeForm.controls.USR_NAME.disable();
-    this.selectedRowData = rowData;
+    this.selectedRowDataId = rowData.ID!;
   }
 
   saveDialog() {
     const req = {
-      ID: this.selectedRowData!.ID,
+      ID: this.selectedRowDataId,
       CLOSE_MEMO: this.closeForm.get('CLOSE_MEMO')!.value || '',
       USR_NO: this.authService.getUserInfo()?.user_No,
       USR_NAME: this.authService.getUserInfo()?.user_Name

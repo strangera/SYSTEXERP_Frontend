@@ -39,22 +39,22 @@ import { InputTextareaComponent } from '../../../shared/componentkit/input-texta
 })
 export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    KIND_ID: [null as string | null, Validators.required],           // 意見類型（必填）
-    KIND_ID_SUB: [null as string | null, Validators.required],       // 意見子類型（必填）
-    SUGG_SOURCE: [null as string | null, Validators.required],       // 建議來源（必填）
-    ORG_ID_QUERY: [null as string | null, Validators.required],                     // 組織(查詢責任單位用)
-    ORG_ID: [null as string | null, Validators.required],            // 責任單位（必填）
+    KIND_ID: [null as string | null, Validators.required],                        // 意見類型（必填）
+    KIND_ID_SUB: [null as string | null, Validators.required],                    // 意見子類型（必填）
+    SUGG_SOURCE: [null as string | null, Validators.required],                    // 建議來源（必填）
+    ORG_ID_QUERY: [null as string | null, Validators.required],                   // 組織(查詢責任單位用)
+    ORG_ID: [null as string | null, Validators.required],                         // 責任單位（必填）
     COMPLAIN_NOTES: [null, [Validators.required, Validators.maxLength(1000)]],    // 顧客意見內容（必填）
-    CUST_NAME: [null, Validators.maxLength(20)],                              // 客戶姓名
-    SEX: [null],                                    // 性別
-    CONTACT_ADDR: [null],                           // 聯絡地址
-    CONTACT_TEL: [null, Validators.maxLength(30)],                            // 聯絡電話
-    CELL_PHONE: [null, Validators.maxLength(30)],                             // 手機號碼
-    E_MAIL: [null, [Validators.email, Validators.maxLength(100)]],                                 // Email
-    SUGG_SOURCE_OTHER: [null, Validators.required],                      // 其他建議來源
-    MEMBER_ID: [null],                              // 會員編號
-    CRT_USR_No: [null],                                 // 建檔人編號
-    CRT_USR_Name: [null]                                // 建檔人姓名
+    CUST_NAME: [null, Validators.maxLength(20)],                                  // 客戶姓名
+    SEX: [null],                                                                  // 性別
+    CONTACT_ADDR: [null],                                                         // 聯絡地址
+    CONTACT_TEL: [null, Validators.maxLength(30)],                                // 聯絡電話
+    CELL_PHONE: [null, Validators.maxLength(30)],                                 // 手機號碼
+    E_MAIL: [null, [Validators.email, Validators.maxLength(100)]],                // Email
+    SUGG_SOURCE_OTHER: [null, Validators.required],                               // 其他建議來源
+    MEMBER_ID: [null],                                                            // 會員編號
+    CRT_USR_No: [null],                                                           // 建檔人編號
+    CRT_USR_Name: [null]                                                          // 建檔人姓名
   });
 
   //#region 下拉選單
@@ -63,17 +63,22 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     { label: '男', value: 'M' },
     { label: '女', value: 'F' }
   ];
+
   // 意見類型選項
   kindIdOptions: any[] = [];
+
   // 意見子類型選項
   kindIdSubOptions: any[] = [];
+
   // 建議來源選項
   suggSourceOptions = [
     { label: 'WEB', value: 'WEB' },
     { label: 'APP', value: 'APP' },
   ];
+
   // 組織選項
   orgIdQueryOptions: any[] = [];
+
   // 責任單位選項
   orgIdOptions: any[] = [];
   //#endregion
@@ -119,6 +124,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
   ngOnInit(): void {
     this.initializePage('CPM12050', this.dataForm);
     this.loadOptions();
+    // 若為編輯或檢視狀態，帶回資料
     if (this.rowdata) {
       // 預先載入下拉選項
       this.onKindChange(this.rowdata.KIND_ID!);
