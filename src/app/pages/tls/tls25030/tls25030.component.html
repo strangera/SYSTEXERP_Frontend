@@ -20,13 +20,19 @@
             <app-input-text label="單據編號" controlName="fine_no" [control]="queryForm.controls.fine_no" [submitted]="submitted"></app-input-text>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="專櫃編號" controlName="tlt_no" [control]="queryForm.controls.tlt_no" [submitted]="submitted"></app-input-text>
+            <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="專櫃編號"
+              controlName="tlt_no"
+              [options]="CounterOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_no"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="專櫃名稱" controlName="tlt_name" [control]="queryForm.controls.tlt_name" [submitted]="submitted"></app-input-text>
-          </div>
+
         </div>
 
         <!-- 第二排 -->
@@ -55,7 +61,7 @@
             <app-dropdown
               label="開立單位"
               controlName="org_id"
-              [options]="orgOptions"
+              [options]="orgOptions | async"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.org_id"
@@ -90,28 +96,24 @@
             ></app-dropdown>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="樓層(多選)"
-              controlName="floors"
-              [options]="floorOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.floors"
-              [submitted]="submitted"
-            ></app-multi-select>
+ 
+                 <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.floors" [submitted]="submitted">
+            </app-multi-select>
           </div>
         </div>
 
         <!-- 第四排 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="金額(起)" controlName="amount_s" [control]="queryForm.controls.amount_s" [submitted]="submitted"></app-input-text>
+            <app-input-text-range 
+               label="金額"
+              [startControl]="queryForm.controls.amount_s" [endControl]="queryForm.controls.amount_e" [submitted]="submitted">
+            </app-input-text-range>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="金額(迄)" controlName="amount_e" [control]="queryForm.controls.amount_e" [submitted]="submitted"></app-input-text>
-          </div>
+ 
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="建立者(工號)" controlName="crt_usr_no" [control]="queryForm.controls.crt_usr_no" [submitted]="submitted"></app-input-text>

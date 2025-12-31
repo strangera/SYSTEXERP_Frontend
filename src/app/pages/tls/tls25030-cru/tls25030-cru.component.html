@@ -20,13 +20,16 @@
 
         <!-- 專櫃編號 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="專櫃編號"
-            controlName="tlt_no"
-            [control]="dataForm.controls.tlt_no"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
+            <app-dropdown
+              label="專櫃編號"
+              controlName="tlt_no"
+              [options]="CounterOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="dataForm.controls.tlt_no"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
 
         <!-- 合約編號 -->
         <div class="col-12 md:col-6 lg:col-4">

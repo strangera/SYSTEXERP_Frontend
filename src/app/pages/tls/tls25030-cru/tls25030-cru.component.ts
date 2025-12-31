@@ -16,12 +16,18 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
+import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+
 import {
-  DropDownListResponse,
+  ApiResponse,
   OptionItem,
   QueryTLS25030DetailResponse,
   TLS25030Service,
 } from '../../../service/api/tls/tls25030.service';
+
+import { DeductionService } from '@service/basic/queryAPS1003.service';
+import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 
 @UntilDestroy()
 @Component({
@@ -44,29 +50,22 @@ import {
 })
 export class TLS25030CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   readonly CRUD = CRUDStatus;
+    CounterOptions: OptionItem[] = [];
 
   // ✅ 下拉 options
-  violationTypeOptions: OptionItem[] = [];
+  violationTypeOptions: OptionItem[] = getSYS1000Options('Violation_type') as any;
   capItemOptions: OptionItem[] = [];
   orgOptions: OptionItem[] = [];
-  payTypeOptions: OptionItem[] = [];
-
-  private mapDropDownToOptions(resp: DropDownListResponse | null | undefined): OptionItem[] {
-    const rows = Array.isArray(resp?.Data) ? resp!.Data! : [];
-    return rows
-      .filter((x) => x && x.No != null && x.Name != null)
-      .map((x) => ({
-        value: String(x.No).trim(),
-        label: `${String(x.No).trim()}-${String(x.Name).trim()}`,
-      }));
-  }
+  payTypeOptions: OptionItem[] = [
+  { value: '1', label: '1-扣款' },
+  { value: '2', label: '2-現金' },
+  { value: '9', label: '9-其他' },
+];
 
   dataForm = this.formBuilder.group({
-    // 顯示/更新用
     fine_no: [{ value: '' as string, disabled: true }],
     ID: [null as number | null],
 
-    // Insert 必填
     tlt_no: ['' as string, [Validators.required, Validators.maxLength(12)]],
     talent_id: [null as number | null, [Validators.required]],
     org_id: ['' as string, [Validators.required, Validators.maxLength(20)]],
@@ -76,7 +75,6 @@ export class TLS25030CRUComponent extends BasicCruPageComponent<any> implements 
     pay_type: ['' as string, [Validators.required, Validators.maxLength(1)]],
     deduct_date: [null as Date | null, [Validators.required]],
 
-    // 其他
     Violation_Facts: ['' as string],
     violation_otherdesc: ['' as string],
     pay_otherdesc: ['' as string],
@@ -84,6 +82,9 @@ export class TLS25030CRUComponent extends BasicCruPageComponent<any> implements 
 
   constructor(
     private tls25030Service: TLS25030Service,
+    private deductionService: DeductionService,
+    private dropdown: DropdownApiService,
+    private counterNameService: CounterNameService,
     private route: ActivatedRoute
   ) {
     super();
@@ -92,29 +93,47 @@ export class TLS25030CRUComponent extends BasicCruPageComponent<any> implements 
   ngOnInit(): void {
     this.initializePage('TLS25030', this.dataForm);
     this.updateDisabledState();
-
-    // ✅ 下拉：共用快取
-    this.tls25030Service
-      .getDropdownsOnce()
+        // 2) Counter
+    this.counterNameService
+      .getCounters()
       .pipe(untilDestroyed(this))
       .subscribe({
-        next: ({ violationType, capItem, org, payType }) => {
-          this.violationTypeOptions = this.mapDropDownToOptions(violationType);
-          this.capItemOptions = this.mapDropDownToOptions(capItem);
-          this.orgOptions = this.mapDropDownToOptions(org);
-          this.payTypeOptions = this.mapDropDownToOptions(payType);
+        next: (v) => {
+          this.CounterOptions = (v || []).map((x) => ({
+            label: x.label,
+            formLabel: `${x.value} - ${x.label}`,
+            value: x.value,
+          }));
         },
-        error: (err) => {
-          console.error('TLS25030 CRU dropdown load error:', err);
-          this.violationTypeOptions = [];
-          this.capItemOptions = [];
-          this.orgOptions = [];
-          this.payTypeOptions = [];
-        },
+        error: () => (this.CounterOptions = []),
       });
 
-    // ✅ Edit/Read：抓 queryParam fine_no -> 打 detail 回填
-    // 用 subscribe 比 snapshot 更穩（路由參數變更也會觸發）
+    // ✅ 1) orgOptions（SYS3100）
+    this.dropdown
+      .querySys3100()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (opts: any) => (this.orgOptions = Array.isArray(opts) ? opts : []),
+        error: () => (this.orgOptions = []),
+      });
+
+    // ✅ 2) capItemOptions（APS1003）
+    this.deductionService
+      .getAPS1003DropDownList({ cap_typeList: ['Z'] })
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (list) => {
+          this.capItemOptions = (list || []).map((x: any) => ({
+            value: String(x.value),
+            label: `${x.value} - ${x.label}`,
+          }));
+        },
+        error: () => (this.capItemOptions = []),
+      });
+
+
+
+    // ✅ 4) Edit/Read：抓 fine_no -> detail
     this.route.queryParamMap
       .pipe(untilDestroyed(this))
       .subscribe((pm) => {
@@ -125,12 +144,21 @@ export class TLS25030CRUComponent extends BasicCruPageComponent<any> implements 
       });
   }
 
+  private mapDropDownToOptions(resp: any): OptionItem[] {
+    const rows = Array.isArray(resp?.Data) ? resp.Data : [];
+    return rows
+      .filter((x: any) => x && x.No != null && x.Name != null)
+      .map((x: any) => ({
+        value: String(x.No).trim(),
+        label: `${String(x.No).trim()}-${String(x.Name).trim()}`,
+      }));
+  }
+
   private updateDisabledState(): void {
     if (this.crudstatus === CRUDStatus.Read) {
       if (!this.useReadonlyInsteadOfDisable) this.dataForm.disable();
       return;
     }
-
     this.dataForm.enable();
     this.dataForm.get('fine_no')?.disable();
   }
@@ -151,7 +179,7 @@ export class TLS25030CRUComponent extends BasicCruPageComponent<any> implements 
       .queryTLS25030Detail({ fine_no: fineNo })
       .pipe(untilDestroyed(this))
       .subscribe({
-        next: (res) => {
+        next: (res: ApiResponse<QueryTLS25030DetailResponse>) => {
           const d = (res as any)?.Data as QueryTLS25030DetailResponse | null | undefined;
           if (!d) {
             this.messageService.errorBubble('查無明細');
@@ -226,14 +254,12 @@ export class TLS25030CRUComponent extends BasicCruPageComponent<any> implements 
             },
             error: () => this.messageService.errorBubble('新增失敗'),
           });
-
         return;
       }
 
       if (this.crudstatus === CRUDStatus.Edit) {
         if (!this.canEdit()) return;
 
-        // fine_no 在 form disabled => getRawValue 會拿得到，但這邊保險再取一次
         const fineNo = this.trim(this.dataForm.get('fine_no')?.value ?? raw.fine_no);
         if (!fineNo) {
           this.messageService.errorBubble('缺少 fine_no');
