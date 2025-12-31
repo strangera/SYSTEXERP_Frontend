@@ -171,7 +171,7 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
       }
     },
     { field: 'DIFF_Qty', header: '差異量', format: formatAmount },
-    { field: 'PST_Remark', header: '備註' },
+    { field: 'PST_Remark', header: '備註', type: 'input', },
   ];
   //#endregion
 
@@ -201,7 +201,8 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
           PLU_MagNo: item.PLU_MagNo,
           PST_Qty1: item.PST_Qty1,
           PST_Qty2: item.PST_Qty2,
-          PST_Qty3: item.PST_Qty3
+          PST_Qty3: item.PST_Qty3,
+          PST_Remark: item.PST_Remark
         }));
 
         this.tls53030Service.updateTLS53030Detail(updateDetails)
