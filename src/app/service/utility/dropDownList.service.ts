@@ -461,6 +461,12 @@ export class DropDownListService {
   queryTLTTALENT__StoreWay2_Approve_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT__StoreWay2_Approve_DropDownList`, {});
   }
+
+  // 查詢自營專櫃主檔(TLTTALENT)資料表下拉選單(Store_way=2自營and approve_status=2已審核)
+  queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList`, {});
+  }
+
   // 查詢專櫃下拉 (取最新契約，含對應資料，不用傳參數)
   queryTLTTALENTDropDownList(): Observable<ApiResponse<ITalentOption[]>> {
     return this.http.post<ApiResponse<ITalentOption[]>>(
