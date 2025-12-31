@@ -19,7 +19,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { formatAmount } from './../../../shared/componentkit/table-report/table-report.model';
+import { formatAmount, formatYYYYMM } from './../../../shared/componentkit/table-report/table-report.model';
 //1.3.2.1 應收帳款維護
 @Component({
   selector: 'app-fin24020',
@@ -41,8 +41,6 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
     PayGenerated: [null],
     Remark: [null, [Validators.maxLength(200)]],
   });
-  // 表格
-  // ----------------------------------------------------------------
   pageSize = 20;
   pageIndex = 1;
   sortBy = '';
@@ -53,9 +51,9 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
     { field: 'ACP_No', header: '應付ID' },
     { field: 'VEN_No', header: '廠商編號' },
     { field: 'VEN_Name', header: '廠商名稱' },
-    { field: 'ACP_YYYYMM', header: '應付帳款年月', format: formatDate },
+    { field: 'ACP_YYYYMM', header: '應付帳款年月', format: formatYYYYMM },
     { field: 'acp_termno', header: '帳次', format: formatAmount },
-    { field: 'ACP_ReserveAmt', header: '退保留款金額', format: formatAmount },
+    { field: 'ACP_ReserveAmt', header: '退保留款金額', format: formatAmount, align: 'right' },
     { field: 'RET_Date', header: '退保留款日期', format: formatDate },
     { field: 'STATUS', header: '是否產生付款資料' },
     { field: 'NoteDesc', header: '備註' },
@@ -74,9 +72,13 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
     super();
   }
 
-  // 禁止編輯的判斷：若該列已有 VouNo（傳票號）則不可編輯
   editDisabledByVouNo = (rowData: any): boolean => {
-    return !!(rowData && rowData.VouNo);
+    if (!rowData) {
+      return false;
+    }
+    const hasVouNo = !!rowData.VouNo;
+    const isPayGeneratedYes = rowData.STATUS === '是';
+    return hasVouNo || isPayGeneratedYes;
   }
 
   ngOnInit(): void {
@@ -84,7 +86,6 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
 
   }
 
-  // 包一層，讓所有查詢(畫面及 table-report)都會把 STATUS 代碼轉成中文
   queryFIN24020WithStatusLabel(body: any) {
     return this.fin24020Service.queryFIN24020(body).pipe(
       map((res: any) => {
@@ -100,6 +101,21 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      let acpYyyymm = '';
+      const rawAcpYyyymm = frm.value.ACP_YYYYMM;
+      if (rawAcpYyyymm) {
+        const formatted = this.datePipe.transform(rawAcpYyyymm, 'yyyyMM');
+        acpYyyymm = formatted ?? '';
+      }
+      const rawRetFrom = frm.value.RetDate_From;
+      const rawRetTo = frm.value.RetDate_To;
+      const retDateFrom = rawRetFrom
+        ? this.datePipe.transform(rawRetFrom, 'yyyy-MM-dd')
+        : null;
+      const retDateTo = rawRetTo
+        ? this.datePipe.transform(rawRetTo, 'yyyy-MM-dd')
+        : null;
+
       const body: any = {
         PageSize: this.pageSize,
         PageIndex: this.pageIndex,
@@ -110,13 +126,12 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
         SortBy: this.sortBy
           ? [{ field: this.sortBy, order: 1 }]
           : [],
-
         ACP_No: frm.value.ACP_No ?? '',
         VEN_No: frm.value.VEN_No ?? '',
-        ACP_YYYYMM: frm.value.ACP_YYYYMM ?? '',
+        ACP_YYYYMM: acpYyyymm,
         Acp_TermNo: frm.value.Acp_TermNo ?? null,
-        RetDate_From: frm.value.RetDate_From ?? null,
-        RetDate_To: frm.value.RetDate_To ?? null,
+        RetDate_From: retDateFrom,
+        RetDate_To: retDateTo,
         RetAmt_From: frm.value.RetAmt_From ?? null,
         RetAmt_To: frm.value.RetAmt_To ?? null,
         PayGenerated: frm.value.PayGenerated ?? '',
@@ -133,6 +148,4 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
         });
     });
   }
-
-
 }

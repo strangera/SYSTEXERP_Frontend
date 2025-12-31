@@ -9,7 +9,7 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="應收ID" controlName="ACP_No"
+            <app-input-number [useGrouping]="false" label="應付ID" controlName="ACP_No"
               [control]="queryForm.controls.ACP_No" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">

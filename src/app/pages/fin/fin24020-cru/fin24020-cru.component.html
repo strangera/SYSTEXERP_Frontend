@@ -7,18 +7,18 @@
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown-table [control]="dialogQueryForm.controls.ACP_No" [submitted]="submitted" templateLabel="ACP_No"
+          <app-dropdown-table [control]="dataForm.controls.ACP_No" [submitted]="submitted" templateLabel="ACP_No"
             optionLabel="ACP_No" optionValue="ACP_No" [suggestions]="apsSuggestions" [fieldsConfig]="apsFieldsConfig"
             [formGroup]="dialogQueryForm" [dialogData]="apsDialogData" [dialogColumns]="apsDialogColumns"
             [loading]="apsDialogLoading" [lazy]="false" (select)="onApsSelect($event)"
             (inputValueChanged)="onApsInputChange($event)" (formValueChanged)="onDialogQueryFormValueChanged($event)">
-            <app-input-text class="col-12 md:col-6" label="應付ID" controlName="ACP_No"
-              [control]="dialogQueryForm.controls.ACP_No"></app-input-text>
+            <!-- <app-input-text label="應付ID" controlName="ACP_No" [control]="dataForm.controls.ACP_No"
+              [submitted]="submitted"></app-input-text> -->
           </app-dropdown-table>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateMonthOne" label="立帳日期" [control]="dataForm.controls.ACP_Date"
-            [submitted]="submitted"></app-calendar>
+          <app-calendar calendarType="dateOne" label="立帳日期" [control]="dataForm.controls.ACP_Date"
+            [submitted]="submitted" [readonly]="true"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="廠商編號" controlName="VEN_No" [control]="dataForm.controls.VEN_No" [submitted]="submitted"
@@ -31,21 +31,30 @@
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number [useGrouping]="false" label="應付金額" controlName="ACP_Amt"
-            [control]="dataForm.controls.ACP_Amt" [submitted]="submitted"></app-input-number>
+            [control]="dataForm.controls.ACP_Amt" [submitted]="submitted" [readonly]="true"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number [useGrouping]="false" label="保留款金額" controlName="ACP_ReserveAmt"
-            [control]="dataForm.controls.ACP_ReserveAmt" [submitted]="submitted"></app-input-number>
+            [control]="dataForm.controls.ACP_ReserveAmt" [submitted]="submitted"
+            [readonly]="isFormReadable"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number [useGrouping]="false" label="應付帳款餘額" controlName="sam_termno"
-            [control]="dataForm.controls.sam_termno" [submitted]="submitted"></app-input-number>
+            [control]="dataForm.controls.sam_termno" [submitted]="submitted" [readonly]="true"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number [useGrouping]="false" label="已產生保留款" controlName="sam" [control]="dataForm.controls.sam"
-            [submitted]="submitted"></app-input-number>
+            [submitted]="submitted" [readonly]="true"></app-input-number>
         </div>
 
+      </div>
+
+      <!-- 保留退款明細編輯 Table -->
+      <div class="mt-3">
+        <app-table-edit title="保留退款明細" tableKey="FIN24020_ITEMS" [columns]="editColumns" [showFooter]="false"
+          [showPaginator]="false" [scrollable]="true" [data]="tableData" [disabled]="isFormReadable"
+          (dataChange)="onTableDataChange($event)">
+        </app-table-edit>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" />
