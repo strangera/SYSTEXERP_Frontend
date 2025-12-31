@@ -1,18 +1,18 @@
 
-import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { Fin28010Service } from '@service/api/fin/fin28010.service';
+import { Fin33010Service } from '@service/api/fin/fin33010.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 @Component({
   selector: 'app-fin33010',
   templateUrl: './fin33010.component.html',
@@ -23,7 +23,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 
 export class FIN33010Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    WSLIP_NO: ['', [Validators.maxLength(15)]],
+    RCV_No: ['', [Validators.required, Validators.maxLength(15)]],
     VouDate: [null as Date | null, [Validators.required,]],
     ...createPaginationConfig([{ field: 'AccNo', order: 1 }]),
   });
@@ -34,20 +34,9 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
   get selectedCount(): number {
     return this.selectedItems?.length ?? 0;
   }
-  columns: any[] = [
-    { field: 'AccNo', header: '科目代號', visible: true },
-    { field: 'AccCName', header: '會計科目名稱', visible: true },
-    { field: 'VEN_No', header: '廠商編號', visible: true },
-    { field: 'VEN_Name', header: '廠商名稱', visible: true },
-    { field: 'NoteDesc', header: '摘要', visible: true },
-    { field: 'd_amt', header: '借方金額', visible: true, format: formatAmount },
-    { field: 'c_amt', header: '貸方金額', visible: true, format: formatAmount },
-    { field: 'org_id', header: '組織代號', visible: true },
-    { field: 'PTA', header: '立沖代號', visible: true },
-  ];
+
   constructor(
-    private fin28010Service: Fin28010Service,
-    private datePipe: DatePipe,
+    private fin33010Service: Fin33010Service,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -57,36 +46,57 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
 
   }
 
+  override onDetail(data: any, queryConditions?: any) {
+    this.navigateWithState(CRUDStatus.Read, data, queryConditions);
+  }
+
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       const v = frm.getRawValue();
       const payload = {
-        PageSize: 20,
-        PageIndex: 1,
+        PageSize: 0,
+        PageIndex: 0,
         OrderBy: '',
         Offset: 0,
         SortBy: [{ field: 'AccNo', order: 1 }],
-        WSLIP_NO: v.WSLIP_NO || '',
-        VouDate: this.datePipe.transform(v.VouDate, 'yyyy-MM-dd') || ''
+        RCV_No: v.RCV_No || '',
+        VouDate: v.VouDate ? v.VouDate.toISOString() : ''
       };
 
       this.loading = true;
       this.messageService.blockUi();
 
-      this.fin28010Service.queryFIN28010(payload).subscribe({
+      this.fin33010Service.queryFIN33010(payload).subscribe({
         next: (res: any) => {
           if (res.Status === '0000' || res.Status === '200') {
-            const details = res.Data ?? [];
+            const data = res.Data;
+            const rawDetails = Array.isArray(data?.DetailItem) ? data.DetailItem : [];
 
-            if (!details.length) {
+            if (!rawDetails.length) {
               this.messageService?.warnBubble?.('查無資料');
               return;
             }
+            // 後端欄位轉成 CRU 畫面及 TableEdit 使用的欄位命名
+            const details = rawDetails.map((item: any) => ({
+              SerNo: item.SerNo,
+              dc: item.DC,
+              AccNo: item.AccNo,
+              AccCName: item.AccCName,
+              Ven_No: item.Ven_No,
+              NoteDesc: item.NoteDesc,
+              D_Amt: item.D_Amt,
+              C_Amt: item.C_Amt,
+              Org_Id: item.Org_Id,
+              PTA: item.PTA,
+              // 若後續需要對象別編號，可共用 Ven_No
+              VEN_No: item.Ven_No,
+            }));
 
-            const header = details[0];
+            const header = data;
             const queryConditions = {
               form: frm.getRawValue(),
               details,
+              header,
             };
 
             // 直接進入 CRU 顯示欄位與明細表

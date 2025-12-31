@@ -7,8 +7,8 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="收款單號" controlName="WSLIP_NO"
-            [control]="queryForm.controls.WSLIP_NO" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="收款單號" controlName="RCV_No"
+            [control]="queryForm.controls.RCV_No" [submitted]="submitted"></app-input-text>
           <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="傳票日期" controlName="VouDate"
             [control]="queryForm.controls.VouDate" [submitted]="submitted" />
         </div>

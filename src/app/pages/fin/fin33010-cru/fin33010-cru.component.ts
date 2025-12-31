@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Fin28010Service } from '@service/api/fin/fin28010.service';
+import { Fin33010Service } from '@service/api/fin/fin33010.service';
 import { IDropdownItem } from '@service/utility/dropdown-api.model';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
@@ -76,17 +76,18 @@ export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements 
   editData: any[] = [];
   selectedItems: any[] = [];
   editFooterData = {
-    d_amt: 0, // 借方總金額
-    c_amt: 0, // 貸方總金額
+    D_Amt: 0, // 借方總金額
+    C_Amt: 0, // 貸方總金額
   }
 
   editColumns: EditColumn[] = [
-    { field: 'dc', header: '借/貸' },
-    { field: 'AccNo', header: '會計科目' },
-    { field: 'AccNo', header: '廠商代號' },
+    // { field: 'dc', header: '借/貸' },
+    { field: 'AccNo', header: '會計科目代號' },
+    { field: 'AccCName', header: '會計科目名稱' },
+    { field: 'Ven_No', header: '廠商代號' },
     { field: 'NoteDesc', header: '摘要', type: 'input', validate: [validateRequired], width: '250px' },
     {
-      field: 'd_amt', header: '借方金額',
+      field: 'D_Amt', header: '借方金額',
       format: (v, i, r) => {
         if (r?.AccDC) {
           // 一般資料行
@@ -98,7 +99,7 @@ export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements 
       },
     },
     {
-      field: 'c_amt', header: '貸方金額',
+      field: 'C_Amt', header: '貸方金額',
       format: (v, i, r) => {
         if (r?.AccDC) {
           return r.AccDC === 'C' ? formatAmount(r.AccAmt) : '0';
@@ -107,11 +108,11 @@ export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements 
         }
       }
     },
-    { field: 'org_id', header: '組織代碼' },
+    { field: 'Org_Id', header: '組織代碼' },
     { field: 'PTA', header: '立沖代號' },
-    { field: 'PTA', header: '活動代號' },
-    { field: 'VEN_No', header: '對象別編號' },
-    { field: 'PTA', header: '對帳KEY值' }
+    { field: '?', header: '活動代號' },
+    { field: '?', header: '對象別編號' },
+    { field: '?', header: '對帳KEY值' }
   ];
   detailData: any[] = [];
   totalRecords = 0;
@@ -121,7 +122,7 @@ export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements 
   constructor(
 
     private dropDownListService: DropDownListService,
-    private fin28010Service: Fin28010Service,
+    private fin33010Service: Fin33010Service,
     private datePipe: DatePipe,
   ) {
     super();
@@ -137,8 +138,8 @@ export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements 
     if (Array.isArray(details) && details.length) {
       this.editData = details;
       this.editFooterData = {
-        d_amt: details.reduce((sum, r) => sum + (Number(r.d_amt) || 0), 0),
-        c_amt: details.reduce((sum, r) => sum + (Number(r.c_amt) || 0), 0),
+        D_Amt: details.reduce((sum, r) => sum + (Number(r.D_Amt) || 0), 0),
+        C_Amt: details.reduce((sum, r) => sum + (Number(r.C_Amt) || 0), 0),
       };
       this.totalRecords = details.length;
     }
@@ -171,8 +172,8 @@ export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements 
     }
 
     const formValue = frm.getRawValue();
-    // 以查詢時輸入的日期為主
-    const queryForm = this.queryData?.form as { VouDate?: any } | undefined;
+    // 以查詢時輸入的條件為主
+    const queryForm = this.queryData?.form as { VouDate?: any; RCV_No?: string } | undefined;
     const queryVouDate = queryForm?.VouDate ?? null;
 
     if (!queryVouDate) {
@@ -183,31 +184,32 @@ export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements 
     }
 
     const queryVouDateObj = typeof queryVouDate === 'string' ? new Date(queryVouDate) : queryVouDate;
-    const vouDateString = this.datePipe.transform(queryVouDateObj, 'yyyy-MM-dd');
 
     const rows = (this.editData || []).filter(r => !r._isAutoInsertCandidate);
 
     const payload = {
-      WSLIP_NO: formValue.WSLIP_NO,
-      VouDate: vouDateString,
-      VouType: formValue.VouType,
-      PostFlag: formValue.PostFlag,
-      VoucherType: formValue.VoucherType,
-      INV_YN: formValue.INV_YN,
-      Remark: formValue.Remark || '',
-      GLS3002List: rows.map(r => ({
-        dc: r.dc || '',
+      PageSize: 0,
+      PageIndex: 0,
+      OrderBy: '',
+      Offset: 0,
+      SortBy: [{ field: 'AccNo', order: 1 }],
+      RCV_No: queryForm?.RCV_No ?? '',
+      VouDate: queryVouDateObj ? queryVouDateObj.toISOString() : '',
+      Details: rows.map(r => ({
+        SerNo: r.SerNo || '',
+        DC: r.dc || r.DC || '',
         AccNo: r.AccNo || '',
-        d_amt: Number(r.d_amt) || 0,
-        c_amt: Number(r.c_amt) || 0,
-        org_id: r.org_id || '',
-        VEN_No: r.VEN_No || '',
+        AccCName: r.AccCName || '',
+        Ven_No: r.Ven_No || '',
         NoteDesc: r.NoteDesc || '',
+        D_Amt: Number(r.D_Amt) || 0,
+        C_Amt: Number(r.C_Amt) || 0,
+        Org_Id: r.Org_Id || '',
         PTA: r.PTA || '',
       })),
     };
 
-    this.fin28010Service.insertFIN28010(payload)
+    this.fin33010Service.insertFIN33010(payload)
       .pipe(
         untilDestroyed(this),
         finalize(() => {

@@ -469,11 +469,11 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     } else {
       this.columnsNormal = [
         // tlt_no 保持以物件為值 (包含 contract/org 等)，因此不設定 optionValue（以物件方式綁定）
-        { field: 'tlt_no', header: '專櫃編號/名稱', type: 'dropdown', options: this.tlt_noOptions, optionLabel: 'label', width: '12rem' },
-        { field: 'contract_no', header: '契約編號', type: 'input', width: '12rem', disabled: () => true },
-        { field: 'contract_subno', header: '版次', type: 'input', width: '15rem', disabled: () => true },
+        { field: 'tlt_no', header: '專櫃編號/名稱', type: 'dropdown', options: this.tlt_noOptions, optionLabel: 'label', width: '15rem' },
+        { field: 'contract_no', header: '契約編號', type: 'input', width: '1rem', disabled: () => true },
+        { field: 'contract_subno', header: '版次', type: 'input', width: '1rem', disabled: () => true },
         { field: 'org_id', header: '組織代號/名稱', type: 'dropdown', width: '15rem', options: this.org_idOptions, optionLabel: 'label', optionValue: 'value' },
-        { field: 'pod_no', header: '活動代碼/名稱', type: 'dropdown', options: this.pod_noOptions, optionLabel: 'label', optionValue: 'value', width: '10rem' },
+        { field: 'pod_no', header: '活動代碼/名稱', type: 'dropdown', options: this.pod_noOptions, optionLabel: 'label', optionValue: 'value', width: '18rem' },
         {
           field: 'tpy_date',
           header: '扣款日期',
