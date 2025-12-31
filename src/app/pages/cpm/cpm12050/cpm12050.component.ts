@@ -6,6 +6,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
 import { ValidationService } from '@shared/service/validation.service';
@@ -33,26 +34,27 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
     TableComponent,
     TranslateModule,
     CalendarRangeComponent,
-    InputTextareaComponent
+    InputTextareaComponent,
+    DialogComponent
   ]
 })
 export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    SEQ_ID: [null, Validators.maxLength(15)],                         // 客戶意見編號
-    CUST_NAME: [null, Validators.maxLength(20)],                      // 客戶姓名
-    SEX: [null],                            // 性別
-    STATUS: [null],                         // 處理狀況
-    KIND_ID: [null],                        // 意見類型
-    SUGG_SOURCE: [null],                    // 建議來源
-    CONTACT_TEL: [null, [this.validationService.phoneNumberValidator, Validators.maxLength(30)]],                    // 聯絡電話
-    CELL_PHONE: [null, [this.validationService.phoneNumberValidator, Validators.maxLength(30)]],                     // 手機號碼
-    E_MAIL: [null, [this.validationService.emailValidator, Validators.maxLength(100)]],                         // Email
-    COMPLAIN_NOTES: [null, Validators.maxLength(1000)],                 // 顧客意見內容
-    ORG_ID: [null],                         // 責任單位
-    ORG_ID_QUERY: [null],                 // 組織(查詢責任單位用)
-    CRT_USR_Name: [null, Validators.maxLength(50)],                   // 建檔人員
-    COMPLAIN_DATE_F: [null as Date | null], // 接件日期(起)
-    COMPLAIN_DATE_T: [null as Date | null], // 接件日期(迄)
+    SEQ_ID: [null, Validators.maxLength(15)],           // 客戶意見編號
+    CUST_NAME: [null, Validators.maxLength(20)],        // 客戶姓名
+    SEX: [null],                                        // 性別
+    STATUS: [null],                                     // 處理狀況
+    KIND_ID: [null],                                    // 意見類型
+    SUGG_SOURCE: [null],                                // 建議來源
+    CONTACT_TEL: [null, [this.validationService.phoneNumberValidator, Validators.maxLength(30)]], // 聯絡電話
+    CELL_PHONE: [null, [this.validationService.phoneNumberValidator, Validators.maxLength(30)]],  // 手機號碼
+    E_MAIL: [null, [this.validationService.emailValidator, Validators.maxLength(100)]],           // Email
+    COMPLAIN_NOTES: [null, Validators.maxLength(1000)], // 顧客意見內容
+    ORG_ID: [null],                                     // 責任單位
+    ORG_ID_QUERY: [null],                               // 組織(查詢責任單位用)
+    CRT_USR_Name: [null, Validators.maxLength(50)],     // 建檔人員
+    COMPLAIN_DATE_F: [null as Date | null],             // 接件日期(起)
+    COMPLAIN_DATE_T: [null as Date | null],             // 接件日期(迄)
     ...createPaginationConfig([])
   });
 
@@ -126,6 +128,15 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
     },
   ];
 
+  // Dialog相關
+  dialogVisible = false;
+  selectedRowData?: CPM12050Data;
+  closeForm = this.formBuilder.group({
+    USR_NO: [''],          // 使用者編號
+    USR_NAME: [''],        // 使用者名稱
+    CLOSE_MEMO: ['', [Validators.required, Validators.maxLength(1000)]]  // 結案備註
+  });
+
   constructor(
     private cpm12050Service: CPM12050Service,
     private validationService: ValidationService,
@@ -195,12 +206,52 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
 
   // 派單
   onDispatch(rowData: CPM12050Data) {
-
+    this.confirmationService.confirm({
+      header: `是否確認派單?`,
+      accept: () => {
+        const usrNo = this.authService.getUserInfo()?.user_No;
+        const usrName = this.authService.getUserInfo()?.user_Name;
+        this.cpm12050Service.dispatchCPM12050({
+          ID: rowData.ID,
+          USR_NO: usrNo,
+          USR_NAME: usrName
+        })
+          .pipe(untilDestroyed(this))
+          .subscribe(() => {
+            this.messageService.successBubble('派單成功');
+            this.onSubmit(this.queryForm);
+          });
+      }
+    });
   }
 
   // 結案
   onClose(rowData: CPM12050Data) {
+    this.dialogVisible = true;
+    this.closeForm.patchValue({
+      USR_NO: this.authService.getUserInfo()?.user_No,
+      USR_NAME: this.authService.getUserInfo()?.user_Name,
+      CLOSE_MEMO: ''
+    });
+    this.closeForm.controls.USR_NO.disable();
+    this.closeForm.controls.USR_NAME.disable();
+    this.selectedRowData = rowData;
+  }
 
+  saveDialog() {
+    const req = {
+      ID: this.selectedRowData!.ID,
+      CLOSE_MEMO: this.closeForm.get('CLOSE_MEMO')!.value || '',
+      USR_NO: this.authService.getUserInfo()?.user_No,
+      USR_NAME: this.authService.getUserInfo()?.user_Name
+    }
+    this.cpm12050Service.closeCPM12050(req)
+      .pipe(untilDestroyed(this))
+      .subscribe(() => {
+        this.messageService.successBubble('結案成功');
+        this.dialogVisible = false;
+        this.onSubmit(this.queryForm);
+      });
   }
 
 }
