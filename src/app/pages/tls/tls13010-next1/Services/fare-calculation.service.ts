@@ -127,11 +127,11 @@ export class FareCalculationService {
       return;
     }
 
-    // 期數必須大於 1 才能有分攤概念
-    if (periods <= 1) {
-      console.log('⚠️ C類型計算: 期數必須大於1');
-      data.down_payment = Math.round(totalAmount);  // 🔧 改用 Math.round
-      data.tpy_amount = 0;
+    // 🔥 修正：期數 = 1 時，每月金額 = 總金額，首期金額 = 總金額（只有一期，首期就是全部）
+    if (periods === 1) {
+      console.log('✅ C類型計算: 期數為 1，每月金額 = 總金額 = 首期金額');
+      data.tpy_amount = Math.round(totalAmount);
+      data.down_payment = Math.round(totalAmount);
       return;
     }
 
