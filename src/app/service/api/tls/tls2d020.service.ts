@@ -18,7 +18,7 @@ export interface ExecuteRequest {
 export interface QueryRequest {
   PageSize: number;
   PageIndex: number;
-  SortBy: SortMeta[];
+  SortBy?: SortMeta[];
   sam_yyymm: string;
   money_type: number;
   tlt_no: string;
