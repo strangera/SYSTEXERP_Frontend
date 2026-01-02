@@ -155,11 +155,18 @@ export class NotificationMessageComponent implements OnInit {
     this.confirmationService.close();
   }
 
-  onConfirmAccept() {
-    this.confirmationService.close();
+  onConfirmAccept(cd: any) {
+    // 1. 取得資料：從 templateContext 中抓取 data
+    const resultData = this.currentConfirmOpts?.templateContext?.data ?? null;
+
+    // 2. 執行回調：執行當初傳進來的 accept 函式，並帶入 data
     if (this.currentConfirmOpts?.accept) {
-      const resultData = this.currentConfirmOpts.templateContext ? this.currentConfirmOpts.templateContext.data : null;
       this.currentConfirmOpts.accept(resultData);
     }
+
+    // 3. 關閉視窗：這步很重要，呼叫 cd.accept() 讓 PrimeNG 清除內部狀態
+    cd.accept();
   }
+
+
 }

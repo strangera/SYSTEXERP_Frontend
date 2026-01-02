@@ -15,7 +15,7 @@
         </ng-container>
       </div>
       <div class="flex align-items-center gap-2 mt-4">
-        <p-button title="確定" label="確定" (click)="onConfirmAccept()" severity="primary" styleClass="w-8rem">
+        <p-button title="確定" label="確定" (click)="onConfirmAccept(cd)" severity="primary" styleClass="w-8rem">
         </p-button>
 
         <p-button *ngFor="let btn of extraButtons" [label]="btn.label" [severity]="btn.severity || 'secondary'"
