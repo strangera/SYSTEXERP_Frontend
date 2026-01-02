@@ -1,17 +1,20 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatDate, formatAmount } from '../../../shared/componentkit/table/table.model';
-import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { AbstractControl, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
+import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { AccordionModule } from 'primeng/accordion';
+import { debounceTime } from 'rxjs';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { NgIf } from '@angular/common';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { debounceTime } from 'rxjs';
+import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
 
 export interface Label {
   id: number,
@@ -41,7 +44,7 @@ export function atLeastOneFieldRequired(fields: string[]): ValidatorFn {
   templateUrl: './tls51070-os.component.html',
   styleUrl: './tls51070-os.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, NgIf, FormsModule, ReactiveFormsModule, InputTextComponent, InputNumberComponent, ExpandableEditTableComponent, TableComponent]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, NgIf, FormsModule, ReactiveFormsModule, InputTextComponent, InputNumberComponent, ExpandableEditTableComponent, TableComponent, DropdownTableComponent]
 })
 //處理 變價歷史紀錄/產生標籤檔
 export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
@@ -149,7 +152,9 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
 
   // selectedItems: Label[] = [];// 多選項目
   // ----------------------------------------------------------------
-  constructor(private tls51070Service: Tls51070Service) {
+  constructor(
+    private tls51070Service: Tls51070Service,
+    private tls52010Service: Tls52010Service) {
     super();
   }
 
@@ -364,5 +369,87 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     return !!form.get('PLU_MagNo')?.value?.trim() ||
       !!form.get('PLU_No')?.value?.trim() ||
       !!form.get('PLU_OrgPLUNo')?.value?.trim();
+  }
+
+  // #region 商品管理編號/國際條碼/廠商貨號 
+  opLoading = false;
+  opForm = this.formBuilder.group({
+    PLU_MagNo: ['', [Validators.maxLength(20)]],   // ← 新增這行（關鍵修正）
+    PLU_Name: ['', [Validators.maxLength(60)]],
+    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
+  });
+  suggestions: IQueryPOS2004DetailResponse[] = [];
+  fieldsConfig: FieldsConfig[] = [
+    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
+  ];
+  opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
+  opColumns: Column[] = [
+    { field: 'PLU_MagNo', header: '商品管理編號' },
+    { field: 'PLU_No', header: '國際條碼' },
+    { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
+    { field: 'PLU_Name', header: '商品名稱' },
+  ];
+  opTotalRecords = 0;
+  onAutoCompleteInputChange(event: any) {
+    const body = {
+      ...event,
+      VEN_No: '',
+      LOGO_No: '',
+      queryNo: event.PLU_MagNo || '',
+      pageSize: 30,
+      pageIndex: 1,
+      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
+    }
+    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results: { Data: any[]; }) => {
+      this.suggestions = [...results.Data.map(item => ({
+        ...item,
+        label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo,
+      }))];
+
+      // **********************************************
+      // 2. 新增邏輯：檢查是否有精確匹配的單一結果
+      //    (假設使用者在欄位中輸入的內容，會精確匹配到 suggestions 的其中一項，
+      //     且通常只有一個結果時，代表精確命中。)
+      const inputVal = event.PLU_MagNo || '';
+
+      // 找到完全匹配 PLU_MagNo 或 PLU_No 或 PLU_OrgPLUNo 的項目
+      const exactMatch = results.Data.find(
+        item => item.PLU_MagNo === inputVal || item.PLU_No === inputVal || item.PLU_OrgPLUNo === inputVal
+      );
+
+      if (exactMatch && results.Data.length === 1) {
+        // 如果精確匹配到一個項目，則更新主查詢表單的其他欄位
+        console.log('精確匹配，同步欄位:', exactMatch);
+        this.queryForm.patchValue({
+          PLU_MagNo: exactMatch.PLU_MagNo || '',
+          PLU_No: exactMatch.PLU_No || '',
+          PLU_OrgPLUNo: exactMatch.PLU_OrgPLUNo || '',
+        });
+      } else if (!inputVal) {
+        // 如果輸入欄位清空了，也清空 queryForm 的相關欄位
+        this.queryForm.patchValue({
+          PLU_MagNo: '',
+          PLU_No: '',
+          PLU_OrgPLUNo: '',
+        });
+      }
+      // **********************************************
+    });
+  }
+
+  // 商品管理編號 / 國際條碼 / 廠商貨號 (合併查詢表單)
+  onformValueChanged(event: IQueryPOS2004DetailRequest) {
+    this.opLoading = true;
+    const body = {
+      queryNo: event.queryNo || '',
+      PLU_Name: event.PLU_Name || '',
+      VEN_No: '',
+      LOGO_No: '',
+    };
+    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results: { Data: any; TotalCount: number; }) => {
+      this.opData = [...results.Data]; // 更新data資料
+      this.opTotalRecords = results.TotalCount;
+      this.opLoading = false;
+    });
   }
 }

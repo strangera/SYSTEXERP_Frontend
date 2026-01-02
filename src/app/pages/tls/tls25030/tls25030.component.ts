@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { forkJoin, of } from 'rxjs';
@@ -37,6 +37,7 @@ import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 import { FloorService } from '@service/basic/querySYS3900.service';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { DeductionService } from '@service/basic/queryAPS1003.service';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 type SortItem = { field: string; order: number };
 
@@ -67,6 +68,8 @@ type SortItem = { field: string; order: number };
   ],
 })
 export class TLS25030Component extends BasicQueryPageComponent<any> {
+  @ViewChild('tableReport') tableReport?: TableReportComponent;
+
   data: QueryTLS25030Row[] = [];
   totalRecords = 0;
   viewTotalRecords = 0;
@@ -78,6 +81,7 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
   btnLoading = false;
 
   readonly defaultSort: SortItem[] = [{ field: 'UPD_Date', order: -1 }];
+  private _currentSortBy: SortItem[] = this.defaultSort;
 
   columns: ReportColumn[] = [
     { field: 'fine_no', header: '單據編號' },
@@ -91,31 +95,20 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
     { field: 'Org_Name', header: '開立單位' },
     { field: 'CRT_USR_Name', header: '建立者' },
     { field: 'UPD_Date', header: '維護日', format: (v: string) => this.formatDate(v) },
-    { field: 'payment_status_Name', header: '狀態' },
+    { field: 'fine_status_Name', header: '狀態' },
     { field: 'violation_otherdesc', header: '備註' },
   ];
 
-  /** ✅ 下拉 options（以 TLS25030Component 為主、統一管理） */
-  // 違規類別：SYS1000
+  /** ✅ 下拉 options */
   violationTypeOptions: OptionItem[] = getSYS1000Options('Violation_type') as any;
-
-  // 扣款項目：APS1003
   capItemOptions: OptionItem[] = [];
-
-  // 樓層：SYS3900
   floorOptions: OptionItem[] = [];
-
-  // 繳款方式：寫死 (1=扣款,2=現金,9=其他)
   payTypeOptions: OptionItem[] = [
     { value: '1', label: '1-扣款' },
     { value: '2', label: '2-現金' },
     { value: '9', label: '9-其他' },
   ];
-
-  // 開立單位：SYS3100（Observable options）
   orgOptions = this.dropdown.querySys3100();
-
-  // 建立者：Counter
   CounterOptions: OptionItem[] = [];
 
   queryForm = this.formBuilder.group({
@@ -123,25 +116,21 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
     tlt_name: ['' as string],
     fine_no: ['' as string],
 
-    // 日期區間（Date）
     fine_date_s: [null as Date | null],
     fine_date_e: [null as Date | null],
     deduct_date_s: [null as Date | null],
     deduct_date_e: [null as Date | null],
 
-    // 金額
     amount_s: [null as number | null],
     amount_e: [null as number | null],
 
-    // 下拉/多選
     violation_type: ['' as string],
     cap_item: ['' as string],
     org_id: ['' as string],
     fine_status: ['' as string],
-    pay_type: ['' as string], // ✅ 查詢條件要用繳款方式就保留
+    pay_type: ['' as string],
 
     floors: [[] as string[]], // 多選 => join CSV
-
     crt_usr_no: ['' as string],
 
     ...createPaginationConfig(this.defaultSort),
@@ -158,13 +147,40 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
     super();
   }
 
+  // =========================
+  // ✅ 還原/保存查詢條件（比照 FIN64010）
+  // =========================
+  private saveQueryState(): void {
+    this.queryStateService.setQueryState('TLS25030', {
+      formValue: this.queryForm.getRawValue(),
+      currentSortBy: this._currentSortBy,
+      lastQueryBody: this.lastQueryBody,
+    });
+  }
+
+  private restoreQueryStateAndAutoQuery(): void {
+    const saved = this.queryStateService.getQueryStateValue('TLS25030');
+
+    // 兼容舊格式：以前可能直接存 formValue（不是物件）
+    const formValue = (saved as any)?.formValue ?? (saved && typeof saved === 'object' && !(saved as any)?.formValue ? saved : null);
+
+    if (formValue) {
+      this.queryForm.patchValue(formValue, { emitEvent: false });
+      this._currentSortBy = (saved as any)?.currentSortBy ?? this.defaultSort;
+      this.lastQueryBody = (saved as any)?.lastQueryBody ?? null;
+
+      Promise.resolve().then(() => this.onSubmit(this.queryForm));
+    }
+  }
+
+  // =========================
+  // utils
+  // =========================
   private formatDate(val: string): string {
     if (!val) return '';
     const d = new Date(val);
     if (isNaN(d.getTime())) return val;
-    return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(
-      d.getDate()
-    ).padStart(2, '0')}`;
+    return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
   }
 
   private toIso(d: Date | string | null | undefined): string | undefined {
@@ -254,7 +270,7 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('TLS25030', '/tls/tls25030cru', this.queryForm, (form) => this.onSubmit(form));
 
-    // ✅ 這裡會「一定關掉 loading」，避免你現在卡住的問題
+    // ✅ 先載入下拉，再做「還原 + 自動查詢」，避免多選 options 尚未就緒時顯示怪怪的
     this.loading = true;
 
     const floors$ = this.floorService.getFloors().pipe(
@@ -284,7 +300,7 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
     forkJoin([floors$, counters$, capItems$])
       .pipe(
         finalize(() => {
-          this.loading = false; // ✅ 一定會關掉
+          this.loading = false;
           this.cdr.detectChanges();
         }),
         untilDestroyed(this)
@@ -302,6 +318,9 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
           value: String(x.value),
           label: `${x.value} - ${x.label}`,
         }));
+
+        // ✅ 下拉完成後再還原 & 自動查詢（比照 FIN64010）
+        this.restoreQueryStateAndAutoQuery();
       });
   }
 
@@ -314,11 +333,16 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
     }
 
     const raw = this.queryForm.getRawValue();
-    const payload = this.buildQueryPayload(raw);
-    payload.PageIndex = 1;
 
-    this.btnLoading = true; // ✅ 如果你按鈕有綁 btnLoading
-    this.loading = true;    // ✅ table-report/loading
+    // ✅ 送出時：固定查第一頁，排序用目前記住的
+    const payload = this.buildQueryPayload({
+      ...raw,
+      pageIndex: 1,
+      SortBy: this._currentSortBy?.length ? this._currentSortBy : this.defaultSort,
+    });
+
+    this.btnLoading = true;
+    this.loading = true;
 
     this.data = [];
     this.selectedItems = [];
@@ -348,10 +372,13 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
           setTimeout(() => {
             this.totalRecords = realTotal;
             this.viewTotalRecords = realTotal;
-            this.lastQueryBody = { ...payload };
-          });
 
-          this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+            this.lastQueryBody = { ...payload };
+            this._currentSortBy = payload.SortBy ?? this.defaultSort;
+
+            // ✅ 保存查詢條件（比照 FIN64010）
+            this.saveQueryState();
+          });
         },
         error: (err: any) => {
           console.error('TLS25030 query API error:', err);
@@ -361,6 +388,89 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
           this.footerData = undefined;
         },
       });
+  }
+
+  /** ✅ lazyload（分頁/排序） */
+  override onLazyLoadData(e: any) {
+    const raw = this.queryForm.getRawValue();
+
+    const sortBy = this.normalizeSort(e?.SortBy, this._currentSortBy?.length ? this._currentSortBy : this.defaultSort);
+
+    const payload = this.buildQueryPayload({
+      ...raw,
+      pageIndex: e?.pageIndex,
+      pageSize: e?.pageSize,
+      SortBy: sortBy,
+    });
+
+    this.loading = true;
+
+    this.tls25030Service
+      .queryTLS25030(payload)
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        }),
+        untilDestroyed(this)
+      )
+      .subscribe({
+        next: (response: ApiResponse<QueryTLS25030Row[]>) => {
+          const rows: QueryTLS25030Row[] = Array.isArray(response?.Data) ? response.Data : [];
+          rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
+
+          this.data = rows;
+          const realTotal = Number((response as any)?.TotalCount ?? rows.length) || rows.length;
+
+          this.totalRecords = realTotal;
+          this.viewTotalRecords = realTotal;
+
+          this.lastQueryBody = { ...payload };
+          this._currentSortBy = payload.SortBy ?? this.defaultSort;
+
+          // ✅ 保存查詢條件（比照 FIN64010）
+          this.saveQueryState();
+        },
+        error: (err: any) => {
+          console.error('TLS25030 lazy query API error:', err);
+          this.data = [];
+          this.totalRecords = 0;
+          this.viewTotalRecords = 0;
+        },
+      });
+  }
+
+  /** ✅ 點編輯/明細：先存查詢條件（回來可還原） */
+  override onEdit(row: QueryTLS25030Row) {
+    const id = String((row as any)?.fine_no ?? '').trim();
+    if (!id) return;
+
+    this.saveQueryState();
+
+    this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
+      queryParams: { fine_no: id }, // ⚠️ 若你 CRU 用別的 key（如 Id / FineNo）這裡改一下
+      state: {
+        crudstatus: CRUDStatus.Edit,
+        rowdata: row,
+        fromRoute: this.router.url,
+      },
+    });
+  }
+
+  override onDetail(row: QueryTLS25030Row) {
+    const id = String((row as any)?.fine_no ?? '').trim();
+    if (!id) return;
+
+    this.saveQueryState();
+
+    this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
+      queryParams: { fine_no: id },
+      state: {
+        crudstatus: CRUDStatus.Read,
+        rowdata: row,
+        fromRoute: this.router.url,
+      },
+    });
   }
 
   onClear(frm: any) {
@@ -393,5 +503,10 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
     this.totalRecords = 0;
     this.viewTotalRecords = 0;
     this.footerData = undefined;
+    this.lastQueryBody = null;
+    this._currentSortBy = this.defaultSort;
+
+    // ✅ 清掉保存的狀態（可選；如果你希望清除後回來也清空，就保留）
+    this.saveQueryState();
   }
 }

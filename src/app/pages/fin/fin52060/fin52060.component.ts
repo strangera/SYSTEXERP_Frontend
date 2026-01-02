@@ -75,7 +75,8 @@ export class FIN52060Component extends BasicQueryPageComponent<GLS1004> implemen
     { field: 'ClassNo', header: '中類代號', visible: true, exportFormat: [] }, // 中類代號
     { field: 'ClassCName', header: '中類名稱', visible: true }, // 中類名稱
     { field: 'ClassEname', header: '中類英文名稱', visible: true }, // 中類英文名稱
-    { field: 'ClassAttr', header: '大類代號', visible: true }, // 大類代號
+    { field: 'ClassAttr', header: '大類代號', visible: false }, // 大類代號
+    { field: 'ClassAttrCName', header: '大類名稱', visible: true }, // 大類名稱
 
     { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
     { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員

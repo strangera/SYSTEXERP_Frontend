@@ -1436,8 +1436,24 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     const totalAmount = parseFloat(rowData.tpy_totalamt) || 0;
     const periods = parseInt(rowData.period_nos) || 0;
 
-    if (totalAmount <= 0 || periods <= 1) {
+    // 🔥 修正：期數 >= 1 即可，允許一個月內的情況
+    if (totalAmount <= 0 || periods < 1) {
       this.messageService.warnBubble('請檢查總金額和期數');
+      return;
+    }
+
+    // 🔥 新增：期數 = 1 時的特殊處理
+    if (periods === 1) {
+      this.calculationResult = {
+        totalAmount,
+        periods,
+        monthlyAmount: totalAmount,
+        downPayment: totalAmount,
+        verification: totalAmount
+      };
+      this.currentRowData = rowData;
+      this.currentCapType = capType;
+      this.showCalculationDialog = true;
       return;
     }
 
