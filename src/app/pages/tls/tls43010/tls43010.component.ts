@@ -64,7 +64,7 @@ export class TLS43010Component extends BasicQueryPageComponent<QueryTls43010Resp
     { value: '2', label: '已刪除' },
   ];
   constructor(
-    private tls43010Service: Tls43010Service
+    private readonly tls43010Service: Tls43010Service,
   ) {
     super();
   }
@@ -74,7 +74,7 @@ export class TLS43010Component extends BasicQueryPageComponent<QueryTls43010Resp
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const body = {
-        ...frm.value,
+        ...frm.value
       }
       this.tls43010Service.queryTLS43010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
         this.data = res.Data

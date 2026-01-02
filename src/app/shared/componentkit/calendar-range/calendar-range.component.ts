@@ -50,13 +50,30 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
     this.calendarOneType = config.calendarOneType as 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne';
     this.checkRequiredValidator(this.startControl, 0);
     this.checkRequiredValidator(this.endControl, 1);
+
+    this.endControl.valueChanges.subscribe((val) => {
+      if (val instanceof Date) {
+        const endOfDay = new Date(val);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        if (val.getTime() !== endOfDay.getTime()) {
+          this.endControl.setValue(endOfDay, { emitEvent: false });
+        }
+      }
+      this.validateRange();
+    });
+
+    // 監聽起日變化也要觸發驗證（防止先選迄日，再選一個更晚的起日）
+    this.startControl.valueChanges.subscribe(() => {
+      this.validateRange();
+    });
   }
 
   validateRange() {
     if (this.startControl.value && this.endControl.value && this.startControl.value > this.endControl.value) {
-      this.endControl.setErrors({ invalidDateRange: true });
+      this.startControl.setErrors({ invalidDateRange: true });
     } else {
-      this.endControl.setErrors(null);
+      this.startControl.setErrors(null);
     }
   }
   get isStartDisabled() {

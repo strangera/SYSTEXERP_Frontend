@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { IUTls43010Request, QueryTls43010Response, Tls43010Detail, Tls43010Service } from '@service/api/tls/tls43010.service';
-import { SystemOption, SystemOptionsService } from '@service/system/sys1000.service';
+import { getSYS1000Options, SystemOption, SystemOptionsService } from '@service/system/sys1000.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { ImageQueryRequest, ImageService } from '@service/utility/image.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -75,11 +75,7 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
     { value: '1', label: '已審核' },
     { value: '2', label: '已刪除' },
   ];
-  NOT_DtlLimit_Options: { value: string, label: string }[] = [
-    { value: '0', label: '不限制' },
-    { value: '1', label: '符合明細設定的機台才播放' },
-    { value: '2', label: '不符合明細設定的機台才播放' },
-  ];
+  NOT_DtlLimit_Options = getSYS1000Options('NOT_DtlLimit');
   data: Tls43010Detail[] = [];
   selectedItems: Tls43010Detail[] = [];
   // 如果機台群組編號有值那其他要disable，反之亦然
