@@ -279,10 +279,24 @@ export function convertYYYYMMToDate(yyyymm: string): Date | null {
 }
 
 // 將 Date 轉為 "YYYYMM" 物件
-export function convertDateToYYYYMM(date: Date): string {
+export function convertDateToYYYYMM(date: any): string {
+  // 1. 基本空值檢查
   if (!date) return '';
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0'); // 月份從 1 開始
+
+  // 2. 如果傳進來的是字串，嘗試轉成 Date 物件
+  let d = date;
+  if (typeof date === 'string') {
+    d = new Date(date);
+  }
+
+  // 3. 檢查是否為有效的 Date 物件 (防止 Invalid Date)
+  if (!(d instanceof Date) || isNaN(d.getTime())) {
+    console.warn('Invalid date provided to convertDateToYYYYMM:', date);
+    return ''; // 或者根據需求回傳原字串或特定格式
+  }
+
+  const year = d.getFullYear();
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
   return `${year}${month}`;
 }
 // formatDateToYYYY_MM_DD：輸出為 YYYY-MM-DD（避免 toISOString 造成減一天）
