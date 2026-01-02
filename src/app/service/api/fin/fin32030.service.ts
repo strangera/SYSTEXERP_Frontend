@@ -529,4 +529,11 @@ export class FIN32030Service {
   updateFIN32030ARRecvAcct(params: UpdateFIN32030ARRecvAcctRequest): Observable<ApiResponse<object>> {
     return this.http.post<ApiResponse<object>>(`${this.apiUrl}/updateFIN32030ARRecvAcct`, params);
   }
+
+  /**
+   * 收款項目查詢
+   */
+  queryRecvItem(params: Record<string, never>): Observable<ApiResponse<QueryRecvItemResponse[]>> {
+    return this.http.post<ApiResponse<QueryRecvItemResponse[]>>(`${this.apiUrl}/queryRecvItem`, params);
+  }
 }
