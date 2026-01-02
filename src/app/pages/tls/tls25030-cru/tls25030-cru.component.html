@@ -30,15 +30,66 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+        <!-- 違規條文 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="違規條文"
+            controlName="Violation_type"
+            [options]="violationTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.Violation_type"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
 
-        <!-- 合約編號 -->
+
+        
+        <!-- 金額 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
-            label="合約編號"
-            controlName="talent_id"
-            [control]="dataForm.controls.talent_id"
+            label="金額"
+            controlName="fine_amount"
+            [control]="dataForm.controls.fine_amount"
             [submitted]="submitted"
           ></app-input-text>
+        </div>
+
+        
+        <!-- 繳款方式 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="繳款方式"
+            controlName="pay_type"
+            [options]="payTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.pay_type"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+
+                <!-- 扣款日期 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="扣款日期"
+            controlName="deduct_date"
+            [control]="dataForm.controls.deduct_date"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+
+        <!-- 違規日期 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="違規日期"
+            controlName="fine_date"
+            [control]="dataForm.controls.fine_date"
+            [submitted]="submitted"
+          ></app-calendar>
         </div>
 
         <!-- 開立單位 -->
@@ -54,63 +105,8 @@
           ></app-dropdown>
         </div>
 
-        <!-- 違規日期 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            calendarType="dateOne"
-            label="違規日期"
-            controlName="fine_date"
-            [control]="dataForm.controls.fine_date"
-            [submitted]="submitted"
-          ></app-calendar>
-        </div>
 
-        <!-- 金額 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="金額"
-            controlName="fine_amount"
-            [control]="dataForm.controls.fine_amount"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
 
-        <!-- 違規條文 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="違規條文"
-            controlName="Violation_type"
-            [options]="violationTypeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.Violation_type"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-
-        <!-- 繳款方式 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="繳款方式"
-            controlName="pay_type"
-            [options]="payTypeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.pay_type"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-
-        <!-- 扣款日期 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            calendarType="dateOne"
-            label="扣款日期"
-            controlName="deduct_date"
-            [control]="dataForm.controls.deduct_date"
-            [submitted]="submitted"
-          ></app-calendar>
-        </div>
 
         <!-- 違約事項說明 -->
         <div class="col-12">
