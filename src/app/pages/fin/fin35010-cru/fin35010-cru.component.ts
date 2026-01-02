@@ -178,52 +178,76 @@ export class FIN35010CRUComponent extends BasicCruPageComponent<FIN35010Response
       // 取得當前商店編號
       const stoNo = this.authService.currentUserValue?.SYS_StoreNo ?? '';
       const rawValue = frm.getRawValue();
+      const updateType = String(this.rowdata?.update_type || '0');
+
       // --- 情況 A：如果是批次模式 (Table 有資料) ---
       if (this.isFormCreateable && this.data && this.data.length > 0) {
         const listBody: FIN35010ModifyRequest[] = this.data.map(item => ({
           ...item,
           ...rawValue,
-          update_type: this.rowdata?.update_type || '0',
+          update_type: updateType,
           STO_No: stoNo,
-          // 確保 Table 中的日期格式正確
           In_Date: this.datePipe.transform(item.In_Date, 'yyyy-MM-dd') || '',
           CHK_ExpireDate: this.datePipe.transform(item.CHK_ExpireDate, 'yyyy-MM-dd') || undefined,
           Deposit_Date: this.datePipe.transform(item.Deposit_Date, 'yyyy-MM-dd') || undefined,
           Return_Date: this.datePipe.transform(item.Return_Date, 'yyyy-MM-dd') || undefined,
           Return_EDate: this.datePipe.transform(item.Return_EDate, 'yyyy-MM-dd') || undefined,
-          // 確保數字型別
           CHK_Amt: Number(item.CHK_Amt) || 0,
-          // 專櫃相關
           Talent_Id: item.Talent_Id ? Number(item.Talent_Id) : undefined,
           TLT_No: item.TLT_No,
           Org_Id: item.Org_Id,
           TLT_Name: item.TLT_Name,
-          TLT_BDate: item.tlt_bdate,
           tlt_bdate: item.tlt_bdate,
-          TLT_EDate: item.tlt_edate,
           tlt_edate: item.tlt_edate,
           CHK_Type: item.CHK_Type,
           VEN_No: item.VEN_No,
           VEN_Name: item.VEN_Name,
         }));
 
-        this.fin35010Service.insertListFIN35010({ List: listBody }).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        this.fin35010Service.insertListFIN35010({ List: listBody }).pipe(
+          finalize(() => this.loading = false),
+          untilDestroyed(this)
+        ).subscribe(res => {
           this.messageService.successBubble(res.Message || '批次新增成功');
-          this.onCancel(); // 回上一頁
+          this.onCancel();
         });
-        return; // 結束，不執行下方的單筆邏輯
+        return;
       }
 
-      // --- 情況 B：單筆模式 (一般新增或更新) ---
+      // --- 情況 B：單筆模式 ---
+      // 1. 使用你保留的 getTargetStatus 取得狀態
+      const targetStatus = this.getTargetStatus(updateType);
+
+      // 2. 處理日期自動回寫邏輯
+      let depositDate: string | undefined = this.datePipe.transform(rawValue.Deposit_Date, 'yyyy-MM-dd') || undefined;
+      let returnDate: string | undefined = this.datePipe.transform(rawValue.Return_Date, 'yyyy-MM-dd') || undefined;
+      const today = this.datePipe.transform(new Date(), 'yyyy-MM-dd')!;
+
+      switch (updateType) {
+        case '1': // 繳票
+          depositDate = today;
+          break;
+        case '2': // 取消繳票
+          depositDate = undefined;
+          break;
+        case '3': // 退票
+          returnDate = today;
+          break;
+        case '4': // 取消退票
+          returnDate = undefined;
+          break;
+      }
+
       const formattedBody: FIN35010ModifyRequest = {
         ...rawValue,
         Id: this.isFormCreateable ? undefined : rawValue.Id,
-        update_type: this.rowdata?.update_type || '0',
+        update_type: updateType,
+        Status: targetStatus,       // 使用 getTargetStatus 的結果
+        Deposit_Date: depositDate,
+        Return_Date: returnDate,
         STO_No: stoNo,
         In_Date: this.datePipe.transform(rawValue.In_Date, 'yyyy-MM-dd') || '',
         CHK_ExpireDate: this.datePipe.transform(rawValue.CHK_ExpireDate, 'yyyy-MM-dd') || undefined,
-        Deposit_Date: this.datePipe.transform(rawValue.Deposit_Date, 'yyyy-MM-dd') || undefined,
-        Return_Date: this.datePipe.transform(rawValue.Return_Date, 'yyyy-MM-dd') || undefined,
         Return_EDate: this.datePipe.transform(rawValue.Return_EDate, 'yyyy-MM-dd') || undefined,
         CHK_Amt: rawValue.CHK_Amt ? Number(rawValue.CHK_Amt) : 0,
         Talent_Id: rawValue.Talent_Id ? Number(rawValue.Talent_Id) : undefined,
@@ -233,11 +257,25 @@ export class FIN35010CRUComponent extends BasicCruPageComponent<FIN35010Response
         ? this.fin35010Service.insertFIN35010(formattedBody)
         : this.fin35010Service.updateFIN35010(formattedBody);
 
-      $req.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      $req.pipe(
+        finalize(() => this.loading = false),
+        untilDestroyed(this)
+      ).subscribe(res => {
         this.messageService.successBubble(res.Message);
-        this.onCancel(); // 通常存完就回列表
+        this.onCancel();
       });
     });
+  }
+
+  // 保留此方法，供單筆模式使用
+  private getTargetStatus(updateType: UpdateType | string): string {
+    switch (String(updateType)) {
+      case '1': return '1'; // 繳票 -> 已繳票
+      case '2': return '0'; // 取消繳票 -> 未繳票
+      case '3': return '2'; // 退票 -> 已退票
+      case '4': return '1'; // 取消退票 -> 已繳票
+      default: return '0';
+    }
   }
 
   dialogVisible = false;

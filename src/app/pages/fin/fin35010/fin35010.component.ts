@@ -94,6 +94,7 @@ export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response>
       action: (rowData: FIN35010Response) => {
         this.onEdit({ ...rowData, update_type: UpdateType.Deposit });
       },
+      // 只有「未繳票」狀態可以執行繳票
       disabled: (rowData: FIN35010Response) => rowData.Status !== '0'
     },
     {
@@ -102,6 +103,7 @@ export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response>
       action: (rowData: FIN35010Response) => {
         this.onEdit({ ...rowData, update_type: UpdateType.CancelDeposit });
       },
+      // 只有「已繳票」狀態可以取消繳票
       disabled: (rowData: FIN35010Response) => rowData.Status !== '1'
     },
     {
@@ -110,7 +112,8 @@ export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response>
       action: (rowData: FIN35010Response) => {
         this.onEdit({ ...rowData, update_type: UpdateType.Refund });
       },
-      disabled: (rowData: FIN35010Response) => rowData.Status !== '0'
+      // 修正點：必須是「已繳票(1)」狀態才能執行退票
+      disabled: (rowData: FIN35010Response) => rowData.Status !== '1'
     },
     {
       label: '取消退票',
@@ -118,6 +121,7 @@ export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response>
       action: (rowData: FIN35010Response) => {
         this.onEdit({ ...rowData, update_type: UpdateType.CancelRefund });
       },
+      // 只有「已退票(2)」狀態可以取消退票
       disabled: (rowData: FIN35010Response) => rowData.Status !== '2'
     },
   ];
