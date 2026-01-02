@@ -1,44 +1,71 @@
 <div class="card">
-    <div class="flex gap-2 mb-2">
-        <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-        <app-button btnType="back" (click)="onCancel()"></app-button>
-    </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="dataForm.controls.RefCode"
-                        [submitted]="submitted" optionLabel="RefCode" optionValue="RefCode"
-                        [fieldsConfig]="fieldsConfig" (select)="onSelect($event)"
-                        (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
-                        [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" 
-                        [lazy]="false">
-                        <app-input-text class="col-12 md:col-6" label="廠商編號" controlName="VEN_No"
-                        [control]="opForm.controls.VEN_No" />
-                        <app-input-text class="col-12 md:col-6" label="廠商名稱" controlName="VEN_Name"
-                        [control]="opForm.controls.VEN_Name" />
-                    </app-dropdown-table>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown-table
+            class="col-12 md:col-6 lg:col-4"
+            [control]="dataForm.controls.RefCode"
+            [submitted]="submitted"
+            optionLabel="RefCode"
+            optionValue="RefCode"
+            [fieldsConfig]="fieldsConfig"
+            (select)="onSelect($event)"
+            (inputValueChanged)="onAutoCompleteInputChange($event)"
+            (formValueChanged)="onformValueChanged($event)"
+            [formGroup]="opForm"
+            [dialogData]="opData"
+            [dialogColumns]="opColumns"
+            [lazy]="false"
+          >
+            <app-input-text
+              class="col-12 md:col-6"
+              label="廠商編號"
+              controlName="VEN_No"
+              [control]="opForm.controls.VEN_No"
+            />
+            <app-input-text
+              class="col-12 md:col-6"
+              label="廠商名稱"
+              controlName="VEN_Name"
+              [control]="opForm.controls.VEN_Name"
+            />
+          </app-dropdown-table>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <!-- <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text label="統一編號" controlName="UniformNo" [control]="dataForm.controls.UniformNo"
                     [submitted]="submitted"></app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="對象別代碼" controlName="RefCode" [control]="dataForm.controls.RefCode"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="對象別名稱" controlName="RefName" [control]="dataForm.controls.RefName"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-            </div>
-            <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-                *ngIf="!isFormReadable">
-                <app-button btnType="cancel" [form]="dataForm"></app-button>
-                <app-button btnType="submit"></app-button>
-            </div>
-        </form>
-    </p-panel>
+                </div> -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="對象別代碼"
+            controlName="RefCode"
+            [control]="dataForm.controls.RefCode"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="對象別名稱"
+            controlName="RefName"
+            [control]="dataForm.controls.RefName"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        *ngIf="!isFormReadable"
+      >
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit"></app-button>
+      </div>
+    </form>
+  </p-panel>
 </div>
