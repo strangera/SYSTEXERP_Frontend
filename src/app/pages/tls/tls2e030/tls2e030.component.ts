@@ -1,21 +1,21 @@
-import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
 import { Tls2e030Data, Tls2e030EstBody, Tls2e030QueryBody, Tls2e030Service } from '@service/api/tls/tls2e030.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { AsyncPipe } from '@angular/common';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { finalize } from 'rxjs';
 import { formatDate, formatYYYYMM, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 
 // 2.2.14.3 專櫃帳款試算作業
 @Component({
@@ -143,18 +143,63 @@ export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> imp
   loading2 = false;
   onSam(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const body = {
+      const baseBody = {
         ...frm.value,
         sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
-        sam_termno: frm.value.sam_termno as number, // 確保型別是 number
-        money_type: frm.value.money_type
-      } as Tls2e030EstBody; // 轉換為正確的 Request Body 型別
-      this.loading2 = true;
-      this.tls2e030Service.estTls2e030(body).pipe(finalize(() => { this.loading = false; this.loading2 = false }), untilDestroyed(this)).subscribe(res => {
-        this.messageService.successBubble(res.Message);
-        this.currentColumns = this.LOG_COLUMNS;
-        this.data = res.Data;
-      })
+        sam_termno: frm.value.sam_termno as number,
+        money_type: frm.value.money_type,
+        isForce: false // 預設先不強制
+      } as Tls2e030EstBody;
+
+      this.executeTrialCalculation(baseBody);
     });
+  }
+  /**
+ * 執行試算的邏輯封裝
+ * @param body 請求參數
+ */
+  private executeTrialCalculation(body: Tls2e030EstBody) {
+    this.loading2 = true;
+
+    this.tls2e030Service.estTls2e030(body)
+      .pipe(
+        finalize(() => {
+          this.loading2 = false;
+          this.loading = false;
+        }),
+        untilDestroyed(this)
+      )
+      .subscribe(res => {
+        // 判斷是否為「已存在」的特殊代碼 (假設後端 ReturnCode 為 'EXISTED')
+        if (res.Status === 'EXISTED') {
+          this.confirmationService.confirm({
+            header: '確認重算',
+            message: res.Message || `已有試算資料，是否重新計算?`,
+            accept: () => {
+              // 使用者同意重算，帶入 isForce = true 再次執行
+              this.executeTrialCalculation({ ...body, isForce: true });
+            },
+          });
+          return; // 中斷，不繼續跑後面的顯示 logic
+        }
+
+        // 2. 處理「執行失敗」 (例如：9999, 或者 ErrCode != 0)
+        // 根據你後端的邏輯，失敗時會回傳 ErrMsg 並帶上檢查 Log 列表
+        if (res.Status !== '0000') {
+          this.messageService.errorBubble(res.Message || '試算失敗，請檢查下方明細');
+
+          // 即便失敗也要顯示 Log，讓使用者知道哪一步錯了
+          this.currentColumns = this.LOG_COLUMNS;
+          this.data = res.Data || [];
+          this.totalRecords = this.data.length;
+          return;
+        }
+
+        // 3. 正常的試算完成 (0000)
+        this.messageService.successBubble(res.Message || '試算完成');
+        this.currentColumns = this.LOG_COLUMNS;
+        this.data = res.Data || [];
+        this.totalRecords = this.data.length;
+      });
   }
 }
