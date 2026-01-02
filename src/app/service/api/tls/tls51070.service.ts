@@ -85,6 +85,14 @@ export class Tls51070Service {
     });
   }
 
+  //下載excel範本
+  // 修改後：下載 TXT 內容
+  downloadTLS51070Template(): Observable<string> {
+    return this.http.get(`${this.apiUrl}/downloadTLS51070Template`, {
+      responseType: 'text' // 改為 text 方便後續處理字串
+    });
+  }
+
   // --- dropDown ---
 
   // 查詢 大分類(業種)設定檔

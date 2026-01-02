@@ -497,6 +497,32 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     });
   }
 
+  // 範本下載
+  downloadTLS51070Template() {
+    this.tls51070Service.downloadTLS51070Template()
+      .subscribe((result: string) => {
+        // 1. 建立包含 BOM 的 Blob，確保 UTF-8 格式在 Windows 正常顯示
+        const bom = '\uFEFF';
+        const blob = new Blob([bom + result], { type: 'text/plain;charset=utf-8' });
+
+        // 2. 建立下載連結
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        // 3. 設定下載檔名
+        a.download = 'TLS51070sample.txt';
+
+        // 執行下載
+        document.body.appendChild(a); // 將 a 加入 body 確保在部分瀏覽器相容性
+        a.click();
+        document.body.removeChild(a);
+
+        // 4. 釋放資源
+        window.URL.revokeObjectURL(url);
+      });
+  }
+
   //用戶匯入大量圖檔
   userInputIMGs() {
     this.messageService.infoBubble('開發中');
