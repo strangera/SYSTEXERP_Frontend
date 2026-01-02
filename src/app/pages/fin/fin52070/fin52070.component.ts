@@ -78,7 +78,8 @@ export class FIN52070Component extends BasicQueryPageComponent<GLS1005> implemen
     { field: 'ClassNo', header: '三碼代號', visible: true, exportFormat: [] }, // 三碼代號
     { field: 'ClassCName', header: '三碼名稱', visible: true }, // 三碼名稱
     { field: 'ClassEname', header: '三碼英文名稱', visible: true }, // 三碼英文名稱
-    { field: 'ParentClass', header: '中類代碼', visible: true, options: this.ClassAttr_Option }, // 中類代碼
+    { field: 'ParentClass', header: '中類代碼', visible: false }, // 中類代碼
+    { field: 'ParentClassName', header: '中類名稱', visible: true }, // 中類代碼
 
     { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
     { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
