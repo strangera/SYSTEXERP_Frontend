@@ -1,21 +1,21 @@
-import { ExcelColumn, ExcelExportService } from './../../../shared/service/excel-export.service';
 import { Component, OnInit, signal } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Fin21020Service, IFin21020Data, IQueryFin21020Request } from '@service/api/fin/fin21020.service';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AddButton, Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { AddButton, Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
-import { Fin21020Service, IFin21020Data, IQueryFin21020Request } from '@service/api/fin/fin21020.service';
-import { finalize } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ExcelColumn, ExcelExportService } from './../../../shared/service/excel-export.service';
 // 1.2.1.2 費率對照維護
 @Component({
   selector: 'app-fin21020',
@@ -30,14 +30,18 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     Remit_BAmount_End: [null as number | null, [Validators.max(9999999999)]], // 金額下限 - 轉帳最低金額(迄)
     Remit_UAmount_Start: [null as number | null, [Validators.max(9999999999)]], // 金額上限 - 轉帳最高金額(起)
     Remit_UAmount_End: [null as number | null, [Validators.max(9999999999)]], // 金額上限 - 轉帳最高金額(迄)
-    Remit_Fee: [null as number | null, [Validators.max(999999)]], // 廠商負擔電匯手續費
-    Comp_Remit_Fee: [null as number | null, [Validators.max(999999)]], // 公司負擔電匯手續費
-    Cash_Back_Amt: [null as number | null, [Validators.max(999999)]], // 廠商負擔電匯手續費回饋收入
+    Remit_Fee_Start: [null as number | null, [Validators.max(999999)]],
+    Remit_Fee_End: [null as number | null, [Validators.max(999999)]],
+    Comp_Remit_Fee_Start: [null as number | null, [Validators.max(999999)]],
+    Comp_Remit_Fee_End: [null as number | null, [Validators.max(999999)]],
+    Cash_Back_Amt_Start: [null as number | null, [Validators.max(999999)]],
+    Cash_Back_Amt_End: [null as number | null, [Validators.max(999999)]],
     ...createPaginationConfig([{ field: 'BNK_No', order: 1 }, { field: 'Remit_BAmount', order: 1 }])
   });
   selectedItems: IFin21020Data[] = [];
   columns: Column[] = [
     { field: 'BNK_No', header: '公司銀行科目代號' },
+    { field: 'BNK_Name', header: '公司銀行科目名稱' },
     { field: 'Remit_BAmount', header: '金額下限', format: formatAmount },
     { field: 'Remit_UAmount', header: '金額上限', format: formatAmount },
     { field: 'Remit_Fee', header: '廠商負擔電匯手續費', format: formatAmount },
@@ -83,7 +87,7 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
         this.totalRecords = res.TotalCount;
         this.data = res.Data;
 
-        
+
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });

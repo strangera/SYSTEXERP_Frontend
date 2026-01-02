@@ -297,7 +297,8 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         header: '刪除交易',
         message: '確定要刪除交易嗎?',
         accept: () => {
-          this.tls24010Service.deleteTLS24010(body).pipe(untilDestroyed(this)).subscribe(res => {
+          this.loading = true;
+          this.tls24010Service.deleteTLS24010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
             this.messageService.successBubble(res.Message);
             this.onSubmit(this.queryForm);
           })
