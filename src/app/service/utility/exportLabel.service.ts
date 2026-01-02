@@ -1,11 +1,11 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, tap } from 'rxjs'; // 引入 tap
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 /**
  * @interface IExportLabelRequest
- * 標籤檔匯出請求的資料結構
+ * 標籤檔匯出請求資料結構 (通用型)
  */
 export interface IExportLabelRequest {
   PLU_MagNo: string;
@@ -19,7 +19,7 @@ export interface IExportLabelRequest {
 
 /**
  * @interface IExportDXTRequest
- * 申報檔匯出請求的資料結構 (對應 /ExportLabel/ExportDXT)
+ * 申報檔匯出請求資料結構
  */
 export interface IExportDXTRequest {
   STO_Uniform: string;
@@ -42,6 +42,14 @@ export interface IExportDXTRequest {
   STO_ApplyFlag: string;
 }
 
+/**
+ * @interface IExportFIN26010Request
+ * 匯款銀行匯出請求資料結構
+ */
+export interface IExportFIN26010Request {
+  PamNoList: string[];
+}
+
 
 @Injectable({
   providedIn: 'root'
@@ -56,12 +64,9 @@ export class ExportLabelService {
   /**
    * @method handleFileDownload
    * 處理檔案下載的核心邏輯：從 HttpResponse 讀取 Blob 和檔名，並觸發瀏覽器下載。
-   * @param exportHttpResponse 完整的 HTTP Response，包含 Blob。
-   * @param defaultFilename 當 Content-Disposition 標頭中找不到檔名時使用的預設檔名。
    */
   handleFileDownload(exportHttpResponse: HttpResponse<Blob>, defaultFilename = 'unknown.txt'): void {
     if (!exportHttpResponse.ok || !exportHttpResponse.body) {
-      // 這裡可以加上錯誤處理或日誌
       console.warn('File download failed: Response not OK or body is null.');
       return;
     }
@@ -71,20 +76,17 @@ export class ExportLabelService {
     let filename = defaultFilename;
 
     if (contentDisposition) {
-      // 處理 Content-Disposition: filename* (RFC 5987) 和 filename (RFC 6266)
       const filenameMatch = contentDisposition.match(/filename\*?=['"]?(?:UTF-8''|)([^;"]+)/i);
       if (filenameMatch && filenameMatch[1]) {
-        // 解碼 URL 編碼的檔名
         try {
           filename = decodeURIComponent(filenameMatch[1]);
         } catch (e) {
-          filename = filenameMatch[1]; // 解碼失敗則用原始值
+          filename = filenameMatch[1];
           console.error('Error decoding filename from content-disposition:', e);
         }
       }
     }
 
-    // 觸發瀏覽器下載
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -97,48 +99,60 @@ export class ExportLabelService {
 
   /**
    * @method ExportLabel
-   * 確認產生標籤檔(格式.txt)，並自動處理檔案下載。
-   * @param data IExportLabelRequest 陣列
-   * @returns Observable<HttpResponse<Blob>> 包含 .txt 檔案內容的 Observable
+   * 確認產生標籤檔(格式.txt)
    */
   ExportLabel(data: IExportLabelRequest[]): Observable<HttpResponse<Blob>> {
     return this.http.post<Blob>(
       `${this.apiUrl}/ExportLabel/ExportLabel`,
       data,
-      {
-        responseType: 'blob' as 'json', // 必須明確指定為 'blob'
-        observe: 'response' // 觀察完整的 HttpResponse，以便讀取 headers (如 filename)
-      }
+      { responseType: 'blob' as 'json', observe: 'response' }
     ).pipe(
-      // 使用 tap 運算子在 Observable 流中執行副作用（處理下載）
-      tap((response) => {
-        if (response.ok && response.body) {
-          this.handleFileDownload(response, 'label_export.txt');
-        }
-      })
+      tap((response) => this.handleFileDownload(response, 'label_export.txt'))
+    );
+  }
+
+  /**
+   * @method ExportLabel_Other
+   * 確認產生標籤檔(格式.txt) - 專供 tls52050、tls51070 使用
+   * 檔名統一為: TRIMKG.txt
+   */
+  ExportLabel_Other(data: IExportLabelRequest[]): Observable<HttpResponse<Blob>> {
+    return this.http.post<Blob>(
+      `${this.apiUrl}/ExportLabel/ExportLabel_Other`,
+      data,
+      { responseType: 'blob' as 'json', observe: 'response' }
+    ).pipe(
+      tap((response) => this.handleFileDownload(response, 'TRIMKG.txt'))
     );
   }
 
   /**
    * @method ExportDXT
-   * 產生申報檔(格式.DXT) - 新增的 API
-   * @param data IExportDXTRequest 陣列
-   * @returns Observable<HttpResponse<Blob>> 包含 .DXT 檔案內容的 Observable
+   * 產生申報檔(格式.DXT)
    */
   ExportDXT(data: IExportDXTRequest[]): Observable<HttpResponse<Blob>> {
     return this.http.post<Blob>(
       `${this.apiUrl}/ExportLabel/ExportDXT`,
       data,
-      {
-        responseType: 'blob' as 'json', // 指定 responseType 為 'blob' 以接收檔案資料
-        observe: 'response' // 觀察完整的 HttpResponse
-      }
+      { responseType: 'blob' as 'json', observe: 'response' }
     ).pipe(
-      // 可以在這裡為 DXT 檔案添加自動下載邏輯
+      tap((response) => this.handleFileDownload(response, 'declaration_export.DXT'))
+    );
+  }
+
+  /**
+   * @method ExportFIN26010TXT
+   * 產生匯款銀行檔 (格式.yyyyMMddSSS_TSBRT.txt)
+   */
+  ExportFIN26010TXT(data: IExportFIN26010Request): Observable<HttpResponse<Blob>> {
+    return this.http.post<Blob>(
+      `${this.apiUrl}/ExportLabel/ExportFIN26010TXT`,
+      data,
+      { responseType: 'blob' as 'json', observe: 'response' }
+    ).pipe(
       tap((response) => {
-        if (response.ok && response.body) {
-          this.handleFileDownload(response, 'declaration_export.DXT');
-        }
+        // 銀行檔通常後端會給特定檔名，若無則使用預設格式
+        this.handleFileDownload(response, 'bank_export.txt');
       })
     );
   }
