@@ -95,7 +95,7 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
       visible: true,
     },
     {
-      field: 'BNK_CheckInAccNo',
+      field: 'BNK_CheckInAccCName',
       header: '應收票據名稱',
       visible: true,
     },
@@ -105,7 +105,7 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
       visible: true,
     },
     {
-      field: 'BNK_CheckOutAccNo',
+      field: 'BNK_CheckOutAccCName',
       header: '應付票據名稱',
       visible: true,
     },

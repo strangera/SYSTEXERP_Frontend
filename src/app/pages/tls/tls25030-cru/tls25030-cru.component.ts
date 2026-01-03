@@ -67,7 +67,7 @@ export class TLS25030CRUComponent extends BasicCruPageComponent<any> implements 
     ID: [null as number | null],
 
     tlt_no: ['' as string, [Validators.required, Validators.maxLength(12)]],
-    talent_id: [null as number | null, [Validators.required]],
+    talent_id: [null as number | null],
     org_id: ['' as string, [Validators.required, Validators.maxLength(20)]],
     fine_date: [null as Date | null, [Validators.required]],
     fine_amount: [null as number | null, [Validators.required]],

@@ -115,8 +115,8 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
     ];
   // 類型
   closeFlagOptions: any[] = [
-    { label: '未結帳', value: 'N' },
-    { label: '已結帳', value: 'Y' }
+    { label: '試算', value: 'N' },
+    { label: '結算', value: 'Y' }
   ];
   // 專櫃/自營櫃
   storeWayOptions: any[] = [

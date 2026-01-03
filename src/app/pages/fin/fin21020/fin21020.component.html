@@ -22,16 +22,21 @@
               [endControl]="queryForm.controls.Remit_BAmount_End" [submitted]="submitted"></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="廠商負擔電匯手續費" [startControl]="queryForm.controls.Remit_Fee"
-              [endControl]="queryForm.controls.Remit_Fee" [submitted]="submitted"></app-input-number-range>
+            <app-input-number-range label="廠商負擔電匯手續費" [startControl]="queryForm.controls.Remit_Fee_Start"
+              [endControl]="queryForm.controls.Remit_Fee_End" [submitted]="submitted">
+            </app-input-number-range>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="公司負擔電匯手續費" [startControl]="queryForm.controls.Comp_Remit_Fee"
-              [endControl]="queryForm.controls.Comp_Remit_Fee" [submitted]="submitted"></app-input-number-range>
+            <app-input-number-range label="公司負擔電匯手續費" [startControl]="queryForm.controls.Comp_Remit_Fee_Start"
+              [endControl]="queryForm.controls.Comp_Remit_Fee_End" [submitted]="submitted">
+            </app-input-number-range>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="廠商負擔電匯手續費回饋收入" [startControl]="queryForm.controls.Cash_Back_Amt"
-              [endControl]="queryForm.controls.Cash_Back_Amt" [submitted]="submitted"></app-input-number-range>
+            <app-input-number-range label="廠商負擔電匯手續費回饋收入" [startControl]="queryForm.controls.Cash_Back_Amt_Start"
+              [endControl]="queryForm.controls.Cash_Back_Amt_End" [submitted]="submitted">
+            </app-input-number-range>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

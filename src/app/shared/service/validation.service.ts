@@ -53,6 +53,7 @@ export class ValidationService {
       textRange: '起號不可大於迄號',
       invalidGuiVehicle: '格式錯誤：需以「/」為開頭，長度8碼，且第2碼後只能包含半形英數字+-.等符號',
       dateNotAfterToday: '日期必須大於等於今日',
+      containsFullWidth: '不可輸入全形字元，請切換為半形輸入。',
     };
     return config[validatorName];
   }
@@ -526,5 +527,24 @@ export class ValidationService {
       // 驗證通過
       return null;
     };
+  }
+
+  /**
+ * 檢查是否包含全形字元（包含數字、符號、空格）
+ */
+  containsFullWidth(control: { value: any }) {
+    const value = control.value;
+    if (value === null || value === '' || value === undefined) {
+      return null;
+    }
+
+    // 使用正則表達式檢查是否包含全形字元或全形空格
+    const fullWidthRegex = /[！-～　]/;
+
+    if (fullWidthRegex.test(value.toString())) {
+      return { containsFullWidth: true };
+    }
+
+    return null;
   }
 }

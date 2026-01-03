@@ -32,6 +32,7 @@
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
+          <app-button label="結算鎖定" icon="pi pi-lock" (click)="onUpdate(queryForm)" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -39,15 +40,8 @@
 </div>
 <div class="card">
   <app-table-report tableKey="tls2e070" dataKey="id" [lastQueryBody]="historyRequestBody" [data]="data"
-    [columns]="columns" [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [showReportMode]="false"
-    [queryFunction]="tls2e070Service.queryTLS2E070.bind(tls2e070Service)" [selectedItems]="selectedItems"
-    [loading]="loading" (selectionChange)="selectedItems = $event" [showCheckBox]="showCheckBox"
-    [isRowSelectable]="isRowSelectable">
-    <header>
-      <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }"
-        pTooltip="更新鎖定狀態" tooltipPosition="top" pButton icon="pi pi-lock" severity="success"
-        class="p-button-rounded p-button-text" [disabled]="selectedItems.length === 0" (click)="onUpdate()"
-        [loading]="btnLoading" />
-    </header>
+    [showSummary]="isSettle" [columns]="columns" [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false"
+    [showReportMode]="false" [queryFunction]="tls2e070Service.queryTLS2E070.bind(tls2e070Service)" [loading]="loading"
+    [showFilter]="false">
   </app-table-report>
 </div>

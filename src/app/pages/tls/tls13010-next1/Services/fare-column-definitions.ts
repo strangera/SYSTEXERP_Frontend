@@ -1,6 +1,6 @@
-import { TLS13010_DROPDOWN_OPTIONS } from './../../tls13010/tls13010.dropdown';
 import { ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { TableValidators } from '@shared/componentkit/expandable-edit-table/table-validation.interface';
+import { TLS13010_DROPDOWN_OPTIONS } from './../../tls13010/tls13010.dropdown';
 
 /**
  * 扣款項目欄位定義
@@ -105,7 +105,7 @@ export class FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '是否新增',
+        header: '新增',
         type: 'checkbox',
         editable: true,
         autoWidth: true,
@@ -223,7 +223,7 @@ export class FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '是否新增',
+        header: '新增',
         type: 'checkbox',
         editable: true,
 
@@ -365,7 +365,7 @@ export class FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '是否新增',
+        header: '新增',
         type: 'checkbox',
         editable: true,
 
@@ -544,7 +544,7 @@ export class FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '是否新增',
+        header: '新增',
         type: 'checkbox',
         editable: true,
 
@@ -724,7 +724,7 @@ export class FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '是否新增',
+        header: '新增',
         type: 'checkbox',
         editable: true,
 

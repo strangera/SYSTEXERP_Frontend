@@ -50,13 +50,43 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
     this.calendarOneType = config.calendarOneType as 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne';
     this.checkRequiredValidator(this.startControl, 0);
     this.checkRequiredValidator(this.endControl, 1);
+
+    this.endControl.valueChanges.subscribe((val) => {
+      if (val instanceof Date) {
+        const endOfDay = new Date(val);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        if (val.getTime() !== endOfDay.getTime()) {
+          this.endControl.setValue(endOfDay, { emitEvent: false });
+        }
+      }
+      this.validateRange();
+    });
+
+    // 監聽起日變化也要觸發驗證（防止先選迄日，再選一個更晚的起日）
+    this.startControl.valueChanges.subscribe(() => {
+      this.validateRange();
+    });
   }
 
   validateRange() {
-    if (this.startControl.value && this.endControl.value && this.startControl.value > this.endControl.value) {
-      this.endControl.setErrors({ invalidDateRange: true });
+    const startVal = this.startControl.value;
+    const endVal = this.endControl.value;
+
+    // 取得目前 startControl 所有的錯誤
+    const errors = this.startControl.errors || {};
+
+    if (startVal && endVal && startVal > endVal) {
+      // 增加日期區間錯誤，但不影響原本已存在的錯誤 (如全形錯誤)
+      this.startControl.setErrors({ ...errors, invalidDateRange: true });
     } else {
-      this.endControl.setErrors(null);
+      // 移除日期區間錯誤
+      if (errors['invalidDateRange']) {
+        delete errors['invalidDateRange'];
+      }
+      // 如果移除後沒有其他錯誤了，就給 null，否則保留剩餘錯誤
+      const remainingErrors = Object.keys(errors).length > 0 ? errors : null;
+      this.startControl.setErrors(remainingErrors);
     }
   }
   get isStartDisabled() {
