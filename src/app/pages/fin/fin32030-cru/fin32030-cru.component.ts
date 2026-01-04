@@ -1,17 +1,20 @@
-import { NgFor, NgIf } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DialogModule } from 'primeng/dialog';
 import { PanelModule } from 'primeng/panel';
+import { StepperModule } from 'primeng/stepper';
+import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import {
   FIN32030Service,
   QueryFIN32030ARResponse,
   QueryFIN32030Response,
   QueryRecvItemResponse,
-  RecvDetailResponse
+  RecvDetailResponse,
+  CheckDetailItem
 } from '../../../service/api/fin/fin32030.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -21,7 +24,9 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableEditComponent } from '../../../shared/componentkit/table-edit/table-edit.component';
 import { Column, formatAmountWithFraction, formatDate } from '../../../shared/componentkit/table/table.model';
+import { EditColumn } from '../../../shared/componentkit/table-edit/table-edit.model';
 
 
 //1.3.2.3 收款沖帳維護 CRU
@@ -31,6 +36,7 @@ import { Column, formatAmountWithFraction, formatDate } from '../../../shared/co
   styleUrl: './fin32030-cru.component.scss',
   standalone: true,
   imports: [
+    CommonModule,
     MenubarComponent,
     ButtonComponent,
     PanelModule,
@@ -40,21 +46,202 @@ import { Column, formatAmountWithFraction, formatDate } from '../../../shared/co
     CalendarComponent,
     DropdownComponent,
     InputTextComponent,
-    NgFor,
-    NgIf,
     TranslateModule,
     DialogModule,
-    TableComponent
+    TableComponent,
+    TableEditComponent,
+    StepperModule,
+    ButtonModule
   ]
 })
 export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Response> implements OnInit {
-  dataForm = this.formBuilder.nonNullable.group({
+  // 步驟控制
+  activeStep = 0;
+
+  // 步驟1: 基本資料表單
+  step1Form = this.formBuilder.nonNullable.group({
     RCV_No: ['', [Validators.maxLength(20)]], // 收款單號
     RCV_Date: [new Date(), [Validators.required]], // 收款日期
     Sales_Id: [null as string | null], // 業務員代號
     Remark: ['', [Validators.maxLength(100)]], // 備註
-    items: this.formBuilder.array<FormGroup>([]), // 收款項目明細
   });
+
+  // 步驟1: 應收帳款選擇
+  selectedARItems: QueryFIN32030ARResponse[] = [];
+  arDialogColumns: Column[] = [
+    { field: 'ARS_ID', header: '應收ID', visible: true },
+    { field: 'VEN_No', header: '廠客代號', visible: true },
+    { field: 'VEN_Name', header: '廠客名稱', visible: true },
+    { field: 'ARS_Amt', header: '應收金額', visible: true, format: formatAmountWithFraction, style: 'text-align: right' },
+    { field: 'ARS_Date', header: '立帳日', visible: true, format: formatDate },
+    { field: 'PaidAmt', header: '已收款金額', visible: true, format: formatAmountWithFraction, style: 'text-align: right' },
+    { field: 'UnpaidAmt', header: '未收款金額', visible: true, format: formatAmountWithFraction, style: 'text-align: right' },
+    { field: 'PTA_Date', header: '預計收款日', visible: true, format: formatDate },
+    { field: 'NoteDesc', header: '摘要', visible: true },
+  ];
+
+  // 步驟1: 已選擇的應收帳款顯示欄位
+  selectedARColumns: Column[] = [
+    { field: 'ARS_ID', header: '應收ID', visible: true },
+    { field: 'VEN_No', header: '廠客代號', visible: true },
+    { field: 'VEN_Name', header: '廠客名稱', visible: true },
+    { field: 'UnpaidAmt', header: '收款金額', visible: true, format: formatAmountWithFraction, style: 'text-align: right' },
+  ];
+
+  // 步驟2: 收款項目表格資料
+  step2TableData: any[] = [];
+  step2Columns: EditColumn[] = [
+    {
+      field: 'CAP_Item',
+      header: '收款項目',
+      type: 'dropdown',
+      options: () => this.recvItemOptions,
+      optionLabel: 'CAP_ItemName',
+      optionValue: 'CAP_Item',
+      showClear: true,
+      validate: [
+        (value: any) => ({
+          isValid: !!value,
+          errorMessage: ['收款項目為必填']
+        })
+      ]
+    },
+    {
+      field: 'ARS_Amt',
+      header: '收款金額',
+      type: 'inputNumber',
+      minFractionDigits: 2,
+      maxFractionDigits: 2,
+      min: 0,
+      textAlign: 'right',
+      aggregate: 'sum',
+      validate: [
+        (value: any) => ({
+          isValid: value !== null && value !== undefined && value >= 0,
+          errorMessage: ['收款金額為必填且必須大於等於0']
+        })
+      ]
+    },
+    {
+      field: 'NoteDesc',
+      header: '備註',
+      type: 'input',
+      maxLength: 100
+    }
+  ];
+
+  // 步驟3: 票據資訊表格資料
+  step3TableData: any[] = [];
+  step3Columns: EditColumn[] = [
+    {
+      field: 'CHK_No',
+      header: '票據號碼',
+      type: 'input',
+      maxLength: 50,
+      validate: [
+        (value: any) => ({
+          isValid: !!value,
+          errorMessage: ['票據號碼為必填']
+        })
+      ]
+    },
+    {
+      field: 'CHK_Type',
+      header: '票據種類',
+      type: 'dropdown',
+      options: () => this.checkTypeOptions,
+      optionLabel: 'label',
+      optionValue: 'value',
+      defaultValueFunction: () => '1'
+    },
+    {
+      field: 'CHK_Amt',
+      header: '票面金額',
+      type: 'inputNumber',
+      minFractionDigits: 2,
+      maxFractionDigits: 2,
+      min: 0,
+      textAlign: 'right',
+      aggregate: 'sum',
+      validate: [
+        (value: any) => ({
+          isValid: value !== null && value !== undefined && value >= 0,
+          errorMessage: ['票面金額為必填且必須大於等於0']
+        })
+      ]
+    },
+    {
+      field: 'Ticket_YN',
+      header: '是否客票',
+      type: 'dropdown',
+      options: () => this.ticketYNOptions,
+      optionLabel: 'label',
+      optionValue: 'value',
+      defaultValueFunction: () => 'N'
+    },
+    {
+      field: 'BNK_No',
+      header: '往來銀行代號',
+      type: 'input',
+      validate: [
+        (value: any) => ({
+          isValid: !!value,
+          errorMessage: ['往來銀行代號為必填']
+        })
+      ]
+    },
+    {
+      field: 'BNK_BranchNo',
+      header: '分行代號',
+      type: 'input',
+      validate: [
+        (value: any) => ({
+          isValid: !!value,
+          errorMessage: ['分行代號為必填']
+        })
+      ]
+    },
+    {
+      field: 'BNK_AccNo',
+      header: '客戶銀行帳號',
+      type: 'input'
+    },
+    {
+      field: 'VEN_No',
+      header: '廠客代號',
+      type: 'input'
+    },
+    {
+      field: 'CHK_ReceDate',
+      header: '收票日',
+      type: 'date',
+      dateFormat: 'yy/mm/dd'
+    },
+    {
+      field: 'CHK_ExpireDate',
+      header: '到期日',
+      type: 'date',
+      dateFormat: 'yy/mm/dd',
+      validate: [
+        (value: any) => ({
+          isValid: !!value,
+          errorMessage: ['到期日為必填']
+        })
+      ]
+    },
+    {
+      field: 'CHK_PreDate',
+      header: '預兌日',
+      type: 'date',
+      dateFormat: 'yy/mm/dd'
+    },
+    {
+      field: 'CHK_Comment',
+      header: '備註',
+      type: 'input',
+      maxLength: 200
+    }
+  ];
 
   // 收款項目下拉選項 (從 API 載入)
   recvItemOptions: QueryRecvItemResponse[] = [];
@@ -69,20 +256,26 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     DateTo: [null],
   });
   arDialogData: QueryFIN32030ARResponse[] = [];
-  arDialogColumns: Column[] = [
-    { field: 'ARS_ID', header: '應收ID', visible: true },
-    { field: 'VEN_No', header: '廠客代號', visible: true },
-    { field: 'VEN_Name', header: '廠客名稱', visible: true },
-    { field: 'ARS_Amt', header: '應收金額', visible: true, format: formatAmountWithFraction, style: 'text-right' },
-    { field: 'ARS_Date', header: '立帳日', visible: true, format: formatDate },
-    { field: 'PaidAmt', header: '已收款金額', visible: true, format: formatAmountWithFraction, style: 'text-right' },
-    { field: 'UnpaidAmt', header: '未收款金額', visible: true, format: formatAmountWithFraction, style: 'text-right' },
-    { field: 'PTA_Date', header: '預計收款日', visible: true, format: formatDate },
-    { field: 'NoteDesc', header: '摘要', visible: true },
-  ];
 
   // 業務員下拉選項 (TODO: 需要從 API 載入)
   salesOptions: any[] = [];
+
+  // 票據種類選項
+  checkTypeOptions = [
+    { label: '支票', value: '1' },
+    { label: '本票', value: '2' },
+    { label: '匯票', value: '3' }
+  ];
+
+  // 是否客票選項
+  ticketYNOptions = [
+    { label: '是', value: 'Y' },
+    { label: '否', value: 'N' }
+  ];
+
+  // 銀行下拉選項 (TODO: 需要從 API 載入)
+  bankOptions: any[] = [];
+  branchOptions: any[] = [];
 
   constructor(
     private readonly fin32030Service: FIN32030Service
@@ -91,7 +284,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
   }
 
   ngOnInit(): void {
-    this.initializePage('FIN32030', this.dataForm);
+    this.initializePage('FIN32030', this.step1Form);
 
     // 載入收款項目選項
     this.loadRecvItemOptions();
@@ -106,39 +299,176 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       this.loadRecvData(headerData);
 
       if (this.isFormReadable) {
-        this.dataForm.disable();
+        this.step1Form.disable();
       }
-    } else if (this.isFormCreateable) {
-      // 新增模式：初始化一個空的收款項目
-      this.addItem();
     }
   }
 
   // ----------------------------------------------------------------
-  // FormArray 相關
+  // 步驟控制
   // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
+
+  /** 前往下一步 */
+  nextStep(): void {
+    if (this.activeStep === 0) {
+      // 驗證步驟1
+      if (!this.validateStep1()) {
+        return;
+      }
+    } else if (this.activeStep === 1) {
+      // 驗證步驟2
+      if (!this.validateStep2()) {
+        return;
+      }
+    }
+    this.activeStep++;
   }
 
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
+  /** 返回上一步 */
+  prevStep(): void {
+    if (this.activeStep > 0) {
+      this.activeStep--;
+    }
   }
 
-  createItem(data?: RecvDetailResponse): FormGroup {
-    return this.formBuilder.group({
-      CAP_Item: [data?.CAP_Item || null, [Validators.required]], // 收款項目
-      ARS_Amt: [data?.ARS_Amt || null, [Validators.required, Validators.min(0)]], // 收款金額
-      NoteDesc: [data?.NoteDesc || '', [Validators.maxLength(100)]], // 備註
+  /** 驗證步驟1 */
+  validateStep1(): boolean {
+    this.step1Form.markAllAsTouched();
+    if (this.step1Form.invalid) {
+      this.messageService.errorBubble('請填寫必填欄位');
+      return false;
+    }
+    if (this.selectedARItems.length === 0) {
+      this.messageService.errorBubble('請至少選擇一筆應收帳款');
+      return false;
+    }
+    return true;
+  }
+
+  /** 驗證步驟2 */
+  validateStep2(): boolean {
+    if (this.step2TableData.length === 0) {
+      this.messageService.errorBubble('請至少新增一個收款項目');
+      return false;
+    }
+    // TODO: 可以在這裡加入表格驗證邏輯
+    return true;
+  }
+
+  // ----------------------------------------------------------------
+  // 步驟1: 應收帳款選擇相關
+  // ----------------------------------------------------------------
+
+  /** 打開應收未收查詢對話框 */
+  openARDialog(): void {
+    this.showARDialog = true;
+    // 重置查詢表單並載入資料
+    this.arQueryForm.reset({
+      STO_No: '',
+      VEN_No: '',
+      DateFrom: null,
+      DateTo: null,
+    });
+    this.onQueryAR();
+  }
+
+  /** 查詢應收未收 */
+  onQueryAR(): void {
+    const queryValue = this.arQueryForm.value;
+
+    this.arDialogLoading = true;
+    this.fin32030Service.queryFIN32030AR({
+      STO_No: queryValue.STO_No || null,
+      VEN_No: queryValue.VEN_No || null,
+      DateFrom: queryValue.DateFrom || null,
+      DateTo: queryValue.DateTo || null,
+    })
+      .pipe(
+        finalize(() => this.arDialogLoading = false),
+        untilDestroyed(this)
+      )
+      .subscribe(response => {
+        this.arDialogData = response.Data;
+      });
+  }
+
+  /** 確認選擇應收帳款 */
+  onConfirmARSelection(selected: QueryFIN32030ARResponse[]): void {
+    if (!selected || selected.length === 0) {
+      this.messageService.errorBubble('請至少選擇一筆應收帳款');
+      return;
+    }
+
+    this.selectedARItems = selected;
+    this.showARDialog = false;
+
+    // 自動根據選中的應收帳款生成收款項目
+    this.generateItemsFromAR();
+
+    this.messageService.successBubble(`已選擇 ${selected.length} 筆應收帳款`);
+  }
+
+  /** 根據應收帳款生成收款項目 */
+  generateItemsFromAR(): void {
+    // 清空現有項目
+    this.step2TableData = [];
+
+    // 為每個應收帳款創建收款項目
+    this.selectedARItems.forEach(ar => {
+      this.step2TableData.push({
+        CAP_Item: null, // 收款項目
+        ARS_Amt: ar.UnpaidAmt || 0, // 預設為未收款金額
+        NoteDesc: ar.NoteDesc || '', // 備註
+      });
     });
   }
 
-  addItem(): void {
-    this.items.push(this.createItem());
+  /** 刪除選中的應收帳款 (從 app-table 刪除事件) */
+  onDeleteSelectedAR(deletedItems: QueryFIN32030ARResponse[]): void {
+    // 從 selectedARItems 中移除被刪除的項目
+    deletedItems.forEach(deletedItem => {
+      const index = this.selectedARItems.findIndex(item => item.ARS_ID === deletedItem.ARS_ID);
+      if (index !== -1) {
+        this.selectedARItems.splice(index, 1);
+        // 同時移除對應的收款項目
+        if (index < this.step2TableData.length) {
+          this.step2TableData.splice(index, 1);
+        }
+      }
+    });
   }
 
-  removeItem(index: number): void {
-    this.items.removeAt(index);
+  /** 計算應收帳款總金額 */
+  get totalARAmount(): number {
+    return this.selectedARItems.reduce((sum, item) => sum + (item.UnpaidAmt || 0), 0);
+  }
+
+  // ----------------------------------------------------------------
+  // 步驟2: 收款項目相關
+  // ----------------------------------------------------------------
+
+  /** 計算收款項目總金額 */
+  get totalItemAmount(): number {
+    return this.step2TableData.reduce((sum, item) => sum + (item.ARS_Amt || 0), 0);
+  }
+
+  /** 步驟2表格資料變更事件 */
+  onStep2DataChange(data: any[]): void {
+    this.step2TableData = data;
+  }
+
+  // ----------------------------------------------------------------
+  // 步驟3: 票據資訊相關
+  // ----------------------------------------------------------------
+
+  /** 計算票據總金額 */
+  get totalCheckAmount(): number {
+    return this.step3TableData.reduce((sum, item) => sum + (item.CHK_Amt || 0), 0);
+  }
+
+  /** 步驟3表格資料變更事件 */
+  onStep3DataChange(data: any[]): void {
+    this.step3TableData = data;
   }
 
   // ----------------------------------------------------------------
@@ -162,8 +492,8 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
         if (response.Data && response.Data.length > 0) {
           const recvData = response.Data[0];
 
-          // 填入表單資料 (header 資訊)
-          this.dataForm.patchValue({
+          // 填入步驟1表單資料
+          this.step1Form.patchValue({
             RCV_No: recvData.RCV_No || '',
             RCV_Date: recvData.RCV_Date ? new Date(recvData.RCV_Date) : new Date(),
             Sales_Id: recvData.Sales_Id,
@@ -174,12 +504,36 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
           if (recvData.RecvItemsJson) {
             try {
               const recvItems: RecvDetailResponse[] = JSON.parse(recvData.RecvItemsJson);
-              this.items.clear();
-              recvItems.forEach(item => {
-                this.items.push(this.createItem(item));
-              });
+              this.step2TableData = recvItems.map(item => ({
+                CAP_Item: item.CAP_Item,
+                ARS_Amt: item.ARS_Amt,
+                NoteDesc: item.NoteDesc || ''
+              }));
             } catch (e) {
               console.error('解析收款項目明細失敗:', e);
+            }
+          }
+
+          // 載入票據明細
+          if (recvData.ChecksJson) {
+            try {
+              const checks: CheckDetailItem[] = JSON.parse(recvData.ChecksJson);
+              this.step3TableData = checks.map(check => ({
+                CHK_No: check.CHK_No,
+                CHK_Type: check.CHK_Type || '1',
+                CHK_Amt: check.CHK_Amt,
+                Ticket_YN: check.Ticket_YN || 'N',
+                BNK_No: check.BNK_No,
+                BNK_BranchNo: check.BNK_BranchNo,
+                BNK_AccNo: check.BNK_AccNo || '',
+                VEN_No: check.VEN_No || '',
+                CHK_ReceDate: check.CHK_ReceDate ? new Date(check.CHK_ReceDate) : null,
+                CHK_ExpireDate: check.CHK_ExpireDate ? new Date(check.CHK_ExpireDate) : null,
+                CHK_PreDate: check.CHK_PreDate ? new Date(check.CHK_PreDate) : null,
+                CHK_Comment: check.CHK_Comment || ''
+              }));
+            } catch (e) {
+              console.error('解析票據明細失敗:', e);
             }
           }
         }
@@ -187,106 +541,128 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
   }
 
   // ----------------------------------------------------------------
-  // 應收未收查詢對話框
-  // ----------------------------------------------------------------
-
-  /** 開啟應收未收查詢對話框 */
-  openARDialog(): void {
-    this.showARDialog = true;
-    this.loadARData();
-  }
-
-  /** 載入應收未收資料 */
-  loadARData(): void {
-    const queryValue = this.arQueryForm.value;
-
-    this.arDialogLoading = true;
-    this.fin32030Service.queryFIN32030AR({
-      STO_No: queryValue.STO_No || null,
-      VEN_No: queryValue.VEN_No || null,
-      DateFrom: queryValue.DateFrom || null,
-      DateTo: queryValue.DateTo || null,
-    })
-      .pipe(
-        finalize(() => this.arDialogLoading = false),
-        untilDestroyed(this)
-      )
-      .subscribe(response => {
-        this.arDialogData = response.Data;
-      });
-  }
-
-  /** 查詢應收未收 */
-  onQueryAR(): void {
-    this.loadARData();
-  }
-
-  /** 選擇應收帳款（雙擊） */
-  onSelectAR(data: QueryFIN32030ARResponse): void {
-    // TODO: 實作選擇應收帳款後的邏輯
-    // 可能需要新增到收款項目或建立沖帳記錄
-    this.messageService.successBubble(`已選擇應收帳款: ${data.ARS_ID}`);
-    this.showARDialog = false;
-  }
-
-  // ----------------------------------------------------------------
   // 表單提交
   // ----------------------------------------------------------------
 
-  onSubmit(frm: FormGroup): void {
-    this.handleSubmit(frm, () => {
-      const formValue = frm.getRawValue();
+  /** 最終提交 (步驟3完成後) */
+  onFinalSubmit(): void {
+    // 驗證所有步驟
+    this.step1Form.markAllAsTouched();
 
-      // 驗證至少要有一個收款項目
-      if (!formValue.items || formValue.items.length === 0) {
-        this.messageService.errorBubble('請至少新增一個收款項目');
-        this.loading = false;
-        return;
-      }
+    if (this.step1Form.invalid) {
+      this.messageService.errorBubble('請填寫所有必填欄位');
+      return;
+    }
 
-      // 準備 API 請求參數
-      const request = {
-        STO_No: '', // 從登入使用者取得組織代號
-        RCV_No: formValue.RCV_No || this.generateRCVNo(), // 新增時產生收款單號
-        RCV_Date: formValue.RCV_Date,
-        Sales_Id: formValue.Sales_Id,
-        CompNo: '', // 從登入使用者取得公司代號
-        VouNo: null, // 傳票號碼由後端產生
-        Remark: formValue.Remark,
-        Status: 'A', // 狀態
-        UserId: '',
-        UserName: '',
-        Detail: formValue.items.map((item: { CAP_Item: string; ARS_Amt: number; NoteDesc: string }) => ({
-          CAP_Item: item.CAP_Item,
-          ARS_Amt: item.ARS_Amt,
-          NoteDesc: item.NoteDesc
-        }))
-      };
+    if (this.selectedARItems.length === 0) {
+      this.messageService.errorBubble('請至少選擇一筆應收帳款');
+      return;
+    }
 
-      // 根據模式呼叫新增或更新 API
-      const apiCall = this.isFormCreateable
-        ? this.fin32030Service.insertFIN32030Recv(request)
-        : this.fin32030Service.updateFIN32030Recv(request);
+    if (this.step2TableData.length === 0) {
+      this.messageService.errorBubble('請至少新增一個收款項目');
+      return;
+    }
 
-      apiCall
-        .pipe(
-          untilDestroyed(this),
-          finalize(() => this.loading = false)
-        )
-        .subscribe({
-          next: () => {
+    this.loading = true;
+
+    const step1Value = this.step1Form.getRawValue();
+
+    // 準備收款資料
+    const recvRequest = {
+      STO_No: '', // TODO: 從登入使用者取得組織代號
+      RCV_No: step1Value.RCV_No || this.generateRCVNo(),
+      RCV_Date: step1Value.RCV_Date.toISOString(),
+      Sales_Id: step1Value.Sales_Id,
+      CompNo: '', // TODO: 從登入使用者取得公司代號
+      VouNo: null,
+      Remark: step1Value.Remark,
+      Status: 'A',
+      UserId: '', // TODO: 從登入使用者取得
+      UserName: '', // TODO: 從登入使用者取得
+      Detail: this.step2TableData.map((item: any) => ({
+        CAP_Item: item.CAP_Item,
+        ARS_Amt: item.ARS_Amt,
+        NoteDesc: item.NoteDesc
+      }))
+    };
+
+    // 先儲存收款資料
+    const recvApiCall = this.isFormCreateable
+      ? this.fin32030Service.insertFIN32030Recv(recvRequest)
+      : this.fin32030Service.updateFIN32030Recv(recvRequest);
+
+    recvApiCall
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.loading = false)
+      )
+      .subscribe({
+        next: () => {
+          // 如果有票據資料，繼續儲存票據
+          if (this.step3TableData && this.step3TableData.length > 0) {
+            this.submitCheckData(recvRequest.RCV_No, this.step3TableData);
+          } else {
             this.messageService.successBubble(
               this.isFormCreateable ? '新增收款沖帳成功' : '更新收款沖帳成功'
             );
             setTimeout(() => {
               this.onCancel();
             }, 500);
-          },
-          error: () => {
-            this.loading = false;
           }
-        });
-    });
+        },
+        error: () => {
+          this.loading = false;
+        }
+      });
+  }
+
+  /** 提交票據資料 */
+  private submitCheckData(rcvNo: string, checks: any[]): void {
+    const checkRequest = {
+      STO_No: '', // TODO: 從登入使用者取得組織代號
+      RCV_No: rcvNo,
+      Sales_Id: this.step1Form.value.Sales_Id || '',
+      UserId: '', // TODO: 從登入使用者取得
+      UserName: '', // TODO: 從登入使用者取得
+      Checks: checks.map((check: any) => ({
+        CHK_No: check.CHK_No,
+        VEN_No: check.VEN_No,
+        BNK_No: check.BNK_No,
+        BNK_BranchNo: check.BNK_BranchNo,
+        BNK_AccNo: check.BNK_AccNo,
+        CHK_ReceDate: check.CHK_ReceDate,
+        CHK_ExpireDate: check.CHK_ExpireDate,
+        CHK_PreDate: check.CHK_PreDate,
+        CHK_Amt: check.CHK_Amt,
+        CHK_Type: check.CHK_Type,
+        Ticket_YN: check.Ticket_YN,
+        CHK_Comment: check.CHK_Comment,
+        AccNo: check.AccNo,
+        ORG_ID: check.ORG_ID,
+        ProjectNo: check.ProjectNo
+      }))
+    };
+
+    const checkApiCall = this.isFormCreateable
+      ? this.fin32030Service.insertFIN32030Check(checkRequest)
+      : this.fin32030Service.updateFIN32030Check(checkRequest);
+
+    checkApiCall
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: () => {
+          this.messageService.successBubble(
+            this.isFormCreateable ? '新增收款沖帳成功(含票據)' : '更新收款沖帳成功(含票據)'
+          );
+          setTimeout(() => {
+            this.onCancel();
+          }, 500);
+        },
+        error: () => {
+          this.messageService.errorBubble('票據資料儲存失敗');
+        }
+      });
   }
 
   /** 產生收款單號 (R+YYYYMMDDXXX) */
