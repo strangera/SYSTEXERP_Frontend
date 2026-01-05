@@ -129,8 +129,8 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
     { field: 'TLT_No', header: '專櫃編號', visible: true },
     { field: 'TLT_Name', header: '專櫃名稱', visible: true },
     { field: 'ENG_YYMM', header: '結算年月', visible: true, format: formatYYYYMM },
-    { field: 'ENG_Amount', header: '結算金額', visible: true, format: formatAmount },
     { field: 'UsageAmount', header: '使用度數', visible: true },
+    { field: 'ENG_Amount', header: '結算金額', visible: true, format: formatAmount },
     { field: 'ENG_Date', header: '抄表日期', visible: true, format: formatDate },
     { field: 'ENG_Status', header: '結算狀態', visible: true, options: this.ENG_Status_Option, format: (value) => formatOptionLabel(value, this.ENG_Status_Option) },
     { field: 'ENG_ImpFileName', header: '匯入檔案名稱', visible: true },
@@ -359,8 +359,22 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
       .pipe(finalize(() => this.btnPDFLoading = false), untilDestroyed(this))
       .subscribe(blob => {
         if (blob) {
+          // 產生時間戳記 YYYYMMDDHHMMSS
+          const now = new Date();
+          const timestamp = now.getFullYear().toString() +
+            (now.getMonth() + 1).toString().padStart(2, '0') +
+            now.getDate().toString().padStart(2, '0') +
+            now.getHours().toString().padStart(2, '0') +
+            now.getMinutes().toString().padStart(2, '0') +
+            now.getSeconds().toString().padStart(2, '0');
+          const fileName = `能源抄表資料${timestamp}.pdf`;
+
           const blobUrl = URL.createObjectURL(blob);
-          window.open(blobUrl, '_blank');
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = fileName;
+          a.click();
+          URL.revokeObjectURL(blobUrl);
         }
       });
   }
@@ -382,12 +396,22 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
       .pipe(finalize(() => this.btnExcelLoading = false), untilDestroyed(this))
       .subscribe(blob => {
         if (blob) {
+          // 產生時間戳記 YYYYMMDDHHMMSS
+          const now = new Date();
+          const timestamp = now.getFullYear().toString() +
+            (now.getMonth() + 1).toString().padStart(2, '0') +
+            now.getDate().toString().padStart(2, '0') +
+            now.getHours().toString().padStart(2, '0') +
+            now.getMinutes().toString().padStart(2, '0') +
+            now.getSeconds().toString().padStart(2, '0');
+          const fileName = `能源抄表資料${timestamp}.xlsx`;
+
           const blobUrl = URL.createObjectURL(blob);
 
           // 建立下載連結
           const a = document.createElement('a');
           a.href = blobUrl;
-          a.download = 'ASS21030_能源抄表作業.xlsx';
+          a.download = fileName;
           a.click();
           URL.revokeObjectURL(blobUrl);
         }

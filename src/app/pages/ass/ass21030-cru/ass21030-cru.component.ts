@@ -274,6 +274,12 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
       }
     }
 
+    // 將 UsageAmount 轉換為 ENG_CurrentReading (後端接收的參數名稱)
+    if (cleaned.UsageAmount !== undefined) {
+      cleaned.ENG_CurrentReading = cleaned.UsageAmount;
+      delete cleaned.UsageAmount;
+    }
+
     return cleaned;
   }
 
