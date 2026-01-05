@@ -120,9 +120,9 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
     { field: 'ProjectNo', header: '活動', visible: true },
     { field: 'PTA', header: '立沖代號', visible: true },
     { field: 'NoteDesc', header: '摘要', visible: true },
-    { field: 'AccAmt_D', header: '借方金額', visible: true, format: formatAmount },
-    { field: 'AccAmt_C', header: '貸方金額', visible: true, format: formatAmount },
-    { field: 'OpeningBal', header: '餘額', visible: true, format: formatAmount },
+    { field: 'AccAmt_D', header: '借方金額', visible: true, format: formatAmount, style: 'text-right' },
+    { field: 'AccAmt_C', header: '貸方金額', visible: true, format: formatAmount, style: 'text-right' },
+    { field: 'OpeningBal', header: '餘額', visible: true, format: formatAmount, style: 'text-right' },
   ];
 
   //#region 下拉
@@ -372,5 +372,9 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
     a.download = fileName;
     a.click();
     window.URL.revokeObjectURL(url);
+  }
+
+  getAccNoLabel(accNo: any): string {
+    return this.AccNoListOptions.find(x => x.value === accNo)?.label ?? accNo;
   }
 }
