@@ -203,6 +203,7 @@ export interface TLS2J030Data {
   _rowValidationError?: { isValid: boolean; errorMessage: string };
   CHG_No?: string;
   GUI_Status?: string;
+  changeEcrNo?: string; // 目前使用的換開收銀機號
   // 換開發票欄位
   TXN_Date?: string;
   TXN_GUIPaper?: string;

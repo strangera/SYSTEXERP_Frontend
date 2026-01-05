@@ -55,7 +55,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   detailEditData: (TLS2J030Data & { _TABLE_KEY?: string; status?: string })[] = [];
 
   sourceInvoiceData: (TLS2J030Source & { TXN_Date?: string; ECR_No?: string }) | null = null;
-  currentEcrNo = '';
+  changeEcrNo = '';
 
   // 欄位定義 (直接使用 model 檔案中的常數)
   columnsnatural = COLUMNS_NATURAL_EDIT;
@@ -92,8 +92,9 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       this.loadDetails(this.rowdata.CHG_No);
       this.isViewMode = true;
     } else {
+      // 新增
+      this.changeEcrNo = this.rowdata?.changeEcrNo || ''; // 目前收銀機號(一進查詢頁面取得)
       this.isViewMode = false;
-      this.initializeEcrNo();
       // 使用 setTimeout 確保 EditTable 相關物件已渲染
       setTimeout(() => this.initializeEditData());
     }
@@ -150,14 +151,6 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       });
   }
 
-  /**
-   * 初始化 ECR_No (目前寫死為預設值，保留查詢 ECR No 的方法)
-   */
-  private initializeEcrNo(): void {
-    // 如果不需要 API 查詢，直接給予預設值
-    this.currentEcrNo = '888888';
-    // 若需 API 查詢，可呼叫 queryEcrNo(defaultIP)
-  }
 
   /**
    * 初始化新增模式下的換開發票和商品明細資料
@@ -441,12 +434,11 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
    */
   private formatInsertData(): any {
     const changeItem = this.changeEditData[0];
-    const sourceEcrNo = this.data[0]?.ECR_No || this.currentEcrNo;
 
     // 1. POS2100List: 來源發票資料 (使用更精簡的語法)
     const pos2100List = this.data.map(item => ({
       TXN_Date: item.TXN_Date || new Date().toISOString().split('T')[0],
-      ECR_No: item.ECR_No || sourceEcrNo,
+      ECR_No: item.ECR_No,
       TXN_No: this.formatTxnNo(item.TXN_No),
       TXN_GUIBegNo: item.TXN_GUIBegNo || '',
       TXN_GUIEndNo: item.TXN_GUIEndNo || '',
@@ -460,7 +452,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     // 2. POS2101List: 換開發票資料 (簡化日期處理)
     const pos2101List = [{
       TXN_Date: changeItem.TXN_Date ? new Date(changeItem.TXN_Date as string).toISOString() : new Date().toISOString(),
-      ECR_No: sourceEcrNo,
+      ECR_No: this.changeEcrNo,
       TXN_GUIPaper: changeItem.TXN_GUIPaper || '',
       PLU_TaxType: changeItem.PLU_TaxType || '',
       TXN_SaleTax: changeItem.TXN_SaleTax || 0,
@@ -545,14 +537,5 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       if (month < 1) month = 1;
       return year.toString() + month.toString().padStart(2, '0');
     }
-  }
-
-  private queryEcrNo(ip: string): void {
-    this.tls2j030Service.queryEcrNo(ip)
-      .subscribe({
-        next: (res: { Status?: string; Data?: { ECR_No?: string } }) => {
-          this.currentEcrNo = (res && res.Status === '0000') ? (res.Data?.ECR_No || '') : '';
-        },
-      });
   }
 }

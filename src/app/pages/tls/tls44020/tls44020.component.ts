@@ -106,8 +106,8 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
       return '關機';
     }
 
-    // 收銀機沒關機，POS 離線 (EOS_Online=0) → 離線
-    if (row.EOS_Online === 0) {
+    // 收銀機沒關機，POS 離線 (EOS_Online=0 或為空/null) → 離線
+    if (row.EOS_Online === 0 || row.EOS_Online === null) {
       return '離線';
     }
 
@@ -179,6 +179,9 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.buildingNoOptions = res.Data.map(x => ({ label: x.Name, value: x.No, Name: x.Name, No: x.No }));
     });
+
+    // 進入頁面自動查詢，行為與 TLS44010 一致
+    this.onSubmit(this.queryForm);
   }
   loadDropdownOptions() {
 
@@ -263,9 +266,18 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
     if (item.label?.includes('全部')) {
       this.filteredData = [...this.data];
     } else if (item.label?.includes('連線')) {
-      this.filteredData = this.data.filter(d => d.EOS_Status === '開機' || d.EOS_Status === '交易中');
+      // 連線機台：中信或聯信任一銀行 "交易中"
+      this.filteredData = this.data.filter(row =>
+        this.getBankStatus(row, '中信') === '交易中' ||
+        this.getBankStatus(row, '聯信') === '交易中'
+      );
     } else if (item.label?.includes('離線')) {
-      this.filteredData = this.data.filter(d => d.EOS_Status === '離線' || d.EOS_Status === '登出');
+      // 離線機台：中信與聯信皆非 "交易中"（包含離線與關機）
+      this.filteredData = this.data.filter(row => {
+        const ct = this.getBankStatus(row, '中信');
+        const lt = this.getBankStatus(row, '聯信');
+        return ct !== '交易中' && lt !== '交易中';
+      });
     }
 
     this.first = 0;

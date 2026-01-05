@@ -46,6 +46,7 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
   data: any[] = [];
   selectedItems: any[] = [];
   isNotECR = false;
+  changeEcrNo = ''; // 目前使用的換開收銀機號
   lastQueryBody: any = {};
   btnLoading2 = false;
   TXN_Uniform_noOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
@@ -112,18 +113,18 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
       this.isNotECR = true;
       return;
     }
-    // this.tls2j030Service.queryEcrNo(ip).subscribe({
-    //   next: (res: any) => {
-    //     this.isNotECR = (res.Data === null);
 
-    //     if (this.isNotECR) {
-    //       this.queryForm.disable();
-    //     } else {
-    //       this.queryForm.enable();
-    //     }
-    //   }
-    // });
-
+    this.tls2j030Service.queryEcrNo(ip).subscribe({
+      next: (res: any) => {
+        this.isNotECR = (res.Data === null);
+        this.changeEcrNo = res.Data; // 目前使用的換開收銀機
+        if (this.isNotECR) {
+          this.queryForm.disable();
+        } else {
+          this.queryForm.enable();
+        }
+      }
+    });
   }
 
   onSubmit(frm: FormGroup) {

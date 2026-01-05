@@ -221,6 +221,19 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
         No: item.No,
         Name: item.Name,
       }));
+
+      const currentSrvIP = this.dataForm.get('ECR_SrvIP')?.value;
+      if (currentSrvIP) {
+        const matched = this.ECR_SrvIP_Option.find(opt =>
+          opt.value === currentSrvIP ||
+          opt.Name === currentSrvIP ||
+          opt.label === currentSrvIP,
+        );
+
+        if (matched && currentSrvIP !== matched.value) {
+          this.dataForm.patchValue({ ECR_SrvIP: matched.value }, { emitEvent: false });
+        }
+      }
     });
 
     //收銀員下拉選單
