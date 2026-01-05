@@ -53,7 +53,7 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS2D030', 'tls/tls2d030cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS2D030');
   }
 
   /**

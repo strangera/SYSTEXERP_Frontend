@@ -60,7 +60,7 @@ export class TLS2D020Component extends BasicQueryPageComponent<QueryDataItem> im
   ) { super(); }
 
   ngOnInit(): void {
-    this.initializePage('TLS2D020', 'tls/tls2d020cru');
+    this.initializePage('TLS2D020');
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -77,8 +77,6 @@ export class TLS2D020Component extends BasicQueryPageComponent<QueryDataItem> im
   }
   onSam(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.loading = false;
-      this.loading = true;
       const body = {
         sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
         money_type: frm.value.money_type,
@@ -86,8 +84,12 @@ export class TLS2D020Component extends BasicQueryPageComponent<QueryDataItem> im
         tlt_floor: frm.value.tlt_floor
       }
       this.tls2d020Service.executeTLS2D020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-        this.onSubmit(frm);
-        this.messageService.successBubble(res.Message);
+        if (res.Data.ErrCode === 1) {
+          this.messageService.successBubble(res.Data.ErrMsg || '結算成功');
+          this.onSubmit(frm);
+        } else {
+          this.messageService.errorBubble(res.Data.ErrMsg || '結算失敗');
+        }
       })
     })
   }
