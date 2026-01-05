@@ -198,6 +198,8 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
           this.data = res?.Data ?? [];
           this.totalRecords = res.TotalCount;
           this.footerTotal = res.FooterTotal;
+          // 儲存本次查詢條件，供從 CRU 返回時還原查詢列表
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
         });
     });
   }

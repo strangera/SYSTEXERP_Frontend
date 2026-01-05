@@ -112,8 +112,11 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
     this.setupEditPermissions(); // 設置編輯權限
     this.setDefaultValues(); // 設置預設值
     this.formatDateFields(); // 格式化日期欄位
+    this.setupFieldLocking(); // 鎖定除了使用度數和結算金額以外的欄位
 
-    console.log('取得資料', this.dataForm.value);
+    console.log('🔍 CRU 初始化 - 原始 rowdata:', this.rowdata);
+    console.log('🔍 CRU 初始化 - 表單值:', this.dataForm.value);
+    console.log('🔍 ENG_Type 值:', this.dataForm.controls.ENG_Type.value);
   }
 
   // 設置預設值 (僅新增模式)
@@ -188,6 +191,23 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
     }
   }
 
+  // 鎖定除了使用度數和結算金額以外的所有欄位（僅在編輯模式）
+  setupFieldLocking() {
+    if (this.crudstatus === CRUDStatus.Edit) {
+      // 鎖定所有欄位，除了 UsageAmount 和 ENG_Amount
+      this.dataForm.controls.ENG_YYMM.disable();
+      this.dataForm.controls.ENG_Type.disable();
+      this.dataForm.controls.ENG_MeterNo.disable();
+      this.dataForm.controls.ENG_Date.disable();
+      // UsageAmount 和 ENG_Amount 根據結算狀態決定
+      // 在 updateFieldPermissions 中處理
+
+      // 觸發一次權限更新（根據當前結算狀態）
+      const currentStatus = this.dataForm.controls.ENG_Status.value;
+      this.updateFieldPermissions(currentStatus);
+    }
+  }
+
   onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
@@ -237,6 +257,22 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
         cleaned[key] = null;
       }
     });
+
+    // 如果 ENG_Type 是中文，轉換回代碼
+    if (cleaned.ENG_Type) {
+      const typeOption = this.ENG_Type_Option.find(opt => opt.label === cleaned.ENG_Type);
+      if (typeOption) {
+        cleaned.ENG_Type = typeOption.value;
+      }
+    }
+
+    // 如果 ENG_Status 是中文，轉換回代碼
+    if (cleaned.ENG_Status) {
+      const statusOption = this.ENG_Status_Option.find(opt => opt.label === cleaned.ENG_Status);
+      if (statusOption) {
+        cleaned.ENG_Status = statusOption.value;
+      }
+    }
 
     return cleaned;
   }

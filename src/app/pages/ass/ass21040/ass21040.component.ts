@@ -57,15 +57,25 @@ export class ASS21040Component extends BasicQueryPageComponent<unknown> implemen
         ClearingYM: convertDateToYYYYMM(frm.value.ENG_YYMM)
       };
       this.handleSubmit(frm, () => {
-        this.aSS21040Service.ClearingASS21040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-          if (response.Data.IsClearingSuccess) {
-            if (response.Data.ErrorMsg === '') {
+        this.aSS21040Service.ClearingASS21040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe({
+          next: (response) => {
+            console.log('結算 API 成功回應:', response);
+            if (response.Data.IsClearingSuccess) {
               this.messageService.successBubble('結算成功');
             } else {
-              this.messageService.errorBubble(response.Data.ErrorMsg);
+              // 業務邏輯失敗
+              this.messageService.errorBubble(response.Data.ErrorMsg || '結算失敗');
             }
-          } else {
-            this.messageService.errorBubble(response.Data.ErrorMsg);
+          },
+          error: (error) => {
+            console.log('Component Error Handler - Error:', error);
+            // 忽略請求取消錯誤
+            if (error.message === 'Request cancelled') {
+              console.log('結算請求被取消,不顯示錯誤訊息');
+              return;
+            }
+            console.error('結算 API 錯誤:', error);
+            this.messageService.errorBubble(error.message || '結算失敗,請稍後再試');
           }
         });
       });

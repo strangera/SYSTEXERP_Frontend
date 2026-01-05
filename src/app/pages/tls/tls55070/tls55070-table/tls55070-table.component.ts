@@ -503,6 +503,21 @@ export class TLS55070TableComponent
   getSubtotalValue(rowData: any): number {
     if (!rowData) return 0;
 
+    // 如果這是小計列，優先使用後端傳來的 SumTXN_SaleAmt（已經是該組的小計）
+    if (rowData.__isSubRow && (rowData.SumTXN_SaleAmt !== undefined && rowData.SumTXN_SaleAmt !== null)) {
+      const raw = rowData.SumTXN_SaleAmt;
+      let n: number;
+      
+      if (typeof raw === 'string') {
+        const cleaned = raw.replace(/,/g, '');
+        n = Number(cleaned);
+      } else {
+        n = Number(raw ?? 0);
+      }
+      
+      return isFinite(n) ? n : 0;
+    }
+
     // 這一列代表哪一張銷售單：
     // 小計列本身 TXN_SaleNoteNo 是空字串，我們在 unpack 時有塞 _grpBase = 原本的群組 key
     const saleNo = rowData.TXN_SaleNoteNo || rowData._grpBase;
