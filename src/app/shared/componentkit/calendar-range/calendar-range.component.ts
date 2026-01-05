@@ -35,6 +35,9 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
   calendarOneType: 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne' = 'dateOne';  // 觸發事件
   @Output() startDateChange = new EventEmitter<any>();
 
+  @Input() helpMsg?: string;
+  @Input() showErrorMessage = true;
+
   // 元件類型對應
   private readonly calendarConfig = {
     timeRange: { timeOnly: true, showTime: true, dateFormat: undefined, view: 'date', placeholder: '請選擇時間', calendarOneType: 'timeOne' },

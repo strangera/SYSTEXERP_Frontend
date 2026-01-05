@@ -23,8 +23,9 @@ export interface Tls2e010QueryBody {
   PageSize: number;
   PageIndex: number;
   SortBy?: SortMeta[];
-  sam_yyymm_start: string;
-  sam_yyymm_end: string;
+  sam_yyymm?: string;
+  sam_yyymm_start?: string;
+  sam_yyymm_end?: string;
   tlt_no: string;
 }
 

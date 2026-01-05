@@ -1,25 +1,25 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Tls2e020Data, Tls2e020QueryBody, Tls2e020Service } from '@service/api/tls/tls2e020.service'; // 確保 Tls2e020QueryBody 已被引入
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Column, convertDateToYYYYMM, formatDate, formatYN, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, convertDateToYYYYMM, createPaginationConfig, formatDate, formatYN, formatYYYYMM } from '@shared/componentkit/table/table.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { finalize } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { Tls2e020Data, Tls2e020Service, Tls2e020QueryBody } from '@service/api/tls/tls2e020.service'; // 確保 Tls2e020QueryBody 已被引入
-import { getSYS1000Options } from '@service/system/sys1000.service';
 
 // 2.2.14.2 專櫃抽成金額結算作業
 @Component({
   selector: 'app-tls2e020',
   templateUrl: './tls2e020.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, TableComponent, TranslateModule]
+  imports: [TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, TranslateModule]
 })
 export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> implements OnInit {
   // 完整的期別選項（基於您的描述）
@@ -38,11 +38,12 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
     sam_yyymm: [new Date(), [Validators.required]], // 查詢年月
     money_type: [this.money_typeOptions[2]?.value || null as string | null, [Validators.required]], // 結帳方式 (使用 string|null 來匹配後端)
     sam_termno: [1, [Validators.required]], // 期別 (使用 number|null)
-    ...createPaginationConfig([{ field: 'sam_yyymm', order: 1 }]), // 分頁和排序參數
+    PageSize: [30],
+    PageIndex: [1],
   });
 
-
   // 表格資料
+  lastQueryBody: Tls2e020QueryBody | null = null;
   data: Tls2e020Data[] = [];
   columns: Column[] = [
     { field: 'sam_yyymm', header: '結算年月', visible: true, format: formatYYYYMM }, // 假設您有這個格式化函數
@@ -58,7 +59,7 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
   ];
 
   constructor(
-    private readonly tls2e020Service: Tls2e020Service
+    public readonly tls2e020Service: Tls2e020Service
   ) {
     super();
   }
@@ -122,6 +123,7 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
       this.tls2e020Service.queryTls2e020(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
+        this.lastQueryBody = body;
       });
     });
   }

@@ -9,16 +9,17 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateMonthOne" label="租金結算年月" controlName="sam_yyymm"
+            <app-calendar calendarType="dateMonthOne" label="租金結算年月" controlName="sam_yyymm" helpMsg="[結算]使用"
               [control]="queryForm.controls.sam_yyymm" [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="單一專櫃查詢" controlName="tlt_no" [control]="queryForm.controls.tlt_no"
-              [submitted]="submitted" [options]="tlt_noOptions$ | async" optionLabel="label" optionValue="value">
+              helpMsg="[結算]及[查詢]使用" [submitted]="submitted" [options]="tlt_noOptions$ | async" optionLabel="label"
+              optionValue="value">
             </app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateMonthRange" label="起迄年月"
+            <app-calendar-range calendarType="dateMonthRange" label="起迄年月" helpMsg="[查詢]使用"
               [startControl]="queryForm.controls.sam_yyymm_start" [endControl]="queryForm.controls.sam_yyymm_end"
               [submitted]="submitted"></app-calendar-range>
           </div>

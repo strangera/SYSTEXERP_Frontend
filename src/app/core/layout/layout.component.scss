@@ -136,17 +136,14 @@
   min-height: 200px; // 確保沒內容時也有高度
 }
 
-.custom-loading-mask {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.4); // 灰底半透明
-  z-index: 999; // 確保在最上層
+.custom-loading-fixed-mask {
+  position: fixed; /* 必須是 fixed */
   display: flex;
   justify-content: center;
   align-items: center;
-  border-radius: 4px; // 配合 UI 弧度
-  backdrop-filter: blur(2px); // 選配：增加磨砂玻璃感
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  pointer-events: all;
+  overflow: hidden;
+  /* 不要在此處寫 width, height, top, left */
 }

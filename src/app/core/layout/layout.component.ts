@@ -144,10 +144,15 @@ export class LayoutComponent implements AfterViewInit { // 移除 OnDestroy (使
     }
   }
 
+  @HostListener('window:resize')
+  onResize() {
+    this.windowWidth.set(window.innerWidth);
+    this.adjustMainContainerPadding();
+  }
+
   /**
    * 最佳實踐：將 DOM 讀取/寫入邏輯隔離在專門的方法中
    */
-  @HostListener('window:resize')
   adjustMainContainerPadding(): void {
     // 修正：使用 appTopbarDivRef 替代 this.appTopbar.appTopbarDiv
     if (this.appTopbarDivRef?.nativeElement && this.layoutMainContainer?.nativeElement) {
@@ -188,4 +193,39 @@ export class LayoutComponent implements AfterViewInit { // 移除 OnDestroy (使
   // 移除已棄用的 Subject 和 Subscription 陣列
   // private readonly destroy$ = new Subject<void>();
   // private readonly subscriptions: Subscription[] = [];
+
+  windowWidth = signal(window.innerWidth);
+  loadingMaskStyle = computed(() => {
+    this.windowWidth(); // 訂閱視窗變化
+    const isDesktop = this.windowWidth() > 991;
+    const isMenuCollapsed = this.layoutService.isStaticMenuDesktopInactive();
+
+    // 取得 Topbar 實際高度
+    const topbarHeight = this.appTopbarDivRef?.nativeElement?.offsetHeight || 80;
+
+    // 1. 手機版：全寬
+    if (!isDesktop) {
+      return {
+        'top': `${topbarHeight}px`,
+        'left': '0',
+        'width': '100vw', // 使用 vw 確保佔滿視窗
+        'height': `calc(100vh - ${topbarHeight}px)`,
+        'z-index': '9999'
+      };
+    }
+
+    // 2. 桌機版
+    // 重要：這裡的 marginLeft 必須跟你的 .layout-sidebar 寬度完全一致
+    // 如果 CSS 是 24rem，這裡就必須是 24rem
+    const marginLeft = isMenuCollapsed ? '0px' : '24rem';
+
+    return {
+      'top': `${topbarHeight - 10}px`,
+      'left': isMenuCollapsed ? '0px' : `calc(${marginLeft} + 2rem)`, // marginLeft,
+      'width': isMenuCollapsed ? '100vw' : `calc(100vw - ${marginLeft} - 2rem)`,
+      'height': `calc(100vh - ${topbarHeight - 10}px)`,
+      'transition': 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+      'z-index': '9999'
+    };
+  });
 }

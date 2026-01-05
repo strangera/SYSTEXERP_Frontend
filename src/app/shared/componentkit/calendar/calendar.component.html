@@ -28,3 +28,6 @@
 <!-- 錯誤訊息 -->
 <app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
   [control]="control"></app-control-messages>
+<small *ngIf="helpMsg || showErrorMessage" [id]="controlName">
+  {{helpMsg}}
+</small>

@@ -48,6 +48,8 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
   @Output() inputChange = new EventEmitter<string>();
   @Output() monthChangeEvent = new EventEmitter<CalendarMonthChangeEvent>();
   @Output() yearChangeEvent = new EventEmitter<CalendarYearChangeEvent>();
+  @Input() helpMsg?: string;
+  @Input() showErrorMessage = true;
 
   private readonly calendarConfig = {
     timeOne: { timeOnly: true, showTime: true, dateFormat: undefined, view: 'date', customPlaceholder: '請選擇時間' },

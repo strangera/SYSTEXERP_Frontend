@@ -26,3 +26,7 @@
   </div>
 </div>
 <ng-content select="footer"></ng-content>
+
+<small *ngIf="helpMsg || showErrorMessage" [id]="controlName">
+  {{helpMsg}}
+</small>
