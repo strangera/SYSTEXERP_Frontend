@@ -15,7 +15,6 @@ import { FIN54030Data } from './fin54030.model';
 @Component({
   selector: 'app-fin54030',
   templateUrl: './fin54030.component.html',
-  styleUrl: './fin54030.component.scss',
   standalone: true,
   imports: [
     AccordionModule,
@@ -58,8 +57,7 @@ export class FIN54030Component extends BasicQueryPageComponent<FIN54030Data> imp
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.tableLoading()
-      || this.service.closeLoading();
-  });
+  }, { allowSignalWrites: true });
 
   constructor(
     public readonly service: FIN54030Service,
@@ -71,10 +69,8 @@ export class FIN54030Component extends BasicQueryPageComponent<FIN54030Data> imp
   public ngOnInit(): void {
     this.initializePage('FIN54030', void 0, this.queryForm, this.onSubmit.bind(this));
 
-    this.tableLoading.set(!0);
     this.service.loadFIN54030().pipe(
       tap(res => this.logger.debug(`init:`, [res])),
-      finalize(() => this.tableLoading.set(!1)),
     ).subscribe({
       next: res => {
         if (res.Status !== '0000') return;

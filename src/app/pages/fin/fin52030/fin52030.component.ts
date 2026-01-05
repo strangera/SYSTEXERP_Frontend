@@ -17,8 +17,7 @@ import { FIN52030Data, FIN52030Payload } from './fin52030.model';
 @Component({
   selector: 'app-fin52030',
   templateUrl: './fin52030.component.html',
-  styleUrl: './fin52030.component.scss',
-  standalone: !0,
+  standalone: true,
   imports: [
     AccordionModule,
     FormsModule,
@@ -32,7 +31,6 @@ import { FIN52030Data, FIN52030Payload } from './fin52030.model';
   ],
 })
 export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> implements OnInit {
-
   public readonly queryForm = this.formBuilder.group({
     TempNo: new FormControl<string | void>(void 0),
     VouType: new FormControl<'1' | '2' | '3' | void>(void 0),
@@ -57,12 +55,7 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.tableLoading()
-      || this.service.accLoading()
-      || this.service.venLoading()
-      || this.service.usrLoading()
-      || this.service.RefNameLoading()
-      || this.service.noteDescLoading();
-  });
+  }, { allowSignalWrites: true });
 
   constructor(
     public readonly service: FIN52030Service,
@@ -80,7 +73,7 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const raw = <FIN52030Payload>{ ...this.queryForm.getRawValue() };
+      const raw = { ...this.queryForm.getRawValue() } as FIN52030Payload;
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
         v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       )) as unknown as FIN52030Payload;

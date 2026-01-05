@@ -19,7 +19,6 @@ import { ASS2100ENGMeterType, ASS21010Data, ASS21010Payload, EngType } from './a
 @Component({
   selector: 'app-ass21010',
   templateUrl: './ass21010.component.html',
-  styleUrl: './ass21010.component.scss',
   standalone: true,
   imports: [
     AccordionModule,
@@ -81,11 +80,8 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
   }, { allowSignalWrites: !0 });
 
   public readonly loadingEffect = effect(() => {
-    this.loading = this.tableLoading()
-      || this.service.engMeterNoLoading()
-      || this.service.locationLoading()
-      || this.service.exportLoading();
-  });
+    this.loading = this.tableLoading() || this.service.exportLoading();
+  }, { allowSignalWrites: true });
 
   public readonly columns: (Omit<Column, 'field'> & { field: keyof ASS21010Data; exportFormat?: unknown[]; })[] = [
     {

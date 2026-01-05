@@ -17,7 +17,6 @@ import { FIN52010Data, FIN52010UpdatePayload } from './fin52010.model';
 @Component({
   selector: 'app-fin52010',
   templateUrl: './fin52010.component.html',
-  styleUrl: './fin52010.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -98,8 +97,7 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.tableLoading()
-      || this.service.gls1005Loading();
-  });
+  }, { allowSignalWrites: true });
 
   constructor(
     public readonly service: FIN52010Service,
@@ -153,12 +151,9 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
       this.logger.debug(`onSubmit:`, [raw, payload]);
       this.service.updateFIN52010Data(payload).pipe(
         finalize(() => this.tableLoading.set(!1)),
-      ).subscribe({
-        next: res => {
-          this.tableData.set(res.Data);
-          this.messageService.successBubble(res.Message || '更新成功');
-        },
-        error: res => this.messageService.errorBubble(res.Message || '更新失敗'),
+      ).subscribe(res => {
+        this.tableData.set(res.Data);
+        this.messageService.successBubble(res.Message || '更新成功');
       });
     });
   };

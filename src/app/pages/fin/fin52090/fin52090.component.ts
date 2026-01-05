@@ -52,8 +52,7 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.tableLoading()
-      || this.service.accNoLoading();
-  });
+  }, { allowSignalWrites: true });
 
   public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52090Data; })[] = [
     { field: 'AccNo', header: '科目代號', format: v => this.service.accNoMap.get(v) ?? v },
@@ -78,11 +77,11 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
 
   onSubmit() {
     this.handleSubmit(this.queryForm, () => {
-      const raw = <FIN52090Query>{
+      const raw = {
         ...this.queryForm.getRawValue(),
         AccNo: this.qf().AccNo.value?.length ? this.qf().AccNo.value : void 0,
         NoteDesc: this.qf().NoteDesc.value ?? void 0,
-      };
+      } as FIN52090Query;
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
         v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       )) as unknown as FIN52090Query;

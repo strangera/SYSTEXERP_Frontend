@@ -27,8 +27,7 @@ import { EditColumnExtend } from './table-edit/table-edit.model';
 @Component({
   selector: 'app-fin52030-cru',
   templateUrl: './fin52030-cru.component.html',
-  styleUrl: './fin52030-cru.component.scss',
-  standalone: !0,
+  standalone: true,
   imports: [
     ButtonModule,
     CheckboxModule,
@@ -285,7 +284,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const d = this.dataForm.getRawValue();
-      const raw = <FIN52030InsertPayload | FIN52030UpdatePayload>{
+      const raw = {
         ...d,
         Details: this.tableData().map(({ AccAmtD, AccAmtC, NoteDesc, ...rest }, index) => ({
           ...rest,
@@ -294,7 +293,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
           AccDC: AccAmtD ? 'D' : AccAmtC ? 'C' : '',
           NoteDesc: this.service.noteDescMap().get(String(NoteDesc))?.label ?? NoteDesc,
         })),
-      };
+      } as FIN52030InsertPayload | FIN52030UpdatePayload;
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
         v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       )) as unknown as FIN52030InsertPayload | FIN52030UpdatePayload;

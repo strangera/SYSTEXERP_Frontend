@@ -1,5 +1,6 @@
 import { SystemOptionsService } from '@service/system/sys1000.service';
-import { Column, formatAmount, formatDate, formatDateTime, formatTimeHHMM, formatYN } from '../../../shared/componentkit/table/table.model';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount, formatDate, formatDateTime, formatTimeHHMM, formatYN } from '../../../shared/componentkit/table/table.model';
 
 export const ECR_SernoType_Option = [
   { value: '1', label: '循環使用' },
@@ -26,7 +27,7 @@ export function getToday2330(): Date {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 30, 0);
 }
-export const columns: Column[] = [
+export const columns: ReportColumn[] = [
   { field: 'ECR_TmplNo', header: '環境變數編號', visible: true },
   { field: 'ECR_TmplDesc', header: '模版備註', visible: true },
   { field: 'ECR_TmplStatus', header: '模版狀態', visible: true, format: value => value === 'A' ? '啟用' : '停用' }, // 資料庫中有此欄位，前端資料也有

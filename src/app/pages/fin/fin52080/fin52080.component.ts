@@ -22,7 +22,7 @@ import { AccDCType, FIN52080Data, FIN52080Query, FIN52080Tree, LedgerMDType, Vou
   selector: 'app-fin52080',
   templateUrl: './fin52080.component.html',
   styleUrl: './fin52080.component.scss',
-  standalone: !0,
+  standalone: true,
   imports: [
     AccordionModule,
     ButtonComponent,
@@ -84,9 +84,7 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.tableLoading()
-      || this.treeLoading()
-      || this.service.classNoLoading();
-  });
+  }, { allowSignalWrites: true });
 
   /**
    * - AccNo: 科目代號
@@ -193,7 +191,7 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const raw = <FIN52080Query>{ ...this.queryForm.getRawValue() };
+      const raw = { ...this.queryForm.getRawValue() } as FIN52080Query;
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
         v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       )) as unknown as FIN52080Query;

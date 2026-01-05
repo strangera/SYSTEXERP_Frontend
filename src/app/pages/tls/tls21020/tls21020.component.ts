@@ -19,7 +19,7 @@ import { EntryType, TLS21020Data, TLS21020Query, TLS21020UpdateQuery } from './t
 @Component({
   selector: 'app-tls21020',
   templateUrl: './tls21020.component.html',
-  standalone: !0,
+  standalone: true,
   imports: [
     AccordionModule,
     FormsModule,
@@ -248,10 +248,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.tableLoading()
-      || this.service.gls1005Loading()
-      || this.service.pos2013Loading()
-      || this.service.orgIdLoading();
-  });
+  }, { allowSignalWrites: true });
 
   constructor(
     public readonly service: TLS21020Service,
@@ -302,7 +299,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   }
 
   public queryTLS21020(): Observable<BaseQueryResponse<TLS21020Data>> {
-    const payload = <TLS21020Query>{ ...this.queryForm.getRawValue(), pageSize: 1e5 };
+    const payload = { ...this.queryForm.getRawValue(), pageSize: 1e5 } as TLS21020Query;
     this.queryStateService.setQueryState(this.ProgNo, payload);
     this.logger.debug(`queryTLS21020:`, [payload]);
     return this.service.queryTLS21020(payload);

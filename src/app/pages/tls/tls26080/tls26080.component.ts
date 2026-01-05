@@ -21,8 +21,7 @@ import { TLS26080Data, TLS26080Query } from './tls26080.model';
 @Component({
   selector: 'app-tls26080',
   templateUrl: './tls26080.component.html',
-  styleUrl: './tls26080.component.scss',
-  standalone: !0,
+  standalone: true,
   imports: [
     AccordionModule,
     FormsModule,
@@ -89,12 +88,8 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   public readonly deleteLoading = signal<boolean>(!1);
 
   public readonly loadingEffect = effect(() => {
-    this.loading = this.tableLoading()
-      || this.deleteLoading()
-      || this.service.capItemsLoading()
-      || this.service.tltTalentOptionsLoading()
-      || this.service.tltTalentChargeOptionsLoading();
-  });
+    this.loading = this.tableLoading() || this.deleteLoading()
+  }, { allowSignalWrites: true });
 
   constructor(
     public readonly service: TLS26080Service,
@@ -112,7 +107,7 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const raw = <TLS26080Query>{ ...this.queryForm.getRawValue() };
+      const raw = { ...this.queryForm.getRawValue() } as TLS26080Query;
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
         v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       )) as unknown as TLS26080Query;
@@ -134,14 +129,9 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
 
   public onDelete(event: TLS26080Data[]): void {
     this.deleteLoading.set(!0);
-    this.service.deleteTLS26080(event.map(v => String(v.id))).pipe(
-      finalize(() => this.deleteLoading.set(!1))
-    ).subscribe({
-      next: () => {
-        this.messageService.successBubble('刪除成功');
-        this.onSubmit(); // 重新查詢
-      },
-      error: () => this.messageService.errorBubble('刪除失敗')
+    this.service.deleteTLS26080(event.map(v => String(v.id))).pipe(finalize(() => this.deleteLoading.set(!1))).subscribe(res => {
+      this.messageService.successBubble(res.Message || '刪除成功');
+      this.onSubmit(); // 重新查詢
     });
   }
 }

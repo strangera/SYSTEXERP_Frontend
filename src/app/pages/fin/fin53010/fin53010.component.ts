@@ -21,8 +21,7 @@ import { FIN53010Data, FIN53010Payload } from './fin53010.model';
 @Component({
   selector: 'app-fin53010',
   templateUrl: './fin53010.component.html',
-  styleUrl: './fin53010.component.scss',
-  standalone: !0,
+  standalone: true,
   imports: [
     AccordionModule,
     FormsModule,
@@ -73,17 +72,7 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.tableLoading()
-      || this.service.accLoading()
-      || this.service.venLoading()
-      || this.service.usrLoading()
-      || this.service.orgNoLoading()
-      || this.service.sys1000Loading()
-      || this.service.voucherTypeLoading()
-      || this.service.refNameLoading()
-      || this.service.noteDescLoading()
-      || this.service.fin52030Loading()
-      || this.service.vocTempLoading();
-  });
+  }, { allowSignalWrites: true });
 
   public readonly columns: Column[] = [
     { field: 'VouNo', header: '傳票號碼' },
@@ -115,11 +104,11 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
       const vns = this.qf().VouNoStart.value;
       const vne = this.qf().VouNoEnd.value;
 
-      const raw = <FIN53010Payload>{
+      const raw = {
         ...this.queryForm.getRawValue(),
         VouNoStart: String(vns ?? ''),
         VouNoEnd: String(vne ?? ''),
-      };
+      } as FIN53010Payload;
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
         v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       )) as unknown as FIN53010Payload;
