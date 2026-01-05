@@ -53,10 +53,12 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     org_idList: [[] as number[]], // 組織
     tpy_date: [], // 扣款年月
     pod_noList: [[]], // 維護日
-    CRT_USR_No: [this.authService.currentUserValue?.user_No],
+    CRT_USR_No: [''],
     GUI_FLAG: [''],
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
   });
+  //     CRT_USR_No: [this.authService.currentUserValue?.user_No], 預設為登入者
+
 
   columns: any[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
@@ -72,6 +74,10 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     { field: 'GUI_FLAG', header: '是否開立發票', visible: true, format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : '' },
     { field: 'tpy_net', header: '扣款(未稅)', visible: true, format: formatAmount, align: 'right' },
     { field: 'remarks', header: '備註', visible: true },
+    { field: 'CRT_USR_Name', header: '建立者', visible: true },
+    { field: 'CRT_Date', header: '建立時間', visible: true, format: formatDate },
+    { field: 'UPD_USR_Name', header: '修改者', visible: true },
+    { field: 'UPD_Date', header: '修改時間', visible: true, format: formatDate },
   ];
 
   totalRecords = 0;

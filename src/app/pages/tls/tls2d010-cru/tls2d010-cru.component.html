@@ -43,7 +43,7 @@
         [columns]="columnsCounter" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
         (dataChange)="onCounterDataChange($event)" dataStatusField="status" [loading]="loading" [tableRequired]="true"
         [disabled]="isDetailMode" [showCheckBox]="!isDetailMode" [showDelete]="!isDetailMode"
-        [canInsert]="!isDetailMode" [showInsert]="!isDetailMode"></app-table-edit>
+        [canInsert]="!isDetailMode" [showInsert]="false"></app-table-edit>
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataFormCounter" (clickEvent)="onLocalCancel('counter')" />
         <app-button btnType="submit" [loading]="loading" />
@@ -109,12 +109,12 @@
         </div>
       </div>
 
-      <!-- table-edit -->
+      <!-- table-edit：一般扣款明細（保留左上角新增 + 按鈕，點擊開啟專櫃選擇彈窗） -->
       <app-table-edit #normalTable title="新增扣款" tableKey="TLSD010Detail" [data]="data" class="col-12"
         [columns]="columnsNormal" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
         (dataChange)="onCounterDataChange($event)" dataStatusField="status" [loading]="loading" [tableRequired]="true"
-        [disabled]="isDetailMode" [showCheckBox]="!isDetailMode" [showDelete]="!isDetailMode"
-        [canInsert]="!isDetailMode" [showInsert]="!isDetailMode"></app-table-edit>
+        [disabled]="isDetailMode" [showCheckBox]="!isDetailMode" [showDelete]="!isDetailMode" [canInsert]="false"
+        [showInsert]="!isDetailMode" (insert)="onOpenTalentDialog()"></app-table-edit>
 
       <!-- 按鈕 -->
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -124,3 +124,12 @@
     </form>
   </p-panel>
 </div>
+
+<app-dialog [visible]="talentDialogVisible" header="選擇專櫃" (visibleChange)="talentDialogVisible = $event"
+  (save)="onTalentDialogSave()" [disable]="!selectedTalents || selectedTalents.length === 0">
+  <app-table tableKey="tls2d010TalentDialogTable" dataKey="tlt_no" [data]="talentDialogData"
+    [columns]="talentDialogColumns" [selectedItems]="selectedTalents" (selectionChange)="selectedTalents = $event"
+    [showHeader]="false" [showManage]="false" [showCheckBox]="true" [showCaption]="false" [scrollHeight]="'400px'"
+    [loading]="talentDialogLoading" [isRowSelectable]="isTalentRowSelectable.bind(this)">
+  </app-table>
+</app-dialog>

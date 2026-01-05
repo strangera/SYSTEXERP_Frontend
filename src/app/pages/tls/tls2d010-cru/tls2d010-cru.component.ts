@@ -9,15 +9,18 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
-import { forkJoin } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { Tls2d010Service } from '../../../service/api/tls/tls2d010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, formatDate as columnDateFormat } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService, IAPS1003Item, IDropdownItem, ITalentOption } from './../../../service/utility/dropDownList.service';
 
 @UntilDestroy()
@@ -30,6 +33,7 @@ import { DropDownListService, IAPS1003Item, IDropdownItem, ITalentOption } from 
     TableEditComponent, CalendarComponent, InputTextComponent, RadiobuttonComponent, MenubarComponent,
     PanelModule, ReactiveFormsModule, DropdownComponent,
     InputNumberComponent, ButtonComponent, NgIf, TranslateModule,
+    DialogComponent, TableComponent,
   ],
 })
 export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -74,6 +78,24 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
   columnsCounter: EditColumn[] = [];
   columnsNormal: EditColumn[] = [];
+
+  // 專櫃選擇 Dialog 相關
+  talentDialogVisible = false;
+  talentDialogLoading = false;
+  talentDialogData: any[] = [];
+  selectedTalents: any[] = [];
+  talentDialogColumns: Column[] = [
+    { field: 'apply_no', header: '申請單號' },
+    { field: 'tlt_bdate', header: '起始日', format: columnDateFormat },
+    { field: 'tlt_edate', header: '截止日', format: columnDateFormat },
+    { field: 'tlt_no', header: '專櫃編號' },
+    { field: 'tlt_name', header: '專櫃名稱' },
+    { field: 'org_id', header: '組織代號' },
+    { field: 'contract_no', header: '契約編號' },
+    { field: 'contract_subno', header: '版次' },
+    { field: 'tlt_contract_bdate', header: '契約起日', format: columnDateFormat },
+    { field: 'tlt_contract_edate', header: '契約迄日', format: columnDateFormat },
+  ];
 
   // 表單
   dataFormCounter = this.formBuilder.group({
@@ -129,11 +151,99 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     super();
   }
 
+  // 開啟專櫃選擇視窗（由「新增扣款」table 的新增按鈕觸發）
+  onOpenTalentDialog(): void {
+    if (this.isDetailMode) {
+      return;
+    }
+    this.talentDialogVisible = true;
+    this.loadTalentDialogData();
+  }
+
+  private loadTalentDialogData(): void {
+    this.talentDialogLoading = true;
+    this.dropDownListService
+      .queryTLTTALENTDropDownList()
+      .pipe(untilDestroyed(this), finalize(() => (this.talentDialogLoading = false)))
+      .subscribe((res: any) => {
+        this.talentDialogData = res?.Data ?? [];
+        this.selectedTalents = [];
+      });
+  }
+
+  // Dialog 列是否可選（避免重複加入相同專櫃）
+  isTalentRowSelectable(row: any): boolean {
+    if (!row || !this.data || !this.data.length) {
+      return true;
+    }
+    const target = row.tlt_no != null ? String(row.tlt_no) : '';
+    if (!target) {
+      return true;
+    }
+    return !this.data.some(existing => {
+      const v = existing.tlt_no;
+      if (!v) { return false; }
+      if (typeof v === 'object') {
+        const key = v.tlt_no ?? v.No ?? v.value;
+        return key != null && String(key) === target;
+      }
+      return String(v) === target;
+    });
+  }
+
+  // 專櫃 Dialog 按下「儲存」後，將選取的專櫃加入「新增扣款」table 資料
+  onTalentDialogSave(): void {
+    if (!this.selectedTalents || this.selectedTalents.length === 0) {
+      this.talentDialogVisible = false;
+      return;
+    }
+
+    // 僅在一般扣款模式下處理
+    if (this.currentCreateType !== 'normal') {
+      this.talentDialogVisible = false;
+      this.selectedTalents = [];
+      return;
+    }
+
+    const tpyDate = this.dataFormNormal.get('tpy_date')?.value ?? null;
+    const tpyNet = this.dataFormNormal.get('tpy_net')?.value ?? null;
+
+    const newRows = this.selectedTalents.map((item: any) => {
+      const matchedOption = this.tlt_noOptions.find(opt => opt.tlt_no === item.tlt_no || opt.No === item.tlt_no);
+      const tltValue = matchedOption ?? {
+        ...item,
+        label: `${item.tlt_no}-${item.tlt_name}`,
+      };
+
+      return {
+        tlt_no: tltValue,
+        tpy_date: tpyDate,
+        tpy_net: tpyNet,
+        remarks: '',
+        status: 'new',
+      };
+    });
+    const baseData = Array.isArray(this.data)
+      ? this.data.filter(row => {
+        if (row._isAutoInsertCandidate) return false;
+        const noTlt = !row.tlt_no;
+        const noContract = !row.contract_no && !row.contract_subno;
+        const noOrg = !row.org_id;
+        const noAmount = row.tpy_net === null || row.tpy_net === undefined || row.tpy_net === '';
+        const noDate = !row.tpy_date;
+        return !(noTlt && noContract && noOrg && noAmount && noDate);
+      })
+      : [];
+
+    const updatedData = [...baseData, ...newRows];
+    this.onCounterDataChange(updatedData);
+    this.talentDialogVisible = false;
+    this.selectedTalents = [];
+  }
+
   ngOnInit(): void {
-    // normal模式 form日期選擇時同步到 table-edit 新增行
     this.dataFormNormal.get('tpy_date')?.valueChanges.subscribe((date: any) => {
       if (this.currentCreateType === 'normal') {
-        // 主要新增行（第一個 status=modified 或無 status）也預設日期；候選行也會被帶入（以便使用者可直接編輯）
         let mainRowSet = false;
         this.data.forEach(row => {
           if (!mainRowSet && (row.status === 'modified' || !row.status)) {
@@ -141,22 +251,16 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             mainRowSet = true;
           }
           if (row.status === 'new' || row._isAutoInsertCandidate) {
-            // 對於新增候選列，若上方有值則帶入，否則保留原有（或清空）
             row.tpy_date = date ?? null;
           }
         });
-        // 重新指定陣列引用以觸發 table-edit 的 ngOnChanges，使 UI 立即更新
         this.data = Array.isArray(this.data) ? [...this.data] : this.data;
       }
     });
 
-    // normal模式 form金額輸入時同步到 table-edit 新增行（預設帶入，但仍可編輯）
     this.dataFormNormal.get('tpy_net')?.valueChanges.subscribe((amount: any) => {
-      // amount 可能為 0，因此檢查 !== null/undefined
       if (this.currentCreateType === 'normal') {
-        // 當上方輸入金額時，帶入主要列與新增候選列，並保留使用者後續可編輯的權限
         if (amount === null || amount === undefined) {
-          // 若沒有值，則清除新增候選列的預設金額
           this.data.forEach(row => {
             if (row.status === 'new' || row._isAutoInsertCandidate) {
               row.tpy_net = null;
@@ -174,9 +278,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             }
           });
         }
-        // 讓 table-edit 觀察到資料參考改變，立即重繪 table
         this.data = Array.isArray(this.data) ? [...this.data] : this.data;
-        // 若是在 counter 模式或需要更新總金額，也嘗試更新一次總金額（無副作用）
         try {
           this.updateTotalCash();
         } catch (e) {
@@ -190,16 +292,11 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     if (rowdata) {
       this.currentCreateType = rowdata.type;
       const form = this.currentCreateType === 'counter' ? this.dataFormCounter : this.dataFormNormal;
-
-      // 共用初始化（同時會依 crudstatus 處理表單狀態）
       this.initializePage('TLS2D010', form);
-
-      // 判斷是否為檢視模式：沿用共用 CRUD 狀態
       if (this.crudstatus === CRUDStatus.Read) {
         this.isDetailMode = true;
       }
 
-      // counter模式補齊所有table-edit行欄位
       const counterMapping = (row: any) => {
         if (row.tlt_no && typeof row.tlt_no === 'object') {
           return {
@@ -226,12 +323,10 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       }
     }
 
-    // 載入下拉選單
     this.loadTltAndPodOptions();
     this.loadAndSetupColumns();
 
 
-    // counter → 選專櫃時帶入契約資料
     this.dataFormCounter.get('tlt_no')?.valueChanges.subscribe((selected: any) => {
       if (selected) {
         // 自動帶入 contract_no, contract_subno, org_id, tlt_contract_bdate, tlt_contract_edate
@@ -250,12 +345,10 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
               row.org_id = selected.org_id ?? '';
             }
           });
-          // 重新指定陣列引用以觸發 table-edit 的 ngOnChanges，使 UI 立即更新 org_id
           this.data = Array.isArray(this.data) ? [...this.data] : this.data;
         }
       }
     });
-    // normal → 選專櫃時也同步到 table rows（用於新增多筆時自動帶入 org_id）
     this.dataFormNormal.get('tlt_no')?.valueChanges.subscribe((selected: any) => {
       if (selected) {
         // normalize selected to object when possible
@@ -268,12 +361,10 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
         if (this.data && this.data.length) {
           this.data.forEach(row => {
-            // 若該列尚未有 tlt_no 或與選擇的 tlt_no 相符，則帶入 org_id
             if ((row.tlt_no && row.tlt_no.tlt_no === sel.tlt_no) || !row.tlt_no) {
               row.org_id = sel.org_id ?? '';
             }
           });
-          // 重新指定資料引用觸發 table-edit 更新
           this.data = Array.isArray(this.data) ? [...this.data] : this.data;
         }
       }
@@ -342,7 +433,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           }
         }
 
-        // normal form control
         const normalCtrl = this.dataFormNormal.get('tlt_no');
         if (normalCtrl) {
           const v = normalCtrl.value;
@@ -352,7 +442,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           }
         }
 
-        // data rows (table-edit data)
         if (this.data && Array.isArray(this.data) && this.data.length) {
           this.data = this.data.map(row => {
             const n = normalizeTltValue(row.tlt_no);
@@ -362,7 +451,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           });
         }
 
-        // 將表單中原本可能含時間的契約日期轉成 yyyy/MM/dd
         const formatToYMD = (val: any) => {
           const d = this.parseBackendDate(val);
           return d ? formatDate(d, 'yyyy/MM/dd', 'en-US') : null;
@@ -388,7 +476,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           }));
         }
 
-        // Normalize AccNo in form controls and table rows so dropdown can match optionValue 'No'
         const normalizeAcc = (val: any) => {
           if (!val && val !== 0) return val;
           if (typeof val === 'string' || typeof val === 'number') return String(val);
@@ -420,7 +507,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         }
 
         this.loadAndSetupColumns();
-        // 初始載入時計算並填入總金額
         this.updateTotalCash();
       });
   }
