@@ -48,7 +48,6 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
   totalRecords = 0;
   footerTotal: any | null = null;
   lastQueryForm: any;
-  override loading = false;
 
   columns: Column[] = [
     { field: 'USR_Level', header: '鍵盤編號', visible: true },
