@@ -16,11 +16,11 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { CustomFooterTableComponent } from '../../../shared/componentkit/custom-footer-table/customFooterTable.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CustomFooterTableComponent } from '../../../shared/componentkit/custom-footer-table/customFooterTable.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, formatAmount, formatDate, formatOptionLabel } from '../../../shared/componentkit/table/table.model';
 import { option } from '../../../shared/models/sys/sysb000.model';
@@ -41,12 +41,14 @@ export interface ENG2001 {
   Location_No: string, // 設備位置編號，對應 POS2002.LOCATION_No
   TLT_No: string, // 專櫃編號，對應 POS2002.TLT_No
   ENG_YYMM: string, // 結算年月
+  ENG_Amount: number, // 本次抄錶金額
   ENG_CurrentReading_Last: number, // 上次抄錶度數
   ENG_LastReadingDate: Date; // 上次抄錶日
   ENG_CurrentReading: number, // 本次抄錶度數
   UsageAmount: number; // 用量
   ENG_Date: Date; // 本次抄錶日
   ENG_ImpFileName?: string; // 匯入檔案名稱
+  ENG_Status?: string; // 結算狀態：0=未結算、1=已結算
 
   ENG_Remark?: string; // 備註
 
@@ -98,6 +100,7 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
     SYS_StoreNo: [this.authService.getUserInfo()?.SYS_StoreNo ?? '', [Validators.maxLength(10)]], // 分店編號 section抓
     Mid: [Number(this.authService.getUserInfo()?.mid), [Validators.maxLength(19)]], //  section抓
     ENG_YYMM: [null, [Validators.maxLength(6)]], // 結算年月
+    ENG_Amount: [null, [Validators.min(0)]], // 結算金額
     ENG_Status: [null, [Validators.maxLength(1)]], // 結算狀態：0=未抄錶、1=已抄錶、2=已結算
 
     //分頁查詢
@@ -126,6 +129,7 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
     { field: 'TLT_No', header: '專櫃編號', visible: true },
     { field: 'TLT_Name', header: '專櫃名稱', visible: true },
     { field: 'ENG_YYMM', header: '結算年月', visible: true, format: formatYYYYMM },
+    { field: 'ENG_Amount', header: '結算金額', visible: true, format: formatAmount },
     { field: 'UsageAmount', header: '使用度數', visible: true },
     { field: 'ENG_Date', header: '抄表日期', visible: true, format: formatDate },
     { field: 'ENG_Status', header: '結算狀態', visible: true, options: this.ENG_Status_Option, format: (value) => formatOptionLabel(value, this.ENG_Status_Option) },
@@ -189,9 +193,29 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
                 engDate = new Date(year, month, 1); // 結算年月通常取當月第一天
               }
 
+              // 如果後端返回的是中文，轉換回代碼（保持原始值）
+              let engType = item.ENG_Type;
+              if (engType && typeof engType === 'string') {
+                const typeOption = this.ENG_Type_Option.find(opt => opt.label === engType);
+                if (typeOption) {
+                  engType = typeOption.value;
+                }
+              }
+
+              // 如果後端返回的是中文，轉換回代碼（保持原始值）
+              let engStatus = item.ENG_Status;
+              if (engStatus && typeof engStatus === 'string') {
+                const statusOption = this.ENG_Status_Option.find(opt => opt.label === engStatus);
+                if (statusOption) {
+                  engStatus = statusOption.value;
+                }
+              }
+
               return {
                 ...item,
                 ENG_YYMM: engDate, // 換成 Date 物件
+                ENG_Type: engType, // 確保是代碼而非中文
+                ENG_Status: engStatus, // 確保是代碼而非中文
               } as ENG2001;
             });
 
@@ -265,6 +289,13 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
 
   isRowSelectable(rowData: ENG2001): boolean {
     return rowData.CanDel ?? false;
+  }
+
+  /**
+   * 編輯按鈕禁用條件（僅未結算狀態可編輯）
+   */
+  editDisabled = (rowData: ENG2001): boolean => {
+    return rowData.ENG_Status !== '0'; // 0:未結算才能編輯，其他狀態禁用
   }
 
   loadOptions() {
