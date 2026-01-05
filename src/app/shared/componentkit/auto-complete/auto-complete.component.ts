@@ -1,10 +1,9 @@
-import { ChangeDetectionStrategy, Component, input, signal, OnInit, Input, effect, output, ViewChild } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common'; // 使用 CommonModule
-import { AutoComplete, AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
-import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
+import { ChangeDetectionStrategy, Component, effect, input, Input, OnInit, output, signal, ViewChild } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
 import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
+import { AutoComplete, AutoCompleteCompleteEvent, AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 @Component({
   selector: 'app-auto-complete',
   standalone: true,
@@ -70,21 +69,27 @@ export class AutoCompleteComponent extends BasicKitComponent implements OnInit {
   filterOptions(event: AutoCompleteCompleteEvent): void {
     const query = event.query.toLowerCase();
     const availableOptions = this._options();
+
     if (this.loading() || availableOptions.length === 0) {
       this.filteredOptions.set([]);
-      // 【修正 2】: 確保在沒有選項時也嘗試刷新虛擬滾動
       this.tryRefreshVirtualScroll();
       return;
     }
-    // 決定要過濾的屬性名稱，如果沒有指定 optionLabel，預設使用 'name'
+
     const labelKey = this.optionLabel() || 'name';
+    const valueKey = this.optionValue(); // 取得 value 的 key (例如 'ecr_no')
+
     const filtered = availableOptions.filter(option => {
       const textToMatch = option[labelKey];
-      // 確保要比對的屬性存在且是字串，並檢查是否以查詢字串開頭 (startsWith 效能通常優於 indexOf == 0)
-      if (typeof textToMatch === 'string') {
-        return textToMatch.toLowerCase().startsWith(query);
-      }
-      return false;
+      const valueToMatch = valueKey ? option[valueKey] : null;
+
+      // 轉為字串進行模糊比對
+      const isLabelMatch = String(textToMatch).toLowerCase().includes(query);
+
+      // 如果有 valueKey，也一起比對 (這樣輸入編號或名稱都能搜到)
+      const isValueMatch = valueToMatch ? String(valueToMatch).toLowerCase().includes(query) : false;
+
+      return isLabelMatch || isValueMatch;
     });
 
     this.filteredOptions.set(filtered);
