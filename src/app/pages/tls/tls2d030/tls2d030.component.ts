@@ -8,7 +8,7 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, convertDateToYYYYMM, createPaginationConfig, formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { Column, convertDateToYYYYMM, formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -26,10 +26,11 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030DataItem> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     sam_yyymm: [null, [Validators.required]], // 結算年月
-    money_type: [null, [Validators.required]], // 結算方式 (對應API的 sam_termno)
+    money_type: [null, [Validators.required]], // 結帳方式 (對應API的 sam_termno)
     tlt_no: [null], // 專櫃編號
     tlt_floor: [null], // 樓層 (對應API的 tlt_floor)
-    ...createPaginationConfig([{ field: 'sam_yyymm', order: 1 }]),
+    pageSize: [30],
+    pageIndex: [1],
   });
   sam_termnoOptions = getSYS1000Options('money_type');
   tlt_noOptions = this.dropdown.queryTltTalent();
@@ -39,7 +40,7 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
   data: QueryTls2d030DataItem[] = [];
   columns: Column[] = [
     { field: 'sam_yyymm', header: '結算年月', visible: true, format: formatYYYYMM },
-    { field: 'money_type_name', header: '結算方式' },
+    { field: 'money_type_name', header: '結帳方式' },
     { field: 'sam_termno', header: '帳次', visible: true },
     { field: 'sam_type_name', header: '費用型態', visible: true },
     { field: 'CRT_Date', header: '關帳時間', visible: true, format: formatDate },
