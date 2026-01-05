@@ -77,8 +77,6 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
   });
   totalRecords = 0;
   historyRequestBody: any;
-  loading2 = false; // onSettle 專屬 loading
-  loading3 = false; // onQueryRecord 專屬 loading
   isSettle = false;
 
   constructor(
@@ -163,7 +161,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
       // 1. 設定欄位為結算檢查欄位
       this.columns = this.settleColumns;
       this.isSettle = true;
-      this.loading2 = true;
+      this.loading = true;
       const body = {
         ...frm.value,
         sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
@@ -171,7 +169,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
         money_type: frm.value.money_type
       } as Tls2e070QueryRecEstBody;
 
-      this.tls2e070Service.estTLS2E070(body).pipe(finalize(() => { this.loading2 = false; this.loading = false }), untilDestroyed(this)).subscribe(res => {
+      this.tls2e070Service.estTLS2E070(body).pipe(finalize(() => { this.loading = false; this.loading = false }), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
         if (res.Status === '0000') {
@@ -192,7 +190,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
       // 1. 設定欄位為試算紀錄欄位
       this.columns = this.recordColumns;
       this.isSettle = false;
-      this.loading3 = true;
+      this.loading = true;
       const body = {
         ...frm.value,
         sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
@@ -200,7 +198,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
         money_type: frm.value.money_type
       } as Tls2e070QueryRecEstBody;
 
-      this.tls2e070Service.queryRecTLS2E070(body).pipe(finalize(() => { this.loading3 = false; this.loading = false }), untilDestroyed(this)).subscribe(res => {
+      this.tls2e070Service.queryRecTLS2E070(body).pipe(finalize(() => { this.loading = false; this.loading = false }), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
         this.historyRequestBody = body;

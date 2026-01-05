@@ -75,18 +75,17 @@ export class TLS2D020Component extends BasicQueryPageComponent<QueryDataItem> im
       })
     })
   }
-  loading2 = false;
   onSam(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = false;
-      this.loading2 = true;
+      this.loading = true;
       const body = {
         sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
         money_type: frm.value.money_type,
         tlt_no: frm.value.tlt_no,
         tlt_floor: frm.value.tlt_floor
       }
-      this.tls2d020Service.executeTLS2D020(body).pipe(untilDestroyed(this), finalize(() => this.loading2 = false)).subscribe((res) => {
+      this.tls2d020Service.executeTLS2D020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
         this.onSubmit(frm);
         this.messageService.successBubble(res.Message);
       })

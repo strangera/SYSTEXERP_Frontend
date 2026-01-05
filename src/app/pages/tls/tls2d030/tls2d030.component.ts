@@ -60,18 +60,15 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
    * 執行結算作業
    * @param frm 表單群組
    */
-  loading2 = false;
   onSettle(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.loading = false;
-      this.loading2 = true;
       const body: ExecuteTls2d030Request = {
         sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
         money_type: frm.value.money_type,
         tlt_no: frm.value.tlt_no,
         tlt_floor: frm.value.tlt_floor,
       };
-      this.tls2d030Service.executeTLS2D030(body).pipe(untilDestroyed(this), finalize(() => this.loading2 = false)).subscribe(res => {
+      this.tls2d030Service.executeTLS2D030(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
         if (res.Data.ErrCode === 1) {
           this.messageService.successBubble(res.Data.ErrMsg || '結算成功');
           this.onSubmit(frm);

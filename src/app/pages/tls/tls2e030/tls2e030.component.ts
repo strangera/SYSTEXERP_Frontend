@@ -140,7 +140,6 @@ export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> imp
       })
     });
   }
-  loading2 = false;
   onSam(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const baseBody = {
@@ -159,12 +158,12 @@ export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> imp
  * @param body 請求參數
  */
   private executeTrialCalculation(body: Tls2e030EstBody) {
-    this.loading2 = true;
+    this.loading = true;
 
     this.tls2e030Service.estTls2e030(body)
       .pipe(
         finalize(() => {
-          this.loading2 = false;
+          this.loading = false;
           this.loading = false;
         }),
         untilDestroyed(this)
