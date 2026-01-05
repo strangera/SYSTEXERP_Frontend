@@ -12,9 +12,7 @@
 
           <app-input-text class=" col-12 md:col-6 lg:col-4 " label="反年結" controlName="vendorSName"
             [control]="queryForm.controls.vendorSName" [submitted]="submitted"></app-input-text>
-          <!-- <div class="my-3">
-          <p>最近關帳日期：{{closeDate}}</p>
-        </div> -->
+
         </div>
         <div class="justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" style="display: flex;">
           <app-button btnType="clear" [form]="queryForm"></app-button>
@@ -25,10 +23,10 @@
   </p-accordion>
 </div>
 
-<!-- <div class="card">
-  <app-table tableKey="tls2c030" dataKey="id" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+<div class="card">
+  <app-table tableKey="fin54045" dataKey="id" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
     [showManage]="false" [showDelete]="false" [multiSortMeta]="[{ field: 'cls_date', order: -1 }]">
   </app-table>
-</div> -->
+</div>
