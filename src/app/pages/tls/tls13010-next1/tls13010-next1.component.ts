@@ -815,7 +815,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       const quantity = parseFloat(rowData.tpy_qty) || 1; // 確保數量至少為 1
 
       if (unitPrice > 0 && quantity > 0) {
-        rowData.tpy_amount = unitPrice * quantity;
+        rowData.tpy_amount = Math.round(unitPrice * quantity);
         console.log(`A類型即時計算: ${unitPrice} × ${quantity} = ${rowData.tpy_amount}`);
       } else {
         rowData.tpy_amount = 0;
@@ -849,7 +849,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       const quantity = parseFloat(rowData.tpy_qty) || 1;
 
       if (unitPrice > 0 && quantity > 0) {
-        rowData.tpy_amount = unitPrice * quantity;
+        rowData.tpy_amount = Math.round(unitPrice * quantity);
       } else {
         rowData.tpy_amount = 0;
       }
@@ -1458,7 +1458,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
 
     const monthlyAmount = Math.round(totalAmount / periods);
-    const downPayment = totalAmount - (monthlyAmount * (periods - 1));
+    const downPayment = Math.round(totalAmount - (monthlyAmount * (periods - 1)));
 
     // 設定對話框資料並顯示
     this.calculationResult = {
@@ -1466,7 +1466,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       periods,
       monthlyAmount,
       downPayment,
-      verification: downPayment + (monthlyAmount * (periods - 1))
+      verification: Math.round(downPayment + (monthlyAmount * (periods - 1)))
     };
     this.currentRowData = rowData;
     this.currentCapType = capType;
