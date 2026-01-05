@@ -51,24 +51,16 @@ export class NotificationMessageComponent implements OnInit {
     });
 
     this.notificationService.confirmMsg$.pipe(untilDestroyed(this)).subscribe((opts) => {
-      this.showIcon = opts.showIcon === true; // 只有明確設定為 true 時才顯示圖示
+      this.showIcon = opts.showIcon === true;
       this.extraButtons = opts.extraButtons || [];
       this.currentConfirmOpts = opts;
+
       this.confirmationService.confirm({
         header: opts.header,
         message: opts.message,
-        accept: () => {
-          this.confirmationService.close();
-          if (opts.accept) {
-            opts.accept();
-          }
-        },
-        reject: () => {
-          this.confirmationService.close();
-          if (opts.reject) {
-            opts.reject();
-          }
-        }
+        // 【重要】這裡不要寫任何邏輯，避免與 HTML 的按鈕點擊重複執行
+        accept: () => { },
+        reject: () => { }
       });
     });
 
@@ -156,17 +148,16 @@ export class NotificationMessageComponent implements OnInit {
   }
 
   onConfirmAccept(cd: any) {
-    // 1. 取得資料：從 templateContext 中抓取 data
-    const resultData = this.currentConfirmOpts?.templateContext?.data ?? null;
+    // 1. 取得資料：確保你的 templateContext 結構正確
+    // 注意：這裡直接抓 currentConfirmOpts 存下來的 context
+    const resultData = this.currentConfirmOpts?.templateContext ?? null;
 
-    // 2. 執行回調：執行當初傳進來的 accept 函式，並帶入 data
+    // 2. 執行回調
     if (this.currentConfirmOpts?.accept) {
       this.currentConfirmOpts.accept(resultData);
     }
 
-    // 3. 關閉視窗：這步很重要，呼叫 cd.accept() 讓 PrimeNG 清除內部狀態
-    cd.accept();
+    // 3. 關閉視窗 (直接呼叫 service 的 close，不要呼叫 cd.accept())
+    this.confirmationService.close();
   }
-
-
 }

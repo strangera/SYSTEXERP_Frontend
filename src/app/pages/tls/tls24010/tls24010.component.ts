@@ -192,40 +192,47 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   // 編輯補登資料
   onEditData(rowData: TLS24010Data, type: string): void {
     if (type === FIX_TYPE.交易資料作廢) {
-      // 1. 取得原始交易日期
-      const orgDate = rowData.TXN_Date; // 假設 TXN_Date 格式為 'YYYY-MM-DD'，可以直接被 new Date() 解析
-      // 2. 判斷是否跨期
+      const orgDate = rowData.TXN_Date;
       const isCross = this.isCrossPeriod(orgDate);
 
       let headerMessage: string;
       let confirmMessage: string;
 
       if (isCross && rowData.TXN_GUIBegNo !== '00000000') {
-        // 跨期：應開立折讓單
         headerMessage = `開立折讓單`;
         confirmMessage = `此筆交易已跨期，需進行開立折讓單作業。確定要開立折讓單嗎?`;
       } else {
-        // 未跨期：作廢交易資料
         headerMessage = `作廢交易資料`;
         confirmMessage = `此筆交易未跨期，確定要作廢交易資料嗎?`;
       }
+
+      // 這裡定義了 data 層級
       const contextObj = { data: { selectedDate: new Date() } };
-      // 3. 呼叫確認服務
+
       this.messageService.confirm({
         header: headerMessage,
         message: confirmMessage,
-        contentTemplate: this.customTimeTemp, // 丟入 HTML 樣板
-        templateContext: contextObj,         // 丟入資料空間
+        contentTemplate: this.customTimeTemp,
+        templateContext: contextObj,
         accept: (result) => {
-          const selectedDate = result?.selectedDate;
-          if (!selectedDate) return;
-          // --- 新增日期卡控邏輯 ---
+          // --- 修正點 1: 依照 contextObj 的結構取值 ---
+          // result 其實就是你傳進去的 contextObj
+          const selectedDate = result?.data?.selectedDate;
+
+          console.log('取得的日期為:', selectedDate); // 偵錯用
+
+          if (!selectedDate) {
+            this.messageService.errorBubble('請選擇作廢日期');
+            return;
+          }
+
+          // --- 修正點 2: 日期卡控邏輯 ---
           const txnDate = new Date(rowData.TXN_Date);
           const today = new Date();
-          // 將時間部分歸零，只比較日期 (避免因為幾點幾分導致判斷錯誤)
           const compareSelected = new Date(selectedDate).setHours(0, 0, 0, 0);
           const compareTxn = new Date(txnDate).setHours(0, 0, 0, 0);
           const compareToday = new Date(today).setHours(0, 0, 0, 0);
+
           if (compareSelected < compareTxn) {
             this.messageService.errorBubble('作廢日期不可早於交易日期');
             return;
@@ -234,6 +241,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
             this.messageService.errorBubble('作廢日期不可晚於今日');
             return;
           }
+
           this.loading = true;
           const data = {
             Store_way: rowData.store_way || '',
@@ -245,29 +253,37 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
             TXN_Remark: rowData.TXN_Remark || '',
             EditType: TLS24010_EDIT_TYPE.交易資料作廢,
             VoidEdit: {
+              // 使用格式化工具處理日期
               Void_Date: formatDateToYYYY_MM_DD(selectedDate) || '',
               Void_Time: formatDateToHH_MM_SS(selectedDate) || '',
             }
-          }
-          this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-            this.messageService.successBubble(res.Message);
-            if (res.Data?.Is_Create_Ret) {
-              setTimeout(() => {
-                this.messageService.confirm({
-                  header: '折讓單已產生',
-                  message: '是否要列印折讓單?',
-                  accept: () => {
-                    this.tls24010Service.printTLS24010(res.Data?.TXN_Ret_No || '').pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-                      window.open(environment.ApiUrl + res.Data.Print_URL, '_blank');
-                      this.onSubmit(this.queryForm);
-                    })
-                  }
-                });
-              }, 1000);
-            } else {
-              this.onSubmit(this.queryForm);
-            }
-          });
+          };
+
+          this.tls24010Service.updateTLS24010(data)
+            .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+            .subscribe((res) => {
+              this.messageService.successBubble(res.Message);
+              if (res.Data?.Is_Create_Ret) {
+                // ... 續接列印折讓單邏輯 ...
+                setTimeout(() => {
+                  this.messageService.confirm({
+                    header: '折讓單已產生',
+                    message: '是否要列印折讓單?',
+                    accept: () => {
+                      this.loading = true;
+                      this.tls24010Service.printTLS24010(res.Data?.TXN_Ret_No || '')
+                        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+                        .subscribe((printRes) => {
+                          window.open(environment.ApiUrl + printRes.Data.Print_URL, '_blank');
+                          this.onSubmit(this.queryForm);
+                        });
+                    }
+                  });
+                }, 1000);
+              } else {
+                this.onSubmit(this.queryForm);
+              }
+            });
         },
         extraButtons: [
           {

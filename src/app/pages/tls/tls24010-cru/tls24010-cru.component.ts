@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { formatDateToHH_MM_SS, formatDateToYYYY_MM_DD, formatTimeToHHMMSS } from '@shared/componentkit/table/table.model';
+import { formatTimeToHHMMSS } from '@shared/componentkit/table/table.model';
 import { CalendarModule } from 'primeng/calendar';
 import { DividerModule } from 'primeng/divider';
 import { DropdownModule } from 'primeng/dropdown';
@@ -400,26 +400,17 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     const orgDate = rowData.TXN_Date;
     let isCross;
 
-    // 專門針對「交易資料作廢」類型進行客製化判斷
+    // 1. 針對「交易資料作廢」處理訊息與標題
     if (this.type === FIX_TYPE.交易資料作廢) {
-      // 確保 rowData 存在且有 TXN_Date
-      const rowData = this.rowdata as TLS24010Data;
       if (rowData && rowData.TXN_Date) {
         isCross = this.isCrossPeriod(orgDate);
-
         if (isCross && rowData.TXN_GUIBegNo !== '00000000') {
-          // 跨期：應開立折讓單
-          headerMessage = `開立折讓單`; // 改變標頭
+          headerMessage = `開立折讓單`;
           confirmMessage = `此筆交易已跨期，需進行開立折讓單作業。確定要開立折讓單嗎?`;
         } else {
-          // 未跨期：作廢交易資料
-          headerMessage = `作廢交易資料`; // 改變標頭
+          headerMessage = `作廢交易資料`;
           confirmMessage = `此筆交易未跨期，確定要作廢交易資料嗎?`;
         }
-      } else {
-        // 如果取不到日期，則使用預設的作廢訊息作為 fallback
-        console.error('無法取得交易日期，使用預設作廢訊息。');
-        headerMessage = FIX_TYPE_LABEL[FIX_TYPE.交易資料作廢];
       }
     }
 
@@ -430,22 +421,31 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       contentTemplate: this.type === FIX_TYPE.交易資料作廢 ? this.customTimeTemp : undefined, // 丟入 HTML 樣板
       templateContext: this.type === FIX_TYPE.交易資料作廢 ? contextObj : undefined,         // 丟入資料空間
       accept: (result) => {
-        const selectedDate = result?.selectedDate;
-        if (!selectedDate) return;
-        // --- 新增日期卡控邏輯 ---
-        const txnDate = new Date(rowData.TXN_Date);
-        const today = new Date();
-        // 將時間部分歸零，只比較日期 (避免因為幾點幾分導致判斷錯誤)
-        const compareSelected = new Date(selectedDate).setHours(0, 0, 0, 0);
-        const compareTxn = new Date(txnDate).setHours(0, 0, 0, 0);
-        const compareToday = new Date(today).setHours(0, 0, 0, 0);
-        if (compareSelected < compareTxn) {
-          this.messageService.errorBubble('作廢日期不可早於交易日期');
-          return;
-        }
-        if (compareSelected > compareToday) {
-          this.messageService.errorBubble('作廢日期不可晚於今日');
-          return;
+        let finalSelectedDate = new Date(); // 預設為現在時間
+        if (this.type === FIX_TYPE.交易資料作廢) {
+          const selectedDate = result?.data?.selectedDate;
+
+          if (!selectedDate) {
+            this.messageService.errorBubble('請選擇日期');
+            return;
+          }
+
+          // 日期卡控邏輯
+          const txnDate = new Date(rowData.TXN_Date);
+          const today = new Date();
+          const compareSelected = new Date(selectedDate).setHours(0, 0, 0, 0);
+          const compareTxn = new Date(txnDate).setHours(0, 0, 0, 0);
+          const compareToday = new Date(today).setHours(0, 0, 0, 0);
+
+          if (compareSelected < compareTxn) {
+            this.messageService.errorBubble('作廢日期不可早於交易日期');
+            return;
+          }
+          if (compareSelected > compareToday) {
+            this.messageService.errorBubble('作廢日期不可晚於今日');
+            return;
+          }
+          finalSelectedDate = new Date(selectedDate);
         }
         this.loading = true;
         const body = {
@@ -583,10 +583,10 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
             ...body,
             EditType: TLS24010_EDIT_TYPE.交易資料作廢,
             VoidEdit: {
-              Void_Date: formatDateToYYYY_MM_DD(selectedDate) || '',
-              Void_Time: formatDateToHH_MM_SS(selectedDate) || '',
+              Void_Date: this.datePipe.transform(finalSelectedDate, 'yyyy-MM-dd') || '',
+              Void_Time: this.datePipe.transform(finalSelectedDate, 'HH:mm:ss') || '',
             }
-          }
+          };
           this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
             this.messageService.successBubble(res.Message);
             this.onCancel();
