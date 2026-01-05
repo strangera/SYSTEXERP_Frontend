@@ -467,7 +467,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         this.loading = true;
         const origPageNo = this.pageOriginalNos[this.activeIndex] ?? (this.activeIndex + 1);
         const payload = {
-          MID: this.rowdata?.ID ?? 0,
+          USR_Level: this.rowdata?.USR_Level ?? this.dataForm.controls.USR_Level.value,
           KB_KeyPage: origPageNo
         };
         this.tls42010Service.deletepageTLS42010(payload)

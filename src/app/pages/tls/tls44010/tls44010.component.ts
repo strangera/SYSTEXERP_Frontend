@@ -194,7 +194,8 @@ export class TLS44010Component extends BasicQueryPageComponent<any> implements O
     } else if (item.label?.includes('連線')) {
       this.filteredData = this.data.filter(d => d.EOS_Online === 'Y'); // 線上
     } else if (item.label?.includes('離線')) {
-      this.filteredData = this.data.filter(d => d.EOS_Online === 'N'); // 離線
+      // 離線：後端回傳 EOS_Online = 'N' 或為空/null 都視為離線
+      this.filteredData = this.data.filter(d => d.EOS_Online === 'N' || d.EOS_Online === null || d.EOS_Online === '');
     }
     this.first = 0;
     this.updatePagedData();
