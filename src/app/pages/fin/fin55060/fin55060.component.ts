@@ -93,17 +93,17 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
   lastQueryBody: QueryFIN55060Payload | null = null;
 
   columns: Column[] = [
-    { field: 'AccNo4', header: '四級科目', visible: true },
-    { field: 'AccNo4Name', header: '四級科目名稱', visible: true },
+    { field: 'AccNo4', header: '科目', visible: true },
+    { field: 'AccNo4Name', header: '科目名稱', visible: true },
     { field: 'AccNo', header: '科目代號', visible: true },
     { field: 'AccCName', header: '科目名稱', visible: true },
     { field: 'DetailNo', header: '廠商代號/名稱', visible: true },
     { field: 'ORG_ID', header: '部門代號', visible: true },
     { field: 'Org_Name', header: '部門名稱', visible: true },
     { field: 'ProjectNo', header: '活動代號', visible: true },
-    { field: 'Debit_Amt', header: '借方金額', visible: true, format: formatAmount },
-    { field: 'Credit_Amt', header: '貸方金額', visible: true, format: formatAmount },
-    { field: 'Balance', header: '餘額', visible: true, format: formatAmount },
+    { field: 'Debit_Amt', header: '借方金額', visible: true, format: formatAmount, style: 'text-right' },
+    { field: 'Credit_Amt', header: '貸方金額', visible: true, format: formatAmount, style: 'text-right' },
+    { field: 'Balance', header: '餘額', visible: true, format: formatAmount, style: 'text-right' },
   ];
 
   org_idListOptions: any[] = [];
@@ -254,7 +254,7 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
       .exportFIN55060PDF(payload)
       .pipe(untilDestroyed(this), finalize(() => (this.PDFBtnLoading = false)))
       .subscribe({
-        next: (r) => this.handleFileExport(r, '.pdf', '分類帳_四級科目'),
+        next: (r) => this.handleFileExport(r, '.pdf', '分類帳_科目'),
         error: (e) => console.error('Export PDF failed', e),
       });
   }
@@ -269,7 +269,7 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
       .exportFIN55060Excel(payload)
       .pipe(untilDestroyed(this), finalize(() => (this.XLSXBtnLoading = false)))
       .subscribe({
-        next: (r) => this.handleFileExport(r, '.xlsx', '分類帳_四級科目'),
+        next: (r) => this.handleFileExport(r, '.xlsx', '分類帳_科目'),
         error: (e) => console.error('Export Excel failed', e),
       });
   }
@@ -349,5 +349,10 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
           value: item.VEN_No,
         })) ?? [];
       });
+  }
+
+  getAccNoLabel(accNo: string): string {
+    const found = this.AccNoListOptions.find(option => option.value === accNo);
+    return found ? found.label : '';
   }
 }
