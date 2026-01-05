@@ -1,27 +1,27 @@
-import { Tls2e010Data, Tls2e010Service } from './../../../service/api/tls/tls2e010.service';
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Column, convertDateToYYYYMM, formatAmount, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, convertDateToYYYYMM, createPaginationConfig, formatAmount, formatYYYYMM } from '@shared/componentkit/table/table.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { AsyncPipe } from '@angular/common';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { finalize } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { Tls2e010Data, Tls2e010QueryBody, Tls2e010Service } from './../../../service/api/tls/tls2e010.service';
 
 // 2.2.14.1 專櫃租金結算作業
 @Component({
   selector: 'app-tls2e010',
   templateUrl: './tls2e010.component.html',
   standalone: true,
-  imports: [AsyncPipe, DropdownComponent, TableComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, CalendarRangeComponent, TranslateModule]
+  imports: [TableReportComponent, AsyncPipe, DropdownComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, CalendarRangeComponent, TranslateModule]
 })
 export class TLS2E010Component extends BasicQueryPageComponent<Tls2e010Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -29,10 +29,13 @@ export class TLS2E010Component extends BasicQueryPageComponent<Tls2e010Data> imp
     tlt_no: [null], // 單一專櫃查詢
     sam_yyymm_start: [new Date()], // 起迄年月
     sam_yyymm_end: [new Date()], // 起迄年月
-    ...createPaginationConfig([{ field: 'sam_yyymm', order: 1 }]), // 分頁和排序參數
+    PageSize: [30],
+    PageIndex: [1],
   });
   tlt_noOptions$ = this.dropdown.queryTltTalent();
   totalRecords = 0;
+  lastQueryBody: Tls2e010QueryBody | null = null;
+  footerData: Tls2e010Data | null = null;
   data: Tls2e010Data[] = [];
   columns: Column[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
@@ -44,7 +47,7 @@ export class TLS2E010Component extends BasicQueryPageComponent<Tls2e010Data> imp
   ];
 
   constructor(
-    private readonly tls2e010Service: Tls2e010Service,
+    public readonly tls2e010Service: Tls2e010Service,
     private readonly dropdown: DropdownApiService
   ) {
     super();
@@ -68,22 +71,22 @@ export class TLS2E010Component extends BasicQueryPageComponent<Tls2e010Data> imp
     }
     this.tls2e010Service.queryTls2e010(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
       this.data = res.Data
+      this.lastQueryBody = body;
+      this.footerData = res.total
       this.totalRecords = res.TotalCount || 0;
-      this.queryStateService.setQueryState(this.ProgNo, frm.value);
     })
   }
-  settleLoding = false;
   onSettle(frm: FormGroup) {
     const sam_yyymm = frm.value.sam_yyymm;
     if (!sam_yyymm) {
       return this.messageService.errorBubble('「租金結算年月」不能為空，請選擇「租金結算年月」');
     }
-    this.settleLoding = true;
+    this.loading = true;
     const body = {
       ...frm.value,
       sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
     }
-    this.tls2e010Service.executeTls2e010(body).pipe(finalize(() => this.settleLoding = false), untilDestroyed(this)).subscribe(res => {
+    this.tls2e010Service.executeTls2e010(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
       this.messageService.successBubble(res.Data.ErrMsg);
     })
   }

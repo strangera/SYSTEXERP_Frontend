@@ -23,6 +23,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { AuthService } from '@service/system/auth.service';
 import { UserInfo } from '@shared/models/system/userInfo';
+import { LoadingService } from '@shared/service/loading.service';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TabViewModule } from 'primeng/tabview';
 import { AppProgressBarComponent } from './app-progress-bar/app-progress-bar.component';
 import { TabService } from './app.tab/tab.service';
@@ -34,7 +36,7 @@ import { TabService } from './app.tab/tab.service';
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
   standalone: true,
-  imports: [CommonModule, AppTopbarComponent, AppMenulistComponent, RouterOutlet, AppMenulistComponent, TabViewModule, AppProgressBarComponent]
+  imports: [ProgressSpinnerModule, CommonModule, AppTopbarComponent, AppMenulistComponent, RouterOutlet, AppMenulistComponent, TabViewModule, AppProgressBarComponent]
 })
 export class LayoutComponent implements AfterViewInit { // 移除 OnDestroy (使用 takeUntilDestroyed)
 
@@ -46,6 +48,7 @@ export class LayoutComponent implements AfterViewInit { // 移除 OnDestroy (使
   @ViewChild('layoutMainContainer', { static: false }) layoutMainContainer!: ElementRef;
   @ViewChild('sidebarContainer') sidebarContainer!: ElementRef;
   @ViewChild('scrollContent') scrollContent!: ElementRef;
+  public loadingService = inject(LoadingService);
   public readonly selectedTopMenuProgNo = signal<string | null>(null);
   // 移除未使用的 @ViewChild('searchInput')
 

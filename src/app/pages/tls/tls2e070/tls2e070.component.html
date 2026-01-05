@@ -1,9 +1,9 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button label="結算" icon="pi pi-plus" (click)="onSettle(queryForm)" [loading]="loading2">
+    <app-button label="結算" icon="pi pi-plus" (click)="onSettle(queryForm)" [loading]="loading">
     </app-button>
-    <app-button label="結帳記錄查詢" icon="pi pi-search" (click)="onQueryRecord(queryForm)" [loading]="loading3">
+    <app-button label="結帳記錄查詢" icon="pi pi-search" (click)="onQueryRecord(queryForm)" [loading]="loading">
     </app-button>
   </div>
   <p-accordion>

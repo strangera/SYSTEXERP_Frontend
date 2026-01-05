@@ -1,7 +1,7 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button label="試算" icon="pi pi-calculator" (click)="onSam(queryForm)" [loading]="loading2"></app-button>
+    <app-button label="試算" icon="pi pi-calculator" (click)="onSam(queryForm)" [loading]="loading"></app-button>
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
@@ -37,6 +37,6 @@
 <div class="card">
   <app-table-report tableKey="tls2e030" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="currentColumns"
     [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [showReportMode]="false"
-    [queryFunction]="tls2e030Service.queryTls2e030.bind(tls2e030Service)" [loading]="loading || loading2">
+    [queryFunction]="tls2e030Service.queryTls2e030.bind(tls2e030Service)" [loading]="loading || loading">
   </app-table-report>
 </div>

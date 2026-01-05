@@ -21,18 +21,15 @@
   </div>
 
   <div #layoutMainContainer class="layout-main-container mt-0">
-    <div class="layout-main">
-      <!-- <p-tabView [scrollable]="true" [activeIndex]="tabService.activeIndex()"
-        (activeIndexChange)="tabService.onTabChange($event)" styleClass="h-full">
-        <p-tabPanel *ngFor="let tab of tabService.openTabs(); let i = index" [header]="tab.header" [closable]="i !== 0"
-          (onClose)="tabService.closeTab(i)"> -->
-      <router-outlet></router-outlet>
-      <!-- </p-tabPanel>
+    <div class="layout-main" style="position: relative;">
+      <div *ngIf="loadingService.isLoading()" class="custom-loading-mask">
+        <div class="flex flex-column align-items-center">
+          <p-progressSpinner styleClass="w-4rem h-4rem" strokeWidth="4"></p-progressSpinner>
+          <span class="text-white mt-2">正在執行中, 請稍候...</span>
+        </div>
+      </div>
 
-        <p-tabPanel header="無開啟的分頁" *ngIf="tabService.openTabs().length === 0">
-          請點擊左側選單開啟一個作業。
-        </p-tabPanel>
-      </p-tabView> -->
+      <router-outlet></router-outlet>
     </div>
   </div>
   <div class="layout-mask" tabindex="0" role="button" aria-label="關閉側邊欄" (click)="layoutService.onOutsideClick()"

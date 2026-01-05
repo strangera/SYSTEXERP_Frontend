@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, OnInit, signal } 
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN52010Service } from '@service/api/fin/fin52010.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -33,6 +34,22 @@ import { FIN52010Data, FIN52010UpdatePayload } from './fin52010.model';
 })
 export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> implements OnInit {
 
+  private formatYmDisplay(value?: string | null): string | undefined {
+    if (!value) return value as any;
+    const v = value.toString();
+    if (/^\d{6}$/.test(v)) {
+      return `${v.substring(0, 4)}/${v.substring(4, 6)}`;
+    }
+    return v;
+  }
+
+  private normalizeYmPayload(value?: string | null): string | undefined {
+    if (!value) return value as any;
+    const v = value.toString();
+    // 將 yyyy/mm 還原為 yyyymm
+    return v.replace('/', '');
+  }
+
   public readonly dataForm = this.formBuilder.nonNullable.group({
     AccYear: new FormControl<string | void>(void 0, [Validators.required]),
     OpenDate: new FormControl<string | void>(void 0, [Validators.required]),
@@ -60,33 +77,33 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
   public readonly tableData = signal<FIN52010Data>(Object.create(null));
   public readonly tableLoading = signal<boolean>(!1);
 
+  public org_id_Options: any[] = [];
+
   public readonly dataEffect = effect(() => {
-    const orgUsr = this.service.orgUsrOptions();
     const gls1005 = this.service.gls1005Options();
-    const { OpenDate, CloseDate, ...rest } = this.tableData();
+    const table = this.tableData();
 
-    if (!orgUsr.length || !gls1005.length) return;
-    const orgLoading = this.service.orgUsrLoading();
-    const gls1005Loading = this.service.gls1005Loading();
+    // 尚未有後端資料或科目下拉尚未載入完成時，不做 patch
+    if (!table || Object.keys(table as any).length === 0 || !gls1005.length) return;
+    if (this.service.gls1005Loading()) return;
 
-    if (orgLoading || gls1005Loading) return;
+    const { OpenDate, CloseDate, ...rest } = table;
+
     this.dataForm.patchValue({
       ...rest,
-      OpenDate: OpenDate,
-      CloseDate: CloseDate,
-      // advanceExpenseAccNo: res.advanceExpenseAccNo,
-      // billTransferCon: res.billTransferCon as 'N' | 'Y',
+      OpenDate: this.formatYmDisplay(OpenDate),
+      CloseDate: this.formatYmDisplay(CloseDate),
     });
   }, { allowSignalWrites: !0 });
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.tableLoading()
-      || this.service.orgUsrLoading()
       || this.service.gls1005Loading();
   });
 
   constructor(
     public readonly service: FIN52010Service,
+    private readonly dropDownListService: DropDownListService,
     private readonly logger: NGXLogger,
   ) {
     super();
@@ -97,7 +114,15 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
     this.initializePage('FIN52010', void 0, this.dataForm);
     this.tableLoading.set(!0);
 
-    this.service.getTblUsrOrgOptions();
+    // 組織下拉改用 SYS3100
+    this.dropDownListService.querySYS3100_DropDownList().subscribe(res => {
+      this.org_id_Options = (res.Data || []).map((item: any) => ({
+        ...item,
+        label: `${item.No}-${item.Name}`,
+        value: item.No,
+      }));
+    });
+
     this.service.getGLS1005DropDownOptions();
     this.service.loadFIN52010(this.user!.CompNo).pipe(
       finalize(() => this.tableLoading.set(!1)),
@@ -114,7 +139,12 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const data = this.dataForm.getRawValue();
-      const raw = <FIN52010UpdatePayload>{ ...data, CompNo: this.user!.CompNo };
+      const raw = {
+        ...data,
+        OpenDate: this.normalizeYmPayload(data.OpenDate as any),
+        CloseDate: this.normalizeYmPayload(data.CloseDate as any),
+        CompNo: this.user!.CompNo,
+      } as FIN52010UpdatePayload;
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
         v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       ));

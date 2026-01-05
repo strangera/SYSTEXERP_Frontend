@@ -48,7 +48,6 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
   totalRecords = 0;
   footerTotal: any | null = null;
   lastQueryForm: any;
-  override loading = false;
 
   columns: Column[] = [
     { field: 'USR_Level', header: '鍵盤編號', visible: true },
@@ -236,12 +235,14 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
       this.messageService.warnBubble('請選擇要刪除的資料');
       return;
     }
+    // 後端刪除使用 USR_Level 作為識別鍵
     const idList = selectedRows
-      .map((item) => item.id)
-      .filter((id) => id !== undefined && id !== null);
+      .map((item) => item.USR_Level)
+      .filter((level) => level !== undefined && level !== null && level !== '')
+      .map((level) => String(level));
 
     if (idList.length === 0) {
-      this.messageService.warnBubble('選取的資料沒有有效的 ID');
+      this.messageService.warnBubble('選取的資料沒有有效的鍵盤編號');
       return;
     }
     const payload = { idList };

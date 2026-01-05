@@ -4,6 +4,7 @@ import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { SystemDataService } from '@service/system/system-data.service';
 import { FormStatusService } from '@shared/service/form-status.service';
+import { LoadingService } from '@shared/service/loading.service';
 import { Actions, PermissionGuardService } from '@shared/service/permission-guard.service';
 import { ConfirmationService } from 'primeng/api';
 import { take } from 'rxjs';
@@ -35,10 +36,24 @@ export abstract class BasicQueryPageComponent<T> {
   systemDataService = inject(SystemDataService);
   private permissionGuard = inject(PermissionGuardService);
   protected formStatusService = inject(FormStatusService);
+  protected loadingService = inject(LoadingService);
   public readonly Actions = Actions;
 
   language = navigator.language;
-  loading = false;
+
+  private _loading = false;
+  get loading(): boolean {
+    return this._loading;
+  }
+  set loading(value: boolean) {
+    this._loading = value;
+    // 當底層 loading 改變時，同步通知全域 Service
+    if (value) {
+      this.loadingService.show();
+    } else {
+      this.loadingService.hide();
+    }
+  }
   submitted = false;
 
   // 初始化方法

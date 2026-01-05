@@ -3,8 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { TLS2C010Service } from '@service/api/tls/tls2-c010.service';
-import { TLS2C030Data, TLS2C030Service } from '@service/api/tls/tls2-c030.service';
+import { Fin54040Service } from '@service/api/fin/fin54040.service';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -12,7 +11,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-fin54040',
@@ -20,31 +19,28 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
   standalone: true,
   imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule, TableComponent]
 })
-export class FIN54040Component extends BasicQueryPageComponent<TLS2C030Data> implements OnInit {
+export class FIN54040Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     onedatedd: ['', Validators.required], // 結帳日期
-    ...createPaginationConfig([{ field: 'cls_date', order: -1 }]) // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'cls_type', order: -1 }]) // 分頁和排序參數
   });
 
-  closeDate = ''; // 最近關帳日期
 
-  data: TLS2C030Data[] = [];
-  selectedItems: TLS2C030Data[] = [];
+  data: any[] = [];
+  selectedItems: any[] = [];
   totalRecords = 0;
 
-  // columns: Column[] = [
-  //   { field: 'id', header: 'ID', hidden: true },
-  //   { field: 'mid', header: 'MID', hidden: true },
-  //   { field: 'cls_date', header: '關帳日期', visible: true, format: formatDate },
-  //   { field: 'day_lock_date', header: '日關帳鎖定日期', visible: true, format: formatDate },
-  //   { field: 'day_USR_No', header: '日關帳鎖定人員', visible: true },
-  //   { field: 'day_USR_Name', header: '日關帳鎖定人員姓名', visible: true },
-  // ];
+  columns: Column[] = [
+    { field: 'id', header: 'ID', hidden: true },
+    { field: 'mid', header: 'MID', hidden: true },
+    { field: 'cls_type', header: '結算型態', visible: true },
+    { field: 'cls_date', header: '結算年月', visible: true },
+    { field: 'check_result', header: '結果說明', visible: true },
+  ];
 
   constructor(
     private datePipe: DatePipe,
-    private tls2c030Service: TLS2C030Service,
-    private tls2c010Service: TLS2C010Service,
+    private fin54040Service: Fin54040Service,
   ) {
     super();
   }
@@ -52,25 +48,13 @@ export class FIN54040Component extends BasicQueryPageComponent<TLS2C030Data> imp
   ngOnInit(): void {
     this.initializePage('FIN54040', 'fin/fin54040cru', this.queryForm, (form) => this.onSubmit(form));
 
-    // 取得最近關帳日期
-    this.tls2c010Service.getTLS2C010Date()
-      .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        this.closeDate = response.Data.CLS_DATE || '';
-        // cls_date 為 closeDate + 1 天
-        const nextDate = new Date(this.closeDate);
-        nextDate.setDate(nextDate.getDate() + 1);
-        this.queryForm.patchValue({ onedatedd: this.datePipe.transform(nextDate, 'yyyy/MM/dd') || '' });
-      });
+
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.tls2c030Service.queryTLS2C030(
-        {
-          ...frm.getRawValue(),
-          onedatedd: this.datePipe.transform(frm.get('onedatedd')?.value, 'yyyy-MM-ddTHH:mm:ss') || ''
-        })
+      // 後端需求：FIN54040 查詢 body 為空物件 {}
+      this.fin54040Service.queryFIN54040({})
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
@@ -80,76 +64,34 @@ export class FIN54040Component extends BasicQueryPageComponent<TLS2C030Data> imp
     });
   }
 
-  defineDateCheckout() {
+  /**
+   * 執行結算：呼叫 executeFIN54040
+   * 後端需求：body = { CloseYEAR: 'yyyy' }
+   */
+  defineDateCheckout(): void {
     if (this.queryForm.invalid) {
       this.submitted = true;
       return;
     }
 
-    // 檢查是否小於等於最後關帳日期
-    const selectedDate = this.queryForm.get('onedatedd')?.value;
-    if (selectedDate && this.closeDate) {
-      const selected = new Date(selectedDate);
-      const lastClose = new Date(this.closeDate);
+    const dateControl = this.queryForm.get('onedatedd');
+    const selectedDate = dateControl?.value;
 
-      if (selected <= lastClose) {
-        this.messageService.warnBubble('已關帳，無法進行調整。');
-        return;
-      }
-    }
-
-    // 呼叫 definedatecheckoutTLS2C030
-    this.tls2c030Service.definedatecheckoutTLS2C030(this.params)
-      .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        // 處理回應
-        this.messageService.successBubble(response.Message);
-        this.onSubmit(this.queryForm); // 重新查詢資料
-      });
-  }
-
-  undefineDateCheckout() {
-    if (this.queryForm.invalid) {
-      this.submitted = true;
+    const closeYear = this.datePipe.transform(selectedDate, 'yyyy') || '';
+    if (!closeYear) {
+      this.messageService.warnBubble('請先選擇年份');
       return;
     }
 
-    // 檢查是否小於等於最後關帳日期
-    const selectedDate = this.queryForm.get('onedatedd')?.value;
-    if (selectedDate && this.closeDate) {
-      const selected = new Date(selectedDate);
-      const lastClose = new Date(this.closeDate);
-
-      if (selected < lastClose) {
-        this.messageService.warnBubble('已關帳，無法進行調整。');
-        return;
-      }
-    }
-
-    // 進行反日結的邏輯
-    this.tls2c030Service.undefinedatecheckoutTLS2C030(this.params)
-      .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        // 處理回應
-        this.messageService.successBubble(response.Message);
-        this.onSubmit(this.queryForm); // 重新查詢資料
+    const payload = { CloseYEAR: closeYear };
+    this.loading = true;
+    this.fin54040Service.executeFIN54040(payload)
+      .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+      .subscribe(res => {
+        this.messageService.successBubble(res.Message || '執行完成');
+        // 執行後重新查詢一次
+        this.onSubmit(this.queryForm);
       });
   }
 
-  get params() {
-    return {
-      onedatedd: this.datePipe.transform(this.queryForm.get('onedatedd')?.value, 'yyyy-MM-ddTHH:mm:ss') || ''
-    };
-  }
-
-  get isDateClosed(): boolean {
-    const selectedDate = this.queryForm.get('onedatedd')?.value;
-    if (!selectedDate || !this.closeDate) {
-      return false;
-    }
-
-    const selected = new Date(selectedDate);
-    const lastClose = new Date(this.closeDate);
-    return selected <= lastClose;
-  }
 }
