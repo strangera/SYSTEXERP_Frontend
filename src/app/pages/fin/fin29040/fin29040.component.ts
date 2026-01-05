@@ -74,7 +74,7 @@ export class FIN29040Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('FIN29040', '/FIN/FIN29040cru', this.queryForm, (form) => this.onSubmit(form));
 
     this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.factoryIDOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, No: item.No }));
+      this.factoryIDOptions = response.Data.map(item => ({ ...item, label: `${item.VEN_No} - ${item.Name}`, value: item.VEN_No }));
     });
   }
 
