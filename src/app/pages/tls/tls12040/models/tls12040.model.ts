@@ -38,7 +38,7 @@ export interface TLS12040QueryRequest {
   tlt_floor?: number[];
 
   /** 洽談者 */
-  contact_USR_No?: number[];
+  contact_USR_No?: string[];
 
   /** 組織代碼 */
   org_id?: string;

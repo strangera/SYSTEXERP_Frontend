@@ -125,12 +125,12 @@ export class TLS12040Component extends BasicQueryPageComponent<ContractItem> imp
     ven_no: [, [Validators.maxLength(50)]],
     vendor_ven_no: [, [Validators.maxLength(16)]],
     location_no: [], // 位置編號
-    contract_subno_from: [, [Validators.max(12)]], // 版本編號
-    contract_subno_to: [, [Validators.max(12)]], // 版本編號
+    contract_subno_from: [, [Validators.maxLength(12)]], // 版本編號
+    contract_subno_to: [, [Validators.maxLength(12)]], // 版本編號
     approve_status: [], // 合約狀態
     area_no: [], // 區域
     tlt_floor: [], // 樓層
-    contact_USR_No: [], // 洽談者
+    contact_USR_No: [[]], // 洽談者
     org_id: [], // 組織代碼
     tlt_openflagList: [[]], // 營運狀況
     comm_comp_type: [[]], // 抽成計算方式
@@ -362,6 +362,10 @@ export class TLS12040Component extends BasicQueryPageComponent<ContractItem> imp
         ...formValue,
         // 營運狀況轉換為陣列
         tlt_openflagList: formValue.operatingStatus ? [formValue.operatingStatus] : [],
+
+        // 版本編號確保為字串
+        contract_subno_from: formValue.contract_subno_from ? String(formValue.contract_subno_from) : undefined,
+        contract_subno_to: formValue.contract_subno_to ? String(formValue.contract_subno_to) : undefined,
 
         // Y/N 欄位轉換 - 只有勾選才傳值
         rece_yn: formValue.rece_yn ? "Y" : undefined,
