@@ -370,17 +370,22 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         label: '刪除',
         icon: 'pi pi-trash',
         disabled: (() => {
-          // 沒有刪除權限，一定 disable
+          // 1. 沒有權限，直接禁用
           if (!this.hasPermission(Actions.Delete)) {
             return true;
           }
-          const row = this.selectedRowData!;
-          // 無發票狀態：GUI_Track === '00' 且 TXN_GUIBegNo === '00000000' → 可以刪除
-          if (row && row.GUI_Track === '00' && row.TXN_GUIBegNo === '00000000') {
+          // 2. 如果沒有選中任何列 (row 為空)，應預設為禁用
+          const row = this.selectedRowData;
+          if (!row) {
+            return true;
+          }
+          // 3. 無發票狀態：可以刪除 (disable = false)
+          if (row.GUI_Track === '00' && row.TXN_GUIBegNo === '00000000') {
             return false;
           }
-          // 有發票或其他狀態：依據 IsCanDel 欄位決定
-          return !row.IsCanDel;
+          // 4. 有發票或其他狀態：依據 IsCanDel 欄位決定
+          // 使用 ?. 並提供預設值，確保不會噴錯
+          return !row?.IsCanDel;
         })(),
         command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.刪除交易),
       });
