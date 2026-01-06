@@ -71,7 +71,7 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
   }
   onDelete(selectedRows: MainInvoiceData[]) {
     const ids = selectedRows.map(row => row.ID);
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       header: '刪除確認',
       message: '是否刪除所選項目?',
       accept: () => {

@@ -86,7 +86,7 @@ export class FIN13070Component extends BasicQueryPageComponent<FIN13070Data> imp
   }
 
   onDelete(event: FIN13070Data[]) {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       message: `確定要取消作廢 ${event.length} 筆發票嗎？`,
       accept: () => {
         const updateRequest: FIN13070UpdateRequest = {

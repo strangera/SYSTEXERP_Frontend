@@ -69,7 +69,12 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
         tlt_no: frm.value.tlt_no,
         tlt_floor: frm.value.tlt_floor,
       };
-      this.tls2d030Service.executeTLS2D030(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+      this.messageService.clearBubble();
+      this.messageService.infoBubble('結算中,請稍候...');
+      this.tls2d030Service.executeTLS2D030(body).pipe(
+        untilDestroyed(this),
+        finalize(() => { this.loading = false })
+      ).subscribe(res => {
         if (res.Data.ErrCode === 1) {
           this.messageService.successBubble(res.Data.ErrMsg || '結算成功');
           this.onSubmit(frm);

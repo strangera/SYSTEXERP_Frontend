@@ -169,7 +169,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   // 表格資料
   data: ContractItem[] = [];
   filteredData: ContractItem[] = [...this.data];
-  totalRecords: number = 0;
+  totalRecords = 0;
   selectedItems: ContractItem[] = [];
 
 
@@ -493,13 +493,6 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
    * 審核功能
    */
   public onApprove(rowData: ContractItem): void {
-    console.log('🔍 onApprove 被觸發', {
-      talent_id: rowData.talent_id,
-      apply_no: rowData.apply_no,
-      approve_status: rowData.approve_status,
-      source_type: rowData.source_type
-    });
-
     this.messageService.confirm({
       message: `確定要審核合約 ${rowData.apply_no} 嗎？`,
       accept: () => {

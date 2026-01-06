@@ -98,7 +98,7 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     const uniqueBnkNos = [...new Set(selectedRows.map(row => row.BNK_No))];
     // 將不重複的 BNK_No 列表用逗號串接成字串
     const bnkNosDisplay = uniqueBnkNos.join('<br>');
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       // 在訊息中顯示不重複的 BNK_No 列表，並加上總筆數
       message: `<div class="flex flex-column justify-content-center align-items-center">
       是否確定要刪除<br><b>公司銀行科目代號為：</b> ${bnkNosDisplay}<br>
@@ -148,7 +148,7 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     this.dataDialog = [];
   }
   saveDialog() {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       message: '是否將被選擇的公司銀行科目代號資料全數刪除，並且將來源公司銀行科目代號的資料複製寫入?',
       accept: () => {
         this.loading = true;

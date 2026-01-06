@@ -8,12 +8,15 @@ interface Message {
 export interface ConfirmOptions {
   header?: string;
   message?: string;
+  icon?: string;
   accept?: (data?: any) => void;
   reject?: () => void;
   contentTemplate?: TemplateRef<any>;
   templateContext?: any;
   type?: 'confirm' | 'update' | 'delete'; // 添加类型
   showIcon?: boolean; // 新增是否顯示圖示的屬性
+  acceptLabel?: string;
+  rejectLabel?: string;
   extraButtons?: {
     label: string;
     action: () => void;
@@ -42,6 +45,7 @@ export class NotificationService {
   inputBoxMsg$ = this.inputBoxSource.asObservable();
   blockUi() { this.blockUiSource.next(true); }
   unblockUi() { this.blockUiSource.next(false); }
+  clearBubble() { this.bubbleMsgSource.next(null); }
   confirm(opts: ConfirmOptions) { this.confirmMsgSource.next(opts); }
   showInputBox(options: InputBoxOptions) { this.inputBoxSource.next(options); }
   infoBox(message: string) { this.sendMessageBox('Information', message); }
@@ -51,7 +55,7 @@ export class NotificationService {
   private sendMessageBox(header: string, message: string) { this.messageBox({ header, message }); }
   messageBox(options: { header?: string; message: string }) { this.boxMsgSource.next(options); }
 
-  infoBubble(message: string, title = '資訊') {
+  infoBubble(message: string, title = '訊息') {
     this.sendBubbleMessage('info', title, message);
   }
   successBubble(message: string, title = '成功') {

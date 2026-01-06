@@ -7,7 +7,6 @@ import { UserInfo } from '@shared/models/system/userInfo';
 import { FormLabelService } from '@shared/service/form-label.service';
 import { Actions, PermissionGuardService } from '@shared/service/permission-guard.service';
 import { ValidationService } from '@shared/service/validation.service';
-import { ConfirmationService } from 'primeng/api';
 import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../component/notification-message/notification.service';
@@ -22,7 +21,6 @@ export abstract class BasicCruPageComponent<T> {
   messageService = inject(NotificationService);
   formBuilder = inject(FormBuilder);
   currentPageService = inject(CurrentPageService);
-  confirmationService = inject(ConfirmationService);
   activatedRoute = inject(ActivatedRoute);
   formLabelService = inject(FormLabelService);
   systemDataService = inject(SystemDataService);

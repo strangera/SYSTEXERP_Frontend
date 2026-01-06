@@ -1,21 +1,21 @@
-import { DropDownListService } from './../../../service/utility/dropDownList.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatDateTime, formatYN } from '../../../shared/componentkit/table/table.model';
-import { TLS21030Data, Tls21030Service } from '../../../service/api/tls/tls21030.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { TLS21030Data, Tls21030Service } from '../../../service/api/tls/tls21030.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { Base64Service } from '../../../shared/service/base64.service';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton-yn/radiobutton-yn.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatDateTime, formatYN } from '../../../shared/componentkit/table/table.model';
+import { Base64Service } from '../../../shared/service/base64.service';
+import { DropDownListService } from './../../../service/utility/dropDownList.service';
 
 /* TALTALENT_BILL_NOTES 對帳單備註檔 */
 @Component({
@@ -105,7 +105,7 @@ export class TLS21030Component extends BasicQueryPageComponent<TLS21030Data> imp
   }
 
   onDelete(rows: TLS21030Data[]) {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       message: `是否確認刪除此對帳單備註?`,
       header: `確認刪除對帳單備註`,
       accept: () => {

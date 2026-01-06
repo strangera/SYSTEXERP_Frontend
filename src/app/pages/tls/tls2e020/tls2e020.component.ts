@@ -8,7 +8,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { convertDateToYYYYMM, formatDate, formatYN, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { convertDateToYYYYMM, formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -51,14 +51,14 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
     { field: 'money_type', header: '結帳方式', visible: true, format: (value) => getSYS1000('money_type', value) },
     { field: 'sam_termno', header: '帳次', visible: true },
     { field: 'sam_type', header: '費用型態', visible: true, format: (value) => getSYS1000('sam_type', value) },
-    { field: 'sam_datebeg', header: '帳款期間-起日', visible: true, format: formatDate },
-    { field: 'sam_dateend', header: '帳款期間-迄日', visible: true, format: formatDate },
-    { field: 'sam_num', header: '結算家數', visible: true },
-    { field: 'sam_confirm', header: '是否鎖定', visible: true, format: formatYN, exportFormat: [{ "Y": "是" }, { "N": "否" }] },
-    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate },
-    { field: 'CRT_USR_No', header: '建立人員', visible: false },
-    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
-    { field: 'salm_id', header: '結帳編號', visible: true },
+    // { field: 'sam_datebeg', header: '帳款期間-起日', visible: true, format: formatDate },
+    // { field: 'sam_dateend', header: '帳款期間-迄日', visible: true, format: formatDate },
+    // { field: 'sam_num', header: '結算家數', visible: true },
+    // { field: 'sam_confirm', header: '是否鎖定', visible: true, format: formatYN, exportFormat: [{ "Y": "是" }, { "N": "否" }] },
+    { field: 'CRT_Date', header: '關帳時間', visible: true, format: formatDate },
+    { field: 'CRT_USR_No', header: '關帳者', visible: true },
+    { field: 'CRT_USR_Name', header: '關帳者姓名', visible: true },
+    // { field: 'salm_id', header: '結帳編號', visible: true },
   ];
 
   constructor(

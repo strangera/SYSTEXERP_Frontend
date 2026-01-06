@@ -53,7 +53,6 @@ export class TLS2D020Component extends BasicQueryPageComponent<QueryDataItem> im
     // { field: 'tpy_namt', header: '扣款金額(未稅)', visible: true },
   ];
 
-
   constructor(
     private readonly dropdown: DropdownApiService,
     public readonly tls2d020Service: Tls2d020Service
@@ -86,7 +85,6 @@ export class TLS2D020Component extends BasicQueryPageComponent<QueryDataItem> im
       this.tls2d020Service.executeTLS2D020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
         if (res.Data.ErrCode === 1) {
           this.messageService.successBubble(res.Data.ErrMsg || '結算成功');
-          this.onSubmit(frm);
         } else {
           this.messageService.errorBubble(res.Data.ErrMsg || '結算失敗');
         }

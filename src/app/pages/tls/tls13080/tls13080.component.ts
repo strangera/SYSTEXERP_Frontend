@@ -212,7 +212,7 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
       const tpyRate = (formValue.tpy_rate || 0).toFixed(2);
 
       // 5. 提示確認訊息
-      this.confirmationService.confirm({
+      this.messageService.confirm({
         acceptLabel: '執行',
         rejectLabel: '取消',
         message: `共有 ${this.isAllSelected ? this.totalRecords : request.selectList.length} 家合約要增加 ${formValue.cap_item} (${capItemName}) 抽成率為 ${tpyRate}%`,

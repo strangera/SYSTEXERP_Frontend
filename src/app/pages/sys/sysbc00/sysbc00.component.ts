@@ -1,18 +1,18 @@
-import { ValidationService } from '@shared/service/validation.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ISysbc00Data, Sysbc00Service } from '../../../service/api/sys/sysbc00.service';
-import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
+import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
 import { Sys1004Service } from '../../../service/api/sys/sys1004.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { ISysbc00Data, Sysbc00Service } from '../../../service/api/sys/sysbc00.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-sysbc00',
@@ -88,7 +88,7 @@ export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> impl
     return this.sys1004Service.queryAPS1004({ BNK_No: rowData.BNK_No });
   };
   onDelete(rows: ISysbc00Data[]) {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       message: `是否確認刪除此銀行?`,
       header: `確認刪除銀行`,
       icon: 'pi pi-exclamation-triangle',

@@ -141,7 +141,7 @@ export class SYS0110Component extends BasicQueryPageComponent<UserData> implemen
   }
   // 刪除項目
   onDelete(data: tblUser | tblUser[]): void {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       header: '確定要停用選中的項目嗎？',
       message: '此操作將停用選中的使用者帳號，請確認是否繼續。',
       accept: () => {

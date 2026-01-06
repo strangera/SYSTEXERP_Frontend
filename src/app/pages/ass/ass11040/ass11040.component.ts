@@ -114,7 +114,7 @@ export class ASS11040Component extends BasicQueryPageComponent<ASS11040Response>
 
 
   onDelete(selectedItems: ASS11040Response[]) {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       header: `是否確認刪除 ${selectedItems.length} 筆資料?`,
       accept: () => {
         const idList = selectedItems.map(item => item.id);

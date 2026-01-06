@@ -194,7 +194,7 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
 
   // 確認審核
   confirmCheck(frm: FormGroup) {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       message: `是否執行審核?`,
       header: `確認審核`,
       icon: 'pi pi-exclamation-triangle',
@@ -235,7 +235,7 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
 
   //確認反審核
   cancelRecheck(frm: FormGroup) {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       message: `是否確認反審核?`,
       header: `確認反審核`,
       icon: 'pi pi-exclamation-triangle',

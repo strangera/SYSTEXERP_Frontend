@@ -160,45 +160,37 @@ export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> imp
   private executeTrialCalculation(body: Tls2e030EstBody) {
     this.loading = true;
 
-    this.tls2e030Service.estTls2e030(body)
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-          this.loading = false;
-        }),
-        untilDestroyed(this)
-      )
-      .subscribe(res => {
-        // 判斷是否為「已存在」的特殊代碼 (假設後端 ReturnCode 為 'EXISTED')
-        if (res.Status === 'EXISTED') {
-          this.confirmationService.confirm({
-            header: '確認重算',
-            message: res.Message || `已有試算資料，是否重新計算?`,
-            accept: () => {
-              // 使用者同意重算，帶入 isForce = true 再次執行
-              this.executeTrialCalculation({ ...body, isForce: true });
-            },
-          });
-          return; // 中斷，不繼續跑後面的顯示 logic
-        }
+    this.tls2e030Service.estTls2e030(body).pipe(finalize(() => { this.loading = false; }), untilDestroyed(this)).subscribe(res => {
+      // 判斷是否為「已存在」的特殊代碼 (假設後端 ReturnCode 為 'EXISTED')
+      if (res.Status === 'EXISTED') {
+        this.messageService.confirm({
+          header: '確認重算',
+          message: res.Message || `已有試算資料，是否重新計算?`,
+          accept: () => {
+            // 使用者同意重算，帶入 isForce = true 再次執行
+            this.executeTrialCalculation({ ...body, isForce: true });
+          },
+        });
+        return; // 中斷，不繼續跑後面的顯示 logic
+      }
 
-        // 2. 處理「執行失敗」 (例如：9999, 或者 ErrCode != 0)
-        // 根據你後端的邏輯，失敗時會回傳 ErrMsg 並帶上檢查 Log 列表
-        if (res.Status !== '0000') {
-          this.messageService.errorBubble(res.Message || '試算失敗，請檢查下方明細');
+      // 2. 處理「執行失敗」 (例如：9999, 或者 ErrCode != 0)
+      // 根據你後端的邏輯，失敗時會回傳 ErrMsg 並帶上檢查 Log 列表
+      if (res.Status !== '0000') {
+        this.messageService.errorBubble(res.Message || '試算失敗，請檢查下方明細');
 
-          // 即便失敗也要顯示 Log，讓使用者知道哪一步錯了
-          this.currentColumns = this.LOG_COLUMNS;
-          this.data = res.Data || [];
-          this.totalRecords = this.data.length;
-          return;
-        }
-
-        // 3. 正常的試算完成 (0000)
-        this.messageService.successBubble(res.Message || '試算完成');
+        // 即便失敗也要顯示 Log，讓使用者知道哪一步錯了
         this.currentColumns = this.LOG_COLUMNS;
         this.data = res.Data || [];
         this.totalRecords = this.data.length;
-      });
+        return;
+      }
+
+      // 3. 正常的試算完成 (0000)
+      this.messageService.successBubble(res.Message || '試算完成');
+      this.currentColumns = this.LOG_COLUMNS;
+      this.data = res.Data || [];
+      this.totalRecords = this.data.length;
+    });
   }
 }

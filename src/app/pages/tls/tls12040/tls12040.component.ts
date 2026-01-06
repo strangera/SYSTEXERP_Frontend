@@ -443,7 +443,7 @@ export class TLS12040Component extends BasicQueryPageComponent<ContractItem> imp
     }
 
     // 確認對話框
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       message: `確定要審核專櫃編號 ${rowData.apply_no} 嗎？`,
       header: '審核確認',
       icon: 'pi pi-exclamation-triangle',
@@ -528,7 +528,7 @@ export class TLS12040Component extends BasicQueryPageComponent<ContractItem> imp
       return;
     }
 
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       message: `確定要反審核專櫃編號 ${rowData.apply_no} 嗎？`,
       header: '反審核確認',
       icon: 'pi pi-exclamation-triangle',
@@ -645,7 +645,7 @@ export class TLS12040Component extends BasicQueryPageComponent<ContractItem> imp
       return;
     }
 
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       message: `確定要作廢合約 ${rowData.apply_no} 嗎？作廢後無法恢復。`,
       accept: () => {
         // 調用作廢 API
