@@ -112,7 +112,7 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
     return new Date(year, month, day);
   }
   onDelete(rows: TLS21040Data[]) {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       message: `是否確認刪除此信用卡卡種?`,
       header: `確認刪除`,
       accept: () => {

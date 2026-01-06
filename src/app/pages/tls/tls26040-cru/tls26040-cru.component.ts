@@ -138,7 +138,7 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
       sad_date_end: this.datePipe.transform(this.dataForm.value.sad_date_end, 'yyyy-MM-dd') ?? '',
     };
 
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       header: `確認結帳 ${this.selectedCheckoutItems.length} 筆資料？`,
       accept: () => {
         this.btnLoading = true;

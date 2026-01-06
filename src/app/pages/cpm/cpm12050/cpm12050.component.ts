@@ -210,7 +210,7 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
 
   // 派單
   onDispatch(rowData: CPM12050Data) {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       header: `是否確認派單?`,
       accept: () => {
         const usrNo = this.authService.getUserInfo()?.user_No;

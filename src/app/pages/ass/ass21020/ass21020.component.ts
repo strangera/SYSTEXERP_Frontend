@@ -1,28 +1,28 @@
-import { DropDownListService, IDropdownItem, TLTTALENT_TLT_SPACE } from './../../../service/utility/dropDownList.service';
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS21020Service } from '@service/api/ass/ass21020.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { KeyFilterModule } from 'primeng/keyfilter';
 import { PanelModule } from 'primeng/panel';
-import { ASS21020Data, ASS21020Delete, ASS21020Query, DeleteASS21020Key } from './ass21020.model';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { getSYS1000Options } from '@service/system/sys1000.service';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { AsyncPipe } from '@angular/common';
 import { finalize } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { Option } from '@service/utility/dropdown-api.model';
-import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { DropDownListService, IDropdownItem, TLTTALENT_TLT_SPACE } from './../../../service/utility/dropDownList.service';
+import { ASS21020Data, ASS21020Delete, ASS21020Query, DeleteASS21020Key } from './ass21020.model';
 
 @Component({
   selector: 'app-ass21020',
@@ -118,7 +118,7 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
       ENG_Type: item.ENG_Type,
       ENG_MeterNo: item.ENG_MeterNo
     }));
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       header: '刪除確認',
       message: `確定要刪除嗎？刪除後無法恢復。`,
       accept: () => {

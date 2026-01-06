@@ -296,7 +296,7 @@ export class SYSBR10Component extends BasicQueryPageComponent<any> {
 
     if (enabled) {
       // ✅ 啟用=是 → 先跳確認視窗
-      this.confirmationService.confirm({
+      this.messageService.confirm({
         message: '此公告目前為【啟用】狀態，是否先改為【不啟用】後再進入編輯？',
         header: '確認停用後編輯',
         icon: 'pi pi-exclamation-triangle',

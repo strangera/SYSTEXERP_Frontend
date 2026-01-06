@@ -117,7 +117,7 @@ export class TLS2J010Component extends BasicQueryPageComponent<any> implements O
     const deleteIds = canDeleteItems.map((item) => item.ID ?? item.SeqNo);
     const payload = { IDs: deleteIds };
 
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       message: `確定要刪除 ${deleteIds.length} 筆資料嗎？`,
       header: '刪除確認',
       icon: 'pi pi-exclamation-triangle',

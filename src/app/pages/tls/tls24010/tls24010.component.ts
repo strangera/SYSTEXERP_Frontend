@@ -376,7 +376,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
           }
           const row = this.selectedRowData!;
           // 無發票狀態：GUI_Track === '00' 且 TXN_GUIBegNo === '00000000' → 可以刪除
-          if (row.GUI_Track === '00' && row.TXN_GUIBegNo === '00000000') {
+          if (row && row.GUI_Track === '00' && row.TXN_GUIBegNo === '00000000') {
             return false;
           }
           // 有發票或其他狀態：依據 IsCanDel 欄位決定

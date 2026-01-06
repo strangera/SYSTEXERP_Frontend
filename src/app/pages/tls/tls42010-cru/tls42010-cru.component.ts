@@ -435,7 +435,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       return;
     }
 
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       message: `確定要刪除第 ${this.activeIndex + 1} 頁嗎？此操作無法復原。`,
       header: '刪除確認',
       icon: 'pi pi-exclamation-triangle',

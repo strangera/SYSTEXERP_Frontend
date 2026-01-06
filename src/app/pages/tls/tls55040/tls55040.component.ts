@@ -76,7 +76,7 @@ export class TLS55040Component extends BasicQueryPageComponent<Tls55040Data> imp
     })
   }
   onDelete(event: Tls55040Data[]) {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       header: '刪除確認',
       message: '確定要刪除選取的資料嗎？',
       accept: () => {

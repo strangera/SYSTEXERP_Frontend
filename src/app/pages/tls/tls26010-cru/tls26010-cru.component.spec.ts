@@ -9,7 +9,7 @@ import { TLS26010Service } from '@service/api/tls/tls26010.service';
 import { DropdownOption } from '@shared/models/api/base-api.interface';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { messageService, MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 import { EcrTable, TLS26010Detail, TltTable } from '../tls26010/tls26010.model';
 import { TLS26010CRUComponent } from './tls26010-cru.component';
@@ -20,7 +20,7 @@ describe('TLS26010CRUComponent', () => {
   let mockTLS26010Service: jasmine.SpyObj<TLS26010Service>;
   let mockRouter: jasmine.SpyObj<Router>;
   let mockMessageService: jasmine.SpyObj<MessageService>;
-  let mockConfirmationService: jasmine.SpyObj<ConfirmationService>;
+  let mockmessageService: jasmine.SpyObj<messageService>;
   let mockTranslateService: jasmine.SpyObj<TranslateService>;
 
   // Mock data
@@ -99,7 +99,7 @@ describe('TLS26010CRUComponent', () => {
 
     mockRouter = jasmine.createSpyObj('Router', ['navigate']);
     mockMessageService = jasmine.createSpyObj('MessageService', ['add']);
-    mockConfirmationService = jasmine.createSpyObj('ConfirmationService', ['confirm']);
+    mockmessageService = jasmine.createSpyObj('messageService', ['confirm']);
     mockTranslateService = jasmine.createSpyObj('TranslateService', ['get']);
 
     // Setup service spies with signals and properties
@@ -156,7 +156,7 @@ describe('TLS26010CRUComponent', () => {
         { provide: 'TLS26010Service', useValue: mockTLS26010Service },
         { provide: Router, useValue: mockRouter },
         { provide: MessageService, useValue: mockMessageService },
-        { provide: ConfirmationService, useValue: mockConfirmationService },
+        { provide: messageService, useValue: mockmessageService },
         { provide: TranslateService, useValue: mockTranslateService }
       ]
     }).compileComponents();

@@ -162,7 +162,7 @@ export class FIN25020Component extends BasicQueryPageComponent<FIN25020Data> imp
       return;
     }
 
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       header: `是否確認刪除 ${selectedItems.length} 筆資料？`,
       accept: () => {
         const wslipNoList = selectedItems.map(item => item.WSLIP_NO);

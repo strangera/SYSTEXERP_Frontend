@@ -5,7 +5,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { messageService, MessageService } from 'primeng/api';
 import { of } from 'rxjs';
 import { TLS26010Component } from './tls26010.component';
 import { TLS26010Data } from './tls26010.model';
@@ -16,7 +16,7 @@ describe('TLS26010Component', () => {
   let mockService: any;
   let mockRouter: jasmine.SpyObj<Router>;
   let mockMessageService: any;
-  let mockConfirmationService: any;
+  let mockmessageService: any;
 
   const mockTLS26010Data: TLS26010Data[] = [
     {
@@ -61,7 +61,7 @@ describe('TLS26010Component', () => {
       successBubble: jasmine.createSpy('successBubble'),
       infoBubble: jasmine.createSpy('infoBubble')
     };
-    mockConfirmationService = {
+    mockmessageService = {
       confirm: jasmine.createSpy('confirm')
     };
 
@@ -78,7 +78,7 @@ describe('TLS26010Component', () => {
         { provide: 'TLS26010Service', useValue: mockService },
         { provide: Router, useValue: mockRouter },
         { provide: MessageService, useValue: mockMessageService },
-        { provide: ConfirmationService, useValue: mockConfirmationService },
+        { provide: messageService, useValue: mockmessageService },
         { provide: TranslateService, useValue: jasmine.createSpyObj('TranslateService', ['get', 'instant']) }
       ]
     }).compileComponents();
@@ -149,13 +149,13 @@ describe('TLS26010Component', () => {
   it('should handle delete confirmation with onDelete', () => {
     const testData = mockTLS26010Data;
 
-    mockConfirmationService.confirm.and.callFake((options: any) => {
+    mockmessageService.confirm.and.callFake((options: any) => {
       options.accept();
     });
 
     component.onDelete(testData);
 
-    expect(mockConfirmationService.confirm).toHaveBeenCalled();
+    expect(mockmessageService.confirm).toHaveBeenCalled();
     expect(mockService.deleteTLS26010).toHaveBeenCalledWith(testData[0]);
     expect(mockMessageService.successBubble).toHaveBeenCalledWith('刪除成功');
   });
@@ -163,13 +163,13 @@ describe('TLS26010Component', () => {
   it('should handle delete rejection with onDelete', () => {
     const testData = mockTLS26010Data;
 
-    mockConfirmationService.confirm.and.callFake((options: any) => {
+    mockmessageService.confirm.and.callFake((options: any) => {
       options.reject();
     });
 
     component.onDelete(testData);
 
-    expect(mockConfirmationService.confirm).toHaveBeenCalled();
+    expect(mockmessageService.confirm).toHaveBeenCalled();
     expect(mockMessageService.infoBubble).toHaveBeenCalledWith('已取消刪除');
   });
 

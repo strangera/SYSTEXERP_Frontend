@@ -62,7 +62,7 @@ export class CPM12020Component extends BasicQueryPageComponent<CPM12020Response>
     })
   }
   onDelete(selectedItems: CPM12020Response[]) {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       header: `是否確認刪除 ${selectedItems.length} 筆資料?`,
       accept: () => {
         const idList = selectedItems.map(item => item.ID);

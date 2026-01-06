@@ -8,12 +8,15 @@ interface Message {
 export interface ConfirmOptions {
   header?: string;
   message?: string;
+  icon?: string;
   accept?: (data?: any) => void;
   reject?: () => void;
   contentTemplate?: TemplateRef<any>;
   templateContext?: any;
   type?: 'confirm' | 'update' | 'delete'; // 添加类型
   showIcon?: boolean; // 新增是否顯示圖示的屬性
+  acceptLabel?: string;
+  rejectLabel?: string;
   extraButtons?: {
     label: string;
     action: () => void;

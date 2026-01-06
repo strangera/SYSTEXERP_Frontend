@@ -6,7 +6,6 @@ import { SystemDataService } from '@service/system/system-data.service';
 import { FormStatusService } from '@shared/service/form-status.service';
 import { LoadingService } from '@shared/service/loading.service';
 import { Actions, PermissionGuardService } from '@shared/service/permission-guard.service';
-import { ConfirmationService } from 'primeng/api';
 import { take } from 'rxjs';
 import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
 import { AuthService } from '../../../service/system/auth.service';
@@ -31,7 +30,6 @@ export abstract class BasicQueryPageComponent<T> {
   formBuilder = inject(FormBuilder);
   queryStateService = inject(QueryStateService);
   currentPageService = inject(CurrentPageService);
-  confirmationService = inject(ConfirmationService);
   activatedRoute = inject(ActivatedRoute);
   systemDataService = inject(SystemDataService);
   private permissionGuard = inject(PermissionGuardService);

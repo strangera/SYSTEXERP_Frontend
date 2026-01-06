@@ -58,6 +58,9 @@ export class NotificationMessageComponent implements OnInit {
       this.confirmationService.confirm({
         header: opts.header,
         message: opts.message,
+        icon: opts.icon,
+        acceptLabel: opts.acceptLabel || '確定', // 傳遞 Label 並設定預設值
+        rejectLabel: opts.rejectLabel || '取消', // 傳遞 Label 並設定預設值
         // 【重要】這裡不要寫任何邏輯，避免與 HTML 的按鈕點擊重複執行
         accept: () => { },
         reject: () => { }

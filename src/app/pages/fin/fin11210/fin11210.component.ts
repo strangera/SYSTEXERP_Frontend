@@ -98,7 +98,7 @@ export class FIN11210Component extends BasicQueryPageComponent<FIN11210Data> imp
   }
 
   onDelete(selectedItems: FIN11210Data[]) {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       header: `是否確認刪除 ${selectedItems.length} 筆資料？`,
       accept: () => {
         const idList = selectedItems.map(item => item.ID);

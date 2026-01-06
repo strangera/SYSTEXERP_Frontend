@@ -493,7 +493,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
    * 審核功能
    */
   public onApprove(rowData: ContractItem): void {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       message: `確定要審核合約 ${rowData.apply_no} 嗎？`,
       accept: () => {
         // 調用審核 API
@@ -522,7 +522,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
    * 反審核功能
    */
   public onUnapprove(rowData: ContractItem): void {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       message: `確定要反審核合約 ${rowData.apply_no} 嗎？`,
       accept: () => {
         // 調用反審核 API
@@ -561,7 +561,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
       return;
     }
 
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       message: `確定要作廢合約 ${rowData.apply_no} 嗎？作廢後無法恢復。`,
       accept: () => {
         // 調用作廢 API

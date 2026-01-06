@@ -398,7 +398,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
 
   // 刪除明細資料
   onDelete(selectedItems: POS2004Info[]) {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       header: `已選擇 ${selectedItems.length} 筆資料，確定刪除？`,
       accept: () => {
         this.tls53010Service.updateTLS53010(this.TLS53010DeleteRequest)

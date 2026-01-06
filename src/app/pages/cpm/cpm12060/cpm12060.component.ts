@@ -107,7 +107,7 @@ export class CPM12060Component extends BasicQueryPageComponent<CPM12060Data> imp
   }
 
   // onDelete(selectedItems: CPM11020Data[]) {
-  //   this.confirmationService.confirm({
+  //   this.messageService.confirm({
   //     header: `是否確認刪除 ${selectedItems.length} 筆資料？`,
   //     accept: () => {
   //       const idList = selectedItems.map(item => item.ID);
