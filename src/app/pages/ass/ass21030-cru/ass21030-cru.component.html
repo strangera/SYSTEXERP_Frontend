@@ -59,7 +59,9 @@
             [control]="dataForm.controls.UsageAmount"
             [maxFractionDigits]="4"
             [submitted]="submitted"
-            [readonly]="isFormReadable || dataForm.controls.UsageAmount.disabled"
+            [readonly]="
+              isFormReadable || dataForm.controls.UsageAmount.disabled
+            "
           ></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">

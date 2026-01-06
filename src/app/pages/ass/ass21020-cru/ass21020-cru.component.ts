@@ -76,7 +76,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       field: 'ENG_Rate', header: '比率', type: 'inputNumber', min: 0, max: 100, maxFractionDigits: 2,
       validate: [validateRequired, validateMinNumber(1)],
     },
-    { field: 'ENG_Remark', header: '備註', type: 'input', maxLength: 200, width: '100%' },
+    // { field: 'ENG_Remark', header: '專櫃招募編號', type: 'input', maxLength: 200, width: '100%', disabled: () => true },
   ];
 
   // string 【修正】用於處理 Dialog 查詢的延遲 Subject (使用 protected 或 private 確保內部使用)
@@ -375,7 +375,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       LocationNo: item['LocationNo'],
       TltSpace: item['TltSpace'],
       ENG_Rate: 0,
-      ENG_Remark: null,
+      ENG_Remark: item['ApplyNo'] || null,  // 自動帶入招募編號到專櫃招募編號
     }))];
     this.selectedItemsDialog = [];
     this.fieldChange();
