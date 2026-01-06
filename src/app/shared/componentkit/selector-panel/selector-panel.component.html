@@ -98,7 +98,7 @@
       [showManage]="false"
       scrollHeight="300px"
       [loading]="isDataLoading"
-      [multiSortMeta]="[{ field: valuePropertyName, order: -1 }]"
+      [multiSortMeta]="multiSortMeta"
       [totalRecords]="totalDataCount"
       (lazyLoadData)="onPaginationLoad($event, searchForm)"
       [lazy]="true"

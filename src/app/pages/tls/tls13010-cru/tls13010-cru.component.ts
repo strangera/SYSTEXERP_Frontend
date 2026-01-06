@@ -2193,7 +2193,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     if (searchParams.SortBy && Array.isArray(searchParams.SortBy)) {
       searchParams.SortBy = searchParams.SortBy.map((sort: any) => ({
         field: sort.field === 'value' ? 'location_no' : sort.field,  // 轉換欄位名
-        order: 1  // 固定為升序，或保持原值 sort.order
+        order: sort.order  // 保持原值,讓用戶可以切換排序順序
       }));
     }
 
