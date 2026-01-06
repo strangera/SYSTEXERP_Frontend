@@ -204,9 +204,9 @@ export const tlsRoutes: Routes = [
   // 年度對帳單
   { path: 'tls2e100', loadComponent: () => import('./tls2e100/tls2e100.component').then(m => m.TLS2E100Component), data: { progNo: 'TLS2E100' } },
   // 廠商發票請款登入暨維護作業
-  { path: 'tls2F010', loadComponent: () => import('./tls2f010/tls2f010.component').then(m => m.TLS2F010Component), data: { progNo: 'TLS2F010' } },
+  { path: 'tls2f010', loadComponent: () => import('./tls2f010/tls2f010.component').then(m => m.TLS2F010Component), data: { progNo: 'TLS2F010' } },
   // 專櫃暫存應付帳款產生作業
-  { path: 'tls2F020', loadComponent: () => import('./tls2f020/tls2f020.component').then(m => m.TLS2F020Component), data: { progNo: 'TLS2F020' } },
+  { path: 'tls2f020', loadComponent: () => import('./tls2f020/tls2f020.component').then(m => m.TLS2F020Component), data: { progNo: 'TLS2F020' } },
   // 專櫃進項發票未開立查詢作業
   { path: 'tls2f030', loadComponent: () => import('./tls2f030/tls2f030.component').then(m => m.TLS2F030Component), data: { progNo: 'TLS2F030' } },
   // 專櫃預估業績轉入作業

@@ -233,6 +233,15 @@ export class TLS44010Component extends BasicQueryPageComponent<any> implements O
     this.pagedData = this.filteredData.slice(this.first, this.first + this.rows);
   }
 
+  // 依據後端資料計算實際顯示的狀態：
+  // 若 EOS_CloseTime 有值，無論原本狀態為何，一律視為「完成清帳」(狀態碼 '2')
+  getDisplayStatus(row: any): string | null {
+    if (row?.EOS_CloseTime) {
+      return '2';
+    }
+    return row?.EOS_Status ?? null;
+  }
+
   // 根據 ECR_Status (0~5) 顯示 icon
   getStatusIcon(status: string | null): string {
     switch (status) {

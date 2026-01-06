@@ -560,6 +560,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
             this.contractInfoData[0],  // 傳入合約資訊
             this.fareCalculationService.getTotalLocationSpace()  //傳入總坪數
           );
+
+          // 🔥 新增：強制觸發變更檢測
+          this.cdr.detectChanges();
+
           this.filterData();
           this.saveFareDataToWorkflow();
 
@@ -942,21 +946,48 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
       // 智能日期解析
       try {
+        // 🔥 處理起始日期
         if (rowData.tpy_bdate instanceof Date) {
           startDate = rowData.tpy_bdate;
         } else {
-          startDate = new Date(rowData.tpy_bdate);
+          // 🔥 新增：處理 YYYYMM 格式字串
+          const startStr = String(rowData.tpy_bdate).trim();
+          if (/^\d{6}$/.test(startStr)) {
+            // YYYYMM 格式 (例如: "202510")
+            const year = parseInt(startStr.substring(0, 4));
+            const month = parseInt(startStr.substring(4, 6)) - 1; // 月份是 0-based
+            startDate = new Date(year, month, 1);
+            console.log(`🔄 轉換 YYYYMM 格式起始日期: ${startStr} → ${year}/${month + 1}`);
+          } else {
+            startDate = new Date(rowData.tpy_bdate);
+          }
         }
 
+        // 🔥 處理結束日期
         if (rowData.tpy_edate instanceof Date) {
           endDate = rowData.tpy_edate;
         } else {
-          endDate = new Date(rowData.tpy_edate);
+          // 🔥 新增：處理 YYYYMM 格式字串
+          const endStr = String(rowData.tpy_edate).trim();
+          if (/^\d{6}$/.test(endStr)) {
+            // YYYYMM 格式 (例如: "202511")
+            const year = parseInt(endStr.substring(0, 4));
+            const month = parseInt(endStr.substring(4, 6)) - 1; // 月份是 0-based
+            endDate = new Date(year, month, 1);
+            console.log(`🔄 轉換 YYYYMM 格式結束日期: ${endStr} → ${year}/${month + 1}`);
+          } else {
+            endDate = new Date(rowData.tpy_edate);
+          }
         }
 
         // 檢查日期有效性
         if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-          console.warn('⚠️ 無效的日期格式');
+          console.warn('⚠️ 無效的日期格式', {
+            原始起始: rowData.tpy_bdate,
+            原始結束: rowData.tpy_edate,
+            轉換後起始: startDate,
+            轉換後結束: endDate
+          });
           return;
         }
 
@@ -989,6 +1020,12 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   //  計算兩個日期間的月數
   private calculateMonthsBetween(startDate: Date, endDate: Date): number {
+    // 🔥 新增：檢查 Date 物件是否有效
+    if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      console.error('❌ calculateMonthsBetween: 無效的日期物件', { startDate, endDate });
+      return 1;
+    }
+
     console.log('📅 計算期數:', {
       開始: startDate.toISOString().slice(0, 7),
       結束: endDate.toISOString().slice(0, 7)
@@ -996,14 +1033,25 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     // 確保開始日期 <= 結束日期
     if (startDate > endDate) {
-      console.warn('⚠️ 開始日期大於結束日期，期數為 0');
-      return 0;
+      console.warn('⚠️ 開始日期大於結束日期，期數為 1');
+      return 1; // 🔥 修改：改為回傳 1 而不是 0
     }
 
     const startYear = startDate.getFullYear();
     const startMonth = startDate.getMonth(); // 0-based
     const endYear = endDate.getFullYear();
     const endMonth = endDate.getMonth(); // 0-based
+
+    // 🔥 新增：檢查年份是否合理（避免 202511 這種錯誤）
+    if (startYear > 9999 || endYear > 9999) {
+      console.error('❌ 日期年份異常:', {
+        開始年: startYear,
+        結束年: endYear,
+        原始開始日期: startDate,
+        原始結束日期: endDate
+      });
+      return 1;
+    }
 
     // 正確的月份差計算公式
     const months = (endYear - startYear) * 12 + (endMonth - startMonth) + 1;

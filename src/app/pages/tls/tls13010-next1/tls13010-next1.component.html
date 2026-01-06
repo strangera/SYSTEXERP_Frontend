@@ -51,6 +51,7 @@
               [data]="contractInfoData"
               [mainColumns]="contractInfoColumns"
               [showCheckBox]="false"
+              [showSequenceNumber]="false"
               [showPaginator]="false"
               [showAddButton]="false"
               [showBatchDelete]="false"
@@ -125,6 +126,7 @@
                 [mainColumns]="getColumnsForType(capType)"
                 (buttonClick)="onButtonClick($event, capType)"
                 [showCheckBox]="false"
+                [showSequenceNumber]="false"
                 (selectionChange)="onItemSelectionChange(capType)"
                 (fieldChange)="
                   onFieldChange(

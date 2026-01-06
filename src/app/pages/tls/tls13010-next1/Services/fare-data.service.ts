@@ -80,6 +80,11 @@ export class FareDataService {
             console.log(`✨ ${processedItem.cap_item} 套用預設值`);
           }
 
+          // 🔥 新增：無論是否需要預設值，C 類型都要驗證並重新計算期數
+          if (capType === 'C' && processedItem.tpy_bdate && processedItem.tpy_edate) {
+            this.recalculatePeriodForCType(processedItem);
+          }
+
           return processedItem;
         });
 
@@ -179,6 +184,11 @@ export class FareDataService {
           if (this.fareDefaultsService.needsDefaults(validatedItem)) {
             this.fareDefaultsService.applyDefaults(validatedItem, contractInfo, totalLocationSpace);
             console.log(`✨ 暫存資料 ${validatedItem.cap_item} 補充預設值`);
+          }
+
+          // 🔥 新增：無論是否需要預設值，C 類型都要驗證並重新計算期數
+          if (item.cap_type === 'C' && validatedItem.tpy_bdate && validatedItem.tpy_edate) {
+            this.recalculatePeriodForCType(validatedItem);
           }
 
           validatedData[item.cap_type].push(validatedItem);
@@ -381,6 +391,75 @@ export class FareDataService {
     });
 
     return filteredData;
+  }
+
+  /**
+   * 🔥 新增：重新計算 C 類型的期數
+   */
+  private recalculatePeriodForCType(item: FareItem): void {
+    if (!item.tpy_bdate || !item.tpy_edate) {
+      return;
+    }
+
+    // 使用 FareDefaultsService 的計算邏輯
+    const calculatedPeriods = this.calculatePeriodsBetweenDates(item.tpy_bdate, item.tpy_edate);
+
+    if (item.period_nos !== calculatedPeriods) {
+      console.log(`🔄 API 資料載入時重新計算期數: ${item.cap_item} 從 ${item.period_nos} 期 → ${calculatedPeriods} 期`);
+      item.period_nos = calculatedPeriods;
+    }
+  }
+
+  /**
+   * 🔥 新增：計算兩個日期之間的期數（複製自 FareDefaultsService）
+   */
+  private calculatePeriodsBetweenDates(startDate: string | Date, endDate: string | Date): number {
+    if (!startDate || !endDate) {
+      return 1;
+    }
+
+    // 支援 Date 物件和字串，並處理 YYYYMM 格式
+    let start: Date;
+    let end: Date;
+
+    if (startDate instanceof Date) {
+      start = startDate;
+    } else {
+      const startStr = String(startDate).trim();
+      if (/^\d{6}$/.test(startStr)) {
+        const year = parseInt(startStr.substring(0, 4));
+        const month = parseInt(startStr.substring(4, 6)) - 1;
+        start = new Date(year, month, 1);
+      } else {
+        start = new Date(startDate);
+      }
+    }
+
+    if (endDate instanceof Date) {
+      end = endDate;
+    } else {
+      const endStr = String(endDate).trim();
+      if (/^\d{6}$/.test(endStr)) {
+        const year = parseInt(endStr.substring(0, 4));
+        const month = parseInt(endStr.substring(4, 6)) - 1;
+        end = new Date(year, month, 1);
+      } else {
+        end = new Date(endDate);
+      }
+    }
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return 1;
+    }
+
+    if (start > end) {
+      return 1;
+    }
+
+    const months = (end.getFullYear() - start.getFullYear()) * 12
+      + (end.getMonth() - start.getMonth()) + 1;
+
+    return Math.max(1, months);
   }
 
   /**

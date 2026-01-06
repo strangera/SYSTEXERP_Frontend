@@ -112,7 +112,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS2F010', 'tls/tls2f010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS2F010', '/tls/tls2f010cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
 
