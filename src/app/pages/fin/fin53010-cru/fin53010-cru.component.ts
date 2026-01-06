@@ -139,11 +139,15 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const data = this.fin53010DetailData();
     if (!data?.Details) return;
 
+    // 將 VoucherType 的 value 轉換成 label
+    const voucherTypeValue = data.VoucherType?.trim() ?? 'GL';
+    const voucherTypeLabel = this.service.voucherTypeMap().get(voucherTypeValue)?.label ?? voucherTypeValue;
+
     this.dataForm.patchValue({
       VouNo: data.VouNo,
       VouType: ['1', '2', '3'].includes(String(data.VouType)) ? String(data.VouType) as '1' | '2' | '3' : '1',
       PostFlag: ['0', '1', '3'].includes(String(data.PostFlag)) ? String(data.PostFlag) as '0' | '1' | '3' : '0',
-      VoucherType: data.VoucherType ?? 'GL ',
+      VoucherType: voucherTypeLabel,
       VouDate: data.VouDate ? new Date(data.VouDate) : new Date(),
       Remark: data.Remark,
       INV_YN: (data.INV_YN ?? 'N') as 'N' | 'Y',
@@ -169,7 +173,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     if (!this.service.accNoMap().size
       || !this.service.vendorMap().size
       || !this.service.usrMap().size
-      || !this.service.noteDescMap().size) return;
+      || !this.service.noteDescMap().size
+      || !this.service.voucherTypeMap().size) return;
 
     this.dataEffect.destroy();
   }, { allowSignalWrites: !0 });
@@ -304,6 +309,35 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.service.getOrgNoOptions();
     this.service.getRefNameOptions();
     this.service.getAccDescOptions();
+    this.service.getVoucherTypeOptions();
+
+    // 如果是新增模式，等待選項載入後設定初始 label
+    if (this.isFormCreateable) {
+      const setInitialLabel = () => {
+        const options = this.service.voucherTypeOptions();
+        if (options.length > 0) {
+          const defaultValue = 'GL';
+          const defaultOption = options.find(opt => opt.value === defaultValue);
+          if (defaultOption) {
+            this.df().VoucherType.setValue(defaultOption.label);
+          }
+        }
+      };
+
+      // 如果選項已載入，直接設定；否則等待載入完成
+      if (this.service.voucherTypeOptions().length > 0) {
+        setInitialLabel();
+      } else {
+        const checkInterval = setInterval(() => {
+          if (this.service.voucherTypeOptions().length > 0) {
+            setInitialLabel();
+            clearInterval(checkInterval);
+          }
+        }, 100);
+        // 設定超時避免無限等待
+        setTimeout(() => clearInterval(checkInterval), 5000);
+      }
+    }
 
     if (!this.isFormCreateable) {
       this.tableLoading.set(!0);
@@ -322,8 +356,15 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const { VouNo, ...d } = this.dataForm.getRawValue();
-      const raw = <FIN53010InsertPayload | FIN53010UpdatePayload>{
+
+      // 將 VoucherType 的 label 轉換回 value
+      const voucherTypeLabel = d.VoucherType;
+      const voucherTypeValue = this.service.voucherTypeOptions().find(opt => opt.label === voucherTypeLabel)?.value
+        ?? (this.service.voucherTypeMap().get(voucherTypeLabel)?.value ?? voucherTypeLabel);
+
+      const raw = {
         ...d,
+        VoucherType: (voucherTypeValue?.padEnd(3, ' ')) || 'GL ',
         Details: this.tableData().map(({ AccAmtD, AccAmtC, NoteDesc, ...rest }, index) => {
           return {
             ...rest,
@@ -332,12 +373,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
             AccAmt: (AccAmtD ?? 0) + (AccAmtC ?? 0),
             AccDC: AccAmtD ? 'D' : AccAmtC ? 'C' : '',
             ORG_ID: rest.ORG_ID || '100000',
-            VoucherType: (d.VoucherType?.padEnd(3, ' ')) || 'GL ',
+            VoucherType: (voucherTypeValue?.padEnd(3, ' ')) || 'GL ',
             NoteDesc: this.service.noteDescMap().get(String(NoteDesc))?.label ?? NoteDesc,
           };
         }),
         ...(!this.isFormCreateable && { VouNo }),
-      };
+      } as FIN53010InsertPayload | FIN53010UpdatePayload;
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
         v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       )) as unknown as FIN53010InsertPayload | FIN53010UpdatePayload;
@@ -503,8 +544,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       next: res => {
         if (res.Status !== '0000') return;
         const data = res.Data;
+
+        // 將 VoucherType 的 value 轉換成 label
+        const voucherTypeValue = data.VouType.trim() ?? 'GL';
+        const voucherTypeLabel = this.service.voucherTypeMap().get(voucherTypeValue)?.label ?? voucherTypeValue;
+
         this.dataForm.patchValue({
           VouType: data.VouType,
+          VoucherType: voucherTypeLabel,
           CRT_USR_No: data.CRT_USR_No ?? void 0,
           CRT_Date: data.CRT_Date || void 0,
           UPD_USR_No: data.UPD_USR_No ?? void 0,
