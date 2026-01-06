@@ -77,4 +77,50 @@ export class DateUtils {
     const normalized = this.toDateString(dateString);
     return normalized.replace(/-/g, '/');
   }
+
+  /**
+   * 格式化日期時間為顯示用字串 (YYYY/MM/DD HH:mm:ss)
+   */
+  static formatDateTimeForDisplay(dateTime: any): string {
+    if (!dateTime) return '';
+
+    // 如果是字串，優先處理 ISO 或一般日期時間格式
+    if (typeof dateTime === 'string') {
+      // 拆成日期與時間
+      const [datePartRaw, timePartRaw] = dateTime.split('T');
+      const dateDisplay = this.formatForDisplay(datePartRaw || dateTime);
+
+      if (!timePartRaw) {
+        return dateDisplay;
+      }
+
+      // 去除時區與毫秒，例如: 11:32:11.6Z、11:32:11.6+08:00
+      const timeClean = timePartRaw
+        .replace('Z', '')
+        .split(/[+\-]/)[0]
+        .trim();
+
+      const [h = '00', m = '00', sRaw = '00'] = timeClean.split(':');
+      const s = sRaw.split('.')[0];
+
+      const hh = h.padStart(2, '0');
+      const mm = m.padStart(2, '0');
+      const ss = s.padStart(2, '0');
+
+      return `${dateDisplay} ${hh}:${mm}:${ss}`;
+    }
+
+    // 其他型別，嘗試轉成 Date 物件
+    const d = dateTime instanceof Date ? dateTime : new Date(dateTime);
+    if (isNaN(d.getTime())) return '';
+
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const seconds = String(d.getSeconds()).padStart(2, '0');
+
+    return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+  }
 }

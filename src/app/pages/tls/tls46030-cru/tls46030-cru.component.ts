@@ -9,6 +9,7 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
+import { DateUtils } from 'src/app/core/utils/date-utils';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 import { DropDownListService } from '../../../service/utility/dropDownList.service';
@@ -62,6 +63,8 @@ export class TLS46030CRUComponent extends BasicCruPageComponent<any> implements 
     { value: 'C', label: '取消' },
     { value: 'F', label: '執行完畢' }
   ];
+  // 實際提供給下拉選單使用的選項（依情境過濾）
+  ECR_SchStatus_SelectOptions: any[] = this.ECR_SchStatus_Options;
   TLTTALENT_Option: apiOption[] = []; //專櫃編號
   constructor(
     private ECRNoService: ECRNoService,
@@ -86,13 +89,29 @@ export class TLS46030CRUComponent extends BasicCruPageComponent<any> implements 
     // 判斷是新增 or 編輯
     const isUpdate = !!this.rowdata?.ECR_SchNo;
 
+    // 後端回傳的異動作業完成時間，格式化為 yyyy/MM/dd HH:mm:ss 顯示
+    if (this.rowdata?.ECR_SchFinTime) {
+      (this.dataForm.get('ECR_SchFinTime') as any)?.setValue(
+        DateUtils.formatDateTimeForDisplay(this.rowdata.ECR_SchFinTime)
+      );
+    }
+
     if (isUpdate) {
-      // 編輯畫面：只允許 A、C
-      this.ECR_SchStatus_Options = this.ECR_SchStatus_Options.filter(opt => opt.value !== 'F');
+      // 編輯畫面：
+      // - 若後端狀態為 F，保留全部選項以顯示中文，但鎖住欄位
+      // - 其他狀態只允許選 A、C
+      const currentStatus = this.rowdata?.ECR_SchStatus as 'A' | 'C' | 'F' | undefined;
+
+      if (currentStatus === 'F') {
+        this.ECR_SchStatus_SelectOptions = this.ECR_SchStatus_Options;
+        this.dataForm.controls.ECR_SchStatus.disable();
+      } else {
+        this.ECR_SchStatus_SelectOptions = this.ECR_SchStatus_Options.filter(opt => opt.value !== 'F');
+      }
     } else {
       // 新增畫面：預設啟用，只能選 A
       this.dataForm.controls.ECR_SchStatus.setValue('A');
-      this.ECR_SchStatus_Options = this.ECR_SchStatus_Options.filter(opt => opt.value === 'A');
+      this.ECR_SchStatus_SelectOptions = this.ECR_SchStatus_Options.filter(opt => opt.value === 'A');
     }
     // 監聽異動類型
     this.dataForm.controls.ECR_FLD_ID.valueChanges.subscribe(val => {
