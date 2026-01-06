@@ -1,138 +1,66 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { Tls55050Body, Tls55050Data, Tls55050Service } from '@service/api/tls/tls55050.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
 
 @Component({
   selector: 'app-tls55050',
   templateUrl: './tls55050.component.html',
-  styleUrl: './tls55050.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule]
+  imports: [AsyncPipe, DropdownComponent, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule]
 })
-export class TLS55050Component {
-  ProgNo: string = '250030';
-  funInfo?: FunsrightInfo;
-
-
-
-  loading: boolean = false;
-  submitted: boolean = false;
-
-  queryForm = this.formBuilder.group({
-
-    billingYearMonth: [],
+export class TLS55050Component extends BasicQueryPageComponent<Tls55050Data> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    PageSize: [30],
+    PageIndex: [1],
+    cls_Month: [null, [Validators.required]],
+    VEN_No: [null],
   });
-
-  // Dropdown options
-  vendorOptions: any[] = [];
-
-  // Table data
-  data: any[] = [
-    { name: 'John', age: 25, email: 'john@example.com' },
-    { name: 'Jane', age: 30, email: 'jane@example.com' },
-    // Other data
+  VEN_NoOptions = this.dropDown.queryPos2013({ VEN_Flag: '' })
+  data: Tls55050Data[] = [];
+  lastQueryBody: Tls55050Body | null = null;
+  totalRecords = 0;
+  columns: ReportColumn[] = [
+    { field: 'ACP_YYYYMM', header: '結帳年月' },
+    { field: 'VEN_No', header: '廠商代號' },
+    { field: 'VEN_Name', header: '廠商名稱' },
+    { field: 'LOGO_CH_NAME', header: '品牌中文名稱' },
+    { field: 'OTA_Status', header: '狀態' },
+    { field: 'TotalCount', header: '總筆數' },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'name', header: 'Name', visible: true },
-    { field: 'age', header: 'Age', visible: true },
-    { field: 'email', header: 'Email', visible: true },
-    // Other columns
-  ];
-
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-  ) { }
+    public readonly tls55050Service: Tls55050Service,
+    private readonly dropDown: DropdownApiService,
+    private readonly datePipe: DatePipe
+  ) { super(); }
 
   ngOnInit(): void {
-    // Initialize dropdown options
-    //
-
+    this.initializePage('TLS55050', 'tls/tls55050cru', this.queryForm, (frm) => this.onSubmit(frm));
   }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
+    this.handleSubmit(frm, () => {
+      const body = {
+        ...frm.value,
+        cls_Month: this.datePipe.transform(frm.value.cls_Month, 'yyyyMM')
+      }
+      this.tls55050Service.queryTLS55050(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe((res) => {
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount;
+        this.lastQueryBody = body;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      })
+    });
   }
 }
