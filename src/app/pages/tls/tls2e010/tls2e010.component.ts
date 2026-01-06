@@ -67,7 +67,7 @@ export class TLS2E010Component extends BasicQueryPageComponent<Tls2e010Data> imp
     const body = {
       PageSize: frm.value.PageSize,
       PageIndex: frm.value.PageIndex,
-      tlt_no: frm.value.tlt_no?.tlt_no,
+      tlt_no: frm.value.tlt_no,
       sam_yyymm_start: convertDateToYYYYMM(frm.value.sam_yyymm_start),
       sam_yyymm_end: convertDateToYYYYMM(frm.value.sam_yyymm_end),
     }
@@ -85,7 +85,7 @@ export class TLS2E010Component extends BasicQueryPageComponent<Tls2e010Data> imp
     }
     this.loading = true;
     const body = {
-      tlt_no: frm.value.tlt_no?.tlt_no,
+      tlt_no: frm.value.tlt_no,
       sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
     }
     this.tls2e010Service.executeTls2e010(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {

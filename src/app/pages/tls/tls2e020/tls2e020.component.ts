@@ -3,11 +3,12 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls2e020Data, Tls2e020QueryBody, Tls2e020Service } from '@service/api/tls/tls2e020.service'; // 確保 Tls2e020QueryBody 已被引入
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, convertDateToYYYYMM, formatDate, formatYN, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { convertDateToYYYYMM, formatDate, formatYN, formatYYYYMM } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -45,16 +46,18 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
   // 表格資料
   lastQueryBody: Tls2e020QueryBody | null = null;
   data: Tls2e020Data[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'sam_yyymm', header: '結算年月', visible: true, format: formatYYYYMM }, // 假設您有這個格式化函數
-    { field: 'sam_termno', header: '期別', visible: true },
+    { field: 'money_type', header: '結帳方式', visible: true, format: (value) => getSYS1000('money_type', value) },
+    { field: 'sam_termno', header: '帳次', visible: true },
+    { field: 'sam_type', header: '費用型態', visible: true, format: (value) => getSYS1000('sam_type', value) },
     { field: 'sam_datebeg', header: '帳款期間-起日', visible: true, format: formatDate },
     { field: 'sam_dateend', header: '帳款期間-迄日', visible: true, format: formatDate },
     { field: 'sam_num', header: '結算家數', visible: true },
-    { field: 'sam_confirm', header: '是否確認', visible: true, format: formatYN, exportFormat: [{ "Y": "是" }, { "N": "否" }] },
-    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
-    { field: 'CRT_USR_No', header: '建立人員', visible: true },
-    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
+    { field: 'sam_confirm', header: '是否鎖定', visible: true, format: formatYN, exportFormat: [{ "Y": "是" }, { "N": "否" }] },
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate },
+    { field: 'CRT_USR_No', header: '建立人員', visible: false },
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
     { field: 'salm_id', header: '結帳編號', visible: true },
   ];
 
@@ -162,8 +165,8 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
     const body = {
       ...frm.value,
       sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
-      money_type: String(frm.value.sam_termno),
-      sam_termno: frm.value.money_type
+      money_type: frm.value.money_type,
+      sam_termno: String(frm.value.sam_termno),
     }
     this.tls2e020Service.lockTls2e020(body).pipe(finalize(() => this.lockLoding = false), untilDestroyed(this)).subscribe(res => {
       this.messageService.successBubble(res.Message)
