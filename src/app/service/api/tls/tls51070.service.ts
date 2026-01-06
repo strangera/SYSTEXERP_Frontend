@@ -80,7 +80,7 @@ export class Tls51070Service {
 
   //產生標籤檔資料
   exportLabel(data: any[]): Observable<string> {
-    return this.http.post(`${environment.ApiUrl}/ExportLabel/ExportLabel`, data, {
+    return this.http.post(`${environment.ApiUrl}/ExportLabel/ExportLabel_Other`, data, {
       responseType: 'text'  // 後端回傳的是純文字
     });
   }
