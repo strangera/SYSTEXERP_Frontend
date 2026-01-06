@@ -156,14 +156,11 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
   }
 
   public readonly loadingEffect = effect(() => {
-    this.loading = this.service.sys3800Loading()
-      || this.service.sys3900Loading()
-      || this.service.sys3A00Loading()
-      || this.service.ecrLoading()
-      || this.service.tltLoading()
-      || this.service.tableLoading()
-      || this.service.approvalStatusLoading();
-  });
+    this.loading = this.service.tableLoading() || this.service.approvalStatusLoading();
+  }, { allowSignalWrites: true });
+
+
+
 
   // 專櫃選項加上 Label（格式：專櫃編號 - 專櫃名稱）
   public readonly tltOptionsWithLabel = computed(() => {
