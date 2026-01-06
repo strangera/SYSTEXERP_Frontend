@@ -15,7 +15,9 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
 import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
+import { FileSelectEvent } from 'primeng/fileupload';
 import { SelectButtonModule } from 'primeng/selectbutton';
+import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
@@ -64,16 +66,18 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
   });
 
   columns: ReportColumn[] = [
-    { field: 'col1', header: '品項代碼', visible: true },
-    { field: 'col2', header: '品項名稱', visible: true },
-    { field: 'col3', header: '大分類代碼', visible: true },
-    { field: 'col4', header: '大分類名稱', visible: true },
-    { field: 'col5', header: '中分類代碼', visible: true },
-    { field: 'col6', header: '中分類名稱', visible: true },
-    { field: 'col7', header: '小分類代碼', visible: true },
-    { field: 'col8', header: '小分類名稱', visible: true },
-    { field: 'col9', header: '品項類別區分', visible: true },
-    { field: 'col10', header: '圖示說明', visible: true },
+    { field: 'col1', header: '專櫃編號', visible: true },
+    { field: 'col2', header: '櫃位名稱', visible: true },
+    { field: 'col3', header: '單據種類', visible: true },
+    { field: 'col4', header: '發票/收據號碼', visible: true },
+    { field: 'col5', header: '單據日期', visible: true },
+    { field: 'col6', header: '請款付款年月', visible: true },
+    { field: 'col7', header: '帳款年月', visible: true },
+    { field: 'col8', header: '結帳方式', visible: true },
+    { field: 'col9', header: '帳次', visible: true },
+    { field: 'col10', header: '申報年月', visible: true },
+    { field: 'col9', header: '廠商統一編號', visible: true },
+    { field: 'col10', header: '課稅別', visible: true },
   ];
   invoiceFormatOptions: any[] = [
     { value: 1, label: '21/進項三聯式、電子計算機統一發票' },
@@ -126,5 +130,37 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
       //   this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       // })
     })
+  }
+  downloadTemplate() {
+    // const export$ = this.tls2d010Service.downloadTLS2D010Template();
+    // this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading);
+  }
+  onImportExcel(event: FileSelectEvent) {
+    const file = event.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // this.tls2d010Service.uploadExcel(formData).pipe(untilDestroyed(this)).subscribe({
+    //   next: (res) => {
+    //     const data = res?.Data;
+
+    //     if (data) {
+    //       if (data.ErrorFilePath) {
+    //         // 有錯誤檔：顯示錯誤提示
+    //         this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
+    //         // 自動下載錯誤檔
+    //         this.downloadErrorFile(data.ErrorFilePath);
+    //       } else {
+    //         // 沒有錯誤檔：顯示成功筆數
+    //         this.messageService.infoBubble(`匯入成功，筆數：${data.SuccessCount}`);
+    //       }
+    //     }
+    //   },
+    // });
+  }
+
+  /** 自動下載錯誤檔 */
+  downloadErrorFile(filePath: string) {
+    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
 }

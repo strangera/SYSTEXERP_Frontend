@@ -45,7 +45,7 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="ECR_SchNo" [data]="data" [columns]="columns" [showCheckBox]="true"
+  <app-table dataKey="ECR_SchNo" [data]="data" [columns]="columns" [showCheckBox]="false"
     [multiSortMeta]="[{ field: 'ECR_SchNo', order: 1 }]"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [totalRecords]="totalRecords" [lazy]="true"
     [loading]="loading" [showPaginator]="true" [selectedItems]="selectedItems" [showReportMode]="false"
