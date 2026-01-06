@@ -104,7 +104,7 @@ export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> i
     this.handleSubmit(frm, () => {
       const body = {
         ...frm.value,
-        STK_Date: this.datePipe.transform(frm.value.StartDate, 'yyyy-MM-dd'),
+        STK_Date: this.datePipe.transform(frm.value.STK_Date, 'yyyy-MM-dd'),
         DisplayRowNumber: String(frm.value.DisplayRowNumber) || '30',
         PageSize: frm.value.DisplayRowNumber || 30
       }
