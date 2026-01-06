@@ -41,6 +41,9 @@ export class NotificationMessageComponent implements OnInit {
     this.notificationService.bubbleMsg$.pipe(untilDestroyed(this)).subscribe((message) => {
       if (message) {
         this.messageService.add(message);
+      } else {
+        // 當收到的訊息是 null 時，執行清除動作
+        this.messageService.clear();
       }
     });
 
