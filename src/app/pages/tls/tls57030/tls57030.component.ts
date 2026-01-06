@@ -50,7 +50,7 @@ export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> i
     PLU_MagNo: [null, [Validators.maxLength(20)]],
     PLU_No: [null as string | null],
     PLU_OrgPLUNo: [null, [Validators.maxLength(30)]],
-    STK_Date: [new Date()],
+    STK_Date: [new Date(), [Validators.required]],
     ShowStockRange: ['1'],
     DisplayRowNumber: [30],
     PageSize: [30],
