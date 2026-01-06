@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { AccNoList, FIN52030Data, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030Payload } from '@pages/fin/fin52030/fin52030.model';
-import { AccDescOption, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010InsertPayload, FIN53010InsertResult, FIN53010Payload, FIN53010UpdatePayload, FIN53010UpdateResult, NoteDescResponse, VoucherType } from '@pages/fin/fin53010/fin53010.model';
+import { AccDescOption, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010InsertPayload, FIN53010InsertResult, FIN53010Payload, FIN53010UpdatePayload, FIN53010UpdateResult, NoteDescResponse } from '@pages/fin/fin53010/fin53010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
 import { finalize, map, Observable, take, tap } from 'rxjs';
@@ -96,6 +97,7 @@ export class FIN53010Service {
     private readonly http: HttpClient,
     private readonly logger: NGXLogger,
     private readonly dropdownApi: DropdownApiService,
+    private readonly dropDownListService: DropDownListService,
   ) { }
 
   public loadFIN53010(payload: FIN53010Payload): Observable<BaseQueryResponse<FIN53010Data>> {
@@ -159,9 +161,9 @@ export class FIN53010Service {
 
   public getVoucherTypeOptions(): void {
     this.voucherTypeLoading.set(!0);
-    this.http.post<BaseQueryResponse<VoucherType>>(`${environment.ApiUrl}/FIN50000/FIN52020/queryFIN52020`, { PageSize: 9999, PageIndex: 1 }).pipe(
+    this.dropDownListService.queryGLS1010_DropDownList().pipe(
       take(1),
-      map(res => res.Data?.map(item => ({ value: item.VoucherKind.trim(), label: item.VoucherName } as Option)) ?? []),
+      map(res => (res?.Data || []).map(item => ({ value: item.No, label: `${item.No}-${item.Name}` } as Option))),
       tap(res => {
         this.voucherTypeOptions.set(res);
         this.logger.debug('查詢VoucherTypeOptions結果:', [res]);
