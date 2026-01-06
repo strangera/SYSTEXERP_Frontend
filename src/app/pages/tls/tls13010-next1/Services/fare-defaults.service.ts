@@ -130,8 +130,16 @@ export class FareDefaultsService {
       item.tpy_totalamt = 0;
     }
 
-    // 期數預設為 1
-    if (!item.period_nos) {
+    // 🔥 修正：如果有起訖日期，優先根據日期計算期數
+    if (item.tpy_bdate && item.tpy_edate) {
+      const calculatedPeriods = this.calculatePeriods(item.tpy_bdate, item.tpy_edate);
+      // 如果計算出的期數與現有期數不同，更新並記錄
+      if (item.period_nos !== calculatedPeriods) {
+        console.log(`🔄 C類型期數重新計算: ${item.cap_item} 從 ${item.period_nos} 期 → ${calculatedPeriods} 期`);
+        item.period_nos = calculatedPeriods;
+      }
+    } else if (!item.period_nos) {
+      // 沒有日期時，期數預設為 1
       item.period_nos = 1;
     }
 
@@ -143,11 +151,6 @@ export class FareDefaultsService {
     // 每月金額預設為 0
     if (!item.tpy_amount) {
       item.tpy_amount = 0;
-    }
-
-    // C類型可以根據起訖日期計算期數
-    if (item.tpy_bdate && item.tpy_edate && !item.period_nos) {
-      item.period_nos = this.calculatePeriods(item.tpy_bdate, item.tpy_edate);
     }
   }
 
@@ -195,13 +198,59 @@ export class FareDefaultsService {
   /**
    * 計算期數(根據起訖日期)
    */
-  private calculatePeriods(startDate: string, endDate: string): number {
-    if (!startDate || !endDate || startDate > endDate) {
+  private calculatePeriods(startDate: string | Date, endDate: string | Date): number {
+    if (!startDate || !endDate) {
       return 1;
     }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    // 🔥 支援 Date 物件和字串，並處理 YYYYMM 格式
+    let start: Date;
+    let end: Date;
+
+    if (startDate instanceof Date) {
+      start = startDate;
+    } else {
+      // 處理字串格式：可能是 "YYYYMM" 或 "YYYY-MM" 或其他格式
+      const startStr = String(startDate).trim();
+      if (/^\d{6}$/.test(startStr)) {
+        // YYYYMM 格式 (例如: "202510")
+        const year = parseInt(startStr.substring(0, 4));
+        const month = parseInt(startStr.substring(4, 6)) - 1; // 月份是 0-based
+        start = new Date(year, month, 1);
+      } else {
+        start = new Date(startDate);
+      }
+    }
+
+    if (endDate instanceof Date) {
+      end = endDate;
+    } else {
+      // 處理字串格式
+      const endStr = String(endDate).trim();
+      if (/^\d{6}$/.test(endStr)) {
+        // YYYYMM 格式 (例如: "202511")
+        const year = parseInt(endStr.substring(0, 4));
+        const month = parseInt(endStr.substring(4, 6)) - 1; // 月份是 0-based
+        end = new Date(year, month, 1);
+      } else {
+        end = new Date(endDate);
+      }
+    }
+
+    // 🔥 檢查日期是否有效
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      console.warn('⚠️ calculatePeriods: 無效的日期', { startDate, endDate });
+      return 1;
+    }
+
+    // 🔥 檢查日期順序
+    if (start > end) {
+      console.warn('⚠️ calculatePeriods: 開始日期大於結束日期', {
+        start: start.toISOString().slice(0, 10),
+        end: end.toISOString().slice(0, 10)
+      });
+      return 1;
+    }
 
     const months = (end.getFullYear() - start.getFullYear()) * 12
       + (end.getMonth() - start.getMonth()) + 1;
