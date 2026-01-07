@@ -30,8 +30,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="INV_ItemNo" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [showManage]="false"
-    [showDelete]="false" [loading]="loading"></app-table>
+  <app-table-report dataKey="INV_ItemNo" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [totalRecords]="totalRecords" [showManage]="false" [showDelete]="false"
+    [loading]="loading" [queryFunction]="tls2e060Service.queryTls2e060.bind(tls2e060Service)"
+    [lastQueryBody]="lastQueryBody"></app-table-report>
 </div>

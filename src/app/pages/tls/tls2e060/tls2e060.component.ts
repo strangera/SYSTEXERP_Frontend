@@ -2,12 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Tls2e060Data, Tls2e060Service } from '@service/api/tls/tls2e060.service';
+import { Tls2e060Data, Tls2e060QueryBody, Tls2e060Service } from '@service/api/tls/tls2e060.service';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, convertDateToYYYYMM, createPaginationConfig, formatAmount, formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatDateTime } from '@shared/componentkit/table-report/table-report.model';
+import { Column, convertDateToYYYYMM, formatAmount, formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -19,15 +20,17 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
   selector: 'app-tls2e060',
   templateUrl: './tls2e060.component.html',
   standalone: true,
-  imports: [InputTextComponent, TableComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TranslateModule]
+  imports: [TableReportComponent, InputTextComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TranslateModule]
 })
 export class TLS2E060Component extends BasicQueryPageComponent<Tls2e060Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     adj_no: [null, [Validators.maxLength(12)]],
     adj_date: [null],
     sam_yyymm: [null],
-    ...createPaginationConfig([{ field: 'adj_no', order: 1 }]),
+    PageSize: [30],
+    PageIndex: [1],
   });
+  lastQueryBody: Tls2e060QueryBody | null = null;
   adj_taxtypeOptions = getSYS1000Options('adj_taxtype'); // 調整稅別選項
   totalRecords = 0;
   data: Tls2e060Data[] = [];
@@ -40,9 +43,15 @@ export class TLS2E060Component extends BasicQueryPageComponent<Tls2e060Data> imp
     { field: 'contract_subno', header: '版次', visible: true },
     { field: 'adj_taxtype', header: '調整稅別', visible: true, format: (v) => getSYS1000('PLU_TaxType', v) }, // 0=免稅, 1=應稅
     { field: 'adj_amount', header: '調整金額', visible: true, format: formatAmount },
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },
+    { field: 'CRT_USR_No', header: '建立人員', visible: false },
+    { field: 'CRT_USR_Name', header: '建立人員名稱', visible: false },
+    { field: 'UPD_Date', header: '修改日期', visible: false, format: formatDateTime },
+    { field: 'UPD_USR_No', header: '修改人員', visible: false },
+    { field: 'UPD_USR_Name', header: '修改人員名稱', visible: false },
   ];
   constructor(
-    private readonly tls2e060Service: Tls2e060Service,
+    public readonly tls2e060Service: Tls2e060Service,
   ) {
     super();
   }
@@ -85,8 +94,10 @@ export class TLS2E060Component extends BasicQueryPageComponent<Tls2e060Data> imp
         untilDestroyed(this),
         finalize(() => this.loading = false)
       ).subscribe(response => {
+        this.lastQueryBody = body;
         this.data = response.Data || [];
         this.totalRecords = response.TotalCount || 0;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
   }

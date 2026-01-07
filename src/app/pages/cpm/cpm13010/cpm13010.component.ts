@@ -4,16 +4,16 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Cpm13010Service, QueryCPM13010Request, QueryCPM13010Response } from '@service/api/cpm/cpm13010.service';
 import { getSYS1000 } from '@service/system/sys1000.service';
-import { ExecSpFuncService } from '@service/utility/execSpFunc.service';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { Column, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { formatDateTime } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-cpm13010',
@@ -44,7 +44,7 @@ export class CPM13010Component extends BasicQueryPageComponent<QueryCPM13010Resp
   data: QueryCPM13010Response[] = [];
   selectedRows: QueryCPM13010Response[] = []; // 用於表格多選/刪除
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'PKNG_SeqNo', header: '序號', visible: false },
     { field: 'PKNG_DiscHour', header: '折抵時數', visible: true },
     { field: 'PKNG_SaleAmt', header: '折抵金額', visible: true },
@@ -59,7 +59,6 @@ export class CPM13010Component extends BasicQueryPageComponent<QueryCPM13010Resp
 
   constructor(
     public readonly cpm13010Service: Cpm13010Service,
-    private readonly ExecSpFunc: ExecSpFuncService
   ) {
     super(); // 呼叫父類建構子
   }

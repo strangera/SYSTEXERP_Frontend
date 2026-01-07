@@ -1,4 +1,3 @@
-import { Tls2e060DropDownListData, Tls2e060Service } from './../../../service/api/tls/tls2e060.service';
 import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -13,9 +12,11 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
+import { Tls2e060DropDownListData, Tls2e060Service } from './../../../service/api/tls/tls2e060.service';
 
 @Component({
   selector: 'app-tls2e060-cru',
@@ -29,6 +30,7 @@ import { finalize } from 'rxjs';
     ReactiveFormsModule,
     TranslateModule,
     NgIf,
+    InputTextareaComponent,
     InputTextComponent,
     DropdownComponent,
     CalendarComponent,
@@ -47,6 +49,7 @@ export class TLS2E060CRUComponent extends BasicCruPageComponent<Tls2e060Data> im
     contract_subno: [{ value: 0, disabled: true }],
     adj_taxtype: [null, [Validators.required]],
     adj_amount: [null, [Validators.required, Validators.min(1)]],
+    remarks: [null, [Validators.maxLength(4000)]],
   });
   tlt_noOptions: Tls2e060DropDownListData[] = [];
   adj_taxtypeOptions = getSYS1000Options('PLU_TaxType');
