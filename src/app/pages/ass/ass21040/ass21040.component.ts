@@ -121,16 +121,25 @@ export class ASS21040Component extends BasicQueryPageComponent<unknown> implemen
       };
       console.log(body);
 
+      // 在用戶點擊的同步上下文中先開啟空白視窗
+      const newWindow = window.open('', '_blank');
+
       this.loading = true;
-      this.aSS21040Service.printASS21040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-        const url = response.Data?.Print_URL || '';
-        if (url) {
-          this.messageService.successBubble('列印成功');
-          window.open(environment.ApiUrl + url);
-        } else {
-          this.messageService.errorBubble(response.Message || '無法取得列印檔案');
-        }
-      });
+      this.aSS21040Service.printASS21040(body)
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe((response) => {
+          const url = response.Data?.Print_URL || '';
+          if (url && newWindow) {
+            const downloadUrl = `${environment.ApiUrl}${url}`;
+            newWindow.location.href = downloadUrl;
+            this.messageService.successBubble('列印成功');
+          } else {
+            if (newWindow) {
+              newWindow.close();
+            }
+            this.messageService.errorBubble(url ? '瀏覽器封鎖了彈出視窗' : '無法取得列印檔案');
+          }
+        });
     }
   }
 }
