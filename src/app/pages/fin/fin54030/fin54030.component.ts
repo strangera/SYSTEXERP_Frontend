@@ -44,7 +44,6 @@ export class FIN54030Component extends BasicQueryPageComponent<FIN54030Data> imp
     const data = this.tableData();
     if (!data?.TargetYM?.length) return;
     const ym = new Date(+data.TargetYM.slice(0, 4), +data.TargetYM.slice(4, 6) - 1, 1);
-    ym.setMonth(ym.getMonth() + 1);
     this.logger.debug(`data`, [data, ym]);
 
     this.queryForm.patchValue({

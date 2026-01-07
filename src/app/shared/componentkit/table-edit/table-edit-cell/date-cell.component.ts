@@ -12,7 +12,7 @@ import { CellInput } from './table-edit-cell.model';
   host: { 'table-edit-id': '複製時請自行取唯一名' },
   template: `
     <p-iconField iconPosition="right">
-      <p-calendar class="min-w-max" [(ngModel)]="cellInput.rowData[cellInput.col.field]"
+      <p-calendar class="flex min-w-max" [(ngModel)]="cellInput.rowData[cellInput.col.field]"
                   [ngModelOptions]="{ standalone: true }" [placeholder]="isDisabled() ? '' : '請輸入' + cellInput.col.header"
                   [timeOnly]="cellInput.col.timeOnly || false" [showTime]="cellInput.col.showTime || false"
                   [hourFormat]="cellInput.col.hourFormat || '24'" [showSeconds]="cellInput.col.showSeconds"
@@ -23,7 +23,7 @@ import { CellInput } from './table-edit-cell.model';
                   (onInput)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index)"
                   (onFocus)="cellInput.col.onFocus?.(cellInput.rowData, cellInput.rowData[cellInput.col.field], cellInput.col, cellInput.index)"
                   (onBlur)="handleBlur()"(keydown.enter)="handleEnter($event)"
-                  [style]="{'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
+                  [style]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
                   [inputStyle]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign || 'left'}"
                   [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
                   [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }">

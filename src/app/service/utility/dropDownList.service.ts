@@ -240,6 +240,7 @@ export interface IAPS1003Item {
   CAP_Item: string;
   CAP_Name: string;
   AccNo?: string;
+  AccCName?: string;
   GUI_FLAG: string;
   CAP_TaxType?: string;
   CAP_Type: string;

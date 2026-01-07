@@ -104,25 +104,42 @@ export class ASS21040Component extends BasicQueryPageComponent<unknown> implemen
   }
 
   onGenerateReport(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      const storeNo = this.authService.currentUserValue?.SYS_StoreNo;
-      const mid = this.authService.currentUserValue?.mid;
-      if (storeNo && mid !== null && mid !== undefined) {
-        const body = {
-          SYS_StoreNo: storeNo,
-          Mid: mid,
-          EngTypes: frm.value.ENG_Type,
-          ClearingYM: convertDateToYYYYMM(frm.value.ENG_YYMM)
-        };
-        this.aSS21040Service.printASS21040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-          if (response.Data.Print_URL) {
+    if (!frm.valid) {
+      this.submitted = true;
+      this.messageService.errorBubble('請填寫必填欄位');
+      return;
+    }
+
+    const storeNo = this.authService.currentUserValue?.SYS_StoreNo;
+    const mid = this.authService.currentUserValue?.mid;
+    if (storeNo && mid !== null && mid !== undefined) {
+      const body = {
+        SYS_StoreNo: storeNo,
+        Mid: mid,
+        EngTypes: frm.value.ENG_Type,
+        ClearingYM: convertDateToYYYYMM(frm.value.ENG_YYMM)
+      };
+      console.log(body);
+
+      // 在用戶點擊的同步上下文中先開啟空白視窗
+      const newWindow = window.open('', '_blank');
+
+      this.loading = true;
+      this.aSS21040Service.printASS21040(body)
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe((response) => {
+          const url = response.Data?.Print_URL || '';
+          if (url && newWindow) {
+            const downloadUrl = `${environment.ApiUrl}${url}`;
+            newWindow.location.href = downloadUrl;
             this.messageService.successBubble('列印成功');
-            window.open(environment.ApiUrl + response.Data.Print_URL);
           } else {
-            this.messageService.errorBubble(response.Message);
+            if (newWindow) {
+              newWindow.close();
+            }
+            this.messageService.errorBubble(url ? '瀏覽器封鎖了彈出視窗' : '無法取得列印檔案');
           }
         });
-      }
-    });
+    }
   }
 }
