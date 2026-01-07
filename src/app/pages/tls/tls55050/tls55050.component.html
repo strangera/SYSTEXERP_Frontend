@@ -18,16 +18,40 @@
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="clear" [form]="queryForm" [text]="true"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
+          <p-divider layout="vertical" />
+          <app-button label="結帳" icon="pi pi-check-square" [loading]="loading"
+            (click)="onSettle(queryForm)"></app-button>
+          <app-button label="反結帳" [outlined]="true" icon="pi pi-undo" [loading]="loading"
+            (click)="onUnSettle(queryForm)"></app-button>
+          <p-divider layout="vertical" />
+          <app-button label="月結鎖定" severity="primary" icon="pi pi-lock" [loading]="loading"
+            (click)="onLock(queryForm)"></app-button>
+          <app-button label="月結反鎖定" [outlined]="true" icon="pi pi-lock-open" [loading]="loading"
+            (click)="onUnlock(queryForm)"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report apiUrl="queryTLS55050" tableKey="TLS55050query" dataKey="OTA_No" [lastQueryBody]="lastQueryBody"
-    [totalRecords]="totalRecords" [data]="data" (edit)="onEdit($event)" (detail)="onDetail($event)" [columns]="columns"
-    [loading]="loading" [queryFunction]="tls55050Service.queryTLS55050.bind(tls55050Service)" [showDelete]="false"
+  <!-- 廠商請款資料 -->
+  <div class="flex align-items-center mb-3">
+    <span class="text-xl font-bold text-primary">廠商請款資料</span>
+  </div>
+  <app-table-report dataKey="OTA_No" [lastQueryBody]="lastQueryBody" [totalRecords]="totalRecords" [data]="data"
+    [showManage]="false" [columns]="columns" [loading]="loading"
+    [queryFunction]="tls55050Service.queryTLS55050.bind(tls55050Service)" [showDelete]="false"
+    [showSort]="true"></app-table-report>
+  <hr class="my-5 border-top-1 surface-border" />
+
+  <div class="flex align-items-center mb-3">
+    <span class="text-xl font-bold text-primary">傳票明細</span>
+  </div>
+  <!-- 傳票明細 -->
+  <app-table-report dataKey="VouNo" [lastQueryBody]="lastQueryBody2" [totalRecords]="totalRecords2" [data]="data2"
+    (edit)="onEdit($event)" (detail)="onDetail($event)" [columns]="columns2" [loading]="loading"
+    [queryFunction]="tls55050Service.queryTLS55050.bind(tls55050Service)" [showDelete]="false"
     [showSort]="true"></app-table-report>
 </div>

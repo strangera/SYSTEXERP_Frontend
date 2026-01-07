@@ -12,7 +12,7 @@ import { ApiResponse } from '../fin/fin26010.service'; // 根據您的專案路�
  */
 export interface Tls55050Body {
   cls_Month: string; // 結帳月份 (例如: "202512")
-  VEN_No: string;    // 廠商代號
+  VEN_No: string;    // 廠商編號
 }
 
 /**
