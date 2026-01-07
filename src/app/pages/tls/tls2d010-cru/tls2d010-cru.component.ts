@@ -243,19 +243,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
   ngOnInit(): void {
     this.dataFormNormal.get('tpy_date')?.valueChanges.subscribe((date: any) => {
-      if (this.currentCreateType === 'normal') {
-        let mainRowSet = false;
-        this.data.forEach(row => {
-          if (!mainRowSet && (row.status === 'modified' || !row.status)) {
-            row.tpy_date = date ?? row.tpy_date;
-            mainRowSet = true;
-          }
-          if (row.status === 'new' || row._isAutoInsertCandidate) {
-            row.tpy_date = date ?? null;
-          }
-        });
-        this.data = Array.isArray(this.data) ? [...this.data] : this.data;
-      }
+      this.syncNormalTpyDateToRows(date);
     });
 
     this.dataFormNormal.get('tpy_net')?.valueChanges.subscribe((amount: any) => {
@@ -646,6 +634,9 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         if (found) normalizedFormTlt = found;
       }
 
+      // 目前上方表單選擇的扣款日期，讓新/空白明細自動帶入
+      const formTpyDate = this.dataFormNormal.get('tpy_date')?.value ?? null;
+
       this.data.forEach(row => {
         const isNewCandidate = row.status === 'new' || row._isAutoInsertCandidate;
         const hasNoOrg = row.org_id === null || row.org_id === undefined || row.org_id === '';
@@ -675,6 +666,12 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             }
           }
         }
+
+        // 若該列尚未有扣款日期，且表單已有選擇日期，則自動帶入
+        const hasNoDate = !row.tpy_date;
+        if (formTpyDate && hasNoDate) {
+          row.tpy_date = formTpyDate;
+        }
       });
       // 讓 table-edit 感知資料變更，立即更新 UI
       this.data = Array.isArray(this.data) ? [...this.data] : this.data;
@@ -695,6 +692,36 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     } catch (e) {
       console.warn('updateTotalCash error', e);
     }
+  }
+
+  /** normal 模式：將表單上的扣款日期同步到下方明細列的 tpy_date，並立即更新畫面 */
+  private syncNormalTpyDateToRows(date: any): void {
+    if (this.currentCreateType !== 'normal') return;
+    if (!Array.isArray(this.data)) return;
+
+    // 需求：上方日期一變更，所有明細列的扣款日期都要即時改成同一天
+    this.data.forEach(row => {
+      row.tpy_date = date ?? null;
+    });
+
+    // 更新父元件的 data 參考，讓 Input 變化被偵測
+    this.data = [...this.data];
+
+    // 額外：主動觸發 table-edit 的 dataChange 流程，
+    // 等同於使用者在 table 內異動資料，確保畫面立即刷新
+    if (this.normalTable) {
+      this.normalTable.dataChange.emit(this.data.filter(r => !r._isAutoInsertCandidate));
+    }
+  }
+
+  /** normal 模式：上方表單扣款日期變更事件（直接由 template 綁定） */
+  onNormalFormDateChange(date: any): void {
+    const ctrl = this.dataFormNormal.get('tpy_date');
+    if (ctrl) {
+      // 避免再觸發一次 valueChanges，這裡不發出事件
+      ctrl.setValue(date, { emitEvent: false });
+    }
+    this.syncNormalTpyDateToRows(date);
   }
   onCounterCAPItemChange(row: any, value: any, field?: string) {
 
