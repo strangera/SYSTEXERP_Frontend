@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { CalendarRangeComponent } from "@shared/componentkit/calendar-range/calendar-range.component";
 import { DialogModule } from 'primeng/dialog';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
@@ -51,12 +52,16 @@ interface ARWithRCVAmt extends QueryFIN32030ARResponse {
     TranslateModule,
     TableEditComponent,
     TableComponent,
-    DialogModule
+    DialogModule,
+    CalendarRangeComponent
   ]
 })
 export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Response> implements OnInit {
   // 按鈕切換控制
   buttonID = 1; // 預設顯示第一個步驟
+
+  // ViewChild for Dialog Table
+  @ViewChild('arDialogTable') arDialogTable!: TableComponent;
 
   // 步驟1: 基本資料表單
   step1Form = this.formBuilder.nonNullable.group({
@@ -99,6 +104,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       min: 0,
       textAlign: 'right',
       aggregate: 'sum',
+      format: (value: number) => value?.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00',
       disabled: () => true // 不可編輯,由對話框帶入
     }
   ];
@@ -106,11 +112,15 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
   // 應收未收查詢對話框
   showARDialog = false;
   arDialogLoading = false;
+  arDialogTotalRecords = 0;
   arQueryForm = this.formBuilder.group({
     STO_No: [''],
     VEN_No: [''],
     DateFrom: [null as Date | null],
     DateTo: [null as Date | null],
+    pageSize: [20],
+    pageIndex: [1],
+    SortBy: [[{ field: 'VEN_No', order: 1 }]],
   });
   arDialogData: QueryFIN32030ARResponse[] = [];
   arDialogColumns: Column[] = [
@@ -369,27 +379,43 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
   /** 打開應收未收查詢對話框 */
   openARDialog(): void {
     this.showARDialog = true;
-    // 重置查詢表單並載入資料
+    // 重置查詢表單
     this.arQueryForm.reset({
       STO_No: '',
       VEN_No: '',
       DateFrom: null,
       DateTo: null,
+      pageSize: 20,
+      pageIndex: 1,
+      SortBy: [{ field: 'VEN_No', order: 1 }],
     });
-    this.onQueryAR();
+    // 清空查詢結果
+    this.arDialogData = [];
+    this.arDialogTotalRecords = 0;
+  }
+
+  /** 關閉應收未收查詢對話框 */
+  closeARDialog(): void {
+    this.showARDialog = false;
+    this.arDialogData = [];
   }
 
   /** 查詢應收未收 */
   onQueryAR(): void {
-    const queryValue = this.arQueryForm.value;
+    const formValue = this.arQueryForm.value;
+
+    const queryParams = {
+      STO_No: formValue.STO_No || undefined,
+      VEN_No: formValue.VEN_No || undefined,
+      DateFrom: formValue.DateFrom ? (formValue.DateFrom as Date).toISOString() : undefined,
+      DateTo: formValue.DateTo ? (formValue.DateTo as Date).toISOString() : undefined,
+      PageIndex: formValue.pageIndex ?? 1,
+      PageSize: formValue.pageSize ?? 20,
+      SortBy: formValue.SortBy || undefined,
+    };
 
     this.arDialogLoading = true;
-    this.fin32030Service.queryFIN32030AR({
-      STO_No: queryValue.STO_No || null,
-      VEN_No: queryValue.VEN_No || null,
-      DateFrom: queryValue.DateFrom ? queryValue.DateFrom.toISOString() : null,
-      DateTo: queryValue.DateTo ? queryValue.DateTo.toISOString() : null,
-    })
+    this.fin32030Service.queryFIN32030AR(queryParams)
       .pipe(
         finalize(() => this.arDialogLoading = false),
         untilDestroyed(this)
@@ -398,11 +424,14 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
         // 過濾掉已選擇的應收帳款 (不可重複選擇)
         const selectedIds = this.step4TableData.map(item => item.ARS_ID);
         this.arDialogData = response.Data.filter(ar => !selectedIds.includes(ar.ARS_ID));
+        this.arDialogTotalRecords = response.TotalCount;
       });
   }
 
-  /** 確認選擇應收帳款 */
-  onConfirmARSelection(selected: QueryFIN32030ARResponse[]): void {
+  /** 確認選擇應收帳款 (點擊確定按鈕) */
+  confirmARSelection(): void {
+    const selected = this.arDialogTable?.selectedItems as QueryFIN32030ARResponse[];
+
     if (!selected || selected.length === 0) {
       this.messageService.errorBubble('請至少選擇一筆應收帳款');
       return;
@@ -418,12 +447,13 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     }
 
     // 將選中的應收帳款加入表格 (使用 UnpaidAmt 作為 RCV_Amt)
-    newItems.forEach(ar => {
-      this.step4TableData.push({
-        ...ar,
-        RCV_Amt: ar.UnpaidAmt || 0 // 預設收款金額為未收款金額
-      });
-    });
+    const newData: ARWithRCVAmt[] = newItems.map(ar => ({
+      ...ar,
+      RCV_Amt: ar.UnpaidAmt || 0 // 預設收款金額為未收款金額
+    }));
+
+    // 使用新陣列來觸發 Angular 變更檢測
+    this.step4TableData = [...this.step4TableData, ...newData];
 
     this.showARDialog = false;
     this.messageService.successBubble(`已新增 ${newItems.length} 筆應收帳款`);
