@@ -10,7 +10,7 @@ export interface SortItem {
   order: 1 | -1;
 }
 
-/** Request 型別 - 帳齡分析表查詢條件 */
+/** Request */
 export interface Fin34040Request {
   /** 分析日期 - ISO 格式 */
   AnalysisDate?: string | null;
@@ -41,13 +41,10 @@ export interface Fin34040Request {
   PageSize?: number;
   /** 排序 */
   SortBy?: SortItem[];
-
-  /** 擴充欄位 */
-  [key: string]: unknown;
 }
 
-/** Response Row 型別 - 帳齡分析表資料列 */
-export interface Fin34040Row {
+/** Response */
+export interface Fin34040Response {
   /** 廠商代號 */
   VEN_No?: string;
   /** 廠商名稱 */
@@ -70,8 +67,8 @@ export class Fin34040Service {
    * 查詢帳齡分析表
    * @param body 查詢條件
    */
-  queryFIN34040(body: Fin34040Request): Observable<ApiResponse<Fin34040Row[]>> {
-    return this.http.post<ApiResponse<Fin34040Row[]>>(
+  queryFIN34040(body: Fin34040Request): Observable<ApiResponse<Fin34040Response[]>> {
+    return this.http.post<ApiResponse<Fin34040Response[]>>(
       `${this.apiUrl}/queryFIN34040`,
       body
     );

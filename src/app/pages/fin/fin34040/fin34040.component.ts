@@ -25,7 +25,7 @@ import { ColumnGroup, createPaginationConfig } from '../../../shared/componentki
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import {
   Fin34040Request,
-  Fin34040Row,
+  Fin34040Response,
   Fin34040Service,
   SortItem,
 } from '../../../service/api/fin/fin34040.service';
@@ -56,10 +56,10 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 })
 export class FIN34040Component extends BasicQueryPageComponent<any> implements OnInit {
   /* ----------------- 狀態 ----------------- */
-  data: Fin34040Row[] = [];
+  data: Fin34040Response[] = [];
   totalRecords = 0;
   viewTotalRecords = 0;
-  selectedItems: Fin34040Row[] = [];
+  selectedItems: Fin34040Response[] = [];
   lastQueryBody: any = null;
   tableVer = 0;
 
@@ -211,7 +211,7 @@ export class FIN34040Component extends BasicQueryPageComponent<any> implements O
   }
 
   /** 解析 API Response */
-  private mapRowsFromResponse(res: ApiResponse<Fin34040Row[]>): Fin34040Row[] {
+  private mapRowsFromResponse(res: ApiResponse<Fin34040Response[]>): Fin34040Response[] {
     const list = res?.Data ?? [];
     return Array.isArray(list) ? list : [];
   }
@@ -219,7 +219,7 @@ export class FIN34040Component extends BasicQueryPageComponent<any> implements O
   /* ----------------- TableReport 查詢函式 ----------------- */
   public queryFIN34040ForReport = (body: any) =>
     this.fin34040Service.queryFIN34040(this.buildPayload(body || {})).pipe(
-      map((res: ApiResponse<Fin34040Row[]>) => {
+      map((res: ApiResponse<Fin34040Response[]>) => {
         const rows = this.mapRowsFromResponse(res);
         const totalCount = Number(res?.TotalCount ?? rows.length) || rows.length;
         return {
@@ -283,7 +283,7 @@ export class FIN34040Component extends BasicQueryPageComponent<any> implements O
       .queryFIN34040(payload)
       .pipe(untilDestroyed(this))
       .subscribe({
-        next: (response: ApiResponse<Fin34040Row[]>) => {
+        next: (response: ApiResponse<Fin34040Response[]>) => {
           const rows = this.mapRowsFromResponse(response);
 
           this.data = rows;
