@@ -293,10 +293,8 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     this.eCRNoService.getECRNo()
       .pipe(untilDestroyed(this))
       .subscribe(data => {
-        this.dialogOptions = data.map((item: { value: string; label: string; }) => ({
-          ...item,
-          label: `${item.value} - ${item.label}`
-        }));
+        // 後端已回傳 label 為「000011-小騎士」，這裡直接沿用即可
+        this.dialogOptions = data;
       });
     //位置編號
 
