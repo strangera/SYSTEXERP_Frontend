@@ -72,8 +72,8 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
     PageIndex: [1],
     sam_yyymm: [new Date(), Validators.required],
     // 試算
-    money_type: [this.money_typeOptions[2]?.value || null as string | null, [Validators.required]],
-    sam_termno: [1, [Validators.required]],
+    money_type: [this.money_typeOptions[2]?.value || null as string | null],
+    sam_termno: [1],
     tlt_no: [null],
   });
   totalRecords = 0;
@@ -160,6 +160,11 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
    */
   onSettle(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      if (!frm.value.money_type || !frm.value.sam_termno) {
+        this.messageService.errorBubble('請選擇結帳方式與帳次');
+        this.loading = false;
+        return;
+      }
       // 1. 設定欄位為結算檢查欄位
       this.columns = this.settleColumns;
       this.isSettle = true;
@@ -189,6 +194,11 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
    */
   onQueryRecord(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      if (!frm.value.money_type || !frm.value.sam_termno) {
+        this.messageService.errorBubble('請選擇結帳方式與帳次');
+        this.loading = false;
+        return;
+      }
       // 1. 設定欄位為試算紀錄欄位
       this.columns = this.recordColumns;
       this.isSettle = false;
@@ -209,6 +219,11 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
   }
   onUpdate(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      if (!frm.value.money_type || !frm.value.sam_termno) {
+        this.messageService.errorBubble('請選擇結帳方式與帳次');
+        this.loading = false;
+        return;
+      }
       const body = {
         ...frm.value,
         sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
