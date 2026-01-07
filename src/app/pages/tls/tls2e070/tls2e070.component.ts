@@ -145,7 +145,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
     this.handleSubmit(frm, () => {
       const body = {
         ...frm.value,
-        sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
+        sam_yyymm: this.datePipe.transform(frm.value.sam_yyymm, 'yyyyMM'),
       } as Tls2e070QueryBody;
       this.tls2e070Service.queryTLS2E070(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data;
@@ -166,7 +166,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
       this.loading = true;
       const body = {
         ...frm.value,
-        sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
+        sam_yyymm: this.datePipe.transform(frm.value.sam_yyymm, 'yyyyMM'),
         sam_termno: frm.value.sam_termno as number,
         money_type: frm.value.money_type
       } as Tls2e070QueryRecEstBody;
