@@ -41,7 +41,7 @@
             label="收款單號"
             controlName="RCV_No"
             [control]="step1Form.controls.RCV_No"
-            [readonly]="!isFormCreateable"
+            [readonly]="true"
             [customPlaceholder]="isFormCreateable ? '系統自動產生' : ''"
           />
           <app-calendar
