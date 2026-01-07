@@ -1,10 +1,10 @@
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls2e070Data, Tls2e070QueryBody, Tls2e070QueryRecEstBody, Tls2e070Service } from '@service/api/tls/tls2e070.service';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -29,6 +29,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
   /** 1. 查詢結果 (Query) 欄位 */
   readonly queryColumns: ReportColumn[] = [
     { field: 'cls_Month', header: '結算年月', visible: true, format: formatYYYYMM },
+    { field: 'money_type', header: '結帳方式', visible: true, format: (value) => getSYS1000('money_type', value) },
     { field: 'cls_termno', header: '結算期別', visible: true },
     { field: 'sale_proc_date', header: '結帳日期', visible: true, format: formatDate },
     { field: 'sale_proc_USR_Name', header: '結帳人員', visible: true },
@@ -82,6 +83,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
   constructor(
     public readonly tls2e070Service: Tls2e070Service,
     private readonly dropdown: DropdownApiService,
+    private readonly datePipe: DatePipe
   ) {
     super();
     // 預設欄位為查詢結果欄位
