@@ -22,7 +22,7 @@ export interface VoucherDetail {
   SerNo?: string;         // 序號
   ACC_No?: string;        // 科目代號
   ACC_Name?: string;      // 科目名稱
-  DetailNo?: string;      // 廠商代號
+  DetailNo?: string;      // 廠商編號
   NoteDesc?: string;      // 摘要
   Debit_Amt?: number;     // 借方金額
   Credit_Amt?: number;    // 貸方金額

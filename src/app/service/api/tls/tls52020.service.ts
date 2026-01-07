@@ -8,7 +8,7 @@ export interface IQueryTLS52020Request {
   CRN_No?: string; // 退貨單編號
   HOS_NoList?: string[]; // 醫院代號列表
   LOGO_NoList?: string[]; // 品牌代碼列表
-  VEN_No?: string; // 廠商代號
+  VEN_No?: string; // 廠商編號
   CRN_StatusList?: string[]; // 退貨單狀態列表
   APPLY_Date_Start?: string; // 申請日期起 (YYYY-MM-DD 或 ISO 格式)
   APPLY_Date_End?: string; // 申請日期迄 (YYYY-MM-DD 或 ISO 格式)
@@ -25,7 +25,7 @@ export interface ITLS52020Data {
   id: number;
   CRN_No: string; // 退貨單編號
   SYS_StoreNo: string; // 門店編號 (系統)
-  VEN_No: string; // 廠商代號
+  VEN_No: string; // 廠商編號
   LOGO_No: string; // 品牌代碼
   HOS_No: string; // 醫院代號
   HOS_NAME: string; // 醫院名稱
@@ -63,7 +63,7 @@ export interface ITLS52020Data {
 }
 /** 查詢廠商所有商品 (queryPOS2004Detail_VEN_No_TLS52020) 的請求介面 */
 export interface IQueryPOS2004DetailVENNoTLS52020Request {
-  VEN_No?: string; // 廠商代號
+  VEN_No?: string; // 廠商編號
   LOGO_No?: string; // 品牌代碼
   PLU_MagNo?: string; // 商品管理編號
   PLU_Name?: string; // 商品名稱
@@ -91,7 +91,7 @@ export interface TLS52020Request {
   CRN_No?: string; // 退貨單編號
   org_id?: string;
   SYS_StoreNo?: string; // 門店編號 (系統)
-  VEN_No?: string; // 廠商代號
+  VEN_No?: string; // 廠商編號
   LOGO_No?: string; // 品牌代碼
   HOS_No?: string; // 醫院代號
   CRN_TaxType?: string; // 退貨稅別

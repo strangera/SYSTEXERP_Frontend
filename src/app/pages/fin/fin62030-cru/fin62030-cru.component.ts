@@ -135,7 +135,7 @@ export class FIN62030CRUComponent extends BasicCruPageComponent<FIN62030Data[]> 
           showClear: false,
           disabled: (value: any, index?: number, rowData?: any) => !(rowData?._originalACC_No?.startsWith('612') && rowData?.AccDC === 'D')
         },
-        { field: 'DetailNo', header: '廠商代號' },
+        { field: 'DetailNo', header: '廠商編號' },
         { field: 'NoteDesc', header: '摘要', type: 'input' },
         { field: 'Debit_Amt', header: '借方金額', format: formatAmount },
         { field: 'Credit_Amt', header: '貸方金額', format: formatAmount },

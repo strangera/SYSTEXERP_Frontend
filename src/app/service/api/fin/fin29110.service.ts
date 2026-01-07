@@ -1,12 +1,12 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 
 // ==== 主表每列型別（對應 SP_FIN29110Query 回傳欄位） ====
 export interface Fin29110Row {
-  VendorNo: string;        // 廠商代號
+  VendorNo: string;        // 廠商編號
   LTYPE_NAME: string;      // 廠商名稱（來源欄位）
 
   Overdue_Over301Days: number;
@@ -64,7 +64,7 @@ export interface Fin29110DetailRow {
   ACP_BalanceAmt: number;     // 應付帳款餘額
   ACP_Date: string;           // 立帳日期
   ACP_ExpectPayDate: string;  // 預計付款日
-  VEN_No: string;             // 廠商代號
+  VEN_No: string;             // 廠商編號
   VEN_Name: string;           // 廠商名稱
   VEN_Uniform: string;        // 統一編號
   AccNo: string;              // 會計科目代號
@@ -98,7 +98,7 @@ export class Fin29110Service {
   // 後端 Controller: /FIN0000/APS1000
   private apiUrl = `${environment.ApiUrl}/FIN0000/APS1000`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /** 查詢 應付帳款帳齡分析表（主表） */
   queryFIN29110(body: Fin29110Request): Observable<ApiResponse<Fin29110Row[]>> {

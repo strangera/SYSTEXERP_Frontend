@@ -33,7 +33,7 @@ export class Fin55120cruComponent extends BasicCruPageComponent<unknown> impleme
         return rowData.VouNo === '期初餘額' || !rowData.VouNo;
       }
     },
-    { field: 'Ven_Name', header: '廠商代號/簡稱' },
+    { field: 'Ven_Name', header: '廠商編號/簡稱' },
     { field: 'VouStatus', header: '狀態' },
     { field: 'ORG_ID', header: '部門' },
     { field: 'Org_Name', header: '部門名稱' },

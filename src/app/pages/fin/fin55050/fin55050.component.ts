@@ -113,7 +113,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
 
   columns: Column[] = [
     { field: 'VouNo', header: '傳票號碼', visible: true, type: 'detail' },
-    { field: 'Ven_Name', header: '廠商代號/簡稱', visible: true },
+    { field: 'Ven_Name', header: '廠商編號/簡稱', visible: true },
     { field: 'VouStatus', header: '狀態', visible: true },
     { field: 'ORG_ID', header: '部門', visible: true },
     { field: 'Org_Name', header: '部門名稱', visible: true },
