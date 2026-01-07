@@ -1,9 +1,8 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
@@ -17,126 +16,183 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
+          <!-- 分析日期（必填） -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
+            <app-calendar
+              calendarType="dateOne"
               label="分析日期"
-              controlName="analysisDateRange"
-              [startControl]="queryForm.controls.SanalysisDate"
-              [endControl]="queryForm.controls.EanalysisDate"
+              [control]="queryForm.controls.AnalysisDate"
               [submitted]="submitted"
-            ></app-calendar-range>
+            ></app-calendar>
           </div>
+
+          <!-- 分析區間（必填，只能輸入數字） -->
           <div class="col-12 md:col-6 lg:col-2">
             <app-input-text
-              label="分析區間"
-              controlName="analysisInterval"
-              [control]="queryForm.controls.analysisInterval"
+              label="分析區間(日)"
+              [control]="queryForm.controls.AnalysisInterval"
               [submitted]="submitted"
+              [keyFilter]="keyFilterInt"
+              [customPlaceholder]="'輸入文字'"
             ></app-input-text>
           </div>
+
+          <!-- 分析期數（必填，只能輸入數字） -->
           <div class="col-12 md:col-6 lg:col-2">
             <app-input-text
-              label="分析期數"
-              controlName="analysisPeriod"
-              [control]="queryForm.controls.analysisPeriod"
+              label="分析期數(期)"
+              [control]="queryForm.controls.AnalysisPeriod"
               [submitted]="submitted"
+              [keyFilter]="keyFilterInt"
+              [customPlaceholder]="'輸入文字'"
             ></app-input-text>
           </div>
+
+          <!-- 分析日期別 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="分析日期別"
-              controlName="analysisDateType"
               [options]="analysisDateTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.analysisDateType"
+              [control]="queryForm.controls.AnalysisDateType"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+
+          <!-- 廠客代號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="廠客代號"
-              controlName="clientCode"
-              [options]="clientCodeOptions"
+              [options]="vendorOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.clientCode"
+              [control]="queryForm.controls.VEN_No"
               [submitted]="submitted"
+              [showClear]="true"
+              [filter]="true"
             ></app-dropdown>
           </div>
+
+          <!-- 立帳日期 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
               label="立帳日期"
-              controlName="accountDate"
-              [startControl]="queryForm.controls.SaccountDate"
-              [endControl]="queryForm.controls.EaccountDate"
+              [startControl]="queryForm.controls.DocDateFrom"
+              [endControl]="queryForm.controls.DocDateTo"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
+
+          <!-- 收款日期 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar
               calendarType="dateOne"
               label="收款日期"
-              controlName="receiptDate"
-              [control]="queryForm.controls.receiptDate"
+              [control]="queryForm.controls.RCV_Date"
               [submitted]="submitted"
             ></app-calendar>
           </div>
+
+          <!-- 科目代號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="科目代號"
-              controlName="accountCode"
-              [options]="accountCodeOptions"
+              [options]="accNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.accountCode"
+              [control]="queryForm.controls.AccNo"
               [submitted]="submitted"
+              [showClear]="true"
+              [filter]="true"
             ></app-dropdown>
           </div>
+
+          <!-- 已到期/未到期 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="已到期/未到期"
-              controlName="dueStatus"
               [options]="dueStatusOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.dueStatus"
+              [control]="queryForm.controls.DueStatus"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+        </div>
+
+        <hr />
+
+        <div class="grid p-fluid">
+          <!-- 是否顯示金額/總計(%) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               label="是否顯示金額/總計(%)"
-              groupname="systemtyperadio"
-              [control]="queryForm.controls.displayAmount"
-              [options]="displayAmountOptions"
+              groupname="ShowAmountType"
+              [control]="queryForm.controls.ShowAmountType"
+              [options]="showAmountTypeOptions"
               [submitted]="submitted"
             ></app-radiobutton>
           </div>
         </div>
-      </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
+            btnType="clear"
+            [type]="'button'"
+            (clickEvent)="onClear(queryForm)"
           ></app-button>
+
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
-      </div>
+      </form>
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table-report
+    [tableKey]="'fin34040_' + tableVer"
+    [dataKey]="'VEN_No'"
+    [columnGroup]="columnGroup"
+    [columns]="columns"
+    [data]="data"
+    [totalRecords]="viewTotalRecords"
+    [loading]="loading"
+    [showManage]="false"
+    [showFilter]="true"
+    [showExcel]="false"
+    [queryFunction]="queryFIN34040ForReport"
+    [lastQueryBody]="lastQueryBody"
+    [showDelete]="false"
+    [showReportMode]="false"
+    [showCheckBox]="false"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+  >
+    <header>
+      <div class="flex justify-content-end gap-2">
+        <p-button
+          styleClass="p-2"
+          label="匯出 Excel"
+          icon="pi pi-file-excel"
+          [loading]="btnExportExcelLoading"
+          (click)="downloadFIN34040Excel()"
+          [disabled]="data.length === 0"
+        ></p-button>
+
+        <p-button
+          styleClass="p-2"
+          label="匯出 PDF"
+          icon="pi pi-file-pdf"
+          [loading]="btnExportPdfLoading"
+          (click)="downloadFIN34040PDF()"
+          [disabled]="data.length === 0"
+        ></p-button>
+      </div>
+    </header>
+  </app-table-report>
 </div>
