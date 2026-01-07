@@ -357,6 +357,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.handleSubmit(this.dataForm, () => {
       const { VouNo, ...d } = this.dataForm.getRawValue();
 
+      if (this.tableData().length === 0) {
+        this.messageService.errorBubble('明細至少要有一筆');
+        this.loading = false
+        return;
+      }
+
       // 將 VoucherType 的 label 轉換回 value
       const voucherTypeLabel = d.VoucherType;
       const voucherTypeValue = this.service.voucherTypeOptions().find(opt => opt.label === voucherTypeLabel)?.value
