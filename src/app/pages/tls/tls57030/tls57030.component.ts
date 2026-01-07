@@ -7,6 +7,7 @@ import { IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/t
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatAmount } from '@shared/componentkit/table/table.model';
@@ -38,7 +39,8 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     TranslateModule,
     TableReportComponent,
     AsyncPipe,
-    DropdownTableComponent
+    DropdownTableComponent,
+    RadiobuttonComponent
   ],
 })
 export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> implements OnInit {
