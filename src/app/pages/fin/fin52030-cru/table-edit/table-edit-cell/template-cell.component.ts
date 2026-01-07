@@ -18,7 +18,7 @@ import { CellInput } from './table-edit-cell.model';
              (click)="overlayPanel.show($event)" />
       </div>
       <p-overlayPanel #overlayPanel>
-      <ng-container *ngTemplateOutlet="cellInput.col.templateRef !; context: { $implicit: cellInput.rowData, col: cellInput.col, overlayPanel }"></ng-container>
+      <ng-container *ngTemplateOutlet="cellInput.col.templateRef !; context: { $implicit: cellInput.rowData, col: cellInput.col, overlayPanel, index: cellInput.index, onValueChange: cellInput.onValueChange }"></ng-container>
     </p-overlayPanel>
     `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,6 +46,8 @@ export class TemplateCellComponent {
   public templateDisplayValue(rowData: any, col: EditColumn): string {
     // 邏輯直接從 TableEditComponent 搬過來
     const displayField = col.templateDisplayField;
-    return displayField ? rowData[displayField] : rowData[col.field] || '';
+    const raw = displayField ? rowData?.[displayField] : rowData?.[col.field];
+    // ✅ 永遠回傳字串，避免 value=undefined/null 造成 placeholder/顯示異常
+    return raw === null || raw === undefined ? '' : String(raw);
   }
 }

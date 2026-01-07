@@ -177,6 +177,12 @@ export class FIN52030Service {
     //   finalize(() => this.logger.debug('查詢TblUserOrgidOptions結果:', [this.usrOptions()])),
     // ).subscribe();
   }
+
+  // ---共用下拉---
+  // 建立/變更 人員 下拉選單
+  public queryTBLUSER_DropDownList(data: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryTBLUSER_DropDownList`, data);
+  }
 }
 
 type UserFavorite = {
