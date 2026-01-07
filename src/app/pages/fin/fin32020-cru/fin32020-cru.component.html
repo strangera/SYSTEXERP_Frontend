@@ -13,14 +13,14 @@
       <!-- 主檔欄位 -->
       <div class="grid p-fluid">
         <div class="col-12 md:col-12 lg:col-4">
-          <app-input-number
-            [useGrouping]="false"
+          <app-input-text
+            
             label="調整單號"
             controlName="adjust_ID"
             [control]="dataForm.controls.adjust_ID"
             [submitted]="submitted"
           >
-          </app-input-number>
+          </app-input-text>
         </div>
 
         <div class="col-12 md:col-12 lg:col-4">
@@ -100,12 +100,16 @@
     class="grid p-fluid mb-3"
   >
     <div class="col-12 md:col-4">
-      <app-input-text
-        label="廠客代號"
-        controlName="VEN_No"
-        [control]="arsSearchForm.controls.VEN_No"
-      >
-      </app-input-text>
+
+                <app-dropdown
+            label="廠客代號"
+            controlName="VEN_No"
+            [options]="VEN_No_Options | async"
+            optionLabel="label"
+            optionValue="value"
+            [control]="arsSearchForm.controls.VEN_No"
+            [submitted]="submitted"
+          ></app-dropdown>
     </div>
 
     <div class="col-12 md:col-4">

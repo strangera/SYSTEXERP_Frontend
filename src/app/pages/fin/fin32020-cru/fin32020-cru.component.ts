@@ -42,6 +42,9 @@ import {
 // Dialog 元件
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-fin32020-cru',
@@ -53,14 +56,16 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
     PanelModule,
     FormsModule,
     ReactiveFormsModule,
-    InputNumberComponent,
+    // InputNumberComponent,
     CalendarComponent,
     InputTextComponent,
     ButtonComponent,
     TranslateModule,
     Table2Component,          // ⭐ 這裡換成 Table2
     DialogComponent,
+     DropdownComponent,
     CalendarRangeComponent,
+    AsyncPipe,
     FIN32020TableEditComponent,
   ],
 })
@@ -143,6 +148,7 @@ export class FIN32020CRUComponent
   arsLoading = false;
   arsList: Fin32020ARSRow[] = [];
   arsSelectedRows: Fin32020ARSRow[] = [];
+  VEN_No_Options = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商代號
   arsColumns: Column[] = [
     { field: 'ARS_No', header: '應收帳款單號' },
     { field: 'VEN_No', header: '廠客代號' },
@@ -177,7 +183,7 @@ export class FIN32020CRUComponent
   @ViewChild(FIN32020TableEditComponent)
   detailTableEdit!: FIN32020TableEditComponent;
 
-  constructor(private fin32020Service: FIN32020Service) {
+  constructor(private fin32020Service: FIN32020Service,private readonly dropDown: DropdownApiService,) {
     super();
   }
 
