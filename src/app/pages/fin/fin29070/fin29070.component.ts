@@ -42,8 +42,8 @@ export class FIN29070Component extends BasicQueryPageComponent<FIN29070Data> imp
   }
 
   queryForm = this.formBuilder.group({
-    VEN_No_From: [null, Validators.required],                       // 廠商代號(起)
-    VEN_No_To: [null, Validators.required],                         // 廠商代號(迄)
+    VEN_No_From: [null, Validators.required],                       // 廠商編號(起)
+    VEN_No_To: [null, Validators.required],                         // 廠商編號(迄)
     ODM_Date_From: [null, Validators.required], // 立帳日期(起) - 必填
     ODM_Date_To: [null, Validators.required],   // 立帳日期(迄) - 必填
     ...createPaginationConfig([{ field: 'VendorNo', order: 1 }])
@@ -57,7 +57,7 @@ export class FIN29070Component extends BasicQueryPageComponent<FIN29070Data> imp
   vendorOptions: any[] = [];
 
   columns: Column[] = [
-    { field: 'VendorNo', header: '廠商代號', visible: true },
+    { field: 'VendorNo', header: '廠商編號', visible: true },
     { field: 'PostingDate', header: '立帳日期', visible: true, format: formatDate },
     { field: 'APAccountNo', header: '應付科目', visible: true },
     { field: 'VoucherNo', header: '對應傳票號碼', visible: true },

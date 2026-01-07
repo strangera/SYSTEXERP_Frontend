@@ -60,7 +60,7 @@ import { columnGroup } from './tls52050-cru.model';
 export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     MAM_No: [{ value: '系統自動產生', disabled: true }], // 變價單號
-    VEN_No: [null, [Validators.required]], // 廠商代號
+    VEN_No: [null, [Validators.required]], // 廠商編號
     LOGO_No: [null, [Validators.required]], // 品牌代碼
     MAM_Method: ['H'], // 是否為永久變價
     MAM_BegDate: [tomorrow, [Validators.required, this.validationService.timeGreaterThanValidator(new Date())]], // 生效起始日期

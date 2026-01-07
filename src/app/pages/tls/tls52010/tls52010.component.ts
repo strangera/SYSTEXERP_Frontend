@@ -81,7 +81,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
   ];
   columns: Column[] = [
     { field: 'PO_No', header: '採購單號', visible: true }, // 採購單號
-    { field: 'VEN_No', header: '廠商編號', visible: true }, // 廠商代號
+    { field: 'VEN_No', header: '廠商編號', visible: true }, // 廠商編號
     { field: 'VEN_Name', header: '廠商名稱', visible: true }, // 廠商名稱
     { field: 'LOGO_No', header: '品牌代碼', visible: true }, // 品牌代碼
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true }, // 品牌名稱
@@ -196,36 +196,9 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
         PLU_OrgPLUNo: item.PLU_OrgPLUNo,
         PLU_No: item.PLU_NO
       }));
-      this.exportLabelService.ExportLabel(transformedData).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(
-        (exportHttpResponse: HttpResponse<Blob>) => {
-          if (exportHttpResponse.ok && exportHttpResponse.body) {
-            const blob = exportHttpResponse.body;
-            const contentDisposition = exportHttpResponse.headers.get('content-disposition');
-            let filename = `label_data_${rowData.PO_No}.txt`; // 預設檔名
-            if (contentDisposition) {
-              const filenameMatch = contentDisposition.match(/filename\*?=['"]?(?:UTF-8''|)([^;"]+)/i);
-              if (filenameMatch && filenameMatch[1]) {
-                // 解碼 URL 編碼的檔名，如果有的話 (例如 UTF-8''PLU_20250701.txt)
-                try {
-                  filename = decodeURIComponent(filenameMatch[1]);
-                } catch (e) {
-                  filename = filenameMatch[1]; // 解碼失敗則用原始值
-                  console.error(e);
-                }
-              }
-            }
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename; // 使用從 Header 獲取的檔名
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-            this.messageService.successBubble('標籤檔案已成功下載！');
-          }
-        }
-      );
+      this.exportLabelService.ExportLabel(transformedData).pipe(untilDestroyed(this), finalize(() => { this.btnLoading = false; this.selectedItems = []; })).subscribe(() => {
+        this.messageService.successBubble('標籤檔案已成功下載！');
+      });
     });
   }
 

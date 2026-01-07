@@ -34,9 +34,9 @@ export class TLS55050Component extends BasicQueryPageComponent<Tls55050Data> imp
   totalRecords = 0;
   columns: ReportColumn[] = [
     { field: 'ACP_YYYYMM', header: '結帳年月' },
-    { field: 'VEN_No', header: '廠商代號' },
+    { field: 'VEN_No', header: '廠商編號' },
     { field: 'VEN_Name', header: '廠商名稱' },
-    { field: 'LOGO_CH_NAME', header: '品牌中文名稱' },
+    { field: 'LOGO_CH_NAME', header: '品牌名稱' },
     { field: 'OTA_Status', header: '狀態' },
     { field: 'TotalCount', header: '總筆數' },
   ];

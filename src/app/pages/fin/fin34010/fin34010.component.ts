@@ -15,17 +15,17 @@ import { ButtonModule } from 'primeng/button';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 // Service & 型別
 import {
-  Fin34010Service,
   ApiResponse,
-  Fin34010Row,
   Fin34010Request,
+  Fin34010Row,
+  Fin34010Service,
 } from '../../../service/api/fin/fin34010.service';
 
 // until-destroy
@@ -121,7 +121,7 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
 
   /* ----------------- 表單 ----------------- */
   queryForm = this.formBuilder.group({
-    VEN_No: [null as string | null], // 客戶/廠商代號
+    VEN_No: [null as string | null], // 客戶/廠商編號
     AccNo: [null as string | null],  // 科目代號
 
     ARSDateFrom: [null as Date | null],
@@ -228,7 +228,7 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
   private buildFooterFromSummary(summary: any | null | undefined): any {
     if (!summary) return undefined;
     return {
-      
+
       ARS_Amt: summary.SumARS_Amt ?? 0,
       REC_Amt: summary.SumREC_Amt ?? 0,
       ADJ_Amt: summary.SumADJ_Amt ?? 0,

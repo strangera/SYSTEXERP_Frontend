@@ -61,7 +61,7 @@ export class FIN23070Component extends BasicQpageComponent implements OnInit {
     { field: 'col2', header: '預支金額', visible: true },
     { field: 'col3', header: '申請日期', visible: true },
     { field: 'col4', header: '預計核銷日', visible: true },
-    { field: 'col5', header: '廠商代號', visible: true },
+    { field: 'col5', header: '廠商編號', visible: true },
     { field: 'col6', header: '付款方式', visible: true },
     { field: 'col7', header: '匯款銀行代號', visible: true },
     { field: 'col8', header: '銀行帳號', visible: true },
