@@ -6,15 +6,15 @@ import { environment } from 'src/environments/environment';
 
 // 查詢 Request
 export interface FIN29070QueryRequest extends BaseQueryRequest {
-  VEN_No_From: string;           // 廠商代號(起)
-  VEN_No_To: string;             // 廠商代號(迄)
+  VEN_No_From: string;           // 廠商編號(起)
+  VEN_No_To: string;             // 廠商編號(迄)
   ODM_Date_From: string;          // 立帳日期(起) - 必填
   ODM_Date_To: string;            // 立帳日期(迄) - 必填
 }
 
 // 明細 Row
 export interface FIN29070Data {
-  VendorNo: string | null;        // 廠商代號
+  VendorNo: string | null;        // 廠商編號
   PostingDate: string | null;     // 立帳日期
   APAccountNo: string | null;     // 應付科目
   VoucherNo: string | null;       // 對應傳票號碼

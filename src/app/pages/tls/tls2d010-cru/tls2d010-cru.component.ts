@@ -243,19 +243,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
   ngOnInit(): void {
     this.dataFormNormal.get('tpy_date')?.valueChanges.subscribe((date: any) => {
-      if (this.currentCreateType === 'normal') {
-        let mainRowSet = false;
-        this.data.forEach(row => {
-          if (!mainRowSet && (row.status === 'modified' || !row.status)) {
-            row.tpy_date = date ?? row.tpy_date;
-            mainRowSet = true;
-          }
-          if (row.status === 'new' || row._isAutoInsertCandidate) {
-            row.tpy_date = date ?? null;
-          }
-        });
-        this.data = Array.isArray(this.data) ? [...this.data] : this.data;
-      }
+      this.syncNormalTpyDateToRows(date);
     });
 
     this.dataFormNormal.get('tpy_net')?.valueChanges.subscribe((amount: any) => {
@@ -527,13 +515,19 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             }
           ]
         },
-        // 明確指定 optionLabel/optionValue，讓 p-dropdown 與 row value 的比對一致
-        { field: 'CAP_Type', header: '扣款類型', type: 'dropdown', width: '10rem', options: this.CAP_TypeOptions, optionLabel: 'label', optionValue: 'value' },
         {
-          field: 'CAP_Item', header: '扣款項目', type: 'dropdown', width: '10rem', optionLabel: 'label', optionValue: 'value', options: (row: any) => {
-            return this.CAP_ItemOptions
-              .filter(item => item.CAP_Type === row.CAP_Type)
-              .map(item => ({ value: item.CAP_Item, label: `${item.CAP_Item}-${item.CAP_Name}`, data: item }));
+          field: 'CAP_Item',
+          header: '扣款項目',
+          type: 'dropdown',
+          width: '16rem',
+          optionLabel: 'label',
+          optionValue: 'value',
+          options: () => {
+            return this.CAP_ItemOptions.map(item => ({
+              value: item.CAP_Item,
+              label: `${String(item.CAP_Item ?? '').trim()}-${item.CAP_Name ?? ''}`,
+              data: item
+            }));
           }
         },
         {
@@ -640,6 +634,9 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         if (found) normalizedFormTlt = found;
       }
 
+      // 目前上方表單選擇的扣款日期，讓新/空白明細自動帶入
+      const formTpyDate = this.dataFormNormal.get('tpy_date')?.value ?? null;
+
       this.data.forEach(row => {
         const isNewCandidate = row.status === 'new' || row._isAutoInsertCandidate;
         const hasNoOrg = row.org_id === null || row.org_id === undefined || row.org_id === '';
@@ -669,6 +666,12 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             }
           }
         }
+
+        // 若該列尚未有扣款日期，且表單已有選擇日期，則自動帶入
+        const hasNoDate = !row.tpy_date;
+        if (formTpyDate && hasNoDate) {
+          row.tpy_date = formTpyDate;
+        }
       });
       // 讓 table-edit 感知資料變更，立即更新 UI
       this.data = Array.isArray(this.data) ? [...this.data] : this.data;
@@ -690,6 +693,36 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       console.warn('updateTotalCash error', e);
     }
   }
+
+  /** normal 模式：將表單上的扣款日期同步到下方明細列的 tpy_date，並立即更新畫面 */
+  private syncNormalTpyDateToRows(date: any): void {
+    if (this.currentCreateType !== 'normal') return;
+    if (!Array.isArray(this.data)) return;
+
+    // 需求：上方日期一變更，所有明細列的扣款日期都要即時改成同一天
+    this.data.forEach(row => {
+      row.tpy_date = date ?? null;
+    });
+
+    // 更新父元件的 data 參考，讓 Input 變化被偵測
+    this.data = [...this.data];
+
+    // 額外：主動觸發 table-edit 的 dataChange 流程，
+    // 等同於使用者在 table 內異動資料，確保畫面立即刷新
+    if (this.normalTable) {
+      this.normalTable.dataChange.emit(this.data.filter(r => !r._isAutoInsertCandidate));
+    }
+  }
+
+  /** normal 模式：上方表單扣款日期變更事件（直接由 template 綁定） */
+  onNormalFormDateChange(date: any): void {
+    const ctrl = this.dataFormNormal.get('tpy_date');
+    if (ctrl) {
+      // 避免再觸發一次 valueChanges，這裡不發出事件
+      ctrl.setValue(date, { emitEvent: false });
+    }
+    this.syncNormalTpyDateToRows(date);
+  }
   onCounterCAPItemChange(row: any, value: any, field?: string) {
 
     if (field === 'CAP_Item' || !field) {
@@ -700,11 +733,9 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       }
       compareValue = compareValue != null ? String(compareValue).trim() : null;
 
-      const candidates = this.CAP_ItemOptions.filter(
-        it => !row.CAP_Type || it.CAP_Type === row.CAP_Type
-      );
-
-      const match = candidates.find(it => String(it.CAP_Item).trim() === compareValue);
+      // 這裡不再依照 CAP_Type 過濾，直接用 CAP_Item 對應，
+      // 以確保選擇扣款項目時一定能帶出正確的會計科目等資訊
+      const match = this.CAP_ItemOptions.find(it => String(it.CAP_Item).trim() === compareValue);
 
       if (match) {
         // 關鍵修正：後端 AccNo 去空白（trim）
@@ -733,6 +764,21 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     }
     return String(field);
   }
+
+  /** 依 CAP_Item 取得對應的 CAP_Name（從後端下拉資料中找） */
+  private getCAPNameByItem(capItem: any): string | null {
+    if (capItem == null || capItem === '') return null;
+    let code: string | null = null;
+    if (typeof capItem === 'object') {
+      code = capItem.value ?? capItem.CAP_Item ?? null;
+    } else {
+      code = String(capItem);
+    }
+    if (!code) return null;
+    const found = this.CAP_ItemOptions.find(it => String(it.CAP_Item).trim() === String(code).trim());
+    return found?.CAP_Name ?? null;
+  }
+
   private buildTltInfo(selectedTltNo: any, podNo: any) {
     console.log('>>> buildTltInfo input selectedTltNo:', selectedTltNo);
 
@@ -831,6 +877,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           tpy_date: mainRow?.tpy_date ? formatDate(mainRow.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
           CAP_Type: mainRow?.CAP_Type || '',
           CAP_Item: mainRow?.CAP_Item || '',
+          CAP_Name: this.getCAPNameByItem(mainRow?.CAP_Item) || null,
           org_id: this.normalizeValue(mainRow?.org_id),
           AccNo: this.normalizeValue(mainRow?.AccNo),
           GUI_FLAG: mainRow?.GUI_FLAG || '',
@@ -850,6 +897,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           tpy_date: mainRow?.tpy_date ? formatDate(mainRow.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
           CAP_Type: mainRow?.CAP_Type || normalValue.CAP_Type || '',
           CAP_Item: mainRow?.CAP_Item || normalValue.CAP_Item || '',
+          CAP_Name: this.getCAPNameByItem(mainRow?.CAP_Item || normalValue.CAP_Item) || null,
           org_id: this.normalizeValue(mainRow?.org_id || normalValue.org_id),
           AccNo: this.normalizeValue(mainRow?.AccNo || normalValue.AccNo),
           GUI_FLAG: mainRow?.GUI_FLAG || normalValue.GUI_FLAG || '',
@@ -880,6 +928,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             tpy_date: i.tpy_date ? formatDate(i.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
             CAP_Type: i.CAP_Type || '',
             CAP_Item: i.CAP_Item || '',
+            CAP_Name: this.getCAPNameByItem(i.CAP_Item) || null,
             org_id: this.normalizeValue(i.org_id),
             AccNo: this.normalizeValue(i.AccNo),
             GUI_FLAG: i.GUI_FLAG || '',
@@ -905,6 +954,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             tpy_date: i.tpy_date ? formatDate(i.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
             CAP_Type: i.CAP_Type || normalValue.CAP_Type || '',
             CAP_Item: i.CAP_Item || normalValue.CAP_Item || '',
+            CAP_Name: this.getCAPNameByItem(i.CAP_Item || normalValue.CAP_Item) || null,
             org_id: this.normalizeValue(i.org_id || normalValue.org_id),
             AccNo: this.normalizeValue(i.AccNo || normalValue.AccNo),
             GUI_FLAG: i.GUI_FLAG || normalValue.GUI_FLAG || '',

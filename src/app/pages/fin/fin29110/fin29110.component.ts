@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { HttpResponse } from '@angular/common/http';
 import { ChangeDetectorRef, Component } from '@angular/core';
 import {
   FormGroup,
@@ -6,7 +7,6 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { HttpResponse } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 
 import { CommonModule } from '@angular/common';
@@ -20,28 +20,27 @@ import {
 
 // UI
 import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonModule } from 'primeng/button';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 // Service & 型別
 import {
-  Fin29110Service,
-  Fin29110Row,
-  Fin29110Request,
-  Fin29110DetailRow,
-  Fin29110DetailRequest,
   ApiResponse,
+  Fin29110DetailRequest,
+  Fin29110DetailRow,
+  Fin29110Request,
+  Fin29110Row,
+  Fin29110Service,
 } from '../../../service/api/fin/fin29110.service';
 
 // 排序欄位型別
@@ -105,7 +104,7 @@ export class FIN29110Component extends BasicQueryPageComponent<any> {
   /* ----------------- 欄位定義 ----------------- */
   // 主表欄位
   columns: ReportColumn[] = [
-    { field: 'VendorNo', header: '廠商代號' },
+    { field: 'VendorNo', header: '廠商編號' },
     // { field: 'VendorName', header: '廠商名稱' },
 
     { field: 'Overdue_Over301Days', header: '已到期(≧301天)', format: this.moneyFormat.bind(this) },
@@ -137,7 +136,7 @@ export class FIN29110Component extends BasicQueryPageComponent<any> {
     { field: 'ACP_BalanceAmt', header: '應付帳款餘額', format: this.moneyFormat.bind(this) },
     { field: 'ACP_Date', header: '立帳日期', format: (v: string) => this.formatDate(v) },
     { field: 'ACP_ExpectPayDate', header: '預計付款日', format: (v: string) => this.formatDate(v) },
-    { field: 'VEN_No', header: '廠商代號' },
+    { field: 'VEN_No', header: '廠商編號' },
     { field: 'VEN_Name', header: '廠商名稱' },
     { field: 'VEN_Uniform', header: '統一編號' },
     { field: 'AccNo', header: '會計科目代號' },
@@ -147,7 +146,7 @@ export class FIN29110Component extends BasicQueryPageComponent<any> {
     { field: 'AgeDays', header: '帳齡天數' },
   ];
 
-  // 預設排序：以廠商代號
+  // 預設排序：以廠商編號
   readonly defaultSort: SortItem[] = [{ field: 'VendorNo', order: 1 }];
 
   /* ----------------- 下拉選項 ----------------- */
@@ -181,7 +180,7 @@ export class FIN29110Component extends BasicQueryPageComponent<any> {
     // 分析日期別（立帳日 / 預計付款日）
     DateType: ['E' as string, [Validators.required]],
 
-    // 廠商代號 起迄
+    // 廠商編號 起迄
     VEN_No_From: [null as string | null],
     VEN_No_To: [null as string | null],
 
@@ -266,60 +265,60 @@ export class FIN29110Component extends BasicQueryPageComponent<any> {
   }
 
   /** 將畫面上的值整理成後端需要的 Fin29110Request */
- private buildPayload(base: any): Fin29110Request {
-  const { bucketDays, periods } = this.parsePeriodInput(
-    base?.PeriodsInput ?? this.queryForm.get('PeriodsInput')?.value
-  );
+  private buildPayload(base: any): Fin29110Request {
+    const { bucketDays, periods } = this.parsePeriodInput(
+      base?.PeriodsInput ?? this.queryForm.get('PeriodsInput')?.value
+    );
 
-  const pageIndex =
-    Number.isFinite(base?.pageIndex) && base.pageIndex >= 1
-      ? base.pageIndex
-      : 1;
-  const pageSize =
-    Number.isFinite(base?.pageSize) && base.pageSize > 0
-      ? base.pageSize
-      : 30;
+    const pageIndex =
+      Number.isFinite(base?.pageIndex) && base.pageIndex >= 1
+        ? base.pageIndex
+        : 1;
+    const pageSize =
+      Number.isFinite(base?.pageSize) && base.pageSize > 0
+        ? base.pageSize
+        : 30;
 
-  const sort = this.normalizeSort(base?.SortBy, this.defaultSort);
+    const sort = this.normalizeSort(base?.SortBy, this.defaultSort);
 
-  // 產 OrderBy 字串，例如：VendorNo ASC, SumAmount DESC
-  const orderBy =
-    sort && sort.length
-      ? sort
+    // 產 OrderBy 字串，例如：VendorNo ASC, SumAmount DESC
+    const orderBy =
+      sort && sort.length
+        ? sort
           .map((s) => {
             const dir = s.order === -1 ? 'DESC' : 'ASC';
             return `${s.field} ${dir}`;
           })
           .join(', ')
-      : null;
+        : null;
 
-  const payload: Fin29110Request = {
-    PageIndex: pageIndex,
-    PageSize: pageSize,
-    SortBy: sort,
+    const payload: Fin29110Request = {
+      PageIndex: pageIndex,
+      PageSize: pageSize,
+      SortBy: sort,
 
-    OrderBy: orderBy,
-    Offset: (pageIndex - 1) * pageSize,
+      OrderBy: orderBy,
+      Offset: (pageIndex - 1) * pageSize,
 
-    AnalysisDate: this.toYMDOrUndef(base?.AnalysisDate),
-    BucketDays: bucketDays,
-    Periods: periods,
-    DateType: base?.DateType || 'E',
-    PayDate: this.toYMDOrUndef(base?.PayDate),
-    DueFlag: base?.DueFlag || 'A',
-    RefDateFrom: this.toYMDOrUndef(base?.RefDateFrom),
-    RefDateTo: this.toYMDOrUndef(base?.RefDateTo),
-    VEN_No_From: base?.VEN_No_From || undefined,
-    VEN_No_To: base?.VEN_No_To || undefined,
-  };
+      AnalysisDate: this.toYMDOrUndef(base?.AnalysisDate),
+      BucketDays: bucketDays,
+      Periods: periods,
+      DateType: base?.DateType || 'E',
+      PayDate: this.toYMDOrUndef(base?.PayDate),
+      DueFlag: base?.DueFlag || 'A',
+      RefDateFrom: this.toYMDOrUndef(base?.RefDateFrom),
+      RefDateTo: this.toYMDOrUndef(base?.RefDateTo),
+      VEN_No_From: base?.VEN_No_From || undefined,
+      VEN_No_To: base?.VEN_No_To || undefined,
+    };
 
-  Object.keys(payload).forEach((k) => {
-    const v = (payload as any)[k];
-    if (v === '' || v == null) delete (payload as any)[k];
-  });
+    Object.keys(payload).forEach((k) => {
+      const v = (payload as any)[k];
+      if (v === '' || v == null) delete (payload as any)[k];
+    });
 
-  return payload;
-}
+    return payload;
+  }
 
   /** 匯出用：沿用查詢條件，但移除 PageIndex/PageSize */
   private buildExportPayload(): Fin29110Request {
@@ -331,51 +330,51 @@ export class FIN29110Component extends BasicQueryPageComponent<any> {
   }
 
   /** 明細查詢 payload：從 dialogContext + body (pageIndex/pageSize/SortBy) 組出 */
-private buildDetailPayload(body: any): Fin29110DetailRequest {
-  if (!this.dialogContext) {
-    throw new Error('DetailContext is not set.');
-  }
+  private buildDetailPayload(body: any): Fin29110DetailRequest {
+    if (!this.dialogContext) {
+      throw new Error('DetailContext is not set.');
+    }
 
-  const ctx = this.dialogContext;
+    const ctx = this.dialogContext;
 
-  const pageIndex =
-    Number.isFinite(body?.pageIndex) && body.pageIndex >= 1
-      ? body.pageIndex
-      : 1;
-  const pageSize =
-    Number.isFinite(body?.pageSize) && body.pageSize > 0
-      ? body.pageSize
-      : 30;
+    const pageIndex =
+      Number.isFinite(body?.pageIndex) && body.pageIndex >= 1
+        ? body.pageIndex
+        : 1;
+    const pageSize =
+      Number.isFinite(body?.pageSize) && body.pageSize > 0
+        ? body.pageSize
+        : 30;
 
-  const sort = this.normalizeSort(body?.SortBy, [
-    { field: 'ACP_Date', order: -1 },
-  ]);
+    const sort = this.normalizeSort(body?.SortBy, [
+      { field: 'ACP_Date', order: -1 },
+    ]);
 
-  const orderBy =
-    sort && sort.length
-      ? sort
+    const orderBy =
+      sort && sort.length
+        ? sort
           .map((s) => `${s.field} ${s.order === -1 ? 'DESC' : 'ASC'}`)
           .join(', ')
-      : null;
+        : null;
 
-  const payload: Fin29110DetailRequest = {
-    PageIndex: pageIndex,
-    PageSize: pageSize,
-    SortBy: sort,
-    OrderBy: orderBy,
-    Offset: (pageIndex - 1) * pageSize,
+    const payload: Fin29110DetailRequest = {
+      PageIndex: pageIndex,
+      PageSize: pageSize,
+      SortBy: sort,
+      OrderBy: orderBy,
+      Offset: (pageIndex - 1) * pageSize,
 
-    AnalysisDate: ctx.AnalysisDate,
-    BucketDays: ctx.BucketDays,
-    DateType: ctx.DateType,
-    PayDate: ctx.PayDate,
-    Side: ctx.Side,
-    BucketN: ctx.BucketN,
-    VEN_No: ctx.VEN_No,
-  };
+      AnalysisDate: ctx.AnalysisDate,
+      BucketDays: ctx.BucketDays,
+      DateType: ctx.DateType,
+      PayDate: ctx.PayDate,
+      Side: ctx.Side,
+      BucketN: ctx.BucketN,
+      VEN_No: ctx.VEN_No,
+    };
 
-  return payload;
-}
+    return payload;
+  }
 
   private getFilenameFromResponse(
     res: HttpResponse<Blob>,
@@ -405,45 +404,21 @@ private buildDetailPayload(body: any): Fin29110DetailRequest {
   }
 
   /* ----------------- 給 <app-table-report> 用的查詢函式（主表） ----------------- */
-public queryFIN29110ForReport = (body: any) =>
-  this.fin29110Service.queryFIN29110(this.buildPayload(body || {})).pipe(
-    map((res: ApiResponse<Fin29110Row[] | Fin29110Row>) => {
-      const src = res?.Data as any;
-      const rows: Fin29110Row[] = Array.isArray(src)
-        ? src
-        : src
-        ? [src]
-        : [];
-
-      const totalCount =
-        Number((res as any)?.TotalCount ?? rows.length) || rows.length;
-
-      rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
-
-      return {
-        Data: rows,
-        TotalCount: totalCount,
-        GrandTotal: null,
-      };
-    })
-  );
-
-
-  /* ----------------- 給 Dialog <app-table-report> 用的查詢函式（明細） ----------------- */
-public queryFIN29110DetailForReport = (body: any) =>
-  this.fin29110Service
-    .queryFIN29110Detail(this.buildDetailPayload(body || {}))
-    .pipe(
-      map((res: ApiResponse<Fin29110DetailRow[] | Fin29110DetailRow>) => {
+  public queryFIN29110ForReport = (body: any) =>
+    this.fin29110Service.queryFIN29110(this.buildPayload(body || {})).pipe(
+      map((res: ApiResponse<Fin29110Row[] | Fin29110Row>) => {
         const src = res?.Data as any;
-        const rows: Fin29110DetailRow[] = Array.isArray(src)
+        const rows: Fin29110Row[] = Array.isArray(src)
           ? src
           : src
-          ? [src]
-          : [];
+            ? [src]
+            : [];
+
         const totalCount =
           Number((res as any)?.TotalCount ?? rows.length) || rows.length;
+
         rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
+
         return {
           Data: rows,
           TotalCount: totalCount,
@@ -451,6 +426,30 @@ public queryFIN29110DetailForReport = (body: any) =>
         };
       })
     );
+
+
+  /* ----------------- 給 Dialog <app-table-report> 用的查詢函式（明細） ----------------- */
+  public queryFIN29110DetailForReport = (body: any) =>
+    this.fin29110Service
+      .queryFIN29110Detail(this.buildDetailPayload(body || {}))
+      .pipe(
+        map((res: ApiResponse<Fin29110DetailRow[] | Fin29110DetailRow>) => {
+          const src = res?.Data as any;
+          const rows: Fin29110DetailRow[] = Array.isArray(src)
+            ? src
+            : src
+              ? [src]
+              : [];
+          const totalCount =
+            Number((res as any)?.TotalCount ?? rows.length) || rows.length;
+          rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
+          return {
+            Data: rows,
+            TotalCount: totalCount,
+            GrandTotal: null,
+          };
+        })
+      );
 
 
   /* ----------------- Init ----------------- */
@@ -659,7 +658,7 @@ public queryFIN29110DetailForReport = (body: any) =>
       });
   }
 
-onDialogClose(visible: boolean) {
+  onDialogClose(visible: boolean) {
     this.dialogVisible = visible;
   }
 
@@ -678,6 +677,6 @@ onDialogClose(visible: boolean) {
 
 
 
-  
+
 
 }

@@ -20,7 +20,7 @@ export interface FIN29020Data {
   STO_No: string | null;                    // 分店編號
   PAM_No: string | null;                    // 匯款單號
   RMT_Date: string | null;                  // 匯款日期
-  VEN_No: string | null;                    // 廠商代號
+  VEN_No: string | null;                    // 廠商編號
   VEN_Name: string | null;                  // 廠商名稱
   CompanyBNK_No: string | null;             // 匯款銀行代號
   CompanyBNK_Name: string | null;           // 匯款銀行名稱

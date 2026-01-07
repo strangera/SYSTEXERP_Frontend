@@ -6,8 +6,8 @@ import { environment } from 'src/environments/environment';
 
 // 查詢請求介面
 export interface QueryFIN29050Request extends BaseQueryRequest {
-  VEN_No_From?: string;      // 廠商代號(起)
-  VEN_No_To?: string;        // 廠商代號(迄)
+  VEN_No_From?: string;      // 廠商編號(起)
+  VEN_No_To?: string;        // 廠商編號(迄)
   ACP_Date_From: string;     // 立帳日期(起) 必填
   ACP_Date_To: string;       // 立帳日期(迄) 必填
   ACP_Amt_From?: number;     // 應付金額(起)

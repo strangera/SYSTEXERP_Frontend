@@ -69,7 +69,7 @@ export class FIN34040Component extends BasicQpageComponent implements OnInit {
   ];
   filteredData: any[] = [...this.data];
   columns: any[] = [
-    { field: 'vendorCode', header: '廠商代號', visible: true },
+    { field: 'vendorCode', header: '廠商編號', visible: true },
     { field: 'vendorName', header: '廠商名稱', visible: true },
     { field: 'expiredOneDayPlus', header: '已到期 1天以上', visible: true },
     { field: 'expiredSeptOnePlus', header: '未到期 1天以上', visible: true },

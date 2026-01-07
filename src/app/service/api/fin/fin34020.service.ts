@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 
 export type SortItem = { field: string; order: number };
 
@@ -13,7 +13,7 @@ export interface QueryFIN34020Request {
   PageIndex?: number | null;
   SortBy?: SortItem[] | null;
 
-  /** 廠商代號(起/迄) */
+  /** 廠商編號(起/迄) */
   VEN_No_From?: string | null;
   VEN_No_To?: string | null;
 
@@ -78,7 +78,7 @@ export class Fin34020Service {
   /** ✅ /FIN0000/ARS1000 */
   private apiUrl = `${environment.ApiUrl}/FIN0000/ARS1000`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   queryFIN34020(body: QueryFIN34020Request): Observable<ApiResponse<QueryFIN34020Row[]>> {
     return this.http.post<ApiResponse<QueryFIN34020Row[]>>(

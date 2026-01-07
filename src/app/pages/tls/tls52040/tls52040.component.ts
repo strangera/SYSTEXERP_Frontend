@@ -59,7 +59,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
     RJM_No: [null, [Validators.maxLength(16)]], // 驗收編號
     LOGO_NoList: [null], // 品牌代碼
     HOS_NoList: [null], // 倉庫代碼
-    VEN_No: [null], // 廠商代號
+    VEN_No: [null], // 廠商編號
     queryNo: [null, [Validators.maxLength(20)]], // 管理編號
     RJM_StatusList: [null], // 驗收狀態
     APPLY_USR: [null], // 申請人員
@@ -82,7 +82,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
   selectedItems: ITLS52040Data[] = [];
   columns: Column[] = [
     { field: 'RJM_No', header: '退貨驗收編號', visible: true },
-    { field: 'VEN_No', header: '廠商編號', visible: true }, // 廠商代號
+    { field: 'VEN_No', header: '廠商編號', visible: true }, // 廠商編號
     { field: 'VEN_Name', header: '廠商名稱', visible: true }, // 廠商名稱
     { field: 'LOGO_No', header: '品牌代碼', visible: true }, // 品牌代碼
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true }, // 品牌名稱

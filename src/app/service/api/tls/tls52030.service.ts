@@ -10,7 +10,7 @@ export interface IQueryTLS52030Request {
   LOGO_No?: string; // 品牌代碼
   HOS_No?: string; // 倉庫代碼
   PLU_MagNo?: string; // 商品管理編號
-  VEN_No?: string; // 廠商代號
+  VEN_No?: string; // 廠商編號
   ODM_Status?: string; // 驗收狀態
   ODM_USR?: string; // 申請人員
   ODM_Date_Start?: string; // 申請日期起
@@ -26,7 +26,7 @@ export interface ITLS52030Data {
   id: number;
   ODM_No: string; // 驗收編號
   SYS_StoreNo: string; // 公司編號/店號
-  VEN_No: string; // 廠商代號
+  VEN_No: string; // 廠商編號
   LOGO_No: string; // 品牌代碼
   LOGO_CH_NAME: string; // LOGO中文名稱
   HOS_No: string; // 倉庫代碼
@@ -95,7 +95,7 @@ export interface ITLS52030Request {
   id?: number; // ID
   ODM_No?: string; // 進貨單號
   SYS_StoreNo: string; // 公司編號/店號
-  VEN_No: string; // 廠商代號
+  VEN_No: string; // 廠商編號
   // LOGO_No: string; // 品牌代碼
   HOS_No: string; // 倉庫代碼
   org_id: string | null; // 組織代碼/組織名稱
@@ -119,7 +119,7 @@ export interface ITLS52030Request {
 export interface IGetPOS2016Request {
   // LOGO_No?: string | null; // 品牌代碼
   HOS_No?: string | null; // 倉庫代碼
-  VEN_No?: string | null; // 廠商代號
+  VEN_No?: string | null; // 廠商編號
 }
 
 /** 取得採購單明細及驗收資料 (GetPOS2017AndPOS2019) 的請求介面 */

@@ -65,7 +65,7 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
     ORG_ID: [''],   // 部門代碼 GLS3001.ORG_ID
     AccNo_Start: [''], // 科目代號 GLS3003.ACCNO
     AccNo_End: [''],
-    DetailNo_Start: [''], // 廠商代號 GLS3001.DetailNo
+    DetailNo_Start: [''], // 廠商編號 GLS3001.DetailNo
     DetailNo_End: [''],
     PTA_Start: [''], // 立沖代號 GLS3003.PTA
     PTA_End: [''],

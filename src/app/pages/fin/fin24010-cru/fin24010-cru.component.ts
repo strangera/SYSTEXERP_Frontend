@@ -43,7 +43,7 @@ export class FIN24010CRUComponent extends BasicCruPageComponent<QueryFIN24010Res
   CTRLYNOptions = [{ label: '是', value: 'Y' }, { label: '否', value: 'N' }]; // 票據禁止背書轉讓 (Y/N)
   AccNoOptions = this.dropDown.queryGls1005(); // 會計科目代號
   SubDetailNoOptions = this.dropDown.queryGLS1016(); // 對象別編號
-  VEN_No_Options = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商代號
+  VEN_No_Options = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
 
   // 設定欄位狀態：根據 API 判斷，無法修改的欄位設為 disabled: true
   dataForm = this.formBuilder.nonNullable.group({
@@ -52,7 +52,7 @@ export class FIN24010CRUComponent extends BasicCruPageComponent<QueryFIN24010Res
     ACP_YYYYMM: [{ value: null, disabled: true }], // 應付帳款年月 (唯讀)
     acp_termno: [{ value: null, disabled: true }], // 帳款帳次 (唯讀)
     ACP_Date: [{ value: null, disabled: true }], // 立帳日期 (唯讀)
-    VEN_No: [{ value: null, disabled: true }], // 廠商代號 (唯讀)
+    VEN_No: [{ value: null, disabled: true }], // 廠商編號 (唯讀)
     VEN_Name: [{ value: null, disabled: true }], // 廠商名稱 (唯讀)
     VEN_Uniform: [{ value: null, disabled: true }], // 統一編號 (唯讀)
     AccNo: [{ value: null, disabled: true }], // 會計科目代號 (唯讀)

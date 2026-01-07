@@ -72,7 +72,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
   columns: any[] = [// 表格欄位定義
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    { field: 'VEN_No', header: '廠商代號', visible: true },
+    { field: 'VEN_No', header: '廠商編號', visible: true },
     { field: 'VEN_Name', header: '廠商名稱', visible: true },
     { field: 'ticket_type', header: '保證票型態', visible: true },
     { field: 'tlt_bdate', header: '合約起日', visible: true },

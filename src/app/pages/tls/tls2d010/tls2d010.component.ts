@@ -23,6 +23,7 @@ import { DropDownListService, IAPS1003Item, IDropdownItem } from './../../../ser
 
 import { FileExportService } from '@shared/service/file-export.service';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
+import { finalize } from 'rxjs';
 @Component({
   selector: 'app-tls2d010',
   templateUrl: './tls2d010.component.html',
@@ -221,10 +222,32 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
   setCounterType(row: any) {
     return { ...row, type: 'counter' };
   }
-  onDelete(event: any) {
-    const idList = event.map((item: any) => item.id);
-    this.tls2d010Service.deleteTLS2D010({ idList }).subscribe(() => {
-      this.onSubmit(this.queryForm);
+  onDelete(selectedItems: any[]): void {
+    if (!selectedItems || selectedItems.length === 0) {
+      alert('請先選擇要刪除的項目');
+      return;
+    }
+
+    const idList = selectedItems.map((item: any) => item.id);
+
+    this.messageService.confirm({
+      message: `確定要刪除 ${idList.length} 筆資料嗎？`,
+      header: '刪除確認',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        this.loading = true;
+        this.tls2d010Service.deleteTLS2D010({ idList })
+          .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+          .subscribe({
+            next: () => {
+              this.messageService.successBubble('刪除成功');
+              this.onSubmit(this.queryForm);
+            },
+          });
+      },
+      reject: () => {
+        // 使用者取消刪除，不做任何事
+      }
     });
   }
   btnLoading = false;

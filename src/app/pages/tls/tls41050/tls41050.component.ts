@@ -17,6 +17,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
@@ -68,6 +69,7 @@ export interface POS1002 {
     DropdownComponent,
     MultiSelectComponent,
     TableComponent,
+    TableReportComponent,
     TranslateModule,
     ButtonModule,
     NgStyle,
@@ -135,10 +137,13 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
   ];
 
   selectedItems: POS1002[] = [];// 多選項目
+  lastQueryBody: Record<string, unknown> | null = null; // 給 app-table-report 使用
+  // 提供給 app-table-report 的查詢函式
+  queryTLS41050ForReport = (body: Record<string, unknown>) => this.tls41050Service.queryTLS41050(body);
 
   // ----------------------------------------------------------------
   constructor(
-    private tls41050Service: Tls41050Service
+    public readonly tls41050Service: Tls41050Service
   ) {
     super();
   }
@@ -151,7 +156,11 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
   onSubmit(frm: FormGroup) {
     console.log('查詢條件', frm.value);
     this.handleSubmit(frm, () => {
-      this.tls41050Service.queryTLS41050(frm.value).pipe(untilDestroyed(this)).subscribe({
+      const body = frm.value;
+      // 儲存查詢條件給 app-table-report 使用
+      this.lastQueryBody = body;
+
+      this.tls41050Service.queryTLS41050(body).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
             this.data = response.Data || [];

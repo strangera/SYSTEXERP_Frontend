@@ -103,7 +103,7 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
   PayTypeOptions = [{ label: '電匯', value: '1' }, { label: '開票', value: '2' }, { label: '現金', value: '3' }] // 付款方式 1:電匯,2:開票,3:現金
   VEN_BNK_No_ParamOptions = this.dropDown.queryAps1001NoBranch(); // 匯款銀行代號
   CTRLYNOptions = [{ label: '是', value: 'Y' }, { label: '否', value: 'N' }]; // 票據禁止背書轉讓 (Y/N)
-  VEN_No_ParamOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商代號
+  VEN_No_ParamOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
   AccNo_ParamOptions = this.dropDown.queryGls1005(); // 會計科目代號
   VouStatusOptions = getSYS1000Options('VOU_Status'); // 傳票狀態
   ACP_Status_ParamOptions = getSYS1000Options('ACP_Status'); // 應付狀態

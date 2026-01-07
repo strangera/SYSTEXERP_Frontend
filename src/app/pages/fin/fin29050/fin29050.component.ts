@@ -51,7 +51,7 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
     ...createPaginationConfig([]),
   });
 
-  VendorNoOptions: any[] = []; // 廠商代號選項
+  VendorNoOptions: any[] = []; // 廠商編號選項
   AccNoOptions: any[] = []; // 科目代號選項
 
   data: FIN29050Data[] = [];
@@ -86,7 +86,7 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
   }
 
   private loadOptions(): void {
-    // 廠商代號
+    // 廠商編號
     this.dropDownListService.queryPOS2013_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe({

@@ -11,7 +11,7 @@ import { ErrorHandlerService } from 'src/app/core/services/error-handler.service
 const maxRetries = 0;
 // 注意：100000000ms 大約是 27.7 小時，在實際應用中可能過長，這裡保持您原設定。
 const retryDelayMs = 100000000;
-const timeoutMs = 300000; // 5 分鐘，保持您原設定
+const timeoutMs = 1800000;
 
 
 /**

@@ -95,28 +95,31 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
     bank: '中信' | '聯信'
   ): '關機' | '離線' | '交易中' {
     const edcKey = bank === '中信' ? 'EDC_Online1' : 'EDC_Online2';
+    const eosStatus = row.EOS_Status;
+    const eosOnline = row.EOS_Online;
+    const edcOnline = row[edcKey];
 
-    // 額外判斷：EOS_Status = 5 → 強制關機
-    if (row.EOS_Status === 5) {
+    const eosStatusStr = eosStatus != null ? String(eosStatus) : '';
+    const eosOnlineStr = eosOnline != null ? String(eosOnline) : '';
+    const edcOnlineStr = edcOnline != null ? String(edcOnline).toUpperCase() : '';
+
+    // 1. EOS_Status = 5 → 關機（支援數字 5 或字串 "5"）
+    if (eosStatus === 5 || eosStatusStr === '5') {
       return '關機';
     }
 
-    // 若兩個 EDC 都離線 → 視為關機（保險判斷，後端已整合時也能用）
-    if (row.EDC_Online1 === 'N' && row.EDC_Online2 === 'N') {
-      return '關機';
-    }
-
-    // 收銀機沒關機，POS 離線 (EOS_Online=0 或為空/null) → 離線
-    if (row.EOS_Online === 0 || row.EOS_Online === null) {
+    // 2. EOS_Status ≠ 5 且 EOS_Online != 1 → 離線（支援 1 / '1'）
+    const isEosOnline = eosOnlineStr === '1';
+    if (!isEosOnline) {
       return '離線';
     }
 
-    // 收銀機沒關機，POS 在線，刷卡機在線 → 交易中
-    if (row[edcKey] === 'Y') {
+    // 3. EOS_Status ≠ 5 且 EOS_Online = 1 且 EDC_Online = 1 / '1' / 'Y' → 交易中
+    if (edcOnlineStr === 'Y' || edcOnlineStr === '1') {
       return '交易中';
     }
 
-    // 其他情況（例如 POS 在線但 EDC 離線） → 離線
+    // 4. 其他情況 → 離線
     return '離線';
   }
 
@@ -128,7 +131,7 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
     switch (status) {
       case '交易中': return 'edc-chip success';
       case '離線': return 'edc-chip logout';
-      case '關機': return 'edc-chip shutdown'; // chip 其實不會用到，因為用 icon
+      case '關機': return 'edc-chip shutdown';
       default: return 'edc-chip';
     }
   }
@@ -151,7 +154,6 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
     }
   }
 
-
   ngOnInit() {
     this.initializePage('TLS44020', '/TLS/TLS44020cru', this.queryForm, (form) => this.onSubmit(form));
     this.items = [
@@ -169,13 +171,13 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
     this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions =
         res?.map((x: any) => ({
-          No: x.value,              // 編號
-          Name: x.label,            // 名稱
-          formLabel: `${x.value} - ${x.label}`, // 下拉顯示
-          value: x.value            // 存值
+          No: x.value,
+          Name: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value
         })) || [];
     });
-    //館別
+    // 館別
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.buildingNoOptions = res.Data.map(x => ({ label: x.Name, value: x.No, Name: x.Name, No: x.No }));
     });
@@ -183,8 +185,8 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
     // 進入頁面自動查詢，行為與 TLS44010 一致
     this.onSubmit(this.queryForm);
   }
-  loadDropdownOptions() {
 
+  loadDropdownOptions() {
     this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.floorOptions = res.Data.map(item => ({
         ...item,
@@ -197,10 +199,8 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
   onSubmit(form: FormGroup) {
     this.loading = true;
 
-    // 取出表單值
     const rawValue = form.value;
 
-    // 組成正確 payload
     const payload = {
       PageSize: rawValue.PageSize ?? 20,
       PageIndex: rawValue.PageIndex ?? 1,
@@ -209,7 +209,6 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
       SortBy: rawValue.SortBy ?? [{ field: 'ECR_No', order: 1 }],
       Day: rawValue.Day ?? 0,
 
-      // 確保是陣列格式
       ECR_No: Array.isArray(rawValue.ECR_No)
         ? rawValue.ECR_No
         : rawValue.ECR_No
@@ -236,7 +235,6 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
           ? [rawValue.area_no]
           : [],
 
-      // 字串欄位
       EDC_IP: rawValue.EDC_IP ?? '',
       EDC_Online: rawValue.EDC_Online ?? '',
       EDC_TmID: rawValue.EDC_TmID ?? ''
@@ -249,16 +247,11 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
         this.first = 0;
         this.updatePagedData();
       },
-      error: (err) => {
-        console.error('查詢失敗', err);
-      },
       complete: () => {
         this.loading = false;
       }
     });
   }
-
-
 
   onTabChange(item: MenuItem) {
     this.activeItem = item;
@@ -266,13 +259,11 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
     if (item.label?.includes('全部')) {
       this.filteredData = [...this.data];
     } else if (item.label?.includes('連線')) {
-      // 連線機台：中信或聯信任一銀行 "交易中"
       this.filteredData = this.data.filter(row =>
         this.getBankStatus(row, '中信') === '交易中' ||
         this.getBankStatus(row, '聯信') === '交易中'
       );
     } else if (item.label?.includes('離線')) {
-      // 離線機台：中信與聯信皆非 "交易中"（包含離線與關機）
       this.filteredData = this.data.filter(row => {
         const ct = this.getBankStatus(row, '中信');
         const lt = this.getBankStatus(row, '聯信');
@@ -284,7 +275,6 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
     this.updatePagedData();
   }
 
-  /** 搜尋框篩選 */
   applyFilter() {
     const keyword = this.globalFilter?.toLowerCase().trim();
     if (!keyword) {
@@ -294,31 +284,29 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
         (row.ECR_LocNo?.toLowerCase().includes(keyword)) ||
         (row.TLT_No?.toLowerCase().includes(keyword)) ||
         (row.TLT_Name?.toLowerCase().includes(keyword)) ||
-        (row.EOS_Status?.toLowerCase().includes(keyword)) ||
+        (row.EOS_Status != null && String(row.EOS_Status).toLowerCase().includes(keyword)) ||
         (row.Store?.toLowerCase().includes(keyword)) ||
         (row.Floor?.toLowerCase().includes(keyword)) ||
         (row.Area?.toLowerCase().includes(keyword)) ||
         (row.ECR_IP?.toLowerCase().includes(keyword))
       );
     }
-    this.first = 0; // 搜尋後回到第一頁
+    this.first = 0;
     this.updatePagedData();
   }
 
-  // DataView layout 切換
   onLayoutChange(event: any) {
     this.layout = event as 'list' | 'grid';
   }
 
-  // 分頁事件
   onPageChange(event: any) {
     this.first = event.first;
     this.rows = event.rows;
     this.updatePagedData();
   }
 
-  // 更新顯示用的分頁資料
   updatePagedData() {
     this.pagedData = this.filteredData.slice(this.first, this.first + this.rows);
   }
+
 }
