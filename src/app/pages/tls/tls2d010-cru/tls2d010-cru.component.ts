@@ -527,13 +527,19 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             }
           ]
         },
-        // 明確指定 optionLabel/optionValue，讓 p-dropdown 與 row value 的比對一致
-        { field: 'CAP_Type', header: '扣款類型', type: 'dropdown', width: '10rem', options: this.CAP_TypeOptions, optionLabel: 'label', optionValue: 'value' },
         {
-          field: 'CAP_Item', header: '扣款項目', type: 'dropdown', width: '10rem', optionLabel: 'label', optionValue: 'value', options: (row: any) => {
-            return this.CAP_ItemOptions
-              .filter(item => item.CAP_Type === row.CAP_Type)
-              .map(item => ({ value: item.CAP_Item, label: `${item.CAP_Item}-${item.CAP_Name}`, data: item }));
+          field: 'CAP_Item',
+          header: '扣款項目',
+          type: 'dropdown',
+          width: '16rem',
+          optionLabel: 'label',
+          optionValue: 'value',
+          options: () => {
+            return this.CAP_ItemOptions.map(item => ({
+              value: item.CAP_Item,
+              label: `${String(item.CAP_Item ?? '').trim()}-${item.CAP_Name ?? ''}`,
+              data: item
+            }));
           }
         },
         {
@@ -700,11 +706,9 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       }
       compareValue = compareValue != null ? String(compareValue).trim() : null;
 
-      const candidates = this.CAP_ItemOptions.filter(
-        it => !row.CAP_Type || it.CAP_Type === row.CAP_Type
-      );
-
-      const match = candidates.find(it => String(it.CAP_Item).trim() === compareValue);
+      // 這裡不再依照 CAP_Type 過濾，直接用 CAP_Item 對應，
+      // 以確保選擇扣款項目時一定能帶出正確的會計科目等資訊
+      const match = this.CAP_ItemOptions.find(it => String(it.CAP_Item).trim() === compareValue);
 
       if (match) {
         // 關鍵修正：後端 AccNo 去空白（trim）
@@ -733,6 +737,21 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     }
     return String(field);
   }
+
+  /** 依 CAP_Item 取得對應的 CAP_Name（從後端下拉資料中找） */
+  private getCAPNameByItem(capItem: any): string | null {
+    if (capItem == null || capItem === '') return null;
+    let code: string | null = null;
+    if (typeof capItem === 'object') {
+      code = capItem.value ?? capItem.CAP_Item ?? null;
+    } else {
+      code = String(capItem);
+    }
+    if (!code) return null;
+    const found = this.CAP_ItemOptions.find(it => String(it.CAP_Item).trim() === String(code).trim());
+    return found?.CAP_Name ?? null;
+  }
+
   private buildTltInfo(selectedTltNo: any, podNo: any) {
     console.log('>>> buildTltInfo input selectedTltNo:', selectedTltNo);
 
@@ -831,6 +850,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           tpy_date: mainRow?.tpy_date ? formatDate(mainRow.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
           CAP_Type: mainRow?.CAP_Type || '',
           CAP_Item: mainRow?.CAP_Item || '',
+          CAP_Name: this.getCAPNameByItem(mainRow?.CAP_Item) || null,
           org_id: this.normalizeValue(mainRow?.org_id),
           AccNo: this.normalizeValue(mainRow?.AccNo),
           GUI_FLAG: mainRow?.GUI_FLAG || '',
@@ -850,6 +870,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           tpy_date: mainRow?.tpy_date ? formatDate(mainRow.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
           CAP_Type: mainRow?.CAP_Type || normalValue.CAP_Type || '',
           CAP_Item: mainRow?.CAP_Item || normalValue.CAP_Item || '',
+          CAP_Name: this.getCAPNameByItem(mainRow?.CAP_Item || normalValue.CAP_Item) || null,
           org_id: this.normalizeValue(mainRow?.org_id || normalValue.org_id),
           AccNo: this.normalizeValue(mainRow?.AccNo || normalValue.AccNo),
           GUI_FLAG: mainRow?.GUI_FLAG || normalValue.GUI_FLAG || '',
@@ -880,6 +901,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             tpy_date: i.tpy_date ? formatDate(i.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
             CAP_Type: i.CAP_Type || '',
             CAP_Item: i.CAP_Item || '',
+            CAP_Name: this.getCAPNameByItem(i.CAP_Item) || null,
             org_id: this.normalizeValue(i.org_id),
             AccNo: this.normalizeValue(i.AccNo),
             GUI_FLAG: i.GUI_FLAG || '',
@@ -905,6 +927,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             tpy_date: i.tpy_date ? formatDate(i.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
             CAP_Type: i.CAP_Type || normalValue.CAP_Type || '',
             CAP_Item: i.CAP_Item || normalValue.CAP_Item || '',
+            CAP_Name: this.getCAPNameByItem(i.CAP_Item || normalValue.CAP_Item) || null,
             org_id: this.normalizeValue(i.org_id || normalValue.org_id),
             AccNo: this.normalizeValue(i.AccNo || normalValue.AccNo),
             GUI_FLAG: i.GUI_FLAG || normalValue.GUI_FLAG || '',
