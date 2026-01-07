@@ -10,6 +10,7 @@ import { CellInput } from './table-edit-cell.model';
 
 @Component({
   selector: 'app-checkbox-cell',
+  host: { 'table-edit-id': '複製時請自行取唯一名' },
   template: `
     <div class="flex justify-content-center align-items-center h-full w-full">
       <p-checkbox

@@ -21,6 +21,7 @@ import { AddButton, ColumnGroup, expandAnimation, ReportColumn } from './table-r
 
 @Component({
   selector: 'app-table-report',
+  host: { 'table-report-id': '複製時請自行取唯一名' },
   standalone: true,
   imports: [TableExpansionComponent, SkeletonModule, TableModule, CommonModule, ImageModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule, TableCaptionComponent],
   templateUrl: './table-report.component.html',

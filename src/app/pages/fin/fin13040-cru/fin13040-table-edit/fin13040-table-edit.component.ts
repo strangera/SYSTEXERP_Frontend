@@ -26,6 +26,7 @@ import { ColumnGroup, EditColumn, FieldChangeEvent } from './fin13040-table-edit
 
 @Component({
   selector: 'app-table-edit',
+  host: { 'table-edit-id': 'FIN13040CRU' },
   templateUrl: './fin13040-table-edit.component.html',
   styleUrl: './fin13040-table-edit.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

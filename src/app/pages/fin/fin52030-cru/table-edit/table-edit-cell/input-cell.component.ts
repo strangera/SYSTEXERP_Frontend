@@ -9,6 +9,7 @@ import { CellInput } from './table-edit-cell.model';
 
 @Component({
   selector: 'app-input-cell',
+  host: { 'table-edit-id': 'FIN52030-CRU' },
   template: `
     <ng-container [ngSwitch]="cellInput.col.type">
       <p-iconField iconPosition="right">

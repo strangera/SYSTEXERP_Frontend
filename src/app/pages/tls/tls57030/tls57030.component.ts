@@ -19,7 +19,6 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 
 @Component({
   selector: 'app-tls57030',
@@ -34,7 +33,6 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
     DropdownComponent,
     InputTextComponent,
     CalendarComponent,
-    RadiobuttonComponent,
     InputNumberComponent,
     ButtonComponent,
     TranslateModule,
@@ -52,7 +50,6 @@ export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> i
     PLU_OrgPLUNo: [null, [Validators.maxLength(30)]],
     STK_Date: [new Date(), [Validators.required]],
     ShowStockRange: ['1'],
-    DisplayRowNumber: [30],
     PageSize: [30],
     PageIndex: [1]
   });
@@ -105,8 +102,7 @@ export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> i
       const body = {
         ...frm.value,
         STK_Date: this.datePipe.transform(frm.value.STK_Date, 'yyyy-MM-dd'),
-        DisplayRowNumber: String(frm.value.DisplayRowNumber) || '30',
-        PageSize: frm.value.DisplayRowNumber || 30
+        PageSize: frm.value.PageSize || 30
       }
 
       this.tls57030Service.queryTLS57030(body).pipe(finalize(() => this.loading = false)).subscribe(res => {

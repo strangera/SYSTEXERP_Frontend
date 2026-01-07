@@ -10,6 +10,7 @@ import { CellInput } from './table-edit-cell.model'; // 假設路徑正確
 
 @Component({
   selector: 'app-percent-cell',
+  host: { 'table-edit-id': 'FIN53010-CRU' },
   template: `
     <p-iconField iconPosition="right">
       <div class="flex align-items-center gap-1">

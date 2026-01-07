@@ -114,8 +114,6 @@ export class ASS21040Component extends BasicQueryPageComponent<unknown> implemen
           EngTypes: frm.value.ENG_Type,
           ClearingYM: convertDateToYYYYMM(frm.value.ENG_YYMM)
         };
-        console.log(body);
-
         this.aSS21040Service.printASS21040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
           if (response.Data.Print_URL) {
             this.messageService.successBubble('列印成功');

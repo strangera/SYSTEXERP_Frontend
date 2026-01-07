@@ -33,6 +33,7 @@ import { TemplateCellComponent } from './table-edit-cell/template-cell.component
 import { ColumnGroup, EditColumn, FieldChangeEvent } from './table-edit.model';
 @Component({
   selector: 'app-table-edit',
+  host: { 'table-edit-id': '複製時請自行取唯一名' },
   templateUrl: './table-edit.component.html',
   styleUrl: './table-edit.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -118,7 +119,7 @@ export class TableEditComponent implements OnChanges {
   protected _calculatedFooterData: any = {}; // 用於儲存計算結果
   @Input() footerSummaryLabel = '總計'; // 新增：Footer 摘要行的標籤名稱
   @Input() showFooter = false;
-  @Input() scrollable = false; // 是否要滾輪
+  @Input() scrollable = true; // 是否要滾輪
   @Input() showPaginator = false; // 是否顯示 分頁器
 
   protected readonly tableUtilityService = inject(TableUtilityService);

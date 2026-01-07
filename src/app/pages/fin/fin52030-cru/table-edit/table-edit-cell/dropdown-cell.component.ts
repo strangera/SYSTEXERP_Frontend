@@ -12,6 +12,7 @@ import { CellInput } from './table-edit-cell.model';
 
 @Component({
   selector: 'app-dropdown-cell',
+  host: { 'table-edit-id': 'FIN52030-CRU' },
   template: `
  <p-iconField iconPosition="right">
   <p-dropdown class="flex min-w-max" appendTo="body"

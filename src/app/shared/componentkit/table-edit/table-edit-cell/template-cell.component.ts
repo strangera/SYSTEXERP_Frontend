@@ -10,6 +10,7 @@ import { CellInput } from './table-edit-cell.model';
 
 @Component({
   selector: 'app-template-cell',
+  host: { 'table-edit-id': '複製時請自行取唯一名' },
   template: `
     <div class="input-wrapper" [attr.data-suffix]="cellInput.col.suffix">
       <input pInputText readonly class="w-full min-w-max" [placeholder]="isDisabled() ? '' :'請選擇' + (cellInput.col.header || '')"
