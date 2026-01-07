@@ -27,13 +27,13 @@
         <div class="grid p-fluid">
           <!-- 調整單號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
+          
               label="調整單號"
               controlName="adjust_ID"
               [control]="queryForm.controls.adjust_ID"
               [submitted]="submitted"
-            ></app-input-number>
+            ></app-input-text>
           </div>
 
           <!-- 調整日期 起訖 -->
@@ -90,28 +90,31 @@
 
 <!-- 主表：改用 app-table-report -->
 <div class="card">
-  <app-table-report
-    [tableKey]="'fin32020_' + tableVer"
-    [dataKey]="'_rowKey'"
-    [columns]="columns"
-    [data]="data"
-    [totalRecords]="viewTotalRecords"
-    [loading]="loading"
-    [showManage]="true"
-    [showFilter]="true"
-    [showExcel]="false"
-    [footerData]="footerData"
-    [queryFunction]="queryFIN32020ForReport"
-    [lastQueryBody]="lastQueryBody"
-    [showDelete]="false"
-    [showReportMode]="false"
-    [showCheckBox]="false"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    [showDetail]="true"
-    (detail)="onDetail($event)"
-    [showEdit]="true"
-    (edit)="onEdit($event)"
-  >
-  </app-table-report>
+<app-table-report
+  [tableKey]="'fin32020_' + tableVer"
+  [dataKey]="'ADJ_No'"
+  [columns]="columns"
+  [data]="data"
+  [totalRecords]="viewTotalRecords"
+  [loading]="loading"
+  [showManage]="true"
+  [showFilter]="true"
+  [showExcel]="false"
+  [footerData]="footerData"
+  [queryFunction]="queryFIN32020ForReport"
+  [lastQueryBody]="lastQueryBody"
+  [showDelete]="false"
+  [showReportMode]="false"
+  [showCheckBox]="false"
+  [selectedItems]="selectedItems"
+  (selectionChange)="selectedItems = $event"
+  [showDetail]="true"
+  (detail)="onDetail($event)"
+  [showEdit]="true"
+  (edit)="onEdit($event)"
+  [expansionDataKey]="'_Details'"
+  [expansionColumns]="expansionColumns"
+  [expansionMultiSortMeta]="[{ field: 'ARS_No', order: 1 }]"
+>
+</app-table-report>
 </div>

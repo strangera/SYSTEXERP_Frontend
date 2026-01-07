@@ -1,3 +1,4 @@
+import { NgStyle } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -7,10 +8,13 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { concatMap, from } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { Tls41040Service } from '../../../service/api/tls/tls41040.service'; // 引入剛剛做的 service
 import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 import { DropDownListService } from '../../../service/utility/dropDownList.service';
+import { ExecSpFuncService, IExportLabelRequest } from '../../../service/utility/execSpFunc.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -49,9 +53,11 @@ interface TLS41040Item {
   imports: [
     MenubarComponent,
     ButtonComponent,
+    ButtonModule,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
+    NgStyle,
     DropdownComponent,
     TableComponent,
     TranslateModule,
@@ -135,7 +141,8 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
   constructor(
     private ECRNoService: ECRNoService,
     private dropDownListService: DropDownListService,
-    private tls41040Service: Tls41040Service // 注入 Service
+    private tls41040Service: Tls41040Service, // 注入 Service
+    private execSpFuncService: ExecSpFuncService
   ) {
     super();
   }
@@ -229,6 +236,44 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
         this.onSubmit(this.queryForm);
         this.selectedItems = [];
       },
+    });
+  }
+
+  // ---- 下傳 ----
+  btnLoading = false;
+  onUpload(): void {
+    const storeNo = this.authService.getUserInfo()?.SYS_StoreNo ?? '';
+    const items = this.selectedItems;
+    if (!items.length) { return; }
+
+    this.btnLoading = true;
+
+    from(items).pipe(
+      concatMap((item) => {
+        const params: IExportLabelRequest = {
+          SYS_StoreNo: storeNo,
+          EXP_StoreNo: storeNo,
+          EXP_Type: 'POS50012',
+          EXP_DocNo: `${storeNo};${item.NOT_SeqNo}`,
+          EXP_DataFlag: 'S2P',
+          EXP_Desc: ''
+        };
+        return this.execSpFuncService.ExecSpFunc(params);
+      }),
+      finalize(() => this.btnLoading = false),
+      untilDestroyed(this)
+    ).subscribe({
+      next: (response) => {
+        if (response.ErrCode && response.ErrCode !== 0) {
+          this.messageService.errorBubble(response.ErrMsg);
+          return;
+        }
+        this.messageService.successBubble('異動檔下傳成功');
+      },
+      complete: () => {
+        this.selectedItems = [];
+        this.onSubmit(this.queryForm);
+      }
     });
   }
 
