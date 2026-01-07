@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { DialogModule } from 'primeng/dialog';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import {
@@ -49,7 +50,8 @@ interface ARWithRCVAmt extends QueryFIN32030ARResponse {
     InputTextComponent,
     TranslateModule,
     TableEditComponent,
-    TableComponent
+    TableComponent,
+    DialogModule
   ]
 })
 export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Response> implements OnInit {

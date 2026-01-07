@@ -147,14 +147,26 @@
   <!-- 步驟 3: 應收帳款 -->
   <!-- ============================================ -->
   <ng-container *ngIf="buttonID === 3">
-    <p-panel header="應收帳款">
+    <p-panel>
+      <ng-template pTemplate="header">
+        <div class="flex align-items-center justify-content-between w-full">
+          <span class="p-panel-title">應收帳款</span>
+          <app-button
+            label="應收未收查詢"
+            icon="pi pi-search"
+            (click)="openARDialog()"
+            [disabled]="isFormReadable"
+          ></app-button>
+        </div>
+      </ng-template>
+
       <app-table-edit
         tableKey="Step3AR"
         title="應收帳款"
         [data]="step4TableData"
         [columns]="step4Columns"
-        [disabled]="isFormReadable"
-        [canInsert]="!isFormReadable"
+        [disabled]="true"
+        [canInsert]="false"
         [showFooter]="true"
         [tableRequired]="true"
         [showDelete]="!isFormReadable"
@@ -171,14 +183,90 @@
         (click)="switchButton(2)"
       />
       @if (!isFormReadable) {
-        <app-button
-          btnType="submit"
-          label="確定修改"
-          icon="pi pi-check"
-          [loading]="loading"
-          (click)="onFinalSubmit()"
-        />
+      <app-button
+        btnType="submit"
+        label="確定修改"
+        icon="pi pi-check"
+        [loading]="loading"
+        (click)="onFinalSubmit()"
+      />
       }
     </div>
   </ng-container>
 </div>
+
+<!-- 應收未收查詢 Dialog -->
+<p-dialog
+  header="應收未收查詢"
+  [(visible)]="showARDialog"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  (onHide)="showARDialog = false"
+>
+  <!-- Query Form -->
+  <form [formGroup]="arQueryForm" class="grid p-fluid mb-3">
+    <app-input-text
+      class="col-12 md:col-6 lg:col-3"
+      label="STO_No"
+      controlName="STO_No"
+      [control]="arQueryForm.controls.STO_No"
+    />
+    <app-input-text
+      class="col-12 md:col-6 lg:col-3"
+      label="廠客代號"
+      controlName="VEN_No"
+      [control]="arQueryForm.controls.VEN_No"
+    />
+    <app-calendar
+      class="col-12 md:col-6 lg:col-3"
+      calendarType="dateOne"
+      label="立帳日(起)"
+      controlName="DateFrom"
+      [control]="arQueryForm.controls.DateFrom"
+    />
+    <app-calendar
+      class="col-12 md:col-6 lg:col-3"
+      calendarType="dateOne"
+      label="立帳日(迄)"
+      controlName="DateTo"
+      [control]="arQueryForm.controls.DateTo"
+    />
+  </form>
+  <div class="flex justify-content-end mb-2">
+    <app-button
+      label="查詢"
+      icon="pi pi-search"
+      (click)="onQueryAR()"
+      [loading]="arDialogLoading"
+    ></app-button>
+  </div>
+
+  <!-- Results Table -->
+  <app-table
+    #arDialogTable
+    tableKey="ARQuery"
+    [data]="arDialogData"
+    [columns]="arDialogColumns"
+    [loading]="arDialogLoading"
+    [showPaginator]="true"
+    [rows]="10"
+    [totalRecords]="arDialogData.length"
+    [scrollable]="true"
+    [scrollHeight]="'400px'"
+    [showCheckBox]="true"
+    selectionMode="multiple"
+  ></app-table>
+
+  <!-- Footer -->
+  <ng-template pTemplate="footer">
+    <app-button
+      label="取消"
+      severity="secondary"
+      (click)="showARDialog = false"
+    ></app-button>
+    <app-button
+      label="確定"
+      (click)="onConfirmARSelection(arDialogTable.selectedItems)"
+    ></app-button>
+  </ng-template>
+</p-dialog>
