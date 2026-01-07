@@ -79,8 +79,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls21030', loadComponent: () => import('./tls21030/tls21030.component').then(m => m.TLS21030Component), data: { progNo: 'TLS21030' } },
   // 信用卡之卡種維護作業
   { path: 'tls21040', loadComponent: () => import('./tls21040/tls21040.component').then(m => m.TLS21040Component), data: { progNo: 'TLS21040' } },
-  // 專櫃營運前參數設定作業
-  { path: 'tls21050', loadComponent: () => import('./tls21050/tls21050.component').then(m => m.TLS21050Component), data: { progNo: 'TLS21050' } },
   // 收銀機對帳查詢作業
   { path: 'tls22010', loadComponent: () => import('./tls22010/tls22010.component').then(m => m.TLS22010Component), data: { progNo: 'TLS22010' } },
   // 系統監控報表
@@ -183,8 +181,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls2d030', loadComponent: () => import('./tls2d030/tls2d030.component').then(m => m.TLS2D030Component), data: { progNo: 'TLS2D030' } },
   // 專櫃代扣款明細表
   { path: 'tls2d040', loadComponent: () => import('./tls2d040/tls2d040.component').then(m => m.TLS2D040Component), data: { progNo: 'TLS2D040' } },
-  // 部門使用券類設定作業
-  { path: 'tls2d050', loadComponent: () => import('./tls2d050/tls2d050.component').then(m => m.TLS2D050Component), data: { progNo: 'TLS2D050' } },
   // 專櫃租金結算作業
   { path: 'tls2e010', loadComponent: () => import('./tls2e010/tls2e010.component').then(m => m.TLS2E010Component), data: { progNo: 'TLS2E010' } },
   // 專櫃抽成金額結算作業
@@ -249,8 +245,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls21030cru', loadComponent: () => import('./tls21030-cru/tls21030-cru.component').then(m => m.TLS21030CRUComponent), data: { progNo: 'TLS21030' } },
   // 信用卡之卡種維護作業 CRU
   { path: 'tls21040cru', loadComponent: () => import('./tls21040-cru/tls21040-cru.component').then(m => m.TLS21040CRUComponent), data: { progNo: 'TLS21040' } },
-  // 專櫃營運前參數設定作業 CRU
-  { path: 'tls21050cru', loadComponent: () => import('./tls21050-cru/tls21050-cru.component').then(m => m.TLS21050CRUComponent), data: { progNo: 'TLS21050' } },
   //電子發票上送筆數檢核表 CRU
   { path: 'tls22040cru', loadComponent: () => import('./tls22040-cru/tls22040-cru.component').then(m => m.TLS22040CRUComponent), data: { progNo: 'TLS22040' } },
   // 專櫃日對帳單
@@ -303,8 +297,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls2d010cru', loadComponent: () => import('./tls2d010-cru/tls2d010-cru.component').then(m => m.TLS2D010CRUComponent), data: { progNo: 'TLS2D010' } },
   // 專櫃代扣款明細表 CRU
   { path: 'tls2d040cru', loadComponent: () => import('./tls2d040-cru/tls2d040-cru.component').then(m => m.TLS2D040CRUComponent), data: { progNo: 'TLS2D040' } },
-  // 部門使用券類設定作業 CRU
-  { path: 'tls2d050cru', loadComponent: () => import('./tls2d050-cru/tls2d050-cru.component').then(m => m.TLS2D050CRUComponent), data: { progNo: 'TLS2D050' } },
   // 專櫃結帳前調整作業 CRU
   { path: 'tls2e060cru', loadComponent: () => import('./tls2e060-cru/tls2e060-cru.component').then(m => m.TLS2E060CRUComponent), data: { progNo: 'TLS2E060' } },
   // 年度對帳單 CRU
