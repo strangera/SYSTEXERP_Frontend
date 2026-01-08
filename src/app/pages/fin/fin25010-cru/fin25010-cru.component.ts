@@ -45,7 +45,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<any> implements 
     ACP_No: [null, Validators.maxLength(14)], // 應付帳款ID
     Voucher_Kind: [null], // 傳票型態
     VEN_PayType: [null], // 付款方式
-    ...createPaginationConfig([])
+    ...createPaginationConfig([{ field: 'ven_no', order: 1 }]),
   });
 
   // 廠客代號選項
@@ -128,7 +128,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<any> implements 
   onGenerate() {
     const aps3009Items = this.selectedItems.map(item => ({
       ID: item.ID,
-      // RMT_TYPE: item.RMT_TYPE,
+      RMT_TYPE: item.RMT_TYPE,
       VEN_No: item.ven_no,
       APAR_No: item.acp_no,
       ACP_YYYYMM: item.ACP_YYYYMM,
@@ -136,7 +136,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<any> implements 
       ACP_Amt: Number(item.ACP_Amt),
       PTA_Date: this.datePipe.transform(item.PTA_Date, 'yyyy-MM-dd') || '',
       NoteDesc: item.NoteDesc,
-      // IN_TYPE: item.IN_TYPE,
+      IN_TYPE: item.IN_TYPE,
       Remit_Status: item.Remit_Status
     }));
 
