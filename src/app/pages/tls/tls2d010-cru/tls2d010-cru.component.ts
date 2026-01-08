@@ -163,7 +163,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   private loadTalentDialogData(): void {
     this.talentDialogLoading = true;
     this.dropDownListService
-      .queryTLTTALENTDropDownList()
+      .queryTLTTALENTDropDownList({ isNewData: true })
       .pipe(untilDestroyed(this), finalize(() => (this.talentDialogLoading = false)))
       .subscribe((res: any) => {
         this.talentDialogData = res?.Data ?? [];
