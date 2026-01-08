@@ -12,6 +12,8 @@ import { Column, createPaginationConfig } from '@shared/componentkit/table/table
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, tap } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { apiOption } from '@shared/models/sys/sysb000.model';
 import { FIN52030Data, FIN52030Payload } from './fin52030.model';
 
 @Component({
@@ -44,6 +46,8 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
   public readonly tableData = signal<FIN52030Data[]>([]);
   public readonly totalRecords = signal<number>(0);
 
+  public tblUserOptions: apiOption[] = []; // 人員 下拉選單
+
   public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52030Data; })[] = [
     { field: 'TempNo', header: '常用傳票代碼' },
     { field: 'TempName', header: '常用傳票名稱' },
@@ -68,7 +72,7 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
     this.initializePage('FIN52030', '/FIN/FIN52030CRU', this.queryForm, this.onSubmit.bind(this));
 
     this.service.getAccNoOptions();
-    this.service.getUsrOptions();
+    this.loadOptions();
   }
 
   public onSubmit(): void {
@@ -102,5 +106,16 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
       }),
       finalize(() => this.onSubmit()),
     ).subscribe();
+  }
+
+  // 讀取下拉選單
+  loadOptions(): void {
+    this.service.queryTBLUSER_DropDownList({}).pipe(untilDestroyed(this)).subscribe(res => {
+      this.tblUserOptions = res.Data.map((item: { No: string; Name: string; Label: string }) => ({
+        No: item.No,
+        Name: item.Name,
+        Label: item.No + '_' + item.Name
+      }));
+    });
   }
 }

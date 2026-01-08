@@ -20,7 +20,7 @@ import { CellInput } from './table-edit-cell.model';
                   iconDisplay="input" [minDate]="cellInput.col.minDate" [maxDate]="cellInput.col.maxDate" [appendTo]="'body'"
                   [showIcon]="!isDisabled()"
                   [disabled]="isDisabled()"
-                  (onInput)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index)"
+          (onSelect)="handleSelect()"
                   (onFocus)="cellInput.col.onFocus?.(cellInput.rowData, cellInput.rowData[cellInput.col.field], cellInput.col, cellInput.index)"
                   (onBlur)="handleBlur()"(keydown.enter)="handleEnter($event)"
                   [style]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
@@ -64,6 +64,16 @@ export class DateCellComponent {
       this.cellInput.col,
       this.cellInput.index
     );
+    this.cellInput.onValueChange(
+      this.cellInput.rowData,
+      this.cellInput.rowData[this.cellInput.col.field],
+      this.cellInput.col,
+      this.cellInput.index
+    );
+  }
+
+  // 使用滑鼠在行事曆中選日期時，立即視為一次完成輸入
+  handleSelect() {
     this.cellInput.onValueChange(
       this.cellInput.rowData,
       this.cellInput.rowData[this.cellInput.col.field],
