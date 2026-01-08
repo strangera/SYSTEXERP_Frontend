@@ -72,7 +72,7 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
   //#endregion
 
   //#region 明細資料
-  detailData: TLS53030DetailData[] = [];
+  detailData: any[] = [];
   originalDetailData: TLS53030DetailData[] = [];
   selectedItems: TLS53030DetailData[] = [];
   detailLoading = false;
@@ -193,17 +193,20 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
     this.handleSubmit(form, () => {
       if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
         // 更新明細資料
-        const updateDetails = this.detailData.map(item => ({
-          MID: this.rowdata!.MID,
-          PST_No: this.rowdata!.PST_No,
-          SYS_StoreNo: this.rowdata!.SYS_StoreNo,
-          HOS_No: this.rowdata!.HOS_No,
-          PLU_MagNo: item.PLU_MagNo,
-          PST_Qty1: item.PST_Qty1,
-          PST_Qty2: item.PST_Qty2,
-          PST_Qty3: item.PST_Qty3,
-          PST_Remark: item.PST_Remark
-        }));
+        const updateDetails = this.detailData
+          .filter(item => item._dataStatus === 'modified')
+          .map(item => ({
+            ...item,
+            MID: this.rowdata!.MID,
+            PST_No: this.rowdata!.PST_No,
+            SYS_StoreNo: this.rowdata!.SYS_StoreNo,
+            HOS_No: this.rowdata!.HOS_No,
+            PLU_MagNo: item.PLU_MagNo,
+            PST_Qty1: item.PST_Qty1,
+            PST_Qty2: item.PST_Qty2,
+            PST_Qty3: item.PST_Qty3,
+            PST_Remark: item.PST_Remark
+          }));
 
         this.tls53030Service.updateTLS53030Detail(updateDetails)
           .pipe(
