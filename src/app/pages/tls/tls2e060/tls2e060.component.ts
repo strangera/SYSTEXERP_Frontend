@@ -68,6 +68,7 @@ export class TLS2E060Component extends BasicQueryPageComponent<Tls2e060Data> imp
     this.handleSubmit(frm, () => {
       const body = {
         ...frm.getRawValue(),
+        adj_date: this.datePipe.transform(frm.value.adj_date, 'yyyy-MM-dd'),
         sam_yyymm: this.datePipe.transform(frm.value.sam_yyymm, 'yyyyMM'),
       };
       this.tls2e060Service.queryTls2e060(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
