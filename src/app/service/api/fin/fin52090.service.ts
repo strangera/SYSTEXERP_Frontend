@@ -38,6 +38,14 @@ export class FIN52090Service {
     );
   };
 
+  public updateFIN52090(data: any): Observable<any> {
+    return this.http.post<any>(`${apiUrl}/updateFIN52090`, data);
+  }
+
+  public deleteFIN52090(data: any): Observable<any> {
+    return this.http.post<any>(`${apiUrl}/deleteFIN52090`, data);
+  }
+
   public getAccNo(): void {
     this.accNoLoading.set(!0);
     this.http.post<BaseQueryResponse<AccNoDropdown>>(`${apiUrl}/queryAccNoDropdown`, {}).pipe(
