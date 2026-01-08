@@ -112,9 +112,13 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     if (!accNos.length || !vendors.length) return;
     this.logger.debug('dropdown effect:', [accNos, vendors, accDescs, name, date]);
 
-    this.isFormCreateable
-      ? this.dataForm.patchValue({ CRT_USR_No: name, CRT_Date: date })
-      : this.dataForm.patchValue({ UPD_USR_No: name, UPD_Date: date });
+    this.isFormCreateable ? this.dataForm.patchValue({ CRT_USR_No: name, CRT_Date: date })
+      : this.dataForm.patchValue({
+        CRT_USR_No: this.fin52030DetailData().CRT_USR_Name,
+        CRT_Date: this.fin52030DetailData().CRT_Date,
+        UPD_USR_No: name,
+        UPD_Date: date
+      });
 
     this.tableLoading.set(!1);
   }, { allowSignalWrites: !0 });
@@ -213,6 +217,8 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
         field: 'DetailNo',
         header: '廠商/員工代號',
         type: 'template',
+        // 顯示用欄位（避免把 DetailNo 存成 "value - label"）
+        templateDisplayField: 'DetailName',
         disabled: () => this.service.venLoading() || this.service.usrLoading(),
         templateRef: this.venUsrTemplate(),
       },
@@ -283,10 +289,23 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
+      // === 業務檢核（維持在 onSubmit 檢核） ===
+      if (!this.isBalanced()) {
+        this.messageService.errorBubble('借貸不平衡');
+        this.loading = false;
+        return;
+      }
+
+      if (this.tableData().length === 0) {
+        this.messageService.errorBubble('明細至少要有一筆');
+        this.loading = false;
+        return;
+      }
+
       const d = this.dataForm.getRawValue();
       const raw = {
         ...d,
-        Details: this.tableData().map(({ AccAmtD, AccAmtC, NoteDesc, ...rest }, index) => ({
+        Details: this.tableData().map(({ AccAmtD, AccAmtC, NoteDesc, AccName, DetailName, recKey, ...rest }, index) => ({
           ...rest,
           index,
           AccAmt: (AccAmtD ?? 0) + (AccAmtC ?? 0),
@@ -429,6 +448,11 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   /** 選中的項目 */
   public selectTemplateItem(rowData: FIN52030DetailTable, item?: Option): void {
     this.logger.debug('selectTemplateItem:', [rowData, item]);
-    rowData.DetailNo = `${item?.value || ''} - ${item?.label || ''}`;
+    rowData.DetailNo = String(item?.value ?? '');
+    rowData.DetailName = String(item?.label ?? '');
+  }
+
+  public onCancelClearTable(): void {
+    this.tableData.set([]);
   }
 }
