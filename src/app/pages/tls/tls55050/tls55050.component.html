@@ -34,6 +34,22 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+<div *ngIf="settleErrors.length > 0" class="my-3">
+  <div class="p-4 border-round bg-red-50 border-left-3 border-red-500 shadow-1">
+    <div class="flex align-items-center mb-2">
+      <i class="pi pi-exclamation-circle text-red-600 mr-2 text-xl"></i>
+      <span class="text-red-900 font-bold text-lg">結帳失敗</span>
+      <p-button icon="pi pi-times" [text]="true" styleClass="ml-auto p-button-sm text-red-500" aria-label="關閉錯誤訊息"
+        (onClick)="settleErrors = []">
+      </p-button>
+    </div>
+    <ul class="m-0 pl-4 text-red-700 line-height-3">
+      <li *ngFor="let err of settleErrors">
+        <span class="font-medium">{{ err.Cls_Date | date: 'yyyy/MM/dd' }}</span> ，原因： {{ err.Msg }}
+      </li>
+    </ul>
+  </div>
+</div>
 <div class="card">
   <!-- 廠商請款資料 -->
   <div class="flex align-items-center mb-3">
@@ -41,7 +57,7 @@
   </div>
   <app-table-report dataKey="OTA_No" [lastQueryBody]="lastQueryBody" [totalRecords]="totalRecords" [data]="data"
     [showManage]="false" [columns]="columns" [loading]="loading"
-    [queryFunction]="tls55050Service.queryTLS55050.bind(tls55050Service)" [showDelete]="false"
+    [queryFunction]="tls55050Service.queryTLS55050_Up.bind(tls55050Service)" [showDelete]="false"
     [showSort]="true"></app-table-report>
   <hr class="my-5 border-top-1 surface-border" />
 
@@ -50,7 +66,7 @@
   </div>
   <!-- 傳票明細 -->
   <app-table-report dataKey="VouNo" [lastQueryBody]="lastQueryBody2" [totalRecords]="totalRecords2" [data]="data2"
-    (edit)="onEdit($event)" (detail)="onDetail($event)" [columns]="columns2" [loading]="loading"
-    [queryFunction]="tls55050Service.queryTLS55050.bind(tls55050Service)" [showDelete]="false"
+    (edit)="onEdit($event)" (detail)="onDetail($event)" [columns]="columns2" [loading]="loading" [showEdit]="false"
+    [queryFunction]="tls55050Service.queryTLS55050_Down.bind(tls55050Service)" [showDelete]="false"
     [showSort]="true"></app-table-report>
 </div>
