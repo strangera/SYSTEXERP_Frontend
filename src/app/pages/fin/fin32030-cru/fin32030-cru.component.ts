@@ -241,6 +241,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
 
   // 步驟3: 票據資訊表格資料
   step3TableData: any[] = [];
+  step3FooterData: { CHK_Amt?: number } = {}; // 票據明細的 footer 資料
   step3Columns: EditColumn[] = [
     {
       field: 'CHK_No',
@@ -559,12 +560,19 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
 
   /** 計算票據總金額 */
   get totalCheckAmount(): number {
-    return this.step3TableData.reduce((sum, item) => sum + (item.CHK_Amt || 0), 0);
+    const total = this.step3TableData.reduce((sum, item) => sum + (item.CHK_Amt || 0), 0);
+    console.log('totalCheckAmount 計算:', total, '資料:', this.step3TableData);
+    return total;
   }
 
   /** 票據資訊表格資料變更事件 */
   onStep3DataChange(data: any[]): void {
     this.step3TableData = data;
+    // 重新計算票據總金額
+    const totalAmount = this.step3TableData
+      .filter(item => !item._isAutoInsertCandidate) // 排除新增候選行
+      .reduce((sum, item) => sum + (item.CHK_Amt || 0), 0);
+    this.step3FooterData = { CHK_Amt: totalAmount };
   }
 
   // ----------------------------------------------------------------
@@ -638,9 +646,15 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
                 CHK_PreDate: check.CHK_PreDate ? new Date(check.CHK_PreDate) : null,
                 CHK_Comment: check.CHK_Comment || ''
               }));
+
+              // 計算票據總金額
+              const totalAmount = this.step3TableData.reduce((sum, item) => sum + (item.CHK_Amt || 0), 0);
+              this.step3FooterData = { CHK_Amt: totalAmount };
+
               console.log('票據明細載入完成 - 筆數:', this.step3TableData.length);
               console.log('票據明細載入完成 - 資料:', this.step3TableData);
               console.log('票據明細 CHK_Amt 值:', this.step3TableData.map(x => x.CHK_Amt));
+              console.log('票據明細 Footer 資料:', this.step3FooterData);
             } catch (e) {
               console.error('解析票據明細失敗:', e);
               this.messageService.errorBubble('載入票據明細失敗');
