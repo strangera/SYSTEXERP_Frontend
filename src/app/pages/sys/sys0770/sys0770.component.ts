@@ -2,24 +2,22 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { AccordionModule } from 'primeng/accordion';
-import { SelectItem } from 'primeng/api'; // PrimeNG SelectItem
-import { finalize, Observable } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-
-// 導入 SYS0770 服務和模型
 import {
   QuerySYS0770Request,
   QueryUserRolesResponse,
   QueryUsersResponse,
   Sys0770Service
 } from '@service/api/sys/sys0770.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { AccordionModule } from 'primeng/accordion';
+import { SelectItem } from 'primeng/api'; // PrimeNG SelectItem
+import { finalize, Observable } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 // 定義授權型態的列舉
 export enum AuthorizationType {
@@ -37,9 +35,9 @@ export enum AuthorizationType {
     FormsModule,
     ReactiveFormsModule,
     ButtonComponent,
-    TableComponent,
     TranslateModule,
-    DropdownComponent
+    DropdownComponent,
+    TableReportComponent
   ],
 })
 // 所有使用者設定的角色權限列表
@@ -49,7 +47,7 @@ export class SYS0770Component extends BasicQueryPageComponent<QueryUsersResponse
     authType: [AuthorizationType.User, [Validators.required]], // 授權型態，預設為 'User'
     ...createPaginationConfig([{ field: 'User_No', order: 1 }]), // 初始無特定排序，由 authType 決定
   });
-
+  lastQueryBody: QuerySYS0770Request | null = null;
   totalRecords = 0;
   // 資料類型為聯集，因為會根據 authType 改變
   data: (QueryUsersResponse | QueryUserRolesResponse)[] = [];
@@ -64,7 +62,7 @@ export class SYS0770Component extends BasicQueryPageComponent<QueryUsersResponse
   columns: Column[] = [];
 
   constructor(
-    private readonly sys0770Service: Sys0770Service
+    public readonly sys0770Service: Sys0770Service
   ) {
     super();
   }
@@ -128,6 +126,7 @@ export class SYS0770Component extends BasicQueryPageComponent<QueryUsersResponse
         )
         .subscribe((response) => {
           if (response.Data) {
+            this.lastQueryBody = requestBody;
             this.data = response.Data;
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);

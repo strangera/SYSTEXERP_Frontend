@@ -27,7 +27,6 @@ import { Cpm13020Service, QueryCPM13020Request } from '../../../service/api/cpm/
 @Component({
   selector: 'app-cpm13020',
   templateUrl: './cpm13020.component.html',
-  styleUrls: ['./cpm13020.component.scss'],
   standalone: true,
   imports: [
     CommonModule,

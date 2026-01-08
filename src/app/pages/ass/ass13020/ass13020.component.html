@@ -6,7 +6,7 @@
     <!-- <div >
             <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
         </div> -->
-    <div >
+    <div>
       <app-button btnType="create" label="轉入" class="col"></app-button>
     </div>
   </div>
@@ -46,6 +46,7 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"></app-table>
+    <app-table-report [data]="data" [columns]="columns" (edit)="onEdit($event)"
+      (detail)="onDetail($event)"></app-table-report>
   </div>
 </div>

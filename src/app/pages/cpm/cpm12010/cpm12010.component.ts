@@ -1,35 +1,36 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms'; // 引入 FormBuilder
+import { untilDestroyed } from '@ngneat/until-destroy'; // 確保您有安裝此函式庫
+import { TranslateModule } from '@ngx-translate/core';
+import { Cpm12010Data, Cpm12010Service, DropdownCpm12010Data, QueryCpm12010Request } from '@service/api/cpm/cpm12010.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Column, formatDateTime } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs'; // 引入 finalize
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
-import { untilDestroyed } from '@ngneat/until-destroy'; // 確保您有安裝此函式庫
-import { finalize } from 'rxjs'; // 引入 finalize
-import { Cpm12010Data, Cpm12010Service, DropdownCpm12010Data } from '@service/api/cpm/cpm12010.service';
 
 //5.1.2.1 顧客意見類別維護
 @Component({
   selector: 'app-cpm12010',
   templateUrl: './cpm12010.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, TableComponent, TranslateModule] // 補上 BasicQueryPageComponent
+  imports: [TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, TranslateModule] // 補上 BasicQueryPageComponent
 })
 export class CPM12010Component extends BasicQueryPageComponent<Cpm12010Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     KIND_ID: [null],
     KIND_Name: [null, Validators.maxLength(60)],
-    ...createPaginationConfig([{ field: 'KIND_ID', order: 1 }])
+    PageSize: [20],
+    PageIndex: [1],
   });
   totalRecords = 0;
   // 資料列表
   data: Cpm12010Data[] = [];
-
+  lastQuery: QueryCpm12010Request | null = null;
   // 顧客意見類別下拉選單 (供查詢條件使用，可選)
   kindDropdown: DropdownCpm12010Data[] = [];
 
@@ -49,7 +50,7 @@ export class CPM12010Component extends BasicQueryPageComponent<Cpm12010Data> imp
   selectedRows: Cpm12010Data[] = [];
 
   constructor(
-    private cpm12010Service: Cpm12010Service, // 注入服務
+    public readonly cpm12010Service: Cpm12010Service, // 注入服務
   ) {
     super(); // 呼叫父類建構子
   }
@@ -76,6 +77,7 @@ export class CPM12010Component extends BasicQueryPageComponent<Cpm12010Data> imp
         finalize(() => this.loading = false),
         untilDestroyed(this)
       ).subscribe(res => {
+        this.lastQuery = frm.value;
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
@@ -85,11 +87,16 @@ export class CPM12010Component extends BasicQueryPageComponent<Cpm12010Data> imp
 
   /** 刪除選中的資料 */
   onDelete(data: Cpm12010Data[]): void {
-    const idList = data.map(item => item.ID);
-    this.cpm12010Service.deleteCPM12010({ IDList: idList }).pipe(untilDestroyed(this)).subscribe(res => {
-      this.messageService.successBubble(res.Message);
-      this.selectedRows = []; // 清空選取
-      this.onSubmit(this.queryForm); // 重新查詢
+    this.messageService.confirm({
+      header: `是否確認刪除 ${data.length} 筆資料?`,
+      accept: () => {
+        const idList = data.map(item => item.ID);
+        this.cpm12010Service.deleteCPM12010({ IDList: idList }).pipe(untilDestroyed(this)).subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          this.selectedRows = []; // 清空選取
+          this.onSubmit(this.queryForm); // 重新查詢
+        });
+      }
     });
   }
 }

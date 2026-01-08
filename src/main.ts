@@ -9,7 +9,6 @@ import { provideServiceWorker } from '@angular/service-worker';
 import { JwtModule } from '@auth0/angular-jwt';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
-import { LoggerModule, NgxLoggerLevel } from 'ngx-logger';
 import { ConfirmationService, MessageService, PrimeNGConfig } from 'primeng/api';
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routing';
@@ -59,13 +58,13 @@ bootstrapApplication(AppComponent, {
           disallowedRoutes: [`${environment.ApiUrl}/login`], // 登入 API 不需要帶 Token
         }
       }),
-      LoggerModule.forRoot({
-        level: environment.production ? NgxLoggerLevel.OFF : NgxLoggerLevel.TRACE, // 設定log等級
-        serverLogLevel: NgxLoggerLevel.ERROR, // 設定伺服器log等級
-        // serverLoggingUrl: `${environment.ApiUrl}/log`, // 設定伺服器接收log的API
-        // enableSourceMaps: !environment.production,
-        timestampFormat: 'yyyy-MM-dd HH:mm:ss:SSS',
-      }),
+      // LoggerModule.forRoot({
+      //   level: environment.production ? NgxLoggerLevel.OFF : NgxLoggerLevel.TRACE, // 設定log等級
+      //   serverLogLevel: NgxLoggerLevel.ERROR, // 設定伺服器log等級
+      //   // serverLoggingUrl: `${environment.ApiUrl}/log`, // 設定伺服器接收log的API
+      //   // enableSourceMaps: !environment.production,
+      //   timestampFormat: 'yyyy-MM-dd HH:mm:ss:SSS',
+      // }),
     ),
     provideRouter(
       routes,
