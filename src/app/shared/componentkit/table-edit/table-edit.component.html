@@ -228,7 +228,7 @@
   <ng-template pTemplate="summary">
     <div class="flex align-items-center justify-content-end p-2">
       總筆數:
-      {{ _tableData.length - (canInsert && _tableData.length > 0 ? 1 : 0) + (disabled ? 1 : 0) }} 筆
+      {{ _tableData.length - (canInsert && !disabled && _tableData.length > 0 ? 1 : 0) }} 筆
     </div>
   </ng-template>
   <ng-template pTemplate="emptymessage">
