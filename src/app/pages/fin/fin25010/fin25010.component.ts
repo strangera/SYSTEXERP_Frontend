@@ -44,7 +44,7 @@ export class FIN25010Component extends BasicQueryPageComponent<FIN25010Data> imp
     Remit_Status: [null],                               // 是否形成電匯
     WSLIP_NO: [null, Validators.maxLength(12)],        // 匯款單號
     payday_Counts: [null, this.validationService.numberValidator], // 付款天數
-    ...createPaginationConfig([])
+    ...createPaginationConfig([{ field: 'D_Date', order: -1 }])
   });
 
   data: FIN25010Data[] = [];
@@ -71,7 +71,7 @@ export class FIN25010Component extends BasicQueryPageComponent<FIN25010Data> imp
     PTA_Date_e: [null],
     Remit_Status: [null],
     PAM_No: [null, Validators.maxLength(12)],
-    ...createPaginationConfig([])
+    ...createPaginationConfig([{ field: "D_Date", order: -1 }])
   });
 
   fieldsConfig: FieldsConfig[] = [
@@ -97,7 +97,12 @@ export class FIN25010Component extends BasicQueryPageComponent<FIN25010Data> imp
   // overlay panel 查詢事件
   onFormValueChanged(event: Record<string, string>): void {
     this.opLoading = true;
-    this.fin25010Service.queryDropFIN25010(event)
+    this.fin25010Service.queryDropFIN25010(
+      {
+        ...event,
+        SortBy: [{ field: "D_Date", order: -1 }]
+      }
+    )
       .pipe(untilDestroyed(this), finalize(() => this.opLoading = false))
       .subscribe((results) => {
         this.opData = results.Data;
