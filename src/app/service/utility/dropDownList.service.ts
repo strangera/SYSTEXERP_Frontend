@@ -468,10 +468,10 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList`, {});
   }
 
-  // 查詢專櫃下拉 (取最新契約，含對應資料，不用傳參數)
-  queryTLTTALENTDropDownList(): Observable<ApiResponse<ITalentOption[]>> {
+  // 查詢專櫃下拉 (取最新契約，含對應資料，可選擇傳入分頁/查詢條件)
+  queryTLTTALENTDropDownList(body: any = {}): Observable<ApiResponse<ITalentOption[]>> {
     return this.http.post<ApiResponse<ITalentOption[]>>(
-      `${this.apiUrl}/TLS0000/TLS2000/queryTLTTALENTDropDownList`, {}
+      `${this.apiUrl}/TLS0000/TLS2000/queryTLTTALENTDropDownList`, body ?? {}
     );
   }
 
