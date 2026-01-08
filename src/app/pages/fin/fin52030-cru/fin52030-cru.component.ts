@@ -289,11 +289,23 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
+      // === 業務檢核（維持在 onSubmit 檢核） ===
+      if (!this.isBalanced()) {
+        this.messageService.errorBubble('借貸不平衡');
+        this.loading = false;
+        return;
+      }
+
+      if (this.tableData().length === 0) {
+        this.messageService.errorBubble('明細至少要有一筆');
+        this.loading = false;
+        return;
+      }
+
       const d = this.dataForm.getRawValue();
       const raw = {
         ...d,
         Details: this.tableData().map(({ AccAmtD, AccAmtC, NoteDesc, AccName, DetailName, recKey, ...rest }, index) => ({
-          // ✅ 只保留後端需要的欄位，UI-only 欄位在這邊排掉
           ...rest,
           index,
           AccAmt: (AccAmtD ?? 0) + (AccAmtC ?? 0),

@@ -77,7 +77,7 @@
           ></app-button>
           <app-button
             btnType="submit"
-            [disabled]="!dataForm.valid || !isBalanced()"
+            [disabled]="loading"
             [loading]="loading"
           ></app-button>
         </div>
