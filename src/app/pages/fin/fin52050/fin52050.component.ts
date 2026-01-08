@@ -1,19 +1,19 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ValidationService } from '@shared/service/validation.service';
+import { Fin52050Service } from '@service/api/fin/fin52050.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { Fin52050Service } from '@service/api/fin/fin52050.service';
+import { ValidationService } from '@shared/service/validation.service';
+import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
 
 export interface GLS1003 {
   ClassAttr: string, // 大類代碼
@@ -109,14 +109,14 @@ export class FIN52050Component extends BasicQueryPageComponent<GLS1003> implemen
   // 刪除控制_Grace 9/9: 
   // 9/9 SA註明: 該作業不可修改/刪除
   onDelete(selectedRows: GLS1003[]) {
-    // const ids = selectedRows.map(row => row.id);
-    // this.fin14010Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
-    //   next: () => {
-    //     this.onSubmit(this.queryForm);
-    //     this.selectedRows = [];
-    //   },
-    //   error: () => { this.loading = false; },
-    // });
+    const ids = selectedRows.map(row => row.ClassAttr);
+    this.fin52050Service.deleteFIN52050(ids).pipe(untilDestroyed(this)).subscribe({
+      next: () => {
+        this.onSubmit(this.queryForm);
+        this.selectedRows = [];
+      },
+      error: () => { this.loading = false; },
+    });
   }
 
   isRowSelectable(row: GLS1003) {

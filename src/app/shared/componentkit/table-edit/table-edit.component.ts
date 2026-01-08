@@ -19,6 +19,7 @@ import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableModule, TableRowReorderEvent } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
+import { debounceTime, Subject } from 'rxjs';
 import { TableEditDataService } from './services/table-edit-data.service';
 import { TableUtilityService } from './services/table-edit-utility.service';
 import { TableValidationService } from './services/table-validation.service';
@@ -116,10 +117,11 @@ export class TableEditComponent implements OnChanges {
   @Input() errorMessage: string | undefined; // 錯誤訊息
   // Footer
   @Input() footerData: any;
+  private footerUpdateSubject = new Subject<void>();
   protected _calculatedFooterData: any = {}; // 用於儲存計算結果
   @Input() footerSummaryLabel = '總計'; // 新增：Footer 摘要行的標籤名稱
   @Input() showFooter = false;
-  @Input() scrollable = true; // 是否要滾輪
+  @Input() scrollable = false; // 是否要滾輪
   @Input() showPaginator = false; // 是否顯示 分頁器
 
   protected readonly tableUtilityService = inject(TableUtilityService);
@@ -137,6 +139,16 @@ export class TableEditComponent implements OnChanges {
     return this.isRowSelectable(data, index, this.data) && !data._isAutoInsertCandidate;// 不允許選擇新增中的列
   };
   public tableDataEmpty = false;                    // table 資料是否為空
+
+  constructor() {
+    // 初始化時建立訂閱
+    this.footerUpdateSubject.pipe(
+      debounceTime(300) // 停止輸入 300ms 後才真正執行大數據計算
+    ).subscribe(() => {
+      this._calculatedFooterData = this.calculateFooterData();
+      this.cdr.markForCheck();
+    });
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     // 檢查 'data' 是否有變動
@@ -275,7 +287,9 @@ export class TableEditComponent implements OnChanges {
 
     // 觸發 fieldChange 事件
     this.fieldChange.emit({ rowData, field: col.field, value, index });
-    this._calculatedFooterData = this.calculateFooterData(); // 新增
+    // 將原本直接計算改為發送訊號
+    // this._calculatedFooterData = this.calculateFooterData();
+    this.footerUpdateSubject.next();
     // 發射 cleanData 給父層
     this.dataChange.emit(cleanData);
     this.cdr.markForCheck();

@@ -1,18 +1,18 @@
-import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { NgIf } from '@angular/common';
+import { Component, OnInit, } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { ValidationService } from '@shared/service/validation.service';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Fin52050Service } from '@service/api/fin/fin52050.service';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { ValidationService } from '@shared/service/validation.service';
+import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 export interface GLS1003 {
   ClassAttr: string, // 大類代碼
@@ -29,29 +29,29 @@ export interface GLS1003 {
 
 
 @Component({
-    selector: 'app-fin52050-cru',
-    templateUrl: './fin52050-cru.component.html',
-    styleUrl: './fin52050-cru.component.scss',
-    standalone: true,
-    imports: [
-      MenubarComponent,
-      ButtonComponent,
-      PanelModule,
-      FormsModule,
-      ReactiveFormsModule,
-      InputTextComponent,
-      DropdownComponent,
-      DialogComponent,
-      NgIf, 
-      TranslateModule,
-      TableComponent
-    ]
+  selector: 'app-fin52050-cru',
+  templateUrl: './fin52050-cru.component.html',
+  styleUrl: './fin52050-cru.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    DialogComponent,
+    NgIf,
+    TranslateModule,
+    TableComponent
+  ]
 })
 export class FIN52050CRUComponent extends BasicCruPageComponent<GLS1003> implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     ClassAttr: ['', [Validators.required, Validators.maxLength(1), this.validationService.numberValidator]], //  大類代碼
-    ClassAttrCName: ['', [Validators.required,  Validators.maxLength(100)]], // 大類名稱
+    ClassAttrCName: ['', [Validators.required, Validators.maxLength(100)]], // 大類名稱
     ClassAttrEname: ['', [Validators.maxLength(100), this.validationService.noChineseValidator]], // 大類英文名稱 (非必填)
   });
 
@@ -64,6 +64,9 @@ export class FIN52050CRUComponent extends BasicCruPageComponent<GLS1003> impleme
 
   ngOnInit(): void {
     this.initializePage('FIN52050', this.dataForm);
+    if (!this.isFormCreateable) {
+      this.dataForm.get('ClassAttr')?.disable(); // Detail/Update 時 disable typecode
+    }
   }
 
   onSubmit(frm: FormGroup) {
@@ -74,7 +77,7 @@ export class FIN52050CRUComponent extends BasicCruPageComponent<GLS1003> impleme
       this.messageService.unblockUi();
       return;
     }
-    
+
     // SA註明: 該作業不可修改/刪除
     const formValue = frm.getRawValue();
     switch (this.crudstatus) {
@@ -91,10 +94,11 @@ export class FIN52050CRUComponent extends BasicCruPageComponent<GLS1003> impleme
       case CRUDStatus.Edit:
         if (this.canEdit()) {
           console.log('update', formValue);
-          // this.tls51080Service.updateTLS51080(formValue).subscribe(() => {
-          //   // this.messageService.successBubble('更新成功');
-          //   this.onCancel(); // 儲存後，會返回列表
-          // });
+          this.fin52050Service.updateFIN52050(formValue).subscribe(() => {
+            this.messageService.successBubble('更新成功');
+            this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+            //this.dataForm.reset(); // 重置表單
+          });
         }
         break;
     }

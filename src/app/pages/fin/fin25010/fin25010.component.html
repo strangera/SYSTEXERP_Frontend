@@ -139,7 +139,7 @@
     [showManage]="false"
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
-    [multiSortMeta]="[]"
+    [multiSortMeta]="[{ field: 'D_Date', order: -1 }]"
     [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     [lazy]="true"
