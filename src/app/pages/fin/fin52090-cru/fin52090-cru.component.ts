@@ -10,6 +10,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
 import { finalize, map, tap } from 'rxjs';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { FIN52090Insert } from '../fin52090/fin52090.model';
 
 @Component({
@@ -31,6 +32,7 @@ import { FIN52090Insert } from '../fin52090/fin52090.model';
 export class FIN52090CRUComponent extends BasicCruPageComponent<unknown> implements OnInit {
 
   public readonly dataForm = this.formBuilder.nonNullable.group({
+    id: new FormControl<number | void>(void 0),
     AccNo: new FormControl<string | void>(void 0, [Validators.required]),
     NoteDesc: new FormControl<string | void>(void 0, [Validators.required, Validators.maxLength(100)]),
   });
@@ -60,23 +62,54 @@ export class FIN52090CRUComponent extends BasicCruPageComponent<unknown> impleme
 
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      const raw = <FIN52090Insert>{ ...this.dataForm.getRawValue() };
-      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
-        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
-      )) as unknown as FIN52090Insert;
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          const raw = <FIN52090Insert>{ ...this.dataForm.getRawValue() };
+          const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+            v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
+          )) as unknown as FIN52090Insert;
 
-      this.saving.set(!0);
-      this.service.saveFIN52090Data(payload).pipe(
-        tap(res => this.logger.debug('onSubmit:', [payload, res])),
-        map(res => { if (res.Status !== '0000') throw new Error('資料儲存失敗'); return res; }),
-        finalize(() => this.saving.set(!1)),
-      ).subscribe({
-        next: () => {
-          this.onCancel();
-          this.messageService.successBubble('資料儲存成功');
-        },
-        error: err => this.messageService.errorBubble(err.message || '資料儲存失敗'),
-      });
+          this.saving.set(!0);
+          this.service.saveFIN52090Data(payload).pipe(
+            tap(res => this.logger.debug('onSubmit:', [payload, res])),
+            map(res => { if (res.Status !== '0000') throw new Error('資料儲存失敗'); return res; }),
+            finalize(() => this.saving.set(!1)),
+          ).subscribe({
+            next: () => {
+              this.onCancel();
+              this.messageService.successBubble('資料儲存成功');
+            },
+            error: err => this.messageService.errorBubble(err.message || '資料儲存失敗'),
+          });
+          break;
+        case CRUDStatus.Edit:
+          if (!this.canEdit()) return;
+
+          const rawE = this.dataForm.getRawValue();
+
+          const payloadE = Object.fromEntries(
+            Object.entries(rawE).filter(
+              ([_, v]) => v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
+            )
+          );
+
+          this.saving.set(true);
+          this.service.updateFIN52090(payloadE).pipe(
+            map(res => {
+              if (res.Status !== '0000') throw new Error('更新失敗');
+              return res;
+            }),
+            finalize(() => this.saving.set(false)),
+          ).subscribe({
+            next: () => {
+              this.messageService.successBubble('更新成功');
+              this.onCancel();
+            },
+            error: err =>
+              this.messageService.errorBubble(err.message || '更新失敗'),
+          });
+          break;
+      }
     });
   }
 }
