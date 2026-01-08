@@ -64,6 +64,9 @@ export class FIN52050CRUComponent extends BasicCruPageComponent<GLS1003> impleme
 
   ngOnInit(): void {
     this.initializePage('FIN52050', this.dataForm);
+    if (!this.isFormCreateable) {
+      this.dataForm.get('ClassAttr')?.disable(); // Detail/Update 時 disable typecode
+    }
   }
 
   onSubmit(frm: FormGroup) {
