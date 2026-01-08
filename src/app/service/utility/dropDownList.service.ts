@@ -246,7 +246,10 @@ export interface IAPS1003Item {
   CAP_Type: string;
   org_id?: string;
 }
-
+export interface TLTTALENTDropDownRequest {
+  tlt_noList?: string[]; // 查指定專櫃編號
+  isNewData?: boolean;   // 是否僅查詢合約有效期內（當日介於契約起迄日）的專櫃資料，後端預設false
+}
 
 @Injectable({
   providedIn: 'root'
@@ -468,10 +471,10 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList`, {});
   }
 
-  // 查詢專櫃下拉 (取最新契約，含對應資料，可選擇傳入分頁/查詢條件)
-  queryTLTTALENTDropDownList(body: any = {}): Observable<ApiResponse<ITalentOption[]>> {
+  // 查詢專櫃下拉 (取最新契約，含對應資料，不用傳參數)
+  queryTLTTALENTDropDownList(params: TLTTALENTDropDownRequest = {}): Observable<ApiResponse<ITalentOption[]>> {
     return this.http.post<ApiResponse<ITalentOption[]>>(
-      `${this.apiUrl}/TLS0000/TLS2000/queryTLTTALENTDropDownList`, body ?? {}
+      `${this.apiUrl}/TLS0000/TLS2000/queryTLTTALENTDropDownList`, params
     );
   }
 

@@ -185,7 +185,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     };
     this.talentLastQueryBody = body;
     this.dropDownListService
-      .queryTLTTALENTDropDownList(body)
+      .queryTLTTALENTDropDownList({ isNewData: true })
       .pipe(untilDestroyed(this), finalize(() => (this.talentDialogLoading = false)))
       .subscribe((res: any) => {
         const raw = res?.Data ?? [];
