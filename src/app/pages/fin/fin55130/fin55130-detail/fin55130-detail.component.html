@@ -1,0 +1,38 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1" />
+    <app-button btnType="back" (click)="onCancel()" />
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <app-button label="列印" icon="pi pi-file-pdf" (click)="onExportPDF()" [loading]="PDFBtnLoading"></app-button>
+    <div class="flex flex-column align-items-center mb-3">
+      <div class="col-12 text-2xl font-bold mb-1 text-center">
+        南紡流通事業股份有限公司(南紡購物中心)
+      </div>
+      <div class="col-12 text-xl font-bold text-center">轉帳傳票</div>
+    </div>
+    <div class="grid text-sm text-700">
+      <div class="col-12 md:col-3">
+        <span class="mr-2">傳票日期：</span>
+        <span class="font-medium">{{ meta?.VouDate || "" }}</span>
+      </div>
+      <div class="col-12 md:col-3">
+        <span class="mr-2">傳票型態：</span>
+        <span class="font-medium">{{ meta?.VouType_Name || "" }}</span>
+      </div>
+      <div class="col-12 md:col-3">
+        <span class="mr-2">傳票編號：</span>
+        <span class="font-medium">{{ meta?.VouNo || "" }}</span>
+      </div>
+      <div class="col-12 md:col-3">
+        <span class="mr-2">狀態：</span>
+        <span class="font-medium">{{ meta?.VouStatus || "" }}</span>
+      </div>
+    </div>
+    <div class="grid p-fluid">
+      <app-table-report class="col-12" [columns]="columns" [loading]="loading" [showCaption]="false"
+        [showManage]="false" [data]="detailData" [footerData]="footerData" [totalRecords]="detailData.length">
+      </app-table-report>
+    </div>
+  </p-panel>
+</div>
