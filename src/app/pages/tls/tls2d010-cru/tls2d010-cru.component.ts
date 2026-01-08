@@ -358,7 +358,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   // ===== 載入選單 =====
   private loadTltAndPodOptions(): void {
     forkJoin({
-      tlt: this.dropDownListService.queryTLTTALENTDropDownList(),
+      tlt: this.dropDownListService.queryTLTTALENTDropDownList({ isNewData: true }),
       pod: this.dropDownListService.queryTALPORDERM_DropDownList(),
       acc: this.dropDownListService.queryGLS1005_DropDownList(),
       org: this.dropDownListService.querySYS3100_DropDownList(),
