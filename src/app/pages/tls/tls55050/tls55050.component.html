@@ -43,11 +43,15 @@
         (onClick)="settleErrors = []">
       </p-button>
     </div>
-    <ul class="m-0 pl-4 text-red-700 line-height-3">
-      <li *ngFor="let err of settleErrors">
-        <span class="font-medium">{{ err.Cls_Date | date: 'yyyy/MM/dd' }}</span> ，原因： {{ err.Msg }}
-      </li>
-    </ul>
+
+    <div [style.max-height]="'200px'" style="overflow-y: auto;">
+      <ul class="m-0 pl-4 text-red-700 line-height-3">
+        <li *ngFor="let err of settleErrors" class="mb-1">
+          <span class="font-medium">{{ err.Cls_Date | date: 'yyyy/MM/dd' }}</span> ，原因： {{ err.Msg }}
+        </li>
+      </ul>
+    </div>
+
   </div>
 </div>
 <div class="card">
