@@ -100,8 +100,8 @@
       [pSelectableRowDisabled]="!isRowSelectable(rowData)" [pReorderableRow]="index" [pSelectableRowIndex]="rowIndex">
       <td *ngIf="showReorder" class="text-center" pFrozenColumn>{{ rowIndex + 1 }}</td>
       <td *ngIf="showCheckBox">
-        <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
-          [value]="rowData" [disabled]="!rowSelectableWrapper" />
+        <p-tableCheckbox class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData"
+          [disabled]="!rowSelectableWrapper" />
       </td>
       <td *ngIf="expansionColumns.length" class="text-center">
         <p-button pRipple [text]="true" [rounded]="true" [plain]="true" severity="secondary"

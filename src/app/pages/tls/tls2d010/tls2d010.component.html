@@ -1,127 +1,61 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button
-      btnType="create"
-      (clickEvent)="onCreate({ type: 'normal' })"
-      label="新增扣款"
-    ></app-button>
-    <app-button
-      btnType="create"
-      (clickEvent)="onCreate({ type: 'counter' })"
-      label="新增專櫃扣款"
-    ></app-button>
+    <app-button btnType="create" (clickEvent)="onCreate({ type: 'normal' })" label="新增扣款"></app-button>
+    <app-button btnType="create" (clickEvent)="onCreate({ type: 'counter' })" label="新增專櫃扣款"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="專櫃編號"
-              controlName="tlt_noList"
-              [control]="queryForm.controls.tlt_noList"
-              [options]="tlt_noOptions"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="專櫃編號" controlName="tlt_noList" [control]="queryForm.controls.tlt_noList"
+              [options]="tlt_noOptions" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="扣款項目"
-              controlName="CAP_ItemList"
-              [options]="CAP_ItemOptions"
-              [control]="queryForm.controls.CAP_ItemList"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="扣款項目" controlName="CAP_ItemList" [options]="CAP_ItemOptions"
+              [control]="queryForm.controls.CAP_ItemList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="會計科目代碼"
-              controlName="AccNoList"
-              [control]="queryForm.controls.AccNoList"
-              [submitted]="submitted"
-              [options]="AccNoOptions"
-            ></app-multi-select>
+            <app-multi-select label="會計科目代碼" controlName="AccNoList" [control]="queryForm.controls.AccNoList"
+              [submitted]="submitted" [options]="AccNoOptions"></app-multi-select>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="組織代碼/名稱"
-              controlName="org_idList"
-              [options]="org_idOptions"
-              [control]="queryForm.controls.org_idList"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="組織代碼/名稱" controlName="org_idList" [options]="org_idOptions"
+              [control]="queryForm.controls.org_idList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              label="扣款年月"
-              calendarType="dateMonthOne"
-              [control]="queryForm.controls.tpy_date"
-              [submitted]="submitted"
-            ></app-calendar>
+            <app-calendar label="扣款年月" calendarType="dateMonthOne" [control]="queryForm.controls.tpy_date"
+              [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              label="扣款日期"
-              controlName="Date"
-              calendarType="dateOne"
-              [control]="queryForm.controls.tpy_date"
-              [submitted]="submitted"
-            ></app-calendar>
+            <app-calendar label="扣款日期" controlName="Date" calendarType="dateOne" [control]="queryForm.controls.tpy_date"
+              [submitted]="submitted"></app-calendar>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="建立者"
-              controlName="CRT_USR_No"
-              [options]="CRT_USR_NoOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.CRT_USR_No"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="建立者" controlName="CRT_USR_No" [options]="CRT_USR_NoOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.CRT_USR_No" [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="活動代碼/名稱"
-              controlName="pod_noList"
-              [options]="pod_noOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.pod_noList"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="活動代碼/名稱" controlName="pod_noList" [options]="pod_noOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.pod_noList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="是否開立發票"
-              groupname="GUI_FLAGOption"
-              [control]="queryForm.controls.GUI_FLAG"
-              [submitted]="submitted"
-              [options]="[
+            <app-radiobutton label="是否開立發票" groupname="GUI_FLAGOption" [control]="queryForm.controls.GUI_FLAG"
+              [submitted]="submitted" [options]="[
                 { value: 'Y', label: '是' },
                 { value: 'N', label: '否' },
-              ]"
-            ></app-radiobutton>
+              ]"></app-radiobutton>
           </div>
         </div>
 
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -131,24 +65,10 @@
 </div>
 
 <div class="card">
-  <app-table
-    [showDelete]="true"
-    [data]="data"
-    [columns]="columns"
-    (edit)="onEdit(setCounterType($event))"
-    (detail)="onDetail(setCounterType($event))"
-    [showCheckBox]="true"
-    dataKey="id"
-    [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [showManage]="true"
-    [loading]="loading"
-    [showExcelExport]="true"
-    [showExcel]="true"
-    (exportExcel)="downloadTemplate()"
-    (importExcel)="onImportExcel($event)"
-    (delete)="onDelete($event)"
-  ></app-table>
+  <app-table [showDelete]="true" [data]="data" [columns]="columns" (edit)="onEdit(setCounterType($event))"
+    (detail)="onDetail(setCounterType($event))" [showCheckBox]="true" dataKey="id" [showReportMode]="false"
+    [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="true" [loading]="loading"
+    [showExcelExport]="true" [showExcel]="true" [exportExcelLoading]="excelLoading" (exportExcel)="downloadTemplate()"
+    (importExcel)="onImportExcel($event)" (delete)="onDelete($event)"></app-table>
 </div>
