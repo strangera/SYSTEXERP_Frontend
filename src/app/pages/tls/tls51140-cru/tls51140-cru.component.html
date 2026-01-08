@@ -14,11 +14,10 @@
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="倉別代碼/名稱" controlName="HOS_No"
           [options]="warehouseOptions$ | async" optionLabel="label" optionValue="No"
           [control]="dataForm.controls.HOS_No" [submitted]="submitted"></app-dropdown>
-        <app-table title="收銀機清單" dataKey="ECR_No" class="col-12" [columns]="columns" [data]="data" [showFilter]="false"
-          [deleteData]="true" (dataChange)="data = $event" [showInsert]="true" [showManage]="false"
-          (insert)="onOpenDialog()" [insertDisabled]="dataForm.controls.TLT_NO.value === null" [showCheckBox]="true"
-          [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showReportMode]="false"
-          [showRowEdit]="true" [alwaysEdit]="true" [disabled]="isFormReadable"></app-table>
+        <app-table-edit title="收銀機清單" class="col-12" [columns]="columns" [data]="data" (dataChange)="data = $event"
+          [showInsert]="true" (insert)="onOpenDialog()" [insertDisabled]="dataForm.controls.TLT_NO.value === null"
+          [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [disabled]="isFormReadable"
+          [canInsert]="false" [tableRequired]="true"></app-table-edit>
       </div>
       <div *ngIf=" !isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
@@ -38,9 +37,9 @@
     <app-dropdown class="flex-grow-1" label="區域" controlName="area_no" [control]="dialogQueryForm.controls.area_no"
       [options]="areaOptions$ | async" optionLabel="Name" optionValue="No" />
   </form>
-  <app-table tableKey="tls51140DialogTable" dataKey="ECR_No" [data]="dialogData" [columns]="dialogColumns"
-    [selectedItems]="selectedItemsDialog" (selectionChange)="selectedItemsDialog = $event" [showHeader]="false"
-    [showManage]="false" [showCheckBox]="true" [emptyMessage]="'無可選擇的收銀機'" [loading]="dialogLoading"
-    [isRowSelectable]="isRowSelectable.bind(this)" [showCaption]="false" [scrollHeight]="'400px'">
-  </app-table>
+  <app-table-report tableKey="tls51140DialogTable" dataKey="ECR_No" [data]="dialogData" [columns]="dialogColumns"
+    [selectedItems]="selectedItemsDialog" (selectionChange)="selectedItemsDialog = $event" [showManage]="false"
+    [showCheckBox]="true" [emptyMessage]="'無可選擇的收銀機'" [loading]="dialogLoading" [totalRecords]="dialogData.length"
+    [isRowSelectable]="isRowSelectable.bind(this)" [showCaption]="false">
+  </app-table-report>
 </app-dialog>

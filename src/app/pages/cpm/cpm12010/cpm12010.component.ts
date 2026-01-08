@@ -24,7 +24,7 @@ export class CPM12010Component extends BasicQueryPageComponent<Cpm12010Data> imp
   queryForm = this.formBuilder.nonNullable.group({
     KIND_ID: [null],
     KIND_Name: [null, Validators.maxLength(60)],
-    PageSize: [20],
+    PageSize: [30],
     PageIndex: [1],
   });
   totalRecords = 0;
