@@ -110,7 +110,7 @@ export class FIN52050Component extends BasicQueryPageComponent<GLS1003> implemen
   // 9/9 SA註明: 該作業不可修改/刪除
   onDelete(selectedRows: GLS1003[]) {
     const ids = selectedRows.map(row => row.ClassAttr);
-    this.fin52050Service.deleteFIN52050(ids).pipe(untilDestroyed(this)).subscribe({
+    this.fin52050Service.deleteFIN52050({ ids }).pipe(untilDestroyed(this)).subscribe({
       next: () => {
         this.onSubmit(this.queryForm);
         this.selectedRows = [];
