@@ -98,10 +98,14 @@ export class FIN52040Component extends BasicQueryPageComponent<Fin52040Request> 
     });
   }
   // 刪除控制_Grace 9/9: 
-  // GLS6002 GLS3002若有對象別編號不可刪除
   onDelete(selectedRows: Fin52040Response[]) {
-    const RefCodes = selectedRows.map(row => row.RefCode);
-    this.fin52040Service.deleteFIN52040(RefCodes).pipe(untilDestroyed(this)).subscribe({
+    const refCodeList = selectedRows.map(row => row.RefCode);
+    const requestBody = {
+      RefCodes: refCodeList
+    };
+
+    console.log('delete request', requestBody);
+    this.fin52040Service.deleteFIN52040(requestBody).pipe(untilDestroyed(this)).subscribe({
       next: () => {
         this.onSubmit(this.queryForm);
         this.selectedRows = [];
