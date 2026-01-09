@@ -165,16 +165,29 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
+  private formatYearMonth(value: any): string {
+    if (!value) return '';
+    const d = value instanceof Date ? value : new Date(value);
+    if (isNaN(d.getTime())) {
+      const s = String(value);
+      if (s.length === 6 && !isNaN(+s)) return s;
+      return '';
+    }
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    return `${yyyy}${mm}`;
+  }
+
   // 查詢並載入
   querySourceInvoice(): void {
     this.queryLoading = true;
     const formValue = this.dataForm.getRawValue();
     const params = {
       tlt_no: formValue.tlt_no,
-      sam_yyymm: formValue.sam_yyymm,
+      sam_yyymm: this.formatYearMonth(formValue.sam_yyymm),
       money_type: formValue.COMM_MONEY_TYPE,
       sam_termno: formValue.sam_termno,
-      COMM_YM: formValue.COMM_YM,
+      COMM_YM: this.formatYearMonth(formValue.COMM_YM),
     };
 
     this.tls2f010Service.queryTLS2F010InsertData(params)
