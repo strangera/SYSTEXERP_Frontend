@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, OnInit, output } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RadioButtonClickEvent, RadioButtonModule } from 'primeng/radiobutton';
+import { RadioButtonModule } from 'primeng/radiobutton';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 

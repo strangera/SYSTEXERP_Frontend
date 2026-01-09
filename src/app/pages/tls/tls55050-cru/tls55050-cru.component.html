@@ -1,1 +1,63 @@
-<p>tls55050-cru works!</p>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="傳票編號" controlName="VouNo" [control]="dataForm.controls.VouNo"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-dropdown label="傳票種類" controlName="VouType" [control]="dataForm.controls.VouType"
+            [options]="VouTypeOptions" optionLabel="label" optionValue="value" [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="傳票型態" controlName="SrcSheetType" [control]="dataForm.controls.SrcSheetType"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-calendar label="傳票日期" controlName="VouDate" [control]="dataForm.controls.VouDate"
+            [submitted]="submitted"></app-calendar>
+        </div>
+        <div class="col-12 md:col-6">
+          <app-input-text label="傳票摘要" controlName="Remark" [control]="dataForm.controls.Remark"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="結帳單號" controlName="SrcSheetNo" [control]="dataForm.controls.SrcSheetNo"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-dropdown label="傳票狀態" controlName="PostFlag" [control]="dataForm.controls.PostFlag"
+            [submitted]="submitted" [options]="PostFlagOptions" optionLabel="label" optionValue="value"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="建立人員編號" controlName="CRT_USR_No"
+            [control]="dataForm.controls.CRT_USR_No"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-calendar calendarType="dateTimeOne" label="建立日期" controlName="CRT_Date"
+            [control]="dataForm.controls.CRT_Date" [submitted]="submitted"></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="變更人員編號" controlName="UPD_USR_No"
+            [control]="dataForm.controls.UPD_USR_No"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-calendar calendarType="dateTimeOne" label="變更日期" controlName="UPD_Date"
+            [control]="dataForm.controls.UPD_Date" [submitted]="submitted"></app-calendar>
+        </div>
+      </div>
+      <app-table-report [data]="data" [columns]="columns" [showManage]="false" [showDelete]="false"
+        [showCaption]="false" [totalRecords]="totalRecords" [loading]="loading">
+      </app-table-report>
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm" />
+        <app-button btnType="submit" [loading]="loading" />
+      </div>
+    </form>
+  </p-panel>
+</div>

@@ -1,25 +1,23 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Cpm13050Service, QueryCPM13050Request } from '@service/api/cpm/cpm13050.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Column, createPaginationConfig, formatAmount, formatDateTime, formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatAmount, formatDateTime, formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { Cpm13050Service, QueryCPM13050Request } from '@service/api/cpm/cpm13050.service';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ButtonModule } from 'primeng/button';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 @Component({
   selector: 'app-cpm13050',
   templateUrl: './cpm13050.component.html',
-  styleUrls: ['./cpm13050.component.scss'],
   standalone: true,
   imports: [
     DropdownComponent,
@@ -31,7 +29,6 @@ import { finalize } from 'rxjs';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    TableComponent,
     TranslateModule
   ]
 })

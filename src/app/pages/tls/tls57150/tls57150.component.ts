@@ -103,7 +103,7 @@ export class TLS57150Component extends BasicQueryPageComponent<QueryTLS57150Deta
   opData: QueryPLUResponse[] = [];
   opTotalRecords = 0;
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號', mainDataField: true },
+    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
   ];
   opColumns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },

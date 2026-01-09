@@ -89,17 +89,23 @@ export class CPM13010Component extends BasicQueryPageComponent<QueryCPM13010Resp
 
   // onDelete (刪除功能，此處僅為模板，需根據實際需求實現)
   onDelete(selectedRows: QueryCPM13010Response[]) {
-    const IDs = selectedRows.map(row => row.ID);
-    this.loading = true;
-    this.cpm13010Service.deleteCPM13010({ IDs }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-      if (res.Status === '0000') {
-        this.onSubmit(this.queryForm);
-        this.selectedRows = [];
-        this.messageService.successBubble(res.Message);
-      } else {
-        this.messageService.errorBubble(res.Message);
+    this.messageService.confirm({
+      header: `是否確認刪除 ${selectedRows.length} 筆資料?`,
+      accept: () => {
+        const IDs = selectedRows.map(row => row.ID);
+        this.loading = true;
+        this.cpm13010Service.deleteCPM13010({ IDs }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+          if (res.Status === '0000') {
+            this.onSubmit(this.queryForm);
+            this.selectedRows = [];
+            this.messageService.successBubble(res.Message);
+          } else {
+            this.messageService.errorBubble(res.Message);
+          }
+        });
+
       }
-    });
+    })
   }
   btnLoading = false;
   // onUpload() {

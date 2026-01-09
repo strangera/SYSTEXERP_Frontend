@@ -41,14 +41,17 @@
     <p-button styleClass="p-2" label="資產負債表.XLSX" [loading]="btnLoading" icon="pi pi-file" (click)="onExportXLSX()"
       [disabled]="A_data.length === 0 || L_data.length === 0" [loading]="btnLoading"></p-button>
   </div>
-  <div class="flex">
-    <app-table-report class="w-full" [data]="A_data" [columns]="columns" [totalRecords]="totalRecords"
-      [loading]="loading" [subData]="subData" [footerData]="A_TotalData" groupRowsBy="groupName"
-      [subTotalData]="subData" [YM]="YM">
-    </app-table-report>
-    <app-table-report class="w-full" [data]="L_data" [columns]="columns" [totalRecords]="totalRecords"
-      [loading]="loading" [subData]="subData" [footerData]="L_TotalData" groupRowsBy="groupName"
-      [subTotalData]="subData" [YM]="YM">
-    </app-table-report>
+  <div class="w-full overflow-x-auto">
+    <div class="flex" style="min-width: 1200px;">
+      <app-table-report class="w-full" [data]="A_data" [columns]="columns" [totalRecords]="totalRecords"
+        [loading]="loading" [subData]="subData" [footerData]="A_TotalData" groupRowsBy="groupName"
+        [subTotalData]="subData" [YM]="YM">
+      </app-table-report>
+      <div class="mx-1"></div>
+      <app-table-report class="w-full" [data]="L_data" [columns]="columns" [totalRecords]="totalRecords"
+        [loading]="loading" [subData]="subData" [footerData]="L_TotalData" groupRowsBy="groupName"
+        [subTotalData]="subData" [YM]="YM">
+      </app-table-report>
+    </div>
   </div>
 </div>

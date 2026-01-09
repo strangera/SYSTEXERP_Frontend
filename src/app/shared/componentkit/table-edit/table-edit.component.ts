@@ -123,6 +123,8 @@ export class TableEditComponent implements OnChanges {
   @Input() showFooter = false;
   @Input() scrollable = false; // 是否要滾輪
   @Input() showPaginator = false; // 是否顯示 分頁器
+  // 鍵盤操作相關
+  @Input() enableTabInsert = false; // 是否在最後一列最後一個欄位按 Tab 觸發新增
 
   protected readonly tableUtilityService = inject(TableUtilityService);
   protected readonly cdr = inject(ChangeDetectorRef);
@@ -231,6 +233,40 @@ export class TableEditComponent implements OnChanges {
         }
       }
     }
+  }
+  /**
+   * 儲存格 keydown 事件處理：
+   * - 一律阻止事件往外傳（維持原本行為）
+   * - 若有啟用 enableTabInsert，且在最後一列最後一欄按下 Tab，則自動觸發新增。
+   */
+  onCellKeydown(event: KeyboardEvent, rowIndex: number, colIndex: number): void {
+    event.stopPropagation();
+
+    if (!this.enableTabInsert) return;
+    if (event.key !== 'Tab' || event.shiftKey) return;
+    if (this.disabled) return;
+
+    const lastRowIndex = this._tableData.length - 1;
+    const lastColIndex = this.columns.length - 1;
+
+    // 只在最後一列最後一欄時處理
+    if (rowIndex !== lastRowIndex || colIndex !== lastColIndex) return;
+
+    // 若已經有自動候選列，就不再自動新增，避免重複
+    const hasCandidate = this._tableData.some(r => r._isAutoInsertCandidate);
+    if (hasCandidate) return;
+
+    // 延遲執行，避免影響瀏覽器原生 Tab 行為與焦點計算
+    setTimeout(() => {
+      // 若外部有定義 insert 事件（例如 TLS2D010 打開專櫃對話框），優先觸發 insert
+      if (this.showInsert && this.insert.observers.length > 0) {
+        this.insert.emit();
+      } else if (this.canInsert) {
+        // 否則使用共用的 insertRow 新增一列
+        this.insertRow();
+      }
+      this.cdr.markForCheck();
+    });
   }
   onSelectionChange(event: any) {
     if (this.disabled) { return; }

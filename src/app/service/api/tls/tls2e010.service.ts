@@ -7,7 +7,7 @@ import { environment } from 'src/environments/environment';
 
 // 定義 executeTLS2E010 的 Request Body
 export interface Tls2e010ExecuteBody {
-  sam_yyymm: string;
+  sam_yyymm: string | null;
   tlt_no: string;
 }
 
@@ -24,8 +24,8 @@ export interface Tls2e010QueryBody {
   PageIndex: number;
   SortBy?: SortMeta[];
   sam_yyymm?: string;
-  sam_yyymm_start?: string;
-  sam_yyymm_end?: string;
+  sam_yyymm_start: string | null;
+  sam_yyymm_end: string | null;
   tlt_no: string;
 }
 

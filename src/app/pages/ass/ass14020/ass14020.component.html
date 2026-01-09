@@ -8,82 +8,43 @@
         </div> -->
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              calendarType="dateOne"
-              label="關帳日期"
-              [control]="queryForm.controls.closeDate"
-              [submitted]="submitted"
-            ></app-calendar>
+            <app-calendar calendarType="dateOne" label="關帳日期" [control]="queryForm.controls.closeDate"
+              [submitted]="submitted"></app-calendar>
           </div>
         </div>
         <hr />
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="發票維護單號"
-              controlName="maintenanceID"
-              [control]="queryForm.controls.maintenanceID"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number [useGrouping]="false" label="發票維護單號" controlName="maintenanceID"
+              [control]="queryForm.controls.maintenanceID" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="未稅總金額"
-              controlName="noTaxAmount"
-              [control]="queryForm.controls.noTaxAmount"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number label="未稅總金額" controlName="noTaxAmount" [control]="queryForm.controls.noTaxAmount"
+              [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="稅額"
-              controlName="taxAmount"
-              [control]="queryForm.controls.taxAmount"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number label="稅額" controlName="taxAmount" [control]="queryForm.controls.taxAmount"
+              [submitted]="submitted"></app-input-number>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="總金額"
-              controlName="totalAmount"
-              [control]="queryForm.controls.totalAmount"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number label="總金額" controlName="totalAmount" [control]="queryForm.controls.totalAmount"
+              [submitted]="submitted"></app-input-number>
           </div>
         </div>
         <div>
           <div class="grid justify-content-end">
             <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
+            <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
           </div>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
-<!-- <div class="card">
-    <div class="col-13">
-        <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-        </app-table>
-    </div>
-</div> -->

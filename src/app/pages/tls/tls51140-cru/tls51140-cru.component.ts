@@ -1,24 +1,26 @@
-import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AsyncPipe, NgIf } from '@angular/common';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
 import { QueryTLS51140ResponseData, Tls51140Service } from '@service/api/tls/tls51140.service';
 import { DropDownListService, POS1002Item } from '@service/utility/dropDownList.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Column } from '@shared/componentkit/table/table.model';
+import { PanelModule } from 'primeng/panel';
 import { debounceTime, finalize, tap } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 @Component({
   selector: 'app-tls51140-cru',
   standalone: true,
-  imports: [AsyncPipe, DialogComponent, TableComponent, MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, ButtonComponent, NgIf, TranslateModule],
+  imports: [TableReportComponent, TableEditComponent, AsyncPipe, DialogComponent, MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, ButtonComponent, NgIf, TranslateModule],
   templateUrl: './tls51140-cru.component.html'
 })
 export class Tls51140CruComponent extends BasicCruPageComponent<QueryTLS51140ResponseData> implements OnInit {
@@ -34,7 +36,7 @@ export class Tls51140CruComponent extends BasicCruPageComponent<QueryTLS51140Res
 
   data: POS1002Item[] = []
   selectedItems: POS1002Item[] = []
-  columns: Column[] = [
+  columns: EditColumn[] = [
     { field: 'ECR_No', header: '收銀機號' },
     { field: 'ECR_Name', header: '收銀機名稱' },
     { field: 'Remark', header: '備註', type: 'input' },
@@ -108,9 +110,14 @@ export class Tls51140CruComponent extends BasicCruPageComponent<QueryTLS51140Res
           });
       });
   }
-
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      const valid = this.tableEditComponent.validateAndShowErrors();
+      if (!valid) {
+        this.loading = false;
+        return;
+      }
       // 這裡將前端的 data 轉換成後端期望的 updateTLS51140Request 格式
       const requestBody = this.data.map(item => ({
         // 判斷是否為既有資料。ID: 0 會被後端視為新增

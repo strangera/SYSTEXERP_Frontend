@@ -301,7 +301,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           { field: 'ven_no', header: '廠商編號' },
           { field: 'VEN_Name', header: '廠商名稱' },
           { field: 'sam_yyymm', header: '扣款年月' },
-          { field: 'GUI_FLAG', header: '是否開立發票', format: (value: any) => value === 'Y' ? '開立' : '不開立' },
+          { field: 'GUI_FLAG', header: '是否開立發票' },
           { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
         ];
         break;
@@ -310,7 +310,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           { field: 'CAP_Item', header: '扣款代碼' },
           { field: 'CAP_Name', header: '扣款名稱' },
           { field: 'sam_yyymm', header: '扣款年月' },
-          { field: 'GUI_FLAG', header: '是否開立發票', format: (value: any) => value === 'Y' ? '開立' : '不開立' },
+          { field: 'GUI_FLAG', header: '是否開立發票' },
           { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
         ];
         break;
@@ -321,7 +321,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           { field: 'org_id', header: '組織代碼' },
           { field: 'Org_Name', header: '組織名稱' },
           { field: 'sam_yyymm', header: '扣款年月' },
-          { field: 'GUI_FLAG', header: '是否開立發票', format: (value: any) => value === 'Y' ? '開立' : '不開立' },
+          { field: 'GUI_FLAG', header: '是否開立發票' },
           { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
         ];
         break;
@@ -332,7 +332,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           { field: 'AccNo', header: '會計科目' },
           { field: 'AccCName', header: '科目中文名稱' },
           { field: 'sam_yyymm', header: '扣款年月' },
-          { field: 'GUI_FLAG', header: '是否開立發票', format: (value: any) => value === 'Y' ? '開立' : '不開立' },
+          { field: 'GUI_FLAG', header: '是否開立發票' },
           { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
         ];
         break;
@@ -347,7 +347,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           { field: 'pod_no', header: '活動代碼' },
           { field: 'AccNo', header: '會計科目' },
           { field: 'sam_yyymm', header: '扣款年月' },
-          { field: 'GUI_FLAG', header: '是否開立發票', format: (value: any) => value === 'Y' ? '開立' : '不開立' },
+          { field: 'GUI_FLAG', header: '是否開立發票' },
           { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true },
           { field: 'remarks', header: '備註' }
         ];

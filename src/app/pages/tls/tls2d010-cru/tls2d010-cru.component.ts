@@ -19,8 +19,9 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, formatDate as columnDateFormat } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { formatDate as columnDateFormat } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService, IAPS1003Item, IDropdownItem, ITalentOption } from './../../../service/utility/dropDownList.service';
 
 @UntilDestroy()
@@ -33,7 +34,7 @@ import { DropDownListService, IAPS1003Item, IDropdownItem, ITalentOption } from 
     TableEditComponent, CalendarComponent, InputTextComponent, RadiobuttonComponent, MenubarComponent,
     PanelModule, ReactiveFormsModule, DropdownComponent,
     InputNumberComponent, ButtonComponent, NgIf, TranslateModule,
-    DialogComponent, TableComponent,
+    DialogComponent, TableReportComponent,
   ],
 })
 export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -63,7 +64,9 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   currentCreateType: 'normal' | 'counter' = 'counter';
   isDetailMode = false;
   data: any[] = [];
-  selectedItems: any[] = [];
+  // 各模式獨立選取狀態，避免互相干擾
+  counterSelectedItems: any[] = [];
+  normalSelectedItems: any[] = [];
 
   // 下拉選單
   tlt_noOptions: ITalentOption[] = [];
@@ -79,23 +82,24 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   columnsCounter: EditColumn[] = [];
   columnsNormal: EditColumn[] = [];
 
+  // 本頁專用：提供給 table-edit 的唯一列 key
+  private rowIdCounter = 1;
+
   // 專櫃選擇 Dialog 相關
   talentDialogVisible = false;
   talentDialogLoading = false;
   talentDialogData: any[] = [];
   selectedTalents: any[] = [];
-  talentDialogColumns: Column[] = [
-    { field: 'apply_no', header: '申請單號' },
-    { field: 'tlt_bdate', header: '起始日', format: columnDateFormat },
-    { field: 'tlt_edate', header: '截止日', format: columnDateFormat },
+  talentDialogColumns: ReportColumn[] = [
     { field: 'tlt_no', header: '專櫃編號' },
     { field: 'tlt_name', header: '專櫃名稱' },
-    { field: 'org_id', header: '組織代號' },
     { field: 'contract_no', header: '契約編號' },
     { field: 'contract_subno', header: '版次' },
     { field: 'tlt_contract_bdate', header: '契約起日', format: columnDateFormat },
     { field: 'tlt_contract_edate', header: '契約迄日', format: columnDateFormat },
   ];
+  talentTotalRecords = 0;
+  talentLastQueryBody: any | null = null;
 
   // 表單
   dataFormCounter = this.formBuilder.group({
@@ -133,10 +137,12 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
   /** 本地取消：清空表單下方的扣款項目清單（table 資料） */
   onLocalCancel(mode: 'counter' | 'normal'): void {
-    // 保持表單 reset 由共用按鈕處理，這裡只負責清表格
     this.data = [];
-    this.selectedItems = [];
-    // 更新總金額（特別是專櫃模式的 totalCash 顯示）
+    if (mode === 'counter') {
+      this.counterSelectedItems = [];
+    } else {
+      this.normalSelectedItems = [];
+    }
     try {
       this.updateTotalCash();
     } catch {
@@ -151,7 +157,18 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     super();
   }
 
-  // 開啟專櫃選擇視窗（由「新增扣款」table 的新增按鈕觸發）
+  /** 確保每筆 row 都有唯一的 rowId，供 dataKey 使用（只影響本頁） */
+  private ensureRowIds(rows: any[]): any[] {
+    if (!Array.isArray(rows)) return [];
+    return rows.map(row => {
+      if (!row.rowId) {
+        row.rowId = this.rowIdCounter++;
+      }
+      return row;
+    });
+  }
+
+  // 開啟專櫃選擇視窗
   onOpenTalentDialog(): void {
     if (this.isDetailMode) {
       return;
@@ -162,16 +179,27 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
   private loadTalentDialogData(): void {
     this.talentDialogLoading = true;
+    const body: any = {
+      pageIndex: 1,
+      pageSize: 30,
+    };
+    this.talentLastQueryBody = body;
     this.dropDownListService
       .queryTLTTALENTDropDownList({ isNewData: true })
       .pipe(untilDestroyed(this), finalize(() => (this.talentDialogLoading = false)))
       .subscribe((res: any) => {
-        this.talentDialogData = res?.Data ?? [];
+        const raw = res?.Data ?? [];
+        this.talentDialogData = raw;
+        this.talentTotalRecords = res?.TotalCount ?? raw.length;
         this.selectedTalents = [];
       });
   }
+  // 提供給 app-table-report 的查詢函式（滾動載入下一頁專櫃資料）
+  queryTalentDialog = (body: any) => {
+    return this.dropDownListService.queryTLTTALENTDropDownList(body);
+  };
 
-  // Dialog 列是否可選（避免重複加入相同專櫃）
+  // Dialog 列是否可選
   isTalentRowSelectable(row: any): boolean {
     if (!row || !this.data || !this.data.length) {
       return true;
@@ -191,20 +219,18 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
-  // 專櫃 Dialog 按下「儲存」後，將選取的專櫃加入「新增扣款」table 資料
+  // 選取的專櫃加入「新增扣款」table 資料
   onTalentDialogSave(): void {
     if (!this.selectedTalents || this.selectedTalents.length === 0) {
       this.talentDialogVisible = false;
       return;
     }
-
     // 僅在一般扣款模式下處理
     if (this.currentCreateType !== 'normal') {
       this.talentDialogVisible = false;
       this.selectedTalents = [];
       return;
     }
-
     const tpyDate = this.dataFormNormal.get('tpy_date')?.value ?? null;
     const tpyNet = this.dataFormNormal.get('tpy_net')?.value ?? null;
 
@@ -214,8 +240,8 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         ...item,
         label: `${item.tlt_no}-${item.tlt_name}`,
       };
-
       return {
+        rowId: this.rowIdCounter++,
         tlt_no: tltValue,
         tpy_date: tpyDate,
         tpy_net: tpyNet,
@@ -234,8 +260,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         return !(noTlt && noContract && noOrg && noAmount && noDate);
       })
       : [];
-
-    const updatedData = [...baseData, ...newRows];
+    const updatedData = this.ensureRowIds([...baseData, ...newRows]);
     this.onCounterDataChange(updatedData);
     this.talentDialogVisible = false;
     this.selectedTalents = [];
@@ -245,36 +270,10 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     this.dataFormNormal.get('tpy_date')?.valueChanges.subscribe((date: any) => {
       this.syncNormalTpyDateToRows(date);
     });
-
+    // normal 模式：當上方表單的扣款金額變更時，預設同步到下方所有明細列
     this.dataFormNormal.get('tpy_net')?.valueChanges.subscribe((amount: any) => {
-      if (this.currentCreateType === 'normal') {
-        if (amount === null || amount === undefined) {
-          this.data.forEach(row => {
-            if (row.status === 'new' || row._isAutoInsertCandidate) {
-              row.tpy_net = null;
-            }
-          });
-        } else {
-          let mainRowSet = false;
-          this.data.forEach(row => {
-            if (!mainRowSet && (row.status === 'modified' || !row.status)) {
-              row.tpy_net = Number(amount);
-              mainRowSet = true;
-            }
-            if (row.status === 'new' || row._isAutoInsertCandidate) {
-              row.tpy_net = Number(amount);
-            }
-          });
-        }
-        this.data = Array.isArray(this.data) ? [...this.data] : this.data;
-        try {
-          this.updateTotalCash();
-        } catch (e) {
-          // 忽略錯誤
-        }
-      }
+      this.syncNormalTpyNetToRows(amount);
     });
-
     // 把 router 帶進來的 rowdata 拿來做初始化
     const rowdata = history.state?.rowdata;
     if (rowdata) {
@@ -284,7 +283,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       if (this.crudstatus === CRUDStatus.Read) {
         this.isDetailMode = true;
       }
-
       const counterMapping = (row: any) => {
         if (row.tlt_no && typeof row.tlt_no === 'object') {
           return {
@@ -301,13 +299,12 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         }
         return {};
       };
-
       if (Array.isArray(rowdata)) {
         form.patchValue(rowdata[0]);
-        this.data = rowdata.map(row => ({ ...row, ...counterMapping(row) }));
+        this.data = this.ensureRowIds(rowdata.map(row => ({ ...row, ...counterMapping(row) })));
       } else {
         form.patchValue(rowdata);
-        this.data = [{ ...rowdata, ...counterMapping(rowdata) }];
+        this.data = this.ensureRowIds([{ ...rowdata, ...counterMapping(rowdata) }]);
       }
     }
 
@@ -317,7 +314,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
     this.dataFormCounter.get('tlt_no')?.valueChanges.subscribe((selected: any) => {
       if (selected) {
-        // 自動帶入 contract_no, contract_subno, org_id, tlt_contract_bdate, tlt_contract_edate
         this.dataFormCounter.patchValue({
           contract_no: selected.contract_no ?? '',
           contract_subno: selected.contract_subno ?? '',
@@ -362,7 +358,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   // ===== 載入選單 =====
   private loadTltAndPodOptions(): void {
     forkJoin({
-      tlt: this.dropDownListService.queryTLTTALENTDropDownList(),
+      tlt: this.dropDownListService.queryTLTTALENTDropDownList({ isNewData: true }),
       pod: this.dropDownListService.queryTALPORDERM_DropDownList(),
       acc: this.dropDownListService.queryGLS1005_DropDownList(),
       org: this.dropDownListService.querySYS3100_DropDownList(),
@@ -431,12 +427,11 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         }
 
         if (this.data && Array.isArray(this.data) && this.data.length) {
-          this.data = this.data.map(row => {
+          this.data = this.ensureRowIds(this.data.map(row => {
             const n = normalizeTltValue(row.tlt_no);
-            // 若 row 尚未有 org_id，且 tlt_no 被正規化為物件，則自動帶入 org_id
             const orgFromTlt = (n && typeof n === 'object') ? (n.org_id ?? '') : row.org_id;
             return { ...row, tlt_no: n, org_id: row.org_id || orgFromTlt };
-          });
+          }));
         }
 
         const formatToYMD = (val: any) => {
@@ -457,11 +452,11 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
         // 同步更新 table rows裡的 tlt_contract_* 欄位（如果有）
         if (this.data && Array.isArray(this.data) && this.data.length) {
-          this.data = this.data.map(row => ({
+          this.data = this.ensureRowIds(this.data.map(row => ({
             ...row,
             tlt_contract_bdate: row.tlt_contract_bdate ? formatToYMD(row.tlt_contract_bdate) : row.tlt_contract_bdate,
             tlt_contract_edate: row.tlt_contract_edate ? formatToYMD(row.tlt_contract_edate) : row.tlt_contract_edate,
-          }));
+          })));
         }
 
         const normalizeAcc = (val: any) => {
@@ -488,10 +483,10 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
         // table rows
         if (this.data && Array.isArray(this.data) && this.data.length) {
-          this.data = this.data.map(row => ({
+          this.data = this.ensureRowIds(this.data.map(row => ({
             ...row,
             AccNo: row.AccNo ? normalizeAcc(row.AccNo) : row.AccNo
-          }));
+          })));
         }
 
         this.loadAndSetupColumns();
@@ -569,9 +564,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         { field: 'tpy_net', header: '扣款金額(未稅)', type: 'inputNumber', width: '12rem', textAlign: 'right' },
         { field: 'remarks', header: '備註', type: 'input', width: '12rem' },
       ];
-
     }
-
   }
 
   // ===== normal: 扣款類型切換 =====
@@ -612,7 +605,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   }
   // table-edit 的資料有變動時會觸發
   onCounterDataChange(updatedData: any[]): void {
-    this.data = updatedData;
+    this.data = this.ensureRowIds(updatedData ?? []);
     // counter模式 table-edit mapping
     if (this.currentCreateType === 'counter') {
       this.data.forEach(row => {
@@ -636,18 +629,14 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
       // 目前上方表單選擇的扣款日期，讓新/空白明細自動帶入
       const formTpyDate = this.dataFormNormal.get('tpy_date')?.value ?? null;
-
       this.data.forEach(row => {
         const isNewCandidate = row.status === 'new' || row._isAutoInsertCandidate;
         const hasNoOrg = row.org_id === null || row.org_id === undefined || row.org_id === '';
-
-        // 若為新增候選列且表單有選 tlt，則先帶入 org_id（避免後續 table 新增時沒帶入）
         if (isNewCandidate && normalizedFormTlt && normalizedFormTlt.org_id && hasNoOrg) {
           row.org_id = normalizedFormTlt.org_id;
         }
 
         if (row.tlt_no && typeof row.tlt_no === 'object') {
-          // 若 contract_no/subno/org_id 尚未填入或 tlt_no 有變動就補值
           if (
             row.contract_no !== row.tlt_no.contract_no ||
             row.contract_subno !== row.tlt_no.contract_subno ||
@@ -658,10 +647,8 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             row.org_id = row.tlt_no.org_id ?? '';
           }
         } else {
-          // 若該列尚未選擇 tlt_no，則嘗試從上方表單的 tlt_no 帶入 org_id（讓新增列也能預設組織代號）
           if (normalizedFormTlt && normalizedFormTlt.org_id) {
             if (hasNoOrg) {
-              // 只在尚未有 org_id 時帶入，避免覆蓋使用者輸入
               row.org_id = normalizedFormTlt.org_id;
             }
           }
@@ -714,11 +701,45 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     }
   }
 
+  /** normal 模式：將表單上的扣款金額同步到下方明細列的 tpy_net，並立即更新畫面 */
+  private syncNormalTpyNetToRows(amount: any): void {
+    if (this.currentCreateType !== 'normal') return;
+    if (!Array.isArray(this.data)) return;
+
+    // 金額一變更，所有明細列的扣款金額都要即時改成同一金額
+    this.data.forEach(row => {
+      row.tpy_net = amount != null ? Number(amount) : null;
+    });
+
+    // 更新父元件的 data 參考，讓 Input 變化被偵測
+    this.data = [...this.data];
+
+    // 讓 table-edit 也能即時收到資料變動並刷新
+    if (this.normalTable) {
+      this.normalTable.dataChange.emit(this.data.filter(r => !r._isAutoInsertCandidate));
+    }
+
+    // 更新專櫃模式總金額欄位（沿用共用計算邏輯）
+    try {
+      this.updateTotalCash();
+    } catch {
+      // 忽略錯誤，避免在尚未初始化時噴錯
+    }
+  }
+
+  /** normal 模式：上方表單扣款金額變更事件（直接由 template 綁定） */
+  onNormalFormAmountChange(amount: any): void {
+    const ctrl = this.dataFormNormal.get('tpy_net');
+    if (ctrl) {
+      ctrl.setValue(amount, { emitEvent: false });
+    }
+    this.syncNormalTpyNetToRows(amount);
+  }
+
   /** normal 模式：上方表單扣款日期變更事件（直接由 template 綁定） */
   onNormalFormDateChange(date: any): void {
     const ctrl = this.dataFormNormal.get('tpy_date');
     if (ctrl) {
-      // 避免再觸發一次 valueChanges，這裡不發出事件
       ctrl.setValue(date, { emitEvent: false });
     }
     this.syncNormalTpyDateToRows(date);
@@ -732,25 +753,19 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         compareValue = compareValue.value ?? compareValue.CAP_Item ?? null;
       }
       compareValue = compareValue != null ? String(compareValue).trim() : null;
-
-      // 這裡不再依照 CAP_Type 過濾，直接用 CAP_Item 對應，
-      // 以確保選擇扣款項目時一定能帶出正確的會計科目等資訊
       const match = this.CAP_ItemOptions.find(it => String(it.CAP_Item).trim() === compareValue);
 
       if (match) {
-        // 關鍵修正：後端 AccNo 去空白（trim）
         row.AccNo = match.AccNo ? String(match.AccNo).trim() : '';
 
         row.GUI_FLAG = match.GUI_FLAG ?? null;
         row.cap_taxtype =
           match.CAP_TaxType != null ? String(match.CAP_TaxType) : null;
-
       } else {
         row.AccNo = null;
         row.GUI_FLAG = null;
         row.cap_taxtype = null;
       }
-
       this.data = [...this.data];
     }
   }
@@ -811,7 +826,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     if (value instanceof Date) return value;
     if (typeof value !== 'string') return null;
 
-    // MM/DD/YYYY 或 M/D/YYYY
     const m1 = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
     if (m1) {
       const month = Number(m1[1]);
@@ -819,8 +833,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       const year = Number(m1[3]);
       return new Date(year, month - 1, day);
     }
-
-    // YYYY-MM-DD
     const m2 = value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
     if (m2) {
       const year = Number(m2[1]);
@@ -828,31 +840,26 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       const day = Number(m2[3]);
       return new Date(year, month - 1, day);
     }
-
-    // fallback to Date parser
     const d = new Date(value);
     return isNaN(d.getTime()) ? null : d;
   }
   onSubmit(): void {
     if (this.isDetailMode) {
-      return; // 檢視模式下不做任何動作
+      return;
     }
     this.submitted = true;
 
-    // 先檢查表單必填欄位（包含 normal 模式的扣款日期）
     const currentForm = this.currentCreateType === 'counter' ? this.dataFormCounter : this.dataFormNormal;
     if (currentForm.invalid) {
       this.messageService.errorBubble('請填寫必填欄位');
       return;
     }
 
-    // 再檢查 table-edit 內的欄位（例如扣款日期）
     const tableComp = this.currentCreateType === 'counter' ? this.counterTable : this.normalTable;
     if (tableComp && !tableComp.validateAndShowErrors()) {
       return;
     }
 
-    // 下方列表需至少一筆實際資料（排除自動候選列）
     const hasDetail = Array.isArray(this.data) && this.data.some(r => !r._isAutoInsertCandidate);
     if (!hasDetail) {
       this.messageService.errorBubble('明細列表至少需一筆資料');
@@ -909,9 +916,11 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
       this.tls2d010Service.updateTLS2D010(payload)
         .pipe(untilDestroyed(this))
-        .subscribe(() => {
-          this.messageService.successBubble('更新成功');
-          this.onCancel();
+        .subscribe({
+          next: () => {
+            this.messageService.successBubble('更新成功');
+            this.onCancel();
+          },
         });
 
     } else {
@@ -921,14 +930,13 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       if (this.currentCreateType === 'counter') {
         // counter 從 form 抓
         const counterValue = this.dataFormCounter.getRawValue();
-        const tltInfo = this.buildTltInfo(counterValue.tlt_no, counterValue.pod_no);
+        const tltInfoFull = this.buildTltInfo(counterValue.tlt_no, counterValue.pod_no);
         const feeList = this.data
           .filter(i => !i._isAutoInsertCandidate)
           .map(i => ({
             tpy_date: i.tpy_date ? formatDate(i.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
             CAP_Type: i.CAP_Type || '',
             CAP_Item: i.CAP_Item || '',
-            CAP_Name: this.getCAPNameByItem(i.CAP_Item) || null,
             org_id: this.normalizeValue(i.org_id),
             AccNo: this.normalizeValue(i.AccNo),
             GUI_FLAG: i.GUI_FLAG || '',
@@ -937,24 +945,24 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             remarks: i.remarks || ''
           }));
 
-        payload = { tltList: [tltInfo], feeList };
+        const tltList = [{
+          tlt_no: tltInfoFull?.tlt_no || '',
+          talent_id: Number(tltInfoFull?.talent_id ?? 0),
+          pod_no: tltInfoFull?.pod_no || ''
+        }];
+
+        payload = { tltList, feeList };
+
 
       } else {
         // normal 從 table-edit 抓
         const normalValue = this.dataFormNormal.getRawValue();
-        const selectedRow = this.data.find(i => i.tlt_no); // 取 table 第一筆有 tlt_no 的
-        const tltInfo = this.buildTltInfo(
-          selectedRow?.tlt_no || normalValue.tlt_no,
-          normalValue.pod_no
-        );
-
         const feeList = this.data
           .filter(i => !i._isAutoInsertCandidate)
           .map(i => ({
             tpy_date: i.tpy_date ? formatDate(i.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
             CAP_Type: i.CAP_Type || normalValue.CAP_Type || '',
             CAP_Item: i.CAP_Item || normalValue.CAP_Item || '',
-            CAP_Name: this.getCAPNameByItem(i.CAP_Item || normalValue.CAP_Item) || null,
             org_id: this.normalizeValue(i.org_id || normalValue.org_id),
             AccNo: this.normalizeValue(i.AccNo || normalValue.AccNo),
             GUI_FLAG: i.GUI_FLAG || normalValue.GUI_FLAG || '',
@@ -963,24 +971,44 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             remarks: i.remarks || normalValue.remarks || ''
           }));
 
-        payload = { tltList: [tltInfo], feeList };
+        // 根據 table 中實際出現的專櫃，動態產生多筆 tltList，符合後端 spec
+        const tltMap = new Map<string, { tlt_no: string; talent_id: number; pod_no: string }>();
+        for (const row of this.data.filter(i => !i._isAutoInsertCandidate)) {
+          const rowTlt = row.tlt_no || normalValue.tlt_no;
+          if (!rowTlt) {
+            continue;
+          }
+          const podNo = this.normalizeValue(row.pod_no || normalValue.pod_no);
+          const full = this.buildTltInfo(rowTlt, podNo);
+          const tlt_no = full?.tlt_no || '';
+          const talent_id = Number(full?.talent_id ?? 0);
+          const pod_no = full?.pod_no || '';
+          const key = `${tlt_no}|${talent_id}|${pod_no}`;
+          if (!tltMap.has(key)) {
+            tltMap.set(key, { tlt_no, talent_id, pod_no });
+          }
+        }
+
+        const tltList = Array.from(tltMap.values());
+        if (tltList.length === 0) {
+          this.messageService.errorBubble('請先選擇至少一筆專櫃');
+          return;
+        }
+
+        payload = { tltList, feeList };
       }
 
       console.log('insert payload', payload);
 
       this.tls2d010Service.insertTLS2D010(payload)
         .pipe(untilDestroyed(this))
-        .subscribe(() => {
-          this.messageService.successBubble('新增成功');
-          // 清空表單與 table-edit 資料，但保留在當前畫面
-          this.dataFormCounter.reset();
-          this.dataFormNormal.reset();
-          this.data = [];
-          // 更新總金額顯示（會把 totalCash 設為 0）
-          this.updateTotalCash();
+        .subscribe({
+          next: () => {
+            this.messageService.successBubble('新增成功');
+            this.onCancel();
+          },
         });
     }
   }
-
 
 }

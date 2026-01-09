@@ -161,14 +161,13 @@
         </span>
       </td>
       <td *ngIf="showCheckBox && !disabled && !rowData._isAutoInsertCandidate" class="w-1rem text-center">
-        <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
-          [value]="rowData" [disabled]="
+        <p-tableCheckbox class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData" [disabled]="
             !isRowSelectable(rowData, rowIndex, _tableData) || disabled
           " />
       </td>
-      <td *ngFor="let col of columns" (click)="col.type ? $event.stopPropagation() : null"
-        (keydown)="$event.stopPropagation()" [style]="{ width: col.width, 'text-align': col.textAlign || 'center' }"
-        [ngClass]="getTdClass(rowData, col)">
+      <td *ngFor="let col of columns; let colIndex = index" (click)="col.type ? $event.stopPropagation() : null"
+        (keydown)="onCellKeydown($event, rowIndex, colIndex)"
+        [style]="{ width: col.width, 'text-align': col.textAlign || 'center' }" [ngClass]="getTdClass(rowData, col)">
         <ng-container *ngIf="col.type && getEditComponent(col.type) as componentType">
           <ng-container *ngComponentOutlet="
               componentType;

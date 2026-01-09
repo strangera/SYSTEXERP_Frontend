@@ -1,24 +1,23 @@
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ButtonModule } from 'primeng/button';
-import { Cpm13060Service } from '@service/api/cpm/cpm13060.service';
-import { NgStyle, DatePipe } from '@angular/common';
-import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Cpm13060Service } from '@service/api/cpm/cpm13060.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-cpm13060',
   templateUrl: './cpm13060.component.html',
-  styleUrls: ['./cpm13060.component.scss'],
   standalone: true,
   imports: [
     ButtonModule,

@@ -43,30 +43,38 @@ export class TableReportUtilityService {
   }
 
   private safeUrlCache = new Map<string, SafeUrl>();
-  getImage(url: string): SafeUrl | undefined {
-    if (!url) { return undefined; }
+
+  getImage(url: any): SafeUrl | string {
+    // 1. 基本防呆：如果是空值，直接回傳一個透明或佔位圖的 base64，或是一個空字串
+    if (!url || typeof url !== 'string' || url.trim() === '') {
+      return '';
+    }
+
     if (this.safeUrlCache.has(url)) {
-      return this.safeUrlCache.get(url);
+      return this.safeUrlCache.get(url)!;
     }
-    const match = url.match(/(.*\/)([^/]*)/);
-    let finalUrl: string;
 
-    if (match && match.length === 3) {
-      const path = match[1].replace(/~/g, '');
-      const filename = match[2];
-      const baseUrl = environment.ApiUrl.endsWith('/') ? environment.ApiUrl.slice(0, -1) : environment.ApiUrl;
-      const sanitizedPath = path.startsWith('/') ? path.slice(1) : path;
-      finalUrl = `${baseUrl}/${sanitizedPath}${filename}`;
-    } else {
-      const sanitizedUrl = url.replace(/~/g, '');
-      const baseUrl = environment.ApiUrl.endsWith('/') ? environment.ApiUrl.slice(0, -1) : environment.ApiUrl;
-      const imagePath = sanitizedUrl.startsWith('/') ? sanitizedUrl.slice(1) : sanitizedUrl;
-      finalUrl = `${baseUrl}/${imagePath}`;
+    try {
+      const baseUrl = environment.ApiUrl.endsWith('/')
+        ? environment.ApiUrl.slice(0, -1)
+        : environment.ApiUrl;
+
+      // 2. 處理路徑：統一移除 ~ 並確保開頭沒有 /
+      let cleanPath = url.replace(/~/g, '');
+      if (cleanPath.startsWith('/')) {
+        cleanPath = cleanPath.slice(1);
+      }
+
+      // 3. 拼接並處理可能的重複斜線
+      const finalUrl = `${baseUrl}/${cleanPath}`;
+
+      const safeUrl = this.sanitizer.bypassSecurityTrustUrl(finalUrl);
+      this.safeUrlCache.set(url, safeUrl);
+      return safeUrl;
+    } catch (e) {
+      console.error('URL轉換出錯:', e);
+      return '';
     }
-    const safeUrl = this.sanitizer.bypassSecurityTrustUrl(finalUrl);
-    this.safeUrlCache.set(url, safeUrl);
-
-    return safeUrl;
   }
   /**
    * 判斷當前行是否為該分組的最後一筆。

@@ -169,8 +169,8 @@
         </td>
         <td *ngIf="showSerialNo" class="text-center">{{ rowIndex + 1 }}</td>
         <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
-          <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
-            [value]="rowData" [disabled]="!isRowSelectable(rowData) || disabled" />
+          <p-tableCheckbox class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData"
+            [disabled]="!isRowSelectable(rowData) || disabled" />
         </td>
         <td *ngIf="expansionColumns.length && IsPrint" class="text-center">
           <p-button pRipple [text]="true" [rounded]="true" [plain]="true" severity="secondary"
