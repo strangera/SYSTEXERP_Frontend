@@ -47,7 +47,7 @@ export abstract class BasicPrintDataComponent {
     }
   }
 
-  exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string, PrintRemark?: boolean): void {
+  exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string, PrintRemark?: boolean, Conditions?: any): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`${apiUrl ? apiUrl : `query${ProgNo}`}`);
@@ -74,7 +74,7 @@ export abstract class BasicPrintDataComponent {
     const body = {
       query_condition: {
         ServiceName: apiUrl ? `${apiUrl}` : `query${ProgNo}`,
-        Conditions: queryState?.value || []
+        Conditions: Conditions || queryState?.value || []
       },
       report_title: REPORT_TITLES[`query${ProgNo}`] || funInfo?.prog_name,
       columns: pdfColumns,
@@ -93,7 +93,7 @@ export abstract class BasicPrintDataComponent {
       (isLoading) => this.exportDialog = isLoading
     );
   }
-  exportExcelDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string): void {
+  exportExcelDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string, Conditions?: any): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string; // 取得程式編號
     const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`${apiUrl ? apiUrl : `query${ProgNo}`}`); // 取得查詢條件
@@ -120,7 +120,7 @@ export abstract class BasicPrintDataComponent {
     const body = {
       query_condition: {
         ServiceName: apiUrl ? `${apiUrl}` : `query${ProgNo}`,
-        Conditions: queryState?.value
+        Conditions: Conditions || queryState?.value || []
       },
       report_title: REPORT_TITLES[`query${ProgNo}`] || funInfo?.prog_name,
       columns: excelColumns,

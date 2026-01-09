@@ -21,7 +21,7 @@
       [exportExcelLoading]="exportExcelLoading" [showPage]="false" (delete)="delete.emit($event)"
       (exportExcel)="exportExcel.emit()" (importExcel)="importExcel.emit($event)" [totalRecords]="dt.totalRecords"
       [apiUrl]="apiUrl" [DataKeyName]="DataKeyName" [PrintRemark]="PrintRemark" [customReport]="customReport"
-      (exportEvent)="exportEvent.emit($event)">
+      (exportEvent)="exportEvent.emit($event)" [Conditions]="Conditions">
       <header><ng-content select="header"></ng-content></header>
     </app-table-caption>
   </ng-template>
