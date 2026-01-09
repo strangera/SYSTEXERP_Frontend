@@ -81,8 +81,8 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
   }
 
   onDelete(selectedRows: any[]) {
-    const ids = selectedRows.map(row => row.ClassNo);
-    this.service.deleteFIN52090(ids).subscribe({
+    const ids = selectedRows.map(row => row.id);
+    this.service.deleteFIN52090({ ids }).subscribe({
       next: () => {
         this.onSubmit();
         this.selectedRows = [];
