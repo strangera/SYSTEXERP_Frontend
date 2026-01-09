@@ -12,8 +12,8 @@
             <app-dropdown label="專櫃編號/名稱" controlName="tlt_no" [options]="tlt_noOptions | async" optionLabel="label"
               optionValue="value" [control]="dataForm.controls.tlt_no" [submitted]="submitted"></app-dropdown>
           </div>
-          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateYearOne" label="所屬結帳年月" controlName="COMM_YM"
-            [control]="dataForm.controls.COMM_YM" [submitted]="submitted" />
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="所屬結帳年月"
+            controlName="COMM_YM" [control]="dataForm.controls.COMM_YM" [submitted]="submitted" />
         </div>
 
         <div class="grid p-fluid">
@@ -21,8 +21,8 @@
             <app-dropdown label="結帳方式" controlName="COMM_MONEY_TYPE" [options]="money_typeOptions" optionLabel="label"
               optionValue="value" [control]="dataForm.controls.COMM_MONEY_TYPE" [submitted]="submitted"></app-dropdown>
           </div>
-          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateYearOne" label="請款付款年月" controlName="COMM_YM"
-            [control]="dataForm.controls.COMM_YM" [submitted]="submitted" />
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="請款付款年月"
+            controlName="COMM_YM" [control]="dataForm.controls.COMM_YM" [submitted]="submitted" />
         </div>
         <br />
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
