@@ -9,10 +9,10 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown-table
             class="col-12 md:col-6 lg:col-4"
-            [control]="dataForm.controls.RefCode"
+            [control]="dataForm.controls.UniformNo"
             [submitted]="submitted"
-            optionLabel="RefCode"
-            optionValue="RefCode"
+            optionLabel="DisplayName"
+            optionValue="UniformNo"
             [fieldsConfig]="fieldsConfig"
             (select)="onSelect($event)"
             (inputValueChanged)="onAutoCompleteInputChange($event)"
@@ -40,9 +40,9 @@
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
-            label="統一編號"
-            controlName="UniformNo"
-            [control]="dataForm.controls.UniformNo"
+            label="對象別代碼"
+            controlName="RefCode"
+            [control]="dataForm.controls.RefCode"
             [submitted]="submitted"
           ></app-input-text>
         </div>

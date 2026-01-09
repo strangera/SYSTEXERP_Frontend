@@ -88,6 +88,8 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
   ngOnInit(): void {
     this.initializePage('FIN52040', this.dataForm);
     this.loadOptions();
+
+    console.log('Receive', this.dataForm.value);
   }
 
   onSubmit(frm: FormGroup) {
@@ -119,10 +121,10 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
       case CRUDStatus.Edit:
         if (this.canEdit()) {
           console.log('update', formValue);
-          // this.fin52040Service.updateFIN52040(formValue).subscribe(() => {
-          //   // this.messageService.successBubble('更新成功');
-          //   this.onCancel(); // 儲存後，會返回列表
-          // });
+          this.fin52040Service.updateFIN52040(formValue).subscribe(() => {
+            // this.messageService.successBubble('更新成功');
+            this.onCancel(); // 儲存後，會返回列表
+          });
         }
         break;
     }
@@ -148,7 +150,7 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
   });
   suggestions: any[] = [];
   fieldsConfig: any[] = [
-    { field: 'RefCode', header: '對象別代碼', mainDataField: true },
+    { field: 'UniformNo', header: '統一編號', mainDataField: true },
   ];
   opData: any[] = [];// overlayPanel 裡面的table
   rawOpData: any = [];// 原始資料
@@ -162,14 +164,14 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
   ];
 
   onAutoCompleteInputChange(event: any) {
-    const refCode = this.dataForm.get('RefCode')?.value?.toString().trim() || '';
-    console.log('自動查詢', refCode);
-
-    if (refCode) {
+    const searchText = this.dataForm.get('UniformNo')?.value?.toString().trim() || '';
+    if (searchText) {
       this.opData = this.rawOpData.filter((item: any) =>
-        (item.VEN_No && item.VEN_No.includes(refCode)) ||
-        (item.VEN_Name && item.VEN_Name.includes(refCode))
+        (item.VEN_Uniform && item.VEN_Uniform.includes(searchText)) ||
+        (item.VEN_Name && item.VEN_Name.includes(searchText))
       );
+    } else {
+      this.opData = [...this.rawOpData];
     }
   }
 
@@ -183,9 +185,9 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
   onSelect(event: any) {
     console.log('選取的廠商資料', event);
     this.dataForm.patchValue({
-      RefCode: event.UniformNo,
+      RefCode: event.VEN_Uniform, // 將統一編號帶入給 RefCode
       RefName: event.VEN_Name,
-      UniformNo: event.UniformNo
+      UniformNo: event.VEN_Uniform
     });
 
     console.log('帶入廠商資料', this.dataForm.value);
@@ -198,7 +200,9 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
         ...item,
         RefCode: item.VEN_No,       // 對象別代碼
         RefName: item.VEN_Name,     // 對象別名稱
-        UniformNo: item.VEN_Uniform // 統一編號
+        UniformNo: item.VEN_Uniform, // 統一編號
+
+        DisplayName: `${item.VEN_Uniform || ''}-${item.VEN_Name || ''}`, // 顯示名稱: 統一編號+廠商名稱
       }));
     });
   }
