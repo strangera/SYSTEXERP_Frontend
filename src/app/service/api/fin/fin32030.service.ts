@@ -554,6 +554,47 @@ export interface QueryBankBranchDropdownResponse {
   /** 最大帳號長度 */
   ACC_LEN_MAX?: number | null;
 }
+/**
+ * 業務員下拉選單回應
+ */
+export interface QueryARS1001DropdownResponse {
+  /** ID */
+  ID?: number | null;
+
+  /** 主檔 ID */
+  MID?: number | null;
+
+  /** 業務代碼 */
+  Sales_Id?: string | null;
+
+  /** 使用者編號 */
+  User_no?: string | null;
+
+  /** 使用者名稱 */
+  User_Name?: string | null;
+
+  /** 組織代碼 */
+  ORG_ID?: string | null;
+
+  /** 建立時間 */
+  CRT_Date?: string | null; // ISO DateTime 字串
+
+  /** 建立者編號 */
+  CRT_USR_No?: string | null;
+
+  /** 建立者名稱 */
+  CRT_USR_Name?: string | null;
+
+  /** 更新時間 */
+  UPD_Date?: string | null;
+
+  /** 更新者編號 */
+  UPD_USR_No?: string | null;
+
+  /** 更新者名稱 */
+  UPD_USR_Name?: string | null;
+}
+
 
 @Injectable({
   providedIn: 'root'
@@ -617,5 +658,11 @@ export class FIN32030Service {
    */
   queryBankBranchDropdown(): Observable<ApiResponse<QueryBankBranchDropdownResponse[]>> {
     return this.http.post<ApiResponse<QueryBankBranchDropdownResponse[]>>(`${this.apiUrl}/queryBankBranchDropdown`, {});
+  }
+  /**
+   * 業務員下拉選單查詢
+   */
+  queryARS1001Dropdown(): Observable<ApiResponse<QueryARS1001DropdownResponse[]>> {
+    return this.http.post<ApiResponse<QueryARS1001DropdownResponse[]>>(`${this.apiUrl}/queryARS1001Dropdown`, {});
   }
 }

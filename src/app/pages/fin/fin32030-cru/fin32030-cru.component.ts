@@ -6,14 +6,15 @@ import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeComponent } from "@shared/componentkit/calendar-range/calendar-range.component";
 import { DialogModule } from 'primeng/dialog';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import {
   FIN32030Service,
   InsertFIN32030CompleteRequest,
-  UpdateFIN32030CompleteRequest,
   QueryFIN32030ARResponse,
-  QueryFIN32030Response
+  QueryFIN32030Response,
+  UpdateFIN32030CompleteRequest
 } from '../../../service/api/fin/fin32030.service';
+import { DropDownListService } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -85,8 +86,11 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     {
       field: 'VEN_No',
       header: '廠客代號',
-      type: 'input',
-      maxLength: 20,
+      type: 'dropdown',
+      options: () => this.vendorOptions,
+      optionLabel: 'label',
+      optionValue: 'value',
+      showClear: true,
       disabled: () => true // 不可編輯,由對話框帶入
     },
     {
@@ -198,7 +202,12 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     {
       field: 'VEN_No',
       header: '廠客代號',
-      type: 'input'
+      type: 'dropdown',
+      options: () => this.vendorOptions,
+      optionLabel: 'label',
+      optionValue: 'value',
+      showClear: true,
+      width: '250px'
     },
     {
       field: 'BNK_All',
@@ -208,6 +217,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       optionLabel: 'label',
       optionValue: 'value',
       showClear: true,
+      width: '300px',
       calculate: (_rowData, newValue: string) => {
         // 選擇銀行後自動帶入分行代號和帳號長度
         const selectedBank = this.bankBranchOptions.find(b => b.value === newValue);
@@ -338,8 +348,8 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
   // 收款項目下拉選項 (格式: CAP_Item - CAP_Name)
   recvItemOptions: { label: string; value: string }[] = [];
 
-  // 業務員下拉選項 (TODO: 需要從 API 載入)
-  salesOptions: any[] = [];
+  // 業務員下拉選項 (格式: Sales_Id - User_Name)
+  salesOptions: { label: string; value: string }[] = [];
 
   // 票據種類選項
   checkTypeOptions = [
@@ -364,8 +374,12 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     ACC_LEN_MAX?: number;
   }[] = [];
 
+  // 廠客代號下拉選項 (格式: VEN_No - Name)
+  vendorOptions: { label: string; value: string }[] = [];
+
   constructor(
     private readonly fin32030Service: FIN32030Service,
+    private readonly dropDownListService: DropDownListService,
     private readonly cdr: ChangeDetectorRef
   ) {
     super();
@@ -558,25 +572,36 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
 
   /** 載入下拉選單資料 */
   loadDropdownOptions(): void {
-    // 載入收款項目下拉選單 (格式: 01 - 兆豐東台南(活))
-    this.fin32030Service.queryCapItemDropdown()
+    // 使用 forkJoin 等待所有下拉選單載入完成
+    forkJoin({
+      recvItems: this.fin32030Service.queryCapItemDropdown(),
+      vendors: this.dropDownListService.queryPOS2013_DropDownList({ VEN_Flag: '1' }),
+      banks: this.fin32030Service.queryBankBranchDropdown(),
+      sales: this.fin32030Service.queryARS1001Dropdown()
+    })
       .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        if (response.Data) {
-          this.recvItemOptions = response.Data.map(item => ({
+      .subscribe(results => {
+        // 載入收款項目下拉選單
+        if (results.recvItems.Data) {
+          this.recvItemOptions = results.recvItems.Data.map(item => ({
             label: `${item.CAP_Item || ''} - ${item.CAP_Name || ''}`,
             value: item.CAP_Item || ''
           }));
           console.log('收款項目下拉選單載入完成:', this.recvItemOptions.length, '筆');
         }
-      });
 
-    // 載入銀行分行下拉選單 (格式: 0050027 - 臺灣土地銀行(基隆分行))
-    this.fin32030Service.queryBankBranchDropdown()
-      .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        if (response.Data) {
-          this.bankBranchOptions = response.Data.map(item => ({
+        // 載入廠客代號下拉選單
+        if (results.vendors.Data) {
+          this.vendorOptions = results.vendors.Data.map(item => ({
+            label: `${item.VEN_No || ''} - ${item.Name || ''}`,
+            value: item.VEN_No || ''
+          }));
+          console.log('廠客代號下拉選單載入完成:', this.vendorOptions.length, '筆');
+        }
+
+        // 載入銀行分行下拉選單
+        if (results.banks.Data) {
+          this.bankBranchOptions = results.banks.Data.map(item => ({
             label: `${item.BNK_All || ''} - ${item.BNK_Name || ''}${item.BNK_BranchName ? `(${item.BNK_BranchName})` : ''}`,
             value: item.BNK_All || '',
             BNK_No: item.BNK_No || '',
@@ -585,16 +610,25 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
             ACC_LEN_MAX: item.ACC_LEN_MAX || 0
           }));
           console.log('銀行分行下拉選單載入完成:', this.bankBranchOptions.length, '筆');
+        }
 
-          // 銀行下拉選單載入完成後，如果是檢視/編輯模式，載入收款資料
-          if ((this.isFormReadable || this.isFormEditable) && this.rowdata) {
-            const headerData = this.rowdata as QueryFIN32030Response;
-            this.loadRecvData(headerData);
+        // 載入業務員下拉選單
+        if (results.sales.Data) {
+          this.salesOptions = results.sales.Data.map(item => ({
+            label: `${item.Sales_Id || ''} - ${item.User_Name || ''}`,
+            value: item.Sales_Id || ''
+          }));
+          console.log('業務員下拉選單載入完成:', this.salesOptions.length, '筆');
+        }
 
-            // 檢視模式才需要禁用表單
-            if (this.isFormReadable) {
-              this.step1Form.disable();
-            }
+        // 所有下拉選單載入完成後，如果是檢視/編輯模式，載入收款資料
+        if ((this.isFormReadable || this.isFormEditable) && this.rowdata) {
+          const headerData = this.rowdata as QueryFIN32030Response;
+          this.loadRecvData(headerData);
+
+          // 檢視模式才需要禁用表單
+          if (this.isFormReadable) {
+            this.step1Form.disable();
           }
         }
       });
