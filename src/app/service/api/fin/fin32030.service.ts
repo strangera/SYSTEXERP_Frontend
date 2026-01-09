@@ -263,6 +263,70 @@ export interface ARRecvAcctUpdateDetailItem {
   CHK_No?: string | null;
 }
 
+/**
+ * 收款沖帳完整新增 (包含收款、票據、帳款)
+ */
+export interface InsertFIN32030CompleteRequest {
+  /** 組織代號 */
+  STO_No: string;
+  /** 收款單號 (後端自動產生 R+YYYYMMDDXXX) */
+  RCV_No?: string | null;
+  /** 收款日期 */
+  RCV_Date: string;
+  /** 業務員代號 */
+  Sales_Id?: string | null;
+  /** 公司代號 */
+  CompNo: string;
+  /** 傳票號碼 */
+  VouNo?: string | null;
+  /** 備註 */
+  Remark?: string | null;
+  /** 狀態 */
+  Status: string;
+  /** 使用者ID */
+  UserId: string;
+  /** 使用者名稱 */
+  UserName: string;
+  /** 收款項目明細 */
+  RecvDetails?: RecvDetailItem[] | null;
+  /** 票據明細 */
+  CheckDetails?: CheckDetailItem[] | null;
+  /** 帳款明細 */
+  ARDetails?: ARRecvAcctDetailItem[] | null;
+}
+
+/**
+ * 收款沖帳完整更新 (包含收款、票據、帳款)
+ */
+export interface UpdateFIN32030CompleteRequest {
+  /** 組織代號 */
+  STO_No: string;
+  /** 收款單號 */
+  RCV_No: string;
+  /** 收款日期 */
+  RCV_Date: string;
+  /** 業務員代號 */
+  Sales_Id?: string | null;
+  /** 公司代號 */
+  CompNo: string;
+  /** 傳票號碼 */
+  VouNo?: string | null;
+  /** 備註 */
+  Remark?: string | null;
+  /** 狀態 */
+  Status: string;
+  /** 使用者ID */
+  UserId: string;
+  /** 使用者名稱 */
+  UserName: string;
+  /** 收款項目明細 */
+  RecvDetails?: RecvDetailItem[] | null;
+  /** 票據明細 */
+  CheckDetails?: CheckDetailItem[] | null;
+  /** 帳款更新明細 */
+  ARDetails?: ARRecvAcctUpdateDetailItem[] | null;
+}
+
 // ==================== Response 介面 ====================
 
 /**
@@ -349,12 +413,12 @@ export interface QueryFIN32030RecvAllResponse {
   UPD_USR_Name?: string | null;
   /** 總金額 */
   TotalAmt?: number | null;
-  /** 收款項目明細 JSON */
-  RecvItemsJson?: string | null;
-  /** 收款主檔資料 JSON */
-  ReceiptsJson?: string | null;
-  /** 票據明細 JSON */
-  ChecksJson?: string | null;
+  /** 收款項目明細 (已解析為陣列) */
+  RecvItems?: RecvDetailResponse[] | null;
+  /** 應收沖帳明細 (已解析為陣列) */
+  Receipts?: ARAcctDetailResponse[] | null;
+  /** 票據明細 (已解析為陣列) */
+  Checks?: CheckDetailResponse[] | null;
 }
 
 /**
@@ -459,6 +523,38 @@ export interface QueryRecvItemResponse {
   AccName?: string | null;
 }
 
+/**
+ * 收款項目下拉選單回應
+ */
+export interface QueryCapItemDropdownResponse {
+  /** 收款項目代號 */
+  CAP_Item?: string | null;
+  /** 收款項目名稱 */
+  CAP_Name?: string | null;
+}
+
+/**
+ * 銀行分行下拉選單回應
+ */
+export interface QueryBankBranchDropdownResponse {
+  /** 全省銀行代號 (銀行代號+分行代號) */
+  BNK_All?: string | null;
+  /** 銀行代號 */
+  BNK_No?: string | null;
+  /** 銀行名稱 */
+  BNK_Name?: string | null;
+  /** 銀行簡稱 */
+  BNK_ShortName?: string | null;
+  /** 分行代號 */
+  BNK_BranchNo?: string | null;
+  /** 分行名稱 */
+  BNK_BranchName?: string | null;
+  /** 帳號長度 */
+  ACC_LEN?: number | null;
+  /** 最大帳號長度 */
+  ACC_LEN_MAX?: number | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -489,51 +585,37 @@ export class FIN32030Service {
   }
 
   /**
-   * 收款沖帳新增
-   */
-  insertFIN32030Recv(params: InsertFIN32030RecvRequest): Observable<ApiResponse<object>> {
-    return this.http.post<ApiResponse<object>>(`${this.apiUrl}/insertFIN32030Recv`, params);
-  }
-
-  /**
-   * 收款沖帳更新
-   */
-  updateFIN32030Recv(params: UpdateFIN32030RecvRequest): Observable<ApiResponse<object>> {
-    return this.http.post<ApiResponse<object>>(`${this.apiUrl}/updateFIN32030Recv`, params);
-  }
-
-  /**
-   * 票據新增
-   */
-  insertFIN32030Check(params: InsertFIN32030CheckRequest): Observable<ApiResponse<object>> {
-    return this.http.post<ApiResponse<object>>(`${this.apiUrl}/insertFIN32030Check`, params);
-  }
-
-  /**
-   * 票據更新
-   */
-  updateFIN32030Check(params: UpdateFIN32030CheckRequest): Observable<ApiResponse<object>> {
-    return this.http.post<ApiResponse<object>>(`${this.apiUrl}/updateFIN32030Check`, params);
-  }
-
-  /**
-   * 帳款新增
-   */
-  insertFIN32030ARRecvAcct(params: InsertFIN32030ARRecvAcctRequest): Observable<ApiResponse<object>> {
-    return this.http.post<ApiResponse<object>>(`${this.apiUrl}/insertFIN32030ARRecvAcct`, params);
-  }
-
-  /**
-   * 帳款更新
-   */
-  updateFIN32030ARRecvAcct(params: UpdateFIN32030ARRecvAcctRequest): Observable<ApiResponse<object>> {
-    return this.http.post<ApiResponse<object>>(`${this.apiUrl}/updateFIN32030ARRecvAcct`, params);
-  }
-
-  /**
    * 收款項目查詢
    */
   queryRecvItem(params: Record<string, never>): Observable<ApiResponse<QueryRecvItemResponse[]>> {
     return this.http.post<ApiResponse<QueryRecvItemResponse[]>>(`${this.apiUrl}/queryRecvItem`, params);
+  }
+
+  /**
+   * 收款沖帳完整新增 (包含收款、票據、帳款)
+   */
+  insertFIN32030Complete(params: InsertFIN32030CompleteRequest): Observable<ApiResponse<Record<string, never>>> {
+    return this.http.post<ApiResponse<Record<string, never>>>(`${this.apiUrl}/InsertFIN32030Complete`, params);
+  }
+
+  /**
+   * 收款沖帳完整更新 (包含收款、票據、帳款)
+   */
+  updateFIN32030Complete(params: UpdateFIN32030CompleteRequest): Observable<ApiResponse<Record<string, never>>> {
+    return this.http.post<ApiResponse<Record<string, never>>>(`${this.apiUrl}/UpdateFIN32030Complete`, params);
+  }
+
+  /**
+   * 收款項目下拉選單查詢
+   */
+  queryCapItemDropdown(): Observable<ApiResponse<QueryCapItemDropdownResponse[]>> {
+    return this.http.post<ApiResponse<QueryCapItemDropdownResponse[]>>(`${this.apiUrl}/queryCapItemDropdown`, {});
+  }
+
+  /**
+   * 銀行分行下拉選單查詢
+   */
+  queryBankBranchDropdown(): Observable<ApiResponse<QueryBankBranchDropdownResponse[]>> {
+    return this.http.post<ApiResponse<QueryBankBranchDropdownResponse[]>>(`${this.apiUrl}/queryBankBranchDropdown`, {});
   }
 }
