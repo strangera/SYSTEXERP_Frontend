@@ -7,9 +7,11 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-
         <!-- 紀錄編號（後端給，Edit/Read 顯示用） -->
-        <div class="col-12 md:col-6 lg:col-4" *ngIf="crudstatus !== CRUD.Create">
+        <div
+          class="col-12 md:col-6 lg:col-4"
+          *ngIf="crudstatus !== CRUD.Create"
+        >
           <app-input-text
             label="紀錄編號"
             controlName="Loan_No"
@@ -109,26 +111,18 @@
           ></app-input-text>
         </div>
 
-        <!-- 設備代碼 -->
+        <!-- 設備編號/名稱 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="設備代碼"
+          <app-dropdown
+            label="設備編號/名稱"
             controlName="Device_ID"
+            [options]="deviceNameOptions"
+            optionLabel="label"
+            optionValue="value"
             [control]="dataForm.controls.Device_ID"
             [submitted]="submitted"
-          ></app-input-text>
+          ></app-dropdown>
         </div>
-
-        <!-- 設備名稱 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="設備名稱"
-            controlName="Device_Name"
-            [control]="dataForm.controls.Device_Name"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-
       </div>
 
       <div
