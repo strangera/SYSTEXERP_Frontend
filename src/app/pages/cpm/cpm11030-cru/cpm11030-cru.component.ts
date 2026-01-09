@@ -1,27 +1,28 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormsModule, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 import {
   Cpm11030Service,
+  DropDownListResponse,
   InsertCPM11030Request,
-  UpdateCPM11030Request,
-    DropDownListResponse,
   OptionItem,
+  UpdateCPM11030Request,
 } from '../../../service/api/cpm/cpm11030.service';
+
 
 @UntilDestroy()
 @Component({
@@ -52,7 +53,7 @@ export class CPM11030CRUComponent extends BasicCruPageComponent<any> implements 
 
   /** ✅ 設備名稱下拉 */
   deviceNameOptions: OptionItem[] = [];
-    private mapDropDownToOptions(resp: DropDownListResponse | null | undefined): OptionItem[] {
+  private mapDropDownToOptions(resp: DropDownListResponse | null | undefined): OptionItem[] {
     const rows = Array.isArray(resp?.Data) ? resp!.Data! : [];
     return rows
       .filter(x => x && x.No != null && x.Name != null)
@@ -95,7 +96,7 @@ export class CPM11030CRUComponent extends BasicCruPageComponent<any> implements 
     Cert_Type: ['' as string, [Validators.maxLength(2)]],
     Cert_No: ['' as string, [Validators.maxLength(50)]],
     Loan_Phone: ['' as string, [Validators.maxLength(20)]],
-    Device_ID: ['' as string, [Validators.maxLength(2)]],
+    Device_ID: ['' as string, [Validators.maxLength(50)]],
     Device_Name: ['' as string, [Validators.maxLength(50)]],
   });
 
@@ -103,62 +104,62 @@ export class CPM11030CRUComponent extends BasicCruPageComponent<any> implements 
     super();
   }
 
-ngOnInit(): void {
-  this.initializePage('CPM11030', this.dataForm);
-  this.updateDisabledState();
+  ngOnInit(): void {
+    this.initializePage('CPM11030', this.dataForm);
+    this.updateDisabledState();
 
-  // ✅ 下拉：跟 Query 共用同一份快取（只會真的打一次）
-  this.cpm11030Service
-    .getDropdownsOnce()
-    .pipe(untilDestroyed(this))
-    .subscribe({
-      next: ({ css1001, sys1000, css2001 }) => {
-        this.counterCodeOptions = this.mapDropDownToOptions(css1001);
-        this.certTypeOptions = this.mapDropDownToOptions(sys1000);
-        this.deviceNameOptions = this.mapDropDownToOptions(css2001);
-      },
-      error: (err) => {
-        console.error('CPM11030 CRU dropdown load error:', err);
-        this.counterCodeOptions = [];
-        this.certTypeOptions = [];
-        this.deviceNameOptions = [];
-      },
-    });
+    // ✅ 下拉：跟 Query 共用同一份快取（只會真的打一次）
+    this.cpm11030Service
+      .getDropdownsOnce()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: ({ css1001, sys1000, css2001 }) => {
+          this.counterCodeOptions = this.mapDropDownToOptions(css1001);
+          this.certTypeOptions = this.mapDropDownToOptions(sys1000);
+          this.deviceNameOptions = this.mapDropDownToOptions(css2001);
+        },
+        error: (err) => {
+          console.error('CPM11030 CRU dropdown load error:', err);
+          this.counterCodeOptions = [];
+          this.certTypeOptions = [];
+          this.deviceNameOptions = [];
+        },
+      });
 
-  // ✅ 先把後端/route 帶回來的值正規化成 Date（給 calendar 顯示用）
-  const rawDate = this.dataForm.get('Loan_Date')?.value as any;
-  const rawTime = this.dataForm.get('Loan_Time')?.value as any;
+    // ✅ 先把後端/route 帶回來的值正規化成 Date（給 calendar 顯示用）
+    const rawDate = this.dataForm.get('Loan_Date')?.value as any;
+    const rawTime = this.dataForm.get('Loan_Time')?.value as any;
 
-  const parsedDate = rawDate instanceof Date ? rawDate : rawDate ? new Date(rawDate) : null;
-  const parsedTime = rawTime instanceof Date ? rawTime : rawTime ? new Date(rawTime) : null;
+    const parsedDate = rawDate instanceof Date ? rawDate : rawDate ? new Date(rawDate) : null;
+    const parsedTime = rawTime instanceof Date ? rawTime : rawTime ? new Date(rawTime) : null;
 
-  const patch: any = {};
-  if (parsedDate && !isNaN(parsedDate.getTime())) patch.Loan_Date = parsedDate;
-  if (parsedTime && !isNaN(parsedTime.getTime())) patch.Loan_Time = parsedTime;
+    const patch: any = {};
+    if (parsedDate && !isNaN(parsedDate.getTime())) patch.Loan_Date = parsedDate;
+    if (parsedTime && !isNaN(parsedTime.getTime())) patch.Loan_Time = parsedTime;
 
-  if (Object.keys(patch).length) {
-    this.dataForm.patchValue(patch, { emitEvent: false });
+    if (Object.keys(patch).length) {
+      this.dataForm.patchValue(patch, { emitEvent: false });
+    }
+
+    // ✅ Create：預設帶現在日期 + 現在時間（但「已有值就不覆蓋」）
+    if (this.crudstatus === CRUDStatus.Create) {
+      const now = new Date();
+
+      const curDate = this.dataForm.get('Loan_Date')?.value as any;
+      const curTime = this.dataForm.get('Loan_Time')?.value as any;
+
+      const hasDate = curDate instanceof Date && !isNaN(curDate.getTime());
+      const hasTime = curTime instanceof Date && !isNaN(curTime.getTime());
+
+      this.dataForm.patchValue(
+        {
+          Loan_Date: hasDate ? curDate : now,
+          Loan_Time: hasTime ? curTime : now,
+        },
+        { emitEvent: false }
+      );
+    }
   }
-
-  // ✅ Create：預設帶現在日期 + 現在時間（但「已有值就不覆蓋」）
-  if (this.crudstatus === CRUDStatus.Create) {
-    const now = new Date();
-
-    const curDate = this.dataForm.get('Loan_Date')?.value as any;
-    const curTime = this.dataForm.get('Loan_Time')?.value as any;
-
-    const hasDate = curDate instanceof Date && !isNaN(curDate.getTime());
-    const hasTime = curTime instanceof Date && !isNaN(curTime.getTime());
-
-    this.dataForm.patchValue(
-      {
-        Loan_Date: hasDate ? curDate : now,
-        Loan_Time: hasTime ? curTime : now,
-      },
-      { emitEvent: false }
-    );
-  }
-}
 
 
 
@@ -198,6 +199,13 @@ ngOnInit(): void {
   }
 
   private buildInsertPayload(raw: any): InsertCPM11030Request {
+    const deviceId = this.trimOrEmpty(raw.Device_ID);
+    const deviceName =
+      this.deviceNameOptions.find(o => o.value === deviceId)?.label
+        ?.split('-')
+        .slice(1)
+        .join('-') || '';
+
     return {
       Service_Id: this.trimOrEmpty(raw.Service_Id),
       Loan_Date: raw.Loan_Date ? this.toIso(raw.Loan_Date) : '', // nullable:true，但 DTO 是 string：沒值就送空字串
@@ -209,12 +217,19 @@ ngOnInit(): void {
       Cert_No: this.trimOrEmpty(raw.Cert_No),
       Loan_Phone: this.trimOrEmpty(raw.Loan_Phone),
 
-      Device_ID: this.trimOrEmpty(raw.Device_ID),
-      Device_Name: this.trimOrEmpty(raw.Device_Name),
+      Device_ID: deviceId ?? '',
+      Device_Name: deviceName ?? '',
     };
   }
 
   private buildUpdatePayload(raw: any): UpdateCPM11030Request {
+    const deviceId = this.trimOrEmpty(raw.Device_ID);
+    const deviceName =
+      this.deviceNameOptions.find(o => o.value === deviceId)?.label
+        ?.split('-')
+        .slice(1)
+        .join('-') || '';
+
     return {
       ID: Number(raw.ID ?? 0),
       Loan_No: this.trimOrEmpty(raw.Loan_No),
@@ -229,8 +244,8 @@ ngOnInit(): void {
       Cert_No: this.trimOrEmpty(raw.Cert_No),
       Loan_Phone: this.trimOrEmpty(raw.Loan_Phone),
 
-      Device_ID: this.trimOrEmpty(raw.Device_ID),
-      Device_Name: this.trimOrEmpty(raw.Device_Name),
+      Device_ID: deviceId ?? '',
+      Device_Name: deviceName ?? '',
     };
   }
 
