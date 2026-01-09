@@ -90,6 +90,11 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
     this.loadOptions();
 
     console.log('Receive', this.dataForm.value);
+
+    if (this.crudstatus == CRUDStatus.Edit) {
+      // 編輯模式避免更改主鍵
+      this.dataForm.get('UniformNo')?.disable();
+    }
   }
 
   onSubmit(frm: FormGroup) {
