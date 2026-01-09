@@ -32,6 +32,7 @@ interface ARWithRCVAmt extends QueryFIN32030ARResponse {
   RCV_Amt?: number | null;
   STO_No?: string | null;
   RCV_Date?: string | null;
+  Id?: number | null; // 編輯模式時需要的 ID
 }
 
 //1.3.2.3 收款沖帳維護 CRU
@@ -465,6 +466,20 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
   onQueryAR(): void {
     const formValue = this.arQueryForm.value;
 
+    // 有效的排序欄位列表（對應後端 queryFIN32030ARResponse 的欄位）
+    const validSortFields = ['ARS_ID', 'VEN_No', 'VEN_Name', 'ARS_Amt', 'ARS_Date', 'PaidAmt', 'UnpaidAmt', 'PTA_Date', 'NoteDesc'];
+
+    // 過濾並清理 SortBy 參數，只保留有效欄位
+    let sortBy = formValue.SortBy;
+    if (sortBy && Array.isArray(sortBy)) {
+      sortBy = sortBy.filter((sort: any) => validSortFields.includes(sort.field));
+      if (sortBy.length === 0) {
+        sortBy = [{ field: 'VEN_No', order: 1 }]; // 預設排序
+      }
+    } else {
+      sortBy = [{ field: 'VEN_No', order: 1 }]; // 預設排序
+    }
+
     const queryParams = {
       STO_No: formValue.STO_No || undefined,
       VEN_No: formValue.VEN_No || undefined,
@@ -472,7 +487,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       DateTo: formValue.DateTo ? (formValue.DateTo as Date).toISOString() : undefined,
       PageIndex: formValue.pageIndex ?? 1,
       PageSize: formValue.pageSize ?? 20,
-      SortBy: formValue.SortBy || undefined,
+      SortBy: sortBy,
     };
 
     this.arDialogLoading = true;
@@ -736,8 +751,9 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
 
           // 載入應收沖帳明細 (步驟4)
           if (recvData.Receipts && recvData.Receipts.length > 0) {
-            // API 回傳的欄位: ARS_No (不是 ARS_ID), 沒有 VEN_Name、WriteOffAmt 等欄位
+            // API 回傳的欄位: ARS_No (不是 ARS_ID), id (小寫，不是大寫 Id)
             this.step4TableData = (recvData.Receipts as any[]).map((receipt: any) => ({
+              Id: receipt.id || receipt.Id || null, // 編輯模式需要的 ID (後端回傳小寫 id)
               ARS_ID: receipt.ARS_No || '', // API 使用 ARS_No (不是 ARS_ID)
               VEN_No: receipt.VEN_No || '', // 廠客代號
               ARS_Amt: receipt.ARS_Amt || 0, // 應收金額
@@ -808,7 +824,8 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       .map((check: {
         CHK_No: string;
         VEN_No?: string;
-        BNK_No: string;
+        BNK_All?: string;
+        BNK_No?: string;
         BNK_BranchNo: string;
         BNK_AccNo?: string;
         CHK_ReceDate?: Date;
@@ -824,7 +841,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       }) => ({
         CHK_No: check.CHK_No,
         VEN_No: check.VEN_No || null,
-        BNK_No: check.BNK_No,
+        BNK_No: check.BNK_All || check.BNK_No || '', // 使用 BNK_All (完整銀行代號)
         BNK_BranchNo: check.BNK_BranchNo,
         BNK_AccNo: check.BNK_AccNo || null,
         CHK_ReceDate: check.CHK_ReceDate ? check.CHK_ReceDate.toISOString() : null,
@@ -892,7 +909,53 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     }
     // 編輯模式：使用 updateFIN32030Complete
     else {
-      const updateRequest: UpdateFIN32030CompleteRequest = {
+      // 編輯模式需要處理兩種情況：
+      // 1. 有 Id 的舊資料 → 使用 Update 格式 (ARRecvAcctUpdateDetailItem)
+      // 2. 沒有 Id 的新資料 → 使用 Insert 格式 (ARRecvAcctDetailItem)，後端會呼叫 Insert SP
+
+      console.log('編輯模式 - step4TableData 原始資料:', this.step4TableData);
+
+      // 舊資料：有 Id，使用 Update 格式
+      const existingARDetails = this.step4TableData
+        .filter((ar: ARWithRCVAmt) => {
+          const hasId = ar.Id !== null && ar.Id !== undefined;
+          const hasRcvAmt = ar.RCV_Amt !== null && ar.RCV_Amt !== undefined;
+          console.log(`過濾檢查 - ARS_ID: ${ar.ARS_ID}, Id: ${ar.Id}, hasId: ${hasId}, RCV_Amt: ${ar.RCV_Amt}, hasRcvAmt: ${hasRcvAmt}`);
+          return hasId && hasRcvAmt;
+        })
+        .map((ar: ARWithRCVAmt) => ({
+          Id: ar.Id!,
+          ARS_Amt: ar.RCV_Amt || 0,
+          CHK_No: null
+        }));
+
+      // 新資料：沒有 Id，使用 Insert 格式（與新增模式相同）
+      const newARDetails = this.step4TableData
+        .filter((ar: ARWithRCVAmt) => !ar.Id && ar.ARS_ID && ar.RCV_Amt !== null && ar.RCV_Amt !== undefined)
+        .map((ar: ARWithRCVAmt) => ({
+          STO_No: '', // 後端會自動填入
+          RCV_No: step1Value.RCV_No || '',
+          RCV_Date: step1Value.RCV_Date.toISOString(),
+          VEN_No: ar.VEN_No || '',
+          ARS_No: ar.ARS_ID || '',
+          Remit_No: null,
+          Check_No: null,
+          CHK_No: null,
+          ARS_Amt: ar.RCV_Amt || 0,
+          ARS_Status: 'A'
+        }));
+
+      // 合併舊資料（有 Id，Update 格式）和新資料（沒有 Id，Insert 格式）
+      // 後端會根據是否有 Id 來決定呼叫 Insert 或 Update SP
+      const allARDetails = [...existingARDetails, ...newARDetails];
+
+      console.log('編輯模式 - 舊資料(有Id):', existingARDetails.length, '筆');
+      console.log('編輯模式 - 新資料(無Id):', newARDetails.length, '筆');
+      console.log('編輯模式 - 送出的 ARDetails:', allARDetails);
+      console.log('編輯模式 - existingARDetails:', existingARDetails);
+      console.log('編輯模式 - newARDetails:', newARDetails);
+
+      const updateRequest: any = {
         STO_No: '', // 後端會自動填入
         RCV_No: step1Value.RCV_No || '',
         RCV_Date: step1Value.RCV_Date.toISOString(),
@@ -905,7 +968,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
         UserName: '', // 後端會自動填入
         RecvDetails: recvDetails,
         CheckDetails: checkDetails.length > 0 ? checkDetails : null,
-        ARDetails: null // 編輯模式的應收沖帳明細由後端處理
+        ARDetails: allARDetails.length > 0 ? allARDetails : null
       };
 
       this.fin32030Service.updateFIN32030Complete(updateRequest)
