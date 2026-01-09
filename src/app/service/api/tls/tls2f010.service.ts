@@ -15,5 +15,10 @@ export class Tls2f010Service {
   queryTLS2F010(params: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/QueryTLS2F010`, params);
   }
-
+  queryTLS2F010_TLT_No(params: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/QueryTLS2F010_TLT_No`, params);
+  }
+  queryTLS2F010InsertData(params: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/QueryTLS2F010InsertData`, params);
+  }
 }
