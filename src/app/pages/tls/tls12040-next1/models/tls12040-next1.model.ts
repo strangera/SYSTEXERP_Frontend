@@ -168,6 +168,7 @@ export interface CruData {
 export interface Next1Data {
   applyNo: any;
   fareData: { [key: string]: TLS12040FareItem[] };
+  originalFareData: { [key: string]: TLS12040FareItem[] };  // 🔥 新增：完整的原始資料
   selectedItems: any[];
   contractInfo: any;
   timestamp: any;
