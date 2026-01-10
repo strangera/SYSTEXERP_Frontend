@@ -99,7 +99,7 @@ export class TLS12040FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '是否新增',
+        header: '新增',
         type: 'checkbox',
 
         autoWidth: true,
@@ -218,7 +218,7 @@ export class TLS12040FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '是否新增',
+        header: '新增',
         type: 'checkbox',
 
 
@@ -368,7 +368,7 @@ export class TLS12040FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '是否新增',
+        header: '新增',
         type: 'checkbox',
 
 
@@ -545,10 +545,8 @@ export class TLS12040FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '是否新增',
+        header: '新增',
         type: 'checkbox',
-
-
         // autoEditOnSelect: true,
         // autoSaveOnUnselect: true,
       },
@@ -728,7 +726,7 @@ export class TLS12040FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '是否新增',
+        header: '新增',
         type: 'checkbox',
 
       },
