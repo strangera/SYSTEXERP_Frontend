@@ -370,28 +370,64 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     // ✅ 3. 優先載入暫存，沒有才打 API
     const next1Data = this.flowService.getNext1Data<Next1Data>();
 
+    console.log('🔍 檢查 next1 暫存資料:', {
+      有暫存: !!next1Data,
+      有originalFareData: !!next1Data?.originalFareData,
+      originalFareData內容: next1Data?.originalFareData ? Object.keys(next1Data.originalFareData).map(type =>
+        `${type}: ${next1Data.originalFareData[type]?.length || 0}筆`
+      ) : '無',
+      timestamp: next1Data?.timestamp
+    });
+
     if (next1Data && next1Data.originalFareData) {
-      console.log('✅ 使用 workflow 暫存的費用資料');
-      // 🔥 修正：從暫存載入完整的 originalFareData，而不是過濾後的 fareData
-      this.originalFareData = JSON.parse(JSON.stringify(next1Data.originalFareData)); // 深拷貝完整資料
+      // 🔥 檢查 originalFareData 是否有實際資料
+      const hasActualData = Object.values(next1Data.originalFareData).some(
+        items => Array.isArray(items) && items.length > 0
+      );
 
-      // 過濾資料以顯示
-      this.filterData();
+      if (hasActualData) {
+        console.log('✅ 使用 workflow 暫存的費用資料');
 
-      // 🔥 新增：使用暫存資料時也要確保預設值已套用
-      setTimeout(() => {
-        this.applyDefaultValuesToAllItems();
-        //  新增：無條件同步 org_id
-        this.syncOrgIdFromPrevious();
-      }, 100); // 延遲一下確保 contractInfoData 已載入
+        // 🔥 深拷貝暫存的 originalFareData（包含所有用戶修改）
+        this.originalFareData = JSON.parse(JSON.stringify(next1Data.originalFareData));
 
+        console.log('📊 載入暫存資料統計:', {
+          A: this.originalFareData['A']?.length || 0,
+          B: this.originalFareData['B']?.length || 0,
+          C: this.originalFareData['C']?.length || 0,
+          D: this.originalFareData['D']?.length || 0,
+          E: this.originalFareData['E']?.length || 0,
+          總數: Object.values(this.originalFareData).reduce((sum, items) => sum + (items?.length || 0), 0),
+          已選: Object.values(this.originalFareData).flat().filter(item => item.is_selected).length,
+          修改: Object.values(this.originalFareData).flat().filter(item => item._status === 'modified').length
+        });
+
+        // 🔥 恢復顯示模式偏好
+        if (next1Data.showModeByType) {
+          this.showModeByType = { ...next1Data.showModeByType };
+          console.log('📋 恢復顯示模式:', this.showModeByType);
+        }
+
+        // 過濾資料以顯示
+        this.filterData();
+
+        // 🔥 注意：不需要再套用預設值，因為暫存的資料已經包含了所有修改
+        // 只需要同步 org_id（如果 CRU 有變更）
+        setTimeout(() => {
+          this.syncOrgIdFromPrevious();
+        }, 100);
+
+        return; // 🔥 重要：成功載入暫存後直接返回
+      } else {
+        console.warn('⚠️ originalFareData 存在但為空，需要重新載入');
+      }
     } else {
-      // 🔥 修正：無論新增或編輯模式，只要沒有暫存就從 API 載入
-      // 新增模式：apply_no 為空字串，API 會回傳所有可用扣款項目
-      // 編輯模式：apply_no 有值，API 會回傳該合約的扣款資料
-      console.log('📡 暫存無資料，從 API 載入（apply_no:', this.currentApplyNo || '空(新增模式)', ')');
-      this.loadFareDataFromAPI();
+      console.log('📡 暫存無資料或 originalFareData 不存在');
     }
+
+    // 🔥 沒有有效暫存：從 API 載入
+    console.log('📡 從 API 載入（apply_no:', this.currentApplyNo || '空(新增模式)', ')');
+    this.loadFareDataFromAPI();
   }
 
   // 2. 新增專門的方法，在資料載入完成後一次性套用所有預設值
@@ -708,11 +744,17 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
           if (response?.Data?.FaresByType) {
             this.processAPIData(response.Data.FaresByType);
 
-            // 🔥 新增：API 載入完成後立即套用預設值
+            // 🔥 API 載入完成後立即套用預設值
             this.applyDefaultValuesToAllItems();
 
-            // 🆕 新增：無條件同步 org_id
+            // 🔥 無條件同步 org_id
             this.syncOrgIdFromPrevious();
+
+            // 🔥 關鍵修復：API 載入完成後立即儲存到暫存
+            setTimeout(() => {
+              this.saveFareDataToWorkflow();
+              console.log('✅ API 資料已儲存到暫存');
+            }, 200);
 
           } else {
             console.warn('API 沒有回傳有效的扣款資料');
@@ -739,7 +781,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 處理 API 回傳的資料
   private processAPIData(faresByType: any): void {
-    console.log('開始處理 API 資料:', faresByType);
+    console.log('🔄 開始處理 API 資料:', faresByType);
 
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
 
@@ -779,14 +821,23 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
           };
         });
 
-        console.log(`${capType} 類型載入 ${this.originalFareData[capType].length} 筆資料`);
+        console.log(`✅ ${capType} 類型載入 ${this.originalFareData[capType].length} 筆資料`);
       } else {
-        console.log(`${capType} 類型無資料`);
+        console.log(`⚠️ ${capType} 類型無資料`);
       }
     });
 
     // 處理完成後執行過濾
     this.filterData();
+
+    console.log('📊 processAPIData 完成，originalFareData 狀態:', {
+      A: this.originalFareData['A']?.length || 0,
+      B: this.originalFareData['B']?.length || 0,
+      C: this.originalFareData['C']?.length || 0,
+      D: this.originalFareData['D']?.length || 0,
+      E: this.originalFareData['E']?.length || 0,
+      總數: Object.values(this.originalFareData).reduce((sum, items) => sum + (items?.length || 0), 0)
+    });
   }
 
 
@@ -837,20 +888,27 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     // 🔥 關鍵修復:使用 originalFareData 並包含所有項目(包括 deleted 狀態的)
     const allFareItems = Object.values(this.originalFareData).flat();
 
+    // 🔥 新增：儲存顯示模式偏好
     const next1Data = {
       fareData: this.fareData,  // 過濾後的資料（用於顯示）
-      originalFareData: this.originalFareData,  // 🔥 新增：完整的原始資料（用於切換模式）
+      originalFareData: this.originalFareData,  // 🔥 完整的原始資料（用於切換模式）
+      showModeByType: this.showModeByType,  // 🔥 新增：各群組的顯示模式
       selectedItems: allFareItems,  // 🔥 改為包含所有項目,讓 DataCleaner 處理篩選
-      contractInfo: this.contractInfoData
+      contractInfo: this.contractInfoData,
+      timestamp: Date.now()  // 🔥 新增：時間戳記
     };
 
     console.log('💾 儲存到 workflow 的資料:', {
       originalFareData總數: allFareItems.length,
+      originalFareData詳細: Object.keys(this.originalFareData).map(type =>
+        `${type}: ${this.originalFareData[type]?.length || 0}筆`
+      ),
       fareData總數: Object.values(this.fareData).flat().length,
       已選: allFareItems.filter(item => item.is_selected).length,
       刪除: allFareItems.filter(item => item._status === 'deleted').length,
       新增: allFareItems.filter(item => item._status === 'new').length,
-      修改: allFareItems.filter(item => item._status === 'modified').length
+      修改: allFareItems.filter(item => item._status === 'modified').length,
+      顯示模式: this.showModeByType
     });
 
     const saveResult = this.flowService.setStepData('next1', next1Data);
@@ -1374,11 +1432,13 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   private updateOriginalData(capType: string): void {
     this.fareData[capType].forEach(displayItem => {
-      const originalItem = this.originalFareData[capType].find(item => item.id === displayItem.id);
-      if (originalItem) {
-        // 🔥 完整同步所有狀態欄位
-        originalItem.is_selected = displayItem.is_selected;
-        originalItem._status = displayItem._status;  // 🔥 關鍵修復:同步 _status
+      const originalIndex = this.originalFareData[capType].findIndex(item => item.id === displayItem.id);
+      if (originalIndex > -1) {
+        // 🔥 完整同步所有字段（包括用户修改的欄位值）
+        this.originalFareData[capType][originalIndex] = {
+          ...this.originalFareData[capType][originalIndex],
+          ...displayItem  // 完整覆蓋所有字段
+        };
 
         // 🔥 新增日誌以追蹤刪除狀態
         if (displayItem._status === 'deleted') {

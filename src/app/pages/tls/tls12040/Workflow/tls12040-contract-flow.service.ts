@@ -1,9 +1,11 @@
-import { TLS12040SubmitData, TLS12040DataCleanerClass } from './../models/tls12040submit.model';
 import { Injectable } from '@angular/core';
 import { TLS12040DetailModel } from '@pages/tls/tls12040-cru/models/tls12040-cru.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { BehaviorSubject } from 'rxjs';
+import { DateUtils } from 'src/app/core/utils/date-utils';
+import { TLS12040DataCleanerClass, TLS12040SubmitData } from './../models/tls12040submit.model';
 import { CrudModeService } from './crud-mode.service';
+
 // 核心資料介面 - 用 interface 控制結構
 export interface TLS12040CoreData {
   readonly applyNo: string;
@@ -175,17 +177,47 @@ class Next1DataCleaner implements TLS12040DataCleaner {
       item.is_selected || item._status === 'deleted'
     );
 
+    // 🔥 格式化日期欄位 - 統一轉換為 YYYYMM 格式
+    const formatItemDates = (item: any) => {
+      return {
+        ...item,
+        tpy_bdate: item.tpy_bdate ? DateUtils.toYYYYMM(item.tpy_bdate) : item.tpy_bdate,
+        tpy_edate: item.tpy_edate ? DateUtils.toYYYYMM(item.tpy_edate) : item.tpy_edate
+      };
+    };
+
+    // 格式化 fareData 中的日期
+    const formattedFareData: any = {};
+    Object.keys(data.fareData || {}).forEach(type => {
+      formattedFareData[type] = (data.fareData[type] || []).map(formatItemDates);
+    });
+
+    // 格式化 originalFareData 中的日期
+    const formattedOriginalFareData: any = {};
+    Object.keys(data.originalFareData || {}).forEach(type => {
+      formattedOriginalFareData[type] = (data.originalFareData[type] || []).map(formatItemDates);
+    });
+
+    // 格式化 selectedItems 中的日期
+    const formattedSelectedItems = selectedItems.map(formatItemDates);
+
     return {
-      fareData: data.fareData || {},
-      selectedItems: selectedItems,
-      contractInfo: data.contractInfo || null
+      fareData: formattedFareData,
+      originalFareData: formattedOriginalFareData,  // 🔥 保留完整的原始資料(已格式化日期)
+      showModeByType: data.showModeByType || {},      // 🔥 保留顯示模式偏好
+      selectedItems: formattedSelectedItems,
+      contractInfo: data.contractInfo || null,
+      timestamp: data.timestamp || Date.now()          // 🔥 保留時間戳
     };
   }
 
   validate(data: any): boolean {
-    // 🆕 修正：只要有 fareData 就算有效，不要求一定要有 selectedItems
-    const hasFareData = data.fareData && Object.keys(data.fareData).length > 0;
-    return !!hasFareData;
+    // 🔥 修正：檢查 originalFareData 是否有資料
+    const hasOriginalFareData = data.originalFareData &&
+      Object.values(data.originalFareData).some((items: any) =>
+        Array.isArray(items) && items.length > 0
+      );
+    return !!hasOriginalFareData;
   }
 }
 
@@ -1374,7 +1406,7 @@ export class TLS12040FlowService {
    * 獲取抽成類型名稱 (輔助方法)
    */
   private getCommissionTypeName(commissionType: string): string {
-    const typeNames: { [key: string]: string } = {
+    const typeNames: Record<string, string> = {
       '1': '固定租金',
       '2': '底租抽成取高者',
       '3': '一般抽成',
