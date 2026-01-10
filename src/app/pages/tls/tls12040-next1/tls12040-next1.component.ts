@@ -385,11 +385,12 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
         this.syncOrgIdFromPrevious();
       }, 100); // 延遲一下確保 contractInfoData 已載入
 
-    } else if (this.currentApplyNo) {
-      console.log('📡 暫存無資料，從 API 載入');
-      this.loadFareDataFromAPI();
     } else {
-      console.warn('⚠️ 沒有 apply_no 也沒有暫存資料');
+      // 🔥 修正：無論新增或編輯模式，只要沒有暫存就從 API 載入
+      // 新增模式：apply_no 為空字串，API 會回傳所有可用扣款項目
+      // 編輯模式：apply_no 有值，API 會回傳該合約的扣款資料
+      console.log('📡 暫存無資料，從 API 載入（apply_no:', this.currentApplyNo || '空(新增模式)', ')');
+      this.loadFareDataFromAPI();
     }
   }
 
