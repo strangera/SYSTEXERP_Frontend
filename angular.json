@@ -104,11 +104,22 @@
                   "with": "src/environments/environment.staging.ts"
                 }
               ],
-              "outputHashing": "none",
-              "optimization": false,
-              "sourceMap": true,
-              "extractLicenses": false,
+              "outputHashing": "all",
+              "optimization": true,
+              "aot": true,
               "baseHref": "/tsrdwebdev/",
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                }
+              ],
               "assets": [
                 "src/favicon.ico",
                 "src/assets",
