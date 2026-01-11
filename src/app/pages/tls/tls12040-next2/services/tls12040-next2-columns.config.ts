@@ -69,21 +69,35 @@ export class TLS12040Next2ColumnsConfig {
         field: 'is_selected',
         header: '是否新增',
         type: 'checkbox',
-        editable: false,  // 關鍵：Level 的 checkbox 不可編輯，由 Discount 控制
-        directEdit: false,  // 禁用直接編輯
-        autoEditOnSelect: false,
-        autoSaveOnUnselect: false,
+        editable: true,  // 🔑 改為 true，讓使用者可以自己決定是否勾選
+        directEdit: true,
+        autoEditOnSelect: true,
+        autoSaveOnUnselect: true,
       },
-      // {
-      //   field: 'copy_button',
-      //   header: '複製',
-      //   type: 'button',
-      //   buttonLabel: '複製',
-      //   buttonIcon: 'pi pi-copy',
-      //   buttonClass: 'p-button-sm p-button-secondary',
-      //   buttonTooltip: '複製此扣款項目',
-      //   editable: false
-      // },
+      {
+        field: 'copy_level_button',
+        header: '複製',
+        type: 'button',
+        buttonIcon: 'pi pi-copy',
+        buttonClass: 'p-button-sm p-button-secondary',
+        buttonTooltip: '複製此折扣層級',
+        style: 'width: 50px;',
+        editable: false
+      },
+      {
+        field: 'delete_level_button',
+        header: '刪除',
+        type: 'button',
+        buttonIcon: 'pi pi-trash',
+        buttonClass: 'p-button-sm p-button-danger',
+        buttonTooltip: '刪除此折扣層級',
+        style: 'width: 50px;',
+        editable: false,
+        showCondition: (rowData: any) => {
+          // 使用預先計算的 _canDelete 欄位
+          return rowData._canDelete !== false;
+        }
+      },
       { field: 'cag_barcode', header: '折扣別', type: 'dropdown', editable: false, options: discountOptions },
       {
         field: 'contract_period',
@@ -93,7 +107,17 @@ export class TLS12040Next2ColumnsConfig {
       },
       { field: 'level_bmount', header: '業績計算金額(起)', type: 'number', editable: true },
       { field: 'level_eamount', header: '業績計算金額(迄)', type: 'number', editable: true },
-      { field: 'level_charge_rate', header: '抽成率', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 4 }
+      {
+        field: 'level_charge_rate',
+        header: '抽成率(%)',
+        type: 'number',
+        editable: true,
+        allowDecimal: true,
+        decimalPlaces: 2,
+        useGrouping: false,  // 關閉千分位分隔符
+        maxValue: 100,
+        minValue: 0
+      }
     ];
   }
 

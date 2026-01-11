@@ -1,4 +1,3 @@
-<!-- tls13010-next2.component.html - 優化版本 -->
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
@@ -8,6 +7,7 @@
       btnType="submit"
       label="確認"
       (click)="onSubmitNext()"
+      [disabled]="!hasCommissionData()"
       [loading]="loading"
     ></app-button>
 
@@ -15,9 +15,9 @@
     <app-button
       *ngIf="!isGeneralCommissionMode"
       btnType="create"
-      label="下一步(租金設定)"
-      (click)="onSubmitNext()"
-      [disabled]="crudstatus"
+      label="下一步(條件設定)"
+      (click)="onGoToNext3()"
+      [disabled]="isReadOnlyMode || !hasCommissionData()"
       [loading]="loading"
     ></app-button>
     <app-button btnType="back" (click)="onClearAndExit()"></app-button>
@@ -35,7 +35,7 @@
   <!-- 主要內容 -->
   <div *ngIf="!loading">
     <!-- 專櫃契約書資訊 -->
-    <p-accordion *ngIf="contractInfoData">
+    <p-accordion>
       <p-accordionTab
         header="專櫃契約書資訊"
         [selected]="true"
@@ -52,8 +52,8 @@
             [showBatchDelete]="false"
             [loading]="loading"
             [dataKey]="'id'"
-            [detailKey]="''"
             [readonly]="true"
+            [detailKey]="''"
             [emptyMessage]="'沒有合約資訊'"
           ></app-expandable-edit-table>
         </div>
@@ -68,17 +68,17 @@
           [selected]="true"
           class="line-height-3 m-0"
         >
-          <!-- 修改：直接顯示表格，無論是否有資料 -->
+          <!-- 直接顯示表格，無論是否有資料 -->
           <div *ngIf="dataLoaded">
             <app-expandable-edit-table
+              (fieldChange)="onFieldChange($event)"
+              (detailFieldChange)="onDetailFieldChange($event)"
               [data]="processedCommissionData"
               [mainColumns]="commissionColumns"
-              [detailColumns]="getCurrentColumns()"
-              [detailKey]="getDetailKey()"
+              [detailKey]="'detailItems'"
               [dataKey]="'id'"
               [showPaginator]="false"
               [showCheckBox]="true"
-              [readonly]="false"
               [showDetailTabs]="true"
               [detailTabOptions]="settingTabs"
               [defaultDetailTab]="'discount'"
@@ -92,6 +92,16 @@
               (edit)="onItemEdit($event)"
               (save)="onItemSave($event)"
               (cancel)="onItemCancel($event)"
+              [autoAddRowOnTab]="true"
+              [autoAddDetailRowOnTab]="true"
+              [forceEditMode]="!isReadOnlyMode"
+              [showCheckBox]="!isReadOnlyMode"
+              [showAddButton]="!isReadOnlyMode"
+              [showBatchDelete]="!isReadOnlyMode"
+              [showDetailAddButton]="!isReadOnlyMode"
+              [showDetailBatchDelete]="!isReadOnlyMode"
+              [showActionColumn]="false"
+              [showDetailActionColumn]="false"
               (detailEdit)="onDetailEdit($event)"
               (detailSave)="onDetailSave($event)"
               (beforeSave)="onBeforeDetailSave($event)"
@@ -102,15 +112,6 @@
               (addDetailItem)="onAddDetailItem($event)"
               (dropdownChange)="onDropdownChange($event)"
               (detailButtonClick)="onDetailButtonClick($event)"
-              (fieldChange)="onFieldChange($event)"
-              [forceEditMode]="!isReadOnlyMode"
-              [showActionColumn]="false"
-              [showDetailActionColumn]="false"
-              [showBatchDelete]="isReadOnlyMode"
-              [showAddButton]="!isReadOnlyMode"
-              [showBatchDelete]="!isReadOnlyMode"
-              [showDetailAddButton]="!isReadOnlyMode"
-              [showDetailBatchDelete]="!isReadOnlyMode"
             ></app-expandable-edit-table>
           </div>
 
@@ -126,6 +127,11 @@
     <!-- 操作按鈕區 -->
     <div class="flex justify-content-between align-items-center mt-3 pt-3">
       <div class="flex align-items-center gap-2">
+        <!-- <span class="text-sm text-gray-600" *ngIf="dataLoaded">
+          目前共有
+          <span class="font-semibold">{{ getCommissionItemCount() }}</span>
+          個抽成項目
+        </span> -->
         <!-- 保留：資料載入狀態指示 -->
         <span *ngIf="!dataLoaded" class="text-xs text-orange-500">
           (載入中...)
@@ -147,10 +153,11 @@
         (click)="onCancel()"
       ></app-button>
       <app-button
-        *ngIf="isGeneralCommissionMode && !crudstatus"
+        *ngIf="isGeneralCommissionMode && !isReadOnlyMode"
         btnType="submit"
         label="確認"
         (click)="onSubmitNext()"
+        [disabled]="!hasCommissionData()"
         [loading]="loading"
       ></app-button>
 
@@ -158,9 +165,8 @@
       <app-button
         *ngIf="!isGeneralCommissionMode"
         btnType="create"
-        label="下一步(租金設定)"
-        (click)="onSubmitNext()"
-        [disabled]="crudstatus"
+        label="下一步(條件設定)"
+        [disabled]="isReadOnlyMode || !hasCommissionData()"
         [loading]="loading"
       ></app-button>
       <app-button btnType="back" (click)="onClearAndExit()"></app-button>

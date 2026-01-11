@@ -53,14 +53,14 @@ export class TLS12040DataFlowService {
   ) { }
 
   /**
-   * 載入折扣選項
+   * 載入折扣選項（使用帶排序的 API）
    */
   async loadDiscountOptions(): Promise<any[]> {
     try {
-      console.log('載入 TLS12040 折扣選項...');
+      console.log('載入 TLS12040 折扣選項（帶排序）...');
 
       const options = await firstValueFrom(
-        this.locationOptionsService.getPaperTypeOptions('T102').pipe(
+        this.locationOptionsService.querySYS1000_DropDownListWithSort('T102').pipe(
           catchError(error => {
             console.error('載入折扣選項時發生錯誤:', error);
             return of([]);
@@ -69,6 +69,7 @@ export class TLS12040DataFlowService {
       );
 
       console.log('TLS12040 折扣選項載入完成:', options?.length || 0);
+      console.log('折扣選項（含排序）:', options);
       return options || [];
     } catch (error) {
       console.error('載入折扣選項失敗:', error);
