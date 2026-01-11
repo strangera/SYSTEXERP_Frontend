@@ -166,6 +166,7 @@
         *ngIf="!isGeneralCommissionMode"
         btnType="create"
         label="下一步(條件設定)"
+        (click)="onGoToNext3()"
         [disabled]="isReadOnlyMode || !hasCommissionData()"
         [loading]="loading"
       ></app-button>
