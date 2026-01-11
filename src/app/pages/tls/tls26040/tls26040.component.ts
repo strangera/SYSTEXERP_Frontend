@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -87,7 +88,8 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
 
   constructor(
     private tls26040Service: TLS26040Service,
-    private dropDownListService: DropDownListService
+    private dropDownListService: DropDownListService,
+    private datePipe: DatePipe,
   ) {
     super();
   }
@@ -123,10 +125,16 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
   };
 
   onRestore(rowData: TLS26040Data) {
+    const updData = {
+      id: rowData.id,
+      sad_date: this.datePipe.transform(rowData.sad_date, 'yyyy-MM-dd') ?? '',
+      talent_id: rowData.talent_id,
+      tlt_no: rowData.tlt_no,
+    };
     this.messageService.confirm({
       header: `是否確認還原？`,
       accept: () => {
-        this.tls26040Service.revertTLS26040({ id: rowData.id })
+        this.tls26040Service.revertTLS26040(updData)
           .pipe(untilDestroyed(this))
           .subscribe(() => {
             this.messageService.successBubble('還原成功');
