@@ -31,10 +31,9 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   // 查詢
   queryForm = this.formBuilder.group({
     // POS2004 商品主檔
-    PLU_MagNo: ['', [Validators.maxLength(20)]], // 商品管理編號 *
+
+    KeyWord: ['', [Validators.maxLength(20)]], // 20260112調整: 商品管理編號/國際條碼/廠商貨號都以KeyWord送出
     PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
-    PLU_No: ['', [Validators.maxLength(20)]], // 國際條碼 *
-    PLU_OrgPLUNo: ['', [Validators.maxLength(30)]], // 廠商貨號 --廠商自編碼 廠商貨號 *
     LOGO_No: ['', [Validators.maxLength(4)]], // 品牌代碼
     CAT_LNo: ['', [Validators.maxLength(6)]], // 大分類代碼 --POS2003
     CAT_MNo: ['', [Validators.maxLength(6)]], // 中分類代碼 POS20031
@@ -413,6 +412,46 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     });
   }
 
+  //匯入圖片檔並產生錯誤檔
+  onIMGUpload(event: FileSelectEvent) {
+    // 寫入時資料必須是 國際條碼.jpg 多筆的強況則是(國際條碼-1.jpg、國際條碼-2.jpg)
+    // 1. 檢查是否有檔案
+    if (!event.files || event.files.length === 0) return;
+
+    const formData = new FormData();
+
+    // 2. 依照 Swagger 需求，使用 'files' 作為 key，並透過迴圈加入所有檔案
+    // 這是傳遞「檔案陣列」到 multipart/form-data 的標準做法
+    for (const file of event.files) {
+      formData.append('files', file);
+    }
+
+    // 顯示讀取中，避免重複點擊
+    this.messageService.infoBubble('檔案上傳中...');
+
+    this.tls51070Service.uploadTLS51070Image(formData)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          const data = res?.Data;
+          if (data) {
+            if (data.ErrorFilePath) {
+              // 有錯誤檔：顯示錯誤提示
+              this.messageService.errorBubble(`匯入失敗`);
+              // 這裡通常會建議提供下載 ErrorFilePath 的邏輯
+            } else {
+              // 沒有錯誤檔：顯示成功
+              this.messageService.infoBubble(`上傳圖片成功`);
+            }
+          }
+        },
+        error: (err) => {
+          console.error(err);
+          this.messageService.errorBubble('檔案上傳失敗，請稍後再試');
+        },
+      });
+  }
+
   downloadErrorFile(filePath: string) {
     window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
@@ -451,35 +490,6 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
         ...item,
         label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo,
       }))];
-
-      // **********************************************
-      // 2. 新增邏輯：檢查是否有精確匹配的單一結果
-      //    (假設使用者在欄位中輸入的內容，會精確匹配到 suggestions 的其中一項，
-      //     且通常只有一個結果時，代表精確命中。)
-      const inputVal = event.PLU_MagNo || '';
-
-      // 找到完全匹配 PLU_MagNo 或 PLU_No 或 PLU_OrgPLUNo 的項目
-      const exactMatch = results.Data.find(
-        item => item.PLU_MagNo === inputVal || item.PLU_No === inputVal || item.PLU_OrgPLUNo === inputVal
-      );
-
-      if (exactMatch && results.Data.length === 1) {
-        // 如果精確匹配到一個項目，則更新主查詢表單的其他欄位
-        console.log('精確匹配，同步欄位:', exactMatch);
-        this.queryForm.patchValue({
-          PLU_MagNo: exactMatch.PLU_MagNo || '',
-          PLU_No: exactMatch.PLU_No || '',
-          PLU_OrgPLUNo: exactMatch.PLU_OrgPLUNo || '',
-        });
-      } else if (!inputVal) {
-        // 如果輸入欄位清空了，也清空 queryForm 的相關欄位
-        this.queryForm.patchValue({
-          PLU_MagNo: '',
-          PLU_No: '',
-          PLU_OrgPLUNo: '',
-        });
-      }
-      // **********************************************
     });
   }
 
@@ -503,10 +513,5 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   downloadTLS51070Template() {
     const export$ = this.tls51070Service.downloadTLS51070Template();
     this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.downloadTLS51070TemplateLoading = isLoading);
-  }
-
-  //用戶匯入大量圖檔
-  userInputIMGs() {
-    this.messageService.infoBubble('開發中');
   }
 }
