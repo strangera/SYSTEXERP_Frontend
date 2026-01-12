@@ -1,11 +1,10 @@
 import { NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { AbstractControl, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { AccordionModule } from 'primeng/accordion';
-import { debounceTime } from 'rxjs';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -25,18 +24,6 @@ export interface Label {
   PLU_Unit: string,// 商品單位
   PLU_OrgPLUNo: string,// 廠商貨號
   PLU_No: string,// 國際條碼
-}
-
-// 標籤檔至少輸入其中一項 檢核
-export function atLeastOneFieldRequired(fields: string[]): ValidatorFn {
-  return (formGroup: AbstractControl): ValidationErrors | null => {
-    const hasAtLeastOne = fields.some(field => {
-      const value = formGroup.get(field)?.value;
-      return value !== null && value !== undefined && value.toString().trim() !== '';
-    });
-
-    return hasAtLeastOne ? null : { atLeastOneRequired: true };
-  };
 }
 
 @Component({
@@ -59,20 +46,16 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
 
   // 查詢 標籤檔定加入欄位
   queryForm = this.formBuilder.group({
-    PLU_MagNo: ['', [Validators.maxLength(20)]], // 商品管理碼
-    PLU_No: ['', [Validators.maxLength(20)]], // 國際條碼
-    PLU_OrgPLUNo: ['', [Validators.maxLength(20)]], // 廠商貨號
+    KeyWord: ['', [Validators.maxLength(20)]], // 20260112調整: 商品管理編號/國際條碼/廠商貨號都以KeyWord送出
     Label_Qty: [1], // 標籤數量
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
-  }, {
-    validators: atLeastOneFieldRequired(['PLU_MagNo', 'PLU_No', 'PLU_OrgPLUNo']) //至少要填寫其中一項
   });
 
   // 查詢 變價歷史紀錄
   queryPriceForm = this.formBuilder.group({
-    PLU_MagNo: ['', [Validators.required, Validators.maxLength(20)]], // 商品管理碼
+    KeyWord: ['', [Validators.maxLength(20)]], // 20260112調整: 商品管理編號/國際條碼/廠商貨號都以KeyWord送出
     //分頁查詢
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
   });
@@ -170,28 +153,9 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     } else {
       return
     }
-
-    // ✅ 監聽欄位變化，進行查詢但不加到清單
-    const watchFields = ['PLU_MagNo', 'PLU_No', 'PLU_OrgPLUNo'];
-    watchFields.forEach(field => {
-      this.queryForm.get(field)?.valueChanges.pipe(debounceTime(300)).subscribe(() => {
-        if (this.hasAnySearchInput()) {
-          this.previewLabel();
-        } else {
-          this.previewLabelData = null;
-        }
-      });
-    });
   }
 
   onSubmitLabel(frm: FormGroup) {
-    if (this.queryForm.invalid) {
-      if (this.queryForm.errors?.['atLeastOneRequired']) {
-        this.messageService.errorBubble('請至少填寫「商品管理碼」、「國際條碼」或「廠商貨號」其中一項');
-      }
-      return;
-    }
-
     this.handleSubmit(frm, () => {
       console.log('query condition', frm.value);
       this.loading = false;
@@ -302,7 +266,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
   //預覽標籤檔
   previewLabel() {
     const frm = this.queryForm;
-    if (frm.invalid || !this.hasAnySearchInput()) return;
+    if (frm.invalid) return;
 
     this.tls51070Service.getLabelTLS51070(frm.value).subscribe({
       next: (response) => {
@@ -363,14 +327,6 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     return maxId + 1;
   }
 
-  // 標籤檢查(三者其中之一不為空才執行)
-  hasAnySearchInput(): boolean {
-    const form = this.queryForm;
-    return !!form.get('PLU_MagNo')?.value?.trim() ||
-      !!form.get('PLU_No')?.value?.trim() ||
-      !!form.get('PLU_OrgPLUNo')?.value?.trim();
-  }
-
   // #region 商品管理編號/國際條碼/廠商貨號 
   opLoading = false;
   opForm = this.formBuilder.group({
@@ -405,35 +361,6 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
         ...item,
         label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo,
       }))];
-
-      // **********************************************
-      // 2. 新增邏輯：檢查是否有精確匹配的單一結果
-      //    (假設使用者在欄位中輸入的內容，會精確匹配到 suggestions 的其中一項，
-      //     且通常只有一個結果時，代表精確命中。)
-      const inputVal = event.PLU_MagNo || '';
-
-      // 找到完全匹配 PLU_MagNo 或 PLU_No 或 PLU_OrgPLUNo 的項目
-      const exactMatch = results.Data.find(
-        item => item.PLU_MagNo === inputVal || item.PLU_No === inputVal || item.PLU_OrgPLUNo === inputVal
-      );
-
-      if (exactMatch && results.Data.length === 1) {
-        // 如果精確匹配到一個項目，則更新主查詢表單的其他欄位
-        console.log('精確匹配，同步欄位:', exactMatch);
-        this.queryForm.patchValue({
-          PLU_MagNo: exactMatch.PLU_MagNo || '',
-          PLU_No: exactMatch.PLU_No || '',
-          PLU_OrgPLUNo: exactMatch.PLU_OrgPLUNo || '',
-        });
-      } else if (!inputVal) {
-        // 如果輸入欄位清空了，也清空 queryForm 的相關欄位
-        this.queryForm.patchValue({
-          PLU_MagNo: '',
-          PLU_No: '',
-          PLU_OrgPLUNo: '',
-        });
-      }
-      // **********************************************
     });
   }
 

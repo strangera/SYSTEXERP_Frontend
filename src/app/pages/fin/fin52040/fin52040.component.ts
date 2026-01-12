@@ -6,7 +6,6 @@ import { Fin52040Request, Fin52040Response, FIN52040Service } from '@service/api
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { apiOption } from '@shared/models/sys/sysb000.model';
-import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -71,7 +70,6 @@ export class FIN52040Component extends BasicQueryPageComponent<Fin52040Request> 
 
   constructor(
     private fin52040Service: FIN52040Service,
-    private validationService: ValidationService
   ) {
     super(); // 呼叫父類建構子
   }

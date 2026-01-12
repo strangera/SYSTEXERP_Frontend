@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { Observable, of } from 'rxjs';
 
 // Query request interface for TLS42020
 export interface TLS42020QueryRequest extends BaseQueryRequest {
@@ -134,6 +134,11 @@ export interface TLS42020DropdownRequest {
   TLT_NO: string[];               // 專櫃編號清單
 }
 
+// ExecSpFunc request interface for TLS42020
+export interface TLS42020ExecSpFuncRequest {
+  idList: number[];               // ID清單
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -178,6 +183,11 @@ export class TLS42020Service {
   // 下載收銀觸控按鍵設定作業Excel規範
   downloadRule(): Observable<any> {
     return this.http.post(`${this.apiUrl}/downloadRule`, {});
+  }
+
+  // 下傳POS1027M資料表
+  ExecSpFuncTLS42020(data: TLS42020ExecSpFuncRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/ExecSpFuncTLS42020`, data);
   }
 
   // 專櫃編號下拉選單

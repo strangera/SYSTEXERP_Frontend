@@ -40,6 +40,10 @@ export interface FIN52080Tree {
   org_name: string;
 }
 
+export interface DeleteFIN52080Request {
+  Ids: string[] | null;
+}
+
 /** D: 借 C: 貸 */
 export type AccDCType = 'D' | 'C';
 /** 0: 統制 1: 明細 */
