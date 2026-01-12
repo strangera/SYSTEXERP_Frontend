@@ -46,7 +46,7 @@ export class FIN52040Component extends BasicQueryPageComponent<Fin52040Request> 
     CRT_USR_No: ['', [Validators.maxLength(16)]], //  建立人員姓名
     UPD_USR_No: ['', [Validators.maxLength(16)]], //  變更人員姓名
 
-    ...createPaginationConfig([{ field: 'UniformNo', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'RefCode', order: 1 }]), // 分頁和排序參數
   });
 
   totalRecords = 0;// 分頁和排序參數 // 排序需要

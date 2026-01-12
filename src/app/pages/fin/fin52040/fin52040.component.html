@@ -77,14 +77,14 @@
 <div class="card">
   <app-table
     tableKey="FIN52040"
-    dataKey="UniformNo"
+    dataKey="RefCode"
     [data]="data"
     [columns]="columns"
     (edit)="onEdit($event)"
     (detail)="onDetail($event)"
     (delete)="onDelete($event)"
     [showCheckBox]="true"
-    [multiSortMeta]="[{ field: 'UniformNo', order: 1 }]"
+    [multiSortMeta]="[{ field: 'RefCode', order: 1 }]"
     [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     [lazy]="true"
