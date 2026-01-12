@@ -42,8 +42,8 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
   /**
    * 會計科目代號維護
    * - AccNo: 科目代號
-   * - AccCname: 科目名稱
-   * - AccEname: 科目英文名稱 (非必填)
+   * - AccCName: 科目名稱
+   * - AccEName: 科目英文名稱 (非必填)
    * - AccDC: 借/貸
    * - Ledger_MD: 統制/明細
    * - ClassNo: 三碼代號
@@ -57,8 +57,8 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
    */
   public readonly queryForm = this.formBuilder.group({
     AccNo: new FormControl<string | void>(void 0, [Validators.minLength(3), Validators.maxLength(8)]),
-    AccCname: new FormControl<string | void>(void 0, [Validators.maxLength(40)]),
-    AccEname: new FormControl<string | void>(void 0, [Validators.maxLength(50)]),
+    AccCName: new FormControl<string | void>(void 0, [Validators.maxLength(40)]),
+    AccEName: new FormControl<string | void>(void 0, [Validators.maxLength(50)]),
     AccDC: new FormControl<AccDCType | void>(void 0),
     Ledger_MD: new FormControl<LedgerMDType | void>(void 0),
     ClassNo: new FormControl<string | void>(void 0),
@@ -87,8 +87,8 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
 
   /**
    * - AccNo: 科目代號
-   * - AccCname: 科目名稱
-   * - AccEname: 科目英文名稱
+   * - AccCName: 科目名稱
+   * - AccEName: 科目英文名稱
    * - AccDC: 借/貸
    * - Ledger_MD: 統制/明細
    * - ClassNo: 三碼代號
@@ -212,5 +212,26 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
 
   public onLevelSelected(selected: any[]): void {
     this.logger.debug(`onLevelSelected:`, [selected]);
+  }
+
+  public onDelete(selected: FIN52080Data[]): void {
+    this.logger.debug(`onDelete:`, [selected]);
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: '確定要刪除選取的資料嗎？',
+      accept: () => {
+        const accNos = selected.map(v => v.AccNo);
+        this.tableLoading.set(!0);
+        this.service.deleteFIN52080({ Ids: accNos }).pipe(
+          finalize(() => this.tableLoading.set(!1)),
+        ).subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.messageService.successBubble(res.Message);
+            this.onSubmit();
+          },
+        });
+      },
+    });
   }
 }
