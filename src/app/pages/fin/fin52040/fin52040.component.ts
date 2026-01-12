@@ -6,7 +6,6 @@ import { Fin52040Request, Fin52040Response, FIN52040Service } from '@service/api
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { apiOption } from '@shared/models/sys/sysb000.model';
-import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -47,7 +46,7 @@ export class FIN52040Component extends BasicQueryPageComponent<Fin52040Request> 
     CRT_USR_No: ['', [Validators.maxLength(16)]], //  建立人員姓名
     UPD_USR_No: ['', [Validators.maxLength(16)]], //  變更人員姓名
 
-    ...createPaginationConfig([{ field: 'RefCode', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'UniformNo', order: 1 }]), // 分頁和排序參數
   });
 
   totalRecords = 0;// 分頁和排序參數 // 排序需要
@@ -71,7 +70,6 @@ export class FIN52040Component extends BasicQueryPageComponent<Fin52040Request> 
 
   constructor(
     private fin52040Service: FIN52040Service,
-    private validationService: ValidationService
   ) {
     super(); // 呼叫父類建構子
   }

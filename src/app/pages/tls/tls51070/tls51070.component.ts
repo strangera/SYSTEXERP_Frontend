@@ -31,10 +31,9 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   // 查詢
   queryForm = this.formBuilder.group({
     // POS2004 商品主檔
-    PLU_MagNo: ['', [Validators.maxLength(20)]], // 商品管理編號 *
+
+    KeyWord: ['', [Validators.maxLength(20)]], // 20260112調整: 商品管理編號/國際條碼/廠商貨號都以KeyWord送出
     PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
-    PLU_No: ['', [Validators.maxLength(20)]], // 國際條碼 *
-    PLU_OrgPLUNo: ['', [Validators.maxLength(30)]], // 廠商貨號 --廠商自編碼 廠商貨號 *
     LOGO_No: ['', [Validators.maxLength(4)]], // 品牌代碼
     CAT_LNo: ['', [Validators.maxLength(6)]], // 大分類代碼 --POS2003
     CAT_MNo: ['', [Validators.maxLength(6)]], // 中分類代碼 POS20031
@@ -451,35 +450,6 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
         ...item,
         label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo,
       }))];
-
-      // **********************************************
-      // 2. 新增邏輯：檢查是否有精確匹配的單一結果
-      //    (假設使用者在欄位中輸入的內容，會精確匹配到 suggestions 的其中一項，
-      //     且通常只有一個結果時，代表精確命中。)
-      const inputVal = event.PLU_MagNo || '';
-
-      // 找到完全匹配 PLU_MagNo 或 PLU_No 或 PLU_OrgPLUNo 的項目
-      const exactMatch = results.Data.find(
-        item => item.PLU_MagNo === inputVal || item.PLU_No === inputVal || item.PLU_OrgPLUNo === inputVal
-      );
-
-      if (exactMatch && results.Data.length === 1) {
-        // 如果精確匹配到一個項目，則更新主查詢表單的其他欄位
-        console.log('精確匹配，同步欄位:', exactMatch);
-        this.queryForm.patchValue({
-          PLU_MagNo: exactMatch.PLU_MagNo || '',
-          PLU_No: exactMatch.PLU_No || '',
-          PLU_OrgPLUNo: exactMatch.PLU_OrgPLUNo || '',
-        });
-      } else if (!inputVal) {
-        // 如果輸入欄位清空了，也清空 queryForm 的相關欄位
-        this.queryForm.patchValue({
-          PLU_MagNo: '',
-          PLU_No: '',
-          PLU_OrgPLUNo: '',
-        });
-      }
-      // **********************************************
     });
   }
 
