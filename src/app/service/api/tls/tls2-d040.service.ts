@@ -56,4 +56,45 @@ export class TLS2D040Service {
   queryTLS2D040_Detail(req: QueryTLS2D040Request): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS2D040_Detail`, req);
   }
+  //匯出明細excel
+  exportTLS2D040_Detail(req: QueryTLS2D040Request): Observable<Blob> {
+    // 後端實際路徑為 /TLS0000/TLS2000/exportTLS2D040
+    return this.http.post(`${this.apiUrl}/exportTLS2D040`, req, { responseType: 'blob' });
+  }
+  //匯出明細PDF
+  exportTLS2D040PDF_Detail(req: QueryTLS2D040Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS2D040PDF`, req, { responseType: 'blob' });
+  }
+  //匯出依專櫃彙總excel
+  exportTLS2D040_TLT_Summary(req: QueryTLS2D040Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS2D040_TLT_Summary`, req, { responseType: 'blob' });
+  }
+  //匯出依據扣款項目彙總excel
+  exportTLS2D040_ChargeItem_Summary(req: QueryTLS2D040Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS2D040_ChargeItem_Summary`, req, { responseType: 'blob' });
+  }
+  //匯出依據部門彙總excel
+  exportTLS2D040_Department_Summary(req: QueryTLS2D040Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS2D040_Department_Summary`, req, { responseType: 'blob' });
+  }
+  //匯出依會計科目彙總excel
+  exportTLS2D040_Acct_Summary(req: QueryTLS2D040Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS2D040_Acct_Summary`, req, { responseType: 'blob' });
+  }
+  //匯出依專櫃彙總PDF
+  exportTLS2D040_TLT_SummaryPDF(req: QueryTLS2D040Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS2D040_TLT_SummaryPDF`, req, { responseType: 'blob' });
+  }
+  //匯出依據扣款項目彙總PDF
+  exportTLS2D040_ChargeItem_SummaryPDF(req: QueryTLS2D040Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS2D040_ChargeItem_SummaryPDF`, req, { responseType: 'blob' });
+  }
+  //匯出依據部門型態別PDF
+  exportTLS2D040_Department_SummaryPDF(req: QueryTLS2D040Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS2D040_Department_SummaryPDF`, req, { responseType: 'blob' });
+  }
+  //匯出依會計科目彙總PDF
+  exportTLS2D040_Acct_SummaryPDF(req: QueryTLS2D040Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS2D040_Acct_SummaryPDF`, req, { responseType: 'blob' });
+  }
 }
