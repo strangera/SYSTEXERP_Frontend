@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
 import {
   FormGroup,
@@ -37,14 +38,11 @@ type SortMeta = { field: string; order: 1 | -1 };
     ReactiveFormsModule,
     InputTextComponent,
     CalendarRangeComponent,
-    // DropdownComponent,
-    // QueryYearMonthComponent,
     TableComponent,
     MultiSelectComponent,
     TranslateModule,
     CalendarComponent,
     InputNumberRangeComponent,
-
   ],
   templateUrl: './fin13050.component.html',
   styleUrls: ['./fin13050.component.scss'],
@@ -52,32 +50,35 @@ type SortMeta = { field: string; order: 1 | -1 };
 export class FIN13050Component extends BasicQueryPageComponent<any> {
   totalRecords = 0;
   data: any[] = [];
+
   private vendorMap: Record<
     string,
     { VEN_No: string; VEN_Name: string; VEN_Uniform: string }
   > = {};
 
-  // 下拉/多選選項（沿用你原本的）
+  // 下拉/多選選項
   PUR_VoucherTypeOptions: any[] = [];
-
-  // 發票用途 -> 對應後端 PUR_DirectType
   directTypeOptions: Array<{ label: string; value: string }> = [];
   taxTypeOptions: Array<{ label: string; value: string }> = [];
   PUR_DiscNoOptions: Array<{ label: string; value: string }> = [];
   typeOptions: Array<{ label: string; value: string }> = [];
   SYS_ORIGINOptions: Array<{ label: string; value: string }> = [];
-  // 課稅別 -> 後端 PUR_TaxType（單值；多選我幫你以逗號字串送出）
-
-  // 類別區分 -> 對應後端 PUR_Type（若需多選，同樣以逗號字串送出）
-
   vendorOptions: any[] = [];
+
+  /** 預設排序（清除 / 無 SortBy 時使用） */
+  private readonly defaultSort: SortMeta[] = [
+    { field: 'PUR_RepYYYYMM', order: 1 },
+  ];
+
+  /** 還原查詢條件用：目前排序＋最後一次查詢 payload */
+  private _currentSortBy: SortMeta[] = this.defaultSort;
+  private lastQueryBody: any = null;
+
   private makeRowKey(row: any): string {
     const no = row?.PUR_GUINo ?? '';
     const dt = row?.PUR_GUIDate ?? '';
     return `${no}#${dt}`;
   }
-
-
 
   // ===== 表單：全面改成後端欄位命名 =====
   queryForm = this.formBuilder.group({
@@ -90,8 +91,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
     // 主條件（全部使用後端命名）
     PUR_VoucherType: [], // 發票格式
     PUR_GUITrack: [, [Validators.maxLength(2)]], // 字軌
-    PUR_GUINo: [, [Validators.maxLength(8)]], // 發票號碼（前端區間 -> 後端只有單值，會在送出時合併）
-
+    PUR_GUINo: [, [Validators.maxLength(8)]], // 發票號碼
 
     PUR_GUIDate_Start: [], // 發票日期 起
     PUR_GUIDate_End: [], // 發票日期 迄
@@ -100,7 +100,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
       [
         // this.validationService.evenMonthValidator,
       ],
-    ], // 發票日期(年月)；若你不用可不填
+    ], // 發票日期(年月)
 
     PUR_RepYYYYMM: [, []], // 資料所屬年月
     PUR_VenUniform: [], // 廠商編號(統編)
@@ -112,14 +112,14 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
     PUR_Tax_Small: [], // 稅額 起
     PUR_Tax_Big: [], // 稅額 迄
 
-    PUR_DirectType: [], // 發票用途（多選轉逗號字串）
-    PUR_TaxType: [], // 課稅別（多選轉逗號字串）
-    PUR_DiscNo: [], // 憑證單號（若你需要「來源單號」，後端是 Source_Doc_No；此欄保留對應規格）
-    PUR_Type: [], // 類別區分（多選轉逗號字串）
-    SYS_ORIGIN: [], // 系統別（多選轉逗號字串） 
-    Source_Doc_No: [, [Validators.maxLength(14)]], // 憑證單號（若前端使用這個，會直送）
+    PUR_DirectType: [], // 發票用途
+    PUR_TaxType: [], // 課稅別
+    PUR_DiscNo: [], // 扣抵代號
+    PUR_Type: [], // 類別區分
+    SYS_ORIGIN: [], // 系統別
+    Source_Doc_No: [, [Validators.maxLength(14)]], // 憑證單號
     Voucher_No: [, [Validators.maxLength(11)]], // 傳票號碼
-    SAL_Type: [], // 銷售類型（若不用可留空）
+    SAL_Type: [], // 銷售類型
     PUR_Remark: [, [Validators.maxLength(100)]], // 備註
 
     CRT_USR_Name: [],
@@ -141,13 +141,12 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
       visible: true,
       format: this.formatDateTime,
     },
-
     { field: 'PUR_GUIDate_YYYYMM', header: '資料所屬年月', visible: true },
     { field: 'PUR_RepYYYYMM', header: '申報年月', visible: true },
     { field: 'PUR_VenUniform', header: '廠商統編', visible: true },
-    { field: 'PUR_Amt', header: '發票總金額', visible: true },
-    { field: 'PUR_Net', header: '發票未稅金額', visible: true },
-    { field: 'PUR_Tax', header: '發票稅額', visible: true },
+    { field: 'PUR_Amt', header: '發票總金額', visible: true, format: this.money },
+    { field: 'PUR_Net', header: '發票未稅金額', visible: true, format: this.money  },
+    { field: 'PUR_Tax', header: '發票稅額', visible: true, format: this.money  },
     { field: 'PUR_DirectTypeDesc', header: '發票用途', visible: true },
     { field: 'PUR_TaxTypeDesc', header: '課稅別', visible: true },
     { field: 'PUR_DiscNoDesc', header: '扣抵代號', visible: true },
@@ -164,6 +163,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
   ) {
     super();
   }
+
   ngOnInit(): void {
     // ---- 小工具：把 YYYYMM / YYYY-MM / YYYY/MM / YYYYMMDD 轉為該月 1 號的 Date ----
     const toMonthDate = (val: any): Date | null => {
@@ -171,24 +171,20 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
       if (val instanceof Date && !isNaN(val.getTime())) return val;
 
       const s = String(val).trim();
-      // 1) 直接抓數字
       const digits = s.replace(/\D/g, '');
 
-      // YYYYMMDD -> 取 YYYYMM
       if (/^\d{8}$/.test(digits)) {
         const y = Number(digits.slice(0, 4));
         const m = Number(digits.slice(4, 6)) - 1;
         return isFinite(y) && isFinite(m) ? new Date(y, m, 1) : null;
       }
 
-      // YYYYMM
       if (/^\d{6}$/.test(digits)) {
         const y = Number(digits.slice(0, 4));
         const m = Number(digits.slice(4, 6)) - 1;
         return isFinite(y) && isFinite(m) ? new Date(y, m, 1) : null;
       }
 
-      // YYYY-MM / YYYY/MM
       const m2 = s.match(/^(\d{4})[-\/](\d{1,2})$/);
       if (m2) {
         const y = Number(m2[1]);
@@ -199,18 +195,16 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
       return null;
     };
 
-    // ---- 小工具：把控制值（若為字串）轉回 Date，避免月曆顯示 202208/01 等怪值 ----
     const normalizeMonthControl = (ctrl: any) => {
       const v = ctrl?.value;
       if (v == null) return;
-      // 若已是 Date 就不處理；其餘嘗試轉回 Date
       if (!(v instanceof Date)) {
         const d = toMonthDate(v);
         if (d) ctrl.patchValue(d, { emitEvent: false });
       }
     };
 
-    // === 頁面初始化（會還原查詢狀態到表單） ===
+    // === 頁面初始化 ===
     this.initializePage('FIN13050', '/fin/FIN13050cru', this.queryForm);
 
     // === 下拉資料 ===
@@ -227,74 +221,109 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
       const list = res?.Data ?? [];
       this.PUR_VoucherTypeOptions = list.map((x: any) => ({
         value: String(x.No),
-        label: `${x.No}-${x.Name}`,   // <- 變成 value-label 顯示
+        label: `${x.No}-${x.Name}`,
       }));
     });
 
-    this.fin13050Service.querySYS1000DropDownList('PUR_DirectType').subscribe((res) => {
-      const list = res?.Data ?? [];
-      this.directTypeOptions = list.map((x: any) => ({
-        value: String(x.No),
-        label: String(x.Name),
-      }));
-    });
+    this.fin13050Service
+      .querySYS1000DropDownList('PUR_DirectType')
+      .subscribe((res) => {
+        const list = res?.Data ?? [];
+        this.directTypeOptions = list.map((x: any) => ({
+          value: String(x.No),
+          label: String(x.Name),
+        }));
+      });
 
-    this.fin13050Service.querySYS1000DropDownList('PUR_TaxType').subscribe((res) => {
-      const list = res?.Data ?? [];
-      this.taxTypeOptions = list.map((x: any) => ({
-        value: String(x.No),
-        label: String(x.Name),
-      }));
-    });
+    this.fin13050Service
+      .querySYS1000DropDownList('PUR_TaxType')
+      .subscribe((res) => {
+        const list = res?.Data ?? [];
+        this.taxTypeOptions = list.map((x: any) => ({
+          value: String(x.No),
+          label: String(x.Name),
+        }));
+      });
 
-    this.fin13050Service.querySYS1000DropDownList('PUR_DiscNo').subscribe((res) => {
-      const list = res?.Data ?? [];
-      this.PUR_DiscNoOptions = list.map((x: any) => ({
-        value: String(x.No),
-        label: String(x.Name),
-      }));
-    });
+    this.fin13050Service
+      .querySYS1000DropDownList('PUR_DiscNo')
+      .subscribe((res) => {
+        const list = res?.Data ?? [];
+        this.PUR_DiscNoOptions = list.map((x: any) => ({
+          value: String(x.No),
+          label: String(x.Name),
+        }));
+      });
 
-    this.fin13050Service.querySYS1000DropDownList('PUR_Type').subscribe((res) => {
-      const list = res?.Data ?? [];
-      this.typeOptions = list.map((x: any) => ({
-        value: String(x.No),
-        label: String(x.Name),
-      }));
-    });
+    this.fin13050Service
+      .querySYS1000DropDownList('PUR_Type')
+      .subscribe((res) => {
+        const list = res?.Data ?? [];
+        this.typeOptions = list.map((x: any) => ({
+          value: String(x.No),
+          label: String(x.Name),
+        }));
+      });
 
-    this.fin13050Service.querySYS1000DropDownList('SYS_ORIGIN').subscribe((res) => {
-      const list = res?.Data ?? [];
-      this.SYS_ORIGINOptions = list.map((x: any) => ({
-        value: String(x.No),
-        label: String(x.Name),
-      }));
-    });
+    this.fin13050Service
+      .querySYS1000DropDownList('SYS_ORIGIN')
+      .subscribe((res) => {
+        const list = res?.Data ?? [];
+        this.SYS_ORIGINOptions = list.map((x: any) => ({
+          value: String(x.No),
+          label: String(x.Name),
+        }));
+      });
 
-    // === 發票號碼輸入：若被輸入數字，改成字串避免被格式化 ===
+    // 發票號碼輸入：若被輸入數字，改成字串避免被格式化
     const toStr = (v: any) => (v == null ? v : String(v));
     this.queryForm.controls.PUR_GUINo?.valueChanges.subscribe((v) => {
       if (typeof v === 'number') {
-        this.queryForm.controls.PUR_GUINo.patchValue(toStr(v), { emitEvent: false });
+        this.queryForm.controls.PUR_GUINo.patchValue(toStr(v), {
+          emitEvent: false,
+        });
       }
     });
 
-    // === 關鍵：把可能被還原成字串的年月欄位轉回 Date ===
+    // 先 normalize 初始的年月欄位
     normalizeMonthControl(this.queryForm.controls.PUR_RepYYYYMM);
     normalizeMonthControl(this.queryForm.controls.PUR_GUIDate_YYYYMM);
 
-    // （可選）確保清除時會變回 null，而不是空字串
-    // 若你有自訂 clear 按鈕元件，這段可不需要
+    // ✅ 還原查詢條件
+    const saved = this.queryStateService.getQueryStateValue('FIN13050');
+    if (saved) {
+      const formValue = saved.formValue ?? saved;
+      if (formValue) {
+        this.queryForm.patchValue(formValue, { emitEvent: false });
+
+        // 還原年月欄位型別（可能被存成字串）
+        normalizeMonthControl(this.queryForm.controls.PUR_RepYYYYMM);
+        normalizeMonthControl(this.queryForm.controls.PUR_GUIDate_YYYYMM);
+      }
+
+      if (Array.isArray(saved.currentSortBy) && saved.currentSortBy.length) {
+        this._currentSortBy = saved.currentSortBy;
+      } else if (formValue?.SortBy) {
+        this._currentSortBy = formValue.SortBy as SortMeta[];
+      } else {
+        this._currentSortBy = this.defaultSort;
+      }
+
+      this.lastQueryBody = saved.lastQueryBody ?? null;
+
+      // 自動查一次
+      Promise.resolve().then(() => this.onSubmit(this.queryForm));
+    }
+
     this.queryForm.valueChanges.subscribe(() => {
-      // nothing; 這裡只是保留鉤子，必要時可加入狀態同步
+      // 需要的話這裡可以做狀態同步
     });
   }
 
   /** 將多選值正規化為陣列（空陣列=>undefined 不送） */
-  /** 將多選值正規化為陣列（空陣列=>undefined 不送） */
   private arr<T = any>(
     value: any,
-    mapFn?: (x: any) => T | undefined
+    mapFn?: (x: any) => T | undefined,
   ): T[] | undefined {
     if (value == null) return undefined;
 
@@ -312,11 +341,11 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
     return single != null && single !== '' ? [single] : undefined;
   }
 
-  /** 單一值 -> 'YYYYMM'，無法轉則回 undefined */
   private toYYYYMMOne(input: any): string | undefined {
     if (!input) return undefined;
-    if (typeof input === 'string' && /^\d{6}$/.test(input)) return input;     // 'YYYYMM'
-    if (typeof input === 'string' && /^\d{8}$/.test(input)) return input.slice(0, 6); // 'YYYYMMDD' -> 'YYYYMM'
+    if (typeof input === 'string' && /^\d{6}$/.test(input)) return input;
+    if (typeof input === 'string' && /^\d{8}$/.test(input))
+      return input.slice(0, 6);
     if (typeof input === 'string') {
       const m = input.match(/^(\d{4})[-\/](\d{2})/);
       if (m) return m[1] + m[2];
@@ -330,12 +359,10 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
     return undefined;
   }
 
-  /** 允許單值或陣列，回傳 'YYYYMM' 的陣列（空=>undefined） */
   private toYYYYMMArray(value: any): string[] | undefined {
     return this.arr<string>(value, (v) => this.toYYYYMMOne(v));
   }
 
-  /** 統編：接受單值或陣列，回傳「只取前8碼數字」的陣列（空=>undefined） */
   private uniform8Array(value: any): string[] | undefined {
     const mapTo8 = (val: any): string | undefined => {
       if (val == null || val === '') return undefined;
@@ -347,25 +374,30 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
     return this.arr<string>(value, mapTo8);
   }
 
-
-  // 組合「前端號碼區間」成單一送出值（兩端都有時：start-end；僅一端就送該值）
-  private composeGUINo(
-    start?: string | null,
-    end?: string | null,
-  ): string | undefined {
-    const s = (start ?? '').trim();
-    const e = (end ?? '').trim();
-    if (s && e) return `${s}-${e}`;
-    if (s) return s;
-    if (e) return e;
-    return undefined;
-  }
-
   formatDateTime(value: any): string {
     if (!value) return '';
     const date = new Date(value);
     const pad = (n: number) => n.toString().padStart(2, '0');
-    return `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())}`;
+    return `${date.getFullYear()}/${pad(
+      date.getMonth() + 1,
+    )}/${pad(date.getDate())}`;
+  }
+
+  /** 金額格式化（千分位） */
+  money(v: number): string {
+    return Number(v ?? 0).toLocaleString('en-US');
+  }
+
+  /** 儲存查詢狀態，給返回列表還原用 */
+  private saveQueryState(): void {
+    this.queryStateService.setQueryState(this.ProgNo, {
+      formValue: this.queryForm.getRawValue(),
+      currentSortBy:
+        this._currentSortBy && this._currentSortBy.length
+          ? this._currentSortBy
+          : this.defaultSort,
+      lastQueryBody: this.lastQueryBody,
+    });
   }
 
   onSubmit(form: FormGroup): void {
@@ -375,29 +407,31 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
       return;
     }
 
-    const v = form.value;
+    const v = form.value as any;
 
-    // 建立 payload：對齊後端，且不包含 Offset / OrderBy
+    const sortBy: SortMeta[] =
+      v.SortBy && v.SortBy.length
+        ? (v.SortBy as SortMeta[])
+        : this._currentSortBy?.length
+        ? this._currentSortBy
+        : this.defaultSort;
+
     const payload: any = {
       pageSize: v.pageSize ?? 20,
       pageIndex: v.pageIndex ?? 1,
-      SortBy: v.SortBy && v.SortBy.length ? v.SortBy : [{ field: 'PUR_RepYYYYMM', order: 1 }],
+      SortBy: sortBy,
 
-      // 單/區間維持原邏輯
       PUR_GUITrack: v.PUR_GUITrack || undefined,
       PUR_GUINo: v.PUR_GUINo || undefined,
 
-      // ↓↓↓ 全部改成「陣列」送出 ↓↓↓
       PUR_VoucherType: this.arr(v.PUR_VoucherType),
 
       PUR_GUIDate_Start: v.PUR_GUIDate_Start || undefined,
       PUR_GUIDate_End: v.PUR_GUIDate_End || undefined,
 
-      // 年月也改成陣列（單選時就是單元素陣列）
       PUR_GUIDate_YYYYMM: this.toYYYYMMOne(v.PUR_GUIDate_YYYYMM),
       PUR_RepYYYYMM: this.toYYYYMMOne(v.PUR_RepYYYYMM),
 
-      // 統編可多選 -> 傳陣列（每個元素都只保留前8碼數字）
       PUR_VenUniform: this.uniform8Array(v.PUR_VenUniform),
 
       PUR_Amt_Small: v.PUR_Amt_Small ?? undefined,
@@ -407,16 +441,14 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
       PUR_Tax_Small: v.PUR_Tax_Small ?? undefined,
       PUR_Tax_Big: v.PUR_Tax_Big ?? undefined,
 
-      // 多選 -> 陣列
       PUR_DirectType: this.arr(v.PUR_DirectType),
       PUR_TaxType: this.arr(v.PUR_TaxType),
       PUR_DiscNo: this.arr(v.PUR_DiscNo),
       PUR_Type: this.arr(v.PUR_Type),
 
-      // 這些也改成多選陣列（若你 UI 仍是單選，會自動轉單元素陣列）
       Source_Doc_No: v.Source_Doc_No,
-      SYS_ORIGIN: this.arr(v.SYS_ORIGIN),  // 你模板已用 multi-select（系統別）
-      SAL_Type: this.arr(v.SAL_Type),          // 你模板已用 multi-select（系統別）
+      SYS_ORIGIN: this.arr(v.SYS_ORIGIN),
+      SAL_Type: this.arr(v.SAL_Type),
       PUR_Remark: v.PUR_Remark,
 
       Voucher_No: v.Voucher_No ?? undefined,
@@ -428,11 +460,9 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
       UPD_Date_End: v.UPD_Date_End || undefined,
     };
 
-    // 清掉空值
     Object.keys(payload).forEach((k) => {
       const val = payload[k];
       if (val === '' || val === null) payload[k] = undefined;
-      // 陣列也檢查一下空陣列
       if (Array.isArray(val) && val.length === 0) payload[k] = undefined;
     });
 
@@ -449,21 +479,27 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
       )
       .subscribe({
         next: (res) => {
-          this.data = res?.Data ?? []; // 直接吃回來的 data，內含 id
+          this.data = res?.Data ?? [];
           this.totalRecords = res?.TotalCount ?? this.data.length ?? 0;
-          this.queryStateService.setQueryState(this.ProgNo, payload);
+
+          // 更新排序與最後查詢條件並儲存
+          this._currentSortBy = payload.SortBy;
+          this.lastQueryBody = { ...payload };
+          this.saveQueryState();
         },
         error: () => {
-          /* 已由 errorHandler 處理 */
+          // 已由 errorHandler 處理
         },
       });
   }
+
   override onLazyLoadData(event: any, form: FormGroup) {
-    // 先讓父類把頁碼/排序寫回表單（我們也會修正父類大小寫）
+    // 讓父類把分頁/排序寫回 form
     super.onLazyLoadData(event, form);
-    // 立刻打 API
+    // 重新查詢（會用 form 裡的 pageIndex / SortBy）
     this.onSubmit(this.queryForm);
   }
+
   onDelete = (selection: any | any[]) => {
     const rows = Array.isArray(selection) ? selection : [selection];
     const ids = rows
@@ -475,9 +511,6 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
       return;
     }
 
-    // 若你有共用確認窗，可在這裡加一段 confirm（可略）
-    // if (!(await this.messageService.confirm('確定刪除選取的資料？'))) return;
-
     this.messageService.blockUi();
     this.fin13050Service
       .deleteFIN13050(ids)
@@ -485,7 +518,6 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
       .subscribe({
         next: () => {
           this.messageService.successBubble('刪除成功');
-          // 若剛好刪掉當頁最後一筆且不是第一頁，退回前一頁（可選）
           const v = this.queryForm.value as any;
           const pageSize = v.pageSize ?? 20;
           let pageIndex = v.pageIndex ?? 1;
@@ -493,17 +525,14 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
             pageIndex -= 1;
             this.queryForm.patchValue({ pageIndex });
           }
-          // 重新查詢
           this.onSubmit(this.queryForm);
         },
         error: () => {
-          // 已由全域錯誤處理；這裡不需要額外處理
+          // 全域錯誤處理
         },
       });
   };
 
-
-  /** 允許陣列（回逗號字串），或單值（回單一 'YYYYMM'） */
   private toYYYYMMCsv(value: any): string | undefined {
     if (Array.isArray(value)) {
       const items = value
@@ -513,42 +542,30 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
     }
     return this.toYYYYMMOne(value);
   }
-  /** 取得統編前 8 碼（忽略 - 分店碼、空白與非數字） */
+
   private uniform8(value: any): string | undefined {
     if (value == null || value === '') return undefined;
     const s = String(value).trim();
-
-    // 先抓第一段（避免像 03090217-1）
     const head = s.split('-')[0].trim();
-
-    // 只保留數字
     const digits = head.replace(/\D/g, '');
-
-    // 足 8 碼就取前 8 碼
     if (digits.length >= 8) return digits.slice(0, 8);
-
-    // 不足 8 碼就不送
     return undefined;
   }
-  // 建議放在 class 內靠前處
-  private defaultSort = [{ field: 'PUR_RepYYYYMM', order: 1 } as any];
+
   private buildInitialQueryValues() {
     return {
       pageIndex: 1,
       pageSize: 20,
       SortBy: this.defaultSort as SortMeta[],
 
-      // 單值欄位
       PUR_GUITrack: null,
       PUR_GUINo: null,
 
-      // 日期/年月欄位
       PUR_GUIDate_Start: null,
       PUR_GUIDate_End: null,
       PUR_GUIDate_YYYYMM: null,
       PUR_RepYYYYMM: null,
 
-      // 多選或輸入欄位（清空 -> null）
       PUR_VoucherType: null,
       PUR_VenUniform: null,
       PUR_Amt_Small: null,
@@ -576,17 +593,15 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
     };
   }
 
-
-  // fin13050.component.ts（類別內）
   onClear(): void {
     const init = this.buildInitialQueryValues();
-    this.queryForm.reset(init);  // 型別就對了
+    this.queryForm.reset(init);
 
-    // （可選）清表格
     this.data = [];
     this.totalRecords = 0;
+
+    this.lastQueryBody = null;
+    this._currentSortBy = this.defaultSort;
+    this.saveQueryState();
   }
-
-
-
 }
