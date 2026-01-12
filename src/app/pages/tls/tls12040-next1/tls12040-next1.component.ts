@@ -59,6 +59,8 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   orgOptions: any[] = [];
   payNoOptions: any[] = [];
 
+  // 新增：forceEditMode 屬性
+  forceEditMode = true;
 
   fareData: { [key: string]: TLS12040FareItem[] } = {
     'A': [], 'B': [], 'C': [], 'D': [], 'E': []
@@ -277,16 +279,23 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   private loadPayNoOptions(): void {
+    console.log('📄 開始載入支付編號選項...');
+    console.log('🔍 初始 payNoOptions 長度:', this.payNoOptions.length);
+
     const subscription = this.negotiatorService.getPOS1006Options().subscribe({
       next: (response: any[]) => {
         this.payNoOptions = response;
-        console.log(' 支付編號選項載入完成:', this.payNoOptions.length);
+        console.log('✅ 支付編號選項載入完成:', this.payNoOptions.length);
 
-        //  強制清除所有快取，確保重新生成欄位定義
-        this.clearColumnCache();
-
-        //  觸發變更檢測
-        this.cdr.detectChanges();
+        if (this.payNoOptions.length > 0) {
+          console.log('🔍 第一筆資料:', this.payNoOptions[0]);
+          this.clearColumnCache();
+          this.cdr.detectChanges();
+        } else {
+          // 如果載入為空，使用重試機制
+          console.log('⏳ 支付編號尚未載入，等待...');
+          this.retryLoadPayNoOptions();
+        }
       },
       error: (error: any) => {
         console.error('❌ 載入支付編號選項失敗:', error);
@@ -296,6 +305,45 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     });
 
     this.subscriptions.push(subscription);
+  }
+
+  /**
+   * 🔥 新增：支付編號選項重試載入機制
+   */
+  private retryLoadPayNoOptions(): void {
+    let retryCount = 0;
+    const maxRetries = 5;
+
+    const checkInterval = setInterval(() => {
+      retryCount++;
+      console.log(`🔄 第 ${retryCount} 次重試載入支付編號...`);
+
+      const subscription = this.negotiatorService.getPOS1006Options().subscribe({
+        next: (response: any[]) => {
+          this.payNoOptions = response;
+          console.log('🔍 重試後 payNoOptions 長度:', this.payNoOptions.length);
+
+          if (this.payNoOptions.length > 0) {
+            console.log('✅ 支付編號選項延遲載入成功:', this.payNoOptions.length);
+            console.log('🔍 第一筆資料:', this.payNoOptions[0]);
+            this.clearColumnCache();
+            this.cdr.detectChanges();
+            clearInterval(checkInterval);
+          } else if (retryCount >= maxRetries) {
+            console.error('❌ 支付編號載入失敗，已達最大重試次數');
+            clearInterval(checkInterval);
+          }
+        },
+        error: (error: any) => {
+          console.error('❌ 重試載入支付編號失敗:', error);
+          if (retryCount >= maxRetries) {
+            clearInterval(checkInterval);
+          }
+        }
+      });
+
+      this.subscriptions.push(subscription);
+    }, 500); // 每 500ms 重試一次
   }
 
   private clearColumnCache(): void {
@@ -322,24 +370,64 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     // ✅ 3. 優先載入暫存，沒有才打 API
     const next1Data = this.flowService.getNext1Data<Next1Data>();
 
-    if (next1Data && next1Data.fareData) {
-      console.log('✅ 使用 workflow 暫存的費用資料');
-      this.fareData = next1Data.fareData;
-      this.originalFareData = JSON.parse(JSON.stringify(next1Data.fareData)); // 深拷貝
+    console.log('🔍 檢查 next1 暫存資料:', {
+      有暫存: !!next1Data,
+      有originalFareData: !!next1Data?.originalFareData,
+      originalFareData內容: next1Data?.originalFareData ? Object.keys(next1Data.originalFareData).map(type =>
+        `${type}: ${next1Data.originalFareData[type]?.length || 0}筆`
+      ) : '無',
+      timestamp: next1Data?.timestamp
+    });
 
-      // 🔥 新增：使用暫存資料時也要確保預設值已套用
-      setTimeout(() => {
-        this.applyDefaultValuesToAllItems();
-        //  新增：無條件同步 org_id
-        this.syncOrgIdFromPrevious();
-      }, 100); // 延遲一下確保 contractInfoData 已載入
+    if (next1Data && next1Data.originalFareData) {
+      // 🔥 檢查 originalFareData 是否有實際資料
+      const hasActualData = Object.values(next1Data.originalFareData).some(
+        items => Array.isArray(items) && items.length > 0
+      );
 
-    } else if (this.currentApplyNo) {
-      console.log('📡 暫存無資料，從 API 載入');
-      this.loadFareDataFromAPI();
+      if (hasActualData) {
+        console.log('✅ 使用 workflow 暫存的費用資料');
+
+        // 🔥 深拷貝暫存的 originalFareData（包含所有用戶修改）
+        this.originalFareData = JSON.parse(JSON.stringify(next1Data.originalFareData));
+
+        console.log('📊 載入暫存資料統計:', {
+          A: this.originalFareData['A']?.length || 0,
+          B: this.originalFareData['B']?.length || 0,
+          C: this.originalFareData['C']?.length || 0,
+          D: this.originalFareData['D']?.length || 0,
+          E: this.originalFareData['E']?.length || 0,
+          總數: Object.values(this.originalFareData).reduce((sum, items) => sum + (items?.length || 0), 0),
+          已選: Object.values(this.originalFareData).flat().filter(item => item.is_selected).length,
+          修改: Object.values(this.originalFareData).flat().filter(item => item._status === 'modified').length
+        });
+
+        // 🔥 恢復顯示模式偏好
+        if (next1Data.showModeByType) {
+          this.showModeByType = { ...next1Data.showModeByType };
+          console.log('📋 恢復顯示模式:', this.showModeByType);
+        }
+
+        // 過濾資料以顯示
+        this.filterData();
+
+        // 🔥 注意：不需要再套用預設值，因為暫存的資料已經包含了所有修改
+        // 只需要同步 org_id（如果 CRU 有變更）
+        setTimeout(() => {
+          this.syncOrgIdFromPrevious();
+        }, 100);
+
+        return; // 🔥 重要：成功載入暫存後直接返回
+      } else {
+        console.warn('⚠️ originalFareData 存在但為空，需要重新載入');
+      }
     } else {
-      console.warn('⚠️ 沒有 apply_no 也沒有暫存資料');
+      console.log('📡 暫存無資料或 originalFareData 不存在');
     }
+
+    // 🔥 沒有有效暫存：從 API 載入
+    console.log('📡 從 API 載入（apply_no:', this.currentApplyNo || '空(新增模式)', ')');
+    this.loadFareDataFromAPI();
   }
 
   // 2. 新增專門的方法，在資料載入完成後一次性套用所有預設值
@@ -656,11 +744,17 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
           if (response?.Data?.FaresByType) {
             this.processAPIData(response.Data.FaresByType);
 
-            // 🔥 新增：API 載入完成後立即套用預設值
+            // 🔥 API 載入完成後立即套用預設值
             this.applyDefaultValuesToAllItems();
 
-            // 🆕 新增：無條件同步 org_id
+            // 🔥 無條件同步 org_id
             this.syncOrgIdFromPrevious();
+
+            // 🔥 關鍵修復：API 載入完成後立即儲存到暫存
+            setTimeout(() => {
+              this.saveFareDataToWorkflow();
+              console.log('✅ API 資料已儲存到暫存');
+            }, 200);
 
           } else {
             console.warn('API 沒有回傳有效的扣款資料');
@@ -687,7 +781,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 處理 API 回傳的資料
   private processAPIData(faresByType: any): void {
-    console.log('開始處理 API 資料:', faresByType);
+    console.log('🔄 開始處理 API 資料:', faresByType);
 
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
 
@@ -727,14 +821,23 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
           };
         });
 
-        console.log(`${capType} 類型載入 ${this.originalFareData[capType].length} 筆資料`);
+        console.log(`✅ ${capType} 類型載入 ${this.originalFareData[capType].length} 筆資料`);
       } else {
-        console.log(`${capType} 類型無資料`);
+        console.log(`⚠️ ${capType} 類型無資料`);
       }
     });
 
     // 處理完成後執行過濾
     this.filterData();
+
+    console.log('📊 processAPIData 完成，originalFareData 狀態:', {
+      A: this.originalFareData['A']?.length || 0,
+      B: this.originalFareData['B']?.length || 0,
+      C: this.originalFareData['C']?.length || 0,
+      D: this.originalFareData['D']?.length || 0,
+      E: this.originalFareData['E']?.length || 0,
+      總數: Object.values(this.originalFareData).reduce((sum, items) => sum + (items?.length || 0), 0)
+    });
   }
 
 
@@ -785,18 +888,27 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     // 🔥 關鍵修復:使用 originalFareData 並包含所有項目(包括 deleted 狀態的)
     const allFareItems = Object.values(this.originalFareData).flat();
 
+    // 🔥 新增：儲存顯示模式偏好
     const next1Data = {
-      fareData: this.fareData,
+      fareData: this.fareData,  // 過濾後的資料（用於顯示）
+      originalFareData: this.originalFareData,  // 🔥 完整的原始資料（用於切換模式）
+      showModeByType: this.showModeByType,  // 🔥 新增：各群組的顯示模式
       selectedItems: allFareItems,  // 🔥 改為包含所有項目,讓 DataCleaner 處理篩選
-      contractInfo: this.contractInfoData
+      contractInfo: this.contractInfoData,
+      timestamp: Date.now()  // 🔥 新增：時間戳記
     };
 
-    console.log('💾 儲存的 selectedItems 包含:', {
-      總數: allFareItems.length,
+    console.log('💾 儲存到 workflow 的資料:', {
+      originalFareData總數: allFareItems.length,
+      originalFareData詳細: Object.keys(this.originalFareData).map(type =>
+        `${type}: ${this.originalFareData[type]?.length || 0}筆`
+      ),
+      fareData總數: Object.values(this.fareData).flat().length,
       已選: allFareItems.filter(item => item.is_selected).length,
       刪除: allFareItems.filter(item => item._status === 'deleted').length,
       新增: allFareItems.filter(item => item._status === 'new').length,
-      修改: allFareItems.filter(item => item._status === 'modified').length
+      修改: allFareItems.filter(item => item._status === 'modified').length,
+      顯示模式: this.showModeByType
     });
 
     const saveResult = this.flowService.setStepData('next1', next1Data);
@@ -1320,11 +1432,13 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   private updateOriginalData(capType: string): void {
     this.fareData[capType].forEach(displayItem => {
-      const originalItem = this.originalFareData[capType].find(item => item.id === displayItem.id);
-      if (originalItem) {
-        // 🔥 完整同步所有狀態欄位
-        originalItem.is_selected = displayItem.is_selected;
-        originalItem._status = displayItem._status;  // 🔥 關鍵修復:同步 _status
+      const originalIndex = this.originalFareData[capType].findIndex(item => item.id === displayItem.id);
+      if (originalIndex > -1) {
+        // 🔥 完整同步所有字段（包括用户修改的欄位值）
+        this.originalFareData[capType][originalIndex] = {
+          ...this.originalFareData[capType][originalIndex],
+          ...displayItem  // 完整覆蓋所有字段
+        };
 
         // 🔥 新增日誌以追蹤刪除狀態
         if (displayItem._status === 'deleted') {
@@ -1359,13 +1473,29 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     const totalAmount = parseFloat(rowData.tpy_totalamt) || 0;
     const periods = parseInt(rowData.period_nos) || 0;
 
-    if (totalAmount <= 0 || periods <= 1) {
+    // 🔥 修正：期數 >= 1 即可，允許一個月內的情況
+    if (totalAmount <= 0 || periods < 1) {
       this.messageService.warnBubble('請檢查總金額和期數');
       return;
     }
 
+    // 🔥 新增：期數 = 1 時的特殊處理
+    if (periods === 1) {
+      this.calculationResult = {
+        totalAmount,
+        periods,
+        monthlyAmount: totalAmount,
+        downPayment: totalAmount,
+        verification: totalAmount
+      };
+      this.currentRowData = rowData;
+      this.currentCapType = capType;
+      this.showCalculationDialog = true;
+      return;
+    }
+
     const monthlyAmount = Math.round(totalAmount / periods);
-    const downPayment = totalAmount - (monthlyAmount * (periods - 1));
+    const downPayment = Math.round(totalAmount - (monthlyAmount * (periods - 1)));
 
     // 設定對話框資料並顯示
     this.calculationResult = {
@@ -1373,7 +1503,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       periods,
       monthlyAmount,
       downPayment,
-      verification: downPayment + (monthlyAmount * (periods - 1))
+      verification: Math.round(downPayment + (monthlyAmount * (periods - 1)))
     };
     this.currentRowData = rowData;
     this.currentCapType = capType;
@@ -1471,24 +1601,8 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
         console.log(`設定預設 tpy_type: ${copiedItem.tpy_type}`);
       }
 
-      // 日期複製：只複製合理的日期，異常日期設為 null
-      ['tpy_bdate', 'tpy_edate'].forEach(dateField => {
-        if (originalItem[dateField]) {
-          if (originalItem[dateField] instanceof Date) {
-            if (this.isValidDateRange(originalItem[dateField])) {
-              copiedItem[dateField] = new Date(originalItem[dateField]);
-              console.log(`${dateField} 日期複製成功`);
-            } else {
-              copiedItem[dateField] = null;
-              console.warn(`${dateField} 日期異常，設為 null`);
-            }
-          } else {
-            // 非 Date 物件直接保持原值，讓顯示邏輯處理
-            copiedItem[dateField] = originalItem[dateField];
-            console.log(`${dateField} 保持原始格式`);
-          }
-        }
-      });
+      // 🔥 新增：使用進階日期處理邏輯
+      this.handleCopiedItemDates(copiedItem, originalItem);
 
       // 確保必要的數值欄位有預設值
       const numericFields = ['tpy_unitamt', 'tpy_qty', 'tpy_amount'];
@@ -1572,6 +1686,81 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     return isReasonable;
   }
 
+  /**
+   * 🔥 新增：處理複製項目的日期邏輯（復刻自 tls13010-next1）
+   */
+  private handleCopiedItemDates(copiedItem: any, originalItem: any): void {
+    try {
+      // 取得合約資訊
+      const contractInfo = this.contractInfoData[0];
+
+      // 結束日期：永遠設定為合約終止日
+      if (contractInfo?.tlt_edate) {
+        const contractEndDate = new Date(contractInfo.tlt_edate);
+
+        if (!isNaN(contractEndDate.getTime())) {
+          copiedItem.tpy_edate = contractEndDate;
+          console.log(`✅ 複製項目結束日期：合約終止日 ${this.formatDateForLog(contractEndDate)}`);
+        } else {
+          copiedItem.tpy_edate = null;
+          console.warn('⚠️ 合約終止日期無效');
+        }
+      } else {
+        copiedItem.tpy_edate = null;
+        console.warn('⚠️ 沒有合約終止日期');
+      }
+
+      // 處理起始日期：原項目結束日期的下個月，但要檢查是否超過合約終止日
+      if (originalItem.tpy_edate && copiedItem.tpy_edate) {
+        const originalEndDate = new Date(originalItem.tpy_edate);
+        const contractEndDate = new Date(copiedItem.tpy_edate);
+
+        if (!isNaN(originalEndDate.getTime())) {
+          // 計算下個月
+          const nextMonth = new Date(originalEndDate);
+          nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+          // 檢查起始日期是否超過合約終止日
+          if (nextMonth > contractEndDate) {
+            console.warn(`⚠️ 複製項目起始日期 ${this.formatDateForLog(nextMonth)} 已超過合約終止日 ${this.formatDateForLog(contractEndDate)}，清空起始日期`);
+
+            copiedItem.tpy_bdate = null;
+
+            // 給用戶提示
+            this.messageService.warnBubble('複製項目的起始日期會超過合約終止日，已清空起始日期，請手動設定');
+          } else {
+            copiedItem.tpy_bdate = nextMonth;
+            console.log(`✅ 複製項目起始日期：${this.formatDateForLog(originalEndDate)} -> ${this.formatDateForLog(nextMonth)}`);
+          }
+        } else {
+          copiedItem.tpy_bdate = null;
+          console.warn('⚠️ 原項目結束日期無效，複製項目起始日期設為 null');
+        }
+      } else {
+        copiedItem.tpy_bdate = null;
+        console.warn('⚠️ 原項目沒有結束日期或合約終止日期，複製項目起始日期設為 null');
+      }
+
+    } catch (error) {
+      console.error('❌ 處理複製項目日期時發生錯誤:', error);
+      copiedItem.tpy_bdate = null;
+      // tpy_edate 保持已設定的合約終止日，不清空
+    }
+  }
+
+  /**
+   * 🔥 新增：格式化日期用於 log
+   */
+  private formatDateForLog(date: Date): string {
+    if (!date || isNaN(date.getTime())) {
+      return 'Invalid Date';
+    }
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${year}/${month}`;
+  }
+
   onFieldChange(fieldName: string, newValue: any, rowData: any, capType?: string): void {
     // 專門處理 checkbox 勾選
     if (fieldName === 'is_selected') {
@@ -1588,6 +1777,11 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       this.updateOriginalData(capType || 'A');
       this.filterData();
       this.saveFareDataToWorkflow();
+
+      // 🔥 新增：勾選狀態變更時，檢查整個類型的重複日期
+      if (capType) {
+        this.validateDuplicateDatesForType(capType);
+      }
       return;
     }
 
@@ -1645,6 +1839,25 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
+  /**
+   * 🔥 新增：驗證整個類型的重複日期（用於即時驗證）
+   */
+  private validateDuplicateDatesForType(capType: string): void {
+    const allItemsOfType = this.originalFareData[capType] || [];
+
+    // 先清除所有項目的重複日期錯誤標記
+    allItemsOfType.forEach(item => {
+      delete item['_hasDuplicateDateError'];
+      delete item['_duplicateDateMessage'];
+    });
+
+    // 重新驗證（驗證服務會自動標記重複的項目）
+    this.fareValidationService.validateFareTypeData(allItemsOfType, capType);
+
+    // 強制更新視圖
+    this.cdr.detectChanges();
+  }
+
   // A類型計算優化
   private handleTypeACalculation(fieldName: string, newValue: any, rowData: any): void {
     // 選擇坪數單位時自動帶入總坪數
@@ -1678,6 +1891,11 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     // A類型特殊處理：結束日期等於開始日期
     if (fieldName === 'tpy_bdate' && newValue) {
       rowData.tpy_edate = newValue;
+
+      // 🔥 新增：起始日期變更時，檢查重複日期
+      if (rowData.is_selected) {
+        this.validateDuplicateDatesForType('A');
+      }
     }
   }
 
@@ -1706,6 +1924,11 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
         rowData.tpy_amount = 0;
       }
     }
+
+    // 🔥 新增：起始日期變更時，檢查重複日期
+    if (fieldName === 'tpy_bdate' && newValue && rowData.is_selected) {
+      this.validateDuplicateDatesForType('B');
+    }
   }
 
   // C類型計算優化 - 最重要的優化
@@ -1715,6 +1938,11 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     // 日期變更時重新計算期數
     if (['tpy_bdate', 'tpy_edate'].includes(fieldName)) {
       console.log('📅 日期欄位變更，重新計算期數');
+
+      // 🔥 新增：起始日期變更時，檢查重複日期
+      if (fieldName === 'tpy_bdate' && rowData.is_selected) {
+        this.validateDuplicateDatesForType('C');
+      }
 
       // 使用 setTimeout 確保日期值已經更新
       setTimeout(() => {
@@ -1753,11 +1981,21 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     if (fieldName === 'tpy_rate') {
       this.fareCalculationService.autoCalculateAmount(rowData, 'D', fieldName);
     }
+
+    // 🔥 新增：起始日期變更時，檢查重複日期
+    if (fieldName === 'tpy_bdate' && newValue && rowData.is_selected) {
+      this.validateDuplicateDatesForType('D');
+    }
   }
 
   private handleTypeECalculation(fieldName: string, newValue: any, rowData: any): void {
     if (fieldName === 'tpy_rate') {
       this.fareCalculationService.autoCalculateAmount(rowData, 'E', fieldName);
+    }
+
+    // 🔥 新增：起始日期變更時，檢查重複日期
+    if (fieldName === 'tpy_bdate' && newValue && rowData.is_selected) {
+      this.validateDuplicateDatesForType('E');
     }
   }
 
@@ -1772,23 +2010,50 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       let startDate: Date;
       let endDate: Date;
 
-      // 智能日期解析
+      // 智能日期解析（支援 YYYYMM 格式）
       try {
+        // 🔥 處理起始日期
         if (rowData.tpy_bdate instanceof Date) {
           startDate = rowData.tpy_bdate;
         } else {
-          startDate = new Date(rowData.tpy_bdate);
+          // 🔥 新增：處理 YYYYMM 格式字串
+          const startStr = String(rowData.tpy_bdate).trim();
+          if (/^\d{6}$/.test(startStr)) {
+            // YYYYMM 格式 (例如: "202510")
+            const year = parseInt(startStr.substring(0, 4));
+            const month = parseInt(startStr.substring(4, 6)) - 1; // 月份是 0-based
+            startDate = new Date(year, month, 1);
+            console.log(`🔄 轉換 YYYYMM 格式起始日期: ${startStr} → ${year}/${month + 1}`);
+          } else {
+            startDate = new Date(rowData.tpy_bdate);
+          }
         }
 
+        // 🔥 處理結束日期
         if (rowData.tpy_edate instanceof Date) {
           endDate = rowData.tpy_edate;
         } else {
-          endDate = new Date(rowData.tpy_edate);
+          // 🔥 新增：處理 YYYYMM 格式字串
+          const endStr = String(rowData.tpy_edate).trim();
+          if (/^\d{6}$/.test(endStr)) {
+            // YYYYMM 格式 (例如: "202511")
+            const year = parseInt(endStr.substring(0, 4));
+            const month = parseInt(endStr.substring(4, 6)) - 1; // 月份是 0-based
+            endDate = new Date(year, month, 1);
+            console.log(`🔄 轉換 YYYYMM 格式結束日期: ${endStr} → ${year}/${month + 1}`);
+          } else {
+            endDate = new Date(rowData.tpy_edate);
+          }
         }
 
         // 檢查日期有效性
         if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-          console.warn('⚠️ 無效的日期格式');
+          console.warn('⚠️ 無效的日期格式', {
+            原始起始: rowData.tpy_bdate,
+            原始結束: rowData.tpy_edate,
+            轉換後起始: startDate,
+            轉換後結束: endDate
+          });
           return;
         }
 
@@ -1821,6 +2086,12 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   //  計算兩個日期間的月數
   private calculateMonthsBetween(startDate: Date, endDate: Date): number {
+    // 🔥 新增：檢查 Date 物件是否有效
+    if (!startDate || !endDate || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      console.error('❌ calculateMonthsBetween: 無效的日期物件', { startDate, endDate });
+      return 1;
+    }
+
     console.log('📅 計算期數:', {
       開始: startDate.toISOString().slice(0, 7),
       結束: endDate.toISOString().slice(0, 7)
@@ -1828,8 +2099,8 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     // 確保開始日期 <= 結束日期
     if (startDate > endDate) {
-      console.warn('⚠️ 開始日期大於結束日期，期數為 0');
-      return 0;
+      console.warn('⚠️ 開始日期大於結束日期，期數為 1');
+      return 1; // 🔥 修改：改為回傳 1 而不是 0
     }
 
     const startYear = startDate.getFullYear();
@@ -1837,8 +2108,19 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     const endYear = endDate.getFullYear();
     const endMonth = endDate.getMonth(); // 0-based
 
+    // 🔥 新增：檢查年份是否合理（避免 202511 這種錯誤）
+    if (startYear > 9999 || endYear > 9999) {
+      console.error('❌ 日期年份異常:', {
+        開始年: startYear,
+        結束年: endYear,
+        原始開始日期: startDate,
+        原始結束日期: endDate
+      });
+      return 1;
+    }
+
     // 正確的月份差計算公式
-    const months = (endYear - startYear) * 12 + (endMonth - startMonth);
+    const months = (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
 
     console.log('🧮 期數計算詳情:', {
       開始年: startYear,

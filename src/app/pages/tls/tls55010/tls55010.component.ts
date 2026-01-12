@@ -66,6 +66,7 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
         htmlFormat: true,
         format: () => '<i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>'
       } : c);
+      this.messageService.infoBubble('日結檢查中,請稍候...');
       this.tls55010Service.checkTLS55010(body).pipe(untilDestroyed(this), finalize(() => {
         this.loading = false
         this.columns = this.columns.map(c => c.field === 'isPassed' ? {
@@ -103,43 +104,48 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
   // 宣告是否確定日期變數
   isConfirmDate = false;
   onSubmit(frm: FormGroup) {
-    this.insertLoading = true;
-    const body = {
-      TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',
-    }
-    this.tls55010Service.insertTLS55010(body).pipe(untilDestroyed(this), finalize(() => this.insertLoading = false)).subscribe((res) => {
-      this.messageService.successBubble(res.Message);
-      this.isConfirmDate = true;
-      this.showReverseBtn = true;
-      this.lastDate = body.TXN_Date as unknown as Tls55010DateRequest;
-      this.tls55010Service.getTLS55010Date().pipe(untilDestroyed(this)).subscribe((res) => {
-        this.cls_date = res.Data.CLS_DATE;
+    this.handleSubmit(frm, () => {
+      this.insertLoading = true;
+      const body = {
+        TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',
+      }
+      this.messageService.infoBubble('日結中,請稍候...');
+      this.tls55010Service.insertTLS55010(body).pipe(untilDestroyed(this), finalize(() => this.insertLoading = false)).subscribe((res) => {
+        this.messageService.successBubble(res.Message);
+        this.isConfirmDate = true;
+        this.showReverseBtn = true;
+        this.lastDate = body.TXN_Date as unknown as Tls55010DateRequest;
+        this.tls55010Service.getTLS55010Date().pipe(untilDestroyed(this)).subscribe((res) => {
+          this.cls_date = res.Data.CLS_DATE;
+        });
+        this.dataForm.patchValue(res.Data.Data._gls6001);
+        this.data2 = res.Data.Data._gls6002s.map((item: any) => ({
+          ...item,
+          DAccAmt: item.AccDC === 'D' ? item.AccAmt : 0,
+          CAccAmt: item.AccDC === 'C' ? item.AccAmt : 0,
+        }));
       });
-      this.dataForm.patchValue(res.Data.Data._gls6001);
-      this.data2 = res.Data.Data._gls6002s.map((item: any) => ({
-        ...item,
-        DAccAmt: item.AccDC === 'D' ? item.AccAmt : 0,
-        CAccAmt: item.AccDC === 'C' ? item.AccAmt : 0,
-      }));
     });
   }
   queryLoading = false;
   onQueryVou(frm: FormGroup) {
-    this.queryLoading = true;
-    const body = {
-      TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',
-    }
-    this.tls55010Service.queryTLS55010(body).pipe(untilDestroyed(this), finalize(() => this.queryLoading = false)).subscribe((res) => {
-      this.messageService.successBubble(res.Message);
-      this.lastDate = body.TXN_Date as unknown as Tls55010DateRequest;
-      this.isConfirmDate = true;
-      this.showReverseBtn = true;
-      this.dataForm.patchValue(res.Data.Data._gls6001);
-      this.data2 = res.Data.Data._gls6002s.map((item: any) => ({
-        ...item,
-        DAccAmt: item.AccDC === 'D' ? item.AccAmt : 0,
-        CAccAmt: item.AccDC === 'C' ? item.AccAmt : 0,
-      }));
+    this.handleSubmit(frm, () => {
+      this.queryLoading = true;
+      const body = {
+        TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',
+      }
+      this.tls55010Service.queryTLS55010(body).pipe(untilDestroyed(this), finalize(() => this.queryLoading = false)).subscribe((res) => {
+        this.messageService.successBubble(res.Message);
+        this.lastDate = body.TXN_Date as unknown as Tls55010DateRequest;
+        this.isConfirmDate = true;
+        this.showReverseBtn = true;
+        this.dataForm.patchValue(res.Data.Data._gls6001);
+        this.data2 = res.Data.Data._gls6002s.map((item: any) => ({
+          ...item,
+          DAccAmt: item.AccDC === 'D' ? item.AccAmt : 0,
+          CAccAmt: item.AccDC === 'C' ? item.AccAmt : 0,
+        }));
+      });
     });
   }
   dataForm = this.formBuilder.nonNullable.group({
@@ -182,6 +188,7 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
       return;
     }
     this.reverseLoading = true;
+    this.messageService.infoBubble('反日結中,請稍候...');
     this.tls55010Service.unLockTLS55010(this.lastDate).pipe(untilDestroyed(this), finalize(() => this.reverseLoading = false)).subscribe((res) => {
       this.messageService.successBubble(res.Message);
       this.showReverseBtn = false;

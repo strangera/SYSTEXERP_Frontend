@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
+import { DateUtils } from 'src/app/core/utils/date-utils';
 import { TLS12040FareItem } from '../models/tls12040-next1.model';
+
 
 /**
  * 扣款資料管理服務
@@ -18,7 +20,7 @@ export class Tls12040FareDataService {
    */
   processAPIData(
     faresByType: any,
-    isNewContract: boolean = false,
+    isNewContract = false,
     contractInfoData?: any[]
   ): Record<string, TLS12040FareItem[]> {
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
@@ -177,9 +179,9 @@ export class Tls12040FareDataService {
       talent_id: item.talent_id,
       is_new_item: item.is_new_item,
 
-      // 日期和業務欄位
-      tpy_bdate: item.tpy_bdate,
-      tpy_edate: item.tpy_edate,
+      // 日期和業務欄位 - 使用 DateUtils 統一格式化日期
+      tpy_bdate: this.formatDateField(item.tpy_bdate),
+      tpy_edate: this.formatDateField(item.tpy_edate),
       tpy_type: item.tpy_type,
       tpy_qty: item.tpy_qty,
       tpy_unitamt: item.tpy_unitamt,
@@ -209,6 +211,19 @@ export class Tls12040FareDataService {
     };
 
     return cleanedItem;
+  }
+
+  /**
+   * 格式化日期欄位為 YYYYMM 格式 (避免時區問題)
+   */
+  private formatDateField(dateValue: string | Date | null | undefined): string | null {
+    if (!dateValue) {
+      return null;
+    }
+
+    // 使用 DateUtils 統一轉換為 YYYYMM 格式
+    const formattedDate = DateUtils.toYYYYMM(dateValue);
+    return formattedDate || null;
   }
 
   /**
@@ -329,7 +344,7 @@ export class Tls12040FareDataService {
   applyDefaultValues(
     item: TLS12040FareItem,
     contractInfoData: any[],
-    skipIfCopied: boolean = false
+    skipIfCopied = false
   ): void {
     // 🔍 如果是複製項目且要求跳過，則不套用預設值
     if (skipIfCopied && (item as any)._isCopiedItem) {

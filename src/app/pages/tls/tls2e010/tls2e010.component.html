@@ -9,19 +9,14 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateMonthOne" label="租金結算年月" controlName="sam_yyymm" helpMsg="[結算]使用"
-              [control]="queryForm.controls.sam_yyymm" [submitted]="submitted"></app-calendar>
+            <app-calendar-range calendarType="dateMonthRange" label="租金結算年月" helpMsg="[結算]或[租金結算鎖定]時，租金結算年月必須相同"
+              [startControl]="queryForm.controls.sam_yyymm_start" [endControl]="queryForm.controls.sam_yyymm_end"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="單一專櫃查詢" controlName="tlt_no" [control]="queryForm.controls.tlt_no"
-              helpMsg="[結算]及[查詢]使用" [submitted]="submitted" [options]="tlt_noOptions$ | async" optionLabel="label"
-              optionValue="value">
+              [submitted]="submitted" [options]="tlt_noOptions$ | async" optionLabel="label" optionValue="value">
             </app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateMonthRange" label="起迄年月" helpMsg="[查詢]使用"
-              [startControl]="queryForm.controls.sam_yyymm_start" [endControl]="queryForm.controls.sam_yyymm_end"
-              [submitted]="submitted"></app-calendar-range>
           </div>
         </div>
         <h6>結算流程 :</h6>
@@ -38,7 +33,7 @@
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
-          <app-button label="租金結算鎖定" icon="pi pi-lock" [loading]="lockLoding"
+          <app-button label="租金結算鎖定" icon="pi pi-lock" [loading]="loading"
             (clickEvent)="onLock(queryForm)"></app-button>
         </div>
       </form>

@@ -252,6 +252,8 @@
     [showDelete]="false"
     [showCaption]="false"
     selectionMode="multiple"
+    [lazy]="true"
+    (lazyLoadData)="onLazyLoadData($event, arQueryForm); onQueryAR()"
   ></app-table>
 
   <!-- Footer -->

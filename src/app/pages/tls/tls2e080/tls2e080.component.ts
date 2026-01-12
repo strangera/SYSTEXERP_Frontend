@@ -151,11 +151,11 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
           sam_yyymm: item.sam_yyymm,
           sad_date_Start: sad_date_Start,
           sad_date_End: sad_date_End,
-          money_type: item.money_type,
-          money_type_name: item.money_type_name,
+          money_type: item.money_type || '',
+          money_type_name: item.money_type_name || '',
           sam_termno: item.sam_termno,
-          tlt_term_type: item.tlt_term_type,
-          tlt_term_type_name: item.tlt_term_type_name
+          tlt_term_type: item.tlt_term_type || '',
+          tlt_term_type_name: item.tlt_term_type_name || ''
         };
       })
     }
@@ -197,14 +197,14 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
 
         return {
           talent_id: item.talent_id,
-          sam_yyymm: item.sam_yyymm,
-          sad_date_Start: sad_date_Start,
-          sad_date_End: sad_date_End,
-          money_type: item.money_type,
-          money_type_name: item.money_type_name,
+          sam_yyymm: item.sam_yyymm || '',
+          sad_date_Start: sad_date_Start || '',
+          sad_date_End: sad_date_End || '',
+          money_type: item.money_type || '',
+          money_type_name: item.money_type_name || '',
           sam_termno: item.sam_termno,
-          tlt_term_type: item.tlt_term_type,
-          tlt_term_type_name: item.tlt_term_type_name
+          tlt_term_type: item.tlt_term_type || '',
+          tlt_term_type_name: item.tlt_term_type_name || ''
         };
       })
     };

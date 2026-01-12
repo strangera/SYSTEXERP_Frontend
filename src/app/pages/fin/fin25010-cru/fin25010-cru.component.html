@@ -101,7 +101,7 @@
     [showManage]="false"
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
-    [multiSortMeta]="[]"
+    [multiSortMeta]="[{ field: 'ven_no', order: 1 }]"
     [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit(dataForm)"
     [lazy]="true"

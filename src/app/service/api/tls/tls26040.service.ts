@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
 
@@ -51,6 +51,7 @@ export interface TLS26040Data {
   tlt_no: string;
   tlt_name: string;
   batch_no: string;
+  talent_id: string;
   TXN_TotSaleAmt: number;          // 修正欄位名稱
   details?: any[];  // 展開的詳細資料
 }
@@ -81,34 +82,6 @@ export class TLS26040Service {
   // 查詢SALCHARGEM資料表(插入用)
   queryTLS26040Insert(data: TLS26040QueryInsertRequest): Observable<BaseQueryResponse<TLS26040Data>> {
     return this.http.post<BaseQueryResponse<TLS26040Data>>(`${this.apiUrl}/queryTLS26040_insert`, data);
-
-    // 回傳假資料
-    return of({
-      Data: [
-        {
-          id: 1,
-          sad_date: '2025-07-06',
-          sad_preorder_date: '2025-07-11',
-          tlt_no: '001087',
-          tlt_name: 'GUERLAIN',
-          batch_no: '20250711001',
-          TXN_TotSaleAmt: 46815
-        },
-        {
-          id: 2,
-          sad_date: '2025-07-05',
-          sad_preorder_date: '2025-07-11',
-          tlt_no: '001087',
-          tlt_name: 'GUERLAIN',
-          batch_no: '20250711001',
-          TXN_TotSaleAmt: 311022
-        }
-      ],
-      TotalCount: 2,
-      TotalPage: 1,
-      Status: 'Success',
-      Message: '查詢成功'
-    });
   }
 
   // 查詢預售明細(POS5006)資料

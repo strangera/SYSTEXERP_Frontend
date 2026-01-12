@@ -81,11 +81,16 @@ export class CPM12040Component extends BasicQueryPageComponent<QueryCpm12040Requ
 
   /** 刪除選中的資料 */
   onDelete(data: Cpm12040Data[]): void {
-    const idList = data.map(item => item.ID);
-    this.cpm12040Service.deleteCPM12040({ IDList: idList }).pipe(untilDestroyed(this)).subscribe(res => {
-      this.messageService.successBubble(res.Message);
-      this.selectedRows = []; // 清空選取
-      this.onSubmit(this.queryForm); // 重新查詢
+    this.messageService.confirm({
+      header: `是否確認刪除 ${data.length} 筆資料?`,
+      accept: () => {
+        const idList = data.map(item => item.ID);
+        this.cpm12040Service.deleteCPM12040({ IDList: idList }).pipe(untilDestroyed(this)).subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          this.selectedRows = []; // 清空選取
+          this.onSubmit(this.queryForm); // 重新查詢
+        });
+      }
     });
   }
 }

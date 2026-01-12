@@ -311,6 +311,32 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   /**
+   * 🔥 排序折扣項目
+   * 1. 先按 is_selected 排序（已選的在前）
+   * 2. 再按 API 提供的 sort 欄位排序
+   */
+  private sortDiscountItems<T extends { is_selected?: boolean; cag_barcode?: string }>(items: T[]): T[] {
+    // 使用非破壞性排序，避免影響原始陣列
+    return [...items].sort((a, b) => {
+      // 第一層排序：is_selected (true 在前)
+      const aSelected = a.is_selected ? 1 : 0;
+      const bSelected = b.is_selected ? 1 : 0;
+      if (aSelected !== bSelected) {
+        return bSelected - aSelected;
+      }
+
+      // 第二層排序：根據 discountOptions 中的 sort 欄位
+      const aOption = this.discountOptions.find(opt => opt.value === a.cag_barcode);
+      const bOption = this.discountOptions.find(opt => opt.value === b.cag_barcode);
+
+      const aSort = aOption?.sort ?? Number.MAX_SAFE_INTEGER;
+      const bSort = bOption?.sort ?? Number.MAX_SAFE_INTEGER;
+
+      return aSort - bSort;
+    });
+  }
+
+  /**
    *  改進:獨立的資料訂閱方法
    */
   private subscribeToDataChanges(): void {
@@ -351,6 +377,14 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
           ChargeDetails_count: item.ChargeDetails?.length,
           ChargeDetails_selected: item.ChargeDetails?.filter(d => d.is_selected).map(d => d.cag_barcode)
         });
+
+        // 🔥 從暫存載入時也要排序
+        if (item.ChargeDetails) {
+          item.ChargeDetails = this.sortDiscountItems(item.ChargeDetails);
+        }
+        if (item.LevelChargeDetails) {
+          item.LevelChargeDetails = this.sortDiscountItems(item.LevelChargeDetails);
+        }
       });
 
       this.dataLoaded = true;
@@ -377,6 +411,14 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         ChargeDetails_count: item.ChargeDetails?.length,
         ChargeDetails_selected: item.ChargeDetails?.filter(d => d.is_selected).map(d => d.cag_barcode)
       });
+
+      // 🔥 從 API 載入時也要排序
+      if (item.ChargeDetails) {
+        item.ChargeDetails = this.sortDiscountItems(item.ChargeDetails);
+      }
+      if (item.LevelChargeDetails) {
+        item.LevelChargeDetails = this.sortDiscountItems(item.LevelChargeDetails);
+      }
     });
 
     this.dataLoaded = true;
@@ -537,6 +579,17 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
     // 切換標籤
     this.selectedSettingTab = tab;
+
+    // 🔥 在切換到 discount 或 level 標籤時進行排序
+    if (tab === 'discount' || tab === 'level') {
+      this.commissionData.forEach(item => {
+        if (tab === 'discount' && item.ChargeDetails) {
+          item.ChargeDetails = this.sortDiscountItems(item.ChargeDetails);
+        } else if (tab === 'level' && item.LevelChargeDetails) {
+          item.LevelChargeDetails = this.sortDiscountItems(item.LevelChargeDetails);
+        }
+      });
+    }
 
     // 更新所有項目的顯示
     this.commissionData.forEach(item => {
@@ -782,6 +835,14 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       // 增強 level 項目
       if (!commissionItem.LevelChargeDetails || commissionItem.LevelChargeDetails.length === 0) {
         commissionItem.LevelChargeDetails = this.createInitialLevelItems(commissionItem);
+      }
+
+      // 🔥 初始載入時就進行排序
+      if (commissionItem.ChargeDetails) {
+        commissionItem.ChargeDetails = this.sortDiscountItems(commissionItem.ChargeDetails);
+      }
+      if (commissionItem.LevelChargeDetails) {
+        commissionItem.LevelChargeDetails = this.sortDiscountItems(commissionItem.LevelChargeDetails);
       }
     });
 
@@ -1301,6 +1362,17 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       // 重要：要使用 navigationExtras
       this.router.navigate(['account/tls/tls12040next3'], navigationExtras);
     }
+  }
+
+  onGoToNext3(): void {
+    console.log('前往 Next3 (條件設定)');
+    const navigationExtras: NavigationExtras = {
+      state: {
+        crudstatus: this.crudstatus,
+        fromRoute: this.router.url
+      }
+    };
+    this.router.navigate(['account/tls/tls12040next3'], navigationExtras);
   }
 
   onClearAndExit(): void {

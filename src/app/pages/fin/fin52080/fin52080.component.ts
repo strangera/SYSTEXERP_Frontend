@@ -21,7 +21,6 @@ import { AccDCType, FIN52080Data, FIN52080Query, FIN52080Tree, LedgerMDType, Vou
 @Component({
   selector: 'app-fin52080',
   templateUrl: './fin52080.component.html',
-  styleUrl: './fin52080.component.scss',
   standalone: true,
   imports: [
     AccordionModule,

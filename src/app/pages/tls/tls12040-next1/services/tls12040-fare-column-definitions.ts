@@ -1,6 +1,6 @@
-import { TLS13010_DROPDOWN_OPTIONS } from './../../tls13010/tls13010.dropdown';
 import { ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { TableValidators } from '@shared/componentkit/expandable-edit-table/table-validation.interface';
+import { TLS13010_DROPDOWN_OPTIONS } from './../../tls13010/tls13010.dropdown';
 
 /**
  * 扣款項目欄位定義
@@ -99,7 +99,7 @@ export class TLS12040FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '是否新增',
+        header: '新增',
         type: 'checkbox',
 
         autoWidth: true,
@@ -218,7 +218,7 @@ export class TLS12040FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '是否新增',
+        header: '新增',
         type: 'checkbox',
 
 
@@ -368,7 +368,7 @@ export class TLS12040FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '是否新增',
+        header: '新增',
         type: 'checkbox',
 
 
@@ -450,6 +450,7 @@ export class TLS12040FareColumnDefinitions {
         field: 'period_nos',
         header: '期數',
         type: 'number',
+        editable: false,
         // 設為不可編輯，因為要自動計算
         // 關鍵：為期數添加動態預設值函數
         defaultValueFunction: () => {
@@ -544,10 +545,8 @@ export class TLS12040FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '是否新增',
+        header: '新增',
         type: 'checkbox',
-
-
         // autoEditOnSelect: true,
         // autoSaveOnUnselect: true,
       },
@@ -727,7 +726,7 @@ export class TLS12040FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '是否新增',
+        header: '新增',
         type: 'checkbox',
 
       },
