@@ -412,6 +412,46 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     });
   }
 
+  //匯入圖片檔並產生錯誤檔
+  onIMGUpload(event: FileSelectEvent) {
+    // 寫入時資料必須是 國際條碼.jpg 多筆的強況則是(國際條碼-1.jpg、國際條碼-2.jpg)
+    // 1. 檢查是否有檔案
+    if (!event.files || event.files.length === 0) return;
+
+    const formData = new FormData();
+
+    // 2. 依照 Swagger 需求，使用 'files' 作為 key，並透過迴圈加入所有檔案
+    // 這是傳遞「檔案陣列」到 multipart/form-data 的標準做法
+    for (const file of event.files) {
+      formData.append('files', file);
+    }
+
+    // 顯示讀取中，避免重複點擊
+    this.messageService.infoBubble('檔案上傳中...');
+
+    this.tls51070Service.uploadTLS51070Image(formData)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          const data = res?.Data;
+          if (data) {
+            if (data.ErrorFilePath) {
+              // 有錯誤檔：顯示錯誤提示
+              this.messageService.errorBubble(`匯入失敗`);
+              // 這裡通常會建議提供下載 ErrorFilePath 的邏輯
+            } else {
+              // 沒有錯誤檔：顯示成功
+              this.messageService.infoBubble(`上傳圖片成功`);
+            }
+          }
+        },
+        error: (err) => {
+          console.error(err);
+          this.messageService.errorBubble('檔案上傳失敗，請稍後再試');
+        },
+      });
+  }
+
   downloadErrorFile(filePath: string) {
     window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
@@ -473,10 +513,5 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   downloadTLS51070Template() {
     const export$ = this.tls51070Service.downloadTLS51070Template();
     this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.downloadTLS51070TemplateLoading = isLoading);
-  }
-
-  //用戶匯入大量圖檔
-  userInputIMGs() {
-    this.messageService.infoBubble('開發中');
   }
 }

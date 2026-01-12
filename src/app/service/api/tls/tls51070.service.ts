@@ -46,6 +46,11 @@ export class Tls51070Service {
     return this.http.post<any>(`${this.apiUrl}/uploadTLS51070`, formData);
   }
 
+  //上傳圖檔
+  uploadTLS51070Image(formData: FormData): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/uploadTLS51070Image`, formData);
+  }
+
   // ---圖片處理---
 
   //查詢圖片

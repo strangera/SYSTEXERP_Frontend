@@ -12,7 +12,17 @@
       chooseLabel="匯入EXCEL"
     />
 
-    <!-- <app-button label="匯入圖檔" (click)="userInputIMGs()"></app-button> -->
+    <p-fileUpload
+      id="customButton"
+      #fileUpload
+      mode="basic"
+      chooseIcon="pi pi-upload"
+      accept=".png"
+      (onSelect)="onIMGUpload($event); fileUpload.clear()"
+      [auto]="true"
+      chooseLabel="匯入圖片檔"
+    />
+
     <app-button
       label="範本下載"
       (click)="downloadTLS51070Template()"
