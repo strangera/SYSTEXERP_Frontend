@@ -123,7 +123,8 @@ export interface TLS53010UpdateRequest {
 export interface QueryTLS53010POS2004Request extends BaseQueryRequest {
   LOGO_No: string;         // 品牌代碼 (必填)
   HOS_No?: string;         // 倉別代碼
-  PLU_MagNo?: string;      // 商品管理編號
+  KeyWord?: string;        // 關鍵字
+  // PLU_MagNo?: string;      // 商品管理編號
   PLU_Name?: string;       // 商品名稱
   CAT_LNo?: string;        // 大分類代碼
   CAT_MNo?: string;        // 中分類代碼

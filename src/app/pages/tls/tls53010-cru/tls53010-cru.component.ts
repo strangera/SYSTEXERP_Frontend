@@ -13,6 +13,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { validateRequired } from '@shared/componentkit/table/validate-field.model';
+import { QueryStateService } from '@shared/service/query-state.service';
 import { PanelModule } from 'primeng/panel';
 import { debounceTime, finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -103,6 +104,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     public tls53010Service: TLS53010Service,
     private datePipe: DatePipe,
     private dropDownListService: DropDownListService,
+    private queryStateService: QueryStateService
   ) {
     super();
   }
@@ -234,10 +236,21 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
         }
         this.tls53010Service.insertTLS53010(payload)
           .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-          .subscribe(() => {
-            this.messageService.successBubble('新增全品項完成');
-            this.resetForm();
-            this.onCancel();
+          .subscribe((res: any) => {
+            this.messageService.confirm({
+              header: `新增全品項成功`,
+              message: `盤點單號：${res.Data}`,
+              accept: () => {
+                this.queryStateService.setQueryState(this.ProgNo, {
+                  PST_No: res.Data
+                });
+                this.messageService.successBubble('新增全品項成功');
+                this.onCancel();
+              },
+              reject: () => {
+                this.resetForm();
+              },
+            });
           });
       }
     });
@@ -247,7 +260,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
   dialogVisible = false;
   dialogLoading = false;
   dialogQueryForm = this.formBuilder.group({
-    PLU_MagNo: ['', [Validators.maxLength(20)]], // 商品管理編號
+    KeyWord: ['', [Validators.maxLength(20)]], // 商品管理編號
     PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
     CAT_LNo: [null], // 大分類代碼
     CAT_MNo: [{ value: null, disabled: true }], // 中分類代碼
@@ -419,7 +432,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
       return;
     }
     const queryRequest: QueryTLS53010POS2004Request = {
-      PLU_MagNo: value,      // 輸入商品管理編號/國際條碼都可以 模糊查詢
+      KeyWord: value,      // 輸入商品管理編號/國際條碼都可以 模糊查詢
       LOGO_No: this.dataForm.get('LOGO_No')?.value || '',
       HOS_No: this.dataForm.get('HOS_No')?.value || '',
     };
