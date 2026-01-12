@@ -80,7 +80,7 @@ export class FIN32010Component extends BasicQueryPageComponent<any> implements O
   // 下拉選單/多選列表的 Options 宣告 (必須與 HTML 中的 options 屬性對應)
   Org_IdOptions = this.dropDown.querySys3100(); // 組織代碼
   VEN_BNK_No_ParamOptions = this.dropDown.queryAps1001NoBranch(); // 匯款銀行代號
-  VEN_No_ParamOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商代號
+  VEN_No_ParamOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
   AccNo_ParamOptions = this.dropDown.queryGls1005(); // 會計科目代號
   VouStatusOptions = getSYS1000Options('VOU_Status'); // 傳票狀態
   ACP_Status_ParamOptions = getSYS1000Options('ACP_Status'); // 應付狀態

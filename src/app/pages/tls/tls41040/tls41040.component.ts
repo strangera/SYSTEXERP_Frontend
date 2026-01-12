@@ -1,3 +1,4 @@
+import { NgStyle } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -7,10 +8,12 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs/operators';
 import { Tls41040Service } from '../../../service/api/tls/tls41040.service'; // 引入剛剛做的 service
 import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 import { DropDownListService } from '../../../service/utility/dropDownList.service';
+import { ExecSpFuncService } from '../../../service/utility/execSpFunc.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -49,9 +52,11 @@ interface TLS41040Item {
   imports: [
     MenubarComponent,
     ButtonComponent,
+    ButtonModule,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
+    NgStyle,
     DropdownComponent,
     TableComponent,
     TranslateModule,
@@ -135,7 +140,8 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
   constructor(
     private ECRNoService: ECRNoService,
     private dropDownListService: DropDownListService,
-    private tls41040Service: Tls41040Service // 注入 Service
+    private tls41040Service: Tls41040Service, // 注入 Service
+    private execSpFuncService: ExecSpFuncService
   ) {
     super();
   }
@@ -230,6 +236,36 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
         this.selectedItems = [];
       },
     });
+  }
+
+  // ---- 下傳 ----
+  btnLoading = false;
+  onUpload(): void {
+    if (!this.selectedItems || this.selectedItems.length === 0) {
+      return;
+    }
+
+    // 後端需求：以 idList 傳入欲下傳的資料 ID 清單
+    const idList = this.selectedItems
+      .map(row => row.ID ?? row.id)
+      .filter((id): id is number => typeof id === 'number');
+
+    if (!idList.length) {
+      this.messageService.errorBubble('無可下傳的資料');
+      return;
+    }
+
+    this.btnLoading = true;
+
+    this.tls41040Service.posTLS41040({ idList })
+      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+      .subscribe({
+        next: () => {
+          this.messageService.successBubble('下傳成功');
+          this.onSubmit(this.queryForm);
+          this.selectedItems = [];
+        },
+      });
   }
 
 

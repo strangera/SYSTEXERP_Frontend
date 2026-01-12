@@ -22,6 +22,7 @@ export interface Fin55100Column {
 
 @Component({
   selector: 'app-table-subheader-grouping',
+  host: { 'table-edit-id': 'FIN55100' },
   templateUrl: 'fin55100-table.component.html',
   styleUrls: ['fin55100-table.component.scss'],
   standalone: true,

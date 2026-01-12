@@ -4,14 +4,15 @@ import { Injectable, signal } from '@angular/core';
 export class LoadingService {
   // 使用 Signal 效能最好且代碼最簡潔
   isLoading = signal<boolean>(false);
+  // messageService = inject(NotificationService);
 
   show() {
     this.isLoading.set(true);
-    console.log('🚀 載入中...');
+    // this.messageService.infoBubble('載入中...請稍後');
   }
 
   hide() {
     this.isLoading.set(false);
-    console.log('🚀 載入完成');
+    // this.messageService.clearBubble();
   }
 }

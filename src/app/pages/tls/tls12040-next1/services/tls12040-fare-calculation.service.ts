@@ -75,7 +75,7 @@ export class Tls12040FareCalculationService {
     const quantity = parseFloat(data.tpy_qty) || 0;
 
     if (unitPrice > 0 && quantity > 0) {
-      data.tpy_amount = unitPrice * quantity;
+      data.tpy_amount = Math.ceil(unitPrice * quantity);  // 改為無條件進位
       console.log(`💰 A類型計算: ${unitPrice} × ${quantity} = ${data.tpy_amount}`);
     } else {
       data.tpy_amount = 0;
@@ -97,7 +97,7 @@ export class Tls12040FareCalculationService {
     const quantity = parseFloat(data.tpy_qty) || 0;
 
     if (unitPrice > 0 && quantity > 0) {
-      data.tpy_amount = unitPrice * quantity;
+      data.tpy_amount = Math.ceil(unitPrice * quantity);  // 改為無條件進位
       console.log(`💰 B類型計算: ${unitPrice} × ${quantity} = ${data.tpy_amount}`);
     } else {
       data.tpy_amount = 0;
@@ -141,11 +141,11 @@ export class Tls12040FareCalculationService {
       case 'tpy_totalamt': // 總金額變更
         if (monthlyAmount > 0) {
           const calculatedDownPayment = totalAmount - (monthlyAmount * (periods - 1));
-          data.down_payment = Math.max(0, calculatedDownPayment);
+          data.down_payment = Math.ceil(Math.max(0, calculatedDownPayment));  // 改為無條件進位
           console.log(`💰 總金額變更: 根據每月金額計算首期金額 = ${data.down_payment}`);
         } else if (downPayment > 0) {
           const calculatedMonthlyAmount = (totalAmount - downPayment) / (periods - 1);
-          data.tpy_amount = Math.max(0, calculatedMonthlyAmount);
+          data.tpy_amount = Math.ceil(Math.max(0, calculatedMonthlyAmount));  // 改為無條件進位
           console.log(`💰 總金額變更: 根據首期金額計算每月金額 = ${data.tpy_amount}`);
         }
         break;
@@ -153,11 +153,11 @@ export class Tls12040FareCalculationService {
       case 'period_nos': // 期數變更
         if (monthlyAmount > 0) {
           const calculatedDownPayment = totalAmount - (monthlyAmount * (periods - 1));
-          data.down_payment = Math.max(0, calculatedDownPayment);
+          data.down_payment = Math.ceil(Math.max(0, calculatedDownPayment));  // 改為無條件進位
           console.log(`📅 期數變更: 重新計算首期金額 = ${data.down_payment}`);
         } else if (downPayment > 0) {
           const calculatedMonthlyAmount = (totalAmount - downPayment) / (periods - 1);
-          data.tpy_amount = Math.max(0, calculatedMonthlyAmount);
+          data.tpy_amount = Math.ceil(Math.max(0, calculatedMonthlyAmount));  // 改為無條件進位
           console.log(`📅 期數變更: 重新計算每月金額 = ${data.tpy_amount}`);
         }
         break;
@@ -165,7 +165,7 @@ export class Tls12040FareCalculationService {
       case 'tpy_amount': // 每月金額變更
         if (monthlyAmount >= 0) {
           const calculatedDownPayment = totalAmount - (monthlyAmount * (periods - 1));
-          data.down_payment = Math.max(0, calculatedDownPayment);
+          data.down_payment = Math.ceil(Math.max(0, calculatedDownPayment));  // 改為無條件進位
           console.log(`🔄 每月金額變更: 計算首期金額 = ${data.down_payment}`);
         }
         break;
@@ -173,7 +173,7 @@ export class Tls12040FareCalculationService {
       case 'down_payment': // 首期金額變更
         if (downPayment >= 0) {
           const calculatedMonthlyAmount = (totalAmount - downPayment) / (periods - 1);
-          data.tpy_amount = Math.max(0, calculatedMonthlyAmount);
+          data.tpy_amount = Math.ceil(Math.max(0, calculatedMonthlyAmount));  // 改為無條件進位
           console.log(`🔄 首期金額變更: 計算每月金額 = ${data.tpy_amount}`);
         }
         break;

@@ -33,6 +33,7 @@ import { TemplateCellComponent } from './table-edit-cell/template-cell.component
 import { ColumnGroup, EditColumn, FieldChangeEvent } from './table-edit.model';
 @Component({
   selector: 'app-table-edit',
+  host: { 'table-edit-id': 'FIN53010CRU' },
   templateUrl: './table-edit.component.html',
   styleUrl: './table-edit.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

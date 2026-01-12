@@ -41,6 +41,9 @@ export class NotificationMessageComponent implements OnInit {
     this.notificationService.bubbleMsg$.pipe(untilDestroyed(this)).subscribe((message) => {
       if (message) {
         this.messageService.add(message);
+      } else {
+        // 當收到的訊息是 null 時，執行清除動作
+        this.messageService.clear();
       }
     });
 
@@ -63,7 +66,11 @@ export class NotificationMessageComponent implements OnInit {
         rejectLabel: opts.rejectLabel || '取消', // 傳遞 Label 並設定預設值
         // 【重要】這裡不要寫任何邏輯，避免與 HTML 的按鈕點擊重複執行
         accept: () => { },
-        reject: () => { }
+        reject: () => {
+          if (opts.reject) {
+            opts.reject();
+          }
+        }
       });
     });
 

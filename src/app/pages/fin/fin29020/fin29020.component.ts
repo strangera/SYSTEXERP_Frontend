@@ -75,7 +75,7 @@ export class FIN29020Component extends BasicQueryPageComponent<FIN29020Data> imp
     { field: 'Pay_TotNet', header: '帳款金額', visible: true, format: formatAmount },
     { field: 'RMT_Amt', header: '匯款金額', visible: true, format: formatAmount },
     { field: 'STO_No', header: '分店編號', visible: false },
-    { field: 'VEN_No', header: '廠商代號', visible: false },
+    { field: 'VEN_No', header: '廠商編號', visible: false },
     { field: 'CompanyBNK_Name', header: '匯款銀行名稱', visible: false },
     { field: 'CompanyBNK_BranchNo', header: '匯款銀行分行代號', visible: false },
     { field: 'VendorBNK_No', header: '解款銀行代號', visible: false },

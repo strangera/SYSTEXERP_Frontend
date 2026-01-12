@@ -25,18 +25,10 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+  <app-table-report dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [showManage]="true" [showCheckBox]="true" (delete)="onDelete($event)" (selectionChange)="selectedRows = $event"
-    [selectedItems]="selectedRows" [multiSortMeta]="[{ field: 'PKNG_SeqNo', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [isRowSelectable]="isRowSelectable" [editDisabled]="editDisabled">
-    <!-- <header>
-      <div class="flex gap-2 align-items-center">
-        <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }"
-          pTooltip="下傳" tooltipPosition="top" pButton icon="pi pi-upload rotate-180" severity="success"
-          class="p-button-rounded p-button-text " [disabled]="selectedRows.length === 0" (click)="onUpload()"
-          [loading]="btnLoading" />
-      </div>
-    </header> -->
-  </app-table>
+    [selectedItems]="selectedRows" [totalRecords]="totalRecords" [loading]="loading" [isRowSelectable]="isRowSelectable"
+    [editDisabled]="editDisabled" [queryFunction]="cpm13010Service.queryCPM13010.bind(cpm13010Service)"
+    [lastQueryBody]="lastQueryBody">
+  </app-table-report>
 </div>

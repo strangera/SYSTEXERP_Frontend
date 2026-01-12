@@ -296,7 +296,9 @@ export const finRoutes: Routes = [
   { path: 'fin55120cru', loadComponent: () => import('./fin55120/fin55120cru/fin55120cru.component').then(m => m.Fin55120cruComponent), data: { progNo: 'FIN55120' } },
   { path: 'fin55120detail', loadComponent: () => import('./fin55120/fin55120-detail/fin55120-detail.component').then(m => m.Fin55120DetailComponent), data: { progNo: 'FIN55120' } },
   // 總帳報表-資產負債比較表
-  // { path: 'fin55130', loadComponent: () => import('./fin55130/fin55130.component').then(m => m.FIN55130Component),data:{progNo:'FIN55130'} },
+  { path: 'fin55130', loadComponent: () => import('./fin55130/fin55130.component').then(m => m.FIN55130Component), data: { progNo: 'FIN55130' } },
+  { path: 'fin55130cru', loadComponent: () => import('./fin55130/fin55130cru/fin55130cru.component').then(m => m.Fin55130cruComponent), data: { progNo: 'FIN55130' } },
+  { path: 'fin55130detail', loadComponent: () => import('./fin55130/fin55130-detail/fin55130-detail.component').then(m => m.Fin55130DetailComponent), data: { progNo: 'FIN55130' } },
   // 支票號碼維護
   // { path: 'fin61010', loadComponent: () => import('./fin61010/fin61010.component').then(m => m.FIN61010Component),data:{progNo:'FIN61010'} },
   // { path: 'fin61010cru', loadComponent: () => import('./fin61010-cru/fin61010-cru.component').then(m => m.FIN61010CRUComponent),data: { progNo: 'FIN61010'} },

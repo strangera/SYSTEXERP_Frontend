@@ -82,6 +82,8 @@ export class TLS2D020Component extends BasicQueryPageComponent<QueryDataItem> im
         tlt_no: frm.value.tlt_no,
         tlt_floor: frm.value.tlt_floor
       }
+      this.messageService.clearBubble();
+      this.messageService.infoBubble('試算中,請稍候...');
       this.tls2d020Service.executeTLS2D020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
         if (res.Data.ErrCode === 1) {
           this.messageService.successBubble(res.Data.ErrMsg || '結算成功');

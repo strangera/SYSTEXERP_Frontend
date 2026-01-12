@@ -9,9 +9,10 @@ import { CellInput } from './table-edit-cell.model';
 
 @Component({
   selector: 'app-date-cell',
+  host: { 'table-edit-id': '複製時請自行取唯一名' },
   template: `
     <p-iconField iconPosition="right">
-      <p-calendar class="min-w-max" [(ngModel)]="cellInput.rowData[cellInput.col.field]"
+      <p-calendar class="flex min-w-max" [(ngModel)]="cellInput.rowData[cellInput.col.field]"
                   [ngModelOptions]="{ standalone: true }" [placeholder]="isDisabled() ? '' : '請輸入' + cellInput.col.header"
                   [timeOnly]="cellInput.col.timeOnly || false" [showTime]="cellInput.col.showTime || false"
                   [hourFormat]="cellInput.col.hourFormat || '24'" [showSeconds]="cellInput.col.showSeconds"
@@ -19,10 +20,10 @@ import { CellInput } from './table-edit-cell.model';
                   iconDisplay="input" [minDate]="cellInput.col.minDate" [maxDate]="cellInput.col.maxDate" [appendTo]="'body'"
                   [showIcon]="!isDisabled()"
                   [disabled]="isDisabled()"
-                  (onInput)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index)"
+          (onSelect)="handleSelect()"
                   (onFocus)="cellInput.col.onFocus?.(cellInput.rowData, cellInput.rowData[cellInput.col.field], cellInput.col, cellInput.index)"
                   (onBlur)="handleBlur()"(keydown.enter)="handleEnter($event)"
-                  [style]="{'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
+                  [style]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
                   [inputStyle]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign || 'left'}"
                   [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
                   [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }">
@@ -63,6 +64,16 @@ export class DateCellComponent {
       this.cellInput.col,
       this.cellInput.index
     );
+    this.cellInput.onValueChange(
+      this.cellInput.rowData,
+      this.cellInput.rowData[this.cellInput.col.field],
+      this.cellInput.col,
+      this.cellInput.index
+    );
+  }
+
+  // 使用滑鼠在行事曆中選日期時，立即視為一次完成輸入
+  handleSelect() {
     this.cellInput.onValueChange(
       this.cellInput.rowData,
       this.cellInput.rowData[this.cellInput.col.field],

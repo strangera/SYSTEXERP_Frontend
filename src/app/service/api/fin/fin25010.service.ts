@@ -53,25 +53,24 @@ export interface QueryAddFIN25010Request extends BaseQueryRequest {
 
 // 查詢產生電匯付款資料 新增查詢Response
 export interface QueryAddFIN25010Response {
-  // 隱藏欄位
   ID: number;
-  IN_TYPE?: string;
-  VEN_PayType?: string;
-  ACP_YYYYMM?: string;
-  ACP_TERMNO?: string;
-  Remit_Status?: string;
-  // 顯示欄位
+  acp_no?: string;
   ven_no?: string;
   ven_name?: string;
-  RMT_TYPE?: string;
-  ACP_Amt?: string;
-  acp_no?: string;
+  IN_TYPE?: string;
+  ACP_Amt?: number;
   acp_DATE?: string;
   PTA_Date?: string;
   NoteDesc?: string;
   ACCNO?: string;
   ACP_STATUS?: string;
+  Voucher_Kind?: string;
+  VEN_PayType?: string;
   ORG_ID?: string;
+  ACP_YYYYMM?: string;
+  ACP_TERMNO?: string;
+  Remit_Status?: string;
+  RMT_TYPE?: string;
 }
 
 // 新增 APS3009 資料表 Request

@@ -65,7 +65,7 @@ function calculateNetTax(row: Record<string, unknown>) {
   if (taxType === '0') {
     // 1. 稅別 = 免稅 (PLU_TaxType = '0')
     // 未稅 = 免稅發票金額 (因為應稅金額 saleTax 已被重置為 0)
-    TXN_Net = saleNoTax;
+    // TXN_Net = saleNoTax; // 庭瑋說免稅時TXN_Net不用等於saleNoTax
     TXN_Tax = 0;
   } else if (taxType === '1') {
     // 2. 稅別 = 應稅 (PLU_TaxType = '1')

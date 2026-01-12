@@ -78,6 +78,10 @@ export class FIN52070CRUComponent extends BasicCruPageComponent<GLS1005> impleme
   ngOnInit(): void {
     this.initializePage('FIN52070', this.dataForm);
     this.loadOption();
+    if (!this.isFormCreateable) {
+      this.dataForm.get('ClassNo')?.disable(); // Detail/Update 時 disable typecode
+      this.dataForm.get('ParentClass')?.disable(); // Detail/Update 時 disable typecode
+    }
   }
 
   onSubmit(frm: FormGroup) {
@@ -106,10 +110,11 @@ export class FIN52070CRUComponent extends BasicCruPageComponent<GLS1005> impleme
       case CRUDStatus.Edit:
         if (this.canEdit()) {
           console.log('update', formValue);
-          // this.tls51080Service.updateTLS51080(formValue).subscribe(() => {
-          //   // this.messageService.successBubble('更新成功');
-          //   this.onCancel(); // 儲存後，會返回列表
-          // });
+          this.fin52070Service.updateFIN52070(formValue).subscribe(() => {
+            this.messageService.successBubble('更新成功');
+            this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+            //this.dataForm.reset(); // 重置表單
+          });
         }
         break;
     }

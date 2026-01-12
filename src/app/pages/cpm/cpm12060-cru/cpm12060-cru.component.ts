@@ -5,7 +5,6 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Cpm12060Service, detail12060Data } from '@service/api/cpm/cpm12060.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { CalenderoneComponent } from '@shared/componentkit/calenderone/calenderone.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { formatDateTime } from '@shared/componentkit/table/table.model';
 import { option } from '@shared/models/sys/sysb000.model';
@@ -34,7 +33,6 @@ import { EditColumn } from '../../../shared/componentkit/table-edit/table-edit.m
     TranslateModule,
     TableEditComponent,
     DropdownComponent,
-    CalenderoneComponent,
     CalendarComponent
   ]
 })

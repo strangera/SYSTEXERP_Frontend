@@ -9,6 +9,7 @@ import { CellInput } from './table-edit-cell.model';
 
 @Component({
   selector: 'app-date-cell',
+  host: { 'table-edit-id': 'FIN52030-CRU' },
   template: `
     <p-iconField iconPosition="right">
       <p-calendar class="min-w-max" [(ngModel)]="cellInput.rowData[cellInput.col.field]"

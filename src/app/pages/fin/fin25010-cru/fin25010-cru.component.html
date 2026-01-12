@@ -15,7 +15,7 @@
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar
-            label="預計收/付款日"
+            label="收/付款日"
             controlName="ACP_ExpectPayDate"
             [control]="dataForm.controls.ACP_ExpectPayDate"
             [submitted]="submitted"
@@ -34,7 +34,7 @@
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
-            label="應收/付ID"
+            label="應付帳款ID"
             controlName="ACP_No"
             [control]="dataForm.controls.ACP_No"
             [submitted]="submitted"
@@ -101,11 +101,13 @@
     [showManage]="false"
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
-    [multiSortMeta]="[]"
+    [multiSortMeta]="[{ field: 'ven_no', order: 1 }]"
     [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit(dataForm)"
     [lazy]="true"
     [loading]="loading"
     [showReportMode]="false"
+    [groupRowsBy]="'ven_no'"
+    [showSubTotal]="true"
   ></app-table>
 </div>

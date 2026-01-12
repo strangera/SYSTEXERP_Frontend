@@ -21,7 +21,7 @@
       [exportExcelLoading]="exportExcelLoading" [showPage]="false" (delete)="delete.emit($event)"
       (exportExcel)="exportExcel.emit()" (importExcel)="importExcel.emit($event)" [totalRecords]="dt.totalRecords"
       [apiUrl]="apiUrl" [DataKeyName]="DataKeyName" [PrintRemark]="PrintRemark" [customReport]="customReport"
-      (exportEvent)="exportEvent.emit($event)">
+      (exportEvent)="exportEvent.emit($event)" [Conditions]="Conditions">
       <header><ng-content select="header"></ng-content></header>
     </app-table-caption>
   </ng-template>
@@ -100,8 +100,8 @@
       [pSelectableRowDisabled]="!isRowSelectable(rowData)" [pReorderableRow]="index" [pSelectableRowIndex]="rowIndex">
       <td *ngIf="showReorder" class="text-center" pFrozenColumn>{{ rowIndex + 1 }}</td>
       <td *ngIf="showCheckBox">
-        <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
-          [value]="rowData" [disabled]="!rowSelectableWrapper" />
+        <p-tableCheckbox class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData"
+          [disabled]="!rowSelectableWrapper" />
       </td>
       <td *ngIf="expansionColumns.length" class="text-center">
         <p-button pRipple [text]="true" [rounded]="true" [plain]="true" severity="secondary"
@@ -115,7 +115,17 @@
         style="text-overflow: ellipsis; min-width: 55px" (dblclick)="detail.emit(rowData)"
         [ngClass]="[col.cellClass ? col.cellClass(rowData) || '' : '']">
         <ng-container *ngIf="col.type === 'image'">
-          <p-image [src]="tableUtility.getImage(rowData[col.field])" alt="Image" width="50" [preview]="true" />
+          <div class="flex justify-content-center align-items-center">
+            <p-image *ngIf="rowData[col.field] && !rowData[col.field + '_error']"
+              [src]="tableUtility.getImage(rowData[col.field])" alt="Image" width="50" [preview]="true" appendTo="body"
+              (onImageError)="rowData[col.field + '_error'] = true">
+            </p-image>
+
+            <span *ngIf="!rowData[col.field] || rowData[col.field + '_error']"
+              class="text-xs p-2 bg-gray-100 border-round text-500">
+              無法讀取圖片
+            </span>
+          </div>
         </ng-container>
         <ng-container *ngIf="col.type === 'button'">
           <p-button [label]="col.buttonLabel ?? rowData?.[col.field]" severity="info"
@@ -239,7 +249,7 @@
     <tr>
       <td [attr.colspan]="1 + columns.length + (showManage ? 1 : 0) + (showCheckBox ? 1 : 0)+ (showReorder ? 1 : 0)">
         <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
-          查無資料
+          {{ emptyMessage || '查無資料' }}
         </div>
       </td>
     </tr>

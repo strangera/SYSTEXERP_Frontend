@@ -104,27 +104,45 @@ export class ASS21040Component extends BasicQueryPageComponent<unknown> implemen
   }
 
   onGenerateReport(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      const storeNo = this.authService.currentUserValue?.SYS_StoreNo;
-      const mid = this.authService.currentUserValue?.mid;
-      if (storeNo && mid !== null && mid !== undefined) {
-        const body = {
-          SYS_StoreNo: storeNo,
-          Mid: mid,
-          EngTypes: frm.value.ENG_Type,
-          ClearingYM: convertDateToYYYYMM(frm.value.ENG_YYMM)
-        };
-        console.log(body);
+    if (!frm.valid) {
+      this.submitted = true;
+      this.messageService.errorBubble('請填寫必填欄位');
+      return;
+    }
 
-        this.aSS21040Service.printASS21040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-          if (response.Data.Print_URL) {
+    const storeNo = this.authService.currentUserValue?.SYS_StoreNo;
+    const mid = this.authService.currentUserValue?.mid;
+    if (storeNo && mid !== null && mid !== undefined) {
+      const body = {
+        SYS_StoreNo: storeNo,
+        Mid: mid,
+        EngTypes: frm.value.ENG_Type,
+        ClearingYM: convertDateToYYYYMM(frm.value.ENG_YYMM)
+      };
+      console.log(body);
+
+      this.loading = true;
+      this.aSS21040Service.printASS21040(body)
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe((response) => {
+          const url = response.Data?.Print_URL || '';
+          if (url) {
+            const downloadUrl = `${environment.ApiUrl}${url}`;
+
+            // 使用 <a> 標籤在新分頁開啟 PDF（不會被瀏覽器封鎖）
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer'; // 安全性考量
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
             this.messageService.successBubble('列印成功');
-            window.open(environment.ApiUrl + response.Data.Print_URL);
           } else {
-            this.messageService.errorBubble(response.Message);
+            this.messageService.errorBubble('無法取得列印檔案');
           }
         });
-      }
-    });
+    }
   }
 }

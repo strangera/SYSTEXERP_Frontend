@@ -19,7 +19,6 @@ import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { Tls2e080TableReportComponent } from './tls2e080-table-report/tls2e080-table-report.component';
 
 // 2.2.14.8 專櫃對帳單
 @Component({
@@ -39,7 +38,6 @@ import { Tls2e080TableReportComponent } from './tls2e080-table-report/tls2e080-t
     InputTextComponent,
     TableReportComponent,
     ButtonModule,
-    Tls2e080TableReportComponent
   ]
 })
 export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> implements OnInit {
@@ -47,7 +45,7 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
     tlt_noList: [null], // 專櫃編號
     tlt_term_typeList: [null], // 抽成方式
     tlt_floorList: [null], // 樓層
-    sam_yyymm: [new Date('2025-01'), [Validators.required]], // 查詢年月
+    sam_yyymm: [null, [Validators.required]], // 查詢年月
     money_typeList: [null], //結帳方式
     sam_termnoList: [null], // 帳次
     tlt_buildingList: [null], // 館別
@@ -153,11 +151,11 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
           sam_yyymm: item.sam_yyymm,
           sad_date_Start: sad_date_Start,
           sad_date_End: sad_date_End,
-          money_type: item.money_type,
-          money_type_name: item.money_type_name,
+          money_type: item.money_type || '',
+          money_type_name: item.money_type_name || '',
           sam_termno: item.sam_termno,
-          tlt_term_type: item.tlt_term_type,
-          tlt_term_type_name: item.tlt_term_type_name
+          tlt_term_type: item.tlt_term_type || '',
+          tlt_term_type_name: item.tlt_term_type_name || ''
         };
       })
     }
@@ -199,14 +197,14 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
 
         return {
           talent_id: item.talent_id,
-          sam_yyymm: item.sam_yyymm,
-          sad_date_Start: sad_date_Start,
-          sad_date_End: sad_date_End,
-          money_type: item.money_type,
-          money_type_name: item.money_type_name,
+          sam_yyymm: item.sam_yyymm || '',
+          sad_date_Start: sad_date_Start || '',
+          sad_date_End: sad_date_End || '',
+          money_type: item.money_type || '',
+          money_type_name: item.money_type_name || '',
           sam_termno: item.sam_termno,
-          tlt_term_type: item.tlt_term_type,
-          tlt_term_type_name: item.tlt_term_type_name
+          tlt_term_type: item.tlt_term_type || '',
+          tlt_term_type_name: item.tlt_term_type_name || ''
         };
       })
     };

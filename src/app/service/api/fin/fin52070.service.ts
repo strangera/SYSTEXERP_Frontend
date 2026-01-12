@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -9,16 +9,24 @@ import { Observable } from 'rxjs';
 // 科目三碼代號維護
 export class Fin52070Service {
   private apiUrl = `${environment.ApiUrl}/FIN0000/GLS1000`;
-  constructor(private http: HttpClient) {}
-    
+  constructor(private http: HttpClient) { }
+
   // 查詢 GLS1004 科目類別設定檔
   queryFIN52070(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryFIN52070`, data);
   }
-    
+
   // 新增 GLS1004 科目類別設定檔
   insertFIN52070(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/insertFIN52070`, data);
+  }
+
+  updateFIN52070(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateFIN52070`, data);
+  }
+
+  deleteFIN52070(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deleteFIN52070`, data);
   }
 
   // 下拉 GLS1004 中分類列表

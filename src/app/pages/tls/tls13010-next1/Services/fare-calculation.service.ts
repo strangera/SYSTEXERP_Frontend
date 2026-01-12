@@ -275,10 +275,10 @@ export class FareCalculationService {
  */
   private roundToFixed(value: number, decimals: number = 0): number {
     const multiplier = Math.pow(10, decimals);
-    return Math.round(value * multiplier) / multiplier;
+    return Math.ceil(value * multiplier) / multiplier;  // 改為無條件進位
   }
 
   private roundToInteger(value: number): number {
-    return Math.round(value);
+    return Math.ceil(value);  // 改為無條件進位，確保金額足夠
   }
 }

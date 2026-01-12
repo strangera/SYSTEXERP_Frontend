@@ -66,12 +66,8 @@ export class Cpm12070Service {
    * @param body 統一的匯出請求物件 (QueryCPM12070Request)
    * @returns 包含 Excel 檔案的 Blob 物件
    */
-  exportCPM12070Excel(
-    body: CPM12070Request
-  ): Observable<HttpResponse<Blob>> { // 將回傳類型改為 HttpResponse<Blob>
-    return this.http.post(
-      `${this.apiUrl}/exportCPM12070Excel`,
-      body,
+  exportCPM12070Excel(body: CPM12070Request): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportCPM12070Excel`, body,
       {
         observe: 'response',
         responseType: 'blob'

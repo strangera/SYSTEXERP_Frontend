@@ -8,9 +8,9 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 廠商代號(起訖) -->
+          <!-- 廠商編號(起訖) -->
           <div class="col-12 md:col-6 lg:col-6">
-            <app-dropdown-range label="廠商代號" controlName="VEN_No" [startControl]="queryForm.controls.VEN_No_From"
+            <app-dropdown-range label="廠商編號" controlName="VEN_No" [startControl]="queryForm.controls.VEN_No_From"
               [endControl]="queryForm.controls.VEN_No_To" [submitted]="submitted" [options]="vendorOptions"
               optionLabel="label" optionValue="value" />
           </div>

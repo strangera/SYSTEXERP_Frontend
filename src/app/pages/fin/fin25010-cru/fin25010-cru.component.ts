@@ -34,7 +34,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     DropdownComponent,
     TranslateModule,
     DropdownRangeComponent,
-    TableComponent
+    TableComponent,
   ]
 })
 export class FIN25010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -42,10 +42,10 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<any> implements 
     ACP_ExpectPayDate: [new Date(), Validators.required], // 收/付款日
     ven_no_b: [null], // 廠客代號(起)
     ven_no_e: [null], // 廠客代號(迄)
-    ACP_No: [null, Validators.maxLength(14)], // 應收/付ID
+    ACP_No: [null, Validators.maxLength(14)], // 應付帳款ID
     Voucher_Kind: [null], // 傳票型態
     VEN_PayType: [null], // 付款方式
-    ...createPaginationConfig([])
+    ...createPaginationConfig([{ field: 'ven_no', order: 1 }]),
   });
 
   // 廠客代號選項
@@ -77,7 +77,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<any> implements 
     { field: 'ven_no', header: '廠客代號' },
     { field: 'ven_name', header: '廠客名稱' },
     { field: 'IN_TYPE', header: '資料來源別', format: (value: string) => value === '1' ? '應付' : value === '2' ? '應收' : value === '3' ? '保留款' : value },
-    { field: 'ACP_Amt', header: '付款金額', format: formatAmount },
+    { field: 'ACP_Amt', header: '付款金額', format: formatAmount, isSubTotal: true },
     { field: 'acp_no', header: '應收/付ID' },
     { field: 'acp_DATE', header: '立帳日期', format: formatDate },
     { field: 'PTA_Date', header: '預計收/付款日', format: formatDate },

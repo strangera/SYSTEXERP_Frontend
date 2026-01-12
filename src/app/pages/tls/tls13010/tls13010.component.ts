@@ -169,7 +169,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   // 表格資料
   data: ContractItem[] = [];
   filteredData: ContractItem[] = [...this.data];
-  totalRecords: number = 0;
+  totalRecords = 0;
   selectedItems: ContractItem[] = [];
 
 
@@ -496,9 +496,11 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     this.messageService.confirm({
       message: `確定要審核合約 ${rowData.apply_no} 嗎？`,
       accept: () => {
+        console.log('✅ 使用者確認審核，準備呼叫 API');
         // 調用審核 API
         this.apiService.approveTLS13010({ talentId: rowData.talent_id }).subscribe({
           next: (response: any) => {
+            console.log('📡 API 回應:', response);
             if (response.Status === '0000') {
               this.messageService.successBubble('審核成功');
               this.onSubmit(this.queryForm); // 重新查詢更新狀態
@@ -507,12 +509,13 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
             }
           },
           error: (err: any) => {
-            console.error('審核失敗:', err);
+            console.error('❌ 審核失敗:', err);
             this.messageService.errorBubble('審核失敗，請檢查網路連線或聯繫管理員');
           }
         });
       },
       reject: () => {
+        console.log('❌ 使用者取消審核');
         this.messageService.infoBubble('已取消審核');
       }
     });

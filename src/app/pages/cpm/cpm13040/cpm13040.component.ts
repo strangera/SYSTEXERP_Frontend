@@ -1,27 +1,26 @@
-import { formatDate } from './../../../shared/componentkit/table-report/table-report.model';
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatAmount, LazyLoadEvent} from '@shared/componentkit/table/table.model';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { ButtonModule } from 'primeng/button';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { CPM13040Service } from '@service/api/cpm/cpm13040.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { CPM13040Service } from '@service/api/cpm/cpm13040.service';
+import { Column, createPaginationConfig, formatAmount, LazyLoadEvent } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
-import { DatePipe } from '@angular/common';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { formatDate } from './../../../shared/componentkit/table-report/table-report.model';
 @Component({
   selector: 'app-cpm13040',
   templateUrl: './cpm13040.component.html',
-  styleUrls: ['./cpm13040.component.scss'],
   standalone: true,
   imports: [
     DropdownComponent,
@@ -69,7 +68,7 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
 
   // 第二張表格：卡別明細
   columns: Column[] = [
-    { field: 'TXN_Date', header: '日期', visible: true ,format: formatDate},
+    { field: 'TXN_Date', header: '日期', visible: true, format: formatDate },
     { field: 'CardType', header: '卡別', visible: true },
     { field: 'TXN_PayDesc', header: '聯名卡號', visible: true },
     { field: 'Org_ID', header: '組織名稱', visible: true },

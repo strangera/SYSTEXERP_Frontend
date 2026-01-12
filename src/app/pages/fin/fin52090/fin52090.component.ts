@@ -16,6 +16,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { FIN52090Data, FIN52090Query } from './fin52090.model';
 
+
 @Component({
   selector: 'app-fin52090',
   templateUrl: './fin52090.component.html',
@@ -36,6 +37,7 @@ import { FIN52090Data, FIN52090Query } from './fin52090.model';
 export class FIN52090Component extends BasicQueryPageComponent<unknown> implements OnInit {
 
   public readonly queryForm = this.formBuilder.group({
+    id: new FormControl<number | void>(void 0),
     AccNo: new FormControl<string[]>([]),
     NoteDesc: new FormControl<string | void>(void 0),
     ...createPaginationConfig([{ field: 'AccNo', order: 1 }]),
@@ -59,6 +61,8 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
     { field: 'NoteDesc', header: '科目摘要' },
   ];
 
+  selectedRows: any[] = [];
+
   constructor(
     public readonly service: FIN52090Service,
     private readonly logger: NGXLogger,
@@ -73,6 +77,18 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
     this.service.getAccNo();
 
     this.logger.debug(`init:`, [this.service.accNo()]);
+
+  }
+
+  onDelete(selectedRows: any[]) {
+    const ids = selectedRows.map(row => row.id);
+    this.service.deleteFIN52090({ ids }).subscribe({
+      next: () => {
+        this.onSubmit();
+        this.selectedRows = [];
+      },
+      error: () => { this.loading = false; },
+    });
   }
 
   onSubmit() {

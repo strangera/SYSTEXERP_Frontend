@@ -154,22 +154,22 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
       this.messageService.successBubble(`${res.Data.ErrMsg}`);
     });
   }
-  lockLoding = false;
-  onLock(frm: FormGroup) {
-    this.submitted = true;
-    if (!frm.valid) {
-      this.submitted = false;
-      return;
-    }
-    this.lockLoding = true;
-    const body = {
-      ...frm.value,
-      sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
-      money_type: frm.value.money_type,
-      sam_termno: String(frm.value.sam_termno),
-    }
-    this.tls2e020Service.lockTls2e020(body).pipe(finalize(() => this.lockLoding = false), untilDestroyed(this)).subscribe(res => {
-      this.messageService.successBubble(res.Message)
-    })
-  }
+  // lockLoding = false;
+  // onLock(frm: FormGroup) {
+  //   this.submitted = true;
+  //   if (!frm.valid) {
+  //     this.submitted = false;
+  //     return;
+  //   }
+  //   this.lockLoding = true;
+  //   const body = {
+  //     ...frm.value,
+  //     sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
+  //     money_type: frm.value.money_type,
+  //     sam_termno: String(frm.value.sam_termno),
+  //   }
+  //   this.tls2e020Service.lockTls2e020(body).pipe(finalize(() => this.lockLoding = false), untilDestroyed(this)).subscribe(res => {
+  //     this.messageService.successBubble(res.Message)
+  //   })
+  // }
 }

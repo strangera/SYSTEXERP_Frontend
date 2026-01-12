@@ -1,10 +1,10 @@
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls2e070Data, Tls2e070QueryBody, Tls2e070QueryRecEstBody, Tls2e070Service } from '@service/api/tls/tls2e070.service';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -29,6 +29,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
   /** 1. 查詢結果 (Query) 欄位 */
   readonly queryColumns: ReportColumn[] = [
     { field: 'cls_Month', header: '結算年月', visible: true, format: formatYYYYMM },
+    { field: 'money_type', header: '結帳方式', visible: true, format: (value) => getSYS1000('money_type', value) },
     { field: 'cls_termno', header: '結算期別', visible: true },
     { field: 'sale_proc_date', header: '結帳日期', visible: true, format: formatDate },
     { field: 'sale_proc_USR_Name', header: '結帳人員', visible: true },
@@ -37,13 +38,13 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
     { field: 'sale_lock_USR_Name', header: '鎖定人員', visible: true },
   ];
 
-  /** 2. 試算紀錄 (Record) 欄位 */
+  /** 2. 結算紀錄 (Record) 欄位 */
   readonly recordColumns: ReportColumn[] = [
-    { field: 'CRT_Date', header: '試算日期', visible: true, format: formatDateTime },
-    { field: 'sam_yyymm', header: '試算年月', visible: true, format: formatYYYYMM },
+    { field: 'CRT_Date', header: '結算日期', visible: true, format: formatDateTime },
+    { field: 'sam_yyymm', header: '結算年月', visible: true, format: formatYYYYMM },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
-    { field: 'remarks', header: '試算說明', visible: true },
+    { field: 'remarks', header: '結算說明', visible: true },
     { field: 'CRT_USR_No', header: '執行者', visible: true },
   ];
 
@@ -70,9 +71,9 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
     PageSize: [30],
     PageIndex: [1],
     sam_yyymm: [new Date(), Validators.required],
-    // 試算
-    money_type: [this.money_typeOptions[2]?.value || null as string | null, [Validators.required]],
-    sam_termno: [1, [Validators.required]],
+    // 結算
+    money_type: [this.money_typeOptions[2]?.value || null as string | null],
+    sam_termno: [1],
     tlt_no: [null],
   });
   totalRecords = 0;
@@ -82,6 +83,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
   constructor(
     public readonly tls2e070Service: Tls2e070Service,
     private readonly dropdown: DropdownApiService,
+    private readonly datePipe: DatePipe
   ) {
     super();
     // 預設欄位為查詢結果欄位
@@ -143,7 +145,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
     this.handleSubmit(frm, () => {
       const body = {
         ...frm.value,
-        sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
+        sam_yyymm: this.datePipe.transform(frm.value.sam_yyymm, 'yyyyMM'),
       } as Tls2e070QueryBody;
       this.tls2e070Service.queryTLS2E070(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data;
@@ -158,13 +160,18 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
    */
   onSettle(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      if (!frm.value.money_type || !frm.value.sam_termno) {
+        this.messageService.errorBubble('請選擇結帳方式與帳次');
+        this.loading = false;
+        return;
+      }
       // 1. 設定欄位為結算檢查欄位
       this.columns = this.settleColumns;
       this.isSettle = true;
       this.loading = true;
       const body = {
         ...frm.value,
-        sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
+        sam_yyymm: this.datePipe.transform(frm.value.sam_yyymm, 'yyyyMM'),
         sam_termno: frm.value.sam_termno as number,
         money_type: frm.value.money_type
       } as Tls2e070QueryRecEstBody;
@@ -182,12 +189,17 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
   }
 
   /**
-   * 3. 查詢試算紀錄 (onQueryRecord) - 顯示試算紀錄列表
+   * 3. 查詢結算紀錄 (onQueryRecord) - 顯示結算紀錄列表
    * * @param frm 表單
    */
   onQueryRecord(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      // 1. 設定欄位為試算紀錄欄位
+      if (!frm.value.money_type || !frm.value.sam_termno) {
+        this.messageService.errorBubble('請選擇結帳方式與帳次');
+        this.loading = false;
+        return;
+      }
+      // 1. 設定欄位為結算紀錄欄位
       this.columns = this.recordColumns;
       this.isSettle = false;
       this.loading = true;
@@ -207,6 +219,11 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
   }
   onUpdate(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      if (!frm.value.money_type || !frm.value.sam_termno) {
+        this.messageService.errorBubble('請選擇結帳方式與帳次');
+        this.loading = false;
+        return;
+      }
       const body = {
         ...frm.value,
         sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),

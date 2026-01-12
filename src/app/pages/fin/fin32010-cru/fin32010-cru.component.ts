@@ -41,7 +41,7 @@ export class FIN32010CRUComponent extends BasicCruPageComponent<any> implements 
   VEN_BNK_No_ParamOptions = this.dropDown.queryAps1001NoBranch(); // 匯款銀行代號
   AccNoOptions = this.dropDown.queryGls1005(); // 會計科目代號
   SubDetailNoOptions = this.dropDown.queryGLS1016(); // 對象別編號
-  VEN_No_Options = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商代號
+  VEN_No_Options = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
   VouStatusOptions = getSYS1000Options('VOU_Status'); // 傳票狀態
   ACP_Status_ParamOptions = getSYS1000Options('ACP_Status'); // 應收狀態
   dataForm = this.formBuilder.nonNullable.group({

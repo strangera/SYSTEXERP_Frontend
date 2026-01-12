@@ -9,6 +9,7 @@ import { CellInput } from './table-edit-cell.model';
 
 @Component({
   selector: 'app-number-cell',
+  host: { 'table-edit-id': '複製時請自行取唯一名' },
   template: `
     <p-iconField iconPosition="right">
       <p-inputNumber class="min-w-max w-full" mode="decimal"

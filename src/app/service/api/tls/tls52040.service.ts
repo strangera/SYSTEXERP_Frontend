@@ -10,7 +10,7 @@ export interface IQueryTLS52040Request {
   LOGO_NoList?: string[]; // 品牌代碼列表
   HOS_NoList?: string[]; // 倉庫代碼列表
   PLU_MagNo?: string; // 商品管理編號 (用於查詢明細)
-  VEN_No?: string; // 廠商代號
+  VEN_No?: string; // 廠商編號
   RJM_StatusList?: string[]; // 退貨驗收狀態列表
   APPLY_USR?: string; // 申請人員編號
   APPLY_Date_Start?: string; // 申請日期起 (YYYY-MM-DD 或 ISO 格式)
@@ -26,7 +26,7 @@ export interface ITLS52040Data {
   id: number;
   RJM_No: string; // 退貨驗收單號
   SYS_StoreNo: string; // 門店編號 (系統)
-  VEN_No: string; // 廠商代號
+  VEN_No: string; // 廠商編號
   LOGO_No: string; // 品牌代碼
   LOGO_CH_NAME: string; // 品牌中文名稱
   HOS_No: string; // 倉庫代號
@@ -97,7 +97,7 @@ export interface TLS52040Request {
   RJM_No?: string; // 退貨驗收單號
   SYS_StoreNo?: string; // 門店編號 (系統)
   HOS_No?: string; // 倉庫代碼
-  VEN_No?: string; // 廠商代號
+  VEN_No?: string; // 廠商編號
   // LOGO_No?: string; // 品牌代碼
   org_id?: string; // 組織代碼
   RJM_TaxType?: string; // 單據稅別
@@ -120,7 +120,7 @@ export interface TLS52040Request {
 export interface IGetPOS2031PRequest {
   // LOGO_No?: string | null; // 品牌代碼
   HOS_No?: string | null; // 倉庫代碼
-  VEN_No?: string | null; // 廠商代號
+  VEN_No?: string | null; // 廠商編號
 }
 
 /** 取得退貨單明細及驗收資料 (GetPOS2032PAndPOS2032) 的請求介面 */

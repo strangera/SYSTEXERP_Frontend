@@ -10,9 +10,9 @@
   (onColReorder)="columns = tableUtilityService.onColReorder($event)"
   (onRowReorder)="onRowReorder(); rowReorderData.emit($event)"
   styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" [rowSelectable]="rowSelectableWrapper"
-  [loading]="loading" [scrollable]="scrollable" scrollHeight="867px" [virtualScroll]="false" [paginator]="showPaginator"
-  [rows]="20" [rowsPerPageOptions]="[20, 40, 60, 80, 100]" [showCurrentPageReport]="showPaginator"
-  currentPageReportTemplate="顯示第 {first} 到 {last} 筆，共 {totalRecords} 筆">
+  [loading]="loading" [scrollable]="scrollable" [scrollHeight]="scrollable ? '867px' : 'flex'" [virtualScroll]="false"
+  [paginator]="showPaginator" [rows]="50" [rowsPerPageOptions]="[50, 100, 200, 400, 1000]"
+  [showCurrentPageReport]="showPaginator" currentPageReportTemplate="顯示第 {first} 到 {last} 筆，共 {totalRecords} 筆">
   <ng-template pTemplate="caption">
     <div class="grid align-items-center justify-content-between mx-0">
       <div class="caption-left button-group flex gap-2 py-2">
@@ -161,14 +161,13 @@
         </span>
       </td>
       <td *ngIf="showCheckBox && !disabled && !rowData._isAutoInsertCandidate" class="w-1rem text-center">
-        <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
-          [value]="rowData" [disabled]="
+        <p-tableCheckbox class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData" [disabled]="
             !isRowSelectable(rowData, rowIndex, _tableData) || disabled
           " />
       </td>
-      <td *ngFor="let col of columns" (click)="col.type ? $event.stopPropagation() : null"
-        (keydown)="$event.stopPropagation()" [style]="{ width: col.width, 'text-align': col.textAlign || 'center' }"
-        [ngClass]="getTdClass(rowData, col)">
+      <td *ngFor="let col of columns; let colIndex = index" (click)="col.type ? $event.stopPropagation() : null"
+        (keydown)="onCellKeydown($event, rowIndex, colIndex)"
+        [style]="{ width: col.width, 'text-align': col.textAlign || 'center' }" [ngClass]="getTdClass(rowData, col)">
         <ng-container *ngIf="col.type && getEditComponent(col.type) as componentType">
           <ng-container *ngComponentOutlet="
               componentType;
@@ -228,7 +227,7 @@
   <ng-template pTemplate="summary">
     <div class="flex align-items-center justify-content-end p-2">
       總筆數:
-      {{ _tableData.length - (canInsert && _tableData.length > 0 ? 1 : 0) + (disabled ? 1 : 0) }} 筆
+      {{ _tableData.length - (canInsert && !disabled && _tableData.length > 0 ? 1 : 0) }} 筆
     </div>
   </ng-template>
   <ng-template pTemplate="emptymessage">

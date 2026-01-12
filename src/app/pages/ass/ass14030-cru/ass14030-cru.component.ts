@@ -92,7 +92,7 @@ export class ASS14030CRUComponent implements OnInit {
   createItem(): FormGroup {
     return this.formBuilder.group({
       subjectCode: [, [Validators.required]], // 科目代號
-      vendorCode: [''], // 廠商代號
+      vendorCode: [''], // 廠商編號
       summary: [''], // 摘要
       debitAmount: [, [Validators.required, Validators.maxLength(15)]], // 借方金額
       creditAmount: [, [Validators.required, Validators.maxLength(15)]], // 貸方金額

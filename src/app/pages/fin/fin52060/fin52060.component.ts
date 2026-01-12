@@ -119,14 +119,14 @@ export class FIN52060Component extends BasicQueryPageComponent<GLS1004> implemen
   // 刪除控制_Grace 9/9: 
   // 9/9 SA註明: 該作業不可修改/刪除
   onDelete(selectedRows: GLS1004[]) {
-    // const ids = selectedRows.map(row => row.id);
-    // this.fin14010Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
-    //   next: () => {
-    //     this.onSubmit(this.queryForm);
-    //     this.selectedRows = [];
-    //   },
-    //   error: () => { this.loading = false; },
-    // });
+    const ids = selectedRows.map(row => row.ClassNo);
+    this.fin52060Service.deleteFIN52060({ ids }).pipe(untilDestroyed(this)).subscribe({
+      next: () => {
+        this.onSubmit(this.queryForm);
+        this.selectedRows = [];
+      },
+      error: () => { this.loading = false; },
+    });
   }
 
   isRowSelectable(row: GLS1004) {

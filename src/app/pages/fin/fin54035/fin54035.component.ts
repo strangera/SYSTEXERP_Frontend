@@ -77,7 +77,7 @@ export class FIN54035Component extends BasicQueryPageComponent<FIN54030Data> imp
   }
 
   public ngOnInit(): void {
-    this.initializePage('FIN54030', void 0, this.queryForm, this.onSubmit.bind(this));
+    this.initializePage('FIN54035', void 0, this.queryForm, this.onSubmit.bind(this));
 
     this.service.loadFIN54030().pipe(
       tap(res => this.logger.debug(`init:`, [res])),

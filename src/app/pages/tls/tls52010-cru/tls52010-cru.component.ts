@@ -245,7 +245,8 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       LOGO_No.disable();
     }
     if (!this.isFormCreateable) {
-      this.tls52010Service.queryPOS2017({ PO_No: this.dataForm.controls.PO_No.value }).pipe(untilDestroyed(this)).subscribe(response => {
+      this.loading = false;
+      this.tls52010Service.queryPOS2017({ PO_No: this.dataForm.controls.PO_No.value }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.data = response.Data.map(item => ({
           ...item,
           PLU_SalePrc_UNI: item.POD_BuyPrc,

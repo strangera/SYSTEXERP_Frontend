@@ -45,7 +45,6 @@ export abstract class BasicQueryPageComponent<T> {
   }
   set loading(value: boolean) {
     this._loading = value;
-    // 當底層 loading 改變時，同步通知全域 Service
     if (value) {
       this.loadingService.show();
     } else {

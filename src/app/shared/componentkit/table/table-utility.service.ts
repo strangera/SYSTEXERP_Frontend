@@ -1,11 +1,11 @@
 // table-utility.service.ts
 import { Injectable } from '@angular/core';
-import { Column, ColumnGroup } from './table.model';
-import { finalize, Observable, tap } from 'rxjs';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { finalize, Observable, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { Column, ColumnGroup } from './table.model';
 
 @Injectable({
   providedIn: 'root'

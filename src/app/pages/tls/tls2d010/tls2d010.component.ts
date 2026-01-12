@@ -23,6 +23,7 @@ import { DropDownListService, IAPS1003Item, IDropdownItem } from './../../../ser
 
 import { FileExportService } from '@shared/service/file-export.service';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
+import { finalize } from 'rxjs';
 @Component({
   selector: 'app-tls2d010',
   templateUrl: './tls2d010.component.html',
@@ -212,6 +213,8 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
         this.data = res?.Data || [];
         // 支援後端回傳不同的總數欄位名稱 (TotalCount / Total / TotalRecords)
         this.totalRecords = res?.TotalCount ?? res?.Total ?? res?.TotalRecords ?? this.data.length;
+        // 查詢成功後，記錄當前查詢條件，供返回本頁時還原
+        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       },
       complete: () => {
         this.loading = false;
@@ -221,13 +224,36 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
   setCounterType(row: any) {
     return { ...row, type: 'counter' };
   }
-  onDelete(event: any) {
-    const idList = event.map((item: any) => item.id);
-    this.tls2d010Service.deleteTLS2D010({ idList }).subscribe(() => {
-      this.onSubmit(this.queryForm);
+  onDelete(selectedItems: any[]): void {
+    if (!selectedItems || selectedItems.length === 0) {
+      alert('請先選擇要刪除的項目');
+      return;
+    }
+
+    const idList = selectedItems.map((item: any) => item.id);
+
+    this.messageService.confirm({
+      message: `確定要刪除 ${idList.length} 筆資料嗎？`,
+      header: '刪除確認',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        this.loading = true;
+        this.tls2d010Service.deleteTLS2D010({ idList })
+          .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+          .subscribe({
+            next: () => {
+              this.messageService.successBubble('刪除成功');
+              this.onSubmit(this.queryForm);
+            },
+          });
+      },
+      reject: () => {
+        // 使用者取消刪除，不做任何事
+      }
     });
   }
   btnLoading = false;
+  excelLoading = false;
   downloadTemplate() {
     const export$ = this.tls2d010Service.downloadTLS2D010Template();
     this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading);
@@ -238,24 +264,35 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     const file = event.files[0];
     const formData = new FormData();
     formData.append('file', file);
+    this.excelLoading = true;
+    this.tls2d010Service.uploadExcel(formData)
+      .pipe(untilDestroyed(this), finalize(() => (this.excelLoading = false)))
+      .subscribe({
+        next: (res) => {
+          const data = res?.Data;
 
-    this.tls2d010Service.uploadExcel(formData).pipe(untilDestroyed(this)).subscribe({
-      next: (res) => {
-        const data = res?.Data;
-
-        if (data) {
-          if (data.ErrorFilePath) {
-            // 有錯誤檔：顯示錯誤提示
-            this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
-            // 自動下載錯誤檔
-            this.downloadErrorFile(data.ErrorFilePath);
-          } else {
-            // 沒有錯誤檔：顯示成功筆數
-            this.messageService.infoBubble(`匯入成功，筆數：${data.SuccessCount}`);
+          if (data) {
+            if (data.ErrorFilePath) {
+              // 有錯誤檔：顯示錯誤提示
+              this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
+              // 自動下載錯誤檔
+              this.downloadErrorFile(data.ErrorFilePath);
+            } else if (data.Success === false) {
+              // 匯入失敗但沒有錯誤檔：直接顯示錯誤訊息
+              const backendMessage = res?.Message || '';
+              const errorDetail = Array.isArray(data.Errors) && data.Errors.length
+                ? data.Errors.join('\n')
+                : '';
+              const finalMessage = backendMessage || errorDetail || '匯入失敗，請聯絡系統管理員';
+              this.messageService.errorBubble(finalMessage);
+            } else {
+              // 成功：顯示成功筆數並重新查詢
+              this.messageService.infoBubble(`匯入成功，筆數：${data.SuccessCount}`);
+              this.onSubmit(this.queryForm);
+            }
           }
-        }
-      },
-    });
+        },
+      });
   }
 
   /** 自動下載錯誤檔 */

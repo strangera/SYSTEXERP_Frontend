@@ -85,7 +85,7 @@ export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements 
     // { field: 'dc', header: '借/貸' },
     { field: 'AccNo', header: '會計科目代號' },
     { field: 'AccCName', header: '會計科目名稱' },
-    { field: 'Ven_No', header: '廠商代號' },
+    { field: 'Ven_No', header: '廠商編號' },
     { field: 'NoteDesc', header: '摘要', type: 'input', validate: [validateRequired], width: '250px' },
     {
       field: 'D_Amt', header: '借方金額',

@@ -53,7 +53,7 @@
       </div>
 
       <app-table-edit class="col-12" tableKey="TLS52010Detail" [columns]="editColumns" [data]="data"
-        (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
+        (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [loading]="loading"
         (dataChange)="data = $event;calculateTotals()" [tableRequired]="true" [rowValidate]="validateEntireRow"
         [disabled]="isFormReadable || !(dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value) ? true : false"
         (insert)="dialogVisible = true" [showInsert]="isFormCreateable || rowdata?.PO_Status === '0'"

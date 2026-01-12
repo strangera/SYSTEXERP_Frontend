@@ -34,13 +34,13 @@
               [control]="queryForm.controls.STK_Date" [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number label="顯示行數" controlName="DisplayRowNumber"
-              [control]="queryForm.controls.DisplayRowNumber" [submitted]="submitted"></app-input-number>
+            <app-input-number label="顯示行數" controlName="PageSize" [control]="queryForm.controls.PageSize"
+              [submitted]="submitted"></app-input-number>
           </div>
-          <!-- <div class="col-12 md:col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton label="顯示庫存範圍" groupname="ShowStockRange" [control]="queryForm.controls.ShowStockRange"
               [options]="stockRangeOptions" [submitted]="submitted"></app-radiobutton>
-          </div> -->
+          </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>

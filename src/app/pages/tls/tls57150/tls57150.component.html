@@ -21,12 +21,12 @@
           <app-input-text class="col-12 md:col-6 lg:col-4" label="盤點單號" controlName="PST_NO"
             [control]="queryForm.controls.PST_NO" [submitted]="submitted" />
 
-          <app-dropdown-table class="col-12 md:col-6 lg:col-4" label="商品管理編號" controlName="PLU_MagNo"
-            [control]="queryForm.controls.PLU_MagNo" [submitted]="submitted" optionLabel="PLU_MagNo"
-            optionValue="PLU_MagNo" templateLabel="label" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
-            (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
-            [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
-            [totalRecords]="opTotalRecords">
+          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [showOverlay]="false" label="商品管理編號"
+            controlName="PLU_MagNo" [control]="queryForm.controls.PLU_MagNo" [submitted]="submitted"
+            optionLabel="PLU_MagNo" optionValue="PLU_MagNo" templateLabel="label" [suggestions]="suggestions"
+            [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
+            (formValueChanged)="onformValueChanged($event)" [formGroup]="opForm" [dialogData]="opData"
+            [dialogColumns]="opColumns" [loading]="opLoading" [totalRecords]="opTotalRecords">
             <app-input-text class="col-12 md:col-6" label="商品管理編號" controlName="queryNo"
               [control]="opForm.controls.queryNo" />
             <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"

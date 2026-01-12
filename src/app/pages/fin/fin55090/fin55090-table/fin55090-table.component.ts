@@ -13,6 +13,7 @@ export interface Fin55090Column {
 
 @Component({
   selector: 'app-table-subheader-grouping',
+  host: { 'table-edit-id': 'FIN55090' },
   templateUrl: 'fin55090-table.component.html',
   styleUrls: ['fin55090-table.component.scss'],
   standalone: true,

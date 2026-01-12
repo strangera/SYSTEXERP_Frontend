@@ -13,6 +13,7 @@ export interface Finfin55080Column {
 
 @Component({
   selector: 'app-table-subheader-grouping',
+  host: { 'table-edit-id': 'FIN55080' },
   templateUrl: 'fin55080-table.component.html',
   styleUrls: ['fin55080-table.component.scss'],
   standalone: true,

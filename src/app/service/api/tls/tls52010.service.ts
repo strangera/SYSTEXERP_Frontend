@@ -14,7 +14,7 @@ export interface IQueryTLS52010Request {
   PO_No?: string; // 採購單號
   HOS_No?: string; // 醫院代號
   LOGO_No?: string; // LOGO代碼
-  VEN_No?: string; // 廠商代號
+  VEN_No?: string; // 廠商編號
   PO_Status?: string; // 採購單狀態
   APPLY_Date_Start?: string; // 申請日期起
   APPLY_Date_End?: string; // 申請日期迄
@@ -32,7 +32,7 @@ export interface ITLS52010Data {
   id: number;
   PO_No: string; // 採購單號
   SYS_StoreNo: string; // 門店編號 (系統)
-  VEN_No: string; // 廠商代號
+  VEN_No: string; // 廠商編號
   LOGO_No: string; // LOGO代碼
   HOS_No: string; // 醫院代號
   HOS_NAME: string; // 醫院名稱
@@ -106,7 +106,7 @@ export interface IPOS2004DetailData {
 
 /** 商品管理編號/國際條碼/廠商貨號查詢商品 (queryPOS2004Detail) 的請求介面 */
 export interface IQueryPOS2004DetailRequest {
-  VEN_No: string | null; // 廠商代號
+  VEN_No: string | null; // 廠商編號
   queryNo: string; // 查詢編號 (商品管理編號/國際條碼/廠商貨號)
   PLU_Name?: string; // 商品名稱 (查詢條件，可選)
   LOGO_No: string | null; // LOGO代碼
@@ -137,7 +137,7 @@ export interface IQueryPOS2004DetailResponse {
 
 /** 查詢廠商所有商品 (queryPOS2004Detail_VEN_No) 的請求介面 */
 export interface IQueryPOS2004DetailByVenNoRequest {
-  VEN_No: string; // 廠商代號
+  VEN_No: string; // 廠商編號
   PLU_MagNo?: string; // 商品管理編號 (查詢條件，可選)
   PLU_Name?: string; // 商品名稱 (查詢條件，可選)
   CAT_LNo?: string; // 大分類代碼 (查詢條件，可選)
@@ -175,7 +175,7 @@ export interface ITLS52010Request {
   PO_No: string; // 採購單號
   ODM_TaxType: string;
   SYS_StoreNo: string; // 門店編號 (系統)
-  VEN_No: string; // 廠商代號
+  VEN_No: string; // 廠商編號
   LOGO_No: string; // LOGO代碼
   HOS_No: string; // 醫院代號
   PO_Status: string; // 資料狀態

@@ -4,6 +4,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { environment } from '../../../../environments/environment';
@@ -137,7 +138,8 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   // ----------------------------------------------------------------
   constructor(
     private tls51070Service: Tls51070Service,
-    private tls52010Service: Tls52010Service
+    private tls52010Service: Tls52010Service,
+    private readonly fileExportService: FileExportService
   ) {
     super();
   }
@@ -496,31 +498,11 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
       this.opLoading = false;
     });
   }
-
+  downloadTLS51070TemplateLoading = false;
   // 範本下載
   downloadTLS51070Template() {
-    this.tls51070Service.downloadTLS51070Template()
-      .subscribe((result: string) => {
-        // 1. 建立包含 BOM 的 Blob，確保 UTF-8 格式在 Windows 正常顯示
-        const bom = '\uFEFF';
-        const blob = new Blob([bom + result], { type: 'text/plain;charset=utf-8' });
-
-        // 2. 建立下載連結
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-
-        // 3. 設定下載檔名
-        a.download = 'TLS51070sample.txt';
-
-        // 執行下載
-        document.body.appendChild(a); // 將 a 加入 body 確保在部分瀏覽器相容性
-        a.click();
-        document.body.removeChild(a);
-
-        // 4. 釋放資源
-        window.URL.revokeObjectURL(url);
-      });
+    const export$ = this.tls51070Service.downloadTLS51070Template();
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.downloadTLS51070TemplateLoading = isLoading);
   }
 
   //用戶匯入大量圖檔

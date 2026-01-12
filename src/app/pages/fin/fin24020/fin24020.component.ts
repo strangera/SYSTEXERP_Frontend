@@ -58,7 +58,7 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
     { field: 'STATUS', header: '是否產生付款資料' },
     { field: 'NoteDesc', header: '備註' },
   ];
-  VEN_No_ParamOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商代號
+  VEN_No_ParamOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
   PTA_KeyOptions = [
     { label: '是', value: 'Y' },
     { label: '否', value: 'N' },

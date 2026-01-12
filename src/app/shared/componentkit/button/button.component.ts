@@ -106,7 +106,7 @@ export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
         this.showButton.set(true);
         const progNo = this.currentPageService.getCurrentProgNo();
         if (progNo) {
-          console.log(`按鈕元件(${this.btnType})通知表單(${progNo})已截取初始值`);
+          // console.log(`按鈕元件(${this.btnType})通知表單(${progNo})已截取初始值`);
           this.formStatusService.notifyReady(progNo);
         }
       });
@@ -133,7 +133,6 @@ export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
         this.form.reset();
       }
     }
-    console.log(this.form);
     this.clickEvent.emit();
   }
 }

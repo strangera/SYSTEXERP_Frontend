@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { FIN55120DetailItem, Fin55120Service, QueryFIN55120Request } from '@service/api/fin/fin55120.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { lastYearToday } from '@shared/models/system/query-form.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -25,7 +26,7 @@ import { formatAmount } from './fin55120-table-report/fin55120-table-report.mode
 })
 export class FIN55120Component extends BasicQueryPageComponent<FIN55120DetailItem> implements OnInit {
   queryForm = this.formBuilder.group({
-    YM: [new Date('2025/01/01'), [Validators.required]],
+    YM: [lastYearToday, [Validators.required]],
     Category: ['2', [Validators.required]],
     PrintSign: [true],
     ShowZero: [false],

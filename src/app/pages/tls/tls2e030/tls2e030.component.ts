@@ -1,4 +1,4 @@
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -8,7 +8,6 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatDate, formatYYYYMM, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -76,6 +75,7 @@ export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> imp
   constructor(
     public readonly tls2e030Service: Tls2e030Service,
     private readonly dropdown: DropdownApiService,
+    private readonly datePipe: DatePipe
   ) {
     super();
   }
@@ -124,7 +124,7 @@ export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> imp
   onSubmit(frm: FormGroup) {
     const body = {
       ...frm.value,
-      sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
+      sam_yyymm: this.datePipe.transform(frm.value.sam_yyymm, 'yyyyMM'),
       sam_termno: frm.value.sam_termno as number, // 確保型別是 number
       money_type: frm.value.money_type
     } as Tls2e030QueryBody; // 轉換為正確的 Request Body 型別
@@ -144,7 +144,7 @@ export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> imp
     this.handleSubmit(frm, () => {
       const baseBody = {
         ...frm.value,
-        sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
+        sam_yyymm: this.datePipe.transform(frm.value.sam_yyymm, 'yyyyMM'),
         sam_termno: frm.value.sam_termno as number,
         money_type: frm.value.money_type,
         isForce: false // 預設先不強制

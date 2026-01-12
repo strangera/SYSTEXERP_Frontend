@@ -123,4 +123,73 @@ export class DateUtils {
 
     return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
   }
+
+  /**
+   * 將任何日期格式轉換為 YYYYMM 字串 (年月格式)
+   * 使用本地時間避免時區問題
+   */
+  static toYYYYMM(date: any): string {
+    if (!date) return '';
+
+    // 已經是 YYYYMM 格式，直接返回
+    if (typeof date === 'string' && /^\d{6}$/.test(date)) {
+      return date;
+    }
+
+    // Date 物件，使用本地時間格式化（避免時區轉換）
+    if (date instanceof Date && !isNaN(date.getTime())) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      return `${year}${month}`;
+    }
+
+    // 字串格式處理
+    if (typeof date === 'string') {
+      // YYYY-MM-DD 格式
+      if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        const parts = date.split('-');
+        return `${parts[0]}${parts[1]}`;
+      }
+
+      // ISO 格式 (包含 T 的時間戳)
+      if (date.includes('T')) {
+        const datePart = date.split('T')[0];
+        const parts = datePart.split('-');
+        return `${parts[0]}${parts[1]}`;
+      }
+
+      // 其他分隔符號 (/, -)
+      if (/^\d{4}[\/-]\d{2}/.test(date)) {
+        const parts = date.split(/[\/-]/);
+        return `${parts[0]}${parts[1].padStart(2, '0')}`;
+      }
+    }
+
+    // 最後嘗試解析
+    try {
+      const parsed = new Date(date);
+      if (!isNaN(parsed.getTime())) {
+        const year = parsed.getFullYear();
+        const month = String(parsed.getMonth() + 1).padStart(2, '0');
+        return `${year}${month}`;
+      }
+    } catch (e) {
+      console.error('YYYYMM 轉換失敗:', date, e);
+    }
+
+    return '';
+  }
+
+  /**
+   * 格式化為顯示用的年月 (YYYY/MM)
+   */
+  static formatYYYYMMForDisplay(dateString: string): string {
+    if (!dateString) return '';
+    const yyyymm = this.toYYYYMM(dateString);
+    if (!yyyymm || yyyymm.length !== 6) return '';
+
+    const year = yyyymm.substring(0, 4);
+    const month = yyyymm.substring(4, 6);
+    return `${year}/${month}`;
+  }
 }

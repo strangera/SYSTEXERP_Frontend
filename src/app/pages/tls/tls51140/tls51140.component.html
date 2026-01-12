@@ -26,8 +26,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS45030Table" dataKey="id" [data]="data" [columns]="columns" (detail)="onDetail($event)"
-    (edit)="onEdit($event)" [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
-    [lazy]="true" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [loading]="loading"
-    [showCheckBox]="true" (delete)="onDelete($event)"></app-table>
+  <app-table-report tableKey="TLS45030Table" dataKey="id" [data]="data" [columns]="columns" (detail)="onDetail($event)"
+    (edit)="onEdit($event)" [totalRecords]="totalRecords" [loading]="loading" [showCheckBox]="true"
+    (delete)="onDelete($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="tls51140Service.queryTLS51140.bind(tls51140Service)"></app-table-report>
 </div>

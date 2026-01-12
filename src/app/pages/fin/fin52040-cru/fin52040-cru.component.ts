@@ -8,7 +8,6 @@ import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownTableComponent } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -51,8 +50,7 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // CompNo: ['', [Validators.required, Validators.maxLength(6)]], //  公司代號
-
-    RefCode: ['', [Validators.required, Validators.maxLength(30)]], // 對象別代碼 (不可重複)
+    RefCode: ['', [Validators.required, Validators.maxLength(30)]], // 對象別代碼 (不可重複) 改為預設帶入統一編號
     RefName: ['', [Validators.required, Validators.maxLength(30)]], // 對象別名稱 (可編輯)
     UniformNo: ['', [Validators.maxLength(10)]], // 統一編號
 
@@ -75,7 +73,6 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
   selectedItemsDialog: any[] = [];
   dialogColumns: Column[] = [
     { field: 'VEN_No', header: '廠商編號' },
-    // { field: 'brand', header: '品牌' },
     { field: 'VEN_Name', header: '廠商名稱' },
     { field: 'VEN_Uniform', header: '統一標號' },
     { field: 'VEN_ShortName', header: '簡稱' },
@@ -83,8 +80,7 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
   dialogLoading = false;
   // ----------------------------------------------------------------
   constructor(
-    private fin52040Service: FIN52040Service,
-    private validationService: ValidationService
+    private fin52040Service: FIN52040Service
   ) {
     super(); // 呼叫父類建構子
   }
@@ -92,6 +88,13 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
   ngOnInit(): void {
     this.initializePage('FIN52040', this.dataForm);
     this.loadOptions();
+
+    console.log('Receive', this.dataForm.value);
+
+    if (this.crudstatus == CRUDStatus.Edit) {
+      // 編輯模式避免更改主鍵
+      this.dataForm.get('UniformNo')?.disable();
+    }
   }
 
   onSubmit(frm: FormGroup) {
@@ -152,7 +155,7 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
   });
   suggestions: any[] = [];
   fieldsConfig: any[] = [
-    { field: 'VEN_No', header: '廠商編號', mainDataField: true },
+    { field: 'UniformNo', header: '統一編號', mainDataField: true },
   ];
   opData: any[] = [];// overlayPanel 裡面的table
   rawOpData: any = [];// 原始資料
@@ -166,14 +169,14 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
   ];
 
   onAutoCompleteInputChange(event: any) {
-    const refCode = this.dataForm.get('RefCode')?.value?.toString().trim() || '';
-    console.log('自動查詢', refCode);
-
-    if (refCode) {
+    const searchText = this.dataForm.get('UniformNo')?.value?.toString().trim() || '';
+    if (searchText) {
       this.opData = this.rawOpData.filter((item: any) =>
-        (item.VEN_No && item.VEN_No.includes(refCode)) ||
-        (item.VEN_Name && item.VEN_Name.includes(refCode))
+        (item.VEN_Uniform && item.VEN_Uniform.includes(searchText)) ||
+        (item.VEN_Name && item.VEN_Name.includes(searchText))
       );
+    } else {
+      this.opData = [...this.rawOpData];
     }
   }
 
@@ -185,9 +188,9 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
     });
   }
   onSelect(event: any) {
-    // console.log('選取的廠商資料', event);
+    console.log('選取的廠商資料', event);
     this.dataForm.patchValue({
-      RefCode: event.VEN_No,
+      RefCode: event.VEN_Uniform, // 將統一編號帶入給 RefCode
       RefName: event.VEN_Name,
       UniformNo: event.VEN_Uniform
     });
@@ -202,7 +205,9 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
         ...item,
         RefCode: item.VEN_No,       // 對象別代碼
         RefName: item.VEN_Name,     // 對象別名稱
-        UniformNo: item.VEN_Uniform // 統一編號
+        UniformNo: item.VEN_Uniform, // 統一編號
+
+        DisplayName: `${item.VEN_Uniform || ''}-${item.VEN_Name || ''}`, // 顯示名稱: 統一編號+廠商名稱
       }));
     });
   }

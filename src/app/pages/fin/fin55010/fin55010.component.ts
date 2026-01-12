@@ -3,25 +3,26 @@ import { Component, OnInit } from '@angular/core';
 import { finalize } from 'rxjs';
 
 import {
-  FIN55010Service,
   FIN55010Detail,
+  FIN55010Service,
 } from '../../../service/api/fin/fin55010.service';
 
+import { Location } from '@angular/common';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
+import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { FormsModule, ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 
 @Component({
   selector: 'app-fin55010',
@@ -47,6 +48,7 @@ export class FIN55010Component extends BasicQueryPageComponent<FIN55010Detail> i
   constructor(
     private fin55010Service: FIN55010Service,
     private dropDownListService: DropDownListService,
+    private readonly location: Location,
   ) {
     super();
   }
@@ -182,6 +184,7 @@ export class FIN55010Component extends BasicQueryPageComponent<FIN55010Detail> i
     }
 
     // 儲存交接資料到 localStorage（含 ProgNo）
+    // 參考fin54025寫法
     try {
       const handoff = {
         vouNo,
@@ -190,14 +193,15 @@ export class FIN55010Component extends BasicQueryPageComponent<FIN55010Detail> i
       };
       localStorage.setItem('FIN55010_CRU_HANDOFF', JSON.stringify(handoff));
       localStorage.setItem('FIN55010_CRU_PROGNO', 'FIN55010'); // ✅ 存 ProgNo
+      const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55010cru');
+      const finalUrl = `${window.location.origin}${externalUrl}`;
+      // 開新分頁
+      window.open(finalUrl, '_blank', 'noopener');
       console.log('[FIN55010] 已儲存 handoff:', handoff);
     } catch (err) {
       console.error('[FIN55010] handoff save failed:', err);
       this.messageService?.warnBubble?.('寫入交接資料失敗。');
     }
-
-    // 開新分頁
-    window.open('/account/fin/fin55010cru', '_blank', 'noopener');
   }
 
   loadOptions() {
@@ -227,11 +231,6 @@ export class FIN55010Component extends BasicQueryPageComponent<FIN55010Detail> i
         next: (r) => this.handleFileExport(r, '.pdf', '傳票列印'),
         error: () => this.messageService?.warnBubble?.('匯出 PDF 失敗。'),
       });
-  }
-
-  // TODO: 待實作 參考fin55050
-  onExportXLSX() {
-
   }
 
   // ========= 本地工具 =========

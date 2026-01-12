@@ -97,7 +97,7 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
     { field: 'AccNo4Name', header: '科目名稱', visible: true },
     { field: 'AccNo', header: '科目代號', visible: true },
     { field: 'AccCName', header: '科目名稱', visible: true },
-    { field: 'DetailNo', header: '廠商代號/名稱', visible: true },
+    { field: 'DetailNo', header: '廠商編號/名稱', visible: true },
     { field: 'ORG_ID', header: '部門代號', visible: true },
     { field: 'Org_Name', header: '部門名稱', visible: true },
     { field: 'ProjectNo', header: '活動代號', visible: true },
@@ -340,7 +340,7 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
         })) ?? [];
       });
 
-    // 廠商代號
+    // 廠商編號
     this.dropDownListService.queryPOS2013_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(response => {

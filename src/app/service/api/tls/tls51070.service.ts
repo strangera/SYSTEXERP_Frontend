@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -80,16 +80,17 @@ export class Tls51070Service {
 
   //產生標籤檔資料
   exportLabel(data: any[]): Observable<string> {
-    return this.http.post(`${environment.ApiUrl}/ExportLabel/ExportLabel`, data, {
+    return this.http.post(`${environment.ApiUrl}/ExportLabel/ExportLabel_Other`, data, {
       responseType: 'text'  // 後端回傳的是純文字
     });
   }
 
   //下載excel範本
-  // 修改後：下載 TXT 內容
-  downloadTLS51070Template(): Observable<string> {
+  // 下載 excel 範本
+  downloadTLS51070Template(): Observable<HttpResponse<Blob>> {
     return this.http.get(`${this.apiUrl}/downloadTLS51070Template`, {
-      responseType: 'text' // 改為 text 方便後續處理字串
+      observe: 'response',
+      responseType: 'blob'
     });
   }
 

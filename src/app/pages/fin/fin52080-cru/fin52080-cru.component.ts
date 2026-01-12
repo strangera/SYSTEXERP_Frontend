@@ -19,7 +19,6 @@ import { AccDCType, FIN52080Data, FIN52080Query, FIN52080Tree, LedgerMDType, Vou
 @Component({
   selector: 'app-fin52080-cru',
   templateUrl: './fin52080-cru.component.html',
-  styleUrl: './fin52080-cru.component.scss',
   standalone: true,
   imports: [
     FormsModule,
@@ -140,7 +139,7 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      const raw = <FIN52080Query>this.dataForm.getRawValue();
+      const raw = this.dataForm.getRawValue() as FIN52080Query;
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
         v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       ));

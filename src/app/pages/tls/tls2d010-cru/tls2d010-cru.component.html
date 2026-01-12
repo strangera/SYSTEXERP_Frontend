@@ -39,11 +39,11 @@
             [control]="dataFormCounter.controls.tlt_contract_edate" [submitted]="submitted"></app-input-text>
         </div>
       </div>
-      <app-table-edit #counterTable title="新增專櫃扣款" tableKey="TLSD010Detail" [data]="data" class="col-12"
-        [columns]="columnsCounter" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
-        (dataChange)="onCounterDataChange($event)" dataStatusField="status" [loading]="loading" [tableRequired]="true"
-        [disabled]="isDetailMode" [showCheckBox]="!isDetailMode" [showDelete]="!isDetailMode"
-        [canInsert]="!isDetailMode" [showInsert]="false"></app-table-edit>
+      <app-table-edit #counterTable title="新增專櫃扣款" tableKey="TLSD010Detail" [data]="data" class="col-12" dataKey="rowId"
+        [columns]="columnsCounter" (selectionChange)="counterSelectedItems = $event"
+        [selectedItems]="counterSelectedItems" (dataChange)="onCounterDataChange($event)" dataStatusField="status"
+        [loading]="loading" [tableRequired]="true" [disabled]="isDetailMode" [showCheckBox]="!isDetailMode"
+        [showDelete]="!isDetailMode" [canInsert]="!isDetailMode" [showInsert]="false"></app-table-edit>
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataFormCounter" (clickEvent)="onLocalCancel('counter')" />
         <app-button btnType="submit" [loading]="loading" />
@@ -51,13 +51,6 @@
     </form>
     <form *ngIf="currentCreateType === 'normal'" [formGroup]="dataFormNormal" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
-        <!-- 扣款類型 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="扣款類型" controlName="CAP_Type" [options]="CAP_TypeOptions" optionLabel="label"
-            optionValue="value" [control]="dataFormNormal.controls.CAP_Type" [submitted]="submitted"
-            (valueChange)="onCAP_TypeChange($event)"></app-dropdown>
-        </div>
-
         <!-- 扣款項目 -->
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="扣款項目" controlName="CAP_Item"
           [options]="FilterCAP_ItemOptions" optionLabel="label" optionValue="value"
@@ -68,16 +61,17 @@
         <app-input-text class="col-12 md:col-6 lg:col-4" label="扣款名稱" controlName="CAP_Name"
           [control]="dataFormNormal.controls.CAP_Name" [submitted]="submitted"></app-input-text>
 
-        <!-- 扣款日期 -->
+        <!-- 扣款日期（關閉日曆時同步更新下方明細的 tpy_date） -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar label="扣款日期" controlName="tpy_date" calendarType="dateOne"
-            [control]="dataFormNormal.controls.tpy_date" [submitted]="submitted"></app-calendar>
+            [control]="dataFormNormal.controls.tpy_date" [submitted]="submitted"
+            (calendarEvent)="onNormalFormDateChange($event)"></app-calendar>
         </div>
 
-        <!-- 扣款金額 -->
+        <!-- 扣款金額（變更時同步更新下方明細的 tpy_net） -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number label="扣款金額" controlName="tpy_net" [control]="dataFormNormal.controls.tpy_net"
-            [submitted]="submitted"></app-input-number>
+            [submitted]="submitted" (valueChange)="onNormalFormAmountChange($event)"></app-input-number>
         </div>
 
         <!-- 課稅別 (唯讀) -->
@@ -109,12 +103,12 @@
         </div>
       </div>
 
-      <!-- table-edit：一般扣款明細（保留左上角新增 + 按鈕，點擊開啟專櫃選擇彈窗） -->
-      <app-table-edit #normalTable title="新增扣款" tableKey="TLSD010Detail" [data]="data" class="col-12"
-        [columns]="columnsNormal" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
+      <!-- table-edit：一般扣款明細（點擊開啟專櫃選擇彈窗） -->
+      <app-table-edit #normalTable title="新增扣款" tableKey="talent_id" [data]="data" class="col-12" dataKey="rowId"
+        [columns]="columnsNormal" (selectionChange)="normalSelectedItems = $event" [selectedItems]="normalSelectedItems"
         (dataChange)="onCounterDataChange($event)" dataStatusField="status" [loading]="loading" [tableRequired]="true"
         [disabled]="isDetailMode" [showCheckBox]="!isDetailMode" [showDelete]="!isDetailMode" [canInsert]="false"
-        [showInsert]="!isDetailMode" (insert)="onOpenTalentDialog()"></app-table-edit>
+        [showInsert]="!isDetailMode" [enableTabInsert]="true" (insert)="onOpenTalentDialog()"></app-table-edit>
 
       <!-- 按鈕 -->
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -127,9 +121,10 @@
 
 <app-dialog [visible]="talentDialogVisible" header="選擇專櫃" (visibleChange)="talentDialogVisible = $event"
   (save)="onTalentDialogSave()" [disable]="!selectedTalents || selectedTalents.length === 0">
-  <app-table tableKey="tls2d010TalentDialogTable" dataKey="tlt_no" [data]="talentDialogData"
+  <app-table-report tableKey="tls2d010TalentDialogTable" dataKey="tlt_no" [data]="talentDialogData"
     [columns]="talentDialogColumns" [selectedItems]="selectedTalents" (selectionChange)="selectedTalents = $event"
-    [showHeader]="false" [showManage]="false" [showCheckBox]="true" [showCaption]="false" [scrollHeight]="'400px'"
-    [loading]="talentDialogLoading" [isRowSelectable]="isTalentRowSelectable.bind(this)">
-  </app-table>
+    [showCaption]="false" [showFilter]="false" [showReportMode]="false" [showExcel]="false" [showDelete]="false"
+    [showManage]="false" [showCheckBox]="true" [totalRecords]="talentTotalRecords" [lastQueryBody]="talentLastQueryBody"
+    [queryFunction]="queryTalentDialog" [loading]="talentDialogLoading">
+  </app-table-report>
 </app-dialog>

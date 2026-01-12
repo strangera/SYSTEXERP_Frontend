@@ -1,29 +1,26 @@
-import { Cpm12040Data, Cpm12040Service, QueryCpm12040Request } from './../../../service/api/cpm/cpm12040.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-// 基礎元件
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatDateTime } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-// 擴充元件
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-// 模型
-import { Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
-// 服務
-import { getSYS1000Options } from '@service/system/sys1000.service';
-import { finalize } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { Cpm12040Data, Cpm12040Service, QueryCpm12040Request } from './../../../service/api/cpm/cpm12040.service';
 
 //5.1.2.4 顧客意見來源維護
 @Component({
   selector: 'app-cpm12040',
   templateUrl: './cpm12040.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, TableComponent, TranslateModule]
+  imports: [TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, TranslateModule]
 })
 export class CPM12040Component extends BasicQueryPageComponent<QueryCpm12040Request> implements OnInit {
   totalRecords = 0;
@@ -32,16 +29,17 @@ export class CPM12040Component extends BasicQueryPageComponent<QueryCpm12040Requ
   queryForm = this.formBuilder.nonNullable.group({
     SYS_Code: [null], // 意見來源代碼
     SYS_Name: [null, Validators.maxLength(60)], // 意見來源名稱
-    ...createPaginationConfig([{ field: 'SYS_Code', order: 1 }])
+    PageSize: [30],
+    PageIndex: [1],
   });
-
+  lastQueryBody: QueryCpm12040Request | null = null;
   SUGG_SOURCE = getSYS1000Options('SUGG_SOURCE');
 
   // 資料列表
   data: Cpm12040Data[] = [];
 
   // 表格欄位定義
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'SYS_Code', header: '客戶意見來源代碼', visible: true },
     { field: 'SYS_Name', header: '客戶意見來源名稱', visible: true },
     { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },
@@ -56,7 +54,7 @@ export class CPM12040Component extends BasicQueryPageComponent<QueryCpm12040Requ
   selectedRows: Cpm12040Data[] = [];
 
   constructor(
-    private readonly cpm12040Service: Cpm12040Service,
+    public readonly cpm12040Service: Cpm12040Service,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -73,6 +71,7 @@ export class CPM12040Component extends BasicQueryPageComponent<QueryCpm12040Requ
         finalize(() => this.loading = false),
         untilDestroyed(this)
       ).subscribe(res => {
+        this.lastQueryBody = frm.value;
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
@@ -82,11 +81,16 @@ export class CPM12040Component extends BasicQueryPageComponent<QueryCpm12040Requ
 
   /** 刪除選中的資料 */
   onDelete(data: Cpm12040Data[]): void {
-    const idList = data.map(item => item.ID);
-    this.cpm12040Service.deleteCPM12040({ IDList: idList }).pipe(untilDestroyed(this)).subscribe(res => {
-      this.messageService.successBubble(res.Message);
-      this.selectedRows = []; // 清空選取
-      this.onSubmit(this.queryForm); // 重新查詢
+    this.messageService.confirm({
+      header: `是否確認刪除 ${data.length} 筆資料?`,
+      accept: () => {
+        const idList = data.map(item => item.ID);
+        this.cpm12040Service.deleteCPM12040({ IDList: idList }).pipe(untilDestroyed(this)).subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          this.selectedRows = []; // 清空選取
+          this.onSubmit(this.queryForm); // 重新查詢
+        });
+      }
     });
   }
 }

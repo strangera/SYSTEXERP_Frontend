@@ -19,6 +19,7 @@ import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableModule, TableRowReorderEvent } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
+import { debounceTime, Subject } from 'rxjs';
 import { TableEditDataService } from './services/table-edit-data.service';
 import { TableUtilityService } from './services/table-edit-utility.service';
 import { TableValidationService } from './services/table-validation.service';
@@ -33,6 +34,7 @@ import { TemplateCellComponent } from './table-edit-cell/template-cell.component
 import { ColumnGroup, EditColumn, FieldChangeEvent } from './table-edit.model';
 @Component({
   selector: 'app-table-edit',
+  host: { 'table-edit-id': '複製時請自行取唯一名' },
   templateUrl: './table-edit.component.html',
   styleUrl: './table-edit.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -115,11 +117,14 @@ export class TableEditComponent implements OnChanges {
   @Input() errorMessage: string | undefined; // 錯誤訊息
   // Footer
   @Input() footerData: any;
+  private footerUpdateSubject = new Subject<void>();
   protected _calculatedFooterData: any = {}; // 用於儲存計算結果
   @Input() footerSummaryLabel = '總計'; // 新增：Footer 摘要行的標籤名稱
   @Input() showFooter = false;
   @Input() scrollable = false; // 是否要滾輪
   @Input() showPaginator = false; // 是否顯示 分頁器
+  // 鍵盤操作相關
+  @Input() enableTabInsert = false; // 是否在最後一列最後一個欄位按 Tab 觸發新增
 
   protected readonly tableUtilityService = inject(TableUtilityService);
   protected readonly cdr = inject(ChangeDetectorRef);
@@ -136,6 +141,16 @@ export class TableEditComponent implements OnChanges {
     return this.isRowSelectable(data, index, this.data) && !data._isAutoInsertCandidate;// 不允許選擇新增中的列
   };
   public tableDataEmpty = false;                    // table 資料是否為空
+
+  constructor() {
+    // 初始化時建立訂閱
+    this.footerUpdateSubject.pipe(
+      debounceTime(300) // 停止輸入 300ms 後才真正執行大數據計算
+    ).subscribe(() => {
+      this._calculatedFooterData = this.calculateFooterData();
+      this.cdr.markForCheck();
+    });
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     // 檢查 'data' 是否有變動
@@ -219,6 +234,40 @@ export class TableEditComponent implements OnChanges {
       }
     }
   }
+  /**
+   * 儲存格 keydown 事件處理：
+   * - 一律阻止事件往外傳（維持原本行為）
+   * - 若有啟用 enableTabInsert，且在最後一列最後一欄按下 Tab，則自動觸發新增。
+   */
+  onCellKeydown(event: KeyboardEvent, rowIndex: number, colIndex: number): void {
+    event.stopPropagation();
+
+    if (!this.enableTabInsert) return;
+    if (event.key !== 'Tab' || event.shiftKey) return;
+    if (this.disabled) return;
+
+    const lastRowIndex = this._tableData.length - 1;
+    const lastColIndex = this.columns.length - 1;
+
+    // 只在最後一列最後一欄時處理
+    if (rowIndex !== lastRowIndex || colIndex !== lastColIndex) return;
+
+    // 若已經有自動候選列，就不再自動新增，避免重複
+    const hasCandidate = this._tableData.some(r => r._isAutoInsertCandidate);
+    if (hasCandidate) return;
+
+    // 延遲執行，避免影響瀏覽器原生 Tab 行為與焦點計算
+    setTimeout(() => {
+      // 若外部有定義 insert 事件（例如 TLS2D010 打開專櫃對話框），優先觸發 insert
+      if (this.showInsert && this.insert.observers.length > 0) {
+        this.insert.emit();
+      } else if (this.canInsert) {
+        // 否則使用共用的 insertRow 新增一列
+        this.insertRow();
+      }
+      this.cdr.markForCheck();
+    });
+  }
   onSelectionChange(event: any) {
     if (this.disabled) { return; }
     // 使用 zone. runOutsideAngular 優化效能
@@ -274,7 +323,9 @@ export class TableEditComponent implements OnChanges {
 
     // 觸發 fieldChange 事件
     this.fieldChange.emit({ rowData, field: col.field, value, index });
-    this._calculatedFooterData = this.calculateFooterData(); // 新增
+    // 將原本直接計算改為發送訊號
+    // this._calculatedFooterData = this.calculateFooterData();
+    this.footerUpdateSubject.next();
     // 發射 cleanData 給父層
     this.dataChange.emit(cleanData);
     this.cdr.markForCheck();

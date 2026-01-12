@@ -1,4 +1,3 @@
-import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -12,7 +11,6 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
 //
@@ -21,7 +19,6 @@ import { Column, createPaginationConfig, formatDateTime } from '../../../shared/
 @Component({
   selector: 'app-cpm12060',
   templateUrl: './cpm12060.component.html',
-  styleUrl: './cpm12060.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -30,11 +27,9 @@ import { Column, createPaginationConfig, formatDateTime } from '../../../shared/
     FormsModule,
     ReactiveFormsModule,
     DropdownComponent,
-    InputTextComponent,
     TableComponent,
     TranslateModule,
     CalendarRangeComponent,
-    AsyncPipe
   ]
 })
 export class CPM12060Component extends BasicQueryPageComponent<CPM12060Data> implements OnInit {

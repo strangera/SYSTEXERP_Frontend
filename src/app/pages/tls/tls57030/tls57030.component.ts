@@ -7,6 +7,7 @@ import { IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/t
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatAmount } from '@shared/componentkit/table/table.model';
@@ -19,7 +20,6 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 
 @Component({
   selector: 'app-tls57030',
@@ -34,13 +34,13 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
     DropdownComponent,
     InputTextComponent,
     CalendarComponent,
-    RadiobuttonComponent,
     InputNumberComponent,
     ButtonComponent,
     TranslateModule,
     TableReportComponent,
     AsyncPipe,
-    DropdownTableComponent
+    DropdownTableComponent,
+    RadiobuttonComponent
   ],
 })
 export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> implements OnInit {
@@ -50,9 +50,8 @@ export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> i
     PLU_MagNo: [null, [Validators.maxLength(20)]],
     PLU_No: [null as string | null],
     PLU_OrgPLUNo: [null, [Validators.maxLength(30)]],
-    STK_Date: [new Date()],
+    STK_Date: [new Date(), [Validators.required]],
     ShowStockRange: ['1'],
-    DisplayRowNumber: [30],
     PageSize: [30],
     PageIndex: [1]
   });
@@ -104,9 +103,8 @@ export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> i
     this.handleSubmit(frm, () => {
       const body = {
         ...frm.value,
-        STK_Date: this.datePipe.transform(frm.value.StartDate, 'yyyy-MM-dd'),
-        DisplayRowNumber: String(frm.value.DisplayRowNumber) || '30',
-        PageSize: frm.value.DisplayRowNumber || 30
+        STK_Date: this.datePipe.transform(frm.value.STK_Date, 'yyyy-MM-dd'),
+        PageSize: frm.value.PageSize || 30
       }
 
       this.tls57030Service.queryTLS57030(body).pipe(finalize(() => this.loading = false)).subscribe(res => {

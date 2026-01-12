@@ -27,9 +27,9 @@
 </div>
 
 <div class="card">
-  <app-table dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+  <app-table-report dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [showCheckBox]="true" (delete)="onDelete($event)" (selectionChange)="selectedRows = $event"
-    [selectedItems]="selectedRows" [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading"></app-table>
+    [selectedItems]="selectedRows" [totalRecords]="totalRecords" [loading]="loading"
+    [queryFunction]="cpm12010Service.queryCPM12010.bind(cpm12010Service)"
+    [lastQueryBody]="lastQuery"></app-table-report>
 </div>
