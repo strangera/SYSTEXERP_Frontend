@@ -78,9 +78,9 @@ export class NotificationMessageComponent implements OnInit {
       this.blockedDocument = blocked;
     });
 
-    this.notificationService.blockUiMsg$.pipe(untilDestroyed(this)).subscribe(() => {
-      this.blockedDocument = false;
-    });
+    // this.notificationService.blockUiMsg$.pipe(untilDestroyed(this)).subscribe(() => {
+    //   this.blockedDocument = false;
+    // });
 
     this.notificationService.inputBoxMsg$.pipe(untilDestroyed(this)).subscribe((opts) => {
       this.inputBoxDisplay = true;

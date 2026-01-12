@@ -92,6 +92,9 @@ export class Tls24010Pos5007Component implements OnChanges {
                   ...item,
                   label: `${item.PLU_MagNo} - ${item.PLU_Name}`
                 }));
+                if (this.isFormCreateable) {
+                  this.insertRow();
+                }
               } else {
                 this.messageService.errorBubble('此專櫃無銷售商品', '無法新增');
               }
@@ -130,26 +133,63 @@ export class Tls24010Pos5007Component implements OnChanges {
   }
 
   getPLU_Name(rowData: POS5007Data): string {
+    if (this.store_way === STORE_WAY.專櫃) {
+      return this.TLT_Name || '';
+    }
     return this.TLT_NoOptions.find(item => item.No === rowData.PLU_No)?.Name || '';
   }
 
   insertRow(): void {
-    this.POS5007Data.push({
-      id: this.index + 1,
+    // 修正 index 累加
+    this.index++;
+
+    // 1. 決定基礎資料 (自營/專櫃共通)
+    const newRow: POS5007Data = {
+      id: this.index,
       PLU_MagNo: this.store_way === STORE_WAY.專櫃 ? this.POS2004Options[0] : undefined,
-      PLU_No: this.store_way === STORE_WAY.專櫃 ? this.POS2004Options[0].PLU_No : undefined,
+      PLU_No: this.store_way === STORE_WAY.專櫃 ? (this.TLT_No || '') : undefined,
       PLU_Name: this.store_way === STORE_WAY.專櫃 ? this.TLT_Name : undefined,
       TXN_Qty: 1,
       PLU_SalePrc: 0,
       TXN_Amt: 0,
       TXN_Disc: 0,
       TXN_SaleAmt: 0,
-      tlt_id: this.tlt_idOptions[0]?.tlt_id,
-      PLU_TaxType: this.tlt_idOptions[0]?.cag_taxtype ?? '0',
-      TXN_DiscCode: this.tlt_idOptions[0]?.cag_barcode,
-      TXN_DiscCode_Name: this.tlt_idOptions[0]?.cag_barcode_name
-    });
-    this.index++;
+    };
+
+    // 2. 處理類別與稅別相關邏輯 (主要針對專櫃模式)
+    if (this.store_way === STORE_WAY.專櫃) {
+      if (this.tlt_idOptions && this.tlt_idOptions.length > 0) {
+        // 正常情況：取第一個下拉選項
+        const defaultCharge = this.tlt_idOptions[0];
+        newRow.tlt_id = defaultCharge.tlt_id;
+        newRow.tlt_id_desc = defaultCharge.tlt_id_desc;
+        newRow.PLU_TaxType = defaultCharge.cag_taxtype ?? '1'; // 預設應稅
+        newRow.TXN_DiscCode = defaultCharge.cag_barcode;
+        newRow.TXN_DiscCode_Name = defaultCharge.cag_barcode_name;
+      } else {
+        // 特殊情況：沒抓到類別下拉，給予系統預設值
+        newRow.tlt_id = "0";
+        newRow.tlt_id_desc = "0";
+        newRow.PLU_TaxType = "1"; // 應稅
+        newRow.TXN_DiscCode = "000";
+        newRow.TXN_DiscCode_Name = "正品";
+
+        // 同步把這筆預設值塞入 options，避免下拉選單空白
+        if (!this.tlt_idOptions.find(o => o.tlt_id === "0")) {
+          this.tlt_idOptions = [{
+            tlt_id: "0",
+            tlt_id_desc: "0",
+            label: "0 - 0",
+            cag_taxtype: "1",
+            cag_barcode: "000",
+            cag_barcode_name: "正品"
+          } as any];
+        }
+      }
+    }
+
+    this.POS5007Data = [...this.POS5007Data, newRow];
+    this.calculateLastYearTotal();
   }
 
   deleteRow(rowData: POS5007Data[]): void {
@@ -164,10 +204,13 @@ export class Tls24010Pos5007Component implements OnChanges {
     this.calculateLastYearTotal();
   }
   onChangeTLT_ID(rowData: POS5007Data) {
-    const item = this.tlt_idOptions.find((item) => item.tlt_id === rowData.tlt_id);
-    rowData.PLU_TaxType = item?.cag_taxtype;
-    rowData.TXN_DiscCode = item?.cag_barcode;
-    rowData.TXN_DiscCode_Name = item?.cag_barcode_name;
+    const selected = this.tlt_idOptions.find((item) => item.tlt_id === rowData.tlt_id);
+    if (selected) {
+      rowData.tlt_id_desc = selected.tlt_id_desc;
+      rowData.PLU_TaxType = selected.cag_taxtype;
+      rowData.TXN_DiscCode = selected.cag_barcode;
+      rowData.TXN_DiscCode_Name = selected.cag_barcode_name;
+    }
   }
   onChangePLU_MagNo(rowData: POS5007Data) {
     if (!rowData.PLU_MagNo) {

@@ -3,6 +3,8 @@
 export const yesterday = (() => {
   const d = new Date();
   d.setDate(d.getDate() - 1);
+  // 將時間設定為 00:00:00.000
+  d.setHours(0, 0, 0, 0);
   return d;
 })();
 // 明天

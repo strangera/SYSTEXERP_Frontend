@@ -17,6 +17,7 @@ export interface IDropdownItem {
   HOS_No?: string; // 品牌編號
   store_way?: string;
   talent_id?: number;
+  rece_yn?: string;
   PAY_Type?: string;
   label?: string; // 用於顯示的標籤
   CAT_LNo?: string;
