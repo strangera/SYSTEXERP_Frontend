@@ -61,7 +61,13 @@ export class FIN13010CRUComponent
     PUR_GUINo_Correspond: [''], // 發票號碼
     PUR_GUIDate: ['', Validators.required], // 領用日期
     PUR_VoucherType: [''], // 發票格式
-    PUR_RepYYYYMM: [null, this.validationService.oddMonthValidator, this.validationService.minMonthValidator], // 發票年月
+   PUR_RepYYYYMM: [
+  null,
+  [
+    this.validationService.oddMonthValidator,
+    this.validationService.minMonthValidator,
+  ],
+],
     Credit_Type: ['', Validators.required], // 區別（折讓/退出）
     PUR_TaxType: ['', Validators.required], // 稅別
     PUR_Net: [undefined as any],
