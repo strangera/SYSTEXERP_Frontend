@@ -187,11 +187,14 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     }
     if (type === FIX_TYPE.交易資料作廢) {
       const isCross = this.isCrossPeriod(rowData.TXN_Date) && rowData.TXN_GUIBegNo !== '00000000';
+      // --- 預設時間為 23:00 的 Date 物件 ---
+      const defaultVoidDate = new Date();
+      defaultVoidDate.setHours(23, 0, 0, 0);
       this.messageService.confirm({
         header: isCross ? '開立折讓單' : '作廢交易資料',
         message: isCross ? '此筆交易已跨期，需進行開立折讓單作業。確定要開立折讓單嗎?' : '此筆交易未跨期，確定要作廢交易資料嗎?',
         contentTemplate: this.customTimeTemp,
-        templateContext: { data: { selectedDate: new Date() } },
+        templateContext: { data: { selectedDate: defaultVoidDate } },
         accept: (result) => {
           const selectedDate = result?.data?.selectedDate;
           if (!this.isValidVoidDate(selectedDate, rowData.TXN_Date)) return;
@@ -264,9 +267,12 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       this.messageService.errorBubble('請選擇作廢日期');
       return false;
     }
+    // 清除時間部分，只比較年月日
     const s = new Date(selected).setHours(0, 0, 0, 0);
     const t = new Date(txnDateStr).setHours(0, 0, 0, 0);
-    const today = new Date().setHours(0, 0, 0, 0);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
     if (s < t) {
       this.messageService.errorBubble('作廢日期不可早於交易日期');
       return false;

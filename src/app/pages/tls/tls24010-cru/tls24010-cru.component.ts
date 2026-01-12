@@ -359,7 +359,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   /** 輔助：驗證作廢日期 */
   private isValidVoidDate(selected: Date, txnDateStr: string): boolean {
     if (!selected) {
-      this.messageService.errorBubble('請選擇日期');
+      this.messageService.errorBubble('請選擇作廢日期');
       return false;
     }
     const s = new Date(selected).setHours(0, 0, 0, 0);
@@ -378,11 +378,14 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   updateTLS24010() {
     const rowData = this.rowdata as TLS24010Data;
     const isCross = this.isCrossPeriod(rowData.TXN_Date) && rowData.TXN_GUIBegNo !== '00000000';
+    // --- 預設時間為 23:00 的 Date 物件 ---
+    const defaultVoidDate = new Date();
+    defaultVoidDate.setHours(23, 0, 0, 0);
     this.messageService.confirm({
       header: this.type === FIX_TYPE.交易資料作廢 ? (isCross ? '開立折讓單' : '作廢交易資料') : FIX_TYPE_LABEL[this.type!],
       message: this.type === FIX_TYPE.交易資料作廢 ? (isCross ? '此筆交易已跨期，需進行開立折讓單作業。確定要開立折讓單嗎?' : '此筆交易未跨期，確定要作廢交易資料嗎?') : `確定要${FIX_TYPE_LABEL[this.type!]}嗎?`,
       contentTemplate: this.type === FIX_TYPE.交易資料作廢 ? this.customTimeTemp : undefined, // 丟入 HTML 樣板
-      templateContext: this.type === FIX_TYPE.交易資料作廢 ? { data: { selectedDate: new Date() } } : undefined,// 丟入資料空間
+      templateContext: this.type === FIX_TYPE.交易資料作廢 ? { data: { selectedDate: defaultVoidDate } } : undefined,
       accept: (result) => {
         this.loading = true;
         const body = {
@@ -510,7 +513,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         } else if (this.type === FIX_TYPE.交易資料作廢) {
           let finalSelectedDate = new Date(); // 預設為現在時間
           const selectedDate = result?.data?.selectedDate;
-          if (!this.isValidVoidDate(selectedDate, rowData.TXN_Date)) return;
+          if (!this.isValidVoidDate(selectedDate, rowData.TXN_Date)) { this.loading = false; return }
           finalSelectedDate = new Date(selectedDate);
           const data = {
             ...body,
