@@ -38,13 +38,13 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
     { field: 'sale_lock_USR_Name', header: '鎖定人員', visible: true },
   ];
 
-  /** 2. 試算紀錄 (Record) 欄位 */
+  /** 2. 結算紀錄 (Record) 欄位 */
   readonly recordColumns: ReportColumn[] = [
-    { field: 'CRT_Date', header: '試算日期', visible: true, format: formatDateTime },
-    { field: 'sam_yyymm', header: '試算年月', visible: true, format: formatYYYYMM },
+    { field: 'CRT_Date', header: '結算日期', visible: true, format: formatDateTime },
+    { field: 'sam_yyymm', header: '結算年月', visible: true, format: formatYYYYMM },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
-    { field: 'remarks', header: '試算說明', visible: true },
+    { field: 'remarks', header: '結算說明', visible: true },
     { field: 'CRT_USR_No', header: '執行者', visible: true },
   ];
 
@@ -71,7 +71,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
     PageSize: [30],
     PageIndex: [1],
     sam_yyymm: [new Date(), Validators.required],
-    // 試算
+    // 結算
     money_type: [this.money_typeOptions[2]?.value || null as string | null],
     sam_termno: [1],
     tlt_no: [null],
@@ -189,7 +189,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
   }
 
   /**
-   * 3. 查詢試算紀錄 (onQueryRecord) - 顯示試算紀錄列表
+   * 3. 查詢結算紀錄 (onQueryRecord) - 顯示結算紀錄列表
    * * @param frm 表單
    */
   onQueryRecord(frm: FormGroup) {
@@ -199,7 +199,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
         this.loading = false;
         return;
       }
-      // 1. 設定欄位為試算紀錄欄位
+      // 1. 設定欄位為結算紀錄欄位
       this.columns = this.recordColumns;
       this.isSettle = false;
       this.loading = true;
