@@ -106,10 +106,31 @@
     [footerData]="footerData"
     [showDelete]="false"
     [showManage]="false"
-    [showReportMode]="true"
+    [showReportMode]="false"
     [loading]="loading"
     [queryFunction]="tls57120Service.queryTLS57120.bind(tls57120Service)"
     [showEdit]="false"
     [showDetail]="false"
-  ></app-table-report>
+  >
+    <header>
+      <div class="flex justify-content-end align-items-center gap-2">
+        <p-button
+          styleClass="p-2"
+          label="滯銷商品統計表.pdf"
+          [loading]="btnPDFLoading"
+          icon="pi pi-file"
+          (click)="onExportPDF()"
+          [disabled]="data.length === 0"
+        ></p-button>
+        <p-button
+          styleClass="p-2"
+          label="滯銷商品統計表.xlsx"
+          [loading]="btnExcelLoading"
+          icon="pi pi-file"
+          (click)="onExportXLSX()"
+          [disabled]="data.length === 0"
+        ></p-button>
+      </div>
+    </header>
+  </app-table-report>
 </div>

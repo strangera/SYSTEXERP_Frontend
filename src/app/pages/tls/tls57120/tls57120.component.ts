@@ -1,14 +1,13 @@
 import { AsyncPipe, DatePipe } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import {
-  QueryTLS57120DetailResponse,
+  QueryTLS57120DataItem,
   QueryTLS57120Request,
   QueryTLS57120ShowType,
-  QueryTLS57120SummaryResponse,
-  QueryTLS57120TotalResponse,
   Tls57120Service
 } from '@service/api/tls/tls57120.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -17,6 +16,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { ColumnGroup, formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -39,12 +39,13 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
     CalendarRangeComponent,
     InputNumberComponent,
     ButtonComponent,
+    ButtonModule,
     TranslateModule,
     TableReportComponent,
     AsyncPipe,
   ]
 })
-export class TLS57120Component extends BasicQueryPageComponent<QueryTLS57120DetailResponse | QueryTLS57120SummaryResponse> implements OnInit {
+export class TLS57120Component extends BasicQueryPageComponent<QueryTLS57120DataItem> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     /** 顯示方式 */
     ShowType: [QueryTLS57120ShowType.Summary, Validators.required],
@@ -76,12 +77,14 @@ export class TLS57120Component extends BasicQueryPageComponent<QueryTLS57120Deta
   ];
 
   // Table data
-  data: (QueryTLS57120DetailResponse | QueryTLS57120SummaryResponse)[] = [];
+  data: QueryTLS57120DataItem[] = [];
   totalRecords = 0;
   lastQueryBody: QueryTLS57120Request | null = null;
   columns: ReportColumn[] = [];
   columnGroup: ColumnGroup[] = [];
-  footerData: QueryTLS57120TotalResponse | null = null;
+  footerData: QueryTLS57120DataItem | null = null;
+  btnPDFLoading = false;
+  btnExcelLoading = false;
 
   constructor(
     private readonly dropdown: DropdownApiService,
@@ -125,11 +128,11 @@ export class TLS57120Component extends BasicQueryPageComponent<QueryTLS57120Deta
         { field: 'PLU_MagNo', header: '商品管理編號' },
         { field: 'PLU_Name', header: '品名' },
         { field: 'PLU_NO', header: '國際條碼' },
-        { field: 'PLU_ORGPLUNO', header: '廠商貨號' },
-        { field: 'PLU_SALEPRC', header: '售價', format: formatAmount },
+        { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
+        { field: 'PLU_SalePrc', header: '售價', format: formatAmount },
         { field: 'STK_UnitCost', header: '平均成本', format: formatAmount },
-        { field: 'STK_CurrentQty', header: '期末數量', format: formatAmount },
-        { field: 'STK_CurrentCost', header: '期末成本', format: formatAmount },
+        { field: 'TOT_STK_CurrentQty', header: '期末數量', format: formatAmount },
+        { field: 'TOT_STK_CurrentCost', header: '期末成本', format: formatAmount },
         { field: 'StockCost', header: '庫存成本', format: formatAmount },
         { field: 'MAX_SALE_DATE', header: '最近銷貨日期', format: formatDate },
       ];
@@ -161,7 +164,7 @@ export class TLS57120Component extends BasicQueryPageComponent<QueryTLS57120Deta
       const requestBody: QueryTLS57120Request = {
         ShowType: formValue.ShowType,
         BaseYM: convertDateToYYYYMM(formValue.BaseYM),
-        HOS_No: formValue.HOS_No || undefined,
+        HOS_NO: formValue.HOS_No || undefined,
         LOGO_No: formValue.LOGO_No || undefined,
         DateFrom: formValue.DateFrom ? this.datePipe.transform(formValue.DateFrom, 'yyyy-MM-dd') || undefined : undefined,
         DateTo: formValue.DateTo ? this.datePipe.transform(formValue.DateTo, 'yyyy-MM-dd') || undefined : undefined,
@@ -183,5 +186,75 @@ export class TLS57120Component extends BasicQueryPageComponent<QueryTLS57120Deta
         this.footerData = response.TotalData;
       });
     });
+  }
+
+  onExportPDF() {
+    if (!this.lastQueryBody) return;
+    this.btnPDFLoading = true;
+    this.tls57120Service.exportTLS57120PDF(this.lastQueryBody).pipe(untilDestroyed(this), finalize(() => this.btnPDFLoading = false)).subscribe({
+      next: (response: HttpResponse<Blob>) => {
+        this.handleFileExport(response, '.pdf');
+      },
+    });
+  }
+
+  onExportXLSX() {
+    if (!this.lastQueryBody) return;
+    this.btnExcelLoading = true;
+    this.tls57120Service.exportTLS57120(this.lastQueryBody).pipe(untilDestroyed(this), finalize(() => this.btnExcelLoading = false)).subscribe({
+      next: (response: HttpResponse<Blob>) => {
+        this.handleFileExport(response, '.xlsx');
+      },
+    });
+  }
+
+  // 處理檔案匯出的通用邏輯
+  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      // this.messageService.warnBubble('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
+
+  // 輔助方法：從 header 獲取檔名
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
+    if (!contentDisposition) {
+      return `download${defaultExtension}`;
+    }
+
+    const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
+    if (filenameStarMatch && filenameStarMatch.length > 1) {
+      const encodedFilename = filenameStarMatch[1];
+      try {
+        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
+        return decoded;
+      } catch (error) {
+        console.error('Failed to decode filename*', error);
+        return encodedFilename;
+      }
+    }
+
+    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
+    if (filenameMatch && filenameMatch.length > 1) {
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      } catch {
+        return filenameMatch[1];
+      }
+    }
+
+    return `download${defaultExtension}`;
   }
 }
