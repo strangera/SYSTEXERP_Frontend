@@ -1494,8 +1494,8 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       return;
     }
 
-    const monthlyAmount = Math.round(totalAmount / periods);
-    const downPayment = Math.round(totalAmount - (monthlyAmount * (periods - 1)));
+    const monthlyAmount = Math.ceil(totalAmount / periods);  // 改為無條件進位
+    const downPayment = Math.ceil(totalAmount - (monthlyAmount * (periods - 1)));  // 改為無條件進位
 
     // 設定對話框資料並顯示
     this.calculationResult = {
@@ -1503,7 +1503,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       periods,
       monthlyAmount,
       downPayment,
-      verification: Math.round(downPayment + (monthlyAmount * (periods - 1)))
+      verification: Math.ceil(downPayment + (monthlyAmount * (periods - 1)))  // 改為無條件進位
     };
     this.currentRowData = rowData;
     this.currentCapType = capType;
@@ -1881,7 +1881,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       const quantity = parseFloat(rowData.tpy_qty) || 1; // 確保數量至少為 1
 
       if (unitPrice > 0 && quantity > 0) {
-        rowData.tpy_amount = unitPrice * quantity;
+        rowData.tpy_amount = Math.ceil(unitPrice * quantity);  // 改為無條件進位
         console.log(`A類型即時計算: ${unitPrice} × ${quantity} = ${rowData.tpy_amount}`);
       } else {
         rowData.tpy_amount = 0;
@@ -1919,7 +1919,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       const quantity = parseFloat(rowData.tpy_qty) || 1;
 
       if (unitPrice > 0 && quantity > 0) {
-        rowData.tpy_amount = unitPrice * quantity;
+        rowData.tpy_amount = Math.ceil(unitPrice * quantity);  // 改為無條件進位
       } else {
         rowData.tpy_amount = 0;
       }
