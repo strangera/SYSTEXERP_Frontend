@@ -126,6 +126,13 @@ export class CPM11030CRUComponent extends BasicCruPageComponent<any> implements 
         },
       });
 
+    // 把 Cert_Type 從「顯示用的 01-身分證」轉成「後端要的代碼 01」
+    const certRaw = this.dataForm.get('Cert_Type')?.value as any;
+    const certType = certRaw.includes('-')
+      ? certRaw.split('-')[0].trim()
+      : certRaw.trim();
+    this.dataForm.patchValue({ Cert_Type: certType }, { emitEvent: false });
+
     // ✅ 先把後端/route 帶回來的值正規化成 Date（給 calendar 顯示用）
     const rawDate = this.dataForm.get('Loan_Date')?.value as any;
     const rawTime = this.dataForm.get('Loan_Time')?.value as any;
