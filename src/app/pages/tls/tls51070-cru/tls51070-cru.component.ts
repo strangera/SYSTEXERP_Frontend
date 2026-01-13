@@ -429,8 +429,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         const exists = this.POS2020Data.some(item => item.VEN_No === value);
         const isValidVendor = this.vendorOptions.some(item => item.value === value);
 
-        // [POS2020不存在] && [廠商編號在vendorOptions]
-        if (!exists && isValidVendor) {
+        // [POS2020不存在] && [廠商編號在vendorOptions]且長度為0
+        if (!exists && isValidVendor && this.POS2020Data.length == 0) {
           this.messageService.infoBubble('POS2020表單無對應的廠商編號，已自動新增一筆');
 
           const pluMagno = this.dataForm.get('PLU_MagNo')?.value || '';
@@ -464,8 +464,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
         // 重新查詢 自營 專櫃編號選單(queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList)
         // this.tls51070Service.queryTLTTALENT_DropDownList({ "VEN_No": value }).pipe(untilDestroyed(this)).subscribe((response) => { //廠商編號 > 專櫃編號
-        // this.tls51070Service.queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => { //自營(全帶入)
-        this.tls51070Service.queryTLTTALENT_ByStoreWay2AndApprove2WithVenNo_DropDownList({ "VEN_No": value }).pipe(untilDestroyed(this)).subscribe((response) => { //自營(廠商編號)
+        this.tls51070Service.queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => { //自營(全帶入)
+          // this.tls51070Service.queryTLTTALENT_ByStoreWay2AndApprove2WithVenNo_DropDownList({ "VEN_No": value }).pipe(untilDestroyed(this)).subscribe((response) => { //自營(廠商編號)
           this.TLT_NO_Option = response.Data.map((item: any) => ({
             No: item.No, // 專櫃編號代碼
             Label: item.No + '-' + item.Name, // 組合成顯示用的Label

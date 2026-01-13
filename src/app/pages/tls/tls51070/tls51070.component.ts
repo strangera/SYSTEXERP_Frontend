@@ -4,7 +4,6 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
-import { FileExportService } from '@shared/service/file-export.service';
 import saveAs from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
@@ -141,7 +140,6 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   constructor(
     private tls51070Service: Tls51070Service,
     private tls52010Service: Tls52010Service,
-    private readonly fileExportService: FileExportService
   ) {
     super();
   }
@@ -436,17 +434,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (res) => {
-          const data = res?.Data;
-          if (data) {
-            if (data.ErrorFilePath) {
-              // 有錯誤檔：顯示錯誤提示
-              this.messageService.errorBubble(`匯入失敗`);
-              // 這裡通常會建議提供下載 ErrorFilePath 的邏輯
-            } else {
-              // 沒有錯誤檔：顯示成功
-              this.messageService.infoBubble(`上傳圖片成功`);
-            }
-          }
+          this.messageService.successBubble(res);
         },
         error: (err) => {
           console.error(err);
