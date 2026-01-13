@@ -21,7 +21,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
@@ -80,6 +80,12 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
     return `${no}#${dt}`;
   }
 
+  // ✅ Voucher_No 有值的資料不可勾選（無法刪除）
+  isRowSelectable = (row: any): boolean => {
+    // 有傳票號碼 => 不可選
+    return !row?.Voucher_No;
+  };
+
   // ===== 表單：全面改成後端欄位命名 =====
   queryForm = this.formBuilder.group({
     // 後端分頁排序；不包含 Offset / OrderBy
@@ -119,7 +125,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
     SYS_ORIGIN: [], // 系統別
     Source_Doc_No: [, [Validators.maxLength(14)]], // 憑證單號
     Voucher_No: [, [Validators.maxLength(11)]], // 傳票號碼
-    SAL_Type: [], // 銷售類型
+    SAL_Type: [], // 銷售類型/系統別（依後端定義）
     PUR_Remark: [, [Validators.maxLength(100)]], // 備註
 
     CRT_USR_Name: [],
@@ -145,8 +151,8 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
     { field: 'PUR_RepYYYYMM', header: '申報年月', visible: true },
     { field: 'PUR_VenUniform', header: '廠商統編', visible: true },
     { field: 'PUR_Amt', header: '發票總金額', visible: true, format: this.money },
-    { field: 'PUR_Net', header: '發票未稅金額', visible: true, format: this.money  },
-    { field: 'PUR_Tax', header: '發票稅額', visible: true, format: this.money  },
+    { field: 'PUR_Net', header: '發票未稅金額', visible: true, format: this.money },
+    { field: 'PUR_Tax', header: '發票稅額', visible: true, format: this.money },
     { field: 'PUR_DirectTypeDesc', header: '發票用途', visible: true },
     { field: 'PUR_TaxTypeDesc', header: '課稅別', visible: true },
     { field: 'PUR_DiscNoDesc', header: '扣抵代號', visible: true },
@@ -502,6 +508,14 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
 
   onDelete = (selection: any | any[]) => {
     const rows = Array.isArray(selection) ? selection : [selection];
+
+    // ✅ 防呆：有 Voucher_No 的資料不能刪
+    const invalid = rows.filter((r) => !!r?.Voucher_No);
+    if (invalid.length) {
+      this.messageService.warnBubble('已產生傳票號碼之資料不可刪除');
+      return;
+    }
+
     const ids = rows
       .map((r) => Number(r?.id))
       .filter((id) => Number.isFinite(id));
