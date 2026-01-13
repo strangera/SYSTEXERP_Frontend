@@ -97,15 +97,26 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
     });
   }
 
-  public onDelete(event: FIN52030Data[]): void {
-    this.logger.debug(`onDelete:`, [event]);
-    this.service.deleteFIN52030Data(event.map(item => item.id)).pipe(
-      tap(res => {
-        if (res.Status === '0000') this.messageService.successBubble('刪除成功');
-        else this.messageService.errorBubble(`刪除失敗: ${res.Message}`);
-      }),
-      finalize(() => this.onSubmit()),
-    ).subscribe();
+  public onDelete(selected: FIN52030Data[]): void {
+    this.logger.debug(`onDelete:`, [selected]);
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: '確定要刪除選取的資料嗎？',
+      accept: () => {
+        const ids = selected.map(item => item.id);
+        this.tableLoading.set(!0);
+        this.service.deleteFIN52030Data(ids).pipe(
+          tap(res => {
+            if (res.Status === '0000') this.messageService.successBubble('刪除成功');
+            else this.messageService.errorBubble(`刪除失敗: ${res.Message}`);
+          }),
+          finalize(() => {
+            this.tableLoading.set(!1);
+            this.onSubmit();
+          }),
+        ).subscribe();
+      },
+    });
   }
 
   // 讀取下拉選單
