@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ChangeDetectorRef, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { finalize, map } from 'rxjs/operators';
@@ -45,14 +45,14 @@ import {
   QueryCPM11030Row,
 } from '../../../service/api/cpm/cpm11030.service';
 
-type SortItem = { field: string; order: number };
+interface SortItem { field: string; order: number }
 
-type DailyRow = {
+interface DailyRow {
   _rowKey: string;
   Device_ID: string;
   Device_Name: string;
   Device_Qty: number;
-};
+}
 
 @UntilDestroy()
 @Component({
@@ -169,7 +169,7 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
     { field: 'Device_Qty', header: '可借出量', visible: true, type: 'inputNumber' } as any,
   ];
 
-  constructor(private cpm11030Service: Cpm11030Service, private cdr: ChangeDetectorRef) {
+  constructor(public readonly cpm11030Service: Cpm11030Service, private cdr: ChangeDetectorRef) {
     super();
   }
 
@@ -293,6 +293,8 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
           this.deviceNameOptions = [];
         },
       });
+
+    this.cpm11030Service.getUsrOptions();
   }
 
   // =========================
@@ -534,7 +536,7 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
       });
   }
 
-  onDailyRowEditSave(_e: RowEditSaveEvent) {}
+  onDailyRowEditSave(_e: RowEditSaveEvent) { }
 
   private closeDailyDialog() {
     this.dailyDialogVisible = false;

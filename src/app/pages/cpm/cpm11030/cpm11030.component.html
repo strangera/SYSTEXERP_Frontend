@@ -61,13 +61,24 @@
 
         <!-- 第二排 -->
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="出借處理人員(工號)"
               controlName="Loan_USR_No"
               [control]="queryForm.controls.Loan_USR_No"
               [submitted]="submitted"
             ></app-input-text>
+          </div> -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="出借處理人員(工號)"
+              controlName="Loan_USR_No"
+              [options]="cpm11030Service.usrOptions()"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Loan_USR_No"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
