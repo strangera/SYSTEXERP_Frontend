@@ -30,6 +30,83 @@
           <app-button btnType="query" [loading]="queryLoading" (click)="querySourceInvoice()"></app-button>
         </div>
       </ng-container>
+      <ng-container *ngIf="showEditArea">
+        <div class="grid p-fluid">
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="結帳年月"
+            controlName="sam_yyymm" [control]="dataForm.controls.sam_yyymm" [submitted]="submitted" />
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="專櫃編號/名稱" controlName="tlt_no" [options]="tlt_noOptions | async" optionLabel="label"
+              optionValue="value" [control]="dataForm.controls.tlt_no" [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="單據種類" controlName="PUR_GUIType" [options]="invoiceTypeOptions" optionLabel="label"
+              optionValue="value" [control]="dataForm.controls.PUR_GUIType" [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="發票/收據號碼" controlName="PUR_GUINO" [control]="dataForm.controls.PUR_GUINO"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateRange" label="單據日期"
+              [startControl]="dataForm.controls.PUR_GUIDate_From" [endControl]="dataForm.controls.PUR_GUIDate_To"
+              [submitted]="submitted"></app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="結帳方式" controlName="COMM_MONEY_TYPE" [options]="money_typeOptions" optionLabel="label"
+              optionValue="value" [control]="dataForm.controls.COMM_MONEY_TYPE" [submitted]="submitted"></app-dropdown>
+          </div>
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="請款付款年月"
+            controlName="COMM_YM" [control]="dataForm.controls.COMM_YM" [submitted]="submitted" />
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="帳次" controlName="sam_termno" [options]="sam_termnoOptions" optionLabel="label"
+              optionValue="value" [control]="dataForm.controls.sam_termno" [submitted]="submitted"></app-dropdown>
+          </div>
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="申報年月" controlName="DEC_YM"
+            [control]="dataForm.controls.DEC_YM" [submitted]="submitted" />
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="廠商編號/名稱" controlName="ven_uniform" [options]="ven_noOptions | async"
+              optionLabel="label" optionValue="value" [control]="dataForm.controls.ven_uniform"
+              [submitted]="submitted"></app-dropdown>
+          </div>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="課稅別" controlName="PUR_TaxType"
+            [options]="taxTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
+            [control]="dataForm.controls.PUR_TaxType" [submitted]="submitted"></app-multi-select>
+
+          <app-input-number label="發票/收據號碼" controlName="PUR_GUINO" [control]="dataForm.controls.PUR_GUINO"
+            class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="發票總額"
+            [submitted]="submitted"></app-input-number>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="扣抵代號" [control]="dataForm.controls.PUR_DiscNo" [options]="discountOptions"
+              optionLabel="label" optionValue="value" [submitted]="submitted">
+            </app-dropdown>
+          </div>
+          <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="未稅金額"
+            [control]="dataForm.controls.ACP_GUINet" [submitted]="submitted"></app-input-number>
+
+          <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="稅額"
+            [control]="dataForm.controls.ACP_GUITax" [submitted]="submitted"></app-input-number>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="發票格式" controlName="PUR_GUIPaper" [options]="invoiceFormatOptions" optionLabel="label"
+              optionValue="value" [control]="dataForm.controls.PUR_GUIPaper" [submitted]="submitted">
+            </app-dropdown>
+          </div>
+        </div>
+        <hr />
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateRange" label="傳送日期" [startControl]="dataForm.controls.COMM_NUM_Start"
+              [endControl]="dataForm.controls.COMM_NUM_End" [submitted]="submitted"></app-calendar-range>
+          </div>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="dataForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </ng-container>
 
       <ng-container *ngIf="showResultTables">
         <app-table-report tableKey="TLS2F010ChangeEdit" class="col-12" [columns]="columns1" [data]="changeEditData"
@@ -38,14 +115,15 @@
         </app-table-report>
         <br />
 
-        <app-table tableKey="b" [data]="sourceInvoiceData" class="col-12" [columns]="columns2" dataKey="TXN_GUIBegNo"
-          [showCaption]="false" [showManage]="false" [showCheckBox]="false" dataStatusField="status"
-          [scrollable]="false" [showPaginator]="false" [showReportMode]="false" [loading]="queryLoading">
-        </app-table>
+        <app-table-report tableKey="TLS2F010SourceInvoice" class="col-12" [columns]="columns2"
+          [data]="sourceInvoiceData" [totalRecords]="sourceInvoiceData.length" [loading]="queryLoading" [lazy]="false"
+          [showManage]="false" [showDelete]="false" [showReportMode]="false" [showFilter]="false" [showCheckBox]="false"
+          [footerData]="footer2" footerLabel="" [autoHeight]="true" [showFooterTotal]="false">
+        </app-table-report>
 
         <app-table-edit #detailEdit title="新增單據" tableKey="VEN_No" class="col-12" [columns]="columns3"
           [data]="detailEditData" dataStatusField="status" [tableRequired]="true" [showDelete]="true"
-          [showInsert]="false" [canInsert]="true" [showCheckBox]="false" (dataChange)="onDetailEditDataChange($event)"
+          [showInsert]="false" [canInsert]="true" [showCheckBox]="true" (dataChange)="onDetailEditDataChange($event)"
           (fieldChange)="onDetailFieldChange($event)">
         </app-table-edit>
         <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
