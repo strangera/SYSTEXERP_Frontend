@@ -57,7 +57,7 @@ export class TLS2E050Component extends BasicQueryPageComponent<Tls2e050MainData>
     check_day: [], // 結帳後n天付款
     invoice_type: [], // 請款單據別
 
-    // store_wayList: [null],
+    store_way: [null as '1' | '2' | null],
 
     // 分頁欄位
     pageSize: [30],
@@ -148,6 +148,15 @@ export class TLS2E050Component extends BasicQueryPageComponent<Tls2e050MainData>
         this.queryForm.controls.bus_classList.setValue([]);
       }
     });
+
+    this.queryForm.controls.store_way.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(() => {
+        // 只有在已經有查詢結果的情況下才自動觸發，避免頁面一開啟就查
+        if (this.lastQueryBody1 || this.lastQueryBody2) {
+          this.onSubmit(this.queryForm);
+        }
+      });
   }
 
   // 處理 SelectButton 切換
@@ -247,20 +256,23 @@ export class TLS2E050Component extends BasicQueryPageComponent<Tls2e050MainData>
 
       // 取得當前報表類型的 API Function
       const queryFn = this.getCurrentQueryFunction();
-
-      queryFn({ ...baseBody, store_wayList: ['1'] }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-        this.data1 = res.Data;
-        this.totalRecords1 = res.TotalCount;
-        this.footerData1 = res.footerData && res.footerData.length > 0 ? res.footerData[0] : null;
-        this.lastQueryBody1 = { ...baseBody, store_wayList: ['1'] };
-      });
-
-      queryFn({ ...baseBody, store_wayList: ['2'] }).pipe(untilDestroyed(this), finalize(() => this.loading2 = false)).subscribe(res => {
-        this.data2 = res.Data;
-        this.totalRecords2 = res.TotalCount;
-        this.footerData2 = res.footerData && res.footerData.length > 0 ? res.footerData[0] : null;
-        this.lastQueryBody2 = { ...baseBody, store_wayList: ['2'] };
-      });
+      const sw = frm.getRawValue().store_way;
+      if (sw === null || sw === '1') {
+        queryFn({ ...baseBody, store_wayList: ['1'] }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+          this.data1 = res.Data;
+          this.totalRecords1 = res.TotalCount;
+          this.footerData1 = res.footerData && res.footerData.length > 0 ? res.footerData[0] : null;
+          this.lastQueryBody1 = { ...baseBody, store_wayList: ['1'] };
+        });
+      }
+      if (sw === null || sw === '2') {
+        queryFn({ ...baseBody, store_wayList: ['2'] }).pipe(untilDestroyed(this), finalize(() => this.loading2 = false)).subscribe(res => {
+          this.data2 = res.Data;
+          this.totalRecords2 = res.TotalCount;
+          this.footerData2 = res.footerData && res.footerData.length > 0 ? res.footerData[0] : null;
+          this.lastQueryBody2 = { ...baseBody, store_wayList: ['2'] };
+        });
+      }
     });
   }
 }
