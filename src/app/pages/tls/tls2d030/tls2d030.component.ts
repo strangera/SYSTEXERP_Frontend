@@ -90,16 +90,15 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
    * @param frm 表單群組
    */
   onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      const body: QueryTls2d030Request = {
-        ...frm.value,
-        sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
-      };
-      this.tls2d030Service.queryTLS2D030(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-        this.totalRecords = res.TotalCount;
-        this.lastQueryBody = body;
-        this.data = res.Data;
-      });
+    this.loading = true;
+    const body: QueryTls2d030Request = {
+      ...frm.value,
+      sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
+    };
+    this.tls2d030Service.queryTLS2D030(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+      this.totalRecords = res.TotalCount;
+      this.lastQueryBody = body;
+      this.data = res.Data;
     });
   }
 }
