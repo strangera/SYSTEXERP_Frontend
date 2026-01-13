@@ -37,18 +37,38 @@
         </th>
         <ng-container *ngFor="let col of columns; let i = index">
           <!-- 如果是第一次出現這個群組 -->
-          <ng-container *ngIf="tableUtility.shouldRenderGroupHeader(col, i, columns)">
-            <th [attr.colspan]="tableUtility.getColumnSpan(columns, col.groupField!)" class="group-header text-center"
-              pReorderableColumn pResizableColumn>
+          <ng-container
+            *ngIf="tableUtility.shouldRenderGroupHeader(col, i, columns)"
+          >
+            <th
+              [attr.colspan]="
+                tableUtility.getColumnSpan(columns, col.groupField!)
+              "
+              class="group-header text-center"
+              [ngClass]="{ 'multiline-header': allowMultilineHeader }"
+              pReorderableColumn
+              pResizableColumn
+            >
               {{ getGroupHeader(col.groupField!) }}
             </th>
           </ng-container>
           <!-- 如果是沒群組的欄位 -->
           <ng-container *ngIf="!col.groupField">
-            <th rowspan="2" class="text-center" pResizableColumn
-              [pSortableColumn]="showSort ? col.sortField ?? col.field : undefined"
-              [pSortableColumnDisabled]="col.showSort === false || showSort === false" pFrozenColumn
-              [frozen]="!!col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
+            <th
+              rowspan="2"
+              class="text-center"
+              [ngClass]="{ 'multiline-header': allowMultilineHeader }"
+              pResizableColumn
+              [pSortableColumn]="
+                showSort ? col.sortField ?? col.field : undefined
+              "
+              [pSortableColumnDisabled]="
+                col.showSort === false || showSort === false
+              "
+              pFrozenColumn
+              [frozen]="!!col.frozen"
+              [alignFrozen]="col.alignFrozen || 'right'"
+            >
               {{ col.header }}
               <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length"
                 [field]="col.sortField ?? col.field" />
@@ -63,7 +83,13 @@
       <!-- 第二層：實際欄位標題 -->
       <tr>
         <ng-container *ngFor="let col of columns">
-          <th *ngIf="col.groupField" class="text-center" pReorderableColumn pResizableColumn [pSortableColumn]="
+          <th
+            *ngIf="col.groupField"
+            class="text-center"
+            [ngClass]="{ 'multiline-header': allowMultilineHeader }"
+            pReorderableColumn
+            pResizableColumn
+            [pSortableColumn]="
               showSort ? col.sortField ?? col.field : undefined
             " [pSortableColumnDisabled]="col.showSort === false" style="min-width: 55px">
             {{ col.header }}
@@ -82,8 +108,11 @@
         <th class="w-1rem" *ngIf="expansionColumns.length">收合/展開</th>
         <th *ngFor="let col of columns" pReorderableColumn pResizableColumn
           [pSortableColumn]="showSort ? col.sortField ?? col.field : undefined"
-          [pSortableColumnDisabled]="!showSort || col.showSort === false" class="text-center wrap-header"
-          style="min-width: 55px">
+          [pSortableColumnDisabled]="!showSort || col.showSort === false"
+          class="text-center wrap-header"
+          [ngClass]="{ 'multiline-header': allowMultilineHeader }"
+          style="min-width: 55px"
+        >
           {{ col.header }}
           <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length" [field]="col.field" />
         </th>
