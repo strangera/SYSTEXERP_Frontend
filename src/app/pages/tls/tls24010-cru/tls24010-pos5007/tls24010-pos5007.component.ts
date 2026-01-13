@@ -111,21 +111,30 @@ export class Tls24010Pos5007Component implements OnChanges {
             }
           ];
           this.dropDownListService.queryTLTTALENT_CHARGE_DropDownList(this.talent_id).pipe(untilDestroyed(this)).subscribe((data) => {
-            // 1. 先進行去重處理
-            const uniqueData = data.Data.reduce((acc: TltTalentChargeData[], current) => {
-              if (!acc.find((item: TltTalentChargeData) => item.tlt_id === current.tlt_id)) {
-                acc.push(current);
-              }
-              return acc;
-            }, []);
-            this.tlt_idOptions = uniqueData.map((item) => ({
-              ...item,
-              label: `${item.tlt_id} - ${item.tlt_id_desc}`
-            }));
+            if (data.Data && data.Data.length > 0) {
+              // 1. 正常有資料：進行去重處理
+              const uniqueData = data.Data.reduce((acc: TltTalentChargeData[], current) => {
+                if (!acc.find((item: TltTalentChargeData) => item.tlt_id === current.tlt_id)) {
+                  acc.push(current);
+                }
+                return acc;
+              }, []);
+              this.tlt_idOptions = uniqueData.map((item) => ({
+                ...item,
+                label: `${item.tlt_id} - ${item.tlt_id_desc}`,
+                tlt_id: item.tlt_id // 確保 optionValue 用的到
+              }));
+            } else {
+              // 2. ★ 沒資料時：直接賦予您要求的預設值
+              this.tlt_idOptions = [
+                { label: "0 - 應稅", tlt_id: "0", tlt_id_desc: "應稅", cag_taxtype: "1", cag_barcode: "000", cag_barcode_name: "正品" } as any,
+                { label: "1 - 免稅", tlt_id: "1", tlt_id_desc: "免稅", cag_taxtype: "0", cag_barcode: "000", cag_barcode_name: "正品" } as any
+              ];
+            }
             if (this.isFormCreateable) {
               this.insertRow();
             }
-          })
+          });
           break;
         default: break;
       }
@@ -158,33 +167,14 @@ export class Tls24010Pos5007Component implements OnChanges {
 
     // 2. 處理類別與稅別相關邏輯 (主要針對專櫃模式)
     if (this.store_way === STORE_WAY.專櫃) {
+      // 檢查是否有選項（包含我們在 ngOnChanges 塞入的預設值）
       if (this.tlt_idOptions && this.tlt_idOptions.length > 0) {
-        // 正常情況：取第一個下拉選項
-        const defaultCharge = this.tlt_idOptions[0];
-        newRow.tlt_id = defaultCharge.tlt_id;
-        newRow.tlt_id_desc = defaultCharge.tlt_id_desc;
-        newRow.PLU_TaxType = defaultCharge.cag_taxtype ?? '1'; // 預設應稅
-        newRow.TXN_DiscCode = defaultCharge.cag_barcode;
-        newRow.TXN_DiscCode_Name = defaultCharge.cag_barcode_name;
-      } else {
-        // 特殊情況：沒抓到類別下拉，給予系統預設值
-        newRow.tlt_id = "0";
-        newRow.tlt_id_desc = "0";
-        newRow.PLU_TaxType = "1"; // 應稅
-        newRow.TXN_DiscCode = "000";
-        newRow.TXN_DiscCode_Name = "正品";
-
-        // 同步把這筆預設值塞入 options，避免下拉選單空白
-        if (!this.tlt_idOptions.find(o => o.tlt_id === "0")) {
-          this.tlt_idOptions = [{
-            tlt_id: "0",
-            tlt_id_desc: "0",
-            label: "0 - 0",
-            cag_taxtype: "1",
-            cag_barcode: "000",
-            cag_barcode_name: "正品"
-          } as any];
-        }
+        const defaultOption = this.tlt_idOptions[0];
+        newRow.tlt_id = defaultOption.tlt_id;
+        newRow.tlt_id_desc = defaultOption.tlt_id_desc;
+        newRow.PLU_TaxType = defaultOption.cag_taxtype || '1';
+        newRow.TXN_DiscCode = defaultOption.cag_barcode || '000';
+        newRow.TXN_DiscCode_Name = defaultOption.cag_barcode_name || '正品';
       }
     }
 

@@ -178,6 +178,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     // 檢查是否開立業主發票 (rece_yn)
     if (this.rece_yn !== 'Y') {
       this.dataForm.get('TXN_TaxFreeCertNo')?.disable();
+      this.dataForm.get('TXN_GUIRemark')?.disable();
     }
     this.listenForChanges();
     if (this.type === FIX_TYPE.預售交易修正) {
@@ -302,6 +303,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
             Store_way: this.store_way,
             TXN_GUIPaper: this.TXN_GUIPaper,
             ...frm.getRawValue(),
+            TXN_GUIRemark: this.rece_yn === 'Y' ? frm.getRawValue().TXN_GUIRemark : '',
             TXN_Date: this.datePipe.transform(this.dataForm.getRawValue().TXN_Date, 'yyyy-MM-dd'),
             GUI_Track: frm.getRawValue().GUI_Track || '00',
             TXN_GUIBegNo: frm.getRawValue().TXN_GUIBegNo || '00000000',
