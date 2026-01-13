@@ -31,7 +31,7 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
     { field: 'cls_Month', header: '結算年月', visible: true, format: formatYYYYMM },
     { field: 'money_type', header: '結帳方式', visible: true, format: (value) => getSYS1000('money_type', value) },
     { field: 'cls_termno', header: '結算期別', visible: true },
-    { field: 'sale_proc_date', header: '結帳日期', visible: true, format: formatDate },
+    { field: 'sale_proc_date', header: '結帳日期', visible: true, format: formatDateTime },
     { field: 'sale_proc_USR_Name', header: '結帳人員', visible: true },
     { field: 'sale_lock', header: '是否鎖定', visible: true, format: formatYN },
     { field: 'sale_lock_date', header: '鎖定日期', visible: true, format: formatDate },
@@ -42,10 +42,12 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
   readonly recordColumns: ReportColumn[] = [
     { field: 'CRT_Date', header: '結算日期', visible: true, format: formatDateTime },
     { field: 'sam_yyymm', header: '結算年月', visible: true, format: formatYYYYMM },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true },
-    { field: 'remarks', header: '結算說明', visible: true },
+    { field: 'sam_termno', header: '結算帳次', visible: true },
+    { field: 'money_type', header: '結帳方式', visible: true, format: (value) => getSYS1000('money_type', value) },
+    { field: 'sam_num', header: '資料筆數', visible: true },
+    { field: 'remarks', header: '說明', visible: true },
     { field: 'CRT_USR_No', header: '執行者', visible: true },
+    { field: 'CRT_USR_Name', header: '執行者姓名', visible: true },
   ];
 
   /** 3. 結算檢查 (Settle) 欄位 */

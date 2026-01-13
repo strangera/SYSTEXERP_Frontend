@@ -1,4 +1,4 @@
-import { ValidationErrors } from "@angular/forms";
+import { AbstractControl, ValidationErrors } from "@angular/forms";
 import { Column } from "../../../shared/componentkit/table/table.model";
 
 export const txnStatusOptions = [
@@ -63,40 +63,14 @@ export enum TLS24010_EDIT_TYPE {
  * 2. 第 1 碼為 '/'
  * 3. 第 2 碼後只允許 [0-9 A-Z a-z + - .]
  */
-export function guiVehicleValidator(control: { value: string | null }): ValidationErrors | null {
+export function guiVehicleValidator(control: AbstractControl): ValidationErrors | null {
   const value = control.value;
+  if (!value) return null;
 
-  // 1. 如果值為空，則不進行驗證，交由 required 處理
-  if (value === null || value === undefined || value === '') {
-    return null;
-  }
+  const vehicle = String(value).trim();
 
-  // 將值轉換為字串並 trim
-  const vehicle = value.toString().trim();
+  // 優化後的正則：總長8碼，第1碼 /，後7碼為指定字元
+  const vehicleRegex = /^\/[0-9A-Z+-.]{7}$/i; // 加上 'i' flag 可同時支援大小寫，或依需求移除
 
-  // 2. 檢核長度必須為 8 碼
-  if (vehicle.length !== 8) {
-    return { invalidGuiVehicle: true };
-  }
-
-  // 3. 檢核第 1 碼必須是 '/'
-  if (vehicle.charAt(0) !== '/') {
-    return { invalidGuiVehicle: true };
-  }
-
-  // 4. 檢核第 2 碼到第 8 碼的字元內容
-  // Regex 解讀:
-  // ^: 字串開頭
-  // \/: 第一個字元必須是 /
-  // [0-9A-Za-z+-\.] 會匹配 0-9, A-Z, a-z, +, -, .
-  // {7}: 緊接著必須是 7 個符合前面字元集的字元
-  // $: 字串結尾
-  const vehicleBodyRegex = /^\/([0-9A-Za-z+\-.]){7}$/;
-
-  if (!vehicleBodyRegex.test(vehicle)) {
-    return { invalidGuiVehicle: true };
-  }
-
-  // 驗證通過
-  return null;
+  return vehicleRegex.test(vehicle) ? null : { invalidGuiVehicle: true };
 }

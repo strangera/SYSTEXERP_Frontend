@@ -57,6 +57,8 @@ export class TLS2E050Component extends BasicQueryPageComponent<Tls2e050MainData>
     check_day: [], // 結帳後n天付款
     invoice_type: [], // 請款單據別
 
+    // store_wayList: [null],
+
     // 分頁欄位
     pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1

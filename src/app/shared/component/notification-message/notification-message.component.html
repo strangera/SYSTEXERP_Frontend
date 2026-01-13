@@ -23,8 +23,8 @@
           styleClass="w-8rem" (click)="onExtraButtonClick(btn)">
         </p-button>
 
-        <p-button [title]="message.rejectLabel" [label]="message.rejectLabel" (click)="cd.reject()" outlined="true"
-          styleClass="w-8rem">
+        <p-button *ngIf="currentConfirmOpts?.showRejectButton !== false" [title]="message.rejectLabel"
+          [label]="message.rejectLabel" (click)="cd.reject()" outlined="true" styleClass="w-8rem">
         </p-button>
       </div>
     </div>

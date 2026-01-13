@@ -1,5 +1,4 @@
 import { AsyncPipe, DatePipe } from '@angular/common';
-import { HttpResponse } from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -9,6 +8,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { AutoCompleteComponent } from '@shared/componentkit/auto-complete/auto-complete.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { Actions } from '@shared/service/permission-guard.service';
 import { ValidationService } from '@shared/service/validation.service';
@@ -29,8 +29,9 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { STORE_WAY, TLS24010_EDIT_TYPE } from '../tls24010-cru/tls24010-cru.model';
-import { AddButton, formatDateToHH_MM_SS, formatDateToYYYY_MM_DD } from './../../../shared/componentkit/table/table.model';
-import { C_columns, columns, FIX_TYPE, TXN_GUIPaperOptions, txnStatusOptions } from './tls24010.model';
+import { AddButton } from './../../../shared/componentkit/table/table.model';
+import { FileExportService } from './../../../shared/service/file-export.service';
+import { C_columns, columns, FIX_TYPE, TXN_GUIPAPER, TXN_GUIPaperOptions, TXN_STATUS, txnStatusOptions } from './tls24010.model';
 // 交易補登作業
 @Component({
   selector: 'app-tls24010',
@@ -56,31 +57,40 @@ import { C_columns, columns, FIX_TYPE, TXN_GUIPaperOptions, txnStatusOptions } f
   ],
 })
 export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> implements OnInit {
+  @ViewChild('customTimeTemp') customTimeTemp!: TemplateRef<any>;
   @ViewChild('menu') menu?: Menu;
   TXN_Date_Label = '銷售日期';
   queryForm = this.formBuilder.nonNullable.group({
     TXN_GUIPaper: ['E', [Validators.required]],/*補登類別 → TXN_GUIPaper */
-    TXN_Date: [null as Date | null, [Validators.required]],    /*銷售日期 → POS5006.TXN_Date */
+    TXN_Date: [yesterday, [Validators.required]],    /*銷售日期 → POS5006.TXN_Date */
     ECR_No: [null as string | null], /*收銀機號 → ECR_No */
     TLT_No: [null as string | null], /*櫃編 → TLT_No */
     TXN_No: [null as string | number | null, [Validators.maxLength(8), this.validation.numberValidator]],  /*交易序號 → TXN_No */
     TLT_Name: [''], /*櫃名 → TLT_Name */
     store_way: [''], /*櫃位類型 → store_way */
     talent_id: [0], /*專櫃代號 → talent_id */
+    rece_yn: [null], /*是否開立業主發票 → rece_yn */
+    pageSize: [30],
+    pageIndex: [1],
+    SortBy: [[{ field: 'TXN_Date', order: -1 }]],
   });
-  historyRequestBody?: TLS24010Request;
-  color: string | undefined;
-  totalRecords = 0;
-  isTXN_GUIPaper!: boolean;
-  today = new Date(); // 獲取當前日期
+  // Options
   TXN_GUIPaperOptions = TXN_GUIPaperOptions
   txnStatusOptions = txnStatusOptions
   ECR_NoOptions = this.dropDown.queryPos1002();
   TLT_NoOptions: IDropdownItem[] = [];
+  // Table
   data: TLS24010Data[] = [];
+  columns = columns;
+  historyRequestBody?: TLS24010Request;
+  totalRecords = 0;
   selectedRowData?: TLS24010Data;
-  columns = columns
-  addButton: AddButton[] = []
+  addButton: AddButton[] = [];
+  items: MenuItem[] = [];
+  get isSpecialPaper(): boolean { // 交易作廢取消 || 折讓單交易取消
+    const paper = this.queryForm.get('TXN_GUIPaper')?.value;
+    return paper === TXN_GUIPAPER.交易作廢取消 || paper === TXN_GUIPAPER.折讓單交易取消;
+  }
   constructor(
     private readonly dropDownList: DropDownListService,
     private readonly dropDown: DropdownApiService,
@@ -88,32 +98,25 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     private readonly tLS41010Service: TLS41010Service,
     private readonly cdr: ChangeDetectorRef,
     private readonly validation: ValidationService,
-    private readonly datePipe: DatePipe
+    private readonly datePipe: DatePipe,
+    private readonly fileExportService: FileExportService
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS24010', 'tls/tls24010cru', this.queryForm, (form) => this.onSubmit(form));
-    this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(yesterday.toISOString().split('T')[0]).pipe(untilDestroyed(this)).subscribe(options => {
+    this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(this.datePipe.transform(yesterday, 'yyyy-MM-dd')).pipe(untilDestroyed(this)).subscribe(options => {
       this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
-    const txnDate = this.queryForm.get('TXN_Date')?.value;
-    if (!txnDate) {
-      this.queryForm.get('TXN_Date')?.setValue(new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0));
-    }
     this.queryForm.get('TXN_Date')?.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
-      const dateString = value ? formatDateToYYYY_MM_DD(value) : '';
+      const dateString = value ? this.datePipe.transform(value, 'yyyy-MM-dd') : '';
       if (!dateString) { return; }
       this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(dateString).pipe(untilDestroyed(this)).subscribe(options => {
         this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
       });
     });
   }
-  onECRNoChanged(event: string): void {
-    if (!event) {
-      this.queryForm.get('TLT_No')?.setValue(null);
-      return;
-    }
-    const body = { ECR_No: event };
-    this.tLS41010Service.queryTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
+  onECRNoChanged(ecrNo: string): void {
+    if (!ecrNo) return this.queryForm.get('TLT_No')?.setValue(null);
+    this.tLS41010Service.queryTLS41010({ ECR_No: ecrNo }).pipe(untilDestroyed(this)).subscribe(res => {
       if (res.Data.length !== 0) {
         const ECR_TLT_No = this.TLT_NoOptions.filter(option => option.No === res.Data[0].ECR_TLT_No);
         this.queryForm.get('TLT_No')?.setValue(ECR_TLT_No.length > 0 ? ECR_TLT_No[0].No : null);
@@ -121,37 +124,27 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     });
   }
   public tableQueryFunction = (body: TLS24010Request): Observable<ApiResponse<TLS24010Data[]>> => {
-    // 這裡確保將 Component 中已有的 TLT_NoOptions 傳入 Service
     return this.tls24010Service.queryTLS24010(body, this.TLT_NoOptions);
   }
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       const rawTxnNo = frm.value.TXN_No;
-      const isInvalidOrNonNumeric = !rawTxnNo || rawTxnNo === '' || isNaN(Number(rawTxnNo));
       const body = {
         ...frm.value,
-        TXN_Date: frm.value.TXN_Date ? formatDateToYYYY_MM_DD(frm.value.TXN_Date) : '',
-        TXN_No: isInvalidOrNonNumeric ? null : rawTxnNo,
-        pageSize: 30,
-        pageIndex: 1,
-        SortBy: [{ field: 'TXN_Date', order: -1 }],
+        TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',
+        TXN_No: (!rawTxnNo || rawTxnNo === '' || isNaN(Number(rawTxnNo))) ? null : rawTxnNo
       }
       this.tableQueryFunction(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.historyRequestBody = body;
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
-        this.isTXN_GUIPaper = frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C';
-        if (frm.get('TXN_GUIPaper')?.value === 'C') {
+        if (frm.get('TXN_GUIPaper')?.value === TXN_GUIPAPER.折讓單交易取消) {
           this.addButton = [
             {
-              label: '列印折讓單',
-              icon: 'pi pi-print',
+              label: '列印折讓單', icon: 'pi pi-print',
               action: (rowdata: TLS24010Data) => {
-                if (!rowdata.TXN_Ret_No) {
-                  this.messageService.errorBubble('無折讓單號，無法列印折讓單');
-                  return;
-                }
-                this.tls24010Service.printTLS24010(rowdata?.TXN_Ret_No || '').pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+                if (!rowdata || !rowdata.TXN_Ret_No) return this.messageService.errorBubble('無折讓單號，無法列印折讓單');
+                this.tls24010Service.printTLS24010(rowdata.TXN_Ret_No).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
                   window.open(environment.ApiUrl + res.Data.Print_URL, '_blank');
                   this.onSubmit(this.queryForm);
                 })
@@ -161,21 +154,21 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         } else {
           this.addButton = [
             {
-              label: frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C' ? '取消作廢' : '修正交易資料',
-              icon: frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C' ? 'pi pi-undo' : 'pi pi-ellipsis-h',
+              label: this.isSpecialPaper ? '取消作廢' : '修正交易資料',
+              icon: this.isSpecialPaper ? 'pi pi-undo' : 'pi pi-ellipsis-h',
               action: (rowdata: TLS24010Data, event) => {
                 const data = this.TLT_NoOptions.find(option => option.No === rowdata.TLT_No);
                 if (data?.store_way && data?.Name && data?.talent_id) {
                   rowdata.store_way = data.store_way;
                   rowdata.talent_id = data?.talent_id;
                 }
-                if (frm.get('TXN_GUIPaper')?.value === 'R') {
+                if (frm.get('TXN_GUIPaper')?.value === TXN_GUIPAPER.交易作廢取消) {
                   this.onCancel(rowdata)
                 } else {
                   this.openModal(rowdata, event);
                 }
               },
-              disabled: (rowData: TLS24010Data) => rowData.TXN_Status === 'D'
+              disabled: (rowData: TLS24010Data) => rowData.TXN_Status === TXN_STATUS.作廢交易
             }
           ]
         }
@@ -185,122 +178,69 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     });
   }
   // 查看補登資料
-  onDetailData(rowdata: TLS24010Data): void {
-    this.onDetail(rowdata, this.historyRequestBody);
-  }
-  @ViewChild('customTimeTemp') customTimeTemp!: TemplateRef<any>;
+  onDetailData(rowdata: TLS24010Data): void { this.onDetail(rowdata, this.historyRequestBody); }
   // 編輯補登資料
   onEditData(rowData: TLS24010Data, type: string): void {
+    // 1. 處理非作廢、非刪除的一般編輯
+    if (type !== FIX_TYPE.交易資料作廢 && type !== FIX_TYPE.刪除交易) {
+      return this.onEdit({ ...rowData, type, TXN_GUIPaper: this.historyRequestBody?.TXN_GUIPaper }, this.historyRequestBody);
+    }
     if (type === FIX_TYPE.交易資料作廢) {
-      const orgDate = rowData.TXN_Date;
-      const isCross = this.isCrossPeriod(orgDate);
-
-      let headerMessage: string;
-      let confirmMessage: string;
-
-      if (isCross && rowData.TXN_GUIBegNo !== '00000000') {
-        headerMessage = `開立折讓單`;
-        confirmMessage = `此筆交易已跨期，需進行開立折讓單作業。確定要開立折讓單嗎?`;
-      } else {
-        headerMessage = `作廢交易資料`;
-        confirmMessage = `此筆交易未跨期，確定要作廢交易資料嗎?`;
-      }
-
-      // 這裡定義了 data 層級
-      const contextObj = { data: { selectedDate: new Date() } };
-
+      const isCross = this.isCrossPeriod(rowData.TXN_Date) && rowData.TXN_GUIBegNo !== '00000000';
+      // --- 預設時間為 23:00 的 Date 物件 ---
+      const defaultVoidDate = new Date();
+      defaultVoidDate.setHours(23, 0, 0, 0);
       this.messageService.confirm({
-        header: headerMessage,
-        message: confirmMessage,
+        header: isCross ? '開立折讓單' : '作廢交易資料',
+        message: isCross ? '此筆交易已跨期，需進行開立折讓單作業。確定要開立折讓單嗎?' : '此筆交易未跨期，確定要作廢交易資料嗎?',
         contentTemplate: this.customTimeTemp,
-        templateContext: contextObj,
+        templateContext: { data: { selectedDate: defaultVoidDate } },
         accept: (result) => {
-          // --- 修正點 1: 依照 contextObj 的結構取值 ---
-          // result 其實就是你傳進去的 contextObj
           const selectedDate = result?.data?.selectedDate;
-
-          console.log('取得的日期為:', selectedDate); // 偵錯用
-
-          if (!selectedDate) {
-            this.messageService.errorBubble('請選擇作廢日期');
-            return;
-          }
-
-          // --- 修正點 2: 日期卡控邏輯 ---
-          const txnDate = new Date(rowData.TXN_Date);
-          const today = new Date();
-          const compareSelected = new Date(selectedDate).setHours(0, 0, 0, 0);
-          const compareTxn = new Date(txnDate).setHours(0, 0, 0, 0);
-          const compareToday = new Date(today).setHours(0, 0, 0, 0);
-
-          if (compareSelected < compareTxn) {
-            this.messageService.errorBubble('作廢日期不可早於交易日期');
-            return;
-          }
-          if (compareSelected > compareToday) {
-            this.messageService.errorBubble('作廢日期不可晚於今日');
-            return;
-          }
-
+          if (!this.isValidVoidDate(selectedDate, rowData.TXN_Date)) return;
           this.loading = true;
           const data = {
             Store_way: rowData.store_way || '',
             SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
-            TXN_Date: formatDateToYYYY_MM_DD(rowData.TXN_Date) || '',
+            TXN_Date: this.datePipe.transform(rowData.TXN_Date, 'yyyy-MM-dd') || '',
             ECR_No: rowData.ECR_No || '',
             TXN_No: Number(rowData.TXN_No) || 0,
             POS5006_ID: rowData.ID || 0,
             TXN_Remark: rowData.TXN_Remark || '',
             EditType: TLS24010_EDIT_TYPE.交易資料作廢,
             VoidEdit: {
-              // 使用格式化工具處理日期
-              Void_Date: formatDateToYYYY_MM_DD(selectedDate) || '',
-              Void_Time: formatDateToHH_MM_SS(selectedDate) || '',
+              Void_Date: this.datePipe.transform(selectedDate, 'yyyy-MM-dd') || '',
+              Void_Time: this.datePipe.transform(selectedDate, 'HH:mm:ss') || '',
             }
           };
-
-          this.tls24010Service.updateTLS24010(data)
-            .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-            .subscribe((res) => {
-              this.messageService.successBubble(res.Message);
-              if (res.Data?.Is_Create_Ret) {
-                // ... 續接列印折讓單邏輯 ...
-                setTimeout(() => {
-                  this.messageService.confirm({
-                    header: '折讓單已產生',
-                    message: '是否要列印折讓單?',
-                    accept: () => {
-                      this.loading = true;
-                      this.tls24010Service.printTLS24010(res.Data?.TXN_Ret_No || '')
-                        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-                        .subscribe((printRes) => {
-                          window.open(environment.ApiUrl + printRes.Data.Print_URL, '_blank');
-                          this.onSubmit(this.queryForm);
-                        });
-                    }
-                  });
-                }, 1000);
-              } else {
-                this.onSubmit(this.queryForm);
-              }
-            });
+          this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+            this.messageService.successBubble(res.Message);
+            if (res.Data?.Is_Create_Ret) {
+              setTimeout(() => {
+                this.messageService.confirm({
+                  header: '折讓單已產生', message: '是否要列印折讓單?',
+                  accept: () => {
+                    this.loading = true;
+                    this.tls24010Service.printTLS24010(res.Data?.TXN_Ret_No || '').pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((printRes) => {
+                      window.open(environment.ApiUrl + printRes.Data.Print_URL, '_blank');
+                      this.onSubmit(this.queryForm);
+                    });
+                  }
+                });
+              }, 1000);
+            } else {
+              this.onSubmit(this.queryForm);
+            }
+          });
         },
         extraButtons: [
           {
-            label: '確認資料',
-            severity: 'info',
-            action: () => {
-              this.onEdit({
-                ...rowData,
-                type,
-                TXN_GUIPaper: this.queryStateService.getQueryStateValue(this.ProgNo)?.TXN_GUIPaper,
-              });
-            }
+            label: '確認資料', severity: 'info',
+            action: () => this.onEdit({ ...rowData, type, TXN_GUIPaper: this.historyRequestBody?.TXN_GUIPaper }, this.historyRequestBody)
           }
         ]
       });
     } else if (type === FIX_TYPE.刪除交易) {
-      if (!rowData) return;
       const txnDate = this.datePipe.transform(rowData.TXN_Date, 'yyyy-MM-dd')
       if (!txnDate) return;
       const body = {
@@ -310,8 +250,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         TXN_No: Number(rowData.TXN_No),
       };
       this.messageService.confirm({
-        header: '刪除交易',
-        message: '確定要刪除交易嗎?',
+        header: '刪除交易', message: '確定要刪除交易嗎?',
         accept: () => {
           this.loading = true;
           this.tls24010Service.deleteTLS24010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
@@ -320,15 +259,30 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
           })
         }
       });
-    } else {
-      this.onEdit({
-        ...rowData,
-        type,
-        TXN_GUIPaper: this.queryStateService.getQueryStateValue(this.ProgNo)?.TXN_GUIPaper,
-      }, this.historyRequestBody);
     }
   }
-  items: MenuItem[] = [];
+  /** 輔助：驗證作廢日期 */
+  private isValidVoidDate(selected: Date, txnDateStr: string): boolean {
+    if (!selected) {
+      this.messageService.errorBubble('請選擇作廢日期');
+      return false;
+    }
+    // 清除時間部分，只比較年月日
+    const s = new Date(selected).setHours(0, 0, 0, 0);
+    const t = new Date(txnDateStr).setHours(0, 0, 0, 0);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+    if (s < t) {
+      this.messageService.errorBubble('作廢日期不可早於交易日期');
+      return false;
+    }
+    if (s > today) {
+      this.messageService.errorBubble('作廢日期不可晚於今日');
+      return false;
+    }
+    return true;
+  }
   updateItems(): void {
     this.items = [
       {
@@ -365,77 +319,53 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       }
     ];
     const TXN_GUIPaper = this.queryForm.controls.TXN_GUIPaper.value;
-    if (TXN_GUIPaper === 'E' || TXN_GUIPaper === '2') { // 補原機台、手開發票才有刪除
+    if (TXN_GUIPaper === TXN_GUIPAPER.補原機台 || TXN_GUIPaper === TXN_GUIPAPER.手開發票) { // 補原機台、手開發票才有刪除
       this.items.push({
         label: '刪除',
         icon: 'pi pi-trash',
         disabled: (() => {
-          // 1. 沒有權限，直接禁用
-          if (!this.hasPermission(Actions.Delete)) {
-            return true;
-          }
-          // 2. 如果沒有選中任何列 (row 為空)，應預設為禁用
+          if (!this.hasPermission(Actions.Delete)) return true;// 1. 沒有權限，直接禁用
           const row = this.selectedRowData;
-          if (!row) {
-            return true;
-          }
-          // 3. 無發票狀態：可以刪除 (disable = false)
-          if (row.GUI_Track === '00' && row.TXN_GUIBegNo === '00000000') {
-            return false;
-          }
-          // 4. 有發票或其他狀態：依據 IsCanDel 欄位決定
-          // 使用 ?. 並提供預設值，確保不會噴錯
-          return !row?.IsCanDel;
+          if (!row) return true; // 2. 如果沒有選中任何列 (row 為空)，應預設為禁用
+          if (row.GUI_Track === '00' && row.TXN_GUIBegNo === '00000000') return false; // 3. 無發票狀態：可以刪除 (disable = false)
+          return !row?.IsCanDel;// 4. 有發票或其他狀態：依據 IsCanDel 欄位決定
         })(),
         command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.刪除交易),
       });
     }
   }
-
   openModal(rowdata: TLS24010Data, event?: Event): void {
     this.selectedRowData = rowdata;
     this.updateItems();
-    if (this.menu && event) {
-      this.menu.toggle(event);
-    }
+    if (this.menu && event) this.menu.toggle(event);
   }
   // 補登資料
   onCreateData(frm: FormGroup): void {
-    this.isTXN_GUIPaper = frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C';
-    if (frm?.value.TXN_GUIPaper === 'R' || frm?.value.TXN_GUIPaper === 'C') { return; }
-    if (!frm || !frm.get('ECR_No')?.value) {
-      this.messageService.errorBubble('請選擇收銀機號');
-      return;
-    }
-    if (!frm.get('TLT_No')?.value) {
-      this.messageService.errorBubble('請選擇專櫃編號');
-      return;
-    }
+    if (this.isSpecialPaper || !frm) return;
+    if (!frm.get('ECR_No')?.value) return this.messageService.errorBubble('請選擇收銀機號');
+    if (!frm.get('TLT_No')?.value) return this.messageService.errorBubble('請選擇專櫃編號');
     this.submitted = true;
-    if (!this.queryForm.valid) { return; }
+    if (!frm.valid) { return; }
     const TLT_No = frm.get('TLT_No')?.value;
     const data = this.TLT_NoOptions.find(option => option.No === TLT_No);
     if (data?.store_way && data?.Name && data?.talent_id) {
-      this.queryForm.get('store_way')?.setValue(data.store_way);
-      this.queryForm.get('TLT_Name')?.setValue(data?.Name);
-      this.queryForm.get('talent_id')?.setValue(data?.talent_id);
+      frm.get('store_way')?.setValue(data.store_way);
+      frm.get('TLT_Name')?.setValue(data?.Name);
+      frm.get('talent_id')?.setValue(data?.talent_id);
+      frm.get('rece_yn')?.setValue(data?.rece_yn);
     }
-    const inertData = {
-      ...frm.value,
-      TXN_No: '系統自動產生',
-    };
+    const inertData = { ...frm.value, TXN_No: '系統自動產生' };
     this.onCreate(inertData);
   }
 
   onCancel(rowdata: TLS24010Data): void {
     this.messageService.confirm({
-      header: '取消作廢交易資料',
-      message: '確定要取消作廢交易資料嗎?',
+      header: '取消作廢交易資料', message: '確定要取消作廢交易資料嗎?',
       accept: () => {
         this.loading = true;
         this.tls24010Service.cancelVoidTLS24010({
           SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
-          TXN_Date: formatDateToYYYY_MM_DD(rowdata.TXN_Date) || '',
+          TXN_Date: this.datePipe.transform(rowdata.TXN_Date, 'yyyy-MM-dd') || '',
           ECR_No: rowdata.ECR_No,
           TXN_No: Number(rowdata.TXN_No),
         }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
@@ -446,129 +376,50 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     });
   }
   get checkTXN_GUIPaper(): boolean {
-    return this.queryForm.get('TXN_GUIPaper')?.value === 'R' ||
-      this.queryForm.get('TXN_GUIPaper')?.value === 'C' ||
-      this.queryForm.get('TXN_GUIPaper')?.value === 'M';
+    const form = this.queryForm;
+    return form.get('TXN_GUIPaper')?.value === 'R' || form.get('TXN_GUIPaper')?.value === 'C' || form.get('TXN_GUIPaper')?.value === 'M';
   }
   onTXNGuipaperChanged(value: string): void {
+    const form = this.queryForm;
     this.data = [];
     this.submitted = false;
-    const form = this.queryForm;
-    if (value === 'M' && form) {
-      // 加入本身的驗證規則以及額外加入必填
-      form.get('ECR_No')?.setValidators([Validators.required]);
-      form.get('TXN_No')?.setValidators([Validators.required, Validators.maxLength(8), Validators.max(99999999)]);
-      form.updateValueAndValidity();
-      this.cdr.markForCheck();
-      form.get('ECR_No')?.setValue(null);
-      form.get('TXN_No')?.setValue(null);
-      this.columns = columns;
-      this.TXN_Date_Label = '銷售日期';
-    } else if (value === 'C') {
-      form.get('ECR_No')?.setValidators(null);
-      form.get('TXN_No')?.setValidators([Validators.maxLength(8), Validators.max(99999999)]);
-      form.updateValueAndValidity();
-      this.cdr.markForCheck();
-      form.get('ECR_No')?.setValue(null);
-      form.get('TXN_No')?.setValue(null);
-      this.columns = C_columns;
-      this.TXN_Date_Label = '折讓單日期';
-    } else if (value === 'R') {
-      // 移除必填驗證規則，保留其他規則
-      form.get('ECR_No')?.setValidators(null);
-      form.get('TXN_No')?.setValidators([Validators.maxLength(8), Validators.max(99999999)]);
-      form.updateValueAndValidity();
-      this.cdr.markForCheck();
-      form.get('ECR_No')?.setValue(null);
-      form.get('TXN_No')?.setValue(null);
-      this.columns = columns;
-      this.TXN_Date_Label = '作廢日期';
-    } else {
-      // 移除必填驗證規則，保留其他規則
-      form.get('ECR_No')?.setValidators(null);
-      form.get('TXN_No')?.setValidators([Validators.maxLength(8), Validators.max(99999999)]);
-      form.updateValueAndValidity();
-      this.cdr.markForCheck();
-      form.get('ECR_No')?.setValue(null);
-      form.get('TXN_No')?.setValue(null);
-      this.columns = columns;
-      this.TXN_Date_Label = '銷售日期';
-    }
+    form.patchValue({ ECR_No: null, TXN_No: null });// 重設欄位
+    // 根據 value 定義配置
+    const configs: Record<string, { label: string; columns: ReportColumn[]; ecrRequired?: boolean; txnRequired?: boolean }> = {
+      'M': { label: '銷售日期', columns: columns, ecrRequired: true, txnRequired: true },
+      'C': { label: '折讓單日期', columns: C_columns },
+      'R': { label: '作廢日期', columns: columns },
+      'default': { label: '銷售日期', columns: columns }
+    };
+    const config = configs[value] || configs['default'];
+    // 統一處理驗證
+    this.TXN_Date_Label = config.label;
+    this.columns = config.columns;
+    const ecrValidators = config.ecrRequired ? [Validators.required] : null;
+    const txnValidators = [Validators.maxLength(8), Validators.max(99999999)];
+    if (config.txnRequired) txnValidators.push(Validators.required);
+    form.get('ECR_No')?.setValidators(ecrValidators);
+    form.get('TXN_No')?.setValidators(txnValidators);
+    form.updateValueAndValidity();
+    this.cdr.markForCheck();
   }
   btnLoading = false;
   onExportPDF(frm: FormGroup): void {
     this.submitted = true;
     this.btnLoading = true;
-    this.messageService.blockUi();
     if (frm.valid) {
       const body = {
         ...frm.value,
-        TXN_Date: frm.value.TXN_Date ? formatDateToYYYY_MM_DD(frm.value.TXN_Date) : '',
+        TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',
       }
-      this.tls24010Service.exportTLS24010PDF(body).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this)).subscribe(res => {
-        this.handleFileExport(res, '.pdf');
-      })
+      const export$ = this.tls24010Service.exportTLS24010PDF(body);
+      this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading);
       this.submitted = false;
     } else {
       this.btnLoading = false;
     }
-    this.messageService.unblockUi();
   }
-  // 處理檔案匯出的通用邏輯
-  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
-    const contentDisposition = response.headers.get('Content-Disposition');
-    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
-    const blob = response.body;
-
-    if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } else {
-      this.messageService.warnBubble('沒有找到符合條件的資料，無法生成報表。');
-    }
-  }
-  // 輔助方法：從 header 獲取檔名
-  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
-    if (!contentDisposition) {
-      return `download${defaultExtension}`;
-    }
-
-    const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
-    if (filenameStarMatch && filenameStarMatch.length > 1) {
-      const encodedFilename = filenameStarMatch[1];
-      try {
-        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
-        return decoded;
-      } catch (error) {
-        console.error('Failed to decode filename*', error);
-        return encodedFilename;
-      }
-    }
-
-    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
-    if (filenameMatch && filenameMatch.length > 1) {
-      try {
-        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
-      } catch {
-        return filenameMatch[1];
-      }
-    }
-
-    return `download${defaultExtension}`;
-  }
-
-  /**
- * 判斷作廢是否跨期 (模擬後端邏輯)
- * 根據台灣發票每兩個月一期的規則判斷。
- * @param orgDateString 原始日期的字串 (例如 'YYYY-MM-DD')
- * @returns boolean 是否跨期
- */
+  // 判斷作廢是否跨期，根據台灣發票每兩個月一期的規則判斷。
   private isCrossPeriod(orgDateString: string): boolean {
     // 原始日期
     const orgDate = new Date(orgDateString);

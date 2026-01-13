@@ -97,6 +97,12 @@
               [control]="queryForm.controls.is_tax" [submitted]="submitted" [options]="taxOptions"
               (valueChange)="onTaxChange($event)"></app-radiobutton>
           </div>
+          <!-- <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton label="  " controlName="store_wayList" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.store_wayList"
+              [options]="[{ label: '全部', value: null },{ label: '專櫃', value: '1' }, { label: '自營', value: '2' }]"
+              [submitted]="submitted"></app-radiobutton>
+          </div> -->
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>

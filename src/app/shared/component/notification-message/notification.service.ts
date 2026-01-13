@@ -17,6 +17,7 @@ export interface ConfirmOptions {
   showIcon?: boolean; // 新增是否顯示圖示的屬性
   acceptLabel?: string;
   rejectLabel?: string;
+  showRejectButton?: boolean;
   extraButtons?: {
     label: string;
     action: () => void;

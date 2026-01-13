@@ -49,7 +49,9 @@ export interface GLS1016 {
 export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    // CompNo: ['', [Validators.required, Validators.maxLength(6)]], //  公司代號
+    // SA補充: 
+    // 目前是以RefCode 對象別代碼為pk, 不用改, 但要麻煩您增加卡控, 統一編號必需是唯一值即可
+
     RefCode: ['', [Validators.required, Validators.maxLength(30)]], // 對象別代碼 (不可重複) 改為預設帶入統一編號
     RefName: ['', [Validators.required, Validators.maxLength(30)]], // 對象別名稱 (可編輯)
     UniformNo: ['', [Validators.maxLength(10)]], // 統一編號
@@ -93,6 +95,7 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
 
     if (this.crudstatus == CRUDStatus.Edit) {
       // 編輯模式避免更改主鍵
+      this.dataForm.get('RefCode')?.disable();
       this.dataForm.get('UniformNo')?.disable();
     }
   }

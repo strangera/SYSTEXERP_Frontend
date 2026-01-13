@@ -1,23 +1,24 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormGroup, Validators, FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { finalize } from 'rxjs/operators';
-import { Observable } from 'rxjs';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { TLS42020Service, TLS42020Data } from '../../../service/api/tls/tls42020.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
-import { FileSelectEvent, FileUploadHandlerEvent } from 'primeng/fileupload';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { FileSelectEvent, FileUploadHandlerEvent } from 'primeng/fileupload';
+import { Observable } from 'rxjs';
+import { finalize } from 'rxjs/operators';
+import { TLS42020Data, TLS42020Service } from '../../../service/api/tls/tls42020.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
 @Component({
   selector: 'app-tls42020',
@@ -36,7 +37,8 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
     DialogComponent,
     FileUploadComponent,
     RadiobuttonComponent,
-    CalendarComponent
+    CalendarComponent,
+    ButtonModule
   ]
 })
 export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> implements OnInit {
@@ -243,5 +245,25 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     });
+  }
+
+  // 檔案下傳功能
+  btnLoading = false;
+  onUpload() {
+    // 呼叫ExecSpFuncTLS42020 API
+    this.btnLoading = true;
+    this.tls42020Service.ExecSpFuncTLS42020({
+      idList: this.selectedItems.map(item => item.id)
+    })
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.btnLoading = false)
+      )
+      .subscribe(res => {
+        if (res.Status === '0000') {
+          this.messageService.successBubble('下傳成功');
+          this.onSubmit(this.queryForm);
+        }
+      });
   }
 }

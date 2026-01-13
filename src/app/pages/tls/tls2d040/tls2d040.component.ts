@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { TLS2D040Service } from '@service/api/tls/tls2-d040.service';
+import { QueryTLS2D040Request, TLS2D040Service } from '@service/api/tls/tls2-d040.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
@@ -11,13 +11,40 @@ import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-t
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { saveAs } from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
+import { SortMeta } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
+interface TLS2D040FormValue {
+  tlt_no: string[];
+  source_type: string[];
+  CAP_Item: string[];
+  AccNo: string[];
+  tpy_bdate: Date | null;
+  tpy_edate: Date | null;
+  VEN_No: string | null;
+  pod_no: string | null;
+  GUI_FLAG: string | null;
+  org_id: string[];
+  close_flag: string;
+  bus_type: string[];
+  store_way: string | null;
+  building_no: string[];
+  FLOOR_NO: string[];
+  status: string;
+  report_type: string;
+  ShowNeg1: boolean;
+  ShowNeg2: boolean;
+  pageSize: number;
+  pageIndex: number;
+  SortBy: SortMeta[];
+}
 @Component({
   selector: 'app-tls2d040',
   templateUrl: './tls2d040.component.html',
@@ -36,6 +63,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
     CommonModule,
     CheckboxModule,
     CustomFooterTableComponent,
+    ButtonModule
   ]
 })
 export class TLS2D040Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -126,7 +154,8 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
   //#endregion
 
   columns: Column[] = [];
-
+  btnLoading = false;
+  btnLoading2 = false;
   constructor(
     private tls2d040Service: TLS2D040Service,
     private datepipe: DatePipe,
@@ -353,5 +382,134 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
         ];
         break;
     }
+  }
+
+  private buildExportPayload(): QueryTLS2D040Request & { OrderBy?: string; Offset?: number } {
+    const raw = this.queryForm.getRawValue() as unknown as TLS2D040FormValue;
+
+    const toArray = (val: string[] | undefined): string[] =>
+      Array.isArray(val) ? val.filter(v => v !== '') : [];
+
+    return {
+      PageSize: 0,
+      PageIndex: 0,
+      OrderBy: '',
+      Offset: 0,
+      SortBy: raw.SortBy ?? [],
+      tlt_no: toArray(raw.tlt_no),
+      source_type: toArray(raw.source_type),
+      CAP_Item: toArray(raw.CAP_Item),
+      AccNo: toArray(raw.AccNo),
+      tpy_bdate: raw.tpy_bdate ? this.datepipe.transform(raw.tpy_bdate, 'yyyyMM') ?? '' : '',
+      tpy_edate: raw.tpy_edate ? this.datepipe.transform(raw.tpy_edate, 'yyyyMM') ?? '' : '',
+      VEN_No: raw.VEN_No ?? '',
+      pod_no: raw.pod_no ?? '',
+      GUI_FLAG: raw.GUI_FLAG ?? '',
+      org_id: toArray(raw.org_id),
+      close_flag: raw.close_flag ?? '',
+      bus_type: toArray(raw.bus_type),
+      store_way: raw.store_way ?? '',
+      building_no: toArray(raw.building_no),
+      FLOOR_NO: toArray(raw.FLOOR_NO),
+      ShowNeg: raw.status === '1' && raw.report_type === '0' ? !!raw.ShowNeg1 : !!raw.ShowNeg2,
+    };
+  }
+
+  onExportExcel(): void {
+    if (!this.data || this.data.length === 0) {
+      return;
+    }
+
+    const formValue = this.queryForm.value;
+    const payload = this.buildExportPayload();
+
+    this.btnLoading2 = true;
+
+    let exportRequest$;
+
+    if (formValue.status === '0') {
+      // 明細匯出
+      exportRequest$ = this.tls2d040Service.exportTLS2D040_Detail(payload);
+    } else {
+      // 彙總匯出，依 report_type 決定 API
+      switch (formValue.report_type) {
+        case '0':
+          exportRequest$ = this.tls2d040Service.exportTLS2D040_TLT_Summary(payload);
+          break;
+        case '1':
+          exportRequest$ = this.tls2d040Service.exportTLS2D040_ChargeItem_Summary(payload);
+          break;
+        case '2':
+          exportRequest$ = this.tls2d040Service.exportTLS2D040_Department_Summary(payload);
+          break;
+        case '3':
+          exportRequest$ = this.tls2d040Service.exportTLS2D040_Acct_Summary(payload);
+          break;
+        default:
+          this.btnLoading2 = false;
+          return;
+      }
+    }
+
+    exportRequest$
+      .pipe(untilDestroyed(this), finalize(() => this.btnLoading2 = false))
+      .subscribe({
+        next: (blob: Blob) => {
+          if (!blob || blob.size === 0) {
+            this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
+            return;
+          }
+          saveAs(blob, '專櫃代扣款明細表.xlsx');
+        }
+      });
+  }
+
+  onExportPDF(): void {
+    if (!this.data || this.data.length === 0) {
+      return;
+    }
+
+    const formValue = this.queryForm.value;
+    const payload = this.buildExportPayload();
+
+    this.btnLoading = true;
+
+    let exportRequest$;
+
+    if (formValue.status === '0') {
+      // 明細匯出
+      exportRequest$ = this.tls2d040Service.exportTLS2D040PDF_Detail(payload);
+    } else {
+      // 彙總匯出，依 report_type 決定 API
+      switch (formValue.report_type) {
+        case '0':
+          exportRequest$ = this.tls2d040Service.exportTLS2D040_TLT_SummaryPDF(payload);
+          break;
+        case '1':
+          exportRequest$ = this.tls2d040Service.exportTLS2D040_ChargeItem_SummaryPDF(payload);
+          break;
+        case '2':
+          exportRequest$ = this.tls2d040Service.exportTLS2D040_Department_SummaryPDF(payload);
+          break;
+        case '3':
+          exportRequest$ = this.tls2d040Service.exportTLS2D040_Acct_SummaryPDF(payload);
+          break;
+        default:
+          this.btnLoading = false;
+          return;
+      }
+    }
+
+    exportRequest$
+      .pipe(untilDestroyed(this), finalize(() => this.btnLoading = false))
+      .subscribe({
+        next: (blob: Blob) => {
+          if (!blob || blob.size === 0) {
+            this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
+            return;
+          }
+          saveAs(blob, '專櫃代扣款明細表.pdf');
+        }
+      });
   }
 }
