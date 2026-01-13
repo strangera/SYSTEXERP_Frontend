@@ -14,7 +14,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 
 @Component({
@@ -60,12 +60,12 @@ export class FIN52040Component extends BasicQueryPageComponent<Fin52040Request> 
     { field: 'RefCode', header: '對象別代碼', visible: true }, // 對象別代碼
     { field: 'RefName', header: '對象別名稱', visible: true }, // 對象別名稱
 
-    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
-    { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
-    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
-    { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
-    { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
-    { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
+    // { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
+    // { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
+    // { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
+    // { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
+    // { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
+    // { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
   ];
 
   constructor(

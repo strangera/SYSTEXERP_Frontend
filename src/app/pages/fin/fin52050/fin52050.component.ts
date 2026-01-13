@@ -5,7 +5,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Fin52050Service } from '@service/api/fin/fin52050.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -13,7 +12,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 export interface GLS1003 {
   ClassAttr: string, // 大類代碼
@@ -68,17 +67,17 @@ export class FIN52050Component extends BasicQueryPageComponent<GLS1003> implemen
     { field: 'ClassAttrCName', header: '大類名稱', visible: true }, // 大類名稱
     { field: 'ClassAttrEname', header: '大類英文名稱', visible: true }, // 大類英文名稱
 
-    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
-    { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
-    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
-    { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
-    { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
-    { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
+    // { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
+    // { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
+    // { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
+    // { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
+    // { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
+    // { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
   ];
 
   constructor(
     private fin52050Service: Fin52050Service,
-    private validationService: ValidationService
+    // private validationService: ValidationService
   ) {
     super(); // 呼叫父類建構子
   }
