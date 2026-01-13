@@ -7,10 +7,12 @@
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <label for="AccNoPrefix">
+          <label [for]="isFormCreateable ? 'AccNoPrefix' : 'AccNo'">
             科目代號
             <span class="text-red-500">*</span>
           </label>
+          @if (isFormCreateable) {
+          <!-- 新增模式：顯示兩個欄位（AccNoPrefix + AccNoSuffix） -->
           <div class="flex gap-2">
             <div style="flex: 0 0 30%;">
               <app-input-text controlName="AccNoPrefix" [control]="df().AccNoPrefix" [submitted]="submitted"
@@ -21,6 +23,11 @@
                 [submitted]="submitted" [showLabel]="false" [showErrorMessage]="true"></app-input-text>
             </div>
           </div>
+          } @else {
+          <!-- 編輯/檢視模式：只顯示一個欄位（AccNo） -->
+          <app-input-text controlName="AccNo" [control]="df().AccNo" [submitted]="submitted" [showLabel]="false"
+            [showErrorMessage]="true" [readonly]="!isFormReadable"></app-input-text>
+          }
         </div>
 
         <app-input-text class="col-12 md:col-6 lg:col-4" label="科目名稱" controlName="AccCName" [control]="df().AccCName"
@@ -39,7 +46,8 @@
 
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="三碼代號" controlName="ClassNo"
           [options]="service.classNoOptions()" optionLabel="label" optionValue="value" [showClear]="false"
-          [loading]="service.classNoLoading()" [control]="df().ClassNo" [submitted]="submitted"></app-dropdown>
+          [loading]="service.classNoLoading()" [control]="df().ClassNo" [submitted]="submitted"
+          [readonly]="isFormEditable"></app-dropdown>
 
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否為沖帳代號" controlName="ABAT_YN"
           [options]="service.whetherOption" optionLabel="label" optionValue="value" [showClear]="false"
