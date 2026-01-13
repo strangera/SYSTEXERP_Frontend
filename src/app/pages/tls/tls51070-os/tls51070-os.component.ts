@@ -14,6 +14,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
+import { ExportLabelService } from './../../../service/utility/exportLabel.service';
 
 export interface Label {
   id: number,
@@ -137,7 +138,9 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
   // ----------------------------------------------------------------
   constructor(
     private tls51070Service: Tls51070Service,
-    private tls52010Service: Tls52010Service) {
+    private tls52010Service: Tls52010Service,
+    private readonly exportLabelService: ExportLabelService,
+  ) {
     super();
   }
 
@@ -241,26 +244,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
 
     // 將 labelData 的每一筆物件複製一份，並移除 id 屬性
     const exportData = this.labelData.map(({ id, ...rest }) => rest);
-    this.tls51070Service.exportLabel(exportData)
-      .subscribe((response) => {
-        // 處理匯出完成後的邏輯（如有需要）
-        const result = response;
-        // console.log('匯出標籤檔',result);
-
-        // 建立 blob 對象
-        const bom = '\uFEFF'; // UTF-8 BOM
-        const blob = new Blob([bom + result], { type: 'text/plain;charset=utf-8' });
-
-        // 建立下載連結
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'exportLabel.txt'; // 檔案名稱
-        a.click();
-
-        // 釋放資源
-        window.URL.revokeObjectURL(url);
-      });
+    this.exportLabelService.ExportLabel_Other(exportData).subscribe();
   }
 
   //預覽標籤檔
@@ -327,7 +311,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     return maxId + 1;
   }
 
-  // #region 商品管理編號/國際條碼/廠商貨號 
+  // #region 商品管理編號/國際條碼/廠商貨號
   opLoading = false;
   opForm = this.formBuilder.group({
     PLU_MagNo: ['', [Validators.maxLength(20)]],   // ← 新增這行（關鍵修正）
