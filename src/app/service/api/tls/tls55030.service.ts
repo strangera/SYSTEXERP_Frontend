@@ -139,6 +139,7 @@ export interface IInvoiceDetail {
   PUR_TaxType_TEXT: string; // 稅別說明 (新增)
   PUR_DirectType: string; // 發票用途
   PUR_VoucherType: string; // 發票格式代碼
+  Rebate_GUIDate: string;
   PUR_Amt: number; // 發票金額
   Rebate_Amt: number; // 已折讓金額
   Rebate_Name: string | null;    // 新增/輸入的折讓名稱
@@ -169,6 +170,7 @@ export interface IInvoiceDetailByDisNo {
   Rebate_Amt: number; // 折讓金額
   Rebate_Net: number;
   Rebate_Tax: number;
+  Rebate_GUIDate: string;
   Rebate_Name: string | null;    // 新增/輸入的折讓名稱
   // 注意: 此 API 回傳不包含 PUR_Amt
 }

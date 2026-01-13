@@ -38,8 +38,8 @@ export interface IRebateDetailForCRU extends IInvoiceDetail {
   Rebate_Net?: number;    // 計算後的折讓淨額
   Rebate_Tax?: number;    // 計算後的折讓稅額
   Rebate_Name: string | null;    // 新增/輸入的折讓名稱
+  Rebate_GUIDate: string;  // 新增/輸入的折讓日期
 }
-
 
 @Component({
   selector: 'app-tls55030-cru',
@@ -55,24 +55,21 @@ export interface IRebateDetailForCRU extends IInvoiceDetail {
 })
 export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData> implements OnInit {
   @ViewChild('dialogs') dialogComponent!: TLS55030DialogComponent;
-
   dataForm = this.formBuilder.group({
-    DIS_No: [{ value: '', disabled: true }],
-    ACP_YYYYMM: [new Date('2025-01'), [Validators.required]],
-    VEN_No: ['84445301-1', [Validators.required]],
+    DIS_No: [{ value: '系統自動產生', disabled: true }],
+    ACP_YYYYMM: [new Date(), [Validators.required]],
+    VEN_No: [null, [Validators.required]],
     DIS_EntryType: ['1', [Validators.required]],
     RJM_TotalBuyAmt: [{ value: 0, disabled: true }], 			    // 退貨總金額
     invoiceTotalAmount: [{ value: 0, disabled: true }], 			  // 發票總金額(自取) - 彙總所有選取的發票金額
     invoiceRemainingRebateAmount: [{ value: 0, disabled: true }], 	// 發票剩餘可折總金額(自取) - 彙總所有選取的發票剩餘可折金額
     totalRebateAmount: [{ value: 0, disabled: true }], 			    // 折讓總金額(自取) - 彙總所有折讓明細的金額 (APS30231.Rebate_Amt)
     balanceAmount: [{ value: 0, disabled: true }], 				      // 餘額(自取) - 計算結果 (RJM_TotalBuyAmt - totalRebateAmount)
-
     // 折讓單開立金額
     Rebate_Amt: [{ value: 0, disabled: true }], // 折讓金額
     Rebate_Name: [null as string | null], // 品名
     radioOption: ['1'], // 品名選項
   });
-
   // Dropdown options
   DIS_EntryTypeOptions = getSYS1000Options('DIS_EntryType');
   VEN_NoOptions = this.dropdown.queryPos2013({ VEN_Flag: '' })
@@ -88,13 +85,29 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
   data: IRebateDetailForCRU[] = []; // <--- 介面已更新
   selectedItems: IRebateDetailForCRU[] = []; // <--- 介面已更新
   columns = columns;
+  defaultInsertData = {}
 
   // 修正 validateRow 的型別以使用擴展介面
   validateRow = (rowData: IRebateDetailForCRU): { isValid: boolean, errorMessage: string } => {
-    // 由於 rowData 現在是 IRebateDetailForCRU 類型，存取 Rebate_Amt_New 是安全的
-    if ((rowData.Rebate_Amt_New || 0) > rowData.PUR_Amt - rowData.Rebate_Amt) {
-      return { isValid: false, errorMessage: '此張進項發票已超折，請確認折讓單內容' };
+    if (!rowData.PUR_GUINo) return { isValid: true, errorMessage: '' };
+
+    // 1. 找出表格中所有「同一張發票」的資料列
+    const sameInvoiceRows = this.data.filter(item => item.PUR_GUINo === rowData.PUR_GUINo);
+
+    // 2. 累加這些資料列中，使用者「本次輸入」的所有折讓金額
+    const currentTotalRebateNew = sameInvoiceRows.reduce((sum, item) => sum + (item.Rebate_Amt_New || 0), 0);
+
+    // 3. 檢查：(API回傳的已折金額 + 本次表格內所有同發票號碼的輸入總和) 是否超過 發票總金額
+    // 注意：這裡的 rowData.Rebate_Amt 是 API 回傳的原始已折金額
+    const isOverRebate = (rowData.Rebate_Amt + currentTotalRebateNew) > rowData.PUR_Amt;
+
+    if (isOverRebate) {
+      return {
+        isValid: false,
+        errorMessage: `發票 ${rowData.PUR_GUINo} 累計折讓金額已超過發票金額 (上限: ${rowData.PUR_Amt - rowData.Rebate_Amt})`
+      };
     }
+
     return { isValid: true, errorMessage: '' };
   };
 
@@ -108,8 +121,34 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
     this.initializePage('TLS55030', this.dataForm);
     this.setupVendorUniformNoListener();
     this.setupRebateNameValidator();
+    // 監聽結帳年月，隨時更新 Table 的預設折讓日期
+    this.dataForm.controls.ACP_YYYYMM.valueChanges
+      .pipe(startWith(this.dataForm.controls.ACP_YYYYMM.value), untilDestroyed(this))
+      .subscribe(date => {
+        this.updateTableDefaultDate(date);
+      });
     if (!this.isFormCreateable) {
       this.loadDetailData();
+    }
+  }
+  /**
+   * 根據結帳年月計算該月最後一天，並存入 tableDefaultData
+   */
+  private updateTableDefaultDate(acpDateValue: Date | null): void {
+    if (acpDateValue) {
+      const inputDate = acpDateValue instanceof Date ? acpDateValue : new Date(acpDateValue);
+      if (!isNaN(inputDate.getTime())) {
+        const year = inputDate.getFullYear();
+        const month = inputDate.getMonth();
+        // 計算該月最後一天
+        const lastDay = new Date(year, month + 1, 0);
+
+        // 更新預設值物件 (確保欄位名稱與 columns 中的 field 一致)
+        this.defaultInsertData = {
+          ...this.defaultInsertData,
+          Rebate_GUIDate: lastDay
+        };
+      }
     }
   }
   // 在非新增模式下 (編輯/查詢)，根據 DIS_No 載入發票/退貨明細資料。
@@ -127,6 +166,7 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
         Rebate_Amt_New: item.Rebate_Amt, // 先給0
         Rebate_Net: item.Rebate_Net, // 需從 Rebate_Amt 計算或後端提供
         Rebate_Tax: item.Rebate_Tax,  // 需從 Rebate_Amt 計算或後端提供
+        Rebate_GUIDate: item.Rebate_GUIDate
       }));
       this.data = convertedData;
 
@@ -156,7 +196,7 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
       })
     );
     combineLatest([loadRebate$, loadReturn$]).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(() => {
-      this.messageService.successBubble('資料載入成功');
+      console.log('資料載入成功');
     });
   }
   // 監聽 VEN_No 變化並找出對應的廠商統一編號 (No)
@@ -224,11 +264,7 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
       Rebate_Tax: 0
     }));
     this.data = [...this.data, ...newItems];
-    console.log(this.data);
-
     this.selectedItems = [];
-
-    // 統一呼叫新的方法
     this.updateInvoiceSummaryAndFormState();
   }
   // **核心修正點：統一處理主表單禁用/啟用和彙總欄位恆禁用邏輯**
@@ -272,18 +308,24 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
     let positiveTotalRebateAmt = 0;
 
     this.data.forEach(item => {
+      // 確保輸入的折讓金額在計算前已經處理過（或在此處強制取整）
+      const rebateNew = Math.round(item.Rebate_Amt_New || 0);
+
       totalInvoiceAmt += item.PUR_Amt;
       totalRemainingRebateAmt += item.PUR_Amt - item.Rebate_Amt;
-      positiveTotalRebateAmt += item.Rebate_Amt_New || 0;
+      positiveTotalRebateAmt += rebateNew;
     });
-    const negativeTotalRebateAmt = positiveTotalRebateAmt != 0 ? -positiveTotalRebateAmt : 0;
-    const balance = totalInvoiceAmt - totalRemainingRebateAmt + negativeTotalRebateAmt;
+
+    // 全部取整數
+    const finalPositiveAmt = Math.round(positiveTotalRebateAmt);
+    const negativeTotalRebateAmt = finalPositiveAmt !== 0 ? -finalPositiveAmt : 0;
+    const balance = Math.round(totalInvoiceAmt - totalRemainingRebateAmt + negativeTotalRebateAmt);
 
     // 更新 FormControls
-    this.dataForm.controls.invoiceTotalAmount.setValue(totalInvoiceAmt);
-    this.dataForm.controls.invoiceRemainingRebateAmount.setValue(totalRemainingRebateAmt);
+    this.dataForm.controls.invoiceTotalAmount.setValue(Math.round(totalInvoiceAmt));
+    this.dataForm.controls.invoiceRemainingRebateAmount.setValue(Math.round(totalRemainingRebateAmt));
     this.dataForm.controls.totalRebateAmount.setValue(negativeTotalRebateAmt);
-    this.dataForm.controls.Rebate_Amt.setValue(positiveTotalRebateAmt);
+    this.dataForm.controls.Rebate_Amt.setValue(finalPositiveAmt);
     this.dataForm.controls.balanceAmount.setValue(balance);
   }
   // 彙總退貨明細相關欄位 (主要是 RJM_TotalBuyAmt)
@@ -303,17 +345,6 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const formValue = frm.getRawValue();
-      const acpDateValue = formValue.ACP_YYYYMM;
-      let rebateGUIDate = '';
-      if (acpDateValue) {
-        const inputDate = acpDateValue instanceof Date ? acpDateValue : new Date(acpDateValue);
-        if (!isNaN(inputDate.getTime())) {
-          const year = inputDate.getFullYear();// 2. 獲取當前的年份
-          const month = inputDate.getMonth();// 3. 獲取當前的月份 (JavaScript 月份是 0-11)
-          const lastDay = new Date(year, month + 1, 0);// 4. 計算該月的最後一天：設置下一個月 (month + 1) 的第 0 天
-          rebateGUIDate = this.datePipe.transform(lastDay, 'yyyy-MM-dd') || '';// 5. 格式化為 YYYY-MM-dd
-        }
-      }
       const paramBody = {
         DIS_No: this.isFormCreateable ? undefined : formValue.DIS_No,
         ACP_YYYYMM: this.datePipe.transform(formValue.ACP_YYYYMM, 'yyyyMM') || '',
@@ -326,12 +357,10 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
           TABTYPE: item.TABTYPE,
           PUR_TaxType: item.PUR_TaxType,
           GUI_Amt: item.PUR_Amt,
-
-          Rebate_GUIDate: rebateGUIDate,
-
-          Rebate_Amt: item.Rebate_Amt_New || 0,
-          Rebate_Net: item.Rebate_Net || 0,
-          Rebate_Tax: item.Rebate_Tax || 0,
+          Rebate_GUIDate: this.datePipe.transform(item.Rebate_GUIDate, 'yyyy-MM-dd') || '',
+          Rebate_Amt: Math.round(item.Rebate_Amt_New || 0),
+          Rebate_Net: Math.round(item.Rebate_Net || 0),
+          Rebate_Tax: Math.round(item.Rebate_Tax || 0),
           Rebate_Name: formValue.DIS_EntryType === '1' ? '退貨' : formValue.Rebate_Name || '',
         })),
         returnDetails: this.data2.map(item => ({
@@ -391,7 +420,6 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
     const formValue = frm.getRawValue();
     const paramBody = {
       ...formValue,
-      // 使用 DatePipe 轉換日期格式
       APRV_Date_Start: this.datePipe.transform(formValue.APRV_Date_Start, 'yyyy-MM-dd'),
       APRV_Date_End: this.datePipe.transform(formValue.APRV_Date_End, 'yyyy-MM-dd'),
       PageIndex: 1,

@@ -6,21 +6,25 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="折讓維護單號" controlName="DIS_No" [control]="dataForm.controls.DIS_No"
+            [submitted]="submitted" />
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
           <app-calendar label="結帳年月" calendarType="dateMonthOne" controlName="ACP_YYYYMM"
             [control]="dataForm.controls.ACP_YYYYMM" [submitted]="submitted" />
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
+        <div class="col-12 md:col-6 lg:col-3">
           <app-dropdown label="廠商編號" controlName="VEN_No" [options]="VEN_NoOptions | async" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.VEN_No" [submitted]="submitted" />
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
+        <div class="col-12 md:col-6 lg:col-3">
           <app-radiobutton label="折讓項目" controlName="DIS_EntryType" groupname="DIS_EntryType"
             [options]="DIS_EntryTypeOptions" optionLabel="label" optionValue="value"
             [control]="dataForm.controls.DIS_EntryType" [submitted]="submitted" />
         </div>
       </div>
-      <app-table-edit title="折讓單明細" [data]="data" [columns]="columns"
+      <app-table-edit title="折讓單明細" [data]="data" [columns]="columns" [defaultInsertData]="defaultInsertData"
         (dataChange)="updateInvoiceSummaryAndFormState($event)" (selectionChange)="selectedItems = $event"
         [selectedItems]="selectedItems" [tableRequired]="true" [disabled]="isFormReadable"
         (insert)="dialogComponent.openInvoiceDialog()" [showInsert]="!isFormReadable" [canInsert]="false"

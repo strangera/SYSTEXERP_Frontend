@@ -1,11 +1,11 @@
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { IInvoiceDetail, IReturnDetailData, RebateDetailOptionQueryBody, ReturnDetailOptionQueryBody, Tls55030Service } from '@service/api/tls/tls55030.service';
 import { getSYS1000 } from '@service/system/sys1000.service';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model';
 
 /**
  * 處理 TLS55030 頁面中所有彈跳視窗 (Dialog) 邏輯的元件。
@@ -33,7 +33,7 @@ import { getSYS1000 } from '@service/system/sys1000.service';
       <app-table-report tableKey="tls55030DialogTable" dataKey="PUR_GUINo" [showReportMode]="false" [data]="dialogData"
         [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
         (selectionChange)="selectedItemsDialog = $event" [showManage]="false" [showCheckBox]="true"
-        [isRowSelectable]="isRowSelectable.bind(this)" [lastQueryBody]="lastQueryBody" [showReorder]="false"
+         [lastQueryBody]="lastQueryBody" [showReorder]="false"
         [queryFunction]="tls55030Service.queryTLS55030RebateDetailOption.bind(tls55030Service)" [totalRecords]="totalRecords"
         [loading]="dialogLoading">
       </app-table-report>
@@ -116,12 +116,6 @@ export class TLS55030DialogComponent {
     const selectedItems = [...this.selectedItemsDialog];
     this.invoicesSelected.emit(selectedItems);
     this.selectedItemsDialog = [];
-  }
-
-  /** 判斷折讓單明細行是否可選 (已存在的不能再選) */
-  isRowSelectable(event: IInvoiceDetail): boolean {
-    // 使用 SeqNo 作為唯一鍵
-    return !this.existingInvoiceData || !this.existingInvoiceData.some((item: IInvoiceDetail) => item.PUR_GUINo === event.PUR_GUINo);
   }
 
   // --- Return Detail Dialog (退貨明細) 相關屬性 ---

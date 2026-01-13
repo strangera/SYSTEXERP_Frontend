@@ -1,9 +1,12 @@
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount } from '@shared/componentkit/table-report/table-report.model';
 import { Column } from '@shared/componentkit/table/table.model';
@@ -22,7 +25,7 @@ import { DropdownApiService } from './../../../service/utility/dropdown-api.serv
   selector: 'app-tls55030',
   templateUrl: './tls55030.component.html',
   standalone: true,
-  imports: [TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, CalendarComponent, InputNumberRangeComponent, TranslateModule]
+  imports: [RadiobuttonComponent, MultiSelectComponent, MultiSelectComponent, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, CalendarComponent, InputNumberRangeComponent, TranslateModule]
 })
 export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -41,13 +44,17 @@ export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData>
     Rebate_Tax_End: [null, [Validators.max(10)]], // 折讓稅額 迄
     PUR_VoucherType: [null], // 發票格式
     DIS_Status: [null], // 狀況 1 待結帳 2 已結帳 新增時1，月結後變更2
+    DIS_EntryType: [null], // 折讓項目
     // CRT_USR_No: [],
     DIS_No: [null, [Validators.maxLength(16)]], // 折讓單維護編號
+    PageIndex: [1],
+    PageSize: [30]
   });
   TABTYPEOptions = getSYS1000Options('TABTYPE');
   DIS_StatusOptions = getSYS1000Options('DIS_Status');
   PUR_TaxTypeOptions = getSYS1000Options('PUR_TaxType');
-  PUR_VoucherTypeOptions = getSYS1000Options('PUR_VoucherType');
+  PUR_VoucherTypeOptions = getSYS1000Options('PUR_VoucherType').map(opt => ({ ...opt, label: `${opt.value} - ${opt.label}` }));
+  DIS_EntryTypeOptions = getSYS1000Options('DIS_EntryType');
   tblUserOptions = this.dropdown.queryTblUser();
   data: Tls55030ListData[] = [];
   selectedItems: Tls55030ListData[] = [];
@@ -62,9 +69,12 @@ export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData>
     { field: 'DIS_Status', header: '狀況', format: (v) => getSYS1000('DIS_Status', v) },
     { field: 'Rebate_Amt', header: '總折讓金額', format: formatAmount },
   ];
+  isRowSelectable = (item: Tls55030ListData) => item.DIS_Status === '1';
+  editDisabled = (item: Tls55030ListData) => item.DIS_Status !== '1';
   constructor(
     private readonly dropdown: DropdownApiService,
-    public readonly tls55030Service: Tls55030Service
+    public readonly tls55030Service: Tls55030Service,
+    private readonly datePipe: DatePipe
   ) { super(); }
 
   ngOnInit(): void {
@@ -72,11 +82,15 @@ export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData>
   }
 
   onSubmit(frm: FormGroup) {
+    const body = {
+      ...frm.value,
+      ACP_YYYYMM: this.datePipe.transform(frm.value.ACP_YYYYMM, 'yyyyMM')
+    }
     this.handleSubmit(frm, () => {
-      this.tls55030Service.queryTLS55030(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+      this.tls55030Service.queryTLS55030(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
-        this.lastQueryBody = frm.value;
+        this.lastQueryBody = body;
         this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
       })
     });
