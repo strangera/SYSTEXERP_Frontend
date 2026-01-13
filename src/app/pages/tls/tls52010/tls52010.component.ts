@@ -124,7 +124,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
   btnLoading = false;
   warehouseOptions = this.dropdown.queryPos2034(); // 倉別
   brandOptions = this.dropdown.queryPluLogo(); // 品牌代碼
-  vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
+  vendorOptions = this.dropdown.queryPos2013TltTalent(); // 廠商編號
   poStatusOptions = getSYS1000Options('PO_Status'); // 採購單狀態 (靜態資料)
   userOptions = this.dropdown.queryTblUser(); // 申請人員、審核人員、結案人員
   constructor(

@@ -63,7 +63,7 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
     RJM_Remark: [null as string | null, [Validators.maxLength(200)]],// 進貨驗收單說明
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
   });
-  vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' })
+  vendorOptions = this.dropdown.queryPos2013TltTalent()
   brandOptions = this.dropdown.queryPluLogoHosNo(); // 品牌下拉選單選項
   warehouseOptions = this.dropdown.queryPos2034() // 倉別下拉選單選項
   originalData: ITLS52040Detail[] = [];

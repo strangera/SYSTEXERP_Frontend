@@ -1,11 +1,11 @@
-import { DatePipe, NgIf } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { QueryTLS57100DetailResponse, QueryTLS57100Request, QueryTLS57100SummaryResponse, Tls57100Service } from '@service/api/tls/tls57100.service';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
@@ -36,7 +36,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
     ButtonModule,
     InputTextComponent,
     TableReportComponent,
-    NgIf
+    AsyncPipe
   ],
   providers: [DatePipe]
 })
@@ -69,9 +69,9 @@ export class TLS57100Component extends BasicQueryPageComponent<QueryTLS57100Deta
     { value: 1, label: '彙總' },
     { value: 2, label: '明細' },
   ];
-  warehouseOptions: IDropdownItem[] = [];
-  brandCodeOptions: IDropdownItem[] = [];
-  vendorOptions: IDropdownItem[] = [];
+  warehouseOptions = this.dropdown.queryPos2034();
+  brandCodeOptions = this.dropdown.queryPluLogo();
+  vendorOptions = this.dropdown.queryPos2013TltTalent();
   data: (QueryTLS57100DetailResponse | QueryTLS57100SummaryResponse)[] = [];
   columns: Column[] = [];
 
@@ -79,7 +79,7 @@ export class TLS57100Component extends BasicQueryPageComponent<QueryTLS57100Deta
   historyRequestBody: QueryTLS57100Request | null = null;
 
   constructor(
-    private readonly dropDownListService: DropDownListService,
+    private readonly dropdown: DropdownApiService,
     public readonly tls57100Service: Tls57100Service,
     private datePipe: DatePipe
   ) { super(); }
@@ -91,16 +91,6 @@ export class TLS57100Component extends BasicQueryPageComponent<QueryTLS57100Deta
       this.updateTableColumns(mode);
     });
     this.updateTableColumns(this.queryForm.controls.DisplayMode.value);
-
-    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
-      this.warehouseOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, No: item.No }));
-    });
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.brandCodeOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, No: item.No }));
-    });
-    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.vendorOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, No: item.No }));
-    });
   }
 
   updateTableColumns(displayMode: number | null) {

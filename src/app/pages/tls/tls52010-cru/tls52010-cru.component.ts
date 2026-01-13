@@ -72,7 +72,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     PO_Remark: [null as string | null, [Validators.maxLength(200)]], // 採購單備註 (對應 POS2016.PO_Remark)
   });
   // === 下拉選單選項 ===
-  vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }); // 廠商下拉選單選項
+  vendorOptions = this.dropdown.queryPos2013TltTalent(); // 廠商下拉選單選項
   // 儲存【完整的品牌/倉別關聯數據】 (使用新的 API 查詢結果)
   fullLogoAccorHosData: LogoAccorHosItem[] = [];
   // 儲存所有【不重複的品牌】選項 (用於綁定到畫面上 LOGO_No 的選項)

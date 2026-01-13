@@ -77,7 +77,7 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
   ];
   warehouseOptions: IDropdownItem[] = [];
   brandCodeOptions: IDropdownItem[] = [];
-  vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }); // 廠商下拉選單選項
+  vendorOptions = this.dropdown.queryPos2013TltTalent(); // 廠商下拉選單選項
   data: (QueryTLS57090DetailResponse | QueryTLS57090SummaryResponse)[] = [];
   columns: ReportColumn[] = [];
 
