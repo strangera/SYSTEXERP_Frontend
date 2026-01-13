@@ -7,8 +7,6 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <!-- 不顯示的系統欄位：mid、STO_No -->
-
         <!-- 應付帳款類型 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
@@ -79,7 +77,7 @@
           </app-input-text>
         </div>
 
-        <!-- 發票號碼 -->
+        <!-- 發票號碼（進來就只會是 8 碼） -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="發票號碼"
@@ -181,7 +179,7 @@
           </app-dropdown>
         </div>
 
-        <!-- ✅ 廠商編號（下拉） -->
+        <!-- 廠商編號 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="廠商編號"
@@ -194,7 +192,7 @@
           </app-dropdown>
         </div>
 
-        <!-- 廠商名稱（唯讀，自動帶） -->
+        <!-- 廠商名稱（唯讀） -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="廠商名稱"
@@ -203,7 +201,7 @@
           </app-input-text>
         </div>
 
-        <!-- 憑證單號（Source_Doc_No） -->
+        <!-- 憑證單號 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="憑證單號"
@@ -222,24 +220,12 @@
           </app-input-text>
         </div>
 
-        <!-- 使用別（T205） -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="使用別"
-            [control]="dataForm.controls.SAL_Type"
-            [options]="salTypeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [submitted]="submitted">
-          </app-dropdown>
-        </div>
-
-        <!-- 系統別（SYS_ORIGIN） -->
+        <!-- 系統別（SAL_Type） -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="系統別"
-            [control]="dataForm.controls.SYS_ORIGIN"
-            [options]="sysOriginOptions"
+            [control]="dataForm.controls.SAL_Type"
+            [options]="salTypeOptions"
             optionLabel="label"
             optionValue="value"
             [submitted]="submitted">
@@ -256,7 +242,9 @@
         </div>
       </div>
 
-      <div class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
+      <div
+        class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
+        *ngIf="!isFormReadable">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit"></app-button>
       </div>
