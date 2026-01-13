@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { DeleteFIN52080Request, FIN52080ClassNo, FIN52080Data, FIN52080Query, FIN52080Tree } from '@pages/fin/fin52080/fin52080.model';
+import { DeleteFIN52080Request, FIN52080ClassNo, FIN52080Data, FIN52080Query, FIN52080Tree, UpdateFIN52080Request, UpdateFIN52080Response } from '@pages/fin/fin52080/fin52080.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
@@ -112,6 +112,14 @@ export class FIN52080Service {
       tap(res => this.logger.debug(logLabel, [res])),
     );
   };
+
+  /** 更新 */
+  public updateFIN52080(payload: UpdateFIN52080Request): Observable<BaseQueryResponse<UpdateFIN52080Response>> {
+    return this.http.post<BaseQueryResponse<UpdateFIN52080Response>>(`${apiUrl}/updateFIN52080`, payload).pipe(
+      take(1),
+      tap(res => this.logger.debug('更新FIN52080結果:', [res])),
+    );
+  }
 
   /** 刪除 */
   public deleteFIN52080(payload: DeleteFIN52080Request): Observable<BaseQueryResponse<unknown>> {

@@ -44,6 +44,34 @@ export interface DeleteFIN52080Request {
   Ids: string[] | null;
 }
 
+export interface UpdateFIN52080Request {
+  AccNo?: string | null;
+  AccCName?: string | null;
+  AccEName?: string | null;
+  AccDC?: string | null;
+  Ledger_MD?: string | null;
+  ClassNo?: string | null;
+  ABAT_YN?: string | null;
+  Voucher_Type?: string | null;
+  Budget_YN?: string | null;
+  Org_YN?: string | null;
+  Input_YN?: string | null;
+}
+
+export interface UpdateFIN52080Response {
+  AccNo?: string | null;
+  AccCName?: string | null;
+  AccEName?: string | null;
+  AccDC?: string | null;
+  Ledger_MD?: string | null;
+  ClassNo?: string | null;
+  ABAT_YN?: string | null;
+  Voucher_Type?: string | null;
+  Budget_YN?: string | null;
+  Org_YN?: string | null;
+  Input_YN?: string | null;
+}
+
 /** D: 借 C: 貸 */
 export type AccDCType = 'D' | 'C';
 /** 0: 統制 1: 明細 */
