@@ -50,7 +50,6 @@ export class TLS57080Component extends BasicQueryPageComponent<QueryTLS57080Deta
     StartDate: [null as Date | null, [Validators.required]],
     EndDate: [null as Date | null, [Validators.required]],
     PLU_MagNo: [null as string | null, [Validators.required, Validators.maxLength(20)]],
-    PLU_No: [null as string | null, [Validators.maxLength(20)]],
     HOS_No: [null, [Validators.maxLength(4)]],
     PLU_Name: [null, [Validators.maxLength(50)]],
   });
@@ -90,7 +89,7 @@ export class TLS57080Component extends BasicQueryPageComponent<QueryTLS57080Deta
       ...frm.value,
       StartDate: this.datePipe.transform(frm.value.StartDate, 'yyyy-MM-dd'),
       EndDate: this.datePipe.transform(frm.value.EndDate, 'yyyy-MM-dd'),
-      PLU_No: frm.value.PLU_No || frm.value.PLU_MagNo,
+      KeyWord: frm.value.PLU_MagNo
     }
     this.handleSubmit(frm, () => {
       this.tls57080Service.queryTLS57080(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
@@ -147,16 +146,6 @@ export class TLS57080Component extends BasicQueryPageComponent<QueryTLS57080Deta
   ];
   onAutoCompleteInputChange(event: any) {
     const inputString = event.PLU_MagNo || '';
-
-    // 邏輯：檢查目前的輸入內容是否精準匹配 suggestions 中的某個 PLU_MagNo
-    // 如果不匹配，則將 PLU_No 清空，避免帶到舊的或錯誤的編號
-    const matchedItem = this.suggestions.find(s => s.PLU_MagNo === inputString);
-    if (!matchedItem) {
-      this.queryForm.controls.PLU_No.setValue('');
-    } else {
-      this.queryForm.controls.PLU_No.setValue(matchedItem.PLU_No);
-    }
-
     const body = {
       ...event,
       VEN_No: '',
@@ -172,42 +161,6 @@ export class TLS57080Component extends BasicQueryPageComponent<QueryTLS57080Deta
         ...item,
         label: `${item.PLU_MagNo} - ${item.PLU_Name} - ${item.PLU_No} - ${item.PLU_OrgPLUNo}`,
       }));
-
-      // API 回傳後再次檢查，如果輸入的值剛好匹配到結果清單中的唯一一筆，就自動帶入
-      const exactMatch = this.suggestions.find(item => item.PLU_MagNo === inputString);
-      if (exactMatch) {
-        this.queryForm.controls.PLU_No.setValue(exactMatch.PLU_No);
-      }
     });
   }
-  // 當使用者「選擇」一筆商品時觸發
-  onPLUSelect(event: IQueryPOS2004DetailResponse) {
-    if (event) {
-      // 當選中商品時，自動將該商品的 PLU_No 填入 queryForm
-      this.queryForm.patchValue({
-        PLU_No: event.PLU_No,
-      });
-    }
-  }
-  // suggestions2: QueryPOS2005PLUNoResponse[] = [];
-  // fieldsConfig2: FieldsConfig[] = [
-  //   { field: 'PLU_No', header: '國際條碼', mainDataField: true },
-  // ];
-  // onAutoCompleteInputChange2(event: any) {
-  //   const body = {
-  //     ...event,
-  //     PLU_No: event.PLU_No || null,
-  //     PLU_Name: null,
-  //     LOGO_No: null,
-  //     pageSize: 30,
-  //     pageIndex: 1,
-  //     SortBy: [{ field: 'PLU_No', order: 1 }],
-  //   }
-  //   this.tls57080Service.queryPOS2005PLUNo(body).pipe(untilDestroyed(this)).subscribe((results) => {
-  //     this.suggestions2 = [...results.Data.map(item => ({
-  //       ...item,
-  //       label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No,
-  //     }))];
-  //   });
-  // }
 }

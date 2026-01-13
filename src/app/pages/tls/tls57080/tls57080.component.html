@@ -16,7 +16,7 @@
           <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.PLU_MagNo"
             templateLabel="label" [submitted]="submitted" optionLabel="PLU_MagNo" optionValue="PLU_MagNo"
             [suggestions]="suggestions" [fieldsConfig]="fieldsConfig" [showOverlay]="false"
-            (inputValueChanged)="onAutoCompleteInputChange($event)" (select)="onPLUSelect($event)">
+            (inputValueChanged)="onAutoCompleteInputChange($event)">
           </app-dropdown-table>
           <!-- 國際條碼 -->
           <!-- <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.PLU_No"
