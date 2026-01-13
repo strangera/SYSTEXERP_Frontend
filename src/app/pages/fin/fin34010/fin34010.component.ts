@@ -130,8 +130,7 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
     ShowArsAmt: ['1' as string],   // 應收金額是否顯示
     ShowZeroAmt: ['1' as string],  // 帳款餘額為零是否顯示
 
-    // TableReport 用的分頁/排序控制（使用小寫 pageIndex/pageSize，
-    // buildPayload 裡會轉成後端要的 PageIndex/PageSize，同時保留小寫給 table-report 用）
+    // TableReport 用的分頁/排序控制
     ...createPaginationConfig(this.defaultSort),
   });
 
@@ -180,17 +179,16 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
       Number.isFinite(base?.pageIndex) && base.pageIndex >= 1
         ? base.pageIndex
         : 1;
-    const pageSize =
-      Number.isFinite(base?.pageSize) && base.pageSize > 0
-        ? base.pageSize
-        : 30;
+
+    // ⭐ 固定 PageSize = 30（不吃 base.pageSize）
+    const pageSize = 30;
 
     const payload: Fin34010Request = {
       // 後端要的大寫欄位
       PageIndex: pageIndex,
       PageSize: pageSize,
 
-      // 給 table-report 用的小寫（不影響後端，頂多多傳兩個欄位）
+      // 給 table-report 用的小寫（不影響後端）
       pageIndex,
       pageSize,
 
@@ -228,7 +226,6 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
   private buildFooterFromSummary(summary: any | null | undefined): any {
     if (!summary) return undefined;
     return {
-
       ARS_Amt: summary.SumARS_Amt ?? 0,
       REC_Amt: summary.SumREC_Amt ?? 0,
       ADJ_Amt: summary.SumADJ_Amt ?? 0,
