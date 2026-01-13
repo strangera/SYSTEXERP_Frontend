@@ -157,6 +157,7 @@ export class CPM11020CRUComponent extends BasicCruPageComponent<CPM11020Data> im
           Details: this.data.map(item => ({
             Service_Id: item.Service_Id,
             Device_Qty: item.Device_Qty,
+            _dataStatus: item._dataStatus || 'new'  // 帶上狀態
           }))
         };
 

@@ -12,7 +12,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 export interface GLS1004 {
   ClassNo: string, // 中類代碼
@@ -78,12 +78,12 @@ export class FIN52060Component extends BasicQueryPageComponent<GLS1004> implemen
     { field: 'ClassAttr', header: '大類代號', visible: false }, // 大類代號
     { field: 'ClassAttrCName', header: '大類名稱', visible: true }, // 大類名稱
 
-    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
-    { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
-    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
-    { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
-    { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
-    { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
+    // { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
+    // { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
+    // { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
+    // { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
+    // { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
+    // { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
   ];
 
   constructor(
