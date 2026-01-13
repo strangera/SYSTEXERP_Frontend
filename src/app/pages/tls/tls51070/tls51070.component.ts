@@ -5,6 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { FileExportService } from '@shared/service/file-export.service';
+import saveAs from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { environment } from '../../../../environments/environment';
@@ -128,6 +129,8 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   ];
 
   selectedItems: POS2004[] = [];// 多選項目
+
+  excelLoading = false; //excel讀條
 
   //---CRU注意---
   // 新增的時候 PLU_Staus 固定給 0
@@ -508,10 +511,14 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
       this.opLoading = false;
     });
   }
-  downloadTLS51070TemplateLoading = false;
-  // 範本下載
-  downloadTLS51070Template() {
-    const export$ = this.tls51070Service.downloadTLS51070Template();
-    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.downloadTLS51070TemplateLoading = isLoading);
+
+  // 匯出Excel範本
+  onExportExcel() {
+    this.tls51070Service.downloadTLS51070Template().subscribe({
+      next: (res: Blob) => {
+        const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveAs(blob, 'TLS51070_Template.xlsx');
+      },
+    });
   }
 }
