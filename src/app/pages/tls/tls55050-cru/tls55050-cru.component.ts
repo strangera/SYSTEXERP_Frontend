@@ -3,8 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Gls6002 } from '@service/api/tls/tls55010.service';
-import { Gls6001, Tls55050Service } from '@service/api/tls/tls55050.service';
+import { Gls6001, Gls6002, Tls55050Service } from '@service/api/tls/tls55050.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -49,13 +48,14 @@ export class TLS55050CRUComponent extends BasicCruPageComponent<Gls6001> impleme
     { field: 'DAccAmt', header: '借方金額', format: formatAmount, isTotal: true, align: 'right' },
     { field: 'CAccAmt', header: '貸方金額', format: formatAmount, isTotal: true, align: 'right' },
     { field: 'ORG_ID', header: '組織編號', align: 'left' },
-    { field: 'VEN_NO', header: '廠商編號', align: 'left' },
+    { field: 'DetailNo', header: '廠商編號', align: 'left' },
     { field: 'VEN_NAME', header: '廠商名稱', align: 'left' },
     { field: 'ProjectNo', header: '活動代號', align: 'left' },
     { field: 'PTA', header: '立沖代號' },
   ]
   data: Gls6002[] = [];
   totalRecords = 0;
+  footerData: { DAccAmt: number, CAccAmt: number } = { DAccAmt: 0, CAccAmt: 0 };
   VouTypeOptions = getSYS1000Options('VouType');
   PostFlagOptions = getSYS1000Options('PostFlag');
   constructor(
@@ -73,8 +73,13 @@ export class TLS55050CRUComponent extends BasicCruPageComponent<Gls6001> impleme
       this.tls55050Service.queryTLS55050M_D(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
         if (res.Data) {
           this.dataForm.patchValue(res.Data.Data._gls6001);
-          this.data = res.Data.Data._gls6002s || [];
+          this.data = res.Data.Data._gls6002s.map((item: any) => ({
+            ...item,
+            DAccAmt: item.AccDC === 'D' ? item.AccAmt : 0,
+            CAccAmt: item.AccDC === 'C' ? item.AccAmt : 0,
+          }));
           this.totalRecords = res.Data.Data._gls6002s?.length || 0;
+          this.footerData = this.data.reduce((acc, cur) => (acc.DAccAmt += cur.DAccAmt, acc.CAccAmt += cur.CAccAmt, acc), { DAccAmt: 0, CAccAmt: 0 });
         }
       });
     }

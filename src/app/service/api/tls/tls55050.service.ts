@@ -83,6 +83,9 @@ export interface Gls6002 {
   HOS_NAME: string;
   ACCCNAME: string;
   VEN_NAME: string;
+
+  DAccAmt: number;
+  CAccAmt: number;
 }
 
 // ====================================================================

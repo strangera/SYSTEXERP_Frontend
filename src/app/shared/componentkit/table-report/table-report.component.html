@@ -37,38 +37,22 @@
         </th>
         <ng-container *ngFor="let col of columns; let i = index">
           <!-- 如果是第一次出現這個群組 -->
-          <ng-container
-            *ngIf="tableUtility.shouldRenderGroupHeader(col, i, columns)"
-          >
-            <th
-              [attr.colspan]="
+          <ng-container *ngIf="tableUtility.shouldRenderGroupHeader(col, i, columns)">
+            <th [attr.colspan]="
                 tableUtility.getColumnSpan(columns, col.groupField!)
-              "
-              class="group-header text-center"
-              [ngClass]="{ 'multiline-header': allowMultilineHeader }"
-              pReorderableColumn
-              pResizableColumn
-            >
+              " class="group-header text-center" [ngClass]="{ 'multiline-header': allowMultilineHeader }"
+              pReorderableColumn pResizableColumn>
               {{ getGroupHeader(col.groupField!) }}
             </th>
           </ng-container>
           <!-- 如果是沒群組的欄位 -->
           <ng-container *ngIf="!col.groupField">
-            <th
-              rowspan="2"
-              class="text-center"
-              [ngClass]="{ 'multiline-header': allowMultilineHeader }"
-              pResizableColumn
-              [pSortableColumn]="
+            <th rowspan="2" class="text-center" [ngClass]="{ 'multiline-header': allowMultilineHeader }"
+              pResizableColumn [pSortableColumn]="
                 showSort ? col.sortField ?? col.field : undefined
-              "
-              [pSortableColumnDisabled]="
+              " [pSortableColumnDisabled]="
                 col.showSort === false || showSort === false
-              "
-              pFrozenColumn
-              [frozen]="!!col.frozen"
-              [alignFrozen]="col.alignFrozen || 'right'"
-            >
+              " pFrozenColumn [frozen]="!!col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
               {{ col.header }}
               <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length"
                 [field]="col.sortField ?? col.field" />
@@ -83,13 +67,8 @@
       <!-- 第二層：實際欄位標題 -->
       <tr>
         <ng-container *ngFor="let col of columns">
-          <th
-            *ngIf="col.groupField"
-            class="text-center"
-            [ngClass]="{ 'multiline-header': allowMultilineHeader }"
-            pReorderableColumn
-            pResizableColumn
-            [pSortableColumn]="
+          <th *ngIf="col.groupField" class="text-center" [ngClass]="{ 'multiline-header': allowMultilineHeader }"
+            pReorderableColumn pResizableColumn [pSortableColumn]="
               showSort ? col.sortField ?? col.field : undefined
             " [pSortableColumnDisabled]="col.showSort === false" style="min-width: 55px">
             {{ col.header }}
@@ -108,11 +87,8 @@
         <th class="w-1rem" *ngIf="expansionColumns.length">收合/展開</th>
         <th *ngFor="let col of columns" pReorderableColumn pResizableColumn
           [pSortableColumn]="showSort ? col.sortField ?? col.field : undefined"
-          [pSortableColumnDisabled]="!showSort || col.showSort === false"
-          class="text-center wrap-header"
-          [ngClass]="{ 'multiline-header': allowMultilineHeader }"
-          style="min-width: 55px"
-        >
+          [pSortableColumnDisabled]="!showSort || col.showSort === false" class="text-center wrap-header"
+          [ngClass]="{ 'multiline-header': allowMultilineHeader }" style="min-width: 55px">
           {{ col.header }}
           <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length" [field]="col.field" />
         </th>
@@ -198,13 +174,14 @@
       </td>
     </tr>
     <tr *ngIf="rowData && isGroupLastRow(rowData, rowIndex) && hasSubtotalColumns()"
-      class="font-bold text-center text-sm bg-gray-200 text-primary">
+      class="font-bold text-sm bg-gray-200 text-primary">
       <td class="text-center"
         [colSpan]="(showReorder ? 1 : 0) + (showCheckBox ? 1 : 0) + (expansionColumns.length ? 1 : 0)" pFrozenColumn>
         <span class="font-bold">小計</span>
       </td>
       <ng-container *ngFor="let col of columns">
-        <td class="text-center" [ngClass]="[col.cellClass ? col.cellClass(rowData) || '' : '',]">
+        <td [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
+          [ngClass]="[col.cellClass ? col.cellClass(rowData) || '' : '']">
           <span class="font-bold"> {{ getGroupSubtotal(rowData, col) }}</span>
         </td>
       </ng-container>
@@ -226,14 +203,15 @@
     </ng-container>
   </ng-template>
   <ng-template pTemplate="footer" let-columns let-rowData>
-    <tr *ngIf="footerData" class="font-bold text-center text-sm bg-gray-200 text-primary">
+    <tr *ngIf="footerData" class="font-bold text-sm bg-gray-200 text-primary">
       <td class="text-center" [colSpan]="(showReorder ? 1 : 0) + (showCheckBox ? 1 : 0)" pFrozenColumn>
         <span class="font-bold">總計</span>
       </td>
       <td *ngIf="expansionColumns.length"></td>
 
       <ng-container *ngFor="let col of columns">
-        <td class="text-center" [ngClass]="[ col.cellClass ? col.cellClass(rowData) || '' : '',]">
+        <td [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
+          [ngClass]="[ col.cellClass ? col.cellClass(rowData) || '' : '']">
           <span class="font-bold">
             {{ col.format ? col.format(footerData[col.field]) : footerData[col.field] }}
           </span>
@@ -242,14 +220,15 @@
       <td [hidden]="!showManage" class="text-center" alignFrozen="right" pFrozenColumn [frozen]="true"></td>
     </tr>
 
-    <tr *ngIf="footerPercentData" class="font-bold text-center text-sm bg-gray-200 text-primary">
+    <tr *ngIf="footerPercentData" class="font-bold text-sm bg-gray-200 text-primary">
       <td class="text-center" [colSpan]="(showReorder ? 1 : 0) + (showCheckBox ? 1 : 0)" pFrozenColumn>
         <span class="font-bold">平均</span>
       </td>
       <td *ngIf="expansionColumns.length"></td>
 
       <ng-container *ngFor="let col of columns">
-        <td class="text-center" [ngClass]="[col.cellClass ? col.cellClass(rowData) || '' : '',]">
+        <td [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
+          [ngClass]="[col.cellClass ? col.cellClass(rowData) || '' : '']">
           <span class="font-bold">
             {{ col.format ? col.format(footerPercentData[col.field]) : footerPercentData[col.field] }}
           </span>

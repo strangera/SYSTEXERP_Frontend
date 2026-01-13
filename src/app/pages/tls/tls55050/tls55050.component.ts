@@ -33,7 +33,11 @@ export class TLS55050Component extends BasicQueryPageComponent<Tls55050Data> imp
     VEN_No: [null],
   });
 
-  VEN_NoOptions = this.dropDown.queryPos2013({ VEN_Flag: '' });
+  venOptions: any[] = [];
+  VEN_NoOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }).pipe(
+    untilDestroyed(this),
+    finalize(() => { })
+  );
 
   // 上半部資料 (Up)
   data: Tls55050Data[] = [];
@@ -67,6 +71,19 @@ export class TLS55050Component extends BasicQueryPageComponent<Tls55050Data> imp
 
   ngOnInit(): void {
     this.initializePage('TLS55050', 'tls/tls55050cru', this.queryForm, (frm) => this.onSubmit(frm));
+    this.VEN_NoOptions.subscribe(options => {
+      this.venOptions = options || [];
+    });
+  }
+
+  /**
+   * 輔助方法：根據當前 Form 狀態取得「全部廠商」或「廠商 [編號] 名稱」
+   */
+  private getTargetName(venNo: string | null): string {
+    if (!venNo) return '全部廠商';
+    const found = this.venOptions.find(opt => opt.value === venNo);
+    // 如果有找到 label 就顯示 label (通常包含編號+名稱)，否則顯示編號
+    return found ? found.label : `廠商 [${venNo}]`;
   }
 
   /**
@@ -109,6 +126,8 @@ export class TLS55050Component extends BasicQueryPageComponent<Tls55050Data> imp
         cls_Month: this.datePipe.transform(frm.value.cls_Month, 'yyyyMM') ?? ''
       };
 
+      const targetName = this.getTargetName(frm.value.VEN_No);
+
       const runRequest = () => {
         apiCall(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe((res: any) => {
           this.messageService.successBubble(res.Message || successMsg);
@@ -117,7 +136,8 @@ export class TLS55050Component extends BasicQueryPageComponent<Tls55050Data> imp
       };
 
       if (confirmConfig) {
-        this.messageService.confirm({ ...confirmConfig, accept: runRequest, reject: () => this.loading = false });
+        const updatedMessage = confirmConfig.message.replace('${target}', targetName);
+        this.messageService.confirm({ ...confirmConfig, message: updatedMessage, accept: runRequest, reject: () => this.loading = false });
       } else {
         runRequest();
       }
@@ -133,9 +153,10 @@ export class TLS55050Component extends BasicQueryPageComponent<Tls55050Data> imp
         ...frm.value,
         cls_Month: this.datePipe.transform(frm.value.cls_Month, 'yyyyMM') ?? ''
       };
+      const targetName = this.getTargetName(frm.value.VEN_No);
       this.messageService.confirm({
         header: '執行月結作業',
-        message: `您確定要執行 ${this.ym} 的月結作業嗎？`,
+        message: `您確定要執行 ${this.ym} ${targetName} 的月結作業嗎？`,
         icon: 'pi pi-check-square',
         acceptLabel: '開始結帳',
         accept: () => {
@@ -165,7 +186,7 @@ export class TLS55050Component extends BasicQueryPageComponent<Tls55050Data> imp
   onUnSettle(frm: FormGroup) {
     this.executeAction(frm, b => this.tls55050Service.reinsertTLS55050(b), '反結帳成功', {
       header: '反結帳確認',
-      message: `將還原 ${this.ym} 狀態並刪除暫存傳票。`,
+      message: `將還原 ${this.ym} 狀態`,
       icon: 'pi pi-undo',
       acceptLabel: '執行反結帳'
     });
