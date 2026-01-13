@@ -167,8 +167,20 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     { field: 'PUR_GUIDate', header: '發票/收據日期', type: 'date', width: '200px', dateFormat: 'yy-mm-dd', view: 'date' },
     { field: 'DEC_YM', header: '申報年月', type: 'date', width: '120px', dateFormat: 'yy-mm', view: 'month' },
     { field: 'ven_uniform', header: '廠商統一編號', type: 'input', width: '140px' },
-    { field: 'TAX_TYPE', header: '課稅別', type: 'dropdown', width: '200px', options: this.taxTypeOptions, optionLabel: 'label', optionValue: 'value', showClear: true },
-    { field: 'Deduct_Code', header: '扣抵代號', type: 'dropdown', width: '120px', options: this.discountOptions, optionLabel: 'label', optionValue: 'value', showClear: true },
+    {
+      field: 'TAX_TYPE', header: '課稅別', type: 'dropdown', width: '200px', options: this.taxTypeOptions, optionLabel: 'label', optionValue: 'value', showClear: true,
+      disabled: (_v, _i, row) => {
+        const guiLabel = this.mapValueToLabel(this.invoiceTypeOptions, row?.GUIType);
+        return (guiLabel ?? String(row?.GUIType ?? '')).includes('收據');
+      }
+    },
+    {
+      field: 'Deduct_Code', header: '扣抵代號', type: 'dropdown', width: '120px', options: this.discountOptions, optionLabel: 'label', optionValue: 'value', showClear: true,
+      disabled: (_v, _i, row) => {
+        const guiLabel = this.mapValueToLabel(this.invoiceTypeOptions, row?.GUIType);
+        return (guiLabel ?? String(row?.GUIType ?? '')).includes('收據');
+      }
+    },
     { field: 'GUINet', header: '未稅金額', type: 'inputNumber', width: '140px', textAlign: 'right' },
     { field: 'GUITax', header: '稅額', type: 'inputNumber', width: '200px', textAlign: 'right' },
     { field: 'GUIAmt', header: '應稅金額', type: 'inputNumber', width: '120px', textAlign: 'right', disabled: () => true },
@@ -492,7 +504,32 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
 
 
   onDetailFieldChange(_event: any): void {
-    // no-op
+    // event payload: { rowData, field, value, index }
+    const ev = _event as { rowData: any, field: string, value: any, index?: number };
+    if (!ev || !ev.field) return;
+
+    // 當單據別 (GUIType) 變成「收據」時，自動把課稅別設為「免稅」，扣抵代號設為「代表進項不可扣抵之進貨及費用」
+    if (ev.field === 'GUIType') {
+      const row = ev.rowData ?? {};
+      const guiLabel = this.mapValueToLabel(this.invoiceTypeOptions, ev.value);
+      const isReceipt = (guiLabel ?? String(ev.value ?? '')).includes('收據');
+
+      if (isReceipt) {
+        const taxVal = this.mapLabelToValue(this.taxTypeOptions, '免稅');
+        const deductVal = this.mapLabelToValue(this.discountOptions, '代表進項不可扣抵之進貨及費用');
+        // 設定欄位值（若 table-edit 使用的是同一物件則畫面會自動更新）
+        row.TAX_TYPE = taxVal ?? row.TAX_TYPE;
+        row.Deduct_Code = deductVal ?? row.Deduct_Code;
+      }
+    }
+  }
+
+  // 由 value 取得對應的 label（若找不到就回傳 undefined）
+  private mapValueToLabel(options: { label: string, value: any }[] | any, raw: any): string | undefined {
+    if (!options) return undefined;
+    const list = Array.isArray(options) ? options : (typeof options === 'function' ? options(null) : []);
+    const hit = (list ?? []).find((o: any) => o?.value === raw || o?.label === raw);
+    return hit?.label;
   }
 }
 

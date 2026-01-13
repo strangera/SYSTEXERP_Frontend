@@ -75,7 +75,7 @@
             [control]="dataForm.controls.PUR_TaxType" [submitted]="submitted"></app-multi-select>
 
           <app-input-number label="發票/收據號碼" controlName="PUR_GUINO" [control]="dataForm.controls.PUR_GUINO"
-            class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="發票總額"
+            class="col-12 md:col-6 lg:col-4" [useGrouping]="true" label="發票總額"
             [submitted]="submitted"></app-input-number>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -83,10 +83,10 @@
               optionLabel="label" optionValue="value" [submitted]="submitted">
             </app-dropdown>
           </div>
-          <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="未稅金額"
+          <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="true" label="未稅金額"
             [control]="dataForm.controls.ACP_GUINet" [submitted]="submitted"></app-input-number>
 
-          <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="稅額"
+          <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="true" label="稅額"
             [control]="dataForm.controls.ACP_GUITax" [submitted]="submitted"></app-input-number>
 
           <div class="col-12 md:col-6 lg:col-4">
