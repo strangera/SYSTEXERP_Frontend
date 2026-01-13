@@ -2,12 +2,12 @@
   [disable]="ODMselectedItems.length === 0" [height]="'500px'">
   <div class="grid p-fluid" [formGroup]="selectedTotalForm">
     <div class="col-12 md:col-6 lg:col-4">
-      <app-input-text label="選取的進貨未稅總額" controlName="selectedTotal"
-        [control]="selectedTotalForm.controls.selectedTotal"></app-input-text>
+      <app-input-number label="選取的進貨未稅總額" controlName="selectedTotal"
+        [control]="selectedTotalForm.controls.selectedTotal"></app-input-number>
     </div>
     <div class="col-12 md:col-6 lg:col-4">
-      <app-input-text label="含稅總額" controlName="taxIncludedTotal"
-        [control]="selectedTotalForm.controls.taxIncludedTotal"></app-input-text>
+      <app-input-number label="含稅總額" controlName="taxIncludedTotal"
+        [control]="selectedTotalForm.controls.taxIncludedTotal"></app-input-number>
     </div>
   </div>
   <app-table-report dataKey="ODM_No" [lastQueryBody]="ODMLastQueryBody" [totalRecords]="ODMtotalRecords"

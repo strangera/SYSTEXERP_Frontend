@@ -39,5 +39,5 @@
     [totalRecords]="totalRecords" [data]="data" (edit)="onEdit($event)" (detail)="onDetail($event)" [columns]="columns"
     [loading]="loading" [queryFunction]="tls55040Service.queryTLS55040.bind(tls55040Service)" [showCheckBox]="true"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showSort]="true"
-    (delete)="onDelete($event)"></app-table-report>
+    (delete)="onDelete($event)" [isRowSelectable]="isRowSelectable" [editDisabled]="editDisabled"></app-table-report>
 </div>

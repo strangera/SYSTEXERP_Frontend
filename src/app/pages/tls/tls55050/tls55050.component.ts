@@ -32,13 +32,8 @@ export class TLS55050Component extends BasicQueryPageComponent<Tls55050Data> imp
     cls_Month: [new Date(), [Validators.required]],
     VEN_No: [null],
   });
-
   venOptions: any[] = [];
-  VEN_NoOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }).pipe(
-    untilDestroyed(this),
-    finalize(() => { })
-  );
-
+  VEN_NoOptions = this.dropDown.queryPos2013({ VEN_Flag: '' })
   // 上半部資料 (Up)
   data: Tls55050Data[] = [];
   totalRecords = 0;

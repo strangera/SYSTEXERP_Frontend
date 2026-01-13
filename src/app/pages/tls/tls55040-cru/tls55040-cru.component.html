@@ -55,7 +55,7 @@
         </div>
       </div>
 
-      <div *ngIf="dataForm.valid && APS30181Data.length > 0" class="card grid p-fluid">
+      <div *ngIf="(dataForm.valid && APS30181Data.length > 0) || !isFormCreateable" class="card grid p-fluid">
         <div class="col-12 md:col-6 lg:col-3">
           <app-input-number label="發票總金額(未稅)" controlName="PUR_TotNet" [control]="dataForm.controls.PUR_TotNet"
             [submitted]="submitted"></app-input-number>
@@ -77,10 +77,11 @@
       <div *ngIf="(dataForm.valid && APS30181Data.length > 0) || !isFormCreateable" class="card grid p-fluid">
         <div class="col-12">
           <app-table-edit #APS3018TableEdit title="發票資料" [columns]="APS3018Columns" [data]="APS3018Data"
-            [canInsert]="isFormCreateable" (selectionChange)="APS3018selectedItems = $event" footerSummaryLabel="發票總金額"
-            [selectedItems]="APS3018selectedItems" [showDelete]="isFormCreateable" [disabled]="isFormReadable"
-            [showCheckBox]="isFormCreateable" (dataChange)="APS3018Data = $event;updateTotals()" [tableRequired]="true"
-            [loading]="APS3018Loading" [defaultInsertData]="defaultInsertData" errorMessage="請先新增發票資料!">
+            [canInsert]="!isFormReadable" (selectionChange)="APS3018selectedItems = $event" footerSummaryLabel="發票總金額"
+            [selectedItems]="APS3018selectedItems" [showDelete]="!isFormReadable" [disabled]="isFormReadable"
+            [rowValidate]="validateRepYYYYMMConsistency" [showCheckBox]="!isFormReadable"
+            (dataChange)="APS3018Data = $event;updateTotals()" [tableRequired]="true" [loading]="APS3018Loading"
+            [defaultInsertData]="defaultInsertData" errorMessage="請先新增發票資料!">
           </app-table-edit>
         </div>
       </div>

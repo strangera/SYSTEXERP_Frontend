@@ -46,6 +46,8 @@ export class TLS55040Component extends BasicQueryPageComponent<Tls55040Data> imp
     { field: 'OTA_Status', header: '狀況', format: value => getSYS1000('OTA_Status', value) },
     { field: 'PUR_TotNet', header: '未銷金額', format: formatAmount },
   ];
+  isRowSelectable = (data: Tls55040Data) => data.OTA_Status !== '2';
+  editDisabled = (data: Tls55040Data) => data.OTA_Status === '2';
 
   constructor(
     public readonly tls55040Service: Tls55040Service,
@@ -54,6 +56,11 @@ export class TLS55040Component extends BasicQueryPageComponent<Tls55040Data> imp
   ) { super(); }
 
   ngOnInit(): void {
+    const returnedOtaNo = history.state?.data;
+    if (returnedOtaNo) {
+      this.queryForm.patchValue({ OTA_No: returnedOtaNo });
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+    }
     this.initializePage('TLS55040', 'tls/tls55040cru', this.queryForm, (form) => this.onSubmit(form));
   }
 

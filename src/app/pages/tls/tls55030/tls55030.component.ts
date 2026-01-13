@@ -84,7 +84,9 @@ export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData>
   onSubmit(frm: FormGroup) {
     const body = {
       ...frm.value,
-      ACP_YYYYMM: this.datePipe.transform(frm.value.ACP_YYYYMM, 'yyyyMM')
+      ACP_YYYYMM: this.datePipe.transform(frm.value.ACP_YYYYMM, 'yyyyMM'),
+      PUR_GUIDate: this.datePipe.transform(frm.value.PUR_GUIDate, 'yyyy-MM-dd'),
+      PUR_RepYYYYMM: this.datePipe.transform(frm.value.PUR_RepYYYYMM, 'yyyyMM'),
     }
     this.handleSubmit(frm, () => {
       this.tls55030Service.queryTLS55030(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {

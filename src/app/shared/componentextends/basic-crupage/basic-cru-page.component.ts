@@ -139,15 +139,19 @@ export abstract class BasicCruPageComponent<T> {
       }
     });
   }
-  onCancel() {
+  onCancel(returnValue?: any) {
     // 確保返回正確的查詢頁面
     const queryPageRoute = this.previousRoute?.includes('account/')
       ? this.previousRoute
       : `/account/${this.ProgNo.toLowerCase().slice(0, 3)}/${this.ProgNo.toLowerCase()}`;
 
     const extras: NavigationExtras = {
-      state: { fromRoute: this.router.url },
+      state: {
+        fromRoute: this.router.url,
+        data: returnValue
+      },
     };
+
     this.router.navigate([queryPageRoute], extras);
   }
 

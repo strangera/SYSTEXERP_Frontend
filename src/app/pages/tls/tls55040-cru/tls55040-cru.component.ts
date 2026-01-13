@@ -31,8 +31,8 @@ import { Tls55040GoodDataDialogComponent } from './tls55040-good-data-dialog/tls
 export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     OTA_No: [{ value: null as string | null, disabled: true }],  // 單號 (系統產生，無法編輯)
-    VEN_No: ['36260296-1' as string | null, [Validators.required]],   // 廠商編號 (下拉表格的主控項)
-    ACP_YYYYMM: [new Date('2025-10-01') as Date | null, [Validators.required]],  // 結帳年月
+    VEN_No: [null as string | null, [Validators.required]],   // 廠商編號 (下拉表格的主控項)
+    ACP_YYYYMM: [null as Date | null, [Validators.required]],  // 結帳年月
     PUR_Uniform: [{ value: null as string | null, disabled: true }, [Validators.required]], // 統一編號 (由選取帶入)
     VEN_PayConditionDay: [null as number | null, [Validators.required]],// 付款天數 (隱藏，由選取帶入)
     ACP_PayDate: [{ value: null as Date | null, disabled: true }, [Validators.required]],// 預計付款日期 (由廠商編號連動取得)
@@ -101,8 +101,31 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
     TABTYPE: '0',
     OTA_TaxType: '1',
     PUR_VoucherType: '25',
-    PUR_DirectType: '0',
+    PUR_DirectType: '1',
     PUR_DiscNo: '1',
+    PUR_GUIDate: new Date(), // 初始預設今日
+  };
+  validateRepYYYYMMConsistency = (rowData: APS3018): { isValid: boolean, errorMessage: string } => {
+    // 如果還沒輸入日期，不觸發一致性檢查
+    if (!rowData.PUR_GUIDate) return { isValid: true, errorMessage: '' };
+    // 計算當前行預計的申報年月
+    const currentRepMonth = this.calculateRepYYYYMM(rowData.PUR_GUIDate);
+    // 找出表格中「其他」已有日期的資料列
+    const otherRows = this.APS3018Data.filter(item => item !== rowData && item.PUR_GUIDate);
+
+    if (otherRows.length > 0) {
+      // 取得第一筆資料的申報年月作為基準
+      const baseRepMonth = this.calculateRepYYYYMM(otherRows[0].PUR_GUIDate);
+
+      if (currentRepMonth !== baseRepMonth) {
+        return {
+          isValid: false,
+          errorMessage: `申報年月(${currentRepMonth})不一致，請檢查發票日期。`
+        };
+      }
+    }
+
+    return { isValid: true, errorMessage: '' };
   };
   // ========== APS3018 Table Edit 相關屬性 END ==========
   // ========== 彈窗相關屬性 ==========
@@ -176,10 +199,10 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
       { field: 'ADJ_Amt', header: this.isFormCreateable ? '調整金額' : '未稅調整金額', format: formatAmount, max: 9999999999, type: 'inputNumber', aggregate: 'sum', textAlign: 'right' },
     ]
     this.APS3018Columns = [
-      { field: 'TABTYPE', header: '單據別', format: v => getSYS1000('TABTYPE', v) },
+      { field: 'TABTYPE', header: '單據別', format: v => getSYS1000('TABTYPE', v), width: '85px' },
       {
         field: 'PUR_GUINo', header: '發票/收據編號', type: 'input', validate: [validateDuplicate, validateRequired, validateMaxLength(10), AA00000000], maxLength: 10,
-        onBlur: (rowData) => this.toUpperCase(rowData)
+        onBlur: (rowData) => this.toUpperCase(rowData), width: '230px'
       },
       {
         field: 'PUR_GUIDate', header: '發票/收據日期', type: 'date', calculate: (rowData, dateValue) => {
@@ -187,9 +210,9 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
           return {
             'PUR_RepYYYYMM': repYYYYMM,
           };
-        }, validate: [validateRequired]
+        }, validate: [validateRequired], width: '145px'
       },
-      { field: 'PUR_RepYYYYMM', header: '申報年月', format: this.formatRepYYYYMM, validate: [validateRequired] },
+      { field: 'PUR_RepYYYYMM', header: '申報年月', format: this.formatRepYYYYMM, width: '110px' },
       {
         field: 'OTA_TaxType', header: '課稅別', validate: [validateRequired], type: this.isFormCreateable ? 'dropdown' : undefined, options: getSYS1000Options('OTA_TaxType'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('OTA_TaxType', v), disabled: () => !this.isFormCreateable,
         calculate: (rowData, value) => {
@@ -197,26 +220,27 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
             PUR_Tax: value !== '1' ? 0 : rowData.PUR_Tax,
             PUR_TotAmt: value !== '1' ? rowData.PUR_TotNet : rowData.PUR_TotAmt,
           };
-        },
+        }, width: '85px', showClear: false
       },
-      { field: 'PUR_DirectType', header: '發票用途', type: this.isFormCreateable ? 'dropdown' : undefined, options: getSYS1000Options('PUR_DirectType'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('PUR_DirectType', v) },
-      { field: 'PUR_DiscNo', header: '扣抵代號', type: this.isFormCreateable ? 'dropdown' : undefined, options: getSYS1000Options('PUR_DiscNo'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('PUR_DiscNo', v) },
+      { field: 'PUR_DirectType', header: '發票用途', type: this.isFormCreateable ? 'dropdown' : undefined, options: getSYS1000Options('PUR_DirectType'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('PUR_DirectType', v), width: '110px', showClear: false },
+      { field: 'PUR_DiscNo', header: '扣抵代號', type: this.isFormCreateable ? 'dropdown' : undefined, options: getSYS1000Options('PUR_DiscNo'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('PUR_DiscNo', v), width: '230px', showClear: false },
       {
         field: 'PUR_TotNet', header: '未稅金額', format: formatAmount, validate: [validateRequired], max: 9999999999, maxLength: 10, type: 'inputNumber',
-        onBlur: (rowData, value) => this.onPurTotNetBlur(rowData, value), textAlign: 'right', aggregate: 'sum', min: 0,
+        onBlur: (rowData, value) => this.onPurTotNetBlur(rowData, value), textAlign: 'right', aggregate: 'sum', min: 0, width: '100px'
       },
       {
-        field: 'PUR_TotTax', header: '稅額', format: formatAmount, validate: [validateRequired], max: 9999999999, min: 0, maxLength: 10, type: 'inputNumber', textAlign: 'right', aggregate: 'sum',
+        field: 'PUR_TotTax', header: '稅額', format: formatAmount, validate: [validateRequired], max: 9999999999, min: 0, maxLength: 10, type: 'inputNumber', textAlign: 'right', aggregate: 'sum', width: '80px',
         onBlur: (rowData, value) => this.onPurTotTaxBlur(rowData, value), disabled: (value, index, rowData) => {
           if (rowData.OTA_TaxType !== '1') { rowData.PUR_TotTax = 0 }
           return rowData.OTA_TaxType !== '1'
         }
       },
-      { field: 'PUR_TotAmt', header: '應稅金額', format: formatAmount, validate: [validateRequired], max: 9999999999, min: 0, maxLength: 10, type: 'inputNumber', disabled: () => true, aggregate: 'sum', textAlign: 'right' },
+      { field: 'PUR_TotAmt', header: '應稅金額', format: formatAmount, validate: [validateRequired], max: 9999999999, min: 0, maxLength: 10, type: 'inputNumber', disabled: () => true, aggregate: 'sum', textAlign: 'right', width: '100px' },
       {
         field: 'PUR_VoucherType', header: '發票格式', validate: [validateRequired], type: 'dropdown',
         options: this.PUR_VoucherTypeOptions,
-        optionLabel: 'value', optionValue: 'value'
+        optionLabel: 'value', optionValue: 'value',
+        width: '85px', showClear: false
       },
     ]
   }
@@ -275,7 +299,7 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
   loadVenData(body?: Record<string, string>): void {
     this.vendorTableLoading = true;
     console.log(body);
-    const queryBody: Tls55040VenQueryBody = { VEN_No: body?.['label'] || '' };
+    const queryBody: Tls55040VenQueryBody = { VEN_No: body?.['label'] || body?.['VEN_No'] || '' };
     this.tls55040Service.queryTLS55040VenData(queryBody).pipe(untilDestroyed(this), finalize(() => this.vendorTableLoading = false)).subscribe(res => {
       this.vendorTableData = res.Data || [];
       this.vendorTotalRecords = res.TotalCount || 0;
@@ -397,7 +421,7 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
       $req.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.messageService.successBubble(res.Message);
         if (this.isFormCreateable) {
-          this.dataForm.reset();
+          this.onCancel(res.Data);
         } else if (this.isFormEditable) {
           this.onCancel();
         }
@@ -412,12 +436,11 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
 
   onTabTypeChange(event: string): void {
     this.defaultInsertData = {
+      ...this.defaultInsertData,
       TABTYPE: event,
-      OTA_TaxType: '1',
-      PUR_VoucherType: '25',
-      PUR_DirectType: '0',
-      PUR_DiscNo: '1',
+      PUR_DirectType: '1', // 根據你原本邏輯這裡改為 '0'
     };
+
     this.APS3018Data = [
       ...this.APS3018Data.map(item => ({
         ...item,

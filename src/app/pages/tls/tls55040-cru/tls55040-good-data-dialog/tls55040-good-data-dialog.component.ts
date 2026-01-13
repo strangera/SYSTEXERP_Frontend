@@ -5,16 +5,16 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { APS30181, Tls55040GoodData, Tls55040GoodQueryBody, Tls55040Service } from '@service/api/tls/tls55040.service';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 
 @UntilDestroy()
 @Component({
   selector: 'app-tls55040-good-data-dialog',
   templateUrl: './tls55040-good-data-dialog.component.html',
   standalone: true,
-  imports: [ReactiveFormsModule, DialogComponent, TableReportComponent, TranslateModule, InputTextComponent],
+  imports: [InputNumberComponent, ReactiveFormsModule, DialogComponent, TableReportComponent, TranslateModule],
   providers: [DatePipe]
 })
 export class Tls55040GoodDataDialogComponent implements OnInit {
@@ -50,14 +50,15 @@ export class Tls55040GoodDataDialogComponent implements OnInit {
   ODMtotalRecords = 0;
   ODMLoading = false;
 
-  ODMColumns: Column[] = [
+  ODMColumns: ReportColumn[] = [
     { field: 'ODM_No', header: '驗收單編號' },
     { field: 'APRV_Date', header: '驗收日期' },
     { field: 'VEN_Name', header: '廠商名稱' },
-    { field: 'HOS_Name', header: '驗收倉別' },
-    { field: 'TotalBuyNet', header: '未稅金額' },
-    { field: 'TotalBuyTax', header: '稅額' },
-    { field: 'TotalBuyAmt', header: '含稅金額' },
+    { field: 'HOS_No', header: '驗收倉別代碼' },
+    { field: 'HOS_Name', header: '驗收倉別名稱' },
+    { field: 'TotalBuyNet', header: '未稅金額', format: formatAmount },
+    { field: 'TotalBuyTax', header: '稅額', format: formatAmount },
+    { field: 'TotalBuyAmt', header: '含稅金額', format: formatAmount },
   ];
 
   constructor(
