@@ -93,6 +93,9 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() subTotalData: any;    // (小計)頁尾資料
   @Output() selectButton = new EventEmitter<any>();    // 選擇 按鈕事件
   @Input() showSummary = true; // 是否顯示 總計欄位
+  @Input() footerLabel = '總計'; // 總計列左側標籤文字
+  @Input() autoHeight = false; // 是否依資料高度自動撐開（不固定 450px）
+  @Input() showFooterTotal = true; // 是否顯示第一列 footer 總計資料
   // expansion 收合展開
   @Input() expansionColumns: ReportColumn[] = [];
   @Input() expansionDataKey = 'details';
@@ -132,10 +135,10 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         if (this.data.length < (this.lastQueryBody?.pageSize || 30)) {
           this.virtualData = this.data;
           this.dt.virtualScroll = false;
-          this.dt.scrollHeight = '450px';
+          this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
         } else {
           this.dt.virtualScroll = true;
-          this.dt.scrollHeight = '450px';
+          this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
           this.virtualData = Array.from({ length: this.data.length });
           this.cdr.detectChanges();
           this.virtualData = this.data;
@@ -192,7 +195,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       if (res && res.Data && res.Data.length > 0) {
         this.virtualData = [];
         this.dt.virtualScroll = false;
-        this.dt.scrollHeight = '450px';
+        this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
         this.groupTotals = {}; // 清空小計，因為這是新的一組資料
         this.updateGroupTotals(res.Data);
         this.data = res.Data;
@@ -203,10 +206,10 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
           this.data = res.Data;
           this.virtualData = this.data;
           this.dt.virtualScroll = false;
-          this.dt.scrollHeight = '450px';
+          this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
         } else {
           this.dt.virtualScroll = true;
-          this.dt.scrollHeight = '450px';
+          this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
           this.virtualData = Array.from({ length: res.Data.length });
           this.data = res.Data;
           this.cdr.detectChanges();

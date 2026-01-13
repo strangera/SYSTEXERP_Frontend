@@ -52,7 +52,8 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     CAP_ItemList: [[]],
     AccNoList: [[]], // 會計科目代號
     org_idList: [[] as number[]], // 組織
-    tpy_date: [], // 扣款年月
+    tpy_YYYYMM: [], // 扣款年月
+    tpy_date: [], // 扣款日期
     pod_noList: [[]], // 維護日
     CRT_USR_No: [''],
     GUI_FLAG: [''],

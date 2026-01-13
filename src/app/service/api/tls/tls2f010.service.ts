@@ -21,4 +21,22 @@ export class Tls2f010Service {
   queryTLS2F010InsertData(params: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/QueryTLS2F010InsertData`, params);
   }
+  insertTLS2F010(params: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/InsertTLS2F010`, params);
+  }
+  updateTLS2F010(params: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/UpdateTLS2F010`, params);
+  }
+  deleteTLS2F010(params: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/DeleteTLS2F010`, params);
+  }
+  uploadTLS2F010(params: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/uploadTLS2F010`, params);
+  }
+  downloadTLS2F010Template(): Observable<ExportFileResponse> {
+    return this.http.get(`${this.apiUrl}/DownloadTLS2F010Template`, {
+      observe: 'response',
+      responseType: 'blob'
+    });
+  }
 }
