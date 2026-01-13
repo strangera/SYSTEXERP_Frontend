@@ -208,6 +208,18 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
       const dd = String(payload.tpy_date.getDate()).padStart(2, '0');
       payload.tpy_date = `${yyyy}-${mm}-${dd}`;
     }
+    // 若 tpy_YYYYMM 有值且為 Date，轉成 yyyymm 字串
+    if (payload.tpy_YYYYMM instanceof Date) {
+      const yyyy = payload.tpy_YYYYMM.getFullYear();
+      const mm = String(payload.tpy_YYYYMM.getMonth() + 1).padStart(2, '0');
+      payload.tpy_YYYYMM = `${yyyy}${mm}`;
+    } else if (typeof payload.tpy_YYYYMM === 'string') {
+      // 如果是像 2026-01 或 2026/01 或 202601 等字串，嘗試轉為 yyyymm
+      const s = String(payload.tpy_YYYYMM).replace(/[^0-9]/g, '');
+      if (s.length === 6) {
+        payload.tpy_YYYYMM = `${s.substring(0, 4)}${s.substring(4, 6)}`;
+      }
+    }
     this.loading = true;
     this.tls2d010Service.queryTLS2D010(payload).subscribe({
       next: (res) => {
