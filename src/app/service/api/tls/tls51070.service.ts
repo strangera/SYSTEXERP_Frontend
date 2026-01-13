@@ -1,4 +1,4 @@
-import { HttpClient, HttpResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -91,11 +91,9 @@ export class Tls51070Service {
   }
 
   //下載excel範本
-  // 下載 excel 範本
-  downloadTLS51070Template(): Observable<HttpResponse<Blob>> {
+  downloadTLS51070Template(): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/downloadTLS51070Template`, {
-      observe: 'response',
-      responseType: 'blob'
+      responseType: 'blob',
     });
   }
 
