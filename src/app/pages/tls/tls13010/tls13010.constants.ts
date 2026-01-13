@@ -75,9 +75,9 @@ export const TLT_OPENFLAG_OPTIONS = {
 
 // 抄表類型
 export const METER_TYPE_OPTIONS = {
-  'WATER': '水表',
-  'ELECTRIC': '電表',
-  'GAS': '瓦斯表'
+  'WATER': '水錶',
+  'ELECTRIC': '電錶',
+  'GAS': '瓦斯錶',
 } as const;
 
 // 超出部份處理方式(1:全部 2:部份)

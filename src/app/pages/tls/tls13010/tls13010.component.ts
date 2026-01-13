@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 // 基礎服務
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { AddButton, Column, createPaginationConfig, formatDate, formatYN } from '../../../shared/componentkit/table/table.model';
+import { Actions } from '../../../shared/service/permission-guard.service';
 
 // 格式化函數
 import {
@@ -71,19 +72,19 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
       label: '審核',
       icon: 'pi pi-check-circle text-green-500',
       action: (rowData: ContractItem) => this.onApprove(rowData),
-      disabled: (rowData: ContractItem) => rowData.source_type === '要約書' || rowData.approve_status !== '1'
+      disabled: (rowData: ContractItem) => rowData.source_type === '要約書' || rowData.approve_status !== '1' || !this.hasPermission(Actions.Audit)
     },
     {
       label: '反審核',
       icon: 'pi pi-undo text-orange-500',
       action: (rowData: ContractItem) => this.onUnapprove(rowData),
-      disabled: (rowData: ContractItem) => rowData.source_type === '要約書' || rowData.approve_status !== '2'
+      disabled: (rowData: ContractItem) => rowData.source_type === '要約書' || rowData.approve_status !== '2' || !this.hasPermission(Actions.AntiAudit)
     },
     {
       label: '作廢',
       icon: 'pi pi-times-circle text-red-500',
       action: (rowData: ContractItem) => this.onVoid(rowData),
-      disabled: (rowData: ContractItem) => rowData.source_type === '要約書' || this.isVoidDisabled(rowData)
+      disabled: (rowData: ContractItem) => rowData.source_type === '要約書' || this.isVoidDisabled(rowData) || !this.hasPermission(Actions.Invalidate)
     }
   ];
 
@@ -589,6 +590,13 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     });
   }
 
+  /**
+   * 檢查是否有下傳權限
+   */
+  hasDownloadPermission(): boolean {
+    return this.hasPermission(Actions.Download);
+  }
+
   btnLoading = false;
   onUpload() {
     const storeNo = this.authService.currentUserValue?.SYS_StoreNo;
@@ -654,6 +662,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
       },
       complete: () => {
         // 所有請求完成後的處理
+        this.messageService.successBubble('下傳成功');
         this.selectedItems = [];
         this.onSubmit(this.queryForm);
       }
