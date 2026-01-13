@@ -38,29 +38,17 @@
         <ng-container *ngFor="let col of columns; let i = index">
           <!-- 如果是第一次出現這個群組 -->
           <ng-container *ngIf="tableUtility.shouldRenderGroupHeader(col, i, columns)">
-            <th [attr.colspan]="
-          <ng-container *ngIf=" tableUtility.shouldRenderGroupHeader(col, i, columns)">
-            <th [attr.colspan]="
-                tableUtility.getColumnSpan(columns, col.groupField!)
-              " class="group-header text-center" [ngClass]="{ 'multiline-header': allowMultilineHeader }"
-              pReorderableColumn pResizableColumn>
-              " class="group-header text-center" [ngClass]="{ 'multiline-header': allowMultilineHeader }"
-              pReorderableColumn pResizableColumn>
+            <th [attr.colspan]="tableUtility.getColumnSpan(columns, col.groupField!)" class="group-header text-center"
+              [ngClass]="{ 'multiline-header': allowMultilineHeader }" pReorderableColumn pResizableColumn>
               {{ getGroupHeader(col.groupField!) }}
             </th>
           </ng-container>
           <!-- 如果是沒群組的欄位 -->
           <ng-container *ngIf="!col.groupField">
             <th rowspan="2" class="text-center" [ngClass]="{ 'multiline-header': allowMultilineHeader }"
-              pResizableColumn [pSortableColumn]="
-            <th rowspan=" 2" class="text-center" [ngClass]="{ 'multiline-header': allowMultilineHeader }"
-              pResizableColumn [pSortableColumn]="
-                showSort ? col.sortField ?? col.field : undefined
-              " [pSortableColumnDisabled]="
-              " [pSortableColumnDisabled]="
-                col.showSort === false || showSort === false
-              " pFrozenColumn [frozen]="!!col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
-              " pFrozenColumn [frozen]="!!col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
+              pResizableColumn [pSortableColumn]="showSort ? col.sortField ?? col.field : undefined"
+              [pSortableColumnDisabled]="col.showSort === false || showSort === false" pFrozenColumn
+              [frozen]="!!col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
               {{ col.header }}
               <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length"
                 [field]="col.sortField ?? col.field" />
