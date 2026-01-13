@@ -19,7 +19,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { SelectButtonModule } from 'primeng/selectbutton';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { Tls2f010Service } from '../../../service/api/tls/tls2f010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -73,7 +73,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     SortBy: [[{ field: 'tlt_no', order: 1 }]],
 
   });
-
+  excelLoading = false;
   columns: ReportColumn[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
@@ -88,10 +88,11 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     { field: 'ven_uniform', header: '廠商統一編號', visible: true },
     { field: 'TAX_TYPE', header: '課稅別', visible: true },
   ];
-  invoiceFormatOptions: any[] = [
-    { value: 1, label: '21/進項三聯式、電子計算機統一發票' },
-    { value: 5, label: '27/彙總登陸每張稅額五百元以下之盡項二聯式收銀雞統一發票、載有稅額之其他憑證' },
+  invoiceFormatOptions = [
+    { value: '21', label: '21/進項三聯式、電子計算機統一發票' },
+    { value: '27', label: '27/彙總登陸每張稅額五百元以下之進項二聯式收銀機統一發票、載有稅額之其他憑證' },
   ];
+
   statusOptions = [
     { label: '未拋轉', value: '2' },
     { label: '已拋轉', value: '3' },
@@ -104,7 +105,15 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
   data: any[] = [];
   lastQueryBody: any = null;
   footerData: any = null;
-  ven_noOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
+  ven_noOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }).pipe(
+    map(list =>
+      (list ?? []).map(item => ({
+        label: `${item['No']} - ${item['Name']}`,
+        value: item['No']
+      }))
+    )
+  );
+
   tlt_noOptions = this.dropdown.queryTltTalent();
   tlt_floorOptions = this.dropdown.querySys3900();
   invoiceTypeOptions = getSYS1000Options('invoice_type');
@@ -162,7 +171,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS2F010', '/tls/tls2f010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS2F010', 'tls/tls2f010cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
 
@@ -213,7 +222,9 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
       payload.CRT_USR_No = raw.CRT_USR_No || '';
       payload.CRT_Date_From = this.formatDateOnly(raw.CRT_Date_From);
       payload.CRT_Date_To = this.formatDateOnly(raw.CRT_Date_To);
-      payload.floor_no = Array.isArray(raw.floor_no) ? raw.floor_no.join(',') : (raw.floor_no || '');
+      payload.floor_no = Array.isArray(raw.floor_no)
+        ? raw.floor_no
+        : (raw.floor_no ? [raw.floor_no] : []);
 
       this.loading = true;
       this.tls2f010Service.queryTLS2F010(payload)
@@ -226,36 +237,116 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
         });
     });
   }
-  downloadTemplate() {
-    // const export$ = this.tls2d010Service.downloadTLS2D010Template();
-    // this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading);
+
+  override onEdit(row: any): void {
+    super.onEdit(row, this.queryForm.getRawValue());
   }
-  onImportExcel(event: FileSelectEvent) {
-    const file = event.files[0];
+
+  override onDetail(row: any): void {
+    super.onDetail(row, this.queryForm.getRawValue());
+  }
+
+  onDelete(selectedItems: any[]): void {
+    if (!selectedItems || selectedItems.length === 0) {
+      this.messageService.errorBubble('請先選擇要刪除的資料');
+      return;
+    }
+
+    const idList = selectedItems
+      .map(item => item.id)
+      .filter(id => id != null);
+
+    if (idList.length === 0) {
+      this.messageService.errorBubble('找不到可刪除的資料');
+      return;
+    }
+
+    this.messageService.confirm({
+      message: `確定要刪除選取的 ${idList.length} 筆資料嗎？`,
+      accept: () => {
+        this.loading = true;
+
+        this.tls2f010Service
+          .deleteTLS2F010({ idList })
+          .pipe(finalize(() => (this.loading = false)))
+          .subscribe(() => {
+            this.messageService.successBubble('刪除成功');
+            this.onSubmit(this.queryForm);
+          });
+      }
+    });
+  }
+  onImportExcel(event: FileSelectEvent): void {
+    if (this.excelLoading) {
+      return;
+    }
+
+    const file = event.files?.[0];
+    if (!file) return;
+
+    this.excelLoading = true;
+
     const formData = new FormData();
     formData.append('file', file);
 
-    // this.tls2d010Service.uploadExcel(formData).pipe(untilDestroyed(this)).subscribe({
-    //   next: (res) => {
-    //     const data = res?.Data;
+    this.tls2f010Service
+      .uploadTLS2F010(formData)
+      .pipe(finalize(() => (this.excelLoading = false)))
+      .subscribe({
+        next: (res) => {
+          const data = res?.Data;
 
-    //     if (data) {
-    //       if (data.ErrorFilePath) {
-    //         // 有錯誤檔：顯示錯誤提示
-    //         this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
-    //         // 自動下載錯誤檔
-    //         this.downloadErrorFile(data.ErrorFilePath);
-    //       } else {
-    //         // 沒有錯誤檔：顯示成功筆數
-    //         this.messageService.infoBubble(`匯入成功，筆數：${data.SuccessCount}`);
-    //       }
-    //     }
-    //   },
-    // });
+          if (!data) {
+            this.messageService.errorBubble('匯入失敗，未取得回傳資料');
+            return;
+          }
+
+          if (data.ErrorFilePath) {
+            this.messageService.errorBubble('部分資料匯入失敗，請下載錯誤檔檢查');
+            this.downloadErrorFile(data.ErrorFilePath);
+            return;
+          }
+
+          if (data.Success === false) {
+            const backendMessage = res?.Message || '';
+            const errorDetail =
+              Array.isArray(data.Errors) && data.Errors.length
+                ? data.Errors.join('\n')
+                : '';
+            const finalMessage =
+              backendMessage || errorDetail || '匯入失敗，請聯絡系統管理員';
+
+            this.messageService.errorBubble(finalMessage);
+            return;
+          }
+
+          this.messageService.infoBubble(`匯入成功，筆數：${data.SuccessCount ?? 0}`);
+          this.onSubmit(this.queryForm);
+        },
+      });
   }
 
-  /** 自動下載錯誤檔 */
-  downloadErrorFile(filePath: string) {
+  downloadTemplate(): void {
+    this.excelLoading = true;
+
+    this.tls2f010Service
+      .downloadTLS2F010Template()
+      .pipe(finalize(() => (this.excelLoading = false)))
+      .subscribe(res => {
+        const blob = res.body;
+        if (!blob) return;
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'TLS2F010_匯入範本.xlsx';
+        a.click();
+
+        window.URL.revokeObjectURL(url);
+      });
+  }
+  downloadErrorFile(filePath: string): void {
     window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
+
 }

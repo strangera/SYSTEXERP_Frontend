@@ -40,7 +40,6 @@
           </div>
           <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="申報年月" controlName="DEC_YM"
             [control]="queryForm.controls.DEC_YM" [submitted]="submitted" />
-
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
@@ -70,11 +69,6 @@
             </app-dropdown>
           </div>
         </div>
-        <!-- <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="狀況" controlName="check_statusList" [options]="statusOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.check_statusList"
-              [submitted]="submitted"></app-multi-select>
-          </div> -->
         <hr />
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
@@ -84,13 +78,6 @@
           <app-input-text class="col-12 md:col-6 lg:col-4" label="建立人員" controlName="CRT_USR_No"
             [control]="queryForm.controls.CRT_USR_No" />
         </div>
-
-        <!-- <hr />
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <p-checkbox label="是否貼現" [binary]="true" controlName="DE  DUCT_YN" formControlName="DEDUCT_YN"></p-checkbox>
-          </div>
-        </div> -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range calendarType="dateRange" label="建立日期" [startControl]="queryForm.controls.CRT_Date_From"
@@ -111,9 +98,11 @@
 </div>
 <div class="card">
   <app-table-report tableKey="tls2f010" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-    [lastQueryBody]="lastQueryBody" [queryFunction]="getCurrentQueryFunction()" [showDelete]="false"
-    [footerData]="footerData" [showManage]="false" [showExcelExport]="true" [showExcel]="true"
-    (exportExcel)="downloadTemplate()" (importExcel)="onImportExcel($event)" [loading]="loading">
+    [lastQueryBody]="lastQueryBody" [queryFunction]="getCurrentQueryFunction()" [showDelete]="true"
+    [showReportMode]="false" [showCheckBox]="true" (edit)="onEdit($event)" [footerData]="footerData" [showManage]="true"
+    [showExcel]="true" (detail)="onDetail($event)" (importExcel)="onImportExcel($event)" (delete)="onDelete($event)"
+    [showExcelExport]="true" [exportExcelLoading]="excelLoading" (exportExcel)="downloadTemplate()"
+    (importExcel)="onImportExcel($event)" [loading]="loading">
 
   </app-table-report>
 </div>
