@@ -8,6 +8,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { FileExportService } from '@shared/service/file-export.service';
+import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -71,7 +72,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
   data: ITLS52010Data[] = [];
   selectedItems: ITLS52010Data[] = []; // 用於儲存選中的項目
   addButton: AddButton[] = [
-    { label: '單據審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.已審核); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已申請 }, // 審核
+    { label: '單據審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.已審核); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已申請 || !this.hasPermission(Actions.Audit) }, // 審核
     { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.已申請); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已審核 }, // 反審核
     { label: '產生標籤檔', icon: 'pi pi-tags', action: (rowData: ITLS52010Data) => { this.generateLabelFile(rowData); } }, // 標籤檔
     { label: '作廢', icon: 'pi pi-trash text-red-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.作廢); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已審核 }, // 作廢
