@@ -1,32 +1,6 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <p-fileUpload
-      id="customButton"
-      #fileUpload
-      mode="basic"
-      chooseIcon="pi pi-upload"
-      accept=".xls"
-      (onSelect)="onFileUpload($event); fileUpload.clear()"
-      [auto]="true"
-      chooseLabel="匯入EXCEL"
-    />
-
-    <p-fileUpload
-      id="customButton"
-      #fileUpload
-      mode="basic"
-      chooseIcon="pi pi-upload"
-      accept=".png"
-      (onSelect)="onIMGUpload($event); fileUpload.clear()"
-      [auto]="true"
-      chooseLabel="匯入圖片檔"
-    />
-
-    <app-button
-      label="範本下載"
-      (click)="downloadTLS51070Template()"
-    ></app-button>
     <app-button
       label="變價歷史紀錄"
       (click)="gotoTls51070OS('history')"
@@ -35,6 +9,16 @@
       label="產生標籤檔"
       (click)="gotoTls51070OS('label')"
     ></app-button>
+    <p-fileUpload
+      id="customButton"
+      #fileUpload
+      mode="basic"
+      chooseIcon="pi pi-upload"
+      accept=".png"
+      (onSelect)="onIMGUpload($event); fileUpload.clear()"
+      [auto]="true"
+      chooseLabel="匯入圖片"
+    />
     <app-button
       btnType="create"
       (click)="onCreate()"
@@ -231,6 +215,10 @@
       [selectedItems]="selectedItems"
       (selectionChange)="selectedItems = $event"
       (delete)="onDelete($event)"
+      [showExcel]="true"
+      (exportExcel)="onExportExcel()"
+      [exportExcelLoading]="excelLoading"
+      (importExcel)="onFileUpload($event)"
       [showCheckBox]="true"
       dataKey="id"
       [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]"

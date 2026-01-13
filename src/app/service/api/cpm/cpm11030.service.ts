@@ -1,14 +1,17 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { Observable, forkJoin } from 'rxjs';
-import { shareReplay } from 'rxjs/operators';
-import { environment } from '../../../../environments/environment';
+import { Injectable, signal } from '@angular/core';
+import { FavoriteService } from '@service/system/favorite.service';
+import { Option } from '@service/utility/dropdown-api.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { NGXLogger } from 'ngx-logger';
+import { Observable, forkJoin } from 'rxjs';
+import { finalize, shareReplay, take, tap } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
 
 /** =========================
  *  Common
  *  ========================= */
-export type SortItem = { field: string; order: number };
+export interface SortItem { field: string; order: number }
 
 /** =========================
  *  Query: /queryCPM11030
@@ -122,12 +125,18 @@ export interface DropDownListResponse {
 }
 
 /** 轉成前端 dropdown options 用 */
-export type OptionItem = { value: string; label: string };
+export interface OptionItem { value: string; label: string }
 
 @Injectable({ providedIn: 'root' })
 export class Cpm11030Service {
   private apiUrl = `${environment.ApiUrl}/CPM0000/CPM1000`;
   private DLapiUrl = `${environment.ApiUrl}`;
+
+  public readonly usrLoading = signal<boolean>(!1);
+  // TODO: 三種 usr 列表 (全部 | 建立人 | 更新人) 看之後要用哪格
+  public readonly usrOptions = signal<Option[]>([]);
+  public readonly crtUsrOptions = signal<Option[]>([]);
+  public readonly updUsrOptions = signal<Option[]>([]);
 
   /** ✅ 下拉快取：Query/CRU 共用同一份（只會真的打一次） */
   private dropdownOnce$?: Observable<{
@@ -136,7 +145,10 @@ export class Cpm11030Service {
     css2001: DropDownListResponse;
   }>;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,
+    private readonly logger: NGXLogger,
+    private readonly fav: FavoriteService,
+  ) { }
 
   /** ✅ 給 Query/CRU 共用的下拉（只打一次） */
   getDropdownsOnce(): Observable<{
@@ -243,6 +255,49 @@ export class Cpm11030Service {
   queryCSS2001_DropDownList(body?: any): Observable<DropDownListResponse> {
     return this.http.post<DropDownListResponse>(`${this.DLapiUrl}/queryCSS2001_DropDownList`, body ?? {});
   }
+
+  public getUsrOptions(): void {
+    this.usrLoading.set(!0);
+    this.fav.getFavorites().pipe(
+      take(1),
+      tap(res => this.logger.debug('getUsrOptions:', [res])),
+      tap(res => {
+        const data = res.Data as UserFavorite[];
+        const set = new Set<string>();
+        // 去重
+        const dedup = (options: Option[]) => options.filter(option => {
+          if (set.has(option.value)) return !1;
+          set.add(option.value);
+          return !0;
+        });
+        this.usrOptions.set(dedup(data.map(item => ({ value: item.USER_No, label: item.CRT_USR_Name } as Option))));
+        this.crtUsrOptions.set(dedup(data.map(item => ({ value: item.CRT_USR_No, label: item.CRT_USR_Name } as Option)) ?? []));
+        this.updUsrOptions.set(dedup(data.map(item => ({ value: item.UPD_USR_No, label: item.UPD_USR_Name } as Option)) ?? []));
+      }),
+      finalize(() => this.usrLoading.set(!1)),
+    ).subscribe();
+
+    // 保留原本的 API
+    // this.dropdownApi.queryTblUserOrgid().pipe(
+    //   take(1),
+    //   tap(res => this.usrOptions.set(res?.map(item => ({ value: item['Org_ID'], label: item['Org_Name'] } as Option)) ?? [])),
+    //   finalize(() => this.logger.debug('查詢TblUserOrgidOptions結果:', [this.usrOptions()])),
+    // ).subscribe();
+  }
+}
+
+interface UserFavorite {
+  CRT_Date: string;
+  CRT_USR_Name: string;
+  CRT_USR_No: string;
+  FVT_SeqNo: number;
+  ID: number;
+  PROG_No: string;
+  UPD_Date: string | null;
+  UPD_USR_Name: string | null;
+  UPD_USR_No: string | null;
+  USER_No: string;
 }
 
 export { ApiResponse };
+

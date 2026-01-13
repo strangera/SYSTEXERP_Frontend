@@ -176,6 +176,9 @@
   .wrap-header {
     white-space: normal; /* 讓文字可以正常換行 */
   }
+  .multiline-header {
+    white-space: pre-line; /* 允許 \n 換行 */
+  }
   .link-active {
     color: #2196f3; /* PrimeNG Primary Blue */
     font-weight: 500;

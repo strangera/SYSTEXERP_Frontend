@@ -57,6 +57,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   // Header 相關
   @Input() showCaption = true;            // 是否顯示 Caption
   @Input() showSort = true;              // 是否顯示 排序
+  @Input() allowMultilineHeader = false; // 是否允許標題使用 \n 換行
   // Header(左) 相關
   @Input() showFilter = true;      // 是否顯示 Filter
   @Input() showReportMode = true;    // 是否顯示 匯出按鈕
