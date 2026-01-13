@@ -187,7 +187,7 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
     { field: 'Ven_No', header: '廠客代號', visible: true },
     { field: 'TXN_Uniform', header: '買受人統一編號', visible: true },
     { field: 'TXN_SaleAmt', header: '發票總金額', visible: true, format: this.moneyFormat },
-    { field: 'PLU_TaxType', header: '課稅別', visible: true },
+    { field: 'PLU_TaxTypeDesc', header: '課稅別', visible: true },
     { field: 'TXN_Net', header: '發票未稅金額', visible: true, format: this.moneyFormat },
     { field: 'TXN_Tax', header: '稅額', visible: true, format: this.moneyFormat },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },

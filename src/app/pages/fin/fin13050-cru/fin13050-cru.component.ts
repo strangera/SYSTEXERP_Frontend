@@ -9,13 +9,16 @@ import {
   ValidationErrors,
   ValidatorFn,
 } from '@angular/forms';
-import { NgIf,DatePipe } from '@angular/common';
+import { NgIf, DatePipe } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
 
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { FIN13050Service, VendorOption } from '../../../service/api/fin/fin13050.service';
+import {
+  FIN13050Service,
+  VendorOption,
+} from '../../../service/api/fin/fin13050.service';
 import { ValidationService } from '@shared/service/validation.service';
 
 // UI
@@ -32,18 +35,25 @@ import { untilDestroyed } from '@ngneat/until-destroy';
  *  進階 Validators（中文化原因）
  * --------------------------- */
 /** 有填才驗證：英數且長度必須是 16 */
-const alnumMax16IfFilled: ValidatorFn = (c: AbstractControl): ValidationErrors | null => {
+const alnumMax16IfFilled: ValidatorFn = (
+  c: AbstractControl,
+): ValidationErrors | null => {
   const v = (c.value ?? '').toString().trim();
   if (!v) return null; // 空值：合法（非必填）
-  if (!/^[A-Za-z0-9]+$/.test(v)) return { alnum: { reason: '包含非英數字元' } };
-  if (v.length > 16) return { maxlength: { requiredLength: 16, actualLength: v.length } };
+  if (!/^[A-Za-z0-9]+$/.test(v))
+    return { alnum: { reason: '包含非英數字元' } };
+  if (v.length > 16)
+    return { maxlength: { requiredLength: 16, actualLength: v.length } };
   return null; // 1~16 碼 OK
 };
 /** 2 碼大寫英文字母（同時配合 min/maxLength(2)） */
-const twoUppercaseValidator: ValidatorFn = (c: AbstractControl): ValidationErrors | null => {
+const twoUppercaseValidator: ValidatorFn = (
+  c: AbstractControl,
+): ValidationErrors | null => {
   const v = (c.value ?? '').toString();
   if (!v) return { required: true };
-  if (!/^[A-Z]+$/.test(v)) return { twoUppercase: { reason: '包含非大寫英文字母' } };
+  if (!/^[A-Z]+$/.test(v))
+    return { twoUppercase: { reason: '包含非大寫英文字母' } };
   return null;
 };
 
@@ -62,7 +72,10 @@ const alnumOnly: ValidatorFn = (c: AbstractControl): ValidationErrors | null => 
   if (!/^[A-Za-z0-9]+$/.test(v)) return { alnum: { reason: '包含非英數字元' } };
   return null;
 };
-export const yyyymmEvenMonthValidator: ValidatorFn = (ctrl: AbstractControl): ValidationErrors | null => {
+
+export const yyyymmEvenMonthValidator: ValidatorFn = (
+  ctrl: AbstractControl,
+): ValidationErrors | null => {
   const v = (ctrl.value ?? '').toString().trim();
   if (!/^\d{6}$/.test(v)) return { yyyymm: { example: 'YYYYMM' } };
 
@@ -91,7 +104,10 @@ export const yyyymmEvenMonthValidator: ValidatorFn = (ctrl: AbstractControl): Va
     CalenderoneComponent,
   ],
 })
-export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements OnInit {
+export class FIN13050CRUComponent
+  extends BasicCruPageComponent<any>
+  implements OnInit
+{
   @Output() fieldChange = new EventEmitter<any>();
 
   // 下拉來源
@@ -101,8 +117,7 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
   taxTypeOptions: any[] = [];
   deductOptions: any[] = [];
   typeOptions: any[] = [];
-  salTypeOptions: any[] = [];
-  sysOriginOptions: any[] = [];
+  salTypeOptions: any[] = []; // SAL_Type = 系統別（取 SYS_ORIGIN 代碼）
   PUR_GUIStatusOptions: any[] = [
     { value: '0', label: '未立帳' },
     { value: '1', label: '已立帳' },
@@ -112,7 +127,12 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
   PUR_VenUniformOptions: VendorOption[] = [];
 
   // 供應商「廠商編號」下拉（value=VEN_No, label="VEN_No VEN_Name"）
-  VendorNoOptions: { label: string; value: string; venName?: string; venUniform?: string }[] = [];
+  VendorNoOptions: {
+    label: string;
+    value: string;
+    venName?: string;
+    venUniform?: string;
+  }[] = [];
 
   /** 欄位中文名稱（出現在泡泡） */
   private labelOf: Record<string, string> = {
@@ -138,55 +158,49 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     PUR_Type: '類別區分',
     Source_Doc_No: '憑證單號',
     Voucher_No: '傳票號碼',
-    SAL_Type: '使用別',
-    SYS_ORIGIN: '系統別',
+    SAL_Type: '系統別',
     PUR_Remark: '備註',
-  };
-
-  /** 中文錯誤訊息 */
-  private zhErrorMap: Record<string, string> = {
-    required: '必填，請輸入資料。',
-    digits: '需為純數字（不可含空白或符號）。',
-    twoUppercase: '需為 2 碼大寫英文字母（A–Z）。',
-    alnum: '需為英數字元（不可含空白或符號）。',
-    minlength: '長度不足。',
-    maxlength: '長度過長。',
-    invalidEvenMonth: '僅接受偶數月：02/04/06/08/10/12。',
-    invalidDate2: '日期格式錯誤。',
-    min: '數值不可小於限制。',
   };
 
   /** 錯誤顯示順序 */
   private checkOrder: string[] = [
-    'PUR_VoucherType', 'PUR_GUITrack', 'PUR_GUINo', 'PUR_GUIDate', 'PUR_RepYYYYMM',
-    'PUR_VenUniform', 'PUR_VenNo',
-    'PUR_Amt', 'PUR_Net', 'PUR_Tax',
-    'PUR_TaxType', 'Source_Doc_No',
+    'PUR_VoucherType',
+    'PUR_GUITrack',
+    'PUR_GUINo',
+    'PUR_GUIDate',
+    'PUR_RepYYYYMM',
+    'PUR_VenUniform',
+    'PUR_VenNo',
+    'PUR_Amt',
+    'PUR_Net',
+    'PUR_Tax',
+    'PUR_TaxType',
+    'Source_Doc_No',
   ];
+
   /** 接受 Date 或 'YYYYMM'，同時檢查偶數月 */
-private repYYYYMMEvenValidator: ValidatorFn = (ctrl: AbstractControl): ValidationErrors | null => {
-  const v = ctrl.value;
-  if (v == null || v === '') return { required: true };
+  private repYYYYMMEvenValidator: ValidatorFn = (
+    ctrl: AbstractControl,
+  ): ValidationErrors | null => {
+    const v = ctrl.value;
+    if (v == null || v === '') return { required: true };
 
-  let y: number, m: number;
+    let y: number, m: number;
 
-  // 允許 Date
-  if (v instanceof Date && !isNaN(v.getTime())) {
-    y = v.getFullYear();
-    m = v.getMonth() + 1;
-  } else {
-    // 允許 'YYYYMM' 字串
-    const s = String(v).trim();
-    if (!/^\d{6}$/.test(s)) return { invalidDate2: true }; // 統一用 invalidDate2 給你的泡泡訊息
-    y = Number(s.slice(0, 4));
-    m = Number(s.slice(4, 6));
-  }
+    if (v instanceof Date && !isNaN(v.getTime())) {
+      y = v.getFullYear();
+      m = v.getMonth() + 1;
+    } else {
+      const s = String(v).trim();
+      if (!/^\d{6}$/.test(s)) return { invalidDate2: true };
+      y = Number(s.slice(0, 4));
+      m = Number(s.slice(4, 6));
+    }
 
-  if (m < 1 || m > 12) return { invalidDate2: true };
-  if (m % 2 !== 0) return { invalidEvenMonth: true };
-  return null;
-};
-
+    if (m < 1 || m > 12) return { invalidDate2: true };
+    if (m % 2 !== 0) return { invalidEvenMonth: true };
+    return null;
+  };
 
   /* ---------------------------
    *  表單
@@ -196,193 +210,294 @@ private repYYYYMMEvenValidator: ValidatorFn = (ctrl: AbstractControl): Validatio
     id: [{ value: null, disabled: true }],
 
     // ===== 系統欄位（必填 & 預設） =====
-    mid: [0, [Validators.required]],                                  // 商場編號（必填）
-    STO_No: ['', [Validators.required]],                               // 分店編號（必填）
+    mid: [0, [Validators.required]], // 商場編號
+    STO_No: ['', [Validators.required]], // 分店編號
 
-    ACP_Type: ['2', [Validators.required]],                            // 應付帳款類型：預設 '2'
-    // PUR_Uniform 預設會在 ngOnInit 以「SELECT STO_Uniform FROM TDS1003 WHERE STO_Status='1'」
-    // 帶入後再 patch；此處先設必填 + 8 碼數字限制
-    PUR_Uniform: ['', [Validators.required, digitsOnly, Validators.minLength(8), Validators.maxLength(8)]],
-    PUR_GUIStatus: ['0', [Validators.required]],                       // 發票狀態：預設 '0'
-    PUR_GUIBalance: [0, [Validators.required, Validators.min(0)]],     // 已沖金額：預設 0（數字）
-    PUR_SeqNo: [1, [Validators.required, Validators.min(1)]],          // 項次：預設 1（數字）
+    ACP_Type: ['2', [Validators.required]], // 應付帳款類型：預設 '2'
+    PUR_Uniform: [
+      '',
+      [
+        Validators.required,
+        digitsOnly,
+        Validators.minLength(8),
+        Validators.maxLength(8),
+      ],
+    ], // 自家統編
+    PUR_GUIStatus: ['0', [Validators.required]], // 發票狀態：預設 '0'
+    PUR_GUIBalance: [0, [Validators.required, Validators.min(0)]], // 已沖金額：預設 0
+    PUR_SeqNo: [1, [Validators.required, Validators.min(1)]], // 項次：預設 1
 
     // ===== 使用者輸入 =====
-    PUR_VoucherType: ['', [Validators.required]],                      // 發票格式：下拉（必填）
+    PUR_VoucherType: ['', [Validators.required]], // 發票格式
 
     // 字軌：2 碼大寫英文（必填）
     PUR_GUITrack: [
       '',
-      [Validators.required, Validators.minLength(2), Validators.maxLength(2), twoUppercaseValidator],
+      [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(2),
+        twoUppercaseValidator,
+      ],
     ],
 
-    // 發票號碼：8 碼純數字（必填）
+    // 發票號碼：8 碼純數字（必填） —— 一進畫面就會被正規化成後 8 碼
     PUR_GUINo: [
       '',
-      [Validators.required, digitsOnly, Validators.minLength(8), Validators.maxLength(8)],
+      [
+        Validators.required,
+        digitsOnly,
+        Validators.minLength(8),
+        Validators.maxLength(8),
+      ],
     ],
 
-    // 發票日期（必填）
+    // 發票日期
     PUR_GUIDate: [null as any, [Validators.required]],
 
-    // 申報年月：YYYYMM + 偶數月（必填）
-    // - HTML 請加 maxlength="6"
-    // - 預設值會依發票日期自動帶偶數月（在 ngOnInit 的 valueChanges 裡處理）
-PUR_RepYYYYMM: [null as any, [Validators.required, this.repYYYYMMEvenValidator]],
-
-    // ===== 供應商 =====
-    PUR_VenNo: ['', [Validators.required]],                            // 廠商編號（改下拉）
-    PUR_VenName: [{ value: '', disabled: true }],                      // 廠商名稱（唯讀，自動帶入）
-    PUR_VenUniform: [
-      '',
-      [Validators.required, digitsOnly, Validators.minLength(8), Validators.maxLength(8)], // 統編 8 碼
+    // 申報年月：YYYYMM + 偶數月
+    PUR_RepYYYYMM: [
+      null as any,
+      [Validators.required, this.repYYYYMMEvenValidator],
     ],
 
-    // ===== 金額（正數） =====
+    // ===== 供應商 =====
+    PUR_VenNo: ['', [Validators.required]], // 廠商編號
+    PUR_VenName: [{ value: '', disabled: true }], // 廠商名稱（唯讀）
+    PUR_VenUniform: [
+      '',
+      [
+        Validators.required,
+        digitsOnly,
+        Validators.minLength(8),
+        Validators.maxLength(8),
+      ],
+    ], // 廠商統編
+
+    // ===== 金額 =====
     PUR_Amt: [null as any, [Validators.required, Validators.min(0.01)]],
     PUR_Net: [null as any, [Validators.required, Validators.min(0.01)]],
     PUR_Tax: [null as any, [Validators.required]],
 
     // ===== 其他下拉 =====
-    PUR_DirectType: ['1'],                                             // 發票用途（預設 1 專供課稅）
-    PUR_TaxType: ['1', [Validators.required]],                         // 課稅別（必填，預設 1 應稅）
-    PUR_DiscNo: ['1'],                                                 // 扣抵代號（預設 1）
-    PUR_Type: [''],                                                    // 類別區分（選填）
+    PUR_DirectType: ['1'], // 發票用途
+    PUR_TaxType: ['1', [Validators.required]], // 課稅別
+    PUR_DiscNo: ['1'], // 扣抵代號
+    PUR_Type: [''], // 類別區分
 
-    // ===== 憑證/傳票/使用別/系統別/備註 =====
-    // 憑證單號：16 碼英數（必填）
-Source_Doc_No: [
-  '',
-  [ alnumMax16IfFilled ]  // 非必填；有填：英數且長度 ≤ 16
-],
-    Voucher_No: [{ value: '', disabled: true }],                       // 傳票號碼（唯讀）
-    SAL_Type: [''],                                                    // 使用別（SYS1000.T205）
-    SYS_ORIGIN: [''],                                                  // 系統別（SYS1000.SYS_ORIGIN）
-    PUR_Remark: [''],                                                  // 備註
+    // ===== 憑證/傳票/系統別/備註 =====
+    Source_Doc_No: ['', [alnumMax16IfFilled]], // 憑證單號 (非必填)
+    Voucher_No: [{ value: '', disabled: true }], // 傳票號碼
+    SAL_Type: [''], // 系統別（對應後端 SAL_Type）
+    PUR_Remark: [''], // 備註
   });
 
   constructor(
     private fin13050Service: FIN13050Service,
     private validationService: ValidationService,
-        private readonly datePipe: DatePipe,
-        private readonly route: ActivatedRoute
-  ) { super(); }
+    private readonly datePipe: DatePipe,
+    private readonly route: ActivatedRoute,
+  ) {
+    super();
+  }
 
-ngOnInit(): void {
-  this.initializePage('FIN13050', this.dataForm);
+  ngOnInit(): void {
+    this.initializePage('FIN13050', this.dataForm);
 
-  // 先帶使用者基本資料（你原本的）
-  const u = this.getUserInfo();
-  this.dataForm.patchValue({
-    mid: Number(u?.mid) || 0,
-    STO_No: u?.SYS_StoreNo ?? '',
-    PUR_Uniform: u?.STR_Uniform ?? '',
-  });
-
-  // ❶ 外部帶 GUI_No：直接進檢視模式載入明細
-  this.route.queryParams
-    .pipe(untilDestroyed(this))
-    .subscribe(params => {
-      const guiNo = (params['GUI_No'] ?? '').toString().trim();
-      if (!guiNo) return;
-
-      this.fin13050Service.queryDetailByGUI({ GUI_No: guiNo })
-        .pipe(untilDestroyed(this))
-        .subscribe(res => {
-          const row = Array.isArray(res?.Data) ? res.Data[0] : null;
-          if (!row) {
-            this.messageService.errorBubble(`查無發票資料（GUI_No=${guiNo}）`);
-            return;
-          }
-
-          // patch 明細
-          this.dataForm.patchValue(row as any, { emitEvent: false });
-
-          // ✅ 強制檢視模式
-          this.crudstatus = CRUDStatus.Read;
-          this.updateDisabledState();
-        });
+    // 帶使用者基本資料
+    const u = this.getUserInfo();
+    this.dataForm.patchValue({
+      mid: Number(u?.mid) || 0,
+      STO_No: u?.SYS_StoreNo ?? '',
+      PUR_Uniform: u?.STR_Uniform ?? '',
     });
 
-  // 其餘你原本的...
-  this.dataForm.get('PUR_GUIDate')?.valueChanges
-    .pipe(untilDestroyed(this))
-    .subscribe(d => {
-      const yyyymm = this.toEvenYYYYMM(d);
-      if (yyyymm) this.dataForm.patchValue({ PUR_RepYYYYMM: yyyymm }, { emitEvent: false });
-    });
+    // ❶ 如果是從外部帶 GUI_No 進來
+    this.route.queryParams
+      .pipe(untilDestroyed(this))
+      .subscribe((params) => {
+        const guiNo = (params['GUI_No'] ?? '').toString().trim();
+        if (!guiNo) return;
 
-  const repCtrl = this.dataForm.get('PUR_RepYYYYMM');
-  repCtrl?.addValidators(this.validationService.evenMonthValidator.bind(this.validationService));
-  repCtrl?.updateValueAndValidity({ emitEvent: false });
+        this.fin13050Service
+          .queryDetailByGUI({ GUI_No: guiNo })
+          .pipe(untilDestroyed(this))
+          .subscribe((res) => {
+            const row = Array.isArray(res?.Data) ? res.Data[0] : null;
+            if (!row) {
+              this.messageService.errorBubble(
+                `查無發票資料（GUI_No=${guiNo}）`,
+              );
+              return;
+            }
 
-  this.loadDropdowns();
-  this.loadVendorUniformOptions();
-  this.loadVendorNoOptions();
+            const patch: any = { ...row };
 
-  // ✅ 只留一個訂閱（不要重複兩次）
-  this.dataForm.get('PUR_VenNo')?.valueChanges
-    .pipe(untilDestroyed(this))
-    .subscribe(venNo => {
-      const picked = this.VendorNoOptions.find(o => o.value === venNo);
-      this.dataForm.patchValue(
-        { PUR_VenName: picked?.venName ?? '' },
-        { emitEvent: false }
-      );
-    });
+            // 後端回傳欄位不管是 PUR_GUINo 或 GUI_No，都只保留最後 8 碼數字
+            if (patch.PUR_GUINo) {
+              patch.PUR_GUINo = this.normalizeGuiNo(patch.PUR_GUINo);
+            } else if (patch.GUI_No) {
+              patch.PUR_GUINo = this.normalizeGuiNo(patch.GUI_No);
+            }
 
-  this.updateDisabledState();
-}
+            this.dataForm.patchValue(patch, { emitEvent: false });
 
+            // 進來就是檢視模式
+            this.crudstatus = CRUDStatus.Read;
+            this.updateDisabledState();
+          });
+      });
+
+    // ❷ 一般從列表進編輯：下一個 tick 把發票號碼先正規化成 8 碼
+    setTimeout(() => {
+      const ctrl = this.dataForm.get('PUR_GUINo');
+      const v = ctrl?.value;
+      if (v) {
+        ctrl.patchValue(this.normalizeGuiNo(v), { emitEvent: false });
+      }
+    }, 0);
+
+    // 發票日期變更 → 自動帶偶數月申報年月
+    this.dataForm
+      .get('PUR_GUIDate')
+      ?.valueChanges.pipe(untilDestroyed(this))
+      .subscribe((d) => {
+        const yyyymm = this.toEvenYYYYMM(d);
+        if (yyyymm)
+          this.dataForm.patchValue(
+            { PUR_RepYYYYMM: yyyymm },
+            { emitEvent: false },
+          );
+      });
+
+    const repCtrl = this.dataForm.get('PUR_RepYYYYMM');
+    repCtrl?.addValidators(
+      this.validationService.evenMonthValidator.bind(this.validationService),
+    );
+    repCtrl?.updateValueAndValidity({ emitEvent: false });
+
+    // 發票號碼輸入時：強制轉成「純數字 + 最後 8 碼」
+    this.dataForm
+      .get('PUR_GUINo')
+      ?.valueChanges.pipe(untilDestroyed(this))
+      .subscribe((val) => {
+        if (val == null || val === '') return;
+        const normalized = this.normalizeGuiNo(val);
+        const current = String(val);
+        if (normalized !== current) {
+          this.dataForm
+            .get('PUR_GUINo')
+            ?.patchValue(normalized, { emitEvent: false });
+        }
+      });
+
+    this.loadDropdowns();
+    this.loadVendorUniformOptions();
+    this.loadVendorNoOptions();
+
+    // 廠商編號變更 → 自動帶廠商名稱
+    this.dataForm
+      .get('PUR_VenNo')
+      ?.valueChanges.pipe(untilDestroyed(this))
+      .subscribe((venNo) => {
+        const picked = this.VendorNoOptions.find((o) => o.value === venNo);
+        this.dataForm.patchValue(
+          { PUR_VenName: picked?.venName ?? '' },
+          { emitEvent: false },
+        );
+      });
+
+    this.updateDisabledState();
+  }
 
   /** 下拉載入 */
   private loadDropdowns(): void {
     this.fin13050Service.queryAPS2002DropDownList().subscribe((res) => {
       const list = res?.Data ?? [];
-      this.PUR_VoucherTypeOptions = list.map((x) => ({ value: String(x.No), label: String(x.Name) }));
+      this.PUR_VoucherTypeOptions = list.map((x) => ({
+        value: String(x.No),
+        label: String(x.Name),
+      }));
     });
-    this.fin13050Service.querySYS1000DropDownList('ACP_TYPE').subscribe((res) => {
-      const list = res?.Data ?? [];
-      this.ACP_TypeOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
-    });
-    this.fin13050Service.querySYS1000DropDownList('PUR_DirectType').subscribe((res) => {
-      const list = res?.Data ?? [];
-      this.invoicePurposeOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
-    });
-    this.fin13050Service.querySYS1000DropDownList('PUR_TaxType').subscribe((res) => {
-      const list = res?.Data ?? [];
-      this.taxTypeOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
-    });
-    this.fin13050Service.querySYS1000DropDownList('PUR_DiscNo').subscribe((res) => {
-      const list = res?.Data ?? [];
-      this.deductOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
-    });
-    this.fin13050Service.querySYS1000DropDownList('PUR_Type').subscribe((res) => {
-      const list = res?.Data ?? [];
-      this.typeOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
-    });
-    this.fin13050Service.querySYS1000DropDownList('T205').subscribe((res) => {
-      const list = res?.Data ?? [];
-      this.salTypeOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
-    });
-    this.fin13050Service.querySYS1000DropDownList('SYS_ORIGIN').subscribe((res) => {
-      const list = res?.Data ?? [];
-      this.sysOriginOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
-    });
+
+    this.fin13050Service
+      .querySYS1000DropDownList('ACP_TYPE')
+      .subscribe((res) => {
+        const list = res?.Data ?? [];
+        this.ACP_TypeOptions = list.map((x: any) => ({
+          value: String(x.No),
+          label: String(x.Name),
+        }));
+      });
+
+    this.fin13050Service
+      .querySYS1000DropDownList('PUR_DirectType')
+      .subscribe((res) => {
+        const list = res?.Data ?? [];
+        this.invoicePurposeOptions = list.map((x: any) => ({
+          value: String(x.No),
+          label: String(x.Name),
+        }));
+      });
+
+    this.fin13050Service
+      .querySYS1000DropDownList('PUR_TaxType')
+      .subscribe((res) => {
+        const list = res?.Data ?? [];
+        this.taxTypeOptions = list.map((x: any) => ({
+          value: String(x.No),
+          label: String(x.Name),
+        }));
+      });
+
+    this.fin13050Service
+      .querySYS1000DropDownList('PUR_DiscNo')
+      .subscribe((res) => {
+        const list = res?.Data ?? [];
+        this.deductOptions = list.map((x: any) => ({
+          value: String(x.No),
+          label: String(x.Name),
+        }));
+      });
+
+    this.fin13050Service
+      .querySYS1000DropDownList('PUR_Type')
+      .subscribe((res) => {
+        const list = res?.Data ?? [];
+        this.typeOptions = list.map((x: any) => ({
+          value: String(x.No),
+          label: String(x.Name),
+        }));
+      });
+
+    // SAL_Type 使用 SYS_ORIGIN 代碼：系統別
+    this.fin13050Service
+      .querySYS1000DropDownList('SYS_ORIGIN')
+      .subscribe((res) => {
+        const list = res?.Data ?? [];
+        this.salTypeOptions = list.map((x: any) => ({
+          value: String(x.No),
+          label: String(x.Name),
+        }));
+      });
   }
 
   /** 供應商統編下拉 */
   private loadVendorUniformOptions(keyword = ''): void {
-    this.fin13050Service.queryVendorUniformOptions(keyword).subscribe((opts) => {
-      this.PUR_VenUniformOptions = opts ?? [];
-    });
+    this.fin13050Service
+      .queryVendorUniformOptions(keyword)
+      .subscribe((opts) => {
+        this.PUR_VenUniformOptions = opts ?? [];
+      });
   }
 
   /** 供應商「廠商編號」下拉 */
   private loadVendorNoOptions(keyword = ''): void {
-    this.fin13050Service.queryVendorNoOptions(keyword).subscribe(opts => {
-      this.VendorNoOptions = opts ?? [];
-    });
+    this.fin13050Service
+      .queryVendorNoOptions(keyword)
+      .subscribe((opts) => {
+        this.VendorNoOptions = opts ?? [];
+      });
   }
 
   /** CRUD 狀態 -> 啟用/停用 */
@@ -401,41 +516,43 @@ ngOnInit(): void {
     }
   }
 
-  /** 送出（改用 handleSubmit(null, ...) 自行驗證 & 中文泡泡） */
+  /** 送出：不再送 CRT_* / UPD_*，全部交給後端自己寫入 */
   onSubmit(form: FormGroup): void {
     this.handleSubmit(null, () => {
-      // 觸發驗證
       Object.values(this.dataForm.controls).forEach((c) => c.markAsTouched());
       this.submitted = true;
 
-      // 直接檢查表單有效性
       if (this.dataForm.invalid) {
         this.showTopErrors();
-        this.messageService.unblockUi(); // handSubmit(null, cb) 不會自動解
+        this.messageService.unblockUi();
         this.loading = false;
         return;
       }
 
       const fv = this.dataForm.getRawValue();
       const u = this.getUserInfo();
-      const nowIso = new Date().toISOString();
 
-      // 組 payload
+      // 組 payload (對應 insertFIN13050Request / updateFIN13050Request)
       const payload: any = {
+        id: fv.id ?? this.rowdata?.id ?? null,
         mid: Number(u?.mid) || Number(fv.mid) || 0,
         STO_No: u?.SYS_StoreNo ?? fv.STO_No ?? null,
-        PUR_Uniform: u?.STR_Uniform ?? fv.PUR_Uniform ?? null,
 
         ACP_Type: fv.ACP_Type ?? '2',
+        PUR_Uniform: u?.STR_Uniform ?? fv.PUR_Uniform ?? null,
         PUR_GUIStatus: fv.PUR_GUIStatus ?? '0',
-        PUR_GUIBalance: fv.PUR_GUIBalance != null ? Number(fv.PUR_GUIBalance) : 0,
+        PUR_GUIBalance:
+          fv.PUR_GUIBalance != null ? Number(fv.PUR_GUIBalance) : 0,
         PUR_SeqNo: fv.PUR_SeqNo != null ? Number(fv.PUR_SeqNo) : 1,
 
         PUR_VoucherType: fv.PUR_VoucherType,
         PUR_GUITrack: fv.PUR_GUITrack,
-        PUR_GUINo: fv.PUR_GUINo,
-        PUR_GUIDate: fv.PUR_GUIDate ? new Date(fv.PUR_GUIDate).toISOString() : null,
-        // 申報年月：使用 Date -> YYYYMM
+        // 發票號碼：只送後 8 碼純數字
+        PUR_GUINo: this.normalizeGuiNo(fv.PUR_GUINo),
+
+        PUR_GUIDate: fv.PUR_GUIDate
+          ? new Date(fv.PUR_GUIDate).toISOString()
+          : null,
         PUR_RepYYYYMM: this.toYYYYMM(fv.PUR_RepYYYYMM),
 
         PUR_VenNo: fv.PUR_VenNo,
@@ -454,50 +571,44 @@ ngOnInit(): void {
         Source_Doc_No: (fv.Source_Doc_No ?? '').toString().trim() || null,
         Voucher_No: fv.Voucher_No ?? null,
         SAL_Type: fv.SAL_Type ?? null,
-        SYS_ORIGIN: fv.SYS_ORIGIN ?? null,
         PUR_Remark: fv.PUR_Remark ?? null,
-
-        id: fv.id ?? this.rowdata?.id ?? null,
       };
 
-      const usrNo = u?.USR_No ?? u?.UserNo ?? u?.Account ?? '';
-      const usrName = u?.USR_Name ?? u?.UserName ?? u?.AccountName ?? '';
-
       if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-        payload.CRT_USR_No = usrNo;
-        payload.CRT_USR_Name = usrName;
-        payload.CRT_Date = nowIso;
-
+        // Insert：不送 id
         const { id, ...forInsert } = payload;
-        this.fin13050Service.insertFIN13050(forInsert).subscribe(() => {
-          this.messageService.successBubble('新增成功');
-          this.dataForm.reset();
+        this.fin13050Service.insertFIN13050(forInsert).subscribe(
+          () => {
+            this.messageService.successBubble('新增成功');
+            this.dataForm.reset();
 
-          const uu = this.getUserInfo();
-          this.dataForm.patchValue({
-            mid: Number(uu?.mid) || 0,
-            STO_No: uu?.SYS_StoreNo ?? '',
-            PUR_Uniform: uu?.STR_Uniform ?? '',
-            ACP_Type: '2',
-            PUR_GUIStatus: '0',
-            PUR_GUIBalance: 0,
-            PUR_SeqNo: 1,
-          });
-          this.updateDisabledState();
-        }, () => {
-          this.messageService.unblockUi();
-        });
+            const uu = this.getUserInfo();
+            this.dataForm.patchValue({
+              mid: Number(uu?.mid) || 0,
+              STO_No: uu?.SYS_StoreNo ?? '',
+              PUR_Uniform: uu?.STR_Uniform ?? '',
+              ACP_Type: '2',
+              PUR_GUIStatus: '0',
+              PUR_GUIBalance: 0,
+              PUR_SeqNo: 1,
+            });
+            this.updateDisabledState();
+          },
+          () => {
+            this.messageService.unblockUi();
+          },
+        );
       } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-        payload.UPD_USR_No = usrNo;
-        payload.UPD_USR_Name = usrName;
-        payload.UPD_Date = nowIso;
-
-        this.fin13050Service.updateFIN13050(payload).subscribe(() => {
-          this.messageService.successBubble('更新成功');
-          this.onCancel();
-        }, () => {
-          this.messageService.unblockUi();
-        });
+        // Update：把 payload 直接丟給後端，讓後端自己寫 UPD_*
+        this.fin13050Service.updateFIN13050(payload).subscribe(
+          () => {
+            this.messageService.successBubble('更新成功');
+            this.onCancel();
+          },
+          () => {
+            this.messageService.unblockUi();
+          },
+        );
       } else {
         this.messageService.unblockUi();
       }
@@ -507,21 +618,21 @@ ngOnInit(): void {
   /** 只用右上角泡泡顯示全部錯誤（逐條） */
   private showTopErrors(): void {
     const msgs: string[] = [];
-    // 依排序清單檢查
+
     this.checkOrder.forEach((name) => {
       const msg = this.buildFieldError(name);
       if (msg) msgs.push(msg);
     });
-    // 其餘欄位
+
     Object.keys(this.dataForm.controls).forEach((name) => {
       if (this.checkOrder.includes(name)) return;
       const msg = this.buildFieldError(name);
       if (msg && !msgs.includes(msg)) msgs.push(msg);
     });
+
     if (msgs.length) msgs.forEach((m) => this.messageService.errorBubble(m));
   }
 
-  /** 單欄位錯誤轉中文原因（索引簽章安全寫法） */
   private buildFieldError(ctrlName: string): string | null {
     const ctrl = this.dataForm.get(ctrlName);
     if (!ctrl || !ctrl.errors) return null;
@@ -531,7 +642,6 @@ ngOnInit(): void {
 
     if (e['required']) return `「${label}」必填，請輸入資料。`;
 
-    // 純數字/英數
     if (e['digits']) {
       const reason = e['digits'].reason ? `（${e['digits'].reason}）` : '';
       return `「${label}」需為純數字${reason}。`;
@@ -541,7 +651,6 @@ ngOnInit(): void {
       return `「${label}」需為英數字元${reason}。`;
     }
 
-    // 長度
     if (e['minlength']) {
       return `「${label}」需為 ${e['minlength'].requiredLength} 碼，目前為 ${e['minlength'].actualLength} 碼。`;
     }
@@ -549,39 +658,42 @@ ngOnInit(): void {
       return `「${label}」最長 ${e['maxlength'].requiredLength} 碼，目前為 ${e['maxlength'].actualLength} 碼。`;
     }
 
-    // 字軌（2 碼大寫）
     if (e['twoUppercase']) {
-      const reason = e['twoUppercase'].reason ? `（${e['twoUppercase'].reason}）` : '';
+      const reason = e['twoUppercase'].reason
+        ? `（${e['twoUppercase'].reason}）`
+        : '';
       return `「${label}」需為 2 碼大寫英文字母${reason}。`;
     }
 
-    // 申報年月（ValidationService.evenMonthValidator）
-    if (e['invalidEvenMonth']) return `「${label}」僅接受偶數月：02/04/06/08/10/12。`;
+    if (e['invalidEvenMonth'])
+      return `「${label}」僅接受偶數月：02/04/06/08/10/12。`;
     if (e['invalidDate2']) return `「${label}」日期格式錯誤。`;
 
-    // 一般 min 檢查
-    if (e['min']?.min != null) return `「${label}」數值不可小於 ${e['min'].min}。`;
+    if (e['min']?.min != null)
+      return `「${label}」數值不可小於 ${e['min'].min}。`;
     if (e['length']) {
-  return `「${label}」需為 ${e['length'].required} 碼，目前為 ${e['length'].actual} 碼。`;
-}
-
+      return `「${label}」需為 ${e['length'].required} 碼，目前為 ${e['length'].actual} 碼。`;
+    }
 
     return `「${label}」格式有誤，請檢查輸入資料。`;
   }
 
-  /** 讀取本機使用者資訊 */
   private getUserInfo(): any {
-    try { return JSON.parse(localStorage.getItem('UserInfo') || '{}'); }
-    catch { return {}; }
+    try {
+      return JSON.parse(localStorage.getItem('UserInfo') || '{}');
+    } catch {
+      return {};
+    }
   }
 
   /** 發票日期 -> 偶數月 YYYYMM */
   private toEvenYYYYMM(input: any): string | null {
-    const d = input instanceof Date ? input : (input ? new Date(input) : null);
+    const d =
+      input instanceof Date ? input : input ? new Date(input) : null;
     if (!d || isNaN(d.getTime())) return null;
     const y = d.getFullYear();
     let m = d.getMonth() + 1;
-    if (m % 2 === 1) m += 1; // odd -> next even
+    if (m % 2 === 1) m += 1;
     if (m === 13) return `${y + 1}02`;
     return `${y}${String(m).padStart(2, '0')}`;
   }
@@ -598,4 +710,12 @@ ngOnInit(): void {
     return s.length >= 6 ? s.slice(0, 6) : null;
   }
 
+  /** 發票號碼正規化：只保留最後 8 碼純數字 */
+  private normalizeGuiNo(val: any): string {
+    if (val == null) return '';
+    const digits = String(val).replace(/\D/g, '');
+    if (!digits) return '';
+    if (digits.length <= 8) return digits;
+    return digits.slice(-8);
+  }
 }
