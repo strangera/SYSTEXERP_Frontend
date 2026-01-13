@@ -30,7 +30,7 @@
           <div class="col-12 md:col-6 lg:col-2">
             <app-input-text
               label="分析區間(日)"
-              [control]="queryForm.controls.AnalysisInterval"
+              [control]="queryForm.controls.IntervalDays"
               [submitted]="submitted"
               [keyFilter]="keyFilterInt"
               [customPlaceholder]="'輸入文字'"
@@ -41,7 +41,7 @@
           <div class="col-12 md:col-6 lg:col-2">
             <app-input-text
               label="分析期數(期)"
-              [control]="queryForm.controls.AnalysisPeriod"
+              [control]="queryForm.controls.AnalysisPeriods"
               [submitted]="submitted"
               [keyFilter]="keyFilterInt"
               [customPlaceholder]="'輸入文字'"
@@ -62,16 +62,16 @@
 
           <!-- 廠客代號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-dropdown-range
               label="廠客代號"
+              controlName="VEN_No_From"
+              [startControl]="queryForm.controls.VEN_No_From"
+              [endControl]="queryForm.controls.VEN_No_To"
+              [submitted]="submitted"
               [options]="vendorOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.VEN_No"
-              [submitted]="submitted"
-              [showClear]="true"
-              [filter]="true"
-            ></app-dropdown>
+            ></app-dropdown-range>
           </div>
 
           <!-- 立帳日期 -->
@@ -79,8 +79,8 @@
             <app-calendar-range
               calendarType="dateRange"
               label="立帳日期"
-              [startControl]="queryForm.controls.DocDateFrom"
-              [endControl]="queryForm.controls.DocDateTo"
+              [startControl]="queryForm.controls.ARS_Date_From"
+              [endControl]="queryForm.controls.ARS_Date_To"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
@@ -90,33 +90,33 @@
             <app-calendar
               calendarType="dateOne"
               label="收款日期"
-              [control]="queryForm.controls.RCV_Date"
+              [control]="queryForm.controls.PayDate"
               [submitted]="submitted"
             ></app-calendar>
           </div>
 
           <!-- 科目代號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-dropdown-range
               label="科目代號"
+              controlName="AccNo_From"
+              [startControl]="queryForm.controls.AccNo_From"
+              [endControl]="queryForm.controls.AccNo_To"
+              [submitted]="submitted"
               [options]="accNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.AccNo"
-              [submitted]="submitted"
-              [showClear]="true"
-              [filter]="true"
-            ></app-dropdown>
+            ></app-dropdown-range>
           </div>
 
           <!-- 已到期/未到期 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="已到期/未到期"
-              [options]="dueStatusOptions"
+              [options]="dueTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.DueStatus"
+              [control]="queryForm.controls.DueType"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -125,13 +125,13 @@
         <hr />
 
         <div class="grid p-fluid">
-          <!-- 是否顯示金額/總計(%) -->
+          <!-- 是否顯示百分比 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
-              label="是否顯示金額/總計(%)"
-              groupname="ShowAmountType"
-              [control]="queryForm.controls.ShowAmountType"
-              [options]="showAmountTypeOptions"
+              label="是否顯示百分比"
+              groupname="ShowPercent"
+              [control]="queryForm.controls.ShowPercent"
+              [options]="showPercentOptions"
               [submitted]="submitted"
             ></app-radiobutton>
           </div>
@@ -160,6 +160,7 @@
     [columnGroup]="columnGroup"
     [columns]="columns"
     [data]="data"
+    [footerData]="footerData"
     [totalRecords]="viewTotalRecords"
     [loading]="loading"
     [showManage]="false"
@@ -170,6 +171,7 @@
     [showDelete]="false"
     [showReportMode]="false"
     [showCheckBox]="false"
+    [allowMultilineHeader]="true"
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
   >
