@@ -417,26 +417,44 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     });
   }
 
-  //匯入圖片檔並產生錯誤檔
+  // 匯入圖片檔
   async onIMGUpload(event: FileSelectEvent) {
-    // 寫入時資料必須是 國際條碼.jpg 多筆的強況則是(國際條碼-1.jpg、國際條碼-2.jpg)
     // 1. 檢查是否有檔案
     if (!event.files || event.files.length === 0) return;
 
-    const formData = new FormData();
+    // 正則表達式解釋：
+    // ^[a-zA-Z0-9]+ : 開頭為英數字（條碼）
+    // (-\d+)?      : 可選的橫線加上一個或多個數字（如 -1, -2）
+    // \.[a-zA-Z]+$  : 檔案結尾的副檔名
+    const fileNamePattern = /^[a-zA-Z0-9]+(-\d+)?\.[a-zA-Z]+$/;
 
-    // 2. 依照 Swagger 需求，使用 'files' 作為 key，並透過迴圈加入所有檔案
-    // 這是傳遞「檔案陣列」到 multipart/form-data 的標準做法
+    const formData = new FormData();
+    const invalidFiles: string[] = [];
+
     for (const file of event.files) {
+      // 檢查檔名格式
+      if (!fileNamePattern.test(file.name)) {
+        invalidFiles.push(file.name);
+        continue;
+      }
       formData.append('files', file);
     }
 
+    // 如果有格式不符的檔案，阻斷上傳並提示
+    if (invalidFiles.length > 0) {
+      this.messageService.errorBubble(`檔名格式錯誤：${invalidFiles.join(', ')}。必須為「國際條碼.png」或「國際條碼-1.png」`);
+      return;
+    }
+
     try {
+      this.messageService.blockUi(); // 開始上傳時鎖定 UI
       await firstValueFrom(this.tls51070Service.uploadTLS51070Image(formData).pipe(untilDestroyed(this)));
       this.messageService.successBubble('圖片上傳成功');
     } catch (error) {
       console.error('❌ 圖片上傳失敗:', error);
       this.messageService.errorBubble('圖片上傳失敗');
+    } finally {
+      this.messageService.unblockUi();
     }
   }
 
