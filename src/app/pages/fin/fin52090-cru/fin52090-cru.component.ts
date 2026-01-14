@@ -38,6 +38,13 @@ export class FIN52090CRUComponent extends BasicCruPageComponent<unknown> impleme
   });
   public readonly df = computed(() => this.dataForm.controls);
 
+  public readonly accNoWithDisplayLabel = computed(() =>
+    this.service.accNo().map(item => ({
+      ...item,
+      displayLabel: `${item.AccNo}-${item.AccCName}`
+    }))
+  );
+
   public readonly saving = signal<boolean>(!1);
 
   public readonly loadingEffect = computed(() => {
