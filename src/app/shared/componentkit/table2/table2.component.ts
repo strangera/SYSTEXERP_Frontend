@@ -69,7 +69,6 @@ export class Table2Component
   implements OnInit, OnChanges, OnDestroy {
   trackByCol = (index: number, col: any) => col.key ?? col.__uid ?? col.field ?? index;
 
-
   /* ====== 基本與依賴 ====== */
   @ViewChild('dt', { static: false }) dt!: Table;
   @ViewChild('fileUpload') fileUpload!: FileUpload;
@@ -154,7 +153,7 @@ export class Table2Component
 
   // 自訂報表
   @Input() customReport = false;
-  @Output() exportEvent = new EventEmitter<string>();
+  @Output() exportEvent = new EventEmitter<any>();  // ⭐ 用 any，比較好帶整包 payload
 
   // Expansion
   @Input() expansionColumns: Column[] = [];
@@ -252,7 +251,6 @@ export class Table2Component
   ngOnInit(): void {
     this.ensureInitialGroupingSort();
     this.lastSortSig = JSON.stringify(this.ensureGroupFirst(this.multiSortMeta));
-
 
     this.currentPageService.currentPageProgNo$
       .pipe(takeUntil(this.ngUnsubscribe))
@@ -362,7 +360,6 @@ export class Table2Component
     }
   }
 
-
   /** paginator 點擊（同步下拉） */
   onPageChange(event: TablePageEvent) {
     this.first = event.first;
@@ -463,7 +460,6 @@ export class Table2Component
     this.lazyLoadData.emit(payload);
   }
 
-
   /* ======================= Header（原 TableCaption）相關 ======================= */
 
   /** 欄位過濾 MultiSelect 變更 */
@@ -542,7 +538,6 @@ export class Table2Component
       + visibleCount
       + (this.IsPrint && this.showManage && (!this.alwaysEdit || (this.alwaysEdit && this.rowEditing)) ? 1 : 0);
   }
-
 
   rowSelectableWrapper = ({ data }: { data: any; index: number }) =>
     this.isRowSelectable(data) && !this.rowEditing;
@@ -852,14 +847,61 @@ export class Table2Component
     const usingExternal = !!this.externalSubtotals && Object.keys(this.externalSubtotals).length > 0;
     return usingExternal ? true : true;
   }
-  // ========= Export（補上讓 template 可呼叫） =========
 
+  // ========= Export 相關 =========
+
+  /**
+   * 匯出用欄位設定：
+   * - 只帶出 visible 的欄位
+   * - 若有設定 col.exportFormat 才會帶到物件上，沒設定就不含此屬性
+   */
+  get exportColumns(): { field: string; header: string; exportFormat?: any }[] {
+    const cols = this.selectedColumns?.length ? this.selectedColumns : this.columns || [];
+    return cols
+      .filter(c => c.visible !== false && c.hidden !== true)
+      .map(c => {
+        const base: { field: string; header: string; exportFormat?: any } = {
+          field: c.field,
+          header: c.header,
+        };
+
+        if (c.exportFormat !== undefined) {
+          base.exportFormat = c.exportFormat; // ⭐ 有設定才帶出去
+        }
+
+        return base;
+      });
+  }
 
   /** 開啟匯出對話框：type = 'PDF' | 'Excel' */
   export(type: 'PDF' | 'Excel') {
     this.exportStatus = type;
     this.exportDialog = true;
   }
+
+  /**
+   * 子元件（TableExport2Component）呼叫的實際匯出邏輯：
+   * - baseRequest 只需要帶 query_condition / report_title / file_name / config ...
+   * - 這裡會自動塞入 columns = this.exportColumns
+   * - 再把整包 payload 丟給父元件，由父元件去呼叫後端 /exportPDF
+   */
+  onExportPDF(baseRequest: any) {
+    if (!baseRequest) {
+      return;
+    }
+
+    const payload = {
+      ...baseRequest,
+      columns: this.exportColumns,
+    };
+
+    // 丟給父元件處理實際 HTTP 呼叫
+    this.exportEvent.emit(payload);
+
+    // 關閉匯出對話框
+    this.exportDialog = false;
+  }
+
   // 點展開按鈕時先阻止冒泡，再走原有邏輯
   onToggleRow(ev: MouseEvent, rowData: any) {
     ev?.stopPropagation();
@@ -885,6 +927,7 @@ export class Table2Component
       });
     }
   }
+
   getColMinWidth(col: any): string {
     const text = (col?.header ?? '').toString();
     // 用展開運算子避免代理對（emoji/CJK 擴充等）計數錯誤
@@ -894,7 +937,6 @@ export class Table2Component
     const ch = Math.max(6, Math.min(40, len + 2)); // 6ch~40ch
     return `calc(${ch}ch + 1.25rem)`; // 多 1.25rem 做左右 padding / icon 空間
   }
-
 
   get bodyColumnsOrdered(): any[] {
     if (this.hasTwoHeaderRows) {
@@ -910,8 +952,6 @@ export class Table2Component
       ];
     }
   }
-
-
 
   // -----------------------------------------------------
   /** 取得目前可見欄位（selectedColumns 優先，其次 columns） */
@@ -935,14 +975,15 @@ export class Table2Component
     return this.visibleCols.filter(c => c.headerRow === 2);
   }
 
-
   /** 是否需要兩列表頭：只要有任一個 row2 欄位就需要；或你也可強制兩列 */
   get hasTwoHeaderRows(): boolean {
     return this.headerRow2Columns.length > 0;
   }
+
   get skeletonRows(): any[] {
     return Array.from({ length: this.rows });
   }
+
   /** 整列雙擊 → 觸發「檢視」；編輯中或點到互動元件時不觸發 */
   onRowDblClick(ev: MouseEvent, rowData: any, editing: boolean) {
     // 若未開放檢視按鈕，雙擊也不做事
@@ -974,7 +1015,7 @@ export class Table2Component
           '.p-inputswitch',
           '.p-radiobutton',
           '.p-fileupload',
-        ].join(',')
+        ].join(','),
       )
     ) {
       return;
@@ -983,5 +1024,7 @@ export class Table2Component
     // 真的進入檢視（等同按右側「檢視」鈕）
     this.detailRow(rowData);
   }
+  // 在 Table2Component 裡新增或修改這個方法
+
 
 }

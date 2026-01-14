@@ -47,6 +47,13 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
   public readonly accNoSignal = toSignal(this.qf().AccNo.valueChanges);
   public readonly noteDescSignal = toSignal(this.qf().NoteDesc.valueChanges);
 
+  public readonly accNoWithDisplayLabel = computed(() =>
+    this.service.accNo().map(item => ({
+      ...item,
+      displayLabel: `${item.AccNo}-${item.AccCName}`
+    }))
+  );
+
   public readonly tableData = signal<FIN52090Data[]>([]);
   public readonly totalRecords = signal<number>(0);
 
