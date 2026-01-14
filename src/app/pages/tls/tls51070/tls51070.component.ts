@@ -100,6 +100,9 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
       field: 'CAT_SName', header: '小分類', visible: true,
     },
     {
+      field: 'PLU_SalePrc', header: '商品售價', visible: true,
+    },
+    {
       field: 'PLU_Attribute', header: '商品型態代碼', visible: false,
     },
     {
