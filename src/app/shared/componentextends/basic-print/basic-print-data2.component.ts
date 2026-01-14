@@ -28,23 +28,36 @@ export class BasicPrintData2Component {
   authService = inject(AuthService);
   systemDataService = inject(SystemDataService);
 
+  /**
+   * PDF 匯出
+   * columns 由 Table2 傳進來，會帶有 exportFormat（若有設定）
+   * 這裡只在 exportFormat 是「字串」時才送給後端
+   */
   exportPDFDownload(event: TableExport2, columns: Column[], apiUrl?: string): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`query${ProgNo}`);
     const userInfo = this.authService.currentUserValue;
+
     const today = new Date();
     const year = today.getFullYear();
-    const month = (today.getMonth() + 1).toString().padStart(2, '0'); // getMonth() 返回 0-11，所以要 +1
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');
     const day = today.getDate().toString().padStart(2, '0');
     const formattedToday = `${year}${month}${day}`;
+
     const pdfColumns = columns.map(col => {
-      return {
+      const c: any = {
         field: col.field,
         header: col.header,
-        visible: col.visible ? col.visible : true,
-        exportFormat: col.exportFormat     // ⬅️ 新增
+        visible: col.visible !== false
       };
+
+      // ⭐ 只有在 exportFormat 是非空字串時才加到 body
+      if (typeof (col as any).exportFormat === 'string' && (col as any).exportFormat.trim() !== '') {
+        c.exportFormat = (col as any).exportFormat.trim();
+      }
+
+      return c;
     });
 
     const body = {
@@ -78,7 +91,7 @@ export class BasicPrintData2Component {
           const blob = new Blob([response.body], { type: 'application/pdf' });
           saveAs(blob, filename);
         } else {
-          console.error("Response body is empty!");
+          console.error('Response body is empty!');
         }
         this.exportDialog = false;
       },
@@ -88,42 +101,56 @@ export class BasicPrintData2Component {
       }
     });
   }
+
+  /**
+   * Excel 匯出
+   * 同樣只在 exportFormat 是「字串」時才送給後端
+   */
   exportExcelDownload(event: TableExport2, columns: Column[], apiUrl?: string): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`query${ProgNo}`);
     const userInfo = this.authService.currentUserValue;
+
     const today = new Date();
     const year = today.getFullYear();
-    const month = (today.getMonth() + 1).toString().padStart(2, '0'); // getMonth() 返回 0-11，所以要 +1
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');
     const day = today.getDate().toString().padStart(2, '0');
     const formattedToday = `${year}${month}${day}`;
+
     const excelColumns = columns.map(col => {
-      return {
+      const c: any = {
         field: col.field,
         header: col.header,
-        visible: col.visible ? col.visible : true,
-        exportFormat: col.exportFormat     // ⬅️ 同步帶給 Excel
+        visible: col.visible !== false
       };
+
+      // ⭐ 只有在 exportFormat 是非空字串時才加到 body
+      if (typeof (col as any).exportFormat === 'string' && (col as any).exportFormat.trim() !== '') {
+        c.exportFormat = (col as any).exportFormat.trim();
+      }
+
+      return c;
     });
 
     const body = {
       query_condition: {
         ServiceName: apiUrl ? `${apiUrl}` : `query${ProgNo}`,
-        Conditions: queryState?.value
+        Conditions: queryState?.value || []
       },
       report_title: REPORT_TITLES[`query${ProgNo}`] || funInfo?.prog_name,
       columns: excelColumns,
       config: event,
-      file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`,
+      file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`
     };
+
     this.tableService.exportExcel(body).pipe(untilDestroyed(this)).subscribe({
       next: (response: HttpResponse<Blob>) => {
         if (response.body) {
           const contentDisposition = response.headers.get('content-disposition');
-          let filename = `${body.file_name}.xlsx`; // 副檔名改為 .xlsx
+          let filename = `${body.file_name}.xlsx`;
           if (contentDisposition) {
-            const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.xlsx)?$|filename="(.+?)(?:\.xlsx)?"$/;  //  正則匹配.xlsx
+            const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.xlsx)?$|filename="(.+?)(?:\.xlsx)?"$/;
             const matches = contentDisposition.match(filenameRegex);
             if (matches) {
               filename = matches[1] || matches[2] || filename;
@@ -131,10 +158,13 @@ export class BasicPrintData2Component {
             }
             filename = filename.replace(/["']/g, '');
           }
-          const blob = new Blob([response.body], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }); // 正確的 MIME 類型
+          const blob = new Blob(
+            [response.body],
+            { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+          );
           saveAs(blob, filename);
         } else {
-          console.error("Response body is empty!");
+          console.error('Response body is empty!');
         }
         this.exportDialog = false;
         this.cdr.detectChanges();
@@ -146,6 +176,7 @@ export class BasicPrintData2Component {
       }
     });
   }
+
   toggleVisibility(): void {
     this.IsPrint = !this.IsPrint;
   }
