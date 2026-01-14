@@ -2,7 +2,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, inject } from '@angular/core'; // 引入 inject
 import { FormsModule } from '@angular/forms';
-import { DropdownModule } from 'primeng/dropdown';
+import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { TooltipModule } from 'primeng/tooltip';
@@ -27,14 +27,14 @@ import { CellInput } from './table-edit-cell.model';
               [disabled]="isDisabled() || internalLoading"
               [editable]="true"
               [loading]="internalLoading"
-              (onChange)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index)"
-              (onHide)="handleHide()"
-              (keydown.enter)="handleEnter($event)"
               [virtualScroll]="true"
               [virtualScrollItemSize]="40"
               [showClear]="cellInput.col.showClear ?? true"
               [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
-              [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }">
+              [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }"
+              (onChange)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index);onDropdownChange($event)"
+              (onHide)="handleHide()"
+              (keydown.enter)="handleEnter($event)">
 
     <ng-template let-item pTemplate="item" *ngIf="cellInput.col.templateLabel">
       <div class="flex align-items-center gap-2">
@@ -169,6 +169,23 @@ export class DropdownCellComponent {
     }
 
     return this._resolvedOptions;
+  }
+
+  /**
+   * 處理 Dropdown 值的變更
+   */
+  onDropdownChange(event: DropdownChangeEvent) {
+    const col = this.cellInput.col as EditColumn;
+    const rowData = this.cellInput.rowData;
+    const index = this.cellInput.index;
+
+    // 1. 執行原有的系統邏輯 (更新資料與觸發驗證)
+    this.cellInput.onValueChange(rowData, event.value, col, index);
+
+    // 2. 執行使用者在配置中定義的自定義 onChange
+    if (col.onChange && typeof col.onChange === 'function') {
+      col.onChange(event.value, rowData, col, index);
+    }
   }
 
   handleEnter(event: Event) {

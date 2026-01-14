@@ -70,7 +70,7 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
   // Options
   MAM_StatusOptions = getSYS1000Options('MAM_Status');        // 進價變價單狀態選項
   brandOptions = this.dropdown.queryPluLogo();   // 品牌
-  vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });  // 廠商編號
+  vendorOptions = this.dropdown.queryPos2013TltTalent();  // 廠商編號
   userOptions = this.dropdown.queryTblUser();     // 申請人員、審核人員
   // table
   data: ITLS52050Data[] = [];

@@ -109,7 +109,7 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
   ];
   warehouseOptions = this.dropdown.queryPos2034(); // 倉別
   brandOptions = this.dropdown.queryPluLogo(); // 品牌代碼
-  vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
+  vendorOptions = this.dropdown.queryPos2013TltTalent(); // 廠商編號
   crnstatusOptions = getSYS1000Options('CRN_Status') // 採購單狀態 (靜態資料)
   userOptions = this.dropdown.queryTblUser(); // 申請人員、審核人員、結案人員
   addButton: AddButton[] = [

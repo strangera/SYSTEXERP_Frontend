@@ -41,7 +41,7 @@ export class TLS57020Component extends BasicQueryPageComponent<Tls57020TableRepo
     VEN_No: [null],
     ACP_YYYYMM: [new Date('2025-01-01'), [Validators.required]],
   });
-  VEN_NoOptions = this.dropdown.queryPos2013({ VEN_Flag: '' })
+  VEN_NoOptions = this.dropdown.queryPos2013TltTalent()
   data: Tls57020TableReportData | null = null;
   historyRequestBody: TLS57020Request | null = null;
   columns: ReportColumn[] = [
