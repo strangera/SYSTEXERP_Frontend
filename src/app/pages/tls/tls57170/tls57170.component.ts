@@ -53,7 +53,7 @@ export class TLS57170Component extends BasicQueryPageComponent<TLS57170Data> imp
     STK_YM: [null, Validators.required],    // 存貨年月 - 必填
     HOS_No: [null],                         // 倉別
     LOGO_No: [null],                        // 品牌
-    PLU_MagNo: [null], // 商品管理編號/國際條碼/廠商貨號
+    PLU_MagNo: [[]], // 商品管理編號/國際條碼/廠商貨號
     // PLU_No: [null],                         // 國際條碼
     // PLU_OrgPLUNo: [null],                   // 廠商貨號
     FeeRate: ['1', [Validators.required, Validators.pattern(/^\d+(\.\d+)?$/)]],                        // 推銷費用率
@@ -92,10 +92,12 @@ export class TLS57170Component extends BasicQueryPageComponent<TLS57170Data> imp
 
   onSubmit(form: FormGroup) {
     this.handleSubmit(form, () => {
+      const PLU_MagNo = form.value.PLU_MagNo;
       this.tls57170Service.queryTLS57170({
         ...form.getRawValue(),
         SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
         STK_YM: this.datepipe.transform(form.value.STK_YM, 'yyyyMM'),
+        PLU_MagNo: Array.isArray(PLU_MagNo) ? PLU_MagNo : (PLU_MagNo ? [PLU_MagNo] : [])
       })
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
         .subscribe(response => {
