@@ -4,6 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 // Shared
 
 import { ValidationService } from '../../../shared/service/validation.service';
+import { Actions } from '../../../shared/service/permission-guard.service';
 
 // 使用共用服務和常數
 import {
@@ -86,10 +87,7 @@ export class TLS12040Component extends BasicQueryPageComponent<ContractItem> imp
         console.log('🔘 審核按鈕被點擊:', rowData);
         this.onApprove(rowData);
       },
-      disabled: (rowData: ContractItem) => {
-        const isDisabled = rowData.approve_status !== '1';
-        return isDisabled;
-      }
+      disabled: (rowData: ContractItem) => rowData.approve_status !== '1' || !this.hasPermission(Actions.Audit)
     },
     {
       label: '反審核',
@@ -98,10 +96,7 @@ export class TLS12040Component extends BasicQueryPageComponent<ContractItem> imp
         console.log('🔘 反審核按鈕被點擊:', rowData);
         this.onUnapprove(rowData);
       },
-      disabled: (rowData: ContractItem) => {
-        const isDisabled = rowData.approve_status !== '2';
-        return isDisabled;
-      }
+      disabled: (rowData: ContractItem) => rowData.approve_status !== '2' || !this.hasPermission(Actions.AntiAudit)
     },
     {
       label: '作廢',
@@ -110,7 +105,7 @@ export class TLS12040Component extends BasicQueryPageComponent<ContractItem> imp
         console.log('🔘 作廢按鈕被點擊:', rowData);
         this.onVoid(rowData);
       },
-      disabled: (rowData: ContractItem) => this.isVoidDisabled(rowData)
+      disabled: (rowData: ContractItem) => this.isVoidDisabled(rowData) || !this.hasPermission(Actions.Invalidate)
     }
   ];
 
@@ -414,14 +409,14 @@ export class TLS12040Component extends BasicQueryPageComponent<ContractItem> imp
 
   //編輯權限
   onRowClick(rowData: TLS12040Response): void {
-    if (this.hasPermission('30')) { // '修改' 的 function_code 是 "30"
+    if (this.hasPermission(Actions.Edit)) {
       this.navigateWithState(CRUDStatus.Edit, rowData);
       console.log('🔄 進入編輯模式:', rowData);
     }
   }
 
   onDetailClick(rowData: TLS12040Response): void {
-    if (this.hasPermission('10')) { // '查詢' 的 function_code 是 "10"
+    if (this.hasPermission(Actions.Query)) {
       this.navigateWithState(CRUDStatus.Read, rowData);
     }
   }
