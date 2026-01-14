@@ -19,6 +19,8 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { FIN13060Service, QueryResponse } from '../../../service/api/fin/fin13060.service';
 import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-fin13060',
@@ -50,6 +52,7 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
   taxTypeOptions: any[] = [];
   System_IDOptions: any[] = [];
   AssetNoteOptions: any[] = [];
+  venNoOptions: any[] = [];
 
   /** 記錄最後一次查詢用的條件（供分頁/排序沿用） */
   private lastQueryPayload: any | null = null;
@@ -112,6 +115,7 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
   constructor(
     private readonly fin13060Service: FIN13060Service,
     private readonly counterNameService: CounterNameService,
+    private dropDownListService: DropDownListService,
     private readonly fin13050Service: FIN13050Service
   ) {
     super();
@@ -120,7 +124,7 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
   ngOnInit(): void {
     // ✅ 不自動打 API：只用 initializePage 設定 ProgNo/權限/麵包屑等，不傳 onSubmit callback
     this.initializePage('FIN13060', '/FIN/FIN13060CRU', this.queryForm);
-
+        this.loadDropdownOptions();
     // ✅ 回填但不查詢：把已儲存的 UI 狀態轉回 Date 後 patch 進表單
     const saved = this.queryStateService.getQueryStateValue(this.ProgNo);
     if (saved) {
@@ -195,6 +199,19 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
     { field: 'AssetType', header: '資產註記', visible: true },
     { field: 'SYS_ORIGIN', header: '系統別', visible: true },
   ];
+    // 載入下拉選項
+    protected loadDropdownOptions(): void {
+      // 載入廠客代號選項
+      this.dropDownListService
+        .queryPOS2013_DropDownList()
+        .pipe(untilDestroyed(this))
+        .subscribe(res => {
+          this.venNoOptions = res.Data.map((x: any) => ({
+            label: `${x.VEN_No} - ${x.Name}`,
+            value: x.VEN_No
+          }));
+        });
+    }
 
   /** 工具：Date → yyyy-MM-dd（給 API 用） */
   private toDateOnlyString(d?: Date | string | null): string | null {
