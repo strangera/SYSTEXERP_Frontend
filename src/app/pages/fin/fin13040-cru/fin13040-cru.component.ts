@@ -43,7 +43,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     InvoiceType: ['', Validators.required],
     SAL_Type: ['', Validators.required],
     GUI_Track: ['', [Validators.maxLength(2)]],
-    INV_GUINumber: ['', Validators.required],
+    INV_GUINumber: ['', [Validators.required, Validators.pattern(/^[A-Za-z]{2}\d{8}$/)]],
     InvoiceDate: [null as Date | null, Validators.required],
     Buyer_Uniform: ['', Validators.required],
     PUR_TaxType: ['', Validators.required],
@@ -90,6 +90,18 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     this.initializePage('FIN13040', this.dataForm);
     this.loadBuyerUniformOptions();
     this.loadInvoiceTypeOptions();
+
+    // 自動將發票號碼轉為大寫，方便使用者輸入小寫英文字母時仍符合格式
+    this.dataForm.get('INV_GUINumber')?.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((val) => {
+        if (val && typeof val === 'string') {
+          const up = val.toUpperCase();
+          if (up !== val) {
+            this.dataForm.controls.INV_GUINumber.setValue(up, { emitEvent: false });
+          }
+        }
+      });
 
     const rowData = history.state?.rowdata;
     console.log('主檔資料:', rowData);
