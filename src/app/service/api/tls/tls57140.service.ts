@@ -41,6 +41,8 @@ export interface QueryTLS57140Response {
  * 商品迴轉率 (明細) 單筆資料模型
  */
 export interface QueryTLS57140DetailResponse {
+  /** 品牌代碼 */
+  LOGO_No?: string;
   /** 品牌名稱 */
   LOGO_NAME?: string;
   /** 商品管理編號 */
@@ -69,6 +71,8 @@ export interface QueryTLS57140DetailResponse {
  * 商品迴轉率 (彙總) 單筆資料模型
  */
 export interface QueryTLS57140SummaryResponse {
+  /** 品牌代碼 */
+  LOGO_No?: string;
   /** 品牌名稱 */
   LOGO_NAME?: string;
   /** 銷售數量 */
