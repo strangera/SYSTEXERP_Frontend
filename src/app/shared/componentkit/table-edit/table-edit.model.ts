@@ -6,7 +6,7 @@ export interface EditColumn {
   header: string;    // 欄位標題 (顯示在表格上的標題)
   format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
   disabled?: (value: any, index?: number, rowData?: any) => boolean;  // 是否禁用 (是否為禁用欄位)
-  hidden?: (rowData: any, index?: number) => boolean; // 是否隱藏 (是否為隱藏欄位)
+  hidden?: boolean | ((rowData: any, index?: number) => boolean); // 是否隱藏 (是否為隱藏欄位)
   validate?: ((value: any, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[]; })[];
   type?: 'input' | 'inputNumber' | 'percent' | 'dropdown' | 'date' | 'template' | 'checkbox'; // 欄位類型
   groupField?: string;

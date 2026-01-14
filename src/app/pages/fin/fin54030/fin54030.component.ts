@@ -81,14 +81,19 @@ export class FIN54030Component extends BasicQueryPageComponent<FIN54030Data> imp
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
       this.logger.debug(`關帳:`, []);
-      if (!this.qf().TargetYM.value?.length) return this.messageService.errorBubble('請選擇目標年月');
+      const hasTargetYMError = !this.qf().TargetYM.value?.length;
+      const hasPostFlagError = this.qf().CntPostFlag1.value! > 0;
 
-      this.tableLoading.set(!0);
-      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-      this.logger.debug(`onSubmit:`, [this.qf().TargetYM.value]);
-      this.qf().CntPostFlag1.value! > 0
-        ? (() => { this.messageService.errorBubble('已建立傳票大於0，不允許關帳'); this.tableLoading.set(!1); })()
-        : this.service.closeFIN54030(this.qf().TargetYM.value!, 1).pipe(
+      if (hasTargetYMError) this.messageService.errorBubble('請選擇目標年月');
+      if (hasPostFlagError) this.messageService.errorBubble('已建立傳票大於0，不允許關帳');
+      if (hasTargetYMError || hasPostFlagError) {
+        this.loading = false;
+        return;
+      } else {
+        this.tableLoading.set(!0);
+        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+        this.logger.debug(`onSubmit:`, [this.qf().TargetYM.value]);
+        this.service.closeFIN54030(this.qf().TargetYM.value!, 1).pipe(
           finalize(() => this.tableLoading.set(!1)),
         ).subscribe({
           next: res => {
@@ -96,6 +101,7 @@ export class FIN54030Component extends BasicQueryPageComponent<FIN54030Data> imp
             this.messageService.successBubble('儲存成功');
           },
         });
+      }
     });
   }
 }

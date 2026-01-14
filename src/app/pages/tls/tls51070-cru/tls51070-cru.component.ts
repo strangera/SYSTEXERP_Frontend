@@ -9,7 +9,6 @@ import { ValidationService } from '@shared/service/validation.service';
 import { DividerModule } from 'primeng/divider';
 import { PanelModule } from 'primeng/panel';
 import { firstValueFrom } from 'rxjs';
-import { v4 as uuidv4 } from 'uuid'; // 引入 uuidv4
 import { environment } from '../../../../environments/environment';
 import { Tls51060Service } from '../../../service/api/tls/tls51060.service';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
@@ -1131,11 +1130,28 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     formData.append('LOGO_No', selected_Logo);  // 20251218 規格新增，本作業 圖片匯入需要 品牌代號(必填)
 
     // 加入所有檔案（以 uuid 命名）
-    this.files.forEach(file => {
+    // this.files.forEach(file => {
+    //   const extension = file.name.split('.').pop(); // 保留副檔名
+    //   const uuidFileName = `${uuidv4()}.${extension}`;
+    //   formData.append('Files', file, uuidFileName);
+    // });
+
+    // --- 修改命名邏輯開始 ---
+    // 取得目前現有的圖片數量作為起始 index
+    const currentLength = this.img1001Detail ? this.img1001Detail.length : 0;
+    const PLU_No = this.dataForm.get('PLU_No')?.value || '未知國條';
+
+    // 加入所有檔案（改為 PLU_MagNo-序號 命名）
+    this.files.forEach((file, index) => {
       const extension = file.name.split('.').pop(); // 保留副檔名
-      const uuidFileName = `${uuidv4()}.${extension}`;
-      formData.append('Files', file, uuidFileName);
+
+      // 計算新的編號：現有長度 + (目前 index + 1)
+      const newIndex = currentLength + index + 1;
+      const customFileName = `${PLU_No}-${newIndex}.${extension}`;
+
+      formData.append('Files', file, customFileName);
     });
+    // --- 修改命名邏輯結束 ---
 
     // 👉 檢查內容（只能用 FormData.entries() 迴圈看）
     console.log('📤 寄出的 FormData：');

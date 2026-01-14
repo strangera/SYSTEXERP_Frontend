@@ -46,31 +46,32 @@
       </div>
 
       <!-- ================= 調整明細：FIN32020TableEditComponent ================= -->
-      <app-fin32020table-edit
-        [title]="'調整明細'"
-        [tableKey]="'fin32020Detail'"
-        dataKey="SeqNo"
-        [data]="detailData"
-        [columns]="detailColumns"
-        [loading]="detailLoading"
-        [disabled]="isFormReadable"
-        [showReorder]="true"
-        [showCheckBox]="false"
-        [showInsert]="!isFormReadable"
-        [insertDisabled]="isFormReadable"
-        [canInsert]="!isFormReadable"
-        [showDelete]="!isFormReadable"
-        [keepDeletedData]="false"
-        [defaultInsertData]="defaultDetailRow"
-        [showPaginator]="false"
-        [scrollable]="false"
-        [showCaption]="false"
-        (dataChange)="onDetailDataChange($event)"
-        (fieldChange)="onDetailFieldChange($event)"
-        (delete)="onDetailDelete($event)"
-        (cellClick)="onDetailCellClick($event)"
-      >
-      </app-fin32020table-edit>
+<app-fin32020table-edit
+  [title]="'調整明細'"
+  [tableKey]="'fin32020Detail'"
+  dataKey="SeqNo"
+  [data]="detailData"
+  [columns]="detailColumns"
+  [loading]="detailLoading"
+  [disabled]="isFormReadable"
+  [showReorder]="true"
+  [showCheckBox]="!isFormReadable"
+  [showInsert]="false"
+  [insertDisabled]="isFormReadable"
+  [canInsert]="!isFormReadable"
+  [showDelete]="!isFormReadable"
+  [keepDeletedData]="false"
+  [defaultInsertData]="defaultDetailRow"
+  [showPaginator]="false"
+  [scrollable]="false"
+  [showCaption]="!isFormReadable"
+  (dataChange)="onDetailDataChange($event)"
+  (fieldChange)="onDetailFieldChange($event)"
+  (delete)="onDetailDelete($event)"
+  (cellClick)="onDetailCellClick($event)"
+>
+</app-fin32020table-edit>
+
 
       <!-- Footer 按鈕 -->
       <div
