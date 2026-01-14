@@ -45,9 +45,7 @@
         <!-- Reorder -->
         <th *ngIf="_tableData.length && showReorder" rowspan="2" class="w-1rem text-center"></th>
         <!-- 序號變成變數名稱 -->
-        <th [attr.colspan]="
-            _tableData.length === 1 && canInsert ? (disabled ? 1 : (showCheckBox && !disabled && data.length) ? 2 : 1) : 1
-          " rowspan="2" class="w-1rem text-center">
+        <th rowspan="2" class="w-1rem text-center">
           {{ serialName }}
         </th>
         <!-- CheckBox -->
@@ -97,10 +95,8 @@
     <!-- 非群組表頭 -->
     <ng-container *ngIf="!columnGroup?.length">
       <tr>
-        <th *ngIf="_tableData.length && showReorder" rowspan="2" class="w-1rem text-center"></th>
-        <th
-          [attr.colspan]="canInsert && !disabled &&_tableData.length > 0 &&_tableData[_tableData.length - 1]._isAutoInsertCandidate &&!showCheckBox ? 2: 1"
-          class="w-1rem text-center">
+        <th *ngIf="_tableData.length && showReorder" class="w-1rem text-center"></th>
+        <th class="w-1rem text-center">
           {{ serialName }}
         </th>
         <th *ngIf="showCheckBox && !disabled && data.length" class="w-1rem text-center">
@@ -126,19 +122,13 @@
         'insert-row': rowData._isAutoInsertCandidate,
       }">
       <td *ngIf="_tableData.length && showReorder" class="w-1rem text-center">
-        <span *ngIf="!rowData._isAutoInsertCandidate && _tableData.length > 0" class="pi pi-bars w-1rem text-center"
+        <span *ngIf="!rowData._isAutoInsertCandidate && _tableData.length > 0" class="pi pi-bars text-center"
           pReorderableRowHandle></span>
-        <span *ngIf="rowData._isAutoInsertCandidate && !disabled" class="pi pi-plus w-1rem text-center" [ngClass]="{
+        <span *ngIf="rowData._isAutoInsertCandidate && !disabled" class="pi pi-plus text-center" [ngClass]="{
             'text-blue-500': rowData._isAutoInsertCandidate,
           }"></span>
       </td>
-      <td class="text-center w-1rem" [attr.colspan]="
-          rowData._isAutoInsertCandidate && data.length && showCheckBox
-            ? 2
-            : rowData._isAutoInsertCandidate
-              ? 1
-              : 1
-        " [pTooltip]="
+      <td class="text-center w-1rem" [pTooltip]="
           rowData._rowValidationError?.errorMessage
             ? rowData._rowValidationError.errorMessage
             : ''
@@ -148,7 +138,7 @@
               rowData._rowValidationError?.isValid === false &&
               !rowData._isAutoInsertCandidate,
             'text-blue-500': rowData._isAutoInsertCandidate,
-          }" class="w-1rem text-center">
+          }" class="text-center">
           {{
           rowData._isAutoInsertCandidate
           ? disabled
@@ -160,8 +150,8 @@
           }}
         </span>
       </td>
-      <td *ngIf="showCheckBox && !disabled && !rowData._isAutoInsertCandidate" class="w-1rem text-center">
-        <p-tableCheckbox class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData" [disabled]="
+      <td *ngIf="showCheckBox && !disabled" class="w-1rem text-center">
+        <p-tableCheckbox *ngIf="!rowData._isAutoInsertCandidate" class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData" [disabled]="
             !isRowSelectable(rowData, rowIndex, _tableData) || disabled
           " />
       </td>
@@ -232,7 +222,7 @@
   </ng-template>
   <ng-template pTemplate="emptymessage">
     <tr>
-      <td [attr.colspan]="columns.length + 2">
+      <td [attr.colspan]="columns.length + 1 + (showCheckBox && !disabled ? 1 : 0) + (showReorder ? 1 : 0)">
         <div>
           <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
             查無資料

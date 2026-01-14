@@ -75,13 +75,22 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
 
   // 步驟3: 應收帳款表格資料 (從對話框選擇後自動帶入,不可手動編輯)
   step4TableData: ARWithRCVAmt[] = [];
+  // 當前正在編輯的列索引 (用於彈跳視窗選擇後替換)
+  currentEditingRowIndex: number | null = null;
   step4Columns: EditColumn[] = [
     {
       field: 'ARS_ID',
       header: '應收ID',
       type: 'input',
       maxLength: 50,
-      disabled: () => true // 不可編輯,由對話框帶入
+      placeholder: '點擊選擇...',
+      onFocus: (_rowData: ARWithRCVAmt, _value: string | null, _col: EditColumn, index: number) => {
+        // 點擊時開啟彈跳視窗
+        if (!this.isFormReadable) {
+          this.openARDialogForRow(index);
+        }
+      },
+      disabled: () => this.isFormReadable // 檢視模式不可點擊
     },
     {
       field: 'VEN_No',
@@ -118,6 +127,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
   showARDialog = false;
   arDialogLoading = false;
   arDialogTotalRecords = 0;
+  arDialogSelectedItem: QueryFIN32030ARResponse | null = null; // 單選模式下選中的資料
   arQueryForm = this.formBuilder.group({
     STO_No: [''],
     VEN_No: [''],
@@ -437,8 +447,9 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
   // 應收帳款相關 (步驟3使用)
   // ----------------------------------------------------------------
 
-  /** 打開應收未收查詢對話框 */
-  openARDialog(): void {
+  /** 打開應收未收查詢對話框 (針對特定列) */
+  openARDialogForRow(rowIndex: number): void {
+    this.currentEditingRowIndex = rowIndex;
     this.showARDialog = true;
     // 重置查詢表單
     this.arQueryForm.reset({
@@ -450,15 +461,29 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       pageIndex: 1,
       SortBy: [{ field: 'VEN_No', order: 1 }],
     });
-    // 清空查詢結果
+    // 清空查詢結果和選中資料
     this.arDialogData = [];
     this.arDialogTotalRecords = 0;
+    this.arDialogSelectedItem = null;
+  }
+
+  /** 打開應收未收查詢對話框 (舊方法，保留相容性) */
+  openARDialog(): void {
+    this.openARDialogForRow(-1); // -1 表示新增模式
   }
 
   /** 關閉應收未收查詢對話框 */
   closeARDialog(): void {
     this.showARDialog = false;
     this.arDialogData = [];
+    this.arDialogSelectedItem = null;
+  }
+
+  /** 當選擇應收帳款列時 (單選模式) */
+  onARRowSelect(event: { data?: QueryFIN32030ARResponse }): void {
+    if (event.data) {
+      this.arDialogSelectedItem = event.data;
+    }
   }
 
   /** 查詢應收未收 */
@@ -503,35 +528,71 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       });
   }
 
-  /** 確認選擇應收帳款 (點擊確定按鈕) */
+  /** 確認選擇應收帳款 (點擊確定按鈕) - 單選模式 */
   confirmARSelection(): void {
-    const selected = this.arDialogTable?.selectedItems as QueryFIN32030ARResponse[];
+    // 優先使用 onARRowSelect 設定的選中資料，否則從 table 組件取得
+    let selectedAR: QueryFIN32030ARResponse | null = this.arDialogSelectedItem;
 
-    if (!selected || selected.length === 0) {
-      this.messageService.errorBubble('請至少選擇一筆應收帳款');
+    // 如果沒有透過 select 事件選中，嘗試從 table 組件取得
+    if (!selectedAR) {
+      const rawSelected = this.arDialogTable?.selectedItems;
+      if (Array.isArray(rawSelected)) {
+        selectedAR = rawSelected.length > 0 ? rawSelected[0] : null;
+      } else if (rawSelected) {
+        selectedAR = rawSelected as QueryFIN32030ARResponse;
+      }
+    }
+
+    if (!selectedAR) {
+      this.messageService.errorBubble('請選擇一筆應收帳款');
       return;
     }
 
-    // 檢查是否有重複 (雙重保險)
-    const selectedIds = this.step4TableData.map(item => item.ARS_ID);
-    const newItems = selected.filter(item => !selectedIds.includes(item.ARS_ID));
+    // 檢查是否已經在表格中（排除當前編輯的列和空白候選列）
+    const existingIndex = this.step4TableData.findIndex((item, idx) =>
+      item.ARS_ID === selectedAR!.ARS_ID &&
+      idx !== this.currentEditingRowIndex &&
+      !(item as ARWithRCVAmt & { _isAutoInsertCandidate?: boolean })._isAutoInsertCandidate
+    );
 
-    if (newItems.length === 0) {
-      this.messageService.errorBubble('所選應收帳款已存在');
+    if (existingIndex !== -1) {
+      this.messageService.errorBubble('此應收帳款已存在於其他列');
       return;
     }
 
-    // 將選中的應收帳款加入表格 (使用 UnpaidAmt 作為 RCV_Amt)
-    const newData: ARWithRCVAmt[] = newItems.map(ar => ({
-      ...ar,
-      RCV_Amt: ar.UnpaidAmt || 0 // 預設收款金額為未收款金額
-    }));
+    // 檢查是否為有效的編輯索引（排除候選列）
+    const isValidEditIndex = this.currentEditingRowIndex !== null &&
+      this.currentEditingRowIndex >= 0 &&
+      this.currentEditingRowIndex < this.step4TableData.length &&
+      !(this.step4TableData[this.currentEditingRowIndex] as ARWithRCVAmt & { _isAutoInsertCandidate?: boolean })._isAutoInsertCandidate;
 
-    // 使用新陣列來觸發 Angular 變更檢測
-    this.step4TableData = [...this.step4TableData, ...newData];
+    if (isValidEditIndex) {
+      // 替換現有列資料（保留原有 Id）
+      const currentRow = this.step4TableData[this.currentEditingRowIndex!];
+      const originalId = currentRow.Id; // 保留原有的 Id（用於後端判斷是 update）
+
+      this.step4TableData[this.currentEditingRowIndex!] = {
+        ...selectedAR,
+        Id: originalId, // 保留原有 Id
+        RCV_Amt: selectedAR.UnpaidAmt || 0 // 預設收款金額為未收款金額
+      };
+
+      // 觸發變更檢測
+      this.step4TableData = [...this.step4TableData];
+      this.messageService.successBubble('已更新應收帳款');
+    } else {
+      // 新增一筆資料
+      const newData: ARWithRCVAmt = {
+        ...selectedAR,
+        RCV_Amt: selectedAR.UnpaidAmt || 0 // 預設收款金額為未收款金額
+      };
+      this.step4TableData = [...this.step4TableData, newData];
+      this.messageService.successBubble('已新增應收帳款');
+    }
 
     this.showARDialog = false;
-    this.messageService.successBubble(`已新增 ${newItems.length} 筆應收帳款`);
+    this.currentEditingRowIndex = null;
+    this.arDialogSelectedItem = null;
   }
 
   /** 應收帳款表格資料變更事件 */
