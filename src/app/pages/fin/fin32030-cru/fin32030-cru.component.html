@@ -152,24 +152,13 @@
         [data]="step4TableData"
         [columns]="step4Columns"
         [disabled]="isFormReadable"
-        [canInsert]="false"
+        [canInsert]="!isFormReadable"
         [showFooter]="true"
         [tableRequired]="true"
-        [showCheckBox]="true"
-        [showDelete]="!isFormReadable"
+        [showCheckBox]="false"
+        [showDelete]="isFormCreateable"
         (dataChange)="onStep4DataChange($event)"
-      >
-        <header>
-          <div class="flex justify-content-end w-full">
-            <app-button
-              label="應收未收查詢"
-              icon="pi pi-search"
-              (click)="openARDialog()"
-              [disabled]="isFormReadable"
-            ></app-button>
-          </div>
-        </header>
-      </app-table-edit>
+      ></app-table-edit>
     </p-panel>
 
     <!-- 步驟3按鈕 -->
@@ -233,7 +222,7 @@
     ></app-button>
   </div>
 
-  <!-- Results Table -->
+  <!-- Results Table - 單選模式（點擊整行選擇） -->
   <app-table
     #arDialogTable
     tableKey="ARQuery"
@@ -251,9 +240,10 @@
     [showFilter]="false"
     [showDelete]="false"
     [showCaption]="false"
-    selectionMode="multiple"
+    selectionMode="single"
     [lazy]="true"
     (lazyLoadData)="onLazyLoadData($event, arQueryForm); onQueryAR()"
+    (select)="onARRowSelect($event)"
   ></app-table>
 
   <!-- Footer -->

@@ -22,7 +22,7 @@ import { CellInput } from './table-edit-cell.model';
                  [maxlength]="cellInput.col.maxLength || null"
                  [style]="{'width': cellInput.col.width || '100%', 'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
                  [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
-                 (blur)="handleBlur()"(keydown.enter)="handleEnter($event)"
+                 (focus)="handleFocus()" (blur)="handleBlur()" (keydown.enter)="handleEnter($event)"
                  [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }" />
         </ng-container>
 
@@ -51,6 +51,16 @@ export class InputCellComponent {
   isDisabled(): boolean {
     const col = this.cellInput.col;
     return (col.disabled && col.disabled(this.cellInput.rowData[col.field], this.cellInput.index, this.cellInput.rowData)) || this.cellInput.disabled;
+  }
+
+  handleFocus() {
+    // 執行 onFocus 回調（如果有定義）
+    this.cellInput.col.onFocus?.(
+      this.cellInput.rowData,
+      this.cellInput.rowData[this.cellInput.col.field],
+      this.cellInput.col,
+      this.cellInput.index
+    );
   }
 
   handleBlur() {
