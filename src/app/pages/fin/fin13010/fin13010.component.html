@@ -65,13 +65,9 @@
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              controlName="PUR_RepYYYYMM"
-              calendarType="dateMonthOne"
-              label="申報年月"
-              [control]="queryForm.controls.PUR_RepYYYYMM"
-              [submitted]="submitted"
-            ></app-calendar>
+
+            <app-year-month  label="申報年月" [control]="queryForm.controls.PUR_RepYYYYMM"
+          [submitted]="submitted" [evenMonth]="true"></app-year-month>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range
@@ -102,20 +98,23 @@
 </div>
 
 <div class="card">
-  <app-table
-    tableKey="FIN13010"
-    [data]="data"
-    [columns]="columns"
-    dataKey="id"
-    [multiSortMeta]="[{ field: 'id', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    [loading]="loading"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [showManage]="true"
-    [showDelete]="true"
-    [showCheckBox]="true"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-  ></app-table>
+<app-table2
+  tableKey="FIN13010"
+  [data]="data"
+  [columns]="columns"
+  dataKey="id"
+  [multiSortMeta]="[{ field: 'id', order: 1 }]"
+  [totalRecords]="totalRecords"
+  [lazy]="true"
+  [loading]="loading"
+  (edit)="onEdit($event)"
+  (detail)="onDetail($event)"
+  [showManage]="true"
+  (delete)="Delete($event)"
+  [showDelete]="true"
+  [showCheckBox]="true"
+  (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+   
+   [apiUrl]="'queryFIN13010'" 
+></app-table2>
 </div>

@@ -87,7 +87,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     salePriceAmount: [0], // 售價金額調整
   },);
   brandOptions = this.dropdown.queryPluLogo(); // 品牌
-  vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
+  vendorOptions = this.dropdown.queryPos2013TltTalent(); // 廠商編號
   originalData: IInsertTLS52050Detail[] | IUpdateTLS52050Detail[] = [];
   data: IInsertTLS52050Detail[] | IUpdateTLS52050Detail[] = [];
   selectedItems: IInsertTLS52050Detail[] | IUpdateTLS52050Detail[] = [];

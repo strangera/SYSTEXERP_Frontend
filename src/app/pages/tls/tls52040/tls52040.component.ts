@@ -74,7 +74,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
   totalRecords = 0;
   warehouseOptions = this.dropdown.queryPos2034(); // 倉別
   brandOptions = this.dropdown.queryPluLogo(); // 品牌代碼
-  vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
+  vendorOptions = this.dropdown.queryPos2013TltTalent(); // 廠商編號
   poStatusOptions = getSYS1000Options('RJM_Status');
   userOptions = this.dropdown.queryTblUser(); // 申請人員、審核人員、結案人員
   pluMagNoOptions: { label: string, value: string }[] = []; // 商品管理編號

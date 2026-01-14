@@ -32,7 +32,7 @@
               [errorForGroup]="true"></app-input-text-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar label="發票年月" calendarType="dateYearOne" [control]="queryForm.controls.InvoiceDateYM"
+            <app-calendar label="發票年月" calendarType="dateMonthOne" [control]="queryForm.controls.InvoiceDateYM"
               [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -46,11 +46,9 @@
             </app-calendar>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar controlName="INV_DeclareYM" calendarType="dateMonthOne" label="申報年月"
-              [control]="queryForm.controls.INV_DeclareYM" [submitted]="submitted">
-            </app-calendar>
-          </div>
+          <!-- 申報年月 -->
+          <app-year-month class="col-12 md:col-6 lg:col-4" label="申報年月" [control]="queryForm.controls.INV_DeclareYM"
+            [submitted]="submitted" [evenMonth]="true" (valueChanges)="loadGuiTrackOptions($event)"></app-year-month>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="買受人統一編號" controlName="Buyer_Uniform" [control]="queryForm.controls.Buyer_Uniform"

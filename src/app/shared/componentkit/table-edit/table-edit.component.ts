@@ -143,10 +143,7 @@ export class TableEditComponent implements OnChanges {
   public tableDataEmpty = false;                    // table 資料是否為空
 
   constructor() {
-    // 初始化時建立訂閱
-    this.footerUpdateSubject.pipe(
-      debounceTime(300) // 停止輸入 300ms 後才真正執行大數據計算
-    ).subscribe(() => {
+    this.footerUpdateSubject.pipe(debounceTime(300)).subscribe(() => {
       this._calculatedFooterData = this.calculateFooterData();
       this.cdr.markForCheck();
     });
@@ -308,6 +305,21 @@ export class TableEditComponent implements OnChanges {
     }
     // 1. 先更新 rowData 當下的值 (這很重要，否則 Service 拿不到最新值去計算)
     rowData[col.field] = value;
+    // 新增邏輯：自動清空因隱藏而失效的欄位值
+    this.columns.forEach(column => {
+      // 如果該欄位有定義 hidden 邏輯，且執行結果為 true (隱藏)
+      if (column.hidden && column.hidden(rowData, index)) {
+        // 且該欄位目前還有值，則清空它
+        if (rowData[column.field] !== null && rowData[column.field] !== undefined) {
+          rowData[column.field] = null;
+
+          // 如果隱藏的欄位也有驗證錯誤，清空值後一併移除該欄位的錯誤標記
+          if (rowData._validationErrors && rowData._validationErrors[column.field]) {
+            delete rowData._validationErrors[column.field];
+          }
+        }
+      }
+    });
     // 2. 呼叫 Service 進行「該欄位」引發的計算與狀態更新
     const { shouldInsertNewRow, cleanData } = this.dataService.updateRowOnValueChange(
       rowData, value, col, index,

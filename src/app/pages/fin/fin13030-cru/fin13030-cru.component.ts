@@ -1,21 +1,20 @@
-import { Component } from '@angular/core';
-import { FIN13030Data, FIN13030GetZeroTaxGUIRequest, FIN13030GetZeroTaxGUIResponse, FIN13030InsertRequest, FIN13030Service, FIN13030UpdateRequest } from '../../../service/api/fin/fin13030.service';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { DropdownOption } from '../../../shared/models/api/base-api.interface';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { DatePipe, NgIf } from '@angular/common';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { finalize } from 'rxjs';
+import { Component } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
+import { FIN13030Data, FIN13030GetZeroTaxGUIRequest, FIN13030GetZeroTaxGUIResponse, FIN13030InsertRequest, FIN13030Service, FIN13030UpdateRequest } from '../../../service/api/fin/fin13030.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { ValidationService } from '../../../shared/service/validation.service';
 
 @Component({
   selector: 'app-fin13030-cru',
@@ -42,9 +41,9 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
     INV_GUIDate: ['', Validators.required], // 發票日期
     INV_YM: ['', Validators.required], // 資料所屬年月
     INV_DeclareYM: ['', Validators.required], // 申報年月
-    INV_Name: ['', [Validators.required, Validators.maxLength(60)]], // 買受人名稱
+    INV_Name: ['', [Validators.maxLength(60)]], // 買受人名稱
     GoodsOrServicesName: ['', Validators.maxLength(100)], // 貨物或勞務名稱
-    GoodsQty: [0, [this.validationService.numberValidator]], // 貨物或勞務數量
+    GoodsQty: [1, [this.validationService.numberValidator]], // 貨物或勞務數量
     ExportMethod: ['', Validators.required], // 外銷方式
     INV_PassType: ['', Validators.required], // 通關方式註記
     INV_DocName: ['', [Validators.maxLength(20)]], // 證明文件名稱

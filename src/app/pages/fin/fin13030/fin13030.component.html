@@ -1,89 +1,192 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onCreate(queryForm)" label="新增"></app-button>
+    <app-button
+      btnType="create"
+      (click)="onCreate(queryForm)"
+      label="新增"
+    ></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
-
           <!-- 發票號碼起迄 -->
-          <app-input-text-range class="col-12 md:col-6 lg:col-4" label="發票號碼"
-            [startControl]="queryForm.controls.INV_GUINo_B" [endControl]="queryForm.controls.INV_GUINo_E"
-            [submitted]="submitted" [errorForGroup]="true"></app-input-text-range>
+          <app-input-text-range
+            class="col-12 md:col-6 lg:col-4"
+            label="發票號碼"
+            [startControl]="queryForm.controls.INV_GUINo_B"
+            [endControl]="queryForm.controls.INV_GUINo_E"
+            [submitted]="submitted"
+            [errorForGroup]="true"
+          ></app-input-text-range>
 
           <!-- 發票日期起迄 -->
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="發票日期" calendarType="dateRange"
-            [startControl]="queryForm.controls.INV_GUIDate_B" [endControl]="queryForm.controls.INV_GUIDate_E"
-            [submitted]="submitted"></app-calendar-range>
+          <app-calendar-range
+            class="col-12 md:col-6 lg:col-4"
+            label="發票日期"
+            calendarType="dateRange"
+            [startControl]="queryForm.controls.INV_GUIDate_B"
+            [endControl]="queryForm.controls.INV_GUIDate_E"
+            [submitted]="submitted"
+          ></app-calendar-range>
 
           <!-- 資料所屬年月起迄 -->
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="資料所屬年月" calendarType="dateMonthRange"
-            [startControl]="queryForm.controls.INV_YM_B" [endControl]="queryForm.controls.INV_YM_E"
-            [submitted]="submitted"></app-calendar-range>
+          <app-calendar-range
+            class="col-12 md:col-6 lg:col-4"
+            label="資料所屬年月"
+            calendarType="dateMonthRange"
+            [startControl]="queryForm.controls.INV_YM_B"
+            [endControl]="queryForm.controls.INV_YM_E"
+            [submitted]="submitted"
+          ></app-calendar-range>
 
-          <!-- 申報年月起迄 -->
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="申報年月" calendarType="dateMonthRange"
-            [startControl]="queryForm.controls.INV_DeclareYM_B" [endControl]="queryForm.controls.INV_DeclareYM_E"
-            [submitted]="submitted"></app-calendar-range>
+          <!-- 申報年月起 -->
+          <app-year-month
+            class="col-12 md:col-6 lg:col-4"
+            label="申報年月(起)"
+            [control]="queryForm.controls.INV_DeclareYM_B"
+            [submitted]="submitted"
+            [evenMonth]="true"
+          ></app-year-month>
+
+          <!-- 申報年月迄 -->
+          <app-year-month
+            class="col-12 md:col-6 lg:col-4"
+            label="申報年月(迄)"
+            [control]="queryForm.controls.INV_DeclareYM_E"
+            [submitted]="submitted"
+            [evenMonth]="true"
+          ></app-year-month>
 
           <!-- 買受人統一編號 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="買受人統一編號" controlName="INV_Uniform"
-            [control]="queryForm.controls.INV_Uniform" [submitted]="submitted"></app-input-text>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="買受人統一編號"
+            controlName="INV_Uniform"
+            [control]="queryForm.controls.INV_Uniform"
+            [submitted]="submitted"
+          ></app-input-text>
 
           <!-- 貨物或勞務名稱 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="貨物或勞務名稱" controlName="GoodsOrServicesName"
-            [control]="queryForm.controls.GoodsOrServicesName" [submitted]="submitted"></app-input-text>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="貨物或勞務名稱"
+            controlName="GoodsOrServicesName"
+            [control]="queryForm.controls.GoodsOrServicesName"
+            [submitted]="submitted"
+          ></app-input-text>
 
           <!-- 貨物或勞務數量起迄 -->
-          <app-input-text-range class="col-12 md:col-6 lg:col-4" label="貨物或勞務數量"
-            [startControl]="queryForm.controls.GoodsQtyStart" [endControl]="queryForm.controls.GoodsQtyEnd"
-            [submitted]="submitted" [errorForGroup]="true"></app-input-text-range>
+          <app-input-text-range
+            class="col-12 md:col-6 lg:col-4"
+            label="貨物或勞務數量"
+            [startControl]="queryForm.controls.GoodsQtyStart"
+            [endControl]="queryForm.controls.GoodsQtyEnd"
+            [submitted]="submitted"
+            [errorForGroup]="true"
+          ></app-input-text-range>
 
           <!-- 外銷方式 -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="外銷方式" controlName="ExportMethod"
-            [options]="exportMethodOptions" [control]="queryForm.controls.ExportMethod" [submitted]="submitted"
-            optionLabel="label" optionValue="value"></app-multi-select>
+          <app-multi-select
+            class="col-12 md:col-6 lg:col-4"
+            label="外銷方式"
+            controlName="ExportMethod"
+            [options]="exportMethodOptions"
+            [control]="queryForm.controls.ExportMethod"
+            [submitted]="submitted"
+            optionLabel="label"
+            optionValue="value"
+          ></app-multi-select>
 
           <!-- 證明文件名稱 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="證明文件名稱" controlName="INV_DocName"
-            [control]="queryForm.controls.INV_DocName" [submitted]="submitted"></app-input-text>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="證明文件名稱"
+            controlName="INV_DocName"
+            [control]="queryForm.controls.INV_DocName"
+            [submitted]="submitted"
+          ></app-input-text>
 
           <!-- 證明文件號碼 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="證明文件號碼" controlName="INV_DocNo"
-            [control]="queryForm.controls.INV_DocNo" [submitted]="submitted"></app-input-text>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="證明文件號碼"
+            controlName="INV_DocNo"
+            [control]="queryForm.controls.INV_DocNo"
+            [submitted]="submitted"
+          ></app-input-text>
 
           <!-- 非經海關出口金額起迄 -->
-          <app-input-number-range class="col-12 md:col-6 lg:col-4" label="非經海關出口金額"
+          <app-input-number-range
+            class="col-12 md:col-6 lg:col-4"
+            label="非經海關出口金額"
             [startControl]="queryForm.controls.NonCustomsExportAmt_B"
-            [endControl]="queryForm.controls.NonCustomsExportAmt_E" [submitted]="submitted"></app-input-number-range>
+            [endControl]="queryForm.controls.NonCustomsExportAmt_E"
+            [submitted]="submitted"
+          ></app-input-number-range>
 
           <!-- 出口報單類別 -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="出口報單類別" controlName="INV_ExportType"
-            [options]="exportTypeOptions" [control]="queryForm.controls.INV_ExportType" [submitted]="submitted"
-            optionLabel="label" optionValue="value"></app-multi-select>
+          <app-multi-select
+            class="col-12 md:col-6 lg:col-4"
+            label="出口報單類別"
+            controlName="INV_ExportType"
+            [options]="exportTypeOptions"
+            [control]="queryForm.controls.INV_ExportType"
+            [submitted]="submitted"
+            optionLabel="label"
+            optionValue="value"
+          ></app-multi-select>
 
           <!-- 出口報單號碼 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="出口報單號碼" controlName="INV_ExportNo"
-            [control]="queryForm.controls.INV_ExportNo" [submitted]="submitted"></app-input-text>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="出口報單號碼"
+            controlName="INV_ExportNo"
+            [control]="queryForm.controls.INV_ExportNo"
+            [submitted]="submitted"
+          ></app-input-text>
 
           <!-- 經海關出口金額起迄 -->
-          <app-input-number-range class="col-12 md:col-6 lg:col-4" label="經海關出口金額"
-            [startControl]="queryForm.controls.CustomsExportAmt_B" [endControl]="queryForm.controls.CustomsExportAmt_E"
-            [submitted]="submitted"></app-input-number-range>
+          <app-input-number-range
+            class="col-12 md:col-6 lg:col-4"
+            label="經海關出口金額"
+            [startControl]="queryForm.controls.CustomsExportAmt_B"
+            [endControl]="queryForm.controls.CustomsExportAmt_E"
+            [submitted]="submitted"
+          ></app-input-number-range>
 
           <!-- 輸出或結匯日期起迄 -->
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="輸出或結匯日期" calendarType="dateRange"
-            [startControl]="queryForm.controls.ExportDate_B" [endControl]="queryForm.controls.ExportDate_E"
-            [submitted]="submitted"></app-calendar-range>
+          <app-calendar-range
+            class="col-12 md:col-6 lg:col-4"
+            label="輸出或結匯日期"
+            calendarType="dateRange"
+            [startControl]="queryForm.controls.ExportDate_B"
+            [endControl]="queryForm.controls.ExportDate_E"
+            [submitted]="submitted"
+          ></app-calendar-range>
 
           <!-- 備註 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="備註" controlName="INV_Remark"
-            [control]="queryForm.controls.INV_Remark" [submitted]="submitted"></app-input-text>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="備註"
+            controlName="INV_Remark"
+            [control]="queryForm.controls.INV_Remark"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -92,10 +195,21 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="FIN13030" dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-    (detail)="onDetail($event)" (delete)="deleteRow($event)" [showCheckBox]="true" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [multiSortMeta]="[{ field: 'ID', order: -1 }]"
-    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading">
-  </app-table>
+  <app-table
+    tableKey="FIN13030"
+    dataKey="ID"
+    [data]="data"
+    [columns]="columns"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    (delete)="deleteRow($event)"
+    [showCheckBox]="true"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+    [multiSortMeta]="[{ field: 'ID', order: -1 }]"
+    [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [lazy]="true"
+    [loading]="loading"
+  ></app-table>
 </div>
