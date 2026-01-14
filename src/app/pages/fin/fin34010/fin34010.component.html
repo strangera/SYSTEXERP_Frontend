@@ -11,8 +11,16 @@
         <div class="grid p-fluid">
           <!-- 客戶/廠商編號 (VEN_No) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="客戶代號" [control]="queryForm.controls.VEN_No" [submitted]="submitted">
-            </app-input-text>
+
+                       <app-dropdown
+            label="廠客代號"
+            [control]="queryForm.controls.VEN_No"
+          
+            [submitted]="submitted"
+            [options]="venNoOptions"
+            optionLabel="label"
+            optionValue="value"
+          ></app-dropdown>
           </div>
 
           <!-- 立帳日期區間 (ARSDateFrom / ARSDateTo) -->
@@ -24,8 +32,9 @@
 
           <!-- 科目代號 (AccNo) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="科目代號" [control]="queryForm.controls.AccNo" [submitted]="submitted">
-            </app-input-text>
+       
+                <app-dropdown label="科目代號" controlName="AccNo" [options]="AccNo_ParamOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.AccNo" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
 

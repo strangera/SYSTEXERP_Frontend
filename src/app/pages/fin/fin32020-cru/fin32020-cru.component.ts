@@ -474,41 +474,39 @@ export class FIN32020CRUComponent
 
   /* ================= Submit ================= */
 
-  onSubmit(frm: FormGroup) {
-    if (this.detailTableEdit) {
-      const tableValid = this.detailTableEdit.validateAndShowErrors();
-      if (!tableValid) {
-        return;
-      }
+onSubmit(frm: FormGroup) {
+  if (this.detailTableEdit) {
+    const tableValid = this.detailTableEdit.validateAndShowErrors();
+    if (!tableValid) {
+      return;
     }
-
-    this.handleSubmit(frm, () => {
-      if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-        const payload = this.buildInsertPayload();
-
-        this.fin32020Service.insertFIN32020(payload).subscribe({
-          next: (res) => {
-            console.log('FIN32020 Insert success:', res);
-          },
-          error: (err) => {
-            console.error('FIN32020 Insert error:', err);
-          },
-        });
-      } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-        const payload = this.buildUpdatePayload();
-
-        this.fin32020Service.updateFIN32020(payload).subscribe({
-          next: (res) => {
-            console.log('FIN32020 Update success:', res);
-          },
-          error: (err) => {
-            console.error('FIN32020 Update error:', err);
-            this.loading = false;
-          },
-        });
-      }
-    });
   }
+
+  this.handleSubmit(frm, () => {
+    if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
+      const payload = this.buildInsertPayload();
+      this.fin32020Service.insertFIN32020(payload).subscribe({
+        next: (res) => {
+          // success 不動
+          console.log('FIN32020 Insert success:', res);
+        },
+        error: (_err) => {
+          this.loading = false;
+        },
+      });
+    } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
+      const payload = this.buildUpdatePayload();
+      this.fin32020Service.updateFIN32020(payload).subscribe({
+        next: (res) => {
+          console.log('FIN32020 Update success:', res);
+        },
+        error: (_err) => {
+          this.loading = false;
+        },
+      });
+    }
+  });
+}
 
   submitForm(frm: FormGroup) {
     this.onSubmit(frm);

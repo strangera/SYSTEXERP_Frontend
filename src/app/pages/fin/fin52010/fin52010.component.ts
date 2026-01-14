@@ -6,7 +6,6 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { NGXLogger } from 'ngx-logger';
@@ -25,13 +24,19 @@ import { FIN52010Data, FIN52010UpdatePayload } from './fin52010.model';
     ReactiveFormsModule,
     TranslateModule,
     ButtonComponent,
-    CalendarComponent,
     DropdownComponent,
     InputTextComponent,
     MenubarComponent,
   ],
 })
 export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> implements OnInit {
+
+  // 日期格式選項
+  public readonly dateFormatOptions = [
+    { value: 'YYYY', label: 'YYYY' },
+    { value: 'YYYY/MM', label: 'YYYY/MM' },
+    { value: 'YYYY/MM/DD', label: 'YYYY/MM/DD' },
+  ];
 
   private formatYmDisplay(value?: string | null): string | undefined {
     if (!value) return value as any;
@@ -53,7 +58,7 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
     AccYear: new FormControl<string | void>(void 0, [Validators.required]),
     OpenDate: new FormControl<string | void>(void 0, [Validators.required]),
     CloseDate: new FormControl<string | void>(void 0, [Validators.required]),
-    DefaultVouDate: new FormControl<Date | void>(void 0),
+    DefaultVouDate: new FormControl<string | void>(void 0),
     ORG_ID: new FormControl<string | void>(void 0, [Validators.required]),
     AccNoTotPL: new FormControl<string | void>(void 0, [Validators.required]),
     AccNoCurPL: new FormControl<string | void>(void 0, [Validators.required]),

@@ -11,6 +11,8 @@ export interface Column {
 
   // 顯示格式
   format?: (value: any, index?: number, rowData?: any) => string | number | null;
+
+
   exportFormat?: Record<string, string>[] | any; // 讓它能放物件/陣列
 
   // 群組/小計/總計

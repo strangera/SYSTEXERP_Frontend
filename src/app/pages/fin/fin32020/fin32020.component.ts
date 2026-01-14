@@ -80,32 +80,31 @@ export class FIN32020Component
   tableVer = 0;
 
   /* ----------------- 欄位定義 (app-table-report) ----------------- */
-// 主表欄位：主檔
-columns: ReportColumn[] = [
-  { field: 'ADJ_No', header: '調整單號' },
-  {
-    field: 'ADJ_Date',
-    header: '調整日期',
-    format: (v: string) => this.formatDate(v),
-  },
-  { field: 'Remark', header: '備註' },
-];
+  // 主表欄位：主檔
+  columns: ReportColumn[] = [
+    { field: 'ADJ_No', header: '調整單號' },
+    {
+      field: 'ADJ_Date',
+      header: '調整日期',
+      format: (v: string) => this.formatDate(v),
+    },
+    { field: 'Remark', header: '備註' },
+  ];
 
-// 展開明細欄位：_Details
-expansionColumns: ReportColumn[] = [
-  { field: 'ARS_No', header: '應收帳款單號' },
-  { field: 'AccNo', header: '科目代號' },
-  { field: 'AccCName', header: '科目名稱' },
-  {
-    field: 'ADJ_Amt',
-    header: '調整金額',
-    align: 'right',
-    format: this.moneyFormat,
-  },
-  { field: 'Detail_Remark', header: '備註' },
-  { field: 'VouNo', header: '傳票單號' },
-];
-
+  // 展開明細欄位：_Details
+  expansionColumns: ReportColumn[] = [
+    { field: 'ARS_No', header: '應收帳款單號' },
+    { field: 'AccNo', header: '科目代號' },
+    { field: 'AccCName', header: '科目名稱' },
+    {
+      field: 'ADJ_Amt',
+      header: '調整金額',
+      align: 'right',
+      format: this.moneyFormat,
+    },
+    { field: 'Detail_Remark', header: '備註' },
+    { field: 'VouNo', header: '傳票單號' },
+  ];
 
   /** 預設排序：調整日期 DESC, 調整單號 ASC */
   readonly defaultSort: SortItem[] = [
@@ -149,7 +148,7 @@ expansionColumns: ReportColumn[] = [
     const saved = this.queryStateService.getQueryStateValue('FIN32020');
     if (saved) {
       // 1) formValue
-      const formValue = saved?.formValue ?? saved; // 兼容你以前只存 queryForm.value 的舊格式
+      const formValue = saved?.formValue ?? saved; // 兼容舊格式
       if (formValue) {
         this.queryForm.patchValue(formValue, { emitEvent: false });
       }
@@ -166,10 +165,10 @@ expansionColumns: ReportColumn[] = [
       Promise.resolve().then(() => this.onSubmit(this.queryForm));
     }
   }
-    moneyFormat(value: number): string {
+
+  moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
-
 
   /* ----------------- Utility ----------------- */
   private formatDate(val: string): string {
@@ -193,7 +192,12 @@ expansionColumns: ReportColumn[] = [
   private normalizeSort(input: any, fallback: SortItem[]): SortItem[] {
     const asArr = Array.isArray(input) ? input : [];
     const cleaned = asArr
-      .filter((x) => x && typeof x.field === 'string' && typeof x.order === 'number')
+      .filter(
+        (x) =>
+          x &&
+          typeof x.field === 'string' &&
+          typeof x.order === 'number'
+      )
       .map((x) => ({ field: String(x.field), order: x.order as number }));
     return cleaned.length ? cleaned : fallback;
   }
@@ -202,7 +206,9 @@ expansionColumns: ReportColumn[] = [
   private saveQueryState(): void {
     this.queryStateService.setQueryState('FIN32020', {
       formValue: this.queryForm.getRawValue(),
-      currentSortBy: this._currentSortBy?.length ? this._currentSortBy : this.defaultSort,
+      currentSortBy: this._currentSortBy?.length
+        ? this._currentSortBy
+        : this.defaultSort,
       lastQueryBody: this.lastQueryBody,
     });
   }
@@ -212,9 +218,12 @@ expansionColumns: ReportColumn[] = [
     const raw = this.queryForm.getRawValue();
 
     const pageIndex =
-      Number.isFinite(base?.pageIndex) && base.pageIndex >= 1 ? base.pageIndex : 1;
-    const pageSize =
-      Number.isFinite(base?.pageSize) && base.pageSize > 0 ? base.pageSize : 30;
+      Number.isFinite(base?.pageIndex) && base.pageIndex >= 1
+        ? base.pageIndex
+        : 1;
+
+    // ⭐ 固定後端 PageSize = 30（不吃 base.pageSize 也不吃 form.pageSize）
+    const pageSize = 30;
 
     const sort = this.normalizeSort(base?.SortBy, this.defaultSort);
 
@@ -239,7 +248,9 @@ expansionColumns: ReportColumn[] = [
       ADJ_Date_From: this.toYMDOrNull(raw.adjust_Date_From),
       ADJ_Date_To: this.toYMDOrNull(raw.adjust_Date_To),
       Remark: raw.remark || null,
-      VouNo_From: raw.summons_ID_From ? String(raw.summons_ID_From) : null,
+      VouNo_From: raw.summons_ID_From
+        ? String(raw.summons_ID_From)
+        : null,
       VouNo_To: raw.summons_ID_To ? String(raw.summons_ID_To) : null,
     };
 
@@ -253,17 +264,25 @@ expansionColumns: ReportColumn[] = [
 
   /** 給 <app-table-report> 用的查詢函式（分頁載入） */
   public queryFIN32020ForReport = (body: any) =>
-    this.fin32020Service.queryFIN32020(this.buildPayload(body || {})).pipe(
-      map((res: ApiResponse<Fin32020Row[] | Fin32020Row>) => {
-        const src = res?.Data as any;
-        const rows: Fin32020Row[] = Array.isArray(src) ? src : src ? [src] : [];
-        const totalCount = Number((res as any)?.TotalCount ?? rows.length) || rows.length;
+    this.fin32020Service
+      .queryFIN32020(this.buildPayload(body || {}))
+      .pipe(
+        map((res: ApiResponse<Fin32020Row[] | Fin32020Row>) => {
+          const src = res?.Data as any;
+          const rows: Fin32020Row[] = Array.isArray(src)
+            ? src
+            : src
+            ? [src]
+            : [];
+          const totalCount =
+            Number((res as any)?.TotalCount ?? rows.length) ||
+            rows.length;
 
-        rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
+          rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
 
-        return { Data: rows, TotalCount: totalCount, GrandTotal: null };
-      })
-    );
+          return { Data: rows, TotalCount: totalCount, GrandTotal: null };
+        })
+      );
 
   /* ----------------- Submit（主表查詢） ----------------- */
   onSubmit(frm: FormGroup) {
@@ -280,10 +299,12 @@ expansionColumns: ReportColumn[] = [
     const payload = this.buildPayload({
       ...raw,
       pageIndex: 1,
+      // pageSize 這裡給什麼都沒差，buildPayload 會強制改成 30
       pageSize: raw.pageSize || 30,
       SortBy: raw.SortBy || this._currentSortBy || this.defaultSort,
     });
 
+    // 再保險一次 PageIndex = 1
     payload.PageIndex = 1;
 
     this.loading = true;
@@ -299,13 +320,16 @@ expansionColumns: ReportColumn[] = [
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (res: ApiResponse<Fin32020Row[]>) => {
-          const rows: Fin32020Row[] = Array.isArray(res?.Data) ? res.Data : [];
+          const rows: Fin32020Row[] = Array.isArray(res?.Data)
+            ? res.Data
+            : [];
           rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
 
           this.data = rows;
           this.cdr.detectChanges();
 
-          const realTotal = Number(res?.TotalCount ?? rows.length) || rows.length;
+          const realTotal =
+            Number(res?.TotalCount ?? rows.length) || rows.length;
 
           setTimeout(() => {
             this.totalRecords = realTotal;

@@ -4,6 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS11040Response, Ass11040Service } from '@service/api/ass/ass11040.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { PanelModule } from 'primeng/panel';
@@ -36,7 +37,10 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<ASS11040Response
     maintenanceMethod: [], // 保養方式
     illustrate: [,], // 說明
   });
-  warrantyMethodOptions: any[] = [];
+  itemCategoryOptions = getSYS1000Options('PROD_TYPE');
+  itemUnitOptions = getSYS1000Options('UNIT');
+  packageUnitOptions = getSYS1000Options('PACK_UNIT');
+
   bigCategoryCodeOptions: any[] = [
     { value: 1, label: 'A/裝潢工程' },
     { value: 2, label: 'B/其他工程' },
@@ -57,21 +61,13 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<ASS11040Response
     { value: 25, label: '機電消防工程' },
     { value: 22, label: '電子產品及零件' },
   ];
-  itemCategoryOptions: any[] = [
-    { value: 1, label: '資產' },
-    { value: 2, label: '列管品' },
-    { value: 3, label: '耗材' },
-    { value: 4, label: '房屋和建築設備' },
-    { value: 5, label: '其他資產(無形)' },
-    { value: 6, label: '不領用之耗材' },
+  warrantyMethodOptions: any[] = [
+    { value: 0, label: '廠商' },
+    { value: 1, label: '公司' },
   ];
-  itemUnitOptions: any[] = [];
-  packageUnitOptions: any[] = [
-    { value: 1, label: '箱' },
-    { value: 2, label: '包' },
-    { value: 3, label: '袋' },
-    { value: 4, label: '束' },
-    { value: 5, label: '盒' },
+  maintenanceMethodOptions: any[] = [
+    { value: 0, label: '廠商' },
+    { value: 1, label: '公司' },
   ];
   constructor(
     private readonly ass11040Service: Ass11040Service
