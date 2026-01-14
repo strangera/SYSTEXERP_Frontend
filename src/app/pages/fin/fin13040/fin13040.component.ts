@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -21,6 +21,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 //1.1.4.3 形成申報書
 @Component({
   selector: 'app-fin13040',
@@ -40,6 +41,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
     TranslateModule,
     InputTextComponent,
     CalendarRangeComponent,
+    YearMonthComponent,
     CalendarModule,
     MultiSelectComponent,
     InputNumberRangeComponent,
@@ -73,7 +75,7 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
     InvoiceDate_S: [''],
     InvoiceDate_E: [''],
     InvoiceDateYM: [''],
-    INV_DeclareYM: [this.getEvenMonthDate(), [Validators.required]],
+    INV_DeclareYM: ['', [Validators.required]],
     INV_Data_YM_S: [''],
     INV_Data_YM_E: [''],
     Buyer_Uniform: [''],
@@ -119,7 +121,30 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('FIN13040', '/FIN/FIN13040cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadBuyerUniformOptions();
     this.loadInvoiceTypeOptions();
+    // 設定 INV_DeclareYM 預設為最近的雙數月（若當月為單月，跳到下個月）
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    if (currentMonth % 2 !== 0) {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+    const dp = new DatePipe('en-US');
+    this.queryForm.get('INV_DeclareYM')?.setValue(dp.transform(currentDate, 'yyyyMM'));
 
+  }
+
+  loadGuiTrackOptions(event: any): void {
+    // 根據申報年月載入字軌下拉（參考 FIN15010）
+    this.dropDownListService.queryPOS1018_GUI_TRACK_DropDownList({
+      GUI_YYMM: event,
+      MID: 0,
+      STO_No: '10',
+      GUI_Type: this.queryForm.controls.InvoiceType.value ?? []
+    }).pipe(untilDestroyed(this)).subscribe(r => {
+      // 若回傳結構不同，嘗試從 r.Data.GuiTracks 取得陣列
+      const tracks = r?.Data?.GuiTracks ?? r?.Data ?? [];
+      // 不直接存到 control，僅供其他下拉使用；若需要可存到 this.guiTrackOptions
+      console.log('[loadGuiTrackOptions] tracks', tracks);
+    });
   }
 
   /** 載入買受人統一編號下拉清單 */
@@ -179,6 +204,9 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
       const payload = Object.fromEntries(
         Object.entries(v).map(([k, val]) => [k, dp(val, k)])
       );
+
+      // Debug: 印出實際送出的 payload（檢查 Voucher_No_S/E 與 AssetType 型別）
+      console.log('[QueryFIN13040 payload]', payload);
 
       this.fin13040Service
         .queryFIN13040(payload)
