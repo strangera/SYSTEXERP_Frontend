@@ -206,19 +206,19 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     return [
       {
         field: 'AccNo',
-        header: '科目代號',
+        header: '科目代號/名稱',
         type: this.isFormCreateable ? 'dropdown' : void 0,
         required: !0,
         showClear: !1,
         options: () => this.service.accNoOptions(),
-        optionLabel: 'value',
+        optionLabel: 'templateLabel',
         optionValue: 'value',
         templateLabel: 'templateLabel',
-      },
-      {
-        field: 'AccCName',
-        header: '科目名稱',
-        format: (v, i, r) => r?.AccNo ? accMap.get(String(r.AccNo))?.label ?? '' : '',
+        format: (v, i, r) => {
+          if (!r?.AccNo) return '';
+          const accItem = accMap.get(String(r.AccNo));
+          return accItem?.['templateLabel'] ?? accItem?.label ?? '';
+        },
       },
       {
         field: 'DetailNo',
@@ -355,6 +355,20 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
+      // 驗證借貸是否平衡
+      if (!this.isBalanced()) {
+        this.messageService.errorBubble('借貸金額不平衡');
+        this.loading = false;
+        return;
+      }
+
+      // 驗證對話框是否開啟
+      if (this.displayDialog()) {
+        this.messageService.errorBubble('請先關閉對話框');
+        this.loading = false;
+        return;
+      }
+
       const { VouNo, ...d } = this.dataForm.getRawValue();
 
       if (this.tableData().length === 0) {
@@ -408,21 +422,23 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     });
   }
 
+  public onDataChange(data: FIN53010DetailTable[]): void {
+    this.logger.debug(`onDataChange:`, [data]);
+    // 更新 tableData signal
+    this.tableData.set(data);
+    // 檢查是否可儲存
+    this.rowEditCanSave.set(this.tableData().some(row => row.AccNo && row.ORG_ID) || !!this.isBalanced());
+  }
+
   public onFieldChange(event: FieldChangeEvent<FIN53010DetailTable>): void {
     this.logger.debug(`onFieldChange:`, [event]);
 
-    // 更新 tableData 並觸發重算合計
-    this.tableData.update(current => {
-      const result = [...current];
-      const index = event.index;
+    // 只處理業務邏輯，不直接修改 tableData
+    // 資料同步由 dataChange 事件處理
+    const rowData = event.rowData;
+    const index = event.index;
 
-      if (typeof index !== 'number' || index < 0 || index >= result.length) {
-        result.push({ ...event.rowData, SerNo: (result.length + 1) * 10 });
-        return result;
-      }
-
-      const rowData = result[index];
-      this.logger.debug(`rowData :`, [rowData, event.rowData]);
+    if (typeof index === 'number' && index >= 0) {
       switch (event.field) {
         case 'AccNo':
           // 自動帶入科目名稱
@@ -464,17 +480,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
       // 更新 SerNo
       rowData.SerNo = (index + 1) * 10;
-
-      // 檢查是否可儲存
-      this.rowEditCanSave.set(!!rowData.AccNo && !!rowData.ORG_ID || !!this.isBalanced());
-
-      return result;
-    });
+    }
   }
 
   public onDelete(event: (FIN53010DetailTable & EditColumnExtend)[]): void {
-    let ids: number[] = [];
-    for (let e of event) {
+    const ids: number[] = [];
+    for (const e of event) {
       if (RegExp(/^[^0-9]/).test(String(e.SerNo))) continue;
 
       const data = this.tableData();
@@ -611,12 +622,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public vouTermChange(event: Event): void {
     this.logger.debug(`vouTermChange:`, [event]);
-    this.vouTermSearchTemp.set((<HTMLInputElement>event.target).value?.toString() || '');
+    this.vouTermSearchTemp.set((event.target as HTMLInputElement).value?.toString() || '');
   }
 
   public vouTypeChange(event: '1' | '2' | '3' | void): void {
     this.logger.debug(`vouTypeChange:`, [event]);
-    this.vouTypeTemp.set(<'1' | '2' | '3' | void>event);
+    this.vouTypeTemp.set((event as '1' | '2' | '3' | void));
     this.df().VouType.patchValue(event);
   }
 }
