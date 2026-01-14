@@ -7,6 +7,7 @@ import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropd
 import saveAs from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
+import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -414,7 +415,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   }
 
   //匯入圖片檔並產生錯誤檔
-  onIMGUpload(event: FileSelectEvent) {
+  async onIMGUpload(event: FileSelectEvent) {
     // 寫入時資料必須是 國際條碼.jpg 多筆的強況則是(國際條碼-1.jpg、國際條碼-2.jpg)
     // 1. 檢查是否有檔案
     if (!event.files || event.files.length === 0) return;
@@ -427,20 +428,13 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
       formData.append('files', file);
     }
 
-    // 顯示讀取中，避免重複點擊
-    this.messageService.infoBubble('檔案上傳中...');
-
-    this.tls51070Service.uploadTLS51070Image(formData)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res) => {
-          this.messageService.successBubble(res);
-        },
-        error: (err) => {
-          console.error(err);
-          this.messageService.errorBubble('檔案上傳失敗，請稍後再試');
-        },
-      });
+    try {
+      await firstValueFrom(this.tls51070Service.uploadTLS51070Image(formData).pipe(untilDestroyed(this)));
+      this.messageService.successBubble('圖片上傳成功');
+    } catch (error) {
+      console.error('❌ 圖片上傳失敗:', error);
+      this.messageService.errorBubble('圖片上傳失敗');
+    }
   }
 
   downloadErrorFile(filePath: string) {
