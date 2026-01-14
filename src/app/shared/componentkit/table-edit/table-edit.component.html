@@ -158,19 +158,21 @@
       <td *ngFor="let col of columns; let colIndex = index" (click)="col.type ? $event.stopPropagation() : null"
         (keydown)="onCellKeydown($event, rowIndex, colIndex)"
         [style]="{ width: col.width, 'text-align': col.textAlign || 'center' }" [ngClass]="getTdClass(rowData, col)">
-        <ng-container *ngIf="col.type && getEditComponent(col.type) as componentType">
-          <ng-container *ngComponentOutlet="
-              componentType;
-              inputs: { cellInput: cellInputData(rowData, col, rowIndex) }
-            "></ng-container>
+        <ng-container *ngIf="!col.hidden || !col.hidden(rowData, rowIndex)">
+          <ng-container *ngIf="col.type && getEditComponent(col.type) as componentType">
+            <ng-container *ngComponentOutlet="
+          componentType;
+          inputs: { cellInput: cellInputData(rowData, col, rowIndex) }
+        "></ng-container>
+          </ng-container>
+          <span *ngIf="!col.type">
+            {{
+            col.format
+            ? col.format(rowData[col.field], index, rowData)
+            : rowData[col.field]
+            }}
+          </span>
         </ng-container>
-        <span *ngIf="!col.type">
-          {{
-          col.format
-          ? col.format(rowData[col.field], index, rowData)
-          : rowData[col.field]
-          }}
-        </span>
       </td>
     </tr>
   </ng-template>

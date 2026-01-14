@@ -32,7 +32,7 @@ export class TLS55040Component extends BasicQueryPageComponent<Tls55040Data> imp
     PUR_GUINo: [null, [Validators.maxLength(16)]],
     ACP_YYYYMM: [null],
   });
-  VEN_NoOptions = this.dropDown.queryPos2013({ VEN_Flag: '' });
+  VEN_NoOptions = this.dropDown.queryPos2013TltTalent();
   data: Tls55040Data[] = [];
   selectedItems: Tls55040Data[] = [];
   totalRecords = 0;

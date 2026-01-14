@@ -59,7 +59,7 @@ export class TLS57010Component extends BasicQueryPageComponent<Tls57010DataItem>
     LOGO_NoList: [null],
     ShowType: ['M', [Validators.required]],
   });
-  VEN_NoOptions = this.dropdown.queryPos2013({ VEN_Flag: '' }); // 廠商選項
+  VEN_NoOptions = this.dropdown.queryPos2013TltTalent(); // 廠商選項
   PO_StatusListOptions = getSYS1000Options('PO_Status');
   LOGO_NoListOptions = this.dropdown.queryPluLogo(); // 品牌選項
   showTypeOptions = [

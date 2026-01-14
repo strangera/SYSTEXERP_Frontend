@@ -284,27 +284,38 @@ export class TableEditComponent implements OnChanges {
   deleteRow(selectedItems: any) {
     if (this.disabled) { return; }
 
-    // 呼叫 Service 執行刪除邏輯
-    const { fullData, cleanData } = this.dataService.deleteRows(
-      selectedItems,
-      this.dataKey,
-      this.dataStatusField,
-      this.dataStatusValue,
-      this.canInsert,
-      this.keepDeletedData
-    );
-
-    this.delete.emit(fullData); // 傳遞包含 Deleted 狀態的完整資料
-    this.selectedItems = [];
-
-    // 2. 【關鍵檢查點 A】: 刪除後，如果內部資料為空，插入一筆新增行
-    if (this._tableData.length === 0 && this.canInsert) {
-      this.insertRow();
+    // 檢查是否有選中的項目
+    if (!selectedItems || selectedItems.length === 0) {
+      return;
     }
-    this._calculatedFooterData = this.calculateFooterData();
-    // 3. 發射資料給父層
-    this.dataChange.emit(cleanData);
-    this.cdr.markForCheck();
+
+    // 顯示確認對話框
+    this.messageService.confirm({
+      header: `是否確認刪除 ${selectedItems.length} 筆資料？`,
+      accept: () => {
+        // 呼叫 Service 執行刪除邏輯
+        const { fullData, cleanData } = this.dataService.deleteRows(
+          selectedItems,
+          this.dataKey,
+          this.dataStatusField,
+          this.dataStatusValue,
+          this.canInsert,
+          this.keepDeletedData
+        );
+
+        this.delete.emit(fullData); // 傳遞包含 Deleted 狀態的完整資料
+        this.selectedItems = [];
+
+        // 2. 【關鍵檢查點 A】: 刪除後，如果內部資料為空，插入一筆新增行
+        if (this._tableData.length === 0 && this.canInsert) {
+          this.insertRow();
+        }
+        this._calculatedFooterData = this.calculateFooterData();
+        // 3. 發射資料給父層
+        this.dataChange.emit(cleanData);
+        this.cdr.markForCheck();
+      }
+    });
   }
   /** // !!! 整筆欄位使用，父層使用方法：
   / * // !!! @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;

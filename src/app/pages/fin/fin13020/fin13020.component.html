@@ -7,6 +7,7 @@
       label="{{ 'create' | translate }}"
     ></app-button>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
@@ -28,6 +29,7 @@
               [submitted]="submitted"
             ></app-input-text-range>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="字軌"
@@ -35,6 +37,7 @@
               [submitted]="submitted"
             ></app-input-text>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range
               label="發票號碼"
@@ -43,6 +46,7 @@
               [submitted]="submitted"
             ></app-input-text-range>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
@@ -65,14 +69,14 @@
             ></app-dropdown>
           </div>
 
+          <!-- 🔁 申報年月改用 app-year-month -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              controlName="INV_DeclareYM"
-              calendarType="dateMonthOne"
+            <app-year-month
               label="申報年月"
               [control]="queryForm.controls.INV_DeclareYM"
               [submitted]="submitted"
-            ></app-calendar>
+              [evenMonth]="true"
+            ></app-year-month>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -83,6 +87,7 @@
               [submitted]="submitted"
             ></app-input-text-range>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range
               label="傳票編號"
@@ -92,6 +97,7 @@
             ></app-input-text-range>
           </div>
         </div>
+
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
@@ -104,8 +110,8 @@
 </div>
 
 <div class="card">
-  <app-table
-    tableKey="FIN13020"
+  <app-table2
+  tableKey="FIN13020"
     [data]="data"
     [columns]="columns"
     dataKey="id"
@@ -118,6 +124,7 @@
     [showManage]="true"
     [showDelete]="true"
     [showCheckBox]="true"
+    (delete)="onDelete($event)"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-  ></app-table>
+  ></app-table2>
 </div>

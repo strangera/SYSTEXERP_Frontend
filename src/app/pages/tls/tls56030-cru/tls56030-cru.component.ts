@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import {
   FormArray,
@@ -9,42 +10,44 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { NgIf } from '@angular/common';
-import { finalize } from 'rxjs';
-import { map, debounceTime } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
+import { debounceTime, map } from 'rxjs/operators';
 
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { Sys0110Service } from '@service/api/sys/sys0110.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { PanelModule } from 'primeng/panel';
 import {
+  IPOS2004DetailData,
   IQueryPOS2004DetailRequest,
   IQueryPOS2004DetailResponse,
   Tls52010Service,
-  IPOS2004DetailData,
 } from '../../../service/api/tls/tls52010.service';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import {
   DropdownTableComponent,
   FieldsConfig,
 } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
-import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import {
   Column,
   createPaginationConfig,
   RowEditSaveEvent,
 } from '../../../shared/componentkit/table/table.model';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Sys0110Service } from '@service/api/sys/sys0110.service';
 import { Tls56030Service } from './../../../service/api/tls/TLS56030.service';
-import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 
 @UntilDestroy()
 @Component({
@@ -64,6 +67,7 @@ import { InputTextareaComponent } from '@shared/componentkit/input-textarea/inpu
     NgIf,
     TranslateModule,
     TableComponent,
+    TableEditComponent,
     DialogComponent,
     DropdownTableComponent,
     InputTextareaComponent
@@ -100,10 +104,14 @@ export class TLS56030CRUComponent
   // -------------------- Table (main) --------------------
   data: IPOS2004DetailData[] = [];
   selectedItems: IPOS2004DetailData[] = [];
-  columns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品編號' },
-    { field: 'PLU_No', header: '國際條碼' },
+  editColumns: EditColumn[] = [
+    {
+      field: 'PLU_No', header: '國際條碼', width: '150px', type: 'input',
+      onBlur: (rowData: IPOS2004DetailData, value: string, col: EditColumn, index: number) => this.onPLU_NoBlur(rowData, value, col, index),
+      validate: [validateRequired]
+    },
     { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'PLU_MagNo', header: '商品編號' },
     { field: 'PLU_SalePrc', header: '商品售價' },
     { field: 'PLU_StockTaxType', header: '目前庫存' },
     { field: 'RPD_SaleAmt', header: '領退數量' },
@@ -285,7 +293,7 @@ export class TLS56030CRUComponent
   }
 
   // -------------------- Totals --------------------
-  private calculateTotals(): void {
+  public calculateTotals(): void {
     const totalQuantity = this.data.reduce((sum, item) => sum + (item.POD_SaleAmt || 0), 0);
     const totalPrice = this.data.reduce(
       (sum, item) => sum + (item.POD_SaleAmt || 0) * (item.PLU_SalePrc || 0),
@@ -294,6 +302,17 @@ export class TLS56030CRUComponent
     console.log(`Total Quantity: ${totalQuantity}`);
     console.log(`Total Price: ${totalPrice}`);
   }
+
+  // -------------------- Row Validation --------------------
+  public validateEntireRow = (rowData: IPOS2004DetailData): { isValid: boolean; errorMessage: string } => {
+    const hasDuplicatePLU_MagNo = this.data.some((item: IPOS2004DetailData) =>
+      item.PLU_MagNo === rowData.PLU_MagNo && item._TABLE_KEY !== rowData._TABLE_KEY
+    );
+    if (hasDuplicatePLU_MagNo) {
+      return { isValid: false, errorMessage: '商品管理編號重複' };
+    }
+    return { isValid: true, errorMessage: '' };
+  };
 
   // -------------------- Payload Builder --------------------
   private buildPayload(): any {
@@ -413,6 +432,93 @@ export class TLS56030CRUComponent
         this.opTotalRecords = results.TotalCount;
         this.opLoading = false;
       });
+  }
+
+  onPLU_NoBlur(rowData: IPOS2004DetailData, value: string, col: EditColumn, index: number) {
+    const logoNo = this.dataForm.controls.LOGO_No.value;
+    if (!logoNo || !value) {
+      return;
+    }
+
+    const body = {
+      PageSize: 1,
+      PageIndex: 1,
+      SortBy: [],
+      queryNo: value,
+      PLU_Name: '',
+      LOGO_No: logoNo,
+      HOS_No: this.dataForm.controls.HOS_No.value,
+      VEN_No: this.dataForm.controls.VEN_No?.value ?? null,
+    } as IQueryPOS2004DetailRequest;
+
+    setTimeout(() => {
+      if (!this.dataForm.controls.LOGO_No.value || !value) return;
+      this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+        if (results.Data && results.Data.length > 0) {
+          const newData = results.Data[0];
+          const buyPrc = newData.PLU_SalePrc_UNI || 0;
+          const salePrc = newData.PLU_SalePrc || 0;
+          const taxType = newData.PLU_StockTaxType;
+          const subQty = 1;
+
+          const buyNet = Math.round(subQty * buyPrc);
+          const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0;
+          const buyAmt = buyNet + buyTax;
+          const saleAmt = Math.round(subQty * salePrc);
+          const saleTax = newData.PLU_TaxType === '1' ? Math.round((saleAmt || 0) / 21) : 0;
+
+          const updatedRow: IQueryPOS2004DetailResponse = {
+            ...newData,
+            id: 0,
+            PLU_MagNo: newData.PLU_MagNo,
+            PLU_Name: newData.PLU_Name,
+            PLU_No: newData.PLU_No,
+            UNIT_NAME: newData.UNIT_NAME,
+            PLU_BoxQty: newData.PLU_BoxQty || 0,
+            PLU_StockTaxType: newData.PLU_StockTaxType,
+            PLU_TaxType: newData.PLU_TaxType,
+            PLU_SalePrc_UNI: buyPrc,
+            PLU_SalePrc: salePrc,
+            POD_SubQty: subQty,
+            POD_BuyNet: buyNet,
+            POD_BuyTax: buyTax,
+            POD_BuyAmt: buyAmt,
+            POD_SaleAmt: saleAmt,
+            POD_SaleTax: saleTax,
+            POD_Remark: ''
+          } as any;
+
+          const currentRow = this.data[index];
+          if (currentRow) {
+            Object.assign(currentRow, updatedRow);
+          }
+          this.data = [...this.data];
+          this.calculateTotals();
+          this.cdr.detectChanges();
+        } else {
+          this.notificationService.errorBubble('查無該商品資訊');
+          const currentRow = this.data[index];
+          if (currentRow) {
+            Object.assign(currentRow, {
+              PLU_MagNo: '',
+              PLU_Name: '',
+              PLU_No: '',
+              UNIT_NAME: '',
+              PLU_BoxQty: 0,
+              PLU_StockTaxType: '',
+              PLU_TaxType: '',
+              PLU_SalePrc_UNI: 0,
+              PLU_SalePrc: 0,
+              RPD_SaleAmt: 0,
+              POD_BuyNet: 0,
+            });
+          }
+          this.data = [...this.data];
+          this.calculateTotals();
+          this.cdr.detectChanges();
+        }
+      });
+    }, 50);
   }
 
   // -------------------- Dialog Save --------------------

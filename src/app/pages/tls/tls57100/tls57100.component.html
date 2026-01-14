@@ -8,13 +8,14 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉庫代碼/名稱" controlName="HOS_No"
-            [options]="warehouseOptions" optionLabel="label" optionValue="No" [control]="queryForm.controls.HOS_No"
-            [submitted]="submitted" />
+            [options]="warehouseOptions | async" optionLabel="label" optionValue="No"
+            [control]="queryForm.controls.HOS_No" [submitted]="submitted" />
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="品牌代碼/名稱" controlName="LOGO_No"
-            [options]="brandCodeOptions" optionLabel="label" optionValue="No" [control]="queryForm.controls.LOGO_No"
+            [options]="brandCodeOptions | async" optionLabel="label" optionValue="No"
+            [control]="queryForm.controls.LOGO_No" [submitted]="submitted" />
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商編號/名稱" controlName="VEN_No"
+            [options]="vendorOptions | async" optionLabel="label" optionValue="No" [control]="queryForm.controls.VEN_No"
             [submitted]="submitted" />
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商編號/名稱" controlName="VEN_No" [options]="vendorOptions"
-            optionLabel="label" optionValue="No" [control]="queryForm.controls.VEN_No" [submitted]="submitted" />
           <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
             [startControl]="queryForm.controls.ODM_Date_Start" [endControl]="queryForm.controls.ODM_Date_End"
             [submitted]="submitted" />

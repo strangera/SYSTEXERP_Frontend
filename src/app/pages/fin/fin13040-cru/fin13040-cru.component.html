@@ -18,9 +18,9 @@
         </div>
       </div>
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
+        <!-- <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="字軌" [control]="dataForm.controls.GUI_Track" [submitted]="submitted"></app-input-text>
-        </div>
+        </div> -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="發票號碼" [control]="dataForm.controls.INV_GUINumber"
             [submitted]="submitted"></app-input-text>
@@ -42,8 +42,8 @@
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text-range label="傳票號碼 " [startControl]="dataForm.controls.startVoucher_No"
-            [endControl]="dataForm.controls.endVoucher_No"></app-input-text-range>
+          <app-input-text label="傳票號碼 " [control]="dataForm.controls.Voucher_No"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="資產註記" [control]="dataForm.controls.AssetType" [options]="AssetNoteOptions"

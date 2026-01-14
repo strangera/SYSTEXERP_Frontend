@@ -3,6 +3,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS11040Request, ASS11040Response, Ass11040Service } from '@service/api/ass/ass11040.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -35,6 +36,10 @@ export class ASS11040Component extends BasicQueryPageComponent<ASS11040Response>
     maintenanceMethod: [null], // 保養方式
     illustrate: [null], // 說明
   });
+
+  itemCategoryOptions = getSYS1000Options('PROD_TYPE');
+  itemUnitOptions = getSYS1000Options('UNIT');
+  packageUnitOptions = getSYS1000Options('PACK_UNIT');
   bigCategoryCodeOptions: any[] = [
     { value: 1, label: 'A/裝潢工程' },
     { value: 2, label: 'B/其他工程' },
@@ -55,23 +60,15 @@ export class ASS11040Component extends BasicQueryPageComponent<ASS11040Response>
     { value: 25, label: '機電消防工程' },
     { value: 22, label: '電子產品及零件' },
   ];
-  itemCategoryOptions: any[] = [
-    { value: 1, label: '資產' },
-    { value: 2, label: '列管品' },
-    { value: 3, label: '耗材' },
-    { value: 4, label: '房屋和建築設備' },
-    { value: 5, label: '其他資產(無形)' },
-    { value: 6, label: '不領用之耗材' },
+
+  warrantyMethodOptions: any[] = [
+    { value: 0, label: '廠商' },
+    { value: 1, label: '公司' },
   ];
-  itemUnitOptions: any[] = [];
-  packageUnitOptions: any[] = [
-    { value: 1, label: '箱' },
-    { value: 2, label: '包' },
-    { value: 3, label: '袋' },
-    { value: 4, label: '束' },
-    { value: 5, label: '盒' },
+  maintenanceMethodOptions: any[] = [
+    { value: 0, label: '廠商' },
+    { value: 1, label: '公司' },
   ];
-  warrantyMethodOptions: any[] = [];
   data: ASS11040Response[] = [];
   selectedRows: ASS11040Response[] = [];
   totalRecords = 0;
