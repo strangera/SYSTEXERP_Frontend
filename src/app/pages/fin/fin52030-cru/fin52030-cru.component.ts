@@ -120,7 +120,10 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
         UPD_Date: date
       });
 
-    this.tableLoading.set(!1);
+    // 只有在新增模式時才關閉 loading，檢視模式的 loading 由 dataEffect 控制
+    if (this.isFormCreateable) {
+      this.tableLoading.set(!1);
+    }
   }, { allowSignalWrites: !0 });
 
   public readonly dataEffect = effect(() => {
@@ -152,6 +155,8 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
     this.logger.debug(`dataEffect:`, [data, this.dataForm.getRawValue(), this.tableData()]);
     if (!accNoMap.size || !vendorMap.size || !usrMap.size || !noteDescMap.size) return;
+    // 資料已載入完成，關閉 loading
+    this.tableLoading.set(!1);
     this.dataEffect.destroy();
   }, { allowSignalWrites: !0 });
 
