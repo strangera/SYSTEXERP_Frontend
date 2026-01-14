@@ -132,6 +132,7 @@ export class TLS57140Component extends BasicQueryPageComponent<QueryTLS57140Deta
     if (showType === QueryTLS57140ShowType.Summary) {
       // 彙總模式
       this.columns = [
+        { field: 'LOGO_No', header: '品牌代碼' },
         { field: 'LOGO_NAME', header: '品牌' },
         { field: 'STK_SaleQty', header: '銷售數量', format: formatAmount },
         { field: 'STK_PriorQty', header: '期初存貨', format: formatAmount },
@@ -141,6 +142,7 @@ export class TLS57140Component extends BasicQueryPageComponent<QueryTLS57140Deta
     } else if (showType === QueryTLS57140ShowType.Detail) {
       // 明細模式
       this.columns = [
+        { field: 'LOGO_No', header: '品牌代碼' },
         { field: 'LOGO_NAME', header: '品牌' },
         { field: 'PLU_MagNo', header: '商品管理編號' },
         { field: 'PLU_NO', header: '國際條碼' },
@@ -171,8 +173,8 @@ export class TLS57140Component extends BasicQueryPageComponent<QueryTLS57140Deta
         PageIndex: 1,
         PageSize: formValue.PageSize || 30,
         SortBy: formValue.ShowType === QueryTLS57140ShowType.Summary
-          ? [{ field: 'LOGO_NAME', order: 1 }]
-          : [{ field: 'LOGO_NAME', order: 1 }, { field: 'PLU_MagNo', order: 1 }],
+          ? [{ field: 'LOGO_No', order: 1 }]
+          : [{ field: 'LOGO_No', order: 1 }, { field: 'PLU_MagNo', order: 1 }],
       };
 
       this.tls57140Service.queryTLS57140(requestBody).pipe(

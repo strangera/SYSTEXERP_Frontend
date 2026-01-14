@@ -1,7 +1,7 @@
 import { HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { Observable, Subscription, tap } from 'rxjs'; // 引入必要的 RxJS 相關
+import { Observable, tap } from 'rxjs'; // 引入必要的 RxJS 相關
 
 @Injectable({
   providedIn: 'root'
@@ -21,30 +21,25 @@ export class FileExportService {
   public executeFileExport(
     exportObservable: Observable<HttpResponse<Blob>>,
     fileExtension: string,
-    btnLoadingSetter: (isLoading: boolean) => void // 使用函數來設定元件的狀態
-  ): Subscription {
+    btnLoadingSetter?: (isLoading: boolean) => void // 使用函數來設定元件的狀態
+  ): Observable<HttpResponse<Blob>> {
 
-    btnLoadingSetter(true); // 開始加載
+    if (btnLoadingSetter) {
+      btnLoadingSetter(true);
+    }
 
-    return exportObservable
-      .pipe(
-        // Finalize 應該在 service 中處理，確保無論成功失敗都會關閉 loading
-        tap({
-          // 這裡沒有 untilDestroyed，因為 Service 不依賴 Component 生命周期，
-          // 但 Component 調用時必須自行處理取消訂閱 (例如: 使用 untilDestroyed(this))
-          finalize: () => btnLoadingSetter(false)
-        })
-      )
-      .subscribe({
+    return exportObservable.pipe(
+      tap({
         next: (response: HttpResponse<Blob>) => {
           this.handleFileExport(response, fileExtension);
         },
         error: (err) => {
-          // 可以在此處加入更詳細的錯誤處理邏ary
           this.messageService.errorBubble('檔案匯出失敗，請重試或聯繫管理員。');
           console.error('File export error:', err);
-        }
-      });
+        },
+        finalize: () => btnLoadingSetter?.(false)
+      })
+    );
   }
 
   // 處理檔案匯出的通用邏輯
@@ -54,7 +49,7 @@ export class FileExportService {
     const blob = response.body;
 
     if (blob && blob.size > 0) {
-      // 下載邏輯
+      // 執行下載邏輯
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -63,7 +58,11 @@ export class FileExportService {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+
+      // --- 在這裡噴成功訊息 ---
+      this.messageService.successBubble('檔案已成功下載！');
     } else {
+      // 雖然 API 回傳 200，但沒有內容
       this.messageService.warnBubble('沒有找到符合條件的資料，無法生成報表。');
     }
   }

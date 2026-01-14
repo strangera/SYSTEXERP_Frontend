@@ -122,9 +122,7 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
   }
   saveDialog() {
     this.btnLoading.set(true);
-    this.exportLabelService.ExportLabel_Other(this.dialogData).pipe(untilDestroyed(this), finalize(() => { this.btnLoading.set(false); this.dialogVisible.set(false); })).subscribe(() => {
-      this.messageService.successBubble('標籤檔案已成功下載！');
-    });
+    this.exportLabelService.ExportLabel_Other(this.dialogData).pipe(untilDestroyed(this), finalize(() => { this.btnLoading.set(false); this.dialogVisible.set(false); })).subscribe();
   }
   excelColumns: ExcelColumn[] = [
     { field: 'VEN_No', header: '廠商編號', excelFormat: '@' },
