@@ -114,38 +114,37 @@
                          [submitted]="submitted"></app-radiobutton>
       </div>
 
-
       @if (!isFormReadable) {
-      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel"
-                    [form]="dataForm"></app-button>
-        <app-button btnType="submit"
-                    [disabled]="!dataForm.valid || !isBalanced() || displayDialog()"
-                    [loading]="loading"></app-button>
-      </div>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="cancel" [form]="dataForm"></app-button>
+          <app-button btnType="submit" [loading]="loading"></app-button>
+        </div>
       }
     </form>
   </p-panel>
 </div>
 
-
 <div class="card">
   <div class="grid p-fluid">
     <div class="col-12">
-      <p-panel header="資料"
-               class="line-height-3 m-0 mb-3">
-        <app-table-edit [showCheckBox]="isFormCreateable"
-                        [showReorder]="isFormCreateable"
-                        [disabled]="!isFormCreateable"
-                        (fieldChange)="onFieldChange($event)"
-                        (delete)="onDelete($event)"
-                        (rowReorderData)="onRowReorder($event)"
-                        [data]="tableData()"
-                        [defaultInsertData]="defaultInsertData()"
-                        [footerData]="footerData()"
-                        [loading]="tableLoading()"
-                        [tableKey]="'FIN52030_detail'"
-                        [columns]="columns()"></app-table-edit>
+      <p-panel header="資料" class="line-height-3 m-0 mb-3">
+        <app-table-edit
+          [showCheckBox]="isFormCreateable"
+          [showReorder]="isFormCreateable"
+          [disabled]="!isFormCreateable"
+          (fieldChange)="onFieldChange($event)"
+          (dataChange)="onDataChange($event)"
+          (rowReorderData)="onRowReorder($event)"
+          [data]="tableData()"
+          [defaultInsertData]="defaultInsertData()"
+          [footerData]="footerData()"
+          [loading]="tableLoading()"
+          [tableKey]="'FIN52030_detail'"
+          [tableRequired]="true"
+          [columns]="columns()"
+        ></app-table-edit>
       </p-panel>
     </div>
   </div>
