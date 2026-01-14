@@ -548,6 +548,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls57160', loadComponent: () => import('./tls57160/tls57160.component').then(m => m.TLS57160Component), data: { progNo: 'TLS57160' } },
   // 存貨評價分析表
   { path: 'tls57170', loadComponent: () => import('./tls57170/tls57170.component').then(m => m.TLS57170Component), data: { progNo: 'TLS57170' } },
+  // 存貨評價分析表
+  { path: 'tls57190', loadComponent: () => import('./tls57190/tls57190.component').then(m => m.TLS57190Component), data: { progNo: 'TLS57190' } },
   // 大分類維護作業 CRU
   { path: 'tls51010cru', loadComponent: () => import('./tls51010-cru/tls51010-cru.component').then(m => m.TLS51010CRUComponent), data: { progNo: 'TLS51010' } },
   // 中分類維護作業 CRU
