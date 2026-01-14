@@ -34,7 +34,7 @@ export const GUI_DINGTYPE_OPTIONS = [
  * FIX：
  * 補正一致邏輯，統一所有計算方式
  */
-function calculateNetTax(row: Record<string, unknown>) {
+export function calculateNetTax(row: Record<string, unknown>) {
   // 從 row 取得必要的欄位值
   const taxType = String(row['PLU_TaxType'] ?? ''); // 稅別
   const zeroTax = String(row['INV_NoneTax'] ?? '0'); // 零稅註記
@@ -141,11 +141,8 @@ export const COLUMNS_NATURAL_VIEW: Column[] = [
 ];
 
 // ===== 換開發票欄位定義 =====
-
 /** 新增模式用的換開發票欄位（用於 table-edit） */
 export const COLUMNS_CHANGE_EDIT: EditColumn[] = [
-  { field: 'TXN_Date', header: '發票日期', type: 'date', validate: [validateRequired], width: '150px', },
-  { field: 'TXN_GUIPaper', header: '發票聯式', type: 'dropdown', options: GUI_PAPER_OPTIONS, optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
   { field: 'PLU_TaxType', header: '稅別', type: 'dropdown', options: getSYS1000Options('PLU_TaxType'), calculate: (row) => calculateNetTax(row), optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
   { field: 'TXN_SaleTax', header: '應稅發票金額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: (v: any, i?: number, row?: any) => String(row?.['PLU_TaxType']) === '0', minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
   { field: 'TXN_SaleNoTax', header: '免稅發票金額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: (v: any, i?: number, row?: any) => String(row?.['PLU_TaxType']) === '1', minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },

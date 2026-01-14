@@ -7,6 +7,8 @@ import { TLS2j030Service } from '@service/api/tls/tls2j030.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { DropdownModule } from 'primeng/dropdown';
 import { PanelModule } from 'primeng/panel';
@@ -20,6 +22,7 @@ import {
   COLUMNS_DETAIL_VIEW,
   COLUMNS_NATURAL_EDIT,
   COLUMNS_NATURAL_VIEW,
+  GUI_PAPER_OPTIONS,
   TLS2J030Data,
   TLS2J030Source
 } from '../tls2j030/tls2j030.model';
@@ -60,7 +63,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   // 欄位定義 (直接使用 model 檔案中的常數)
   columnsnatural = COLUMNS_NATURAL_EDIT;
   columnsNaturalView = COLUMNS_NATURAL_VIEW;
-  columnschange = COLUMNS_CHANGE_EDIT;
+  columnschange: EditColumn[] = [];
   columnsChangeView = COLUMNS_CHANGE_VIEW;
   columnsdetail = COLUMNS_DETAIL_EDIT;
   columnsDetailView = COLUMNS_DETAIL_VIEW;
@@ -81,7 +84,28 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   ) {
     super();
   }
+  private updateColumnsChange(): void {
+    // 基礎欄位
+    let baseColumns: EditColumn[] = [
+      { field: 'TXN_Date', header: '發票日期', type: 'date', validate: [validateRequired], width: '150px' },
+      {
+        field: 'TXN_GUIPaper', header: '發票聯式', type: 'dropdown', options: GUI_PAPER_OPTIONS,
+        optionLabel: 'label', optionValue: 'value', validate: [validateRequired],
+        onChange: () => this.updateColumnsChange(),
+      },
+    ];
+    // 判斷是否要顯示發票號碼
+    const paperValue = String(this.changeEditData[0]?.TXN_GUIPaper ?? '');
+    const showGuiNo = ['2', '3'].includes(paperValue);
+    if (showGuiNo) {
+      baseColumns.push({ field: 'TXN_GUINo', header: '發票號碼', type: 'input', maxLength: 10, validate: [validateRequired], });
+    }
 
+    // 加入剩餘欄位
+    baseColumns = [...baseColumns, ...COLUMNS_CHANGE_EDIT]
+
+    this.columnschange = baseColumns;
+  }
   // ===== 生命周期與初始化 =====
 
   ngOnInit(): void {
@@ -98,6 +122,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       // 使用 setTimeout 確保 EditTable 相關物件已渲染
       setTimeout(() => this.initializeEditData());
     }
+    this.updateColumnsChange();
   }
 
   /**
@@ -453,6 +478,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     const pos2101List = [{
       TXN_Date: changeItem.TXN_Date ? new Date(changeItem.TXN_Date as string).toISOString() : new Date().toISOString(),
       ECR_No: this.changeEcrNo,
+      TXN_GUINo: changeItem.TXN_GUIPaper === '2' || changeItem.TXN_GUIPaper === '3' ? changeItem.TXN_GUINo || '' : '', // 根據發票聯式決定是否傳入發票號碼
       TXN_GUIPaper: changeItem.TXN_GUIPaper || '',
       PLU_TaxType: changeItem.PLU_TaxType || '',
       TXN_SaleTax: changeItem.TXN_SaleTax || 0,

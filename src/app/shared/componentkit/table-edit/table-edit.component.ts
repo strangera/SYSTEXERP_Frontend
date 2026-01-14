@@ -308,7 +308,7 @@ export class TableEditComponent implements OnChanges {
     // 新增邏輯：自動清空因隱藏而失效的欄位值
     this.columns.forEach(column => {
       // 如果該欄位有定義 hidden 邏輯，且執行結果為 true (隱藏)
-      if (column.hidden && column.hidden(rowData, index)) {
+      if ((typeof column.hidden === 'function' ? column.hidden(rowData, index) : column.hidden) === true) {
         // 且該欄位目前還有值，則清空它
         if (rowData[column.field] !== null && rowData[column.field] !== undefined) {
           rowData[column.field] = null;
