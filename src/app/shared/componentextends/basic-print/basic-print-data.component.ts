@@ -91,7 +91,7 @@ export abstract class BasicPrintDataComponent {
       export$.pipe(untilDestroyed(this)),
       '.pdf',
       (isLoading) => this.exportDialog = isLoading
-    );
+    ).subscribe();
   }
   exportExcelDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string, Conditions?: any): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string; // 取得程式編號
@@ -130,7 +130,7 @@ export abstract class BasicPrintDataComponent {
     };
     this.tableService.exportExcel(body)
     const export$ = this.tableService.exportExcel(body)
-    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.exportDialog = isLoading);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.exportDialog = isLoading).subscribe();
   }
   toggleVisibility(): void {
     this.IsPrint = !this.IsPrint;

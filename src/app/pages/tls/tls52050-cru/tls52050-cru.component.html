@@ -12,8 +12,8 @@
           [options]="brandOptions | async" optionLabel="label" optionValue="value" [control]="dataForm.controls.LOGO_No"
           [submitted]="submitted" [helpMsg]="isFormEditable && data.length ? '已有明細資料，不可修改品牌':''"></app-dropdown>
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商編號/名稱" controlName="VEN_No"
-          [options]="vendorOptions | async" optionLabel="label" optionValue="VEN_No"
-          [control]="dataForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>
+          [options]="vendorOptions | async" optionLabel="label" optionValue="value" [control]="dataForm.controls.VEN_No"
+          [submitted]="submitted"></app-dropdown>
         <app-input-textarea class="col-12 md:col-6 lg:col-4" label="進價售價變價單說明" controlName="MAM_Remark"
           [control]="dataForm.controls.MAM_Remark" [submitted]="submitted"></app-input-textarea>
         <app-calendar-range class="col-12 lg:col-8" startLabel="生效日期(起)" endLabel="生效日期(迄)"
