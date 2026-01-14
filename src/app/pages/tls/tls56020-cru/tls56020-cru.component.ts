@@ -1,3 +1,4 @@
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { Tls56020Service } from '../../../service/api/tls/tls56020.service';
 
 import { AsyncPipe, NgClass, NgIf } from '@angular/common';
@@ -89,9 +90,15 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   fullWarehouseOptions: Option[] = [];
   filteredWarehouseOptions: Option[] | null = null;
   editColumns: EditColumn[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號' },
+    {
+      field: 'PLU_No', header: '國際條碼',
+      width: '150px',
+      type: 'input',
+      onBlur: (rowData: IPOS2004DetailData, value: string, col: EditColumn, index: number) => this.onPLU_MagNoBlur(rowData, value, col, index),
+      validate: [validateRequired],
+    },
     { field: 'PLU_Name', header: '商品名稱' },
-    { field: 'PLU_No', header: '國際條碼' },
+    { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Unit', header: '單位' },
     { field: 'UNIT_NAME', header: '商品單位' },
     { field: 'PLU_BoxQty', header: '包裝入數' },

@@ -22,7 +22,7 @@ import { Column, createPaginationConfig } from '../../../shared/componentkit/tab
 })
 export class FIN54045Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    vendorSName: [''], //反年結
+    vendorSName: [{ value: '', disabled: true }], //反年結（預設 disabled，會由後端填入並控制狀態）
     ...createPaginationConfig([{ field: 'cls_date', order: -1 }])
   });
 
@@ -61,6 +61,16 @@ export class FIN54045Component extends BasicQueryPageComponent<any> implements O
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+
+          // 若後端回傳反年結欄位，填入並 disable；否則啟用給使用者輸入
+          const respAny = response as any;
+          const vendorFromResp = (respAny?.VendorSName ?? respAny?.vendorSName ?? respAny?.Data?.VendorSName ?? respAny?.Data?.vendorSName) as string | undefined;
+          if (vendorFromResp) {
+            this.queryForm.patchValue({ vendorSName: vendorFromResp });
+            this.queryForm.get('vendorSName')?.disable();
+          } else {
+            this.queryForm.get('vendorSName')?.enable();
+          }
         });
     });
   }
