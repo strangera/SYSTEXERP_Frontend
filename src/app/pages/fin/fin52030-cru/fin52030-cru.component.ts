@@ -139,7 +139,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       VouType: data.VouType,
     });
 
-    this.tableData.set(data.Details.map(v => ({
+    this.tableData.set(data.Details.map((v, index) => ({
       ...v,
       AccAmtC: v.AccDC === 'C' ? v.AccAmt : void 0,
       AccAmtD: v.AccDC === 'D' ? v.AccAmt : void 0,
@@ -147,6 +147,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
         ?? usrMap.get(String(v.DetailNo))?.label,
       NoteDesc: v.NoteDesc || this.service.noteDescMap().get(String(v.AccNo))?.label,
+      SerNo: (index + 1) * 10,
     })));
 
     this.logger.debug(`dataEffect:`, [data, this.dataForm.getRawValue(), this.tableData()]);
@@ -185,7 +186,10 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     ).subscribe({
       next: res => {
         if (res.Status !== '0000') return;
-        this.tableData.set(res.Data?.Details || []);
+        this.tableData.set((res.Data?.Details || []).map((v, index) => ({
+          ...v,
+          SerNo: (index + 1) * 10,
+        })));
       },
     });
   }, { allowSignalWrites: !0 });
