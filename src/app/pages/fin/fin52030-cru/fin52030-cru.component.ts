@@ -120,7 +120,10 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
         UPD_Date: date
       });
 
-    this.tableLoading.set(!1);
+    // 只有在新增模式時才關閉 loading，檢視模式的 loading 由 dataEffect 控制
+    if (this.isFormCreateable) {
+      this.tableLoading.set(!1);
+    }
   }, { allowSignalWrites: !0 });
 
   public readonly dataEffect = effect(() => {
@@ -139,7 +142,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       VouType: data.VouType,
     });
 
-    this.tableData.set(data.Details.map(v => ({
+    this.tableData.set(data.Details.map((v, index) => ({
       ...v,
       AccAmtC: v.AccDC === 'C' ? v.AccAmt : void 0,
       AccAmtD: v.AccDC === 'D' ? v.AccAmt : void 0,
@@ -147,10 +150,13 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
         ?? usrMap.get(String(v.DetailNo))?.label,
       NoteDesc: v.NoteDesc || this.service.noteDescMap().get(String(v.AccNo))?.label,
+      SerNo: (index + 1) * 10,
     })));
 
     this.logger.debug(`dataEffect:`, [data, this.dataForm.getRawValue(), this.tableData()]);
     if (!accNoMap.size || !vendorMap.size || !usrMap.size || !noteDescMap.size) return;
+    // 資料已載入完成，關閉 loading
+    this.tableLoading.set(!1);
     this.dataEffect.destroy();
   }, { allowSignalWrites: !0 });
 
@@ -185,7 +191,10 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     ).subscribe({
       next: res => {
         if (res.Status !== '0000') return;
-        this.tableData.set(res.Data?.Details || []);
+        this.tableData.set((res.Data?.Details || []).map((v, index) => ({
+          ...v,
+          SerNo: (index + 1) * 10,
+        })));
       },
     });
   }, { allowSignalWrites: !0 });
