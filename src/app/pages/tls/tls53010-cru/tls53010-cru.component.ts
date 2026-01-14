@@ -58,7 +58,7 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
     PST_No: ['系統自動產生'], // 盤點單編號
     HOS_No: [null, Validators.required], // 倉別代碼 - 必填
     LOGO_No: [null, Validators.required], // 品牌代碼 - 必填
-    PST_Date: [this.yesterday.toString(), Validators.required], // 盤點基準日期 - 必填
+    PST_Date: [this.yesterday, Validators.required], // 盤點基準日期 - 必填
     PST_Remark: [''], // 盤點備註
   });
 
@@ -240,6 +240,8 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
             this.messageService.confirm({
               header: `新增全品項成功`,
               message: `盤點單號：${res.Data}`,
+              acceptLabel: '返回列表',
+              rejectLabel: '繼續新增',
               accept: () => {
                 this.queryStateService.setQueryState(this.ProgNo, {
                   PST_No: res.Data
