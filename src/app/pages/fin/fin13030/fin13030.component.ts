@@ -27,6 +27,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 
 @Component({
@@ -34,7 +35,21 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
   templateUrl: './fin13030.component.html',
   styleUrl: './fin13030.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextRangeComponent, CalendarRangeComponent, InputTextComponent, InputNumberRangeComponent, TableComponent, TranslateModule, MultiSelectComponent]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextRangeComponent,
+    CalendarRangeComponent,
+    InputTextComponent,
+    InputNumberRangeComponent,
+    TableComponent,
+    TranslateModule,
+    MultiSelectComponent,
+    YearMonthComponent
+  ]
 })
 export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -42,10 +57,10 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
     INV_GUINo_E: ['', [Validators.maxLength(10)]], // 發票號碼_迄
     INV_GUIDate_B: [null], // 發票日期_起
     INV_GUIDate_E: [null], // 發票日期_迄
-    INV_YM_B: [null, Validators.required], // 資料所屬年月_起
-    INV_YM_E: [null, Validators.required], // 資料所屬年月_迄
-    INV_DeclareYM_B: [null, [this.validationService.oddMonthValidator, Validators.required]], // 申報年月_起
-    INV_DeclareYM_E: [null, [this.validationService.oddMonthValidator, Validators.required]], // 申報年月_迄
+    INV_YM_B: [null], // 資料所屬年月_起
+    INV_YM_E: [null], // 資料所屬年月_迄
+    INV_DeclareYM_B: [null, [Validators.required]], // 申報年月_起
+    INV_DeclareYM_E: [null, [Validators.required]], // 申報年月_迄
     INV_Uniform: ['', [Validators.maxLength(10)]], // 買受人統一編號
     GoodsOrServicesName: ['', [Validators.maxLength(20)]], // 貨物或勞務名稱
     GoodsQtyStart: [0, [this.validationService.numberValidator]], // 貨物或勞務數量_起
@@ -123,8 +138,6 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
       // 年月格式轉換
       INV_YM_B: this.datePipe.transform(frm.get('INV_YM_B')?.value, 'yyyyMM') ?? null,
       INV_YM_E: this.datePipe.transform(frm.get('INV_YM_E')?.value, 'yyyyMM') ?? null,
-      INV_DeclareYM_B: this.datePipe.transform(frm.get('INV_DeclareYM_B')?.value, 'yyyyMM') ?? null,
-      INV_DeclareYM_E: this.datePipe.transform(frm.get('INV_DeclareYM_E')?.value, 'yyyyMM') ?? null,
     }
 
     this.handleSubmit(frm, () => {
@@ -165,8 +178,8 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
       { field: 'INV_GUINo_E', message: '請輸入發票號碼_迄' },
       { field: 'INV_GUIDate_B', message: '請輸入發票日期_起' },
       { field: 'INV_GUIDate_E', message: '請輸入發票日期_迄' },
-      { field: 'INV_YM_B', message: '請輸入資料所屬年月_起' },
-      { field: 'INV_YM_E', message: '請輸入資料所屬年月_迄' },
+      // { field: 'INV_YM_B', message: '請輸入資料所屬年月_起' },
+      // { field: 'INV_YM_E', message: '請輸入資料所屬年月_迄' },
       { field: 'INV_DeclareYM_B', message: '請輸入申報年月_起' },
       { field: 'INV_DeclareYM_E', message: '請輸入申報年月_迄' }
     ];
@@ -193,8 +206,8 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
         INV_GUIDate_E: frm.get('INV_GUIDate_E')?.value,
         INV_YM_B: this.datePipe.transform(frm.get('INV_YM_B')?.value, 'yyyyMM') ?? "",
         INV_YM_E: this.datePipe.transform(frm.get('INV_YM_E')?.value, 'yyyyMM') ?? "",
-        INV_DeclareYM_B: this.datePipe.transform(frm.get('INV_DeclareYM_B')?.value, 'yyyyMM') ?? "",
-        INV_DeclareYM_E: this.datePipe.transform(frm.get('INV_DeclareYM_E')?.value, 'yyyyMM') ?? "",
+        // INV_DeclareYM_B: this.datePipe.transform(frm.get('INV_DeclareYM_B')?.value, 'yyyyMM') ?? "",
+        // INV_DeclareYM_E: this.datePipe.transform(frm.get('INV_DeclareYM_E')?.value, 'yyyyMM') ?? "",
       };
 
       this.fin13030Service.queryFIN13030_GetZeroTaxGUI(rb).subscribe(r => {
