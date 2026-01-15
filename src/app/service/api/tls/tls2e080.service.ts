@@ -4,10 +4,10 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
-// 根據 Swagger 定義的介面
+// --- Interfaces ---
+
 export interface IExportPDFRequest {
-  exportList:
-  {
+  exportList: {
     talent_id: number,
     sam_yyymm: string,
     sad_date_Start: string | Date,
@@ -35,6 +35,22 @@ export interface IQueryRequest {
   ven_uniform?: string;
 }
 
+/**
+ * 網路對帳請求介面
+ * 根據 Swagger 定義，這結合了查詢條件與 exportList
+ */
+export interface IOnlineRequest extends Omit<IQueryRequest, 'PageSize' | 'PageIndex'> {
+  exportList: {
+    mid?: number; // 根據 Swagger 範例新增
+    talent_id: number;
+    sam_yyymm: string;
+    sad_date_Start: string | Date;
+    sad_date_End: string | Date;
+    money_type: string;
+    sam_termno: number;
+  }[];
+}
+
 export interface IQueryData {
   id: number,
   talent_id: number,
@@ -50,6 +66,7 @@ export interface IQueryData {
   tlt_name: string
 }
 
+// --- Service ---
 
 @Injectable({
   providedIn: 'root'
@@ -61,9 +78,6 @@ export class TLS2E080Service {
 
   /**
    * 匯出專櫃月對帳單 (PDF)
-   * API: POST /TLS0000/TLS2000/exportTLS2E080PDF
-   * @param data 查詢條件，包含 talent_id, sad_date_Start, sad_date_End
-   * @returns 檔案串流 (Blob) 或其他 API 響應
    */
   exportTLS2E080PDF(data: IExportPDFRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/exportTLS2E080PDF`, data, { responseType: 'blob', observe: 'response' });
@@ -71,15 +85,24 @@ export class TLS2E080Service {
 
   /**
    * 專櫃對帳單查詢
-   * API: POST /TLS0000/TLS2000/queryTLS2E080
-   * @param params 查詢條件
-   * @returns 包含專櫃對帳單資料陣列的 API 響應
    */
   queryTLS2E080(params: IQueryRequest): Observable<ApiResponse<IQueryData[]>> {
     return this.http.post<ApiResponse<IQueryData[]>>(`${this.apiUrl}/queryTLS2E080`, params);
   }
 
+  /**
+   * 預覽/列印專櫃對帳單 PDF 連結
+   */
   PrintTLS2E080PDF(data: IExportPDFRequest): Observable<ApiResponse<{ url: string }>> {
     return this.http.post<ApiResponse<{ url: string }>>(`${this.apiUrl}/printTLS2E080PDF`, data);
+  }
+
+  /**
+   * 網路對帳：將產出的 PDF 儲存至伺服器目錄
+   * API: POST /TLS0000/TLS2000/onlineTLS2E080
+   * @param data 包含查詢條件與 exportList
+   */
+  onlineTLS2E080(data: IOnlineRequest): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/onlineTLS2E080`, data);
   }
 }

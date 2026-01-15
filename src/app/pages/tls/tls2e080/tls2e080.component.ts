@@ -1,4 +1,4 @@
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -84,6 +84,7 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
   constructor(
     public readonly tls2e080Service: TLS2E080Service,
     public readonly dropdown: DropdownApiService,
+    private readonly datePipe: DatePipe,
   ) {
     super();
   }
@@ -113,18 +114,53 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
     })
   }
 
-  autoReport(status: string) {
-    // this.loading = true;
-    // const body = {
-    //   ...this.historyRequestBody,
-    //   pageIndex: 1,
-    //   pageSize: 30,
-    //   SortBy: [{ field: 'tlt_no', order: 1 }],
-    // }
-    // this.tls2e080Service.queryTLS2E080(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-    //   this.data = res.Data
-    //   this.totalRecords = res.TotalCount || 0;
-    // })
+  netReport() {
+    const body: any = {
+      tlt_noList: this.historyRequestBody?.tlt_noList || null,
+      tlt_term_typeList: this.historyRequestBody?.tlt_term_typeList || null,
+      tlt_floorList: this.historyRequestBody?.tlt_floorList || null,
+      sam_yyymm: this.historyRequestBody?.sam_yyymm || null,
+      money_typeList: this.historyRequestBody?.money_typeList || null,
+      sam_termnoList: this.historyRequestBody?.sam_termnoList || null,
+      tlt_buildingList: this.historyRequestBody?.tlt_buildingList || null,
+      check_typeList: this.historyRequestBody?.check_typeList || null,
+      ven_uniform: this.historyRequestBody?.ven_uniform || null,
+      exportList: []
+    };
+
+    if (this.selectedItems.length !== this.totalRecords) {
+      body.exportList = this.selectedItems.map(item => {
+        let sam_yyymm_string = '';
+        if (item.sam_yyymm) {
+          const date = new Date(item.sam_yyymm);
+          const year = date.getFullYear();
+          const month = (date.getMonth() + 1).toString().padStart(2, '0');
+          sam_yyymm_string = `${year}${month}`;
+        }
+        const year = parseInt(sam_yyymm_string.substring(0, 4), 10);
+        const month = parseInt(sam_yyymm_string.substring(4, 6), 10) - 1;
+        const sad_date_Start = new Date(year, month, 1);
+        const sad_date_End = new Date(year, month + 1, 0);
+        return {
+          mid: this.authService.currentUserValue?.mid,
+          talent_id: item.talent_id,
+          sam_yyymm: item.sam_yyymm,
+          sad_date_Start: sad_date_Start,
+          sad_date_End: sad_date_End,
+          money_type: item.money_type,
+          sam_termno: item.sam_termno
+        };
+      });
+    }
+
+    this.btnLoading = true;
+    this.tls2e080Service.onlineTLS2E080(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(res => {
+      this.messageService.successBubble(res.Data || '網路對帳執行成功');
+      this.selectedItems = [];
+    });
+  }
+
+  autoMail() {
   }
 
   exportZip() {
@@ -133,19 +169,14 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
         let sam_yyymm_string = '';
         if (item.sam_yyymm) {
           const date = new Date(item.sam_yyymm);
-          // 格式化為 yyyyMM
           const year = date.getFullYear();
           const month = (date.getMonth() + 1).toString().padStart(2, '0');
           sam_yyymm_string = `${year}${month}`;
         }
-        // 假設 sam_yyymm 格式為 'YYYYMM'，例如 '202509'
         const year = parseInt(sam_yyymm_string.substring(0, 4), 10);
-        const month = parseInt(sam_yyymm_string.substring(4, 6), 10) - 1; // 月份從0開始，所以要減1
-        // 啟始日：設定為該月的第一天
+        const month = parseInt(sam_yyymm_string.substring(4, 6), 10) - 1;
         const sad_date_Start = new Date(year, month, 1);
-        // 結束日：透過設定為下個月的第一天，再往前推一天，來取得該月的最後一天
         const sad_date_End = new Date(year, month + 1, 0);
-
         return {
           talent_id: item.talent_id,
           sam_yyymm: item.sam_yyymm,
