@@ -58,27 +58,24 @@ export class FIN13010CRUComponent
 
   dataForm = this.formBuilder.nonNullable.group({
     GUI_Track: [null as string | null, Validators.required], // 字軌 (必填)
-    PUR_GUINo: ['', Validators.required],                     // 發票號碼 (必填)
-    PUR_GUINo_Correspond: [''], // 發票號碼(字軌+號碼)
-    PUR_GUIDate: ['', Validators.required], // 退出/折讓日期
-    PUR_VoucherType: [''], // 發票格式
-    PUR_RepYYYYMM: [
-      null,
-
-    ],
-    Credit_Type: ['', Validators.required], // 區別（折讓/退出）
-    PUR_TaxType: ['', Validators.required], // 稅別
-    PUR_Net: [undefined as any],            // 退出/折讓金額
-    PUR_Tax: [undefined as any],            // 退出/折讓稅額（自動計算，不可修改）
-    PUR_Amt: [undefined as any],            // 退回/折讓總金額
-    Inv_Date: [undefined as any],           // 發票日期
-    Total_hitory_PUR_Amt: [undefined as any], // 已退出/折讓歷史總金額
-    Total_Amt: [undefined as any],          // 剩餘總金額
-    TXN_Ret_No: ['系統自動帶入', Validators.required], // 退出/折讓單號
-    Inv_Net: [undefined as any],            // 銷售額
-    Inv_Tax: [undefined as any],            // 稅額
-    Source_Doc_No: [''],                    // 憑證單號
-    Voucher_No: [''],                       // 傳票編號
+    PUR_GUINo: ['', Validators.required],                    // 發票號碼 (必填)
+    PUR_GUINo_Correspond: [''],                              // 發票號碼(字軌+號碼)
+    PUR_GUIDate: ['', Validators.required],                  // 退出/折讓日期
+    PUR_VoucherType: [''],                                   // 發票格式
+    PUR_RepYYYYMM: [null],
+    Credit_Type: ['', Validators.required],                  // 區別（折讓/退出）
+    PUR_TaxType: ['', Validators.required],                  // 稅別
+    PUR_Net: [undefined as any],                             // 退出/折讓金額
+    PUR_Tax: [undefined as any],                             // 退出/折讓稅額（自動計算，不可修改）
+    PUR_Amt: [undefined as any],                             // 退回/折讓總金額
+    Inv_Date: [undefined as any],                            // 發票日期
+    Total_hitory_PUR_Amt: [undefined as any],                // 已退出/折讓歷史總金額
+    Total_Amt: [undefined as any],                           // 剩餘總金額
+    TXN_Ret_No: ['系統自動帶入', Validators.required],        // 退出/折讓單號
+    Inv_Net: [undefined as any],                             // 銷售額
+    Inv_Tax: [undefined as any],                             // 稅額
+    Source_Doc_No: [''],                                     // 憑證單號
+    Voucher_No: [''],                                        // 傳票編號
   });
 
   constructor(
@@ -91,9 +88,9 @@ export class FIN13010CRUComponent
   ngOnInit(): void {
     this.initializePage('FIN13010', this.dataForm);
     this.updateDisabledState();
-    this.setupTrackNoWatcher(); // 監聽字軌
+    this.setupTrackNoWatcher();           // 監聽字軌
     this.setupGuiNoAndCorrespondWatcher(); // 監聽發票號碼 & 對應欄位
-    this.setupAmountRelations(); // ⬅️ 新：金額互算邏輯
+    this.setupAmountRelations();          // 🔢 金額互算（改成整數版）
 
     // 固定禁止手動輸入的欄位
     this.dataForm.get('TXN_Ret_No')?.disable();
@@ -104,7 +101,7 @@ export class FIN13010CRUComponent
     this.dataForm.get('Inv_Date')?.disable();
     this.dataForm.get('Total_hitory_PUR_Amt')?.disable();
     this.dataForm.get('Total_Amt')?.disable();
-    this.dataForm.get('PUR_Tax')?.disable(); // ⬅️ 退出/折讓稅額不可手動改
+    this.dataForm.get('PUR_Tax')?.disable(); // 退出/折讓稅額不可手動改
   }
 
   private setupTrackNoWatcher(): void {
@@ -241,6 +238,11 @@ export class FIN13010CRUComponent
     this.handleSubmit(form, () => {
       const formValue = form.getRawValue();
 
+      // ⭐ 送後端前，先把金額三個欄位變成整數（或 null）
+      const intNet = this.toIntOrNull(formValue.PUR_Net);
+      const intTax = this.toIntOrNull(formValue.PUR_Tax);
+      const intAmt = this.toIntOrNull(formValue.PUR_Amt);
+
       const payload: any = {
         GUI_Track: formValue.GUI_Track,
         PUR_GUINo: formValue.PUR_GUINo,
@@ -249,9 +251,9 @@ export class FIN13010CRUComponent
         PUR_RepYYYYMM: formValue.PUR_RepYYYYMM,
         Credit_Type: formValue.Credit_Type,
         PUR_TaxType: formValue.PUR_TaxType,
-        PUR_Net: formValue.PUR_Net,
-        PUR_Tax: formValue.PUR_Tax,
-        PUR_Amt: formValue.PUR_Amt,
+        PUR_Net: intNet,
+        PUR_Tax: intTax,
+        PUR_Amt: intAmt,
         Source_Doc_No: formValue.Source_Doc_No,
         Voucher_No: formValue.Voucher_No,
       };
@@ -270,7 +272,7 @@ export class FIN13010CRUComponent
           break;
 
         case CRUDStatus.Edit:
-          // ⬅️ Edit 時要傳 TXN_Ret_No
+          // Edit 時要傳 TXN_Ret_No
           payload.TXN_Ret_No = formValue.TXN_Ret_No;
           if (this.canEdit()) {
             this.fin13010Service.updateFIN13010(payload).subscribe(() => {
@@ -283,7 +285,7 @@ export class FIN13010CRUComponent
     });
   }
 
-  // ⬅️ 新：金額互算邏輯
+  // 🔢 金額互算邏輯（全部用整數）
   private setupAmountRelations(): void {
     const netControl = this.dataForm.get('PUR_Net'); // 退出/折讓金額
     const taxControl = this.dataForm.get('PUR_Tax'); // 退出/折讓稅額（自動）
@@ -301,21 +303,24 @@ export class FIN13010CRUComponent
       if (updatingFromAmt) return; // 避免互相觸發
       updatingFromNet = true;
 
-      const net = Number(value);
-      if (!value && value !== 0) {
+      if (value === null || value === undefined || value === '') {
         // 清空時：連帶清空稅額與總額
         taxControl.setValue(null, { emitEvent: false });
         amtControl.setValue(null, { emitEvent: false });
-      } else if (!isNaN(net)) {
-        // 先清空再寫入（符合作法）
-        taxControl.setValue(null, { emitEvent: false });
-        amtControl.setValue(null, { emitEvent: false });
+        updatingFromNet = false;
+        return;
+      }
 
-        const tax = this.roundTo(net * 0.05);
-        const total = this.roundTo(net + tax);
+      const rawNet = Number(value);
+      if (!isNaN(rawNet)) {
+        // 金額全部用整數
+        const netInt = this.roundToInt(rawNet);
+        const taxInt = this.roundToInt(netInt * 0.05); // 先算再四捨五入成整數
+        const totalInt = this.roundToInt(netInt + taxInt);
 
-        taxControl.setValue(tax, { emitEvent: false });
-        amtControl.setValue(total, { emitEvent: false });
+        netControl.setValue(netInt, { emitEvent: false });
+        taxControl.setValue(taxInt, { emitEvent: false });
+        amtControl.setValue(totalInt, { emitEvent: false });
       }
 
       updatingFromNet = false;
@@ -326,31 +331,43 @@ export class FIN13010CRUComponent
       if (updatingFromNet) return;
       updatingFromAmt = true;
 
-      const total = Number(value);
-      if (!value && value !== 0) {
+      if (value === null || value === undefined || value === '') {
         netControl.setValue(null, { emitEvent: false });
         taxControl.setValue(null, { emitEvent: false });
-      } else if (!isNaN(total)) {
-        // total = net + tax，且 tax = net * 0.05
-        // => total = net * 1.05 => net = total / 1.05
-        const net = this.roundTo(total / 1.05);
-        const tax = this.roundTo(total - net);
+        updatingFromAmt = false;
+        return;
+      }
 
-        // 先清空再寫入
-        netControl.setValue(null, { emitEvent: false });
-        taxControl.setValue(null, { emitEvent: false });
+      const rawTotal = Number(value);
+      if (!isNaN(rawTotal)) {
+        const totalInt = this.roundToInt(rawTotal);
 
-        netControl.setValue(net, { emitEvent: false });
-        taxControl.setValue(tax, { emitEvent: false });
+        // total = net + tax，tax = round(net * 0.05)
+        // 反推 net，大致用 total / 1.05，再取整數
+        const approxNet = totalInt / 1.05;
+        const netInt = this.roundToInt(approxNet);
+        const taxInt = totalInt - netInt; // 保證 net + tax = total，三者皆整數
+
+        amtControl.setValue(totalInt, { emitEvent: false });
+        netControl.setValue(netInt, { emitEvent: false });
+        taxControl.setValue(taxInt, { emitEvent: false });
       }
 
       updatingFromAmt = false;
     });
   }
 
-  private roundTo(value: number, fractionDigits = 2): number {
-    const factor = Math.pow(10, fractionDigits);
-    return Math.round(value * factor) / factor;
+  // ⭐ 四捨五入為整數
+  private roundToInt(value: number): number {
+    return Math.round(value);
+  }
+
+  // ⭐ 將任意值轉成整數（或 null）
+  private toIntOrNull(value: any): number | null {
+    if (value === null || value === undefined || value === '') return null;
+    const n = Number(value);
+    if (isNaN(n)) return null;
+    return this.roundToInt(n);
   }
 
   private toYYYYMM(input: any): string | null {
