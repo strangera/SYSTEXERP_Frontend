@@ -127,6 +127,9 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   showResultTables = false;
 
   changeEditData: any[] = [];
+  // 已選取的主表項（供新增時決定 talent_id）
+  selectedMainItems: any[] = [];
+  selectedMain: any | null = null;
   columns1: ReportColumn[] = [
     { field: 'sam_yyymm', header: '所屬結帳年月', visible: true, format: formatYYYYMM },
     { field: 'money_type_desc', header: '結帳方式', visible: true },
@@ -470,12 +473,22 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       };
     });
 
+    // 若主區有多筆資料，要求先選取一筆主資料（selectedMain）才能新增明細
+    if ((this.changeEditData?.length ?? 0) > 1 && !this.selectedMain) {
+      this.messageService.errorBubble('此區有多筆主資料，請先選取一筆主資料再進行新增明細');
+      this.messageService.unblockUi();
+      this.loading = false;
+      this.submitted = false;
+      return;
+    }
+
     const body = {
       sam_yyymm: this.formatYearMonth(formValue.sam_yyymm ?? formValue.COMM_YM),
       money_type: formValue.COMM_MONEY_TYPE ?? formValue.money_type ?? '',
       sam_termno: Number(formValue.sam_termno ?? 0),
       tlt_no: formValue.tlt_no ?? '',
-      talent_id: (this.rowdata as any)?.talent_id ?? 0,
+      // 優先使用選取的主資料的 talent_id，若無則 fallback 到 rowdata
+      talent_id: (this.selectedMain && this.selectedMain.talent_id) ? this.selectedMain.talent_id : ((this.rowdata as any)?.talent_id ?? 0),
       details,
     };
 
@@ -498,6 +511,12 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     this.changeEditData = data;
   }
 
+  // 第一張表（主區）選取變更
+  onChangeEditSelection(items: any[]): void {
+    this.selectedMainItems = items ?? [];
+    this.selectedMain = (this.selectedMainItems && this.selectedMainItems.length) ? this.selectedMainItems[0] : null;
+  }
+
   onDetailEditDataChange(data: any[]): void {
     this.detailEditData = data;
   }
@@ -515,8 +534,16 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       const isReceipt = (guiLabel ?? String(ev.value ?? '')).includes('收據');
 
       if (isReceipt) {
-        const taxVal = this.mapLabelToValue(this.taxTypeOptions, '免稅');
-        const deductVal = this.mapLabelToValue(this.discountOptions, '代表進項不可扣抵之進貨及費用');
+        let taxVal = this.mapLabelToValue(this.taxTypeOptions, '免稅');
+        if (taxVal == null) {
+          const hit = (this.taxTypeOptions ?? []).find((o: any) => String(o.label ?? '').includes('免稅'));
+          taxVal = hit?.value ?? null;
+        }
+        let deductVal = this.mapLabelToValue(this.discountOptions, '代表進項不可扣抵之進貨及費用');
+        if (deductVal == null) {
+          const hit2 = (this.discountOptions ?? []).find((o: any) => String(o.label ?? '').includes('代表進項不可扣抵'));
+          deductVal = hit2?.value ?? null;
+        }
         // 設定欄位值（若 table-edit 使用的是同一物件則畫面會自動更新）
         row.TAX_TYPE = taxVal ?? row.TAX_TYPE;
         row.Deduct_Code = deductVal ?? row.Deduct_Code;
