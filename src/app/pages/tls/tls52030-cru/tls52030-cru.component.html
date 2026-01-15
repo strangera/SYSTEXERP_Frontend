@@ -11,9 +11,8 @@
       </div>
       <hr>
       <div class="grid p-fluid">
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商編號/名稱" controlName="VEN_No"
-          [options]="vendorOptions | async" optionLabel="label" optionValue="value" [control]="dataForm.controls.VEN_No"
-          [submitted]="submitted" />
+        <app-dropdown class="col-12" label="廠商編號/名稱" controlName="VEN_No" [options]="vendorOptions | async"
+          optionLabel="label" optionValue="value" [control]="dataForm.controls.VEN_No" [submitted]="submitted" />
         <!-- <app-dropdown class="col-12 md:col-6 lg:col-4" label="品牌代碼/名稱" controlName="LOGO_No"
           [options]="brandOptions | async" optionLabel="label" optionValue="No" [control]="dataForm.controls.LOGO_No"
           [submitted]="submitted" /> -->
