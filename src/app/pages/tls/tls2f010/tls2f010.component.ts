@@ -443,10 +443,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
           a.click();
           window.URL.revokeObjectURL(url);
         },
-        error: (err: any) => {
-          const msg = err?.message ?? '匯出失敗';
-          this.messageService.errorBubble(msg);
-        }
+
       });
   }
 
@@ -476,10 +473,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
           a.click();
           window.URL.revokeObjectURL(url);
         },
-        error: (err: any) => {
-          const msg = err?.message ?? '匯出失敗';
-          this.messageService.errorBubble(msg);
-        }
+
       });
   }
 

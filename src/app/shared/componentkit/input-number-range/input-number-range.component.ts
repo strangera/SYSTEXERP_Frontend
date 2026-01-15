@@ -1,11 +1,11 @@
+import { NgIf, NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { NgIf, NgStyle } from '@angular/common';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
-import { InputNumberComponent } from '../input-number/input-number.component';
 import { InputNumberInputEvent } from 'primeng/inputnumber';
+import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { InputNumberComponent } from '../input-number/input-number.component';
 
 @Component({
   selector: 'app-input-number-range',
@@ -40,6 +40,7 @@ export class InputNumberRangeComponent extends BasicKitComponent implements OnIn
   @Input() suffix: string | undefined | null = null;
   @Input() step = 1; // 步進值
   @Input() showButtons = false; // 是否顯示按鈕
+  @Input() allowUnlimited = false; // 若 true，傳遞給內部 app-input-number 以放寬限制
   // 觸發事件
   @Output() startChangeEvent = new EventEmitter<InputNumberInputEvent>();
   @Output() endChangeEvent = new EventEmitter<InputNumberInputEvent>();

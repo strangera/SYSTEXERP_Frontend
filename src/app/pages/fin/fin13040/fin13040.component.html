@@ -62,13 +62,13 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range [useGrouping]="false" label="銷售金額" [startControl]="queryForm.controls.PUR_Amt_S"
-              [endControl]="queryForm.controls.PUR_Amt_E">
+            <app-input-number-range label="銷售金額" [allowUnlimited]="true" [useGrouping]="true"
+              [startControl]="queryForm.controls.PUR_Amt_S" [endControl]="queryForm.controls.PUR_Amt_E">
             </app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range [useGrouping]="false" label="稅額" [startControl]="queryForm.controls.PUR_Tax_S"
-              [endControl]="queryForm.controls.PUR_Tax_E">
+            <app-input-number-range label="稅額" [allowUnlimited]="true" [useGrouping]="true"
+              [startControl]="queryForm.controls.PUR_Tax_S" [endControl]="queryForm.controls.PUR_Tax_E">
             </app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
