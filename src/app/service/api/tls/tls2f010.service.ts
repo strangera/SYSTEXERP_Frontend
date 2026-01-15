@@ -39,4 +39,16 @@ export class Tls2f010Service {
       responseType: 'blob'
     });
   }
+  exportTLS2F010(params: any): Observable<ExportFileResponse> {
+    return this.http.post(`${this.apiUrl}/ExportTLS2F010`, params, {
+      observe: 'response',
+      responseType: 'blob'
+    });
+  }
+  exportTLS2F010PDF(params: any): Observable<ExportFileResponse> {
+    return this.http.post(`${this.apiUrl}/ExportTLS2F010PDF`, params, {
+      observe: 'response',
+      responseType: 'blob'
+    });
+  }
 }

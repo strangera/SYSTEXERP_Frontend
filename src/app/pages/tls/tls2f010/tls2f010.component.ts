@@ -12,10 +12,11 @@ import { InputNumberComponent } from '@shared/componentkit/input-number/input-nu
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
+import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
 import { formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { SelectButtonModule } from 'primeng/selectbutton';
@@ -32,7 +33,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
   selector: 'app-tls2f010',
   templateUrl: './tls2f010.component.html',
   standalone: true,
-  imports: [InputNumberRangeComponent, CalendarComponent, InputTextComponent, SelectButtonModule, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TranslateModule]
+  imports: [ButtonModule, InputNumberRangeComponent, CalendarComponent, InputTextComponent, SelectButtonModule, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TranslateModule]
 })
 export class TLS2F010Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -74,6 +75,8 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
 
   });
   excelLoading = false;
+  btnLoading = false; // PDF
+  btnLoading2 = false; // Excel
   columns: ReportColumn[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
@@ -82,11 +85,17 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     { field: 'PUR_GUIDate', header: '單據日期', visible: true, format: formatDate },
     { field: 'COMM_YM', header: '請款付款年月', visible: true, format: formatYYYYMM },
     { field: 'sam_yyymm', header: '帳款年月', visible: true, format: formatYYYYMM },
-    { field: 'COMM_MONEY_TYPE', header: '結帳方式', visible: true, format: (v: any) => this.formatMoneyType(v) },
+    { field: 'MONEY_TYPE_DESC', header: '結帳方式', visible: true },
     // { field: 'col9', header: '帳次', visible: true },
     { field: 'DEC_YM', header: '申報年月', visible: true, format: formatYYYYMM },
     { field: 'ven_uniform', header: '廠商統一編號', visible: true },
     { field: 'TAX_TYPE', header: '課稅別', visible: true },
+    { field: 'ACP_GUIAmt', header: '發票總額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'ACP_GUINet', header: '未稅金額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'ACP_GUITax', header: '稅額', visible: true, format: formatAmount, align: 'right' },
+    // { field: 'PUR_GUIPaper', header: '格式', visible: true },
+    { field: 'CRT_USR_No', header: '建立者', visible: true },
+    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
   ];
   invoiceFormatOptions = [
     { value: '21', label: '21/進項三聯式、電子計算機統一發票' },
@@ -117,26 +126,6 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
   tlt_noOptions = this.dropdown.queryTltTalent();
   tlt_floorOptions = this.dropdown.querySys3900();
   invoiceTypeOptions = getSYS1000Options('invoice_type');
-
-  private formatMoneyType(value: any): string {
-    if (value === null || value === undefined || value === '') return '';
-    const code = String(value);
-
-    const option = this.money_typeOptions?.find(o => String(o.value) === code);
-    if (option) {
-      return option.label;
-    }
-    switch (code) {
-      case '10':
-        return '十日結';
-      case '15':
-        return '半月結';
-      case '30':
-        return '月結';
-      default:
-        return code;
-    }
-  }
 
   private formatYearMonth(value: any): string {
     if (!value) return '';
@@ -230,7 +219,40 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
       this.tls2f010Service.queryTLS2F010(payload)
         .pipe(finalize(() => (this.loading = false)))
         .subscribe(res => {
-          this.data = res?.Data || [];
+          const respData = res?.Data ?? [];
+
+          // 支援後端回傳 Data[0].Details + Data[0].Total 的格式
+          let rawTotal: any = null;
+          if (Array.isArray(respData) && respData.length && respData[0] && respData[0].Details) {
+            this.data = respData[0].Details || [];
+            rawTotal = respData[0].Total ?? null;
+          } else if (Array.isArray(respData)) {
+            // 傳統平面陣列
+            this.data = respData;
+            rawTotal = res?.Total ?? null;
+          } else {
+            this.data = [];
+            rawTotal = res?.Total ?? null;
+          }
+
+          // 將後端回傳的總計欄位轉換成 table footer 預期的欄位名稱
+          if (rawTotal) {
+            const mapped: any = { ...rawTotal };
+            // 若後端回傳的 key 為 Total_ACP_GUIAmt 等，轉成 ACP_GUIAmt
+            if (rawTotal.Total_ACP_GUIAmt !== undefined) mapped.ACP_GUIAmt = rawTotal.Total_ACP_GUIAmt;
+            if (rawTotal.Total_ACP_GUINet !== undefined) mapped.ACP_GUINet = rawTotal.Total_ACP_GUINet;
+            if (rawTotal.Total_ACP_GUITax !== undefined) mapped.ACP_GUITax = rawTotal.Total_ACP_GUITax;
+
+            // 保障 fallback（若後端直接回傳 ACP_GUIAmt 等）
+            mapped.ACP_GUIAmt = mapped.ACP_GUIAmt ?? rawTotal.ACP_GUIAmt ?? rawTotal.ACP_GUIAmtSum ?? 0;
+            mapped.ACP_GUINet = mapped.ACP_GUINet ?? rawTotal.ACP_GUINet ?? rawTotal.ACP_GUINetSum ?? 0;
+            mapped.ACP_GUITax = mapped.ACP_GUITax ?? rawTotal.ACP_GUITax ?? rawTotal.ACP_GUITaxSum ?? 0;
+
+            this.footerData = mapped;
+          } else {
+            this.footerData = null;
+          }
+
           this.totalRecords = res?.TotalCount ?? this.data.length;
           this.lastQueryBody = payload;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
@@ -347,6 +369,118 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
   }
   downloadErrorFile(filePath: string): void {
     window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
+  }
+
+  private buildExportPayloadFromForm(): any {
+    const raw = this.queryForm.getRawValue() as any;
+    const pageSize = Number(raw.pageSize ?? 0);
+    const pageIndex = Number(raw.pageIndex ?? 1);
+
+    const payload: any = {
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      Offset: (pageIndex - 1) * pageSize,
+      SortBy: Array.isArray(raw.SortBy) && raw.SortBy.length ? raw.SortBy : [{ field: 'tlt_no', order: 1 }],
+    };
+
+    if (!payload.OrderBy && payload.SortBy[0]?.field) {
+      payload.OrderBy = payload.SortBy[0].field;
+    }
+
+    payload.sam_yyymm = this.formatYearMonth(raw.sam_yyymm);
+    payload.tlt_no = raw.tlt_no || '';
+    payload.PUR_GUIType = raw.PUR_GUIType || '';
+    payload.PUR_GUINO = raw.PUR_GUINO || '';
+    const purFrom = raw.PUR_GUIDate_From || raw.PUR_GUIDate_Start || '';
+    const purTo = raw.PUR_GUIDate_To || raw.PUR_GUIDate_End || '';
+    payload.PUR_GUIDate_From = this.formatDateOnly(purFrom);
+    payload.PUR_GUIDate_To = this.formatDateOnly(purTo);
+    payload.COMM_MONEY_TYPE = Array.isArray(raw.COMM_MONEY_TYPE) ? raw.COMM_MONEY_TYPE.join(',') : (raw.COMM_MONEY_TYPE || '');
+    payload.COMM_YM = this.formatYearMonth(raw.COMM_YM);
+    payload.DEC_YM = this.formatYearMonth(raw.DEC_YM);
+    payload.ven_uniform = raw.ven_uniform || '';
+    payload.PUR_TaxType = Array.isArray(raw.PUR_TaxType) ? raw.PUR_TaxType.join(',') : (raw.PUR_TaxType || '');
+    payload.ACP_GUIAmt_From = raw.ACP_GUIAmt_From ?? null;
+    payload.ACP_GUIAmt_To = raw.ACP_GUIAmt_To ?? null;
+    payload.ACP_GUINet_From = raw.ACP_GUINet_From ?? null;
+    payload.ACP_GUINet_To = raw.ACP_GUINet_To ?? null;
+    payload.ACP_GUITax_From = raw.ACP_GUITax_From ?? null;
+    payload.ACP_GUITax_To = raw.ACP_GUITax_To ?? null;
+    payload.PUR_GUIPaper = raw.PUR_GUIPaper || '';
+    payload.CRT_USR_No = raw.CRT_USR_No || '';
+    payload.CRT_Date_From = this.formatDateOnly(raw.CRT_Date_From);
+    payload.CRT_Date_To = this.formatDateOnly(raw.CRT_Date_To);
+    payload.floor_no = Array.isArray(raw.floor_no)
+      ? raw.floor_no
+      : (raw.floor_no ? [raw.floor_no] : []);
+
+    return payload;
+  }
+
+  onExportExcel(): void {
+    if (this.btnLoading2) return;
+    const params = this.lastQueryBody ?? this.buildExportPayloadFromForm();
+    this.btnLoading2 = true;
+
+    this.tls2f010Service.exportTLS2F010(params)
+      .pipe(finalize(() => (this.btnLoading2 = false)))
+      .subscribe({
+        next: (res) => {
+          const blob = res?.body;
+          if (!blob) {
+            this.messageService.errorBubble('檔案產生失敗');
+            return;
+          }
+          const cd = res.headers?.get?.('content-disposition') ?? '';
+          let filename = 'TLS2F010.xlsx';
+          const m = /filename\*=UTF-8''(.+)$/.exec(cd) || /filename="?([^";]+)"?/.exec(cd);
+          if (m && m[1]) filename = decodeURIComponent(m[1]);
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          a.click();
+          window.URL.revokeObjectURL(url);
+        },
+        error: (err: any) => {
+          const msg = err?.message ?? '匯出失敗';
+          this.messageService.errorBubble(msg);
+        }
+      });
+  }
+
+  onExportPDF(): void {
+    if (this.btnLoading) return;
+    const params = this.lastQueryBody ?? this.buildExportPayloadFromForm();
+    this.btnLoading = true;
+
+    this.tls2f010Service.exportTLS2F010PDF(params)
+      .pipe(finalize(() => (this.btnLoading = false)))
+      .subscribe({
+        next: (res) => {
+          const blob = res?.body;
+          if (!blob) {
+            this.messageService.errorBubble('檔案產生失敗');
+            return;
+          }
+          const cd = res.headers?.get?.('content-disposition') ?? '';
+          let filename = 'TLS2F010.pdf';
+          const m = /filename\*=UTF-8''(.+)$/.exec(cd) || /filename="?([^";]+)"?/.exec(cd);
+          if (m && m[1]) filename = decodeURIComponent(m[1]);
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          a.click();
+          window.URL.revokeObjectURL(url);
+        },
+        error: (err: any) => {
+          const msg = err?.message ?? '匯出失敗';
+          this.messageService.errorBubble(msg);
+        }
+      });
   }
 
 }
