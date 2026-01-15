@@ -1,3 +1,4 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -34,7 +35,8 @@ import { EditColumn } from './fin13040-table-edit/fin13040-table-edit.model';
     ButtonComponent,
     TranslateModule,
     TableEditComponent,
-    ButtonModule
+    ButtonModule,
+    NgIf
   ],
 })
 export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -571,9 +573,9 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (res) => {
-          console.log('[updateFIN13040 回傳]', res);
+
           if (res?.Status === '0000') {
-            alert('更新成功');
+            this.messageService.successBubble('新增成功');
             this.onCancel();
           }
         },
