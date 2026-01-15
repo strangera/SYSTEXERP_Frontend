@@ -73,8 +73,8 @@ export class FareDefaultsService {
       item.tpy_qty = totalLocationSpace;
     }
 
-    // 只有在沒有單位時才預設數量為 1
-    if (!item.tpy_qty && item.tpy_type && item.tpy_type !== '01') {
+    // 🔥 修正：數量預設為 1（無論是否有單位）
+    if (!item.tpy_qty) {
       item.tpy_qty = 1;
     }
 
@@ -100,8 +100,8 @@ export class FareDefaultsService {
       item.tpy_qty = totalLocationSpace;
     }
 
-    // 只有在沒有單位時才預設數量為 1
-    if (!item.tpy_qty && item.tpy_type && item.tpy_type !== '01') {
+    // 🔥 修正：數量預設為 1（無論是否有單位）
+    if (!item.tpy_qty) {
       item.tpy_qty = 1;
     }
 
