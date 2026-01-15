@@ -1,11 +1,6 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <!-- <div >
-            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-        </div> -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
     <p-accordionTab
@@ -21,28 +16,26 @@
       >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
               label="廠商編號"
-              controlName="vendorId"
-              [control]="queryForm.controls.vendorId"
+              controlName="VENDOR_ID"
+              [control]="queryForm.controls.VENDOR_ID"
               [submitted]="submitted"
-            ></app-input-number>
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
               label="廠商統一編號"
-              controlName="vendorUid"
-              [control]="queryForm.controls.vendorUid"
+              controlName="GUI_ID"
+              [control]="queryForm.controls.GUI_ID"
               [submitted]="submitted"
-            ></app-input-number>
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="廠商名稱(中文)"
-              controlName="vendorCName"
-              [control]="queryForm.controls.vendorCName"
+              controlName="VENDOR_NAME"
+              [control]="queryForm.controls.VENDOR_NAME"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -51,24 +44,24 @@
           <div class="col-12 md:col-6 lg:col-6">
             <app-input-text
               label="發票地址"
-              controlName="vendorSName"
-              [control]="queryForm.controls.invoiceAddress"
+              controlName="VENDOR_REG_ADDR"
+              [control]="queryForm.controls.VENDOR_REG_ADDR"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-3">
             <app-input-text
               label="廠商名稱(英文)"
-              controlName="vendorEName"
-              [control]="queryForm.controls.vendorEName"
+              controlName="VENDOR_NAME_E"
+              [control]="queryForm.controls.VENDOR_NAME_E"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-3">
             <app-input-text
               label="廠商簡稱"
-              controlName="vendorSName"
-              [control]="queryForm.controls.vendorSName"
+              controlName="VENDOR_NAME_S"
+              [control]="queryForm.controls.VENDOR_NAME_S"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -78,66 +71,52 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="負責人"
-              controlName="principal"
-              [control]="queryForm.controls.principal"
+              controlName="CHARGE_STAFF"
+              [control]="queryForm.controls.CHARGE_STAFF"
               [submitted]="submitted"
-            >
-              >
-            </app-input-text>
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="負責人職稱"
-              controlName="principalTitle"
-              [control]="queryForm.controls.principalTitle"
+              controlName="CHARGE_TITLE"
+              [control]="queryForm.controls.CHARGE_TITLE"
               [submitted]="submitted"
-            >
-              >
-            </app-input-text>
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="負責人身份証字號"
-              controlName="principalUid"
-              [control]="queryForm.controls.principalUid"
+              controlName="CHARGE_PID"
+              [control]="queryForm.controls.CHARGE_PID"
               [submitted]="submitted"
-            >
-              >
-            </app-input-text>
+            ></app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-6">
             <app-input-text
               label="負責人聯絡地址"
-              controlName="principalAddress"
-              [control]="queryForm.controls.principalAddress"
+              controlName="CHARGE_ADDR"
+              [control]="queryForm.controls.CHARGE_ADDR"
               [submitted]="submitted"
-            >
-              >
-            </app-input-text>
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-3">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
               label="負責人電話"
-              controlName="principalPhone"
-              [control]="queryForm.controls.principalPhone"
+              controlName="CHARGE_TEL"
+              [control]="queryForm.controls.CHARGE_TEL"
               [submitted]="submitted"
-            >
-              >
-            </app-input-number>
+            ></app-input-text>
           </div>
-
           <div class="col-12 md:col-6 lg:col-3">
             <app-input-text
               label="負責人電子郵件"
-              controlName="principalEmail"
-              [control]="queryForm.controls.principalEmail"
+              controlName="CHARGE_EMAIL"
+              [control]="queryForm.controls.CHARGE_EMAIL"
               [submitted]="submitted"
-            >
-              >
-            </app-input-text>
+            ></app-input-text>
           </div>
         </div>
         <hr />
@@ -148,31 +127,23 @@
               controlName="companyAddress"
               [control]="queryForm.controls.companyAddress"
               [submitted]="submitted"
-            >
-              >
-            </app-input-text>
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-3">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
               label="公司登記電話"
-              controlName="companyPhone"
-              [control]="queryForm.controls.companyPhone"
+              controlName="VENDOR_REG_TEL"
+              [control]="queryForm.controls.VENDOR_REG_TEL"
               [submitted]="submitted"
-            >
-              >
-            </app-input-number>
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-3">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
               label="公司傳真"
-              controlName="companyFax"
-              [control]="queryForm.controls.companyFax"
+              controlName="VENDOR_FAX"
+              [control]="queryForm.controls.VENDOR_FAX"
               [submitted]="submitted"
-            >
-              >
-            </app-input-number>
+            ></app-input-text>
           </div>
         </div>
         <hr />
@@ -180,34 +151,26 @@
           <div class="col-12 md:col-6 lg:col-6">
             <app-input-text
               label="訂貨地址"
-              controlName="orderingAddress"
-              [control]="queryForm.controls.orderingAddress"
+              controlName="ORDER_ADDR"
+              [control]="queryForm.controls.ORDER_ADDR"
               [submitted]="submitted"
-            >
-              >
-            </app-input-text>
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-3">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
               label="訂貨電話"
-              controlName="orderingPhone"
-              [control]="queryForm.controls.orderingPhone"
+              controlName="ORDER_TEL"
+              [control]="queryForm.controls.ORDER_TEL"
               [submitted]="submitted"
-            >
-              >
-            </app-input-number>
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-3">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
               label="訂貨傳真"
-              controlName="orderingFax"
-              [control]="queryForm.controls.orderingFax"
+              controlName="ORDER_FAX"
+              [control]="queryForm.controls.ORDER_FAX"
               [submitted]="submitted"
-            >
-              >
-            </app-input-number>
+            ></app-input-text>
           </div>
         </div>
         <hr />
@@ -215,66 +178,58 @@
           <div class="col-12 md:col-6 lg:col-6">
             <app-input-text
               label="工廠地址"
-              controlName="factoryAddress"
-              [control]="queryForm.controls.factoryAddress"
+              controlName="FACTO_ADDR"
+              [control]="queryForm.controls.FACTO_ADDR"
               [submitted]="submitted"
-            >
-              >
-            </app-input-text>
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-3">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
               label="工廠電話"
-              controlName="factoryPhone"
-              [control]="queryForm.controls.factoryPhone"
+              controlName="FACTO_TEL"
+              [control]="queryForm.controls.FACTO_TEL"
               [submitted]="submitted"
-            >
-              >
-            </app-input-number>
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-3">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
               label="工廠傳真"
-              controlName="factoryFax"
-              [control]="queryForm.controls.factoryFax"
+              controlName="FACTO_FAX"
+              [control]="queryForm.controls.FACTO_FAX"
               [submitted]="submitted"
-            >
-              >
-            </app-input-number>
+            ></app-input-text>
           </div>
         </div>
         <hr />
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
+            <app-dropdown
               label="送貨方式"
-              controlName="deliveryMethod"
+              controlName="DELIVERY"
               [options]="deliveryMethodOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.deliveryMethod"
+              [control]="queryForm.controls.DELIVERY"
               [submitted]="submitted"
-            ></app-multi-select>
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
+            <app-dropdown
               label="退貨處理方式"
-              controlName="returnMethod"
+              controlName="RETURN_ORDER"
               [options]="returnMethodOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.returnMethod"
+              [control]="queryForm.controls.RETURN_ORDER"
               [submitted]="submitted"
-            ></app-multi-select>
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
-              label="廠商送貨期限"
-              [startControl]="queryForm.controls.startDeliveryDate"
-              [endControl]="queryForm.controls.endDeliveryDate"
+              label="廠商送貨期限(批號)"
+              [startControl]="queryForm.controls.DELIVERY_LIMIT_FROM"
+              [endControl]="queryForm.controls.DELIVERY_LIMIT_TO"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
@@ -282,33 +237,34 @@
         <hr />
         <app-editor-text
           label="附註"
-          controlName="remark"
-          [control]="queryForm.controls.remark"
+          controlName="NOTES"
+          [control]="queryForm.controls.NOTES"
           [style]="{ height: '100px' }"
           [submitted]="submitted"
         ></app-editor-text>
-        <hr />
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table
+    tableKey="ASS11060"
+    dataKey="VENDOR_ID"
+    [data]="data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [showTotal]="false"
+    [showManage]="false"
+    [showCheckBox]="false"
+    [showDelete]="false"
+    [lazy]="true"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+  ></app-table>
 </div>

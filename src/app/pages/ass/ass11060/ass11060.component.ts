@@ -1,24 +1,19 @@
-import { TransportationMethodService } from './../../../service/basic/transportation-method.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-//
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { ASS11060Service, QueryASS11060Response } from '../../../service/api/ass/ass11060.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
 
 //3.1.1.6 供應商資料維護作業
 @Component({
@@ -26,170 +21,149 @@ import { TranslateModule } from '@ngx-translate/core';
   templateUrl: './ass11060.component.html',
   styleUrl: './ass11060.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, MultiSelectComponent, CalendarRangeComponent, EditorTextComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    CalendarRangeComponent,
+    EditorTextComponent,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule
+  ]
 })
-export class ASS11060Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    vendorId: [, [Validators.maxLength(12)]], // 廠商編號
-    vendorUid: [, [Validators.maxLength(10)]], // 廠商統一編號
-    vendorCName: ['', [Validators.maxLength(60)]], // 廠商名稱(中文)
-    vendorEName: ['', [Validators.maxLength(60)]], // 廠商名稱(英文)
-    vendorSName: ['', [Validators.maxLength(10)]], // 廠商簡稱
-    invoiceAddress: ['', [Validators.maxLength(60)]], // 發票地址
-    //
-    principal: ['', [Validators.maxLength(12)]], // 負責人
-    principalTitle: ['', [Validators.maxLength(16)]], // 負責人職稱
-    principalUid: ['', [Validators.maxLength(10)]], // 負責人身份証字號
-    principalPhone: [, [Validators.maxLength(15)]], // 負責人電話
-    principalAddress: ['', [Validators.maxLength(100)]], // 負責人聯絡地址
-    principalEmail: ['', [Validators.maxLength(60)]], // 負責人電子郵件
-    //
-    companyAddress: ['', [Validators.maxLength(100)]], // 公司登記地址
-    companyPhone: [, [Validators.maxLength(15)]], // 公司登記電話
-    companyFax: [, [Validators.maxLength(15)]], // 公司傳真
-    //
-    orderingAddress: ['', [Validators.maxLength(100)]], // 訂貨地址
-    orderingPhone: [, [Validators.maxLength(12)]], // 訂貨電話
-    orderingFax: [, [Validators.maxLength(12)]], // 訂貨傳真
-    //
-    factoryAddress: ['', [Validators.maxLength(100)]], // 工廠地址
-    factoryPhone: [, [Validators.maxLength(12)]], // 工廠電話
-    factoryFax: [, [Validators.maxLength(12)]], // 工廠傳真
-    //
-    deliveryMethod: [[] as number[]], // 送貨方式
-    returnMethod: [[] as number[]], // 退貨處理方式
-    //
-    startDeliveryDate: [], // 廠商送貨期限
-    endDeliveryDate: [], // 廠商送貨期限
-    //
-    remark: [,], // 附註
+export class ASS11060Component extends BasicQueryPageComponent<QueryASS11060Response> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    VENDOR_ID: ['', [Validators.maxLength(12)]], // 廠商編號
+    GUI_ID: ['', [Validators.maxLength(10)]], // 廠商統一編號
+    VENDOR_NAME: ['', [Validators.maxLength(60)]], // 廠商名稱(中文)
+    VENDOR_NAME_E: ['', [Validators.maxLength(60)]], // 廠商名稱(英文)
+    VENDOR_NAME_S: ['', [Validators.maxLength(10)]], // 廠商簡稱
+    VENDOR_REG_ADDR: ['', [Validators.maxLength(60)]], // 發票地址
+    // 負責人相關
+    CHARGE_STAFF: ['', [Validators.maxLength(12)]], // 負責人
+    CHARGE_TITLE: ['', [Validators.maxLength(16)]], // 負責人職稱
+    CHARGE_PID: ['', [Validators.maxLength(10)]], // 負責人身份証字號
+    CHARGE_TEL: ['', [Validators.maxLength(15)]], // 負責人電話
+    CHARGE_ADDR: ['', [Validators.maxLength(100)]], // 負責人聯絡地址
+    CHARGE_EMAIL: ['', [Validators.maxLength(60)]], // 負責人電子郵件
+    // 公司相關
+    companyAddress: ['', [Validators.maxLength(100)]], // 公司登記地址(中文)
+    VENDOR_REG_TEL: ['', [Validators.maxLength(15)]], // 公司登記電話
+    VENDOR_FAX: ['', [Validators.maxLength(15)]], // 公司傳真
+    // 訂貨相關
+    ORDER_ADDR: ['', [Validators.maxLength(100)]], // 訂貨地址
+    ORDER_TEL: ['', [Validators.maxLength(12)]], // 訂貨電話
+    ORDER_FAX: ['', [Validators.maxLength(12)]], // 訂貨傳真
+    // 工廠相關
+    FACTO_ADDR: ['', [Validators.maxLength(100)]], // 工廠地址
+    FACTO_TEL: ['', [Validators.maxLength(12)]], // 工廠電話
+    FACTO_FAX: ['', [Validators.maxLength(12)]], // 工廠傳真
+    // 其他
+    DELIVERY: [null as string | null], // 送貨方式
+    RETURN_ORDER: [null as string | null], // 退貨處理方式
+    DELIVERY_LIMIT_FROM: [null as number | null], // 廠商送貨期限起
+    DELIVERY_LIMIT_TO: [null as number | null], // 廠商送貨期限迄
+    NOTES: [''], // 附註
+    // 分頁排序
+    pageSize: [20],
+    pageIndex: [1],
+    SortBy: [[{ field: 'VENDOR_ID', order: 1 }]],
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+
+  // 表格資料
+  data: QueryASS11060Response[] = [];
+  totalRecords = 0;
+
+  // 下拉選項
+  deliveryMethodOptions = [
+    { value: '1', label: '貨運' },
+    { value: '2', label: '自取' },
+    { value: '3', label: '其他' },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
+  returnMethodOptions = [
+    { value: '1', label: '貨運' },
+    { value: '2', label: '自取' },
+    { value: '3', label: '其他' },
   ];
-  columns: any[] = [
-    { field: 'col1', header: '廠商編號', visible: true },
-    { field: 'col2', header: '廠商統一編號', visible: true },
-    { field: 'col3', header: '廠商名稱(中文)', visible: true },
-    { field: 'col4', header: '廠商名稱(英文)', visible: true },
-    { field: 'col5', header: '廠商簡稱', visible: true },
-    { field: 'col6', header: '發票地址', visible: true },
-    { field: 'col7', header: '負責人', visible: true },
-    { field: 'col8', header: '負責人職稱', visible: true },
-    { field: 'col9', header: '負責人身份証字號', visible: true },
-    { field: 'col10', header: '負責人電話', visible: true },
-    { field: 'col11', header: '負責人聯絡地址', visible: true },
-    { field: 'col12', header: '負責人電子郵件', visible: true },
 
-    { field: 'col13', header: '公司登記地址', visible: true },
-    { field: 'col14', header: '公司登記電話', visible: true },
-    { field: 'col15', header: '公司傳真', visible: true },
-
-    { field: 'col16', header: '訂貨地址', visible: true },
-    { field: 'col17', header: '訂貨電話', visible: true },
-    { field: 'col18', header: '訂貨傳真', visible: true },
-
-    { field: 'col19', header: '工廠地址', visible: true },
-    { field: 'col20', header: '工廠電話', visible: true },
-    { field: 'col21', header: '工廠傳真', visible: true },
-
-    { field: 'col22', header: '送貨方式', visible: true },
-    { field: 'col23', header: '退貨處理方式', visible: true },
-    { field: 'col24', header: '廠商送貨期限', visible: true },
-
-    { field: 'col25', header: '附註', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  //
-  deliveryMethodOptions: any[] = [];
-  returnMethodOptions: any[] = [
-    { value: 1, label: '貨運' },
-    { value: 2, label: '自取' },
-    { value: 3, label: '其他' },
+  // 表格欄位定義
+  columns: Column[] = [
+    { field: 'VENDOR_ID', header: '廠商編號', visible: true },
+    { field: 'GUI_ID', header: '廠商統一編號', visible: true },
+    { field: 'VENDOR_NAME', header: '廠商名稱(中文)', visible: true },
+    { field: 'VENDOR_NAME_E', header: '廠商名稱(英文)', visible: true },
+    { field: 'VENDOR_NAME_S', header: '廠商簡稱', visible: true },
+    { field: 'VENDOR_REG_ADDR', header: '發票地址', visible: true },
+    { field: 'CHARGE_STAFF', header: '負責人', visible: true },
+    { field: 'CHARGE_TITLE', header: '負責人職稱', visible: true },
+    { field: 'CHARGE_PID', header: '負責人身份証字號', visible: true },
+    { field: 'CHARGE_TEL', header: '負責人電話', visible: true },
+    { field: 'CHARGE_ADDR', header: '負責人聯絡地址', visible: true },
+    { field: 'CHARGE_EMAIL', header: '負責人電子郵件', visible: true },
   ];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private transportationMethodService: TransportationMethodService,
+    private readonly ass11060Service: ASS11060Service,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310006';
-    this.cruPage = '/ASS1000/ASS11060CRU';
-    //
-
-    //
-    this.transportationMethodService.getSystemTypes().subscribe(data => {
-      this.deliveryMethodOptions = data;
-    });
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('ASS11060', 'ass/ass11060cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(frm, () => {
+      const rawValue = frm.getRawValue();
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
+      const payload = {
+        PageSize: rawValue.pageSize,
+        PageIndex: rawValue.pageIndex,
+        SortBy: rawValue.SortBy,
+        VENDOR_ID: rawValue.VENDOR_ID || null,
+        GUI_ID: rawValue.GUI_ID || null,
+        VENDOR_NAME: rawValue.VENDOR_NAME || null,
+        VENDOR_NAME_E: rawValue.VENDOR_NAME_E || null,
+        VENDOR_NAME_S: rawValue.VENDOR_NAME_S || null,
+        VENDOR_REG_ADDR: rawValue.VENDOR_REG_ADDR || null,
+        CHARGE_STAFF: rawValue.CHARGE_STAFF || null,
+        CHARGE_TITLE: rawValue.CHARGE_TITLE || null,
+        CHARGE_PID: rawValue.CHARGE_PID || null,
+        CHARGE_TEL: rawValue.CHARGE_TEL || null,
+        CHARGE_ADDR: rawValue.CHARGE_ADDR || null,
+        CHARGE_EMAIL: rawValue.CHARGE_EMAIL || null,
+        VENDOR_REG_TEL: rawValue.VENDOR_REG_TEL || null,
+        VENDOR_FAX: rawValue.VENDOR_FAX || null,
+        ORDER_ADDR: rawValue.ORDER_ADDR || null,
+        ORDER_TEL: rawValue.ORDER_TEL || null,
+        ORDER_FAX: rawValue.ORDER_FAX || null,
+        FACTO_ADDR: rawValue.FACTO_ADDR || null,
+        FACTO_TEL: rawValue.FACTO_TEL || null,
+        FACTO_FAX: rawValue.FACTO_FAX || null,
+        DELIVERY: rawValue.DELIVERY || null,
+        RETURN_ORDER: rawValue.RETURN_ORDER || null,
+        DELIVERY_LIMIT: rawValue.DELIVERY_LIMIT_FROM || null,
+        NOTES: rawValue.NOTES || null,
+      };
 
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+      this.ass11060Service.queryASS11060(payload)
+        .pipe(
+          finalize(() => this.loading = false),
+          untilDestroyed(this)
+        )
+        .subscribe(res => {
+          this.data = res.Data.Data || [];
+          this.totalRecords = res.Data.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        });
+    });
   }
 
   onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+    this.queryForm.reset();
   }
 }

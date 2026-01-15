@@ -11,7 +11,6 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 //
 import { NgIf } from '@angular/common';
 import { PanelModule } from 'primeng/panel';
-import { TransportationMethodService } from '../../../service/basic/transportation-method.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -90,9 +89,9 @@ export class ASS11060CRUComponent implements OnInit {
     private translate: TranslateService,
     private validationService: ValidationService,
     //
-    private transportationMethodService: TransportationMethodService,
+    // private transportationMethodService: TransportationMethodService,
   ) {
-    super();  // 呼叫父類建構子
+    // super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
@@ -103,9 +102,9 @@ export class ASS11060CRUComponent implements OnInit {
     //
     // ----------------------------------------------------------------
     //
-    this.transportationMethodService.getSystemTypes().subscribe(data => {
-      this.deliveryMethodOptions = data;
-    });
+    // this.transportationMethodService.getSystemTypes().subscribe(data => {
+    //   this.deliveryMethodOptions = data;
+    // });
     // ----------------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus,
@@ -155,16 +154,16 @@ export class ASS11060CRUComponent implements OnInit {
 
     switch (this.crudstatus) {
       case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
+        // if (this.canAdd()) {
+        //   // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
+        //   this.messageService.successBubble(this.translate.instant('success_message'));
+        // }
         break;
       case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
+        // if (this.canEdit()) {
+        //   // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
+        //   this.messageService.successBubble(this.translate.instant('updated-successfully'));
+        // }
         break;
     }
 
