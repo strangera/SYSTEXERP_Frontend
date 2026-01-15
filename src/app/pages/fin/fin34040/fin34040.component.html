@@ -174,6 +174,7 @@
     [allowMultilineHeader]="true"
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
+    (linkClick)="onLinkClick($event)"
   >
     <header>
       <div class="flex justify-content-end gap-2">
@@ -198,3 +199,27 @@
     </header>
   </app-table-report>
 </div>
+
+<!-- 應收帳款明細 Dialog -->
+<app-dialog
+  [visible]="dialogVisible"
+  header="應收帳款明細"
+  (visibleChange)="onDialogClose($event)"
+  [showFooter]="false"
+  width="95vw"
+>
+  <app-table-report
+    [tableKey]="'fin34040_detail_' + dialogTableVer"
+    [columns]="detailColumns"
+    [data]="dialogData"
+    [footerData]="dialogFooterData"
+    [totalRecords]="dialogTotalRecords"
+    [loading]="dialogLoading"
+    dataKey="_rowKey"
+    [showManage]="false"
+    [showDelete]="false"
+    [showDetail]="false"
+    [showReportMode]="false"
+    [lazy]="false"
+  ></app-table-report>
+</app-dialog>

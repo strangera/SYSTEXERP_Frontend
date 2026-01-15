@@ -5,6 +5,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { formatAmount } from '@shared/componentkit/table/table.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { DividerModule } from 'primeng/divider';
 import { PanelModule } from 'primeng/panel';
@@ -240,7 +241,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_OrderPrc: 0,
 
     PLU_Purchase: '1',
-    PLU_TransType: '1',
+    PLU_TransType: '4',
     PLU_TransDay: null,
     Remark: null,
     VDP_LastStockDate: null,
@@ -855,9 +856,9 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
           { field: 'VEN_No', header: '廠商編號', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'value', options: this.vendorOptions },
 
           { field: 'PLU_TransType', header: '運輸方式', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'value', options: this.transTypeOption },  // １＝自行送貨２＝貨運  ３＝快遞  ４＝其它。
-          { field: 'PLU_TransDay', header: '送貨天數', type: 'inputNumber', width: '12rem' },
+          { field: 'PLU_TransDay', header: '送貨天數', type: 'inputNumber', width: '12rem', format: formatAmount },
           { field: 'PLU_Purchase', header: '採購狀態', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'value', options: this.purchaseTypeOption },  // １＝自行送貨２＝貨運  ３＝快遞  ４＝其它。
-          { field: 'PLU_OrderPrc', header: '目前進價', width: '12rem' }, // readonly: 目前進價 > 顯示 最後進價
+          { field: 'PLU_OrderPrc', header: '目前進價', width: '12rem', format: formatAmount }, // readonly: 目前進價 > 顯示 最後進價
           //readonly，商品新增時，最後進價=POS2004的標準進價PLU_OrderPrc，之後進價異動透過進價/售價變價作業(關帳作業、啟動變價時更新)
 
           { field: 'VDP_LastStockDate', header: '最後進貨日期', width: '12rem' }, //  readonly，商品新增時，不給值，進貨作業驗收更新

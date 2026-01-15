@@ -17,7 +17,7 @@ import { finalize, Observable } from 'rxjs';
 import { TableCaptionComponent } from '../table/table-caption/table-caption.component';
 import { TableExpansionComponent } from '../table/table-expansion/table-expansion.component';
 import { TableReportUtilityService } from './table-report-utility.service';
-import { AddButton, ColumnGroup, expandAnimation, ReportColumn } from './table-report.model';
+import { AddButton, ColumnGroup, expandAnimation, formatAmount2, ReportColumn } from './table-report.model';
 
 @Component({
   selector: 'app-table-report',
@@ -88,6 +88,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() buttonsLoading = false;   // 按鈕們 loading
   @Input() footerData: any;     // (總計)頁尾資料
   @Input() footerPercentData: any;     // (百分比)頁尾資料
+  @Input() extraFooterData: any; // 額外的 footer 資料（可為 object 或 array），會顯示於 footer 區塊，不對應欄位
   @Input() groupRowsBy?: string;    // (小計)群組欄位
   groupTotals: Record<string, Record<string, number>> = {}; // 用於儲存每個群組的總計
   @Input() subTotalData: any;    // (小計)頁尾資料
@@ -145,6 +146,40 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         }
       }
     }
+  }
+
+  // 對 extraFooter 的 key 做中文對應
+  private rawLabelMap: Record<string, string> = {
+    UnPostedAmt_NoTax: '未登錄餘額(免稅)',
+    UnPostedAmt_WithTax: '未登錄餘額(含稅)',
+  };
+
+  private formatValue(v: any): any {
+    if (v === null || v === undefined || v === '') return '';
+    const num = Number(v);
+    if (!isNaN(num)) return formatAmount2(num);
+    return String(v);
+  }
+
+  // 將 extraFooterData 統一轉為陣列格式 [{label, value}, ...]
+  public getExtraFooterArray(): { label: string; value: any }[] {
+    const d = this.extraFooterData;
+    if (!d) return [];
+    if (Array.isArray(d)) {
+      return d.map((x: any) => {
+        if (x && typeof x === 'object' && ('label' in x || 'value' in x)) {
+          const rawLabel = x.label ?? '';
+          const mappedLabel = this.rawLabelMap[rawLabel] ?? rawLabel;
+          return { label: mappedLabel, value: this.formatValue(x.value ?? '') };
+        }
+        const rawLabel = String(x?.label ?? '');
+        return { label: this.rawLabelMap[rawLabel] ?? rawLabel, value: this.formatValue(x?.value ?? x) };
+      });
+    }
+    if (typeof d === 'object') {
+      return Object.keys(d).map(k => ({ label: this.rawLabelMap[k] ?? k, value: this.formatValue(d[k]) }));
+    }
+    return [{ label: '', value: this.formatValue(d) }];
   }
   loadMoreData() {
     if (this._loading || !this.queryFunction || !this.lastQueryBody || this.data.length >= this.totalRecords || !this.lazy) {

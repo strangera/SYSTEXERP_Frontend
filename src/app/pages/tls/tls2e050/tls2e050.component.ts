@@ -148,15 +148,6 @@ export class TLS2E050Component extends BasicQueryPageComponent<Tls2e050MainData>
         this.queryForm.controls.bus_classList.setValue([]);
       }
     });
-
-    this.queryForm.controls.store_way.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe(() => {
-        // 只有在已經有查詢結果的情況下才自動觸發，避免頁面一開啟就查
-        if (this.lastQueryBody1 || this.lastQueryBody2) {
-          this.onSubmit(this.queryForm);
-        }
-      });
   }
 
   // 處理 SelectButton 切換
@@ -233,7 +224,14 @@ export class TLS2E050Component extends BasicQueryPageComponent<Tls2e050MainData>
   loading2 = false;
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.loading2 = true; // 開啟讀取中狀態
+      // 1. 取得當前選擇的櫃位類型
+      const sw = frm.getRawValue().store_way;
+
+      // 2. 初始化 Loading 狀態
+      // 如果要查詢該表，就設為 true；如果不查，就設為 false (避免畫面轉圈)
+      this.loading = (sw === null || sw === '1');
+      this.loading2 = (sw === null || sw === '2');
+
       const rawValue = frm.getRawValue();
       const rawBusClassList = rawValue.bus_classList;
 
@@ -254,24 +252,38 @@ export class TLS2E050Component extends BasicQueryPageComponent<Tls2e050MainData>
         cash_yn: '',
       };
 
-      // 取得當前報表類型的 API Function
       const queryFn = this.getCurrentQueryFunction();
-      const sw = frm.getRawValue().store_way;
+
+      // --- 執行查詢 ---
+
+      // 一般專櫃
       if (sw === null || sw === '1') {
-        queryFn({ ...baseBody, store_wayList: ['1'] }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-          this.data1 = res.Data;
-          this.totalRecords1 = res.TotalCount;
-          this.footerData1 = res.footerData && res.footerData.length > 0 ? res.footerData[0] : null;
-          this.lastQueryBody1 = { ...baseBody, store_wayList: ['1'] };
-        });
+        queryFn({ ...baseBody, store_wayList: ['1'] })
+          .pipe(
+            untilDestroyed(this),
+            finalize(() => this.loading = false) // 確保結束後關閉 loading
+          )
+          .subscribe(res => {
+            this.data1 = res.Data;
+            this.totalRecords1 = res.TotalCount;
+            this.footerData1 = res.footerData && res.footerData.length > 0 ? res.footerData[0] : null;
+            this.lastQueryBody1 = { ...baseBody, store_wayList: ['1'] };
+          });
       }
+
+      // 自營專櫃
       if (sw === null || sw === '2') {
-        queryFn({ ...baseBody, store_wayList: ['2'] }).pipe(untilDestroyed(this), finalize(() => this.loading2 = false)).subscribe(res => {
-          this.data2 = res.Data;
-          this.totalRecords2 = res.TotalCount;
-          this.footerData2 = res.footerData && res.footerData.length > 0 ? res.footerData[0] : null;
-          this.lastQueryBody2 = { ...baseBody, store_wayList: ['2'] };
-        });
+        queryFn({ ...baseBody, store_wayList: ['2'] })
+          .pipe(
+            untilDestroyed(this),
+            finalize(() => this.loading2 = false) // 確保結束後關閉 loading2
+          )
+          .subscribe(res => {
+            this.data2 = res.Data;
+            this.totalRecords2 = res.TotalCount;
+            this.footerData2 = res.footerData && res.footerData.length > 0 ? res.footerData[0] : null;
+            this.lastQueryBody2 = { ...baseBody, store_wayList: ['2'] };
+          });
       }
     });
   }
