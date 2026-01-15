@@ -178,8 +178,8 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
       { field: 'INV_GUINo_E', message: '請輸入發票號碼_迄' },
       { field: 'INV_GUIDate_B', message: '請輸入發票日期_起' },
       { field: 'INV_GUIDate_E', message: '請輸入發票日期_迄' },
-      // { field: 'INV_YM_B', message: '請輸入資料所屬年月_起' },
-      // { field: 'INV_YM_E', message: '請輸入資料所屬年月_迄' },
+      { field: 'INV_YM_B', message: '請輸入資料所屬年月_起' },
+      { field: 'INV_YM_E', message: '請輸入資料所屬年月_迄' },
       { field: 'INV_DeclareYM_B', message: '請輸入申報年月_起' },
       { field: 'INV_DeclareYM_E', message: '請輸入申報年月_迄' }
     ];
@@ -206,8 +206,8 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
         INV_GUIDate_E: frm.get('INV_GUIDate_E')?.value,
         INV_YM_B: this.datePipe.transform(frm.get('INV_YM_B')?.value, 'yyyyMM') ?? "",
         INV_YM_E: this.datePipe.transform(frm.get('INV_YM_E')?.value, 'yyyyMM') ?? "",
-        // INV_DeclareYM_B: this.datePipe.transform(frm.get('INV_DeclareYM_B')?.value, 'yyyyMM') ?? "",
-        // INV_DeclareYM_E: this.datePipe.transform(frm.get('INV_DeclareYM_E')?.value, 'yyyyMM') ?? "",
+        INV_DeclareYM_B: this.datePipe.transform(frm.get('INV_DeclareYM_B')?.value, 'yyyyMM') ?? "",
+        INV_DeclareYM_E: this.datePipe.transform(frm.get('INV_DeclareYM_E')?.value, 'yyyyMM') ?? "",
       };
 
       this.fin13030Service.queryFIN13030_GetZeroTaxGUI(rb).subscribe(r => {

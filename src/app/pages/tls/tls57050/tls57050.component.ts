@@ -61,7 +61,7 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
   totalRecords = 0;
   ECR_NoOptions = this.dropdown.queryPos1002(); // 收銀機
   brandCodeOptions = this.dropdown.queryPluLogo(); // 品牌
-  vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });// 廠商
+  vendorOptions = this.dropdown.queryPos2013TltTalent();// 廠商
   data: (DetailData[] | SummaryData[]) = [];
   footerData: (DetailFooter[] | SummaryFooter[]) = [];
   columns: Column[] = [];
