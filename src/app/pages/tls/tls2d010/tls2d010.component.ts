@@ -269,7 +269,7 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
   excelLoading = false;
   downloadTemplate() {
     const export$ = this.tls2d010Service.downloadTLS2D010Template();
-    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
 
   /** 匯入 Excel 並產生錯誤檔 */

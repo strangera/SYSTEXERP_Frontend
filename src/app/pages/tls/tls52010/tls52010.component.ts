@@ -162,7 +162,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
       export$.pipe(untilDestroyed(this), finalize(() => { this.printLoading = false; this.selectedItems = [] })),
       '.' + type,
       (isLoading) => this.btnLoading = isLoading
-    );
+    ).subscribe();
   }
   statusChange(rowData: ITLS52010Data, status: string) {
     this.btnLoading = true;

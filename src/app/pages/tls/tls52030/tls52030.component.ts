@@ -255,6 +255,6 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
       export$.pipe(untilDestroyed(this), finalize(() => { this.printLoading = false; this.selectedItems = [] })),
       '.' + type,
       (isLoading) => this.btnLoading = isLoading
-    );
+    ).subscribe();
   }
 }

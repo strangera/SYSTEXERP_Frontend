@@ -105,7 +105,7 @@ export class FIN55130Component extends BasicQueryPageComponent<FIN55130DetailIte
       return;
     }
     const export$ = this.fin55130Service.exportFIN55130PDF(this.lastQueryBody);
-    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
 
   onExportXLSX() {
@@ -114,6 +114,6 @@ export class FIN55130Component extends BasicQueryPageComponent<FIN55130DetailIte
       return;
     }
     const export$ = this.fin55130Service.exportFIN55130Excel(this.lastQueryBody);
-    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
 }

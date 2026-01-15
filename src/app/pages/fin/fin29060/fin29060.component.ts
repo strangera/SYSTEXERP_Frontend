@@ -177,7 +177,7 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
       export$.pipe(untilDestroyed(this)),
       '.pdf',
       (isLoading) => this.excelBtnLoading = isLoading
-    );
+    ).subscribe();
   }
   pdfBtnLoading = false;
   onExportPDF() {
@@ -192,6 +192,6 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
       export$.pipe(untilDestroyed(this)),
       '.pdf',
       (isLoading) => this.pdfBtnLoading = isLoading
-    );
+    ).subscribe();
   }
 }

@@ -13,7 +13,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount } from '@shared/componentkit/table/table.model';
-import { ValidationService } from '@shared/service/validation.service';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -128,8 +128,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private dropDownListService: DropDownListService,
     public readonly tls2a010Service: Tls2a010Service,
-    private readonly validationService: ValidationService
-
+    private readonly fileExportService: FileExportService
   ) {
     super();
   }
@@ -431,5 +430,18 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       this.calculateAdjustedAmounts(row);
     });
     this.dialogData = [...data];
+  }
+  btnLoading = false;
+  onExportXLSX() {
+    if (!this.historyRequestBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
+    }
+    const export$ = this.tls2a010Service.exportTLS2A010Excel(this.historyRequestBody);
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this)),
+      '.xlsx',
+      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
+    ).subscribe();
   }
 }
