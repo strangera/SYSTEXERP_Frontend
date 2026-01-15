@@ -251,6 +251,24 @@
   </p-accordion>
 </div>
 <div class="card">
+  <div class="flex justify-content-end align-items-center gap-2 mb-2">
+    <p-button
+      styleClass="p-2"
+      label="供應商資料.PDF"
+      icon="pi pi-file-pdf"
+      (click)="onExportPDF(queryForm)"
+      [disabled]="data.length === 0"
+      [loading]="btnPDFLoading"
+    ></p-button>
+    <p-button
+      styleClass="p-2"
+      label="供應商資料.XLSX"
+      icon="pi pi-file-excel"
+      (click)="onExportExcel(queryForm)"
+      [disabled]="data.length === 0"
+      [loading]="btnExcelLoading"
+    ></p-button>
+  </div>
   <app-table
     tableKey="ASS11060"
     dataKey="VENDOR_ID"

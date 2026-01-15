@@ -4,6 +4,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { ASS11060Service, QueryASS11060Response } from '../../../service/api/ass/ass11060.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -31,6 +32,7 @@ import { Column } from '../../../shared/componentkit/table/table.model';
     CalendarRangeComponent,
     EditorTextComponent,
     ButtonComponent,
+    ButtonModule,
     TableComponent,
     TranslateModule
   ]
@@ -77,6 +79,10 @@ export class ASS11060Component extends BasicQueryPageComponent<QueryASS11060Resp
   // 表格資料
   data: QueryASS11060Response[] = [];
   totalRecords = 0;
+
+  // 匯出按鈕 loading 狀態
+  btnPDFLoading = false;
+  btnExcelLoading = false;
 
   // 下拉選項
   deliveryMethodOptions = [
@@ -165,5 +171,95 @@ export class ASS11060Component extends BasicQueryPageComponent<QueryASS11060Resp
 
   onClearForm() {
     this.queryForm.reset();
+  }
+
+  // 建立匯出用的 payload
+  private buildExportPayload(frm: FormGroup) {
+    const rawValue = frm.getRawValue();
+    return {
+      PageSize: rawValue.pageSize,
+      PageIndex: rawValue.pageIndex,
+      SortBy: rawValue.SortBy,
+      VENDOR_ID: rawValue.VENDOR_ID || null,
+      GUI_ID: rawValue.GUI_ID || null,
+      VENDOR_NAME: rawValue.VENDOR_NAME || null,
+      VENDOR_NAME_E: rawValue.VENDOR_NAME_E || null,
+      VENDOR_NAME_S: rawValue.VENDOR_NAME_S || null,
+      VENDOR_REG_ADDR: rawValue.VENDOR_REG_ADDR || null,
+      CHARGE_STAFF: rawValue.CHARGE_STAFF || null,
+      CHARGE_TITLE: rawValue.CHARGE_TITLE || null,
+      CHARGE_PID: rawValue.CHARGE_PID || null,
+      CHARGE_TEL: rawValue.CHARGE_TEL || null,
+      CHARGE_ADDR: rawValue.CHARGE_ADDR || null,
+      CHARGE_EMAIL: rawValue.CHARGE_EMAIL || null,
+      VENDOR_REG_TEL: rawValue.VENDOR_REG_TEL || null,
+      VENDOR_FAX: rawValue.VENDOR_FAX || null,
+      ORDER_ADDR: rawValue.ORDER_ADDR || null,
+      ORDER_TEL: rawValue.ORDER_TEL || null,
+      ORDER_FAX: rawValue.ORDER_FAX || null,
+      FACTO_ADDR: rawValue.FACTO_ADDR || null,
+      FACTO_TEL: rawValue.FACTO_TEL || null,
+      FACTO_FAX: rawValue.FACTO_FAX || null,
+      DELIVERY: rawValue.DELIVERY || null,
+      RETURN_ORDER: rawValue.RETURN_ORDER || null,
+      DELIVERY_LIMIT: rawValue.DELIVERY_LIMIT_FROM || null,
+      NOTES: rawValue.NOTES || null,
+    };
+  }
+
+  // 匯出 PDF
+  onExportPDF(frm: FormGroup) {
+    const payload = this.buildExportPayload(frm);
+
+    this.btnPDFLoading = true;
+    this.ass11060Service.exportASS11060PDF(payload)
+      .pipe(finalize(() => this.btnPDFLoading = false), untilDestroyed(this))
+      .subscribe(blob => {
+        if (blob) {
+          const now = new Date();
+          const timestamp = now.getFullYear().toString() +
+            (now.getMonth() + 1).toString().padStart(2, '0') +
+            now.getDate().toString().padStart(2, '0') +
+            now.getHours().toString().padStart(2, '0') +
+            now.getMinutes().toString().padStart(2, '0') +
+            now.getSeconds().toString().padStart(2, '0');
+          const fileName = `供應商資料${timestamp}.pdf`;
+
+          const blobUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = fileName;
+          a.click();
+          URL.revokeObjectURL(blobUrl);
+        }
+      });
+  }
+
+  // 匯出 Excel
+  onExportExcel(frm: FormGroup) {
+    const payload = this.buildExportPayload(frm);
+
+    this.btnExcelLoading = true;
+    this.ass11060Service.exportASS11060(payload)
+      .pipe(finalize(() => this.btnExcelLoading = false), untilDestroyed(this))
+      .subscribe(blob => {
+        if (blob) {
+          const now = new Date();
+          const timestamp = now.getFullYear().toString() +
+            (now.getMonth() + 1).toString().padStart(2, '0') +
+            now.getDate().toString().padStart(2, '0') +
+            now.getHours().toString().padStart(2, '0') +
+            now.getMinutes().toString().padStart(2, '0') +
+            now.getSeconds().toString().padStart(2, '0');
+          const fileName = `供應商資料${timestamp}.xlsx`;
+
+          const blobUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = fileName;
+          a.click();
+          URL.revokeObjectURL(blobUrl);
+        }
+      });
   }
 }

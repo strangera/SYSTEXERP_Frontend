@@ -155,4 +155,18 @@ export class ASS11060Service {
   updateASS11060(params: UpdateASS11060Request): Observable<ApiResponse<Record<string, never>>> {
     return this.http.post<ApiResponse<Record<string, never>>>(`${this.apiUrl}/updateASS11060`, params);
   }
+
+  /**
+   * 匯出 PDF
+   */
+  exportASS11060PDF(params: QueryASS11060Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/ExportASS11060PDF`, params, { responseType: 'blob' });
+  }
+
+  /**
+   * 匯出 Excel
+   */
+  exportASS11060(params: QueryASS11060Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/ExportASS11060`, params, { responseType: 'blob' });
+  }
 }
