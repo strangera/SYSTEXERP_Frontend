@@ -168,7 +168,12 @@ export class SmartDateSegmentationService {
   private getLatestEndDate(items: ConditionItem[]): string | null {
     const endDates = items
       .map(item => item.cag_edate)
-      .filter(date => date && date.trim() !== '')
+      .filter(date => {
+        if (!date) return false;
+        // 處理可能是 Date 物件或字串的情況
+        const dateStr = typeof date === 'string' ? date : String(date);
+        return dateStr.trim() !== '';
+      })
       .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
     return endDates.length > 0 ? endDates[0] : null;
