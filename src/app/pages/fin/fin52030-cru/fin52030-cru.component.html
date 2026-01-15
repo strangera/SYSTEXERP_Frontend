@@ -7,80 +7,28 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="常用傳票代號"
-          controlName="TempNo"
-          [control]="df().TempNo"
-          [submitted]="submitted"
-        ></app-input-text>
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="常用傳票名稱"
-          controlName="TempName"
-          [control]="df().TempName"
-          [submitted]="submitted"
-        ></app-input-text>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="傳票種類"
-          controlName="VouType"
-          [options]="service.vouTypeOptions()"
-          optionLabel="label"
-          optionValue="value"
-          [showClear]="false"
-          [control]="df().VouType"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="建立者"
-          controlName="CRT_USR_No"
-          [control]="df().CRT_USR_No"
-          [disabled]="!0"
-          [submitted]="submitted"
-        ></app-input-text>
-        <app-calendar
-          class="col-12 md:col-6 lg:col-4"
-          label="建立日"
-          controlName="CRT_Date"
-          [control]="df().CRT_Date"
-          [disabled]="!0"
-          [submitted]="submitted"
-        ></app-calendar>
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="修改者"
-          controlName="UPD_USR_No"
-          [control]="df().UPD_USR_No"
-          [disabled]="!0"
-          [submitted]="submitted"
-        ></app-input-text>
-        <app-calendar
-          class="col-12 md:col-6 lg:col-4"
-          label="修改日"
-          controlName="UPD_Date"
-          [control]="df().UPD_Date"
-          [disabled]="!0"
-          [submitted]="submitted"
-        ></app-calendar>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="常用傳票代號" controlName="TempNo" [control]="df().TempNo"
+          [submitted]="submitted" [disabled]="!isFormCreateable"></app-input-text>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="常用傳票名稱" controlName="TempName" [control]="df().TempName"
+          [submitted]="submitted"></app-input-text>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="傳票種類" controlName="VouType"
+          [options]="service.vouTypeOptions()" optionLabel="label" optionValue="value" [showClear]="false"
+          [control]="df().VouType" [submitted]="submitted"></app-dropdown>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="建立者" controlName="CRT_USR_No"
+          [control]="df().CRT_USR_No" [disabled]="!0" [submitted]="submitted"></app-input-text>
+        <app-calendar class="col-12 md:col-6 lg:col-4" label="建立日" controlName="CRT_Date" [control]="df().CRT_Date"
+          [disabled]="!0" [submitted]="submitted"></app-calendar>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="修改者" controlName="UPD_USR_No"
+          [control]="df().UPD_USR_No" [disabled]="!0" [submitted]="submitted"></app-input-text>
+        <app-calendar class="col-12 md:col-6 lg:col-4" label="修改日" controlName="UPD_Date" [control]="df().UPD_Date"
+          [disabled]="!0" [submitted]="submitted"></app-calendar>
       </div>
 
       @if (!isFormReadable) {
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
-          <app-button
-            btnType="cancel"
-            [form]="dataForm"
-            (clickEvent)="onCancelClearTable()"
-          ></app-button>
-          <app-button
-            btnType="submit"
-            [disabled]="loading"
-            [loading]="loading"
-          ></app-button>
-        </div>
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm" (clickEvent)="onCancelClearTable()"></app-button>
+        <app-button btnType="submit" [disabled]="loading" [loading]="loading"></app-button>
+      </div>
       }
     </form>
   </p-panel>
@@ -90,72 +38,36 @@
   <div class="grid p-fluid">
     <div class="col-12">
       <p-panel header="資料" class="line-height-3 m-0 mb-3">
-        <app-table-edit
-          [showCheckBox]="!isFormReadable"
-          [showReorder]="!isFormReadable"
-          (fieldChange)="onFieldChange($event)"
-          (delete)="onDelete($event)"
-          (rowReorderData)="onRowReorder($event)"
-          [disabled]="isFormReadable"
-          [data]="tableData()"
-          [defaultInsertData]="defaultNewRow()"
-          [footerData]="footerData()"
-          [loading]="tableLoading()"
-          [tableKey]="'FIN52030_detail'"
-          [columns]="columns()"
-        ></app-table-edit>
+        <app-table-edit [showCheckBox]="!isFormReadable" [showReorder]="!isFormReadable"
+          (fieldChange)="onFieldChange($event)" (delete)="onDelete($event)" (rowReorderData)="onRowReorder($event)"
+          [disabled]="isFormReadable" [data]="tableData()" [defaultInsertData]="defaultNewRow()"
+          [footerData]="footerData()" [loading]="tableLoading()" [tableKey]="'FIN52030_detail'"
+          [columns]="columns()"></app-table-edit>
       </p-panel>
     </div>
   </div>
 </div>
 
-<ng-template
-  #venUsrTemplate
-  let-rowData
-  let-col="col"
-  let-index="index"
-  let-onValueChange="onValueChange"
-  let-overlayPanel="overlayPanel"
->
+<ng-template #venUsrTemplate let-rowData let-col="col" let-index="index" let-onValueChange="onValueChange"
+  let-overlayPanel="overlayPanel">
   <div class="col-12">
     <div class="flex justify-content-between align-items-center mb-3">
       <h6 class="mb-0">選擇廠商/員工</h6>
-      <p-dropdown
-        [options]="templateOptions"
-        [(ngModel)]="selectedTemplateType"
-        [ngModelOptions]="{ standalone: true }"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="選擇類型"
-        (onChange)="onTemplateTypeChange($event)"
-        styleClass="w-10rem"
-      ></p-dropdown>
+      <p-dropdown [options]="templateOptions" [(ngModel)]="selectedTemplateType" [ngModelOptions]="{ standalone: true }"
+        optionLabel="label" optionValue="value" placeholder="選擇類型" (onChange)="onTemplateTypeChange($event)"
+        styleClass="w-10rem"></p-dropdown>
     </div>
 
     <div class="mb-3">
-      <input
-        pInputText
-        class="w-full"
-        [(ngModel)]="templateSearchTerm"
-        [ngModelOptions]="{ standalone: true }"
-        placeholder="搜尋..."
-      />
+      <input pInputText class="w-full" [(ngModel)]="templateSearchTerm" [ngModelOptions]="{ standalone: true }"
+        placeholder="搜尋..." />
     </div>
 
     <div class="max-h-30rem">
-      <p-table
-        [value]="getFilteredTemplateData()"
-        [scrollable]="true"
-        scrollHeight="400px"
-        selectionMode="single"
-        dataKey="value"
-        styleClass="p-datatable-sm"
-        [paginator]="!0"
-        [rows]="10"
-        [showCurrentPageReport]="!0"
+      <p-table [value]="getFilteredTemplateData()" [scrollable]="true" scrollHeight="400px" selectionMode="single"
+        dataKey="value" styleClass="p-datatable-sm" [paginator]="!0" [rows]="10" [showCurrentPageReport]="!0"
         currentPageReportTemplate="顯示 {first} 到 {last} 筆，共 {totalRecords} 筆"
-        [loading]="service.venLoading() || service.usrLoading()"
-      >
+        [loading]="service.venLoading() || service.usrLoading()">
         <ng-template pTemplate="header">
           <tr>
             <th>代號</th>
@@ -163,14 +75,11 @@
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-item>
-          <tr
-            class="cursor-pointer hover:surface-hover"
-            (click)="
+          <tr class="cursor-pointer hover:surface-hover" (click)="
               selectTemplateItem(rowData, item);
               onValueChange(rowData, rowData.DetailNo, col, index);
               overlayPanel.hide()
-            "
-          >
+            ">
             <td>{{ item.value }}</td>
             <td>{{ item.label }}</td>
           </tr>
@@ -183,25 +92,13 @@
       </p-table>
     </div>
 
-    <div
-      class="flex justify-content-end gap-2 mt-3 pt-2 border-top-1 surface-border"
-    >
-      <button
-        pButton
-        label="取消"
-        class="p-button-text"
-        (click)="overlayPanel.hide()"
-      ></button>
-      <button
-        pButton
-        label="清除"
-        class="p-button-outlined"
-        (click)="
+    <div class="flex justify-content-end gap-2 mt-3 pt-2 border-top-1 surface-border">
+      <button pButton label="取消" class="p-button-text" (click)="overlayPanel.hide()"></button>
+      <button pButton label="清除" class="p-button-outlined" (click)="
           selectTemplateItem(rowData);
           onValueChange(rowData, rowData.DetailNo, col, index);
           overlayPanel.hide()
-        "
-      ></button>
+        "></button>
     </div>
   </div>
 </ng-template>

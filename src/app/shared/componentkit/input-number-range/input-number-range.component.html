@@ -15,7 +15,7 @@
     <p-inputGroup id="input-number-start">
       <app-input-number class="w-full" [controlName]="startControlName" [control]="startControl" [submitted]="submitted"
         [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits" [useGrouping]="useGrouping"
-        [mode]="mode" [suffix]="suffix" [step]="step" [showButtons]="showButtons"
+        [mode]="mode" [suffix]="suffix" [step]="step" [showButtons]="showButtons" [allowUnlimited]="allowUnlimited"
         (changeEvent)="onStartInputChange($event)" (blurEvent)="onStartBlur($event)"></app-input-number>
     </p-inputGroup>
   </div>
@@ -26,7 +26,7 @@
     <p-inputGroup id="input-number-end">
       <app-input-number class="w-full" [controlName]="endControlName" [control]="endControl" [submitted]="submitted"
         [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits" [useGrouping]="useGrouping"
-        [mode]="mode" [suffix]="suffix" [step]="step" [showButtons]="showButtons"
+        [mode]="mode" [suffix]="suffix" [step]="step" [showButtons]="showButtons" [allowUnlimited]="allowUnlimited"
         (changeEvent)="onEndInputChange($event)" (blurEvent)="onEndBlur($event)"></app-input-number>
     </p-inputGroup>
   </div>

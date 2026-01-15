@@ -10,9 +10,6 @@
         [submitted]="submitted"></app-input-text>
       <app-input-text class="col-6 md:col-3 lg:col-2" label="系統關帳年月" controlName="CloseDate" [disabled]="!0"
         [control]="df().CloseDate" [submitted]="submitted"></app-input-text>
-      <app-dropdown class="col-12 md:col-6 lg:col-4" label="傳票日期預設" controlName="DefaultVouDate"
-        [options]="dateFormatOptions" optionLabel="label" optionValue="value" [showClear]="!1"
-        [control]="df().DefaultVouDate" [submitted]="submitted"></app-dropdown>
       <app-dropdown class="col-12 md:col-6 lg:col-4" label="預設組織" controlName="ORG_ID" [options]="org_id_Options"
         optionLabel="label" optionValue="value" [showClear]="!1" [control]="df().ORG_ID"
         [submitted]="submitted"></app-dropdown>
@@ -51,10 +48,6 @@
       <app-dropdown class="col-12 md:col-6 lg:col-4" label="銀行匯款手續費科目" controlName="AccNoRemitFee"
         [options]="service.gls1005Options()" optionLabel="label" optionValue="value"
         [loading]="service.gls1005Loading()" [showClear]="!1" [control]="df().AccNoRemitFee"
-        [submitted]="submitted"></app-dropdown>
-      <app-dropdown class="col-12 md:col-6 lg:col-4" label="預支費用科目" controlName="advanceExpenseAccNo"
-        [options]="service.gls1005Options()" optionLabel="label" optionValue="value"
-        [loading]="service.gls1005Loading()" [showClear]="!1" [control]="df().advanceExpenseAccNo"
         [submitted]="submitted"></app-dropdown>
       <app-dropdown class="col-12 md:col-6 lg:col-4" label="應付票據是否需領用才拋轉傳票" controlName="billTransferCon"
         [options]="service.billTransferConOptions()" optionLabel="label" optionValue="value" [showClear]="!1"

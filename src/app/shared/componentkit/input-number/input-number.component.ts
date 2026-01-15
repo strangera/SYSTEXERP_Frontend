@@ -49,6 +49,7 @@ export class InputNumberComponent extends BasicKitComponent implements OnInit {
   @Input() showButtons = false; // 是否顯示按鈕
   @Input() keyFilter: KeyFilterPattern | RegExp | undefined; // 輸入過濾規則
   @Input() disabled = false;
+  @Input() allowUnlimited = false; // 若 true，放寬 maxlength/max 限制
   // 自訂屬性
   @Input() customPlaceholder: string | undefined; // 自訂提示
   @Input() showErrorMessage = true;

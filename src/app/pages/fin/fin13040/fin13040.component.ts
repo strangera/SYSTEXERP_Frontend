@@ -205,9 +205,6 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
         Object.entries(v).map(([k, val]) => [k, dp(val, k)])
       );
 
-      // Debug: 印出實際送出的 payload（檢查 Voucher_No_S/E 與 AssetType 型別）
-      console.log('[QueryFIN13040 payload]', payload);
-
       this.fin13040Service
         .queryFIN13040(payload)
         .pipe(untilDestroyed(this))

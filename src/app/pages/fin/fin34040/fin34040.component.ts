@@ -27,6 +27,9 @@ import { ColumnGroup, createPaginationConfig } from '../../../shared/componentki
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import {
   Fin34040Bucket,
+  Fin34040DetailRequest,
+  Fin34040DetailResponse,
+  Fin34040DetailRow,
   Fin34040Request,
   Fin34040Response,
   Fin34040Service,
@@ -35,6 +38,7 @@ import {
 } from '../../../service/api/fin/fin34040.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 
 @UntilDestroy()
 @Component({
@@ -57,6 +61,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
     InputTextComponent,
     RadiobuttonComponent,
     TableReportComponent,
+    DialogComponent,
   ],
 })
 export class FIN34040Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -83,6 +88,46 @@ export class FIN34040Component extends BasicQueryPageComponent<any> implements O
     { field: 'Unexpired', header: '未到期' },
   ]
   columns: ReportColumn[] = [];
+
+  /** 儲存 Buckets 供明細查詢使用 */
+  buckets: Fin34040Bucket[] = [];
+
+  /* ----------------- 明細 Dialog 狀態 ----------------- */
+  /** Dialog 顯示狀態 */
+  dialogVisible = false;
+  /** Dialog 明細資料 */
+  dialogData: Fin34040DetailRow[] = [];
+  /** Dialog 總筆數 */
+  dialogTotalRecords = 0;
+  /** Dialog 載入狀態 */
+  dialogLoading = false;
+  /** Dialog 表格版本（用於重新渲染） */
+  dialogTableVer = 0;
+
+  /** Dialog Footer 資料（總計列） */
+  dialogFooterData: Fin34040DetailRow | null = null;
+
+  /** 明細欄位定義 */
+  detailColumns: ReportColumn[] = [
+    { field: 'ARS_No', header: '應收 ID' },
+    { field: 'ORG_ID', header: '組織代號' },
+    { field: 'Org_Name', header: '組織名稱' },
+    { field: 'Sam_yyymm', header: '帳款年月' },
+    { field: 'Sam_Termno', header: '帳款帳次' },
+    { field: 'RCV_ARS_Amt', header: '應收金額', format: formatAmount },
+    { field: 'PTA_Amt', header: '沖帳金額', format: formatAmount },
+    { field: 'Pay_AMT', header: '應收帳款餘額', format: formatAmount },
+    { field: 'ARS_Date', header: '立帳日期', format: formatDate },
+    { field: 'PTA_Date', header: '預計收款日', format: formatDate },
+    { field: 'VEN_No', header: '廠客代號' },
+    { field: 'VEN_Name', header: '廠客名稱' },
+    { field: 'VEN_Uniform', header: '統一編號' },
+    { field: 'AccNo', header: '會計科目代號' },
+    { field: 'AccCName', header: '會計科目名稱' },
+    { field: 'ARS_SourceNo', header: '帳款來源單號' },
+    { field: 'VouNo', header: '傳票號碼' },
+    { field: 'ARS_StatusName', header: '狀態' },
+  ];
 
   /* ----------------- 下拉選項 ----------------- */
   /** 分析日期別 */
@@ -255,7 +300,7 @@ export class FIN34040Component extends BasicQueryPageComponent<any> implements O
   }
 
   /* ----------------- 資料轉換方法 ----------------- */
-  /** 建立 Bucket 欄位 */
+  /** 建立 Bucket 欄位（金額 > 0 時可點擊開啟明細） */
   private createBucketColumn(
     bucket: Fin34040Bucket,
     groupField: string,
@@ -269,11 +314,20 @@ export class FIN34040Component extends BasicQueryPageComponent<any> implements O
       dateTo,
     ].filter(line => line !== '');
 
+    const fieldName = this.getBucketFieldName(bucket);
+
     return {
-      field: this.getBucketFieldName(bucket),
+      field: fieldName,
       header: headerLines.join('\n'),
       format: formatAmount,
       groupField,
+      // 設定為可點擊連結
+      type: 'link',
+      // 金額 <= 0 時禁用連結
+      linkDisabled: (rowData: any) => {
+        const value = Number(rowData?.[fieldName] ?? 0);
+        return value <= 0;
+      },
     };
   }
 
@@ -393,6 +447,9 @@ export class FIN34040Component extends BasicQueryPageComponent<any> implements O
     rows: any[];
     totalCount: number;
   } {
+    // 儲存 Buckets 供明細查詢使用
+    this.buckets = responseData.Buckets || [];
+
     // 動態產生欄位
     if (responseData.Buckets && responseData.Buckets.length > 0) {
       this.columns = this.generateColumnsFromBuckets(responseData.Buckets);
@@ -624,5 +681,125 @@ export class FIN34040Component extends BasicQueryPageComponent<any> implements O
       .add(() => {
         this.btnExportPdfLoading = false;
       });
+  }
+
+  /* ----------------- 明細 Dialog 相關方法 ----------------- */
+
+  /**
+   * 根據欄位名稱找到對應的 Bucket
+   * @param fieldName 欄位名稱，例如 'DueBucket_1' 或 'EndBucket_2'
+   */
+  private findBucketByFieldName(fieldName: string): Fin34040Bucket | undefined {
+    return this.buckets.find(bucket => this.getBucketFieldName(bucket) === fieldName);
+  }
+
+  /**
+   * 建立明細查詢 payload
+   * @param venNo 廠客代號
+   * @param bucket 對應的 Bucket（包含日期區間）
+   */
+  private buildDetailPayload(venNo: string, bucket: Fin34040Bucket): Fin34040DetailRequest {
+    const analysisDate = this.datePipe.transform(
+      this.queryForm.controls.AnalysisDate.value,
+      'yyyy-MM-dd'
+    ) || '';
+
+    const payload: Fin34040DetailRequest = {
+      VenNo: venNo,
+      BaseDate: analysisDate,
+    };
+
+    // 若 DateFrom/DateTo 有值才加入 payload
+    if (bucket.DateFrom) {
+      payload.ARS_DateFrom = bucket.DateFrom;
+    }
+    if (bucket.DateTo) {
+      payload.ARS_DateTo = bucket.DateTo;
+    }
+
+    return payload;
+  }
+
+  /**
+   * 處理表格連結點擊事件
+   * @param event 包含 rowData 和 field 的事件物件
+   */
+  onLinkClick(event: { rowData: any; field: string }): void {
+    const { rowData, field } = event;
+
+    // 找到對應的 Bucket
+    const bucket = this.findBucketByFieldName(field);
+    if (!bucket) {
+      console.warn(`找不到對應的 Bucket: ${field}`);
+      return;
+    }
+
+    // 取得廠客代號
+    const venNo = rowData?.VEN_No;
+    if (!venNo) {
+      console.warn('找不到廠客代號 (VEN_No)');
+      return;
+    }
+
+    // 開啟明細 Dialog
+    this.openDetail(venNo, bucket);
+  }
+
+  /**
+   * 開啟明細 Dialog 並查詢資料
+   * @param venNo 廠客代號
+   * @param bucket 對應的 Bucket
+   */
+  openDetail(venNo: string, bucket: Fin34040Bucket): void {
+    // 重置 Dialog 狀態
+    this.dialogVisible = true;
+    this.dialogLoading = true;
+    this.dialogData = [];
+    this.dialogFooterData = null;
+    this.dialogTotalRecords = 0;
+    this.dialogTableVer++;
+
+    // 建立查詢 payload
+    const payload = this.buildDetailPayload(venNo, bucket);
+
+    // 呼叫明細 API
+    this.fin34040Service
+      .queryFIN34040Detail(payload)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: ApiResponse<Fin34040DetailResponse>) => {
+          const allDetails = res?.Data?.Details || [];
+
+          // 分離總計列和明細資料
+          const dataRows = allDetails.filter(row => !row.IsTotal);
+          const totalRow = allDetails.find(row => row.IsTotal) || null;
+
+          // 為明細資料加上 _rowKey 供表格使用
+          dataRows.forEach((row, idx) => {
+            (row as any)._rowKey = idx + 1;
+          });
+
+          this.dialogData = dataRows;
+          this.dialogFooterData = totalRow;
+          this.dialogTotalRecords = dataRows.length;
+        },
+        error: (err: any) => {
+          console.error('FIN34040 明細查詢錯誤:', err);
+          this.dialogData = [];
+          this.dialogFooterData = null;
+          this.dialogTotalRecords = 0;
+        },
+      })
+      .add(() => {
+        this.dialogLoading = false;
+      });
+  }
+
+  /**
+   * 關閉明細 Dialog
+   * @param visible Dialog 顯示狀態
+   */
+  onDialogClose(visible: boolean): void {
+    this.dialogVisible = visible;
   }
 }
