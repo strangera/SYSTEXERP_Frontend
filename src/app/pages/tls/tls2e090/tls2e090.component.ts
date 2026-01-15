@@ -59,6 +59,7 @@ export class TLS2E090Component extends BasicQueryPageComponent<Tls2e090Data> imp
     pageIndex: [1],
     SortBy: [[{ field: 'tlt_no', order: 1 }]],
     is_tax: [true],
+    store_way: [null as '1' | '2' | null], // 新增：null=全部, '1'=專櫃, '2'=自營
   });
 
   reportType: ReportType = '1';
@@ -176,7 +177,9 @@ export class TLS2E090Component extends BasicQueryPageComponent<Tls2e090Data> imp
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.loading2 = true;
+      this.loading = true;  // 控制一般專櫃 loading
+      this.loading2 = true; // 控制自營專櫃 loading
+
       const rawValue = frm.getRawValue();
       const transformedBusClassList: string[][] = rawValue.bus_classList.map((item: any) => [item.bus_type || '', item.No || '']);
 
@@ -190,22 +193,35 @@ export class TLS2E090Component extends BasicQueryPageComponent<Tls2e090Data> imp
       };
 
       const queryFn = this.getCurrentQueryFunction();
+      const sw = rawValue.store_way;
 
-      // Table 1: store_wayList ['1']
-      queryFn({ ...baseBody, store_wayList: ['1'] }).pipe(untilDestroyed(this as any), finalize(() => this.loading = false)).subscribe(res => {
-        this.data1 = res.Data;
-        this.totalRecords1 = res.TotalCount;
-        this.footerData1 = res.footerData?.[0] || null;
-        this.lastQueryBody1 = { ...baseBody, store_wayList: ['1'] };
-      });
+      // 只有在選「全部」或「專櫃」時才打第一個 API
+      if (sw === null || sw === '1') {
+        queryFn({ ...baseBody, store_wayList: ['1'] })
+          .pipe(untilDestroyed(this as any), finalize(() => this.loading = false))
+          .subscribe(res => {
+            this.data1 = res.Data;
+            this.totalRecords1 = res.TotalCount;
+            this.footerData1 = res.footerData?.[0] || null;
+            this.lastQueryBody1 = { ...baseBody, store_wayList: ['1'] };
+          });
+      } else {
+        this.loading = false;
+      }
 
-      // Table 2: store_wayList ['2']
-      queryFn({ ...baseBody, store_wayList: ['2'] }).pipe(untilDestroyed(this as any), finalize(() => this.loading2 = false)).subscribe(res => {
-        this.data2 = res.Data;
-        this.totalRecords2 = res.TotalCount;
-        this.footerData2 = res.footerData?.[0] || null;
-        this.lastQueryBody2 = { ...baseBody, store_wayList: ['2'] };
-      });
+      // 只有在選「全部」或「自營」時才打第二個 API
+      if (sw === null || sw === '2') {
+        queryFn({ ...baseBody, store_wayList: ['2'] })
+          .pipe(untilDestroyed(this as any), finalize(() => this.loading2 = false))
+          .subscribe(res => {
+            this.data2 = res.Data;
+            this.totalRecords2 = res.TotalCount;
+            this.footerData2 = res.footerData?.[0] || null;
+            this.lastQueryBody2 = { ...baseBody, store_wayList: ['2'] };
+          });
+      } else {
+        this.loading2 = false;
+      }
     });
   }
 }
