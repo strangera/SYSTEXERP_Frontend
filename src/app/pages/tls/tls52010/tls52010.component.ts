@@ -73,12 +73,10 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
   selectedItems: ITLS52010Data[] = []; // 用於儲存選中的項目
   addButton: AddButton[] = [
     { label: '單據審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.已審核); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已申請 || !this.hasPermission(Actions.Audit) }, // 審核
-    { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.已申請); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已審核 }, // 反審核
-    { label: '產生標籤檔', icon: 'pi pi-tags', action: (rowData: ITLS52010Data) => { this.generateLabelFile(rowData); } }, // 標籤檔
-    { label: '作廢', icon: 'pi pi-trash text-red-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.作廢); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已審核 }, // 作廢
-    { label: '取消單據', icon: 'pi pi-times-circle text-gray-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.取消); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已申請 }, // 取消單據
-    // { label: '列印採購單PDF', icon: 'fa fa-file-pdf text-red-500', action: (rowData: ITLS52010Data) => { this.print(rowData, 'pdf') } },
-    // { label: '列印採購單EXCEL', icon: 'fa fa-file-lines text-green-500', action: (rowData: ITLS52010Data) => { this.print(rowData, 'excel') } }
+    { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.已申請); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已審核 || !this.hasPermission(Actions.AntiAudit) }, // 反審核
+    { label: '產生標籤檔', icon: 'pi pi-tags', action: (rowData: ITLS52010Data) => { this.generateLabelFile(rowData); }, disabled: () => !this.hasPermission(Actions.TagPrint) }, // 標籤檔
+    { label: '作廢', icon: 'pi pi-trash text-red-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.作廢); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已審核 || !this.hasPermission(Actions.Invalidate) }, // 作廢
+    { label: '取消單據', icon: 'pi pi-times-circle text-gray-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.取消); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已申請 || !this.hasPermission(Actions.CancelDocument) }, // 取消單據
   ];
   columns: Column[] = [
     { field: 'PO_No', header: '採購單號', visible: true }, // 採購單號
@@ -98,8 +96,6 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     { field: 'PO_TotalBuyNet', header: '進價未稅小計', visible: true, format: formatAmount }, // 採購總淨額
     { field: 'PO_TotalBuyTax', header: '進價稅額小計', visible: true, format: formatAmount }, // 採購總稅額
     { field: 'PO_TotalBuyAmt', header: '進價合計', visible: true, format: formatAmount }, // 採購總金額
-    // { field: 'PO_TotalSaleNet', header: '售價未稅小計', visible: true, format: formatAmount }, // 銷售總淨額
-    // { field: 'PO_TotalSaleTax', header: '售價稅額小計', visible: true, format: formatAmount }, // 銷售總稅額
     { field: 'PO_TotalSaleAmt', header: '售價合計', visible: true, format: formatAmount }, // 銷售總金額
     { field: 'APRV_Date', header: '審核日期', visible: true, format: formatDate }, // 核准日期 (ISO 格式字串)
     { field: 'APRV_USR_No', header: '審核人員編號', visible: true }, // 核准人員編號

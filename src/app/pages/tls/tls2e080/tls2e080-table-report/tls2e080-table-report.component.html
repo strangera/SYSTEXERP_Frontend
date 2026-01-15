@@ -96,9 +96,9 @@
         [style]="{ height: showManage ? '40.6px' : '24px' }" class="no-wrap" alignFrozen="right" pFrozenColumn
         [frozen]="true" [style.text-align]="'center'">
         <p-button [text]="true" [outlined]="true" pTooltip="編輯" tooltipPosition="top" icon="pi pi-pencil"
-          (click)="edit.emit(rowData)" *ngIf="showEdit" [disabled]="editDisabled(rowData)" />
-        <p-button pTooltip="查看" tooltipPosition="top" icon="pi pi-eye" (click)="detail.emit(rowData)"
-          *ngIf="showDetail" />
+          (click)="edit.emit(rowData)" *ngIf="showEdit" [disabled]="editDisabled(rowData) || !hasPermission('30')"" />
+        <p-button pTooltip=" 查看" tooltipPosition="top" icon="pi pi-eye" (click)="detail.emit(rowData)"
+          [disabled]="!hasPermission('10')" *ngIf="showDetail" />
       </td>
     </tr>
     <ng-container *ngIf="hasSubtotalColumns()">
