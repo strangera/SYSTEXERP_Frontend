@@ -109,9 +109,9 @@ export interface Fin34040DetailRequest {
   /** 廠客代號 */
   VenNo: string;
   /** 立帳日期起 (yyyy-MM-dd) */
-  ARS_DateFrom: string;
+  ARS_DateFrom?: string | null;
   /** 立帳日期迄 (yyyy-MM-dd) */
-  ARS_DateTo: string;
+  ARS_DateTo?: string | null;
   /** 分析日期 (yyyy-MM-dd) */
   BaseDate: string;
 }
