@@ -16,7 +16,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { POS2004 } from '../../../shared/models/tls/tls000.model';
 
@@ -100,7 +100,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
       field: 'CAT_SName', header: '小分類', visible: true,
     },
     {
-      field: 'PLU_SalePrc', header: '商品售價', visible: true,
+      field: 'PLU_SalePrc', header: '商品售價', visible: true, format: formatAmount
     },
     {
       field: 'PLU_Attribute', header: '商品型態代碼', visible: false,
