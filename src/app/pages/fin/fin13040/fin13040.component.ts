@@ -20,7 +20,7 @@ import { Column, formatAmount } from 'src/app/shared/componentkit/table/table.mo
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 //1.1.4.3 形成申報書
 @Component({
@@ -37,7 +37,7 @@ import { YearMonthComponent } from '../fin11020/query-year-month/query-year-mont
     CalendarComponent,
     CommonModule,
     DropdownComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     InputTextComponent,
     CalendarRangeComponent,
@@ -92,6 +92,7 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
   });
   data: any[] = [];
   totalRecords = 0;
+  footerData: any = {};
   InvoiceType_Options: { label: string; value: string }[] = [];
   SAL_Type_Options = getSYS1000Options('SAL_Type');
   taxTypeOptions = getSYS1000Options('PUR_TaxType');
@@ -212,6 +213,10 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
           next: (res) => {
             this.data = res?.Data?.Data ?? [];
             this.totalRecords = res?.Data?.TotalCount ?? 0;
+            this.footerData = {};
+            this.footerData['PUR_Net'] = res?.Data?.TotalNet ?? 0;
+            this.footerData['PUR_Tax'] = res?.Data?.TotalTax ?? 0;
+            this.footerData['PUR_Amt'] = res?.Data?.TotalAmt ?? 0;
           },
           complete: () => (this.loading = false),
         });

@@ -16,6 +16,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 import { TableEditComponent } from './fin13040-table-edit/fin13040-table-edit.component';
 import { EditColumn } from './fin13040-table-edit/fin13040-table-edit.model';
 
@@ -36,7 +37,8 @@ import { EditColumn } from './fin13040-table-edit/fin13040-table-edit.model';
     TranslateModule,
     TableEditComponent,
     ButtonModule,
-    NgIf
+    NgIf,
+    YearMonthComponent
   ],
 })
 export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -57,6 +59,8 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     PUR_Tax: [0],
     PUR_Amt: [0],
     PUR_Net: [0],
+    Invoice_Cancel: ['N', Validators.required],
+    INV_DeclareYM: ['', Validators.required],
   });
 
   /** 下拉選單與資料 */
@@ -65,7 +69,10 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
   taxTypeOptions = getSYS1000Options('PUR_TaxType');
   AssetNoteOptions = getSYS1000Options('AssetType');
   Buyer_Uniform_Options: any[] = [];
-
+  Invoice_CancelOptions = [
+    { label: '是', value: 'Y' },
+    { label: '否', value: 'N' }
+  ];
   /** 明細資料表 */
   columns: EditColumn[] = [];
   data: any[] = [];
@@ -138,7 +145,20 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         });
       });
   }
-
+  loadGuiTrackOptions(event: any): void {
+    // 根據申報年月載入字軌下拉（參考 FIN15010）
+    this.dropDownListService.queryPOS1018_GUI_TRACK_DropDownList({
+      GUI_YYMM: event,
+      MID: 0,
+      STO_No: '10',
+      GUI_Type: this.dataForm.controls.InvoiceType.value ? [this.dataForm.controls.InvoiceType.value] : []
+    }).pipe(untilDestroyed(this)).subscribe(r => {
+      // 若回傳結構不同，嘗試從 r.Data.GuiTracks 取得陣列
+      const tracks = r?.Data?.GuiTracks ?? r?.Data ?? [];
+      // 不直接存到 control，僅供其他下拉使用；若需要可存到 this.guiTrackOptions
+      console.log('[loadGuiTrackOptions] tracks', tracks);
+    });
+  }
   // ======================== 主檔填入 ========================
   private fillHeaderData(header: any): void {
     // 處理 AssetType：嘗試以下拉選項比對完整 code 或片段，並填入下拉可辨識的 value

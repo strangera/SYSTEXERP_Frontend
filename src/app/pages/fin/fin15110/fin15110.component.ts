@@ -311,7 +311,15 @@ export class FIN15110Component
 
     this.dropDownListService
       .queryPOS1002_DropDownList()
-      .subscribe((data) => (this.ECRNoOptions = data.Data));
+      .subscribe((res) => {
+        const list = res?.Data ?? [];
+        this.ECRNoOptions = list.map((item: any) => ({
+          No: item.No ?? '',
+          Name: `${item.No ?? ''}-${item.Name ?? ''}`,
+          label: `${item.No ?? ''}-${item.Name ?? ''}`,
+          value: item.No ?? '',
+        }));
+      });
 
     // 初始化預設欄位配置
     this.columns = this.getColumnsByReportType(this.queryForm.value.displayMode || '1');
