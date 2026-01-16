@@ -41,7 +41,7 @@ export interface Potential_Customer {
   VEN_BossFax?: string; // 廠商聯絡人傳真
   VEN_BossMobile?: string; // 廠商聯絡人行動電話
   VEN_BossEmail?: string; // 廠商聯絡人電子郵件
-  VEN_Addr?: string; // 公司通訊地址
+  VEN_Addr?: string; // 郵寄地址
   VEN_PersonInCharge?: string; // 公司負責人
   business_type?: string; // 經營方式
   demanded_area?: number; // 需求面積 (小數，預設 0)
@@ -128,7 +128,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     VEN_BossFax: ['', [Validators.maxLength(20), this.validationService.phoneNumberValidator]], // 廠商聯絡人傳真
     VEN_BossMobile: ['', [Validators.maxLength(20), this.validationService.phoneNumberValidator]], // 廠商聯絡人行動電話
     VEN_BossEmail: ['', [Validators.maxLength(60), this.validationService.noChineseValidator]], // 廠商聯絡人電子郵件
-    VEN_Addr: ['', [Validators.maxLength(100)]], // 公司通訊地址
+    VEN_Addr: ['', [Validators.maxLength(100)]], // 郵寄地址
     VEN_PersonInCharge: ['', [Validators.maxLength(20)]], // 公司負責人
     business_type: [null, [Validators.maxLength(1)]], // 經營方式(SYS1000.T117)（長度1，1=生產者、2=代理商、3=經銷商、4=其它）
 

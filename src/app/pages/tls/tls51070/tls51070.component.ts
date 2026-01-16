@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { Actions, PermissionGuardService } from '@shared/service/permission-guard.service';
 import saveAs from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
@@ -29,6 +30,16 @@ import { POS2004 } from '../../../shared/models/tls/tls000.model';
   imports: [MenubarComponent, FileUploadModule, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, TableComponent, TranslateModule, DropdownTableComponent]
 })
 export class TLS51070Component extends BasicQueryPageComponent<POS2004> implements OnInit {
+  // ---確認許可權限---
+  // 2. 注入 PermissionGuardService
+  private permissionService = inject(PermissionGuardService);
+
+  // 將 Actions 暴露給 Template 使用
+  public get ActionType() {
+    return Actions;
+  }
+  // ------
+
   // 查詢
   queryForm = this.formBuilder.group({
     // POS2004 商品主檔
@@ -524,4 +535,12 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
       },
     });
   }
+
+  // ---確認許可權限---
+  // 3. 新增一個輔助方法用於 Template 判斷
+  hasAuth(action: Actions): boolean {
+    return this.permissionService.
+      hasPermission(this.ProgNo, action);
+  }
+  // ------
 }
