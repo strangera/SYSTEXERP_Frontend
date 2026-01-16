@@ -92,10 +92,8 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="FIN13060" [data]="data" [columns]="columns" dataKey="ID" [showDelete]="false"
-    [showReportMode]="false" [multiSortMeta]="[{ field: 'ID', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
-    [loading]="loading" (edit)="onEdit($event)" (detail)="onDetail($event)" [showManage]="true" [showCheckBox]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)">
-
-  </app-table>
+  <app-table-report tableKey="FIN13060" [data]="data" [columns]="columns" dataKey="ID" [showDelete]="false"
+    [showReportMode]="false" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [showManage]="true" [showCheckBox]="false" [footerData]="footerData">
+  </app-table-report>
 </div>
