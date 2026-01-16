@@ -1,3 +1,4 @@
+import { NgClass } from '@angular/common';
 import { Component, computed, effect, OnInit, signal, TemplateRef, viewChild } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -33,6 +34,7 @@ import { TableEditComponent } from './table-edit/table-edit.component';
   styleUrl: './fin53010-cru.component.scss',
   standalone: true,
   imports: [
+    NgClass,
     ButtonModule,
     CheckboxModule,
     DropdownModule,
@@ -236,6 +238,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         field: 'NoteDesc',
         header: '摘要',
         type: this.isFormCreateable ? 'dropdown' : void 0,
+        allowCustomValue: true,
         options: (v: FIN53010DetailTable) => this.service.noteDescOptions().find(item => item.value === v.AccNo)?.data ?? [],
         optionLabel: 'label',
         optionValue: 'value',

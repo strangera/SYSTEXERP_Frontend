@@ -10,6 +10,7 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
@@ -33,6 +34,7 @@ import { FIN53010Data, FIN53010Payload } from './fin53010.model';
     InputNumberRangeComponent,
     InputTextComponent,
     MenubarComponent,
+    MultiSelectComponent,
     RadiobuttonComponent,
     TableComponent,
   ],
@@ -51,8 +53,8 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     /** 傳票狀態 0:作廢 1:建立 2:確認(取消確認動作) 3:過帳 */
     PostFlag: new FormControl<'0' | '1' | '3' | void>(void 0),
     Remark: new FormControl<string | void>(void 0),
-    /** 傳票種類(SYS1000.VoucherType) */
-    VoucherType: new FormControl<string | void>(void 0),
+    /** 傳票型態(SYS1000.VoucherType) (多選) */
+    VoucherType: new FormControl<string[]>([]),
     CRT_USR_No: new FormControl<string | void>(void 0),
     UPD_USR_No: new FormControl<string | void>(void 0),
     CrtDateStart: new FormControl<Date | void>(void 0),
@@ -108,6 +110,7 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
         ...this.queryForm.getRawValue(),
         VouNoStart: String(vns ?? ''),
         VouNoEnd: String(vne ?? ''),
+        VoucherType: this.formatListForBackend(this.qf().VoucherType.value),
       } as FIN53010Payload;
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
         v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
@@ -127,5 +130,16 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
         },
       });
     });
+  }
+
+  /**
+   * 輔助函數：將陣列轉換為逗號分隔的字串
+   * 參考功能：TLS32020、TLS32030
+   */
+  private formatListForBackend(list: string[] | null): string | null {
+    if (Array.isArray(list) && list.length > 0) {
+      return list.map(item => String(item)).join(',');
+    }
+    return null;
   }
 }
