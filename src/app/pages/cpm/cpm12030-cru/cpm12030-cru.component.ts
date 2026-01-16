@@ -24,9 +24,9 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 export class CPM12030CRUComponent extends BasicCruPageComponent<CPM12030Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     ID: [0],
-    KIND_ID: [null, [Validators.required, Validators.maxLength(10)]], // 子類別編號
-    KIND_SubID: [null, [Validators.required, Validators.maxLength(40)]], // 責任單位名稱類別名稱
-    KIND_SubName: [null, [Validators.required]], // 客戶意見主類別
+    KIND_ID: [null, [Validators.required, Validators.maxLength(10)]],
+    KIND_SubID: [{ value: '系統自動編號', disabled: true }, [Validators.required, Validators.maxLength(40)]],
+    KIND_SubName: [null, [Validators.required]],
   });
   KIND_IDOptions$ = this.dropdown.queryCss1002();
   CLASS_IDOptions$ = this.dropdown.queryCss1005();
@@ -92,7 +92,7 @@ export class CPM12030CRUComponent extends BasicCruPageComponent<CPM12030Data> im
       const params = {
         ID: this.isFormCreateable ? undefined : frm.get('ID')?.value,
         KIND_ID: frm.get('KIND_ID')?.value,
-        KIND_SubID: frm.get('KIND_SubID')?.value,
+        KIND_SubID: this.isFormCreateable ? undefined : frm.getRawValue().KIND_SubID,
         KIND_SubName: frm.get('KIND_SubName')?.value,
         CLASS_IDs: this.data.map(item => item.CLASS_ID)
       }
@@ -101,6 +101,7 @@ export class CPM12030CRUComponent extends BasicCruPageComponent<CPM12030Data> im
         this.messageService.successBubble(response.Message);
         if (this.isFormCreateable) {
           this.dataForm.reset();
+          this.data = [];
         } else {
           this.onCancel();
         }
