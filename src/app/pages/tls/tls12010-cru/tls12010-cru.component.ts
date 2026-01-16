@@ -129,6 +129,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     VEN_BossMobile: ['', [Validators.maxLength(20), this.validationService.phoneNumberValidator]], // 廠商聯絡人行動電話
     VEN_BossEmail: ['', [Validators.maxLength(60), this.validationService.noChineseValidator]], // 廠商聯絡人電子郵件
     VEN_Addr: ['', [Validators.maxLength(100)]], // 郵寄地址
+    VEN_Address: ['', [Validators.maxLength(100)]], // 公司營登地址
     VEN_PersonInCharge: ['', [Validators.maxLength(20)]], // 公司負責人
     business_type: [null, [Validators.maxLength(1)]], // 經營方式(SYS1000.T117)（長度1，1=生產者、2=代理商、3=經銷商、4=其它）
 

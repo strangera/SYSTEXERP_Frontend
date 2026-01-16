@@ -45,6 +45,8 @@ export interface FIN55030Detail {
   PTA: string;
   PTA1: number;
   PTA2: number;
+
+  Label?: string; // AccNo + AccCName
 }
 
 // 巢狀父資料（包含 data 與 summary）

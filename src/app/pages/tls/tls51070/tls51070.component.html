@@ -220,8 +220,6 @@
       [showExcel]="true"
       (exportExcel)="onExportExcel()"
       [exportExcelLoading]="excelLoading"
-      [showExcelImport]="hasAuth(ActionType.ExcelImport)"
-      [showExcelExport]="hasAuth(ActionType.ExportTemplate)"
       (importExcel)="onFileUpload($event)"
       [showCheckBox]="true"
       dataKey="id"
