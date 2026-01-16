@@ -1,4 +1,4 @@
-import { NgFor, NgIf } from '@angular/common';
+import { NgClass, NgFor, NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
@@ -40,7 +40,7 @@ interface CategoryItem {
   templateUrl: './tls13010-next1.component.html',
   styleUrls: ['./tls13010-next1.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, NgIf, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, NgFor, DialogComponent]
+  imports: [MenubarComponent, ButtonComponent, NgIf, NgClass, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, NgFor, DialogComponent]
 })
 export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
 

@@ -47,6 +47,7 @@ export class ConditionDataManager {
 
   /**
    * 根據抽成類型初始化空的條件數據
+   * 注意：類型 4, 5, 6 不預先產生資料，等使用者按新增時才建立
    */
   initializeEmptyConditions(commissionType: string, talentId: string, existingItems?: any[]): ConditionItem[] {
     switch (commissionType) {
@@ -55,11 +56,14 @@ export class ConditionDataManager {
       case '2':
         return [this.createBaseRentHigherItem(talentId)];
       case '4':
-        return [this.createBaseCommissionItem(talentId)];
+        // 包底抽成：不預先產生資料，等使用者按新增時才建立
+        return [];
       case '5':
-        return [this.createGraduatedItem(talentId, existingItems as GraduatedCommissionCondition[])];
+        // 層級抽成：不預先產生資料，等使用者按新增時才建立
+        return [];
       case '6':
-        return [this.createBaseTierItem(talentId, existingItems as BaseTierCondition[])];
+        // 包底加層級：不預先產生資料，等使用者按新增時才建立
+        return [];
       default:
         return [];
     }
@@ -67,6 +71,7 @@ export class ConditionDataManager {
 
   /**
    * 使用智能日期初始化空的條件數據（新方法）
+   * 注意：類型 4, 5, 6 不預先產生資料，等使用者按新增時才建立
    */
   initializeSmartConditions(
     commissionType: string,
@@ -75,6 +80,11 @@ export class ConditionDataManager {
     contractEndDate: string,
     existingItems?: any[]
   ): ConditionItem[] {
+    // 類型 4, 5, 6 不預先產生資料
+    if (['4', '5', '6'].includes(commissionType)) {
+      return [];
+    }
+
     try {
       const newItem = this.createSmartConditionItem(
         commissionType,
