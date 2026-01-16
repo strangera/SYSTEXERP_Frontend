@@ -359,9 +359,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       { field: 'ACT_PayAmt', header: '實收帳', format: formatAmount },
       { field: 'MOD_PayAmt', header: '調整後實收帳', format: formatAmount, type: 'inputNumber', min: -999999999 },
       { field: 'OVER_PayAmt', header: '系統/實收帳差異', format: formatAmount },
-      {
-        header: '狀況', field: 'OVER_Status', format: (v: any) => { if (typeof v === 'string') return v; if (v < 0) return '欠'; if (v === 0) return '平'; if (v > 0) return '溢'; return v; },
-      },
+      { field: 'OVER_Status', header: '狀況' },
     ];
   }
   calculateAdjustedAmounts(rowData: any): void {
