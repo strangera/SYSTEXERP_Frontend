@@ -1,6 +1,16 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
-import { AccNoDropdown, FIN52090Data, FIN52090Insert, FIN52090Query } from '@pages/fin/fin52090/fin52090.model';
+import {
+  AccNoDropdown,
+  FIN52090Data,
+  FIN52090DeleteRequest,
+  FIN52090DeleteResponse,
+  FIN52090Insert,
+  FIN52090InsertResponse,
+  FIN52090Query,
+  FIN52090UpdateRequest,
+  FIN52090UpdateResponse,
+} from '@pages/fin/fin52090/fin52090.model';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
 import { finalize, Observable, take, tap } from 'rxjs';
@@ -31,19 +41,25 @@ export class FIN52090Service {
     );
   };
 
-  public saveFIN52090Data(payload: FIN52090Insert): Observable<BaseQueryResponse<FIN52090Data>> {
-    return this.http.post<BaseQueryResponse<FIN52090Data>>(`${apiUrl}/insertFIN52090`, payload).pipe(
+  public saveFIN52090Data(payload: FIN52090Insert): Observable<BaseQueryResponse<FIN52090InsertResponse>> {
+    return this.http.post<BaseQueryResponse<FIN52090InsertResponse>>(`${apiUrl}/insertFIN52090`, payload).pipe(
       take(1),
-      tap(res => this.logger.debug('更新FIN52090結果:', [res])),
+      tap(res => this.logger.debug('新增FIN52090結果:', [res])),
     );
   };
 
-  public updateFIN52090(data: any): Observable<any> {
-    return this.http.post<any>(`${apiUrl}/updateFIN52090`, data);
+  public updateFIN52090(data: FIN52090UpdateRequest): Observable<BaseQueryResponse<FIN52090UpdateResponse>> {
+    return this.http.post<BaseQueryResponse<FIN52090UpdateResponse>>(`${apiUrl}/updateFIN52090`, data).pipe(
+      take(1),
+      tap(res => this.logger.debug('更新FIN52090結果:', [res])),
+    );
   }
 
-  public deleteFIN52090(data: any): Observable<any> {
-    return this.http.post<any>(`${apiUrl}/deleteFIN52090`, data);
+  public deleteFIN52090(data: FIN52090DeleteRequest): Observable<BaseQueryResponse<FIN52090DeleteResponse>> {
+    return this.http.post<BaseQueryResponse<FIN52090DeleteResponse>>(`${apiUrl}/deleteFIN52090`, data).pipe(
+      take(1),
+      tap(res => this.logger.debug('刪除FIN52090結果:', [res])),
+    );
   }
 
   public getAccNo(): void {

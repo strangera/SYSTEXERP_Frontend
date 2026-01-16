@@ -14,7 +14,7 @@ import { Column, createPaginationConfig } from '@shared/componentkit/table/table
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { FIN52090Data, FIN52090Query } from './fin52090.model';
+import { FIN52090Data, FIN52090DeleteRequest, FIN52090Query } from './fin52090.model';
 
 
 @Component({
@@ -64,7 +64,8 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
   }, { allowSignalWrites: true });
 
   public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52090Data; })[] = [
-    { field: 'AccNo', header: '科目代號', format: v => this.service.accNoMap.get(v) ?? v },
+    { field: 'AccNo', header: '科目代號' },
+    { field: 'AccName', header: '科目名稱' },
     { field: 'NoteDesc', header: '科目摘要' },
   ];
 
@@ -89,7 +90,8 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
 
   onDelete(selectedRows: any[]) {
     const ids = selectedRows.map(row => row.id);
-    this.service.deleteFIN52090({ ids }).subscribe({
+    const payload: FIN52090DeleteRequest = { Ids: ids };
+    this.service.deleteFIN52090(payload).subscribe({
       next: () => {
         this.onSubmit();
         this.selectedRows = [];
@@ -100,14 +102,30 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
 
   onSubmit() {
     this.handleSubmit(this.queryForm, () => {
+      const rawValue = this.queryForm.getRawValue();
       const raw = {
-        ...this.queryForm.getRawValue(),
+        ...rawValue,
         AccNo: this.qf().AccNo.value?.length ? this.qf().AccNo.value : void 0,
         NoteDesc: this.qf().NoteDesc.value ?? void 0,
+        // 轉換分頁欄位為大寫（API 需要大寫）
+        PageSize: rawValue.pageSize,
+        PageIndex: rawValue.pageIndex,
+        SortBy: rawValue.SortBy,
+        // OrderBy 和 Offset 為可選欄位，如果需要的話可以在這裡加入
+        // OrderBy: undefined,
+        // Offset: undefined,
       } as FIN52090Query;
-      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+
+      // 過濾掉 undefined、null 和空陣列
+      const filtered = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
         v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
-      )) as unknown as FIN52090Query;
+      ));
+
+      // 移除小寫的分頁欄位，避免重複
+      delete (filtered as any).pageSize;
+      delete (filtered as any).pageIndex;
+
+      const payload = filtered as unknown as FIN52090Query;
 
       this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
