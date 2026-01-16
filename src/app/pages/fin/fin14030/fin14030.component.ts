@@ -1,5 +1,5 @@
 import { CommonModule, JsonPipe } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -7,6 +7,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Fin14030Service } from '@service/api/fin/fin14030.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { Actions, PermissionGuardService } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -65,6 +66,16 @@ interface REP_TaxNo_list {
 })
 
 export class FIN14030Component extends BasicQueryPageComponent<unknown> implements OnInit {
+  // ---確認許可權限---
+  // 2. 注入 PermissionGuardService
+  private permissionService = inject(PermissionGuardService);
+
+  // 將 Actions 暴露給 Template 使用
+  public get ActionType() {
+    return Actions;
+  }
+  // ------
+
   queryForm = this.formBuilder.group({
     Mid: [this.authService.getUserInfo()?.mid ?? null, [Validators.required]], // section抓
     STO_No: [this.authService.getUserInfo()?.SYS_StoreNo ?? null, [Validators.required]], // section抓
@@ -287,4 +298,12 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
 
     throw new Error('convertDateToYYYYMM: 不支援的日期格式');
   }
+
+  // ---確認許可權限---
+  // 3. 新增一個輔助方法用於 Template 判斷
+  hasAuth(action: Actions): boolean {
+    return this.permissionService.
+      hasPermission(this.ProgNo, action);
+  }
+  // ------
 }

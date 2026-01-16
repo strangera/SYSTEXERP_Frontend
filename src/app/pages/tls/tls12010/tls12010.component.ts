@@ -36,7 +36,7 @@ export interface Potential_Customer {
   VEN_BossFax?: string; // 廠商聯絡人傳真
   VEN_BossMobile?: string; // 廠商聯絡人行動電話
   VEN_BossEmail?: string; // 廠商聯絡人電子郵件
-  VEN_Addr?: string; // 公司通訊地址
+  VEN_Addr?: string; // 郵寄地址
   VEN_PersonInCharge?: string; // 公司負責人
   business_type?: string; // 經營方式
   demanded_area?: number; // 需求面積 (小數，預設 0)
@@ -131,7 +131,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
     { field: 'VEN_BossFax', header: '廠商聯絡人傳真', visible: true },
     { field: 'VEN_BossMobile', header: '廠商聯絡人行動電話', visible: true },
     { field: 'VEN_BossEmail', header: '廠商聯絡人電子郵件', visible: true },
-    { field: 'VEN_Addr', header: '公司通訊地址', visible: true },
+    { field: 'VEN_Addr', header: '郵寄地址', visible: true },
     { field: 'VEN_PersonInCharge', header: '公司負責人', visible: true },
     {
       field: 'business_type', header: '經營方式', visible: true, format: (value: string) =>
@@ -168,7 +168,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
         next: (response) => {
           if (response.Status === '0000') {
             this.data = response.Data || [];
-            console.log('Result', this.data);
+            console.log('Result', response.Data);
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
           } else {

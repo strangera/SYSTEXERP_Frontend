@@ -8,6 +8,7 @@
     <app-button
       label="產生標籤檔"
       (click)="gotoTls51070OS('label')"
+      [disabled]="hasAuth(ActionType.TagPrint)"
     ></app-button>
     <p-fileUpload
       id="customButton"
@@ -17,6 +18,7 @@
       accept=".png"
       (onSelect)="onIMGUpload($event); fileUpload.clear()"
       [auto]="true"
+      [disabled]="hasAuth(ActionType.ExcelImport)"
       chooseLabel="匯入圖片"
     />
     <app-button
@@ -218,6 +220,8 @@
       [showExcel]="true"
       (exportExcel)="onExportExcel()"
       [exportExcelLoading]="excelLoading"
+      [showExcelImport]="hasAuth(ActionType.ExcelImport)"
+      [showExcelExport]="hasAuth(ActionType.ExportTemplate)"
       (importExcel)="onFileUpload($event)"
       [showCheckBox]="true"
       dataKey="id"
