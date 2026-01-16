@@ -132,6 +132,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
     { field: 'VEN_BossMobile', header: '廠商聯絡人行動電話', visible: true },
     { field: 'VEN_BossEmail', header: '廠商聯絡人電子郵件', visible: true },
     { field: 'VEN_Addr', header: '郵寄地址', visible: true },
+    { field: 'VEN_Address', header: '公司營登地址', visible: true },
     { field: 'VEN_PersonInCharge', header: '公司負責人', visible: true },
     {
       field: 'business_type', header: '經營方式', visible: true, format: (value: string) =>
