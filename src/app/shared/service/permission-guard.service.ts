@@ -3,7 +3,6 @@ import { SystemDataService } from '@service/system/system-data.service';
 import { FunsrightInfo } from '../models/system/funsrightInfo';
 
 export enum Actions {
-  // 標準 CRUD 行為
   Query = '10',          // 查詢/讀取 (R)
   Create = '20',         // 新增 (C)
   Edit = '30',           // 修改 (U)
@@ -11,7 +10,6 @@ export enum Actions {
   Report = '50',         // 報表
   Print = '60',          // 列印
   ExportExcel = '70',    // 匯出 EXCEL
-  // 客製化/進階 行為
   Audit = '80',            // 審核
   AntiAudit = '90',        // 反審核
   Download = '100',        // 下傳
@@ -28,11 +26,15 @@ export enum Actions {
   ConfirmDailyClose = '210',       // 確定日結
   AntiDailyClose = '220',          // 反日結
   TransferFile = '230',            // 轉檔
-  ImportCSV = '240',               // 匯入CSV
+  ImportCSV = '240',               // 匯入CSV、Excel
   AllocateNumber = '250',          // 配號
   CancelInvalidate = '260',        // 取消作廢
   CarryForward = '270',            // 結轉
   Preview = '280',                 // 預覽
+  CancelDocument = '290',          // 取消單據
+  TagPrint = '300',                // 產生標籤檔
+  CloseCase = '305',              // 結案
+  ExportTemplate = '320',          // 匯出範本
 }
 
 @Injectable({

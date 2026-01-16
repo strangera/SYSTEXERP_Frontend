@@ -260,7 +260,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
       export$.pipe(untilDestroyed(this)),
       '.pdf',
       (isLoading) => this.btnLoading = isLoading
-    );
+    ).subscribe();
   }
 
   onExportXLSX() {
@@ -277,7 +277,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
       export$.pipe(untilDestroyed(this)),
       '.xlsx',
       (isLoading) => this.btnLoading = isLoading
-    );
+    ).subscribe();
   }
   /**
   * 獲取當前日期是當年的第幾週 (基於 ISO 8601: 星期一為一週開始)

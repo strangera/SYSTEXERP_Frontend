@@ -8,6 +8,7 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { FileExportService } from '@shared/service/file-export.service';
+import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -127,19 +128,19 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
       label: '單據審核',
       icon: 'pi pi-check-circle text-green-500',
       action: (rowData: ITLS52030Data) => { this.statusChange(rowData, POStatus.已審核); },
-      disabled: (rowData: ITLS52030Data) => rowData.ODM_Status !== POStatus.已確認
+      disabled: (rowData: ITLS52030Data) => rowData.ODM_Status !== POStatus.已確認 || !this.hasPermission(Actions.Audit)
     },
     {
       label: '反審核',
       icon: 'pi pi-undo text-orange-500',
       action: (rowData: ITLS52030Data) => { this.statusChange(rowData, POStatus.已確認); },
-      disabled: (rowData: ITLS52030Data) => rowData.Request_No !== null || rowData.ODM_Status !== POStatus.已審核
+      disabled: (rowData: ITLS52030Data) => rowData.Request_No !== null || rowData.ODM_Status !== POStatus.已審核 || !this.hasPermission(Actions.AntiAudit)
     },
     {
       label: '作廢單據',
       icon: 'pi pi-trash text-red-500',
       action: (rowData: ITLS52030Data) => { this.statusChange(rowData, POStatus.作廢); },
-      disabled: (rowData: ITLS52030Data) => rowData.ODM_Status !== POStatus.已確認
+      disabled: (rowData: ITLS52030Data) => rowData.ODM_Status !== POStatus.已確認 || !this.hasPermission(Actions.Invalidate)
     },
   ];
 
@@ -254,6 +255,6 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
       export$.pipe(untilDestroyed(this), finalize(() => { this.printLoading = false; this.selectedItems = [] })),
       '.' + type,
       (isLoading) => this.btnLoading = isLoading
-    );
+    ).subscribe();
   }
 }

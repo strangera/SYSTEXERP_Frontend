@@ -413,7 +413,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',
       }
       const export$ = this.tls24010Service.exportTLS24010PDF(body);
-      this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading);
+      this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading).subscribe();
       this.submitted = false;
     } else {
       this.btnLoading = false;

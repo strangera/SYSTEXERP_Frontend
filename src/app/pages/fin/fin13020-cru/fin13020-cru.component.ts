@@ -96,7 +96,7 @@ export class FIN13020CRUComponent
   ngOnInit(): void {
     this.initializePage('FIN13020', this.dataForm);
     this.updateDisabledState();
-    this.setupAmountRelations();          // 🔢 金額欄位互算
+    this.setupAmountRelations();          // 🔢 金額欄位互算（已改為整數）
     this.setupRemainAmountCalculation();  // 留骨架
 
     this.dataForm.get('TXN_Ret_No')?.disable();
@@ -137,84 +137,78 @@ export class FIN13020CRUComponent
   }
 
   // 監聽字軌 + 發票號碼，查對應資料
-// 監聽字軌 + 發票號碼，查對應資料
-private setupGuiNoAndCorrespondWatcher(): void {
-  const trackControl = this.dataForm.get('GUI_Track');
-  const noControl = this.dataForm.get('PUR_GUINo');
+  private setupGuiNoAndCorrespondWatcher(): void {
+    const trackControl = this.dataForm.get('GUI_Track');
+    const noControl = this.dataForm.get('PUR_GUINo');
 
-  if (trackControl && noControl) {
-    const trigger = () => {
-      const track = (trackControl.value as string | null)?.trim();
-      const guiNo = (noControl.value as string | null)?.trim();
+    if (trackControl && noControl) {
+      const trigger = () => {
+        const track = (trackControl.value as string | null)?.trim();
+        const guiNo = (noControl.value as string | null)?.trim();
 
-      if (track && guiNo) {
-        const full = `${track}${guiNo}`;
+        if (track && guiNo) {
+          const full = `${track}${guiNo}`;
 
-        this.dataForm.patchValue(
-          { InvoiceNumber_Correspond: full },
-          { emitEvent: false },
-        );
+          this.dataForm.patchValue(
+            { InvoiceNumber_Correspond: full },
+            { emitEvent: false },
+          );
 
-        this.fin13020Service
-          .queryCorrespondByGUINoCorrespond({ InvoiceNumber_Correspond: full })
-          .subscribe((res) => {
-            const detail = res?.Data?.[0];
-            if (detail) {
-              // 🔄 這裡改用 InvoiceType，而不是 PUR_VoucherType
-              const invoiceType = detail.InvoiceType as string | undefined;
+          this.fin13020Service
+            .queryCorrespondByGUINoCorrespond({ InvoiceNumber_Correspond: full })
+            .subscribe((res) => {
+              const detail = res?.Data?.[0];
+              if (detail) {
+                const invoiceType = detail.InvoiceType as string | undefined;
 
-              let voucherType = '';
-              if (invoiceType === '31' || invoiceType === '35') {
-                // 31 / 35 → 三聯式折讓證明單 33
-                voucherType = '33';
-              } else if (invoiceType === '32') {
-                // 32 → 二聯式折讓證明單 34
-                voucherType = '34';
+                let voucherType = '';
+                if (invoiceType === '31' || invoiceType === '35') {
+                  voucherType = '33';
+                } else if (invoiceType === '32') {
+                  voucherType = '34';
+                } else {
+                  voucherType = '';
+                }
+
+                this.dataForm.get('PUR_VoucherType')?.enable(); // 暫時開
+
+                this.dataForm.patchValue(
+                  {
+                    Inv_Date: detail.InvoiceDate,
+                    PUR_VoucherType: voucherType,
+                    PUR_TaxType: detail.PUR_TaxType,
+                    Inv_Net: detail.PUR_Net,
+                    Inv_Tax: detail.PUR_Tax,
+                    Total_hitory_PUR_Amt: detail.Total_hitory_PUR_Amt,
+                    Total_Amt: detail.Total_Amt,
+                  },
+                  { emitEvent: false },
+                );
+
+                this.dataForm.get('PUR_VoucherType')?.disable(); // 關回去
               } else {
-                voucherType = ''; // 不再填 OK
+                this.dataForm.patchValue(
+                  {
+                    Inv_Date: null,
+                    PUR_VoucherType: '',
+                    PUR_TaxType: '',
+                    Inv_Net: null,
+                    Inv_Tax: null,
+                    PUR_Amt: null,
+                    Total_hitory_PUR_Amt: null,
+                    Total_Amt: null,
+                  },
+                  { emitEvent: false },
+                );
               }
+            });
+        }
+      };
 
-              this.dataForm.get('PUR_VoucherType')?.enable(); // 暫時開
-
-              this.dataForm.patchValue(
-                {
-                  Inv_Date: detail.InvoiceDate,          // 發票日期 (如果你要顯示)
-                  PUR_VoucherType: voucherType,          // 顯示 33 / 34
-                  PUR_TaxType: detail.PUR_TaxType,
-                  Inv_Net: detail.PUR_Net,
-                  Inv_Tax: detail.PUR_Tax,
-                  Total_hitory_PUR_Amt: detail.Total_hitory_PUR_Amt,
-                  Total_Amt: detail.Total_Amt,
-                },
-                { emitEvent: false },
-              );
-
-              this.dataForm.get('PUR_VoucherType')?.disable(); // 關回去
-            } else {
-              // 查不到則清空
-              this.dataForm.patchValue(
-                {
-                  Inv_Date: null,
-                  PUR_VoucherType: '',
-                  PUR_TaxType: '',
-                  Inv_Net: null,
-                  Inv_Tax: null,
-                  PUR_Amt: null,
-                  Total_hitory_PUR_Amt: null,
-                  Total_Amt: null,
-                },
-                { emitEvent: false },
-              );
-            }
-          });
-      }
-    };
-
-    trackControl.valueChanges.subscribe(trigger);
-    noControl.valueChanges.subscribe(trigger);
+      trackControl.valueChanges.subscribe(trigger);
+      noControl.valueChanges.subscribe(trigger);
+    }
   }
-}
-
 
   // ✅ 僅允許特定欄位可編輯
   private updateDisabledState(): void {
@@ -251,7 +245,11 @@ private setupGuiNoAndCorrespondWatcher(): void {
     this.handleSubmit(form, () => {
       const formValue = form.getRawValue();
 
-      // 明確組 payload：只送 Swagger 需要的欄位
+      // ⭐ 保證送出去的是整數（如果有值）
+      const intNet = this.toIntOrNull(formValue.PUR_Net);
+      const intTax = this.toIntOrNull(formValue.PUR_Tax);
+      const intAmt = this.toIntOrNull(formValue.PUR_Amt);
+
       if (this.crudstatus === CRUDStatus.Edit) {
         const payload = {
           id: formValue.id,
@@ -261,9 +259,9 @@ private setupGuiNoAndCorrespondWatcher(): void {
           InvoiceDate: formValue.PUR_GUIDate,
           INV_DeclareYM: this.toYYYYMM(formValue.PUR_RepYYYYMM),
           Credit_Type: formValue.Credit_Type,
-          PUR_Net: formValue.PUR_Net,
-          PUR_Tax: formValue.PUR_Tax,
-          PUR_Amt: formValue.PUR_Amt,
+          PUR_Net: intNet,
+          PUR_Tax: intTax,
+          PUR_Amt: intAmt,
           Source_Doc_No: formValue.Source_Doc_No,
           APS40235List: this.detailRows.map((row) => ({
             PLU_Name: row.PLU_Name,
@@ -282,7 +280,7 @@ private setupGuiNoAndCorrespondWatcher(): void {
       } else {
         // Create 對應 insertFIN13020Request
         const payload = {
-          Source: 'APS', // 🔧 固定 APS，如要 POS 再改
+          Source: 'APS',
           GUI_Track: formValue.GUI_Track,
           InvoiceNumber: formValue.PUR_GUINo,
           InvoiceDate: formValue.PUR_GUIDate,
@@ -290,9 +288,9 @@ private setupGuiNoAndCorrespondWatcher(): void {
           INV_DeclareYM: this.toYYYYMM(formValue.PUR_RepYYYYMM),
           Credit_Type: formValue.Credit_Type,
           PUR_TaxType: formValue.PUR_TaxType,
-          PUR_Net: formValue.PUR_Net,
-          PUR_Tax: formValue.PUR_Tax,
-          PUR_Amt: formValue.PUR_Amt,
+          PUR_Net: intNet,
+          PUR_Tax: intTax,
+          PUR_Amt: intAmt,
           Source_Doc_No: formValue.Source_Doc_No,
           APS40235List: this.detailRows.map((row) => ({
             PLU_Name: row.PLU_Name,
@@ -312,7 +310,7 @@ private setupGuiNoAndCorrespondWatcher(): void {
     });
   }
 
-  // 🔢 退出/折讓金額 ↔ 稅額 ↔ 總金額 的互算邏輯
+  // ⭐ 退出/折讓金額 ↔ 稅額 ↔ 總金額 的互算邏輯（全部用整數）
   private setupAmountRelations(): void {
     const netControl = this.dataForm.get('PUR_Net'); // 退出/折讓金額
     const taxControl = this.dataForm.get('PUR_Tax'); // 退出/折讓稅額（自動）
@@ -328,21 +326,24 @@ private setupGuiNoAndCorrespondWatcher(): void {
       if (updatingFromAmt) return;
       updatingFromNet = true;
 
-      const net = Number(value);
-
       if (value === null || value === undefined || value === '') {
         taxControl.setValue(null, { emitEvent: false });
         amtControl.setValue(null, { emitEvent: false });
-      } else if (!isNaN(net)) {
-        // 先清空
-        taxControl.setValue(null, { emitEvent: false });
-        amtControl.setValue(null, { emitEvent: false });
+        updatingFromNet = false;
+        return;
+      }
 
-        const tax = this.roundTo(net * 0.05);
-        const total = this.roundTo(net + tax);
+      const rawNet = Number(value);
+      if (!isNaN(rawNet)) {
+        // 金額全部用整數
+        const netInt = this.roundToInt(rawNet);
+        const taxInt = this.roundToInt(netInt * 0.05); // 先算稅額再四捨五入成整數
+        const totalInt = this.roundToInt(netInt + taxInt);
 
-        taxControl.setValue(tax, { emitEvent: false });
-        amtControl.setValue(total, { emitEvent: false });
+        // 回填成整數
+        netControl.setValue(netInt, { emitEvent: false });
+        taxControl.setValue(taxInt, { emitEvent: false });
+        amtControl.setValue(totalInt, { emitEvent: false });
       }
 
       updatingFromNet = false;
@@ -353,30 +354,43 @@ private setupGuiNoAndCorrespondWatcher(): void {
       if (updatingFromNet) return;
       updatingFromAmt = true;
 
-      const total = Number(value);
-
       if (value === null || value === undefined || value === '') {
         netControl.setValue(null, { emitEvent: false });
         taxControl.setValue(null, { emitEvent: false });
-      } else if (!isNaN(total)) {
-        // total = net + tax，且 tax = net * 0.05 ⇒ total = net * 1.05 ⇒ net = total / 1.05
-        const net = this.roundTo(total / 1.05);
-        const tax = this.roundTo(total - net);
+        updatingFromAmt = false;
+        return;
+      }
 
-        netControl.setValue(null, { emitEvent: false });
-        taxControl.setValue(null, { emitEvent: false });
+      const rawTotal = Number(value);
+      if (!isNaN(rawTotal)) {
+        const totalInt = this.roundToInt(rawTotal);
 
-        netControl.setValue(net, { emitEvent: false });
-        taxControl.setValue(tax, { emitEvent: false });
+        // total = net + tax, tax = round(net * 0.05)
+        // 反推 net，大致用 total / 1.05，再取整數
+        const approxNet = totalInt / 1.05;
+        const netInt = this.roundToInt(approxNet);
+        const taxInt = totalInt - netInt; // 保證 net + tax = total，三者皆整數
+
+        amtControl.setValue(totalInt, { emitEvent: false });
+        netControl.setValue(netInt, { emitEvent: false });
+        taxControl.setValue(taxInt, { emitEvent: false });
       }
 
       updatingFromAmt = false;
     });
   }
 
-  private roundTo(value: number, fractionDigits = 2): number {
-    const factor = Math.pow(10, fractionDigits);
-    return Math.round(value * factor) / factor;
+  // ⭐ 四捨五入為整數
+  private roundToInt(value: number): number {
+    return Math.round(value);
+  }
+
+  // ⭐ 將任意值轉成整數（或 null）
+  private toIntOrNull(value: any): number | null {
+    if (value === null || value === undefined || value === '') return null;
+    const n = Number(value);
+    if (isNaN(n)) return null;
+    return this.roundToInt(n);
   }
 
   // 歷史金額 / 剩餘金額計算骨架（目前實際沒掛到控制項，不影響）

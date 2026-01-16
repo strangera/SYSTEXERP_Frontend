@@ -106,7 +106,7 @@
             </div>
 
             <!-- 使用 expandable-edit-table 組件 -->
-            <div *ngIf="hasDataForType(capType)" class="col-12">
+            <div *ngIf="hasDataForType(capType)" class="col-12" [ngClass]="{'compact-table-d': capType === 'D'}">
               <app-expandable-edit-table
                 [data]="fareData[capType]"
                 [mainColumns]="getColumnsForType(capType)"
@@ -131,8 +131,8 @@
                 [forceEditMode]="shouldForceEdit"
                 [showActionColumn]="false"
                 [showSequenceNumber]="false"
-                [minColumnWidth]="80"
-                [maxColumnWidth]="350"
+                [minColumnWidth]="capType === 'D' ? 45 : 80"
+                [maxColumnWidth]="capType === 'D' ? 120 : 350"
                 (save)="onFareTableSave($event, capType)"
                 (edit)="onFareTableEdit($event, capType)"
                 (cancel)="onFareTableCancel($event, capType)"

@@ -132,7 +132,7 @@ export class TLS57190Component extends BasicQueryPageComponent<TLS57190Data> imp
       return;
     }
     const export$ = this.tls57190Service.exportTLS57190PDF(this.lastQueryBody);
-    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
 
   onExportXLSX() {
@@ -141,7 +141,7 @@ export class TLS57190Component extends BasicQueryPageComponent<TLS57190Data> imp
       return;
     }
     const export$ = this.tls57190Service.exportTLS57190Excel(this.lastQueryBody);
-    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
 
   // 管理編號

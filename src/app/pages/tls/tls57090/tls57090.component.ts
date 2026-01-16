@@ -201,7 +201,7 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
       export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
       '.pdf',
       (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
-    );
+    ).subscribe();
   }
 
   onExportXLSX() {
@@ -216,6 +216,6 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
       export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
       '.xlsx',
       (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
-    );
+    ).subscribe();
   }
 }

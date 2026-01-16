@@ -148,7 +148,7 @@ export class FIN63050Component extends BasicQueryPageComponent<Fin63050ListData>
     const export$ = this.fin63050Service.exportFIN63050PDF(this.lastQuery);
     this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf',
       (isLoading) => this.btnLoading = isLoading
-    );
+    ).subscribe();
   }
 
   onExportXLSX() {
@@ -159,6 +159,6 @@ export class FIN63050Component extends BasicQueryPageComponent<Fin63050ListData>
     const export$ = this.fin63050Service.exportFIN63050(this.lastQuery);
     this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx',
       (isLoading) => this.btnLoading = isLoading
-    );
+    ).subscribe();
   }
 }

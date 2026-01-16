@@ -1,10 +1,11 @@
 <div class="card tls52050">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button [outlined]="true" label="匯出EXCEL範本"
+    <app-button [outlined]="true" label="匯出EXCEL範本" [disabled]="!this.hasPermission(Actions.ExportTemplate)"
       (click)="excelExportService.exportTemplate(excelColumns, '進價/售價變價作業Excel範本')"></app-button>
     <p-fileUpload #fileUpload mode="basic" chooseIcon="pi pi-upload" accept=".xlsx,.xls"
-      (onSelect)="importExcel($event);fileUpload.clear()" [auto]="true" chooseLabel="匯入EXCEL" />
+      (onSelect)="importExcel($event);fileUpload.clear()" [auto]="true" chooseLabel="匯入EXCEL"
+      [disabled]="!this.hasPermission(Actions.ImportCSV)" />
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>

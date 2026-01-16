@@ -31,13 +31,6 @@ import { FIN52010Data, FIN52010UpdatePayload } from './fin52010.model';
 })
 export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> implements OnInit {
 
-  // 日期格式選項
-  public readonly dateFormatOptions = [
-    { value: 'YYYY', label: 'YYYY' },
-    { value: 'YYYY/MM', label: 'YYYY/MM' },
-    { value: 'YYYY/MM/DD', label: 'YYYY/MM/DD' },
-  ];
-
   private formatYmDisplay(value?: string | null): string | undefined {
     if (!value) return value as any;
     const v = value.toString();
@@ -58,7 +51,6 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
     AccYear: new FormControl<string | void>(void 0, [Validators.required]),
     OpenDate: new FormControl<string | void>(void 0, [Validators.required]),
     CloseDate: new FormControl<string | void>(void 0, [Validators.required]),
-    DefaultVouDate: new FormControl<string | void>(void 0),
     ORG_ID: new FormControl<string | void>(void 0, [Validators.required]),
     AccNoTotPL: new FormControl<string | void>(void 0, [Validators.required]),
     AccNoCurPL: new FormControl<string | void>(void 0, [Validators.required]),
@@ -69,7 +61,6 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
     AccNoOutTax: new FormControl<string | void>(void 0),
     AccNoPost: new FormControl<string | void>(void 0),
     AccNoRemitFee: new FormControl<string | void>(void 0),
-    advanceExpenseAccNo: new FormControl<string | void>(void 0),
     billTransferCon: new FormControl<'N' | 'Y'>('N'),
   });
   public readonly df = computed(() => this.dataForm.controls);

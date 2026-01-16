@@ -8,20 +8,21 @@
     <p-inputNumber [inputId]="controlName" [title]="label" [name]="label" [formControl]="control" [readonly]="readonly"
       [disabled]="disabled" [placeholder]="customPlaceholder ? customPlaceholder:
         control.disabled || readonly ? '' : placeholder
-      " [showButtons]="showButtons" [max]="max || maxValue" [step]="step" [useGrouping]="useGrouping"
-      [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits" [ngClass]="inputNumberClasses"
-      [mode]="mode" [maxlength]="maxLength" (onInput)="onInputChange($event)" (onBlur)="onBlur($event)"
-      [pTooltip]="customPlaceholder || placeholder" tooltipPosition="bottom" [pKeyFilter]="keyFilter" />
+      " [showButtons]="showButtons" [max]="allowUnlimited ? null : (max || maxValue)" [step]="step"
+      [useGrouping]="useGrouping" [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
+      [ngClass]="inputNumberClasses" [mode]="mode" [attr.maxlength]="allowUnlimited ? null : maxLength"
+      (onInput)="onInputChange($event)" (onBlur)="onBlur($event)" [pTooltip]="customPlaceholder || placeholder"
+      tooltipPosition="bottom" [pKeyFilter]="keyFilter" />
   </ng-container>
   <ng-template #inputNumber>
     <p-inputNumber [inputId]="controlName" [title]="label" [name]="label" [formControl]="control" [readonly]="readonly"
       [disabled]="disabled" [placeholder]=" customPlaceholder ? customPlaceholder:
         control.disabled || readonly ? '' : placeholder
-      " [showButtons]="showButtons" [min]="min || minValue" [max]="max || maxValue" [step]="step"
-      [useGrouping]="useGrouping" [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
-      [ngClass]="inputNumberClasses" [mode]="mode" [maxlength]="maxLength" (onInput)="onInputChange($event)"
-      (onBlur)="onBlur($event)" [pTooltip]="customPlaceholder || placeholder" tooltipPosition="bottom"
-      [pKeyFilter]="keyFilter" />
+      " [showButtons]="showButtons" [min]="min || minValue" [max]="allowUnlimited ? null : (max || maxValue)"
+      [step]="step" [useGrouping]="useGrouping" [minFractionDigits]="minFractionDigits"
+      [maxFractionDigits]="maxFractionDigits" [ngClass]="inputNumberClasses" [mode]="mode"
+      [attr.maxlength]="allowUnlimited ? null : maxLength" (onInput)="onInputChange($event)" (onBlur)="onBlur($event)"
+      [pTooltip]="customPlaceholder || placeholder" tooltipPosition="bottom" [pKeyFilter]="keyFilter" />
   </ng-template>
   <p-inputGroupAddon *ngIf="suffix">{{ suffix }}</p-inputGroupAddon>
 </p-inputGroup>
