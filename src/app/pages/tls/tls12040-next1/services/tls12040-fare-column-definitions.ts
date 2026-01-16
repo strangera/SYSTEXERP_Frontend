@@ -539,7 +539,7 @@ export class TLS12040FareColumnDefinitions {
   }
 
   /**
-   * 取得 D 類型（比率分攤）欄位定義
+   * 取得 D 類型（比率分攤）欄位定義 - 緊湊樣式
    */
   static getDeductionDColumns(contractInfoData: any[] = []): ColumnDef[] {
     return [
@@ -547,174 +547,153 @@ export class TLS12040FareColumnDefinitions {
         field: 'is_selected',
         header: '新增',
         type: 'checkbox',
-        // autoEditOnSelect: true,
-        // autoSaveOnUnselect: true,
+        editable: true,
+        style: 'width: 45px; min-width: 45px;'
       },
       {
         field: 'copy_button',
         header: '複製',
         type: 'button',
-        // buttonLabel: '複製',
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
         buttonTooltip: '複製此扣款項目',
-
+        style: 'width: 45px; min-width: 45px;'
       },
       {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
         editable: false,
-
+        style: 'width: 55px; min-width: 55px; font-size: 0.65rem;'
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
         editable: false,
-        autoWidth: true,
-        style: 'white-space: normal; word-break: break-word; line-height: 1.3; max-width: 150px; min-width: 100px;'
+        style: 'width: 80px; min-width: 80px; font-size: 0.8rem; white-space: normal; word-break: break-word; line-height: 1.2;'
       },
       {
         field: 'cap_saletype',
         header: '銷售類型',
         type: 'dropdown',
-
-        autoWidth: true,
+        editable: true,
         options: TLS13010_DROPDOWN_OPTIONS.capSaletypeOptions,
+        style: 'width: 90px; min-width: 90px; font-size: 0.65rem;'
       },
       {
         field: 'instms_type',
         header: '期數',
         type: 'dropdown',
-
-        autoWidth: true,
+        editable: true,
         options: TLS13010_DROPDOWN_OPTIONS.instmsTypeOptions,
+        style: 'width: 60px; min-width: 60px; font-size: 0.65rem;'
       },
       {
         field: 'edc_bank',
         header: '收單行',
         type: 'dropdown',
-
-        autoWidth: true,
+        editable: true,
         options: TLS13010_DROPDOWN_OPTIONS.edcBankOptions,
+        style: 'width: 90px; min-width: 90px; font-size: 0.65rem;'
       },
       {
         field: 'pay_no',
         header: '支付編號',
         type: 'dropdown',
-
-        autoWidth: true,
+        editable: true,
         options: [],
+        style: 'width: 90px; min-width: 90px; font-size: 0.65rem;'
       },
       {
         field: 'calc_type',
         header: '券類計算方式',
         type: 'dropdown',
-
-        autoWidth: true,
+        editable: true,
         options: TLS13010_DROPDOWN_OPTIONS.calcTypeOptions,
+        style: 'width: 90px; min-width: 90px; font-size: 0.65rem;'
       },
       {
         field: 'over_base_rate',
         header: '超過基準比率',
         type: 'number',
-
-        autoWidth: true,
+        editable: true,
+        style: 'width: 70px; min-width: 70px; font-size: 0.65rem;'
       },
       {
         field: 'rent_plus_rate',
         header: '加抽比率',
         type: 'number',
-
+        editable: true,
         required: true,
         allowDecimal: true,
         decimalPlaces: 3,
-        autoWidth: true,
-        style: 'min-width: 80px; width: 100px;',
+        style: 'width: 70px; min-width: 70px; font-size: 0.65rem;'
       },
       {
         field: 'down_payment',
         header: '超過基準金額',
         type: 'number',
-
-        autoWidth: true,
+        editable: true,
+        style: 'width: 80px; min-width: 80px; font-size: 0.65rem;'
       },
       {
         field: 'tpy_bdate',
         header: '扣款起始年月',
         type: 'date',
-
-        autoWidth: true,
+        editable: true,
         dateFormat: 'year-month',
-        style: 'min-width: 120px; width: 140px;',
         required: true,
-
-        // defaultValueFunction: () => {
-        //   const contractInfo = contractInfoData[0];
-        //   if (contractInfo?.tlt_contract_bdate) {
-        //     return new Date(contractInfo.tlt_contract_bdate);
-        //   }
-        //   return null;
-        // }
+        style: 'width: 95px; min-width: 95px; font-size: 0.65rem;'
       },
       {
         field: 'tpy_edate',
         header: '扣款結束年月',
         type: 'date',
-
+        editable: true,
         dateFormat: 'year-month',
         required: true,
-        style: 'min-width: 120px; width: 140px;',
-        // defaultValueFunction: () => {
-        //   const contractInfo = contractInfoData[0];
-        //   if (contractInfo?.tlt_contract_edate) {
-        //     return new Date(contractInfo.tlt_contract_edate);
-        //   }
-        //   return null;
-        // }
+        style: 'width: 95px; min-width: 95px; font-size: 0.65rem;'
       },
       {
         field: 'tpy_type',
         header: '單位',
         type: 'dropdown',
-
+        editable: true,
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
-        autoWidth: true,
         required: true,
-
+        style: 'width: 60px; min-width: 60px; font-size: 0.65rem;'
       },
       {
         field: 'tpy_rate',
         header: '比率',
         type: 'number',
-
+        editable: true,
         required: true,
         allowDecimal: true,
         decimalPlaces: 3,
-        style: 'min-width: 80px; width: 100px;', // 加寬讓數字可以完整顯示
+        style: 'width: 70px; min-width: 70px; max-width: 80px; font-size: 0.65rem;'
       },
       {
         field: 'org_id',
         header: '組織',
         type: 'dropdown',
+        editable: true,
+        options: [],
+        required: false,
         hidden: true,
-        options: [], // 需要動態設定
-        required: true,
-
       },
       {
         field: 'gui_flag',
         header: '是否開立發票',
         type: 'dropdown',
-
+        editable: true,
         options: [
           { label: '開立', value: 'Y' },
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        // defaultValue: 'Y',
-
+        style: 'width: 75px; min-width: 75px; max-width: 85px; font-size: 0.65rem;'
       }
     ];
   }
