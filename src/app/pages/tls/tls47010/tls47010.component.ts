@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   FormsModule,
   ReactiveFormsModule,
@@ -13,7 +13,6 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-
 
 @Component({
   selector: 'app-tls47010',
@@ -30,7 +29,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     TranslateModule,
   ],
 })
-export class TLS47010Component extends BasicQueryPageComponent<any> {
+export class TLS47010Component extends BasicQueryPageComponent<any> implements OnInit {
   ECRNoOptions: any[] = []; // 收銀機號下拉選單
   dataTypeOptions: any[] = [];
 
@@ -53,7 +52,7 @@ export class TLS47010Component extends BasicQueryPageComponent<any> {
     this.tls47010Service.ECROptions({}).subscribe((res) => {
       this.ECRNoOptions =
         res?.Data?.map((x: any) => ({
-          label: `${x.ECR_No} - ${x.ECR_Name}`,
+          label: `${x.ECR_No} - ${x.ECR_Name} - ${x.ECR_TLT_Name}`,
           value: x.ECR_No,
         })) || [];
     });
