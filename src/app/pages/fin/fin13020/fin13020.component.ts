@@ -45,16 +45,13 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     TXN_Ret_NoStart: [null, [Validators.maxLength(20)]], // 退出/折讓單號(起)
     TXN_Ret_NoEnd: [null, [Validators.maxLength(20)]],   // 退出/折讓單號(迄)
-    GUI_Track: [null, [Validators.maxLength(2)]],        // 字軌
+    GUI_Track: [null, [Validators.maxLength(2)]],        // 字軌 (查詢條件還是用 GUI_Track 給你方便)
     InvoiceNumberStart: [null, [Validators.maxLength(10)]],
     InvoiceNumberEnd: [null, [Validators.maxLength(10)]],
     InvoiceDateStart: [null],                            // 退出/折讓日期(起)
     InvoiceDateEnd: [null],                              // 退出/折讓日期(迄)
     InvoiceType: [null],                                 // 發票格式
-    INV_DeclareYM: [
-      null,
- 
-    ],                                                   // 申報年月
+    INV_DeclareYM: [null],                               // 申報年月
     Source_Doc_NoStart: [null, [Validators.maxLength(16)]], // 憑證單號(起)
     Source_Doc_NoEnd: [null, [Validators.maxLength(16)]],   // 憑證單號(迄)
     Voucher_NoStart: [null, [Validators.maxLength(16)]],    // 傳票編號(起)
@@ -65,29 +62,42 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
 
+  // ⭐ 這裡改成用「CRU 同一套欄位名稱」，讓 BasicCruPageComponent 能自動帶值過去
   columns: any[] = [
     { field: 'TXN_Ret_No', header: '退出/折讓單號', visible: true },
-    { field: 'PUR_GUINo', header: '字軌', visible: true },
-    { field: 'InvoiceNumber', header: '發票號碼', visible: true },
+
+    // GUI_Track：從後端的 InvoiceTrack 映射而來（onSubmit 內處理）
+    { field: 'GUI_Track', header: '字軌', visible: true },
+
+    // PUR_GUINo：從後端的 InvoiceNumber 映射而來
+    { field: 'PUR_GUINo', header: '發票號碼', visible: true },
+
+    // PUR_GUIDate：從後端的 InvoiceDate 映射而來
     {
       field: 'PUR_GUIDate',
       header: '退出/折讓日期',
       visible: true,
       format: this.formatDateFromBackend,
     },
+
+    // PUR_VoucherType：從 InvoiceType 映射而來
     { field: 'PUR_VoucherType', header: '發票格式', visible: true },
+
     {
       field: 'Credit_Type',
       header: '區別',
       visible: true,
       format: this.formatCreditType,
     },
+
+    // PUR_RepYYYYMM：從 INV_DeclareYM 映射而來
     {
       field: 'PUR_RepYYYYMM',
       header: '申報年月',
       visible: true,
       format: this.formatRepYYYYMM,
     },
+
     {
       field: 'PUR_Net',
       header: '退回/折讓金額',
@@ -95,6 +105,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
       format: (v: number) => this.money(v),
       exportFormat: 'number:comma2',
     },
+
     {
       field: 'PUR_Tax',
       header: '退回/折讓稅額',
@@ -102,7 +113,9 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
       format: (v: number) => this.money(v),
       exportFormat: 'number:comma2',
     },
+
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
+
     { field: 'Voucher_No', header: '傳票編號', visible: true },
   ];
 
@@ -187,7 +200,19 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
 
     this.fin13020Service.queryFIN13020(payload).subscribe({
       next: (res) => {
-        this.data = res.Data || [];
+        const raw = res.Data || [];
+
+        // ⭐ 關鍵：把後端 APS4023 的欄位名稱映射成 CRU 用的欄位名稱
+        this.data = raw.map((row: any) => ({
+          ...row,
+          // 給 CRU 用的
+          GUI_Track: row.InvoiceTrack,      // 字軌
+          PUR_GUINo: row.InvoiceNumber,     // 發票號碼
+          PUR_GUIDate: row.InvoiceDate,     // 退出/折讓日期
+          PUR_VoucherType: row.InvoiceType, // 發票格式
+          PUR_RepYYYYMM: row.INV_DeclareYM, // 申報年月
+        }));
+
         this.totalRecords = res.TotalCount || this.data.length;
 
         // 儲存查詢條件（含 INV_DeclareYM=YYYYMM）
