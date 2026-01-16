@@ -18,7 +18,8 @@
           optionValue="value" [submitted]="initialQuerySubmitted" />
         <!-- 交易流水號 -->
         <app-input-text class="col-12 md:col-6 lg:col-3" label="交易流水號" controlName="TXN_No"
-          [control]="initialQueryForm.controls.TXN_No" [submitted]="initialQuerySubmitted" [autoPadZero]="true" [padLength]="8"/>
+          [control]="initialQueryForm.controls.TXN_No" [submitted]="initialQuerySubmitted" [autoPadZero]="true"
+          [padLength]="8" />
         <!-- 銷售日期 -->
         <app-calendar class="col-12 md:col-6 lg:col-3" label="銷售日期" controlName="TXN_Date"
           [control]="initialQueryForm.controls.TXN_Date" [submitted]="initialQuerySubmitted" />
@@ -41,9 +42,9 @@
           optionValue="value" [filter]="true" />
       </div>
       <div class="grid p-fluid">
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
-          [control]="POS6118dataForm.controls.ECR_No" [submitted]="submitted">
-        </app-input-text>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
+          [control]="POS6118dataForm.controls.ECR_No" [options]="ECR_NoOptions | async" optionLabel="label"
+          optionValue="value" [submitted]="submitted" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="交易流水號" controlName="TXN_No"
           [control]="POS6118dataForm.controls.TXN_No" [submitted]="submitted">
         </app-input-text>
@@ -104,9 +105,9 @@
           optionValue="value" [filter]="true" />
       </div>
       <div class="grid p-fluid">
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
-          [control]="POS6119dataForm.controls.ECR_No" [submitted]="submitted">
-        </app-input-text>
+        <app-dropdown class="col-12 md:col-6 lg:col-3" label="收銀機號" controlName="ECR_No"
+          [control]="POS6119dataForm.controls.ECR_No" [options]="ECR_NoOptions | async" optionLabel="label"
+          optionValue="value" [submitted]="initialQuerySubmitted" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="交易流水號" controlName="TXN_No"
           [control]="POS6119dataForm.controls.TXN_No" [submitted]="submitted">
         </app-input-text>
@@ -162,9 +163,9 @@
           optionValue="value" [filter]="true" />
       </div>
       <div class="grid p-fluid">
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
-          [control]="POS6119PdataForm.controls.ECR_No" [submitted]="submitted">
-        </app-input-text>
+        <app-dropdown class="col-12 md:col-6 lg:col-3" label="收銀機號" controlName="ECR_No"
+          [control]="POS6119PdataForm.controls.ECR_No" [options]="ECR_NoOptions | async" optionLabel="label"
+          optionValue="value" [submitted]="initialQuerySubmitted" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="交易流水號" controlName="TXN_No"
           [control]="POS6119PdataForm.controls.TXN_No" [submitted]="submitted">
         </app-input-text>

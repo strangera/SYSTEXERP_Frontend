@@ -45,6 +45,7 @@ export interface KeyItem {
   type?: string;
   mergeRight?: number;
   mergeDown?: number;
+  KB_Merge?: string;
 }
 
 @Component({
@@ -244,11 +245,25 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         KB_Fonttyped: 'NNN',
         KB_Style: '1',
         KB_Switch: 'Y',
+        // reset merge properties
+        mergeRight: 0,
+        mergeDown: 0,
+        KB_Merge: '',
+        // reset colors
+        KB_Color: 'RGB:255,255,255',
+        KB_FontColor: 'RGB:0,0,0'
       });
     });
 
     if (!isMulti && this.selected) {
-      this.selectedKeyForm.patchValue(this.selected, { emitEvent: true });
+      // also reset color pickers and merge form controls so UI reflects cleared state
+      this.selectedKeyForm.patchValue({
+        ...this.selected,
+        color: null,
+        FontColor: null,
+        KB_Merge: this.selected.KB_Merge ?? ''
+      }, { emitEvent: true });
+      this.updateMergeDisplay();
     }
   }
   handleAttrAction(action: string, event: MouseEvent) {

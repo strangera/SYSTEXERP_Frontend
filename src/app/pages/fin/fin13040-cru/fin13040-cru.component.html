@@ -25,6 +25,8 @@
           <app-input-text label="發票號碼" [control]="dataForm.controls.INV_GUINumber"
             [submitted]="submitted"></app-input-text>
         </div>
+        <app-year-month class="col-12 md:col-6 lg:col-4" label="申報年月" [control]="dataForm.controls.INV_DeclareYM"
+          [submitted]="submitted" [evenMonth]="true" (valueChanges)="loadGuiTrackOptions($event)"></app-year-month>
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar label="發票日期" calendarType="dateOne" controlName="InvoiceDate"
             [control]="dataForm.controls.InvoiceDate" [submitted]="submitted"></app-calendar>
@@ -39,6 +41,11 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="課稅別" controlName="PUR_TaxType" [options]="taxTypeOptions" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.PUR_TaxType" [submitted]="submitted">
+          </app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="是否作廢" controlName="Invoice_Cancel" [options]="Invoice_CancelOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.Invoice_Cancel" [submitted]="submitted">
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">

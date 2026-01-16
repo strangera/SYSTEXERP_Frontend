@@ -17,10 +17,7 @@ export class Tls2a010Service {
       map(res => {
         if (res?.Data?.mainData) {
           res.footerData = res?.Data?.totalData ? res.Data.totalData[0] : {};
-          res.Data = res.Data.mainData.map((item: any) => ({
-            ...item,
-            OVER_Status: item.OVER_PayAmt
-          }));
+          res.Data = res.Data.mainData;
         }
         console.log('queryTLS2A010 處理後的 res:', res);
         return res; // 保持原結構，只改 Data.mainData
