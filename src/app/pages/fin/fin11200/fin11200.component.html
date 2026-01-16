@@ -1,7 +1,8 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" label="配號" (click)="onCreate()"></app-button>
+    <app-button label="配號" (click)="onAllocationOfNumber()" icon="pi pi-receipt"
+      [disabled]="!hasPermission(Actions.AllocateNumber)"></app-button>
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true">
@@ -40,7 +41,8 @@
     <header>
       <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }" pTooltip="下傳"
         tooltipPosition="top" pButton icon="pi pi-upload rotate-180" severity="success"
-        class="p-button-rounded p-button-text" [disabled]="selectedRows.length === 0" (click)="onUpload()"
+        class="p-button-rounded p-button-text"
+        [disabled]="selectedRows.length === 0 || !hasPermission(Actions.Download)" (click)="onUpload()"
         [loading]="btnLoading" />
     </header>
   </app-table>

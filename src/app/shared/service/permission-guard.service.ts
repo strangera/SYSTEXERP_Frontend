@@ -26,14 +26,14 @@ export enum Actions {
   ConfirmDailyClose = '210',       // 確定日結
   AntiDailyClose = '220',          // 反日結
   TransferFile = '230',            // 轉檔
-  ImportCSV = '240',               // 匯入CSV、Excel
+  ImportCSV = '240',               // 匯入CSV
   AllocateNumber = '250',          // 配號
   CancelInvalidate = '260',        // 取消作廢
   CarryForward = '270',            // 結轉
   Preview = '280',                 // 預覽
   CancelDocument = '290',          // 取消單據
   TagPrint = '300',                // 產生標籤檔
-  CloseCase = '305',              // 結案
+  CloseCase = '305',               // 結案
   ExportTemplate = '320',          // 匯出範本
 }
 

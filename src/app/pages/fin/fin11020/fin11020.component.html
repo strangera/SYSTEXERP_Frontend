@@ -3,7 +3,8 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <p-fileUpload #fileUpload mode="basic" chooseIcon="pi pi-upload" accept=".csv"
       (onSelect)="onFileUpload($event);fileUpload.clear()" [auto]="true" chooseLabel="匯入CSV"
-      [chooseIcon]="uploadLoading ? 'pi pi-spin pi-spinner' : 'pi pi-upload'" [disabled]="uploadLoading" />
+      [chooseIcon]="uploadLoading ? 'pi pi-spin pi-spinner' : 'pi pi-upload'"
+      [disabled]="uploadLoading || !this.hasPermission(Actions.ImportCSV)" />
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
