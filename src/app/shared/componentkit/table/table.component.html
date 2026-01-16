@@ -232,9 +232,10 @@
             <p-button *ngIf="editing" icon="pi pi-times text-red-500" (click)="onRowEditCancel(rowData, ri)" />
           </div>
           <p-button [text]="true" [outlined]="true" pTooltip="編輯" tooltipPosition="top" icon="pi pi-pencil"
-            (click)="editRow(rowData)" *ngIf="showEdit && !showRowEdit" [disabled]="editDisabled(rowData)" />
-          <p-button pTooltip="查看" tooltipPosition="top" icon="pi pi-eye" (click)="detailRow(rowData)"
-            *ngIf="showDetail && !showRowEdit" />
+            (click)="editRow(rowData)" *ngIf="showEdit && !showRowEdit"
+            [disabled]="editDisabled(rowData) || !hasPermission('30')" />
+          <p-button pTooltip="查看" tooltipPosition="top" icon="pi pi-eye" [disabled]="!hasPermission('10')"
+            (click)="detailRow(rowData)" *ngIf="showDetail && !showRowEdit" />
           <ng-container *ngIf="addButton.length">
             <div [ngStyle]="{ border: '1px solid var(--surface-border)', 'border-left': '0'}"></div>
             <p-button *ngFor="let btn of addButton" [label]="btn.displayText" pTooltip="{{ btn.label }}"

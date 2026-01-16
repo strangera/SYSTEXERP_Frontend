@@ -8,6 +8,7 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { FileExportService } from '@shared/service/file-export.service';
+import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -125,19 +126,19 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
       label: '單據審核',
       icon: 'pi pi-check-circle text-green-500',
       action: (rowData: ITLS52040Data) => { this.statusChange(rowData, POStatus.已審核); },
-      disabled: (rowData: ITLS52040Data) => rowData.RJM_Status !== POStatus.已確認
+      disabled: (rowData: ITLS52040Data) => rowData.RJM_Status !== POStatus.已確認 || !this.hasPermission(Actions.Audit)
     },
     {
       label: '反審核',
       icon: 'pi pi-undo text-orange-500',
       action: (rowData: ITLS52040Data) => { this.statusChange(rowData, POStatus.已確認); },
-      disabled: (rowData: ITLS52040Data) => rowData.Request_No !== null || rowData.RJM_Status !== POStatus.已審核
+      disabled: (rowData: ITLS52040Data) => rowData.Request_No !== null || rowData.RJM_Status !== POStatus.已審核 || !this.hasPermission(Actions.AntiAudit)
     },
     {
       label: '作廢單據',
       icon: 'pi pi-trash text-red-500',
       action: (rowData: ITLS52040Data) => { this.statusChange(rowData, POStatus.作廢); },
-      disabled: (rowData: ITLS52040Data) => rowData.RJM_Status !== POStatus.已確認
+      disabled: (rowData: ITLS52040Data) => rowData.RJM_Status !== POStatus.已確認 || !this.hasPermission(Actions.Invalidate)
     },
   ];
   constructor(
@@ -256,6 +257,6 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
       export$.pipe(untilDestroyed(this), finalize(() => { this.printLoading = false; this.selectedItems = [] })), // 傳遞 Observable 並加入銷毀處理
       '.' + type,                            // 傳遞檔案副檔名 (.pdf 或 .excel)
       (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
-    );
+    ).subscribe();
   }
 }

@@ -1,4 +1,4 @@
-import { AsyncPipe, NgClass, NgIf } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -41,7 +41,6 @@ import { validateMinNumber } from '../../../shared/componentkit/table/validate-f
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
-    NgClass,
     NgIf,
     InputNumberComponent,
     CalendarComponent,
@@ -481,8 +480,8 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     { field: 'UNIT_NAME', header: '單位' },
     { field: 'PLU_BoxQty', header: '包裝入數' },
     { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : '應稅' },
-    { field: 'PLU_SalePrc_UNI', header: '單價', showSort: false },
-    { field: 'PLU_SalePrc', header: '售價' },
+    { field: 'PLU_SalePrc_UNI', header: '單價', showSort: false, format: formatAmount },
+    { field: 'PLU_SalePrc', header: '售價', format: formatAmount },
   ];
   dialogLoading = false;
   loadDialogData() {

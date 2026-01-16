@@ -139,7 +139,7 @@ export class FIN55080Component extends BasicQueryPageComponent<QueryFIN55080Resp
       export$.pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)), // 傳遞 Observable 並加入銷毀處理
       '.' + 'pdf',        // 傳遞檔案副檔名
       (isLoading: boolean) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
-    );
+    ).subscribe();
   }
   // 匯出 Excel 事件處理
   onExportExcel() {
@@ -155,6 +155,6 @@ export class FIN55080Component extends BasicQueryPageComponent<QueryFIN55080Resp
       export$.pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)), // 傳遞 Observable 並加入銷毀處理
       '.' + 'xlsx',        // 傳遞檔案副檔名
       (isLoading: boolean) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
-    );
+    ).subscribe();
   }
 }

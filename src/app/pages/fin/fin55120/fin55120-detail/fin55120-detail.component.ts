@@ -112,6 +112,6 @@ export class Fin55120DetailComponent extends BasicCruPageComponent<unknown> impl
       return;
     }
     const export$ = this.fin55120Service.exportFIN55050DetailPDF({ VouNo: this.vouNo });
-    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.PDFBtnLoading = isLoading);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.PDFBtnLoading = isLoading).subscribe();
   }
 }

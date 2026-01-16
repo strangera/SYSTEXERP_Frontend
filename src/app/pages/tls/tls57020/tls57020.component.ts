@@ -92,7 +92,7 @@ export class TLS57020Component extends BasicQueryPageComponent<Tls57020TableRepo
       return;
     }
     const export$ = this.tls57020Service.exportTLS57020PDF(this.historyRequestBody);
-    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
   onExportXLSX() {
     if (!this.historyRequestBody) {
@@ -102,6 +102,6 @@ export class TLS57020Component extends BasicQueryPageComponent<Tls57020TableRepo
     const export$ = this.tls57020Service.exportTLS57020Excel(this.historyRequestBody);
     this.fileExportService.executeFileExport(
       export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading
-    );
+    ).subscribe();
   }
 }
