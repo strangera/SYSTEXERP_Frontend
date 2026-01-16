@@ -110,64 +110,110 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  /** 取出 redirectURL（優先讀取目前網址，其次讀 localStorage: preLoginUrlOnce） */
-  /** 取出 redirectURL（優先讀取目前網址，其次讀 localStorage: preLoginUrlOnce） */
-  private getRedirectFromPreLoginOrLocation(): string {
+ /** 取出完整 redirectURL（包含外層的 formsflow_id、popup 等） */
+private getRedirectFromPreLoginOrLocation(): string {
+  try {
+    // 1. 先用目前網址來組 redirect
+    const href = window.location.href;
+    console.log('[getRedirectFromPreLoginOrLocation] href:', href);
+
+    const u = new URL(href);
+
+    // 1-1. 先抓 redirectURL / redirect 參數（可能沒 encode，也可能有）
+    const rawRedirect =
+      u.searchParams.get('redirectURL') ||
+      u.searchParams.get('redirecturl') ||
+      u.searchParams.get('redirect') ||
+      '';
+
+    // 沒帶 redirect，就直接走 localStorage fallback
+    if (!rawRedirect) {
+      return this.getRedirectFromStorageFallback();
+    }
+
+    // 1-2. 把外層其餘 query（formsflow_id、popup...）撿起來
+    const outerParams = new URLSearchParams(u.search);
+    outerParams.delete('redirectURL');
+    outerParams.delete('redirecturl');
+    outerParams.delete('redirect');
+
+    const outerQuery = outerParams.toString(); // 例如：formsflow_id=1110&popup=1
+
+    // 1-3. 處理可能被 encode 過的 redirectURL
+    let baseRedirect = rawRedirect;
     try {
-      const href = window.location.href;
-      console.log('[getRedirectFromPreLoginOrLocation] href:', href);
+      baseRedirect = decodeURIComponent(rawRedirect);
+    } catch {
+      // 不是合法的 encode，就當作原字串用
+    }
 
-      // 1. 嘗試用 URL 物件取出（大小寫都支援）
-      const u = new URL(href);
-      const direct =
-        u.searchParams.get('redirectURL') ||
-        u.searchParams.get('redirecturl') ||
-        u.searchParams.get('redirect') ||
-        '';
+    if (!outerQuery) {
+      console.log('[LoginComponent] redirect (no outerQuery):', baseRedirect);
+      return baseRedirect;
+    }
 
-      if (direct) {
-        try {
-          const decoded = decodeURIComponent(direct);
-          console.log('[LoginComponent] redirect (URLSearchParams decoded):', decoded);
-          return decoded;
-        } catch {
-          console.log('[LoginComponent] redirect (URLSearchParams raw):', direct);
-          return direct;
-        }
-      }
+    // 1-4. 把外層 query 拼回去
+    const fullRedirect =
+      baseRedirect + (baseRedirect.includes('?') ? '&' : '?') + outerQuery;
 
-      // 2. fallback：直接用 regex 抓，容錯性最高
-      const match = href.match(/[?&](redirecturl|redirectURL|redirect)=([^&#]+)/i);
-      if (match && match[2]) {
-        const decoded = decodeURIComponent(match[2].replace(/\+/g, '%20'));
-        console.log('[LoginComponent] redirect (regex decoded):', decoded);
-        return decoded;
-      }
+    console.log('[LoginComponent] redirect (merged outerQuery):', fullRedirect);
+    return fullRedirect;
+  } catch (err) {
+    console.error('[getRedirectFromPreLoginOrLocation] error:', err);
+    return this.getRedirectFromStorageFallback();
+  }
+}
 
-      // 3. 再讀 localStorage 備份
-      const raw = localStorage.getItem(this.URL_KEY);
-      if (raw) {
-        const q = raw.indexOf('?');
-        if (q !== -1) {
-          const qs = raw.slice(q + 1);
-          for (const kv of qs.split('&')) {
-            const [k, v = ''] = kv.split('=');
-            if (/(redirecturl|redirect)/i.test(k)) {
-              const decoded = decodeURIComponent(v);
-              console.log('[LoginComponent] redirect (localStorage decoded):', decoded);
-              return decoded;
-            }
-          }
-        }
-      }
-
-      console.log('[LoginComponent] redirect not found anywhere');
-      return '';
-    } catch (err) {
-      console.error('[getRedirectFromPreLoginOrLocation] error:', err);
+/** 從 localStorage 裡的 preLoginUrlOnce 再做一次同樣的解析（備援用） */
+private getRedirectFromStorageFallback(): string {
+  try {
+    const raw = localStorage.getItem(this.URL_KEY);
+    if (!raw) {
+      console.log('[LoginComponent] redirect not found in storage');
       return '';
     }
+
+    const u = new URL(raw);
+    const rawRedirect =
+      u.searchParams.get('redirectURL') ||
+      u.searchParams.get('redirecturl') ||
+      u.searchParams.get('redirect') ||
+      '';
+
+    if (!rawRedirect) {
+      console.log('[LoginComponent] redirect not found in storage URL');
+      return '';
+    }
+
+    const outerParams = new URLSearchParams(u.search);
+    outerParams.delete('redirectURL');
+    outerParams.delete('redirecturl');
+    outerParams.delete('redirect');
+
+    const outerQuery = outerParams.toString();
+
+    let baseRedirect = rawRedirect;
+    try {
+      baseRedirect = decodeURIComponent(rawRedirect);
+    } catch {
+      // ignore
+    }
+
+    if (!outerQuery) {
+      console.log('[LoginComponent] redirect (storage, no outerQuery):', baseRedirect);
+      return baseRedirect;
+    }
+
+    const fullRedirect =
+      baseRedirect + (baseRedirect.includes('?') ? '&' : '?') + outerQuery;
+
+    console.log('[LoginComponent] redirect (storage merged):', fullRedirect);
+    return fullRedirect;
+  } catch (err) {
+    console.error('[getRedirectFromStorageFallback] error:', err);
+    return '';
   }
+}
 
   /** 安全地把查詢參數（token）附加/覆蓋到 URL 上 */
   private appendOrReplaceParam(url: string, key: string, value: string): string {

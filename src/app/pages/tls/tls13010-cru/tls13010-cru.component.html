@@ -968,29 +968,13 @@
               ></app-input-text>
 
               <!-- 郵寄地址 -->
-              <div class="field">
-                <div class="address-input-container">
-                  <!-- 使用 app-input-text 元件 -->
-                  <app-input-text
-                    label="郵寄地址"
-                    controlName="contact_addr"
-                    [control]="dataForm.controls.contact_addr"
-                    [submitted]="submitted"
-                    [readonly]="isFormReadonly"
-                  ></app-input-text>
-
-                  <!-- 按鈕 - 使用自定義樣式 -->
-                  <button
-                    type="button"
-                    [disabled]="!canCopyAddress() || isFormReadonly"
-                    (click)="copyCompanyAddressToContact()"
-                    class="copy-address-button"
-                  >
-                    <i class="pi pi-copy"></i>
-                    同公司登記地址
-                  </button>
-                </div>
-              </div>
+              <app-input-text
+                label="郵寄地址"
+                controlName="contact_addr"
+                [control]="dataForm.controls.contact_addr"
+                [submitted]="submitted"
+                [readonly]="isFormReadonly"
+              ></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-6"></div>
             <div class="col-12">

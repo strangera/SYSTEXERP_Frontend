@@ -2187,7 +2187,8 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
             tlt_name: potentialData.tlt_name || '',
             bus_type: potentialData.bus_type || '',
             contact_tel: potentialData.VEN_BossTel || '',
-            contact_fax: potentialData.VEN_BossFax || ''
+            contact_fax: potentialData.VEN_BossFax || '',
+            contact_addr: potentialData.VEN_Addr || ''  // 郵寄地址帶入 VEN_Addr
           }, { emitEvent: true }); // 👈 設為 true 以觸發 bus_type 的連動
 
           // 標記為已觸碰
@@ -2205,7 +2206,8 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
             tlt_name: '',
             bus_type: '',
             contact_tel: '',
-            contact_fax: ''
+            contact_fax: '',
+            contact_addr: ''
           }, { emitEvent: false });
 
           this.messageService.infoBubble('查無潛在客戶資料,僅帶入廠商基本資料');
@@ -2219,7 +2221,8 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
           tlt_name: '',
           bus_type: '',
           contact_tel: '',
-          contact_fax: ''
+          contact_fax: '',
+          contact_addr: ''
         }, { emitEvent: false });
 
         this.messageService.warnBubble('查詢潛在客戶資料失敗,僅帶入廠商基本資料');
