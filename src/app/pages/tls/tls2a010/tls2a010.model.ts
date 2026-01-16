@@ -49,14 +49,6 @@ export const defaultColumns = [
   {
     header: '狀況',
     field: 'OVER_Status',
-    sortField: 'OVER_PayAmt',
-    format: (v: number) => {
-      if (v < 0) return '欠';
-      if (v === 0) return '平';
-      if (v > 0) return '溢';
-      return v; // 預設 fallback
-    },
-
   },
   { header: '審核人員', field: 'check_usr_name' },
 
@@ -100,13 +92,6 @@ export const creditCardColumns: Column[] = [
   {
     header: '狀況',
     field: 'OVER_Status',
-    sortField: 'OVER_PayAmt',
-    format: (v: number) => {
-      if (v < 0) return '欠';
-      if (v === 0) return '平';
-      if (v > 0) return '溢';
-      return v; // 預設 fallback
-    },
   },
   { header: '審核人員', field: 'check_usr_name' },
   { header: '是否有缺單', field: 'lose_doc' }
