@@ -36,10 +36,12 @@ export class CPM12020Component extends BasicQueryPageComponent<CPM12020Response>
   lastQuery: CPM12020Request | null = null;
   columns: ReportColumn[] = [
     { field: 'ORG_ID', header: '組織代號' },
+    { field: 'ORG_NAME', header: '組織名稱' },
     { field: 'CLASS_CODE', header: '類別代號' },
+    { field: 'SYS_Name', header: '類別名稱' },
     { field: 'CLASS_NAME', header: '責任單位名稱' },
   ];
-  CLASS_CODEOptions = getSYS1000Options('T211')
+  CLASS_CODEOptions = getSYS1000Options('T211').map(item => ({ value: item.value, label: `${item.value} - ${item.label}` }));
   ORG_IDOptions$ = this.dropdown.querySys3100();
   constructor(
     public readonly cpm12020Service: Cpm12020Service,
