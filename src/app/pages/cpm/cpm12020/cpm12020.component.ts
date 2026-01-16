@@ -8,7 +8,7 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -40,6 +40,12 @@ export class CPM12020Component extends BasicQueryPageComponent<CPM12020Response>
     { field: 'CLASS_CODE', header: '類別代號' },
     { field: 'SYS_Name', header: '類別名稱' },
     { field: 'CLASS_NAME', header: '責任單位名稱' },
+    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateTime },
+    { field: 'CRT_USR_No', header: '建立人員編號', visible: false },
+    { field: 'CRT_USR_Name', header: '建立人員名稱', visible: false },
+    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime },
+    { field: 'UPD_USR_No', header: '變更人員編號', visible: false },
+    { field: 'UPD_USR_Name', header: '變更人員名稱', visible: false },
   ];
   CLASS_CODEOptions = getSYS1000Options('T211').map(item => ({ value: item.value, label: `${item.value} - ${item.label}` }));
   ORG_IDOptions$ = this.dropdown.querySys3100();
