@@ -5,8 +5,8 @@
     <app-button label="產生標籤檔" (click)="gotoTls51070OS('label')"
       [disabled]="!hasPermission(Actions.TagPrint)"></app-button>
     <p-fileUpload id="customButton" #fileUpload mode="basic" chooseIcon="pi pi-upload" accept=".png"
-      (onSelect)="onIMGUpload($event); fileUpload.clear()" [auto]="true" [disabled]="!hasAuth(Actions.ImageImport)"
-      chooseLabel="匯入圖片" />
+      (onSelect)="onIMGUpload($event); fileUpload.clear()" [auto]="true"
+      [disabled]="!hasPermission(Actions.ImageImport)" chooseLabel="匯入圖片" />
     <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
   </div>
   <p-accordion>
