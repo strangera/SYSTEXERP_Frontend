@@ -1,10 +1,9 @@
 import { NgIf } from '@angular/common';
-import { Component, inject, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
-import { Actions, PermissionGuardService } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -40,16 +39,6 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label> implemen
 
   @ViewChild('labelTable') labelTable!: ExpandableEditTableComponent;
   @ViewChild('priceAlterTable') priceAlterTable!: ExpandableEditTableComponent;
-
-  // ---確認許可權限---
-  // 2. 注入 PermissionGuardService
-  private permissionService = inject(PermissionGuardService);
-
-  // 將 Actions 暴露給 Template 使用
-  public get ActionType() {
-    return Actions;
-  }
-  // ------
 
   formTitle!: string; //表頭
   baseId = 0; //初始id
@@ -373,12 +362,4 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label> implemen
       this.opLoading = false;
     });
   }
-
-  // ---確認許可權限---
-  // 3. 新增一個輔助方法用於 Template 判斷
-  hasAuth(action: Actions): boolean {
-    return this.permissionService.
-      hasPermission(this.ProgNo, action);
-  }
-  // ------
 }
