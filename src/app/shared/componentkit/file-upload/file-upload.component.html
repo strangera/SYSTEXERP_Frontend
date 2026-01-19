@@ -25,13 +25,13 @@
         <div class="grid">
           <div class="col-12 grid gap-2 m-0">
             <app-button [icon]="chooseIcon || 'pi pi-plus'" [label]="chooseLabel || '選擇檔案'" [loading]="loading"
-              (click)="chooseCallback()" severity="primary" />
+              (click)="chooseCallback()" severity="primary" [disabled]="disabled" />
             <app-button *ngIf="showUploadButton" [icon]="uploadIcon || 'pi pi-upload'" [label]="uploadLabel || '上傳'"
               [loading]="loading" (click)="uploadCallback()" severity="success"
-              [disabled]="!files || files.length === 0" />
+              [disabled]="!files || files.length === 0 || disabled" />
             <app-button *ngIf="showCancelButton" [icon]="cancelIcon || 'pi pi-times'" [label]="cancelLabel || '取消'"
               [loading]="loading" (click)="clearCallback(); remove.emit()" severity="danger"
-              [disabled]="!files || files.length === 0" [loading]="loading" />
+              [disabled]="!files || files.length === 0 || disabled" [loading]="loading" />
           </div>
         </div>
         <span class="text-sm text-600">
