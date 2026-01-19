@@ -75,10 +75,10 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
 
   columns: Column[] = [
     { field: 'PAY_NAME', header: '支付工具', visible: true },
-    { field: 'OVER_PayAmt', header: '實際溢欠總額 (A)', visible: true, format: formatAmount, isTotal: true },
-    { field: 'PreAudit_OVER_PayAmt', header: '審核前溢欠總額 (B)', visible: true, format: formatAmount, isTotal: true },
-    { field: 'Actual_ReceivedAmt', header: '實收總額 (C)', visible: true, format: formatAmount, isTotal: true },
-    { field: 'BOOK_PayAmt', header: '系統帳 (D)', visible: true, format: formatAmount, isTotal: true },
+    { field: 'OVER_PayAmt', header: '實際溢欠總額 (A)', visible: true, format: formatAmount, isTotal: true, style: 'text-right' },
+    { field: 'PreAudit_OVER_PayAmt', header: '審核前溢欠總額 (B)', visible: true, format: formatAmount, isTotal: true, style: 'text-right' },
+    { field: 'Actual_ReceivedAmt', header: '實收總額 (C)', visible: true, format: formatAmount, isTotal: true, style: 'text-right' },
+    { field: 'BOOK_PayAmt', header: '系統帳 (D)', visible: true, format: formatAmount, isTotal: true, style: 'text-right' },
     {
       field: 'Compare_CD',
       header: '(C) 與 (D) 比較',

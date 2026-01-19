@@ -1,23 +1,23 @@
-import { DropDownListService } from './../../../service/utility/dropDownList.service';
-import { saveAs } from 'file-saver';
+import { CommonModule } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownModule } from 'primeng/dropdown';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { TLS22020Service } from '../../../service/api/tls/tls22020.service';
+import { IDropdownItem } from '@service/utility/dropdown-api.model';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { creditCardColumns, creditCardGroup, TLS22020Data } from './tls22020.model';
-import { CommonModule } from '@angular/common';
+import { saveAs } from 'file-saver';
+import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { HttpResponse } from '@angular/common/http';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
-import { IDropdownItem } from '@service/utility/dropdown-api.model';
+import { DropdownModule } from 'primeng/dropdown';
+import { TLS22020Service } from '../../../service/api/tls/tls22020.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropDownListService } from './../../../service/utility/dropDownList.service';
+import { creditCardColumns, creditCardGroup, TLS22020Data } from './tls22020.model';
 
 const yesterday = new Date();
 yesterday.setDate(yesterday.getDate() - 1);
@@ -90,7 +90,7 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('TLS22020', '/TLS/TLS22020cru', this.queryForm);
     this.queryForm.patchValue({ pageSize: 100 });
     this.dropDownListService.queryPOS1002_DropDownList().subscribe((data) => {
-      this.ECRNoOptions = data.Data;
+      this.ECRNoOptions = (data.Data || []).map((x: any) => ({ No: x.No, Name: `${x.No}-${x.Name}` }));
     });
     // 自動預帶 ECR_No_End
     this.queryForm.controls.ECR_No_Start.valueChanges.subscribe(val => {
