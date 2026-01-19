@@ -38,10 +38,12 @@
           <app-button
             label="審核"
             (click)="confirmCheck(queryForm)"
+            [disabled]="hasAuth(ActionType.Audit)"
           ></app-button>
           <app-button
             label="反審核"
             (click)="cancelRecheck(queryForm)"
+            [disabled]="hasAuth(ActionType.AntiAudit)"
           ></app-button>
         </ng-container>
         <app-button

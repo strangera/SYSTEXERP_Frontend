@@ -53,14 +53,15 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     PUR_TaxType: ['', Validators.required],
     Voucher_No: [null], // Added Voucher_No control
     AssetType: [''],
-    PUR_InvoiceTitle: [''],
+    PUR_InvoiceTitle: ['', [Validators.maxLength(64)]],
     Buyer_VenNo: [''],
     Buyer_Name: [''],
-    PUR_Tax: [0],
-    PUR_Amt: [0],
-    PUR_Net: [0],
-    Invoice_Cancel: ['N', Validators.required],
+    PUR_Tax: [{ value: 0, disabled: true }],
+    PUR_Amt: [{ value: 0, disabled: true }],
+    PUR_Net: [{ value: 0, disabled: true }],
+    Invoice_Cancel: [{ value: 'N', disabled: true }],
     INV_DeclareYM: ['', Validators.required],
+
   });
 
   /** 下拉選單與資料 */
@@ -145,6 +146,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         });
       });
   }
+
   loadGuiTrackOptions(event: any): void {
     // 根據申報年月載入字軌下拉（參考 FIN15010）
     this.dropDownListService.queryPOS1018_GUI_TRACK_DropDownList({
@@ -188,6 +190,10 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       Voucher_No: header.Voucher_No ?? null, // Added Voucher_No assignment
       AssetType: assetVal ?? '',
       PUR_InvoiceTitle: header.Buyer_Name ?? '',
+      PUR_Net: header.PUR_Net ?? this.dataForm.controls.PUR_Net.value ?? 0,
+      PUR_Tax: header.PUR_Tax ?? this.dataForm.controls.PUR_Tax.value ?? 0,
+      PUR_Amt: header.PUR_Amt ?? this.dataForm.controls.PUR_Amt.value ?? 0,
+      Invoice_Cancel: header.Invoice_Cancel ?? this.dataForm.controls.Invoice_Cancel.value ?? 'N',
     });
   }
 
@@ -213,13 +219,10 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
           const header = data.FIN13040Detail_APS4023;
           const details = data.FIN13040Detail_APS40235 ?? [];
 
-          // 儲存主檔 ID
           this.currentDetailId = header?.ID ?? null;
-
-          console.log('主檔資料(明細API):', header);
-          console.log('明細資料:', details);
-
-          if (header?.InvoiceType) this.fillHeaderData(header);
+          if (header?.InvoiceType) {
+            this.fillHeaderData(header);
+          }
 
           const salType = header?.SAL_Type ?? '';
           if (salType) {
@@ -257,24 +260,18 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     this.totalRecords = this.data.length;
     console.log('[填入的明細資料]', this.data);
 
-    // 若後端僅提供品名（PLU_Name），嘗試以已載入的品項清單找回貨號（PLU_No）
     if (this.INV_ItemName_Options && this.INV_ItemName_Options.length > 0) {
       const normalize = (s: any) => (s ?? '').toString().trim();
       const stripCommon = (s: string) => s.replace(/收入|費用|費用|費|入/gi, '').trim();
-
       this.data = this.data.map(row => {
         if ((!row.PLU_No || row.PLU_No === '') && row.PLU_Name) {
           const rawName = normalize(row.PLU_Name);
 
-          // 1) 精準比對
           let match = this.INV_ItemName_Options.find(opt => normalize(opt.INV_ItemName) === rawName || normalize(opt.value) === rawName || normalize(opt.label) === rawName);
 
-          // 2) 包含/部分比對
           if (!match) {
             match = this.INV_ItemName_Options.find(opt => normalize(opt.INV_ItemName).includes(rawName) || rawName.includes(normalize(opt.INV_ItemName)));
           }
-
-          // 3) 移除常見字尾再比對（例如 後端給 "租金"，下拉為 "租金收入"）
           if (!match) {
             const alt = stripCommon(rawName);
             if (alt && alt !== rawName) {
@@ -284,7 +281,6 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
 
           if (match) {
             row.PLU_No = match.INV_ItemNo ?? match.value ?? '';
-            // 將下拉中的正式品名填回，讓 UI 顯示一致
             row.PLU_Name = match.INV_ItemName ?? row.PLU_Name;
           }
         }
@@ -363,14 +359,10 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
             INV_ItemName: item.INV_ItemName,
             INV_UsageType: item.INV_UsageType,
           }));
-
           this.loadAndSetupColumns();
-
-          // callback 用於載入明細
           if (done) {
             done();
           } else {
-            // 新增模式才建立空白行
             setTimeout(() => this.tableEdit?.insertRow(true));
           }
         },
@@ -559,7 +551,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       Voucher_No: v.Voucher_No, // Updated to use v.Voucher_No
       AssetType: v.AssetType ?? '',
       InvoiceTime: new Date().toISOString(),
-      Invoice_Cancel: 'N',
+      Invoice_Cancel: v.Invoice_Cancel ?? this.dataForm.value.Invoice_Cancel ?? 'N',
       PUR_Net: this.dataForm.value.PUR_Net ?? 0,
       PUR_Tax: this.dataForm.value.PUR_Tax ?? 0,
       PUR_Amt: this.dataForm.value.PUR_Amt ?? 0,

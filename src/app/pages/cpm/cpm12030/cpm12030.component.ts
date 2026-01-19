@@ -8,7 +8,7 @@ import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable, of, startWith, switchMap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -39,12 +39,12 @@ export class CPM12030Component extends BasicQueryPageComponent<CPM12030Data> imp
     { field: 'KIND_Name', header: '主類別名稱' },
     { field: 'KIND_SubID', header: '子類別編號' },
     { field: 'KIND_SubName', header: '子類別名稱' },
-    { field: 'CRT_Date', header: '建立日期', format: formatDate },
-    { field: 'CRT_USR_No', header: '建立人員' },
-    { field: 'CRT_USR_Name', header: '建立人員名稱' },
-    { field: 'UPD_Date', header: '修改日期', format: formatDate },
-    { field: 'UPD_USR_No', header: '修改人員' },
-    { field: 'UPD_USR_Name', header: '修改人員名稱' },
+    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateTime },
+    { field: 'CRT_USR_No', header: '建立人員編號', visible: false },
+    { field: 'CRT_USR_Name', header: '建立人員名稱', visible: false },
+    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime },
+    { field: 'UPD_USR_No', header: '變更人員編號', visible: false },
+    { field: 'UPD_USR_Name', header: '變更人員名稱', visible: false },
   ];
   KIND_IDOptions$ = this.dropdown.queryCss1002();
   // 子類別選單 (連動 KIND_ID)
