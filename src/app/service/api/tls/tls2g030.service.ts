@@ -81,9 +81,6 @@ export class Tls2g030Service {
     const body = {
       ...params,
       budget_yy: convertDateToYYYY(params.budget_yy ? new Date(params.budget_yy) : new Date()), // 年
-      PageSize: 30,
-      PageIndex: 1,
-      SortBy: [{ field: 'tlt_no', order: 1 }],
     }
     const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS2G030`;
     return this.http.post<QueryTLS2G030Result>(url, body);
