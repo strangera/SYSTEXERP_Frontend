@@ -77,13 +77,13 @@
 
           <!-- 資料所屬年月 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              controlName="PUR_RepYYYYMM"
-              calendarType="dateMonthOne"
+
+                    <app-year-month
               label="申報年月"
               [control]="queryForm.controls.PUR_RepYYYYMM"
               [submitted]="submitted"
-            ></app-calendar>
+              [evenMonth]="true"
+            ></app-year-month>
           </div>
 
           <!-- 廠商統編 -->

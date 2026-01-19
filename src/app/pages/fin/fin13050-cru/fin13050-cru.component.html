@@ -98,13 +98,13 @@
 
         <!-- 申報年月 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calenderone
-            controlName="PUR_RepYYYYMM"
-            calendarType="dateMonthOne"
-            label="申報年月"
-            [control]="dataForm.controls.PUR_RepYYYYMM"
-            [submitted]="submitted">
-          </app-calenderone>
+
+                              <app-year-month
+              label="申報年月"
+              [control]="dataForm.controls.PUR_RepYYYYMM"
+              [submitted]="submitted"
+              [evenMonth]="true"
+            ></app-year-month>
         </div>
 
         <!-- 金額群組 -->
@@ -181,15 +181,15 @@
 
         <!-- 廠商編號 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="廠商編號"
-            controlName="PUR_VenNo"
-            [options]="VendorNoOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.PUR_VenNo"
-            [submitted]="submitted">
-          </app-dropdown>
+     <app-dropdown
+  label="廠商編號"
+  controlName="PUR_VenNo"
+  [options]="VendorNoOptions"
+  optionLabel="label"
+  optionValue="value"
+  [control]="dataForm.controls.PUR_VenNo"
+  [submitted]="submitted">
+</app-dropdown>
         </div>
 
         <!-- 廠商名稱（唯讀） -->

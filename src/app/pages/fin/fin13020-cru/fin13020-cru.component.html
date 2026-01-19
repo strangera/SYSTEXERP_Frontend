@@ -198,26 +198,31 @@
 </div>
 
 <div class="card">
-  <app-table
-    tableKey="FIN13020CRU"
-    [columns]="columnsForView"
-    dataKey="PUR_RepYYYYMM"
-    [multiSortMeta]="[{ field: 'PUR_RepYYYYMM', order: 1 }]"
-    [lazy]="false"
-    [loading]="loading"
-    [insertRowData]="!isRead"
-    [defaultInsertData]="{ PLU_Name: '', TXN_Qty: null, PLU_SalePrc: null, TXN_SaleAmt: null }"
-    [showInsert]="!isRead"
-    [showRowEdit]="!isRead"
-    [showManage]="!isRead"
-    [showEdit]="false"
-    [showDetail]="false"
-    [showReportMode]="false"
-    [showDelete]="false"
-    [showCheckBox]="false"
-    [showPaginator]="false"
-    [disabled]="isRead"
-    [(data)]="detailRows"
-    (fieldChange)="onFieldChange($event)">
-  </app-table>
+<app-table
+  tableKey="FIN13020CRU"
+  [columns]="columnsForView"
+  dataKey="ID"
+  [multiSortMeta]="[{ field: 'ID', order: 1 }]"
+  [lazy]="false"
+  [loading]="loading"
+  [insertRowData]="!isRead"
+  [defaultInsertData]="{ PLU_Name: '', TXN_Qty: null, PLU_SalePrc: null, TXN_SaleAmt: null }"
+  [showInsert]="!isRead"
+  [showRowEdit]="!isRead"
+  [showManage]="!isRead"
+  [showEdit]="false"
+  [showDetail]="false"
+  [showReportMode]="false"
+
+
+  [showDelete]="!isRead"
+  [showCheckBox]="!isRead"
+  [deleteData]="!isRead"
+
+  [showPaginator]="false"
+  [disabled]="isRead"
+  [(data)]="detailRows"
+  (fieldChange)="onFieldChange($event)">
+</app-table>
+
 </div>

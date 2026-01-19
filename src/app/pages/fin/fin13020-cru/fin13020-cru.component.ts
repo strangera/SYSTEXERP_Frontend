@@ -44,8 +44,6 @@ export class FIN13020CRUComponent
   implements OnInit {
   readonly CRUD = CRUDStatus;
 
-
-
   guiNumberOptions: { label: string; value: string }[] = [];
   voucherTypeOptions = [
     { label: '33 - 三聯式收銀專用發票', value: '33' },
@@ -64,7 +62,7 @@ export class FIN13020CRUComponent
   ];
 
   dataForm = this.formBuilder.nonNullable.group({
-    id: [null as number | null],                                 // Update 主鍵
+    id: [null as number | null],                                 // 主檔 ID（Update 用）
 
     GUI_Track: [null as string | null, Validators.required],     // 字軌
     PUR_GUINo: ['', Validators.required],                        // 發票號碼 (送 InvoiceNumber)
@@ -72,21 +70,22 @@ export class FIN13020CRUComponent
     PUR_GUIDate: ['', Validators.required],                      // 退出/折讓日期 (送 InvoiceDate)
     PUR_VoucherType: ['', Validators.required],                  // 發票格式 (送 InvoiceType)
     PUR_RepYYYYMM: [null],                                       // 申報年月 (送 INV_DeclareYM)
-    Credit_Type: ['', Validators.required],                      // 區別（折讓/退出）→ 程式自動判斷
-    PUR_TaxType: ['', Validators.required],                      // 課稅別（由原發票帶入）
+    Credit_Type: ['', Validators.required],                      // 區別
+    PUR_TaxType: ['', Validators.required],                      // 課稅別
     PUR_Net: [undefined as any],                                 // 退出/折讓金額
-    PUR_Tax: [undefined as any],                                 // 退出/折讓稅額（自動計算）
+    PUR_Tax: [undefined as any],                                 // 退出/折讓稅額
     PUR_Amt: [undefined as any],                                 // 退回/折讓總金額
     Inv_Date: [undefined as any],                                // 發票日期（顯示用）
-    Total_hitory_PUR_Amt: [undefined as any],                    // 已退出/折讓歷史總金額（顯示用）
-    Total_Amt: [undefined as any],                               // 剩餘總金額（顯示用）
-    TXN_Ret_No: ['系統自動帶入', Validators.required],            // 退出/折讓單號（Update 時送）
+    Total_hitory_PUR_Amt: [undefined as any],                    // 已退出/折讓歷史總金額
+    Total_Amt: [undefined as any],                               // 剩餘總金額
+    TXN_Ret_No: ['系統自動帶入', Validators.required],            // 退出/折讓單號
     Inv_Net: [undefined as any],                                 // 銷售額（顯示用，不送）
     Inv_Tax: [undefined as any],                                 // 稅額（顯示用，不送）
     Source_Doc_No: [''],                                         // 憑證單號
     Voucher_No: [''],                                            // 傳票編號
   });
 
+  // ⭐ 明細陣列（對應 APS40235List），每筆要保留自己的 ID
   detailRows: any[] = [];
 
   constructor(
@@ -99,11 +98,63 @@ export class FIN13020CRUComponent
 
   ngOnInit(): void {
     this.initializePage('FIN13020', this.dataForm);
-    this.updateDisabledState();
-    this.setupAmountRelations();          // 金額欄位互算 + 上限檢查 + 區別判斷
-    this.setupRemainAmountCalculation();  // 目前骨架，不影響
 
-    // 固定禁止輸入的欄位（發票格式在 Create 模式要能選，交給 updateDisabledState 控制）
+    // ⭐ 從查詢頁帶進來的資料（BasicCruPageComponent 幫你塞的）
+    const row: any = (this as any).rowdata;
+
+    if (row) {
+      // 主檔 ID（優先用小寫 id，其次大寫 ID）
+      const masterId = row.id ?? row.ID ?? null;
+
+      this.dataForm.patchValue(
+        {
+          id: masterId,
+          TXN_Ret_No: row.TXN_Ret_No ?? this.dataForm.get('TXN_Ret_No')?.value,
+          GUI_Track:
+            row.GUI_Track ?? row.InvoiceTrack ?? this.dataForm.get('GUI_Track')?.value,
+          PUR_GUINo:
+            row.PUR_GUINo ?? row.InvoiceNumber ?? this.dataForm.get('PUR_GUINo')?.value,
+          PUR_GUIDate:
+            row.PUR_GUIDate ?? row.InvoiceDate ?? this.dataForm.get('PUR_GUIDate')?.value,
+          PUR_VoucherType:
+            row.PUR_VoucherType ??
+            row.InvoiceType ??
+            this.dataForm.get('PUR_VoucherType')?.value,
+          PUR_RepYYYYMM:
+            row.PUR_RepYYYYMM ??
+            row.INV_DeclareYM ??
+            this.dataForm.get('PUR_RepYYYYMM')?.value,
+          Credit_Type:
+            row.Credit_Type ?? this.dataForm.get('Credit_Type')?.value,
+          PUR_TaxType:
+            row.PUR_TaxType ?? this.dataForm.get('PUR_TaxType')?.value,
+          PUR_Net: row.PUR_Net ?? this.dataForm.get('PUR_Net')?.value,
+          PUR_Tax: row.PUR_Tax ?? this.dataForm.get('PUR_Tax')?.value,
+          PUR_Amt: row.PUR_Amt ?? this.dataForm.get('PUR_Amt')?.value,
+          Source_Doc_No:
+            row.Source_Doc_No ?? this.dataForm.get('Source_Doc_No')?.value,
+          Voucher_No:
+            row.Voucher_No ?? this.dataForm.get('Voucher_No')?.value,
+        },
+        { emitEvent: false },
+      );
+
+      // ⭐ 明細（APS40235List / Details）帶進來，保留每筆自己的 ID
+      const details = (row.APS40235List ?? row.Details ?? []) as any[];
+      this.detailRows = details.map((d) => ({
+        ID: d.ID ?? null,            // ⭐ 明細自己的 ID（跟主檔 ID 不同）
+        PLU_Name: d.PLU_Name,
+        TXN_Qty: d.TXN_Qty,
+        PLU_SalePrc: d.PLU_SalePrc,
+        TXN_SaleAmt: d.TXN_SaleAmt,
+      }));
+    }
+
+    this.updateDisabledState();
+    this.setupAmountRelations();
+    this.setupRemainAmountCalculation();
+
+    // 固定禁止輸入的欄位
     this.dataForm.get('TXN_Ret_No')?.disable();
     this.dataForm.get('PUR_TaxType')?.disable();
     this.dataForm.get('Inv_Tax')?.disable();
@@ -111,19 +162,18 @@ export class FIN13020CRUComponent
     this.dataForm.get('Inv_Date')?.disable();
     this.dataForm.get('Total_hitory_PUR_Amt')?.disable();
     this.dataForm.get('Total_Amt')?.disable();
-    this.dataForm.get('PUR_Tax')?.disable();      // 退出/折讓稅額不可手改
-    this.dataForm.get('Credit_Type')?.disable();  // 區別改成程式自動判斷
+    this.dataForm.get('PUR_Tax')?.disable();
+    this.dataForm.get('Credit_Type')?.disable();
 
-    this.setupTrackNoWatcher();            // 監聽字軌 → 發票號碼下拉
-    this.setupGuiNoAndCorrespondWatcher(); // 監聽字軌+發票號碼 → 帶對應資料
+    this.setupTrackNoWatcher();
+    this.setupGuiNoAndCorrespondWatcher();
 
-    // 編輯 / 檢視模式：一進畫面就用目前字軌＋發票號碼去撈 APS4023
     if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
       this.loadInvoiceInfoByCurrentGUINo();
     }
   }
 
-  /* ----------------- 共用：依目前 GUI_Track + PUR_GUINo 撈 APS4023 對應資料 ----------------- */
+  /* ----------------- 依目前 GUI_Track + PUR_GUINo 撈 APS4023 對應資料 ----------------- */
 
   private loadInvoiceInfoByCurrentGUINo(): void {
     const trackRaw = this.dataForm.get('GUI_Track')?.value as string | null;
@@ -227,7 +277,6 @@ export class FIN13020CRUComponent
     }
   }
 
-  // 依 CRUDStatus 控制可編輯欄位
   private updateDisabledState(): void {
     if (this.crudstatus === CRUDStatus.Edit) {
       const editableFields = [
@@ -252,7 +301,6 @@ export class FIN13020CRUComponent
       this.dataForm.enable(); // Create 模式
     }
 
-    // 一律不可手動修改
     this.dataForm.get('PUR_Tax')?.disable();
     this.dataForm.get('TXN_Ret_No')?.disable();
     this.dataForm.get('PUR_TaxType')?.disable();
@@ -278,13 +326,12 @@ export class FIN13020CRUComponent
 
       const invDeclareYM = this.toYYYYMM(formValue.PUR_RepYYYYMM);
 
-      // ⏳ 開始 API 前開啟 loading
       this.loading = true;
 
       if (this.crudstatus === CRUDStatus.Edit) {
-        // Update：比照 Swagger（含 id）
+        // ⭐ Update：主檔 id + 明細 ID(自己那個 ID，不是主檔 ID)
         const payload: any = {
-          id: formValue.id,
+          id: formValue.id,                      // 主檔 ID
           TXN_Ret_No: formValue.TXN_Ret_No,
           GUI_Track: formValue.GUI_Track,
           InvoiceNumber: formValue.PUR_GUINo,
@@ -298,6 +345,9 @@ export class FIN13020CRUComponent
           PUR_Amt: intAmt,
           Source_Doc_No: formValue.Source_Doc_No,
           APS40235List: this.detailRows.map((row) => ({
+            // ⭐ 舊的明細：ID 是 number（例如 66078）
+            // ⭐ 新增的明細：Table 可能給 "saved-xxxxx"，要變 0 給後端
+            ID: typeof row.ID === 'number' ? row.ID : 0,
             PLU_Name: row.PLU_Name,
             TXN_Qty: row.TXN_Qty,
             PLU_SalePrc: row.PLU_SalePrc,
@@ -325,7 +375,7 @@ export class FIN13020CRUComponent
           this.loading = false;
         }
       } else {
-        // Insert：完全對齊 Swagger
+        // Insert：維持原本，不帶明細 ID（後端自己產生）
         const payload: any = {
           Source: 'APS',
           GUI_Track: formValue.GUI_Track,
@@ -370,7 +420,7 @@ export class FIN13020CRUComponent
     });
   }
 
-  /* ----------------- 金額互算邏輯（比照 FIN13010） ----------------- */
+  /* ------- 以下金額互算、剩餘金額等維持原本 ------- */
 
   private setupAmountRelations(): void {
     const netControl = this.dataForm.get('PUR_Net');
@@ -658,7 +708,7 @@ export class FIN13020CRUComponent
     if (isNaN(dt.getTime())) return String(d);
     const y = dt.getFullYear();
     const m = String(dt.getMonth() + 1).padStart(2, '0');
-    const day = String(dt.getDate()).padStart(2, '0');
+    const day = String(dt.getDate()).toString().padStart(2, '0');
     return `${y}/${m}/${day}`;
   }
 
