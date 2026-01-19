@@ -95,7 +95,7 @@
             <app-button
               (click)="exportLabel()"
               label="確認產生標籤檔"
-              [disabled]="hasAuth(ActionType.TagPrint)"
+              [disabled]="!hasPermission(Actions.TagPrint)"
             ></app-button>
           </div>
           <!-- </div> -->

@@ -33,7 +33,7 @@
             btnType="query"
             [loading]="loading"
             label="結轉媒體申報資料"
-            [disabled]="hasAuth(ActionType.CarryForward)"
+            [disabled]="!hasPermission(Actions.CarryForward)"
           ></app-button>
         </div>
       </form>
