@@ -17,7 +17,6 @@ import { FIN13060Service } from '../../../service/api/fin/fin13060.service';
 import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 
 import { FIN13050Service } from '@service/api/fin/fin13050.service';
-import { CalenderoneComponent } from '@shared/componentkit/calenderone/calenderone.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
 import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
@@ -26,6 +25,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 /** 依 updateFIN13060Request（後端為主）的 Typed Form */
 interface Fin13060CruForm {
@@ -45,7 +45,9 @@ interface Fin13060CruForm {
   INV_GUINumber: FormControl<string | null>;
 
   TXN_Date: FormControl<Date | string | null>; // UI 收 Date/string，送出字串($date)
-  INV_DeclareYM: FormControl<Date | null>;     // UI 月份控件，送出 'YYYYMM'
+
+  INV_YM: FormControl<string | null>;        // ⭐ 發票年月（'YYYYMM'，唯讀）
+  INV_DeclareYM: FormControl<string | null>; // 申報年月（'YYYYMM'，偶數月）
 
   TXN_SaleAmt: FormControl<number | null>;
   TXN_Net: FormControl<number | null>;
@@ -78,12 +80,13 @@ interface Fin13060CruForm {
     NgIf,
     TranslateModule,
     CalendarComponent,
-    CalenderoneComponent,
+    YearMonthComponent,
   ],
 })
 export class FIN13060CRUComponent
   extends BasicCruPageComponent<any>
   implements OnInit {
+
   @Output() fieldChange = new EventEmitter<any>();
 
   // 下拉選項
@@ -97,12 +100,17 @@ export class FIN13060CRUComponent
     { label: '否', value: 'N' },
     { label: '是', value: 'Y' },
   ];
+  System_IDOptions: any[] = [];
   TXN_GUIPaperOptions: any[] = [];
   INV_GUITypeOptions: any[] = [];
 
   /** 轉成 'YYYYMM'（可吃 Date 或字串 'YYYY/MM'、'YYYYMM'）*/
   private toYYYYMM(v: any): string | null {
     if (!v) return null;
+    // 已經是 6 碼數字字串直接用
+    if (typeof v === 'string' && /^\d{6}$/.test(v)) {
+      return v;
+    }
     const asDate = v instanceof Date ? v : new Date(v);
     if (!isNaN(asDate.getTime())) {
       const y = asDate.getFullYear();
@@ -111,17 +119,6 @@ export class FIN13060CRUComponent
     }
     const digits = String(v).replace(/\D/g, '');
     return digits.length >= 6 ? digits.slice(0, 6) : null;
-  }
-
-  /** 202508 → Date(2025-08-01)（備用） */
-  private ymToDate(v: any): Date | null {
-    if (!v) return null;
-    const s = String(v).replace(/[^0-9]/g, '');
-    if (s.length < 6) return null;
-    const y = Number(s.slice(0, 4));
-    const m = Number(s.slice(4, 6));
-    if (!Number.isFinite(y) || !Number.isFinite(m) || m < 1 || m > 12) return null;
-    return new Date(y, m - 1, 1);
   }
 
   /** Typed FormGroup */
@@ -140,30 +137,71 @@ export class FIN13060CRUComponent
 
     INV_GUIType: new FormControl<string | null>(null, { validators: [Validators.required] }),
     INV_GUITrack: new FormControl<string | null>('', {
-      validators: [Validators.required, Validators.minLength(2), Validators.maxLength(2), Validators.pattern(/^[A-Z]{2}$/)],
+      validators: [
+        Validators.required,
+        Validators.minLength(2),
+        Validators.maxLength(2),
+        Validators.pattern(/^[A-Z]{2}$/),
+      ],
     }),
     INV_GUINumber: new FormControl<string | null>('', {
-      validators: [Validators.required, Validators.minLength(8), Validators.maxLength(8), Validators.pattern(/^\d{8}$/)],
+      validators: [
+        Validators.required,
+        Validators.minLength(8),
+        Validators.maxLength(8),
+        Validators.pattern(/^\d{8}$/),
+      ],
     }),
 
     TXN_Date: new FormControl<Date | string | null>(null, { validators: [Validators.required] }),
-    INV_DeclareYM: new FormControl<Date | null>(null, [
+
+    // ⭐ 發票年月（不一定偶數月，顯示後端回來的值；唯讀）
+    INV_YM: new FormControl<string | null>(
+      { value: null, disabled: true },
+      [
+        Validators.required,
+        // 你原本的 minMonthValidator 照用，吃 'YYYYMM' 也沒問題
+        (control) => (control.value ? null : null), // disabled 不進驗證，其實這裡可有可無
+      ]
+    ),
+
+    // 申報年月（偶數月）
+    INV_DeclareYM: new FormControl<string | null>(null, [
       Validators.required,
-      this.validationService.evenMonthValidator,
-      this.validationService.minMonthValidator,
+      // 這兩個 validator 內部也是用字串做判斷
+      // (原本你也是給在 year-month 上用的)
+      // @ts-ignore
+      (control) => (this.validationService?.evenMonthValidator
+        ? this.validationService.evenMonthValidator(control)
+        : null),
+      // @ts-ignore
+      (control) => (this.validationService?.minMonthValidator
+        ? this.validationService.minMonthValidator(control)
+        : null),
     ]),
 
-    TXN_SaleAmt: new FormControl<number | null>(null, { validators: [Validators.required] }),
-    TXN_Net: new FormControl<number | null>(null, { validators: [Validators.required] }),
-    TXN_Tax: new FormControl<number | null>(null, { validators: [Validators.required] }),
+    // 金額欄位加 maxLength(10)
+    TXN_SaleAmt: new FormControl<number | null>(null, {
+      validators: [Validators.required, Validators.maxLength(10)],
+    }),
+    TXN_Net: new FormControl<number | null>(null, {
+      validators: [Validators.required, Validators.maxLength(10)],
+    }),
+    TXN_Tax: new FormControl<number | null>(null, {
+      validators: [Validators.required, Validators.maxLength(10)],
+    }),
 
     PLU_TaxType: new FormControl<string | null>(null, { validators: [Validators.required] }),
 
     Source_Doc_No: new FormControl<string | null>(null, {
-      validators: [Validators.minLength(16), Validators.maxLength(16), Validators.pattern(/^[A-Z0-9]{16}$/)],
+      validators: [
+        Validators.minLength(16),
+        Validators.maxLength(16),
+        Validators.pattern(/^[A-Z0-9]{16}$/),
+      ],
     }),
     Voucher_No: new FormControl<string | null>(null),
-    SAL_Type: new FormControl<string | null>(null), // 系統別 (T205)
+    SAL_Type: new FormControl<string | null>(null),
     AssetType: new FormControl<string | null>(null),
     INV_Remark: new FormControl<string | null>(null),
     Tlt_No: new FormControl<string | null>(null),
@@ -184,22 +222,32 @@ export class FIN13060CRUComponent
     this.initializePage('FIN13060', this.dataForm);
     this.hydrateStoreInfoFromLocalStorage(); // mid、SYS_StoreNo 由 localStorage 帶入
 
+    // 系統別（SYS_ORIGIN -> 下拉用在別處，如果不用可以略）
+    this.fin13050Service.querySYS1000DropDownList('SYS_ORIGIN').subscribe((res: any) => {
+      const list = res?.Data ?? [];
+      this.System_IDOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
+    });
+
     // 專櫃清單
     this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions =
-        res?.map((x: any) => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })) ?? [];
+        res?.map((x: any) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        })) ?? [];
     });
 
     // 資產註記
     this.fin13050Service.querySYS1000DropDownList('AssetType').subscribe((res) => {
       const list = res?.Data ?? [];
-      this.AssetNoteOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
+      this.AssetNoteOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
     });
 
-    // 零稅銷售註記（預設「否」或 value='0'）
+    // 零稅銷售註記
     this.fin13050Service.querySYS1000DropDownList('INV_NoneTax').subscribe((res) => {
       const list = res?.Data ?? [];
-      this.INV_NoneTaxOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
+      this.INV_NoneTaxOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
       if (this.crudstatus === CRUDStatus.Create && !this.dataForm.controls.INV_NoneTax.value) {
         const defaultNo =
           this.INV_NoneTaxOptions.find(o => o.label?.includes('否'))?.value ??
@@ -214,33 +262,37 @@ export class FIN13060CRUComponent
     // 發票格式
     this.fin13060Service.queryAPS2002DropDownList().subscribe((res) => {
       const list = res?.Data ?? [];
-      this.INV_GUITypeOptions = list.map(x => ({ value: String(x.No), label: String(x.Name) }));
+      this.INV_GUITypeOptions = list.map(x => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
     });
 
     // 收銀機號
     this.ECRNoService.getECRNo().subscribe(res => {
-      this.ECRNoOptions = (res ?? []).map((x: any) => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value }));
+      this.ECRNoOptions = (res ?? []).map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      }));
     });
 
     // 系統別（T205）
     this.fin13050Service.querySYS1000DropDownList('T205').subscribe((res) => {
       const list = res?.Data ?? [];
-      this.SAL_TypeOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
+      this.SAL_TypeOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
     });
 
     // 稅別
     this.fin13050Service.querySYS1000DropDownList('PLU_TaxType').subscribe((res) => {
       const list = res?.Data ?? [];
-      this.taxTypeOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
+      this.taxTypeOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
     });
 
     // 發票種類
     this.fin13050Service.querySYS1000DropDownList('TXN_GUIPaper').subscribe((res) => {
       const list = res?.Data ?? [];
-      this.TXN_GUIPaperOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
+      this.TXN_GUIPaperOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
     });
 
-    // 即時輸入限制
+    // 即時輸入限制（字軌/號碼/憑證）
     this.setupInputMasks();
 
     this.updateDisabledState();
@@ -265,7 +317,10 @@ export class FIN13060CRUComponent
     srcDoc.valueChanges.subscribe(v => {
       if (v == null) return;
       const inStr = v.toString();
-      const fixed = inStr.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16);
+      const fixed = inStr
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, '')
+        .slice(0, 16);
       if (fixed !== inStr) srcDoc.setValue(fixed, { emitEvent: false });
     });
   }
@@ -311,6 +366,7 @@ export class FIN13060CRUComponent
     this.dataForm.enable();
     this.dataForm.controls.mid.disable();
     this.dataForm.controls.SYS_StoreNo.disable();
+    this.dataForm.controls.INV_YM.disable(); // ⭐ 發票年月永遠唯讀
   }
 
   // 送出（新增/修改統一在這裡依 crudstatus 分流）
@@ -323,6 +379,7 @@ export class FIN13060CRUComponent
       INV_GUITrack: '發票字軌',
       INV_GUINumber: '發票數字',
       TXN_Date: '發票日期',
+      INV_YM: '發票年月',
       INV_DeclareYM: '申報年月',
       TXN_SaleAmt: '發票總金額',
       TXN_Net: '發票未稅金額',
@@ -346,9 +403,9 @@ export class FIN13060CRUComponent
     this.handleSubmit(form, () => {
       const raw = form.getRawValue();
 
-      // ★ 依後端 schema 組裝 payload（Update/Insert 共用；Insert 會拿掉 ID）
+      // 組 payload（Update/Insert 共用；Insert 會拿掉 ID）
       const payload = {
-        ID: raw.ID != null ? Number(raw.ID) : 0,                    // update 帶 ID
+        ID: raw.ID != null ? Number(raw.ID) : 0,
         mid: Number(raw.mid ?? 0),
         SYS_StoreNo: this.normalize(raw.SYS_StoreNo),
         ECR_No: this.normalize(raw.ECR_No),
@@ -359,15 +416,19 @@ export class FIN13060CRUComponent
         INV_GUIType: this.normalize(raw.INV_GUIType),
         INV_GUITrack: this.normalize(raw.INV_GUITrack),
         INV_GUINumber: this.normalize(raw.INV_GUINumber),
-        TXN_Date: this.toDateOnlyString(raw.TXN_Date) ?? '',        // string($date) => 'YYYY-MM-DD'
-        INV_DeclareYM: this.toYYYYMM(raw.INV_DeclareYM) ?? '',      // string => 'YYYYMM'
+
+        TXN_Date: this.toDateOnlyString(raw.TXN_Date) ?? '',      // 'YYYY-MM-DD'
+        INV_YM: this.toYYYYMM(raw.INV_YM) ?? '',                  // 'YYYYMM'
+        INV_DeclareYM: this.toYYYYMM(raw.INV_DeclareYM) ?? '',    // 'YYYYMM'
+
         TXN_SaleAmt: raw.TXN_SaleAmt != null ? Number(raw.TXN_SaleAmt) : 0,
         TXN_Net: raw.TXN_Net != null ? Number(raw.TXN_Net) : 0,
         TXN_Tax: raw.TXN_Tax != null ? Number(raw.TXN_Tax) : 0,
+
         PLU_TaxType: this.normalize(raw.PLU_TaxType),
         Source_Doc_No: this.normalize(raw.Source_Doc_No),
         Voucher_No: this.normalize(raw.Voucher_No),
-        SAL_Type: this.normalize(raw.SAL_Type),                     // 系統別（T205）
+        SAL_Type: this.normalize(raw.SAL_Type), // 系統別（T205）
         AssetType: this.normalize(raw.AssetType),
         INV_Remark: this.normalize(raw.INV_Remark),
         Tlt_No: this.normalize(raw.Tlt_No),

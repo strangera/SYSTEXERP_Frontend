@@ -24,7 +24,7 @@
           ></app-input-text>
         </div>
 
-        <!-- 發票日期/申報年月 -->
+        <!-- 發票日期 / 發票年月 / 申報年月 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar
             label="發票日期"
@@ -35,13 +35,20 @@
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calenderone
-            controlName="INV_DeclareYM"
-            calendarType="dateMonthOne"
+          <app-year-month
+            label="發票年月"
+            [control]="dataForm.controls.INV_YM"
+            [submitted]="submitted"
+          ></app-year-month>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-year-month
             label="申報年月"
             [control]="dataForm.controls.INV_DeclareYM"
             [submitted]="submitted"
-          ></app-calenderone>
+            [evenMonth]="true"
+          ></app-year-month>
         </div>
 
         <!-- 專櫃/廠商 -->

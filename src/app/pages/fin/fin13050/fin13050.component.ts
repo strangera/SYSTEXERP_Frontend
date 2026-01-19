@@ -24,6 +24,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 type SortMeta = { field: string; order: 1 | -1 };
 
@@ -43,6 +44,7 @@ type SortMeta = { field: string; order: 1 | -1 };
     TranslateModule,
     CalendarComponent,
     InputNumberRangeComponent,
+    YearMonthComponent,
   ],
   templateUrl: './fin13050.component.html',
   styleUrls: ['./fin13050.component.scss'],
@@ -217,10 +219,10 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
     this.fin13050Service.queryVendorList().subscribe((res) => {
       const list = res?.Data ?? [];
       this.vendorOptions = list.map((v: any) => ({
-        label: `${v.VEN_No}-${v.VEN_Name}`,
-        value: v.VEN_No,
+        label: `${v.VEN_Uniform}-${v.VEN_Name}`,
+        value: v.VEN_Uniform,
       }));
-      this.vendorMap = Object.fromEntries(list.map((v: any) => [v.VEN_No, v]));
+      this.vendorMap = Object.fromEntries(list.map((v: any) => [v.VEN_Uniform, v]));
     });
 
     this.fin13050Service.queryAPS2002DropDownList().subscribe((res) => {
@@ -237,7 +239,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
         const list = res?.Data ?? [];
         this.directTypeOptions = list.map((x: any) => ({
           value: String(x.No),
-          label: String(x.Name),
+          label: `${x.No}-${x.Name}`,
         }));
       });
 
@@ -247,7 +249,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
         const list = res?.Data ?? [];
         this.taxTypeOptions = list.map((x: any) => ({
           value: String(x.No),
-          label: String(x.Name),
+          label: `${x.No}-${x.Name}`,
         }));
       });
 
@@ -257,7 +259,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
         const list = res?.Data ?? [];
         this.PUR_DiscNoOptions = list.map((x: any) => ({
           value: String(x.No),
-          label: String(x.Name),
+          label: `${x.No}-${x.Name}`,
         }));
       });
 
@@ -267,7 +269,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
         const list = res?.Data ?? [];
         this.typeOptions = list.map((x: any) => ({
           value: String(x.No),
-          label: String(x.Name),
+          label: `${x.No}-${x.Name}`,
         }));
       });
 
@@ -277,7 +279,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
         const list = res?.Data ?? [];
         this.SYS_ORIGINOptions = list.map((x: any) => ({
           value: String(x.No),
-          label: String(x.Name),
+          label: `${x.No}-${x.Name}`,
         }));
       });
 

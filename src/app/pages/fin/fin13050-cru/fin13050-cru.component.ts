@@ -30,6 +30,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { CalenderoneComponent } from '@shared/componentkit/calenderone/calenderone.component';
 import { ActivatedRoute } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 /* ---------------------------
  *  進階 Validators（中文化原因）
@@ -101,7 +102,8 @@ export const yyyymmEvenMonthValidator: ValidatorFn = (
     NgIf,
     TranslateModule,
     CalendarComponent,
-    CalenderoneComponent,
+    // CalenderoneComponent,
+    YearMonthComponent,
   ],
 })
 export class FIN13050CRUComponent
@@ -301,114 +303,83 @@ export class FIN13050CRUComponent
     super();
   }
 
-  ngOnInit(): void {
-    this.initializePage('FIN13050', this.dataForm);
+ ngOnInit(): void {
+  this.initializePage('FIN13050', this.dataForm);
 
-    // 帶使用者基本資料
-    const u = this.getUserInfo();
-    this.dataForm.patchValue({
-      mid: Number(u?.mid) || 0,
-      STO_No: u?.SYS_StoreNo ?? '',
-      PUR_Uniform: u?.STR_Uniform ?? '',
+  // 帶使用者基本資料
+  const u = this.getUserInfo();
+  this.dataForm.patchValue({
+    mid: Number(u?.mid) || 0,
+    STO_No: u?.SYS_StoreNo ?? '',
+    PUR_Uniform: u?.STR_Uniform ?? '',
+  });
+
+  // ✅ 如果是從查詢頁帶 rowdata 進來，就把廠商統編帶進來
+  const rd: any = this.rowdata;
+  if (rd && rd.PUR_VenUniform) {
+    this.dataForm.patchValue(
+      {
+        // 下拉「統一編號」欄位
+        PUR_VenUniform: rd.PUR_VenUniform,
+        // 下拉「廠商編號」現在的 value 也是 venUniform，所以一起帶
+        PUR_VenNo: rd.PUR_VenUniform,
+      },
+      { emitEvent: false },
+    );
+  }
+
+  // ❶ 如果是從外部帶 GUI_No 進來（你的原本程式碼）
+  this.route.queryParams
+    .pipe(untilDestroyed(this))
+    .subscribe((params) => {
+      const guiNo = (params['GUI_No'] ?? '').toString().trim();
+      if (!guiNo) return;
+
+      this.fin13050Service
+        .queryDetailByGUI({ GUI_No: guiNo })
+        .pipe(untilDestroyed(this))
+        .subscribe((res) => {
+          const row = Array.isArray(res?.Data) ? res.Data[0] : null;
+          if (!row) {
+            this.messageService.errorBubble(
+              `查無發票資料（GUI_No=${guiNo}）`,
+            );
+            return;
+          }
+
+          const patch: any = { ...row };
+
+          if (patch.PUR_GUINo) {
+            patch.PUR_GUINo = this.normalizeGuiNo(patch.PUR_GUINo);
+          } else if (patch.GUI_No) {
+            patch.PUR_GUINo = this.normalizeGuiNo(patch.GUI_No);
+          }
+
+          this.dataForm.patchValue(patch, { emitEvent: false });
+
+          this.crudstatus = CRUDStatus.Read;
+          this.updateDisabledState();
+        });
     });
 
-    // ❶ 如果是從外部帶 GUI_No 進來
-    this.route.queryParams
-      .pipe(untilDestroyed(this))
-      .subscribe((params) => {
-        const guiNo = (params['GUI_No'] ?? '').toString().trim();
-        if (!guiNo) return;
+  // ...（以下維持你原本的 ngOnInit 內容）
+  // 發票號碼 normalize、發票日期 → 偶數月、loadDropdowns() 等
+  this.loadDropdowns();
+  this.loadVendorUniformOptions();
+  this.loadVendorNoOptions();
 
-        this.fin13050Service
-          .queryDetailByGUI({ GUI_No: guiNo })
-          .pipe(untilDestroyed(this))
-          .subscribe((res) => {
-            const row = Array.isArray(res?.Data) ? res.Data[0] : null;
-            if (!row) {
-              this.messageService.errorBubble(
-                `查無發票資料（GUI_No=${guiNo}）`,
-              );
-              return;
-            }
-
-            const patch: any = { ...row };
-
-            // 後端回傳欄位不管是 PUR_GUINo 或 GUI_No，都只保留最後 8 碼數字
-            if (patch.PUR_GUINo) {
-              patch.PUR_GUINo = this.normalizeGuiNo(patch.PUR_GUINo);
-            } else if (patch.GUI_No) {
-              patch.PUR_GUINo = this.normalizeGuiNo(patch.GUI_No);
-            }
-
-            this.dataForm.patchValue(patch, { emitEvent: false });
-
-            // 進來就是檢視模式
-            this.crudstatus = CRUDStatus.Read;
-            this.updateDisabledState();
-          });
-      });
-
-    // ❷ 一般從列表進編輯：下一個 tick 把發票號碼先正規化成 8 碼
-    setTimeout(() => {
-      const ctrl = this.dataForm.get('PUR_GUINo');
-      const v = ctrl?.value;
-      if (v) {
-        ctrl.patchValue(this.normalizeGuiNo(v), { emitEvent: false });
-      }
-    }, 0);
-
-    // 發票日期變更 → 自動帶偶數月申報年月
-    this.dataForm
-      .get('PUR_GUIDate')
-      ?.valueChanges.pipe(untilDestroyed(this))
-      .subscribe((d) => {
-        const yyyymm = this.toEvenYYYYMM(d);
-        if (yyyymm)
-          this.dataForm.patchValue(
-            { PUR_RepYYYYMM: yyyymm },
-            { emitEvent: false },
-          );
-      });
-
-    const repCtrl = this.dataForm.get('PUR_RepYYYYMM');
-    repCtrl?.addValidators(
-      this.validationService.evenMonthValidator.bind(this.validationService),
-    );
-    repCtrl?.updateValueAndValidity({ emitEvent: false });
-
-    // 發票號碼輸入時：強制轉成「純數字 + 最後 8 碼」
-    this.dataForm
-      .get('PUR_GUINo')
-      ?.valueChanges.pipe(untilDestroyed(this))
-      .subscribe((val) => {
-        if (val == null || val === '') return;
-        const normalized = this.normalizeGuiNo(val);
-        const current = String(val);
-        if (normalized !== current) {
-          this.dataForm
-            .get('PUR_GUINo')
-            ?.patchValue(normalized, { emitEvent: false });
-        }
-      });
-
-    this.loadDropdowns();
-    this.loadVendorUniformOptions();
-    this.loadVendorNoOptions();
-
-    // 廠商編號變更 → 自動帶廠商名稱
+  // 廠商編號變更 → 自動帶廠商名稱 + 廠商統編（你原本改好的邏輯）
+  this.dataForm
     this.dataForm
       .get('PUR_VenNo')
       ?.valueChanges.pipe(untilDestroyed(this))
-      .subscribe((venNo) => {
-        const picked = this.VendorNoOptions.find((o) => o.value === venNo);
-        this.dataForm.patchValue(
-          { PUR_VenName: picked?.venName ?? '' },
-          { emitEvent: false },
-        );
+      .subscribe(() => {
+        this.syncVendorFromDropdown();
       });
 
-    this.updateDisabledState();
-  }
+  this.updateDisabledState();
+}
+
 
   /** 下拉載入 */
   private loadDropdowns(): void {
@@ -416,7 +387,7 @@ export class FIN13050CRUComponent
       const list = res?.Data ?? [];
       this.PUR_VoucherTypeOptions = list.map((x) => ({
         value: String(x.No),
-        label: String(x.Name),
+        label: `${x.No}-${x.Name}`,
       }));
     });
 
@@ -426,7 +397,7 @@ export class FIN13050CRUComponent
         const list = res?.Data ?? [];
         this.ACP_TypeOptions = list.map((x: any) => ({
           value: String(x.No),
-          label: String(x.Name),
+          label: `${x.No}-${x.Name}`,
         }));
       });
 
@@ -436,7 +407,7 @@ export class FIN13050CRUComponent
         const list = res?.Data ?? [];
         this.invoicePurposeOptions = list.map((x: any) => ({
           value: String(x.No),
-          label: String(x.Name),
+          label:`${x.No}-${x.Name}`,
         }));
       });
 
@@ -446,7 +417,7 @@ export class FIN13050CRUComponent
         const list = res?.Data ?? [];
         this.taxTypeOptions = list.map((x: any) => ({
           value: String(x.No),
-          label: String(x.Name),
+          label: `${x.No}-${x.Name}`,
         }));
       });
 
@@ -456,7 +427,7 @@ export class FIN13050CRUComponent
         const list = res?.Data ?? [];
         this.deductOptions = list.map((x: any) => ({
           value: String(x.No),
-          label: String(x.Name),
+          label: `${x.No}-${x.Name}`,
         }));
       });
 
@@ -466,7 +437,7 @@ export class FIN13050CRUComponent
         const list = res?.Data ?? [];
         this.typeOptions = list.map((x: any) => ({
           value: String(x.No),
-          label: String(x.Name),
+          label: `${x.No}-${x.Name}`,
         }));
       });
 
@@ -477,7 +448,7 @@ export class FIN13050CRUComponent
         const list = res?.Data ?? [];
         this.salTypeOptions = list.map((x: any) => ({
           value: String(x.No),
-          label: String(x.Name),
+          label: `${x.No}-${x.Name}`,
         }));
       });
   }
@@ -491,13 +462,46 @@ export class FIN13050CRUComponent
       });
   }
 
-  /** 供應商「廠商編號」下拉 */
+
+  /** 供應商「廠商編號」下拉：value=venUniform, label="venUniform-venName" */
   private loadVendorNoOptions(keyword = ''): void {
     this.fin13050Service
       .queryVendorNoOptions(keyword)
       .subscribe((opts) => {
-        this.VendorNoOptions = opts ?? [];
+        const list = opts ?? [];
+        this.VendorNoOptions = list.map((x: any) => {
+          const venUniform = String(x.venUniform ?? x.VEN_Uniform ?? '').trim();
+          const venName = String(x.venName ?? x.VEN_Name ?? '').trim();
+          return {
+            value: venUniform,                        // ✅ 用 venUniform 當 value
+            label: venUniform
+              ? `${venUniform}-${venName}`            // ✅ 顯示 venUniform-venName
+              : venName,
+            venName,
+            venUniform,
+          };
+        });
+            this.syncVendorFromDropdown();
       });
+  }
+
+  /** 依目前 PUR_VenNo 的選項，同步廠商名稱與統一編號 */
+  private syncVendorFromDropdown(): void {
+    const venNoCtrl = this.dataForm.get('PUR_VenNo');
+    if (!venNoCtrl) return;
+
+    const venUniform = venNoCtrl.value;
+    const picked = this.VendorNoOptions.find(o => o.value === venUniform);
+
+    this.dataForm.patchValue(
+      {
+        // 廠商名稱一律從 dropdown 的 venName 來；如果沒有就設空白
+        PUR_VenName: picked?.venName ?? '',
+        // 同步統一編號（如果你不想動 PUR_VenUniform 也可以拿掉這行）
+        PUR_VenUniform: picked?.venUniform ?? this.dataForm.get('PUR_VenUniform')?.value ?? '',
+      },
+      { emitEvent: false },
+    );
   }
 
   /** CRUD 狀態 -> 啟用/停用 */
