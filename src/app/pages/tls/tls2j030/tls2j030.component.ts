@@ -45,8 +45,9 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
   totalRecords = 0;
   data: any[] = [];
   selectedItems: any[] = [];
-  isNotECR = false;
+  isNotECR = true;
   changeEcrNo = ''; // 目前使用的換開收銀機號
+  clientIP = ''; // 目前電腦IP
   lastQueryBody: any = {};
   btnLoading2 = false;
   TXN_Uniform_noOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
@@ -94,7 +95,7 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
 
   // 控制 checkbox 是否可選 - 當 GUI_Status 為 "1" 時不可選
   isRowSelectable = (rowData: TLS2J030Data): boolean => {
-    return rowData?.GUI_Status !== "1";
+    return rowData?.GUI_Status !== "1" && !this.isNotECR;
   }
 
   ngOnInit(): void {
@@ -108,27 +109,16 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
   }
 
   private checkECRMachine() {
-    const ip = this.authService.currentUserValue?.client_ip;
-    if (!ip) {
-      this.isNotECR = true;
-      return;
-    }
-
-    this.tls2j030Service.queryEcrNo(ip).subscribe({
+    this.tls2j030Service.queryEcrNo().subscribe({
       next: (res: any) => {
-        this.isNotECR = (res.Data === null);
-        this.changeEcrNo = res.Data; // 目前使用的換開收銀機
-        if (this.isNotECR) {
-          this.queryForm.disable();
-        } else {
-          this.queryForm.enable();
-        }
+        this.isNotECR = (res.Data.ECR_No === null);
+        this.changeEcrNo = res.Data.ECR_No; // 目前使用的換開收銀機
+        this.clientIP = res.Data.IP; // 目前電腦IP
       }
     });
   }
 
   onSubmit(frm: FormGroup) {
-    if (this.isNotECR) return;
     this.handleSubmit(frm, () => {
       const req = {
         PageSize: frm.value.pageSize || 30,

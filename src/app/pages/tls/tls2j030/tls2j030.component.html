@@ -20,11 +20,18 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
-          <!-- <div class="col-12 flex justify-content-start align-items-center" *ngIf="isNotECR">
-            <span class="text-red-500 font-bold">
-              【本機台未設定為發票換開機台，無法執行換開作業】
-            </span>
-          </div> -->
+          <div
+            class="col-12 flex flex-column justify-content-center align-items-start gap-2"
+            *ngIf="isNotECR"
+          >
+            <div class="text-lg font-bold">
+              <span class="text-900">本機固定位址為：</span>
+              <span class="text-red-500">{{ clientIP }}</span>
+            </div>
+            <div class="text-red-500 text-lg font-bold">
+              本機台未設定為發票換開機台，不可換開發票!!!
+            </div>
+          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="換開編號"
@@ -85,7 +92,6 @@
 
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-          *ngIf="!isNotECR"
         >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
@@ -95,7 +101,7 @@
   </p-accordion>
 </div>
 
-<div class="card" *ngIf="!isNotECR">
+<div class="card">
   <app-table-report
     [data]="data"
     [columns]="columns"
