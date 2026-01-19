@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { formatDate } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
@@ -45,7 +46,7 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
   ];
 
   columns: Column[] = [
-    { field: 'TXN_Date', header: '銷售日期', visible: true, groupField: '111' },
+    { field: 'TXN_Date', header: '銷售日期', visible: true, groupField: '111', format: formatDate },
     { field: 'MIG_Type', header: '發票類型', visible: true, groupField: '111' },
     { field: 'MIG_Type_Name', header: '發票類型名稱', visible: false },
     { field: 'InvoiceNum', header: '發票張數', visible: true, groupField: '111' },

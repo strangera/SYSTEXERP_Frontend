@@ -3,6 +3,8 @@ import { SortMeta } from 'primeng/api';
 export interface Column<T = Record<string, any>> {
   field: keyof T;     // 欄位名稱 (資料的欄位名稱)
   header: string;    // 欄位標題 (顯示在表格上的標題)
+  /** 對齊方式：預設由元件決定，常見為 'left' | 'center' | 'right' */
+  align?: 'left' | 'center' | 'right';
   visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
   hidden?: boolean;  // 是否隱藏 (是否為無法篩選欄位)
   format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)

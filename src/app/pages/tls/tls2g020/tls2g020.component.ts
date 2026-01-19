@@ -1,18 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
+import { formatDate } from '@shared/componentkit/table/table.model';
+import { formatAmount } from '@shared/componentkit/table2/table2.model';
+import { AccordionModule } from 'primeng/accordion';
+import { Tls2g020Service } from '../../../service/api/tls/tls2g020.service';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { Tls2g020Service } from '../../../service/api/tls/tls2g020.service';
-import { formatAmount } from '@shared/componentkit/table2/table2.model';
 
 @Component({
   selector: 'app-tls2g020',
@@ -48,8 +49,8 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
     { field: 'Contract_No', header: '合約編號', visible: true },
     { field: 'Contract_subno', header: '合約版次', visible: true },
-    { field: 'Contract_bdate', header: '合約起始日', visible: true },
-    { field: 'Contract_edate', header: '合約結束日', visible: true },
+    { field: 'Contract_bdate', header: '合約起始日', visible: true, format: formatDate },
+    { field: 'Contract_edate', header: '合約結束日', visible: true, format: formatDate },
   ];
   expansionColumns: Column[] = [
     {
@@ -57,7 +58,7 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
       header: '月',
       format: (value: string) => value ? value.slice(-2) : ''
     },
-    { field: 'budget', header: '月預算', visible: true , format: formatAmount },
+    { field: 'budget', header: '月預算', visible: true, format: formatAmount },
     { field: 'avg_cag_charge_rate', header: '平均抽成', format: formatAmount },
     { field: 'avg_cag_charge_nurate', header: '抽成額', format: formatAmount },
   ];
@@ -89,6 +90,12 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
     this.submitted = true;
     this.loading = true;
     this.messageService.blockUi();
+    // 儲存查詢條件，方便 CRU 返回時還原並自動查詢
+    try {
+      this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+    } catch (e) {
+      console.warn('Save query state failed', e);
+    }
 
     const raw = frm.getRawValue();
     const payload = {

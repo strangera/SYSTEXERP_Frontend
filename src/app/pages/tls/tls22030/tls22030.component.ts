@@ -56,11 +56,11 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
     { field: 'SLE_GUIEndNo', header: '發票結束(迄)', visible: true },
     {
       field: 'IsPerDayLoss', header: '當日是否欠落', visible: true,
-      format: (val: string) => val === '1' ? 'Y' : '--'
+      format: (val: string) => val === '1' ? '有' : '無'
     },
     {
       field: 'IsCrossDayLoss', header: '跨日是否欠落', visible: true,
-      format: (val: string) => val === '1' ? 'Y' : '--'
+      format: (val: string) => val === '1' ? '有' : '無'
     },
   ];
   btnLoading = false;
@@ -86,7 +86,7 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
       .subscribe(res => {
         if (res && res.Data) {
           this.tltNoOptions = res.Data.map(item => ({
-            label: `${item.No} ${item.Name}`,   // 假設 item 有 Name 欄位
+            label: `${item.No}-${item.Name}`,   // 假設 item 有 Name 欄位
             value: item.No,     // 假設 item 有 No 欄位
             No: item.No,        // 確保包含 No 屬性
             Name: item.Name     // 確保包含 Name 屬性
