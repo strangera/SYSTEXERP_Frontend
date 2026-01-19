@@ -10,7 +10,7 @@ export enum Actions {
   Delete = '40',         // 刪除 (D)
   // 匯入/匯出相關
   Report = '50',         // 報表
-  Print = '60',          // 列印
+  Print = '60',          // 匯出 PDF
   ExportExcel = '70',    // 匯出 EXCEL
   ExcelImport = '130',   // 匯入 EXCEL
   ImportCSV = '240',     // 匯入CSV
@@ -40,6 +40,13 @@ export enum Actions {
   Preview = '280',                 // 預覽
   CancelDocument = '290',          // 取消單據
   CloseCase = '310',               // 結案
+  Stop = '350',                    // 停用
+  Copy = '360',                     // 複製
+  Check = '370',                   // 檢核
+  PayCheck = '380',               // 繳票
+  CancelPayCheck = '390',         // 取消繳票
+  ReturnCheck = '400',            // 退票
+  CancelReturnCheck = '410',      // 取消退票
 }
 
 @Injectable({
