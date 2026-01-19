@@ -19,7 +19,6 @@ export class ASS11050TreeDropdownComponent {
   columns = input<Column[]>([], { alias: 'Columns' }); //Columns前兩欄是父節點，最後一個是末端葉節點
   columnsLength = computed(() => this.columns().length - 1); // 欄位數量
   leaveColumnLabel = input<string>('', { alias: 'LeaveColumnLabel' }); // 子節點顯示名稱
-  selectbleCheckBox = input<boolean>(!0, { alias: 'SelectbleCheckBox' }); // 能否選擇checkbox
   listTitle = input<string>('階層圖'); // 階層圖名稱
 
   protected readonly treeData = computed(() => this.buildTreeFromFlatData());
@@ -30,7 +29,6 @@ export class ASS11050TreeDropdownComponent {
     const columns = this.columns();
     const columnsLength = columns.length;
     const leaveColumnLabel = this.leaveColumnLabel();
-    const selectbleCheckBox = this.selectbleCheckBox();
 
     if (!members.length || !columnsLength) return [];
 
@@ -58,7 +56,7 @@ export class ASS11050TreeDropdownComponent {
             data: dataItem,
             icon: 'pi pi-user',
             leaf: !0,
-            selectable: selectbleCheckBox // 是否可選，依 SelectbleCheckBox 決定
+            selectable: !1
           };
         }
 

@@ -6,7 +6,7 @@ import { ASS11050Service } from '@service/api/ass/ass11050.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { ASS11050TreeDropdownComponent } from './ass11050-tree-dropdown/ass11050-tree-dropdown.component';
@@ -36,9 +36,7 @@ export interface ASS11050Tree {
   ]
 })
 export class ASS11050Component extends BasicQueryPageComponent<any> implements OnInit {
-  queryForm = this.formBuilder.group({
-    Date: [null],
-  });
+  queryForm = this.formBuilder.group({});
 
   ASS11050Tree = signal<ASS11050Tree[]>([]);
   leaveLabel = 'T_Name';
@@ -67,8 +65,12 @@ export class ASS11050Component extends BasicQueryPageComponent<any> implements O
   onSubmit(form: FormGroup) {
     this.handleSubmit(this.queryForm, () => {
       this.ass11050Service.getASS11050Tree()
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-        .subscribe(res => this.ASS11050Tree.set(res.Data));
+        .pipe(
+          map(res => res.Data || []),
+          finalize(() => this.loading = false),
+          untilDestroyed(this)
+        )
+        .subscribe(res => this.ASS11050Tree.set(res));
     });
   };
 }
