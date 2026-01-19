@@ -1,20 +1,20 @@
+import { NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { PanelModule } from 'primeng/panel';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { NgIf } from '@angular/common';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { TLS42020Data, TLS42020DetailData, TLS42020InsertDetailData, TLS42020InsertRequest, TLS42020Service, TLS42020UpdateRequest } from '@service/api/tls/tls42020.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, FieldChangeEvent } from '@shared/componentkit/table/table.model';
-import { TLS42020Data, TLS42020DetailData, TLS42020InsertDetailData, TLS42020InsertRequest, TLS42020Service, TLS42020UpdateRequest } from '@service/api/tls/tls42020.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 // 介面定義
 interface DropdownOption {
@@ -68,7 +68,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
   tltNoOptions: TLTOption[] = [];
 
   //#region 明細資料
-  // 商品貨號下拉選項
+  // 商品管理編號下拉選項
   PLU_MagNoOptions: any[] = [];
 
   // 明細資料欄位定義
@@ -82,7 +82,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
     },
     {
       field: 'PLU_MagNo',
-      header: '商品貨號',
+      header: '商品管理編號',
       type: 'dropdown',
       options: () => this.PLU_MagNoOptions, // 使用函數動態返回選項
       optionLabel: 'label',
@@ -92,8 +92,6 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       field: 'PLU_No',
       header: '國際條碼',
       type: 'input',
-      validate: [this.requiredValidator('國際條碼為必填欄位')],
-      required: true
     },
     {
       field: 'PLU_Name',
@@ -106,15 +104,11 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       field: 'PLU_PrnName',
       header: '商品列印名稱',
       type: 'input',
-      validate: [this.requiredValidator('商品列印名稱為必填欄位')],
-      required: true
     },
     {
       field: 'PLU_FixPrc',
       header: '商品定價',
       type: 'inputNumber',
-      validate: [this.requiredValidator('商品定價為必填欄位')],
-      required: true,
     },
     {
       field: 'PLU_SalePrc',
@@ -182,7 +176,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
     this.selectedRows = [];
   }
 
-  // 選擇 PLU_MagNo (商品貨號) 後自動帶出其他欄位的資料
+  // 選擇 PLU_MagNo (商品管理編號) 後自動帶出其他欄位的資料
   onFieldChange(event: FieldChangeEvent): void {
     if (event.field === 'PLU_MagNo' && event.index !== undefined) {
       const selectedProduct = this.PLU_MagNoOptions.find(item => item.PLU_MagNo === event.value);
@@ -190,10 +184,10 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
         // 更新該行的其他欄位
         const rowData = this.data[event.index];
         if (rowData) {
-          rowData.PLU_No = selectedProduct.PLU_No || '';
+          rowData.PLU_No = selectedProduct.PLU_No || selectedProduct.PLU_MagNo || '';
           rowData.PLU_Name = selectedProduct.PLU_Name || '';
-          rowData.PLU_PrnName = selectedProduct.PLU_PrnName || '';
-          rowData.PLU_FixPrc = selectedProduct.PLU_FixPrc || '';
+          rowData.PLU_PrnName = selectedProduct.PLU_PrnName || selectedProduct.PLU_Name || '';
+          rowData.PLU_FixPrc = selectedProduct.PLU_FixPrc || selectedProduct.PLU_FixPrc || '';
           rowData.PLU_SalePrc = selectedProduct.PLU_SalePrc || '';
           // 觸發變更檢測
           this.changeDetectorRef.detectChanges();
