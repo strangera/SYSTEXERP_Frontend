@@ -39,8 +39,13 @@
 
           <!-- 申報年月 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar controlName="INV_DeclareYM" calendarType="dateMonthOne" label="申報年月"
-              [control]="queryForm.controls.INV_DeclareYM" [submitted]="submitted"></app-calendar>
+
+                                  <app-year-month
+              label="申報年月"
+              [control]="queryForm.controls.INV_DeclareYM"
+              [submitted]="submitted"
+              [evenMonth]="true"
+            ></app-year-month>
           </div>
 
           <!-- 專櫃編號 -->
