@@ -63,7 +63,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
       label: '停用',
       icon: 'pi pi-ban text-red-500',
       action: (rowData: Pos1018) => { this.onStop(rowData); },
-      disabled: (rowData: Pos1018) => rowData.GUI_Status === '02' || rowData.GUI_Status === '03',
+      disabled: (rowData: Pos1018) => rowData.GUI_Status === '02' || rowData.GUI_Status === '03' || !this.hasPermission(Actions.Stop),
     }
   ]
   disabledMonthDates: Date[] = [];

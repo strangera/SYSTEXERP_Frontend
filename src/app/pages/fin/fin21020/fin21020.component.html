@@ -1,7 +1,7 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button label="複製費率" (click)="onCopyRate()"></app-button>
+    <app-button label="複製費率" (click)="onCopyRate()" [disabled]="!hasPermission(Actions.Copy)"></app-button>
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>

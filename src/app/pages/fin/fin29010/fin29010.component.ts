@@ -1,7 +1,6 @@
 import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-// Shared
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin29010Data, Fin29010Request, Fin29010Service } from '@service/api/fin/fin29010.service';
