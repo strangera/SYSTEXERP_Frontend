@@ -349,6 +349,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
             ...frm.getRawValue(),
             TXN_GUIRemark: this.rece_yn === 'Y' ? frm.getRawValue().TXN_GUIRemark : '',
             TXN_Date: this.datePipe.transform(this.dataForm.getRawValue().TXN_Date, 'yyyy-MM-dd'),
+            ORG_TXN_Date: this.datePipe.transform(this.dataForm.getRawValue().ORG_TXN_Date, 'yyyy-MM-dd'),
             GUI_Track: frm.getRawValue().GUI_Track || '00',
             TXN_GUIBegNo: frm.getRawValue().TXN_GUIBegNo || '00000000',
             TXN_GUIEndNo: frm.getRawValue().TXN_GUIEndNo || '00000000',
