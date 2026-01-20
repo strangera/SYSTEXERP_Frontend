@@ -111,7 +111,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     // pod_desc: ['Eugeme測試', [Validators.required, Validators.maxLength(100)]], // 使用者輸入  for 測試
     // pod_sdate: [yesterday, [Validators.required]], // 活動起始日 (Date) // for 測試
     // pod_edate: [yesterday, [Validators.required]], // 活動終止日 (Date) // for 測試
-    // pod_status: ['', Validators.required], // 活動建立=0 /核准=1 /反核准=0 /刪除=9
+    pod_status: ['', Validators.required], // 活動建立=0 /核准=1 /反核准=0 /刪除=9
 
     // 核准不會再新增進行
     approved_userno: [{ value: null, disabled: true }], // 核准人員編號
