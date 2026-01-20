@@ -9,7 +9,7 @@ import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calend
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { Garantee_Ticket } from '../../../shared/models/tls/tls000.model';
 import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
@@ -71,7 +71,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
         this.ticket_kindOption.find((option) => option.value === value)?.label ||
         value
     },
-    { field: 'ticket_amount', header: '保證票金額', visible: true },
+    { field: 'ticket_amount', header: '保證票金額', visible: true, format: formatAmount },
     { field: 'expiry_date', header: '票據到期日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
     {
       field: 'get_ticket_status', header: '票據收票狀態', visible: true,
