@@ -32,7 +32,6 @@ import { formatAmount, formatYYYYMM, ReportColumn } from './../../../shared/comp
 @Component({
   selector: 'app-tls2f010-cru',
   templateUrl: './tls2f010-cru.component.html',
-  styleUrl: './tls2f010-cru.component.scss',
   standalone: true,
   imports: [TableEditComponent, NgIf, PanelModule, InputNumberRangeComponent, CalendarComponent, InputTextComponent, SelectButtonModule, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TranslateModule]
 })
