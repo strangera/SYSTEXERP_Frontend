@@ -157,10 +157,7 @@
               ]
             },
             "development": {
-              "optimization": {
-                "scripts": false,
-                "styles": true
-              },
+              "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
             }

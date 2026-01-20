@@ -18,30 +18,15 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
-import { TableSelectAllChangeEvent } from 'primeng/table';
 import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-tls13080',
   standalone: true,
-  imports: [
-    MenubarComponent,
-    AccordionModule,
-    ButtonComponent,
-    ReactiveFormsModule,
-    TranslateModule,
-    CalendarRangeQuickComponent,
-    MultiSelectComponent,
-    DropdownComponent,
-    InputNumberComponent,
-    AsyncPipe,
-    PanelModule,
-    TableReportComponent
-  ],
+  imports: [MenubarComponent, AccordionModule, ButtonComponent, ReactiveFormsModule, TranslateModule, CalendarRangeQuickComponent, MultiSelectComponent, DropdownComponent, InputNumberComponent, AsyncPipe, PanelModule, TableReportComponent],
   templateUrl: './tls13080.component.html'
 })
 export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response> implements OnInit {
-  formTitle = '合約扣款項目';
   dataForm = this.formBuilder.nonNullable.group({
     cap_type: [{ value: 'D', disabled: true }], // 扣款類型 (固定 D)
     cap_item: [null, [Validators.required]], // 扣款代號
@@ -143,12 +128,13 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
     edcBankControl.updateValueAndValidity();
   }
 
-  /**
-   * 查詢邏輯
-   */
+  // 查詢邏輯
+  cap_item_submitted = false;
   onSubmit(frm: FormGroup) {
     if (!this.dataForm.get('cap_item')?.value) {
-      this.messageService.errorBubble('請先選擇 扣款代碼');
+      this.cap_item_submitted = true;
+      this.dataForm.controls['cap_item'].markAsTouched();
+      this.messageService.errorBubble('請先選擇 扣款代號');
       return;
     }
     const body: Tls13080QueryRequest = {
@@ -163,6 +149,7 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
         this.totalRecords = res.TotalCount;
         this.lastQueryBody = body
         this.selectedItems = [];
+        this.isAllSelected = false;
       })
     });
   }
@@ -224,6 +211,7 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
             next: (res) => {
               this.messageService.successBubble(res.Message);
               this.selectedItems = []; // 清空選取
+              this.isAllSelected = false;
               this.data = [];
               this.totalRecords = 0;
               this.queryForm.reset();
@@ -233,9 +221,5 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
         }
       });
     });
-  }
-
-  selectAllChange(event: TableSelectAllChangeEvent) {
-    console.log(event.checked);
   }
 }

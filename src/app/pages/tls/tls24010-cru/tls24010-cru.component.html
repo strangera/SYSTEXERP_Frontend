@@ -73,6 +73,12 @@
           [submitted]="submitted" controlName="TXN_Uniform" />
         <app-calendar class="col-12 md:col-6 lg:col-3" label="銷售時段" [control]="dataForm.controls.TXN_Time"
           [submitted]="submitted" calendarType="timeOne" controlName="TXN_Time" customPlaceholder="HH:MM" />
+
+        <app-calendar class="col-12 md:col-6 lg:col-3" label="原交易日期" [control]="dataForm.controls.ORG_TXN_Date"
+          [submitted]="submitted" controlName="ORG_TXN_Date"></app-calendar>
+        <app-dropdown class="col-12 md:col-6 lg:col-3" label="原收銀機台" [control]="dataForm.controls.ORG_ECR_No"
+          [submitted]="submitted" [options]="ECR_NoOptions | async" optionLabel="label" optionValue="value"
+          controlName="ORG_ECR_No" />
       </div>
       <div class="grid p-fluid" *ngIf="TXN_GUIPaper === 'E'">
         <p-divider type="solid" class="col-12" />
