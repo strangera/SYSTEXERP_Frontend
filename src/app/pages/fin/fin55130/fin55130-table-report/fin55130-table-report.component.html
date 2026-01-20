@@ -113,7 +113,6 @@
 
         <span *ngIf="col.isSubTotal" class="font-bold text-blue-600">
           {{ calculateClassTotal(data, rowIndex, col.field) | number: (col.field.includes('Pct') ? '1.2-2' : '1.0-0') }}
-          {{ col.field.includes('Pct') ? '%' : '' }}
         </span>
       </td>
     </tr>

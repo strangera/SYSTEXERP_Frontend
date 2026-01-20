@@ -142,27 +142,26 @@ export class Fin55120TableReportComponent {
  */
   shouldShowClassFooter(data: any[], index: number): boolean {
     if (!data || index < 0) return false;
-    const currentPrefix = data[index]?.AccNo?.substring(0, 2);
-    const nextPrefix = data[index + 1]?.AccNo?.substring(0, 2);
+    // 優先使用 ClassNo 判斷，因為 AccNo 可能為空
+    const currentClass = data[index]?.ClassNo;
+    const nextClass = data[index + 1]?.ClassNo;
     const currentGroup = data[index]?.groupName;
     const nextGroup = data[index + 1]?.groupName;
 
-    // 如果是最後一筆，或是下一筆的前兩碼/大群組變了，就顯示小計
-    return (index === data.length - 1) || (currentPrefix !== nextPrefix) || (currentGroup !== nextGroup);
+    return (index === data.length - 1) || (currentClass !== nextClass) || (currentGroup !== nextGroup);
   }
 
   /**
    * 動態計算當前 AccNo 前兩碼分類的 Balance 總和
    */
   calculateClassBalanceTotal(data: any[], currentIndex: number): number {
-    const currentPrefix = data[currentIndex]?.AccNo?.substring(0, 2);
+    const currentClass = data[currentIndex]?.ClassNo; // 改用 ClassNo
     const currentGroup = data[currentIndex]?.groupName;
 
     let total = 0;
-    // 往回找，直到前兩碼不同或群組不同為止
     for (let i = currentIndex; i >= 0; i--) {
       const item = data[i];
-      if (item.AccNo?.substring(0, 2) === currentPrefix && item.groupName === currentGroup) {
+      if (item.ClassNo === currentClass && item.groupName === currentGroup) {
         total += (Number(item.Balance) || 0);
       } else {
         break;
