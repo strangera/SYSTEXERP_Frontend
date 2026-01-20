@@ -268,7 +268,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     } else {
       this.selectedItems = [...this.selectedItems];
       this.selectionChange.emit(this.selectedItems);
-      this.selectAllChange.emit(true);
+      this.selectAllChange.emit(false);
     }
   }
   onScroll(event: any) {

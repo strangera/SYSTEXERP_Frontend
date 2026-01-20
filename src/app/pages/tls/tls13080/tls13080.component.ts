@@ -15,7 +15,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
@@ -69,8 +69,8 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
   columns: ReportColumn[] = [
     { field: 'tlt_no', header: '專櫃編號' },
     { field: 'tlt_name', header: '專櫃名稱' },
-    { field: 'tlt_bdate', header: '契約起始日' },
-    { field: 'tlt_edate', header: '契約到期日' },
+    { field: 'tlt_bdate', header: '契約起始日', format: formatDate },
+    { field: 'tlt_edate', header: '契約到期日', format: formatDate },
     { field: 'tlt_term_type_Name', header: '抽成別' },
     { field: 'bus_type', header: '大分類' },
     { field: 'bus_type_name', header: '大分類名稱' },
@@ -134,7 +134,7 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
     if (!this.dataForm.get('cap_item')?.value) {
       this.cap_item_submitted = true;
       this.dataForm.controls['cap_item'].markAsTouched();
-      this.messageService.errorBubble('請先選擇 扣款代號');
+      this.messageService.errorBubble('請先選擇 扣款代號', '必填');
       return;
     }
     const body: Tls13080QueryRequest = {
@@ -163,6 +163,11 @@ export class TLS13080Component extends BasicQueryPageComponent<Tls13080Response>
    * 新增邏輯
    */
   override onCreate(frm: FormGroup) {
+    if (!this.dataForm.valid) {
+      this.dataForm.markAllAsTouched();
+      this.messageService.errorBubble('「合約扣款項目」還有必填欄位', '必填');
+      return;
+    }
     this.handleSubmit(frm, () => {
       this.loading = false;
       const formValue = frm.value;
