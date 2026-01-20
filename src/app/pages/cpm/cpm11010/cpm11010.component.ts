@@ -50,7 +50,7 @@ export class CPM11010Component extends BasicQueryPageComponent<CPM11010Data> imp
   // 下拉選單選項
   buildingNoOptions: IDropdownItem[] = [];
   floorNoOptions: IDropdownItem[] = [];
-  areaNoOptions: IDropdownItem[] = [];
+  areaNoOptions: any[] = [];
   serviceIdOptions: any[] = [];
 
   columns: Column[] = [
@@ -122,11 +122,11 @@ export class CPM11010Component extends BasicQueryPageComponent<CPM11010Data> imp
     });
     // 載入營業區域選項
     this.dropdownApiService.querySys3A00().subscribe(options => {
-      this.areaNoOptions = options ?? [];
+      this.areaNoOptions = options?.map(item => ({ label: `${item.No}-${item.Name}`, value: item.No })) || [];
     });
     // 載入服務台位置編號選項
     this.dropDownListService.queryCPM11010_ServiceId_DropDownList().subscribe(response => {
-      this.serviceIdOptions = response.Data?.map(item => ({ label: item.Service_Id, value: item.Service_Id })) || [];
+      this.serviceIdOptions = response.Data?.map(item => ({ label: `${item.Service_Id}-${item.Service_Name}`, value: item.Service_Id })) || [];
     });
   }
 }

@@ -73,7 +73,7 @@
             <app-dropdown
               label="出借處理人員(工號)"
               controlName="Loan_USR_No"
-              [options]="cpm11030Service.usrOptions()"
+              [options]="Loan_USR_NoOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.Loan_USR_No"
@@ -216,7 +216,7 @@
   (visibleChange)="onDailyDialogVisibleChange($event)"
 >
   <form [formGroup]="dailyForm" class="p-fluid">
-    <div class="grid justify-content-center p-fluid">
+    <div class="grid p-fluid">
       <div class="col-12 md:col-6 lg:col-4">
         <app-dropdown
           label="服務台位置編號"
@@ -235,6 +235,7 @@
           label="營業日期"
           controlName="CSS_Date"
           [control]="dailyForm.controls.CSS_Date"
+          [disabled]="true"
           [submitted]="dailySubmitted"
         ></app-calendar>
       </div>

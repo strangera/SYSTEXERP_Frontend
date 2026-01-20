@@ -68,7 +68,8 @@ export interface QueryDailyEquipAvailabilityRequest {
 export interface DailyEquipAvailabilityRow {
   Device_ID: string;
   Device_Name: string;
-  Device_Qty: number;
+  Device_TotQty: number;
+  CSS_CurrentQty: number;
 }
 
 export interface InsertDailyEquipAvailabilityRequest {
