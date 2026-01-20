@@ -1,6 +1,7 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -36,6 +37,12 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
   imports: [ButtonModule, InputNumberRangeComponent, CalendarComponent, InputTextComponent, SelectButtonModule, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TranslateModule]
 })
 export class TLS2F010Component extends BasicQueryPageComponent<any> implements OnInit {
+  // 完整的期別選項映射（參考 tls2e020 的寫法）
+  private readonly SAM_TERMNO_MAP = {
+    '10': [1, 2, 3],
+    '15': [1, 2],
+    '30': [1]
+  };
   queryForm = this.formBuilder.nonNullable.group({
     sam_yyymm: [''], // 結帳年月
     tlt_no: [''],
@@ -43,9 +50,9 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     PUR_GUINO: ['', [Validators.maxLength(10)]],
     PUR_GUIDate_Start: [null],
     PUR_GUIDate_End: [null],
-    COMM_MONEY_TYPE: [[]],
+    COMM_MONEY_TYPE: [''],
     COMM_YM: [null],
-    sam_termno: [''],
+    sam_termno: [1],
     DEC_YM: [null],
     ven_uniform: [''],
     PUR_TaxType: [[]],
@@ -161,6 +168,30 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS2F010', 'tls/tls2f010cru', this.queryForm, (form) => this.onSubmit(form));
+    // 根據 COMM_MONEY_TYPE (多選) 的第一個值，自動產生 sam_termnoOptions
+    const moneyCtrl = this.queryForm.controls.COMM_MONEY_TYPE as any;
+    moneyCtrl.valueChanges.pipe(untilDestroyed(this)).subscribe((val: any) => {
+      let moneyType: string | null = null;
+      if (Array.isArray(val) && val.length) moneyType = String(val[0]);
+      else if (val != null && val !== '') moneyType = String(val);
+      this.updateSamTermnoOptions(moneyType);
+      this.queryForm.controls.sam_termno.setValue(1);
+    });
+    // 初始載入時也更新一次，支援單選字串或多選陣列
+    const initialVal = moneyCtrl.value as any;
+    let initialMoney: string | null = null;
+    if (Array.isArray(initialVal) && initialVal.length) initialMoney = String(initialVal[0]);
+    else if (initialVal != null && initialVal !== '') initialMoney = String(initialVal);
+    if (initialMoney) this.updateSamTermnoOptions(initialMoney);
+  }
+
+  private updateSamTermnoOptions(moneyType: string | null): void {
+    if (moneyType && this.SAM_TERMNO_MAP[moneyType as keyof typeof this.SAM_TERMNO_MAP]) {
+      const termNumbers = this.SAM_TERMNO_MAP[moneyType as keyof typeof this.SAM_TERMNO_MAP];
+      this.sam_termnoOptions = termNumbers.map(num => ({ label: `${num}`, value: num }));
+    } else {
+      this.sam_termnoOptions = [];
+    }
   }
 
 

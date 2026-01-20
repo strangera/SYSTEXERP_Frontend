@@ -14,7 +14,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
 
 @Component({
@@ -30,7 +30,7 @@ import { Column, createPaginationConfig, formatAmount } from '../../../shared/co
     DropdownComponent,
     RadiobuttonComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     DropdownComponent
   ],
@@ -52,6 +52,7 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
   data: any[] = [];
   selectedItems: any[] = [];
   totalRecords = 0;
+  historyRequestBody: any;
   floorOptions: any[] = [];
   ECRNoOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
@@ -59,7 +60,7 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private locationOptionsService: LocationOptionsService,
     private ecrNoService: ECRNoService,
-    private tls2a020Service: TLS2A020Service
+    public tls2a020Service: TLS2A020Service
   ) {
     super();
   }
@@ -111,6 +112,9 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
         ...raw,
         TXN_Date: formatDate(raw.TXN_Date, 'yyyy-MM-dd', 'en-US'),
       };
+
+      // 設定最後查詢條件給 app-table-report 使用
+      this.historyRequestBody = params;
 
       this.tls2a020Service.queryTLS2A020(params).subscribe({
         next: (res) => {

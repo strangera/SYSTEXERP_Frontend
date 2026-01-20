@@ -129,6 +129,7 @@ export class TLS2J010Component extends BasicQueryPageComponent<any> implements O
             next: (res) => {
               if (res?.Status === '0000') {
                 this.selectedItems = []; // 清空選中項目
+                this.messageService.successBubble('刪除成功');
                 this.onSubmit(this.queryForm);
               }
             },

@@ -1,6 +1,7 @@
 import { AsyncPipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls2f010Service } from '@service/api/tls/tls2f010.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
@@ -39,11 +40,11 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
 
   dataForm = this.formBuilder.nonNullable.group({
     tlt_no: ['', [Validators.required]],
-    sam_yyymm: [null],
+    sam_yyymm: [new Date()],
     money_type: [null],
-    sam_termno: [null],
-    COMM_YM: [null],
-    COMM_MONEY_TYPE: [null],
+    sam_termno: [1],
+    COMM_YM: [new Date()],
+    COMM_MONEY_TYPE: [''],
     // 以下為從查詢頁帶入的條件，用於編輯模式顯示，不一定都參與送出
     PUR_GUIType: [null],
     PUR_GUINO: [''],
@@ -73,6 +74,12 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
 
   taxTypeOptions = getSYS1000Options('PLU_TaxType');
   money_typeOptions = getSYS1000Options('money_type');
+  // 完整的期別選項映射（可依 money type 產生不同期數）
+  private readonly SAM_TERMNO_MAP = {
+    '10': [1, 2, 3],
+    '15': [1, 2],
+    '30': [1]
+  };
   sam_termnoOptions: { value: number, label: string }[] = []; // 期別選項
   discountOptions: Option[] = getSYS1000Options('PUR_DiscNo');
   totalRecords = 0;
@@ -202,6 +209,12 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   ngOnInit(): void {
     this.initializePage('TLS2F010', this.dataForm);
 
+    // 若未帶入 COMM_MONEY_TYPE，預設為「月結」（參考其他元件使用的 index）
+    const commCtrlInit = this.dataForm.controls.COMM_MONEY_TYPE;
+    if (!commCtrlInit.value && this.money_typeOptions && this.money_typeOptions[2]) {
+      commCtrlInit.setValue(this.money_typeOptions[2].value);
+    }
+
     if (this.queryData) {
       this.dataForm.patchValue(this.queryData);
     }
@@ -236,6 +249,19 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       }));
     });
 
+    // 綁定 COMM_MONEY_TYPE 變化以更新 sam_termnoOptions
+    const commCtrl = this.dataForm.controls.COMM_MONEY_TYPE as any;
+    commCtrl.valueChanges?.pipe?.(untilDestroyed(this)).subscribe((val: any) => {
+      const moneyType = Array.isArray(val) && val.length ? String(val[0]) : (val == null ? null : String(val));
+      this.updateSamTermnoOptions(moneyType);
+      // 預設帳次為 1
+      this.dataForm.controls.sam_termno.setValue(1);
+    });
+    // 初始值處理
+    const initVal = commCtrl.value as any;
+    const initMoney = Array.isArray(initVal) && initVal.length ? String(initVal[0]) : (initVal == null ? null : String(initVal));
+    if (initMoney) this.updateSamTermnoOptions(initMoney);
+
     // 決定顯示哪一塊畫面：
     // - 新增模式：顯示查詢區 + 查詢結果/新增單據
     // - 編輯/檢視模式：顯示從查詢頁帶入的條件區塊(showEditArea)，不再顯示查詢區與結果表
@@ -250,6 +276,15 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     // 編輯模式下：只允許特定欄位可編輯，其餘鎖定
     if (this.isFormEditable) {
       this.applyEditModeReadonly();
+    }
+  }
+
+  private updateSamTermnoOptions(moneyType: string | null): void {
+    if (moneyType && this.SAM_TERMNO_MAP[moneyType as keyof typeof this.SAM_TERMNO_MAP]) {
+      const termNumbers = this.SAM_TERMNO_MAP[moneyType as keyof typeof this.SAM_TERMNO_MAP];
+      this.sam_termnoOptions = termNumbers.map(num => ({ label: `${num}`, value: num }));
+    } else {
+      this.sam_termnoOptions = [];
     }
   }
 
@@ -365,6 +400,14 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
           if (mains.length > 0 || details.length > 0) {
             this.showQueryArea = false;
             this.showResultTables = true;
+          }
+        },
+        error: (err: any) => {
+          this.queryLoading = false;
+          try {
+            this.messageService.errorBubble(err?.Message ?? err?.message ?? '查詢失敗');
+          } catch (e) {
+            // 若 messageService 不可用，忽略
           }
         },
         complete: () => {
