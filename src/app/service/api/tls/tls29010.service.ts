@@ -71,10 +71,10 @@ export class Tls29010Service {
   // ---dropDown下拉---
 
   // ---20251216 SA新增需求---
-  // 活動申請編號 下拉選單
-  dropdownTLS29010bypodno(body: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/dropdownTLS29010bypodno`, body);
-  }
+  // 活動申請編號 下拉選單)(取消使用，由用戶自行輸入活動名稱與啟日迄日)
+  // dropdownTLS29010bypodno(body: any): Observable<any> {
+  //   return this.http.post<any>(`${this.apiUrl}/dropdownTLS29010bypodno`, body);
+  // }
 
   // 折扣別 下拉選單
   dropdownTLS29010bytalentid(body: any): Observable<any> {

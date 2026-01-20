@@ -141,14 +141,16 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     { label: '刪除', value: '9' },
   ];
 
-  act_no_Options: ActNoOption[] = []; // 活動編號
   cag_barcode_Options: { value: string, label: string }[] = []; // 折扣別下拉
   allBarcodeOptions: any[] = []; // 儲存所有專櫃的折扣別選項
   tlt_No_Option: { value: string, label: string }[] = [];  // 專櫃編號下拉
   tlt_ID_Option: { value: string, label: string }[] = [];  // 抽成類別下拉
 
+  // ★★★ 新增這個變數：用來紀錄變更前的狀態 ★★★
+  private lastDetailSnapshot: TALPORDERD_OPENDisc[] = [];
+
   //主檔資料備份 用於比對是否更動
-  originalData: TALPORDERD_OPENDisc[] = []; // 明細檔 備份
+  originalData: TALPORDERD_OPENDisc[] = []; // 明細檔 備份(用於明細重製)
   originalMainData: ReturnType<typeof this.dataForm.getRawValue> | null = null;  // 主檔 備份
 
   // ---Potential_Customer_Detail 潛在客戶其他資料明細檔 table---
@@ -220,36 +222,6 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       this.originalMainData = this.dataForm.getRawValue();
       this.loadDetailData(pod_no); //讀取明細檔
     }
-
-    // 活動編號act_no 變更時寫入dataform對應的活動名稱(pod_desc)與起訖日期(pod_sdate、pod_edate)
-    this.dataForm.get('act_no')?.valueChanges
-      .pipe(untilDestroyed(this)) // 使用直到銷毀的操作符，避免記憶體洩漏
-      .subscribe(selectedActNo => {
-        // 根據選中的 act_no cag_barcode_Options 中尋找對應的資料
-        const selectedOption = this.act_no_Options.find(
-          option => option.act_no === selectedActNo
-        );
-
-        if (selectedOption) {
-          // 找到了對應的活動資料，更新 dataForm 中的其他欄位
-          this.dataForm.patchValue({
-            // 活動名稱
-            pod_desc: selectedOption.POD_DESC,
-            pod_sdate: new Date(selectedOption.pod_sdate),
-            pod_edate: new Date(selectedOption.pod_edate),
-          });
-        } else {
-          // 如果選擇的值為 null 或在 options 中找不到，可以選擇清空或保持不變
-          this.dataForm.patchValue({
-            pod_desc: null,
-            pod_sdate: null,
-            pod_edate: null,
-          });
-
-          // (可選) 清空明細資料
-          this.opendisc_Detail = [];
-        }
-      });
 
     //新增模式pod_desc才可以填寫，否則與其他欄位一樣都設為disabled
     const userInfo = this.authService?.getUserInfo?.();
@@ -364,16 +336,6 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   }
 
   loadOption() {
-    // 活動編號(新增request空物件即可，修改代入原有的)
-    // const pod = this.dataForm.get('pod_no')?.value || "";
-    const pod = "";
-    this.tls29010Service.dropdownTLS29010bypodno({ "pod_no": pod }).pipe(untilDestroyed(this)).subscribe(res => {
-      this.act_no_Options = res.Data.map((item: { act_no: string; POD_DESC: string; }) => ({
-        ...item,
-        Label: `${item.act_no} - ${item.POD_DESC}`
-      }));
-      console.log('pod: ', pod, ' ,活動編號 下拉:', this.act_no_Options);
-    });
     // 抽成別
     this.tls29010Service.dropdownTLS29010bytalentid({ "talent_id": "" }).pipe(untilDestroyed(this)).subscribe(res => {
       this.allBarcodeOptions = res.Data;
@@ -414,29 +376,35 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
             _tempId: `id_${Math.random().toString(36).substr(2, 9)}` // 產生前端唯一識別碼
           }));
           this.originalData = JSON.parse(JSON.stringify(this.opendisc_Detail));
+
+          // ★★★ 初始化快照：這裡存的是最原始的狀態 ★★★
+          this.lastDetailSnapshot = JSON.parse(JSON.stringify(this.opendisc_Detail));
         }
       });
   }
 
-  // #region 明細檔操作
+  // #region 明細檔操作(row變化時重新寫入明細)
   async onDataChange(newData: TALPORDERD_OPENDisc[]): Promise<void> {
-    // 1. 建立舊狀態的深拷貝快照，用於精準比對變更
-    const previousState = JSON.parse(JSON.stringify(this.opendisc_Detail));
+    // 1. 不要再從 this.opendisc_Detail 複製，改用我們維護的 lastDetailSnapshot
+    // const previousState = JSON.parse(JSON.stringify(this.opendisc_Detail)); (這行刪除)
 
-    // 2. 使用 for...of 配合 entries() 同時取得 index 與 row
+    // 用之前的快照來比對
+    const previousState = this.lastDetailSnapshot;
+
     for (const [i, currentRow] of newData.entries()) {
-      const oldRow = previousState[i];
+      const oldRow = previousState[i]; // 這裡會抓到真正「變更前」的資料
 
-      // 確保新增加的行也有唯一識別碼，解決「改 A 動到 B」
+      // 確保新增加的行也有唯一識別碼
       if (!(currentRow as any)._tempId) {
         (currentRow as any)._tempId = `new_${Math.random().toString(36).substr(2, 9)}`;
       }
 
       // 比對專櫃編號是否真的改變了
+      // 如果是新的一行 (oldRow undefined) 或者 號碼不一致
       const isTltNoChanged = !oldRow || currentRow.tlt_no !== oldRow.tlt_no;
 
       if (isTltNoChanged) {
-        console.log(`第 ${i} 列專櫃變更:`, currentRow.tlt_no);
+        console.log(`第 ${i} 列專櫃變更 detected! 從 [${oldRow?.tlt_no}] 變為 [${currentRow.tlt_no}]`);
 
         // 執行重置邏輯
         currentRow.talent_id = 0;
@@ -446,14 +414,16 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         (currentRow as any)._barcodeOptions = [];
 
         if (currentRow.tlt_no) {
-          // 抓取新專櫃的下拉選單資料
           await this.fetchTltDetails(currentRow);
         }
       }
     }
 
-    // 3. 斷開引用同步回組件，確保下次觸發時 oldRow 為正確的舊值
+    // 2. 更新畫面資料
     this.opendisc_Detail = [...newData];
+
+    // ★★★ 關鍵：處理完所有邏輯後，更新快照，等待下一次變更 ★★★
+    this.lastDetailSnapshot = JSON.parse(JSON.stringify(newData));
   }
   // 封裝 API 抓取邏輯 (可用000033測試)
   private async fetchTltDetails(row: any) {
@@ -553,7 +523,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       this.dataForm.reset();
     }
 
-    // 恢復明細資料
+    // 恢復明細資料(用originalData進行重製)
     this.opendisc_Detail = [...this.originalData];
   }
 
