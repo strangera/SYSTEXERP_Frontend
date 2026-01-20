@@ -274,6 +274,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (this._loading || !this.lazy) {
       return;
     }
+    this.selectedItems = [...this.selectedItems];
     const pageSize = this.lastQueryBody?.pageSize || this.lastQueryBody?.PageSize || 30;
     if (this.data.length >= this.totalRecords || this.data.length < pageSize) {
       this.virtualData = [...this.data];
@@ -291,22 +292,41 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     }
     this.cdr.detectChanges();
   }
+  // 1. 處理單一勾選變更 (在 HTML 中對應 selectionChange)
+  onSelectionChange(event: any[]) {
+    this.selectedItems = event;
+
+    // 找出目前資料中真正「可以被勾選」的數量
+    const selectableRows = this.data.filter(rowData => {
+      const selectable = this.isRowSelectable(rowData);
+      return selectable === undefined ? true : selectable;
+    });
+    // 如果已選數量 > 0 且等於可選總數，才亮起全選
+    this.isAllSelected = selectableRows.length > 0 && this.selectedItems.length === selectableRows.length;
+
+    this.selectionChange.emit(this.selectedItems);
+    this.selectAllChange.emit(this.isAllSelected);
+  }
   onSelectAllChange(event: TableSelectAllChangeEvent) {
-    this.isAllSelected = event.checked;
-    if (this.isAllSelected) {
+    const checked = event.checked;
+
+    if (checked) {
+      // 過濾出可選的資料
       this.selectedItems = this.data.filter(rowData => {
-        // 確保 rowData 可選時才加入 selectedItems
         const selectable = this.isRowSelectable(rowData);
         return selectable === undefined ? true : selectable;
       });
-      this.selectionChange.emit(this.selectedItems);
-      this.selectAllChange.emit(true);
+      // 如果過濾完發現根本沒資料可選，則全選按鈕不應亮起
+      this.isAllSelected = this.selectedItems.length > 0;
     } else {
       this.selectedItems = [];
-      this.selectionChange.emit(this.selectedItems);
-      this.selectAllChange.emit(false);
+      this.isAllSelected = false;
     }
+
+    this.selectionChange.emit(this.selectedItems);
+    this.selectAllChange.emit(this.isAllSelected);
   }
+
   trackByFn(index: number, item: any) {
     return this.dataKey && item?.[this.dataKey] || index;
   }
