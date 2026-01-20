@@ -18,6 +18,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-tls11020-cru',
@@ -32,18 +33,21 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
-    // NgIf,
+    NgIf,
     TranslateModule,
   ],
 })
 export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
+  // 讓 HTML 可以用 CRUDStatus
+  CRUDStatus = CRUDStatus;
+
   deductionCategoryOptions = [
-    { value: 'A', label: '一次扣款' },
-    { value: 'B', label: '每月扣款' },
-    { value: 'C', label: '平均分攤' },
-    { value: 'D', label: '比率分攤' },
-    { value: 'E', label: '活動扣款' },
-    { value: 'Z', label: '其他扣款' },
+    { value: 'A', label: 'A-一次扣款' },
+    { value: 'B', label: 'B-每月扣款' },
+    { value: 'C', label: 'C-平均分攤' },
+    { value: 'D', label: 'D-比率分攤' },
+    { value: 'E', label: 'E-活動扣款' },
+    { value: 'Z', label: 'Z-其他扣款' },
   ];
   accountOptions: any[] = [];
 
@@ -88,11 +92,13 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
 
     this.accountingaccountService.getOptions().subscribe((data) => {
       this.accountOptions = (data || []).map((x: any) => ({
-        label: x.Name,
+        label: `${x.No} - ${x.Name}`,
         formLabel: `${x.No} - ${x.Name}`,
         value: x.No,
       }));
     });
+
+    // 檢視模式(Read) 時整個表單會在 Base 裡被 disable
   }
 
   onSubmit(): void {
@@ -108,8 +114,6 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
 
       // === 新增 ===
       if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-        console.log('📤 新增送出的 payload：', raw);
-
         this.tls11020Service.insertTLS11020(raw).subscribe({
           next: () => {
             this.messageService.successBubble(
@@ -130,14 +134,12 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
         (raw as any).id = this.rowdata?.id;
         raw.CAP_Item = this.rowdata?.CAP_Item;
 
-        console.log('📤 更新送出的 payload：', raw);
-
         this.tls11020Service.updateTLS11020(raw).subscribe({
           next: () => {
             this.messageService.successBubble(
               this.translate.instant('updated-successfully')
             );
-            this.onCancel();
+            this.onCancel();          // 回列表（帶 fromCru）
             this.resetFormToDefault();
           },
           error: () => {
@@ -176,4 +178,3 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     this.dataForm.markAsPristine();
   }
 }
-

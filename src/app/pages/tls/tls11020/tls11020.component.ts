@@ -43,12 +43,12 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
 
   selectedItems: any[] = [];
   deductionCategoryOptions = [
-    { value: 'A', label: '一次扣款' },
-    { value: 'B', label: '每月扣款' },
-    { value: 'C', label: '平均分攤' },
-    { value: 'D', label: '比率分攤' },
-    { value: 'E', label: '活動扣款' },
-    { value: 'Z', label: '其他扣款' },
+    { value: 'A', label: 'A-一次扣款' },
+    { value: 'B', label: 'B-每月扣款' },
+    { value: 'C', label: 'C-平均分攤' },
+    { value: 'D', label: 'D-比率分攤' },
+    { value: 'E', label: 'E-活動扣款' },
+    { value: 'Z', label: 'Z-其他扣款' },
   ];
   guiFlagOptions = [
     { label: '開立', value: 'Y' },
