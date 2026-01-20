@@ -11,8 +11,6 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
@@ -24,28 +22,9 @@ import { Column, createPaginationConfig, formatDate } from '../../../shared/comp
   templateUrl: './cpm11040.component.html',
   styleUrl: './cpm11040.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, CalendarComponent, InputTextComponent, DropdownComponent, TableComponent, DialogComponent, TranslateModule, AsyncPipe]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, InputTextComponent, DropdownComponent, TableComponent, TranslateModule, AsyncPipe]
 })
 export class CPM11040Component extends BasicQueryPageComponent<CPM11040Data> implements OnInit {
-  // 歸還對話框
-  returnDialogVisible = false;
-  returnSubmitted = false;
-
-  // 歸還表單
-  returnForm = this.formBuilder.group({
-    LoanNo: ['', [Validators.required, Validators.maxLength(14)]], // 借記編號
-    ReturnUserName: [''], // 歸還處理人員
-    ReturnDate: [new Date(), [Validators.required]], // 歸還日期
-    ReturnTime: ['', [Validators.required]], // 歸還時間
-    ServiceId: [''], // 出借編號
-    ServiceCode: [''], // 服務台位置編號
-    LoanDate: [''], // 出借日期
-    UserName: [''], // 姓名
-    LoanPhone: [''], // 連絡電話
-    CertType: [''], // 證件類型
-    DeviceName: [''], // 設備名稱
-  });
-
   queryForm = this.formBuilder.group({
     LoanNo: ['', [Validators.maxLength(14)]], // 借記/歸還編號
     ServiceId: [null], // 服務中心位置編號
@@ -97,7 +76,7 @@ export class CPM11040Component extends BasicQueryPageComponent<CPM11040Data> imp
   ];
 
   columns: Column[] = [
-    { field: 'LoanNo', header: '借記編號', visible: true },
+    { field: 'LoanNo', header: '出借編號', visible: true },
     { field: 'LoanDate', header: '出借日期', visible: true, format: formatDate },
     { field: 'LoanTime', header: '出借時間', visible: true },
     { field: 'ReturnDate', header: '歸還日期', visible: true, format: formatDate },
@@ -121,7 +100,7 @@ export class CPM11040Component extends BasicQueryPageComponent<CPM11040Data> imp
   }
 
   ngOnInit(): void {
-    this.initializePage('CPM11040', undefined, this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('CPM11040', 'cpm/cpm11040cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {
@@ -154,131 +133,4 @@ export class CPM11040Component extends BasicQueryPageComponent<CPM11040Data> imp
     });
   }
 
-  // 開啟歸還對話框
-  onReturn() {
-    this.returnDialogVisible = true;
-    this.returnSubmitted = false;
-
-    // 取得當前使用者名稱
-    const currentUser = this.authService.currentUserValue?.user_Name || '';
-
-    this.returnForm.reset({
-      ReturnDate: new Date(),
-      ReturnTime: '',
-      ReturnUserName: currentUser
-    });
-  }
-
-  // 查詢鈕 - 根據借記編號查詢資料
-  onQueryReturn() {
-    const loanNo = this.returnForm.get('LoanNo')?.value;
-    if (!loanNo) {
-      this.messageService.warnBubble('請輸入借記編號');
-      return;
-    }
-
-    this.loading = true;
-    this.messageService.blockUi();
-
-    // 使用查詢 API 根據 LoanNo 查詢資料
-    this.cpm11040Service.queryCPM11040({
-      LoanNo: loanNo,
-      PageSize: 1,
-      PageIndex: 1
-    })
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        }),
-        untilDestroyed(this)
-      )
-      .subscribe(response => {
-        if (response.Data && response.Data.length > 0) {
-          const data = response.Data[0];
-
-          // 檢查是否已經歸還
-          if (data.LoanStatus === '已歸還') {
-            this.messageService.warnBubble('此借記編號已經歸還');
-            return;
-          }
-
-          // 填充表單資料
-          this.returnForm.patchValue({
-            ServiceId: data.LoanNo,           // 出借編號
-            ServiceCode: data.ServiceName,     // 服務台位置編號
-            LoanDate: data.LoanDate,           // 出借日期
-            UserName: data.UserName,           // 姓名
-            LoanPhone: data.LoanPhone,         // 連絡電話
-            CertType: data.CertTypeName,       // 證件類型
-            DeviceName: data.DeviceName        // 設備名稱
-          });
-          this.messageService.successBubble('查詢成功');
-        } else {
-          this.messageService.warnBubble('查無此借記編號');
-        }
-      });
-  }
-
-  // 確認歸還
-  onConfirmReturn() {
-    this.returnSubmitted = true;
-
-    if (this.returnForm.invalid) {
-      this.messageService.warnBubble('請填寫必填欄位');
-      return;
-    }
-
-    const loanNo = this.returnForm.get('LoanNo')?.value;
-    const returnDate = this.returnForm.get('ReturnDate')?.value;
-    const returnTime = this.returnForm.get('ReturnTime')?.value;
-
-    if (!loanNo || !returnDate || !returnTime) {
-      this.messageService.warnBubble('請填寫借記編號、歸還日期和歸還時間');
-      return;
-    }
-
-    // 格式化日期為 YYYY-MM-DD
-    const formattedDate = returnDate instanceof Date
-      ? returnDate.toISOString().split('T')[0]
-      : returnDate;
-
-    this.loading = true;
-    this.messageService.blockUi();
-
-    // 呼叫歸還 API
-    this.cpm11040Service.returnDevice({
-      LoanNo: loanNo,
-      ReturnDate: formattedDate,
-      ReturnTime: returnTime
-    })
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        }),
-        untilDestroyed(this)
-      )
-      .subscribe({
-        next: () => {
-          this.messageService.successBubble('歸還成功');
-          this.returnDialogVisible = false;
-          this.returnForm.reset();
-          this.returnSubmitted = false;
-          this.onSubmit(this.queryForm); // 重新查詢列表
-        },
-        error: (error) => {
-          // 處理錯誤訊息
-          const errorMsg = error?.error?.Message || '歸還失敗，請稍後再試';
-          this.messageService.errorBubble(errorMsg);
-        }
-      });
-  }
-
-  // 取消歸還
-  onCancelReturn() {
-    this.returnDialogVisible = false;
-    this.returnForm.reset();
-    this.returnSubmitted = false;
-  }
 }
