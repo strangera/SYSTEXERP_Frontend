@@ -7,7 +7,7 @@ import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 export interface FIN52090Data {
   id?: number;
   AccNo: string;
-  AccName: string;
+  AccCName: string;
   NoteDesc: string;
 }
 

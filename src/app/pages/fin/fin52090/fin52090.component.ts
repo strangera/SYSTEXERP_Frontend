@@ -65,7 +65,7 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
 
   public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52090Data; })[] = [
     { field: 'AccNo', header: '科目代號' },
-    { field: 'AccName', header: '科目名稱' },
+    { field: 'AccCName', header: '科目名稱' },
     { field: 'NoteDesc', header: '科目摘要' },
   ];
 
