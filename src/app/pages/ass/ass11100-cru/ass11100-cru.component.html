@@ -1,39 +1,34 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1;">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="倉別" controlName="WH_ID" [control]="dataForm.controls.WH_ID"
+            [submitted]="submitted"></app-input-text>
         </div>
-    </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="倉別" controlName="storageType"
-                        [control]="dataForm.controls.storageType" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="倉別名稱" controlName="storageName" [control]="dataForm.controls.storageName"
-                        [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="部門代號" controlName=" organizationNumber" [options]="organizationNumberOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.organizationNumber"
-                        [submitted]="submitted"></app-dropdown>
-                </div>
-            </div>
-            <hr />
-            <app-editor-text label="備註" controlName="remark" [control]="dataForm.controls.remark"
-                [style]="{ height: '100px' }" [submitted]="submitted">
-            </app-editor-text>
-            <hr />
-        </form>
-        <div class="col pt-4">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
-            </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="倉別名稱" controlName="WH_NAME" [control]="dataForm.controls.WH_NAME"
+            [submitted]="submitted"></app-input-text>
         </div>
-    </p-panel>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="部門代號" controlName="ATT_ORG_ID" [options]="organizationOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.ATT_ORG_ID" [submitted]="submitted"></app-dropdown>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="備註" controlName="NOTES" [control]="dataForm.controls.NOTES"
+            [submitted]="submitted"></app-input-text>
+        </div>
+      </div>
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
+      </div>
+    </form>
+  </p-panel>
 </div>

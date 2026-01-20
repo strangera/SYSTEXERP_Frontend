@@ -1,17 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-// Shared
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-//
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { ASS11100Service } from '../../../service/api/ass/ass11100.service';
+import { DropDownListService } from '../../../service/utility/dropDownList.service';
+import { ASS11100Data } from './ass11100.model';
 
 //3.1.1.10 倉別設定作業
 @Component({
@@ -19,105 +19,131 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
   templateUrl: './ass11100.component.html',
   styleUrl: './ass11100.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, EditorTextComponent, TableComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    TableComponent,
+    TranslateModule
+  ]
 })
-export class ASS11100Component extends BasicQpageComponent implements OnInit {
-  //
+export class ASS11100Component extends BasicQueryPageComponent<ASS11100Data> implements OnInit {
+  // 查詢表單
   queryForm = this.formBuilder.group({
-    storageType: [, [Validators.maxLength(10)]], // 倉別
-    storageName: ['', [Validators.maxLength(40)]], // 倉別名稱
-    organizationNumber: [], // 部門代號
-    remark: [,], // 備註
+    WH_ID: ['', [Validators.maxLength(10)]], // 倉別
+    WH_NAME: ['', [Validators.maxLength(40)]], // 倉別名稱
+    ATT_ORG_ID: [null], // 部門代號
+    NOTES: ['', [Validators.maxLength(100)]], // 備註
+    ...createPaginationConfig([{ field: 'WH_ID', order: 1 }]), // 分頁和排序參數
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+
+  totalRecords = 0;
+  data: ASS11100Data[] = [];
+  selectedItems: ASS11100Data[] = [];
+  organizationOptions: Array<{ label: string; value: string }> = [];
+
+  columns: Column[] = [
+    { field: 'WH_ID', header: '倉別', visible: true, showSort: true },
+    { field: 'WH_NAME', header: '倉別名稱', visible: true, showSort: true },
+    { field: 'ATT_ORG_ID', header: '部門代號', visible: true, showSort: true },
+    { field: 'NOTES', header: '備註', visible: true, type: 'html', showSort: true },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '倉別', visible: true },
-    { field: 'col2', header: '倉別名稱', visible: true },
-    { field: 'col3', header: '部門代號', visible: true },
-    { field: 'col4', header: '備註', visible: true },
 
-    // { field: 'col5', header: '所屬會計科目(借)', visible: true },
-    // { field: 'col6', header: '所屬會計科目(貸)', visible: true },
-    // { field: 'col7', header: '進項稅額科目(借)', visible: true },
-    // { field: 'col8', header: '費用科目', visible: true },
-    // { field: 'col9', header: '折舊科目(借)', visible: true },
-    // { field: 'col10', header: '累計折舊科目(貸)', visible: true },
-    // { field: 'col11', header: '折舊年限', visible: true },
-    // { field: 'col12', header: '說明', visible: true },
-
-    // { field: 'col13', header: '公司地址', visible: true },
-    // { field: 'col14', header: '付款方式', visible: true },
-    // { field: 'col15', header: '營運模式', visible: true },
-    // { field: 'col16', header: '票期', visible: true },
-    // { field: 'col17', header: '備註', visible: true },
-    // { field: 'col18', header: '訂貨傳真', visible: true },
-
-    // { field: 'col19', header: '工廠地址', visible: true },
-    // { field: 'col20', header: '工廠電話', visible: true },
-    // { field: 'col21', header: '工廠傳真', visible: true },
-
-    // { field: 'col22', header: '送貨方式', visible: true },
-    // { field: 'col23', header: '退貨處理方式', visible: true },
-    // { field: 'col24', header: '廠商送貨期限', visible: true },
-
-    // { field: 'col25', header: '附註', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  //
-  organizationNumberOptions: any[] = [];
-
-  //
   constructor(
-    private formBuilder: FormBuilder,
+    private ass11100Service: ASS11100Service,
+    private dropDownListService: DropDownListService,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310010';
-    this.cruPage = '/ASS1000/ASS11100CRU';
+    this.initializePage('ASS11100', 'ass/ass11100cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOrganizationOptions();
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-
+  // 載入部門下拉選單
+  loadOrganizationOptions(): void {
+    this.dropDownListService.querySYS3100_DropDownList().subscribe({
+      next: (response) => {
+        if (response.Status === '0000' && response.Data) {
+          this.organizationOptions = response.Data.map(item => ({
+            label: `${item.No || ''}-${item.Name || ''}`,
+            value: item.No || ''
+          }));
+        }
+      },
+      error: (err) => {
+        console.error('載入部門下拉選單失敗:', err);
+      }
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+  // 提交查詢
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      this.ass11100Service.queryASS11100(frm.value).subscribe({
+        next: (response) => {
+          if (response.Status === '0000') {
+            this.data = response.Data || [];
+            this.totalRecords = response.TotalCount || response.Data.length;
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: () => {
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
+    });
   }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
+  // 刪除項目
+  onDelete(data: ASS11100Data | ASS11100Data[]): void {
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) return;
+
+    const idList = items
+      .filter(item => item && item.id != null)
+      .map(item => item.id!);
+
+    if (idList.length === 0) {
+      this.messageService.warnBubble('未找到有效的刪除項目');
+      return;
     }
+
+    this.messageService.confirm({
+      header: `是否確認刪除 ${items.length} 筆資料?`,
+      accept: () => {
+        this.ass11100Service.deleteASS11100({ idList }).subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble('選中項目刪除成功');
+            } else {
+              console.error('API error:', response.Status, response.Message);
+              this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+            }
+          },
+          error: (err: string) => {
+            console.error('API error:', err);
+            this.messageService.errorBubble('刪除失敗');
+          },
+          complete: () => {
+            this.onSubmit(this.queryForm); // 刷新資料
+            this.selectedItems = [];
+          },
+        });
+      }
+    });
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-    }
-  }
-
-  onDetail(data: any) {
+  // 判斷行是否可選
+  isRowSelectable(rowData: ASS11100Data): boolean {
+    return true; // 所有行都可選，或根據業務邏輯判斷
   }
 }
