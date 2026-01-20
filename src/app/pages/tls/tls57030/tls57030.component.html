@@ -34,7 +34,7 @@
               [control]="queryForm.controls.STK_Date" [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number label="顯示行數" controlName="PageSize" [control]="queryForm.controls.PageSize"
+            <app-input-number label="顯示行數" controlName="pageSize" [control]="queryForm.controls.pageSize"
               [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -53,6 +53,15 @@
 <div class="card">
   <app-table-report tableKey="tls57030" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
     [columnGroup]="columnGroup" [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false"
-    [showReportMode]="true" [loading]="loading" [queryFunction]="tls57030Service.queryTLS57030.bind(tls57030Service)">
+    [footerData]="footerData" [showReportMode]="true" [loading]="loading"
+    [queryFunction]="tls57030Service.queryTLS57030.bind(tls57030Service)">
+    <header>
+      <div class="flex justify-content-end align-items-center gap-2">
+        <p-button styleClass="p-2" label="商品庫存表.PDF" [loading]="btnLoading" icon="pi pi-file" (click)="onExportPDF()"
+          [disabled]="data.length === 0 || !hasPermission(Actions.Print)"></p-button>
+        <p-button styleClass="p-2" label="商品庫存表.XLSX" [loading]="btnLoading" icon="pi pi-file" (click)="onExportXLSX()"
+          [disabled]="data.length === 0 || !hasPermission(Actions.ExportExcel)"></p-button>
+      </div>
+    </header>
   </app-table-report>
 </div>
