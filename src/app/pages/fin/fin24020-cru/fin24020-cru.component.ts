@@ -1,6 +1,7 @@
 import { DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NavigationExtras } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin24020Service } from '@service/api/fin/fin24020.service';
@@ -16,6 +17,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { Column } from '@shared/componentkit/table/table.model';
+import { QueryStateService } from '@shared/service/query-state.service';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 
@@ -102,6 +104,7 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
       optionValue: 'value',
       width: '6rem',
       validate: [validateRequired],
+      disabled: () => !this.isFormCreateable,
     },
 
   ];
@@ -110,6 +113,7 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
     private readonly datePipe: DatePipe,
     public readonly fin24020Service: Fin24020Service,
     private readonly dropDownListService: DropDownListService,
+    private readonly queryStateService: QueryStateService,
   ) {
     super();
   }
@@ -118,6 +122,31 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
     this.initializePage('FIN24020', this.dataForm, { useReadonly: true });
     this.loadAPS3001List();
     this.initializeFormFromRowData();
+
+    // 當使用者修改關鍵金額欄位或明細時，若先前因驗證失敗導致 submitted/loading/block，則清除狀態讓使用者可以重送
+    this.dataForm.get('ACP_Amt')?.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
+      if (this.submitted || this.loading) {
+        this.submitted = false;
+        this.loading = false;
+        try { this.messageService.unblockUi(); } catch (e) { /* ignore */ }
+      }
+    });
+    this.dataForm.get('ACP_ReserveAmt')?.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
+      if (this.submitted || this.loading) {
+        this.submitted = false;
+        this.loading = false;
+        try { this.messageService.unblockUi(); } catch (e) { /* ignore */ }
+      }
+    });
+
+    // 當不是新增模式（例如 Edit / Read），不可手動修改應付ID；編輯/檢視時也不可修改「是否已付款」
+    if (!this.isFormCreateable) {
+      this.dataForm.get('ACP_No')?.disable({ emitEvent: false });
+      this.dataForm.get('STATUS')?.disable({ emitEvent: false });
+    } else {
+      this.dataForm.get('ACP_No')?.enable({ emitEvent: false });
+      this.dataForm.get('STATUS')?.enable({ emitEvent: false });
+    }
 
     if (this.isFormReadable) {
       this.dialogQueryForm.disable({ emitEvent: false });
@@ -194,6 +223,9 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
     this.handleSubmit(frm, () => {
       const detailRows = (this.tableData || []).filter(r => !r._isAutoInsertCandidate);
       if (!detailRows.length) {
+        this.loading = false;
+        try { this.messageService.unblockUi(); } catch (e) { }
+        this.submitted = false;
         this.messageService.errorBubble('請至少輸入一筆保留退款明細');
         return;
       }
@@ -201,11 +233,36 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
       const reserveAmt = Number(frm.value.ACP_ReserveAmt) || 0;
       const totalRetAmt = detailRows.reduce((sum, r) => sum + (Number(r.RET_Amt) || 0), 0);
 
+      // 新增時檢查：單筆或合計的保留退款金額不得超過保留款金額
+      if (this.isFormCreateable) {
+        const anyRowTooLarge = detailRows.some(r => (Number(r.RET_Amt) || 0) > reserveAmt);
+        if (anyRowTooLarge) {
+          this.loading = false;
+          try { this.messageService.unblockUi(); } catch (e) { }
+          this.submitted = false;
+          this.messageService.errorBubble('保留退款金額不可大於保留款金額');
+          return;
+        }
+        if (totalRetAmt > reserveAmt) {
+          this.loading = false;
+          try { this.messageService.unblockUi(); } catch (e) { }
+          this.submitted = false;
+          this.messageService.errorBubble('保留款退款金額合計不可大於保留款金額');
+          return;
+        }
+      }
+
       if (reserveAmt > acpAmt) {
+        this.loading = false;
+        try { this.messageService.unblockUi(); } catch (e) { }
+        this.submitted = false;
         this.messageService.errorBubble('保留款金額不可大於應付金額');
         return;
       }
       if (totalRetAmt > acpAmt) {
+        this.loading = false;
+        try { this.messageService.unblockUi(); } catch (e) { }
+        this.submitted = false;
         this.messageService.errorBubble('保留款退款金額不可大於應付金額');
         return;
       }
@@ -225,6 +282,9 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
       }
 
       if (!acpYyyymm) {
+        this.loading = false;
+        try { this.messageService.unblockUi(); } catch (e) { }
+        this.submitted = false;
         this.messageService.errorBubble('帳款年月不可空白');
         return;
       }
@@ -303,6 +363,29 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
     const effectiveRows = this.tableData.filter(r => !r._isAutoInsertCandidate);
     const totalRetAmt = effectiveRows.reduce((sum, r) => sum + (Number(r.RET_Amt) || 0), 0);
     this.dataForm.patchValue({ sam: totalRetAmt }, { emitEvent: false });
+    if (this.submitted || this.loading) {
+      this.submitted = false;
+      this.loading = false;
+      try { this.messageService.unblockUi(); } catch (e) { /* ignore */ }
+    }
+  }
+
+  override onCancel(returnValue?: any) {
+    // 儲存查詢條件到 QueryStateService，讓查詢頁能還原（頁面層處理）
+    try { this.queryStateService.setQueryState(this.ProgNo, this.queryData); } catch (e) { /* ignore */ }
+
+    const queryPageRoute = this.previousRoute?.includes('account/')
+      ? this.previousRoute
+      : `/account/${this.ProgNo.toLowerCase().slice(0, 3)}/${this.ProgNo.toLowerCase()}`;
+
+    const extras: NavigationExtras = {
+      state: {
+        fromRoute: this.router.url,
+        data: returnValue,
+      },
+    };
+
+    this.router.navigate([queryPageRoute], extras);
   }
 
   // APS3001 應付ID 下拉資料

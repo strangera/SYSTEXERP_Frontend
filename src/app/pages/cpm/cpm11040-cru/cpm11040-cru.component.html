@@ -1,0 +1,120 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <!-- 第一行：出借編號(下拉選單)、歸還處理人員、歸還日期 -->
+        <div class="col-12 md:col-4">
+          <app-dropdown
+            label="出借編號"
+            controlName="LoanNo"
+            [options]="loanNoOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.LoanNo"
+            [submitted]="submitted"
+            [showClear]="true"
+            [filter]="true"
+            filterBy="label"
+            [customPlaceholder]="'請選擇出借編號'"
+            (valueChange)="onLoanNoChange($event)"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-4">
+          <app-input-text
+            label="歸還處理人員"
+            controlName="ReturnUserName"
+            [control]="dataForm.controls.ReturnUserName"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="歸還日期"
+            controlName="ReturnDate"
+            [control]="dataForm.controls.ReturnDate"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+
+        <!-- 第二行：歸還時間、服務台位置編號、出借日期 -->
+        <div class="col-12 md:col-4">
+          <app-calendar
+            calendarType="timeOne"
+            label="歸還時間"
+            controlName="ReturnTime"
+            [control]="dataForm.controls.ReturnTime"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+        <div class="col-12 md:col-4">
+          <app-input-text
+            label="服務台位置編號"
+            controlName="ServiceCode"
+            [control]="dataForm.controls.ServiceCode"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="出借日期"
+            controlName="LoanDate"
+            [control]="dataForm.controls.LoanDate"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+
+        <!-- 第三行：姓名、連絡電話 -->
+        <div class="col-12 md:col-6">
+          <app-input-text
+            label="姓名"
+            controlName="UserName"
+            [control]="dataForm.controls.UserName"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6">
+          <app-input-text
+            label="連絡電話"
+            controlName="LoanPhone"
+            [control]="dataForm.controls.LoanPhone"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <!-- 第四行：證件類型 -->
+        <div class="col-12 md:col-6">
+          <app-input-text
+            label="證件類型"
+            controlName="CertType"
+            [control]="dataForm.controls.CertType"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <!-- 第五行：設備名稱 -->
+        <div class="col-12">
+          <app-input-text
+            label="設備名稱"
+            controlName="DeviceName"
+            [control]="dataForm.controls.DeviceName"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+
+      <div
+        class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
+      >
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit"></app-button>
+      </div>
+    </form>
+  </p-panel>
+</div>

@@ -1,7 +1,11 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button label="歸還" (click)="onReturn()"></app-button>
+    <app-button
+      btnType="create"
+      [type]="'button'"
+      (clickEvent)="onCreate()"
+    ></app-button>
   </div>
   <p-accordion>
     <p-accordionTab
@@ -127,6 +131,7 @@
     [data]="data"
     [columns]="columns"
     (delete)="onDelete($event)"
+    (detail)="onDetail($event)"
     [showCheckBox]="true"
     [multiSortMeta]="[{ field: 'LoanDate', order: -1 }]"
     [totalRecords]="totalRecords"
@@ -134,122 +139,8 @@
     [lazy]="true"
     [loading]="loading"
     [showDelete]="true"
+    [showEdit]="false"
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
   ></app-table>
 </div>
-
-<!-- 歸還對話框 -->
-<app-dialog
-  [visible]="returnDialogVisible"
-  header="歸還處理"
-  (visibleChange)="returnDialogVisible = $event"
-  (save)="onConfirmReturn()"
-  [disable]="returnForm.invalid"
-  width="800px"
->
-  <form [formGroup]="returnForm">
-    <div class="grid p-fluid">
-      <!-- 第一行：借記編號、歸還日期、歸還時間 -->
-      <div class="col-12 md:col-4">
-        <app-input-text
-          label="借記編號"
-          controlName="LoanNo"
-          [control]="returnForm.controls.LoanNo"
-          [submitted]="returnSubmitted"
-          placeholder="必填, 最多14個字"
-          [showButton]="true"
-          buttonLabel="查詢"
-          (clickButton)="onQueryReturn()"
-        ></app-input-text>
-      </div>
-      <app-input-text
-        class="col-12 md:col-4"
-        label="歸還處理人員"
-        controlName="ReturnUserName"
-        [control]="returnForm.controls.ReturnUserName"
-        [submitted]="returnSubmitted"
-        [readonly]="true"
-      ></app-input-text>
-      <app-calendar
-        class="col-12 md:col-4"
-        label="歸還日期"
-        controlName="ReturnDate"
-        [control]="returnForm.controls.ReturnDate"
-        [submitted]="returnSubmitted"
-      ></app-calendar>
-      <app-input-text
-        class="col-12 md:col-4"
-        label="歸還時間"
-        controlName="ReturnTime"
-        [control]="returnForm.controls.ReturnTime"
-        [submitted]="returnSubmitted"
-        placeholder="HH:NN"
-      ></app-input-text>
-
-      <!-- 第二行：出借編號、服務台位置編號 -->
-      <app-input-text
-        class="col-12 md:col-6"
-        label="出借編號"
-        controlName="ServiceId"
-        [control]="returnForm.controls.ServiceId"
-        [submitted]="returnSubmitted"
-        [readonly]="true"
-      ></app-input-text>
-      <app-input-text
-        class="col-12 md:col-6"
-        label="服務台位置編號"
-        controlName="ServiceCode"
-        [control]="returnForm.controls.ServiceCode"
-        [submitted]="returnSubmitted"
-        [readonly]="true"
-      ></app-input-text>
-
-      <!-- 第三行：出借日期、姓名 -->
-      <app-input-text
-        class="col-12 md:col-6"
-        label="出借日期"
-        controlName="LoanDate"
-        [control]="returnForm.controls.LoanDate"
-        [submitted]="returnSubmitted"
-        [readonly]="true"
-      ></app-input-text>
-      <app-input-text
-        class="col-12 md:col-6"
-        label="姓名"
-        controlName="UserName"
-        [control]="returnForm.controls.UserName"
-        [submitted]="returnSubmitted"
-        [readonly]="true"
-      ></app-input-text>
-
-      <!-- 第四行：連絡電話、證件類型 -->
-      <app-input-text
-        class="col-12 md:col-6"
-        label="連絡電話"
-        controlName="LoanPhone"
-        [control]="returnForm.controls.LoanPhone"
-        [submitted]="returnSubmitted"
-        [readonly]="true"
-      ></app-input-text>
-      <app-input-text
-        class="col-12 md:col-6"
-        label="證件類型"
-        controlName="CertType"
-        [control]="returnForm.controls.CertType"
-        [submitted]="returnSubmitted"
-        [readonly]="true"
-      ></app-input-text>
-
-      <!-- 第五行：設備名稱 -->
-      <app-input-text
-        class="col-12"
-        label="設備名稱"
-        controlName="DeviceName"
-        [control]="returnForm.controls.DeviceName"
-        [submitted]="returnSubmitted"
-        [readonly]="true"
-      ></app-input-text>
-    </div>
-  </form>
-</app-dialog>

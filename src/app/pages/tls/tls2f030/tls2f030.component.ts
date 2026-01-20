@@ -55,14 +55,15 @@ export class TLS2F030Component extends BasicQueryPageComponent<QueryTLS2F030Resp
 
   // 表格欄位定義
   columns: Column[] = [
-    { field: 'tlt_no', header: '專櫃', visible: true, format: (value: any, _index?: number, rowData?: any) => rowData ? `(${value})${rowData.tlt_name}` : value },
+    { field: 'tlt_no', header: '專櫃代碼', visible: true },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true },
     { field: 'sam_yyymm', header: '結帳年月', visible: true, format: formatYYYYMM },
     { field: 'money_type_desc', header: '結帳方式', visible: true },
     { field: 'sam_termno', header: '帳次', visible: true },
-    { field: 'sam_ap_namt', header: '未稅金額', visible: true, format: formatAmount, style: 'text-align: right', isTotal: true },
-    { field: 'sam_ap_tax', header: '稅額', visible: true, format: formatAmount, style: 'text-align: right', isTotal: true },
-    { field: 'sam_ap_amt', header: '應開立發票金額', visible: true, format: formatAmount, style: 'text-align: right', isTotal: true },
-    { field: 'balance', header: '餘額', visible: true, format: formatAmount, style: 'text-align: right', isTotal: true },
+    { field: 'sam_ap_namt', header: '未稅金額', visible: true, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'sam_ap_tax', header: '稅額', visible: true, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'sam_ap_amt', header: '應開立發票金額', visible: true, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'balance', header: '餘額', visible: true, format: formatAmount, align: 'right', isTotal: true },
     { field: 'status', header: '狀況', visible: true },
   ];
 

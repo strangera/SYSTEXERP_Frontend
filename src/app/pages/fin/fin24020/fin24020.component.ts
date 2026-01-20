@@ -13,6 +13,7 @@ import { InputNumberComponent } from '@shared/componentkit/input-number/input-nu
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatDate } from '@shared/componentkit/table/table.model';
+import { QueryStateService } from '@shared/service/query-state.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, map } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -68,6 +69,7 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
     private readonly dropDown: DropdownApiService,
     private readonly datePipe: DatePipe,
     public readonly fin24020Service: Fin24020Service,
+    override readonly queryStateService: QueryStateService,
   ) {
     super();
   }
@@ -83,6 +85,12 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('FIN24020', 'fin/FIN24020cru', this.queryForm, (form) => this.onSubmit(form));
+
+    // 若是從 CRU 返回並帶有 queryConditions，立即還原表單欄位（頁面層）
+    const state = this.router.lastSuccessfulNavigation?.extras.state;
+    if (state?.['queryConditions']) {
+      try { this.queryForm.patchValue(state['queryConditions'], { emitEvent: false }); } catch (e) { /* ignore */ }
+    }
 
   }
 
@@ -137,6 +145,12 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
         PayGenerated: frm.value.PayGenerated ?? '',
         Remark: frm.value.Remark ?? ''
       };
+
+      // 儲存查詢條件到 QueryStateService（頁面層），方便 CRU 回到查詢頁時還原
+      try { this.queryStateService.setQueryState(this.ProgNo, body); } catch (e) { /* ignore */ }
+
+      // 儲存查詢欄位值以便 CRU 返回時還原（頁面層）
+      try { this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue()); } catch (e) { /* ignore */ }
 
       this.queryFIN24020WithStatusLabel(body)
         .pipe(finalize(() => this.loading = false), untilDestroyed(this))

@@ -97,6 +97,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() footerLabel = '總計'; // 總計列左側標籤文字
   @Input() autoHeight = false; // 是否依資料高度自動撐開（不固定 450px）
   @Input() showFooterTotal = true; // 是否顯示第一列 footer 總計資料
+  @Input() allowFooterHtml = false; // 是否允許 footer 使用 HTML 內嵌呈現（預設 false，避免影響既有頁面）
   // expansion 收合展開
   @Input() expansionColumns: ReportColumn[] = [];
   @Input() expansionDataKey = 'details';
