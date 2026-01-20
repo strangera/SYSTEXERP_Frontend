@@ -54,7 +54,7 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
     RET_Amt: [0, Validators.required],
     STATUS: ['', Validators.required],
     Remark: [''],
-    sam_termno: [0, Validators.required],
+    ACP_BalanceAmt: [0, Validators.required],
     sam: [0, Validators.required],
   });
 
@@ -195,8 +195,8 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
           }
         }
       }
-      if (row.sam_termno != null) {
-        this.dataForm.patchValue({ sam_termno: row.sam_termno });
+      if (row.ACP_BalanceAmt != null) {
+        this.dataForm.patchValue({ ACP_BalanceAmt: row.ACP_BalanceAmt });
       }
       this.dialogQueryForm.patchValue({
         ACP_No: row.ACP_No ?? '',

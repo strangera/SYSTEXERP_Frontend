@@ -36,7 +36,6 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    // DropdownComponent,
     MultiSelectComponent,
     InputTextComponent,
     InputNumberRangeComponent,
@@ -62,9 +61,10 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     { value: '3', label: '停用' },
   ];
 
+  // 查詢表單：一開始就是「全部沒選 / 沒輸入」的狀態
   queryForm = this.formBuilder.group({
     LOCATION_No: ['', Validators.maxLength(10)],
-    org_id: [[]],
+    org_id: [[]], // Multi-select -> 一開始空陣列
     building_no: [[]],
     FLOOR_NO: [[] as string[]],
     AREA_NO: [[] as string[]],
@@ -107,7 +107,6 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     { field: 'GROSS_SPACE', header: '簽約坪數', visible: true },
     { field: 'NET_SPACE', header: '營業坪數', visible: true },
 
-    // ✅ 用 LOCATION_Status 當排序欄位，畫面顯示 label
     {
       field: 'LOCATION_Status',
       header: '使用狀態',
@@ -127,15 +126,18 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    // 1. 初始化頁面（只負責 ProgNo、權限、cruPage 等，不由它幫你做查詢還原）
-    this.initializePage('TLS11010', 'tls/tls11010cru');
-
-    // 2. 共用查詢條件還原機制
-    this.handleQueryRestore(this.queryForm, this.ProgNo, (f) =>
-      this.onSubmit(f),
+    // ✅ 改成跟 TLS11020 一樣的 initializePage 模式
+    //    讓 BasicQueryPageComponent 自己處理：
+    //    - 初次進入：保持初始條件
+    //    - 從 CRU 回來，有 QueryState 的話自動還原＋自動查詢
+    this.initializePage(
+      'TLS11010',
+      'tls/tls11010cru',
+      this.queryForm,
+      (f) => this.onSubmit(f),
     );
 
-    // 3. 載入各種下拉
+    // 載入各種下拉
     this.tls11010Service
       .getFloorOptions()
       .pipe(untilDestroyed(this))
@@ -176,33 +178,50 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
       .subscribe((res) => (this.BUILDING_NO_Options = res));
   }
 
+  /** 給 API 用的 payload 轉換 */
+  private buildApiPayload(formValue: any): any {
+    const payload: any = { ...formValue };
+
+    // 將空字串欄位轉為 null，以符合後端 char? 要求
+    if (payload.building_no === '') payload.building_no = null;
+    if (payload.LOCATION_No === '') payload.LOCATION_No = null;
+
+    // MultiSelect：把可能是物件或字串，統一轉成「代碼字串」陣列
+    const toCodeArray = (arr: any[]): string[] =>
+      (arr || [])
+        .map((x: any) => {
+          if (x == null) return '';
+          if (typeof x === 'string' || typeof x === 'number') return String(x);
+          // 如果是 { value, label } 的物件
+          if (typeof x === 'object' && 'value' in x) return String(x.value);
+          return '';
+        })
+        .filter((v) => v !== '');
+
+    if (Array.isArray(payload.LOCATION_Status)) {
+      payload.LOCATION_Status = toCodeArray(payload.LOCATION_Status);
+    }
+
+    if (Array.isArray(payload.Purpose_no)) {
+      payload.Purpose_no = toCodeArray(payload.Purpose_no);
+    }
+
+    return payload;
+  }
+
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       this.loading = true;
       this.messageService.blockUi();
 
-      const formValue: any = { ...frm.value };
+      // 原始表單值：留給查詢還原用
+      const rawFormValue: any = frm.getRawValue();
 
-      // 將空字串欄位轉為 null，以符合後端 char? 要求
-      if (formValue.building_no === '') formValue.building_no = null;
-      if (formValue.LOCATION_No === '') formValue.LOCATION_No = null;
-
-      // 將 LOCATION_Status 轉成字串陣列（後端若用 in 查詢較穩）
-      if (Array.isArray(formValue.LOCATION_Status)) {
-        formValue.LOCATION_Status = formValue.LOCATION_Status.map(
-          (x: string | number) => String(x),
-        );
-      }
-
-      // 將 Purpose_no 轉成字串陣列，變成 ["1","2"]
-      if (Array.isArray(formValue.Purpose_no)) {
-        formValue.Purpose_no = formValue.Purpose_no.map(
-          (x: string | number) => String(x),
-        );
-      }
+      // 給 API 的 payload：用 helper 做轉型
+      const payload = this.buildApiPayload(rawFormValue);
 
       this.tls11010Service
-        .queryData(formValue)
+        .queryData(payload)
         .pipe(untilDestroyed(this))
         .subscribe({
           next: (res) => {
@@ -210,10 +229,12 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
               const rows = res?.Data || [];
               // 先把 null → ''（避免 table 顯示 null）
               const cleaned = this.convertNullToEmptyString(rows);
-              // 保留裝飾用欄位（雖然目前欄位用不到也沒關係）
+              // 保留裝飾用欄位
               this.data = this.decorateRowsForDisplay(cleaned);
               this.totalRecords = res?.TotalCount || this.data.length;
-              this.queryStateService.setQueryState(this.ProgNo, formValue);
+
+              // ✅ 跟 TLS11020 一樣：存「原始表單值」到查詢還原
+              this.queryStateService.setQueryState(this.ProgNo, rawFormValue);
             }
             this.loading = false;
             this.messageService.unblockUi();
@@ -302,4 +323,48 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     );
     return found ? found.label : trimmedValue;
   }
+
+  /** 🔹 清除：回到「一開始都沒選、沒輸入」的狀態，並且更新還原用的 state */
+/** 🔹 清除：回到「一開始都沒選、沒輸入」的狀態，並且更新還原用的 state */
+onClear(): void {
+  const form = this.queryForm;
+
+  // 保留目前的分頁設定
+  const paging = {
+    pageIndex: form.get('pageIndex')?.value ?? 1,
+    pageSize: form.get('pageSize')?.value ?? 20,
+    SortBy:
+      form.get('SortBy')?.value ?? [{ field: 'LOCATION_No', order: 1 }],
+  };
+
+  // 先全部 reset（型別會回到控制項原本宣告的型別）
+  form.reset();
+
+  // 🔹 Text / number 類欄位：清成「沒輸入」
+  form.get('LOCATION_No')?.setValue('');
+  form.get('GROSS_SPACE_Start')?.setValue(null);
+  form.get('GROSS_SPACE_End')?.setValue(null);
+  form.get('NET_SPACE_Start')?.setValue(null);
+  form.get('NET_SPACE_End')?.setValue(null);
+
+  // 🔹 Multi-select / 陣列欄位：設成 []（用 any 避掉 TS 推斷成 null | undefined 的問題）
+  (form.get('org_id') as any)?.setValue([]);
+  (form.get('building_no') as any)?.setValue([]);
+  (form.get('FLOOR_NO') as any)?.setValue([]);
+  (form.get('AREA_NO') as any)?.setValue([]);
+  (form.get('LOCATION_Status') as any)?.setValue([]);
+  (form.get('Purpose_no') as any)?.setValue([]);
+
+  // 🔹 把分頁設回去
+  form.patchValue(paging);
+
+  this.submitted = false;
+  form.markAsPristine();
+  form.markAsUntouched();
+
+  // 🔥 重點：把「清空後」的條件寫回查詢還原
+  const cleared = form.getRawValue();
+  this.queryStateService.setQueryState(this.ProgNo, cleared);
+}
+
 }
