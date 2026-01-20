@@ -331,16 +331,16 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
       (form) => this.onSubmit(form)
     );
 
-    // 🔄 還原查詢條件（參考 FIN64010 寫法）
-    const saved = this.queryStateService.getQueryStateValue('FIN26010');
-    if (saved?.formValue) {
-      this.queryForm.patchValue(saved.formValue, { emitEvent: false });
-      this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
-      this.lastQueryBody = saved.lastQueryBody ?? null;
+    // // 🔄 還原查詢條件（參考 FIN64010 寫法）
+    // const saved = this.queryStateService.getQueryStateValue('FIN26010');
+    // if (saved?.formValue) {
+    //   this.queryForm.patchValue(saved.formValue, { emitEvent: false });
+    //   this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
+    //   this.lastQueryBody = saved.lastQueryBody ?? null;
 
-      // 等變更套用後再自動查一次
-      Promise.resolve().then(() => this.onSubmit(this.queryForm));
-    }
+    //   // 等變更套用後再自動查一次
+    //   Promise.resolve().then(() => this.onSubmit(this.queryForm));
+    // }
   }
 
   /* ----------------- Submit（主表查詢） ----------------- */
