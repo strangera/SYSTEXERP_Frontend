@@ -1,10 +1,12 @@
 
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { Fin21030Service } from 'src/app/service/api/fin/fin21030.service';
 import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -189,19 +191,30 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
     this.loading = true;
     this.messageService.blockUi();
     const raw = frm.getRawValue();
-    const payload = {
-      ...raw,
-      VEN_PayConditionDay: raw.VEN_PayConditionDay ? Number(raw.VEN_PayConditionDay) : 0
-    };
-    this.fin21030Service.queryFIN21030(payload).subscribe({
-      next: (res) => {
-        this.data = res?.Data || [];
-        this.totalRecords = res?.TotalCount || 0;
-        this.queryStateService.setQueryState(this.ProgNo, payload);
+    const payload: any = { ...raw };
+    // 若 VEN_DiscYN 是陣列（UI 可能回傳 single-select as array），改為傳單一字串
+    if (Array.isArray(raw.VEN_DiscYN)) {
+      payload.VEN_DiscYN = raw.VEN_DiscYN.length ? raw.VEN_DiscYN[0] : '';
+      if (payload.VEN_DiscYN === '') delete payload.VEN_DiscYN;
+    }
+    if (raw.VEN_PayConditionDay !== null && raw.VEN_PayConditionDay !== undefined && raw.VEN_PayConditionDay !== '') {
+      payload.VEN_PayConditionDay = Number(raw.VEN_PayConditionDay);
+    } else {
+      delete payload.VEN_PayConditionDay;
+    }
+
+    this.fin21030Service.queryFIN21030(payload)
+      .pipe(untilDestroyed(this), finalize(() => {
         this.loading = false;
         this.messageService.unblockUi();
-      },
-    });
+      }))
+      .subscribe({
+        next: (res) => {
+          this.data = res?.Data || [];
+          this.totalRecords = res?.TotalCount || 0;
+          this.queryStateService.setQueryState(this.ProgNo, payload);
+        },
+      });
   }
 }
 

@@ -5,6 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
 import { Tls22030Service } from '../../../service/api/tls/tls22030.service';
 import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
@@ -14,7 +15,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 const yesterday = new Date();
@@ -24,7 +25,7 @@ yesterday.setDate(yesterday.getDate() - 1);
   selector: 'app-tls22030',
   templateUrl: './tls22030.component.html',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ButtonModule, ReactiveFormsModule, CalendarRangeQuickComponent, MultiSelectComponent, RadiobuttonComponent, ButtonComponent, TableComponent, DropdownComponent, TranslateModule],
+  imports: [MenubarComponent, AccordionModule, FormsModule, ButtonModule, ReactiveFormsModule, CalendarRangeQuickComponent, MultiSelectComponent, RadiobuttonComponent, ButtonComponent, TableReportComponent, DropdownComponent, TranslateModule],
 })
 
 export class TLS22030Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -34,10 +35,13 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
     TXN_DateStart: [yesterday, Validators.required],
     TXN_DateEnd: [yesterday, Validators.required],
     IsLossStatus: [null], // 預設值為 '0000'，表示全部
-    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
+
+    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]),
+    pageSize: [30], // 每頁顯示 30 筆（覆寫共用預設）
 
   });
   totalRecords = 0;
+  historyRequestBody: any;
   tltNoOptions: IDropdownItem[] = [];
   data: any[] = [];
   ECRNoOptions: any[] = [];
@@ -69,7 +73,7 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private ECRNoService: ECRNoService,
-    private tls22030Service: Tls22030Service,
+    public tls22030Service: Tls22030Service,
     private dropDownListService: DropDownListService,
   ) {
     super();
@@ -150,16 +154,22 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
       TXN_DateEnd: this.toYMD(condition.TXN_DateEnd),
     };
 
-    this.tls22030Service.exportTLS22030PDF(payload).subscribe({
-      next: (blob: Blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `TLS22030_${new Date().toISOString().slice(0, 10)}.pdf`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-      },
-    });
+    this.btnLoading = true;
+    this.tls22030Service.exportTLS22030PDF(payload)
+      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+      .subscribe({
+        next: (blob: Blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `TLS22030_${new Date().toISOString().slice(0, 10)}.pdf`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+        },
+        error: (err) => {
+          console.error('匯出 PDF 失敗', err);
+        }
+      });
   }
 
   private toYMD(date: Date | string | null): string | null {
@@ -182,16 +192,24 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
         TXN_DateEnd: this.toYMD(raw.TXN_DateEnd),
       };
 
-      this.tls22030Service.queryTLS22030(payload).subscribe({
-        next: (res) => {
-          this.data = res?.Data ?? [];
-          this.totalRecords = res?.TotalCount ?? this.data.length;
-          this.loading = false;
+      // 設定最後查詢條件給 app-table-report 使用
+      this.historyRequestBody = payload;
 
-          // 儲存查詢條件
-          this.queryStateService.setQueryState(this.ProgNo, payload);
-        },
-      });
+      this.tls22030Service
+        .queryTLS22030(payload)
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe({
+          next: (res) => {
+            this.data = res?.Data ?? [];
+            this.totalRecords = res?.TotalCount ?? this.data.length;
+
+            // 儲存查詢條件
+            this.queryStateService.setQueryState(this.ProgNo, payload);
+            // 更新 historyRequestBody（確保與回傳一致）
+            this.historyRequestBody = payload;
+          },
+
+        });
     });
   }
 
