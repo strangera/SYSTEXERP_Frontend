@@ -86,11 +86,11 @@
     <header>
       <!-- 匯出按鈕維持原本 -->
       <div class="flex justify-content-end gap-2">
-        <p-button styleClass="p-2" label="匯出 Excel" icon="pi pi-file-excel" [loading]="btnExportExcelLoading"
+        <p-button styleClass="p-2" label="產出應付帳款帳齡分析表Excel" icon="pi pi-file-excel" [loading]="btnExportExcelLoading"
           (click)="downloadFIN29110Excel()" [disabled]="btnExportExcelLoading || btnExportPdfLoading">
         </p-button>
 
-        <p-button styleClass="p-2" label="匯出 PDF" icon="pi pi-file-pdf" [loading]="btnExportPdfLoading"
+        <p-button styleClass="p-2" label="產出應付帳款帳齡分析表PDF" icon="pi pi-file-pdf" [loading]="btnExportPdfLoading"
           (click)="downloadFIN29110PDF()" [disabled]="btnExportPdfLoading || btnExportExcelLoading">
         </p-button>
       </div>
