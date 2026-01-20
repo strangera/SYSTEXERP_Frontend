@@ -104,7 +104,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     pod_no: [{ value: '系統產生代碼', disabled: true }], // YYYYMMDDSSS(活動起始日期+流水號)
     pod_type: ['8', [Validators.required]], // 固定寫入8
 
-    act_no: [''], // 活動編號
+    act_no: ['', [Validators.required]], // 活動編號
     pod_desc: [''], // 活動名稱(使用者輸入)，開放下拉
     pod_sdate: [{ value: null as Date | null, disabled: true }, [Validators.required]], // 活動起始日 (Date)
     pod_edate: [{ value: null as Date | null, disabled: true }, [Validators.required]], // 活動終止日 (Date)
@@ -276,7 +276,21 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       return;
     }
 
-    // 1. 檢核明細檔 talent_id (確保都有選到專櫃並成功觸發 API 取得 ID)
+    // 2. 檢核明細檔 (取代原本的 this.opendisc_Detail.invalid)
+    if (!this.isDetailValid()) {
+      // 錯誤訊息已在 isDetailValid 內透過 messageService 發出，這裡只需解鎖 UI
+      this.messageService.unblockUi();
+      return;
+    }
+
+    // 3. 檢核至少要有一筆明細
+    if (this.opendisc_Detail.length === 0) {
+      this.messageService.errorBubble('至少需有一筆明細');
+      this.messageService.unblockUi();
+      return;
+    }
+
+    // 2. 檢核明細檔 talent_id (確保都有選到專櫃並成功觸發 API 取得 ID)
     if (this.opendisc_Detail.some(item => item.status !== 'deleted' && (!item.talent_id || item.talent_id === 0))) {
       this.messageService.errorBubble('部分明細專櫃合約資料不完整，請重新檢查');
       this.messageService.unblockUi();
@@ -569,6 +583,49 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       isValid: !duplicate,
       errorMessage: duplicate ? ['專櫃編號不可重複'] : []
     };
+  }
+
+  // 手動檢核明細檔資料
+  private isDetailValid(): boolean {
+    let isValid = true;
+
+    // 使用 entries() 同時取得 index 和 row
+    for (const [rowIndex, row] of this.opendisc_Detail.entries()) {
+
+      // 忽略已刪除的資料
+      if (row.status === 'deleted') {
+        continue;
+      }
+
+      for (const col of this.TALPORDERD_OPENDisc_Detail_Columns) {
+        // 如果該欄位有設定驗證器
+        if (col.validate && col.validate.length > 0) {
+          // 取得該欄位的值，並強制轉型避免 TS 報錯
+          const value = row[col.field as keyof TALPORDERD_OPENDisc];
+
+          for (const validator of col.validate) {
+
+            // --- 修改處：補齊 5 個參數 ---
+            const result = validator(
+              value,                 // 1. 值
+              row,                   // 2. 該列資料物件
+              this.opendisc_Detail,  // 3. 完整資料陣列
+              rowIndex.toString(),   // 4. 該列索引
+              col.field              // 5. 欄位名稱 string
+            );
+
+            if (!result.isValid) {
+              isValid = false;
+              // 顯示錯誤訊息
+              this.messageService.errorBubble(`第 ${rowIndex + 1} 筆資料的 [${col.header}] 檢核失敗：${result.errorMessage.join(', ')}`);
+              return false; // 遇到錯誤直接中斷
+            }
+          }
+        }
+      }
+    }
+
+    return isValid;
   }
 
   // 明細disabled判斷(專櫃編號沒選就disabled)
