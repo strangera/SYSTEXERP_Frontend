@@ -1,14 +1,14 @@
 import { NgIf } from '@angular/common';
-import { Component, OnInit, } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS11040Response, Ass11040Service } from '@service/api/ass/ass11040.service';
+
+import { ASS11040Service, QueryASS11040Response } from '@service/api/ass/ass11040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -17,81 +17,132 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 //3.1.1.4 品項資料維護作業 CRU
+@UntilDestroy()
 @Component({
   selector: 'app-ass11040-cru',
   templateUrl: './ass11040-cru.component.html',
   standalone: true,
   imports: [InputTextareaComponent, MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class ASS11040CRUComponent extends BasicCruPageComponent<ASS11040Response> implements OnInit {
+export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Response> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    itemCode: [, [Validators.maxLength(13)]], // 品項代碼
-    itemName: ['', [Validators.maxLength(32)]], // 品項代碼
-    bigCategoryCode: [], // 大分類代碼
-    midCategoryCode: [], // 中分類代碼
-    smlCategoryCode: [], // 小分類代碼
-    itemCategory: [], // 品項類別區分
-    itemUnit: [], // 基本單位
-    packageUnit: [], // 包裝單位
-    warrantyMethod: [], // 保固方式
-    maintenanceMethod: [], // 保養方式
-    illustrate: [,], // 說明
+    itemCode: [null as string | null, [Validators.maxLength(13)]], // 品項代碼
+    itemName: ['', [Validators.maxLength(32)]], // 品項名稱
+    bigCategoryCode: [null as string | null], // 大分類代碼
+    midCategoryCode: [null as string | null], // 中分類代碼
+    smlCategoryCode: [null as string | null], // 小分類代碼
+    itemCategory: [null as string | null], // 品項類別區分
+    itemUnit: [null as string | null], // 基本單位
+    packageUnit: [null as string | null], // 包裝單位
+    warrantyMethod: [null as string | null], // 保固方式
+    maintenanceMethod: [null as string | null], // 保養方式
+    illustrate: [null as string | null], // 說明
   });
   itemCategoryOptions = getSYS1000Options('PROD_TYPE');
   itemUnitOptions = getSYS1000Options('UNIT');
   packageUnitOptions = getSYS1000Options('PACK_UNIT');
 
-  bigCategoryCodeOptions: any[] = [
-    { value: 1, label: 'A/裝潢工程' },
-    { value: 2, label: 'B/其他工程' },
-    { value: 3, label: 'C/電腦及電子零件產品' },
-    { value: 4, label: 'D/電力及照明系統' },
-    { value: 5, label: 'E/家電家具設備' },
-    { value: 6, label: 'F/機消空電水零配件' },
-    { value: 7, label: 'G/辦公及營運庶務' },
-    { value: 8, label: 'K/印刷品(非廣告行銷)' },
+  bigCategoryCodeOptions: { value: string; label: string }[] = [];
+  midCategoryCodeOptions: { value: string; label: string }[] = [];
+  smlCategoryCodeOptions: { value: string; label: string }[] = [];
+
+  warrantyMethodOptions: { value: string; label: string }[] = [
+    { value: '0', label: '廠商' },
+    { value: '1', label: '公司' },
   ];
-  midCategoryCodeOptions: any[] = [
-    { value: 23, label: '室內裝潢工程' },
-    { value: 24, label: '室內裝潢備品' },
-    { value: 21, label: '弱電系統' },
-    { value: 22, label: '房屋和建築設備' },
-    { value: 23, label: '停車場設備' },
-    { value: 24, label: '其他工程' },
-    { value: 25, label: '機電消防工程' },
-    { value: 22, label: '電子產品及零件' },
+  maintenanceMethodOptions: { value: string; label: string }[] = [
+    { value: '0', label: '廠商' },
+    { value: '1', label: '公司' },
   ];
-  warrantyMethodOptions: any[] = [
-    { value: 0, label: '廠商' },
-    { value: 1, label: '公司' },
-  ];
-  maintenanceMethodOptions: any[] = [
-    { value: 0, label: '廠商' },
-    { value: 1, label: '公司' },
-  ];
+
   constructor(
-    private readonly ass11040Service: Ass11040Service
+    private readonly ass11040Service: ASS11040Service
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('ASS11040', this.dataForm);
+    this.loadBigCategoryOptions();
+    this.setupCategoryListeners();
   }
+
+  /** 載入大分類選項 */
+  loadBigCategoryOptions(): void {
+    this.ass11040Service.queryFACLASSM({}).pipe(untilDestroyed(this)).subscribe(res => {
+      this.bigCategoryCodeOptions = (res.Data?.Data || []).map(item => ({
+        value: item.CLASS_ID || '',
+        label: `${item.CLASS_ID} - ${item.CLASS_NAME}`
+      }));
+    });
+  }
+
+  /** 設定分類連動監聽 */
+  setupCategoryListeners(): void {
+    // 監聽大分類變更 -> 載入中分類
+    this.dataForm.controls.bigCategoryCode.valueChanges.pipe(untilDestroyed(this)).subscribe(bigCode => {
+      // 清空中分類和小分類
+      this.dataForm.controls.midCategoryCode.setValue(null);
+      this.dataForm.controls.smlCategoryCode.setValue(null);
+      this.midCategoryCodeOptions = [];
+      this.smlCategoryCodeOptions = [];
+
+      if (bigCode) {
+        this.loadMidCategoryOptions(bigCode);
+      }
+    });
+
+    // 監聽中分類變更 -> 載入小分類
+    this.dataForm.controls.midCategoryCode.valueChanges.pipe(untilDestroyed(this)).subscribe(midCode => {
+      // 清空小分類
+      this.dataForm.controls.smlCategoryCode.setValue(null);
+      this.smlCategoryCodeOptions = [];
+
+      if (midCode) {
+        this.loadSmlCategoryOptions(midCode);
+      }
+    });
+  }
+
+  /** 載入中分類選項 */
+  loadMidCategoryOptions(bigCategoryCode: string): void {
+    this.ass11040Service.queryFACLASS1({ B_CLASS_ID: bigCategoryCode }).pipe(untilDestroyed(this)).subscribe(res => {
+      this.midCategoryCodeOptions = (res.Data?.Data || []).map(item => ({
+        value: item.CLASS_ID || '',
+        label: `${item.CLASS_ID} - ${item.CLASS_NAME}`
+      }));
+    });
+  }
+
+  /** 載入小分類選項 */
+  loadSmlCategoryOptions(midCategoryCode: string): void {
+    this.ass11040Service.queryFACLASS2({ M_CLASS_ID: midCategoryCode }).pipe(untilDestroyed(this)).subscribe(res => {
+      this.smlCategoryCodeOptions = (res.Data?.Data || []).map(item => ({
+        value: item.S_CLASS_ID || '',
+        label: `${item.S_CLASS_ID} - ${item.S_CLASS_NAME}`
+      }));
+    });
+  }
+
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const params = {
-        ...frm.getRawValue()
-      }
-      const $request = this.isFormCreateable ? this.ass11040Service.insertASS11040(params) : this.ass11040Service.updateASS11040(params);
-      $request.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-        this.messageService.successBubble(response.Message);
-        if (this.isFormCreateable) {
-          this.dataForm.reset();
-        } else {
-          this.onCancel();
-        }
-      })
-    })
+      // TODO: 等 API 準備好後再串接
+      // const params = {
+      //   ...frm.getRawValue()
+      // };
+      // const $request = this.isFormCreateable
+      //   ? this.ass11040Service.insertASS11040(params)
+      //   : this.ass11040Service.updateASS11040(params);
+      // $request.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+      //   this.messageService.successBubble(response.Message);
+      //   if (this.isFormCreateable) {
+      //     this.dataForm.reset();
+      //   } else {
+      //     this.onCancel();
+      //   }
+      // });
+      this.messageService.warnBubble('新增/修改 API 尚未實作');
+      this.loading = false;
+    });
   }
 }

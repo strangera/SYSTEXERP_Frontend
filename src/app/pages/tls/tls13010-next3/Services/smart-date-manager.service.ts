@@ -39,7 +39,7 @@ export class SmartDateSegmentationService {
 
   /**
    * 順序日期分段邏輯 (固定租金、底租抽成取高者、包底抽成)
-   * 第一筆：契約起日 ~ 下一年1月1日
+   * 第一筆：契約起日 ~ 契約終止日
    * 後續筆：前一筆結束日+1天 ~ 契約終止日
    */
   private getSequentialDateRange(
@@ -52,17 +52,10 @@ export class SmartDateSegmentationService {
     const validItems = existingItems.filter(item => (item as any)._status !== 'deleted');
 
     if (validItems.length === 0) {
-      // 第一筆資料：從契約起始日到下一年1月1日
-      const startDate = new Date(contractStartDate);
-      const firstEndDate = new Date(startDate.getFullYear() + 1, 0, 1); // 下一年1月1日
-      const contractEnd = new Date(contractEndDate);
-
-      // 如果下一年1月1日超過契約終止日，則使用契約終止日
-      const endDate = firstEndDate > contractEnd ? contractEnd : firstEndDate;
-
+      // 第一筆資料：使用契約起訖日作為預設值
       return {
-        cag_bdate: this.formatDate(startDate),
-        cag_edate: this.formatDate(endDate)
+        cag_bdate: contractStartDate,
+        cag_edate: contractEndDate
       };
     }
 
@@ -73,9 +66,22 @@ export class SmartDateSegmentationService {
       return this.getDefaultDateRange(contractStartDate, contractEndDate);
     }
 
-    // 新的開始日期 = 最後結束日期 + 1天
-    const newStartDate = this.addDays(new Date(lastEndDate), 1);
     const contractEnd = new Date(contractEndDate);
+    const lastEnd = new Date(lastEndDate);
+
+    // 檢查是否已經超出或等於合約終止日
+    if (lastEnd >= contractEnd) {
+      // 已經沒有可用的日期範圍，拋出錯誤讓上層處理
+      throw new Error('已超出合約終止日，無法新增更多項目');
+    }
+
+    // 新的開始日期 = 最後結束日期 + 1天
+    const newStartDate = this.addDays(lastEnd, 1);
+
+    // 再次檢查新的開始日期是否超出合約終止日
+    if (newStartDate > contractEnd) {
+      throw new Error('新增項目的起始日期已超出合約終止日');
+    }
 
     return {
       cag_bdate: this.formatDate(newStartDate),
@@ -214,19 +220,18 @@ export class SmartDateSegmentationService {
     const contractStart = new Date(contractStartDate);
     const contractEnd = new Date(contractEndDate);
 
-    // // 基本日期邏輯檢查
-    // if (start >= end) {
-    //   errors.push('開始日期必須小於結束日期');
-    // }
-
     // 契約日期範圍檢查
     if (start < contractStart) {
       errors.push('開始日期不能早於契約起始日');
     }
 
-    // if (end >= contractEnd) {
-    //   errors.push('結束日期不能晚於契約終止日');
-    // }
+    if (start > contractEnd) {
+      errors.push('開始日期不能晚於契約終止日');
+    }
+
+    if (end > contractEnd) {
+      errors.push('結束日期不能晚於契約終止日');
+    }
 
     return {
       isValid: errors.length === 0,
