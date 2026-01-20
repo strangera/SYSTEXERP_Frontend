@@ -1,21 +1,21 @@
-import { TLS2G030DataResponse, Tls2g030Service } from './../../../service/api/tls/tls2g030.service';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { ReportColumn, ColumnGroup, formatAmount } from '@shared/componentkit/table-report/table-report.model';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { AsyncPipe } from '@angular/common';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { finalize } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ColumnGroup, formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { TLS2G030DataResponse, Tls2g030Service } from './../../../service/api/tls/tls2g030.service';
 
 // 2.2.16.3 專櫃預估業績報表
 @Component({
@@ -29,6 +29,8 @@ export class TLS2G030Component extends BasicQueryPageComponent<TLS2G030DataRespo
     budget_yy: [null, [Validators.required]], // 年
     bus_type: [null], // 大分類
     tlt_no: [null], // 專櫃
+    pageSize: [30],
+    pageIndex: [1],
   });
   bus_typeOptions = this.dropdown.queryTltBusType();
   tlt_noOptions = this.dropdown.queryTltTalent();
@@ -124,7 +126,7 @@ export class TLS2G030Component extends BasicQueryPageComponent<TLS2G030DataRespo
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS2G030', '/tls/tls2g030cru');
+    this.initializePage('TLS2G030');
   }
   yyyy: string | null = null;
   onSubmit(frm: FormGroup) {
@@ -135,7 +137,6 @@ export class TLS2G030Component extends BasicQueryPageComponent<TLS2G030DataRespo
         this.lastQueryFormValue = frm.value;
         this.totalRecords = res.TotalCount;
         this.footerTotal = res.FooterTotal;
-        this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
   }

@@ -98,7 +98,7 @@ export class SystemOptionsService {
     // 使用 map 方法將每個物件轉換為新格式
     return originalOptions.map(item => ({
       value: item.SYS_Code,
-      label: `${item.SYS_Code} - ${item.SYS_Name}`
+      label: item.SYS_Name
     }));
   }
 

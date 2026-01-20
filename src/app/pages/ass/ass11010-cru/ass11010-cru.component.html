@@ -1,34 +1,31 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1;">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
+      <div class="grid p-fluid">
+        <app-input-text class="col-12 md:col-6 lg:col-4"
+                        label="大分類代碼"
+                        controlName="CLASS_ID"
+                        [control]="df().CLASS_ID"
+                        [disabled]="isFormReadable"
+                        [submitted]="submitted"></app-input-text>
+        <app-input-text class="col-12 md:col-6 lg:col-4"
+                        label="大分類名稱"
+                        controlName="CLASS_NAME"
+                        [control]="df().CLASS_NAME"
+                        [disabled]="isFormReadable"
+                        [submitted]="submitted"></app-input-text>
+      </div>
+      @if (!isFormReadable) {
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="cancel" [form]="dataForm"></app-button>
+          <app-button btnType="submit" [loading]="loading"></app-button>
         </div>
-    </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="大分類代碼" controlName="bigCategoryCode"
-                        [control]="dataForm.controls.bigCategoryCode" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="大分類名稱" controlName="bigCategoryName"
-                        [control]="dataForm.controls.bigCategoryName" [submitted]="submitted">
-                    </app-input-text>
-                </div>
-            </div>
-            <hr />
-            <app-editor-text label="說明" controlName="illustrate" [control]="dataForm.controls.illustrate"
-                [style]="{ height: '100px' }" [submitted]="submitted">
-            </app-editor-text>
-            <hr />
-        </form>
-        <div class="col pt-4">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
-            </div>
-        </div>
-    </p-panel>
+      }
+    </form>
+  </p-panel>
 </div>

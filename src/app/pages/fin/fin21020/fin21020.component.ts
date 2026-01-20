@@ -8,6 +8,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -50,7 +51,7 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
   ];
   bankCodeOptions: IDropdownItem[] = [];
   addButton: AddButton[] = [
-    { label: '匯出單筆銀行科目', icon: 'pi pi-file-export', action: (rowData: IFin21020Data) => this.onExport(rowData) },
+    { label: '匯出單筆銀行科目', icon: 'pi pi-file-export', action: (rowData: IFin21020Data) => this.onExport(rowData), disabled: () => !this.hasPermission(Actions.ExportExcel) },
   ]
   btnLoading = false;
   lastQueryBody?: IQueryFin21020Request;

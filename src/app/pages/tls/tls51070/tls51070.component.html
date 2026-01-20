@@ -8,6 +8,7 @@
     <app-button
       label="產生標籤檔"
       (click)="gotoTls51070OS('label')"
+      [disabled]="!hasPermission(Actions.TagPrint)"
     ></app-button>
     <p-fileUpload
       id="customButton"
@@ -17,6 +18,7 @@
       accept=".png"
       (onSelect)="onIMGUpload($event); fileUpload.clear()"
       [auto]="true"
+      [disabled]="!hasPermission(Actions.ImageImport)"
       chooseLabel="匯入圖片"
     />
     <app-button

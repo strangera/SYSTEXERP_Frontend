@@ -35,8 +35,7 @@ export interface Label {
   imports: [MenubarComponent, ButtonComponent, AccordionModule, NgIf, FormsModule, ReactiveFormsModule, InputTextComponent, InputNumberComponent, ExpandableEditTableComponent, TableComponent, DropdownTableComponent]
 })
 //處理 變價歷史紀錄/產生標籤檔
-export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
-  implements OnInit {
+export class Tls51070OsComponent extends BasicQueryPageComponent<Label> implements OnInit {
 
   @ViewChild('labelTable') labelTable!: ExpandableEditTableComponent;
   @ViewChild('priceAlterTable') priceAlterTable!: ExpandableEditTableComponent;

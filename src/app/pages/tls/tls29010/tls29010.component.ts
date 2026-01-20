@@ -94,8 +94,8 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
 
   // 20251016 核准按鈕  (狀態不是未審核都不能點)
   addButton: AddButton[] = [
-    { label: '核准', icon: 'pi pi-check-circle text-green-500', action: (rowData: TALPORDERM) => { this.statusChange(rowData); }, disabled: (rowData: TALPORDERM) => rowData.pod_status !== '0' }, // 審核
-    { label: '反核准', icon: 'pi pi-check-circle text-green-500', action: (rowData: TALPORDERM) => { this.statusUnChange(rowData); }, disabled: (rowData: TALPORDERM) => rowData.pod_status !== '1' }, // 反審核
+    { label: '核准', icon: 'pi pi-check-circle text-green-500', action: (rowData: TALPORDERM) => { this.statusChange(rowData); }, disabled: (rowData: TALPORDERM) => rowData.pod_status !== '0' && !this.hasPermission(this.Actions.Audit) }, // 審核
+    { label: '反核准', icon: 'pi pi-check-circle text-green-500', action: (rowData: TALPORDERM) => { this.statusUnChange(rowData); }, disabled: (rowData: TALPORDERM) => rowData.pod_status !== '1' && !this.hasPermission(this.Actions.AntiAudit) }, // 反審核
   ]
   // 表格
   // ----------------------------------------------------------------

@@ -10,21 +10,21 @@
             <app-file-upload #fileUpload1 label="[聯合]請款檔" class="col-12" name="NCML" accept=".dat" [multiple]="true"
               chooseLabel="選擇 DAT 檔案" uploadLabel="上傳" cancelLabel="清除" [auto]="false" [customUpload]="true"
               mode="advanced" (select)="files1 = $event.files" [loading]="loading"
-              emptyMessage="拖曳檔案到此處或點擊「選擇 DAT 檔案」按鈕。"
+              emptyMessage="拖曳檔案到此處或點擊「選擇 DAT 檔案」按鈕。" [disabled]="!hasPermission(Actions.Upload)"
               (uploadHandler)="handleCustomUpload($event,'NCML')"></app-file-upload>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-file-upload #fileUpload2 label="[中信]請款檔" class="col-12" name="CTBC" accept=".txt" [multiple]="true"
               chooseLabel="選擇 TXT 檔案" uploadLabel="上傳" cancelLabel="清除" [auto]="false" [customUpload]="true"
               mode="advanced" (select)="files2 = $event.files" [loading]="loading"
-              emptyMessage="拖曳檔案到此處或點擊「選擇 TXT 檔案」按鈕。"
+              emptyMessage="拖曳檔案到此處或點擊「選擇 TXT 檔案」按鈕。" [disabled]="!hasPermission(Actions.Upload)"
               (uploadHandler)="handleCustomUpload($event,'CTBC')"></app-file-upload>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-file-upload #fileUpload3 label="[中信-停車場]請款檔" class="col-12" name="CTBCPrk" accept=".xls,.xlsx"
               [multiple]="true" chooseLabel="選擇 XLS 或 XLSX 檔案" uploadLabel="上傳" cancelLabel="清除" [auto]="false"
               [customUpload]="true" mode="advanced" (select)="files3 = $event.files" [loading]="loading"
-              emptyMessage="拖曳檔案到此處或點擊「選擇 XLS 或 XLSX 檔案」按鈕。"
+              emptyMessage="拖曳檔案到此處或點擊「選擇 XLS 或 XLSX 檔案」按鈕。" [disabled]="!hasPermission(Actions.Upload)"
               (uploadHandler)="handleCustomUpload($event,'CTBCPrk')"></app-file-upload>
           </div>
         </div>

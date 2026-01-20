@@ -5,6 +5,8 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { createPaginationConfig } from '@shared/componentkit/table2/table2.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
 import { Button, ButtonDirective } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -61,7 +63,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
       label: '停用',
       icon: 'pi pi-ban text-red-500',
       action: (rowData: Pos1018) => { this.onStop(rowData); },
-      disabled: (rowData: Pos1018) => rowData.GUI_Status === '02' || rowData.GUI_Status === '03',
+      disabled: (rowData: Pos1018) => rowData.GUI_Status === '02' || rowData.GUI_Status === '03' || !this.hasPermission(Actions.Stop),
     }
   ]
   disabledMonthDates: Date[] = [];
@@ -146,5 +148,10 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
       this.selectedRows = [];
       this.onSubmit(this.queryForm);
     });
+  }
+  onAllocationOfNumber() {
+    if (this.hasPermission(Actions.AllocateNumber)) { // '新增' 的 function_code 是 "20"
+      this.navigateWithState(CRUDStatus.Create);
+    }
   }
 }

@@ -174,9 +174,17 @@
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
-            label="公司通訊地址"
+            label="郵寄地址"
             controlName="VEN_Addr"
             [control]="dataForm.controls.VEN_Addr"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="公司營登地址"
+            controlName="VEN_Address"
+            [control]="dataForm.controls.VEN_Address"
             [submitted]="submitted"
           ></app-input-text>
         </div>
@@ -188,6 +196,8 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
+      </div>
+      <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="經營方式"
@@ -199,8 +209,6 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
-      </div>
-      <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             label="需求面積"
@@ -218,6 +226,8 @@
             [submitted]="submitted"
           ></app-input-text>
         </div>
+      </div>
+      <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="備註"

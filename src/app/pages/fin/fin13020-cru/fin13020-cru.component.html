@@ -28,7 +28,7 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="發票號碼"
-            controlName="GUI_No"
+            controlName="PUR_GUINo"
             [control]="dataForm.controls.PUR_GUINo"
             optionLabel="label"
             optionValue="value"
@@ -55,7 +55,7 @@
           </app-calendar>
         </div>
 
-        <div class="col-12 md:col-6 lg:col-4">
+        <div class="col-12 md:col-6 lg:col-8">
           <app-dropdown
             label="發票格式"
             controlName="PUR_VoucherType"
@@ -67,7 +67,7 @@
           </app-dropdown>
         </div>
 
-        <!-- 🔁 申報年月用 app-year-month（送 PUR_RepYYYYMM → INV_DeclareYM） -->
+        <!-- 申報年月 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-year-month
             label="申報年月"
@@ -119,7 +119,7 @@
           </app-input-number>
         </div>
 
-        <!-- 🔢 退出/折讓金額 -->
+        <!-- 退出/折讓金額 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             label="退出/折讓金額"
@@ -129,7 +129,7 @@
           </app-input-number>
         </div>
 
-        <!-- 🔢 退出/折讓稅額（自動計算，不可手動） -->
+        <!-- 退出/折讓稅額（自動計算，不可手動） -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             label="退出/折讓稅額"
@@ -139,7 +139,7 @@
           </app-input-number>
         </div>
 
-        <!-- 🔢 退回/折讓總金額（可單獨輸入，會反算金額+稅額） -->
+        <!-- 退回/折讓總金額（可單獨輸入，會反算金額+稅額） -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             label="退回/折讓總金額"
@@ -198,27 +198,31 @@
 </div>
 
 <div class="card">
-  <app-table
-    tableKey="FIN13020CRU"
-    [columns]="columnsForView"
-    dataKey="PUR_RepYYYYMM"
-    [multiSortMeta]="[{ field: 'PUR_RepYYYYMM', order: 1 }]"
-    [lazy]="true"
-    [loading]="loading"
-    (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit(dataForm)"
-    [insertRowData]="!isRead"
-    [defaultInsertData]="{ User_No: '', Org_ID: '', Role_No: '' }"
-    [showInsert]="!isRead"
-    [showRowEdit]="!isRead"
-    [showManage]="!isRead"
-    [showEdit]="false"
-    [showDetail]="false"
-    [showReportMode]="false"
-    [showDelete]="false"
-    [showCheckBox]="false"
-    [showPaginator]="false"
-    [disabled]="isRead"
-    [(data)]="detailRows"
-    (fieldChange)="onFieldChange($event)">
-  </app-table>
+<app-table
+  tableKey="FIN13020CRU"
+  [columns]="columnsForView"
+  dataKey="ID"
+  [multiSortMeta]="[{ field: 'ID', order: 1 }]"
+  [lazy]="false"
+  [loading]="loading"
+  [insertRowData]="!isRead"
+  [defaultInsertData]="{ PLU_Name: '', TXN_Qty: null, PLU_SalePrc: null, TXN_SaleAmt: null }"
+  [showInsert]="!isRead"
+  [showRowEdit]="!isRead"
+  [showManage]="!isRead"
+  [showEdit]="false"
+  [showDetail]="false"
+  [showReportMode]="false"
+
+
+  [showDelete]="!isRead"
+  [showCheckBox]="!isRead"
+  [deleteData]="!isRead"
+
+  [showPaginator]="false"
+  [disabled]="isRead"
+  [(data)]="detailRows"
+  (fieldChange)="onFieldChange($event)">
+</app-table>
+
 </div>

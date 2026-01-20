@@ -105,6 +105,7 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
   isConfirmDate = false;
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      this.loading = false;
       this.insertLoading = true;
       const body = {
         TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',
@@ -130,6 +131,7 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
   queryLoading = false;
   onQueryVou(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      this.loading = false;
       this.queryLoading = true;
       const body = {
         TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',

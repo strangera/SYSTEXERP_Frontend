@@ -57,7 +57,7 @@
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
           <app-button label="新增合約扣款項目" [loading]="loading" (click)="onCreate(dataForm)"
-            [disabled]="selectedItems.length === 0"></app-button>
+            [disabled]="selectedItems.length === 0 || !hasPermission(Actions.Create)"></app-button>
         </div>
       </form>
     </p-accordionTab>

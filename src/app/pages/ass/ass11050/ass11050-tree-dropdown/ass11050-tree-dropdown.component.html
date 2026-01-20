@@ -1,0 +1,33 @@
+<div class="flex flex-column gap-3 w-25rem">
+  <span class="font-medium text-900 block mb-2">{{ listTitle() }}</span>
+
+  <!-- 展開/收合 按鈕 -->
+  <!-- <div class="flex flex-wrap gap-2 mb-6">
+        <p-button icon="pi pi-arrow-up-right-and-arrow-down-left-from-center" (click)="expandAll()" />
+        <p-button icon="pi pi-arrow-down-left-and-arrow-up-right-to-center" (click)="collapseAll()" />
+      </div> -->
+
+  <div class="font-bold mb-2 flex gap-4">
+    @for (col of columns(); track $index) {
+      <span
+        tabindex="0"
+        (click)="expandToLevel($index + 1)"
+        (keydown)="onKeyDownExpand($event, $index + 1)"
+        role="button"
+        class="cursor-pointer text-primary"
+      >
+        {{ col.label }}
+      </span>
+      @if ($index < columnsLength()) {
+        <span>/</span>
+      }
+    }
+  </div>
+  <!-- 樹狀展開層 -->
+  <p-tree
+    [value]="treeData()"
+    styleClass="w-full md:w-[30rem]"
+    [filter]="!0"
+    filterPlaceholder="Strict Filter"
+  />
+</div>

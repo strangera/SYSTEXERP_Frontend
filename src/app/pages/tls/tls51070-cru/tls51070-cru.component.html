@@ -405,7 +405,9 @@
             (imagesChange)="img1001Data = $event"
             [showEdit]="!isFormReadable"
             (imagesDeleteChange)="confirmDeleteImages = $event"
-            [disabled]="img1001Data.length < 10"
+            [disabled]="
+              !hasPermission(Actions.ImageImport) && img1001Data.length < 10
+            "
           ></app-img-upload>
         </div>
       </ng-container>

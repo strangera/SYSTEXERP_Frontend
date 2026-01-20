@@ -217,6 +217,8 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
             this.footerData['PUR_Net'] = res?.Data?.TotalNet ?? 0;
             this.footerData['PUR_Tax'] = res?.Data?.TotalTax ?? 0;
             this.footerData['PUR_Amt'] = res?.Data?.TotalAmt ?? 0;
+            // 保存目前查詢條件，供 CRU 返回時還原
+            this.queryStateService.setQueryState(this.ProgNo, v);
           },
           complete: () => (this.loading = false),
         });

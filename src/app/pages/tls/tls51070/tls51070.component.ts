@@ -24,7 +24,6 @@ import { POS2004 } from '../../../shared/models/tls/tls000.model';
 @Component({
   selector: 'app-tls51070',
   templateUrl: './tls51070.component.html',
-  styleUrl: './tls51070.component.scss',
   standalone: true,
   imports: [MenubarComponent, FileUploadModule, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, TableComponent, TranslateModule, DropdownTableComponent]
 })
@@ -462,7 +461,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
 
-  // #region 商品管理編號/國際條碼/廠商貨號 
+  // #region 商品管理編號/國際條碼/廠商貨號
   opLoading = false;
   opForm = this.formBuilder.group({
     PLU_MagNo: ['', [Validators.maxLength(20)]],   // ← 新增這行（關鍵修正）

@@ -42,7 +42,7 @@ export class CPM12040Component extends BasicQueryPageComponent<QueryCpm12040Requ
   columns: ReportColumn[] = [
     { field: 'SYS_Code', header: '客戶意見來源代碼', visible: true },
     { field: 'SYS_Name', header: '客戶意見來源名稱', visible: true },
-    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },
+    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateTime },
     { field: 'CRT_USR_No', header: '建立人員編號', visible: false },
     { field: 'CRT_USR_Name', header: '建立人員名稱', visible: false },
     { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime },

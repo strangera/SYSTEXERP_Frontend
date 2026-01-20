@@ -66,8 +66,8 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
     TmID: [null, [Validators.maxLength(8)]],      //EDC號碼
     ReqDate_Start: [null], // 請款日期起
     ReqDate_End: [null], // 請款日期迄
-    CrdTxnFgList: [null],      // 交易類別 資料型態，C=一般交易、I=分期交易、R=紅利交易
-    EntryFgList: [null],       // 輸入狀態
+    CrdTxnFgList: [[queryCrdTxnFgOptions[0].value]],      // 交易類別 資料型態，C=一般交易、I=分期交易、R=紅利交易
+    EntryFgList: [['2'].flat()],       // 輸入狀態
     ApprovalCode: [null, [Validators.maxLength(6)]],  // 核准碼
     TermNoList: [null],      // 分期期數
     radioBtn: [null], // 查詢篩選

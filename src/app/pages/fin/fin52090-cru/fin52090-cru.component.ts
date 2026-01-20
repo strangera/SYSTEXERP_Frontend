@@ -11,7 +11,7 @@ import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
 import { finalize, map, tap } from 'rxjs';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { FIN52090Insert } from '../fin52090/fin52090.model';
+import { FIN52090Insert, FIN52090UpdateRequest } from '../fin52090/fin52090.model';
 
 @Component({
   selector: 'app-fin52090-cru',
@@ -93,12 +93,17 @@ export class FIN52090CRUComponent extends BasicCruPageComponent<unknown> impleme
           if (!this.canEdit()) return;
 
           const rawE = this.dataForm.getRawValue();
+          
+          if (!rawE.id) {
+            this.messageService.errorBubble('缺少 id 欄位');
+            return;
+          }
 
-          const payloadE = Object.fromEntries(
-            Object.entries(rawE).filter(
-              ([_, v]) => v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
-            )
-          );
+          const payloadE: FIN52090UpdateRequest = {
+            id: rawE.id,
+            AccNo: rawE.AccNo ?? undefined,
+            NoteDesc: rawE.NoteDesc ?? undefined,
+          };
 
           this.saving.set(true);
           this.service.updateFIN52090(payloadE).pipe(

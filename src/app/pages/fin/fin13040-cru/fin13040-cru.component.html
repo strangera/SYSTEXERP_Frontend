@@ -60,6 +60,15 @@
           <app-input-text label="發票抬頭" [control]="dataForm.controls.PUR_InvoiceTitle"
             [submitted]="submitted"></app-input-text>
         </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="未稅金額" [control]="dataForm.controls.PUR_Net" [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="稅額" [control]="dataForm.controls.PUR_Tax" [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="含稅金額" [control]="dataForm.controls.PUR_Amt" [submitted]="submitted"></app-input-text>
+        </div>
       </div>
       <br />
       <div class="grid p-fluid">

@@ -9,11 +9,11 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="組織代碼" controlName="ORG_ID" [options]="ORG_IDOptions$ | async" optionLabel="label"
+            <app-dropdown label="組織代碼/名稱" controlName="ORG_ID" [options]="ORG_IDOptions$ | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.ORG_ID" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="類別代碼" controlName="CLASS_CODE" [options]="CLASS_CODEOptions" optionLabel="label"
+            <app-dropdown label="類別代碼/名稱" controlName="CLASS_CODE" [options]="CLASS_CODEOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.CLASS_CODE" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">

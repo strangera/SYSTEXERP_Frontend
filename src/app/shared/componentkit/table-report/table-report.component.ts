@@ -186,10 +186,12 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       return; // 如果正在載入、沒有查詢函式、沒有查詢條件或已載入全部資料，則退出
     }
     const pageSize = this.lastQueryBody?.pageSize || this.lastQueryBody?.PageSize || 30;
+    const currentSort = this.dt?.multiSortMeta;
     const body = {
       ...this.lastQueryBody,
       pageIndex: Math.floor(this.data.length / pageSize) + 1,
       pageSize, // 使用 pageSize 變數
+      SortBy: currentSort && currentSort.length > 0 ? currentSort : (this.lastQueryBody.SortBy || undefined)
     };
     this._loading = true;
     this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => this._loading = false)).subscribe(res => {

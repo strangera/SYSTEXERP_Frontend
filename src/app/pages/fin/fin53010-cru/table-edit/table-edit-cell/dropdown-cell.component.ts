@@ -81,7 +81,8 @@ export class DropdownCellComponent {
     const col = this.cellInput.col as EditColumn; // 確保類型為 EditColumn
     const currentValue = rowData[col.field];
 
-    if (col.type === 'dropdown') {
+    // 如果允許自訂值，跳過驗證邏輯
+    if (col.type === 'dropdown' && !col.allowCustomValue) {
       const options = this.getOptions(rowData, col) || [];
       let isValidOption = false;
 

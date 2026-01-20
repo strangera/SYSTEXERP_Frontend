@@ -1,23 +1,23 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
+import { NgFor, NgIf } from '@angular/common';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { ActivatedRoute } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { TableModule } from 'primeng/table';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
-import { NgIf, NgFor } from '@angular/common';
-import { Tls2g020Service } from '../../../service/api/tls/tls2g020.service';
-import { InputNumberModule } from 'primeng/inputnumber';
+import { TranslateModule } from '@ngx-translate/core';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 import { formatAmount } from '@shared/componentkit/table2/table2.model';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { PanelModule } from 'primeng/panel';
+import { TableModule } from 'primeng/table';
+import { Tls2g020Service } from '../../../service/api/tls/tls2g020.service';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
 
 // 定義日期資料的類型
 interface DayData {
@@ -80,8 +80,8 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
   /** 月份欄位設定 */
   columns: Column[] = [
     { field: 'Month', header: '月', format: (v: string) => v ? v.slice(-2) : '' },
-    { field: 'budget', header: '月預算', format: formatAmount  },
-    { field: 'avg_cag_charge_rate', header: '平均抽成' , format: formatAmount },
+    { field: 'budget', header: '月預算', format: formatAmount },
+    { field: 'avg_cag_charge_rate', header: '平均抽成', format: formatAmount },
     { field: 'charge_amt', header: '抽成額', format: formatAmount },
   ];
 
@@ -359,6 +359,10 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
 
           this.cdr.detectChanges();
           console.log('已觸發變更偵測，完全替換了 days 物件');
+          // 更新成功後自動返回查詢頁（並保留原本查詢狀態）
+          setTimeout(() => {
+            this.onCancel();
+          }, 800);
         }
       }
     });

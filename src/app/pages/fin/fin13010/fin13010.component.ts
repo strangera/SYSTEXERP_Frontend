@@ -41,17 +41,17 @@ import { YearMonthComponent } from '../fin11020/query-year-month/query-year-mont
 })
 export class FIN13010Component extends BasicQueryPageComponent<any> {
 
-  PUR_VoucherTypeOptions: any[] = [
-    {
-      value: '23',
-      label: '23-三聯式、電子計算機及三聯式收銀機統一發票之進貨退出或折讓證明單'
-    },
-    {
-      value: '24',
-      label: '24-二聯式收銀機統一發票及載有稅額之其他憑證之進貨退出或折讓證明單'
-    },
-  ];
-
+PUR_VoucherTypeOptions: any[] = [
+  { value: '21', label: '21-進項三聯式、電子計算機統一發票' },
+  { value: '22', label: '22-進項二聯式收銀機統一發票、載有稅額之其他憑證' },
+  { value: '23', label: '23-三聯式、電子計算機及三聯式收銀機統一發票之進貨退出或折讓證明單' },
+  { value: '24', label: '24-二聯式收銀機統一發票及載有稅額之其他憑證之進貨退出或折讓證明單' },
+  { value: '25', label: '25-進項三聯式收銀機統一發票' },
+  { value: '26', label: '26-彙總登錄每張稅額500元以下之進項三聯式、電子計算機統一發票' },
+  { value: '27', label: '27-彙總登錄每張稅額500元以下之進項二聯式收銀機統一發票、載有稅額之其他憑證' },
+  { value: '28', label: '28-進項海關代徵營業稅繳納證' },
+  { value: '29', label: '29-進項海關退還溢繳營業稅申報單' },
+];
   queryForm = this.formBuilder.group({
     TXN_Ret_NoStart: [null, [Validators.maxLength(20)]], // 退出/折讓單號(起)
     TXN_Ret_NoEnd: [null, [Validators.maxLength(20)]],   // 退出/折讓單號(迄)
@@ -80,29 +80,72 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_Ret_No', header: '退出/折讓單號', visible: true },
     { field: 'GUI_Track', header: '字軌', visible: true },
     { field: 'PUR_GUINo', header: '發票號碼', visible: true },
+
+    // 發票日期：Swagger 裡是 PUR_GUIDate
     {
       field: 'PUR_GUIDate',
-      header: '退出/折讓日期',
+      header: '發票日期',
       visible: true,
       format: this.formatDateFromBackend
     },
+
+    // 憑證類別 / 發票格式
     { field: 'PUR_VoucherType', header: '發票格式', visible: true },
+
+    // 區別 C/R
     {
       field: 'Credit_Type',
       header: '區別',
       visible: true,
       format: this.formatCreditType
-    }, // 折讓/退出
+    },
+
+    // 申報年月
     {
       field: 'PUR_RepYYYYMM',
       header: '申報年月',
       visible: true,
       format: this.formatRepYYYYMM
     },
-    { field: 'PUR_Net', header: '退回/折讓金額', visible: true, format: (v: number) => this.money(v), exportFormat: 'number:comma2' },
-    { field: 'PUR_Tax', header: '退回/折讓稅額', visible: true, format: (v: number) => this.money(v), exportFormat: 'number:comma2' },
-    { field: 'Source_Doc_No', header: '憑證單號', visible: true },
-    { field: 'Voucher_No', header: '傳票編號', visible: true },
+
+    // 銷售額：用 PUR_Amt（含稅金額）
+    {
+      field: 'PUR_Amt',
+      header: '銷售額',
+      visible: true,
+      format: (v: number) => this.money(v),
+      exportFormat: 'number:comma2'
+    },
+
+    // 稅額：用 PUR_Tax
+    {
+      field: 'PUR_Tax',
+      header: '稅額',
+      visible: true,
+      format: (v: number) => this.money(v),
+      exportFormat: 'number:comma2'
+    },
+
+    // 退回/折讓金額：這裡就看後端有沒有專門欄位
+    // 目前 swagger 只有 PUR_Net/PUR_Tax/PUR_Amt，
+    // 若 FIN13010 是折讓紀錄本身，那 PUR_Net/PUR_Tax/PUR_Amt 就是「這張折讓的金額」
+    {
+      field: 'PUR_Net',
+      header: '退回/折讓金額',
+      visible: true,
+      format: (v: number) => this.money(v),
+      exportFormat: 'number:comma2'
+    },
+    {
+      field: 'Source_Doc_No',
+      header: '憑證單號',
+      visible: true
+    },
+    {
+      field: 'Voucher_No',
+      header: '傳票編號',
+      visible: true
+    }
   ];
 
   constructor(

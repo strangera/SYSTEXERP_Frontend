@@ -51,10 +51,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     InvoiceDateStart: [null],                            // 退出/折讓日期(起)
     InvoiceDateEnd: [null],                              // 退出/折讓日期(迄)
     InvoiceType: [null],                                 // 發票格式
-    INV_DeclareYM: [
-      null,
- 
-    ],                                                   // 申報年月
+    INV_DeclareYM: [null],                               // 申報年月
     Source_Doc_NoStart: [null, [Validators.maxLength(16)]], // 憑證單號(起)
     Source_Doc_NoEnd: [null, [Validators.maxLength(16)]],   // 憑證單號(迄)
     Voucher_NoStart: [null, [Validators.maxLength(16)]],    // 傳票編號(起)
@@ -65,10 +62,11 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
 
+  // 用 CRU 同一套欄位名稱
   columns: any[] = [
     { field: 'TXN_Ret_No', header: '退出/折讓單號', visible: true },
-    { field: 'PUR_GUINo', header: '字軌', visible: true },
-    { field: 'InvoiceNumber', header: '發票號碼', visible: true },
+    { field: 'GUI_Track', header: '字軌', visible: true },
+    { field: 'PUR_GUINo', header: '發票號碼', visible: true },
     {
       field: 'PUR_GUIDate',
       header: '退出/折讓日期',
@@ -116,9 +114,8 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('FIN13020', '/FIN/FIN13020CRU', this.queryForm);
 
-    // 🔙 還原查詢條件（修掉 BehaviorSubject 型別錯誤）
     const savedAny: any = this.queryStateService.getQueryState(this.ProgNo) as any;
-    const savedValue = savedAny?.value ?? savedAny; // 如果是 BehaviorSubject 就用 .value
+    const savedValue = savedAny?.value ?? savedAny;
 
     if (savedValue) {
       this.queryForm.patchValue(savedValue as any);
@@ -151,7 +148,6 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     return `${value.substring(0, 4)}/${value.substring(4, 6)}`;
   }
 
-  // 數字加千分位，兩位小數
   money(v: number): string {
     if (v === null || v === undefined) return '';
     const n = Number(v);
@@ -187,10 +183,28 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
 
     this.fin13020Service.queryFIN13020(payload).subscribe({
       next: (res) => {
-        this.data = res.Data || [];
+        const raw = res.Data || [];
+
+        // ⭐ 把主檔 ID + 明細 Details(ID) 一起映射成 CRU 用資料
+        this.data = raw.map((row: any) => ({
+          ...row,
+          id: row.ID,                         // 主檔 ID（小寫給 CRUD / table2 用）
+          GUI_Track: row.InvoiceTrack,        // 字軌
+          PUR_GUINo: row.InvoiceNumber,       // 發票號碼
+          PUR_GUIDate: row.InvoiceDate,       // 退出/折讓日期
+          PUR_VoucherType: row.InvoiceType,   // 發票格式
+          PUR_RepYYYYMM: row.INV_DeclareYM,   // 申報年月
+          APS40235List: (row.Details || []).map((d: any) => ({
+            ID: d.ID,                         // ⭐ 明細 ID
+            PLU_Name: d.PLU_Name,
+            TXN_Qty: d.TXN_Qty,
+            PLU_SalePrc: d.PLU_SalePrc,
+            TXN_SaleAmt: d.TXN_SaleAmt,
+          })),
+        }));
+
         this.totalRecords = res.TotalCount || this.data.length;
 
-        // 儲存查詢條件（含 INV_DeclareYM=YYYYMM）
         this.queryStateService.setQueryState(this.ProgNo, payload);
       },
       error: () => {
@@ -207,15 +221,13 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     this.queryForm.reset();
     this.data = [];
     this.totalRecords = 0;
-    // 如果有提供清除方法就一起清掉
     (this.queryStateService as any).clearQueryState?.(this.ProgNo);
   }
 
-  // 🔥 批次刪除 / 單筆刪除
   onDelete(event: any): void {
     const rows = Array.isArray(event) ? event : [event];
     const idList = rows
-      .map((r) => r.id)
+      .map((r) => r.id) // 小寫 id
       .filter((id) => id !== null && id !== undefined);
 
     if (!idList.length) {
@@ -237,7 +249,6 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
   private toYYYYMM(input: any): string | null {
     if (!input) return null;
 
-    // 字串：'2025/05'、'2025-05-01T00:00:00'、'202505'
     if (typeof input === 'string') {
       const onlyDigits = input.replace(/\D/g, '');
       if (onlyDigits.length >= 6) return onlyDigits.slice(0, 6);
@@ -250,14 +261,12 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
       return null;
     }
 
-    // Date 物件
     if (input instanceof Date) {
       const y = input.getFullYear();
       const m = String(input.getMonth() + 1).padStart(2, '0');
       return `${y}${m}`;
     }
 
-    // 其他型別也試著 new Date
     const d = new Date(input);
     if (!isNaN(d.getTime())) {
       const y = d.getFullYear();
