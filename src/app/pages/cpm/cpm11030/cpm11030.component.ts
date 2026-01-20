@@ -34,6 +34,7 @@ import { forkJoin } from 'rxjs';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 
 // Service & 型別
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import {
   ApiResponse,
   Cpm11030Service,
@@ -51,7 +52,7 @@ interface DailyRow {
   _rowKey: string;
   Device_ID: string;
   Device_Name: string;
-  Device_Qty: number;
+  Device_TotQty: number;
 }
 
 @UntilDestroy()
@@ -112,6 +113,7 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
   counterCodeOptions: OptionItem[] = [];
   certTypeOptions: OptionItem[] = [];
   deviceNameOptions: OptionItem[] = [];
+  Loan_USR_NoOptions: IDropdownItem[] = [];
 
   private mapDropDownToOptions(resp: DropDownListResponse | null | undefined): OptionItem[] {
     const rows = Array.isArray(resp?.Data) ? resp!.Data! : [];
@@ -166,10 +168,14 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
   dailyColumns: Column[] = [
     { field: 'Device_ID', header: '設備代碼', visible: true, readonly: true } as any,
     { field: 'Device_Name', header: '設備名稱', visible: true, readonly: true } as any,
-    { field: 'Device_Qty', header: '可借出量', visible: true, type: 'inputNumber' } as any,
+    { field: 'Device_TotQty', header: '可借出量', visible: true, type: 'inputNumber' } as any,
   ];
 
-  constructor(public readonly cpm11030Service: Cpm11030Service, private cdr: ChangeDetectorRef) {
+  constructor(
+    public readonly cpm11030Service: Cpm11030Service,
+    private cdr: ChangeDetectorRef,
+    private dropDownListService: DropDownListService,
+  ) {
     super();
   }
 
@@ -294,7 +300,16 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
         },
       });
 
-    this.cpm11030Service.getUsrOptions();
+    this.dropDownListService.queryTBLUSER_DropDownList().subscribe((res) => {
+      this.Loan_USR_NoOptions = (res?.Data || []).map((item: any) => ({
+        value: item.No,               // 綁定值
+        label: `${item.No}-${item.Name}`, // 顯示文字
+        No: item.No,
+        Name: item.Name
+      }));
+    });
+
+    // this.cpm11030Service.getUsrOptions();
   }
 
   // =========================
@@ -514,13 +529,15 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
         next: (res: ApiResponse<DailyEquipAvailabilityRow[]>) => {
           const rows = Array.isArray(res?.Data) ? res.Data : [];
 
-          rows.forEach((r) => this.dailyPriorQtyMap.set(r.Device_ID, Number(r.Device_Qty ?? 0)));
+          rows.forEach((r) => this.dailyPriorQtyMap.set(r.Device_ID, Number(r.Device_TotQty ?? 0)));
 
           this.dailyRows = rows.map((r) => ({
             _rowKey: `${Service_Id}_${r.Device_ID}`,
             Device_ID: r.Device_ID,
             Device_Name: r.Device_Name,
-            Device_Qty: Number(r.Device_Qty ?? 0),
+            Device_TotQty: r.CSS_CurrentQty !== null && r.CSS_CurrentQty !== undefined && r.CSS_CurrentQty !== 0
+              ? Number(r.CSS_CurrentQty)
+              : Number(r.Device_TotQty ?? 0),
           }));
 
           this.dailyTableVer++;
@@ -562,7 +579,7 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
 
     const items: InsertDailyEquipAvailabilityRequest[] = this.dailyRows.map((r) => {
       const prior = Number(this.dailyPriorQtyMap.get(r.Device_ID) ?? 0);
-      const current = Number.isFinite(r.Device_Qty as any) ? Number(r.Device_Qty) : 0;
+      const current = Number.isFinite(r.Device_TotQty as any) ? Number(r.Device_TotQty) : 0;
 
       return {
         CSS_Date,

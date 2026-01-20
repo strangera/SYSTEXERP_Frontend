@@ -1,4 +1,3 @@
-// public.guard.ts
 import { inject, Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivate, Router, UrlTree } from '@angular/router';
 import { AuthService } from '@service/system/auth.service';
@@ -7,7 +6,6 @@ import { AuthService } from '@service/system/auth.service';
 export class PublicGuard implements CanActivate {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
-  // public.guard.ts
   canActivate(route: ActivatedRouteSnapshot): boolean | UrlTree {
     const loggedIn = this.authService.isLoggedIn();
     const fullUrl = window.location.href; // <== 直接用原始網址解析
@@ -25,11 +23,8 @@ export class PublicGuard implements CanActivate {
 
     if (!loggedIn) return true;
     if (finalRedirect) {
-      console.log('[PublicGuard] 已登入且帶 redirectURL，放行');
       return true;
     }
-
-    console.log('[PublicGuard] 已登入但未帶 redirect，導回 /sso/dashboard');
     return this.router.parseUrl('/sso/dashboard');
   }
 

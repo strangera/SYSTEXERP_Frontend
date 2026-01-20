@@ -11,6 +11,6 @@
   [dropdownIcon]="control().disabled ? 'hidden' : 'pi pi-angle-down'" appendTo="body" [virtualScroll]="true"
   [virtualScrollItemSize]="34" (completeMethod)="filterOptions($event)" [dropdown]="true" [forceSelection]="true"
   [ariaLabel]="'請輸入' + label" [dropdownAriaLabel]="'請選擇' + label" [ariaLabelledBy]="controlName" [autofocus]="true"
-  (onSelect)="handleOptionSelected($event)" />
+  (onSelect)="handleOptionSelected($event)" (keydown.enter)="$event.preventDefault()" />
 <app-control-messages [onerror]="submitted() || (control().touched && control().invalid)" [control]="control()">
 </app-control-messages>

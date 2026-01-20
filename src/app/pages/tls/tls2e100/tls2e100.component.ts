@@ -1,21 +1,21 @@
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { TLS2E100Service } from '@service/api/tls/tls2e100.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { formatAmount } from '@shared/componentkit/table/table.model';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatAmount } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
-import { TLS2E100Service } from '@service/api/tls/tls2e100.service';
-import { DatePipe } from '@angular/common';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 @Component({
   selector: 'app-tls2e100',
@@ -57,19 +57,19 @@ export class TLS2E100Component extends BasicQueryPageComponent<any> implements O
     { field: 'ven_no', header: '廠商編號', visible: true },
     { field: 'tlt_id', header: '類別代號', visible: true },
     { field: 'tlt_id_desc', header: '類別名稱', visible: true },
-    { field: 'Jan', header: '一月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true },
-    { field: 'Feb', header: '二月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true },
-    { field: 'Mar', header: '三月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true },
-    { field: 'Apr', header: '四月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true },
-    { field: 'May', header: '五月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true },
-    { field: 'Jun', header: '六月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true },
-    { field: 'Jul', header: '七月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true },
-    { field: 'Aug', header: '八月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true },
-    { field: 'Sep', header: '九月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true },
-    { field: 'Oct', header: '十月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true },
-    { field: 'Nov', header: '十一月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true },
-    { field: 'Dec', header: '十二月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true },
-    { field: 'tlt_id_count', header: '類別小計', visible: true, format: formatAmount, isTotal: true, isSubTotal: true },
+    { field: 'Jan', header: '一月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true, align: 'right' },
+    { field: 'Feb', header: '二月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true, align: 'right' },
+    { field: 'Mar', header: '三月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true, align: 'right' },
+    { field: 'Apr', header: '四月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true, align: 'right' },
+    { field: 'May', header: '五月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true, align: 'right' },
+    { field: 'Jun', header: '六月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true, align: 'right' },
+    { field: 'Jul', header: '七月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true, align: 'right' },
+    { field: 'Aug', header: '八月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true, align: 'right' },
+    { field: 'Sep', header: '九月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true, align: 'right' },
+    { field: 'Oct', header: '十月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true, align: 'right' },
+    { field: 'Nov', header: '十一月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true, align: 'right' },
+    { field: 'Dec', header: '十二月', visible: true, format: formatAmount, isTotal: true, isSubTotal: true, align: 'right' },
+    { field: 'tlt_id_count', header: '類別小計', visible: true, format: formatAmount, isTotal: true, isSubTotal: true, align: 'right' },
   ];
   groupRowsBy = 'apply_no';
   org_id_Option: IDropdownItem[] = [];

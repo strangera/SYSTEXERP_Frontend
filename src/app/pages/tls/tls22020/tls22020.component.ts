@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { IDropdownItem } from '@service/utility/dropdown-api.model';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
@@ -11,6 +12,7 @@ import { saveAs } from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
+import { finalize } from 'rxjs';
 import { TLS22020Service } from '../../../service/api/tls/tls22020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -121,7 +123,8 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
     }
 
     this.handleSubmit(form, () => {
-      this.tls22020Service.queryTLS22020(form.value).subscribe({
+      this.loading = true;
+      this.tls22020Service.queryTLS22020(form.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe({
         next: (res) => {
           const flatData = (res.Data?.QueryData ?? []).map((item: any) => {
             const row: any = {
@@ -150,12 +153,9 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
           // 保留查詢狀態
           this.queryStateService.setQueryState(this.ProgNo, form.value);
           this.queryStateService.setQueryState(this.ProgNo + '_data', res);
-
-          this.loading = false;
         },
         error: (err) => {
           console.error('查詢 TLS22020 失敗:', err);
-          this.loading = false;
         },
       });
     });
