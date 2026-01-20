@@ -90,6 +90,9 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   talentDialogLoading = false;
   talentDialogData: any[] = [];
   selectedTalents: any[] = [];
+  talentDialogQueryForm = this.formBuilder.group({
+    tlt_no: [null],
+  });
   talentDialogColumns: ReportColumn[] = [
     { field: 'tlt_no', header: '專櫃編號' },
     { field: 'tlt_name', header: '專櫃名稱' },
@@ -185,7 +188,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     };
     this.talentLastQueryBody = body;
     this.dropDownListService
-      .queryTLTTALENTDropDownList({ isNewData: true })
+      .queryTLTTALENTDropDownList({ ...body, isNewData: true })
       .pipe(untilDestroyed(this), finalize(() => (this.talentDialogLoading = false)))
       .subscribe((res: any) => {
         const raw = res?.Data ?? [];
@@ -196,8 +199,46 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   }
   // 提供給 app-table-report 的查詢函式（滾動載入下一頁專櫃資料）
   queryTalentDialog = (body: any) => {
-    return this.dropDownListService.queryTLTTALENTDropDownList(body);
+    // 若 dialog 上方有輸入 tlt_no，轉成 tlt_noList 並加上 isNewData
+    try {
+      const val: any = this.talentDialogQueryForm?.get('tlt_no')?.value;
+      let tlt_noList: string[] | undefined;
+      if (val != null) {
+        if (Array.isArray(val)) {
+          tlt_noList = (val as any[]).map((v: any) => this.normalizeValue(v)).filter((x: any) => !!x) as string[];
+        } else {
+          const nv = this.normalizeValue(val);
+          if (nv) tlt_noList = [nv];
+        }
+      }
+      const payload = { ...body, isNewData: true, ...(tlt_noList ? { tlt_noList } : {}) };
+      return this.dropDownListService.queryTLTTALENTDropDownList(payload);
+    } catch (e) {
+      return this.dropDownListService.queryTLTTALENTDropDownList({ ...body, isNewData: true });
+    }
   };
+
+  // Dialog 查詢表單提交（只用於專櫃編號簡易查詢）
+  onTalentDialogQuery(form: any): void {
+    const val: any = form?.value?.tlt_no ?? null;
+    this.talentDialogLoading = true;
+    const tlt_noList = val ? (Array.isArray(val) ? (val as any[]).map((v: any) => this.normalizeValue(v)).filter((x: any) => !!x) as string[] : [this.normalizeValue(val)]) : undefined;
+    const body: any = {
+      pageIndex: 1,
+      pageSize: 30,
+      isNewData: true,
+      ...(tlt_noList ? { tlt_noList } : {}),
+    };
+    this.talentLastQueryBody = body;
+    this.dropDownListService.queryTLTTALENTDropDownList(body)
+      .pipe(untilDestroyed(this), finalize(() => (this.talentDialogLoading = false)))
+      .subscribe((res: any) => {
+        const raw = res?.Data ?? [];
+        this.talentDialogData = raw;
+        this.talentTotalRecords = res?.TotalCount ?? raw.length;
+        this.selectedTalents = [];
+      });
+  }
 
   // Dialog 列是否可選
   isTalentRowSelectable(row: any): boolean {

@@ -121,6 +121,19 @@
 
 <app-dialog [visible]="talentDialogVisible" header="選擇專櫃" (visibleChange)="talentDialogVisible = $event"
   (save)="onTalentDialogSave()" [disable]="!selectedTalents || selectedTalents.length === 0">
+
+  <form [formGroup]="talentDialogQueryForm" (ngSubmit)="onTalentDialogQuery(talentDialogQueryForm)">
+    <div class="grid p-fluid">
+      <app-input-text class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="tlt_no"
+        [control]="talentDialogQueryForm.controls.tlt_no"></app-input-text>
+    </div>
+    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <app-button btnType="clear" [form]="talentDialogQueryForm"></app-button>
+      <app-button btnType="query" [loading]="talentDialogLoading"></app-button>
+    </div>
+  </form>
+  <hr />
+
   <app-table-report tableKey="tls2d010TalentDialogTable" dataKey="tlt_no" [data]="talentDialogData"
     [columns]="talentDialogColumns" [selectedItems]="selectedTalents" (selectionChange)="selectedTalents = $event"
     [showCaption]="false" [showFilter]="false" [showReportMode]="false" [showExcel]="false" [showDelete]="false"

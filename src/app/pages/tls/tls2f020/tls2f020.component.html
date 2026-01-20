@@ -8,11 +8,15 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="結帳年月" controlName="POS1"
-            [control]="queryForm.controls.POS1" [submitted]="submitted" />
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="結帳年月"
+            controlName="sam_yyymm" [control]="queryForm.controls.sam_yyymm" [submitted]="submitted" />
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="結帳方式" controlName="POS2" [options]="money_typeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.POS2" [submitted]="submitted"></app-multi-select>
+            <app-dropdown label="結帳方式" controlName="COMM_MONEY_TYPE" [options]="money_typeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.COMM_MONEY_TYPE" [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="帳次" controlName="sam_termno" [options]="sam_termnoOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.sam_termno" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -24,8 +28,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report tableKey="FIN13060" [data]="data" [columns]="columns" dataKey="ID" [showDelete]="false"
-    [showReportMode]="false" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading" (edit)="onEdit($event)"
-    (detail)="onDetail($event)" [showManage]="true" [showCheckBox]="false">
+  <app-table-report tableKey="FIN13060" [data]="data" [columns]="columns" dataKey="VouDate" [showDelete]="false"
+    [showReportMode]="false" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading" [showManage]="false"
+    [showCheckBox]="false">
   </app-table-report>
 </div>
