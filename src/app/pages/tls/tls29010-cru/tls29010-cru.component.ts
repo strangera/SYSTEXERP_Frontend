@@ -105,15 +105,18 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     pod_type: ['8', [Validators.required]], // 固定寫入8
 
     act_no: [''], // 活動編號
-    pod_desc: [''], // 活動名稱(使用者輸入)，開放下拉
-    pod_sdate: [{ value: null as Date | null, disabled: true }, [Validators.required]], // 活動起始日 (Date)
-    pod_edate: [{ value: null as Date | null, disabled: true }, [Validators.required]], // 活動終止日 (Date)
-    pod_status: ['', Validators.required], // 活動建立=0 /核准=1 /反核准=0 /刪除=9
+    pod_desc: ['', [Validators.required, Validators.maxLength(100)]], // 活動名稱(使用者輸入)，開放下拉
+    pod_sdate: [null as Date | null, [Validators.required]], // 活動起始日 (Date)
+    pod_edate: [null as Date | null, [Validators.required]], // 活動終止日 (Date)
+    // pod_desc: ['Eugeme測試', [Validators.required, Validators.maxLength(100)]], // 使用者輸入  for 測試
+    // pod_sdate: [yesterday, [Validators.required]], // 活動起始日 (Date) // for 測試
+    // pod_edate: [yesterday, [Validators.required]], // 活動終止日 (Date) // for 測試
+    // pod_status: ['', Validators.required], // 活動建立=0 /核准=1 /反核准=0 /刪除=9
 
     // 核准不會再新增進行
     approved_userno: [{ value: null, disabled: true }], // 核准人員編號
     approved_usr_name: [{ value: null, disabled: true }], // 核准人員姓名
-    approved_date: [{ value: null, disabled: true }], // 核准日期
+    approved_date: [{ value: null as Date | null, disabled: true }], // 核准日期
   });
 
   whetherOption: option[] = [ // 是否使用 Y/N
@@ -331,6 +334,8 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
       const createReq = { ...commonRequest, "pod_no": null }; // 確保主檔也是 null
       console.log('Create Request:', createReq); // Debug 用，上線移除
+      this.messageService.infoBubble('API需調整，目前準備中');
+
       // this.tls29010Service.insertTLS29010(createReq).pipe(untilDestroyed(this)).subscribe({
       //   next: () => {
       //     this.messageService.successBubble('新增成功');
@@ -342,6 +347,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       // });
     } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
       console.log('Update Request:', commonRequest); // Debug 用，上線移除
+      this.messageService.infoBubble('API需調整，目前準備中');
       // this.tls29010Service.updateTLS29010(commonRequest).pipe(untilDestroyed(this)).subscribe({
       //   next: () => {
       //     // this.messageService.successBubble('更新成功');
@@ -449,7 +455,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     // 3. 斷開引用同步回組件，確保下次觸發時 oldRow 為正確的舊值
     this.opendisc_Detail = [...newData];
   }
-  // 封裝 API 抓取邏輯
+  // 封裝 API 抓取邏輯 (可用000033測試)
   private async fetchTltDetails(row: any) {
     try {
       const res = await this.tls29010Service.queryTLTTALENT_Data({ tlt_no: row.tlt_no }).toPromise();
