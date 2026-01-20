@@ -14,7 +14,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { Column, formatAmount } from '../../../shared/componentkit/table/table.model';
 import { FIN25020Data } from '../fin25020/fin25020.component';
 
 //1.2.5.2 形成電匯明細資料 CRU
@@ -78,11 +78,11 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
   remitDetailColumns: Column[] = [
     { field: 'VEN_No', header: '廠商編號', visible: true },
     { field: 'VEN_Name', header: '廠商名稱', visible: true },
-    { field: 'ACP_Amt', header: '收/付金額', visible: true },
-    { field: 'RMT_Amt', header: '匯款金額', visible: true },
-    { field: 'RMT_Fee', header: '廠商負擔匯款手續費', visible: true },
-    { field: 'CASH_BACK_AMT', header: '廠商負擔電匯手續費回饋收入', visible: true },
-    { field: 'COMP_WIRE_FEE', header: '公司負擔匯款手續費', visible: true },
+    { field: 'ACP_Amt', header: '收/付金額', visible: true, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'RMT_Amt', header: '匯款金額', visible: true, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'RMT_Fee', header: '廠商負擔匯款手續費', visible: true, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'CASH_BACK_AMT', header: '廠商負擔電匯手續費回饋收入', visible: true, format: formatAmount, align: 'right', isTotal: true },
+    { field: 'COMP_WIRE_FEE', header: '公司負擔匯款手續費', visible: true, format: formatAmount, align: 'right', isTotal: true },
     { field: 'BANK_DESC', header: '匯款銀行代號', visible: true },
     { field: 'RMT_BnkAccNo', header: '銀行帳號', visible: true },
     { field: 'RMT_BnkAccName', header: '匯款銀行帳戶名稱', visible: true },
