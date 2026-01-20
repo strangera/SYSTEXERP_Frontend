@@ -94,8 +94,8 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
 
   // 20251016 核准按鈕  (狀態不是未審核都不能點)
   addButton: AddButton[] = [
-    { label: '核准', icon: 'pi pi-check-circle text-green-500', action: (rowData: TALPORDERM) => { this.statusChange(rowData); }, disabled: (rowData: TALPORDERM) => rowData.pod_status !== '0' && !this.hasPermission(this.Actions.Audit) }, // 審核
-    { label: '反核准', icon: 'pi pi-check-circle text-green-500', action: (rowData: TALPORDERM) => { this.statusUnChange(rowData); }, disabled: (rowData: TALPORDERM) => rowData.pod_status !== '1' && !this.hasPermission(this.Actions.AntiAudit) }, // 反審核
+    { label: '核准', icon: 'pi pi-check-circle text-green-500', action: (rowData: TALPORDERM) => { this.statusChange(rowData); }, disabled: (rowData: TALPORDERM) => rowData.pod_status !== '0' && this.hasPermission(this.Actions.Audit) }, // 審核
+    { label: '反核准', icon: 'pi pi-undo text-orange-500', action: (rowData: TALPORDERM) => { this.statusUnChange(rowData); }, disabled: (rowData: TALPORDERM) => rowData.pod_status !== '1' && this.hasPermission(this.Actions.AntiAudit) }, // 反審核
   ]
   // 表格
   // ----------------------------------------------------------------
@@ -198,6 +198,8 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
   ngOnInit(): void {
     this.initializePage('TLS29010', 'TLS/TLS29010cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOption();
+
+    // console.log('帳號審核狀態:', this.hasPermission(this.Actions.Audit), '帳號反審核狀態:', this.hasPermission(this.Actions.AntiAudit));
   }
 
   onSubmit(frm: FormGroup) {
@@ -275,11 +277,6 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     this.selectedItems = [];
   }
 
-  isRowSelectable(rowData: TALPORDERM): boolean {
-    return true;
-    // return false; //不予許刪除
-  }
-
   // 20251016 核准按鈕狀態切換
   statusChange(rowData: TALPORDERM) {
     this.btnLoading = true;
@@ -341,4 +338,15 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
       console.log('折扣別 下拉:', this.cag_barcode_Options);
     });
   }
+
+  // 邏輯：只有 '0' (未核准) 的資料可以被勾選/刪除
+  isRowSelectable = (rowData: TALPORDERM) => {
+    return rowData.pod_status === '0';
+  };
+
+
+  // 只有未核准的項目可以編輯
+  isRowEditDisabled = (rowData: TALPORDERM) => {
+    return rowData.pod_status !== '0';
+  };
 }
