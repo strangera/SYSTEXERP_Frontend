@@ -46,7 +46,7 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
     GoodsOrServicesName: ['', Validators.maxLength(100)], // 貨物或勞務名稱
     GoodsQty: [1, [this.validationService.numberValidator]], // 貨物或勞務數量
     ExportMethod: ['', Validators.required], // 外銷方式
-    INV_PassType: ['1', Validators.required], // 通關方式註記
+    INV_PassType: [null as string | null, Validators.required], // 通關方式註記
     INV_DocName: ['', [Validators.maxLength(20)]], // 證明文件名稱
     INV_DocNo: ['', [Validators.maxLength(10)]], // 證明文件號碼
     NonCustomsExportAmt: [null as number | null, [this.validationService.numberValidator]], // 非經海關出口金額
@@ -98,7 +98,7 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
       this.getZeroTaxGUIData(this.dataForm);
     }
     this.setUnEditableFields();
-    this.handlePassTypeChange('1');
+    this.setupPassTypeListener();
   }
 
   onSubmit(form: FormGroup): void {
