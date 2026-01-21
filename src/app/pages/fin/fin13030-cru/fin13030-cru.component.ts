@@ -48,10 +48,10 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
     INV_PassType: ['', Validators.required], // 通關方式註記
     INV_DocName: ['', [Validators.maxLength(20)]], // 證明文件名稱
     INV_DocNo: ['', [Validators.maxLength(10)]], // 證明文件號碼
-    NonCustomsExportAmt: [0, [this.validationService.numberValidator]], // 非經海關出口金額
+    NonCustomsExportAmt: [null, [this.validationService.numberValidator]], // 非經海關出口金額
     INV_ExportType: [''], // 出口報單類別
     INV_ExportNo: ['', [Validators.maxLength(10)]], // 出口報單號碼
-    CustomsExportAmt: [0, [this.validationService.numberValidator]], // 經海關出口金額
+    CustomsExportAmt: [null, [this.validationService.numberValidator]], // 經海關出口金額
     ExportDate: ['', Validators.required], // 輸出或結匯日期
     INV_Remark: ['', Validators.maxLength(100)], // 備註
   });
