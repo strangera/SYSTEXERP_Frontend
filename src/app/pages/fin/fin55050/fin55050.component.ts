@@ -82,9 +82,6 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   PDFBtnLoading = false;
   XLSXBtnLoading = false;
 
-  /** 記住上一次查詢的 payload（供匯出使用） */
-  private lastQueryBody: any | null = null;
-
   queryForm = this.formBuilder.group({
     DateFrom: [this.yesterday, Validators.required],
     DateTo: [this.yesterday, Validators.required],
@@ -146,31 +143,11 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
 
     this.loadOptions();
 
-    const saved = this.queryStateService.getQueryStateValue(this.ProgNo);
-    if (saved) {
-      this.queryForm.patchValue(this.coerceDates(saved), { emitEvent: false });
-      this.lastQueryBody = saved;
-    }
-
     this.queryForm.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe(() => {
         this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       });
-  }
-
-  private coerceDates(raw: any) {
-    const fix = (v: any) => {
-      if (!v) return v;
-      if (v instanceof Date) return v;
-      const d = new Date(v);
-      return isNaN(d.getTime()) ? v : d;
-    };
-    return {
-      ...raw,
-      DateFrom: fix(raw?.DateFrom),
-      DateTo: fix(raw?.DateTo),
-    };
   }
 
   onSubmit(form: FormGroup) {
@@ -182,11 +159,8 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
           this.data = this.restructureData(response.Data);
           this.totalRecords = response.TotalCount ?? this.data.length;
 
-          // 記住本次查詢（匯出用）
-          this.lastQueryBody = form.getRawValue();
-
           // 保存查詢狀態
-          this.queryStateService.setQueryState(this.ProgNo, this.lastQueryBody);
+          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
         });
     });
   }
@@ -309,7 +283,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
 
   /** 產生匯出 payload（不再使用 VOUDATE_*） */
   private buildExportBody(): ExportFIN55050Payload | null {
-    const raw = this.lastQueryBody ?? this.queryForm.getRawValue();
+    const raw = this.queryForm.getRawValue();
 
     const from = this.toDateOnly(raw?.DateFrom);
     const to = this.toDateOnly(raw?.DateTo);
