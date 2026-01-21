@@ -3,8 +3,8 @@
   (onSort)="onSort($event)" [selectionMode]="showCheckBox ? 'multiple' : null" [rowTrackBy]="trackByFn"
   [resizableColumns]="true" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
   (onLazyLoad)="onLazyLoad()" styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
-  [selectAll]="isAllSelected" (selectAllChange)="onSelectAllChange($event)"
-  (selectionChange)="selectionChange.emit($event)" [rowSelectable]="rowSelectableWrapper" [lazy]="lazy"
+  [selectAll]="isAllSelected" (selectAllChange)="onSelectAllChange($event)" (onLazyLoad)="onLazyLoad()"
+  (selectionChange)="onSelectionChange($event)" [rowSelectable]="rowSelectableWrapper" [lazy]="lazy"
   [virtualScrollItemSize]="46" [virtualScrollDelay]="0" [virtualScrollOptions]="{
     inline: true,
     trackBy: trackByFn,
@@ -140,10 +140,10 @@
           <div [innerHTML]="sanitizer.bypassSecurityTrustHtml(rowData[col.field])" class="html-cell"></div>
         </ng-container>
         <ng-container *ngIf="col.type === 'link'">
-          <span [ngClass]="(col.linkDisabled && col.linkDisabled(rowData)) ? 'link-disabled' : 'link-active'"
-            (click)="!(col.linkDisabled && col.linkDisabled(rowData)) && linkClick.emit({rowData: rowData, field: col.field})">
-            {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
-          </span>
+          <p-button [link]="true"
+            [label]="col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field]"
+            (click)="!(col.linkDisabled && col.linkDisabled(rowData)) && linkClick.emit({rowData: rowData, field: col.field})"
+            [disabled]="col.linkDisabled && col.linkDisabled(rowData)" class="text-left"></p-button>
         </ng-container>
         <span *ngIf="!col.type">
           {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
@@ -213,7 +213,14 @@
         <td [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
           [ngClass]="[ col.cellClass ? col.cellClass(rowData) || '' : '']">
           <span class="font-bold">
-            {{ col.format ? col.format(footerData[col.field]) : footerData[col.field] }}
+            <ng-container *ngIf="allowFooterHtml && (col.type === 'html' || col.htmlFormat)">
+              <div
+                [innerHTML]="sanitizer.bypassSecurityTrustHtml(col.format ? col.format(footerData[col.field]) : footerData[col.field])">
+              </div>
+            </ng-container>
+            <ng-container *ngIf="!allowFooterHtml || !(col.type === 'html' || col.htmlFormat)">
+              {{ col.format ? col.format(footerData[col.field]) : footerData[col.field] }}
+            </ng-container>
           </span>
         </td>
       </ng-container>

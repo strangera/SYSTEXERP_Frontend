@@ -1,146 +1,140 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
+import { Component, computed, OnInit, signal } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS11010Service } from '@service/api/ass/ass11010.service';
+import { ASS11020Service } from '@service/api/ass/ass11020.service';
+import { ASS11030Service } from '@service/api/ass/ass11030.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-//
+import { finalize } from 'rxjs';
+import { ASS11030Data, ASS11030QueryRequest } from './ass11030.model';
 
-//3.1.1.3 小分類維護作業
+// 3.1.1.3 資產列管品及耗材分類管理作業-小分類維護作業
 @Component({
   selector: 'app-ass11030',
   templateUrl: './ass11030.component.html',
   styleUrl: './ass11030.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, EditorTextComponent, TableComponent, TranslateModule]
+  imports: [
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    ButtonComponent,
+    DropdownComponent,
+    InputTextareaComponent,
+    InputTextComponent,
+    MenubarComponent,
+    TableReportComponent,
+  ],
 })
-export class ASS11030Component extends BasicQpageComponent implements OnInit {
-  //
-  bigCategoryCodeOptions: any[] = [
-    { value: 'A', label: 'A/裝潢工程' },
-    { value: 'B', label: 'B/其他工程' },
-    { value: 'C', label: 'C/電腦及電子零件產品' },
-    { value: 'D', label: 'D/電力及照明系統' },
-    { value: 'E', label: 'E/家電家具設備' },
-    { value: 'F', label: 'F/機消空電水零配件' },
-    { value: 'G', label: 'G/辦公及營運庶務' },
-    { value: 'H', label: 'K/印刷品(非廣告行銷)' },
-  ];
-  midCategoryCodeOptions: any[] = [
-    { value: 23, label: '室內裝潢工程' },
-    { value: 24, label: '室內裝潢備品' },
-    { value: 21, label: '弱電系統' },
-    { value: 22, label: '房屋和建築設備' },
-    { value: 23, label: '停車場設備' },
-    { value: 24, label: '其他工程' },
-    { value: 25, label: '機電消防工程' },
-    { value: 22, label: '電子產品及零件' },
-  ];
-  //
-  queryForm = this.formBuilder.group({
-    smlCategoryCode: [, [Validators.maxLength(2)]], // 小分類代碼
-    smlCategoryName: ['', [Validators.maxLength(32)]], // 小分類名稱
-    midCategoryCode: [], // 中分類代碼
-    midCategoryName: ['', [Validators.maxLength(40)]], // 中分類名稱
-    bigCategoryCode: [], // 大分類代碼
-    bigCategoryName: ['', [Validators.maxLength(40)]], // 大分類名稱
-    illustrate: [,], // 說明
+export class ASS11030Component extends BasicQueryPageComponent<ASS11030Data> implements OnInit {
+
+  public readonly queryForm = this.formBuilder.group({
+    S_CLASS_ID: new FormControl<string | null>(null, [Validators.maxLength(2)]),     // 小分類代碼
+    S_CLASS_NAME: new FormControl<string | null>(null, [Validators.maxLength(32)]),  // 小分類名稱
+    M_CLASS_ID: new FormControl<string | null>(null),                                 // 中分類代碼
+    M_CLASS_NAME: new FormControl<string | null>(null, [Validators.maxLength(40)]),  // 中分類名稱
+    B_CLASS_ID: new FormControl<string | null>(null),                                 // 大分類代碼
+    B_CLASS_NAME: new FormControl<string | null>(null, [Validators.maxLength(40)]),  // 大分類名稱
+    NOTES_KEYWORD: new FormControl<string | null>(null),                              // 說明
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+  public readonly qf = computed(() => this.queryForm.controls);
+
+  public readonly tableData = signal<ASS11030Data[]>([]);
+  public readonly totalRecords = signal<number>(0);
+  public readonly tableLoading = signal<boolean>(false);
+
+  public readonly columns: ReportColumn[] = [
+    { field: 'S_CLASS_ID', header: '小分類代碼' },
+    { field: 'S_CLASS_NAME', header: '小分類名稱' },
+    { field: 'M_CLASS_ID', header: '中分類代碼' },
+    { field: 'B_CLASS_ID', header: '大分類代碼' },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    { 'smlCategoryCode': 23, 'smlCategoryName': '工區裝潢(分樓層)', 'midCategoryCode': 23, 'bigCategoryCode': 'A' },
-    { 'smlCategoryCode': 24, 'smlCategoryName': '專櫃裝潢補貼款(分品牌)', 'midCategoryCode': 23, 'bigCategoryCode': 'B' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'smlCategoryCode', header: '小分類代碼', visible: true },
-    { field: 'smlCategoryName', header: '小分類名稱', visible: true },
-    { field: 'midCategoryCode', header: '中分類代碼', visible: true },
-    { field: 'bigCategoryCode', header: '大分類代碼', visible: true },
-    { field: 'illustrate', header: '說明', visible: false },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
+
+  // 大分類代碼下拉選項
+  public readonly bigClassOptions = signal<{ label: string; value: string }[]>([]);
+  // 中分類代碼下拉選項
+  public readonly midClassOptions = signal<{ label: string; value: string }[]>([]);
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    //
+    public readonly service: ASS11030Service,
+    private readonly ass11010Service: ASS11010Service,
+    private readonly ass11020Service: ASS11020Service,
+    private readonly logger: NGXLogger,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310003';
-    this.cruPage = '/ASS1000/ASS11030CRU';
-    //
-
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('ASS11030', '/ass/ass11030cru', this.queryForm, this.onSubmit.bind(this));
+    this.logger.debug(`ASS11030 init:`, [this.queryForm]);
+    this.loadBigClassOptions();
+    this.loadMidClassOptions();
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+  /**
+   * 載入大分類下拉選項
+   */
+  private loadBigClassOptions(): void {
+    this.ass11010Service.queryASS11010({}).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.QueryData.map(item => ({
+          label: `${item.CLASS_ID}/${item.CLASS_NAME}`,
+          value: item.CLASS_ID,
+        }));
+        this.bigClassOptions.set(options);
+      },
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+  /**
+   * 載入中分類下拉選項
+   */
+  private loadMidClassOptions(): void {
+    this.ass11020Service.queryASS11020({}).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.QueryData.map(item => ({
+          label: `${item.M_CLASS_ID}/${item.M_CLASS_NAME}`,
+          value: item.M_CLASS_ID,
+        }));
+        this.midClassOptions.set(options);
+      },
+    });
   }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
+  public onSubmit(): void {
+    this.handleSubmit(this.queryForm, () => {
+      const raw = this.queryForm.getRawValue();
+      const payload = Object.fromEntries(Object.entries(raw).filter(([, v]) =>
+        v !== null && v !== undefined && v !== ''
+      )) as ASS11030QueryRequest;
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+      this.tableLoading.set(true);
+      this.queryStateService.setQueryState(this.ProgNo, raw);
+      this.logger.debug(`onSubmit:`, [payload]);
+      this.service.queryASS11030(payload).pipe(
+        finalize(() => {
+          this.tableLoading.set(false);
+          this.loading = false;
+        }),
+      ).subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
+          this.tableData.set(res.Data.QueryData);
+          this.totalRecords.set(res.Data.TotalCount || 0);
+        },
+      });
+    });
   }
 }

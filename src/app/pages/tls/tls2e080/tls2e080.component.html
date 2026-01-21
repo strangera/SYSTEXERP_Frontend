@@ -60,26 +60,6 @@
   </p-accordion>
 </div>
 <div class="card">
-  <!-- <app-tls2e080-table-report tableKey="tls57090" dataKey="id" [lastQueryBody]="historyRequestBody" [data]="data"
-    [columns]="columns" [totalRecords]="totalRecords" [showManage]="false"
-    [queryFunction]="tls2e080Service.queryTLS2E080.bind(tls2e080Service)" [showCheckBox]="true"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event">
-    <header>
-      <div class="flex justify-content-between align-items-center gap-2">
-        <div class="flex gap-2">
-          <p-button styleClass="p-2" label="匯出Zip檔" [rounded]="true" [loading]="btnLoading" icon="pi pi-file"
-            (click)="exportZip()" [disabled]="data.length === 0 || selectedItems.length === 0"
-            [loading]="btnLoading"></p-button>
-        </div>
-        <div class="flex gap-2">
-          <p-button styleClass="p-2" label="網路對帳" [rounded]="true" [loading]="btnLoading" icon="pi pi-file"
-            (click)="autoReport('1')" [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
-          <p-button styleClass="p-2" label="AUTOMAIL" [rounded]="true" [loading]="btnLoading" icon="pi pi-file"
-            (click)="autoReport('3')" [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
-        </div>
-      </div>
-    </header>
-  </app-tls2e080-table-report> -->
   <app-table-report tableKey="tls57090" dataKey="id" [lastQueryBody]="historyRequestBody" [data]="data"
     [columns]="columns" [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [loading]="loading"
     [queryFunction]="tls2e080Service.queryTLS2E080.bind(tls2e080Service)" [showCheckBox]="true"
@@ -89,20 +69,18 @@
       <div class="flex justify-content-between align-items-center gap-2">
         <div class="flex gap-2">
           <p-button styleClass="p-2" label="匯出Zip檔" [rounded]="true" icon="pi pi-file" (click)="exportZip()"
-            [disabled]="data.length === 0 || selectedItems.length === 0" [loading]="btnLoading"></p-button>
+            [disabled]="data.length === 0 || selectedItems.length === 0 || !hasPermission(Actions.ExportZip)"
+            [loading]="btnLoading"></p-button>
         </div>
         <div class="flex gap-2">
           <p-button styleClass="p-2" label="網路對帳" [rounded]="true" icon="pi pi-file" (click)="netReport()"
-            [disabled]="data.length === 0 || selectedItems.length === 0" [loading]="btnLoading"></p-button>
+            [disabled]="data.length === 0 || selectedItems.length === 0 || !hasPermission(Actions.OnlineCheck)"
+            [loading]="btnLoading"></p-button>
           <p-button styleClass="p-2" label="AUTOMAIL" [rounded]="true" icon="pi pi-file" (click)="autoMail()"
-            [disabled]="data.length === 0 || selectedItems.length === 0" [loading]="btnLoading"></p-button>
+            [disabled]="data.length === 0 || selectedItems.length === 0 || !hasPermission(Actions.AUTOMAIL)"
+            [loading]="btnLoading"></p-button>
         </div>
       </div>
     </header>
   </app-table-report>
-  <!-- <app-table [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-    [multiSortMeta]="[{ field: 'HOS_NAME', order: 1 }]" [showReportMode]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showManage]="false" [showDelete]="false">
-  </app-table> -->
 </div>

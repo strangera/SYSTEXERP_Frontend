@@ -32,7 +32,6 @@ import { STORE_WAY, TLS24010_EDIT_TYPE } from '../tls24010-cru/tls24010-cru.mode
 import { AddButton } from './../../../shared/componentkit/table/table.model';
 import { FileExportService } from './../../../shared/service/file-export.service';
 import { C_columns, columns, FIX_TYPE, TXN_GUIPAPER, TXN_GUIPaperOptions, TXN_STATUS, txnStatusOptions } from './tls24010.model';
-// 交易補登作業
 @Component({
   selector: 'app-tls24010',
   templateUrl: './tls24010.component.html',
@@ -355,7 +354,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       frm.get('rece_yn')?.setValue(data?.rece_yn);
     }
     const inertData = { ...frm.value, TXN_No: '系統自動產生' };
-    this.onCreate(inertData);
+    this.onCreate(inertData, frm.value);
   }
 
   onCancel(rowdata: TLS24010Data): void {

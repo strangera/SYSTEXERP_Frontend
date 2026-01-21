@@ -142,6 +142,27 @@ export function formatAmountWithDecimals(value: any, decimals = 2): string {
   }).format(num);
 }
 
+/**
+ * 將 YYYYMMDD (字串或數字) 格式化為 YYYY/MM/DD
+ * 例如: "20250702" -> "2025/07/02"
+ */
+export const formatYYYYMMDD = (value: string | number | null | undefined): string => {
+  if (!value) return '';
+
+  const str = String(value).trim();
+
+  // 檢查是否為 8 位數字字串
+  if (str.length === 8) {
+    const year = str.substring(0, 4);
+    const month = str.substring(4, 6);
+    const day = str.substring(6, 8);
+    return `${year}/${month}/${day}`;
+  }
+
+  // 如果原本就已經帶有分隔符號 (例如 2025-07-02)，則嘗試用原有的 formatDate 處理
+  return formatDate(str);
+};
+
 export const expandAnimation =
   trigger('fadeInOut', [
     transition(':enter', [

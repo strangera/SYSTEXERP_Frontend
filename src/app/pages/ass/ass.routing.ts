@@ -3,10 +3,10 @@ import { Routes } from '@angular/router';
 export const assRoutes: Routes = [
   { path: 'ass11010', loadComponent: () => import('./ass11010/ass11010.component').then(m => m.ASS11010Component), data: { progNo: 'ASS11010' } }, // 資產列管品及耗材分類管理作業-大分類維護作業
   { path: 'ass11010cru', loadComponent: () => import('./ass11010-cru/ass11010-cru.component').then(m => m.ASS11010CRUComponent), data: { progNo: 'ASS11010' } },
-  // { path: 'ass11020', loadComponent: () => import('./ass11020/ass11020.component').then(m => m.ASS11020Component),data: {progNo:'ASS11020'} }, // 資產列管品及耗材分類管理作業-中分類維護作業
-  // { path: 'ass11020cru', loadComponent: () => import('./ass11020-cru/ass11020-cru.component').then(m => m.ASS11020CRUComponent),data: {progNo:'ASS11020'} },
-  // { path: 'ass11030', loadComponent: () => import('./ass11030/ass11030.component').then(m => m.ASS11030Component),data: {progNo:'ASS11030'} }, // 資產列管品及耗材分類管理作業-小分類維護作業
-  // { path: 'ass11030cru', loadComponent: () => import('./ass11030-cru/ass11030-cru.component').then(m => m.ASS11030CRUComponent),data: {progNo:'ASS11030'} },
+  { path: 'ass11020', loadComponent: () => import('./ass11020/ass11020.component').then(m => m.ASS11020Component), data: { progNo: 'ASS11020' } }, // 資產列管品及耗材分類管理作業-中分類維護作業
+  { path: 'ass11020cru', loadComponent: () => import('./ass11020-cru/ass11020-cru.component').then(m => m.ASS11020CRUComponent), data: { progNo: 'ASS11020' } },
+  { path: 'ass11030', loadComponent: () => import('./ass11030/ass11030.component').then(m => m.ASS11030Component), data: { progNo: 'ASS11030' } }, // 資產列管品及耗材分類管理作業-小分類維護作業
+  { path: 'ass11030cru', loadComponent: () => import('./ass11030-cru/ass11030-cru.component').then(m => m.ASS11030CRUComponent), data: { progNo: 'ASS11030' } },
   { path: 'ass11040', loadComponent: () => import('./ass11040/ass11040.component').then(m => m.ASS11040Component), data: { progNo: 'ASS11040' } }, // 資產列管品及耗材分類管理作業-品項資料維護作業
   { path: 'ass11040cru', loadComponent: () => import('./ass11040-cru/ass11040-cru.component').then(m => m.ASS11040CRUComponent), data: { progNo: 'ASS11040' } },
   { path: 'ass11050', loadComponent: () => import('./ass11050/ass11050.component').then(m => m.ASS11050Component), data: { progNo: 'ASS11050' } }, // 資材分類樹狀圖

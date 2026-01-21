@@ -46,9 +46,9 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="TLS2A020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [showCheckBox]="false" dataKey="id"
-    [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="false"
-    [showDelete]="false"></app-table>
+  <app-table-report tableKey="TLS2A020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [showCheckBox]="false" dataKey="id" [totalRecords]="totalRecords"
+    [loading]="loading" [lastQueryBody]="historyRequestBody"
+    [queryFunction]="tls2a020Service.queryTLS2A020.bind(tls2a020Service)" [showManage]="false" [showDelete]="false">
+  </app-table-report>
 </div>

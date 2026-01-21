@@ -85,7 +85,7 @@ export class FIN25020Component extends BasicQueryPageComponent<FIN25020Data> imp
     { field: 'WSLIP_NO', header: '匯款來源單號', visible: true },
     { field: 'D_Date', header: '建立日期', visible: true, format: formatDate },
     { field: 'RMT_Date', header: '匯款日期', visible: true, format: formatDate },
-    { field: 'BNK_id', header: '銀行ID', visible: true },
+    { field: 'BNK_id', header: '銀行代號', visible: true },
     { field: 'BNK_AccName', header: '銀行帳戶名稱', visible: true },
     { field: 'VouStatus', header: '轉傳票狀態', visible: true },
     { field: 'VouNo', header: '傳票號碼', visible: true },

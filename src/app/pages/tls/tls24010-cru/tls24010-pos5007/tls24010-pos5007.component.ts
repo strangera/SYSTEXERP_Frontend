@@ -1,5 +1,5 @@
 import { DecimalPipe, NgIf } from '@angular/common';
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -213,12 +213,14 @@ export class Tls24010Pos5007Component implements OnChanges {
     rowData.PLU_SalePrc = show.PLU_SalePrc;
   }
   TXN_SaleAmtTotal = 0;
+  @Output() totalChange = new EventEmitter<number>();
   calculateLastYearTotal() {
     let total = 0;
     for (const row of this.POS5007Data) {
       total += row.TXN_SaleAmt || 0;
     }
     this.TXN_SaleAmtTotal = total;
+    this.totalChange.emit(this.TXN_SaleAmtTotal);
   }
 
   getTXN_SaleAmtLength(row: POS5007Data): number {

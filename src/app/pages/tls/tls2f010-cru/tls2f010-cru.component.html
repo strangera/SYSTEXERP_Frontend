@@ -14,12 +14,17 @@
           </div>
           <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="所屬結帳年月"
             controlName="COMM_YM" [control]="dataForm.controls.COMM_YM" [submitted]="submitted" />
+
         </div>
 
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="結帳方式" controlName="COMM_MONEY_TYPE" [options]="money_typeOptions" optionLabel="label"
               optionValue="value" [control]="dataForm.controls.COMM_MONEY_TYPE" [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="帳次" controlName="sam_termno" [options]="sam_termnoOptions" optionLabel="label"
+              optionValue="value" [control]="dataForm.controls.sam_termno" [submitted]="submitted"></app-dropdown>
           </div>
           <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="請款付款年月"
             controlName="COMM_YM" [control]="dataForm.controls.COMM_YM" [submitted]="submitted" />

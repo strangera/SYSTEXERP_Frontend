@@ -142,7 +142,12 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
           if (response.Status === '0000') {
             this.data = response.Data || [];
             this.totalRecords = response.TotalCount || 0;
-            this.lastQueryBody = req;
+            const last = { ...req } as any;
+            delete last.PageIndex;
+            delete last.PageSize;
+            last.pageIndex = req.PageIndex;
+            last.pageSize = req.PageSize;
+            this.lastQueryBody = last;
             this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
           } else {
             // API 回傳錯誤狀態

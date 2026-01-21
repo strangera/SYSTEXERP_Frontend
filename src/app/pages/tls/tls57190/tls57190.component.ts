@@ -12,8 +12,8 @@ import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropd
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatAmount } from '@shared/componentkit/table/table.model';
+import { ColumnGroup, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmountCN } from '@shared/componentkit/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -43,16 +43,16 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 })
 export class TLS57190Component extends BasicQueryPageComponent<TLS57190Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    DateFrom: [null, Validators.required],  // 存貨年月 - 必填
-    DateTo: [null, Validators.required],    // 存貨年月 - 必填
-    Mode: ['S' as 'S' | 'D', Validators.required],       // 查詢模式
-    HOS_No: [null],                         // 倉別
-    LOGO_No: [null],                        // 品牌
-    PLU_MagNo: [null, [Validators.maxLength(20)]],                      // 管理編號
-    PLU_No: [null, [Validators.maxLength(20)]],                         // 國際條碼
-    PLU_Name: [null, [Validators.maxLength(50)]],                       // 商品名稱
+    DateFrom: [null, Validators.required],
+    DateTo: [null, Validators.required],
+    ShowType: ['M' as 'M' | 'D', Validators.required], // 改回 Mode，預設 M (彙總)
+    HOS_NO: [null],                                // 修正為 HOS_No
+    LOGO_No: [null],
+    PLU_MagNo: [null, [Validators.maxLength(20)]],
+    PLU_No: [null, [Validators.maxLength(20)]],
+    PLU_Name: [null, [Validators.maxLength(60)]],
     pageSize: [30],
-    pageIndex: [1],
+    pageIndex: [1],                                // SP 裡面註解寫從 1 開始
   });
   constructor(
     public readonly tls57190Service: TLS57190Service,
@@ -64,6 +64,7 @@ export class TLS57190Component extends BasicQueryPageComponent<TLS57190Data> imp
     super();
   }
   data: TLS57190Data[] = [];
+  footerData: TLS57190Data | null = null;
   selectedItems: TLS57190Data[] = [];
   totalRecords = 0;
   lastQueryBody: TLS57190QueryRequest | null = null;
@@ -71,41 +72,55 @@ export class TLS57190Component extends BasicQueryPageComponent<TLS57190Data> imp
   HOS_NOOptions = this.dropdown.queryPos2034();
   LOGO_NoOptions = this.dropdown.queryPluLogo();
   ModeOptions = [
-    { value: 'S', label: '彙總' },
+    { value: 'M', label: '彙總' },
     { value: 'D', label: '明細' },
   ];
   columns: ReportColumn[] = [
     { field: 'LOGO_No', header: '品牌', visible: true },
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
-    { field: 'HOS_NAME', header: '倉別', visible: true },
-
     // 明細欄位
-    { field: 'PLU_MagNo', header: '管理編號', visible: true },
-    { field: 'PLU_No', header: '商品條碼', visible: true },
+    { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
+    { field: 'PLU_No', header: '國際條碼', visible: true },
     { field: 'PLU_Name', header: '商品名稱', visible: true },
 
     // 數量成本資訊
-    { field: 'BeginQty', header: '期初數量', visible: true, format: formatAmount },
-    { field: 'BeginCost', header: '期初成本', visible: true, format: formatAmount },
+    { field: 'BeginQty', header: '數量', visible: true, format: formatAmountCN, groupField: '期初', isSubTotal: true },
+    { field: 'BeginCost', header: '成本', visible: true, format: formatAmountCN, groupField: '期初', isSubTotal: true },
 
-    { field: 'InQty', header: '進貨數量', visible: true, format: formatAmount },
-    { field: 'InCost', header: '進貨成本', visible: true, format: formatAmount },
+    { field: 'InQty', header: '數量', visible: true, format: formatAmountCN, groupField: '進貨', isSubTotal: true },
+    { field: 'InCost', header: '成本', visible: true, format: formatAmountCN, groupField: '進貨', isSubTotal: true },
 
-    { field: 'SaleQty', header: '銷貨數量', visible: true, format: formatAmount },
-    { field: 'SaleAmt', header: '銷貨收入', visible: true, format: formatAmount },
-    { field: 'SaleCost', header: '銷貨成本', visible: true, format: formatAmount },
+    { field: 'InRtnQty', header: '數量', visible: true, format: formatAmountCN, groupField: '退貨', isSubTotal: true },
+    { field: 'InRtnCost', header: '成本', visible: true, format: formatAmountCN, groupField: '退貨', isSubTotal: true },
 
-    { field: 'EndQty', header: '期末數量', visible: true, format: formatAmount },
-    { field: 'EndCost', header: '期末成本', visible: true, format: formatAmount },
+    { field: 'SaleQty', header: '數量', visible: true, format: formatAmountCN, groupField: '銷貨', isSubTotal: true },
+    { field: 'SaleCost', header: '成本', visible: true, format: formatAmountCN, groupField: '銷貨', isSubTotal: true },
+    { field: 'TXN_Net', header: '售價', visible: true, format: formatAmountCN, groupField: '銷貨', isSubTotal: true },
 
-    { field: 'GrossProfit', header: '銷貨毛利', visible: true, format: formatAmount, isSubTotal: true },
+    { field: 'EndQty', header: '數量', visible: true, format: formatAmountCN, groupField: '期末數量', isSubTotal: true },
+    { field: 'EndCost', header: '成本', visible: true, format: formatAmountCN, groupField: '期末數量', isSubTotal: true },
+
+    { field: 'EndSalePrcNet', header: '數量', visible: true, format: formatAmountCN, groupField: '期末售價' },
+    { field: 'EndSalePrc', header: '成本', visible: true, format: formatAmountCN, groupField: '期末售價' },
+    { field: 'AvgUnitCost', header: '平均成本', visible: true, format: formatAmountCN, isSubTotal: true },
+    { field: 'SaleAmt', header: '銷貨合計', visible: true, format: formatAmountCN, isSubTotal: true },
+    { field: 'GrossProfit', header: '銷貨毛利', visible: true, format: formatAmountCN, isSubTotal: true },
     {
       field: 'GrossMarginPct',
-      header: '毛利率%',
+      header: '毛利率',
       visible: true,
-      format: (val: number) => val ? val.toFixed(2) + '%' : '0.00%'
+      format: (val: number) => val ? val : '0.00%'
     },
   ];
+
+  columnGroup: ColumnGroup[] = [
+    { field: '期初', header: '期初' },
+    { field: '進貨', header: '進貨' },
+    { field: '退貨', header: '退貨' },
+    { field: '銷貨', header: '銷貨' },
+    { field: '期末數量', header: '期末數量' },
+    { field: '期末售價', header: '期末售價' },
+  ]
 
   ngOnInit(): void {
     this.initializePage('TLS57190');
@@ -113,16 +128,45 @@ export class TLS57190Component extends BasicQueryPageComponent<TLS57190Data> imp
 
   onSubmit(form: FormGroup) {
     this.handleSubmit(form, () => {
+      const rawValue = form.getRawValue();
+
       const body = {
-        ...form.getRawValue(),
-        DateFrom: this.datepipe.transform(form.value.DateFrom, 'yyyy-MM-dd'),
-        DateTo: this.datepipe.transform(form.value.DateTo, 'yyyy-MM-dd'),
-      }
-      this.tls57190Service.queryTLS57190(body).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe(response => {
-        this.data = response.Data;
-        this.totalRecords = response.TotalCount;
-        this.lastQueryBody = body;
-      });
+        ...rawValue,
+        DateFrom: this.datepipe.transform(rawValue.DateFrom, 'yyyy-MM-dd'),
+        DateTo: this.datepipe.transform(rawValue.DateTo, 'yyyy-MM-dd'),
+        PLU_No: rawValue.PLU_No ? rawValue.PLU_No.trim() : null,
+      };
+
+      this.tls57190Service.queryTLS57190(body)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => (this.loading = false))
+        )
+        .subscribe(response => {
+          // --- 動態調整欄位顯示邏輯 ---
+          const isDetail = body.ShowType === 'D';
+          this.columns = this.columns.map(col => {
+            // 定義哪些欄位是明細專屬
+            const detailFields = ['PLU_MagNo', 'PLU_No', 'PLU_Name'];
+            if (detailFields.includes(col.field)) {
+              return { ...col, visible: isDetail };
+            }
+            return col;
+          });
+
+          // 依照你的要求，維持此寫法
+          this.data = response.Data;
+          this.footerData = {
+            ...response.SumData,
+            LOGO_No: '',
+            LOGO_CH_NAME: '',
+            EndSalePrcNet: '--',
+            EndSalePrc: '--',
+            AvgUnitCost: '--',
+          }
+          this.totalRecords = response.TotalCount;
+          this.lastQueryBody = body;
+        });
     });
   }
   btnLoading = false;

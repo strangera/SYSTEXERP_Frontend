@@ -1,163 +1,208 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-
+import { AsyncPipe } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { Tls2h020Service } from '@service/api/tls/tls2h020.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
+import { formatYN, formatYYYYMM } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { finalize, forkJoin } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
-// 2.2.17.2 租金發票套印作業
+// 2.2.17.1 租金發票套印作業
 @Component({
   selector: 'app-tls2h020',
   templateUrl: './tls2h020.component.html',
-  styleUrl: './tls2h020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputNumberComponent, InputNumberRangeComponent, CheckboxModule, TranslateModule]
+  imports: [ButtonModule, InputNumberRangeComponent, CalendarComponent, SelectButtonModule, TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, CheckboxModule, TranslateModule]
 })
-export class TLS2H020Component {
-  ProgNo: string = '220088';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
-  queryForm = this.formBuilder.group({
-    onedatemm: [, [Validators.required]], // 帳款年月
-    serialnumber: [, [this.validationService.numberValidator, Validators.maxLength(6)]], // 專櫃編號
-    startInvoiceNumber: [, [this.validationService.numberValidator, Validators.max(9999999999)]], // 發票號碼
-    endInvoiceNumber: [, [this.validationService.numberValidator, Validators.max(9999999999)]], // 發票號碼
-    print: [,], // checkbox
-    usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
+export class TLS2H020Component extends BasicQueryPageComponent<any> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    // 分頁欄位
+    pageSize: [30],
+    pageIndex: [1],
+    SamYyyymm: [null, Validators.required],
+    GuiNoStart: [null],
+    GuiNoEnd: [null],
+    TltNo: [''],
+    SortBy: [[{ field: 'TltNo', order: 1 }]],
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    //{ contactPerson: 'A先生', contactDate: '2024-08-08', UID: '123' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 1, progress: '未審核'},
-    //{ contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    //{ contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // 其他資料
+
+  lastQueryBody: any = null;
+  totalRecords = 0;
+  data: any[] = [];
+  selectedItems: any[] = [];
+  tlt_noOptions = this.dropdown.queryTltTalent();
+
+  columns: ReportColumn[] = [
+    { field: 'SamYyyymm', header: '結算年月', visible: true, format: formatYYYYMM },
+    { field: 'TltNo', header: '專櫃編號', visible: true },
+    { field: 'TltName', header: '櫃位名稱', visible: true },
+    { field: 'ContractNo', header: '契約編號', visible: true },
+    { field: 'ContractSubNo', header: '契約子號', visible: true },
+    { field: 'GuiAmt', header: '代扣款發票金額', visible: true, format: formatAmount, align: 'right' },
+    //  { field: 'GuiAmt', header: '發票金額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'GuiNo', header: '發票號碼', visible: true },
+    { field: 'GuiPrintTimes', header: '發票列印次數', visible: true },
+    { field: 'IsPrinted', header: '是否已列印', visible: true, format: formatYN },
+
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'contactPerson', header: '洽談者', visible: true },
-    { field: 'contactDate', header: '洽談日', visible: true },
-    { field: 'UID', header: '統編/廠商', visible: true },
-    { field: 'industryType', header: '大分類', visible: true },
-    { field: 'category', header: '類型', visible: true },
-    { field: 'version', header: '版本', visible: true },
-    { field: 'rentNumber', header: '位置租賃數', visible: true },
-    { field: 'progress', header: '進度', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
+    public readonly tls2h020Service: Tls2h020Service,
+    private readonly dropdown: DropdownApiService,
+    private readonly dropDownListService: DropDownListService,
   ) {
+    super();
   }
 
-  ngOnInit(): void {
-    //
-    //
-  }
+  override onCreate() {
+    if (!this.selectedItems || this.selectedItems.length === 0) {
+      this.messageService.errorBubble('請先選擇資料', '未選取');
+      return;
+    }
 
-  canQuery(): boolean {
-    return true;
-  }
+    const toYYYYMM = (val: any): string | null => {
+      if (val === null || val === undefined || val === '') return null;
+      let d: Date;
+      if (val instanceof Date) d = val;
+      else d = new Date(val);
+      if (isNaN(d.getTime())) return null;
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      return `${y}${m}`;
+    };
 
-  canAdd(): boolean {
-    return true;
-  }
+    const samSet = new Set<string>();
+    this.selectedItems.forEach(it => {
+      const raw = it.SamYyyymm ?? it.sam_yyymm ?? it.SamYyyymm;
+      const yyyyMM = toYYYYMM(raw);
+      if (yyyyMM) samSet.add(yyyyMM);
+    });
 
-  canEdit(): boolean {
-    return true;
-  }
+    if (samSet.size === 0) {
+      this.messageService.errorBubble('所選資料缺少結算年月', '錯誤');
+      return;
+    }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
+    const calls = Array.from(samSet).map(sam => this.tls2h020Service.generateTLS2H020({ SamYyyymm: sam }));
+
     this.loading = true;
     this.messageService.blockUi();
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
+    forkJoin(calls).pipe(untilDestroyed(this), finalize(() => { this.loading = false; this.messageService.unblockUi(); }))
+      .subscribe({
+        next: () => {
+          this.messageService.successBubble('產生發票成功', '完成');
         },
-        skipLocationChange: true
+        error: (err) => {
+          console.error('generateTLS2H020 error', err);
+          this.messageService.errorBubble('產生發票失敗', '錯誤');
+        }
+      });
+  }
+  ngOnInit(): void {
+    this.initializePage('TLS2H020', 'tls/tls2h020cru', this.queryForm, (form) => this.onSubmit(form));
+  }
+
+  onSubmit(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const raw = frm.getRawValue();
+      const pageSize = raw.pageSize ?? 0;
+      const pageIndex = raw.pageIndex ?? 0;
+      const toYYYYMM = (val: any): string | null => {
+        if (val === null || val === undefined || val === '') return null;
+        let d: Date;
+        if (val instanceof Date) d = val;
+        else d = new Date(val);
+        if (isNaN(d.getTime())) return null;
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        return `${y}${m}`;
       };
 
-      //console.log("extra", extras);
-      this.router.navigate(['/TLS2000/TLS2H020CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
+      const body = {
+        PageSize: pageSize,
+        PageIndex: pageIndex,
+        OrderBy: '',
+        Offset: (Math.max(pageIndex - 1, 0) * pageSize),
+        SortBy: raw.SortBy || [],
+        SamYyyymm: toYYYYMM(raw.SamYyyymm),
+        TltNo: raw.TltNo,
+        GuiNoStart: raw.GuiNoStart,
+        GuiNoEnd: raw.GuiNoEnd,
       };
 
-      this.router.navigate(['/TLS2000/TLS2H020CRU'], extras);
-    }
+      this.tls2h020Service.queryTLS2H020(body)
+        .pipe(untilDestroyed(this), finalize(() => { this.loading = false; this.messageService.unblockUi(); }))
+        .subscribe(res => {
+          this.data = res?.Data || [];
+          this.lastQueryBody = body;
+          this.totalRecords = res?.TotalCount || 0;
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        });
+    });
   }
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true
+  /** 支援 table lazy load / 滾動分頁（上捲觸發） */
+  override onLazyLoadData(event: any, frm: FormGroup) {
+    super.onLazyLoadData(event, frm);
+    this.queryStateService.setQueryState(this.ProgNo, frm.value);
+
+    this.loading = true;
+    const formValue = frm.value;
+    const toYYYYMM = (val: any): string | null => {
+      if (val === null || val === undefined || val === '') return null;
+      let d: Date;
+      if (val instanceof Date) d = val;
+      else d = new Date(val);
+      if (isNaN(d.getTime())) return null;
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      return `${y}${m}`;
     };
 
-    this.router.navigate(['/TLS2000/TLS2H020CRU'], extras);
+    const payload = {
+      PageSize: formValue.pageSize || 30,
+      PageIndex: formValue.pageIndex || 1,
+      OrderBy: formValue.SortBy?.[0]?.field || '',
+      Offset: (Math.max((formValue.pageIndex || 1) - 1, 0) * (formValue.pageSize || 30)),
+      SortBy: formValue.SortBy || [],
+      SamYyyymm: toYYYYMM(formValue.SamYyyymm),
+      TltNo: formValue.TltNo,
+      GuiNoStart: formValue.GuiNoStart,
+      GuiNoEnd: formValue.GuiNoEnd,
+    };
+
+    this.tls2h020Service.queryTLS2H020(payload).pipe(untilDestroyed(this)).subscribe({
+      next: (res) => {
+        const incoming = res?.Data || [];
+        const pageIndex = formValue.pageIndex || 1;
+        if (pageIndex > 1) {
+          this.data = [...(this.data || []), ...incoming];
+        } else {
+          this.data = incoming;
+        }
+        this.totalRecords = res?.TotalCount ?? this.data.length;
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+      }
+    });
   }
+
+
 }

@@ -2,8 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { TLS21040Data, Tls21040Service } from '@service/api/tls/tls21040.service';
+import { TLS21040Data, TLS21040QueryRequest, Tls21040Service } from '@service/api/tls/tls21040.service';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatYYYYMMDD, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { finalize } from 'rxjs';
@@ -13,10 +15,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
-import { formatDate, formatDateTime } from './../../../shared/componentkit/table/table.model';
+import { formatDateTime } from './../../../shared/componentkit/table/table.model';
 
 
 @Component({
@@ -31,7 +30,7 @@ import { formatDate, formatDateTime } from './../../../shared/componentkit/table
     ReactiveFormsModule,
     MultiSelectComponent,
     InputTextComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
   ],
 })
@@ -41,18 +40,21 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
     BNK_No: ['', [Validators.maxLength(3)]],
     CRD_TypeList: [null],
     CRD_KindList: [null],
-    ...createPaginationConfig([{ field: 'id', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1],
+    SortBy: [[{ field: 'id', order: 1 }]],
   });
+  lastQueryBody: TLS21040QueryRequest | null = null;
   totalRecords = 0;
   data: TLS21040Data[] = [];
   selectedItems: TLS21040Data[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'CRD_BinCode', header: '信用卡 BIN 碼', visible: true },
     { field: 'BNK_No', header: '發卡銀行代號', visible: true },
-    { field: 'CRD_Type', header: '信用卡卡別', visible: true, format: (value: string) => this.cardTypeOptions.find(item => item.value === value)?.label || value },
+    { field: 'CRD_Type', header: '信用卡卡別', visible: true, format: (value: string) => getSYS1000('CRD_Type', value) },
     { field: 'CRD_Kind', header: '信用卡卡種', visible: true, format: (value: string) => getSYS1000('CRD_Kind', value) },
-    { field: 'Active_Date', header: '生效日期', visible: true, format: formatDate },
-    { field: 'Disable_Date', header: '終止日期', visible: true, format: formatDate },
+    { field: 'Active_Date', header: '生效日期', visible: true, format: formatYYYYMMDD },
+    { field: 'Disable_Date', header: '終止日期', visible: true, format: formatYYYYMMDD },
     { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },
     { field: 'CRT_USR_No', header: '建立人員', visible: false },
     { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
@@ -60,56 +62,25 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
     { field: 'UPD_USR_No', header: '變更人員', visible: false },
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
   ];
-  cardTypeOptions: { value: string, label: string }[] = [
-    { value: 'V', label: 'VISA' },
-    { value: 'M', label: 'MASTER' },
-    { value: 'J', label: 'JCB' },
-    { value: 'A', label: 'AE' },
-    { value: 'D', label: 'DINERS' },
-    { value: 'S', label: '銀聯卡' },
-    { value: 'N', label: '聯合簽帳卡' },
-    { value: 'O', label: '其他' },
-  ];
+  cardTypeOptions = getSYS1000Options('CRD_Type');
   cardCategoryOptions = getSYS1000Options('CRD_Kind');
-  bankOptions: { BNK_No: string, BNK_Name: string }[] = [];
   constructor(
-    private sysbc00Service: Sysbc00Service,
-    private tls21040Service: Tls21040Service
+    public readonly tls21040Service: Tls21040Service
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS21040', 'TLS/TLS21040cru', this.queryForm, (form) => this.onSubmit(form));
-    this.sysbc00Service.querySYSBC00({}).subscribe((res) => {
-      this.bankOptions = res.Data.map(item => ({
-        ...item, label: item.BNK_No + ' - ' + item.BNK_Name
-      }));
-    });
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.tls21040Service.queryTLS21040(frm.getRawValue()).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe((res) => {
-        this.data = res.Data.map(item => ({
-          ...item,
-          Active_Date: this.parseYMD(item.Active_Date),
-          Disable_Date: this.parseYMD(item.Disable_Date)
-        }));
+        this.data = res.Data;
+        this.lastQueryBody = frm.getRawValue();
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })
     });
-  }
-  private parseYMD(ymd: string | Date | null): Date | null {
-    if (!ymd) return null;
-
-    const str = ymd.toString();
-    if (str.length !== 8) return null;
-
-    const year = +str.slice(0, 4);
-    const month = +str.slice(4, 6) - 1; // JS 月份從 0 開始
-    const day = +str.slice(6, 8);
-
-    return new Date(year, month, day);
   }
   onDelete(rows: TLS21040Data[]) {
     this.messageService.confirm({

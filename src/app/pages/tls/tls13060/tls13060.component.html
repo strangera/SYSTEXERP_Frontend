@@ -10,14 +10,15 @@
           <app-input-text class="col-12 md:col-6 lg:col-4" label="專櫃招募編號" controlName="apply_no"
             [control]="queryForm.controls.apply_no" [submitted]="submitted" />
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="廠商統一編號" controlName="ven_uniform"
-            [options]="vandorCategoryOptions" optionLabel="label" optionValue="value"
+            [options]="vandorCategoryOptions | async" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.ven_uniformList" [submitted]="submitted" />
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="tlt_no"
-            [control]="queryForm.controls.tlt_no" [submitted]="submitted" />
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="tlt_no"
+            [control]="queryForm.controls.tlt_no" [submitted]="submitted" [options]="tlt_nocationOptions | async"
+            optionLabel="label" optionValue="value" />
           <app-input-text class="col-12 md:col-6 lg:col-4" label="櫃位名稱" controlName="tlt_name"
             [control]="queryForm.controls.tlt_name" [submitted]="submitted" />
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="位置編號" controlName="location_no"
-            [options]="locationOptions" optionLabel="label" optionValue="value"
+            [options]="locationOptions | async" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.location_noList" [submitted]="submitted" />
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="館別" controlName="building_noList"
             [options]="building_noList | async" optionLabel="Name" optionValue="No"
@@ -28,17 +29,17 @@
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="營運狀況" controlName="tlt_openflagList"
             [options]="tlt_openflagOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.tlt_openflagList" [submitted]="submitted" />
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" startLabel="契約起始日"
-            endLabel="契約起始日" [startControl]="queryForm.controls.tlt_bdate_start"
-            [endControl]="queryForm.controls.tlt_bdate_end" [submitted]="submitted" />
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" startLabel="契約截止日"
-            endLabel="契約截止日" [startControl]="queryForm.controls.tlt_edate_start"
-            [endControl]="queryForm.controls.tlt_edate_end" [submitted]="submitted" />
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" startLabel="營運起始日"
-            endLabel="營運起始日" [startControl]="queryForm.controls.tlt_contract_bdate_start"
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="合約起始日"
+            [startControl]="queryForm.controls.tlt_bdate_start" [endControl]="queryForm.controls.tlt_bdate_end"
+            [submitted]="submitted" />
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="契約截止日"
+            [startControl]="queryForm.controls.tlt_edate_start" [endControl]="queryForm.controls.tlt_edate_end"
+            [submitted]="submitted" />
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="營運起始日"
+            [startControl]="queryForm.controls.tlt_contract_bdate_start"
             [endControl]="queryForm.controls.tlt_contract_bdate_end" [submitted]="submitted" />
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" startLabel="營運截止日"
-            endLabel="營運截止日" [startControl]="queryForm.controls.tlt_contract_edate_start"
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="營運截止日"
+            [startControl]="queryForm.controls.tlt_contract_edate_start"
             [endControl]="queryForm.controls.tlt_contract_edate_end" [submitted]="submitted" />
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="抽成別" controlName="tlt_term_type"
             [options]="tlt_term_typeOptions" optionLabel="label" optionValue="value"
@@ -68,7 +69,7 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="fin11030" dataKey="id" [data]="data" [columns]="columns" [showDelete]="false"
-    [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [totalRecords]="totalRecords" [showManage]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading" />
+  <app-table-report tableKey="fin11030" dataKey="id" [data]="data" [columns]="columns" [showDelete]="false"
+    [totalRecords]="totalRecords" [showManage]="false" [loading]="loading" [lastQueryBody]="historyRequestBody"
+    [queryFunction]="tLS13060Service.queryTLS13060.bind(tLS13060Service)" />
 </div>

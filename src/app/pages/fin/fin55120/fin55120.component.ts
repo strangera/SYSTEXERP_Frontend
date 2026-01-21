@@ -49,7 +49,7 @@ export class FIN55120Component extends BasicQueryPageComponent<FIN55120DetailIte
     { field: 'AccCName', header: '科目名稱', align: 'left' },
     { field: 'Balance', header: '金額', isSubTotal: true, format: formatAmount, align: 'right' },
     { field: 'BalanceTotal', header: '合計', isSubTotal: true, format: formatAmount, align: 'right' },
-    { field: 'Pct', header: '百分比', isSubTotal: true, format: (v) => v + '%', align: 'right' },
+    { field: 'Pct', header: '百分比', isSubTotal: true, format: (v) => v, align: 'right' },
   ];
   YM: Date | null = null;
 

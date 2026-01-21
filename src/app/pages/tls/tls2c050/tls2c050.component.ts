@@ -63,8 +63,11 @@ export class TLS2C050Component extends BasicQueryPageComponent<unknown> implemen
     this.handleSubmit(this.queryForm, () => {
       const date = this.queryForm.controls.cls_date.value;
       if (date) {
-        const dateStr = formatDateToYYYY_MM_DD(date); // 假設有轉換工具
+        const dateStr = formatDateToYYYY_MM_DD(date);
         if (dateStr) {
+          // --- 新增提示訊息 ---
+          this.messageService.infoBubble('執行轉檔中，請稍後...');
+
           this.executeApi(this.tls2c050Service.invoiceTLS2C050(dateStr));
         }
       }

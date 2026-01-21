@@ -1,7 +1,8 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button label="確定結算" icon="pi pi-plus" (click)="onSettle(queryForm)" [loading]="settleLoding"></app-button>
+    <app-button label="確定結算" icon="pi pi-plus" (click)="onSettle(queryForm)" [loading]="settleLoding"
+      [disabled]="!hasPermission(Actions.Settle)"></app-button>
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"

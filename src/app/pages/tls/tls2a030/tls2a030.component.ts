@@ -3,8 +3,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -40,7 +40,7 @@ interface SalesRecord {
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    CustomFooterTableComponent,
+    TableReportComponent,
     CalendarRangeQuickComponent,
     DropdownRangeComponent,
     ButtonComponent,
@@ -55,10 +55,12 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
     ECR_No: [null as string | null],
     ECR_No_Start: [null as string | null],
     ECR_No_End: [null as string | null],
-    ...createPaginationConfig([{ field: 'PAY_NO', order: 1 }])
+    ...createPaginationConfig([{ field: 'PAY_NO', order: 1 }]),
+    pageSize: [30]
   });
 
-  footerData: any[] = [];
+  footerData: any = null;
+  historyRequestBody: any;
   private skipAutoQueryOnce = false;
   data: SalesRecord[] = [];
   totalRecords = 0;
@@ -69,20 +71,20 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
 
   // 緩存完整資料，避免重複 API 呼叫
   private cachedFullData: any[] = [];
-  private cachedFooterData: any[] = [];
+  private cachedFooterData: any = null;
   private lastQueryParams = '';
   // 表格欄位
 
   columns: Column[] = [
     { field: 'PAY_NAME', header: '支付工具', visible: true },
-    { field: 'OVER_PayAmt', header: '實際溢欠總額 (A)', visible: true, format: formatAmount, isTotal: true, style: 'text-right' },
-    { field: 'PreAudit_OVER_PayAmt', header: '審核前溢欠總額 (B)', visible: true, format: formatAmount, isTotal: true, style: 'text-right' },
-    { field: 'Actual_ReceivedAmt', header: '實收總額 (C)', visible: true, format: formatAmount, isTotal: true, style: 'text-right' },
-    { field: 'BOOK_PayAmt', header: '系統帳 (D)', visible: true, format: formatAmount, isTotal: true, style: 'text-right' },
+    { field: 'OVER_PayAmt', header: '實際溢欠總額 (A)', visible: true, format: formatAmount, isTotal: true, align: 'right' },
+    { field: 'PreAudit_OVER_PayAmt', header: '審核前溢欠總額 (B)', visible: true, format: formatAmount, isTotal: true, align: 'right' },
+    { field: 'Actual_ReceivedAmt', header: '實收總額 (C)', visible: true, format: formatAmount, isTotal: true, align: 'right' },
+    { field: 'BOOK_PayAmt', header: '系統帳 (D)', visible: true, format: formatAmount, isTotal: true, align: 'right' },
     {
       field: 'Compare_CD',
       header: '(C) 與 (D) 比較',
-      htmlFormat: true,
+      type: 'html',
       format: (v: any) =>
         v === true || v === 'Y' || v === 'O'
           ? '<span class="circle">〇</span>'
@@ -92,7 +94,7 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
     {
       field: 'Compare_AB',
       header: '(A) 與 (B) 比較',
-      htmlFormat: true,
+      type: 'html',
       format: (v: any) =>
         v === true || v === 'Y' || v === 'O'
           ? '<span class="circle">〇</span>'
@@ -103,7 +105,7 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private ECRNoService: ECRNoService,
-    private tls2a030Service: TLS2A030Service,
+    public tls2a030Service: TLS2A030Service,
     private tls2c050Service: TLS2C050Service,
     private readonly datePipe: DatePipe
   ) {
@@ -207,12 +209,17 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
 
     this.data = structuredClone(pagedData.map((it: any) => ({
       ...it,
-      Compare_CD: it?.Compare_CD,
-      Compare_AB: it?.Compare_AB
+      Compare_CD: this.formatCompare(it?.Compare_CD),
+      Compare_AB: this.formatCompare(it?.Compare_AB)
     })));
 
-    this.footerData = [...this.cachedFooterData];
+    this.footerData = this.cachedFooterData;
     this.totalRecords = this.cachedFullData.length;
+  }
+  private formatCompare(v: any): string {
+    return v === true || v === 'Y' || v === 'O'
+      ? '<span class="circle">〇</span>'
+      : '<span class="cross">✖</span>';
   }
   private buildLockBody() {
     const raw = this.queryForm.getRawValue();
@@ -331,7 +338,7 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
 
   onSubmit(form: FormGroup): void {
     this.data = [];
-    this.footerData = [];
+    this.footerData = null;
 
     this.handleSubmit(form, () => {
       const raw = form.getRawValue();
@@ -362,6 +369,9 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
         ECR_No_End: payload.ECR_No_End
       });
 
+      // 保存最後查詢條件供 app-table-report 使用
+      this.historyRequestBody = payload;
+
       this.tls2a030Service.queryTLS2A030(payload).subscribe({
         next: (res) => {
           const main = res?.Data?.mainData ?? [];
@@ -381,8 +391,8 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
 
           this.data = structuredClone(pagedData.map((it: any) => ({
             ...it,
-            Compare_CD: it?.Compare_CD,
-            Compare_AB: it?.Compare_AB
+            Compare_CD: this.formatCompare(it?.Compare_CD),
+            Compare_AB: this.formatCompare(it?.Compare_AB)
           })));
 
           if (total) {
@@ -392,14 +402,15 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
               PreAudit_OVER_PayAmt: total.PreAudit_OVER_Total_PayAmt,
               Actual_ReceivedAmt: total.Actual_ReceivedAmt_Total,
               BOOK_PayAmt: total.BOOK_Total_PayAmt,
-              Compare_CD: '',
-              Compare_AB: ''
+              // 傳入原始後端值，讓欄位的 `format` 函式處理轉換
+              Compare_CD: total.Compare_CD_Total,
+              Compare_AB: total.Compare_AB_Total
             };
-            this.footerData = [footerRow];
-            this.cachedFooterData = [footerRow];
+            this.footerData = footerRow;
+            this.cachedFooterData = footerRow;
           } else {
-            this.footerData = [];
-            this.cachedFooterData = [];
+            this.footerData = null;
+            this.cachedFooterData = null;
           }
 
           // 設定總筆數為原始資料的長度

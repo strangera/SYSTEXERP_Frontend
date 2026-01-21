@@ -39,7 +39,7 @@ export class InputNumberComponent extends BasicKitComponent implements OnInit {
 
   // Primeng 相關屬性
   @Input() min: number | null = 0; // 最小值
-  @Input() max = 999999999999; // 最大值 (預設 12 位數整數)
+  @Input() max: number | null = 999999999999; // 最大值 (預設 12 位數整數)
   @Input() minFractionDigits = 0; // 最小小數位數
   @Input() maxFractionDigits = 0; // 最大小數位數
   @Input() useGrouping = true; // 是否使用千分位

@@ -112,6 +112,8 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     TXN_MemCard: ['', [Validators.maxLength(30), this.validationService.alphanumericValidator]], //會員編號，若有資料需要串接環友
     TXN_Uniform: ['', [Validators.maxLength(8)]], //客戶統一編號 可以為空
     TXN_Time: [null as Date | null], //銷售時段今日的時間
+    ORG_TXN_Date: [null as Date | null], //原交易日期
+    ORG_ECR_No: [null as string | null], //原收銀機台
     TXN_GUI_CarrType: [null as string | null], //電子載具種類=電子發票載具類別 悠遊載具卡=1K0001、手機條碼=3J0002、自然人憑證=CQ0001、一卡通載具=1H0001、信用卡載具=EK0002、#=取消載具
     TXN_GUIVehicle: [{ value: null, disabled: true }, [Validators.maxLength(20), guiVehicleValidator]], //電子發票載具卡號 若有值則 TXN_GUI_CarrType 固定為3J0002，TXN_GUI_CarrId與TXN_GUI_CarrIdEx內容與此欄位相同
     TXN_GUI_CarrIdEx: [{ value: null, disabled: true }, [Validators.maxLength(64)]], //電子發票載具ID顯碼
@@ -121,6 +123,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     TXN_GUI_Donate: ['N'], //發票捐贈狀態，Y=是、N=否
     TXN_GUILoveCode: [{ value: null, disabled: true }], //捐贈社福團體代碼，若TXN_GUI_Donate為Y，則必須輸入此欄位
   });
+  ECR_NoOptions = this.dropDown.queryPos1002();     //dropdown 下拉選單 收銀機號
   USR_NoOptions = this.dropDown.queryPos2001();     //dropdown 下拉選單 收銀員
   txnStatusOptions = txnStatusOptions               //dropdown 下拉選單 交易型態
   TXN_GUI_CarrTypeOptions = TXN_GUI_CarrTypeOptions;//dropdown 下拉選單 電子載具種類
@@ -154,6 +157,8 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         TXN_Date: this.queryData.TXN_Date,
         ECR_No: this.queryData.ECR_No,
         TLT_No: this.queryData.TLT_No,
+        ORG_ECR_No: this.queryData.ECR_No,
+        ORG_TXN_Date: this.queryData.TXN_Date,
       });
     }
     // 編輯時候
@@ -276,6 +281,8 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       // === 開始支付邏輯卡控 ===
       // 1. 計算銷售總金額 (TXN_SaleAmt 總計)
       const totalSaleAmt = pos5007Data.reduce((sum, item) => sum + (Number(item.TXN_SaleAmt) || 0), 0);
+      // 支付總額與銷售總額比對
+      const totalPayAmt = pos5008Data.reduce((sum, item) => sum + (Number(item.TXN_PayAmt) || 0), 0);
       // ==========================================================
       // 【新增邏輯：檢查銷售總金額是否超過最大位數限制 (10 位)】
       // ==========================================================
@@ -294,6 +301,43 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
           '金額超出限制'
         );
       }
+      // 先處理日期格式以便比較
+      let finalStatus = 'N'; // 預設為一般交易
+      if (totalSaleAmt < 0) {
+        const currentTxnDate = this.datePipe.transform(this.dataForm.getRawValue().TXN_Date, 'yyyy-MM-dd');
+        const orgTxnDate = this.datePipe.transform(this.dataForm.getRawValue().ORG_TXN_Date, 'yyyy-MM-dd');
+        finalStatus = (orgTxnDate === currentTxnDate) ? 'D' : 'E';
+      } else if (totalSaleAmt === 0) {
+        // 視業務需求，總額為 0 是否允許？通常建議擋掉
+        this.messageService.errorBubble('銷售總額不可為 0', '金額檢核失敗');
+        this.loading = false;
+        return;
+      }
+      // 2. 金額檢核
+      // 一般交易 (N) 允許溢收嗎？若不允許，則不分狀態都要檢查 totalSaleAmt === totalPayAmt
+      // 您的原本邏輯是 finalStatus !== 'N' 才檢查，
+      // 但「一般交易」通常也要求 銷售總額 == 支付總額。
+      // 修改後的邏輯
+      const diff = totalPayAmt - totalSaleAmt;
+      if (totalSaleAmt > 0) {
+        // 一般交易：支付金額不可少於銷售金額
+        if (diff < -0.001) {
+          this.loading = false;
+          return this.messageService.errorBubble(
+            `支付總額 (${totalPayAmt}) 不足，尚差 ${Math.abs(diff).toFixed(2)} 元。`,
+            '金額檢核失敗'
+          );
+        }
+      } else {
+        // 退貨或負數交易：必須完全相等
+        if (Math.abs(diff) > 0.001) {
+          this.loading = false;
+          return this.messageService.errorBubble(
+            `退款總額 (${totalPayAmt}) 與原始金額 (${totalSaleAmt}) 不符。`,
+            '金額檢核失敗'
+          );
+        }
+      }
       // === 支付邏輯卡控結束，如果成功則繼續執行 confirm ===
       this.messageService.confirm({
         header: '確認',
@@ -305,11 +349,13 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
             ...frm.getRawValue(),
             TXN_GUIRemark: this.rece_yn === 'Y' ? frm.getRawValue().TXN_GUIRemark : '',
             TXN_Date: this.datePipe.transform(this.dataForm.getRawValue().TXN_Date, 'yyyy-MM-dd'),
+            ORG_TXN_Date: this.datePipe.transform(this.dataForm.getRawValue().ORG_TXN_Date, 'yyyy-MM-dd'),
             GUI_Track: frm.getRawValue().GUI_Track || '00',
             TXN_GUIBegNo: frm.getRawValue().TXN_GUIBegNo || '00000000',
             TXN_GUIEndNo: frm.getRawValue().TXN_GUIEndNo || '00000000',
             TXN_No: this.isFormCreateable ? undefined : frm.getRawValue().TXN_No,
             TXN_Time: frm.getRawValue().TXN_Time ? formatTimeToHHMMSS(frm.getRawValue().TXN_Time) : '00:00:00',
+            TXN_Status: finalStatus,
             POS5007_INFO: pos5007Data.map((item) => {
               if (typeof item.PLU_MagNo === 'object' && item.PLU_MagNo !== null) {
                 return {
@@ -555,6 +601,20 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
 
     // 年度或期數不同即為跨期
     return orgYear !== voidYear || orgPeriod !== voidPeriod;
+  }
+  onProductTotalChange(total: number) {
+    const controls = this.dataForm.controls;
+    const isNegative = total < 0;
+
+    if (isNegative) {
+      controls.ORG_TXN_Date.setValidators([Validators.required]);
+      controls.ORG_ECR_No.setValidators([Validators.required]);
+    } else {
+      controls.ORG_TXN_Date.clearValidators();
+      controls.ORG_ECR_No.clearValidators();
+    }
+    controls.ORG_TXN_Date.updateValueAndValidity();
+    controls.ORG_ECR_No.updateValueAndValidity();
   }
 }
 

@@ -1,7 +1,8 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button label="結算" icon="pi pi-plus" (click)="onSettle(queryForm)" [loading]="loading"></app-button>
+    <app-button label="結算" icon="pi pi-plus" (click)="onSettle(queryForm)" [loading]="loading"
+      [disabled]="!hasPermission(Actions.Settle)"></app-button>
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
@@ -33,8 +34,8 @@
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
-          <app-button label="租金結算鎖定" icon="pi pi-lock" [loading]="loading"
-            (clickEvent)="onLock(queryForm)"></app-button>
+          <app-button label="租金結算鎖定" icon="pi pi-lock" [loading]="loading" (clickEvent)="onLock(queryForm)"
+            [disabled]="!hasPermission(Actions.Lock)"></app-button>
         </div>
       </form>
     </p-accordionTab>

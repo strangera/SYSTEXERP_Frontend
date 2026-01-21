@@ -85,7 +85,9 @@
         </span>
 
         <span *ngIf="col.field === 'Pct'" class="font-bold text-blue-600">
-          {{ calculateClassPctTotal(data, rowIndex) | number:'1.2-2' }}%
+          <ng-container *ngIf="calculateClassPctTotal(data, rowIndex) !== null">
+            {{ calculateClassPctTotal(data, rowIndex) | number:'1.2-2' }}
+          </ng-container>
         </span>
       </td>
     </tr>
