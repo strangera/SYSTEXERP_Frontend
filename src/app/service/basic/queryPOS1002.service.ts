@@ -20,7 +20,7 @@ export class ECRNoService {
         (response?.Data ?? []).map((item: any) => ({
           value: item.No,
           // 顯示「編號-名稱」
-          label: `${item.No}-${item.Name}`
+          label: `${item.No} - ${item.Name}`
         }))
       ),
     );

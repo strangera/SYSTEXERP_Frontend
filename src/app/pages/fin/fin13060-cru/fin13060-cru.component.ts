@@ -2,10 +2,13 @@
 import { NgIf } from '@angular/common';
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import {
+  AbstractControl,
   FormControl,
   FormGroup,
   FormsModule,
   ReactiveFormsModule,
+  ValidationErrors,
+  ValidatorFn,
   Validators,
 } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -24,6 +27,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
@@ -76,6 +80,7 @@ interface Fin13060CruForm {
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
+    InputNumberComponent,
     DropdownComponent,
     NgIf,
     TranslateModule,
@@ -103,6 +108,28 @@ export class FIN13060CRUComponent
   System_IDOptions: any[] = [];
   TXN_GUIPaperOptions: any[] = [];
   INV_GUITypeOptions: any[] = [];
+
+  /** 申報年月驗證器：接受 Date 或 'YYYYMM' 字串，檢查偶數月 */
+  private declareYMValidator(): ValidatorFn {
+    return (ctrl: AbstractControl): ValidationErrors | null => {
+      const v = ctrl.value;
+      if (v == null || v === '') return null; // required 會處理
+
+      let m: number;
+
+      if (v instanceof Date && !isNaN(v.getTime())) {
+        m = v.getMonth() + 1;
+      } else {
+        const s = String(v).trim();
+        if (!/^\d{6}$/.test(s)) return { invalidDate2: true };
+        m = Number(s.slice(4, 6));
+      }
+
+      if (m < 1 || m > 12) return { invalidDate2: true };
+      if (m % 2 !== 0) return { invalidEvenMonth: true };
+      return null;
+    };
+  }
 
   /** 轉成 'YYYYMM'（可吃 Date 或字串 'YYYY/MM'、'YYYYMM'）*/
   private toYYYYMM(v: any): string | null {
@@ -165,19 +192,10 @@ export class FIN13060CRUComponent
       ]
     ),
 
-    // 申報年月（偶數月）
+    // 申報年月（偶數月）- 使用支援 YYYYMM 字串的驗證器
     INV_DeclareYM: new FormControl<string | null>(null, [
       Validators.required,
-      // 這兩個 validator 內部也是用字串做判斷
-      // (原本你也是給在 year-month 上用的)
-      // @ts-ignore
-      (control) => (this.validationService?.evenMonthValidator
-        ? this.validationService.evenMonthValidator(control)
-        : null),
-      // @ts-ignore
-      (control) => (this.validationService?.minMonthValidator
-        ? this.validationService.minMonthValidator(control)
-        : null),
+      this.declareYMValidator(),
     ]),
 
     // 金額欄位加 maxLength(10)
@@ -274,8 +292,8 @@ export class FIN13060CRUComponent
       }));
     });
 
-    // 系統別（T205）
-    this.fin13050Service.querySYS1000DropDownList('T205').subscribe((res) => {
+    // 系統別（SYS_ORGG）
+    this.fin13050Service.querySYS1000DropDownList('SYS_ORIGIN').subscribe((res) => {
       const list = res?.Data ?? [];
       this.SAL_TypeOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
     });
@@ -295,7 +313,173 @@ export class FIN13060CRUComponent
     // 即時輸入限制（字軌/號碼/憑證）
     this.setupInputMasks();
 
+    // 設定稅額計算邏輯
+    this.setupTaxCalculation();
+
+    // 設定發票日期自動帶入發票年月
+    this.setupInvoiceDateToYM();
+
+    // 新增模式：申報年月預設帶入系統年月（偶數月）
+    if (this.crudstatus === CRUDStatus.Create) {
+      this.setDefaultDeclareYM();
+    }
+
     this.updateDisabledState();
+  }
+
+  /** 申報年月預設帶入系統年月（偶數月） */
+  private setDefaultDeclareYM(): void {
+    const now = new Date();
+    let year = now.getFullYear();
+    let month = now.getMonth() + 1; // 1-12
+
+    // 如果是奇數月，調整為當月+1（偶數月）
+    if (month % 2 !== 0) {
+      month += 1;
+      if (month > 12) {
+        month = 2; // 跨年，變成下一年的2月
+        year += 1;
+      }
+    }
+
+    const yyyymm = `${year}${String(month).padStart(2, '0')}`;
+    this.dataForm.controls.INV_DeclareYM.setValue(yyyymm, { emitEvent: false });
+  }
+
+  // 避免金額計算循環觸發的標誌位
+  private updatingFromNet = false;
+  private updatingFromSaleAmt = false;
+
+  /**
+   * 設定稅額計算邏輯（比照 fin13050）
+   * - 0-免稅：稅額 = 0，未稅金額 = 總金額，稅額 disable
+   * - 1-應稅：稅額 = 未稅金額 × 0.05，總金額 = 未稅金額 + 稅額，稅額 disable
+   */
+  private setupTaxCalculation(): void {
+    const netCtrl = this.dataForm.controls.TXN_Net;       // 發票未稅金額
+    const saleAmtCtrl = this.dataForm.controls.TXN_SaleAmt; // 發票總金額
+    const taxCtrl = this.dataForm.controls.TXN_Tax;       // 稅額
+
+    // 監聽課稅別變化
+    this.dataForm.controls.PLU_TaxType.valueChanges.subscribe(() => {
+      this.recalculateTax();
+    });
+
+    // 監聽未稅金額變化
+    netCtrl.valueChanges.subscribe((value) => {
+      if (this.updatingFromSaleAmt) return;
+      this.updatingFromNet = true;
+
+      const taxType = this.dataForm.controls.PLU_TaxType.value;
+
+      if (value === null || value === undefined || String(value) === '') {
+        taxCtrl.setValue(null, { emitEvent: false });
+        saleAmtCtrl.setValue(null, { emitEvent: false });
+        this.updatingFromNet = false;
+        return;
+      }
+
+      const netVal = Math.round(Number(value) || 0);
+
+      if (taxType === '1') {
+        // 應稅：稅額 = 未稅金額 × 0.05，總金額 = 未稅金額 + 稅額
+        const taxVal = Math.round(netVal * 0.05);
+        const totalVal = netVal + taxVal;
+        taxCtrl.setValue(taxVal, { emitEvent: false });
+        saleAmtCtrl.setValue(totalVal, { emitEvent: false });
+      } else if (taxType === '0') {
+        // 免稅：稅額 = 0，總金額 = 未稅金額
+        taxCtrl.setValue(0, { emitEvent: false });
+        saleAmtCtrl.setValue(netVal, { emitEvent: false });
+      }
+
+      this.updatingFromNet = false;
+    });
+
+    // 監聽總金額變化
+    saleAmtCtrl.valueChanges.subscribe((value) => {
+      if (this.updatingFromNet) return;
+      this.updatingFromSaleAmt = true;
+
+      const taxType = this.dataForm.controls.PLU_TaxType.value;
+
+      if (value === null || value === undefined || String(value) === '') {
+        netCtrl.setValue(null, { emitEvent: false });
+        taxCtrl.setValue(null, { emitEvent: false });
+        this.updatingFromSaleAmt = false;
+        return;
+      }
+
+      const totalVal = Math.round(Number(value) || 0);
+
+      if (taxType === '1') {
+        // 應稅：未稅金額 = 總金額 / 1.05，稅額 = 總金額 - 未稅金額
+        const netVal = Math.round(totalVal / 1.05);
+        const taxVal = totalVal - netVal;
+        netCtrl.setValue(netVal, { emitEvent: false });
+        taxCtrl.setValue(taxVal, { emitEvent: false });
+      } else if (taxType === '0') {
+        // 免稅：未稅金額 = 總金額，稅額 = 0
+        netCtrl.setValue(totalVal, { emitEvent: false });
+        taxCtrl.setValue(0, { emitEvent: false });
+      }
+
+      this.updatingFromSaleAmt = false;
+    });
+  }
+
+  /** 根據課稅別重新計算稅額 */
+  private recalculateTax(): void {
+    const taxType = this.dataForm.controls.PLU_TaxType.value;
+    const netCtrl = this.dataForm.controls.TXN_Net;
+    const saleAmtCtrl = this.dataForm.controls.TXN_SaleAmt;
+    const taxCtrl = this.dataForm.controls.TXN_Tax;
+
+    // 0-免稅, 1-應稅
+    const isTaxable = taxType === '1';
+    const isTaxFree = taxType === '0';
+
+    if (isTaxFree) {
+      // 免稅：稅額 = 0，未稅金額 = 總金額
+      taxCtrl.setValue(0, { emitEvent: false });
+      taxCtrl.disable({ emitEvent: false });
+      // 同步未稅金額與總金額
+      const saleAmt = saleAmtCtrl.value ?? 0;
+      if (saleAmt) {
+        netCtrl.setValue(saleAmt, { emitEvent: false });
+      }
+    } else if (isTaxable) {
+      // 應稅：稅額自動計算，稅額 disable
+      taxCtrl.disable({ emitEvent: false });
+      // 如果已有未稅金額，重新計算
+      const netVal = Number(netCtrl.value) || 0;
+      if (netVal > 0) {
+        const taxVal = Math.round(netVal * 0.05);
+        const totalVal = netVal + taxVal;
+        taxCtrl.setValue(taxVal, { emitEvent: false });
+        saleAmtCtrl.setValue(totalVal, { emitEvent: false });
+      }
+    } else {
+      // 其他情況，稅額可編輯
+      taxCtrl.enable({ emitEvent: false });
+    }
+  }
+
+  /** 設定發票日期變化時自動帶入發票年月 */
+  private setupInvoiceDateToYM(): void {
+    this.dataForm.controls.TXN_Date.valueChanges.subscribe((dateValue) => {
+      if (!dateValue) {
+        // 需要 emitEvent: true 讓 YearMonthComponent 收到通知
+        this.dataForm.controls.INV_YM.setValue(null);
+        return;
+      }
+
+      const yyyymm = this.toYYYYMM(dateValue);
+      if (yyyymm) {
+        // 需要 emitEvent: true 讓 YearMonthComponent 收到通知
+        this.dataForm.controls.INV_YM.setValue(yyyymm);
+      }
+    });
   }
 
   private setupInputMasks(): void {
