@@ -16,7 +16,9 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { createPaginationConfig } from '@shared/componentkit/table2/table2.model';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarModule } from 'primeng/calendar';
-import { Column, formatAmount } from 'src/app/shared/componentkit/table/table.model';
+import { map } from 'rxjs/operators';
+import { AddButton, Column, formatAmount } from 'src/app/shared/componentkit/table/table.model';
+import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -49,6 +51,14 @@ import { YearMonthComponent } from '../fin11020/query-year-month/query-year-mont
   ],
 })
 export class FIN13040Component extends BasicQueryPageComponent<any> implements OnInit {
+  public readonly addButton: AddButton[] = [
+    {
+      label: '列印',
+      icon: 'pi pi-file-pdf',
+      action: (rowData: any) => this.onPrint(rowData),
+      disabled: (rowData: any) => !this.hasPermission(this.Actions.Query),
+    },
+  ];
   /**
    * 取得當前或下一個雙數月的日期物件
    */
@@ -66,6 +76,18 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
     // 設定為該月1日
     return new Date(year, month - 1, 1);
   }
+
+  // wrapper for table-report's queryFunction shape
+  queryFn = (body: any) => {
+    return this.fin13040Service.queryFIN13040(body).pipe(
+      map((res: any) => ({ Data: res?.Data?.Data ?? [], TotalCount: res?.Data?.TotalCount ?? 0 }))
+    );
+  };
+
+  // Disable edit button for rows with InvoiceType === '35'
+  editDisabled = (rowData: any) => {
+    return rowData?.InvoiceType === '35';
+  };
 
   queryForm = this.formBuilder.group({
     InvoiceType: [[]],
@@ -92,6 +114,7 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
   });
   data: any[] = [];
   totalRecords = 0;
+  lastQueryBody: any | null = null;
   footerData: any = {};
   InvoiceType_Options: { label: string; value: string }[] = [];
   SAL_Type_Options = getSYS1000Options('SAL_Type');
@@ -105,9 +128,9 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
     { field: 'INV_DeclareYM', header: '申報年月', visible: true },
     { field: 'Buyer_Uniform', header: '買受人統一編號', visible: true },
     { field: 'PUR_TaxType', header: '課稅別', visible: true },
-    { field: 'PUR_Net', header: '未稅金額', visible: true, format: formatAmount },
-    { field: 'PUR_Tax', header: '稅額', visible: true, format: formatAmount },
-    { field: 'PUR_Amt', header: '總金額', visible: true, format: formatAmount },
+    { field: 'PUR_Net', header: '未稅金額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'PUR_Tax', header: '稅額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'PUR_Amt', header: '總金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'Voucher_No', header: '傳票編號', visible: true },
     { field: 'AssetType', header: '資產註記', visible: true },
     { field: 'SAL_Type', header: '使用別', visible: true },
@@ -175,12 +198,12 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
         next: (res) => {
           const allowed = ['31', '32', '35'];
           const data = res?.Data?.INV_GUITypes ?? [];
-          this.InvoiceType_Options = data
-            .filter((x: any) => allowed.includes(x.INV_GUIType))
-            .map((x: any) => ({
-              label: `${x.INV_GUIType} - ${x.INV_GUIName}`,
-              value: x.INV_GUIType,
-            }));
+          const filtered = data.filter((x: any) => allowed.includes(x.INV_GUIType));
+          filtered.sort((a: any, b: any) => Number(a.INV_GUIType) - Number(b.INV_GUIType));
+          this.InvoiceType_Options = filtered.map((x: any) => ({
+            label: `${x.INV_GUIType} - ${x.INV_GUIName}`,
+            value: x.INV_GUIType,
+          }));
         },
 
       });
@@ -211,6 +234,7 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
         .pipe(untilDestroyed(this))
         .subscribe({
           next: (res) => {
+            this.lastQueryBody = payload;
             this.data = res?.Data?.Data ?? [];
             this.totalRecords = res?.Data?.TotalCount ?? 0;
             this.footerData = {};
@@ -222,6 +246,54 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
           },
           complete: () => (this.loading = false),
         });
+    });
+  }
+
+  onPrint(row: any): void {
+    if (!row || !row.ID) return;
+
+    const payload = {
+      PageSize: 0,
+      PageIndex: 0,
+      OrderBy: '',
+      Offset: 0,
+      SortBy: [],
+      MID: 0,
+      STO_No: '10',
+      ID: row.ID,
+    };
+
+    this.fin13040Service.printFIN13040(payload).pipe(untilDestroyed(this)).subscribe({
+      next: async (res: any) => {
+        const contentType = res.headers?.get('Content-Type') || '';
+        const blob = res.body;
+
+        if (contentType.includes('application/json')) {
+          const text = await blob.text();
+          try {
+            const json = JSON.parse(text);
+            if (json?.Status === '0000' && json?.Data?.Print_URL) {
+              const url = `${environment.ApiUrl.replace(/\/$/, '')}${json.Data.Print_URL}`;
+              const filename = decodeURIComponent(json.Data.Print_URL.split('/').pop() ?? 'report.pdf');
+              const a = document.createElement('a');
+              a.href = url;
+              a.setAttribute('download', filename);
+              a.click();
+            }
+          } catch (e) {
+            console.error('解析 JSON 失敗', e);
+          }
+          return;
+        }
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+        a.download = `${row.InvoiceNumber ?? 'report'}.pdf`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      },
+      error: () => {
+        this.messageService.errorBubble('列印失敗');
+      },
     });
   }
 
