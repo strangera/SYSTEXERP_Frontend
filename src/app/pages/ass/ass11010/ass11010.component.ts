@@ -1,11 +1,11 @@
 import { Component, computed, OnInit, signal } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS11010Service } from '@service/api/ass/ass11010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
@@ -25,7 +25,7 @@ import { ASS11010Data, ASS11010QueryRequest } from './ass11010.model';
     ReactiveFormsModule,
     TranslateModule,
     ButtonComponent,
-    InputTextComponent,
+    DropdownComponent,
     MenubarComponent,
     TableComponent,
   ],
@@ -33,14 +33,16 @@ import { ASS11010Data, ASS11010QueryRequest } from './ass11010.model';
 export class ASS11010Component extends BasicQueryPageComponent<ASS11010Data> implements OnInit {
 
   public readonly queryForm = this.formBuilder.group({
-    CLASS_ID: new FormControl<string | null>(null, [Validators.maxLength(1)]),   // 大分類代碼
-    Keyword: new FormControl<string | null>(null, [Validators.maxLength(32)]),   // 大分類名稱
+    CLASS_ID: new FormControl<string | null>(null),   // 大分類代碼
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
   public readonly tableData = signal<ASS11010Data[]>([]);
   public readonly totalRecords = signal<number>(0);
   public readonly tableLoading = signal<boolean>(false);
+
+  // 大分類代碼/名稱下拉選項
+  public readonly bigClassOptions = signal<{ label: string; value: string }[]>([]);
 
   public readonly columns: (Omit<Column, 'field'> & { field: keyof ASS11010Data })[] = [
     { field: 'CLASS_ID', header: '大分類代碼' },
@@ -57,6 +59,23 @@ export class ASS11010Component extends BasicQueryPageComponent<ASS11010Data> imp
   ngOnInit(): void {
     this.initializePage('ASS11010', '/ASS/ASS11010CRU', this.queryForm, this.onSubmit.bind(this));
     this.logger.debug(`ASS11010 init:`, [this.queryForm]);
+    this.loadBigClassOptions();
+  }
+
+  /**
+   * 載入大分類下拉選項
+   */
+  private loadBigClassOptions(): void {
+    this.service.queryASS11010({}).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.QueryData.map(item => ({
+          label: `${item.CLASS_ID} - ${item.CLASS_NAME}`,
+          value: item.CLASS_ID,
+        }));
+        this.bigClassOptions.set(options);
+      },
+    });
   }
 
   public onSubmit(): void {

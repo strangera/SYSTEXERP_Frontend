@@ -42,8 +42,6 @@ export class ASS11020CRUComponent extends BasicCruPageComponent<ASS11020Data> im
     CLASS_NAME: new FormControl<string>('', [Validators.required, Validators.maxLength(32)]),
     /** 大分類代碼 */
     B_CLASS_ID: new FormControl<string>('', [Validators.required]),
-    /** 大分類名稱 */
-    B_CLASS_NAME: new FormControl<string>(''),
     /** 說明 */
     NOTES: new FormControl<string>(''),
   });
@@ -51,8 +49,8 @@ export class ASS11020CRUComponent extends BasicCruPageComponent<ASS11020Data> im
 
   public readonly tableLoading = signal<boolean>(false);
 
-  // 大分類代碼下拉選項
-  public readonly bigClassOptions = signal<{ label: string; value: string; name: string }[]>([]);
+  // 大分類代碼/名稱下拉選項
+  public readonly bigClassOptions = signal<{ label: string; value: string }[]>([]);
 
   constructor(
     public readonly service: ASS11020Service,
@@ -73,13 +71,11 @@ export class ASS11020CRUComponent extends BasicCruPageComponent<ASS11020Data> im
         CLASS_ID: this.rowdata.M_CLASS_ID ?? '',
         CLASS_NAME: this.rowdata.M_CLASS_NAME ?? '',
         B_CLASS_ID: this.rowdata.B_CLASS_ID ?? '',
-        B_CLASS_NAME: this.rowdata.B_CLASS_NAME ?? '',
         NOTES: this.rowdata.NOTES ?? '',
       });
     }
 
     this.loadBigClassOptions();
-    this.setupBigClassNameSync();
   }
 
   /**
@@ -90,37 +86,12 @@ export class ASS11020CRUComponent extends BasicCruPageComponent<ASS11020Data> im
       next: res => {
         if (res.Status !== '0000') return;
         const options = res.Data.QueryData.map(item => ({
-          label: `${item.CLASS_ID}/${item.CLASS_NAME}`,
+          label: `${item.CLASS_ID} - ${item.CLASS_NAME}`,
           value: item.CLASS_ID,
-          name: item.CLASS_NAME,
         }));
         this.bigClassOptions.set(options);
-
-        // 如果是編輯或檢視模式，同步大分類名稱
-        if (this.rowdata?.B_CLASS_ID) {
-          this.syncBigClassName(this.rowdata.B_CLASS_ID);
-        }
       },
     });
-  }
-
-  /**
-   * 設定大分類代碼變更時自動同步大分類名稱
-   */
-  private setupBigClassNameSync(): void {
-    this.dataForm.controls.B_CLASS_ID.valueChanges.subscribe(value => {
-      if (value) {
-        this.syncBigClassName(value);
-      }
-    });
-  }
-
-  /**
-   * 同步大分類名稱
-   */
-  private syncBigClassName(classId: string): void {
-    const selectedOption = this.bigClassOptions().find(opt => opt.value === classId);
-    this.dataForm.controls.B_CLASS_NAME.setValue(selectedOption?.name ?? '');
   }
 
   public onSubmit(): void {
