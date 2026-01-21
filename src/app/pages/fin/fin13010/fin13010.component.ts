@@ -61,7 +61,7 @@ PUR_VoucherTypeOptions: any[] = [
     PUR_GUIDateStart: [null],                            // 領用日期(起)
     PUR_GUIDateEnd: [null],                              // 領用日期(迄)
     PUR_VoucherType: [null],                             // 發票狀態
-    PUR_RepYYYYMM: [null],                               // 發票年月
+    PUR_RepYYYYMM: [null as (string | null)],                           // 發票年月
     Source_Doc_NoStart: [null, [Validators.maxLength(16)]], // 憑證單號(起)
     Source_Doc_NoEnd: [null, [Validators.maxLength(16)]],   // 憑證單號(迄)
     Voucher_NoStart: [null, [Validators.maxLength(16)]],    // 發票起始號碼
@@ -186,17 +186,49 @@ PUR_VoucherTypeOptions: any[] = [
 
   /* ----------------- Init：加上還原條件 ----------------- */
 
-  ngOnInit(): void {
-    this.initializePage('FIN13010', '/FIN/FIN13010CRU', this.queryForm);
+ngOnInit(): void {
+  this.initializePage('FIN13010', '/FIN/FIN13010CRU', this.queryForm);
 
-    // 還原上一筆查詢條件
-    const saved = this.queryStateService.getQueryStateValue(this.ProgNo);
-    if (saved) {
-      this.queryForm.patchValue(saved, { emitEvent: false });
-      // 自動再查一次
-      this.onSubmit(this.queryForm);
-    }
+  // 還原上一筆查詢條件
+  const saved = this.queryStateService.getQueryStateValue(this.ProgNo);
+  if (saved) {
+    this.queryForm.patchValue(saved, { emitEvent: false });
+    // 自動再查一次
+    this.onSubmit(this.queryForm);
+  } else {
+    // ✅ 沒有還原條件時，依「今天日期」自動帶申報年月
+    this.setDefaultRepYYYYMMByToday();
   }
+}
+private setDefaultRepYYYYMMByToday(): void {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1; // 1~12
+
+  // 計算本月屬於哪一個「雙月期間」：用偶數月代表
+  // 1,2  -> 2
+  // 3,4  -> 4
+  // 5,6  -> 6
+  // 7,8  -> 8
+  // 9,10 -> 10
+  // 11,12-> 12
+  let evenMonth = month % 2 === 0 ? month : month + 1;
+  if (evenMonth > 12) {
+    evenMonth = 12; // 理論上只有 11 會 +1 到 12，其實不會超過 12，但保險一下
+  }
+
+  const repYYYYMM = `${year}${String(evenMonth).padStart(2, '0')}`;
+
+  // ✅ 把算出來的 YYYYMM 塞回 form，YearMonthComponent 會自動拆成年+月選項
+  this.queryForm.patchValue(
+    {
+      PUR_RepYYYYMM: repYYYYMM,
+    },
+    { emitEvent: false }
+  );
+}
+
+
 
   /* ----------------- 查詢 ----------------- */
 
