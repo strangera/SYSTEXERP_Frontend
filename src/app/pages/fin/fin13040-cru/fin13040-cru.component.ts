@@ -432,31 +432,13 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     this.columns = [
       {
         field: 'PLU_No',
-        header: '貨號',
-        type: 'dropdown',
-        options: () => this.INV_ItemName_Options,
-        optionLabel: 'label',
-        optionValue: 'INV_ItemNo',
-        validate: [
-          (value: any) => ({
-            isValid: !!value,
-            errorMessage: ['請選擇貨號']
-          })
-        ],
-        calculate: (rowData, value) => {
-          const selected = this.INV_ItemName_Options.find(opt => opt.INV_ItemNo === value);
-          return selected ? { PLU_Name: selected.INV_ItemName } : {};
-        },
-      },
-      {
-        field: 'PLU_Name',
         header: '品名',
         type: 'dropdown',
-        options: () =>
-          this.INV_ItemName_Options.map(opt => ({
-            label: opt.INV_ItemName,
-            value: opt.INV_ItemName,
-          })),
+        options: () => this.INV_ItemName_Options.map(opt => ({
+          label: `${opt.INV_ItemNo} - ${opt.INV_ItemName}`,
+          value: opt.INV_ItemNo,
+          INV_ItemName: opt.INV_ItemName,
+        })),
         optionLabel: 'label',
         optionValue: 'value',
         validate: [
@@ -466,8 +448,8 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
           })
         ],
         calculate: (rowData, value) => {
-          const selected = this.INV_ItemName_Options.find(opt => opt.INV_ItemName === value);
-          return selected ? { PLU_No: selected.INV_ItemNo } : {};
+          const selected = this.INV_ItemName_Options.find(opt => opt.INV_ItemNo === value);
+          return selected ? { PLU_Name: selected.INV_ItemName } : {};
         },
       },
       {
