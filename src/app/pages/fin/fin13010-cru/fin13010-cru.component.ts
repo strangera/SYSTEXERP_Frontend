@@ -110,57 +110,51 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   ngOnInit(): void {
-    this.initializePage('FIN13010', this.dataForm);
+  // 先讓 BasicCruPageComponent 幫你把後端資料 patch 進 dataForm（含 PUR_RepYYYYMM = "202602"）
+  this.initializePage('FIN13010', this.dataForm);
 
-    // ⭐ 編輯 / 檢視模式：把後端的 PUR_RepYYYYMM 轉成 "YYYY/MM" 給 YearMonthComponent，
-    //   同時依目前 GUI_Track + PUR_GUINo 先載一次 APS 資料。
-    if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
-      const raw = this.dataForm.get('PUR_RepYYYYMM')?.value;
-      const normalized = this.normalizeYYYYMMForControl(raw); // 202602 -> 2026/02
-      if (normalized) {
-        this.dataForm.patchValue(
-          { PUR_RepYYYYMM: normalized },
-          { emitEvent: false },
-        );
-      }
-
-      // 一進編輯畫面就先載入 APS 對應資料（發票日期、金額、剩餘總金額⋯）
-      this.loadInvoiceInfoByCurrentGUINo();
-    }
-
-    this.updateDisabledState();
-    this.setupTrackNoWatcher();
-    this.setupGuiNoAndCorrespondWatcher();
-    this.setupAmountRelations();
-
-    // 固定禁用欄位...
-    this.dataForm.get('TXN_Ret_No')?.disable();
-    this.dataForm.get('PUR_VoucherType')?.disable();
-    this.dataForm.get('PUR_TaxType')?.disable();
-    this.dataForm.get('Inv_Tax')?.disable();
-    this.dataForm.get('Inv_Net')?.disable();
-    this.dataForm.get('Inv_Date')?.disable();
-    this.dataForm.get('Total_hitory_PUR_Amt')?.disable();
-    this.dataForm.get('Total_Amt')?.disable();
-    this.dataForm.get('PUR_Tax')?.disable();
-    this.dataForm.get('Credit_Type')?.disable();
-    this.dataForm.get('Voucher_No')?.disable();
-
-    // Create 模式：預設今天 + 當年月（YearMonthComponent 期待的是 "YYYY/MM"）
-    if (this.crudstatus === CRUDStatus.Create) {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-
-      this.dataForm.patchValue(
-        {
-          PUR_GUIDate: today,
-          PUR_RepYYYYMM: `${year}/${month}`, // 給 YearMonthComponent 顯示 2026 + 02
-        },
-        { emitEvent: false },
-      );
-    }
+  // ⭐ 編輯 / 檢視模式：
+  // 一進畫面就先依目前 GUI_Track + PUR_GUINo 撈 APS 資料
+  // （發票日期、銷售額、稅額、原始剩餘總金額等）
+  if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
+    this.loadInvoiceInfoByCurrentGUINo();
   }
+
+  // 共用初始化
+  this.updateDisabledState();
+  this.setupTrackNoWatcher();
+  this.setupGuiNoAndCorrespondWatcher();
+  this.setupAmountRelations();
+
+  // 固定禁用欄位（保險再鎖一次）
+  this.dataForm.get('TXN_Ret_No')?.disable();
+  this.dataForm.get('PUR_VoucherType')?.disable();
+  this.dataForm.get('PUR_TaxType')?.disable();
+  this.dataForm.get('Inv_Tax')?.disable();
+  this.dataForm.get('Inv_Net')?.disable();
+  this.dataForm.get('Inv_Date')?.disable();
+  this.dataForm.get('Total_hitory_PUR_Amt')?.disable();
+  this.dataForm.get('Total_Amt')?.disable();
+  this.dataForm.get('PUR_Tax')?.disable();
+  this.dataForm.get('Credit_Type')?.disable();
+  this.dataForm.get('Voucher_No')?.disable();
+
+  // Create 模式：預設今天 + 當年月（✅ 這裡用 YYYYMM 給 YearMonthComponent 的 control）
+  if (this.crudstatus === CRUDStatus.Create) {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+
+    this.dataForm.patchValue(
+      {
+        PUR_GUIDate: today,
+        PUR_RepYYYYMM: `${year}${month}`, // 例如 202602
+      },
+      { emitEvent: false },
+    );
+  }
+}
+
 
   /* ----------------- 共用：依 GUI_Track + PUR_GUINo 撈 APS2002 對應資料 ----------------- */
 
