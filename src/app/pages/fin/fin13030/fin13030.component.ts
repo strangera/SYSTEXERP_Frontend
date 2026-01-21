@@ -4,6 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { finalize } from 'rxjs';
 
 // Service imports
+import { formatAmount, formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
 import { FIN13030Data, FIN13030GetZeroTaxGUIRequest, FIN13030QueryRequest, FIN13030Service } from '../../../service/api/fin/fin13030.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 
@@ -101,9 +102,9 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
   columns: Column[] = [
     { field: 'ID', header: '資料識別碼', visible: false },
     { field: 'INV_GUINo', header: '發票號碼', visible: true },
-    { field: 'INV_GUIDate', header: '發票日期', visible: true },
-    { field: 'INV_YM', header: '資料所屬年月', visible: true },
-    { field: 'INV_DeclareYM', header: '申報年月', visible: true },
+    { field: 'INV_GUIDate', header: '發票日期', visible: true, format: formatDate },
+    { field: 'INV_YM', header: '資料所屬年月', visible: true, format: formatYYYYMM },
+    { field: 'INV_DeclareYM', header: '申報年月', visible: true, format: formatYYYYMM },
     { field: 'INV_SAL_Uniform', header: '客戶編號(統一編號)', visible: true },
     { field: 'INV_Name', header: '買受人名稱', visible: false },
     { field: 'INV_Uniform', header: '買受人統一編號', visible: true },
@@ -113,18 +114,18 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
     { field: 'ExportMethod', header: '外銷方式', visible: true },
     { field: 'INV_DocName', header: '證明文件名稱', visible: true },
     { field: 'INV_DocNo', header: '證明文件號碼', visible: true },
-    { field: 'NonCustomsExportAmt', header: '非經海關出口金額', visible: true },
+    { field: 'NonCustomsExportAmt', header: '非經海關出口金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'INV_ExportType', header: '出口報單類別', visible: true },
     { field: 'INV_ExportNo', header: '出口報單號碼', visible: true },
-    { field: 'CustomsExportAmt', header: '經海關出口金額', visible: true },
-    { field: 'ExportDate', header: '輸出或結匯日期', visible: true },
+    { field: 'CustomsExportAmt', header: '經海關出口金額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'ExportDate', header: '輸出或結匯日期', visible: true, format: formatDate },
     { field: 'INV_Remark', header: '備註', visible: true },
 
     // 預設 hidden
-    { field: 'CRT_Date', header: '建立日期', visible: false },
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate },
     { field: 'CRT_USR_No', header: '建立人員編號', visible: false },
     { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
-    { field: 'UPD_Date', header: '更新日期', visible: false },
+    { field: 'UPD_Date', header: '更新日期', visible: false, format: formatDate },
     { field: 'UPD_USR_No', header: '更新人員編號', visible: false },
     { field: 'UPD_USR_Name', header: '更新人員姓名', visible: false },
   ];
