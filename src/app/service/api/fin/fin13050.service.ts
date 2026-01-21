@@ -172,6 +172,13 @@ export class FIN13050Service {
         })
       );
   }
+  /** 查詢 TDS1003 資料表（取得 STO_Uniform 等門市資訊） */
+  queryFIN11010(params: { STO_Status?: string } = {}): Observable<any> {
+    return this.http
+      .post<any>(`${this.apiUrl}/FIN0000/INV1000/queryFIN11010`, params)
+      .pipe(tap((res) => console.log('queryFIN11010 結果:', res)));
+  }
+
   queryVendorNoOptions(keyword = ''): Observable<VendorNoOption[]> {
     return this.queryVendorList(keyword ? { keyword } : {})
       .pipe(

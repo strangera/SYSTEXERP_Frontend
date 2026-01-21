@@ -234,7 +234,17 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     this.dataForm.patchValue({
       mid: Number(u?.mid) || 0,
       STO_No: u?.SYS_StoreNo ?? '',
-      PUR_Uniform: u?.STR_Uniform ?? '',
+    });
+
+    // 從 queryFIN11010 取得 STO_Uniform（統一編號）
+    this.fin13050Service.queryFIN11010({ STO_Status: '1' }).pipe(untilDestroyed(this)).subscribe({
+      next: (res) => {
+        const data = Array.isArray(res?.Data) ? res.Data[0] : res?.Data;
+        const stoUniform = data?.STO_Uniform ?? '';
+        if (stoUniform) {
+          this.dataForm.patchValue({ PUR_Uniform: stoUniform }, { emitEvent: false });
+        }
+      },
     });
   }
 
@@ -330,12 +340,14 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
       .subscribe({
         next: ({ uniform, vendor }) => {
           this.PUR_VenUniformOptions = uniform ?? [];
+          // 廠商編號下拉：顯示 VEN_No - VEN_Name，值用 VEN_No
           this.VendorNoOptions = (vendor ?? []).map((x: any) => {
-            const venUniform = String(x.venUniform ?? x.VEN_Uniform ?? '').trim();
+            const venNo = String(x.value ?? x.VEN_No ?? '').trim();
             const venName = String(x.venName ?? x.VEN_Name ?? '').trim();
+            const venUniform = String(x.venUniform ?? x.VEN_Uniform ?? '').trim();
             return {
-              value: venUniform,
-              label: venUniform ? `${venUniform}-${venName}` : venName,
+              value: venNo,
+              label: venNo ? `${venNo} - ${venName}` : venName,
               venName,
               venUniform,
             };
@@ -352,13 +364,13 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
-  /** 同步廠商名稱與統一編號 */
+  /** 同步廠商名稱與統一編號（依 VEN_No 查找） */
   private syncVendorFromDropdown(): void {
     const venNoCtrl = this.dataForm.get('PUR_VenNo');
     if (!venNoCtrl) return;
 
-    const venUniform = venNoCtrl.value;
-    const picked = this.VendorNoOptions.find((o) => o.value === venUniform);
+    const venNo = venNoCtrl.value;
+    const picked = this.VendorNoOptions.find((o) => o.value === venNo);
 
     this.dataForm.patchValue(
       {
