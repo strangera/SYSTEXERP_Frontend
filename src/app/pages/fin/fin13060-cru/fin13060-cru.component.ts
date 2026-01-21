@@ -182,15 +182,8 @@ export class FIN13060CRUComponent
 
     TXN_Date: new FormControl<Date | string | null>(null, { validators: [Validators.required] }),
 
-    // ⭐ 發票年月（不一定偶數月，顯示後端回來的值；唯讀）
-    INV_YM: new FormControl<string | null>(
-      { value: null, disabled: true },
-      [
-        Validators.required,
-        // 你原本的 minMonthValidator 照用，吃 'YYYYMM' 也沒問題
-        (control) => (control.value ? null : null), // disabled 不進驗證，其實這裡可有可無
-      ]
-    ),
+    // ⭐ 發票年月（由發票日期自動帶入，不用 disabled 改用 readonly）
+    INV_YM: new FormControl<string | null>(null, [Validators.required]),
 
     // 申報年月（偶數月）- 使用支援 YYYYMM 字串的驗證器
     INV_DeclareYM: new FormControl<string | null>(null, [
@@ -466,18 +459,18 @@ export class FIN13060CRUComponent
   }
 
   /** 設定發票日期變化時自動帶入發票年月 */
+  /** 設定發票日期變化時自動帶入發票年月 */
   private setupInvoiceDateToYM(): void {
     this.dataForm.controls.TXN_Date.valueChanges.subscribe((dateValue) => {
       if (!dateValue) {
-        // 需要 emitEvent: true 讓 YearMonthComponent 收到通知
         this.dataForm.controls.INV_YM.setValue(null);
         return;
       }
 
-      const yyyymm = this.toYYYYMM(dateValue);
-      if (yyyymm) {
-        // 需要 emitEvent: true 讓 YearMonthComponent 收到通知
-        this.dataForm.controls.INV_YM.setValue(yyyymm);
+      // 改用轉換後的「期別年月」
+      const periodYM = this.toInvoicePeriodYM(dateValue);
+      if (periodYM) {
+        this.dataForm.controls.INV_YM.setValue(periodYM);
       }
     });
   }
@@ -550,7 +543,7 @@ export class FIN13060CRUComponent
     this.dataForm.enable();
     this.dataForm.controls.mid.disable();
     this.dataForm.controls.SYS_StoreNo.disable();
-    this.dataForm.controls.INV_YM.disable(); // ⭐ 發票年月永遠唯讀
+    // INV_YM 不用 disable，改用 HTML readonly
   }
 
   // 送出（新增/修改統一在這裡依 crudstatus 分流）
@@ -656,5 +649,21 @@ export class FIN13060CRUComponent
     });
 
     return true; // 阻擋送出
+  }
+
+  /** 將發票日期轉換為該期起始年月（例如 2026/02 -> 202601） */
+  private toInvoicePeriodYM(v: any): string | null {
+    const yyyymm = this.toYYYYMM(v);
+    if (!yyyymm) return null;
+
+    const year = yyyymm.substring(0, 4);
+    let month = parseInt(yyyymm.substring(4, 6));
+
+    // 判斷是否為偶數月，若是則減 1 (歸類到該期起始月)
+    if (month % 2 === 0) {
+      month -= 1;
+    }
+
+    return `${year}${String(month).padStart(2, '0')}`;
   }
 }
