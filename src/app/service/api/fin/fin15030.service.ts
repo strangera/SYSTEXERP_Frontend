@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
+import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 
 export interface FIN15030QueryRequest extends BaseQueryRequest {
   MID?: number;                // 商場編號
@@ -46,6 +46,7 @@ export interface FIN15030Data {
   SAL_Type?: string;           // 使用別
   TXN_Uniform?: string;        // 統一編號
   SYS_ORIGIN?: string;         // 系統別
+  TXN_VoidDT?: string;         // 作廢日期
 }
 
 export interface FIN15030PrintRequest extends FIN15030QueryRequest {
