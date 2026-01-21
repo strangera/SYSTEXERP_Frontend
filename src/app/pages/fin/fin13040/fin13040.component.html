@@ -92,8 +92,9 @@
 </div>
 
 <div class="card">
-  <app-table-report tableKey="FIN13060" [data]="data" [columns]="columns" dataKey="ID" [showDelete]="false"
+  <app-table-report tableKey="FIN13040" [data]="data" [columns]="columns" dataKey="ID" [showDelete]="false"
     [showReportMode]="false" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading" (edit)="onEdit($event)"
-    (detail)="onDetail($event)" [showManage]="true" [showCheckBox]="false" [footerData]="footerData">
+    (detail)="onDetail($event)" [showManage]="true" [showCheckBox]="false" [footerData]="footerData"
+    [addButton]="addButton" [queryFunction]="queryFn" [lastQueryBody]="lastQueryBody" [editDisabled]="editDisabled">
   </app-table-report>
 </div>

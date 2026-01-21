@@ -21,9 +21,9 @@
         <!-- <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="字軌" [control]="dataForm.controls.GUI_Track" [submitted]="submitted"></app-input-text>
         </div> -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="發票號碼" [control]="dataForm.controls.INV_GUINumber"
-            [submitted]="submitted"></app-input-text>
+        <div class="col-12 md:col-6 lg:col-4" *ngIf="showInvoiceNumberField">
+          <app-input-text label="發票號碼" [control]="dataForm.controls.INV_GUINumber" [submitted]="submitted"
+            [readonly]="isInvoiceNumberReadonly"></app-input-text>
         </div>
         <app-year-month class="col-12 md:col-6 lg:col-4" label="申報年月" [control]="dataForm.controls.INV_DeclareYM"
           [submitted]="submitted" [evenMonth]="true" (valueChanges)="loadGuiTrackOptions($event)"></app-year-month>
@@ -61,13 +61,16 @@
             [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="未稅金額" [control]="dataForm.controls.PUR_Net" [submitted]="submitted"></app-input-text>
+          <app-input-number label="未稅金額" [control]="dataForm.controls.PUR_Net" [submitted]="submitted"
+            [useGrouping]="true" [readonly]="true"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="稅額" [control]="dataForm.controls.PUR_Tax" [submitted]="submitted"></app-input-text>
+          <app-input-number label="稅額" [control]="dataForm.controls.PUR_Tax" [submitted]="submitted"
+            [useGrouping]="true" [readonly]="true"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="含稅金額" [control]="dataForm.controls.PUR_Amt" [submitted]="submitted"></app-input-text>
+          <app-input-number label="含稅金額" [control]="dataForm.controls.PUR_Amt" [submitted]="submitted"
+            [useGrouping]="true" [readonly]="true"></app-input-number>
         </div>
       </div>
       <br />
@@ -77,12 +80,6 @@
             [showDelete]="!isFormReadable" [showCheckBox]="!isTableDisabled && !isFormReadable"
             [disabled]="isTableDisabled || isFormReadable" (dataChange)="data = $event" [autoInsertDefaultRow]="true"
             (fieldChange)="updateMasterAmounts()">
-            <header>
-              <div class="flex justify-content-end w-full">
-                <p-button styleClass="p-2" label="非二聯式收銀機發票調整作業.PDF" [loading]="btnLoading" icon="pi pi-file-pdf"
-                  (click)="onExportPDF()" [disabled]="!currentDetailId"></p-button>
-              </div>
-            </header>
 
           </app-table-edit>
         </div>
