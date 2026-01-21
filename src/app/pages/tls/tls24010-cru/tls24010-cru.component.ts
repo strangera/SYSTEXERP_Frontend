@@ -302,12 +302,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         );
       }
       // 先處理日期格式以便比較
-      let finalStatus = 'N'; // 預設為一般交易
-      if (totalSaleAmt < 0) {
-        const currentTxnDate = this.datePipe.transform(this.dataForm.getRawValue().TXN_Date, 'yyyy-MM-dd');
-        const orgTxnDate = this.datePipe.transform(this.dataForm.getRawValue().ORG_TXN_Date, 'yyyy-MM-dd');
-        finalStatus = (orgTxnDate === currentTxnDate) ? 'D' : 'E';
-      } else if (totalSaleAmt === 0) {
+      if (totalSaleAmt === 0) {
         // 視業務需求，總額為 0 是否允許？通常建議擋掉
         this.messageService.errorBubble('銷售總額不可為 0', '金額檢核失敗');
         this.loading = false;
@@ -338,6 +333,8 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
           );
         }
       }
+      const txnDate = this.datePipe.transform(this.dataForm.getRawValue().TXN_Date, 'yyyy-MM-dd') || null;
+      const orgTxnDate = this.datePipe.transform(this.dataForm.getRawValue().ORG_TXN_Date, 'yyyy-MM-dd') || null;
       // === 支付邏輯卡控結束，如果成功則繼續執行 confirm ===
       this.messageService.confirm({
         header: '確認',
@@ -348,23 +345,24 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
             TXN_GUIPaper: this.TXN_GUIPaper,
             ...frm.getRawValue(),
             TXN_GUIRemark: this.rece_yn === 'Y' ? frm.getRawValue().TXN_GUIRemark : '',
-            TXN_Date: this.datePipe.transform(this.dataForm.getRawValue().TXN_Date, 'yyyy-MM-dd'),
-            ORG_TXN_Date: this.datePipe.transform(this.dataForm.getRawValue().ORG_TXN_Date, 'yyyy-MM-dd'),
+            TXN_Date: txnDate,
+            ORG_TXN_Date: orgTxnDate || txnDate,
+            ORG_ECR_No: frm.getRawValue().ORG_ECR_No ? frm.getRawValue().ORG_ECR_No : frm.getRawValue().ECR_No,
             GUI_Track: frm.getRawValue().GUI_Track || '00',
             TXN_GUIBegNo: frm.getRawValue().TXN_GUIBegNo || '00000000',
             TXN_GUIEndNo: frm.getRawValue().TXN_GUIEndNo || '00000000',
             TXN_No: this.isFormCreateable ? undefined : frm.getRawValue().TXN_No,
             TXN_Time: frm.getRawValue().TXN_Time ? formatTimeToHHMMSS(frm.getRawValue().TXN_Time) : '00:00:00',
-            TXN_Status: finalStatus,
+            TXN_Status: 'N',
             POS5007_INFO: pos5007Data.map((item) => {
               if (typeof item.PLU_MagNo === 'object' && item.PLU_MagNo !== null) {
                 return {
-                  PLU_MagNo: item.PLU_MagNo.PLU_MagNo,
-                  PLU_No: item.PLU_MagNo.PLU_No,
-                  TXN_Qty: item.TXN_Qty,
-                  PLU_SalePrc: item.PLU_SalePrc,
+                  PLU_MagNo: item.PLU_MagNo.PLU_MagNo || '',
+                  PLU_No: item.PLU_MagNo.PLU_No || '',
+                  TXN_Qty: item.TXN_Qty || 0,
+                  PLU_SalePrc: item.PLU_SalePrc || 0,
                   TXN_Disc: item.TXN_Disc || 0,
-                  TXN_SaleAmt: item.TXN_SaleAmt,
+                  TXN_SaleAmt: item.TXN_SaleAmt || 0,
                   tlt_id: item.tlt_id || '0',
                   PLU_TaxType: item.PLU_TaxType || '1',
                   TXN_DiscCode: item.TXN_DiscCode || '000'
@@ -374,8 +372,8 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
             }),
             POS5008_INFO: pos5008Data.map((item) => {
               return {
-                PAY_No: item.PAY_No,
-                TXN_PayAmt: item.TXN_PayAmt,
+                PAY_No: item.PAY_No || '',
+                TXN_PayAmt: item.TXN_PayAmt || 0,
                 CRD_Type: item.CRD_Type !== '' ? item.CRD_Type : undefined,
                 CRD_No: item.CRD_Type !== '' ? item.CRD_No : undefined,
                 TXN_CouponNo: item.TXN_CouponNo != '' ? item.TXN_CouponNo : undefined,
