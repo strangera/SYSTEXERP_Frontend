@@ -97,7 +97,8 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
     { field: 'SYS_ORIGIN', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'SAL_Type', header: '使用別', visible: true, format: (value: string) => this.salTypeOptions.find(opt => opt.value === value)?.label ?? value },
-    { field: 'TXN_Uniform', header: '統一編號', visible: true }
+    { field: 'TXN_Uniform', header: '統一編號', visible: true },
+    { field: 'TXN_VoidDT', header: '作廢日期', visible: true, format: formatDate }
   ];
 
   //#region

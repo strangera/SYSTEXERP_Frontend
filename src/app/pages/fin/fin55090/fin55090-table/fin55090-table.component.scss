@@ -176,4 +176,35 @@
   .wrap-header {
     white-space: normal; /* 讓文字可以正常換行 */
   }
+  .compact-table {
+    /* 1. 壓縮單元格內距 */
+    .p-datatable-thead > tr > th,
+    .p-datatable-tbody > tr > td,
+    .p-datatable-tfoot > tr > td {
+      height: 20px !important; /* 強制設定較低的高度 */
+    }
+
+    /* 2. 調整 Group Header 的高度 */
+    .p-rowgroup-header {
+      height: 20px !important;
+      background-color: #f8fafc !important;
+
+      td {
+        padding-top: 2px !important;
+        padding-bottom: 2px !important;
+      }
+    }
+
+    /* 3. 文字大小微調，讓資料更緊湊但保持可讀性 */
+    .p-datatable-tbody {
+      font-size: 0.875rem;
+    }
+
+    /* 4. 針對財務報表的數字，確保垂直居中 */
+    td span {
+      line-height: 1.2;
+      display: inline-block;
+      vertical-align: middle;
+    }
+  }
 }

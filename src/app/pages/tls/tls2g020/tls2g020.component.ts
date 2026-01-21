@@ -91,7 +91,7 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
     this.submitted = true;
     this.loading = true;
     this.messageService.blockUi();
-    this.messageService.infoBubble('結算中,請稍候...');
+    this.messageService.infoBubble('查詢中,請稍候...');
     // 儲存查詢條件，方便 CRU 返回時還原並自動查詢
     try {
       this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());

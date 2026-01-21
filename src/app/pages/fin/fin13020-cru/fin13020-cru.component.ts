@@ -61,15 +61,21 @@ export class FIN13020CRUComponent
     { label: '退出', value: 'R' },
   ];
 
+  /**
+   * 原始剩餘總金額（APS2002.PUR_Amount）
+   */
+  private originalRemainingAmt: number | null = null;
+
   dataForm = this.formBuilder.nonNullable.group({
     id: [null as number | null],                                 // 主檔 ID（Update 用）
 
     GUI_Track: [null as string | null, Validators.required],     // 字軌
     PUR_GUINo: ['', Validators.required],                        // 發票號碼 (送 InvoiceNumber)
     InvoiceNumber_Correspond: [''],                              // 字軌+號碼，查對應用
-    PUR_GUIDate: ['', Validators.required],                      // 退出/折讓日期 (送 InvoiceDate)
+    PUR_GUIDate: [null as any, Validators.required],             // 退出/折讓日期 (送 InvoiceDate)
+    // 控制項吃 "YYYY/MM"，送出時再轉 YYYYMM
+    PUR_RepYYYYMM: [null as string | null],                      // 申報年月 (送 INV_DeclareYM)
     PUR_VoucherType: ['', Validators.required],                  // 發票格式 (送 InvoiceType)
-    PUR_RepYYYYMM: [null],                                       // 申報年月 (送 INV_DeclareYM)
     Credit_Type: ['', Validators.required],                      // 區別
     PUR_TaxType: ['', Validators.required],                      // 課稅別
     PUR_Net: [undefined as any],                                 // 退出/折讓金額
@@ -77,12 +83,12 @@ export class FIN13020CRUComponent
     PUR_Amt: [undefined as any],                                 // 退回/折讓總金額
     Inv_Date: [undefined as any],                                // 發票日期（顯示用）
     Total_hitory_PUR_Amt: [undefined as any],                    // 已退出/折讓歷史總金額
-    Total_Amt: [undefined as any],                               // 剩餘總金額
+    Total_Amt: [undefined as any],                               // 剩餘總金額（原始剩餘 - 本次退回）
     TXN_Ret_No: ['系統自動帶入', Validators.required],            // 退出/折讓單號
     Inv_Net: [undefined as any],                                 // 銷售額（顯示用，不送）
     Inv_Tax: [undefined as any],                                 // 稅額（顯示用，不送）
     Source_Doc_No: [''],                                         // 憑證單號
-    Voucher_No: [''],                                            // 傳票編號
+    Voucher_No: [''],                                            // 傳票編號（disable）
   });
 
   // ⭐ 明細陣列（對應 APS40235List），每筆要保留自己的 ID
@@ -96,82 +102,120 @@ export class FIN13020CRUComponent
     super();
   }
 
-  ngOnInit(): void {
-    this.initializePage('FIN13020', this.dataForm);
+ngOnInit(): void {
+  // 會把 crudstatus / rowdata / 權限帶進來
+  this.initializePage('FIN13020', this.dataForm);
 
-    // ⭐ 從查詢頁帶進來的資料（BasicCruPageComponent 幫你塞的）
-    const row: any = (this as any).rowdata;
+  // ⭐ 從查詢頁帶進來的資料（BasicCruPageComponent 幫你塞的）
+  const row: any = (this as any).rowdata;
 
-    if (row) {
-      // 主檔 ID（優先用小寫 id，其次大寫 ID）
-      const masterId = row.id ?? row.ID ?? null;
+  if (row) {
+    // 主檔 ID（優先用小寫 id，其次大寫 ID）
+    const masterId = row.id ?? row.ID ?? null;
 
-      this.dataForm.patchValue(
-        {
-          id: masterId,
-          TXN_Ret_No: row.TXN_Ret_No ?? this.dataForm.get('TXN_Ret_No')?.value,
-          GUI_Track:
-            row.GUI_Track ?? row.InvoiceTrack ?? this.dataForm.get('GUI_Track')?.value,
-          PUR_GUINo:
-            row.PUR_GUINo ?? row.InvoiceNumber ?? this.dataForm.get('PUR_GUINo')?.value,
-          PUR_GUIDate:
-            row.PUR_GUIDate ?? row.InvoiceDate ?? this.dataForm.get('PUR_GUIDate')?.value,
-          PUR_VoucherType:
-            row.PUR_VoucherType ??
-            row.InvoiceType ??
-            this.dataForm.get('PUR_VoucherType')?.value,
-          PUR_RepYYYYMM:
-            row.PUR_RepYYYYMM ??
-            row.INV_DeclareYM ??
-            this.dataForm.get('PUR_RepYYYYMM')?.value,
-          Credit_Type:
-            row.Credit_Type ?? this.dataForm.get('Credit_Type')?.value,
-          PUR_TaxType:
-            row.PUR_TaxType ?? this.dataForm.get('PUR_TaxType')?.value,
-          PUR_Net: row.PUR_Net ?? this.dataForm.get('PUR_Net')?.value,
-          PUR_Tax: row.PUR_Tax ?? this.dataForm.get('PUR_Tax')?.value,
-          PUR_Amt: row.PUR_Amt ?? this.dataForm.get('PUR_Amt')?.value,
-          Source_Doc_No:
-            row.Source_Doc_No ?? this.dataForm.get('Source_Doc_No')?.value,
-          Voucher_No:
-            row.Voucher_No ?? this.dataForm.get('Voucher_No')?.value,
-        },
-        { emitEvent: false },
-      );
+    // 申報年月來源：優先 PUR_RepYYYYMM，其次 INV_DeclareYM
+    const repRaw =
+      row.PUR_RepYYYYMM ??
+      row.INV_DeclareYM ??
+      this.dataForm.get('PUR_RepYYYYMM')?.value;
 
-      // ⭐ 明細（APS40235List / Details）帶進來，保留每筆自己的 ID
-      const details = (row.APS40235List ?? row.Details ?? []) as any[];
-      this.detailRows = details.map((d) => ({
-        ID: d.ID ?? null,            // ⭐ 明細自己的 ID（跟主檔 ID 不同）
-        PLU_Name: d.PLU_Name,
-        TXN_Qty: d.TXN_Qty,
-        PLU_SalePrc: d.PLU_SalePrc,
-        TXN_SaleAmt: d.TXN_SaleAmt,
-      }));
-    }
+    this.dataForm.patchValue(
+      {
+        id: masterId,
+        TXN_Ret_No: row.TXN_Ret_No ?? this.dataForm.get('TXN_Ret_No')?.value,
+        GUI_Track:
+          row.GUI_Track ??
+          row.InvoiceTrack ??
+          this.dataForm.get('GUI_Track')?.value,
+        PUR_GUINo:
+          row.PUR_GUINo ??
+          row.InvoiceNumber ??
+          this.dataForm.get('PUR_GUINo')?.value,
+        PUR_GUIDate:
+          row.PUR_GUIDate ??
+          row.InvoiceDate ??
+          this.dataForm.get('PUR_GUIDate')?.value,
+        PUR_VoucherType:
+          row.PUR_VoucherType ??
+          row.InvoiceType ??
+          this.dataForm.get('PUR_VoucherType')?.value,
+        // ⭐ 這裡給 YearMonthComponent 的值，統一用六碼 YYYYMM
+        PUR_RepYYYYMM: this.normalizeYYYYMMForControl(repRaw),
+        Credit_Type:
+          row.Credit_Type ?? this.dataForm.get('Credit_Type')?.value,
+        PUR_TaxType:
+          row.PUR_TaxType ?? this.dataForm.get('PUR_TaxType')?.value,
+        PUR_Net: row.PUR_Net ?? this.dataForm.get('PUR_Net')?.value,
+        PUR_Tax: row.PUR_Tax ?? this.dataForm.get('PUR_Tax')?.value,
+        PUR_Amt: row.PUR_Amt ?? this.dataForm.get('PUR_Amt')?.value,
+        Source_Doc_No:
+          row.Source_Doc_No ?? this.dataForm.get('Source_Doc_No')?.value,
+        Voucher_No:
+          row.Voucher_No ?? this.dataForm.get('Voucher_No')?.value,
+      },
+      { emitEvent: false },
+    );
 
-    this.updateDisabledState();
-    this.setupAmountRelations();
-    this.setupRemainAmountCalculation();
-
-    // 固定禁止輸入的欄位
-    this.dataForm.get('TXN_Ret_No')?.disable();
-    this.dataForm.get('PUR_TaxType')?.disable();
-    this.dataForm.get('Inv_Tax')?.disable();
-    this.dataForm.get('Inv_Net')?.disable();
-    this.dataForm.get('Inv_Date')?.disable();
-    this.dataForm.get('Total_hitory_PUR_Amt')?.disable();
-    this.dataForm.get('Total_Amt')?.disable();
-    this.dataForm.get('PUR_Tax')?.disable();
-    this.dataForm.get('Credit_Type')?.disable();
-
-    this.setupTrackNoWatcher();
-    this.setupGuiNoAndCorrespondWatcher();
-
-    if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
-      this.loadInvoiceInfoByCurrentGUINo();
-    }
+    // ⭐ 明細（APS40235List / Details）帶進來，保留每筆自己的 ID
+    const details = (row.APS40235List ?? row.Details ?? []) as any[];
+    this.detailRows = details.map((d) => ({
+      ID: d.ID ?? null, // ⭐ 明細自己的 ID（跟主檔 ID 不同）
+      PLU_Name: d.PLU_Name,
+      TXN_Qty: d.TXN_Qty,
+      PLU_SalePrc: d.PLU_SalePrc,
+      TXN_SaleAmt: d.TXN_SaleAmt,
+    }));
   }
+
+  // 狀態控制（Create / Edit / Read）
+  this.updateDisabledState();
+
+  // 監聽字軌 / 發票號碼、金額關聯
+  this.setupTrackNoWatcher();
+  this.setupGuiNoAndCorrespondWatcher();
+  this.setupAmountRelations();
+
+  // 不論狀態一律禁止的欄位（再保險一次）
+  this.dataForm.get('TXN_Ret_No')?.disable();
+  this.dataForm.get('PUR_TaxType')?.disable();
+  this.dataForm.get('Inv_Tax')?.disable();
+  this.dataForm.get('Inv_Net')?.disable();
+  this.dataForm.get('Inv_Date')?.disable();
+  this.dataForm.get('Total_hitory_PUR_Amt')?.disable();
+  this.dataForm.get('Total_Amt')?.disable();
+  this.dataForm.get('PUR_Tax')?.disable();
+  this.dataForm.get('Credit_Type')?.disable();
+  this.dataForm.get('PUR_VoucherType')?.disable();
+  this.dataForm.get('Voucher_No')?.disable();
+
+  // ⭐ Create 模式：預設今天 + 當期雙月的 YYYYMM
+  if (this.crudstatus === CRUDStatus.Create) {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth() + 1;
+
+    // 和 FIN13010 一樣：用偶數月代表申報期間
+    let evenMonth = month % 2 === 0 ? month : month + 1;
+    if (evenMonth > 12) {
+      evenMonth = 12;
+    }
+    const repYYYYMM = `${year}${String(evenMonth).padStart(2, '0')}`;
+
+    this.dataForm.patchValue(
+      {
+        PUR_GUIDate: today,       // 退出/折讓日期 = 今日
+        PUR_RepYYYYMM: repYYYYMM, // ⭐ 給 YearMonth 的值 = 六碼 YYYYMM
+      },
+      { emitEvent: false },
+    );
+  }
+
+  // ⭐ 編輯 / 檢視：依目前 GUI_Track + PUR_GUINo 撈 APS4023 對應資料
+  if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
+    this.loadInvoiceInfoByCurrentGUINo();
+  }
+}
+
 
   /* ----------------- 依目前 GUI_Track + PUR_GUINo 撈 APS4023 對應資料 ----------------- */
 
@@ -196,14 +240,52 @@ export class FIN13020CRUComponent
       .subscribe((res) => {
         const detail = res?.Data?.[0];
         if (detail) {
-          const invoiceType = detail.InvoiceType as string | undefined;
+          const invoiceType = (detail.InvoiceType as string | undefined) ?? '';
 
+          // 31 / 35 -> 33，32 -> 34，顯示+送出都用 33/34
           let voucherType = '';
           if (invoiceType === '31' || invoiceType === '35') {
             voucherType = '33';
           } else if (invoiceType === '32') {
             voucherType = '34';
+          } else {
+            voucherType = invoiceType || '';
           }
+
+          // 原始剩餘總金額：APS2002.PUR_Amount
+          const rawOriginal =
+            (detail as any).PUR_Amount ??
+            (detail as any).PUR_Amt ??
+            (detail as any).Total_Amt ??
+            null;
+
+          const original =
+            rawOriginal !== null && rawOriginal !== undefined
+              ? Number(rawOriginal)
+              : null;
+
+          this.originalRemainingAmt =
+            original !== null && !isNaN(original)
+              ? this.roundToInt(original)
+              : null;
+
+          // 目前畫面上的退回/折讓總金額
+          const currentAmtRaw = this.dataForm.get('PUR_Amt')?.value;
+          const currentTotal =
+            currentAmtRaw === null ||
+            currentAmtRaw === undefined ||
+            currentAmtRaw === ''
+              ? null
+              : this.roundToInt(Number(currentAmtRaw));
+
+          // 剩餘總金額 = 原始剩餘 - 本次退回
+          const remaining =
+            this.originalRemainingAmt !== null &&
+            !isNaN(this.originalRemainingAmt) &&
+            currentTotal !== null &&
+            !isNaN(currentTotal)
+              ? this.roundToInt(this.originalRemainingAmt - currentTotal)
+              : this.originalRemainingAmt;
 
           this.dataForm.patchValue(
             {
@@ -213,18 +295,14 @@ export class FIN13020CRUComponent
               Inv_Net: detail.PUR_Net,
               Inv_Tax: detail.PUR_Tax,
               Total_hitory_PUR_Amt: (detail as any).Total_hitory_PUR_Amt,
-              Total_Amt: (detail as any).Total_Amt,
+              Total_Amt: remaining,
             },
             { emitEvent: false },
           );
 
-          const currentAmt = this.dataForm.get('PUR_Amt')?.value;
-          const totalInt =
-            currentAmt === null || currentAmt === undefined || currentAmt === ''
-              ? null
-              : this.roundToInt(Number(currentAmt));
-          this.updateCreditTypeByAmount(totalInt);
+          this.updateCreditTypeByAmount(currentTotal);
         } else {
+          this.originalRemainingAmt = null;
           this.dataForm.patchValue(
             {
               Inv_Date: null,
@@ -301,6 +379,7 @@ export class FIN13020CRUComponent
       this.dataForm.enable(); // Create 模式
     }
 
+    // 不論狀態一律禁止的欄位
     this.dataForm.get('PUR_Tax')?.disable();
     this.dataForm.get('TXN_Ret_No')?.disable();
     this.dataForm.get('PUR_TaxType')?.disable();
@@ -310,11 +389,34 @@ export class FIN13020CRUComponent
     this.dataForm.get('Total_hitory_PUR_Amt')?.disable();
     this.dataForm.get('Total_Amt')?.disable();
     this.dataForm.get('Credit_Type')?.disable();
+    this.dataForm.get('PUR_VoucherType')?.disable();
+    this.dataForm.get('Voucher_No')?.disable();
   }
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const formValue = form.getRawValue();
+
+      // 日期檢核：退出/折讓日期不可小於發票日期
+      const purDate = formValue.PUR_GUIDate ? new Date(formValue.PUR_GUIDate) : null;
+      const invDate = formValue.Inv_Date ? new Date(formValue.Inv_Date) : null;
+      if (purDate && invDate && purDate < invDate) {
+        this.messageService.errorBubble('退出/折讓日期不可小於發票日期');
+        return;
+      }
+
+      // 明細金額加總需與退回/折讓總金額相同
+      const detailTotalRaw = this.detailRows.reduce((sum, row) => {
+        const v = Number(row.TXN_SaleAmt);
+        return sum + (isNaN(v) ? 0 : v);
+      }, 0);
+      const detailTotal = this.roundToInt(detailTotalRaw);
+
+      const purAmtInt = this.toIntOrNull(formValue.PUR_Amt);
+      if (purAmtInt !== null && purAmtInt !== detailTotal) {
+        this.messageService.errorBubble('明細的金額加總必須等於「退回/折讓總金額」');
+        return;
+      }
 
       const intNet = this.toIntOrNull(formValue.PUR_Net);
       const intTax = this.toIntOrNull(formValue.PUR_Tax);
@@ -345,8 +447,8 @@ export class FIN13020CRUComponent
           PUR_Amt: intAmt,
           Source_Doc_No: formValue.Source_Doc_No,
           APS40235List: this.detailRows.map((row) => ({
-            // ⭐ 舊的明細：ID 是 number（例如 66078）
-            // ⭐ 新增的明細：Table 可能給 "saved-xxxxx"，要變 0 給後端
+            // 舊的明細：ID 是 number（例如 66078）
+            // 新增的明細：Table 可能給 "saved-xxxxx"，要變 0 給後端
             ID: typeof row.ID === 'number' ? row.ID : 0,
             PLU_Name: row.PLU_Name,
             TXN_Qty: row.TXN_Qty,
@@ -375,7 +477,7 @@ export class FIN13020CRUComponent
           this.loading = false;
         }
       } else {
-        // Insert：維持原本，不帶明細 ID（後端自己產生）
+        // Insert：不帶明細 ID（後端自己產生）
         const payload: any = {
           Source: 'APS',
           GUI_Track: formValue.GUI_Track,
@@ -402,6 +504,8 @@ export class FIN13020CRUComponent
             next: () => {
               this.messageService.successBubble('新增成功');
               this.dataForm.reset();
+              this.detailRows = [];      // J. 新增後明細清除
+              this.originalRemainingAmt = null;
             },
             error: (err) => {
               this.loading = false;
@@ -419,19 +523,32 @@ export class FIN13020CRUComponent
       }
     });
   }
+  // fin13020-cru.component.ts
 
-  /* ------- 以下金額互算、剩餘金額等維持原本 ------- */
+override onCancel(): void {
+  this.router.navigate(['/account/fin', 'fin13020'], {
+    state: { fromCru: true },
+  });
+}
+
+
+  /* ------- 金額互算 + 剩餘總金額 + 區別判斷 ------- */
 
   private setupAmountRelations(): void {
-    const netControl = this.dataForm.get('PUR_Net');
-    const taxControl = this.dataForm.get('PUR_Tax');
-    const amtControl = this.dataForm.get('PUR_Amt');
+    const netControl = this.dataForm.get('PUR_Net'); // 退出/折讓金額
+    const taxControl = this.dataForm.get('PUR_Tax'); // 退出/折讓稅額（自動）
+    const amtControl = this.dataForm.get('PUR_Amt'); // 退回/折讓總金額
+    const remainingControl = this.dataForm.get('Total_Amt');
+    const invNetControl = this.dataForm.get('Inv_Net'); // 銷售額
 
-    if (!netControl || !taxControl || !amtControl) return;
+    if (!netControl || !taxControl || !amtControl || !remainingControl) {
+      return;
+    }
 
     let updatingFromNet = false;
     let updatingFromAmt = false;
 
+    // 使用者輸入「退出/折讓金額」時：
     netControl.valueChanges.subscribe((value) => {
       if (updatingFromAmt) return;
       updatingFromNet = true;
@@ -439,46 +556,63 @@ export class FIN13020CRUComponent
       if (value === null || value === undefined || value === '') {
         taxControl.setValue(null, { emitEvent: false });
         amtControl.setValue(null, { emitEvent: false });
+        remainingControl.setValue(this.originalRemainingAmt, { emitEvent: false });
         this.updateCreditTypeByAmount(null);
         updatingFromNet = false;
         return;
       }
 
-      const rawNet = Number(value);
-      if (!isNaN(rawNet)) {
-        const invNetControl = this.dataForm.get('Inv_Net');
-        const invNetRaw = invNetControl?.value;
-        const invNet =
-          invNetRaw === null || invNetRaw === undefined || invNetRaw === ''
-            ? null
-            : Number(invNetRaw);
-
-        let netInt = this.roundToInt(rawNet);
-        let taxInt = this.roundToInt(netInt * 0.05);
-        let totalInt = this.roundToInt(netInt + taxInt);
-
-        if (invNet !== null && !isNaN(invNet) && invNet > 0 && totalInt > invNet) {
-          this.messageService.errorBubble('退回/折讓總金額不可大於銷售額');
-
-          const maxTotal = this.roundToInt(invNet);
-          const maxNet = this.roundToInt(maxTotal / 1.05);
-          const maxTax = maxTotal - maxNet;
-
-          netInt = maxNet;
-          taxInt = maxTax;
-          totalInt = maxTotal;
-        }
-
-        netControl.setValue(netInt, { emitEvent: false });
-        taxControl.setValue(taxInt, { emitEvent: false });
-        amtControl.setValue(totalInt, { emitEvent: false });
-
-        this.updateCreditTypeByAmount(totalInt);
+      let netInt = this.roundToInt(Number(value));
+      if (isNaN(netInt)) {
+        updatingFromNet = false;
+        return;
       }
 
+      // f-2. 退出/折讓金額 不可大於 銷售額
+      const invNetRaw = invNetControl?.value;
+      const invNet =
+        invNetRaw === null || invNetRaw === undefined || invNetRaw === ''
+          ? null
+          : Number(invNetRaw);
+
+      if (invNet !== null && !isNaN(invNet) && netInt > invNet) {
+        this.messageService.errorBubble('退出/折讓金額不可大於銷售額');
+        netInt = this.roundToInt(invNet);
+      }
+
+      // 先算稅額 & 總額
+      let taxInt = this.roundToInt(netInt * 0.05);
+      let totalInt = this.roundToInt(netInt + taxInt);
+
+      // f-1. 退回/折讓總金額 不可大於 剩餘總金額（原始剩餘）
+      if (
+        this.originalRemainingAmt !== null &&
+        !isNaN(this.originalRemainingAmt) &&
+        totalInt > this.originalRemainingAmt
+      ) {
+        this.messageService.errorBubble('退回/折讓總金額不可大於剩餘總金額');
+        totalInt = this.roundToInt(this.originalRemainingAmt);
+        const approxNet = totalInt / 1.05;
+        netInt = this.roundToInt(approxNet);
+        taxInt = totalInt - netInt;
+      }
+
+      netControl.setValue(netInt, { emitEvent: false });
+      taxControl.setValue(taxInt, { emitEvent: false });
+      amtControl.setValue(totalInt, { emitEvent: false });
+
+      // 剩餘總金額 = 原始剩餘 - 本次退回/折讓總金額
+      const remaining =
+        this.originalRemainingAmt !== null && !isNaN(this.originalRemainingAmt)
+          ? this.roundToInt(this.originalRemainingAmt - totalInt)
+          : null;
+      remainingControl.setValue(remaining, { emitEvent: false });
+
+      this.updateCreditTypeByAmount(totalInt);
       updatingFromNet = false;
     });
 
+    // 使用者直接改「退回/折讓總金額」時：
     amtControl.valueChanges.subscribe((value) => {
       if (updatingFromNet) return;
       updatingFromAmt = true;
@@ -486,97 +620,103 @@ export class FIN13020CRUComponent
       if (value === null || value === undefined || value === '') {
         netControl.setValue(null, { emitEvent: false });
         taxControl.setValue(null, { emitEvent: false });
+        remainingControl.setValue(this.originalRemainingAmt, { emitEvent: false });
         this.updateCreditTypeByAmount(null);
         updatingFromAmt = false;
         return;
       }
 
-      const rawTotal = Number(value);
-      if (!isNaN(rawTotal)) {
-        const invNetControl = this.dataForm.get('Inv_Net');
-        const invNetRaw = invNetControl?.value;
-        const invNet =
-          invNetRaw === null || invNetRaw === undefined || invNetRaw === ''
-            ? null
-            : Number(invNetRaw);
-
-        let totalInt = this.roundToInt(rawTotal);
-
-        if (invNet !== null && !isNaN(invNet) && invNet > 0 && totalInt > invNet) {
-          this.messageService.errorBubble('退回/折讓總金額不可大於銷售額');
-          totalInt = this.roundToInt(invNet);
-        }
-
-        const approxNet = totalInt / 1.05;
-        const netInt = this.roundToInt(approxNet);
-        const taxInt = totalInt - netInt;
-
-        amtControl.setValue(totalInt, { emitEvent: false });
-        netControl.setValue(netInt, { emitEvent: false });
-        taxControl.setValue(taxInt, { emitEvent: false });
-
-        this.updateCreditTypeByAmount(totalInt);
+      let totalInt = this.roundToInt(Number(value));
+      if (isNaN(totalInt)) {
+        updatingFromAmt = false;
+        return;
       }
 
+      // f-1. 退回/折讓總金額 不可大於 剩餘總金額（原始剩餘）
+      if (
+        this.originalRemainingAmt !== null &&
+        !isNaN(this.originalRemainingAmt) &&
+        totalInt > this.originalRemainingAmt
+      ) {
+        this.messageService.errorBubble('退回/折讓總金額不可大於剩餘總金額');
+        totalInt = this.roundToInt(this.originalRemainingAmt);
+      }
+
+      // total = net + tax，tax ≈ 5%
+      let approxNet = totalInt / 1.05;
+      let netInt = this.roundToInt(approxNet);
+      let taxInt = totalInt - netInt;
+
+      // f-2. 退出/折讓金額 不可大於 銷售額
+      const invNetRaw = invNetControl?.value;
+      const invNet =
+        invNetRaw === null || invNetRaw === undefined || invNetRaw === ''
+          ? null
+          : Number(invNetRaw);
+
+      if (invNet !== null && !isNaN(invNet) && netInt > invNet) {
+        this.messageService.errorBubble('退出/折讓金額不可大於銷售額');
+        netInt = this.roundToInt(invNet);
+        taxInt = this.roundToInt(netInt * 0.05);
+        totalInt = this.roundToInt(netInt + taxInt);
+
+        // 再檢查一次 total 不可大於 原始剩餘
+        if (
+          this.originalRemainingAmt !== null &&
+          !isNaN(this.originalRemainingAmt) &&
+          totalInt > this.originalRemainingAmt
+        ) {
+          totalInt = this.roundToInt(this.originalRemainingAmt);
+          approxNet = totalInt / 1.05;
+          netInt = this.roundToInt(approxNet);
+          taxInt = totalInt - netInt;
+        }
+      }
+
+      amtControl.setValue(totalInt, { emitEvent: false });
+      netControl.setValue(netInt, { emitEvent: false });
+      taxControl.setValue(taxInt, { emitEvent: false });
+
+      const remaining =
+        this.originalRemainingAmt !== null && !isNaN(this.originalRemainingAmt)
+          ? this.roundToInt(this.originalRemainingAmt - totalInt)
+          : null;
+      remainingControl.setValue(remaining, { emitEvent: false });
+
+      this.updateCreditTypeByAmount(totalInt);
       updatingFromAmt = false;
     });
   }
 
+  /**
+   * 區別：
+   *  - totalAmt === originalRemainingAmt → 退出 (R)
+   *  - 0 < totalAmt < originalRemainingAmt → 折讓 (C)
+   */
   private updateCreditTypeByAmount(totalAmt: number | null): void {
     const creditControl = this.dataForm.get('Credit_Type');
-    const invNetControl = this.dataForm.get('Inv_Net');
-    const totalAmtControl = this.dataForm.get('Total_Amt');
-
     if (!creditControl) return;
-
-    if (totalAmtControl) {
-      const remainingRaw = totalAmtControl.value;
-      if (
-        remainingRaw !== null &&
-        remainingRaw !== undefined &&
-        remainingRaw !== ''
-      ) {
-        const remaining = Number(remainingRaw);
-        if (!isNaN(remaining)) {
-          if (remaining === 0) {
-            creditControl.setValue('R', { emitEvent: false });
-            return;
-          }
-          if (remaining > 0) {
-            creditControl.setValue('C', { emitEvent: false });
-            return;
-          }
-        }
-      }
-    }
-
-    if (!invNetControl) {
-      creditControl.setValue('', { emitEvent: false });
-      return;
-    }
-
-    const invNetRaw = invNetControl.value;
-    const invNet =
-      invNetRaw === null || invNetRaw === undefined || invNetRaw === ''
-        ? null
-        : Number(invNetRaw);
 
     if (
       totalAmt === null ||
       totalAmt === undefined ||
       isNaN(totalAmt) ||
-      invNet === null ||
-      isNaN(invNet) ||
-      invNet <= 0
+      totalAmt <= 0 ||
+      this.originalRemainingAmt === null ||
+      isNaN(this.originalRemainingAmt) ||
+      this.originalRemainingAmt <= 0
     ) {
       creditControl.setValue('', { emitEvent: false });
       return;
     }
 
-    if (totalAmt === invNet) {
-      creditControl.setValue('R', { emitEvent: false });
-    } else if (totalAmt < invNet) {
-      creditControl.setValue('C', { emitEvent: false });
+    const t = this.roundToInt(totalAmt);
+    const origin = this.roundToInt(this.originalRemainingAmt);
+
+    if (t === origin) {
+      creditControl.setValue('R', { emitEvent: false }); // 退出
+    } else if (t < origin) {
+      creditControl.setValue('C', { emitEvent: false }); // 折讓
     } else {
       creditControl.setValue('', { emitEvent: false });
     }
@@ -593,25 +733,6 @@ export class FIN13020CRUComponent
     return this.roundToInt(n);
   }
 
-  private setupRemainAmountCalculation(): void {
-    const amtControl = this.dataForm.get('PUR_Amt');
-    const historyControl = this.dataForm.get('History_RetAmt');
-    const remainControl = this.dataForm.get('Remain_Amt');
-
-    if (amtControl && historyControl && remainControl) {
-      amtControl.valueChanges.subscribe(() => this.calculateRemainAmount());
-      historyControl.valueChanges.subscribe(() => this.calculateRemainAmount());
-    }
-  }
-
-  private calculateRemainAmount(): void {
-    const amt = this.dataForm.get('PUR_Amt')?.value || 0;
-    const history = this.dataForm.get('Total_hitory_PUR_Amt')?.value || 0;
-    this.dataForm
-      .get('Total_hitory_PUR_Amt')
-      ?.setValue(amt - history, { emitEvent: false });
-  }
-
   clearFormExcept(): void {
     const keepValues = ['PUR_GUINo'];
     const patch: any = {};
@@ -621,6 +742,7 @@ export class FIN13020CRUComponent
 
     this.dataForm.reset();
     this.dataForm.patchValue(patch);
+    this.originalRemainingAmt = null;
     this.updateDisabledState();
   }
 
@@ -689,6 +811,14 @@ export class FIN13020CRUComponent
     }
     return null;
   }
+
+  /** 後端 / rowdata 的 YYYYMM 轉成控制項用的 YYYY/MM */
+private normalizeYYYYMMForControl(raw: any): string | null {
+  if (!raw) return null;
+  const only = String(raw).replace(/\D/g, '');
+  if (only.length < 6) return null;
+  return only.slice(0, 6); // 例如 "2026/02" -> "202602"
+}
 
   get isRead(): boolean {
     return this.crudstatus === CRUDStatus.Read;

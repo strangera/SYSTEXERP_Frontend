@@ -37,6 +37,7 @@ import { ValidationService } from '../../../shared/service/validation.service';
 export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
   dataForm = this.formBuilder.group({
     ID: [0], // 主鍵ID 隱藏欄位
+    INV_GUITrack: [''], // 發票字軌
     INV_GUINo: ['', [Validators.required, Validators.maxLength(10)]], // 發票號碼
     INV_GUIDate: ['', Validators.required], // 發票日期
     INV_YM: ['', Validators.required], // 資料所屬年月
@@ -45,13 +46,13 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
     GoodsOrServicesName: ['', Validators.maxLength(100)], // 貨物或勞務名稱
     GoodsQty: [1, [this.validationService.numberValidator]], // 貨物或勞務數量
     ExportMethod: ['', Validators.required], // 外銷方式
-    INV_PassType: ['', Validators.required], // 通關方式註記
+    INV_PassType: [null as string | null, Validators.required], // 通關方式註記
     INV_DocName: ['', [Validators.maxLength(20)]], // 證明文件名稱
     INV_DocNo: ['', [Validators.maxLength(10)]], // 證明文件號碼
-    NonCustomsExportAmt: [null, [this.validationService.numberValidator]], // 非經海關出口金額
+    NonCustomsExportAmt: [null as number | null, [this.validationService.numberValidator]], // 非經海關出口金額
     INV_ExportType: [''], // 出口報單類別
     INV_ExportNo: ['', [Validators.maxLength(10)]], // 出口報單號碼
-    CustomsExportAmt: [null, [this.validationService.numberValidator]], // 經海關出口金額
+    CustomsExportAmt: [null as number | null, [this.validationService.numberValidator]], // 經海關出口金額
     ExportDate: ['', Validators.required], // 輸出或結匯日期
     INV_Remark: ['', Validators.maxLength(100)], // 備註
   });
@@ -88,12 +89,16 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
         INV_GUIDate: this.zeroTaxGUIData.INV_GUIDate,
         INV_YM: this.zeroTaxGUIData.INV_YM,
         INV_DeclareYM: this.zeroTaxGUIData.INV_DeclareYM,
+        INV_PassType: '1', // 預設通關方式註記為 1
       });
+      // 根據預設值設置金額欄位
+      this.handlePassTypeChange('1');
     }
     else if (this.crudstatus === CRUDStatus.Edit) {
       this.getZeroTaxGUIData(this.dataForm);
     }
     this.setUnEditableFields();
+    this.setupPassTypeListener();
   }
 
   onSubmit(form: FormGroup): void {
@@ -173,10 +178,48 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
   }
 
   private setUnEditableFields(): void {
+    this.dataForm.get('INV_GUITrack')?.disable();
     this.dataForm.get('INV_GUINo')?.disable();
     this.dataForm.get('INV_GUIDate')?.disable();
     this.dataForm.get('INV_YM')?.disable();
     this.dataForm.get('INV_DeclareYM')?.disable();
+  }
+
+  /**
+   * 設置通關方式註記的監聽器
+   */
+  private setupPassTypeListener(): void {
+    this.dataForm.get('INV_PassType')?.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(value => {
+        this.handlePassTypeChange(value);
+      });
+  }
+
+  /**
+   * 處理通關方式註記變更
+   * @param passType 通關方式註記值 ('1' 或 '2')
+   */
+  private handlePassTypeChange(passType: string | null): void {
+    const invAmt = this.zeroTaxGUIData?.INV_Amt || 0;
+
+    if (passType === '1') {
+      // 選擇 1：預設帶入「非經海關出口金額」，「經海關出口金額」disable 並金額變成 0
+      this.dataForm.patchValue({
+        NonCustomsExportAmt: invAmt,
+        CustomsExportAmt: 0
+      });
+      this.dataForm.get('NonCustomsExportAmt')?.enable();
+      this.dataForm.get('CustomsExportAmt')?.disable();
+    } else if (passType === '2') {
+      // 選擇 2：預設帶入「經海關出口金額」，「非經海關出口金額」disable 並金額變成 0
+      this.dataForm.patchValue({
+        NonCustomsExportAmt: 0,
+        CustomsExportAmt: invAmt
+      });
+      this.dataForm.get('NonCustomsExportAmt')?.disable();
+      this.dataForm.get('CustomsExportAmt')?.enable();
+    }
   }
 
   getZeroTaxGUIData(form: FormGroup): void {

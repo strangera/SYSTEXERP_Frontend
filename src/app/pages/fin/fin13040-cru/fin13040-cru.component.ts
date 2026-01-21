@@ -10,12 +10,13 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
-import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 import { TableEditComponent } from './fin13040-table-edit/fin13040-table-edit.component';
 import { EditColumn } from './fin13040-table-edit/fin13040-table-edit.model';
@@ -33,6 +34,7 @@ import { EditColumn } from './fin13040-table-edit/fin13040-table-edit.model';
     DropdownComponent,
     InputTextComponent,
     CalendarComponent,
+    InputNumberComponent,
     ButtonComponent,
     TranslateModule,
     TableEditComponent,
@@ -95,11 +97,28 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     super();
   }
 
+  // 在模板使用：新增模式且選到 InvoiceType='35' 時隱藏發票號碼欄位
+  get showInvoiceNumberField(): boolean {
+    return !(this.crudstatus === CRUDStatus.Create && this.dataForm?.controls?.InvoiceType?.value === '35');
+  }
+
+  // 在模板使用：發票號碼欄位是否應為唯讀（Edit 模式或 control 被停用）
+  get isInvoiceNumberReadonly(): boolean {
+    const ctrl = this.dataForm?.controls?.INV_GUINumber;
+    return this.crudstatus === CRUDStatus.Edit || !!ctrl?.disabled;
+  }
+
   // ======================== 初始化 ========================
   ngOnInit(): void {
     this.initializePage('FIN13040', this.dataForm);
     this.loadBuyerUniformOptions();
     this.loadInvoiceTypeOptions();
+
+    // 若為編輯模式，僅停用發票號碼欄位（發票格式仍可變更）
+    if (this.crudstatus === CRUDStatus.Edit) {
+      const invCtrl = this.dataForm.get('INV_GUINumber');
+      if (invCtrl && !invCtrl.disabled) invCtrl.disable({ emitEvent: false });
+    }
 
     // 自動將發票號碼轉為大寫，方便使用者輸入小寫英文字母時仍符合格式
     this.dataForm.get('INV_GUINumber')?.valueChanges
@@ -112,6 +131,19 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
           }
         }
       });
+
+    // 若為新增且發票格式為 35，則隱藏/停用發票號碼欄位
+    this.dataForm.get('InvoiceType')?.valueChanges.pipe(untilDestroyed(this)).subscribe((val) => {
+      if (this.crudstatus === CRUDStatus.Create && val === '35') {
+        this.dataForm.controls.INV_GUINumber.setValue('', { emitEvent: false });
+        this.dataForm.controls.INV_GUINumber.disable({ emitEvent: false });
+      } else {
+        // 若不是新增模式或不是 35，確保欄位可用（非 Read 模式）
+        if (!this.isFormReadable && this.dataForm.controls.INV_GUINumber.disabled) {
+          this.dataForm.controls.INV_GUINumber.enable({ emitEvent: false });
+        }
+      }
+    });
 
     const rowData = history.state?.rowdata;
     console.log('主檔資料:', rowData);
@@ -318,12 +350,12 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         next: (res) => {
           const allowed = ['31', '32', '35'];
           const data = res?.Data?.INV_GUITypes ?? [];
-          this.InvoiceType_Options = data
-            .filter((x: any) => allowed.includes(x.INV_GUIType))
-            .map((x: any) => ({
-              label: `${x.INV_GUIType} - ${x.INV_GUIName}`,
-              value: x.INV_GUIType,
-            }));
+          const filtered = data.filter((x: any) => allowed.includes(x.INV_GUIType));
+          filtered.sort((a: any, b: any) => Number(a.INV_GUIType) - Number(b.INV_GUIType));
+          this.InvoiceType_Options = filtered.map((x: any) => ({
+            label: `${x.INV_GUIType} - ${x.INV_GUIName}`,
+            value: x.INV_GUIType,
+          }));
         },
       });
   }
@@ -400,31 +432,13 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     this.columns = [
       {
         field: 'PLU_No',
-        header: '貨號',
-        type: 'dropdown',
-        options: () => this.INV_ItemName_Options,
-        optionLabel: 'label',
-        optionValue: 'INV_ItemNo',
-        validate: [
-          (value: any) => ({
-            isValid: !!value,
-            errorMessage: ['請選擇貨號']
-          })
-        ],
-        calculate: (rowData, value) => {
-          const selected = this.INV_ItemName_Options.find(opt => opt.INV_ItemNo === value);
-          return selected ? { PLU_Name: selected.INV_ItemName } : {};
-        },
-      },
-      {
-        field: 'PLU_Name',
         header: '品名',
         type: 'dropdown',
-        options: () =>
-          this.INV_ItemName_Options.map(opt => ({
-            label: opt.INV_ItemName,
-            value: opt.INV_ItemName,
-          })),
+        options: () => this.INV_ItemName_Options.map(opt => ({
+          label: `${opt.INV_ItemNo} - ${opt.INV_ItemName}`,
+          value: opt.INV_ItemNo,
+          INV_ItemName: opt.INV_ItemName,
+        })),
         optionLabel: 'label',
         optionValue: 'value',
         validate: [
@@ -434,8 +448,8 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
           })
         ],
         calculate: (rowData, value) => {
-          const selected = this.INV_ItemName_Options.find(opt => opt.INV_ItemName === value);
-          return selected ? { PLU_No: selected.INV_ItemNo } : {};
+          const selected = this.INV_ItemName_Options.find(opt => opt.INV_ItemNo === value);
+          return selected ? { PLU_Name: selected.INV_ItemName } : {};
         },
       },
       {
@@ -593,63 +607,5 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         },
       });
   }
-  /** 匯出 PDF */
-  onExportPDF(): void {
-    if (!this.currentDetailId || this.currentDetailId <= 0) {
-      return;
-    }
-
-    this.btnLoading = true;
-
-    const payload = {
-      PageSize: 0,
-      PageIndex: 0,
-      OrderBy: '',
-      Offset: 0,
-      SortBy: [],
-      MID: 0,
-      STO_No: '10',
-      ID: this.currentDetailId,
-    };
-
-    console.log('[PrintFIN13040 payload]', payload);
-
-    this.fin13040Service.printFIN13040(payload).subscribe({
-      next: async (res: any) => {
-        console.log('[printFIN13040 回傳]', res);
-
-        const contentType = res.headers?.get('Content-Type') || '';
-        const blob = res.body;
-
-        if (contentType.includes('application/json')) {
-          const text = await blob.text();
-          try {
-            const json = JSON.parse(text);
-            if (json?.Status === '0000' && json?.Data?.Print_URL) {
-              const url = `${environment.ApiUrl.replace(/\/$/, '')}${json.Data.Print_URL}`;
-              const filename = decodeURIComponent(
-                json.Data.Print_URL.split('/').pop() ?? '三聯式發票列印.pdf'
-              );
-
-              const a = document.createElement('a');
-              a.href = url;
-              a.setAttribute('download', filename);
-              a.click();
-            }
-          } catch (e) {
-            console.error('解析 JSON 失敗', e);
-          }
-          return;
-        }
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
-        a.download = '三聯式發票列印.pdf';
-        a.click();
-        URL.revokeObjectURL(a.href);
-      },
-      complete: () => {
-        this.btnLoading = false;
-      },
-    });
-  }
+  // 匯出功能已搬至清單頁的列印按鈕 (FIN13040Component.onPrint)
 }

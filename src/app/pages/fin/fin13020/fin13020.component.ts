@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormGroup,
+  Validators,
+  FormsModule,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { FIN13020Service } from '../../../service/api/fin/fin13020.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -51,7 +56,8 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     InvoiceDateStart: [null],                            // 退出/折讓日期(起)
     InvoiceDateEnd: [null],                              // 退出/折讓日期(迄)
     InvoiceType: [null],                                 // 發票格式
-    INV_DeclareYM: [null],                               // 申報年月
+    // ⭐ 申報年月，和 FIN13010 一樣用 YYYYMM
+    INV_DeclareYM: [null as string | null],
     Source_Doc_NoStart: [null, [Validators.maxLength(16)]], // 憑證單號(起)
     Source_Doc_NoEnd: [null, [Validators.maxLength(16)]],   // 憑證單號(迄)
     Voucher_NoStart: [null, [Validators.maxLength(16)]],    // 傳票編號(起)
@@ -111,17 +117,51 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     super();
   }
 
-  ngOnInit(): void {
-    this.initializePage('FIN13020', '/FIN/FIN13020CRU', this.queryForm);
+  /* ---------- Init：還原邏輯跟 FIN13010 一樣 ---------- */
 
-    const savedAny: any = this.queryStateService.getQueryState(this.ProgNo) as any;
-    const savedValue = savedAny?.value ?? savedAny;
+// fin13020.component.ts
 
-    if (savedValue) {
-      this.queryForm.patchValue(savedValue as any);
-      this.onSubmit(this.queryForm);
-    }
+ngOnInit(): void {
+  // 第二個參數是 CRU 路徑，照你現在的設定
+  this.initializePage('FIN13020', '/FIN/FIN13020CRU');
+
+  const fromCru = !!(history.state && history.state['fromCru']);
+
+  if (fromCru) {
+    // ✅ 只有從 CRU 回來才還原 + 自動查詢
+    this.handleQueryRestore(this.queryForm, this.ProgNo, (f) =>
+      this.onSubmit(f),
+    );
+  } else {
+    // ✅ 其他情況（從選單 / 其他頁過來）→ 使用預設「當年當月」
+    this.setDefaultDeclareYMByToday();
   }
+}
+
+
+
+  /** ⭐ 預設申報年月：和 FIN13010 一樣，取現在日期所屬「偶數月」的 YYYYMM */
+  private setDefaultDeclareYMByToday(): void {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+
+    // 雙月邏輯：用偶數月代表申報期間
+    let evenMonth = month % 2 === 0 ? month : month + 1;
+    if (evenMonth > 12) {
+      evenMonth = 12;
+    }
+    const repYYYYMM = `${year}${String(evenMonth).padStart(2, '0')}`;
+
+    this.queryForm.patchValue(
+      {
+        INV_DeclareYM: repYYYYMM,
+      },
+      { emitEvent: false },
+    );
+  }
+
+  /* ---------- 顯示用格式 ---------- */
 
   formatCreditType(value: string): string {
     switch (value) {
@@ -158,6 +198,8 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     });
   }
 
+  /* ---------- 查詢 ---------- */
+
   onSubmit(form: FormGroup): void {
     this.submitted = true;
     if (form.invalid) {
@@ -175,7 +217,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
       }
     }
 
-    // 申報年月轉 YYYYMM
+    // 申報年月轉 YYYYMM（YearMonthComponent 會給 YYYYMM，但保險再轉一次）
     payload.INV_DeclareYM = this.toYYYYMM(payload.INV_DeclareYM);
 
     this.loading = true;
@@ -205,7 +247,11 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
 
         this.totalRecords = res.TotalCount || this.data.length;
 
-        this.queryStateService.setQueryState(this.ProgNo, payload);
+        // 存「查詢用原始值」給之後從 CRU 回來還原
+        this.queryStateService.setQueryState(
+          this.ProgNo,
+          this.queryForm.getRawValue(),
+        );
       },
       error: () => {
         this.loading = false;
@@ -222,6 +268,8 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     this.data = [];
     this.totalRecords = 0;
     (this.queryStateService as any).clearQueryState?.(this.ProgNo);
+    // 清空後重新帶預設申報年月（偶數月）
+    this.setDefaultDeclareYMByToday();
   }
 
   onDelete(event: any): void {
@@ -245,6 +293,8 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
       },
     });
   }
+
+  /* ---------- 工具：YYYYMM 轉換 ---------- */
 
   private toYYYYMM(input: any): string | null {
     if (!input) return null;

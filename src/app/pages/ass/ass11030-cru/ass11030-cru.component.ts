@@ -40,21 +40,19 @@ export class ASS11030CRUComponent extends BasicCruPageComponent<ASS11030Data> im
     CLASS_ID: new FormControl<string>('', [Validators.required, Validators.maxLength(2)]),    // 小分類代碼
     CLASS_NAME: new FormControl<string>('', [Validators.required, Validators.maxLength(32)]), // 小分類名稱
     M_CLASS_ID: new FormControl<string>('', [Validators.required]),                            // 中分類代碼
-    M_CLASS_NAME: new FormControl<string>('', [Validators.maxLength(40)]),                    // 中分類名稱（唯讀顯示）
     B_CLASS_ID: new FormControl<string>('', [Validators.required]),                            // 大分類代碼
-    B_CLASS_NAME: new FormControl<string>('', [Validators.maxLength(40)]),                    // 大分類名稱（唯讀顯示）
     NOTES: new FormControl<string>(''),                                                        // 說明
   });
   public readonly df = computed(() => this.dataForm.controls);
 
   public readonly tableLoading = signal<boolean>(false);
 
-  // 大分類代碼下拉選項
-  public readonly bigClassOptions = signal<{ label: string; value: string; name: string }[]>([]);
-  // 中分類代碼下拉選項（篩選後的選項）
-  public readonly midClassOptions = signal<{ label: string; value: string; name: string }[]>([]);
+  // 大分類代碼/名稱下拉選項
+  public readonly bigClassOptions = signal<{ label: string; value: string }[]>([]);
+  // 中分類代碼/名稱下拉選項（篩選後的選項）
+  public readonly midClassOptions = signal<{ label: string; value: string }[]>([]);
   // 儲存所有中分類資料（用於根據大分類篩選）
-  private allMidClassData: { label: string; value: string; name: string; bClassId: string }[] = [];
+  private allMidClassData: { label: string; value: string; bClassId: string }[] = [];
 
   constructor(
     public readonly service: ASS11030Service,
@@ -71,8 +69,7 @@ export class ASS11030CRUComponent extends BasicCruPageComponent<ASS11030Data> im
     this.logger.debug(`ASS11030 CRU init:`, [this.user, this.rowdata]);
 
     // 1. 先設定 valueChanges 監聽（避免 patchValue 觸發時清除資料）
-    this.setupBigClassNameSync();
-    this.setupMidClassNameSync();
+    this.setupBigClassFilterSync();
 
     // 2. 再 patchValue（這樣 valueChanges 會被觸發，但有保護條件）
     if (this.rowdata) {
@@ -80,9 +77,7 @@ export class ASS11030CRUComponent extends BasicCruPageComponent<ASS11030Data> im
         CLASS_ID: this.rowdata.S_CLASS_ID ?? '',
         CLASS_NAME: this.rowdata.S_CLASS_NAME ?? '',
         M_CLASS_ID: this.rowdata.M_CLASS_ID ?? '',
-        M_CLASS_NAME: this.rowdata.M_CLASS_NAME ?? '',
         B_CLASS_ID: this.rowdata.B_CLASS_ID ?? '',
-        B_CLASS_NAME: this.rowdata.B_CLASS_NAME ?? '',
         NOTES: this.rowdata.NOTES ?? '',
       });
     }
@@ -100,16 +95,10 @@ export class ASS11030CRUComponent extends BasicCruPageComponent<ASS11030Data> im
       next: res => {
         if (res.Status !== '0000') return;
         const options = res.Data.QueryData.map(item => ({
-          label: `${item.CLASS_ID}/${item.CLASS_NAME}`,
+          label: `${item.CLASS_ID} - ${item.CLASS_NAME}`,
           value: item.CLASS_ID,
-          name: item.CLASS_NAME,
         }));
         this.bigClassOptions.set(options);
-
-        // 如果是編輯或檢視模式，同步大分類名稱
-        if (this.rowdata?.B_CLASS_ID) {
-          this.syncBigClassName(this.rowdata.B_CLASS_ID);
-        }
       },
     });
   }
@@ -122,19 +111,13 @@ export class ASS11030CRUComponent extends BasicCruPageComponent<ASS11030Data> im
       next: res => {
         if (res.Status !== '0000') return;
         this.allMidClassData = res.Data.QueryData.map(item => ({
-          label: `${item.M_CLASS_ID}/${item.M_CLASS_NAME}`,
+          label: `${item.M_CLASS_ID} - ${item.M_CLASS_NAME}`,
           value: item.M_CLASS_ID,
-          name: item.M_CLASS_NAME,
           bClassId: item.B_CLASS_ID,
         }));
 
         // 根據目前選擇的大分類篩選中分類選項
         this.filterMidClassOptions();
-
-        // 如果是編輯或檢視模式，同步中分類名稱
-        if (this.rowdata?.M_CLASS_ID) {
-          this.syncMidClassName(this.rowdata.M_CLASS_ID);
-        }
       },
     });
   }
@@ -155,17 +138,10 @@ export class ASS11030CRUComponent extends BasicCruPageComponent<ASS11030Data> im
   }
 
   /**
-   * 設定大分類代碼變更時自動同步大分類名稱，並重新篩選中分類選項
+   * 設定大分類代碼變更時重新篩選中分類選項
    */
-  private setupBigClassNameSync(): void {
-    this.dataForm.controls.B_CLASS_ID.valueChanges.subscribe(value => {
-      if (value) {
-        this.syncBigClassName(value);
-      } else {
-        // 清除大分類代碼時，同步清除大分類名稱
-        this.dataForm.controls.B_CLASS_NAME.setValue('');
-      }
-
+  private setupBigClassFilterSync(): void {
+    this.dataForm.controls.B_CLASS_ID.valueChanges.subscribe(() => {
       // 重新篩選中分類選項
       this.filterMidClassOptions();
 
@@ -176,39 +152,9 @@ export class ASS11030CRUComponent extends BasicCruPageComponent<ASS11030Data> im
         if (!isValidOption) {
           // 清除不符合的中分類選擇
           this.dataForm.controls.M_CLASS_ID.setValue('');
-          this.dataForm.controls.M_CLASS_NAME.setValue('');
         }
       }
     });
-  }
-
-  /**
-   * 設定中分類代碼變更時自動同步中分類名稱
-   */
-  private setupMidClassNameSync(): void {
-    this.dataForm.controls.M_CLASS_ID.valueChanges.subscribe(value => {
-      if (value) {
-        this.syncMidClassName(value);
-      } else {
-        this.dataForm.controls.M_CLASS_NAME.setValue('');
-      }
-    });
-  }
-
-  /**
-   * 同步大分類名稱
-   */
-  private syncBigClassName(classId: string): void {
-    const selectedOption = this.bigClassOptions().find(opt => opt.value === classId);
-    this.dataForm.controls.B_CLASS_NAME.setValue(selectedOption?.name ?? '');
-  }
-
-  /**
-   * 同步中分類名稱
-   */
-  private syncMidClassName(classId: string): void {
-    const selectedOption = this.allMidClassData.find(opt => opt.value === classId);
-    this.dataForm.controls.M_CLASS_NAME.setValue(selectedOption?.name ?? '');
   }
 
   public onSubmit(): void {
