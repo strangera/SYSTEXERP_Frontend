@@ -22,24 +22,7 @@
       </div>
       <div class="grid p-fluid">
         <app-dropdown class="col-12 md:col-6 lg:col-4"
-                      label="中分類代碼"
-                      controlName="M_CLASS_ID"
-                      [options]="midClassOptions()"
-                      optionLabel="label"
-                      optionValue="value"
-                      [control]="df().M_CLASS_ID"
-                      [disabled]="isFormReadable"
-                      [submitted]="submitted"></app-dropdown>
-        <app-input-text class="col-12 md:col-6 lg:col-4"
-                        label="中分類名稱"
-                        controlName="M_CLASS_NAME"
-                        [control]="df().M_CLASS_NAME"
-                        [disabled]="true"
-                        [submitted]="submitted"></app-input-text>
-      </div>
-      <div class="grid p-fluid">
-        <app-dropdown class="col-12 md:col-6 lg:col-4"
-                      label="大分類代碼"
+                      label="大分類代碼/名稱"
                       controlName="B_CLASS_ID"
                       [options]="bigClassOptions()"
                       optionLabel="label"
@@ -47,12 +30,15 @@
                       [control]="df().B_CLASS_ID"
                       [disabled]="isFormReadable"
                       [submitted]="submitted"></app-dropdown>
-        <app-input-text class="col-12 md:col-6 lg:col-4"
-                        label="大分類名稱"
-                        controlName="B_CLASS_NAME"
-                        [control]="df().B_CLASS_NAME"
-                        [disabled]="true"
-                        [submitted]="submitted"></app-input-text>
+        <app-dropdown class="col-12 md:col-6 lg:col-4"
+                      label="中分類代碼/名稱"
+                      controlName="M_CLASS_ID"
+                      [options]="midClassOptions()"
+                      optionLabel="label"
+                      optionValue="value"
+                      [control]="df().M_CLASS_ID"
+                      [disabled]="isFormReadable"
+                      [submitted]="submitted"></app-dropdown>
       </div>
       <div class="grid p-fluid">
         <app-input-textarea class="col-12"

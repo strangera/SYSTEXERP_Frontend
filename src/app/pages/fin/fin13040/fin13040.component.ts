@@ -17,13 +17,22 @@ import { createPaginationConfig } from '@shared/componentkit/table2/table2.model
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarModule } from 'primeng/calendar';
 import { map } from 'rxjs/operators';
-import { AddButton, Column, formatAmount } from 'src/app/shared/componentkit/table/table.model';
+import { AddButton, Column, formatAmount, formatDate } from 'src/app/shared/componentkit/table/table.model';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+
+/**
+ * 格式化發票狀態
+ */
+const formatInvoiceStatus = (value: any) => {
+  if (value === 'N') return '開立';
+  if (value === 'Y') return '作廢';
+  return value;
+};
 //1.1.4.3 形成申報書
 @Component({
   selector: 'app-fin13040',
@@ -134,6 +143,8 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
     { field: 'Voucher_No', header: '傳票編號', visible: true },
     { field: 'AssetType', header: '資產註記', visible: true },
     { field: 'SAL_Type', header: '使用別', visible: true },
+    { field: 'INV_Cancel', header: '發票狀態', visible: true, format: formatInvoiceStatus },
+    { field: 'TXN_VoidDT', header: '作廢日期', visible: true, format: formatDate },
   ];
   constructor(
     private dropDownListService: DropDownListService,
