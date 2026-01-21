@@ -1,5 +1,5 @@
 import { registerLocaleData } from '@angular/common';
-import { HttpBackend, HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpBackend, HttpClient } from '@angular/common/http';
 import zhHant from '@angular/common/locales/zh-Hant';
 import { inject, Injectable, Injector } from '@angular/core';
 import { Router } from '@angular/router';
@@ -73,39 +73,40 @@ export class AuthService {
 
   // 初始化客戶端 IP
   private initializeClientIp(): void {
-    // **修改: 創建 ipClient 仍需在 DI 系統外，所以保持 httpBackend 邏輯**
     const ipClient = new HttpClient(this.httpBackend);
-
     ipClient.get<{ ip: string }>('https://api.ipify.org/?format=json').pipe(
       untilDestroyed(this), // 配合 @UntilDestroy() 確保取消訂閱
       map(res => res.ip),
       catchError(() => of('0.0.0.0')),
       tap(ip => {
         this.client_ip = ip;
-
-        let userInfo = this.getUserInfo();
-        if (userInfo) {
-          userInfo = { ...userInfo, client_ip: ip };
-          localStorage.setItem('UserInfo', JSON.stringify(userInfo));
-          this.userSubject.next(userInfo);
+        const latestUserInfo = this.getUserInfo();
+        if (latestUserInfo) {
+          // 只更新 IP，保留最新的 AccessToken 和其他資訊
+          const updatedUserInfo = {
+            ...latestUserInfo,
+            client_ip: ip
+          };
+          // 只有在 IP 真的有變時才更新，減少對系統的干擾
+          if (latestUserInfo.client_ip !== ip) {
+            localStorage.setItem('UserInfo', JSON.stringify(updatedUserInfo));
+            this.userSubject.next(updatedUserInfo);
+            console.log('[AuthService] Client IP 更新成功:', ip);
+          }
         }
       })
     ).subscribe();
   }
-
   // 取得當前使用者
   public get currentUserValue(): UserInfo | null {
     return this.userSubject.value;
   }
-
   // 檢查是否已登入
   isLoggedIn(): boolean {
     const user = this.userSubject.value;
     return !!user?.AccessToken && !this.jwtHelper.isTokenExpired(user.AccessToken);
   }
-
   // 登入
-  // **修改: 返回 Observable<UserInfo>，而不是 ApiResponse<UserInfo>**
   login(data: userLogin, options?: { skipNavigate?: boolean }): Observable<UserInfo> {
     data.password = this.encrypt.getPassword(data.code as string, data.password as string);
     data.client_ip = this.client_ip;
@@ -120,30 +121,23 @@ export class AuthService {
         };
         localStorage.setItem('UserInfo', JSON.stringify(updatedUserInfo));
         this.userSubject.next(updatedUserInfo);
-
-        // **修改: InactivityService 延遲初始化**
-        // 這裡使用 inject() 函數獲取實例，這是現代 Angular 的最佳實踐
         this.inactivityService ??= this.injector.get(InactivityService);
         this.inactivityService.setupListener();
         this.inactivityService.startTimer();
-
         // 清除查詢狀態
         this.queryStateService.clearAllQueryStates();
-
         // 導航邏輯
         if (!options?.skipNavigate) {
           this.router.navigate(['/sso/dashboard']);
         }
       }),
-      // 確保將所有錯誤導向給訂閱者或攔截器 (保持原樣，但現在它會捕獲 validateApiResponse 拋出的 Error)
       catchError(err => throwError(() => err))
     );
   }
 
-  // **新增: 強制登出方法 (供攔截器使用)**
+  // 強制登出方法 (供攔截器使用)
   forceLogout(reason: 'Manual' | 'TokenExpired'): void {
     console.warn(`[AuthService] Force Logout due to: ${reason}`);
-    // 統一清除邏輯，並給出錯誤提示
     this.clearSessionAndLocalStorage();
     this.notemessage.errorBubble('您的會話已過期或無效，請重新登入。');
   }
@@ -155,23 +149,11 @@ export class AuthService {
     of(token).pipe(
       // 如果有 Token，發送後端登出請求
       switchMap(t => t ? this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/User/userLogout`, {}).pipe(
-        // **修改: 增加一次 catchError 處理，確保後端請求失敗時也能繼續前端登出**
-        catchError((error: HttpErrorResponse) => {
-          console.error('後端登出請求失敗:', error);
-          // 即使後端登出失敗，也要繼續執行前端登出流程
-          return EMPTY; // 返回 EMPTY 讓 Observable 鏈結束
-        })
+        catchError(() => { return EMPTY; })
       ) : EMPTY),
-      // **修改: 在 subscribe 前執行 tap 確保執行清除邏輯**
-      // 此處不需要 tap，只需確保 subscribe() 後執行 clearSessionAndLocalStorage()
     ).subscribe({
-      complete: () => {
-        // 不論 switchMap 是否成功或發送，最終執行前端清除
-        this.clearSessionAndLocalStorage();
-      }
+      complete: () => { this.clearSessionAndLocalStorage(); }
     });
-    // **移除: 避免在 subscribe() 外部呼叫 clearSessionAndLocalStorage() 導致重複**
-    // this.clearSessionAndLocalStorage();
   }
 
   // 清除 SessionStorage 和 LocalStorage
@@ -181,7 +163,6 @@ export class AuthService {
     this.userSubject.next(null);
     this.router.navigate(['/login'], { replaceUrl: true });
     this.queryStateService.clearAllQueryStates();
-    // **修改: 避免與 forceLogout 訊息衝突，這裡只給 info 氣泡**
     this.notemessage.infoBubble('已成功登出');
   }
 
@@ -193,7 +174,6 @@ export class AuthService {
 
   // 獲取外部 Token
   getOuterToken(): Observable<OuterTokenResponse> {
-    console.log('[AuthService] 呼叫 /SSOLogin/getOuterToken');
     return this.http.get<OuterTokenResponse>(`${this.apiUrl}/SSOLogin/getOuterToken`);
   }
 }

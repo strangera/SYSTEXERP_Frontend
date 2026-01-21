@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
@@ -16,16 +16,17 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 // UI
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
-type SortMeta = { field: string; order: 1 | -1 };
+interface SortMeta { field: string; order: 1 | -1 }
 
 @Component({
   selector: 'app-fin13050',
@@ -43,11 +44,12 @@ type SortMeta = { field: string; order: 1 | -1 };
     TranslateModule,
     CalendarComponent,
     InputNumberRangeComponent,
+    YearMonthComponent,
   ],
   templateUrl: './fin13050.component.html',
   styleUrls: ['./fin13050.component.scss'],
 })
-export class FIN13050Component extends BasicQueryPageComponent<any> {
+export class FIN13050Component extends BasicQueryPageComponent<any> implements OnInit {
   totalRecords = 0;
   data: any[] = [];
 
@@ -58,11 +60,11 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
 
   // 下拉/多選選項
   PUR_VoucherTypeOptions: any[] = [];
-  directTypeOptions: Array<{ label: string; value: string }> = [];
-  taxTypeOptions: Array<{ label: string; value: string }> = [];
-  PUR_DiscNoOptions: Array<{ label: string; value: string }> = [];
-  typeOptions: Array<{ label: string; value: string }> = [];
-  SYS_ORIGINOptions: Array<{ label: string; value: string }> = [];
+  directTypeOptions: { label: string; value: string }[] = [];
+  taxTypeOptions: { label: string; value: string }[] = [];
+  PUR_DiscNoOptions: { label: string; value: string }[] = [];
+  typeOptions: { label: string; value: string }[] = [];
+  SYS_ORIGINOptions: { label: string; value: string }[] = [];
   vendorOptions: any[] = [];
 
   /** 預設排序（清除 / 無 SortBy 時使用） */
@@ -96,8 +98,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
 
     // 主條件（全部使用後端命名）
     PUR_VoucherType: [], // 發票格式
-    PUR_GUITrack: [, [Validators.maxLength(2)]], // 字軌
-    PUR_GUINo: [, [Validators.maxLength(8)]], // 發票號碼
+    PUR_GUINo: [, [Validators.maxLength(10)]], // 發票號碼（字軌＋數字，共10碼）
 
     PUR_GUIDate_Start: [], // 發票日期 起
     PUR_GUIDate_End: [], // 發票日期 迄
@@ -139,7 +140,6 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
   // ===== Table 欄位：用後端回傳欄位 =====
   columns: any[] = [
     { field: 'PUR_VoucherType', header: '發票格式', visible: true },
-    { field: 'PUR_GUITrack', header: '字軌', visible: true },
     { field: 'PUR_GUINo', header: '發票號碼', visible: true },
     {
       field: 'PUR_GUIDate',
@@ -217,7 +217,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
     this.fin13050Service.queryVendorList().subscribe((res) => {
       const list = res?.Data ?? [];
       this.vendorOptions = list.map((v: any) => ({
-        label: `${v.VEN_No}-${v.VEN_Name}`,
+        label: `${v.VEN_No} - ${v.VEN_Name}`,
         value: v.VEN_No,
       }));
       this.vendorMap = Object.fromEntries(list.map((v: any) => [v.VEN_No, v]));
@@ -237,7 +237,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
         const list = res?.Data ?? [];
         this.directTypeOptions = list.map((x: any) => ({
           value: String(x.No),
-          label: String(x.Name),
+          label: `${x.No}-${x.Name}`,
         }));
       });
 
@@ -247,7 +247,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
         const list = res?.Data ?? [];
         this.taxTypeOptions = list.map((x: any) => ({
           value: String(x.No),
-          label: String(x.Name),
+          label: `${x.No}-${x.Name}`,
         }));
       });
 
@@ -257,7 +257,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
         const list = res?.Data ?? [];
         this.PUR_DiscNoOptions = list.map((x: any) => ({
           value: String(x.No),
-          label: String(x.Name),
+          label: `${x.No}-${x.Name}`,
         }));
       });
 
@@ -267,7 +267,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
         const list = res?.Data ?? [];
         this.typeOptions = list.map((x: any) => ({
           value: String(x.No),
-          label: String(x.Name),
+          label: `${x.No}-${x.Name}`,
         }));
       });
 
@@ -277,7 +277,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
         const list = res?.Data ?? [];
         this.SYS_ORIGINOptions = list.map((x: any) => ({
           value: String(x.No),
-          label: String(x.Name),
+          label: `${x.No}-${x.Name}`,
         }));
       });
 
@@ -419,16 +419,15 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
       v.SortBy && v.SortBy.length
         ? (v.SortBy as SortMeta[])
         : this._currentSortBy?.length
-        ? this._currentSortBy
-        : this.defaultSort;
+          ? this._currentSortBy
+          : this.defaultSort;
 
     const payload: any = {
       pageSize: v.pageSize ?? 20,
       pageIndex: v.pageIndex ?? 1,
       SortBy: sortBy,
 
-      PUR_GUITrack: v.PUR_GUITrack || undefined,
-      PUR_GUINo: v.PUR_GUINo || undefined,
+      PUR_GUINo: v.PUR_GUINo?.toUpperCase() || undefined,
 
       PUR_VoucherType: this.arr(v.PUR_VoucherType),
 
@@ -572,7 +571,6 @@ export class FIN13050Component extends BasicQueryPageComponent<any> {
       pageSize: 20,
       SortBy: this.defaultSort as SortMeta[],
 
-      PUR_GUITrack: null,
       PUR_GUINo: null,
 
       PUR_GUIDate_Start: null,

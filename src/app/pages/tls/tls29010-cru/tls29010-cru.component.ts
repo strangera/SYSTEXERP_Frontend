@@ -105,15 +105,18 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     pod_type: ['8', [Validators.required]], // 固定寫入8
 
     act_no: [''], // 活動編號
-    pod_desc: [''], // 活動名稱(使用者輸入)，開放下拉
-    pod_sdate: [{ value: null as Date | null, disabled: true }, [Validators.required]], // 活動起始日 (Date)
-    pod_edate: [{ value: null as Date | null, disabled: true }, [Validators.required]], // 活動終止日 (Date)
+    pod_desc: ['', [Validators.required, Validators.maxLength(100)]], // 活動名稱(使用者輸入)，開放下拉
+    pod_sdate: [null as Date | null, [Validators.required]], // 活動起始日 (Date)
+    pod_edate: [null as Date | null, [Validators.required]], // 活動終止日 (Date)
+    // pod_desc: ['Eugeme測試', [Validators.required, Validators.maxLength(100)]], // 使用者輸入  for 測試
+    // pod_sdate: [yesterday, [Validators.required]], // 活動起始日 (Date) // for 測試
+    // pod_edate: [yesterday, [Validators.required]], // 活動終止日 (Date) // for 測試
     pod_status: ['', Validators.required], // 活動建立=0 /核准=1 /反核准=0 /刪除=9
 
     // 核准不會再新增進行
     approved_userno: [{ value: null, disabled: true }], // 核准人員編號
     approved_usr_name: [{ value: null, disabled: true }], // 核准人員姓名
-    approved_date: [{ value: null, disabled: true }], // 核准日期
+    approved_date: [{ value: null as Date | null, disabled: true }], // 核准日期
   });
 
   whetherOption: option[] = [ // 是否使用 Y/N
@@ -138,14 +141,16 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     { label: '刪除', value: '9' },
   ];
 
-  act_no_Options: ActNoOption[] = []; // 活動編號
   cag_barcode_Options: { value: string, label: string }[] = []; // 折扣別下拉
   allBarcodeOptions: any[] = []; // 儲存所有專櫃的折扣別選項
   tlt_No_Option: { value: string, label: string }[] = [];  // 專櫃編號下拉
   tlt_ID_Option: { value: string, label: string }[] = [];  // 抽成類別下拉
 
+  // ★★★ 新增這個變數：用來紀錄變更前的狀態 ★★★
+  private lastDetailSnapshot: TALPORDERD_OPENDisc[] = [];
+
   //主檔資料備份 用於比對是否更動
-  originalData: TALPORDERD_OPENDisc[] = []; // 明細檔 備份
+  originalData: TALPORDERD_OPENDisc[] = []; // 明細檔 備份(用於明細重製)
   originalMainData: ReturnType<typeof this.dataForm.getRawValue> | null = null;  // 主檔 備份
 
   // ---Potential_Customer_Detail 潛在客戶其他資料明細檔 table---
@@ -218,36 +223,6 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       this.loadDetailData(pod_no); //讀取明細檔
     }
 
-    // 活動編號act_no 變更時寫入dataform對應的活動名稱(pod_desc)與起訖日期(pod_sdate、pod_edate)
-    this.dataForm.get('act_no')?.valueChanges
-      .pipe(untilDestroyed(this)) // 使用直到銷毀的操作符，避免記憶體洩漏
-      .subscribe(selectedActNo => {
-        // 根據選中的 act_no cag_barcode_Options 中尋找對應的資料
-        const selectedOption = this.act_no_Options.find(
-          option => option.act_no === selectedActNo
-        );
-
-        if (selectedOption) {
-          // 找到了對應的活動資料，更新 dataForm 中的其他欄位
-          this.dataForm.patchValue({
-            // 活動名稱
-            pod_desc: selectedOption.POD_DESC,
-            pod_sdate: new Date(selectedOption.pod_sdate),
-            pod_edate: new Date(selectedOption.pod_edate),
-          });
-        } else {
-          // 如果選擇的值為 null 或在 options 中找不到，可以選擇清空或保持不變
-          this.dataForm.patchValue({
-            pod_desc: null,
-            pod_sdate: null,
-            pod_edate: null,
-          });
-
-          // (可選) 清空明細資料
-          this.opendisc_Detail = [];
-        }
-      });
-
     //新增模式pod_desc才可以填寫，否則與其他欄位一樣都設為disabled
     const userInfo = this.authService?.getUserInfo?.();
     if (userInfo) {
@@ -271,107 +246,96 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     this.messageService.blockUi();
     this.submitted = true;
 
+    // 1. Form 驗證
     if (this.dataForm.invalid) {
+      this.messageService.errorBubble('主檔資料有誤，請檢查欄位');
       this.messageService.unblockUi();
       return;
     }
 
-    // 1. 檢核明細檔 talent_id (確保都有選到專櫃並成功觸發 API 取得 ID)
-    if (this.opendisc_Detail.some(item => item.status !== 'deleted' && (!item.talent_id || item.talent_id === 0))) {
-      this.messageService.errorBubble('部分明細專櫃合約資料不完整，請重新檢查');
+    // 2. 明細欄位驗證 (呼叫修正後的函式)
+    if (!this.isDetailValid()) {
       this.messageService.unblockUi();
       return;
     }
 
-    // 2. 清理並格式化明細資料 (只送出後端需要的欄位)
-    console.log('送出前項目:', this.opendisc_Detail);
+    // 3. 檢核至少要有一筆 "有效" 明細 (修正 length 問題)
+    const validRows = this.opendisc_Detail.filter(x => x.status !== 'deleted');
+    if (validRows.length === 0) {
+      this.messageService.errorBubble('至少需有一筆有效明細');
+      this.messageService.unblockUi();
+      return;
+    }
 
-    const processedDetail = this.opendisc_Detail
-      .map(item => {
-        // 建立乾淨的 API 物件
-        return {
-          // 如果是 new，ID 送 0；其餘送原 ID
-          id: item.status === 'new' ? 0 : item.id,
-          talent_id: item.talent_id,
-          tlt_no: item.tlt_no,
-          tlt_id: item.tlt_id,
-          cag_barcode: item.cag_barcode,
-          use_flag: item.use_flag,
-          pod_no: frm.get('pod_no')?.value === '系統產生代碼' ? null : frm.get('pod_no')?.value,
-          status: item.status // 直接採用 TableEditComponent 幫我們標記好的狀態
-        };
-      });
+    // 4. 檢核 API 資料完整性 (防止 API 還沒回來就存檔)
+    // 檢查是否有 tlt_no 但沒有 talent_id 的情況
+    const incompleteRows = validRows.filter(item => item.tlt_no && (!item.talent_id || item.talent_id === 0));
+    if (incompleteRows.length > 0) {
+      this.messageService.errorBubble(`部分專櫃資料 (${incompleteRows.map(x => x.tlt_no).join(',')}) 尚未讀取完成或無效，請稍後再試`);
+      this.messageService.unblockUi();
+      return;
+    }
+
+    // 5. 建立 Payload
+    const processedDetail = this.opendisc_Detail.map(item => ({
+      id: item.status === 'new' ? 0 : item.id,
+      talent_id: item.talent_id,
+      tlt_no: item.tlt_no,
+      tlt_id: item.tlt_id,
+      cag_barcode: item.cag_barcode,
+      use_flag: item.use_flag,
+      // 如果是新增模式，明細的 pod_no 送 null，由後端統一寫入
+      pod_no: this.crudstatus === CRUDStatus.Create ? null : (frm.get('pod_no')?.value === '系統產生代碼' ? null : frm.get('pod_no')?.value),
+      status: item.status
+    }));
 
     const body = {
       ...frm.getRawValue(),
       TALPORDERD_OPENDisc: processedDetail
     };
 
-    // ... 後續 switch (this.crudstatus) 邏輯 ...
-    // 請確保在呼叫服務前 console.log(body) 檢查結構
-    console.log('Final Body:', JSON.stringify(body, null, 2));
+    console.log('Final Body:', body); // Debug 用，上線移除
 
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          const userInfo = this.authService?.getUserInfo?.();
-          const request = {
-            ...body,
-            "pod_no": null,
-            "str_no": userInfo?.SYS_StoreNo || ''
-          }
+    const userInfo = this.authService?.getUserInfo?.();
+    const commonRequest = {
+      ...body,
+      "str_no": userInfo?.SYS_StoreNo || ''
+    };
 
-          // console.log('insert', request);
+    // 6. 發送請求
+    if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
+      const createReq = { ...commonRequest, "pod_no": null }; // 確保主檔也是 null
+      console.log('Create Request:', createReq); // Debug 用，上線移除
+      this.messageService.infoBubble('API需調整，目前準備中');
 
-          console.log('insert', JSON.stringify(request, null, 2));
-          this.tls29010Service.insertTLS29010(request).pipe(untilDestroyed(this)).subscribe(() => {
-            this.messageService.successBubble('新增成功');
-
-            // 取出要保留的欄位值 --- 20251007 調整重設邏輯，避免多次新增造成的數值變成null
-            const keepValues = {
-              pod_type: this.dataForm.get('pod_type')?.value,
-              pod_status: this.dataForm.get('pod_status')?.value,
-            };
-
-            // reset 其他欄位
-            this.dataForm.reset();
-
-            // 把保留欄位的值重新設回去
-            this.dataForm.patchValue(keepValues);
-          });
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          const userInfo = this.authService?.getUserInfo?.();
-          const request = {
-            ...body,
-            "str_no": userInfo?.SYS_StoreNo || ''
-          }
-          console.log('update:', JSON.stringify(request, null, 2));
-          this.tls29010Service.updateTLS29010(request).pipe(untilDestroyed(this)).subscribe(() => {
-            // this.messageService.successBubble('更新成功');
-            this.onCancel(); // 儲存後，會返回列表
-          });
-        }
-        break;
+      // this.tls29010Service.insertTLS29010(createReq).pipe(untilDestroyed(this)).subscribe({
+      //   next: () => {
+      //     this.messageService.successBubble('新增成功');
+      //     this.messageService.unblockUi(); // 確保在 subscribe 內解鎖
+      //   },
+      //   error: () => {
+      //     this.messageService.unblockUi();
+      //   }
+      // });
+    } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
+      console.log('Update Request:', commonRequest); // Debug 用，上線移除
+      this.messageService.infoBubble('API需調整，目前準備中');
+      // this.tls29010Service.updateTLS29010(commonRequest).pipe(untilDestroyed(this)).subscribe({
+      //   next: () => {
+      //     // this.messageService.successBubble('更新成功');
+      //     this.onCancel();
+      //     this.messageService.unblockUi();
+      //   },
+      //   error: () => {
+      //     this.messageService.unblockUi();
+      //   }
+      // });
+    } else {
+      this.messageService.unblockUi();
     }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
   }
 
   loadOption() {
-    // 活動編號(新增request空物件即可，修改代入原有的)
-    // const pod = this.dataForm.get('pod_no')?.value || "";
-    const pod = "";
-    this.tls29010Service.dropdownTLS29010bypodno({ "pod_no": pod }).pipe(untilDestroyed(this)).subscribe(res => {
-      this.act_no_Options = res.Data.map((item: { act_no: string; POD_DESC: string; }) => ({
-        ...item,
-        Label: `${item.act_no} - ${item.POD_DESC}`
-      }));
-      console.log('pod: ', pod, ' ,活動編號 下拉:', this.act_no_Options);
-    });
     // 抽成別
     this.tls29010Service.dropdownTLS29010bytalentid({ "talent_id": "" }).pipe(untilDestroyed(this)).subscribe(res => {
       this.allBarcodeOptions = res.Data;
@@ -412,29 +376,35 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
             _tempId: `id_${Math.random().toString(36).substr(2, 9)}` // 產生前端唯一識別碼
           }));
           this.originalData = JSON.parse(JSON.stringify(this.opendisc_Detail));
+
+          // ★★★ 初始化快照：這裡存的是最原始的狀態 ★★★
+          this.lastDetailSnapshot = JSON.parse(JSON.stringify(this.opendisc_Detail));
         }
       });
   }
 
-  // #region 明細檔操作
+  // #region 明細檔操作(row變化時重新寫入明細)
   async onDataChange(newData: TALPORDERD_OPENDisc[]): Promise<void> {
-    // 1. 建立舊狀態的深拷貝快照，用於精準比對變更
-    const previousState = JSON.parse(JSON.stringify(this.opendisc_Detail));
+    // 1. 不要再從 this.opendisc_Detail 複製，改用我們維護的 lastDetailSnapshot
+    // const previousState = JSON.parse(JSON.stringify(this.opendisc_Detail)); (這行刪除)
 
-    // 2. 使用 for...of 配合 entries() 同時取得 index 與 row
+    // 用之前的快照來比對
+    const previousState = this.lastDetailSnapshot;
+
     for (const [i, currentRow] of newData.entries()) {
-      const oldRow = previousState[i];
+      const oldRow = previousState[i]; // 這裡會抓到真正「變更前」的資料
 
-      // 確保新增加的行也有唯一識別碼，解決「改 A 動到 B」
+      // 確保新增加的行也有唯一識別碼
       if (!(currentRow as any)._tempId) {
         (currentRow as any)._tempId = `new_${Math.random().toString(36).substr(2, 9)}`;
       }
 
       // 比對專櫃編號是否真的改變了
+      // 如果是新的一行 (oldRow undefined) 或者 號碼不一致
       const isTltNoChanged = !oldRow || currentRow.tlt_no !== oldRow.tlt_no;
 
       if (isTltNoChanged) {
-        console.log(`第 ${i} 列專櫃變更:`, currentRow.tlt_no);
+        console.log(`第 ${i} 列專櫃變更 detected! 從 [${oldRow?.tlt_no}] 變為 [${currentRow.tlt_no}]`);
 
         // 執行重置邏輯
         currentRow.talent_id = 0;
@@ -444,22 +414,24 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         (currentRow as any)._barcodeOptions = [];
 
         if (currentRow.tlt_no) {
-          // 抓取新專櫃的下拉選單資料
           await this.fetchTltDetails(currentRow);
         }
       }
     }
 
-    // 3. 斷開引用同步回組件，確保下次觸發時 oldRow 為正確的舊值
+    // 2. 更新畫面資料
     this.opendisc_Detail = [...newData];
+
+    // ★★★ 關鍵：處理完所有邏輯後，更新快照，等待下一次變更 ★★★
+    this.lastDetailSnapshot = JSON.parse(JSON.stringify(newData));
   }
-  // 封裝 API 抓取邏輯
+  // 封裝 API 抓取邏輯 (可用000033測試)
   private async fetchTltDetails(row: any) {
     try {
       const res = await this.tls29010Service.queryTLTTALENT_Data({ tlt_no: row.tlt_no }).toPromise();
       if (res.Status === '0000' && res.Data?.length) {
         row.talent_id = res.Data[0].talent_id;
-        // ... 續接抓取 DropDownList 邏輯 ...
+        // 第一層檢查：是否有抓到專櫃主檔資料
         if (res.Status === '0000' && res.Data?.length) {
           const apiData = res.Data[0];
           row.talent_id = apiData.talent_id;
@@ -499,6 +471,9 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
               if ((row as any)._tltIdOptions.length === 1) {
                 row.tlt_id = (row as any)._tltIdOptions[0].value;
               }
+
+              // 因為這是非同步操作，等到這裡執行完，onDataChange 才會刷新畫面，所以使用者看得到，帶入預設的 使用別 => 'Y'
+              row.use_flag = 'Y';
 
               console.log('抽成別選單:', (row as any)._tltIdOptions);
               console.log('折扣別選單:', (row as any)._barcodeOptions);
@@ -548,7 +523,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       this.dataForm.reset();
     }
 
-    // 恢復明細資料
+    // 恢復明細資料(用originalData進行重製)
     this.opendisc_Detail = [...this.originalData];
   }
 
@@ -569,6 +544,49 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       isValid: !duplicate,
       errorMessage: duplicate ? ['專櫃編號不可重複'] : []
     };
+  }
+
+  // 手動檢核明細檔資料
+  private isDetailValid(): boolean {
+    let isValid = true;
+
+    // 使用 entries() 同時取得 index 和 row
+    for (const [rowIndex, row] of this.opendisc_Detail.entries()) {
+
+      // 忽略已刪除的資料
+      if (row.status === 'deleted') {
+        continue;
+      }
+
+      for (const col of this.TALPORDERD_OPENDisc_Detail_Columns) {
+        // 如果該欄位有設定驗證器
+        if (col.validate && col.validate.length > 0) {
+          // 取得該欄位的值，並強制轉型避免 TS 報錯
+          const value = row[col.field as keyof TALPORDERD_OPENDisc];
+
+          for (const validator of col.validate) {
+
+            // --- 修改處：補齊 5 個參數 ---
+            const result = validator(
+              value,                 // 1. 值
+              row,                   // 2. 該列資料物件
+              this.opendisc_Detail,  // 3. 完整資料陣列
+              rowIndex.toString(),   // 4. 該列索引
+              col.field              // 5. 欄位名稱 string
+            );
+
+            if (!result.isValid) {
+              isValid = false;
+              // 顯示錯誤訊息
+              this.messageService.errorBubble(`第 ${rowIndex + 1} 筆資料的 [${col.header}] 檢核失敗：${result.errorMessage.join(', ')}`);
+              return false; // 遇到錯誤直接中斷
+            }
+          }
+        }
+      }
+    }
+
+    return isValid;
   }
 
   // 明細disabled判斷(專櫃編號沒選就disabled)

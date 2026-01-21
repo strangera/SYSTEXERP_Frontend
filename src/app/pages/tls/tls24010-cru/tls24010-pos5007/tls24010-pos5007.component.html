@@ -62,7 +62,7 @@
       </td>
       <td class="text-right">
         <p-inputNumber *ngIf="isFormCreateable" class="w-full min-w-max" [(ngModel)]="rowData.PLU_SalePrc"
-          [disabled]="store_way === '2'" [max]="9999999999" [minFractionDigits]="2" [maxFractionDigits]="5"
+          [disabled]="store_way === '2'" [min]="0" [max]="9999999999" [minFractionDigits]="2" [maxFractionDigits]="5"
           (onInput)="onInput(rowData)" />
         <span *ngIf="!isFormCreateable">$ {{ rowData.PLU_SalePrc }}</span>
       </td>

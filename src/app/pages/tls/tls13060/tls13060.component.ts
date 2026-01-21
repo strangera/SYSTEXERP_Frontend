@@ -1,25 +1,24 @@
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { TLTTALENT_columns } from './tls13060.model';
-import { VendorCategoryOptionsService } from '../../../service/api/dropdownservice/vendor-category-options.service';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
-import { TLS13060ResponseItem, TLS13060Service } from '../../../service/api/tls/tls13060.service';
-import { finalize } from 'rxjs';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { AsyncPipe } from '@angular/common';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { TLS13060QueryRequest, TLS13060ResponseItem, TLS13060Service } from '../../../service/api/tls/tls13060.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton-yn/radiobutton-yn.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
+import { TLTTALENT_columns } from './tls13060.model';
 
 @Component({
   selector: 'app-tls13060',
@@ -32,20 +31,21 @@ import { AsyncPipe } from '@angular/common';
     ReactiveFormsModule,
     InputTextComponent,
     MultiSelectComponent,
-    CalendarRangeComponent,
+    CalendarRangeQuickComponent,
     RadiobuttonYNComponent,
     ButtonComponent,
-    TableComponent,
     TranslateModule,
-    AsyncPipe
+    AsyncPipe,
+    TableReportComponent,
+    DropdownComponent
   ],
 })
 export class TLS13060Component extends BasicQueryPageComponent<TLS13060ResponseItem> implements OnInit {
   queryForm = this.formBuilder.group({
-    apply_no: ['', [Validators.maxLength(12)]], // 專櫃招募編號
+    apply_no: [null, [Validators.maxLength(12)]], // 專櫃招募編號
     ven_uniformList: [null], // 廠商統一編號
-    tlt_no: ['', [Validators.maxLength(12)]], // 專櫃編號
-    tlt_name: ['', [Validators.maxLength(100)]], // 櫃位名稱
+    tlt_no: [null, [Validators.maxLength(12)]], // 專櫃編號
+    tlt_name: [null, [Validators.maxLength(100)]], // 櫃位名稱
     location_noList: [null], // 位置編號
     building_noList: [null], // 館別
     org_idList: [null], // 【組織代碼/名稱】
@@ -63,13 +63,17 @@ export class TLS13060Component extends BasicQueryPageComponent<TLS13060ResponseI
     rece_yn: [null], // 是否開立業主發票
     pos_yn: [null], // 是否使用業主收銀機
     cash_yn: [null], // 是否為業主收現
-    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'tlt_no', order: 1 }]],
   });
   totalRecords = 0;
   data: TLS13060ResponseItem[] = [];
   columns: Column[] = TLTTALENT_columns;
-  vandorCategoryOptions: { label: string, value: string }[] = [];
-  locationOptions: { label: string, value: string }[] = [];
+  historyRequestBody: TLS13060QueryRequest | null = null;
+  vandorCategoryOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
+  tlt_nocationOptions = this.dropdown.queryTltTalent();
+  locationOptions = this.dropdown.queryPos2002();
   building_noList = this.dropdown.querySys3800();
   org_idList = this.dropdown.querySys3100();
   tlt_openflagOptions = getSYS1000Options('tlt_openflag');
@@ -78,30 +82,34 @@ export class TLS13060Component extends BasicQueryPageComponent<TLS13060ResponseI
   yesNoOptions = getSYS1000Options('YES_NO');
 
   constructor(
-    private readonly vendorCategoryOptionsService: VendorCategoryOptionsService,
-    private readonly locationOptionsService: LocationOptionsService,
-    private readonly tLS13060Service: TLS13060Service,
-    private readonly dropdown: DropdownApiService
+    public readonly tLS13060Service: TLS13060Service,
+    private readonly dropdown: DropdownApiService,
+    private readonly datePipe: DatePipe,
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS13060', '/TLS/TLS13060cru', this.queryForm, (form) => this.onSubmit(form));
-    this.vendorCategoryOptionsService.getVendorCategoryOptions('1').pipe(untilDestroyed(this)).subscribe((res) => {
-      this.vandorCategoryOptions = res;
-    });
-    this.locationOptionsService.getLocationOptions().pipe(untilDestroyed(this)).subscribe((res) => {
-      this.locationOptions = res;
-    });
+    this.initializePage('TLS13060');
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.tLS13060Service.queryTLS13060(frm.value).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(response => {
+      const body = {
+        ...frm.value,
+        tlt_bdate_start: this.datePipe.transform(frm.value.tlt_bdate_start, 'yyyy-MM-dd') || null,
+        tlt_bdate_end: this.datePipe.transform(frm.value.tlt_bdate_end, 'yyyy-MM-dd') || null,
+        tlt_edate_start: this.datePipe.transform(frm.value.tlt_edate_start, 'yyyy-MM-dd') || null,
+        tlt_edate_end: this.datePipe.transform(frm.value.tlt_edate_end, 'yyyy-MM-dd') || null,
+        tlt_contract_bdate_start: this.datePipe.transform(frm.value.tlt_contract_bdate_start, 'yyyy-MM-dd') || null,
+        tlt_contract_bdate_end: this.datePipe.transform(frm.value.tlt_contract_bdate_end, 'yyyy-MM-dd') || null,
+        tlt_contract_edate_start: this.datePipe.transform(frm.value.tlt_contract_edate_start, 'yyyy-MM-dd') || null,
+        tlt_contract_edate_end: this.datePipe.transform(frm.value.tlt_contract_edate_end, 'yyyy-MM-dd') || null,
+      }
+      this.tLS13060Service.queryTLS13060(body).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(response => {
         this.data = response.Data;
         this.totalRecords = response.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        this.historyRequestBody = frm.value;
       });
     })
   }

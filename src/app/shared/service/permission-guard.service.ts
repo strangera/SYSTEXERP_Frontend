@@ -10,7 +10,7 @@ export enum Actions {
   Delete = '40',         // 刪除 (D)
   // 匯入/匯出相關
   Report = '50',         // 報表
-  Print = '60',          // 列印
+  Print = '60',          // 匯出 PDF
   ExportExcel = '70',    // 匯出 EXCEL
   ExcelImport = '130',   // 匯入 EXCEL
   ImportCSV = '240',     // 匯入CSV
@@ -18,11 +18,26 @@ export enum Actions {
   TagPrint = '300',      // 產生標籤檔
   ImageImport = '330',   // 匯入圖片
   ImageExport = '340',   // 匯出圖片
-  // 其他特殊權限
-  Audit = '80',            // 審核
-  AntiAudit = '90',        // 反審核
+  ExportPledge = '200',  // 匯出切結書
+  // 檔案上傳/下載
+  Upload = '440',          // 上傳
   Download = '100',        // 下傳
-  Invalidate = '110',      // 作廢
+  // 正/反相關
+  Audit = '80',                   // 審核
+  AntiAudit = '90',               // 反審核
+  Invalidate = '110',             // 作廢
+  CancelInvalidate = '260',       // 取消作廢
+  ConfirmDailyClose = '210',      // 確定日結
+  AntiDailyClose = '220',         // 反日結
+  PayCheck = '380',               // 繳票
+  CancelPayCheck = '390',         // 取消繳票
+  ReturnCheck = '400',            // 退票
+  CancelReturnCheck = '410',      // 取消退票
+  Settle = '420',                 // 結算
+  CancelSettle = '430',           // 取消結算
+  Lock = '450',                   // 鎖定
+  Unlock = '460',                 // 反鎖定
+  // 交易補登相關
   ShowContract = '120',    // 顯示合約
   CounterNoCorrection = '140', // 專櫃編號修正
   DiscountCorrection = '150',  // 折數修正
@@ -30,16 +45,16 @@ export enum Actions {
   PaymentTypeCorrection = '170',    // 付款別修正
   PresaleCorrection = '180',       // 是否為預售交易修正
   InvalidateTransaction = '190',   // 交易資料作廢
-  ExportPledge = '200',            // 匯出切結書
-  ConfirmDailyClose = '210',       // 確定日結
-  AntiDailyClose = '220',          // 反日結
+  // 其他
+  Preview = '280',                 // 預覽
   TransferFile = '230',            // 轉檔
   AllocateNumber = '250',          // 配號
-  CancelInvalidate = '260',        // 取消作廢
-  CarryForward = '270',            // 結轉
-  Preview = '280',                 // 預覽
   CancelDocument = '290',          // 取消單據
+  CarryForward = '270',            // 結轉
   CloseCase = '310',               // 結案
+  Stop = '350',                    // 停用
+  Copy = '360',                    // 複製
+  Check = '370',                   // 檢核
 }
 
 @Injectable({

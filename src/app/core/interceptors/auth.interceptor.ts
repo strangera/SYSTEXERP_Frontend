@@ -28,13 +28,10 @@ export const authInterceptor: HttpInterceptorFn = (
     catchError((error) => {
       // 檢查是否為 401 Unauthorized 錯誤，且非登入請求
       if (error.status === 401 && !req.url.includes('/User/userLogin')) {
-        console.error('收到 401 錯誤，嘗試強制登出:', error.url);
-
+        console.warn('[AuthInterceptor] 偵測到 401 錯誤，強制執行登出流程。網址:', req.url);
         // 注意：功能型攔截器中調用方法
         // 功能型攔截器可以直接調用 inject(Service) 取得的服務方法
         authService.forceLogout('TokenExpired');
-
-        return throwError(() => error);
       }
       // 拋出其他錯誤
       return throwError(() => error);

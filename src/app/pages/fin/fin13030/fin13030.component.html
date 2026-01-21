@@ -87,14 +87,13 @@
           ></app-input-text>
 
           <!-- 貨物或勞務數量起迄 -->
-          <app-input-text-range
+          <app-input-number-range
             class="col-12 md:col-6 lg:col-4"
             label="貨物或勞務數量"
             [startControl]="queryForm.controls.GoodsQtyStart"
             [endControl]="queryForm.controls.GoodsQtyEnd"
             [submitted]="submitted"
-            [errorForGroup]="true"
-          ></app-input-text-range>
+          ></app-input-number-range>
 
           <!-- 外銷方式 -->
           <app-multi-select

@@ -1,13 +1,13 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormControl, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
-import { DialogModule } from 'primeng/dialog';
-import { InputSwitchModule } from 'primeng/inputswitch';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { RadioButtonModule } from 'primeng/radiobutton';
-import { DropdownModule } from 'primeng/dropdown';
 import { NgIf } from '@angular/common';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { FormBuilder, FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Button } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { DropdownModule } from 'primeng/dropdown';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputSwitchModule } from 'primeng/inputswitch';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { Subject, takeUntil } from 'rxjs';
 
 export interface TableExport {
   print_reportTitle?: string;
@@ -20,8 +20,8 @@ export interface TableExport {
   page_lines?: number;
   print_line_number?: string,
   footer_DataType?: string,
-  page_orientation?:string,
-  page_size_setting?:string,
+  page_orientation?: string,
+  page_size_setting?: string,
 
 }
 
@@ -30,7 +30,7 @@ export interface TableExport {
   templateUrl: './table-export.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [DialogModule, FormsModule, ReactiveFormsModule, InputSwitchModule, InputNumberModule,RadioButtonModule,DropdownModule, NgIf, Button]
+  imports: [DialogModule, FormsModule, ReactiveFormsModule, InputSwitchModule, InputNumberModule, RadioButtonModule, DropdownModule, NgIf, Button]
 })
 export class TableExportComponent implements OnInit, OnDestroy {
   @Input() visible = true;
@@ -40,8 +40,8 @@ export class TableExportComponent implements OnInit, OnDestroy {
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() save = new EventEmitter<TableExport>();
 
-  @Input()  pageOrientation: string | null = 'Landscape';  // PDF橫式
-  @Input()  pageSizeSetting: string | null = 'A4';  // PDF A4
+  @Input() pageOrientation: string | null = 'Landscape';  // PDF橫式
+  @Input() pageSizeSetting: string | null = 'A4';  // PDF A4
 
   private destroy$ = new Subject<void>();
 
@@ -53,11 +53,11 @@ export class TableExportComponent implements OnInit, OnDestroy {
     print_field_title_per_page: ['N'],// 是否顯示欄位標題
     print_reportFooter: ['Y'], // 報表頁尾
     print_reportFooter_per_page: ['N'], // 報表頁尾每頁
-    page_lines: [10, [Validators.min(10)]], // 每頁行數
+    page_lines: [30, [Validators.min(10)]], // 每頁行數
     print_line_number: ['Y'],
     footer_DataType: [''],
-    page_orientation:['Landscape'],
-    page_size_setting:['A4']
+    page_orientation: ['Landscape'],
+    page_size_setting: ['A4']
   });
   constructor(private formBuilder: FormBuilder) { };
   ngOnInit() {

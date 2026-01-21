@@ -10,6 +10,7 @@ import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -95,7 +96,7 @@ export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response>
         this.onEdit({ ...rowData, update_type: UpdateType.Deposit });
       },
       // 只有「未繳票」狀態可以執行繳票
-      disabled: (rowData: FIN35010Response) => rowData.Status !== '0'
+      disabled: (rowData: FIN35010Response) => rowData.Status !== '0' || !this.hasPermission(Actions.PayCheck)
     },
     {
       label: '取消繳票',
@@ -104,7 +105,7 @@ export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response>
         this.onEdit({ ...rowData, update_type: UpdateType.CancelDeposit });
       },
       // 只有「已繳票」狀態可以取消繳票
-      disabled: (rowData: FIN35010Response) => rowData.Status !== '1'
+      disabled: (rowData: FIN35010Response) => rowData.Status !== '1' || !this.hasPermission(Actions.CancelPayCheck)
     },
     {
       label: '退票',
@@ -113,7 +114,7 @@ export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response>
         this.onEdit({ ...rowData, update_type: UpdateType.Refund });
       },
       // 修正點：必須是「已繳票(1)」狀態才能執行退票
-      disabled: (rowData: FIN35010Response) => rowData.Status !== '1'
+      disabled: (rowData: FIN35010Response) => rowData.Status !== '1' || !this.hasPermission(Actions.ReturnCheck)
     },
     {
       label: '取消退票',
@@ -122,7 +123,7 @@ export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response>
         this.onEdit({ ...rowData, update_type: UpdateType.CancelRefund });
       },
       // 只有「已退票(2)」狀態可以取消退票
-      disabled: (rowData: FIN35010Response) => rowData.Status !== '2'
+      disabled: (rowData: FIN35010Response) => rowData.Status !== '2' || !this.hasPermission(Actions.CancelReturnCheck)
     },
   ];
 

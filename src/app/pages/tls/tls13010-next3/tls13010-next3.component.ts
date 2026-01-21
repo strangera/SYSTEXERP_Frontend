@@ -346,11 +346,15 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   private initializeNewContractConditionData(commissionType: string): void {
     console.log('新增模式：初始化條件設定，抽成類型:', commissionType);
 
-    // 直接使用原有方法，不傳額外的日期參數
-    this.allConditionItems = this.conditionDataManager.initializeEmptyConditions(
+    // 取得合約起訖日期作為預設值
+    const { startDate, endDate } = this.getContractDates();
+
+    // 使用智能日期初始化，預設帳務起訖為合約起訖日
+    this.allConditionItems = this.conditionDataManager.initializeSmartConditions(
       commissionType,
-      this.currentTalentId
-      // 移除額外的日期參數
+      this.currentTalentId,
+      startDate || this.getDefaultStartDate(),
+      endDate || this.getDefaultEndDate()
     );
 
     this.categorizeConditionItems();

@@ -69,7 +69,7 @@ bootstrapApplication(AppComponent, {
     ),
     provideRouter(
       routes,
-      withPreloading(PreloadAllModules)
+      ...(environment.production ? [withPreloading(PreloadAllModules)] : [])
     ),
     provideHttpClient(withInterceptors([
       authInterceptor,

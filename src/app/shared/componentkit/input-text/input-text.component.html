@@ -19,7 +19,7 @@
           (errorForGroup && control.parent?.errors),
       }" pInputText [attr.aria-label]="label || placeholder" [title]="label || placeholder"
       (compositionstart)="onCompositionStart()" (compositionend)="onCompositionEnd($event)" (input)="onInput($event)"
-      (blur)="onBlur($event)" [pKeyFilter]="keyFilter" />
+      (blur)="onBlur($event)" (keydown.enter)="$event.preventDefault()" [pKeyFilter]="keyFilter" />
   </ng-container>
 
   <ng-template #starredInput>

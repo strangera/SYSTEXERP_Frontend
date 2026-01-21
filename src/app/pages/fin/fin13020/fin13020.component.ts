@@ -45,7 +45,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     TXN_Ret_NoStart: [null, [Validators.maxLength(20)]], // 退出/折讓單號(起)
     TXN_Ret_NoEnd: [null, [Validators.maxLength(20)]],   // 退出/折讓單號(迄)
-    GUI_Track: [null, [Validators.maxLength(2)]],        // 字軌 (查詢條件還是用 GUI_Track 給你方便)
+    GUI_Track: [null, [Validators.maxLength(2)]],        // 字軌
     InvoiceNumberStart: [null, [Validators.maxLength(10)]],
     InvoiceNumberEnd: [null, [Validators.maxLength(10)]],
     InvoiceDateStart: [null],                            // 退出/折讓日期(起)
@@ -62,42 +62,30 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
 
-  // ⭐ 這裡改成用「CRU 同一套欄位名稱」，讓 BasicCruPageComponent 能自動帶值過去
+  // 用 CRU 同一套欄位名稱
   columns: any[] = [
     { field: 'TXN_Ret_No', header: '退出/折讓單號', visible: true },
-
-    // GUI_Track：從後端的 InvoiceTrack 映射而來（onSubmit 內處理）
     { field: 'GUI_Track', header: '字軌', visible: true },
-
-    // PUR_GUINo：從後端的 InvoiceNumber 映射而來
     { field: 'PUR_GUINo', header: '發票號碼', visible: true },
-
-    // PUR_GUIDate：從後端的 InvoiceDate 映射而來
     {
       field: 'PUR_GUIDate',
       header: '退出/折讓日期',
       visible: true,
       format: this.formatDateFromBackend,
     },
-
-    // PUR_VoucherType：從 InvoiceType 映射而來
     { field: 'PUR_VoucherType', header: '發票格式', visible: true },
-
     {
       field: 'Credit_Type',
       header: '區別',
       visible: true,
       format: this.formatCreditType,
     },
-
-    // PUR_RepYYYYMM：從 INV_DeclareYM 映射而來
     {
       field: 'PUR_RepYYYYMM',
       header: '申報年月',
       visible: true,
       format: this.formatRepYYYYMM,
     },
-
     {
       field: 'PUR_Net',
       header: '退回/折讓金額',
@@ -105,7 +93,6 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
       format: (v: number) => this.money(v),
       exportFormat: 'number:comma2',
     },
-
     {
       field: 'PUR_Tax',
       header: '退回/折讓稅額',
@@ -113,9 +100,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
       format: (v: number) => this.money(v),
       exportFormat: 'number:comma2',
     },
-
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
-
     { field: 'Voucher_No', header: '傳票編號', visible: true },
   ];
 
@@ -129,9 +114,8 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('FIN13020', '/FIN/FIN13020CRU', this.queryForm);
 
-    // 🔙 還原查詢條件（修掉 BehaviorSubject 型別錯誤）
     const savedAny: any = this.queryStateService.getQueryState(this.ProgNo) as any;
-    const savedValue = savedAny?.value ?? savedAny; // 如果是 BehaviorSubject 就用 .value
+    const savedValue = savedAny?.value ?? savedAny;
 
     if (savedValue) {
       this.queryForm.patchValue(savedValue as any);
@@ -164,7 +148,6 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     return `${value.substring(0, 4)}/${value.substring(4, 6)}`;
   }
 
-  // 數字加千分位，兩位小數
   money(v: number): string {
     if (v === null || v === undefined) return '';
     const n = Number(v);
@@ -202,20 +185,26 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
       next: (res) => {
         const raw = res.Data || [];
 
-        // ⭐ 關鍵：把後端 APS4023 的欄位名稱映射成 CRU 用的欄位名稱
+        // ⭐ 把主檔 ID + 明細 Details(ID) 一起映射成 CRU 用資料
         this.data = raw.map((row: any) => ({
           ...row,
-          // 給 CRU 用的
-          GUI_Track: row.InvoiceTrack,      // 字軌
-          PUR_GUINo: row.InvoiceNumber,     // 發票號碼
-          PUR_GUIDate: row.InvoiceDate,     // 退出/折讓日期
-          PUR_VoucherType: row.InvoiceType, // 發票格式
-          PUR_RepYYYYMM: row.INV_DeclareYM, // 申報年月
+          id: row.ID,                         // 主檔 ID（小寫給 CRUD / table2 用）
+          GUI_Track: row.InvoiceTrack,        // 字軌
+          PUR_GUINo: row.InvoiceNumber,       // 發票號碼
+          PUR_GUIDate: row.InvoiceDate,       // 退出/折讓日期
+          PUR_VoucherType: row.InvoiceType,   // 發票格式
+          PUR_RepYYYYMM: row.INV_DeclareYM,   // 申報年月
+          APS40235List: (row.Details || []).map((d: any) => ({
+            ID: d.ID,                         // ⭐ 明細 ID
+            PLU_Name: d.PLU_Name,
+            TXN_Qty: d.TXN_Qty,
+            PLU_SalePrc: d.PLU_SalePrc,
+            TXN_SaleAmt: d.TXN_SaleAmt,
+          })),
         }));
 
         this.totalRecords = res.TotalCount || this.data.length;
 
-        // 儲存查詢條件（含 INV_DeclareYM=YYYYMM）
         this.queryStateService.setQueryState(this.ProgNo, payload);
       },
       error: () => {
@@ -232,15 +221,13 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     this.queryForm.reset();
     this.data = [];
     this.totalRecords = 0;
-    // 如果有提供清除方法就一起清掉
     (this.queryStateService as any).clearQueryState?.(this.ProgNo);
   }
 
-  // 🔥 批次刪除 / 單筆刪除
   onDelete(event: any): void {
     const rows = Array.isArray(event) ? event : [event];
     const idList = rows
-      .map((r) => r.id)
+      .map((r) => r.id) // 小寫 id
       .filter((id) => id !== null && id !== undefined);
 
     if (!idList.length) {
@@ -262,7 +249,6 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
   private toYYYYMM(input: any): string | null {
     if (!input) return null;
 
-    // 字串：'2025/05'、'2025-05-01T00:00:00'、'202505'
     if (typeof input === 'string') {
       const onlyDigits = input.replace(/\D/g, '');
       if (onlyDigits.length >= 6) return onlyDigits.slice(0, 6);
@@ -275,14 +261,12 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
       return null;
     }
 
-    // Date 物件
     if (input instanceof Date) {
       const y = input.getFullYear();
       const m = String(input.getMonth() + 1).padStart(2, '0');
       return `${y}${m}`;
     }
 
-    // 其他型別也試著 new Date
     const d = new Date(input);
     if (!isNaN(d.getTime())) {
       const y = d.getFullYear();

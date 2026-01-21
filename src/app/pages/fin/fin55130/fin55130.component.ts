@@ -49,7 +49,7 @@ export class FIN55130Component extends BasicQueryPageComponent<FIN55130DetailIte
     { field: 'BaseAmt', header: '金額', isSubTotal: true, format: formatAmount, align: 'right', groupField: '基準年月' },
     { field: 'CompareAmt', header: '金額', isSubTotal: true, format: formatAmount, align: 'right', groupField: '比較年月' },
     { field: 'DiffAmt', header: '金額', isSubTotal: true, format: formatAmount, align: 'right', groupField: '差異' },
-    { field: 'DiffPct', header: '百分比', isSubTotal: true, format: (v) => v ? v + '%' : '', align: 'right', groupField: '差異' },
+    { field: 'DiffPct', header: '百分比', isSubTotal: true, format: (v) => v ? v : '', align: 'right', groupField: '差異' },
   ];
   columnGroup: ColumnGroup[] = [
     { field: '基準年月', header: 'YYYY年M月' },

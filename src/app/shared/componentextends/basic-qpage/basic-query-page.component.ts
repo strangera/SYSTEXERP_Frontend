@@ -36,6 +36,9 @@ export abstract class BasicQueryPageComponent<T> {
   protected formStatusService = inject(FormStatusService);
   protected loadingService = inject(LoadingService);
   public readonly Actions = Actions;
+  hasPermission(action: string): boolean {
+    return this.permissionGuard.hasPermission(this.ProgNo, action);
+  }
 
   language = navigator.language;
 
@@ -80,9 +83,6 @@ export abstract class BasicQueryPageComponent<T> {
         }
       });
     }
-  }
-  hasPermission(action: string): boolean {
-    return this.permissionGuard.hasPermission(this.ProgNo, action);
   }
   navigateWithState(crudstatus: CRUDStatus, rowdata?: T | unknown, queryConditions?: any) {
     const extras: NavigationExtras = {

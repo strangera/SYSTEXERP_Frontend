@@ -10,6 +10,7 @@
       (onSelect)="onFileUpload($event); fileUpload.clear()"
       [auto]="true"
       chooseLabel="匯入EXCEL"
+      [disabled]="!hasPermission(Actions.ExcelImport)"
     />
     <app-button
       btnType="create"

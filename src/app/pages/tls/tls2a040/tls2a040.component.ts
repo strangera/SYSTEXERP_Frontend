@@ -17,7 +17,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, formatDate, formatDateToYYYYMMDD } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatDate, formatDateToYYYYMMDD } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import saveAs from 'file-saver';
 import JSZip from 'jszip';
@@ -84,7 +84,7 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
     { field: 'tlt_name', header: '櫃位名稱' },
     { field: 'TXN_GUIBegNo', header: '發票號碼' },
     { field: 'CRD_No', header: '信用卡卡號' },
-    { field: 'TXN_PayAmt', header: '金額' },
+    { field: 'TXN_PayAmt', header: '金額', format: formatAmount, align: 'right' },
     { field: 'check_status_label', header: '狀況' },
     { field: 'check_remark', header: '備註' }
   ];

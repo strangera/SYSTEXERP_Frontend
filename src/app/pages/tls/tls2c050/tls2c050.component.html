@@ -22,9 +22,12 @@
         </h6>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
-          <app-button btnType="report" [loading]="loading" label="轉檔" (click)="onInvoiceSummary()"></app-button>
-          <app-button btnType="report" [loading]="loading" label="鎖定" (click)="onLock()"></app-button>
-          <app-button btnType="report" [loading]="loading" label="反鎖定" (click)="onUnLock()"></app-button>
+          <app-button btnType="report" [loading]="loading" label="轉檔" (click)="onInvoiceSummary()"
+            [disabled]="!hasPermission(Actions.TransferFile)"></app-button>
+          <app-button btnType="report" [loading]="loading" label="鎖定" (click)="onLock()"
+            [disabled]="!hasPermission(Actions.Lock)"></app-button>
+          <app-button btnType="report" [loading]="loading" label="反鎖定" (click)="onUnLock()"
+            [disabled]="!hasPermission(Actions.Unlock)"></app-button>
         </div>
       </form>
     </p-accordionTab>

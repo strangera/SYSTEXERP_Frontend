@@ -63,17 +63,17 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
     INV_DeclareYM_E: [null, [Validators.required]], // 申報年月_迄
     INV_Uniform: ['', [Validators.maxLength(10)]], // 買受人統一編號
     GoodsOrServicesName: ['', [Validators.maxLength(20)]], // 貨物或勞務名稱
-    GoodsQtyStart: [0, [this.validationService.numberValidator]], // 貨物或勞務數量_起
-    GoodsQtyEnd: [0, [this.validationService.numberValidator]], // 貨物或勞務數量_迄
+    GoodsQtyStart: [null, [this.validationService.numberValidator]], // 貨物或勞務數量_起
+    GoodsQtyEnd: [null, [this.validationService.numberValidator]], // 貨物或勞務數量_迄
     ExportMethod: [null], // 外銷方式 (多選)
     INV_DocName: ['', [Validators.maxLength(20)]], // 證明文件名稱
     INV_DocNo: ['', [Validators.maxLength(10)]], // 證明文件號碼
-    NonCustomsExportAmt_B: [0, [this.validationService.numberValidator]], // 非經海關出口金額_起
-    NonCustomsExportAmt_E: [0, [this.validationService.numberValidator]], // 非經海關出口金額_迄
+    NonCustomsExportAmt_B: [null, [this.validationService.numberValidator]], // 非經海關出口金額_起
+    NonCustomsExportAmt_E: [null, [this.validationService.numberValidator]], // 非經海關出口金額_迄
     INV_ExportType: [null], // 出口報單類別 (多選)
     INV_ExportNo: ['', [Validators.maxLength(10)]], // 出口報單號碼
-    CustomsExportAmt_B: [0, [this.validationService.numberValidator]], // 經海關出口金額_起
-    CustomsExportAmt_E: [0, [this.validationService.numberValidator]], // 經海關出口金額_迄
+    CustomsExportAmt_B: [null, [this.validationService.numberValidator]], // 經海關出口金額_起
+    CustomsExportAmt_E: [null, [this.validationService.numberValidator]], // 經海關出口金額_迄
     ExportDate_B: [null], // 輸出或結匯日期_起
     ExportDate_E: [null], // 輸出或結匯日期_迄
     INV_Remark: ['', [Validators.maxLength(100)]], // 備註
@@ -178,8 +178,6 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
       { field: 'INV_GUINo_E', message: '請輸入發票號碼_迄' },
       { field: 'INV_GUIDate_B', message: '請輸入發票日期_起' },
       { field: 'INV_GUIDate_E', message: '請輸入發票日期_迄' },
-      { field: 'INV_YM_B', message: '請輸入資料所屬年月_起' },
-      { field: 'INV_YM_E', message: '請輸入資料所屬年月_迄' },
       { field: 'INV_DeclareYM_B', message: '請輸入申報年月_起' },
       { field: 'INV_DeclareYM_E', message: '請輸入申報年月_迄' }
     ];
@@ -206,8 +204,8 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
         INV_GUIDate_E: frm.get('INV_GUIDate_E')?.value,
         INV_YM_B: this.datePipe.transform(frm.get('INV_YM_B')?.value, 'yyyyMM') ?? "",
         INV_YM_E: this.datePipe.transform(frm.get('INV_YM_E')?.value, 'yyyyMM') ?? "",
-        INV_DeclareYM_B: this.datePipe.transform(frm.get('INV_DeclareYM_B')?.value, 'yyyyMM') ?? "",
-        INV_DeclareYM_E: this.datePipe.transform(frm.get('INV_DeclareYM_E')?.value, 'yyyyMM') ?? "",
+        INV_DeclareYM_B: this.queryForm.get('INV_DeclareYM_B')?.value ?? "",
+        INV_DeclareYM_E: this.queryForm.get('INV_DeclareYM_E')?.value ?? "",
       };
 
       this.fin13030Service.queryFIN13030_GetZeroTaxGUI(rb).subscribe(r => {

@@ -1,96 +1,71 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div >
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
+
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab [header]="'query-conditions' | translate"
+                    [selected]="true"
+                    class="line-height-3 m-0"
+                    [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm"
+            id="queryForm"
+            (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="中分類代碼"
-              controlName="midCategoryCode"
-              [control]="queryForm.controls.midCategoryCode"
-              [submitted]="submitted"
-            ></app-input-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="中分類名稱"
-              controlName="midCategoryName"
-              [control]="queryForm.controls.midCategoryName"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
+          <app-input-text class="col-12 md:col-6 lg:col-4"
+                          label="中分類代碼"
+                          controlName="M_CLASS_ID"
+                          [control]="qf().M_CLASS_ID"
+                          [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4"
+                          label="中分類名稱"
+                          controlName="M_CLASS_NAME"
+                          [control]="qf().M_CLASS_NAME"
+                          [submitted]="submitted"></app-input-text>
         </div>
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="大分類代碼"
-              controlName="bigCategoryCode"
-              [options]="bigCategoryCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.bigCategoryCode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="大分類名稱"
-              controlName="bigCategoryName"
-              [control]="queryForm.controls.bigCategoryName"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
+          <app-dropdown class="col-12 md:col-6 lg:col-4"
+                        label="大分類代碼"
+                        controlName="B_CLASS_ID"
+                        [options]="bigClassOptions()"
+                        optionLabel="label"
+                        optionValue="value"
+                        [control]="qf().B_CLASS_ID"
+                        [submitted]="submitted"></app-dropdown>
+          <app-input-text class="col-12 md:col-6 lg:col-4"
+                          label="大分類名稱"
+                          controlName="B_CLASS_NAME"
+                          [control]="qf().B_CLASS_NAME"
+                          [submitted]="submitted"></app-input-text>
         </div>
-        <app-editor-text
-          label="說明"
-          controlName="illustrate"
-          [control]="queryForm.controls.illustrate"
-          [style]="{ height: '100px' }"
-          [submitted]="submitted"
-        ></app-editor-text>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+        <div class="grid p-fluid">
+          <app-input-textarea class="col-12"
+                              label="說明"
+                              controlName="NOTES_KEYWORD"
+                              [control]="qf().NOTES_KEYWORD"
+                              [submitted]="submitted"></app-input-textarea>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
-  <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+  <div class="col-12">
+    <app-table-report [data]="tableData()"
+                      dataKey="M_CLASS_ID"
+                      tableKey="ASS11020_Data"
+                      [columns]="columns"
+                      [totalRecords]="totalRecords()"
+                      [loading]="tableLoading()"
+                      [showDelete]="false"
+                      [showReportMode]="false"
+                      (edit)="onEdit($event)"
+                      (detail)="onDetail($event)"></app-table-report>
   </div>
 </div>

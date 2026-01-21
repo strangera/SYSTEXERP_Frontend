@@ -7,6 +7,7 @@ import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-se
 import { formatDate } from '@shared/componentkit/table/table.model';
 import { formatAmount } from '@shared/componentkit/table2/table2.model';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { Tls2g020Service } from '../../../service/api/tls/tls2g020.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -78,7 +79,7 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
       .subscribe(res => {
         if (res?.Data) {
           this.tltNoOptions = res.Data.map(item => ({
-            label: `${item.No} ${item.Name}`,
+            label: `${item.No}-${item.Name}`,
             value: item.No,
             No: item.No,
             Name: item.Name
@@ -90,6 +91,7 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
     this.submitted = true;
     this.loading = true;
     this.messageService.blockUi();
+    this.messageService.infoBubble('結算中,請稍候...');
     // 儲存查詢條件，方便 CRU 返回時還原並自動查詢
     try {
       this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
@@ -108,8 +110,12 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
       SortBy: [{ field: 'tlt_no', order: 1 }],
     };
 
-    this.tls2g020Service.queryTLS2G020(payload).subscribe({
-      next: (res) => {
+    this.tls2g020Service.queryTLS2G020(payload)
+      .pipe(untilDestroyed(this), finalize(() => {
+        this.loading = false;
+        this.messageService.unblockUi();
+      }))
+      .subscribe((res) => {
         this.data = (res?.Data || []).map((item: any) => ({
           ...item,
           Contract_bdate: item.Contract_bdate ? formatDateString(item.Contract_bdate) : '',
@@ -123,12 +129,7 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
           }))
         }));
         this.totalRecords = res?.TotalCount || 0;
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
-      }
-    });
+      });
 
     // 工具函式：將日期字串或 Date 物件轉 yyyy-mm-dd
     function formatDateString(date: string | Date): string {
@@ -150,11 +151,15 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
       budget_yymm: row.Month
     };
 
-    this.tls2g020Service.queryTLS2G020Deatil(payload).subscribe({
-      next: (res) => {
-        row.details = res?.Data || [];
-      },
-    });
+    row.expansionLoading = true;
+    this.messageService.infoBubble('結算中,請稍候...');
+    this.tls2g020Service.queryTLS2G020Deatil(payload)
+      .pipe(untilDestroyed(this), finalize(() => row.expansionLoading = false))
+      .subscribe({
+        next: (res) => {
+          row.details = res?.Data || [];
+        },
+      });
   }
 
 

@@ -9,7 +9,7 @@
           <app-file-upload #fileUpload class="col-12" name="myFile" [accept]="allowedFileTypes" [multiple]="true"
             chooseLabel="選擇 CSV 或 TXT 檔案" uploadLabel="上傳" cancelLabel="清除" [auto]="false" [customUpload]="true"
             mode="advanced" (select)="files = $event.files" [loading]="loading"
-            emptyMessage="拖曳檔案到此處或點擊「選擇 CSV 或 TXT 檔案」按鈕。"
+            [disabled]="!hasPermission(Actions.Upload)" emptyMessage="拖曳檔案到此處或點擊「選擇 CSV 或 TXT 檔案」按鈕。"
             (uploadHandler)="handleCustomUpload($event)"></app-file-upload>
         </div>
       </form>

@@ -1,7 +1,7 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onCreate()"></app-button>
+    <app-button btnType="create" (click)="onCreate(undefined, queryForm.getRawValue())"></app-button>
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
@@ -9,7 +9,7 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="應付ID" controlName="ACP_No"
+            <app-input-number [useGrouping]="false" label="應付ID" controlName="ACP_No" [min]="null"
               [control]="queryForm.controls.ACP_No" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -59,7 +59,8 @@
 </div>
 <div class="card">
   <app-table-report apiUrl="queryFIN24020" tableKey="FIN24020query" dataKey="RowNo" [lastQueryBody]="lastQueryBody"
-    [showReportMode]="false" [totalRecords]="totalRecords" [data]="data" (edit)="onEdit($event)"
-    (detail)="onDetail($event)" [columns]="columns" [loading]="loading" [showDelete]="false"
-    [editDisabled]="editDisabledByVouNo" [queryFunction]="queryFIN24020WithStatusLabel.bind(this)"></app-table-report>
+    [showReportMode]="false" [totalRecords]="totalRecords" [data]="data"
+    (edit)="onEdit($event, queryForm.getRawValue())" (detail)="onDetail($event, queryForm.getRawValue())"
+    [columns]="columns" [loading]="loading" [showDelete]="false" [editDisabled]="editDisabledByVouNo"
+    [queryFunction]="queryFIN24020WithStatusLabel.bind(this)"></app-table-report>
 </div>

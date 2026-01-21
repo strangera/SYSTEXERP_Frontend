@@ -11,7 +11,9 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatAmount } from '@shared/componentkit/table/table.model';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { QueryTLS57030Request, TLS57030Detail, TLS57030Service } from '../../../service/api/tls/tls57030.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -24,7 +26,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 @Component({
   selector: 'app-tls57030',
   templateUrl: './tls57030.component.html',
-  styleUrls: ['./tls57030.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -40,7 +41,8 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     TableReportComponent,
     AsyncPipe,
     DropdownTableComponent,
-    RadiobuttonComponent
+    RadiobuttonComponent,
+    ButtonModule
   ],
 })
 export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> implements OnInit {
@@ -52,8 +54,8 @@ export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> i
     PLU_OrgPLUNo: [null, [Validators.maxLength(30)]],
     STK_Date: [new Date(), [Validators.required]],
     ShowStockRange: ['1'],
-    PageSize: [30],
-    PageIndex: [1]
+    pageSize: [30],
+    pageIndex: [1]
   });
 
   warehouseOptions = this.dropdown.queryPos2034();
@@ -66,6 +68,7 @@ export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> i
   ];
 
   data: TLS57030Detail[] = [];
+  footerData: TLS57030Detail | null = null;
   totalRecords = 0;
   historyRequestBody: QueryTLS57030Request | null = null;
   columnGroup = [{ field: '合計', header: '合計' }];
@@ -90,7 +93,8 @@ export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> i
     public readonly tls57030Service: TLS57030Service,
     private readonly dropdown: DropdownApiService,
     private readonly tls52010Service: Tls52010Service,
-    private readonly datePipe: DatePipe
+    private readonly datePipe: DatePipe,
+    private readonly fileExportService: FileExportService
   ) {
     super();
   }
@@ -104,11 +108,12 @@ export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> i
       const body = {
         ...frm.value,
         STK_Date: this.datePipe.transform(frm.value.STK_Date, 'yyyy-MM-dd'),
-        PageSize: frm.value.PageSize || 30
+        pageSize: frm.value.pageSize || 30
       }
 
       this.tls57030Service.queryTLS57030(body).pipe(finalize(() => this.loading = false)).subscribe(res => {
         this.data = res.Data;
+        this.footerData = res.AllData[0] || null;
         this.totalRecords = res.TotalCount ?? this.data.length;
         this.historyRequestBody = body;
       });
@@ -163,5 +168,23 @@ export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> i
         PLU_No: event.PLU_No,
       });
     }
+  }
+  btnLoading = false;
+  onExportPDF() {
+    if (!this.historyRequestBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
+    }
+    const export$ = this.tls57030Service.exportTLS57030PDF(this.historyRequestBody);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading).subscribe();
+  }
+
+  onExportXLSX() {
+    if (!this.historyRequestBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
+    }
+    const export$ = this.tls57030Service.exportTLS57030Excel(this.historyRequestBody);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
 }

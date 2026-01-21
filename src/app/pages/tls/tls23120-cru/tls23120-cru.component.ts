@@ -10,7 +10,7 @@ import {
   NgSwitchCase,
   NgSwitchDefault,
 } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
 import { FormsModule } from '@angular/forms';
@@ -66,7 +66,7 @@ interface TltGroup {
     DecimalPipe, // 支援 | number
   ],
 })
-export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
+export class TLS23120CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   data: any[] = [];
   dataForm = this.formBuilder.nonNullable.group({ showBusType: true });
 
@@ -279,7 +279,7 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
     // =========================
     //   抬頭三欄小工具（支援右移 dx、分段上色）
     // =========================
-    type Part = { text: string; color?: [number, number, number] };
+    interface Part { text: string; color?: [number, number, number] }
     type GridItem =
       | string
       | {
@@ -332,7 +332,7 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
       items.forEach((item, i) => {
         const col = i % cols;
         const row = Math.floor(i / cols);
-        let x = startX + col * (colWidth + colGap);
+        const x = startX + col * (colWidth + colGap);
         const y = startY + row * (rowHeight + rowGap);
 
         if (typeof item === 'string') {

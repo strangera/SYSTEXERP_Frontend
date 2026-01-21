@@ -115,7 +115,6 @@ export abstract class BasicCruPageComponent<T> {
     this.loading = true;
     if (frm?.invalid) {
       this.logValidationErrors(frm);
-      this.loading = false;
       return;
     }
 
