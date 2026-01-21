@@ -29,6 +29,21 @@ import { Column, createPaginationConfig } from '../../../shared/componentkit/tab
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
+// 本期發票月
+const today = new Date();
+let invoiceYear = today.getFullYear();
+let invoiceMonth = today.getMonth() + 1; // JS 月份 0~11
+
+// 如果不是偶數月，就加 1 個月
+if (invoiceMonth % 2 !== 0) {
+  invoiceMonth += 1;
+  if (invoiceMonth > 12) {
+    invoiceMonth = 1;
+    invoiceYear += 1;
+  }
+}
+// 將年月轉成 YYYYMM 字串
+export const invoiceDate = invoiceYear.toString() + invoiceMonth.toString().padStart(2, '0');
 
 @Component({
   selector: 'app-fin13030',
@@ -57,10 +72,10 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
     INV_GUINo_E: ['', [Validators.maxLength(10)]], // 發票號碼_迄
     INV_GUIDate_B: [null], // 發票日期_起
     INV_GUIDate_E: [null], // 發票日期_迄
-    INV_YM_B: [null], // 資料所屬年月_起
-    INV_YM_E: [null], // 資料所屬年月_迄
-    INV_DeclareYM_B: [null, [Validators.required]], // 申報年月_起
-    INV_DeclareYM_E: [null, [Validators.required]], // 申報年月_迄
+    INV_YM_B: [new Date()], // 資料所屬年月_起
+    INV_YM_E: [new Date()], // 資料所屬年月_迄
+    INV_DeclareYM_B: [invoiceDate, [Validators.required]], // 申報年月_起
+    INV_DeclareYM_E: [invoiceDate, [Validators.required]], // 申報年月_迄
     INV_Uniform: ['', [Validators.maxLength(10)]], // 買受人統一編號
     GoodsOrServicesName: ['', [Validators.maxLength(20)]], // 貨物或勞務名稱
     GoodsQtyStart: [null, [this.validationService.numberValidator]], // 貨物或勞務數量_起

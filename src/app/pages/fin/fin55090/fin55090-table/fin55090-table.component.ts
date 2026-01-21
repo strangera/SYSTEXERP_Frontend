@@ -66,32 +66,55 @@ export class TableSubheaderGroupingComponent implements OnInit, OnChanges {
     this.groupedFooters = {};
     this.detailData = [];
 
-    if (!this.data || this.data.length === 0) {
-      return;
-    }
+    // 定義插入邏輯：當 Key 區塊結束時，要顯示 Value 區塊的小計
+    const extraMapping: Record<string, string> = {
+      '營業成本': '營業毛利',
+      '營業費用': '營業損益',
+      '營業外收入及支出': '稅前損益'
+    };
 
-    // 處理資料：根據 'LTYPE_NAME' 分組，並檢查 'STYPE_ID' 是否為空
+    if (!this.data || this.data.length === 0) return;
+
+    // 1. 先把所有的小計行存入 map (方便快速查找)
+    const allFooters: Record<string, any> = {};
     this.data.forEach(row => {
-      // 假設 LTYPE_NAME 是群組的 key
+      if (row.STYPE_ID === null && row.MTYPE_ID === null) {
+        allFooters[row.LTYPE_NAME] = row;
+      }
+    });
+
+    // 2. 建立主要的 groupedFooters
+    this.data.forEach(row => {
       const groupKey = row.LTYPE_NAME;
 
-      // 判斷是否為小計行 (STYPE_ID 為空)
-      // 這裡假設 STYPE_ID 可能是 null, undefined, 或空字串 ''。
-      if (row.STYPE_ID === null && row.MTYPE_ID === null && row.MTYPE_NAME === null) {
-        // 小計行：儲存到 groupedFooters，並以 LTYPE_NAME 作為 key
-        this.groupedFooters[groupKey] = row;
-      } else {
-        // 明細行：儲存到 detailData (p-table 將使用這個資料源)
+      // 判斷是否為明細行
+      if (row.STYPE_ID !== null || row.MTYPE_ID !== null) {
         this.detailData.push(row);
+      } else {
+        // 這是小計行，存入基礎 Map
+        // 邏輯：如果這個項目本身是「營業毛利」，我們不讓它單獨成為一個區塊的 footer
+        // 因為它會被附屬在「營業成本」下方。
+        const isExtraItem = Object.values(extraMapping).includes(groupKey);
+        if (!isExtraItem) {
+          // 正常的區塊小計
+          const footerInfo = { main: row, extra: null };
+
+          // 檢查是否有要掛載的「額外項」
+          const targetExtraName = extraMapping[groupKey];
+          if (targetExtraName && allFooters[targetExtraName]) {
+            footerInfo.extra = allFooters[targetExtraName];
+          }
+
+          this.groupedFooters[groupKey] = footerInfo;
+        }
       }
     });
   }
 
   // 方法：在 groupfooter 模板中用來取得小計資料
   getGroupFooterData(rowData: any): any {
-    // 取得當前群組 (rowData) 的 LTYPE_NAME 作為 key
     const groupKey = rowData.LTYPE_NAME;
-    return this.groupedFooters[groupKey];
+    return this.groupedFooters[groupKey]; // 回傳包含 { main, extra } 的物件
   }
 }
 const formatAmount2 = (val: number | string | null | undefined): string => {
