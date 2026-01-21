@@ -40,7 +40,7 @@ export class FIN55090Component extends BasicQueryPageComponent<QueryFIN55090Resp
     OrgId: this.formBuilder.control<string | null>(null),
     ProjectNo: this.formBuilder.control<string | null>(null),
     // 預設不顯示餘額為零的科目 (false)，預設列印簽核欄 (true)
-    // ShowZero: this.formBuilder.nonNullable.control(false),
+    ShowZero: this.formBuilder.nonNullable.control(false),
     PrintSign: this.formBuilder.nonNullable.control(true),
   });
   // 類別選項: '0'=統制(4碼), '1'=明細(全碼)
