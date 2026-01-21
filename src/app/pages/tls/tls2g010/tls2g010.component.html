@@ -12,8 +12,8 @@
               <app-file-upload #fileUpload class="col-12" name="myFile" accept=".xlsx,.xls" [multiple]="false"
                 chooseLabel="選擇 XLS 或 XLSX 檔案" uploadLabel="上傳" cancelLabel="清除" [auto]="false" [customUpload]="true"
                 mode="advanced" (select)="onFileSelect($event)" [loading]="loading" (remove)="onFileRemove()"
-                emptyMessage="拖曳檔案到此處或點擊「選擇 XLS 或 XLSX 檔案」按鈕。"
-                (uploadHandler)="handleCustomUpload($event)"></app-file-upload>
+                emptyMessage="拖曳檔案到此處或點擊「選擇 XLS 或 XLSX 檔案」按鈕。" (uploadHandler)="handleCustomUpload($event)"
+                [disabled]="!hasPermission(Actions.ExcelImport)"></app-file-upload>
             </div>
             <app-input-text class="col-12" label="工作表名稱" controlName="worksheetName"
               [control]="queryForm.controls.worksheetName" [submitted]="submitted" />
@@ -42,9 +42,12 @@
               [control]="queryForm.controls.SectionNos" [options]="sectionOptions | async" optionLabel="label"
               optionValue="value" [submitted]="submitted" />
             <div class="col-12 grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-              <app-button label="組織範本下載" [loading]="loading" (click)="onDownloadTemplate(queryForm)" />
-              <app-button label="空白範本下載" [loading]="loading" (click)="onDownloadBlankTemplate()" />
-              <app-button label="產生匯出檔" [loading]="loading" (click)="onSubmit(queryForm)" />
+              <app-button label="組織範本下載" [loading]="loading" [disabled]="!hasPermission(Actions.ExportTemplate)"
+                (click)="onDownloadTemplate(queryForm)" />
+              <app-button label="空白範本下載" [loading]="loading" [disabled]="!hasPermission(Actions.ExportTemplate)"
+                (click)="onDownloadBlankTemplate()" />
+              <app-button label="產生匯出檔" [loading]="loading" [disabled]="!hasPermission(Actions.ExportExcel)"
+                (click)="onSubmit(queryForm)" />
             </div>
           </div>
         </div>

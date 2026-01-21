@@ -71,7 +71,7 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
     { field: 'money_type_name', header: '結帳方式', visible: true },
     { field: 'sam_termno', header: '帳次', visible: true },
     { field: 'tlt_term_type_name', header: '抽成方式', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true, type: 'button', link: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true, },
     { field: 'contract_no', header: '契約編號', visible: true },
     { field: 'contract_subno', header: '版次', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
@@ -79,6 +79,10 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
   btnLoading = false;
   ngOnInit(): void {
     this.initializePage('TLS2E080');
+    if (this.hasPermission(this.Actions.Preview)) {
+      this.columns.find(col => col.field === 'tlt_no')!.type = 'button';
+      this.columns.find(col => col.field === 'tlt_no')!.link = true;
+    }
   }
   constructor(
     public readonly tls2e080Service: TLS2E080Service,

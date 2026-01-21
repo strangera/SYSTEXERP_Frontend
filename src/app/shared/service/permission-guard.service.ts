@@ -19,6 +19,7 @@ export enum Actions {
   ImageImport = '330',   // 匯入圖片
   ImageExport = '340',   // 匯出圖片
   ExportPledge = '200',  // 匯出切結書
+  ExportZip = '470',     // 匯出ZIP
   // 檔案上傳/下載
   Upload = '440',          // 上傳
   Download = '100',        // 下傳
@@ -47,6 +48,7 @@ export enum Actions {
   InvalidateTransaction = '190',   // 交易資料作廢
   // 其他
   Preview = '280',                 // 預覽
+  Trial = '500',                   // 試算
   TransferFile = '230',            // 轉檔
   AllocateNumber = '250',          // 配號
   CancelDocument = '290',          // 取消單據
@@ -55,6 +57,8 @@ export enum Actions {
   Stop = '350',                    // 停用
   Copy = '360',                    // 複製
   Check = '370',                   // 檢核
+  OnlineCheck = '480',             // 網路對帳
+  AUTOMAIL = '490'                 // AUTOMAIL
 }
 
 @Injectable({

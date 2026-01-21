@@ -1,7 +1,8 @@
+select * from tblBehaviorType order by sort
 -- 1. 加入行為
 -- 1. 設定變數
 DECLARE @InputCode NVARCHAR(20) = NULL;  -- 沒給值，自動加 10
-DECLARE @InputName NVARCHAR(400) = '匯出範本';
+DECLARE @InputName NVARCHAR(400) = '試算';
 DECLARE @StartSort INT;
 DECLARE @NewCode NVARCHAR(20);
 -- 2. 卡控：檢查是否有重複的名稱 (function_desc)
@@ -49,6 +50,14 @@ INSERT INTO tblPrivilegeBehavior (
 )
 VALUES
     ('tls52040', '110', 'Y', GETDATE(), '2400215', N'Leo');
+
+select
+a.prog_no,a.function_code,b.function_desc
+from tblPrivilegeBehavior a
+left join tblBehaviorType b on b.function_code = a.function_code
+where prog_no = 'tls2e080' order by a.id
+
+delete tblPrivilegeBehavior where prog_no = 'tls2e070' and function_code in ('20','30','40')
 ----------------------------------------------------------------
 -- 3. 新增作業
 INSERT INTO SYS5000 (

@@ -69,13 +69,16 @@
       <div class="flex justify-content-between align-items-center gap-2">
         <div class="flex gap-2">
           <p-button styleClass="p-2" label="匯出Zip檔" [rounded]="true" icon="pi pi-file" (click)="exportZip()"
-            [disabled]="data.length === 0 || selectedItems.length === 0" [loading]="btnLoading"></p-button>
+            [disabled]="data.length === 0 || selectedItems.length === 0 || !hasPermission(Actions.ExportZip)"
+            [loading]="btnLoading"></p-button>
         </div>
         <div class="flex gap-2">
           <p-button styleClass="p-2" label="網路對帳" [rounded]="true" icon="pi pi-file" (click)="netReport()"
-            [disabled]="data.length === 0 || selectedItems.length === 0" [loading]="btnLoading"></p-button>
+            [disabled]="data.length === 0 || selectedItems.length === 0 || !hasPermission(Actions.OnlineCheck)"
+            [loading]="btnLoading"></p-button>
           <p-button styleClass="p-2" label="AUTOMAIL" [rounded]="true" icon="pi pi-file" (click)="autoMail()"
-            [disabled]="data.length === 0 || selectedItems.length === 0" [loading]="btnLoading"></p-button>
+            [disabled]="data.length === 0 || selectedItems.length === 0 || !hasPermission(Actions.AUTOMAIL)"
+            [loading]="btnLoading"></p-button>
         </div>
       </div>
     </header>
