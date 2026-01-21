@@ -213,16 +213,18 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
             targetForm.patchValue(mappedData);
           }
 
-          // 處理欄位狀態
+          // 統一處理欄位狀態
           const form = this.POS6118dataForm;
           form.get('tableName')?.disable();
-          const txnNoValue = form.get('TXN_No')?.value;
-          if (Number(txnNoValue) !== 99999999) { // 有指定交易時要disable 銷售日期欄位
-            form.get('NCML_TxnDate')?.disable({ emitEvent: false });
-          } else {
-            form.get('NCML_TxnDate')?.enable({ emitEvent: false });
+          if (this.isFormEditable) {
+            // 編輯時拿掉交易必填
+            const txnNoControl = form.get('TXN_No');
+            if (txnNoControl) {
+              // 重新設定驗證器（只保留 maxLength，移除 Validators.required）
+              txnNoControl.setValidators([Validators.maxLength(8)]);
+              txnNoControl.updateValueAndValidity(); // 強制更新控制項的驗證狀態
+            }
           }
-          // 在 Create 模式下 (通過 initialQuerySubmit 觸發)
           if (this.isFormCreateable) {
             form.patchValue({
               ECR_No: rawData.ECR_No,
@@ -231,7 +233,16 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
               // TXN_Date in rawData (this.rowdata) 應該是 TxnDate 屬性
               NCML_TxnDate: rawData.TXN_Date,
             });
-            form.get('NCML_TxnDate')?.disable();
+
+            // 根據交易序號決定欄位狀態
+            const txnNoValue = form.get('TXN_No')?.value;
+            if (Number(txnNoValue) !== 99999999) {
+              form.get('ECR_No')?.disable({ emitEvent: false });
+              form.get('TXN_No')?.disable({ emitEvent: false });
+              form.get('NCML_TxnDate')?.disable({ emitEvent: false });
+            } else {
+              form.get('TXN_No')?.disable({ emitEvent: false });
+            }
           }
 
           // Read 模式下需手動 disable 所有欄位
@@ -269,16 +280,18 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
             targetForm.patchValue(mappedData);
           }
 
-          // 處理欄位狀態
+          // 統一處理欄位狀態
           const form = this.POS6119dataForm;
           form.get('tableName')?.disable();
-          const txnNoValue = form.get('TXN_No')?.value;
-          if (Number(txnNoValue) !== 99999999) { // 有指定交易時要disable 銷售日期欄位
-            form.get('CTBC_TxnTime')?.disable({ emitEvent: false });
-          } else {
-            form.get('CTBC_TxnTime')?.enable({ emitEvent: false });
+          if (this.isFormEditable) {
+            // 編輯時拿掉交易必填
+            const txnNoControl = form.get('TXN_No');
+            if (txnNoControl) {
+              // 重新設定驗證器（只保留 maxLength，移除 Validators.required）
+              txnNoControl.setValidators([Validators.maxLength(8)]);
+              txnNoControl.updateValueAndValidity(); // 強制更新控制項的驗證狀態
+            }
           }
-          form.get('TLT_No')?.enable();
           if (this.isFormCreateable) {
             form.patchValue({
               ECR_No: rawData.ECR_No,
@@ -286,7 +299,16 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
               tableName: rawData.tableName,
               CTBC_TxnTime: rawData.TXN_Date, // TXN_Date in rowdata is the Date object
             });
-            form.get('CTBC_TxnTime')?.disable();
+
+            // 根據交易序號決定欄位狀態
+            const txnNoValue = form.get('TXN_No')?.value;
+            if (Number(txnNoValue) !== 99999999) {
+              form.get('ECR_No')?.disable({ emitEvent: false });
+              form.get('TXN_No')?.disable({ emitEvent: false });
+              form.get('CTBC_TxnTime')?.disable({ emitEvent: false });
+            } else {
+              form.get('TXN_No')?.disable({ emitEvent: false });
+            }
           }
 
           if (this.isFormReadable) form.disable();
@@ -320,16 +342,18 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
             targetForm.patchValue(mappedData);
           }
 
-          // 處理欄位狀態
+          // 統一處理欄位狀態
           const form = this.POS6119PdataForm;
           form.get('tableName')?.disable();
-          const txnNoValue = form.get('TXN_No')?.value;
-          if (Number(txnNoValue) !== 99999999) { // 有指定交易時要disable 銷售日期欄位
-            form.get('CTBC_TxnDate')?.disable({ emitEvent: false });
-          } else {
-            form.get('CTBC_TxnDate')?.enable({ emitEvent: false });
+          if (this.isFormEditable) {
+            // 編輯時拿掉交易必填
+            const txnNoControl = form.get('TXN_No');
+            if (txnNoControl) {
+              // 重新設定驗證器（只保留 maxLength，移除 Validators.required）
+              txnNoControl.setValidators([Validators.maxLength(8)]);
+              txnNoControl.updateValueAndValidity(); // 強制更新控制項的驗證狀態
+            }
           }
-          form.get('TLT_No')?.enable();
           if (this.isFormCreateable) {
             form.patchValue({
               ECR_No: rawData.ECR_No,
@@ -337,7 +361,16 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
               tableName: rawData.tableName,
               CTBC_TxnDate: rawData.TXN_Date, // TXN_Date in rowdata is the Date object
             });
-            form.get('CTBC_TxnDate')?.disable();
+
+            // 根據交易序號決定欄位狀態
+            const txnNoValue = form.get('TXN_No')?.value;
+            if (Number(txnNoValue) !== 99999999) {
+              form.get('ECR_No')?.disable({ emitEvent: false });
+              form.get('TXN_No')?.disable({ emitEvent: false });
+              form.get('CTBC_TxnDate')?.disable({ emitEvent: false });
+            } else {
+              form.get('TXN_No')?.disable({ emitEvent: false });
+            }
           }
 
           if (this.isFormReadable) form.disable();
@@ -392,7 +425,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const formValue = frm.getRawValue();
-      let apiCall: Observable<ApiResponse<number>> | undefined = undefined;
+      let apiCall: Observable<ApiResponse<boolean>> | undefined = undefined;
 
       // 由於 initialQueryForm 已經設定了 rowdata?.tableName，這裡直接使用
       switch (this.rowdata?.tableName) {
@@ -417,7 +450,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
 
               // 確保 ID 被正確賦予
               ID: this.rowdata?.ID as number,
-
+              TXN_No: formValue.TXN_No != '' ? Number(formValue.TXN_No) : null,
               // 覆蓋並修正日期/時間欄位
               NCML_Date: formattedNcmlDate,
               NCML_BatCloseDate: formattedBatCloseDate,
@@ -443,6 +476,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
           {
             const body = {
               ...formValue,
+              TXN_No: formValue.TXN_No != '' ? Number(formValue.TXN_No) : null,
               // 確保將 Date 物件轉換為 yyyy-MM-dd 字串
               CTBC_Date: this.datePipe.transform(formValue.CTBC_Date, 'yyyy-MM-dd'),
               CTBC_PayDate: this.datePipe.transform(formValue.CTBC_PayDate, 'yyyy-MM-dd'),
@@ -461,6 +495,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
           {
             const body = {
               ...formValue,
+              TXN_No: formValue.TXN_No != '' ? Number(formValue.TXN_No) : null,
               // 確保將 Date 物件轉換為 yyyy-MM-dd 字串
               CTBC_Date: this.datePipe.transform(formValue.CTBC_Date, 'yyyy-MM-dd'),
               CTBC_TxnDate: this.datePipe.transform(formValue.CTBC_TxnDate, 'yyyy-MM-dd'),
@@ -478,8 +513,12 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
       // 統一處理 API 呼叫
       if (apiCall) {
         apiCall.pipe(finalize(() => this.loading = false)).subscribe(res => {
-          this.messageService.successBubble(res.Message);
-          this.onCancel();
+          if (res.Data === true) {
+            this.messageService.successBubble(res.Message);
+            this.onCancel();
+          } else {
+            this.messageService.warnBubble(res.Message);
+          }
         });
       }
     });
