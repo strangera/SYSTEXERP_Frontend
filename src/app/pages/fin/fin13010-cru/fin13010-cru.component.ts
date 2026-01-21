@@ -141,7 +141,7 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
 
     const row: any = (this as any).rowdata;
 
-       if (row) {
+    if (row) {
       const repRaw =
         row.PUR_RepYYYYMM ??
         row.INV_DeclareYM ??
@@ -174,7 +174,7 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
             row.Ret_Date ??
             this.dataForm.get('PUR_GUIDate')?.value,
 
-          // ⭐ 在這裡轉：21/25→23、22→24
+          // 21 / 25 -> 23，22 -> 24
           PUR_VoucherType: this.normalizeVoucherType(rawVoucherType),
 
           PUR_RepYYYYMM: this.normalizeYYYYMMForControl(repRaw),
@@ -265,11 +265,11 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
       { emitEvent: false },
     );
 
-    // ✅ 根據實際 API 名稱與參數調整：Swagger 要的是 PUR_GUINo_Correspond
+    // Swagger 要的是 PUR_GUINo_Correspond
     this.fin13010Service
       .queryCorrespondByGUINoCorrespond({ PUR_GUINo_Correspond: full })
       .subscribe((res) => {
-    const detail = res?.Data?.[0];
+        const detail = res?.Data?.[0];
         if (detail) {
           // 先拿原始值，再做 21/25→23、22→24 的轉換
           const rawVoucherType =
@@ -348,28 +348,29 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
       });
   }
 
-
   /** 字軌變動時，撈該字軌所有發票號碼（下拉選單用） */
-private setupTrackNoWatcher(): void {
-  const trackControl = this.dataForm.get('GUI_Track');
+  private setupTrackNoWatcher(): void {
+    const trackControl = this.dataForm.get('GUI_Track');
 
-  if (trackControl) {
-    trackControl.valueChanges.subscribe((trackNo) => {
-      if (typeof trackNo === 'string' && trackNo.trim().length >= 2) {
-        this.fin13010Service
-          .queryINV1000List({ GUI_Track: trackNo.trim() })
-          .subscribe((res) => {
-            this.guiNumberOptions = (res.Data || []).map((item: any) => ({
-              label: item.PUR_GUINo,  // ✅ 顯示文字
-              value: item.PUR_GUINo,  // ✅ 寫回表單的值
-            }));
-          });
-      } else {
-        this.guiNumberOptions = [];
-      }
-    });
+    if (trackControl) {
+      trackControl.valueChanges.subscribe((trackNo) => {
+        if (typeof trackNo === 'string' && trackNo.trim().length >= 2) {
+          this.fin13010Service
+            .queryINV1000List({ GUI_Track: trackNo.trim() })
+            .subscribe((res) => {
+              this.guiNumberOptions = (res.Data || []).map((item: any) => ({
+                label: item.PUR_GUINo,  // 顯示文字
+                value: item.PUR_GUINo,  // 寫回表單的值
+              }));
+            });
+        } else {
+          this.guiNumberOptions = [];
+        }
+      });
+    }
   }
-}
+
+  /** 發票格式對應：21/25→23，22→24 */
   private normalizeVoucherType(raw: any): string {
     const v = String(raw ?? '').trim();
     if (v === '21' || v === '25') return '23';
@@ -670,12 +671,69 @@ private setupTrackNoWatcher(): void {
     return null;
   }
 
+  /* ==================== 商業邏輯檢核 ==================== */
+
+  /**
+   * 1. PUR_Amt 不可大於 originalRemainingAmt
+   * 2. PUR_Net 不可大於 Inv_Net
+   */
+  private validateBusinessRules(): boolean {
+    const totalAmtRaw = this.dataForm.get('PUR_Amt')?.value;
+    const totalAmt =
+      totalAmtRaw === null || totalAmtRaw === undefined || totalAmtRaw === ''
+        ? null
+        : Number(totalAmtRaw);
+
+    const netRaw = this.dataForm.get('PUR_Net')?.value;
+    const netAmt =
+      netRaw === null || netRaw === undefined || netRaw === ''
+        ? null
+        : Number(netRaw);
+
+    const invNetRaw = this.dataForm.get('Inv_Net')?.value;
+    const invNet =
+      invNetRaw === null || invNetRaw === undefined || invNetRaw === ''
+        ? null
+        : Number(invNetRaw);
+
+    // 1) 退回/折讓總金額 不可大於 剩餘總金額(原始)
+    if (
+      this.originalRemainingAmt !== null &&
+      !isNaN(this.originalRemainingAmt) &&
+      totalAmt !== null &&
+      !isNaN(totalAmt) &&
+      totalAmt > this.originalRemainingAmt
+    ) {
+      this.messageService.errorBubble('退回/折讓總金額不可大於剩餘總金額');
+      return false;
+    }
+
+    // 2) 退出/折讓金額 不可大於 銷售額
+    if (
+      invNet !== null &&
+      !isNaN(invNet) &&
+      netAmt !== null &&
+      !isNaN(netAmt) &&
+      netAmt > invNet
+    ) {
+      this.messageService.errorBubble('退出/折讓金額不可大於銷售額');
+      return false;
+    }
+
+    return true;
+  }
+
   /* ==================== 送出 ==================== */
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       if (form.invalid) {
         this.messageService.warnBubble('請先修正表單錯誤');
+        return;
+      }
+
+      // 送出前再做一次商業邏輯檢核
+      if (!this.validateBusinessRules()) {
         return;
       }
 
