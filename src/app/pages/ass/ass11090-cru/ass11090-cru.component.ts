@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-
-//
+import { UntilDestroy } from '@ngneat/until-destroy';
 import { NgFor, NgIf } from '@angular/common';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -10,11 +9,12 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-
-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ASS11090Data } from '../ass11090/ass11090.model';
 
 //3.1.1.9 資材中分類會計科目維護作業 CRU
+@UntilDestroy()
 @Component({
   selector: 'app-ass11090-cru',
   templateUrl: './ass11090-cru.component.html',
@@ -22,11 +22,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, NgFor, ButtonComponent, NgIf, TranslateModule]
 })
-export class ASS11090CRUComponent implements OnInit {
-  ProgNo = '';
-  formTitle = '';
-  submitted = false;
-  crudstatus = '';
+export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> implements OnInit {
 
   //
   bigCategoryCodeOptions: any[] = [
@@ -109,16 +105,12 @@ export class ASS11090CRUComponent implements OnInit {
     ]),
   });
   // ----------------------------------------------------------------
-  constructor(
-    private formBuilder: FormBuilder,
-  ) {
-    super();  // 呼叫父類建構子
+  constructor() {
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310009';
-
+    this.initializePage('ASS11090', this.dataForm);
   }
 
   // ----------------------------------------------------------------
@@ -164,6 +156,6 @@ export class ASS11090CRUComponent implements OnInit {
     this.onSubmit(frm);
   }//CRU
 
-  onCancel() {
+  override onCancel() {
   }
 }
