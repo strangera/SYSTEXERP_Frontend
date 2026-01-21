@@ -35,9 +35,9 @@ export class ASS11100Component extends BasicQueryPageComponent<ASS11100Data> imp
   // 查詢表單
   queryForm = this.formBuilder.group({
     WH_ID: ['', [Validators.maxLength(10)]], // 倉別
-    WH_NAME: ['', [Validators.maxLength(40)]], // 倉別名稱
+    WH_NAME: ['', [Validators.maxLength(50)]], // 倉別名稱
     ATT_ORG_ID: [null], // 部門代號
-    NOTES: ['', [Validators.maxLength(100)]], // 備註
+    NOTES: ['', [Validators.maxLength(160)]], // 備註
     ...createPaginationConfig([{ field: 'WH_ID', order: 1 }]), // 分頁和排序參數
   });
 

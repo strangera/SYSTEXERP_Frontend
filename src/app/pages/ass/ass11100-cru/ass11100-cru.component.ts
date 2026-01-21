@@ -39,7 +39,7 @@ export class ASS11100CRUComponent extends BasicCruPageComponent<ASS11100Data> im
     WH_ID: ['', [Validators.required, Validators.maxLength(10)]], // 倉別，必填，最長10個字
     WH_NAME: ['', [Validators.required, Validators.maxLength(50)]], // 倉別名稱，必填，最長50個字
     ATT_ORG_ID: [null as string | null, [Validators.required]], // 部門代號，必填
-    NOTES: ['', [Validators.maxLength(100)]], // 備註，非必填，最長100個字
+    NOTES: ['', [Validators.maxLength(160)]], // 備註，非必填，最長160個字
   });
 
   organizationOptions: Array<{ label: string; value: string }> = [];
