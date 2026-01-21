@@ -6,63 +6,168 @@
   <p-panel [header]="formTitle" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
+        <!-- 發票字軌 INV_GUITrack -->
+        <app-input-text
+          class="col-12 md:col-2 lg:col-2"
+          label="發票字軌"
+          controlName="INV_GUITrack"
+          [control]="dataForm.controls.INV_GUITrack"
+          [submitted]="submitted"
+        ></app-input-text>
+
         <!-- 發票號碼 INV_GUINo -->
-        <app-input-text class="col-12 md:col-6 lg:col-6" label="發票號碼" controlName="INV_GUINo"
-          [control]="dataForm.controls.INV_GUINo" [submitted]="submitted"></app-input-text>
+        <app-input-text
+          class="col-12 md:col-4 lg:col-4"
+          label="發票號碼"
+          controlName="INV_GUINo"
+          [control]="dataForm.controls.INV_GUINo"
+          [submitted]="submitted"
+        ></app-input-text>
         <!-- 發票日期 INV_GUIDate -->
-        <app-calendar class="col-12 md:col-6 lg:col-6" label="發票日期" calendarType="dateOne" controlName="INV_GUIDate"
-          [control]="dataForm.controls.INV_GUIDate" [submitted]="submitted"></app-calendar>
+        <app-calendar
+          class="col-12 md:col-6 lg:col-6"
+          label="發票日期"
+          calendarType="dateOne"
+          controlName="INV_GUIDate"
+          [control]="dataForm.controls.INV_GUIDate"
+          [submitted]="submitted"
+        ></app-calendar>
         <!-- 資料所屬年月 INV_YM -->
-        <app-input-text class="col-12 md:col-6 lg:col-6" label="資料所屬年月" controlName="INV_YM"
-          [control]="dataForm.controls.INV_YM" [submitted]="submitted"></app-input-text>
+        <app-input-text
+          class="col-12 md:col-6 lg:col-6"
+          label="資料所屬年月"
+          controlName="INV_YM"
+          [control]="dataForm.controls.INV_YM"
+          [submitted]="submitted"
+        ></app-input-text>
         <!-- 申報年月 INV_DeclareYM -->
-        <app-input-text class="col-12 md:col-6 lg:col-6" label="申報年月" controlName="INV_DeclareYM"
-          [control]="dataForm.controls.INV_DeclareYM" [submitted]="submitted"></app-input-text>
+        <app-input-text
+          class="col-12 md:col-6 lg:col-6"
+          label="申報年月"
+          controlName="INV_DeclareYM"
+          [control]="dataForm.controls.INV_DeclareYM"
+          [submitted]="submitted"
+        ></app-input-text>
         <!-- 買受人名稱 INV_Name -->
-        <app-input-text class="col-12 md:col-6 lg:col-6" label="買受人名稱" controlName="INV_Name"
-          [control]="dataForm.controls.INV_Name" [submitted]="submitted"></app-input-text>
+        <app-input-text
+          class="col-12 md:col-6 lg:col-6"
+          label="買受人名稱"
+          controlName="INV_Name"
+          [control]="dataForm.controls.INV_Name"
+          [submitted]="submitted"
+        ></app-input-text>
         <!-- 貨物或勞務名稱 GoodsOrServicesName -->
-        <app-input-text class="col-12 md:col-6 lg:col-6" label="貨物或勞務名稱" controlName="GoodsOrServicesName"
-          [control]="dataForm.controls.GoodsOrServicesName" [submitted]="submitted"></app-input-text>
+        <app-input-text
+          class="col-12 md:col-6 lg:col-6"
+          label="貨物或勞務名稱"
+          controlName="GoodsOrServicesName"
+          [control]="dataForm.controls.GoodsOrServicesName"
+          [submitted]="submitted"
+        ></app-input-text>
         <!-- 貨物或勞務數量 GoodsQty -->
-        <app-input-number class="col-12 md:col-6 lg:col-6" label="貨物或勞務數量" controlName="GoodsQty"
-          [control]="dataForm.controls.GoodsQty" [submitted]="submitted"></app-input-number>
+        <app-input-number
+          class="col-12 md:col-6 lg:col-6"
+          label="貨物或勞務數量"
+          controlName="GoodsQty"
+          [control]="dataForm.controls.GoodsQty"
+          [submitted]="submitted"
+        ></app-input-number>
         <!-- 通關方式註記 INV_PassType -->
-        <app-dropdown class="col-12 md:col-6 lg:col-6" label="通關方式註記" controlName="INV_PassType"
-          [options]="invPassTypeOptions" [control]="dataForm.controls.INV_PassType" [submitted]="submitted"
-          optionLabel="label" optionValue="value"></app-dropdown>
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-6"
+          label="通關方式註記"
+          controlName="INV_PassType"
+          [options]="invPassTypeOptions"
+          [control]="dataForm.controls.INV_PassType"
+          [submitted]="submitted"
+          optionLabel="label"
+          optionValue="value"
+        ></app-dropdown>
         <!-- 外銷方式 ExportMethod -->
-        <app-dropdown class="col-12 md:col-12 lg:col-12" label="外銷方式" controlName="ExportMethod"
-          [options]="exportMethodOptions" [control]="dataForm.controls.ExportMethod" [submitted]="submitted"
-          optionLabel="label" optionValue="value"></app-dropdown>
+        <app-dropdown
+          class="col-12 md:col-12 lg:col-12"
+          label="外銷方式"
+          controlName="ExportMethod"
+          [options]="exportMethodOptions"
+          [control]="dataForm.controls.ExportMethod"
+          [submitted]="submitted"
+          optionLabel="label"
+          optionValue="value"
+        ></app-dropdown>
         <!-- 證明文件名稱 INV_DocName -->
-        <app-input-text class="col-12 md:col-6 lg:col-6" label="證明文件名稱" controlName="INV_DocName"
-          [control]="dataForm.controls.INV_DocName" [submitted]="submitted"></app-input-text>
+        <app-input-text
+          class="col-12 md:col-6 lg:col-6"
+          label="證明文件名稱"
+          controlName="INV_DocName"
+          [control]="dataForm.controls.INV_DocName"
+          [submitted]="submitted"
+        ></app-input-text>
         <!-- 證明文件號碼 INV_DocNo -->
-        <app-input-text class="col-12 md:col-6 lg:col-6" label="證明文件號碼" controlName="INV_DocNo"
-          [control]="dataForm.controls.INV_DocNo" [submitted]="submitted"></app-input-text>
+        <app-input-text
+          class="col-12 md:col-6 lg:col-6"
+          label="證明文件號碼"
+          controlName="INV_DocNo"
+          [control]="dataForm.controls.INV_DocNo"
+          [submitted]="submitted"
+        ></app-input-text>
         <!-- 非經海關出口金額 NonCustomsExportAmt -->
-        <app-input-number class="col-12 md:col-6 lg:col-6" label="非經海關出口金額" controlName="NonCustomsExportAmt"
-          [control]="dataForm.controls.NonCustomsExportAmt" [submitted]="submitted"></app-input-number>
+        <app-input-number
+          class="col-12 md:col-6 lg:col-6"
+          label="非經海關出口金額"
+          controlName="NonCustomsExportAmt"
+          [control]="dataForm.controls.NonCustomsExportAmt"
+          [submitted]="submitted"
+        ></app-input-number>
         <!-- 出口報單類別 INV_ExportType -->
-        <app-dropdown class="col-12 md:col-6 lg:col-6" label="出口報單類別" controlName="INV_ExportType"
-          [options]="exportTypeOptions" [control]="dataForm.controls.INV_ExportType" [submitted]="submitted"
-          optionLabel="label" optionValue="value"></app-dropdown>
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-6"
+          label="出口報單類別"
+          controlName="INV_ExportType"
+          [options]="exportTypeOptions"
+          [control]="dataForm.controls.INV_ExportType"
+          [submitted]="submitted"
+          optionLabel="label"
+          optionValue="value"
+        ></app-dropdown>
         <!-- 出口報單號碼 INV_ExportNo -->
-        <app-input-text class="col-12 md:col-6 lg:col-6" label="出口報單號碼" controlName="INV_ExportNo"
-          [control]="dataForm.controls.INV_ExportNo" [submitted]="submitted"></app-input-text>
+        <app-input-text
+          class="col-12 md:col-6 lg:col-6"
+          label="出口報單號碼"
+          controlName="INV_ExportNo"
+          [control]="dataForm.controls.INV_ExportNo"
+          [submitted]="submitted"
+        ></app-input-text>
         <!-- 經海關出口金額 CustomsExportAmt -->
-        <app-input-number class="col-12 md:col-6 lg:col-6" label="經海關出口金額" controlName="CustomsExportAmt"
-          [control]="dataForm.controls.CustomsExportAmt" [submitted]="submitted"></app-input-number>
+        <app-input-number
+          class="col-12 md:col-6 lg:col-6"
+          label="經海關出口金額"
+          controlName="CustomsExportAmt"
+          [control]="dataForm.controls.CustomsExportAmt"
+          [submitted]="submitted"
+        ></app-input-number>
         <!-- 輸出或結匯日期 ExportDate -->
-        <app-calendar class="col-12 md:col-6 lg:col-6" label="輸出或結匯日期" calendarType="dateOne" controlName="ExportDate"
-          [control]="dataForm.controls.ExportDate" [submitted]="submitted"></app-calendar>
+        <app-calendar
+          class="col-12 md:col-6 lg:col-6"
+          label="輸出或結匯日期"
+          calendarType="dateOne"
+          controlName="ExportDate"
+          [control]="dataForm.controls.ExportDate"
+          [submitted]="submitted"
+        ></app-calendar>
         <!-- 備註 INV_Remark -->
-        <app-input-text class="col-12 md:col-6 lg:col-6" label="備註" controlName="INV_Remark"
-          [control]="dataForm.controls.INV_Remark" [submitted]="submitted"></app-input-text>
+        <app-input-text
+          class="col-12 md:col-6 lg:col-6"
+          label="備註"
+          controlName="INV_Remark"
+          [control]="dataForm.controls.INV_Remark"
+          [submitted]="submitted"
+        ></app-input-text>
       </div>
 
-      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <div
+        *ngIf="!isFormReadable"
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
