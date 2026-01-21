@@ -236,8 +236,8 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
       STO_No: u?.SYS_StoreNo ?? '',
     });
 
-    // 從 queryFIN11010 取得 STO_Uniform（統一編號）
-    this.fin13050Service.queryFIN11010({ STO_Status: '1' }).pipe(untilDestroyed(this)).subscribe({
+    // 從 queryFIN11010 取得 STO_Uniform（統一編號），STO_Status 後端收 list
+    this.fin13050Service.queryFIN11010({ STO_StatusList: ['1'] }).pipe(untilDestroyed(this)).subscribe({
       next: (res) => {
         const data = Array.isArray(res?.Data) ? res.Data[0] : res?.Data;
         const stoUniform = data?.STO_Uniform ?? '';
