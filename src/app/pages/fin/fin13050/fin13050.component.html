@@ -34,22 +34,13 @@
             ></app-multi-select>
           </div>
 
-          <!-- 字軌 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="字軌"
-              [control]="queryForm.controls.PUR_GUITrack"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-
-          <!-- 發票號碼（前端區間 -> 後端單值，送出時合併） -->
+          <!-- 發票號碼（字軌＋數字，共10碼） -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="發票號碼"
               [control]="queryForm.controls.PUR_GUINo"
-      
               [submitted]="submitted"
+              placeholder="例：AB12345678"
             ></app-input-text>
           </div>
 
