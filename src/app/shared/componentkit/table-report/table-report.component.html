@@ -140,10 +140,10 @@
           <div [innerHTML]="sanitizer.bypassSecurityTrustHtml(rowData[col.field])" class="html-cell"></div>
         </ng-container>
         <ng-container *ngIf="col.type === 'link'">
-          <span [ngClass]="(col.linkDisabled && col.linkDisabled(rowData)) ? 'link-disabled' : 'link-active'"
-            (click)="!(col.linkDisabled && col.linkDisabled(rowData)) && linkClick.emit({rowData: rowData, field: col.field})">
-            {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
-          </span>
+          <p-button [link]="true"
+            [label]="col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field]"
+            (click)="!(col.linkDisabled && col.linkDisabled(rowData)) && linkClick.emit({rowData: rowData, field: col.field})"
+            [disabled]="col.linkDisabled && col.linkDisabled(rowData)" class="text-left"></p-button>
         </ng-container>
         <span *ngIf="!col.type">
           {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}

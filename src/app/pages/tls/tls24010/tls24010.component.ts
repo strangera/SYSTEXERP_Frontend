@@ -32,7 +32,6 @@ import { STORE_WAY, TLS24010_EDIT_TYPE } from '../tls24010-cru/tls24010-cru.mode
 import { AddButton } from './../../../shared/componentkit/table/table.model';
 import { FileExportService } from './../../../shared/service/file-export.service';
 import { C_columns, columns, FIX_TYPE, TXN_GUIPAPER, TXN_GUIPaperOptions, TXN_STATUS, txnStatusOptions } from './tls24010.model';
-// 交易補登作業
 @Component({
   selector: 'app-tls24010',
   templateUrl: './tls24010.component.html',

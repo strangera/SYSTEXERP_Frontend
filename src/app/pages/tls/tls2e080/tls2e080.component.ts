@@ -1,4 +1,4 @@
-import { AsyncPipe, DatePipe } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -20,7 +20,6 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 
-// 2.2.14.8 專櫃對帳單
 @Component({
   selector: 'app-tls2e080',
   templateUrl: './tls2e080.component.html',
@@ -79,12 +78,11 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
   ];
   btnLoading = false;
   ngOnInit(): void {
-    this.initializePage('TLS2E080', 'tls/tls2e080', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS2E080');
   }
   constructor(
     public readonly tls2e080Service: TLS2E080Service,
     public readonly dropdown: DropdownApiService,
-    private readonly datePipe: DatePipe,
   ) {
     super();
   }
@@ -109,7 +107,6 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
         this.totalRecords = res.TotalCount || 0;
         this.data = res.Data
         this.historyRequestBody = body;
-        this.queryStateService.setQueryState(this.ProgNo, frm.value);
       })
     })
   }
@@ -207,6 +204,8 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
   }
 
   onSelectButton(event: IQueryData) {
+    this.loading = true; // 借用已有的欄位或自定義 loading 欄位
+    this.messageService.infoBubble('正在產生對帳單 PDF，請稍後...');
     const selectedItems = [event]
     const body = {
       exportList: selectedItems.map(item => {

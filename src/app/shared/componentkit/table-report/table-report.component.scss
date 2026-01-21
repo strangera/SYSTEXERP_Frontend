@@ -179,21 +179,34 @@
   .multiline-header {
     white-space: pre-line; /* 允許 \n 換行 */
   }
+  /* 連結啟動狀態 */
   .link-active {
-    color: #2196f3; /* PrimeNG Primary Blue */
-    font-weight: 500;
+    color: #2196f3; /* 使用主題藍色 */
     cursor: pointer;
+    font-weight: 500;
     text-decoration: none;
+    transition: all 0.2s;
+    display: inline-block;
   }
 
   .link-active:hover {
-    text-decoration: underline;
+    color: #1565c0; /* 移入時顏色變深 */
+    text-decoration: underline; /* 增加底線 */
   }
 
-  /* 禁用連結時的樣式 (例如期初餘額) */
+  /* 連結停用狀態 */
   .link-disabled {
-    color: inherit;
-    font-weight: normal;
-    cursor: default;
+    color: #9e9e9e;
+    cursor: not-allowed;
+    text-decoration: none;
+  }
+
+  /* 增加一個微互動圖示（選擇性） */
+  .link-active::after {
+    content: "\e94b"; /* PrimeIcons pi-external-link 的代碼，若不需要可移除 */
+    font-family: "primeicons";
+    font-size: 0.75rem;
+    margin-left: 4px;
+    opacity: 0.6;
   }
 }

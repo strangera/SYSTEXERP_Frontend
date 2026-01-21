@@ -1,8 +1,8 @@
-<p-table #dt [value]="virtualData" [scrollable]="true" [dataKey]="dataKey" scrollHeight="700px" [rows]="30"
+<p-table #dt [value]="virtualData" [scrollable]="true" [dataKey]="dataKey" scrollHeight="1200px" [rows]="30"
   sortMode="multiple" [rowTrackBy]="trackByFn" [resizableColumns]="true" [reorderableColumns]="true"
   [loading]="isLoading" [totalRecords]="totalRecords"
   styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
-  [virtualScroll]="totalRecords < 30 ? false : true" [loading]="loading" [virtualScrollItemSize]="24"
+  [virtualScroll]="totalRecords < 30 ? false : true" [loading]="loading" [virtualScrollItemSize]="40"
   [lazy]="totalRecords < 30 ? false : true" [virtualScrollOptions]="{
       delay: 50,
       inline: true,
@@ -101,7 +101,7 @@
     </tr>
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-index="rowIndex">
-    <tr [pSelectableRow]="rowData" [style]="{'height': '24px'}" [pSelectableRowIndex]="rowIndex">
+    <tr [pSelectableRow]="rowData" [style]="{'height': '40px'}" [pSelectableRowIndex]="rowIndex">
 
       <td class="text-center" [ngStyle]="{'min-width': '20px'}" pFrozenColumn [attr.rowspan]="rowData.rowspanCount"
         *ngIf="rowData.isMainRow">

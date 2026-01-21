@@ -1,4 +1,4 @@
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -7,13 +7,13 @@ import { Tls13070QueryRequest, Tls13070Response, Tls13070Service } from '@servic
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonYNComponent } from "@shared/componentkit/radiobutton-yn/radiobutton-yn.component";
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { Tls13070TableComponent } from './tls13070-table/tls13070-table.component';
@@ -29,7 +29,7 @@ import { Tls13070TableComponent } from './tls13070-table/tls13070-table.componen
     ReactiveFormsModule,
     InputTextComponent,
     InputNumberRangeComponent,
-    CalendarRangeComponent,
+    CalendarRangeQuickComponent,
     ButtonComponent,
     TranslateModule,
     AsyncPipe,
@@ -42,7 +42,7 @@ export class TLS13070Component extends BasicQueryPageComponent<Tls13070Response>
   queryForm = this.formBuilder.nonNullable.group({
     Apply_No: [null, [Validators.maxLength(12)]], // 專櫃招募編號
     bus_typeList: [null], // 大分類代號
-    tlt_noList: [null, [Validators.maxLength(12)]], // 專櫃編號
+    tlt_noList: [null], // 專櫃編號
     tlt_name: [null, [Validators.maxLength(100)]], // 專櫃名稱
     ven_uniform_List: [null], // 廠商統一編號
     contract_subno_Start: [null, [Validators.max(9999)]], // 版本編號(起)
@@ -83,7 +83,7 @@ export class TLS13070Component extends BasicQueryPageComponent<Tls13070Response>
     SortBy: [[{ field: 'apply_No', order: 1 }]],
   });
   totalRecords = 0;
-  lastQueryBody?: Tls13070QueryRequest;
+  lastQueryBody: Tls13070QueryRequest | null = null;
   BUS_TypeOptions = this.dropdown.queryTltBusType();
   VEN_UniformOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
   Tlt_NoOptions = this.dropdown.queryTltTalent();
@@ -113,6 +113,7 @@ export class TLS13070Component extends BasicQueryPageComponent<Tls13070Response>
   constructor(
     private readonly dropdown: DropdownApiService,
     public readonly tls13070Service: Tls13070Service,
+    private readonly datePipe: DatePipe
   ) { super(); }
 
   ngOnInit(): void {
@@ -120,11 +121,27 @@ export class TLS13070Component extends BasicQueryPageComponent<Tls13070Response>
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.tls13070Service.queryTLS13070(frm.value).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(response => {
-        this.lastQueryBody = frm.value;
+      const body = {
+        ...frm.value,
+        feedback_date_Start: this.datePipe.transform(frm.value.feedback_date_Start, 'yyyy-MM-dd'),
+        feedback_date_End: this.datePipe.transform(frm.value.feedback_date_End, 'yyyy-MM-dd'),
+        due_date_Start: this.datePipe.transform(frm.value.due_date_Start, 'yyyy-MM-dd'),
+        due_date_End: this.datePipe.transform(frm.value.due_date_End, 'yyyy-MM-dd'),
+        contact_Date_Start: this.datePipe.transform(frm.value.contact_Date_Start, 'yyyy-MM-dd'),
+        contact_Date_End: this.datePipe.transform(frm.value.contact_Date_End, 'yyyy-MM-dd'),
+        tlt_bdate_Start: this.datePipe.transform(frm.value.tlt_bdate_Start, 'yyyy-MM-dd'),
+        tlt_bdate_End: this.datePipe.transform(frm.value.tlt_bdate_End, 'yyyy-MM-dd'),
+        tlt_edate_Start: this.datePipe.transform(frm.value.tlt_edate_Start, 'yyyy-MM-dd'),
+        tlt_edate_End: this.datePipe.transform(frm.value.tlt_edate_End, 'yyyy-MM-dd'),
+        tlt_contract_bdate_Start: this.datePipe.transform(frm.value.tlt_contract_bdate_Start, 'yyyy-MM-dd'),
+        tlt_contract_bdate_End: this.datePipe.transform(frm.value.tlt_contract_bdate_End, 'yyyy-MM-dd'),
+        tlt_contract_edate_Start: this.datePipe.transform(frm.value.tlt_contract_edate_Start, 'yyyy-MM-dd'),
+        tlt_contract_edate_End: this.datePipe.transform(frm.value.tlt_contract_edate_End, 'yyyy-MM-dd'),
+      }
+      this.tls13070Service.queryTLS13070(body).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(response => {
+        this.lastQueryBody = body;
         this.data = response.Data;
         this.totalRecords = response.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
   }
