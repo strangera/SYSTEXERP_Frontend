@@ -127,7 +127,6 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
     });
   }
   onDelete(selectedItems: TLS27040Data[]) {
-    this.loading = true;
     const body = {
       selectList: selectedItems.map(item => ({
         id: item.ID,
@@ -137,9 +136,22 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
         TXN_Date: new Date(item.TxnDate),
       })),
     }
-    this.tls27040Service.deleteTLS27040(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-      this.messageService.successBubble(res.Message);
-      this.onSubmit(this.queryForm);
+    const idList = selectedItems.map((item: TLS27040Data) => item.ID);
+
+    this.messageService.confirm({
+      message: `確定要刪除 ${idList.length} 筆資料嗎？`,
+      header: '刪除確認',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        this.loading = true;
+        this.tls27040Service.deleteTLS27040(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          this.onSubmit(this.queryForm);
+        });
+      },
+      reject: () => {
+        // 使用者取消刪除，不做任何事
+      }
     });
   }
 
