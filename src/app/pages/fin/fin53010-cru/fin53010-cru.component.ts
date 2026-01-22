@@ -237,11 +237,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       {
         field: 'NoteDesc',
         header: '摘要',
-        type: this.isFormCreateable ? 'dropdown' : void 0,
-        allowCustomValue: true,
-        options: (v: FIN53010DetailTable) => this.service.noteDescOptions().find(item => item.value === v.AccNo)?.data ?? [],
-        optionLabel: 'label',
-        optionValue: 'value',
+        type: this.isFormCreateable ? 'input' : void 0,
       },
       {
         field: 'AccAmtD',
