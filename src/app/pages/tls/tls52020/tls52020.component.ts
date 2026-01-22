@@ -8,14 +8,15 @@ import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { FileExportService } from '@shared/service/file-export.service';
 import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { finalize, Observable } from 'rxjs';
-import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
-import { ITLS52020Data, Tls52020Service } from '../../../service/api/tls/tls52020.service';
+import { IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
+import { IQueryTLS52020Request, ITLS52020Data, Tls52020Service } from '../../../service/api/tls/tls52020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -23,8 +24,7 @@ import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentk
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, formatAmount, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
 export const enum CRNtatus {
   已申請 = '0',
   已審核 = '2',
@@ -46,7 +46,7 @@ export const enum CRNtatus {
     ])
   ],
   standalone: true,
-  imports: [AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, DropdownTableComponent, DropdownComponent, CalendarRangeQuickComponent, TableComponent, Button, TooltipModule, NgStyle, NgIf, TranslateModule]
+  imports: [AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, DropdownTableComponent, DropdownComponent, CalendarRangeQuickComponent, TableReportComponent, Button, TooltipModule, NgStyle, NgIf, TranslateModule]
 })
 export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -65,11 +65,14 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
     CLOS_USR: [null], // 強制結案人員 multi-select
     CLOS_Date_Start: [null], // 強制結案日期 起 calendar-range
     CLOS_Date_End: [null], // 強制結案日期 迄
-    ...createPaginationConfig([{ field: 'APPLY_Date', order: -1 }, { field: 'CRN_No', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'APPLY_Date', order: -1 }, { field: 'CRN_No', order: 1 }]],
   });
   totalRecords = 0;
   data: ITLS52020Data[] = [];
   selectedItems: ITLS52020Data[] = [];
+  lastQueryBody: IQueryTLS52020Request | null = null;
   columns: Column[] = [
     { field: 'CRN_No', header: '退貨單號', visible: true }, // 採購單號
     { field: 'VEN_No', header: '廠商編號', visible: true }, // 廠商編號
@@ -119,7 +122,7 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
     { label: '作廢單據', icon: 'pi pi-trash text-red-500', action: (rowData: ITLS52020Data) => { this.statusChange(rowData, CRNtatus.作廢); }, disabled: (rowData: ITLS52020Data) => rowData.CRN_Status !== CRNtatus.已審核 || !this.hasPermission(Actions.Invalidate) }, // 作廢
   ];
   constructor(
-    private readonly tls52020Service: Tls52020Service,
+    public readonly tls52020Service: Tls52020Service,
     private readonly dropdown: DropdownApiService,
     private readonly tls52010Service: Tls52010Service,
     private readonly fileExportService: FileExportService
@@ -131,6 +134,7 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.tls52020Service.queryTLS52020(frm.value).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(response => {
+        this.lastQueryBody = frm.value;
         this.data = response.Data;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
@@ -205,24 +209,10 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
     return this.selectedItems.length;
   }
   // 管理編號
-  opLoading = false;
-  opForm = this.formBuilder.group({
-    queryNo: ['', [Validators.maxLength(20)]], // 管理編號
-    PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
-    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
-  });
   suggestions: IQueryPOS2004DetailResponse[] = [];
   fieldsConfig: FieldsConfig[] = [
     { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
   ];
-  opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
-  opColumns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號' },
-    { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
-    { field: 'PLU_Name', header: '商品名稱' },
-  ];
-  opTotalRecords = 0;
   onAutoCompleteInputChange(event: any) {
     const body = {
       ...event,
@@ -238,20 +228,6 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
         ...item,
         label: item.PLU_MagNo + '/' + item.PLU_No + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
       }))];
-    });
-  }
-  onformValueChanged(event: IQueryPOS2004DetailRequest) {
-    this.opLoading = true;
-    const body = {
-      queryNo: event.queryNo || '',
-      PLU_Name: event.PLU_Name || '',
-      VEN_No: '',
-      LOGO_No: '',
-    };
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.opData = [...results.Data]; // 更新data資料
-      this.opTotalRecords = results.TotalCount;
-      this.opLoading = false;
     });
   }
 }

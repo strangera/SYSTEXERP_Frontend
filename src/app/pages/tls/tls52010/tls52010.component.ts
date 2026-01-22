@@ -7,13 +7,14 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { FileExportService } from '@shared/service/file-export.service';
 import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { finalize, Observable } from 'rxjs'; // 只需要 map 運算符，因為我們將直接訂閱
-import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, ITLS52010Data, Tls52010Service } from '../../../service/api/tls/tls52010.service';
+import { IQueryPOS2004DetailResponse, IQueryTLS52010Request, ITLS52010Data, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { ExportLabelService, IExportLabelRequest } from '../../../service/utility/exportLabel.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -22,8 +23,7 @@ import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentk
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, formatAmount, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 export const enum POStatus {
   已申請 = '0',
@@ -47,7 +47,7 @@ export const enum POStatus {
     ])
   ],
   standalone: true,
-  imports: [AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, DropdownTableComponent, DropdownComponent, CalendarRangeQuickComponent, TableComponent, Button, TooltipModule, NgStyle, NgIf, TranslateModule]
+  imports: [AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, DropdownTableComponent, DropdownComponent, CalendarRangeQuickComponent, TableReportComponent, Button, TooltipModule, NgStyle, NgIf, TranslateModule]
 })
 export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -66,11 +66,14 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     CLOS_USR: [null], // 強制結案人員 multi-select
     CLOS_Date_Start: [null], // 強制結案日期 起 calendar-range
     CLOS_Date_End: [null], // 強制結案日期 迄
-    ...createPaginationConfig([{ field: 'APPLY_Date', order: -1 }, { field: 'PO_No', order: -1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'APPLY_Date', order: -1 }, { field: 'PO_No', order: -1 }]],
   });
   totalRecords = 0;
   data: ITLS52010Data[] = [];
   selectedItems: ITLS52010Data[] = []; // 用於儲存選中的項目
+  lastQueryBody: IQueryTLS52010Request | null = null;
   addButton: AddButton[] = [
     { label: '單據審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.已審核); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已申請 || !this.hasPermission(Actions.Audit) }, // 審核
     { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: ITLS52010Data) => { this.statusChange(rowData, POStatus.已申請); }, disabled: (rowData: ITLS52010Data) => rowData.PO_Status !== POStatus.已審核 || !this.hasPermission(Actions.AntiAudit) }, // 反審核
@@ -124,7 +127,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
   poStatusOptions = getSYS1000Options('PO_Status'); // 採購單狀態 (靜態資料)
   userOptions = this.dropdown.queryTblUser(); // 申請人員、審核人員、結案人員
   constructor(
-    private readonly tls52010Service: Tls52010Service, // 注入 TLS52010Service
+    public readonly tls52010Service: Tls52010Service, // 注入 TLS52010Service
     private readonly exportLabelService: ExportLabelService,
     private readonly dropdown: DropdownApiService,
     private readonly fileExportService: FileExportService
@@ -135,6 +138,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.tls52010Service.queryTLS52010(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        this.lastQueryBody = frm.value;
         this.data = response.Data;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
@@ -211,24 +215,10 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     return this.selectedItems.length;
   }
   // 管理編號
-  opLoading = false;
-  opForm = this.formBuilder.group({
-    queryNo: ['', [Validators.maxLength(20)]], // 管理編號
-    PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
-    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
-  });
   suggestions: IQueryPOS2004DetailResponse[] = [];
   fieldsConfig: FieldsConfig[] = [
     { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
   ];
-  opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
-  opColumns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號' },
-    { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
-    { field: 'PLU_Name', header: '商品名稱' },
-  ];
-  opTotalRecords = 0;
   onAutoCompleteInputChange(event: any) {
     const body = {
       ...event,
@@ -244,20 +234,6 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
         ...item,
         label: item.PLU_MagNo + '/' + item.PLU_No + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
       }))];
-    });
-  }
-  onformValueChanged(event: IQueryPOS2004DetailRequest) {
-    this.opLoading = true;
-    const body = {
-      queryNo: event.queryNo || '',
-      PLU_Name: event.PLU_Name || '',
-      VEN_No: '',
-      LOGO_No: '',
-    };
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.opData = [...results.Data]; // 更新data資料
-      this.opTotalRecords = results.TotalCount;
-      this.opLoading = false;
     });
   }
 }
