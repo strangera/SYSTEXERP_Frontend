@@ -19,13 +19,7 @@
           <app-dropdown-table class="col-12 md:col-6 lg:col-4" [showOverlay]="false"
             [control]="queryForm.controls.queryNo" templateLabel="label" [submitted]="submitted" optionLabel="PLU_MagNo"
             optionValue="PLU_MagNo" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
-            (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
-            [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
-            [totalRecords]="opTotalRecords">
-            <app-input-text class="col-12 md:col-6" label="管理編號" controlName="queryNo"
-              [control]="opForm.controls.queryNo" />
-            <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
-              [control]="opForm.controls.PLU_Name" />
+            (inputValueChanged)="onAutoCompleteInputChange($event)">
           </app-dropdown-table>
           <!-- 廠商編號 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商編號/名稱" controlName="VEN_No"
@@ -73,11 +67,10 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS52030" dataKey="ODM_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-    (detail)="onDetail($event)" [editDisabled]="editDisabled"
-    [multiSortMeta]="[{ field: 'ODM_Date', order: -1 }, { field: 'ODM_No', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showDelete]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+  <app-table-report tableKey="TLS52030" dataKey="ODM_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [editDisabled]="editDisabled" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="tls52030Service.queryTLS52030.bind(tls52030Service)" [totalRecords]="totalRecords"
+    [loading]="loading" [showDelete]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
     [addButton]="addButton" [showCheckBox]="true" [buttonsLoading]="btnLoading">
     <header>
       <div class="flex align-items-center gap-2">
@@ -90,5 +83,5 @@
           [disabled]="selectedCount === 0 || !this.hasPermission(Actions.ExportExcel)" />
       </div>
     </header>
-  </app-table>
+  </app-table-report>
 </div>

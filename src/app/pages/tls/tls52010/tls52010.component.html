@@ -19,13 +19,7 @@
           <app-dropdown-table class="col-12 md:col-6 lg:col-4" [showOverlay]="false"
             [control]="queryForm.controls.queryNo" [submitted]="submitted" templateLabel="label" optionLabel="PLU_MagNo"
             optionValue="PLU_MagNo" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
-            (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
-            [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
-            [totalRecords]="opTotalRecords">
-            <app-input-text class="col-12 md:col-6" label="管理編號" controlName="queryNo"
-              [control]="opForm.controls.queryNo" />
-            <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
-              [control]="opForm.controls.PLU_Name" />
+            (inputValueChanged)="onAutoCompleteInputChange($event)">
           </app-dropdown-table>
           <!-- 倉別 (對應 HOS_No) -->
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉庫代碼/名稱" controlName="HOS_No"
@@ -80,14 +74,11 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table apiUrl="queryTLS52010" tableKey="TLS52010" dataKey="PO_No" [data]="data" [columns]="columns"
+  <app-table-report apiUrl="queryTLS52010" tableKey="TLS52010" dataKey="PO_No" [data]="data" [columns]="columns"
     (edit)="onEdit($event)" (detail)="onDetail($event)" [showCheckBox]="true" [editDisabled]="editDisabled"
-    [multiSortMeta]="[
-      { field: 'APPLY_Date', order: -1 },
-      { field: 'PO_No', order: 1 },
-    ]" [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [lazy]="true" [loading]="loading" [showDelete]="false" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [addButton]="addButton" [buttonsLoading]="btnLoading">
+    [totalRecords]="totalRecords" [loading]="loading" [showDelete]="false" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [addButton]="addButton" [buttonsLoading]="btnLoading"
+    [lastQueryBody]="lastQueryBody" [queryFunction]="tls52010Service.queryTLS52010.bind(tls52010Service)">
     <header>
       <div class="flex align-items-center gap-2">
         <p-button label="列印採購單PDF" [ngStyle]="{ height: '35px' }" [style]="{ height: '35px' }" pTooltip="列印採購單"
@@ -105,5 +96,5 @@
         </span>
       </div>
     </header>
-  </app-table>
+  </app-table-report>
 </div>

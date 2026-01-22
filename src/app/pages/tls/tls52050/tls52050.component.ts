@@ -9,6 +9,7 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ExcelColumn, ExcelExportService } from '@shared/service/excel-export.service';
 import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
@@ -23,9 +24,8 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { ITLS52050Data, Tls52050Service } from './../../../service/api/tls/tls52050.service';
+import { AddButton, Column } from '../../../shared/componentkit/table/table.model';
+import { IQueryTLS52050Request, ITLS52050Data, Tls52050Service } from './../../../service/api/tls/tls52050.service';
 import { EXPORT_LABEL_COLUMNS, MAMStatus, POS2008M_COLUMNS } from './tls52050.model';
 
 @Component({
@@ -45,12 +45,12 @@ import { EXPORT_LABEL_COLUMNS, MAMStatus, POS2008M_COLUMNS } from './tls52050.mo
     MultiSelectComponent,
     CalendarRangeQuickComponent,
     CheckboxModule,
-    TableComponent,
     TranslateModule,
     AsyncPipe,
     DialogComponent,
     TableEditComponent,
-    DialogModule
+    DialogModule,
+    TableReportComponent,
   ],
 })
 export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> implements OnInit {
@@ -66,7 +66,9 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
     APRV_Date_Start: [null],   // 審核日期起
     APRV_Date_End: [null],     // 審核日期迄
     showReturnPriceOrdersOnly: [false],
-    ...createPaginationConfig([{ field: 'APPLY_Date', order: -1 }, { field: 'MAM_No', order: -1 }]),
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'APPLY_Date', order: -1 }, { field: 'MAM_No', order: -1 }]],
   });
   // Options
   MAM_StatusOptions = getSYS1000Options('MAM_Status');        // 進價變價單狀態選項
@@ -76,6 +78,7 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
   // table
   data: ITLS52050Data[] = [];
   columns: Column[] = POS2008M_COLUMNS;
+  lastQueryBody: IQueryTLS52050Request | null = null;
   addButton: AddButton[] = [
     { label: '審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS52050Data) => { this.statusChange(rowData, MAMStatus.已審核); }, disabled: (rowData: ITLS52050Data) => rowData.MAM_Status !== MAMStatus.已申請 || (new Date(rowData.MAM_BegDate).setHours(0, 0, 0, 0)) < (new Date().setHours(0, 0, 0, 0)) || !this.hasPermission(Actions.Audit) }, // 審核
     { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: ITLS52050Data) => { this.statusChange(rowData, MAMStatus.已申請); }, disabled: (rowData: ITLS52050Data) => rowData.MAM_Status !== MAMStatus.已審核 || (new Date(rowData.MAM_BegDate).setHours(0, 0, 0, 0)) <= (new Date().setHours(0, 0, 0, 0)) || !this.hasPermission(Actions.AntiAudit) }, // 反審核
@@ -90,7 +93,7 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
   dialogColumns: EditColumn[] = EXPORT_LABEL_COLUMNS;
 
   constructor(
-    private readonly tls52050Service: Tls52050Service,
+    public readonly tls52050Service: Tls52050Service,
     private readonly exportLabelService: ExportLabelService,
     public readonly dropdown: DropdownApiService,
     public readonly excelExportService: ExcelExportService
@@ -149,6 +152,7 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.tls52050Service.queryTLS52050(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        this.lastQueryBody = frm.value;
         this.data = response.Data;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
