@@ -24,6 +24,7 @@ export class YearMonthComponent extends BasicKitComponent implements OnInit, OnC
   @Input() submitted = false;
   @Input() control!: FormControl;
   @Input() evenMonth = false;
+  @Input() readonly = false;
   @Output() valueChanges = new EventEmitter<any>()
 
   yearControl = new FormControl<Date | string | null>(null);
@@ -60,8 +61,8 @@ export class YearMonthComponent extends BasicKitComponent implements OnInit, OnC
     // 初始化子控件值
     this.updateChildControlsFromParent(this.control.value);
 
-    // 處理主控件的 disabled 狀態
-    if (this.control.disabled) {
+    // 處理主控件的 disabled 或 readonly 狀態
+    if (this.control.disabled || this.readonly) {
       this.yearControl.disable();
       this.monthControl.disable();
     }

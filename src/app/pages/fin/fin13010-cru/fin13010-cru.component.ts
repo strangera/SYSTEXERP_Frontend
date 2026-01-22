@@ -48,6 +48,9 @@ import { NgIf } from '@angular/common';
 export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
   CRUDStatus = CRUDStatus;
 
+  /** 金額規則是否通過，用來控制「確認」按鈕 disabled */
+  isAmountValid = true;
+
   /** 發票格式（進項） */
   voucherTypeOptions = [
     { value: '21', label: '21-進項三聯式、電子計算機統一發票' },
@@ -91,40 +94,40 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
   /** 依字軌撈回來的發票號碼清單 */
   guiNumberOptions: { label: string; value: string }[] = [];
 
-  /** 原始的「剩餘總金額」（從 APS 對應資料帶入，用來判斷區別與上限） */
+  /** 原始的「剩餘總金額」（APS 對應資料） */
   private originalRemainingAmt: number | null = null;
 
   dataForm = this.formBuilder.nonNullable.group({
-    id: [null as number | null], // 主檔 id（Update 用）
+    id: [null as number | null],
 
     TXN_Ret_No: [
       '系統自動帶入',
       [Validators.required, Validators.maxLength(20)],
-    ], // 退出/折讓單號（系統自動編號）
-    GUI_Track: ['', [Validators.required, Validators.maxLength(2)]], // 字軌
-    PUR_GUINo: ['', [Validators.required, Validators.maxLength(10)]], // 發票號碼
-    InvoiceNumber_Correspond: [''], // 字軌+號碼，用來呼叫對應 API
+    ],
+    GUI_Track: ['', [Validators.required, Validators.maxLength(2)]],
+    PUR_GUINo: ['', [Validators.required, Validators.maxLength(10)]],
+    InvoiceNumber_Correspond: [''],
 
-    Inv_Date: [null as any], // 發票日期（系統帶出）
-    PUR_GUIDate: [null as any, Validators.required], // 退出/折讓日期
+    Inv_Date: [null as any],
+    PUR_GUIDate: [null as any, Validators.required],
 
-    PUR_VoucherType: ['', Validators.required], // 發票格式
-    PUR_RepYYYYMM: [null as string | null], // 申報年月（六碼 YYYYMM）
-    Credit_Type: ['', Validators.required], // 區別（系統判斷）
-    PUR_TaxType: ['', Validators.required], // 課稅別（系統帶出）
+    PUR_VoucherType: ['', Validators.required],
+    PUR_RepYYYYMM: [null as string | null],
+    Credit_Type: ['', Validators.required],
+    PUR_TaxType: ['', Validators.required],
 
-    Inv_Net: [null as any], // 銷售額（顯示用）
-    Inv_Tax: [null as any], // 稅額（顯示用）
+    Inv_Net: [null as any],
+    Inv_Tax: [null as any],
 
-    PUR_Net: [null as any], // 退出/折讓金額
-    PUR_Tax: [null as any], // 退出/折讓稅額（自算）
-    PUR_Amt: [null as any], // 退回/折讓總金額
+    PUR_Net: [null as any],
+    PUR_Tax: [null as any],
+    PUR_Amt: [null as any],
 
-    Total_hitory_PUR_Amt: [null as any], // 已退出/折讓歷史總金額（系統帶出）
-    Total_Amt: [null as any], // 剩餘總金額（系統帶出 / 再扣本次）
+    Total_hitory_PUR_Amt: [null as any],
+    Total_Amt: [null as any],
 
-    Source_Doc_No: ['', [Validators.maxLength(16)]], // 憑證單號
-    Voucher_No: ['', [Validators.maxLength(16)]], // 傳票編號（系統用）
+    Source_Doc_No: ['', [Validators.maxLength(16)]],
+    Voucher_No: ['', [Validators.maxLength(16)]],
   });
 
   constructor(
@@ -136,12 +139,11 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
   }
 
   ngOnInit(): void {
-    // 會把 crudstatus / rowdata / 權限帶進來
     this.initializePage('FIN13010', this.dataForm);
 
     const row: any = (this as any).rowdata;
 
-       if (row) {
+    if (row) {
       const repRaw =
         row.PUR_RepYYYYMM ??
         row.INV_DeclareYM ??
@@ -174,7 +176,6 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
             row.Ret_Date ??
             this.dataForm.get('PUR_GUIDate')?.value,
 
-          // ⭐ 在這裡轉：21/25→23、22→24
           PUR_VoucherType: this.normalizeVoucherType(rawVoucherType),
 
           PUR_RepYYYYMM: this.normalizeYYYYMMForControl(repRaw),
@@ -208,17 +209,11 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
       );
     }
 
-    // 狀態控制（Create / Edit / Read）
     this.updateDisabledState();
-
-    // 監聽字軌 / 發票號碼，撈 APS 發票清單 + 對應資料
     this.setupTrackNoWatcher();
     this.setupGuiNoAndCorrespondWatcher();
-
-    // 金額互算 + 剩餘總金額 + 區別判斷
     this.setupAmountRelations();
 
-    // Create 模式：預設今天 + 當期雙月的申報年月
     if (this.crudstatus === CRUDStatus.Create) {
       const today = new Date();
       const year = today.getFullYear();
@@ -232,22 +227,29 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
 
       this.dataForm.patchValue(
         {
-          PUR_GUIDate: today, // 退出/折讓日期 = 今日
+          PUR_GUIDate: today,
           PUR_RepYYYYMM: repYYYYMM,
         },
         { emitEvent: false },
       );
     }
 
-    // 編輯 / 檢視：依目前 GUI_Track + PUR_GUINo 撈 APS 對應資料
-    if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
+    if (
+      this.crudstatus === CRUDStatus.Edit ||
+      this.crudstatus === CRUDStatus.Read
+    ) {
       this.loadInvoiceInfoByCurrentGUINo();
     }
+
+    // 任一欄位變化就重新計算一次 isAmountValid（只算布林，不改值）
+    this.dataForm.valueChanges.subscribe(() => this.refreshAmountValidFlag());
+
+    // 初始化一次
+    this.refreshAmountValidFlag();
   }
 
   /* ==================== GUI_Track + PUR_GUINo 對應資料 ==================== */
 
-  // 依目前 GUI_Track + PUR_GUINo 撈 APS 對應資料
   private loadInvoiceInfoByCurrentGUINo(): void {
     const trackRaw = this.dataForm.get('GUI_Track')?.value as string | null;
     const guiNoRaw = this.dataForm.get('PUR_GUINo')?.value as string | null;
@@ -259,19 +261,16 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
 
     const full = `${track}${guiNo}`;
 
-    // 如果你有這個控制項就寫，沒有可以拿掉
     this.dataForm.patchValue(
       { InvoiceNumber_Correspond: full },
       { emitEvent: false },
     );
 
-    // ✅ 根據實際 API 名稱與參數調整：Swagger 要的是 PUR_GUINo_Correspond
     this.fin13010Service
       .queryCorrespondByGUINoCorrespond({ PUR_GUINo_Correspond: full })
       .subscribe((res) => {
-    const detail = res?.Data?.[0];
+        const detail = res?.Data?.[0];
         if (detail) {
-          // 先拿原始值，再做 21/25→23、22→24 的轉換
           const rawVoucherType =
             (detail as any).PUR_VoucherType ??
             (detail as any).InvoiceType ??
@@ -279,7 +278,6 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
 
           const voucherType = this.normalizeVoucherType(rawVoucherType);
 
-          // 原始「剩餘總金額」來源：優先 Total_Amt，其次 PUR_Amount / PUR_Amt
           const rawOriginal =
             (detail as any).Total_Amt ??
             (detail as any).PUR_Amount ??
@@ -296,7 +294,6 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
               ? this.roundToInt(original)
               : null;
 
-          // 目前畫面上的退回/折讓總金額
           const currentAmtRaw = this.dataForm.get('PUR_Amt')?.value;
           const currentTotal =
             currentAmtRaw === null ||
@@ -305,7 +302,6 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
               ? null
               : this.roundToInt(Number(currentAmtRaw));
 
-          // 剩餘總金額 = 原始剩餘 - 本次退回（若本次尚未輸入，就顯示原始剩餘）
           const remaining =
             this.originalRemainingAmt !== null &&
             !isNaN(this.originalRemainingAmt) &&
@@ -316,12 +312,16 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
 
           this.dataForm.patchValue(
             {
-              Inv_Date: (detail as any).PUR_GUIDate ?? (detail as any).InvoiceDate,
+              Inv_Date:
+                (detail as any).PUR_GUIDate ??
+                (detail as any).InvoiceDate,
               Inv_Net: (detail as any).PUR_Net,
               Inv_Tax: (detail as any).PUR_Tax,
               PUR_VoucherType: voucherType ? String(voucherType) : '',
               PUR_TaxType: (detail as any).PUR_TaxType,
-              Total_hitory_PUR_Amt: (detail as any).Total_hitory_PUR_Amt,
+              Total_hitory_PUR_Amt:
+                (detail as any).Total_history_PUR_Amt ??
+                (detail as any).Total_hitory_PUR_Amt,
               Total_Amt: remaining,
             },
             { emitEvent: false },
@@ -345,31 +345,33 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
             { emitEvent: false },
           );
         }
+
+        // 撈完資料後重新算一次是否合法
+        this.refreshAmountValidFlag();
       });
   }
 
+  private setupTrackNoWatcher(): void {
+    const trackControl = this.dataForm.get('GUI_Track');
 
-  /** 字軌變動時，撈該字軌所有發票號碼（下拉選單用） */
-private setupTrackNoWatcher(): void {
-  const trackControl = this.dataForm.get('GUI_Track');
-
-  if (trackControl) {
-    trackControl.valueChanges.subscribe((trackNo) => {
-      if (typeof trackNo === 'string' && trackNo.trim().length >= 2) {
-        this.fin13010Service
-          .queryINV1000List({ GUI_Track: trackNo.trim() })
-          .subscribe((res) => {
-            this.guiNumberOptions = (res.Data || []).map((item: any) => ({
-              label: item.PUR_GUINo,  // ✅ 顯示文字
-              value: item.PUR_GUINo,  // ✅ 寫回表單的值
-            }));
-          });
-      } else {
-        this.guiNumberOptions = [];
-      }
-    });
+    if (trackControl) {
+      trackControl.valueChanges.subscribe((trackNo) => {
+        if (typeof trackNo === 'string' && trackNo.trim().length >= 2) {
+          this.fin13010Service
+            .queryINV1000List({ GUI_Track: trackNo.trim() })
+            .subscribe((res) => {
+              this.guiNumberOptions = (res.Data || []).map((item: any) => ({
+                label: item.PUR_GUINo,
+                value: item.PUR_GUINo,
+              }));
+            });
+        } else {
+          this.guiNumberOptions = [];
+        }
+      });
+    }
   }
-}
+
   private normalizeVoucherType(raw: any): string {
     const v = String(raw ?? '').trim();
     if (v === '21' || v === '25') return '23';
@@ -377,7 +379,6 @@ private setupTrackNoWatcher(): void {
     return v;
   }
 
-  /** 監聽 GUI_Track 與 PUR_GUINo，只要有變動就重撈對應資料 */
   private setupGuiNoAndCorrespondWatcher(): void {
     const trackControl = this.dataForm.get('GUI_Track');
     const noControl = this.dataForm.get('PUR_GUINo');
@@ -393,7 +394,6 @@ private setupTrackNoWatcher(): void {
 
   private updateDisabledState(): void {
     if (this.crudstatus === CRUDStatus.Edit) {
-      // 編輯模式：只有這些欄位可以改
       const editableFields = [
         'PUR_GUIDate',
         'PUR_RepYYYYMM',
@@ -411,14 +411,11 @@ private setupTrackNoWatcher(): void {
         }
       });
     } else if (this.crudstatus === CRUDStatus.Read) {
-      // 檢視模式：全鎖
       this.dataForm.disable();
     } else {
-      // Create 模式：先全部啟用，再鎖一些欄位
       this.dataForm.enable();
     }
 
-    // 不論狀態一律禁止的欄位（系統自帶或計算）
     this.dataForm.get('TXN_Ret_No')?.disable();
     this.dataForm.get('PUR_Tax')?.disable();
     this.dataForm.get('PUR_TaxType')?.disable();
@@ -432,14 +429,13 @@ private setupTrackNoWatcher(): void {
     this.dataForm.get('Voucher_No')?.disable();
   }
 
-  /* ==================== 金額互算 + 區別判斷 ==================== */
+  /* ==================== 金額互算 + 區別判斷（不強制修正超出數值） ==================== */
 
   private setupAmountRelations(): void {
-    const netControl = this.dataForm.get('PUR_Net'); // 退出/折讓金額
-    const taxControl = this.dataForm.get('PUR_Tax'); // 退出/折讓稅額（自動）
-    const amtControl = this.dataForm.get('PUR_Amt'); // 退回/折讓總金額
-    const remainingControl = this.dataForm.get('Total_Amt'); // 剩餘總金額
-    const invNetControl = this.dataForm.get('Inv_Net'); // 銷售額（原始）
+    const netControl = this.dataForm.get('PUR_Net');
+    const taxControl = this.dataForm.get('PUR_Tax');
+    const amtControl = this.dataForm.get('PUR_Amt');
+    const remainingControl = this.dataForm.get('Total_Amt');
 
     if (!netControl || !taxControl || !amtControl || !remainingControl) {
       return;
@@ -448,12 +444,13 @@ private setupTrackNoWatcher(): void {
     let updatingFromNet = false;
     let updatingFromAmt = false;
 
-    // 使用者輸入「退出/折讓金額」
+    // 由「退出/折讓金額」反推稅額與總金額
     netControl.valueChanges.subscribe((value) => {
       if (updatingFromAmt) return;
       updatingFromNet = true;
 
-      if (value === null || value === undefined || value === '') {
+      const netVal = this.parseAmount(value);
+      if (netVal === null) {
         taxControl.setValue(null, { emitEvent: false });
         amtControl.setValue(null, { emitEvent: false });
         remainingControl.setValue(this.originalRemainingAmt, {
@@ -464,40 +461,9 @@ private setupTrackNoWatcher(): void {
         return;
       }
 
-      let netInt = this.roundToInt(Number(value));
-      if (isNaN(netInt)) {
-        updatingFromNet = false;
-        return;
-      }
-
-      // 不可大於銷售額
-      const invNetRaw = invNetControl?.value;
-      const invNet =
-        invNetRaw === null || invNetRaw === undefined || invNetRaw === ''
-          ? null
-          : Number(invNetRaw);
-
-      if (invNet !== null && !isNaN(invNet) && netInt > invNet) {
-        this.messageService.errorBubble('退出/折讓金額不可大於銷售額');
-        netInt = this.roundToInt(invNet);
-      }
-
-      // 先算稅額 & 總額（假設 5% 稅）
-      let taxInt = this.roundToInt(netInt * 0.05);
-      let totalInt = this.roundToInt(netInt + taxInt);
-
-      // 退回/折讓總金額 不可大於 剩餘總金額（原始）
-      if (
-        this.originalRemainingAmt !== null &&
-        !isNaN(this.originalRemainingAmt) &&
-        totalInt > this.originalRemainingAmt
-      ) {
-        this.messageService.errorBubble('退回/折讓總金額不可大於剩餘總金額');
-        totalInt = this.roundToInt(this.originalRemainingAmt);
-        const approxNet = totalInt / 1.05;
-        netInt = this.roundToInt(approxNet);
-        taxInt = totalInt - netInt;
-      }
+      const netInt = this.roundToInt(netVal);
+      const taxInt = this.roundToInt(netInt * 0.05);
+      const totalInt = this.roundToInt(netInt + taxInt);
 
       netControl.setValue(netInt, { emitEvent: false });
       taxControl.setValue(taxInt, { emitEvent: false });
@@ -513,12 +479,13 @@ private setupTrackNoWatcher(): void {
       updatingFromNet = false;
     });
 
-    // 使用者直接修改「退回/折讓總金額」
+    // 由「退回/折讓總金額」反推淨額與稅額
     amtControl.valueChanges.subscribe((value) => {
       if (updatingFromNet) return;
       updatingFromAmt = true;
 
-      if (value === null || value === undefined || value === '') {
+      const totalVal = this.parseAmount(value);
+      if (totalVal === null) {
         netControl.setValue(null, { emitEvent: false });
         taxControl.setValue(null, { emitEvent: false });
         remainingControl.setValue(this.originalRemainingAmt, {
@@ -529,52 +496,10 @@ private setupTrackNoWatcher(): void {
         return;
       }
 
-      let totalInt = this.roundToInt(Number(value));
-      if (isNaN(totalInt)) {
-        updatingFromAmt = false;
-        return;
-      }
-
-      // 退回/折讓總金額 不可大於 剩餘總金額
-      if (
-        this.originalRemainingAmt !== null &&
-        !isNaN(this.originalRemainingAmt) &&
-        totalInt > this.originalRemainingAmt
-      ) {
-        this.messageService.errorBubble('退回/折讓總金額不可大於剩餘總金額');
-        totalInt = this.roundToInt(this.originalRemainingAmt);
-      }
-
-      // total = net + tax，假設稅 5%
-      let approxNet = totalInt / 1.05;
-      let netInt = this.roundToInt(approxNet);
-      let taxInt = totalInt - netInt;
-
-      // 退出/折讓金額不可大於銷售額
-      const invNetRaw = invNetControl?.value;
-      const invNet =
-        invNetRaw === null || invNetRaw === undefined || invNetRaw === ''
-          ? null
-          : Number(invNetRaw);
-
-      if (invNet !== null && !isNaN(invNet) && netInt > invNet) {
-        this.messageService.errorBubble('退出/折讓金額不可大於銷售額');
-        netInt = this.roundToInt(invNet);
-        taxInt = this.roundToInt(netInt * 0.05);
-        totalInt = this.roundToInt(netInt + taxInt);
-
-        // 再檢查一次 total 不可大於 原始剩餘
-        if (
-          this.originalRemainingAmt !== null &&
-          !isNaN(this.originalRemainingAmt) &&
-          totalInt > this.originalRemainingAmt
-        ) {
-          totalInt = this.roundToInt(this.originalRemainingAmt);
-          approxNet = totalInt / 1.05;
-          netInt = this.roundToInt(approxNet);
-          taxInt = totalInt - netInt;
-        }
-      }
+      const totalInt = this.roundToInt(totalVal);
+      const approxNet = totalInt / 1.05;
+      const netInt = this.roundToInt(approxNet);
+      const taxInt = totalInt - netInt;
 
       amtControl.setValue(totalInt, { emitEvent: false });
       netControl.setValue(netInt, { emitEvent: false });
@@ -591,11 +516,6 @@ private setupTrackNoWatcher(): void {
     });
   }
 
-  /**
-   * 區別：
-   *  - totalAmt === originalRemainingAmt → 退出 (R)
-   *  - 0 < totalAmt < originalRemainingAmt → 折讓 (C)
-   */
   private updateCreditTypeByAmount(totalAmt: number | null): void {
     const creditControl = this.dataForm.get('Credit_Type');
     if (!creditControl) return;
@@ -629,17 +549,36 @@ private setupTrackNoWatcher(): void {
     return Math.round(value);
   }
 
+  /** 把畫面上的金額轉成 number，支援千分位 / 空字串 */
+  private parseAmount(raw: any): number | null {
+    if (raw === null || raw === undefined || raw === '') {
+      return null;
+    }
+
+    if (typeof raw === 'number') {
+      return isNaN(raw) ? null : raw;
+    }
+
+    if (typeof raw === 'string') {
+      const cleaned = raw.replace(/,/g, '').trim();
+      if (!cleaned) return null;
+      const n = Number(cleaned);
+      return isNaN(n) ? null : n;
+    }
+
+    const n = Number(raw);
+    return isNaN(n) ? null : n;
+  }
+
   /* ==================== 年月處理 ==================== */
 
-  /** 後端 / rowdata 的 YYYYMM 轉成控制項用的六碼 YYYYMM */
   private normalizeYYYYMMForControl(raw: any): string | null {
     if (!raw) return null;
     const only = String(raw).replace(/\D/g, '');
     if (only.length < 6) return null;
-    return only.slice(0, 6); // 例如 "2026/02" -> "202602"
+    return only.slice(0, 6);
   }
 
-  /** year-month 控制值 -> YYYYMM 傳回後端 */
   private toYYYYMM(input: any): string | null {
     if (!input) return null;
 
@@ -670,18 +609,163 @@ private setupTrackNoWatcher(): void {
     return null;
   }
 
+  /* ========= 依目前 UI 值，計算 isAmountValid（不出訊息、只算布林） ========= */
+
+  private refreshAmountValidFlag(): void {
+    const raw = this.dataForm.getRawValue() as any;
+
+    const totalAmt = this.parseAmount(raw.PUR_Amt);
+    const netAmt = this.parseAmount(raw.PUR_Net);
+
+    const invNet =
+      this.parseAmount(raw.Inv_Net) ??
+      this.parseAmount(this.dataForm.get('Inv_Net')?.value);
+
+    const remainingBaseRawFromForm = this.parseAmount(raw.Total_Amt);
+    const remainingBaseRaw =
+      this.originalRemainingAmt !== null && !isNaN(this.originalRemainingAmt)
+        ? this.originalRemainingAmt
+        : remainingBaseRawFromForm;
+
+    const remainingBase =
+      remainingBaseRaw !== null && !isNaN(remainingBaseRaw)
+        ? remainingBaseRaw
+        : 0;
+
+    let ok = true;
+
+    if (
+      totalAmt !== null &&
+      !isNaN(totalAmt) &&
+      totalAmt > remainingBase
+    ) {
+      ok = false;
+    }
+
+    if (
+      invNet !== null &&
+      netAmt !== null &&
+      !isNaN(invNet) &&
+      !isNaN(netAmt) &&
+      netAmt > invNet
+    ) {
+      ok = false;
+    }
+
+    this.isAmountValid = ok;
+  }
+
+  /* ==================== 送出前的商業邏輯檢核（會出訊息） ==================== */
+
+  private validateBusinessRules(form: FormGroup): boolean {
+    const raw = form.getRawValue() as any;
+
+    const totalAmt = this.parseAmount(raw.PUR_Amt);
+    const netAmt = this.parseAmount(raw.PUR_Net);
+    const invNet =
+      this.parseAmount(raw.Inv_Net) ??
+      this.parseAmount(this.dataForm.get('Inv_Net')?.value);
+
+    const purAmtControl = form.get('PUR_Amt');
+    const purNetControl = form.get('PUR_Net');
+
+    const remainingBaseRawFromForm = this.parseAmount(raw.Total_Amt);
+    const remainingBaseRaw =
+      this.originalRemainingAmt !== null && !isNaN(this.originalRemainingAmt)
+        ? this.originalRemainingAmt
+        : remainingBaseRawFromForm;
+
+    const remainingBase =
+      remainingBaseRaw !== null && !isNaN(remainingBaseRaw)
+        ? remainingBaseRaw
+        : 0;
+
+    const clearErrorKey = (control: any, key: string) => {
+      if (!control) return;
+      const errors = control.errors;
+      if (!errors || !errors[key]) return;
+      const { [key]: _, ...rest } = errors;
+      control.setErrors(Object.keys(rest).length ? rest : null);
+    };
+
+    clearErrorKey(purAmtControl, 'businessRule');
+    clearErrorKey(purNetControl, 'businessRule');
+    clearErrorKey(form, 'businessRule');
+
+    this.isAmountValid = true;
+
+    if (
+      totalAmt !== null &&
+      !isNaN(totalAmt) &&
+      totalAmt > remainingBase
+    ) {
+      this.messageService.errorBubble('退回/折讓總金額不可大於剩餘總金額');
+
+      purAmtControl?.setErrors({
+        ...(purAmtControl?.errors || {}),
+        businessRule: true,
+      });
+      form.setErrors({
+        ...(form.errors || {}),
+        businessRule: true,
+      });
+
+      purAmtControl?.markAsTouched();
+      form.markAsDirty();
+
+      this.isAmountValid = false;
+      return false;
+    }
+
+    if (
+      invNet !== null &&
+      netAmt !== null &&
+      !isNaN(invNet) &&
+      !isNaN(netAmt) &&
+      netAmt > invNet
+    ) {
+      this.messageService.errorBubble('退出/折讓金額不可大於銷售額');
+
+      purNetControl?.setErrors({
+        ...(purNetControl?.errors || {}),
+        businessRule: true,
+      });
+      form.setErrors({
+        ...(form.errors || {}),
+        businessRule: true,
+      });
+
+      purNetControl?.markAsTouched();
+      form.markAsDirty();
+
+      this.isAmountValid = false;
+      return false;
+    }
+
+    this.isAmountValid = true;
+    return true;
+  }
+
   /* ==================== 送出 ==================== */
 
   onSubmit(form: FormGroup): void {
+    // 最終安全檢查
+    if (!this.canSubmit) {
+      this.messageService.warnBubble('請先修正表單錯誤');
+      return;
+    }
+
     this.handleSubmit(form, () => {
+      if (!this.validateBusinessRules(form)) {
+        return;
+      }
+
       if (form.invalid) {
         this.messageService.warnBubble('請先修正表單錯誤');
         return;
       }
 
       const raw = form.getRawValue() as any;
-
-      // year-month 轉 YYYYMM
       raw.PUR_RepYYYYMM = this.toYYYYMM(raw.PUR_RepYYYYMM);
 
       if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
@@ -722,18 +806,22 @@ private setupTrackNoWatcher(): void {
     });
   }
 
-  /** 返回按鈕：一律帶 fromCru=true，讓查詢頁還原條件 */
   override onCancel(): void {
     this.router.navigate(['/account/fin', 'fin13010'], {
       state: { fromCru: true },
     });
   }
 
-  // 清除：如果你有需要，也可以再客製
   onClear(): void {
     this.dataForm.reset();
     this.dataForm.markAsPristine();
     this.originalRemainingAmt = null;
     this.updateDisabledState();
+    this.refreshAmountValidFlag();
+  }
+
+  /** 只有金額合法且表單本身沒有錯誤，才能送出 */
+  get canSubmit(): boolean {
+    return this.isAmountValid && this.dataForm.valid;
   }
 }

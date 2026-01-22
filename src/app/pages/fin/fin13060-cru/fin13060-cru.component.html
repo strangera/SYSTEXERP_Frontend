@@ -39,6 +39,7 @@
             label="發票年月"
             [control]="dataForm.controls.INV_YM"
             [submitted]="submitted"
+            [readonly]="true"
           ></app-year-month>
         </div>
 
@@ -87,11 +88,12 @@
 
         <!-- 金額/稅別 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
+          <app-input-number
             label="發票總金額"
+            controlName="TXN_SaleAmt"
             [control]="dataForm.controls.TXN_SaleAmt"
             [submitted]="submitted"
-          ></app-input-text>
+          ></app-input-number>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -107,19 +109,21 @@
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
+          <app-input-number
             label="發票未稅金額"
+            controlName="TXN_Net"
             [control]="dataForm.controls.TXN_Net"
             [submitted]="submitted"
-          ></app-input-text>
+          ></app-input-number>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
+          <app-input-number
             label="稅額"
+            controlName="TXN_Tax"
             [control]="dataForm.controls.TXN_Tax"
             [submitted]="submitted"
-          ></app-input-text>
+          ></app-input-number>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
