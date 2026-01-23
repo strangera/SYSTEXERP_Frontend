@@ -1,15 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ASS11030Data, ASS11030InsertRequest, ASS11030QueryRequest, ASS11030UpdateRequest, ASS11030UpdateResult } from '@pages/ass/ass11030/ass11030.model';
+import { ASS11030Data, ASS11030InsertRequest, ASS11030QueryDataWrapper, ASS11030QueryRequest, ASS11030UpdateRequest, ASS11030UpdateResult } from '@pages/ass/ass11030/ass11030.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-
-/** 查詢回應資料結構 */
-export interface ASS11030QueryDataWrapper {
-  TotalCount: number;
-  QueryData: ASS11030Data[];
-}
 
 @Injectable({ providedIn: 'root' })
 export class ASS11030Service {
@@ -20,8 +14,17 @@ export class ASS11030Service {
   /**
    * 查詢小分類資料
    */
-  queryASS11030(payload: ASS11030QueryRequest): Observable<ApiResponse<ASS11030QueryDataWrapper>> {
-    return this.http.post<ApiResponse<ASS11030QueryDataWrapper>>(`${this.apiUrl}/queryASS11030`, payload);
+  queryASS11030(payload: ASS11030QueryRequest): Observable<ApiResponse<ASS11030Data[]>> {
+    return this.http.post<ApiResponse<ASS11030QueryDataWrapper>>(`${this.apiUrl}/queryASS11030`, payload)
+      .pipe(
+        map(res => {
+          return {
+            ...res,
+            Data: res.Data.QueryData,
+            TotalCount: res.Data.TotalCount
+          } as ApiResponse<ASS11030Data[]>;
+        })
+      );
   }
 
   /**
