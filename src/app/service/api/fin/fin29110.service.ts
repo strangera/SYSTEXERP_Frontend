@@ -30,24 +30,24 @@ export interface Fin29110Request {
 }
 // ==== 明細每列型別（對應 SP_FIN29110QueryDetail 回傳欄位） ====
 export interface Fin29110DetailRow {
-  RowNo: string;              // 序號
-  ACP_No: string;             // 應付ID
-  STO_No: string;             // 組織代號
-  ACP_YYYYMM: string;         // 帳款年月
-  ACP_TermNo: string;         // 帳款帳次
-  ACP_Amt: number;            // 應付金額
-  PTA_Amt: number;            // 沖帳金額
-  ACP_BalanceAmt: number;     // 應付帳款餘額
-  ACP_Date: string;           // 立帳日期
-  ACP_ExpectPayDate: string;  // 預計付款日
-  VEN_No: string;             // 廠商編號
-  VEN_Name: string;           // 廠商名稱
-  VEN_Uniform: string;        // 統一編號
-  AccNo: string;              // 會計科目代號
-  ACP_SourceNo: string;       // 帳款來源單號
-  VouNo: string;              // 傳票號碼
-  Status: string;             // 狀態
-  AgeDays: number;            // 帳齡天數
+  RowNo: string;
+  ACP_No: string;
+  STO_No: string; // 注意：SP 裡 SELECT 了 A.STO_No，模型中要有
+  ACP_YYYYMM: string;
+  ACP_TermNo: string;
+  ACP_Amt: number;
+  PTA_Amt: number; // 沖帳金額
+  ACP_BalanceAmt: number;
+  ACP_Date: string;
+  ACP_ExpectPayDate: string;
+  VEN_No: string;
+  VEN_Name: string;
+  VEN_Uniform: string;
+  AccNo: string;
+  ACP_SourceNo: string;
+  VouNo: string;
+  Status: string; // 已被 SP 轉為中文
+  AgeDays: number;
 }
 
 // ==== 明細 Request 型別（對應 SP_FIN29110QueryDetail 參數） ====

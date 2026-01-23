@@ -96,8 +96,8 @@
 </div>
 
 <!-- 明細 Dialog -->
-<app-dialog [visible]="dialogVisible" header="應付帳款明細" (visibleChange)="dialogVisible = $event" [showFooter]="false"
-  width="95vw">
+<app-dialog [visible]="dialogVisible" header="應付帳款帳齡分析表(明細)" (visibleChange)="dialogVisible = $event"
+  [showFooter]="false" width="95vw">
 
   <app-table-report [tableKey]="'fin29110_detail_'" [columns]="detailColumns" [data]="dialogData" [showCaption]="false"
     [totalRecords]="dialogTotalRecords" [loading]="dialogLoading" dataKey="_rowKey" [showManage]="false"

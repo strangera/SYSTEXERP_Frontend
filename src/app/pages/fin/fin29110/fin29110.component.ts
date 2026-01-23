@@ -24,6 +24,16 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 @Component({
   selector: 'app-fin29110',
   templateUrl: './fin29110.component.html',
+  styles: [`
+  :host ::ng-deep {
+    /* 金額不為 0 時的樣式：藍色且加粗 (方便辨識可點擊) */
+    .text-amount-active {
+        color: #2196F3 !important;
+        font-weight: bold;
+        cursor: pointer;
+    }
+  }
+  `],
   standalone: true,
   imports: [
     CommonModule,
@@ -86,7 +96,6 @@ export class FIN29110Component extends BasicQueryPageComponent<Fin29110Row> impl
     { field: 'VendorNo', header: '廠商編號' },
     { field: 'VendorName', header: '廠商名稱' },
 
-    // 以下為佔位用的通用字眼，查詢後會被正確的日期區間取代
     { field: 'Overdue_Placeholder', header: '已到期帳款', format: formatAmount, groupField: '已到期' },
     { field: 'NotDue_Placeholder', header: '未到期帳款', format: formatAmount, groupField: '未到期' },
 
@@ -101,7 +110,7 @@ export class FIN29110Component extends BasicQueryPageComponent<Fin29110Row> impl
   // 明細欄位（Dialog 內 table）
   detailColumns: ReportColumn[] = [
     { field: 'ACP_No', header: '應付ID' },
-    { field: 'STO_No', header: '組織代號' },
+    { field: 'org_id', header: '組織代號' },
     { field: 'ACP_YYYYMM', header: '帳款年月' },
     { field: 'ACP_TermNo', header: '帳款帳次' },
     { field: 'ACP_Amt', header: '應付金額', format: formatAmount },
@@ -138,7 +147,6 @@ export class FIN29110Component extends BasicQueryPageComponent<Fin29110Row> impl
       const raw = frm.getRawValue();
       const analysisDate = raw.AnalysisDate as Date;
 
-      // 建立 Request Body
       const body: Fin29110Request = {
         AnalysisDate: this.datePipe.transform(analysisDate, 'yyyy-MM-dd') || undefined,
         BucketDays: raw.BucketDays,
@@ -156,21 +164,59 @@ export class FIN29110Component extends BasicQueryPageComponent<Fin29110Row> impl
         untilDestroyed(this),
         finalize(() => this.loading = false)
       ).subscribe(response => {
-        this.lastQueryBody = body; // 儲存查詢條件供匯出使用
-
-        // *** 關鍵調整：根據當前查詢參數動態產生欄位 ***
+        this.lastQueryBody = body;
         this.columns = this.generateColumns(analysisDate, raw.BucketDays, raw.Periods);
-
         this.data = response.Data;
         this.totalRecords = response.TotalCount || 0;
+
+        // 計算主表 Footer 加總
+        this.footerData = this.calculateFooter(this.data);
       });
     });
   }
+
+  /** 輔助方法：計算主表合計列 */
+  private calculateFooter(data: Fin29110Row[]): Fin29110Row {
+    const footer: any = {
+      VendorName: '',
+      SumAmount: 0
+    };
+
+    if (!data || data.length === 0) return footer;
+
+    data.forEach(row => {
+      // 遍歷該列所有 Key
+      Object.keys(row).forEach(key => {
+        // 只要是數值欄位（SumAmount 或 動態產生的帳齡欄位）就累加
+        if (typeof row[key] === 'number') {
+          footer[key] = (footer[key] || 0) + row[key];
+        }
+      });
+    });
+
+    return footer as Fin29110Row;
+  }
   openDetail(row: Fin29110Row, col?: ReportColumn): void {
     const field = col?.field || '';
+    // 排除點擊「廠商編號」、「廠商名稱」或「總計」
+    if (field === 'VendorNo' || field === 'VendorName' || field === 'SumAmount') return;
+
     const side = field.startsWith('Overdue') ? 'O' : 'N';
     const match = field.match(/_(?<n>\d+)_/);
-    const bucketN = match ? parseInt(match.groups?.['n'] || '1') - 1 : 0;
+
+    // 1. 取得欄位中的數字 (1, 2, 3...)
+    const nFromField = match ? parseInt(match.groups?.['n'] || '1') : 1;
+
+    // 2. 轉換為 SP 要求的 0-based BucketN
+    // SP 規定 0~4 是區間，5 是「301天以上」
+    let bucketN = nFromField - 1;
+
+    // 如果欄位名稱包含 "Over_Days" (即最後一期)，或者 n > 5，強制設為 5
+    if (field.includes('Over_Days') || bucketN > 5) {
+      bucketN = 5;
+    }
+
+    this.dialogLoading = true; // 開啟 Loading
 
     const body: Fin29110DetailRequest = {
       AnalysisDate: this.datePipe.transform(this.queryForm.controls.AnalysisDate.value, 'yyyy-MM-dd') || '',
@@ -180,13 +226,41 @@ export class FIN29110Component extends BasicQueryPageComponent<Fin29110Row> impl
       Side: side,
       BucketN: bucketN,
       VEN_No: row.VendorNo || '',
+      // 如果你有分頁需求，記得補上 PageIndex / PageSize
+      PageIndex: 0,
+      PageSize: 1000
     };
-    this.fin29110Service.queryFIN29110Detail(body).pipe(untilDestroyed(this), finalize(() => (this.dialogLoading = false))).subscribe(res => {
+
+    this.fin29110Service.queryFIN29110Detail(body).pipe(
+      untilDestroyed(this),
+      finalize(() => (this.dialogLoading = false))
+    ).subscribe(res => {
       this.dialogData = res.Data;
-      const realTotal = res.TotalCount || 0;
-      this.dialogTotalRecords = realTotal;
+      this.dialogTotalRecords = res.TotalCount || 0;
+
+      // 計算明細 Dialog Footer 加總
+      this.dialogFooterData = this.calculateDetailFooter(this.dialogData);
+
       this.dialogVisible = true;
-    })
+    });
+  }
+  /** 輔助方法：計算明細表合計列 */
+  private calculateDetailFooter(data: Fin29110DetailRow[]): any {
+    const footer = {
+      ACP_Amt: 0,
+      PTA_Amt: 0,
+      ACP_BalanceAmt: 0
+    };
+
+    if (!data || data.length === 0) return footer;
+
+    data.forEach(row => {
+      footer.ACP_Amt += (row.ACP_Amt || 0);
+      footer.PTA_Amt += (row.PTA_Amt || 0);
+      footer.ACP_BalanceAmt += (row.ACP_BalanceAmt || 0);
+    });
+
+    return footer;
   }
   /* ----------------- 匯出：Excel ----------------- */
   downloadFIN29110Excel(): void {
@@ -204,11 +278,21 @@ export class FIN29110Component extends BasicQueryPageComponent<Fin29110Row> impl
   }
 
   // 動態產生欄位設定
+  // 動態產生欄位設定
   private generateColumns(analysisDate: Date, bucketDays: number, periods: number): ReportColumn[] {
     const cols: ReportColumn[] = [
       { field: 'VendorNo', header: '廠商編號' },
       { field: 'VendorName', header: '廠商名稱' },
     ];
+
+    // 抽出共用的樣式判斷邏輯
+    const getAmountClass = (rowData: any, field: string) => {
+      const val = rowData[field];
+      if (val !== 0 && val !== null && val !== undefined) {
+        return 'text-amount-active';
+      }
+      return '';
+    };
 
     // --- 1. 已到期 (Overdue) ---
     for (let i = periods; i >= 1; i--) {
@@ -217,7 +301,6 @@ export class FIN29110Component extends BasicQueryPageComponent<Fin29110Row> impl
       if (i === periods) {
         const fromDays = (periods - 1) * bucketDays + 1;
         field = `Overdue_${periods}_Over_Days`;
-        // 使用 \n 進行強制換行
         header = `${fromDays}天以上\n${this.getRelativeDate(analysisDate, -fromDays)}\n以前`;
       } else {
         const from = (i - 1) * bucketDays + 1;
@@ -225,7 +308,15 @@ export class FIN29110Component extends BasicQueryPageComponent<Fin29110Row> impl
         field = `Overdue_${i}_${from}_${to}_Days`;
         header = `${from}~${to}天\n${this.getRelativeDate(analysisDate, -to)}\n${this.getRelativeDate(analysisDate, -from)}`;
       }
-      cols.push({ field, header, format: formatAmount, groupField: '已到期' });
+
+      cols.push({
+        field,
+        header,
+        format: formatAmount,
+        groupField: '已到期',
+        // 新增這行：動態綁定 Class
+        cellClass: (rowData) => getAmountClass(rowData, field)
+      });
     }
 
     // --- 2. 未到期 (NotDue) ---
@@ -242,7 +333,15 @@ export class FIN29110Component extends BasicQueryPageComponent<Fin29110Row> impl
         field = `NotDue_${i}_${from}_${to}_Days`;
         header = `${from}~${to}天\n${this.getRelativeDate(analysisDate, from)}\n${this.getRelativeDate(analysisDate, to)}`;
       }
-      cols.push({ field, header, format: formatAmount, groupField: '未到期' });
+
+      cols.push({
+        field,
+        header,
+        format: formatAmount,
+        groupField: '未到期',
+        // 新增這行：動態綁定 Class
+        cellClass: (rowData) => getAmountClass(rowData, field)
+      });
     }
 
     cols.push({ field: 'SumAmount', header: '總計', format: formatAmount });
