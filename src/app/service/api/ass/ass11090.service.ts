@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ASS11090Data, ASS11090DetailRequest, ASS11090QueryRequest } from '@pages/ass/ass11090/ass11090.model';
+import { ASS11090Data, ASS11090DetailRequest, ASS11090QueryRequest, ASS11090UpdateRequest } from '@pages/ass/ass11090/ass11090.model';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
@@ -24,5 +24,12 @@ export class ASS11090Service {
    */
   queryASS11090Detail(payload: ASS11090DetailRequest): Observable<ApiResponse<ASS11090Data>> {
     return this.http.post<ApiResponse<ASS11090Data>>(`${this.apiUrl}/ASS11090Detail`, payload);
+  }
+
+  /**
+   * 更新資材中分類會計科目維護資料
+   */
+  updateASS11090(payload: ASS11090UpdateRequest): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/ASS11090Update`, payload);
   }
 }

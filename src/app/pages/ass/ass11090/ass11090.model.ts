@@ -106,3 +106,101 @@ export interface MidCategoryOption {
   /** 中分類名稱 */
   Name: string;
 }
+
+/**
+ * 採買入帳科目明細
+ */
+export interface PurchaseAccountDetail {
+  /** 序號 */
+  SerialNo?: number;
+  /** 會計科目(借)代碼 */
+  AccountingCode?: string;
+  /** 會計科目(借)名稱 */
+  AccountingName?: string;
+  /** 組織代號 */
+  OrganizationCode?: string;
+  /** 組織名稱 */
+  OrganizationName?: string;
+}
+
+/**
+ * 費用結轉科目明細
+ */
+export interface ExpenseTransferDetail {
+  /** 序號 */
+  SerialNo?: number;
+  /** 費用科目代碼 */
+  ExpenseCode?: string;
+  /** 費用科目名稱 */
+  ExpenseName?: string;
+  /** 組織代號 */
+  OrganizationCode?: string;
+  /** 組織名稱 */
+  OrganizationName?: string;
+}
+
+/**
+ * 折舊攤提科目明細
+ */
+export interface DepreciationDetail {
+  /** 序號 */
+  SerialNo?: number;
+  /** 費用科目代碼 */
+  ExpenseCode?: string;
+  /** 費用科目名稱 */
+  ExpenseName?: string;
+  /** 組織代號 */
+  OrganizationCode?: string;
+  /** 組織名稱 */
+  OrganizationName?: string;
+}
+
+/**
+ * ASS11090 更新請求參數
+ */
+export interface ASS11090UpdateRequest {
+  /** 記錄 ID */
+  id?: number;
+  /** 大分類代碼 */
+  BigCategoryCode?: string;
+  /** 大分類名稱 */
+  BigCategoryName?: string;
+  /** 中分類代碼 */
+  MidCategoryCode?: string;
+  /** 中分類名稱 */
+  MidCategoryName?: string;
+  /** 所屬會計科目(借)代碼 */
+  AccountingDebitCode?: string;
+  /** 所屬會計科目(借)名稱 */
+  AccountingDebitName?: string;
+  /** 所屬會計科目(貸)代碼 */
+  AccountingCreditCode?: string;
+  /** 所屬會計科目(貸)名稱 */
+  AccountingCreditName?: string;
+  /** 進項稅額科目(借)代碼 */
+  InputTaxDebitCode?: string;
+  /** 進項稅額科目(借)名稱 */
+  InputTaxDebitName?: string;
+  /** 費用科目代碼 */
+  ExpenseAccountCode?: string;
+  /** 費用科目名稱 */
+  ExpenseAccountName?: string;
+  /** 累計折舊科目(貸)代碼 */
+  AccumulatedDepreciationCreditCode?: string;
+  /** 累計折舊科目(貸)名稱 */
+  AccumulatedDepreciationCreditName?: string;
+  /** 折舊科目(借)代碼 */
+  DepreciationDebitCode?: string;
+  /** 折舊科目(借)名稱 */
+  DepreciationDebitName?: string;
+  /** 折舊年限 */
+  DepreciationLife?: number;
+  /** 說明 */
+  Description?: string;
+  /** 採買入帳科目明細 */
+  PurchaseAccountDetails?: PurchaseAccountDetail[];
+  /** 費用結轉科目明細 */
+  ExpenseTransferDetails?: ExpenseTransferDetail[];
+  /** 折舊攤提科目明細 */
+  DepreciationDetails?: DepreciationDetail[];
+}
