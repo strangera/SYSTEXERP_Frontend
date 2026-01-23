@@ -224,6 +224,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   }>;
 
 // ========= 查詢（明細 / 彙總） =========
+// ========= 查詢（明細 / 彙總） =========
 onSubmit(frm: FormGroup) {
   this.handleSubmit(frm, () => {
     const val = this.queryForm.getRawValue() as any;
@@ -231,18 +232,23 @@ onSubmit(frm: FormGroup) {
 
     const pageSize = 30;
     const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
+
     const sortByArr = (Array.isArray(val?.SortBy) && val.SortBy.length
       ? val.SortBy
       : (this.sortMeta.length ? this.sortMeta : this.defaultSort)
     ).map((s: any) => ({ ...s }));
 
+    // ✅ 基本 payload（先把日期轉 yyyy-MM-dd）
     const payload: any = {
       ...val,
       TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
       TXN_DateEnd: this.toDateOnly(val?.TXN_DateEnd),
     };
+
+    // ✅ UI 狀態欄位不送後端
     delete payload.showSummary;
 
+    // ✅ 清掉空值，避免送一堆 [] / '' / null
     Object.keys(payload).forEach((k) => {
       const v = payload[k];
       if (v === null || v === undefined) delete payload[k];
@@ -252,13 +258,22 @@ onSubmit(frm: FormGroup) {
 
     this.loading = true;
 
+    // =========================
+    // 明細：後端分頁 + 後端排序
+    // =========================
     if (!isSummary) {
-      // ===== 明細：後端分頁 + 後端排序 =====
-      Object.assign(payload, { pageSize, pageIndex, SortBy: sortByArr });
-      this.historyRequestBody = { ...payload };
+      const detailBody = {
+        ...payload,
+        pageSize,
+        pageIndex,
+        SortBy: sortByArr,
+      };
+
+      // ✅ 匯出 / 重新查詢要用
+      this.historyRequestBody = { ...detailBody };
 
       this.tls23010Service
-        .queryTLS23010(payload)
+        .queryTLS23010(detailBody)
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
         .subscribe({
           next: (resp: any) => {
@@ -271,8 +286,12 @@ onSubmit(frm: FormGroup) {
             this.data = queryData as TLS23010Data[];
             this.summaryData = [];
 
+            // ✅ 明細 totals
             this.detailTotals = this.coerceTotals(resp?.Data?.TotalSummary);
             this.totalRecords = Number(resp?.TotalCount ?? this.data.length ?? 0);
+
+            // ✅ 明細模式不該顯示彙總 totals（避免殘留）
+            this.summaryTotals = {};
 
             this.updatePdfSummary?.();
             this.queryStateService?.setQueryState?.(this.ProgNo, this.queryForm.value);
@@ -282,6 +301,7 @@ onSubmit(frm: FormGroup) {
             this.summaryData = [];
             this.totalRecords = 0;
             this.detailTotals = {};
+            this.summaryTotals = {};
             this.pdfSummary = [];
           },
         });
@@ -289,13 +309,20 @@ onSubmit(frm: FormGroup) {
       return;
     }
 
-    // ===== 彙總：一次抓回，畫面上用 summaryData 顯示 =====
-    Object.assign(payload, { SortBy: sortByArr });
-    delete payload.pageIndex;
-    delete payload.pageSize;
+    // =========================
+    // 彙總：一次抓回（不送 pageIndex/pageSize）
+    // =========================
+    const summaryBody: any = {
+      ...payload,
+      SortBy: sortByArr,
+    };
+
+    // ✅ 彙總本身不用分頁參數（TableReport 也會自己帶）
+    delete summaryBody.pageIndex;
+    delete summaryBody.pageSize;
 
     this.tls23010Service
-      .queryTLS23010Summary(payload)
+      .queryTLS23010Summary(summaryBody)
       .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
       .subscribe({
         next: (resp: any) => {
@@ -311,15 +338,23 @@ onSubmit(frm: FormGroup) {
           this.data = [];
           this.totalRecords = this.summaryData.length;
 
-          // 這個只給匯出 / 其它 API 用，不影響 TableReport 自己的查詢
+          // ✅ 取總計（這裡才會有 Total_TXN_TotGUI）
+          this.summaryTotals = this.coerceNumberMap({
+            Total_TXN_TotGUI: head?.Total_TXN_TotGUI,
+            Total_TXN_TotGUI_Inv: head?.Total_TXN_TotGUI_Inv,
+          });
+
+          // ✅ 彙總模式不該顯示明細 totals（避免殘留）
+          this.detailTotals = {};
+
+          // ✅ 給匯出 / 其它 API 用（你原本的邏輯保留）
           const summaryPageSize = this.summaryData.length || 30;
           this.historyRequestBody = {
-            ...payload,
+            ...summaryBody,
             pageIndex: 1,
             pageSize: summaryPageSize,
           };
 
-          this.detailTotals = {};
           this.updatePdfSummary?.();
           this.queryStateService?.setQueryState?.(this.ProgNo, this.queryForm.value);
         },
@@ -328,6 +363,7 @@ onSubmit(frm: FormGroup) {
           this.data = [];
           this.totalRecords = 0;
           this.detailTotals = {};
+          this.summaryTotals = {};
           this.pdfSummary = [];
         },
       });
@@ -373,9 +409,11 @@ public queryTLS23010SummaryForReport = (body: any) =>
         Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
         [];
 
-      // 不在這裡做排序、也不自行切分頁
-      // 排序交給後端依 body.SortBy 處理
-      // 分頁交給 TableReport 透過 pageIndex / pageSize 控制
+      // ✅ 同步總計（讓 footer 會跟著 TableReport 的查詢更新）
+      this.summaryTotals = this.coerceNumberMap({
+        Total_TXN_TotGUI: head?.Total_TXN_TotGUI,
+        Total_TXN_TotGUI_Inv: head?.Total_TXN_TotGUI_Inv,
+      });
 
       return {
         Data: all,
@@ -384,6 +422,7 @@ public queryTLS23010SummaryForReport = (body: any) =>
       };
     })
   );
+
 
 
 
@@ -804,4 +843,28 @@ public queryTLS23010SummaryForReport = (body: any) =>
 
   // 若 app-table-report 支援 trackBy，可使用
   trackByTxn = (_: number, r: TLS23010Data) => r?.TXN_No;
+  // 彙總總計（來自 summary API 的 Data[0]）
+summaryTotals: Record<string, number> = {};
+
+buildFooterFromSummaryTotals(): Record<string, any> | undefined {
+  if (!this.summaryTotals) return undefined;
+
+  return {
+    // 你 summaryColumns 目前只有 TXN_TotGUI 有 isTotal
+    TXN_TotGUI: this.summaryTotals['Total_TXN_TotGUI'] ?? 0,
+
+    // 如果你之後 summaryColumns 還要加其它欄位，就在這裡一起回傳
+    // 例如：TXN_TotGUI_Inv: this.summaryTotals['Total_TXN_TotGUI_Inv'] ?? 0,
+  };
+}
+
+private coerceNumberMap(src: any): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (!src) return out;
+  Object.keys(src).forEach((k) => {
+    const v = src[k];
+    out[k] = typeof v === 'number' ? v : Number(v) || 0;
+  });
+  return out;
+}
 }
