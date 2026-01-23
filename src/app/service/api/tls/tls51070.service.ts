@@ -42,7 +42,13 @@ export class Tls51070Service {
   }
 
   // excel匯入並且產生錯誤檔
-  uploadTLS51070(formData: FormData): Observable<any> {
+  uploadTLS51070(file: File, sheetNames?: string): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (sheetNames) {
+      formData.append('SheetNames', sheetNames);
+    }
+
     return this.http.post<any>(`${this.apiUrl}/uploadTLS51070`, formData);
   }
 

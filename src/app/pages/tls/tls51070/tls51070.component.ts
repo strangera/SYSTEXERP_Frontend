@@ -1,13 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
 import saveAs from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
-import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
-import { firstValueFrom } from 'rxjs';
+import { FileSelectEvent, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
+import { finalize, firstValueFrom } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -25,7 +27,20 @@ import { POS2004 } from '../../../shared/models/tls/tls000.model';
   selector: 'app-tls51070',
   templateUrl: './tls51070.component.html',
   standalone: true,
-  imports: [MenubarComponent, FileUploadModule, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, TableComponent, TranslateModule, DropdownTableComponent]
+  imports: [
+    MenubarComponent,
+    FileUploadModule,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    FileUploadComponent,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DialogComponent,
+    DropdownComponent,
+    DropdownTableComponent,
+    TableComponent,
+    TranslateModule]
 })
 export class TLS51070Component extends BasicQueryPageComponent<POS2004> implements OnInit {
   // 查詢
@@ -134,10 +149,13 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
 
   excelLoading = false; //excel讀條
 
-  //---CRU注意---
-  // 新增的時候 PLU_Staus 固定給 0
-  // 編輯不顯示 PLU_Staus
-  //-------------
+  // #region 匯入 Excel Dialog 相關
+  @ViewChild('excelUploadComponent') excelUploadComponent!: FileUploadComponent;
+  importDialogVisible = false;
+
+  importForm = this.formBuilder.group({
+    sheetName: ['', [Validators.maxLength(50)]] // 指定頁籤名稱
+  });
 
   // ----------------------------------------------------------------
   constructor(
@@ -387,33 +405,57 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     });
   }
 
-  //匯入excel並產生錯誤檔
-  onFileUpload(event: FileSelectEvent) {
+  // 開啟匯入 Dialog
+  onOpenImportDialog() {
+    this.importForm.reset();
+    if (this.excelUploadComponent) {
+      this.excelUploadComponent.clearFiles();
+    }
+    this.importDialogVisible = true;
+  }
+
+  // #reigion Excel匯入
+  onImportExcelSubmit(event: FileUploadHandlerEvent) {
+    if (!event || !event.files || event.files.length === 0) return;
+
     const file = event.files[0];
-    const formData = new FormData();
-    formData.append('file', file);
+    const sheetName = this.importForm.get('sheetName')?.value || undefined; // 取得輸入框的值
 
-    this.tls51070Service.uploadTLS51070(formData).pipe(untilDestroyed(this)).subscribe({
-      next: (res) => {
-        const data = res?.Data;
+    this.messageService.blockUi();
 
-        if (data) {
-          if (data.ErrorFilePath) {
-            // 有錯誤檔：顯示錯誤提示
-            this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
-            // 自動下載錯誤檔
-            this.downloadErrorFile(data.ErrorFilePath);
-          } else {
-            // 沒有錯誤檔：顯示成功筆數
-            this.messageService.infoBubble(`匯入成功，筆數：${data.SuccessCount}`);
+    this.tls51070Service.uploadTLS51070(file, sheetName)
+      .pipe(
+        untilDestroyed(this),
+        // 2. 確保無論成功或失敗，最後都會解除鎖定
+        finalize(() => {
+          this.messageService.unblockUi();
+        })
+      )
+      .subscribe({
+        next: (res) => {
+          const data = res?.Data;
+
+          if (data) {
+            if (data.ErrorFilePath) {
+              this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
+              this.downloadErrorFile(data.ErrorFilePath);
+            } else {
+              this.messageService.infoBubble(`匯入成功，筆數：${data.SuccessCount}`);
+
+              // 只有成功時才關閉視窗，方便使用者若失敗時可以直接重選檔案
+              this.importDialogVisible = false;
+              this.onSubmit(this.queryForm); // 重新查詢資料
+            }
           }
-        }
-      },
-      error: (err) => {
-        console.error(err);
-        this.messageService.errorBubble('檔案上傳失敗，請稍後再試');
-      },
-    });
+          // 清除上傳元件內的檔案 (避免下次打開還看到舊檔案)
+          this.excelUploadComponent.clearFiles();
+        },
+        error: (err) => {
+          console.error(err);
+          this.messageService.errorBubble('檔案上傳失敗，請稍後再試');
+          this.excelUploadComponent.clearFiles();
+        },
+      });
   }
 
   // 匯入圖片檔

@@ -33,13 +33,15 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table [data]="tableData()"
-               [dataKey]="'CLASS_ID'"
-               [tableKey]="'ASS11010_Data'"
-               [columns]="columns"
-               [totalRecords]="totalRecords()"
-               [loading]="tableLoading()"
-               (edit)="onEdit($event)"
-               (detail)="onDetail($event)"></app-table>
+    <app-table-report [data]="tableData()"
+                      [dataKey]="'CLASS_ID'"
+                      [tableKey]="'ASS11010_Data'"
+                      [columns]="columns"
+                      [totalRecords]="totalRecords()"
+                      [loading]="tableLoading()"
+                      [lastQueryBody]="lastQueryBody"
+                      [queryFunction]="queryFunction"
+                      (edit)="onEdit($event)"
+                      (detail)="onDetail($event)"></app-table-report>
   </div>
 </div>

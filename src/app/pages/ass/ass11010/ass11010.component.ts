@@ -6,11 +6,13 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { removeEmptyValues } from '@shared/utils/object-utils';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 import { ASS11010Data, ASS11010QueryRequest } from './ass11010.model';
 
 // 3.1.1.1 資產列管品及耗材分類管理作業-大分類維護作業
@@ -27,24 +29,27 @@ import { ASS11010Data, ASS11010QueryRequest } from './ass11010.model';
     ButtonComponent,
     DropdownComponent,
     MenubarComponent,
-    TableComponent,
+    TableReportComponent,
   ],
 })
 export class ASS11010Component extends BasicQueryPageComponent<ASS11010Data> implements OnInit {
 
   public readonly queryForm = this.formBuilder.group({
     CLASS_ID: new FormControl<string | null>(null),   // 大分類代碼
+    pageSize: new FormControl<number>(30),            // 每頁筆數
+    pageIndex: new FormControl<number>(1),            // 頁碼
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
   public readonly tableData = signal<ASS11010Data[]>([]);
   public readonly totalRecords = signal<number>(0);
   public readonly tableLoading = signal<boolean>(false);
+  public lastQueryBody?: ASS11010QueryRequest;
 
   // 大分類代碼/名稱下拉選項
   public readonly bigClassOptions = signal<{ label: string; value: string }[]>([]);
 
-  public readonly columns: (Omit<Column, 'field'> & { field: keyof ASS11010Data })[] = [
+  public readonly columns: ReportColumn[] = [
     { field: 'CLASS_ID', header: '大分類代碼' },
     { field: 'CLASS_NAME', header: '大分類名稱' },
   ];
@@ -69,7 +74,7 @@ export class ASS11010Component extends BasicQueryPageComponent<ASS11010Data> imp
     this.service.queryASS11010({}).subscribe({
       next: res => {
         if (res.Status !== '0000') return;
-        const options = res.Data.QueryData.map(item => ({
+        const options = res.Data.map(item => ({
           label: `${item.CLASS_ID} - ${item.CLASS_NAME}`,
           value: item.CLASS_ID,
         }));
@@ -78,17 +83,36 @@ export class ASS11010Component extends BasicQueryPageComponent<ASS11010Data> imp
     });
   }
 
+  /**
+   * 查詢函數（供 table-report 分頁查詢使用）
+   */
+  public queryFunction = (body: ASS11010QueryRequest): Observable<ApiResponse<ASS11010Data[]>> => {
+    const rawFormValue = this.queryForm.getRawValue();
+    const payload: ASS11010QueryRequest = {
+      CLASS_ID: rawFormValue.CLASS_ID || undefined,
+      Keyword: undefined,
+      PageSize: body.PageSize,
+      PageIndex: body.PageIndex,
+      SortBy: body.SortBy,
+    };
+    // 移除空值
+    const cleanPayload = removeEmptyValues(payload) as ASS11010QueryRequest;
+    return this.service.queryASS11010(cleanPayload);
+  };
+
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const raw = this.queryForm.getRawValue();
-      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
-        v !== null && v !== undefined && v !== ''
-      )) as ASS11010QueryRequest;
+      const rawFormValue = this.queryForm.getRawValue();
+      this.lastQueryBody = {
+        CLASS_ID: rawFormValue.CLASS_ID || undefined,
+        PageSize: rawFormValue.pageSize || 30,
+        PageIndex: rawFormValue.pageIndex || 1,
+      } as ASS11010QueryRequest;
 
       this.tableLoading.set(true);
-      this.queryStateService.setQueryState(this.ProgNo, raw);
-      this.logger.debug(`onSubmit:`, [payload]);
-      this.service.queryASS11010(payload).pipe(
+      this.queryStateService.setQueryState(this.ProgNo, rawFormValue);
+      this.logger.debug(`onSubmit:`, [this.lastQueryBody]);
+      this.queryFunction(this.lastQueryBody).pipe(
         finalize(() => {
           this.tableLoading.set(false);
           this.loading = false;
@@ -96,8 +120,8 @@ export class ASS11010Component extends BasicQueryPageComponent<ASS11010Data> imp
       ).subscribe({
         next: res => {
           if (res.Status !== '0000') return;
-          this.tableData.set(res.Data.QueryData);
-          this.totalRecords.set(res.Data.TotalCount || 0);
+          this.tableData.set(res.Data);
+          this.totalRecords.set(res.TotalCount || 0);
         },
       });
     });

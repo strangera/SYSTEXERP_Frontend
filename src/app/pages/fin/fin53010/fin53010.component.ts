@@ -62,7 +62,7 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     UpdDateStart: new FormControl<Date | void>(void 0),
     UpdDateEnd: new FormControl<Date | void>(void 0),
     /** ROC/IFRS 0:ROC 1:IFRS 2:全部 */
-    VouAccType: new FormControl<'0' | '1' | '2'>('0'),
+    // VouAccType: new FormControl<'0' | '1' | '2'>('2'),
     ...createPaginationConfig(this.multiSortMeta),
   });
   public readonly qf = computed(() => this.queryForm.controls);
