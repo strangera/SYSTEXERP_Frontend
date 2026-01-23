@@ -13,6 +13,15 @@ export interface ASS11010Data {
 export interface ASS11010QueryRequest {
   CLASS_ID?: string;   // 大分類代碼
   Keyword?: string;    // 大分類名稱關鍵字
+  PageSize?: number;   // 每頁筆數
+  PageIndex?: number;  // 頁碼
+  SortBy?: { field: string; order: number }[];  // 排序條件
+}
+
+/** 查詢回應資料結構 */
+export interface ASS11010QueryDataWrapper {
+  TotalCount: number;
+  QueryData: ASS11010Data[];
 }
 
 /**
