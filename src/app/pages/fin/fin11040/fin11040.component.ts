@@ -1,18 +1,17 @@
-import { finalize } from 'rxjs';
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Fin11040Service } from '../../../service/api/fin/fin11040.service';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { columns, TDS1008Data } from './fin11040.model';
+import { Component, OnInit, signal } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ValidationService } from '@shared/service/validation.service';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { Fin11040Service, TDS1008Data, TDS1008Req } from '../../../service/api/fin/fin11040.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { columns } from './fin11040.model';
 @Component({
   selector: 'app-fin11040',
   templateUrl: './fin11040.component.html',
@@ -24,7 +23,7 @@ import { ValidationService } from '@shared/service/validation.service';
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
   ],
 })
@@ -33,14 +32,17 @@ export class FIN11040Component extends BasicQueryPageComponent<TDS1008Data> impl
   queryForm = this.formBuilder.nonNullable.group({
     INV_ItemNo: ['', [Validators.maxLength(2), this.validationService.alphanumericValidator]], // 品項代號
     INV_ItemName: ['', [Validators.maxLength(30)]], // 品項名稱
-    ...createPaginationConfig([{ field: 'INV_ItemNo', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'INV_ItemNo', order: 1 }]],
   });
-  totalRecords = 0;// 分頁和排序參數 // 排序需要
-  data: TDS1008Data[] = [];
+  public readonly tableData = signal<TDS1008Data[]>([]);
+  public readonly totalRecords = signal<number>(0);
+  public readonly lastQueryBody = signal<TDS1008Req | null>(null);
   selectedRows: TDS1008Data[] = [];
   columns = columns;
   constructor(
-    private fin11040Service: Fin11040Service,
+    public fin11040Service: Fin11040Service,
     private validationService: ValidationService
   ) {
     super(); // 呼叫父類建構子
@@ -49,23 +51,36 @@ export class FIN11040Component extends BasicQueryPageComponent<TDS1008Data> impl
   ngOnInit(): void {
     this.initializePage('FIN11040', '/FIN/FIN11040cru', this.queryForm, (form) => this.onSubmit(form));
   }
+  queryFunction = (body: TDS1008Req) => {
+    return this.fin11040Service.queryFIN11040(body).pipe(
+      finalize(() => this.loading = false),
+      untilDestroyed(this)
+    );
+  }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = true;
       this.fin11040Service.queryFIN11040(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data
-        this.totalRecords = res.TotalCount;
+        this.tableData.set(res.Data);
+        this.totalRecords.set(res.TotalCount || 0);
+        this.lastQueryBody.set(frm.value);
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
   }
 
   onDelete(selectedRows: TDS1008Data[]) {
-    const idList = selectedRows.map(row => row.ID);
-    this.fin11040Service.deleteFIN11040({ idList }).pipe(untilDestroyed(this)).subscribe(res => {
-      this.onSubmit(this.queryForm);
-      this.selectedRows = [];
-      this.messageService.successBubble(res.Message);
+    this.messageService.confirm({
+      header: `刪除確認`,
+      message: `確定要刪除選取的資料嗎？`,
+      accept: () => {
+        const idList = selectedRows.map(row => row.ID);
+        this.fin11040Service.deleteFIN11040({ idList }).pipe(untilDestroyed(this)).subscribe(res => {
+          this.onSubmit(this.queryForm);
+          this.selectedRows = [];
+          this.messageService.successBubble(res.Message);
+        });
+      }
     });
   }
 }

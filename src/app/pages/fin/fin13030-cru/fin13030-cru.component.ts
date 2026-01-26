@@ -1,8 +1,9 @@
 import { DatePipe, NgIf } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { formatYYYYMM } from '@shared/componentkit/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { FIN13030Data, FIN13030GetZeroTaxGUIRequest, FIN13030GetZeroTaxGUIResponse, FIN13030InsertRequest, FIN13030Service, FIN13030UpdateRequest } from '../../../service/api/fin/fin13030.service';
@@ -34,7 +35,7 @@ import { ValidationService } from '../../../shared/service/validation.service';
     NgIf
   ],
 })
-export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
+export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> implements OnInit {
   dataForm = this.formBuilder.group({
     ID: [0], // 主鍵ID 隱藏欄位
     INV_GUITrack: [''], // 發票字軌
@@ -42,19 +43,25 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
     INV_GUIDate: ['', Validators.required], // 發票日期
     INV_YM: ['', Validators.required], // 資料所屬年月
     INV_DeclareYM: ['', Validators.required], // 申報年月
+    // 顯示欄位（畫面顯示 YYYY/MM），實際送出使用 INV_YM / INV_DeclareYM
+    INV_YM_Display: [''],
+    INV_DeclareYM_Display: [''],
     INV_Name: ['', [Validators.maxLength(60)]], // 買受人名稱
     GoodsOrServicesName: ['', Validators.maxLength(100)], // 貨物或勞務名稱
     GoodsQty: [1, [this.validationService.numberValidator]], // 貨物或勞務數量
     ExportMethod: ['', Validators.required], // 外銷方式
     INV_PassType: [null as string | null, Validators.required], // 通關方式註記
-    INV_DocName: ['', [Validators.maxLength(20)]], // 證明文件名稱
-    INV_DocNo: ['', [Validators.maxLength(10)]], // 證明文件號碼
+    INV_DocName: ['', [Validators.required, Validators.maxLength(20)]], // 證明文件名稱
+    INV_DocNo: ['', [Validators.required, Validators.maxLength(10)]], // 證明文件號碼
     NonCustomsExportAmt: [null as number | null, [this.validationService.numberValidator]], // 非經海關出口金額
     INV_ExportType: [''], // 出口報單類別
     INV_ExportNo: ['', [Validators.maxLength(10)]], // 出口報單號碼
     CustomsExportAmt: [null as number | null, [this.validationService.numberValidator]], // 經海關出口金額
     ExportDate: ['', Validators.required], // 輸出或結匯日期
     INV_Remark: ['', Validators.maxLength(100)], // 備註
+    INV_GUIType: [''], // 發票類別（由 zeroTaxGUI 填入）
+    INV_ZeroTax: [''], // 零稅率註記（由 zeroTaxGUI 填入）
+    INV_SeqNo: [0], // 序號（由 zeroTaxGUI 填入）
   });
 
   zeroTaxGUIData!: FIN13030GetZeroTaxGUIResponse;
@@ -89,12 +96,30 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
         INV_GUIDate: this.zeroTaxGUIData.INV_GUIDate,
         INV_YM: this.zeroTaxGUIData.INV_YM,
         INV_DeclareYM: this.zeroTaxGUIData.INV_DeclareYM,
+        INV_YM_Display: formatYYYYMM(this.zeroTaxGUIData.INV_YM),
+        INV_DeclareYM_Display: formatYYYYMM(this.zeroTaxGUIData.INV_DeclareYM),
         INV_PassType: '1', // 預設通關方式註記為 1
       });
       // 根據預設值設置金額欄位
       this.handlePassTypeChange('1');
+      // 進一步呼叫 API 取得 zeroTaxGUI 的最終範圍並帶入表單（若服務提供不同值）
+      this.getZeroTaxGUIData(this.dataForm);
     }
     else if (this.crudstatus === CRUDStatus.Edit) {
+      // 若為 Edit，先從 router state 的 rowdata 帶入顯示欄位（若有），再呼叫 API 取得最新 zeroTaxGUI 範圍
+      const stateRow = this.rowdata as any;
+      if (stateRow) {
+        this.dataForm.patchValue({
+          INV_GUITrack: stateRow.INV_GUITrack ?? this.dataForm.value.INV_GUITrack,
+          INV_YM: stateRow.INV_YM ?? this.dataForm.value.INV_YM,
+          INV_DeclareYM: stateRow.INV_DeclareYM ?? this.dataForm.value.INV_DeclareYM,
+          INV_YM_Display: formatYYYYMM(stateRow.INV_YM ?? this.dataForm.value.INV_YM),
+          INV_DeclareYM_Display: formatYYYYMM(stateRow.INV_DeclareYM ?? this.dataForm.value.INV_DeclareYM),
+          INV_GUIType: stateRow.INV_GUIType ?? this.dataForm.value.INV_GUIType,
+          INV_ZeroTax: stateRow.INV_ZeroTax ?? this.dataForm.value.INV_ZeroTax,
+          INV_SeqNo: stateRow.INV_SeqNo ?? this.dataForm.value.INV_SeqNo
+        });
+      }
       this.getZeroTaxGUIData(this.dataForm);
     }
     this.setUnEditableFields();
@@ -103,14 +128,24 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
 
   onSubmit(form: FormGroup): void {
     const formValue = form.getRawValue();
+    console.log('[FIN13030 CRU] onSubmit called', {
+      valid: form.valid,
+      raw: formValue,
+      crudstatus: this.crudstatus,
+      canAdd: this.canAdd?.() ?? null,
+      isFormCreateable: this.isFormCreateable,
+      isFormEditable: this.isFormEditable,
+    });
+
     this.handleSubmit(form, () => {
+      console.log('[FIN13030 CRU] handleSubmit callback entered', { crudstatus: this.crudstatus });
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
             const rb: FIN13030InsertRequest = {
               INV_GUINo: formValue.INV_GUINo,
-              INV_YM: this.datePipe.transform(formValue.INV_YM, 'yyyyMM') ?? '',
-              INV_DeclareYM: this.datePipe.transform(formValue.INV_DeclareYM, 'yyyyMM') ?? '',
+              INV_YM: this.normalizeYM(formValue.INV_YM),
+              INV_DeclareYM: this.normalizeYM(formValue.INV_DeclareYM),
               INV_Name: formValue.INV_Name,
               GoodsOrServicesName: formValue.GoodsOrServicesName,
               GoodsQty: formValue.GoodsQty,
@@ -124,17 +159,21 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
               ExportDate: formValue.ExportDate,
               INV_Remark: formValue.INV_Remark,
               INV_PassType: formValue.INV_PassType,
-              // 從 zeroTaxGUIData 取得的欄位
-              INV_GUITrack: this.zeroTaxGUIData.INV_GUITrack,
-              INV_GUIType: this.zeroTaxGUIData.INV_GUIType,
-              INV_ZeroTax: this.zeroTaxGUIData.INV_ZeroTax,
-              INV_SeqNo: this.zeroTaxGUIData.INV_SeqNo
+              INV_GUITrack: formValue.INV_GUITrack ?? this.zeroTaxGUIData?.INV_GUITrack ?? '',
+              INV_GUIType: formValue.INV_GUIType ?? this.zeroTaxGUIData?.INV_GUIType ?? '',
+              INV_ZeroTax: formValue.INV_ZeroTax ?? this.zeroTaxGUIData?.INV_ZeroTax ?? '',
+              INV_SeqNo: formValue.INV_SeqNo ?? this.zeroTaxGUIData?.INV_SeqNo ?? 0
             };
             this.fin13030Service.insertFIN13030(rb)
               .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-              .subscribe(() => {
-                this.messageService.successBubble('新增成功');
-                this.dataForm.reset();
+              .subscribe({
+                next: () => {
+                  this.messageService.successBubble('新增成功');
+                  this.loading = false;
+                  this.submitted = false;
+                  this.messageService.unblockUi();
+                  this.onCancel();
+                },
               });
           }
           break;
@@ -143,8 +182,8 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
             const rb: FIN13030UpdateRequest = {
               ID: formValue.ID,
               INV_GUINo: formValue.INV_GUINo,
-              INV_YM: this.datePipe.transform(formValue.INV_YM, 'yyyyMM') ?? '',
-              INV_DeclareYM: this.datePipe.transform(formValue.INV_DeclareYM, 'yyyyMM') ?? '',
+              INV_YM: this.normalizeYM(formValue.INV_YM),
+              INV_DeclareYM: this.normalizeYM(formValue.INV_DeclareYM),
               INV_Name: formValue.INV_Name,
               GoodsOrServicesName: formValue.GoodsOrServicesName,
               GoodsQty: formValue.GoodsQty,
@@ -158,18 +197,22 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
               ExportDate: formValue.ExportDate,
               INV_Remark: formValue.INV_Remark,
               INV_PassType: formValue.INV_PassType,
-              // 從 zeroTaxGUIData 取得的欄位
-              INV_GUITrack: this.zeroTaxGUIData.INV_GUITrack,
-              INV_GUIType: this.zeroTaxGUIData.INV_GUIType,
-              INV_ZeroTax: this.zeroTaxGUIData.INV_ZeroTax,
-              INV_SeqNo: this.zeroTaxGUIData.INV_SeqNo
+              INV_GUITrack: formValue.INV_GUITrack ?? this.zeroTaxGUIData?.INV_GUITrack ?? '',
+              INV_GUIType: formValue.INV_GUIType ?? this.zeroTaxGUIData?.INV_GUIType ?? '',
+              INV_ZeroTax: formValue.INV_ZeroTax ?? this.zeroTaxGUIData?.INV_ZeroTax ?? '',
+              INV_SeqNo: formValue.INV_SeqNo ?? this.zeroTaxGUIData?.INV_SeqNo ?? 0
             };
 
             this.fin13030Service.updateFIN13030(rb)
               .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-              .subscribe(() => {
-                this.messageService.successBubble('更新成功');
-                this.onCancel();
+              .subscribe({
+                next: () => {
+                  this.messageService.successBubble('更新成功');
+                  this.loading = false;
+                  this.submitted = false;
+                  this.messageService.unblockUi();
+                  this.onCancel();
+                },
               });
           }
           break;
@@ -179,10 +222,15 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
 
   private setUnEditableFields(): void {
     this.dataForm.get('INV_GUITrack')?.disable();
+    this.dataForm.get('INV_GUIType')?.disable();
+    this.dataForm.get('INV_ZeroTax')?.disable();
+    this.dataForm.get('INV_SeqNo')?.disable();
     this.dataForm.get('INV_GUINo')?.disable();
     this.dataForm.get('INV_GUIDate')?.disable();
     this.dataForm.get('INV_YM')?.disable();
     this.dataForm.get('INV_DeclareYM')?.disable();
+    this.dataForm.get('INV_YM_Display')?.disable();
+    this.dataForm.get('INV_DeclareYM_Display')?.disable();
   }
 
   /**
@@ -191,7 +239,7 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
   private setupPassTypeListener(): void {
     this.dataForm.get('INV_PassType')?.valueChanges
       .pipe(untilDestroyed(this))
-      .subscribe(value => {
+      .subscribe((value: string | null) => {
         this.handlePassTypeChange(value);
       });
   }
@@ -236,6 +284,47 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
 
     this.fin13030Service.queryFIN13030_GetZeroTaxGUI(rb).subscribe(response => {
       this.zeroTaxGUIData = response.Data[0];
+      const z: any = this.zeroTaxGUIData ?? {};
+      // 支援兩種回傳格式：INV_YM_B / INV_YM
+      const ym = z.INV_YM_B ?? z.INV_YM;
+      const declareYm = z.INV_DeclareYM_B ?? z.INV_DeclareYM;
+      if (ym) {
+        this.dataForm.patchValue({ INV_YM: ym, INV_YM_Display: formatYYYYMM(ym) });
+        this.dataForm.get('INV_YM')?.disable({ emitEvent: false });
+        this.dataForm.get('INV_YM_Display')?.disable({ emitEvent: false });
+      }
+      if (declareYm) {
+        this.dataForm.patchValue({ INV_DeclareYM: declareYm, INV_DeclareYM_Display: formatYYYYMM(declareYm) });
+        this.dataForm.get('INV_DeclareYM')?.disable({ emitEvent: false });
+        this.dataForm.get('INV_DeclareYM_Display')?.disable({ emitEvent: false });
+      }
+      // 若回傳字軌或類型也希望填入，可在此同步
+      if (z.INV_GUITrack) {
+        this.dataForm.patchValue({ INV_GUITrack: z.INV_GUITrack });
+        this.dataForm.get('INV_GUITrack')?.disable({ emitEvent: false });
+      }
+      if (z.INV_GUIType) {
+        this.dataForm.patchValue({ INV_GUIType: z.INV_GUIType });
+      }
+      if (z.INV_ZeroTax) {
+        this.dataForm.patchValue({ INV_ZeroTax: z.INV_ZeroTax });
+      }
+      if (typeof z.INV_SeqNo !== 'undefined') {
+        this.dataForm.patchValue({ INV_SeqNo: z.INV_SeqNo });
+      }
     });
+  }
+
+  private normalizeYM(val: any): string {
+    if (!val && val !== 0) return '';
+    if (typeof val === 'string' && /^\d{6}$/.test(val)) return val;
+    try {
+      const d = new Date(val);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      return `${y}${m}`;
+    } catch (e) {
+      return '';
+    }
   }
 }

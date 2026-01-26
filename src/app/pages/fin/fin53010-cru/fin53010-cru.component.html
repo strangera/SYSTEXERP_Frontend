@@ -56,26 +56,13 @@
           [control]="df().VouDate"
           [submitted]="submitted"
         ></app-calendar>
-        <div class="col-12 md:col-6 lg:col-4">
-          <label for="Remark">傳票摘要</label>
-          <p-dropdown
-            styleClass="w-full"
-            id="Remark"
-            [formControl]="df().Remark"
-            [options]="service.noteDescOptions()"
-            optionLabel="label"
-            optionValue="value"
-            [loading]="service.noteDescLoading()"
-            [editable]="true"
-            [filter]="true"
-            [showClear]="true"
-            appendTo="body"
-            placeholder="請選擇或輸入"
-            [ngClass]="{
-              'ng-dirty ng-invalid': submitted && df().Remark.errors,
-            }"
-          ></p-dropdown>
-        </div>
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="傳票摘要"
+          controlName="Remark"
+          [control]="df().Remark"
+          [submitted]="submitted"
+        ></app-input-text>
         <app-dropdown
           class="col-12 md:col-6 lg:col-4"
           label="補發票"
@@ -131,6 +118,7 @@
           [disabled]="!0"
           [submitted]="submitted"
         ></app-calendar>
+        <!--
         <app-radiobutton
           class="col-12 md:col-6 lg:col-4"
           label="ROC/IFRS"
@@ -140,6 +128,7 @@
           [options]="service.vouAccTypeOptions"
           [submitted]="submitted"
         ></app-radiobutton>
+        -->
       </div>
 
       @if (!isFormReadable) {

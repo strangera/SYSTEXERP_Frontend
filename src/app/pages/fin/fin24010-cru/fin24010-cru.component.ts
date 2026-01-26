@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin24010Service, QueryFIN24010Response } from '@service/api/fin/fin24010.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -44,6 +45,7 @@ export class FIN24010CRUComponent extends BasicCruPageComponent<QueryFIN24010Res
   AccNoOptions = this.dropDown.queryGls1005(); // 會計科目代號
   SubDetailNoOptions = this.dropDown.queryGLS1016(); // 對象別編號
   VEN_No_Options = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
+  ACP_StatusOptions = getSYS1000Options('ACP_Status'); // 應付帳款狀態
 
   // 設定欄位狀態：根據 API 判斷，無法修改的欄位設為 disabled: true
   dataForm = this.formBuilder.nonNullable.group({

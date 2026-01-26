@@ -7,14 +7,15 @@ import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { FileExportService } from '@shared/service/file-export.service';
 import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { finalize, Observable } from 'rxjs';
-import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
-import { ITLS52030Data, Tls52030Service } from '../../../service/api/tls/tls52030.service';
+import { IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
+import { IQueryTLS52030Request, ITLS52030Data, Tls52030Service } from '../../../service/api/tls/tls52030.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -22,8 +23,7 @@ import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentk
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, formatAmount, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
 
 export const enum POStatus {
   已確認 = '1',
@@ -49,12 +49,12 @@ export const enum POStatus {
     DropdownTableComponent,
     DropdownComponent,
     CalendarRangeQuickComponent,
-    TableComponent,
     Button,
     TooltipModule,
     NgStyle,
     TranslateModule,
-    AsyncPipe
+    AsyncPipe,
+    TableReportComponent
   ],
 })
 export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> implements OnInit {
@@ -72,7 +72,9 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     APRV_USR: [null], // 審核人員
     APRV_Date_Start: [null], // 審核(驗收)日期起
     APRV_Date_End: [null], // 審核(驗收)日期迄
-    ...createPaginationConfig([{ field: 'ODM_Date', order: -1 }, { field: 'ODM_No', order: -1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'ODM_Date', order: -1 }, { field: 'ODM_No', order: -1 }]],
   });
   totalRecords = 0;
   warehouseOptions = this.dropdown.queryPos2034();
@@ -83,6 +85,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   userOptions = this.dropdown.queryTblUser();
   data: ITLS52030Data[] = [];
   selectedItems: ITLS52030Data[] = [];
+  lastQueryBody: IQueryTLS52030Request | null = null;
   columns: Column[] = [
     { field: 'ODM_No', header: '進貨驗收編號', visible: true },
     { field: 'VEN_No', header: '廠商編號', visible: true }, // 廠商編號
@@ -146,7 +149,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
 
   constructor(
     private readonly tls52010Service: Tls52010Service,
-    private readonly tls52030Service: Tls52030Service,
+    public readonly tls52030Service: Tls52030Service,
     private readonly dropdown: DropdownApiService,
     private readonly fileExportService: FileExportService
   ) { super(); }
@@ -157,6 +160,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.tls52030Service.queryTLS52030(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        this.lastQueryBody = frm.value;
         this.data = response.Data;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
@@ -182,24 +186,10 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     return rowData.ODM_Status !== POStatus.已確認;
   }
   // 管理編號
-  opLoading = false;
-  opForm = this.formBuilder.group({
-    queryNo: ['', [Validators.maxLength(20)]], // 管理編號
-    PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
-    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
-  });
   suggestions: IQueryPOS2004DetailResponse[] = [];
   fieldsConfig: FieldsConfig[] = [
     { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
   ];
-  opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
-  opColumns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號' },
-    { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
-    { field: 'PLU_Name', header: '商品名稱' },
-  ];
-  opTotalRecords = 0;
   onAutoCompleteInputChange(event: any) {
     const body = {
       ...event,
@@ -215,20 +205,6 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
         ...item,
         label: item.PLU_MagNo + '/' + item.PLU_No + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
       }))];
-    });
-  }
-  onformValueChanged(event: IQueryPOS2004DetailRequest) {
-    this.opLoading = true;
-    const body = {
-      queryNo: event.queryNo || '',
-      PLU_Name: event.PLU_Name || '',
-      VEN_No: '',
-      LOGO_No: '',
-    };
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.opData = [...results.Data]; // 更新data資料
-      this.opTotalRecords = results.TotalCount;
-      this.opLoading = false;
     });
   }
   get selectedCount() {

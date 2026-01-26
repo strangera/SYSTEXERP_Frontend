@@ -13,17 +13,6 @@ import { TooltipModule } from 'primeng/tooltip';
 import { Fin13080Service } from 'src/app/service/api/fin/fin13080.service';
 import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
-
-export const monthOptions = [
-  { value: '02', label: '二月' },
-  { value: '04', label: '四月' },
-  { value: '06', label: '六月' },
-  { value: '08', label: '八月' },
-  { value: '10', label: '十月' },
-  { value: '12', label: '十二月' },
-];
 
 @Component({
   selector: 'app-fin13080',
@@ -38,17 +27,11 @@ export const monthOptions = [
     CalendarComponent,
     TooltipModule,
     InputTextComponent,
-    YearMonthComponent,
     TableComponent,
     ButtonModule,
   ],
 })
 export class FIN13080Component extends BasicQueryPageComponent<any> implements OnInit {
-
-  loadGuiTrackOptions(event: any): void {
-    // 接受 YearMonth 的變更事件，必要時可載入字軌下拉
-    console.log('[loadGuiTrackOptions] GUI_YYMM changed:', event);
-  }
 
   formatDate(date: Date): string {
     const year = date.getFullYear();
@@ -59,12 +42,11 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
   queryForm = this.formBuilder.group({
     No: [null, Validators.maxLength(16)],
     Date: [yesterday],
-    GUI_YYMM: [null, [this.validationService.evenMonthValidator]],
+    INV_DeclareYM: [null],
     Invoice_No_Start: ['', Validators.maxLength(10)],
     Invoice_No_End: ['', Validators.maxLength(10)],
     ...createPaginationConfig([{ field: 'No', order: 1 }]),
   });
-  monthOptions = monthOptions;
 
   selectedItems: any[] = [];
   data: any[] = [];
@@ -80,7 +62,6 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private fin13080Service: Fin13080Service,
-    private validationService: ValidationService,
   ) {
     super();
   }
@@ -88,46 +69,12 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
   ngOnInit(): void {
     this.initializePage('FIN13080', '/FIN/FIN13080cru', this.queryForm, (form) => this.onSubmit(form));
 
-    // 註冊能接受 YYYYMM 字串或 Date 的偶數月驗證器
-    this.queryForm.get('GUI_YYMM')?.setValidators([this.evenMonthYyyymmValidator.bind(this)]);
     this.queryForm.get('Invoice_No_Start')?.valueChanges.subscribe(start => {
       const endControl = this.queryForm.get('Invoice_No_End');
       if (!endControl?.value && start) {
         endControl?.setValue(start);
       }
     });
-  }
-
-  // 驗證器：接受 YYYYMM 字串或 Date 物件，檢查是否為偶數月
-  evenMonthYyyymmValidator(control: { value: any }): any {
-    const value = control.value;
-    if (value === null || value === '') return null;
-
-    // YYYYMM 字串情況
-    if (typeof value === 'string' && value.length === 6) {
-      const month = parseInt(value.substring(4, 6), 10);
-      if (isNaN(month)) return { invalidDate2: true };
-      return month % 2 === 0 ? null : { invalidEvenMonth: true };
-    }
-
-    // Date 物件情況，委派給現有的 service
-    if (value instanceof Date) {
-      return this.validationService.evenMonthValidator({ value: value });
-    }
-
-    return { invalidDate2: true };
-  }
-  setMinDate(): Date | undefined {
-    if (this.queryForm) {
-      const today = new Date();
-      const currentMonth = today.getMonth();
-      if ((currentMonth + 1) % 2 !== 0) {
-        return new Date(today.getFullYear(), currentMonth, 1);
-      } else {
-        return new Date(today.getFullYear(), currentMonth - 1, 1);
-      }
-    }
-    return undefined;
   }
 
   onSubmit(form: FormGroup): void {
@@ -144,11 +91,9 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
       SortBy: raw.SortBy ?? [{ field: 'No', order: 1 }],
       No: raw.No ?? '',
       Date: raw.Date ? this.formatDate(new Date(raw.Date)) : '',
-      GUI_YYMM: raw.GUI_YYMM
-        ? (typeof raw.GUI_YYMM === 'string' && raw.GUI_YYMM.length === 6
-          ? raw.GUI_YYMM
-          : this.formatDate(new Date(raw.GUI_YYMM)).substring(0, 7).replace('-', ''))
-        : '', No_Start: null,
+      INV_DeclareYM: raw.INV_DeclareYM
+        ? this.formatDate(new Date(raw.INV_DeclareYM)).substring(0, 7).replace('-', '')
+        : '',
       Invoice_No_Start: raw.Invoice_No_Start !== '' ? raw.Invoice_No_Start : null,
       Invoice_No_End: raw.Invoice_No_End !== '' ? raw.Invoice_No_End : null,
     };

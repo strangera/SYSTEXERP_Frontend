@@ -218,9 +218,11 @@
       (selectionChange)="selectedItems = $event"
       (delete)="onDelete($event)"
       [showExcel]="true"
+      [showExcelImport]="false"
+      [showCustomExcelImport]="true"
       (exportExcel)="onExportExcel()"
       [exportExcelLoading]="excelLoading"
-      (importExcel)="onFileUpload($event)"
+      (importExcel)="onOpenImportDialog()"
       [showCheckBox]="true"
       dataKey="id"
       [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]"
@@ -232,3 +234,40 @@
     ></app-table>
   </div>
 </div>
+
+<app-dialog
+  [visible]="importDialogVisible"
+  header="匯入Excel"
+  (visibleChange)="importDialogVisible = $event"
+  [showFooter]="false"
+  [disable]="false"
+  [height]="'auto'"
+  [width]="'500px'"
+>
+  <div class="mb-3">
+    <ul class="pl-3 m-0 line-height-3 text-600">
+      <li>若有填寫頁籤名稱，系統僅會匯入指定頁籤。</li>
+      <li>若未填寫，系統將匯入檔案內的所有頁籤。</li>
+    </ul>
+  </div>
+
+  <form [formGroup]="importForm" class="mb-3">
+    <div class="grid p-fluid">
+      <div class="col-12">
+        <app-input-text
+          label="指定頁籤"
+          controlName="sheetName"
+          [control]="importForm.controls.sheetName"
+        ></app-input-text>
+      </div>
+    </div>
+  </form>
+
+  <app-file-upload
+    #excelUploadComponent
+    [accept]="'.xlsx,.xls'"
+    [customUpload]="true"
+    (uploadHandler)="onImportExcelSubmit($event)"
+    chooseLabel="匯入檔案"
+  ></app-file-upload>
+</app-dialog>

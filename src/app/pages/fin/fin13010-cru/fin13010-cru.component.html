@@ -187,7 +187,12 @@
         class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
         *ngIf="!isFormReadable">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
-        <app-button btnType="submit"></app-button>
+        <app-button
+          btnType="submit"
+          [form]="dataForm"
+
+          label="確認">
+        </app-button>
       </div>
     </form>
   </p-panel>

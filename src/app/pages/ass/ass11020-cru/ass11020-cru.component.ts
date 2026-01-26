@@ -85,7 +85,7 @@ export class ASS11020CRUComponent extends BasicCruPageComponent<ASS11020Data> im
     this.ass11010Service.queryASS11010({}).subscribe({
       next: res => {
         if (res.Status !== '0000') return;
-        const options = res.Data.QueryData.map(item => ({
+        const options = res.Data.map(item => ({
           label: `${item.CLASS_ID} - ${item.CLASS_NAME}`,
           value: item.CLASS_ID,
         }));

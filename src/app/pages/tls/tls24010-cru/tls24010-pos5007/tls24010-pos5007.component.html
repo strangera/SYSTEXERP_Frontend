@@ -57,19 +57,19 @@
       </td>
       <td class="text-center">
         <p-inputNumber *ngIf="isFormCreateable" class="min-w-max" [(ngModel)]="rowData.TXN_Qty"
-          (onInput)="onInput(rowData)" [max]="9999999999" />
+          (onInput)="onInput(rowData)" (onBlur)="onInput(rowData)" [max]="9999999999" />
         <span *ngIf="!isFormCreateable">{{ rowData.TXN_Qty }}</span>
       </td>
       <td class="text-right">
         <p-inputNumber *ngIf="isFormCreateable" class="w-full min-w-max" [(ngModel)]="rowData.PLU_SalePrc"
           [disabled]="store_way === '2'" [min]="0" [max]="9999999999" [minFractionDigits]="2" [maxFractionDigits]="5"
-          (onInput)="onInput(rowData)" />
+          (onInput)="onInput(rowData)" (onBlur)="onInput(rowData)" />
         <span *ngIf="!isFormCreateable">$ {{ rowData.PLU_SalePrc }}</span>
       </td>
       <td class="text-right">$ {{ rowData.TXN_Amt | number:'1.0-0' }}</td>
       <td class="text-right">
         <p-inputNumber *ngIf="isFormCreateable" [(ngModel)]="rowData.TXN_Disc" (onInput)="onInput(rowData)"
-          [max]="9999999999" />
+          (onBlur)="onInput(rowData)" [max]="9999999999" />
         <span *ngIf="!isFormCreateable">{{ rowData.TXN_Disc }}</span>
       </td>
       <td class="text-right">$ {{ rowData.TXN_SaleAmt | number:'1.0-0' }}</td>
