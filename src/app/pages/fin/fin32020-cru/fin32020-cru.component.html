@@ -185,12 +185,16 @@
     class="grid p-fluid mb-3"
   >
     <div class="col-12 md:col-6">
-      <app-input-text
-        label="科目代號"
-        controlName="CAR_AccNo"
-        [control]="adjAccSearchForm.controls.CAR_AccNo"
-        [submitted]="submitted"
-      ></app-input-text>
+<app-dropdown
+  label="科目代號"
+  controlName="CAR_AccNo"
+  [options]="adjAccNoOptions$ | async"
+  optionLabel="label"
+  optionValue="value"
+  [showClear]="true"
+  [control]="adjAccSearchForm.controls.CAR_AccNo"
+  [submitted]="submitted"
+></app-dropdown>
     </div>
 
     <div class="col-12 md:col-4">
@@ -210,26 +214,28 @@
     </div>
   </form>
 
-  <app-table2
-    [tableKey]="'fin32020AdjAcc'"
-    dataKey="CAR_AccNo"
-    [columns]="adjAccColumns"
-    [data]="adjAccList"
-    [loading]="adjAccLoading"
-    [showCheckBox]="false"
-    [showManage]="false"
-    [showDetail]="true"
-    [showEdit]="false"
-    [showHeader]="true"
-    [showFilter]="false"
-    [showReportMode]="false"
-    [showPaginator]="false"
-    [showCaption]="false"
-    selectionMode="single"
-    [(selectedItems)]="adjAccSelectedRows"
-    (selectionChange)="onAdjAccSelectionChange($event)"
-    (detail)="onAdjAccRowDetail($event)"
-  ></app-table2>
+<app-table-report
+  [tableKey]="'fin32020AdjAccReport'"
+  dataKey="CAR_AccNo"
+  [columns]="adjAccReportColumns"
+  [data]="adjAccList"
+  [loading]="adjAccLoading"
+  [totalRecords]="adjAccTotalRecords"
+  [lastQueryBody]="adjAccLastQueryBody"
+  [queryFunction]="adjAccQueryFn"
+  [lazy]="true"
+
+  [showCheckBox]="false"
+  [showManage]="false"
+  [showDetail]="true"
+  [showEdit]="false"
+ 
+  [showFilter]="false"
+  [showReportMode]="false"
+  [showCaption]="false"
+
+  (detail)="onAdjAccRowDetail($event)"
+></app-table-report>
 
   <div class="flex justify-content-end gap-2 mt-3">
     <app-button
