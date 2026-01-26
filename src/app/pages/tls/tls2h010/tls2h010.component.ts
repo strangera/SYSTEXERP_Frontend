@@ -34,9 +34,9 @@ export class TLS2H010Component extends BasicQueryPageComponent<any> implements O
     // 分頁欄位
     pageSize: [30],
     pageIndex: [1],
-    SamYyyymm: [null, Validators.required],
-    ACP_GUITax_From: [null],
-    ACP_GUITax_To: [null],
+    SamYyyymm: [new Date(), Validators.required],
+    GuiNoStart: [null],
+    GuiNoEnd: [null],
     TltNo: [''],
     SortBy: [[{ field: 'TltNo', order: 1 }]],
   });
@@ -56,6 +56,7 @@ export class TLS2H010Component extends BasicQueryPageComponent<any> implements O
     { field: 'PUR_GUIDate', header: '租金', visible: true, format: formatAmount, align: 'right' },
     { field: 'GuiAmt', header: '發票金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'GuiNo', header: '發票號碼', visible: true },
+    { field: 'GuiPrintTimes', header: '發票列印次數', visible: true },
     { field: 'IsPrinted', header: '是否已列印', visible: true, format: formatYN },
 
   ];
