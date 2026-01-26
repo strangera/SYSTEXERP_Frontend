@@ -31,7 +31,7 @@ import { formatAmount } from './../../../shared/componentkit/table-report/table-
 })
 export class FIN32010Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    ARS_No: [null, [Validators.maxLength(14)]],
+    ARS_No: ["", [Validators.maxLength(14)]],
     ORG_ID: [null, [Validators.maxLength(20)]],
     sam_yyymm: ["", [Validators.maxLength(6)]],
     sam_termno: [null, [Validators.max(99)]],
@@ -93,9 +93,9 @@ export class FIN32010Component extends BasicQueryPageComponent<any> implements O
     super();
   }
 
-  // 禁止編輯的判斷：若該列已有 VouNo（傳票號）則不可編輯
-  editDisabledByVouNo = (rowData: any): boolean => {
-    return !!(rowData && rowData.VouNo);
+  // 禁止編輯的判斷：已改為永遠允許編輯（不以 VouNo 判斷）
+  editDisabledByVouNo = (_rowData: any): boolean => {
+    return false;
   }
 
   ngOnInit(): void {
