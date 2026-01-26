@@ -17,6 +17,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { map, catchError, shareReplay, of } from 'rxjs';
 
 import {
   FIN32020Service,
@@ -42,6 +43,8 @@ import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 
 @Component({
   selector: 'app-fin32020-cru',
@@ -63,11 +66,28 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
     CalendarRangeComponent,
     AsyncPipe,
     FIN32020TableEditComponent,
+     TableReportComponent,
   ],
 })
 export class FIN32020CRUComponent
   extends BasicCruPageComponent<Fin32020Row>
   implements OnInit {
+    // ===== 調整科目 report table =====
+adjAccReportColumns: ReportColumn[] = [
+  { field: 'CAR_AccNo', header: '調整科目代號' },
+  { field: 'AccCName', header: '科目名稱' },
+  {
+    field: 'CAR_type',
+    header: '加減項',
+    format: (v: any) => (String(v) === '1' ? '加項' : String(v) === '2' ? '減項' : (v ?? '')),
+  },
+];
+
+adjAccTotalRecords = 0;
+adjAccLastQueryBody: any = null;
+
+// 給 TableReportComponent 用的查詢函式（它會自己帶 pageIndex/pageSize 回來重查）
+adjAccQueryFn = (body: any) => this.fin32020Service.getAdjAcc(body);
   /** 主檔表單 */
   dataForm = this.formBuilder.nonNullable.group({
     adjust_ID: [{ value: '', disabled: true } as any], // ADJ_No（顯示用）
@@ -77,7 +97,21 @@ export class FIN32020CRUComponent
 
   /** 明細資料（畫面用 model） */
   detailData: any[] = [];
-
+// GLS1005 科目下拉（No-Name）
+adjAccNoOptions$ = this.fin32020Service.getGLS1005DropDown().pipe(
+  map((res) => {
+    const list = Array.isArray(res?.Data) ? res.Data : [];
+    return list.map((x) => ({
+      label: `${x.No}-${x.Name}`,
+      value: x.No,
+    }));
+  }),
+  catchError((err) => {
+    console.error('getGLS1005DropDown error:', err);
+    return of([]);
+  }),
+  shareReplay(1)
+);
   defaultDetailRow = {
     SeqNo: null,
     receiveID: null,       // ARS_No（可手輸）
@@ -393,27 +427,38 @@ onBack(): void {
     this.adjAccDialogVisible = true;
   }
 
-  onSearchAdjAcc(): void {
-    const raw = this.adjAccSearchForm.getRawValue();
+onSearchAdjAcc(): void {
+  const raw = this.adjAccSearchForm.getRawValue();
 
-    const body = {
-      CAR_AccNo: raw.CAR_AccNo?.trim() || null,
-      CAR_type: raw.CAR_type?.trim() || null, // 1 / 2
-    };
+  const body = {
+    CAR_AccNo: raw.CAR_AccNo?.trim() || null,
+    CAR_type: raw.CAR_type?.trim() || null,
+    pageIndex: 1,
+    pageSize: 30,     // ✅ 預設 30
+    SortBy: [],
+  };
 
-    this.adjAccLoading = true;
-    this.fin32020Service.getAdjAcc(body).subscribe({
-      next: (res) => {
-        this.adjAccList = Array.isArray(res.Data) ? res.Data : [];
-        this.adjAccLoading = false;
-      },
-      error: (err) => {
-        console.error('FIN32020 getAdjAcc error:', err);
-        this.adjAccList = [];
-        this.adjAccLoading = false;
-      },
-    });
-  }
+  this.adjAccLoading = true;
+
+  // ✅ 存起來給 table-report 虛擬捲動 / lazy load 用
+  this.adjAccLastQueryBody = body;
+
+  this.fin32020Service.getAdjAcc(body).subscribe({
+    next: (res) => {
+      this.adjAccList = Array.isArray(res.Data) ? res.Data : [];
+      // ✅ totalCount 有就用，沒有就退回目前筆數
+      this.adjAccTotalRecords = (res as any).TotalCount ?? this.adjAccList.length;
+      this.adjAccLoading = false;
+    },
+    error: (err) => {
+      console.error('FIN32020 getAdjAcc error:', err);
+      this.adjAccList = [];
+      this.adjAccTotalRecords = 0;
+      this.adjAccLoading = false;
+    },
+  });
+}
+
 
   onAdjAccSelectionChange(selected: Fin32020AdjAccRow[] | Fin32020AdjAccRow): void {
     this.adjAccSelectedRows = Array.isArray(selected) ? selected : selected ? [selected] : [];
