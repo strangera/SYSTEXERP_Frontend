@@ -1,6 +1,7 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -28,6 +29,41 @@ export interface FIN29100Data {
   CheckExpireDate: string;
 }
 
+/**
+ * 取得公司銀行帳戶列表
+ */
+export interface QueryBankAccountRequest {
+  /** 銀行代號 */
+  BNK_No?: string | null;
+  /** 銀行帳戶名稱 */
+  BNK_AccName?: string | null;
+}
+
+/**
+ * 公司銀行帳戶回應
+ */
+export interface QueryBankAccountResponse {
+  /** 銀行ID (APS1002.id) */
+  id: number;
+
+  BNK_id: string;
+
+  /** 銀行代號 */
+  BNK_No: string;
+  /** 銀行名稱 */
+  BNK_Name: string | null;
+  /** 銀行帳號 */
+  BNK_AccNo: string;
+  /** 銀行帳戶名稱 */
+  BNK_AccName: string;
+  /** 存款科目編號 */
+  BNK_DepositAccNo: string | null;
+  /** 存款科目名稱 */
+  AccCName: string | null;
+  /** 完整顯示 (銀行代號 銀行名稱 - 帳戶名稱 - 帳號) */
+  DisplayText: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class FIN29100Service {
   private apiUrl = environment.ApiUrl + '/FIN0000/APS1000';
@@ -50,5 +86,12 @@ export class FIN29100Service {
       observe: 'response',
       responseType: 'blob'
     });
+  }
+
+  /**
+   * 查詢公司銀行帳戶列表
+   */
+  queryBankAccount(params: QueryBankAccountRequest): Observable<ApiResponse<QueryBankAccountResponse[]>> {
+    return this.http.post<ApiResponse<QueryBankAccountResponse[]>>(`${this.apiUrl}/queryBankAccount`, params);
   }
 }

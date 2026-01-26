@@ -27,15 +27,17 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-range
+            <app-dropdown
               label="銀行代號"
-              [startControl]="queryForm.controls.BNK_No"
-              [endControl]="queryForm.controls.BNK_No"
+              controlName="BNK_No"
+              [control]="queryForm.controls.BNK_No"
               [submitted]="submitted"
               [options]="BankOptions"
-              optionLabel="label"
-              optionValue="value"
-            ></app-dropdown-range>
+              optionLabel="displayLabel"
+              optionValue="BNK_No"
+              [showClear]="true"
+              [filter]="true"
+            ></app-dropdown>
           </div>
 
           <!-- 匯款/開票/調撥單號(起迄) -->
@@ -89,7 +91,7 @@
       [groupRowsByName]="''"
       [showGroupheader]="false"
       [loading]="loading"
-      [showSerialNo]="false"
+      [showSerialNo]="true"
       [showPaginator]="false"
       [showReportMode]="false"
       [showSort]="false"
