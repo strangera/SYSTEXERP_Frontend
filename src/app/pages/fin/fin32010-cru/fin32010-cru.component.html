@@ -22,7 +22,7 @@
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar calendarType="dateMonthOne" label="帳款年月" [control]="dataForm.controls.Sam_Yyymm"
-            [submitted]="submitted"></app-calendar>
+            dateFormat="yy-mm" [submitted]="submitted"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number [useGrouping]="false" label="帳款帳次" controlName="Sam_TermNo"

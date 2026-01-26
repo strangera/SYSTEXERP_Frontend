@@ -1,6 +1,6 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
@@ -15,7 +15,6 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
 import { formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
-import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -47,11 +46,11 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     sam_yyymm: [''], // 結帳年月
     tlt_no: [''],
     PUR_GUIType: [''],
-    PUR_GUINO: ['', [Validators.maxLength(10)]],
-    PUR_GUIDate_Start: [null],
-    PUR_GUIDate_End: [null],
+    PUR_GUINO: [''],
+    PUR_GUIDate_Start: [''],
+    PUR_GUIDate_End: [''],
     COMM_MONEY_TYPE: [''],
-    COMM_YM: [null],
+    COMM_YM: [new Date()],
     sam_termno: [1],
     DEC_YM: [null],
     ven_uniform: [''],
@@ -60,21 +59,21 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     PUR_GUIPaper: [''],
     CRT_Date_Start: [''],
     CRT_Date_End: [''],
-    PUR_GUIDate_From: [yesterday, [Validators.required]],
-    PUR_GUIDate_To: [yesterday, [Validators.required]],
-    ACP_GUIAmt_From: [0, [Validators.required]],
-    ACP_GUIAmt_To: [null, [Validators.required]],
-    ACP_GUINet_From: [0, [Validators.required]],
-    ACP_GUINet_To: [null, [Validators.required]],
+    PUR_GUIDate_From: [''],
+    PUR_GUIDate_To: [''],
+    ACP_GUIAmt_From: [null],
+    ACP_GUIAmt_To: [null],
+    ACP_GUINet_From: [null],
+    ACP_GUINet_To: [null],
     floor_no: [[]],
     PUR_PRType: [''],
     INV_Type: [''],
-    ACP_GUITax_From: [0, [Validators.required]],
-    ACP_GUITax_To: [null, [Validators.required]],
-    CRT_Date_To: [null, [Validators.required]],
-    CRT_Date_From: [yesterday, [Validators.required]],
-    COMM_NUM_Start: [yesterday, [Validators.required]],
-    COMM_NUM_End: [yesterday, [Validators.required]],
+    ACP_GUITax_From: [null],
+    ACP_GUITax_To: [null],
+    CRT_Date_To: [null],
+    CRT_Date_From: [null],
+    COMM_NUM_Start: [null],
+    COMM_NUM_End: [null],
     // 分頁欄位
     pageSize: [30],
     pageIndex: [1],
