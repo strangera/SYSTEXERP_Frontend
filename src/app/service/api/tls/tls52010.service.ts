@@ -104,10 +104,10 @@ export interface IPOS2004DetailData {
   _TABLE_KEY?: string;
 }
 
-/** 商品管理編號/國際條碼/廠商貨號查詢商品 (queryPOS2004Detail) 的請求介面 */
+/** 國際條碼/商品管理編號/廠商貨號查詢商品 (queryPOS2004Detail) 的請求介面 */
 export interface IQueryPOS2004DetailRequest {
   VEN_No: string | null; // 廠商編號
-  queryNo: string; // 查詢編號 (商品管理編號/國際條碼/廠商貨號)
+  queryNo: string; // 查詢編號 (國際條碼/商品管理編號/廠商貨號)
   PLU_Name?: string; // 商品名稱 (查詢條件，可選)
   LOGO_No: string | null; // LOGO代碼
 }
@@ -275,7 +275,7 @@ export class Tls52010Service {
     return this.http.post<ApiResponse<IQueryPOS2004DetailResponse[]>>(`${this.apiUrl}/queryPOS2004Detail`, params);
   }
   /**
-   * TLS56020 專用的商品查詢 API（商品管理編號/國際條碼/廠商貨號）
+   * TLS56020 專用的商品查詢 API（國際條碼/商品管理編號/廠商貨號）
    * 後端路由: /queryPOS2004Detail_TLS56020
    */
   queryPOS2004Detail_TLS56020(params: any): Observable<ApiResponse<IQueryPOS2004DetailResponse[]>> {

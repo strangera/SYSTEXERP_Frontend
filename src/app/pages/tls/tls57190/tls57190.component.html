@@ -25,11 +25,10 @@
             <app-dropdown label="品牌" [control]="queryForm.controls.LOGO_No" [submitted]="submitted"
               [options]="LOGO_NoOptions | async" [optionLabel]="'label'" [optionValue]="'value'"></app-dropdown>
           </div>
-          <!-- 管理編號 -->
-          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.PLU_MagNo"
-            templateLabel="label" [submitted]="submitted" optionLabel="PLU_MagNo" optionValue="PLU_MagNo"
-            [suggestions]="suggestions" [fieldsConfig]="fieldsConfig" [showOverlay]="false"
-            (inputValueChanged)="onAutoCompleteInputChange($event)">
+          <!-- 國際條碼/商品管理編號/廠商貨號 -->
+          <app-dropdown-table class="col-12" [showOverlay]="false" [control]="queryForm.controls.PLU_MagNo"
+            [submitted]="submitted" optionLabel="label" optionValue="PLU_No" [suggestions]="suggestions"
+            [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)">
           </app-dropdown-table>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="國際條碼" controlName="PLU_No" [control]="queryForm.controls.PLU_No"

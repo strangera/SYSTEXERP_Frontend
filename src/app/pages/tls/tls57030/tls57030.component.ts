@@ -122,11 +122,10 @@ export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> i
   // 管理編號
   suggestions: IQueryPOS2004DetailResponse[] = [];
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
+    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
   ];
-  onAutoCompleteInputChange(event: any) {
-    const inputString = event.PLU_MagNo || '';
-
+  onAutoCompleteInputChange(event: Record<'label', string>) {
+    const inputString = event.label || '';
     // 邏輯：檢查目前的輸入內容是否精準匹配 suggestions 中的某個 PLU_MagNo
     // 如果不匹配，則將 PLU_No 清空，避免帶到舊的或錯誤的編號
     const matchedItem = this.suggestions.find(s => s.PLU_MagNo === inputString);
@@ -143,14 +142,14 @@ export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> i
       queryNo: inputString,
       pageSize: 30,
       pageIndex: 1,
-      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
+      SortBy: [{ field: 'PLU_No', order: 1 }],
     }
 
     this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = results.Data.map(item => ({
+      this.suggestions = [...results.Data.map(item => ({
         ...item,
-        label: `${item.PLU_MagNo} - ${item.PLU_Name} - ${item.PLU_No} - ${item.PLU_OrgPLUNo}`,
-      }));
+        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
+      }))];
 
       // API 回傳後再次檢查，如果輸入的值剛好匹配到結果清單中的唯一一筆，就自動帶入
       const exactMatch = this.suggestions.find(item => item.PLU_MagNo === inputString);

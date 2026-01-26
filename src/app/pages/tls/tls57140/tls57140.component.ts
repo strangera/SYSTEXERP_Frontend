@@ -1,30 +1,27 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { QueryPLUResponse, QueryTLS57040Request, Tls57040Service } from '@service/api/tls/tls57040.service';
+import { QueryPLUResponse, Tls57040Service } from '@service/api/tls/tls57040.service';
 import { QueryTLS57140DetailResponse, QueryTLS57140Request, QueryTLS57140ShowType, QueryTLS57140SummaryResponse, Tls57140Service } from '@service/api/tls/tls57140.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { Column, convertDateToYYYYMM, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { convertDateToYYYYMM, formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
-import { debounceTime, finalize } from 'rxjs';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
 @Component({
   selector: 'app-tls57140',
   templateUrl: './tls57140.component.html',
-  styleUrl: './tls57140.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -33,7 +30,6 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
     ReactiveFormsModule,
     CalendarComponent,
     DropdownComponent,
-    InputTextComponent,
     InputNumberComponent,
     ButtonComponent,
     TranslateModule,
@@ -50,7 +46,7 @@ export class TLS57140Component extends BasicQueryPageComponent<QueryTLS57140Deta
     HOS_No: [null as string[] | null],
     /** 品牌 */
     LOGO_No: [null as string[] | null],
-    /** 商品管理編號/國際條碼/廠商貨號 */
+    /** 國際條碼/商品管理編號/廠商貨號 */
     PLU_MagNo: [null as string | null, Validators.maxLength(20)],
     /** 顯示方式 */
     ShowType: [QueryTLS57140ShowType.Summary, Validators.required],
@@ -75,26 +71,6 @@ export class TLS57140Component extends BasicQueryPageComponent<QueryTLS57140Deta
   totalRecords = 0;
   lastQueryBody: QueryTLS57140Request | null = null;
   columns: ReportColumn[] = [];
-
-  // 商品管理編號 (Dropdown-Table) 相關屬性
-  opLoading = false;
-  opForm = this.formBuilder.group({
-    queryNo: ['', Validators.maxLength(20)],
-    PLU_Name: ['', Validators.maxLength(60)],
-    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
-  });
-  suggestions: QueryPLUResponse[] = [];
-  opData: QueryPLUResponse[] = [];
-  opTotalRecords = 0;
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
-  ];
-  opColumns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號' },
-    { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
-    { field: 'PLU_Name', header: '商品名稱' },
-  ];
 
   constructor(
     private readonly dropDownListService: DropDownListService,
@@ -188,42 +164,27 @@ export class TLS57140Component extends BasicQueryPageComponent<QueryTLS57140Deta
     });
   }
 
+  // 商品管理編號 (Dropdown-Table) 相關屬性
+  suggestions: QueryPLUResponse[] = [];
+  fieldsConfig: FieldsConfig[] = [
+    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
+  ];
   // 商品管理編號 (dropdown-table) 的自動完成輸入事件
-  onAutoCompleteInputChange(event: any) {
+  onAutoCompleteInputChange(event: Record<'label', string>) {
     const body = {
-      queryNo: event.PLU_MagNo || '',
+      queryNo: event.label || '',
       PLU_MagNo: undefined,
       pageSize: 30,
       pageIndex: 1,
-      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
+      SortBy: [{ field: 'PLU_No', order: 1 }],
     };
     this.tls57040Service.queryPLUForDropdown(body).pipe(
-      untilDestroyed(this),
-      debounceTime(300)
+      untilDestroyed(this)
     ).subscribe((results) => {
       this.suggestions = [...results.Data.map(item => ({
         ...item,
-        label: `${item.PLU_MagNo}/${item.PLU_No}/${item.PLU_OrgPLUNo} - ${item.PLU_Name}`
+        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
       }))];
-    });
-  }
-
-  // 商品管理編號 (dropdown-table) 的表單值改變事件
-  onformValueChanged(event: QueryTLS57040Request) {
-    this.opLoading = true;
-    const body = {
-      ...event,
-      queryNo: undefined,
-      PLU_MagNo: event.queryNo || '',
-      PLU_Name: event.PLU_Name || '',
-    };
-    this.tls57040Service.queryPLUForDropdown(body).pipe(
-      untilDestroyed(this),
-      debounceTime(300)
-    ).subscribe((results) => {
-      this.opData = [...results.Data];
-      this.opTotalRecords = results.TotalCount;
-      this.opLoading = false;
     });
   }
 }
