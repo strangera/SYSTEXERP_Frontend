@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
-import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeComponent } from "@shared/componentkit/calendar-range/calendar-range.component";
@@ -73,6 +73,9 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     Remark: ['', [Validators.maxLength(100)]], // 備註
   });
 
+  // 票據總金額（來自收款明細中「應收票據」會計科目的金額）
+  billTotalAmountControl = new FormControl<number | null>({ value: 0, disabled: true });
+
   // 步驟3: 應收帳款表格資料 (從對話框選擇後自動帶入,不可手動編輯)
   step4TableData: ARWithRCVAmt[] = [];
   // 當前正在編輯的列索引 (用於彈跳視窗選擇後替換)
@@ -119,7 +122,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       textAlign: 'right',
       aggregate: 'sum',
       format: (value: number) => value?.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00',
-      disabled: () => true // 不可編輯,由對話框帶入
+      disabled: () => this.isFormReadable // 檢視模式不可編輯,新增/編輯模式可編輯
     }
   ];
 
@@ -129,8 +132,8 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
   arDialogTotalRecords = 0;
   arDialogSelectedItem: QueryFIN32030ARResponse | null = null; // 單選模式下選中的資料
   arQueryForm = this.formBuilder.group({
-    STO_No: [''],
-    VEN_No: [''],
+    ARS_ID: [''],
+    VEN_No: [null as string | null],
     DateFrom: [null as Date | null],
     DateTo: [null as Date | null],
     pageSize: [20],
@@ -142,10 +145,10 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     { field: 'ARS_ID', header: '應收ID', visible: true },
     { field: 'VEN_No', header: '廠客代號', visible: true },
     { field: 'VEN_Name', header: '廠客名稱', visible: true },
-    { field: 'ARS_Amt', header: '應收金額', visible: true, format: formatAmountWithFraction, style: 'text-align: right' },
+    { field: 'ARS_Amt', header: '應收金額', visible: true, format: formatAmountWithFraction, align: 'right' },
     { field: 'ARS_Date', header: '立帳日', visible: true, format: formatDate },
-    { field: 'PaidAmt', header: '已收款金額', visible: true, format: formatAmountWithFraction, style: 'text-align: right' },
-    { field: 'UnpaidAmt', header: '未收款金額', visible: true, format: formatAmountWithFraction, style: 'text-align: right' },
+    { field: 'PaidAmt', header: '已收款金額', visible: true, format: formatAmountWithFraction, align: 'right' },
+    { field: 'UnpaidAmt', header: '未收款金額', visible: true, format: formatAmountWithFraction, align: 'right' },
     { field: 'PTA_Date', header: '預計收款日', visible: true, format: formatDate },
     { field: 'NoteDesc', header: '摘要', visible: true },
   ];
@@ -202,6 +205,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       header: '票據號碼',
       type: 'input',
       maxLength: 50,
+      width: '120px',
       validate: [
         (value: string) => ({
           isValid: !!value,
@@ -217,7 +221,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       optionLabel: 'label',
       optionValue: 'value',
       showClear: true,
-      width: '250px'
+      width: '280px'
     },
     {
       field: 'BNK_All',
@@ -227,7 +231,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       optionLabel: 'label',
       optionValue: 'value',
       showClear: true,
-      width: '300px',
+      width: '250px',
       calculate: (_rowData, newValue: string) => {
         // 選擇銀行後自動帶入分行代號和帳號長度
         const selectedBank = this.bankBranchOptions.find(b => b.value === newValue);
@@ -257,16 +261,11 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       ]
     },
     {
-      field: 'BNK_BranchNo',
-      header: '分行代號',
-      type: 'input',
-      disabled: () => true // 自動帶入,不可編輯
-    },
-    {
       field: 'BNK_AccNo',
       header: '客戶銀行帳號',
       type: 'input',
       maxLength: 20,
+      width: '130px',
       onBlur: (rowData, value) => {
         // 即時驗證：離開欄位時檢查長度
         const accLen = rowData.ACC_LEN || 0;
@@ -292,13 +291,15 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       field: 'CHK_ReceDate',
       header: '收票日',
       type: 'date',
-      dateFormat: 'yy/mm/dd'
+      dateFormat: 'yy/mm/dd',
+      width: '105px'
     },
     {
       field: 'CHK_ExpireDate',
       header: '到期日',
       type: 'date',
       dateFormat: 'yy/mm/dd',
+      width: '105px',
       validate: [
         (value: Date) => ({
           isValid: !!value,
@@ -310,7 +311,8 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       field: 'CHK_PreDate',
       header: '預兌日',
       type: 'date',
-      dateFormat: 'yy/mm/dd'
+      dateFormat: 'yy/mm/dd',
+      width: '105px'
     },
     {
       field: 'CHK_Amt',
@@ -336,6 +338,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       options: () => this.checkTypeOptions,
       optionLabel: 'label',
       optionValue: 'value',
+      width: '85px',
       defaultValueFunction: () => '1'
     },
     {
@@ -345,6 +348,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       options: () => this.ticketYNOptions,
       optionLabel: 'label',
       optionValue: 'value',
+      width: '85px',
       defaultValueFunction: () => 'N'
     },
     {
@@ -356,7 +360,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
   ];
 
   // 收款項目下拉選項 (格式: CAP_Item - CAP_Name)
-  recvItemOptions: { label: string; value: string }[] = [];
+  recvItemOptions: { label: string; value: string; Voucher_Type?: string | null }[] = [];
 
   // 業務員下拉選項 (格式: Sales_Id - User_Name)
   salesOptions: { label: string; value: string }[] = [];
@@ -453,8 +457,8 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     this.showARDialog = true;
     // 重置查詢表單
     this.arQueryForm.reset({
-      STO_No: '',
-      VEN_No: '',
+      ARS_ID: '',
+      VEN_No: null,
       DateFrom: null,
       DateTo: null,
       pageSize: 20,
@@ -465,6 +469,8 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     this.arDialogData = [];
     this.arDialogTotalRecords = 0;
     this.arDialogSelectedItem = null;
+    // 預設顯示全部資料
+    this.onQueryAR();
   }
 
   /** 打開應收未收查詢對話框 (舊方法，保留相容性) */
@@ -505,7 +511,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     }
 
     const queryParams = {
-      STO_No: formValue.STO_No || undefined,
+      ARS_ID: formValue.ARS_ID || undefined,
       VEN_No: formValue.VEN_No || undefined,
       DateFrom: formValue.DateFrom ? (formValue.DateFrom as Date).toISOString() : undefined,
       DateTo: formValue.DateTo ? (formValue.DateTo as Date).toISOString() : undefined,
@@ -617,6 +623,23 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
   /** 收款項目表格資料變更事件 */
   onStep2DataChange(data: any[]): void {
     this.step2TableData = data;
+    // 計算票據總金額：收款明細中「應收票據」會計科目 (Voucher_Type = '2') 的金額
+    this.calculateBillTotalAmount();
+  }
+
+  /** 計算票據總金額 */
+  private calculateBillTotalAmount(): void {
+    let totalAmount = 0;
+    for (const item of this.step2TableData) {
+      if (item.CAP_Item) {
+        const recvItem = this.recvItemOptions.find(opt => opt.value === item.CAP_Item);
+        // Voucher_Type = '2' 為應收票據科目
+        if (recvItem?.Voucher_Type === '2') {
+          totalAmount += item.ARS_Amt || 0;
+        }
+      }
+    }
+    this.billTotalAmountControl.setValue(totalAmount);
   }
 
   // ----------------------------------------------------------------
@@ -660,7 +683,8 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
         if (results.recvItems.Data) {
           this.recvItemOptions = results.recvItems.Data.map(item => ({
             label: `${item.CAP_Item || ''} - ${item.CAP_Name || ''}`,
-            value: item.CAP_Item || ''
+            value: item.CAP_Item || '',
+            Voucher_Type: item.Voucher_Type
           }));
           console.log('收款項目下拉選單載入完成:', this.recvItemOptions.length, '筆');
         }
@@ -739,6 +763,8 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
               NoteDesc: item.NoteDesc || ''
             }));
             console.log('收款項目明細載入完成:', this.step2TableData);
+            // 計算票據總金額
+            this.calculateBillTotalAmount();
           }
 
           // 載入票據明細 (步驟3)
