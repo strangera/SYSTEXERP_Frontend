@@ -1,20 +1,20 @@
-import { IDropdownItem } from '@service/utility/dropDownList.service';
+import { formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableModule } from 'primeng/table';
-import { TranslateModule } from '@ngx-translate/core';
-import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
-import { ButtonModule } from 'primeng/button';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { footerShowTotal, TLS31020DetailItem, TLS31020DetailRequest, TLS31020DetialPrintRequest, TLS31020Request, TLS31020Response, Tls31020Service, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { IDropdownItem } from '@service/utility/dropDownList.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { footerShowTotal, TLS31020DetailItem, TLS31020DetailRequest, TLS31020DetialPrintRequest, TLS31020Request, TLS31020Response, Tls31020Service, TLS31020Total } from '@service/api/tls/tls31020.service';
-import { formatDate } from '@angular/common';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 @Component({
   selector: 'app-tls31020cru',
@@ -154,7 +154,9 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
     this.dataForm.reset(); // 重置表單
   }
 
-  btnLoading = false;
+  btnPDFLoading = false;
+  btnExcelLoading = false;
+
   onReport(isExcel: boolean) {
     const formValue = {
       ...this.queryConditions,
@@ -167,15 +169,28 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
 
     console.log('單樓層之營業報表print請求', formValue);
 
-    this.btnLoading = true;
-    this.tls31020Service.printTLS31020Detail(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
-      .subscribe(res => {
-        this.messageService.successBubble(res.Message);
-        if (res.Data && res.Data.Print_URL) {
-          const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-          window.open(downloadUrl, '_blank');
-        }
-      });
+    if (isExcel) {
+      this.btnExcelLoading = true;
+      this.tls31020Service.printTLS31020Detail(formValue).pipe(finalize(() => this.btnExcelLoading = false), untilDestroyed(this))
+        .subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          if (res.Data && res.Data.Print_URL) {
+            const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+            window.open(downloadUrl, '_blank');
+          }
+        });
+    } else {
+      this.btnPDFLoading = true;
+      this.tls31020Service.printTLS31020Detail(formValue).pipe(finalize(() => this.btnPDFLoading = false), untilDestroyed(this))
+        .subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          if (res.Data && res.Data.Print_URL) {
+            const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+            window.open(downloadUrl, '_blank');
+          }
+        });
+    }
+
   }
 
   queryTLS31020Detail() {
