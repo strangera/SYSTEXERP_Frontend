@@ -34,7 +34,7 @@ export class TLS2H020Component extends BasicQueryPageComponent<any> implements O
     // 分頁欄位
     pageSize: [30],
     pageIndex: [1],
-    SamYyyymm: [null, Validators.required],
+    SamYyyymm: [new Date(), Validators.required],
     GuiNoStart: [null],
     GuiNoEnd: [null],
     TltNo: [''],
