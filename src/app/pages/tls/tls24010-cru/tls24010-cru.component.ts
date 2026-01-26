@@ -301,13 +301,6 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
           '金額超出限制'
         );
       }
-      // 先處理日期格式以便比較
-      if (totalSaleAmt === 0) {
-        // 視業務需求，總額為 0 是否允許？通常建議擋掉
-        this.messageService.errorBubble('銷售總額不可為 0', '金額檢核失敗');
-        this.loading = false;
-        return;
-      }
       // 2. 金額檢核
       // 一般交易 (N) 允許溢收嗎？若不允許，則不分狀態都要檢查 totalSaleAmt === totalPayAmt
       // 您的原本邏輯是 finalStatus !== 'N' 才檢查，
