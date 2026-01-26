@@ -12,7 +12,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
-import { formatYN, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { AddButton, formatYN, formatYYYYMM } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -62,13 +62,71 @@ export class TLS2H030Component extends BasicQueryPageComponent<any> implements O
     { field: 'IsPrinted', header: '是否已列印', visible: true, format: formatYN },
 
   ];
+  addButton: AddButton[] = [];
   constructor(
     public readonly tls2h030Service: Tls2h030Service,
     private readonly dropdown: DropdownApiService,
     private readonly dropDownListService: DropDownListService,
   ) {
     super();
+    this.addButton = [
+      { label: '預覽列印', icon: 'fa fa-file-pdf text-blue-500', action: (rowData: any) => { this.previewPrint(rowData); } }
+    ];
   }
+  previewPrint(rowData: any): void {
+    const toYYYYMM = (val: any): string | null => {
+      if (val === null || val === undefined || val === '') return null;
+      let d: Date;
+      if (val instanceof Date) d = val;
+      else d = new Date(val);
+      if (isNaN(d.getTime())) return null;
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      return `${y}${m}`;
+    };
+
+    const sam = toYYYYMM(rowData?.SamYyyymm ?? rowData?.sam_yyymm ?? rowData?.SamYyyymm);
+    const params: any = {
+      GuiNo: rowData?.GuiNo ?? '',
+      SamYyyymm: sam ?? ''
+    };
+
+    this.loading = true;
+    this.messageService.blockUi();
+    this.tls2h030Service.PrintTLS2H(params).pipe(untilDestroyed(this), finalize(() => { this.loading = false; this.messageService.unblockUi(); }))
+      .subscribe({
+        next: (res: any) => {
+          try {
+            if (res instanceof Blob) {
+              const blob = res as Blob;
+              const url = window.URL.createObjectURL(blob);
+              window.open(url, '_blank');
+            } else if (res && res.Url) {
+              window.open(res.Url, '_blank');
+            } else {
+              if (res && res.File && typeof res.File === 'string') {
+                const byteCharacters = atob(res.File);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                  byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: 'application/pdf' });
+                const url = window.URL.createObjectURL(blob);
+                window.open(url, '_blank');
+              } else {
+                this.messageService.successBubble(res?.Message ?? '預覽已送出');
+              }
+            }
+          } catch (e) {
+            console.error('PrintTLS2H preview error', e, res);
+            this.messageService.errorBubble('預覽列印失敗');
+          }
+        },
+
+      });
+  }
+
   ngOnInit(): void {
     this.initializePage('TLS2H030', 'tls/tls2h030cru', this.queryForm, (form) => this.onSubmit(form));
   }

@@ -29,8 +29,9 @@
 </div>
 <div class="card">
   <app-table-report tableKey="tls2h010" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-    [lastQueryBody]="lastQueryBody" [showDelete]="false" [showReportMode]="false" [showCheckBox]="true"
-    [showManage]="false" [loading]="loading" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    [addButton]="addButton" [lastQueryBody]="lastQueryBody" [showDelete]="false" [showReportMode]="false"
+    [showCheckBox]="true" [showDetail]="false" [showEdit]="false" [showManage]="true" [loading]="loading"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
     [queryFunction]="tls2h010Service.queryTLS2H010.bind(tls2h010Service)">
   </app-table-report>
 </div>
