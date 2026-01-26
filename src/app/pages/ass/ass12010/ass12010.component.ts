@@ -1,162 +1,217 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
+import { Component, computed, OnInit, signal } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS12010Service } from '@service/api/ass/ass12010.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { removeEmptyValues } from '@shared/utils/object-utils';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-//
+import { finalize, Observable } from 'rxjs';
+import { ASS12010Data, ASS12010QueryRequest } from './ass12010.model';
 
-//3.1.2.1 請購申請作業
+// 請購申請作業
 @Component({
   selector: 'app-ass12010',
   templateUrl: './ass12010.component.html',
   styleUrl: './ass12010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberComponent, CalendarRangeComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  imports: [
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    ButtonComponent,
+    DropdownComponent,
+    InputTextComponent,
+    CalendarRangeComponent,
+    MenubarComponent,
+    TableReportComponent,
+  ],
 })
-export class ASS12010Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    storage: [], // 倉別
-    demandNumber: [, [Validators.maxLength(12)]], // 需求單號
-    itemCode: [], // 品項代碼
-    applicantCode: [], // 申請人代號
-    organizationNumber: [], // 部門代號
-    requestDateFrom: [], // 需求日期
-    requestDateTo: [], // 需求日期
-    requestStatus: [[] as number[]], // 請購申請狀態
-    addNumber: [, [Validators.required, Validators.maxLength(3)]], // 需求單號
-    modifyNumber: [, [Validators.required, Validators.maxLength(3)]], // 修改筆數
-    printNumber: [, [Validators.required, Validators.maxLength(3)]], // 項次列印筆數
+export class ASS12010Component extends BasicQueryPageComponent<ASS12010Data> implements OnInit {
+
+  public readonly queryForm = this.formBuilder.group({
+    /** 倉別 */
+    WH_ID: new FormControl<string | null>(null),
+    /** 需求單號 */
+    NEED_ID: new FormControl<string | null>(null),
+    /** 品項代號 */
+    GOODS_ID: new FormControl<string | null>(null),
+    /** 申請人代號 */
+    EMP_ID: new FormControl<string | null>(null),
+    /** 部門代號 */
+    ORG_ID: new FormControl<string | null>(null),
+    /** 需求日期(起) */
+    APPLY_DATE_FROM: new FormControl<Date | null>(null),
+    /** 需求日期(迄) */
+    APPLY_DATE_TO: new FormControl<Date | null>(null),
+    /** 請購申請狀態 */
+    NEEDS_STATUS: new FormControl<string | null>(null),
+    pageSize: new FormControl<number>(30),
+    pageIndex: new FormControl<number>(1),
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '倉別', visible: true },
-    { field: 'col2', header: '需求單號', visible: true },
-    { field: 'col3', header: '品項代碼', visible: true },
-    { field: 'col4', header: '申請人代號', visible: true },
-    { field: 'col5', header: '部門代號', visible: true },
-    { field: 'col6', header: '需求日期', visible: true },
-    { field: 'col7', header: '請購申請狀態', visible: true },
-    // { field: 'col8', header: '新增筆數', visible: true },
-    // { field: 'col9', header: '折舊科目(借)', visible: true },
-    // { field: 'col10', header: '累計折舊科目(貸)', visible: true },
-    // { field: 'col11', header: '折舊年限', visible: true },
-    // { field: 'col12', header: '說明', visible: true },
+  public readonly qf = computed(() => this.queryForm.controls);
 
-    // { field: 'col13', header: '公司地址', visible: true },
-    // { field: 'col14', header: '付款方式', visible: true },
-    // { field: 'col15', header: '營運模式', visible: true },
-    // { field: 'col16', header: '票期', visible: true },
-    // { field: 'col17', header: '備註', visible: true },
-    // { field: 'col18', header: '訂貨傳真', visible: true },
+  public readonly tableData = signal<ASS12010Data[]>([]);
+  public readonly totalRecords = signal<number>(0);
+  public readonly tableLoading = signal<boolean>(false);
+  public lastQueryBody?: ASS12010QueryRequest;
 
-    // { field: 'col19', header: '工廠地址', visible: true },
-    // { field: 'col20', header: '工廠電話', visible: true },
-    // { field: 'col21', header: '工廠傳真', visible: true },
-
-    // { field: 'col22', header: '送貨方式', visible: true },
-    // { field: 'col23', header: '退貨處理方式', visible: true },
-    // { field: 'col24', header: '廠商送貨期限', visible: true },
-
-    // { field: 'col25', header: '附註', visible: true },
-    // 其他欄位
+  public readonly columns: ReportColumn[] = [
+    { field: 'NEED_ID', header: '需求單號' },
+    { field: 'EMP_ID', header: '申請人編號' },
+    { field: 'EMP_NAME', header: '申請人名稱' },
+    { field: 'WH_ID', header: '倉別' },
+    { field: 'ORG_ID', header: '部門代號' },
+    { field: 'ORG_NAME', header: '部門名稱' },
+    { field: 'APPLY_DATE', header: '需求日期' },
+    { field: 'NEEDS_STATUS_NAME', header: '請購申請狀態' },
   ];
-  // ----------------------------------------------------------------
-  //
-  storageOptions: any[] = [
-    { value: 1, label: '總公司' },
-    { value: 2, label: '測試' },
-  ];
-  requestStatusOptions: any[] = [
-    { value: 1, label: '已申請' },
-    { value: 2, label: '已審核' },
-  ];
-  itemCodeOptions: any[] = [];
-  applicantCodeOptions: any[] = [];
-  organizationNumberOptions: any[] = [];
 
-  //
+  // 下拉選單選項
+  public readonly whIdOptions = signal<{ label: string; value: string }[]>([]);
+  public readonly needIdOptions = signal<{ label: string; value: string }[]>([]);
+  public readonly goodsIdOptions = signal<{ label: string; value: string }[]>([]);
+  public readonly empIdOptions = signal<{ label: string; value: string }[]>([]);
+  public readonly orgIdOptions = signal<{ label: string; value: string }[]>([]);
+  public readonly needsStatusOptions = signal<{ label: string; value: string }[]>([]);
+
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
+    public readonly service: ASS12010Service,
+    private readonly dropdownApiService: DropdownApiService,
+    private readonly dropDownListService: DropDownListService,
+    private readonly logger: NGXLogger,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310011';
-    this.cruPage = '/ASS1000/ASS12010CRU';
+    this.initializePage('ASS12010', '/ASS/ASS12010CRU', this.queryForm, this.onSubmit.bind(this));
+    this.logger.debug(`ASS12010 init:`, [this.queryForm]);
+    this.loadDropdownOptions();
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+  /**
+   * 載入下拉選單選項
+   */
+  private loadDropdownOptions(): void {
+    // 申請人代號
+    this.dropDownListService.queryTBLUSER_DropDownList().subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.map(item => ({
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+        }));
+        this.empIdOptions.set(options);
+      },
+    });
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
+    // 部門代號
+    this.dropDownListService.queryPOS2013_DropDownList({}).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.map(item => ({
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+        }));
+        this.orgIdOptions.set(options);
+      },
+    });
 
-    this.loading = false;
-    this.messageService.unblockUi();
+    // 請購申請狀態
+    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'NEEDS_STATUS' }).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.map(item => ({
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+        }));
+        this.needsStatusOptions.set(options);
+      },
+    });
+
+    // TODO: 等 API 規格確認後，載入以下下拉選單
+    // - 倉別 (WH_ID)
+    // - 需求單號 (NEED_ID)
+    // - 品項代碼 (GOODS_ID)
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+  /**
+   * 查詢函數（供 table-report 分頁查詢使用）
+   */
+  public queryFunction = (body: ASS12010QueryRequest): Observable<ApiResponse<ASS12010Data[]>> => {
+    const rawFormValue = this.queryForm.getRawValue();
+    const payload: ASS12010QueryRequest = {
+      WH_ID: rawFormValue.WH_ID || undefined,
+      NEED_ID: rawFormValue.NEED_ID || undefined,
+      GOODS_ID: rawFormValue.GOODS_ID || undefined,
+      EMP_ID: rawFormValue.EMP_ID || undefined,
+      ORG_ID: rawFormValue.ORG_ID || undefined,
+      APPLY_DATE_FROM: rawFormValue.APPLY_DATE_FROM || undefined,
+      APPLY_DATE_TO: rawFormValue.APPLY_DATE_TO || undefined,
+      NEEDS_STATUS: rawFormValue.NEEDS_STATUS || undefined,
+      PageSize: body.PageSize,
+      PageIndex: body.PageIndex,
+      SortBy: body.SortBy,
+    };
+    // 移除空值
+    const cleanPayload = removeEmptyValues(payload) as ASS12010QueryRequest;
+    return this.service.queryASS12010(cleanPayload);
+  };
+
+  public onSubmit(): void {
+    this.handleSubmit(this.queryForm, () => {
+      const rawFormValue = this.queryForm.getRawValue();
+      this.lastQueryBody = {
+        WH_ID: rawFormValue.WH_ID || undefined,
+        NEED_ID: rawFormValue.NEED_ID || undefined,
+        GOODS_ID: rawFormValue.GOODS_ID || undefined,
+        EMP_ID: rawFormValue.EMP_ID || undefined,
+        ORG_ID: rawFormValue.ORG_ID || undefined,
+        APPLY_DATE_FROM: rawFormValue.APPLY_DATE_FROM || undefined,
+        APPLY_DATE_TO: rawFormValue.APPLY_DATE_TO || undefined,
+        NEEDS_STATUS: rawFormValue.NEEDS_STATUS || undefined,
+        PageSize: rawFormValue.pageSize || 30,
+        PageIndex: rawFormValue.pageIndex || 1,
+      } as ASS12010QueryRequest;
+
+      this.tableLoading.set(true);
+      this.queryStateService.setQueryState(this.ProgNo, rawFormValue);
+      this.logger.debug(`onSubmit:`, [this.lastQueryBody]);
+      this.queryFunction(this.lastQueryBody).pipe(
+        finalize(() => {
+          this.tableLoading.set(false);
+          this.loading = false;
+        }),
+      ).subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
+          this.tableData.set(res.Data);
+          this.totalRecords.set(res.TotalCount || 0);
+        },
+      });
+    });
   }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
-  }
+  /**
+   * 編輯按鈕禁用邏輯
+   * TODO: 等 API 規格確認「已申請」狀態值後，更新此邏輯
+   */
+  public editDisabled = (rowData: ASS12010Data): boolean => {
+    // 只有狀態為「已申請」時才可編輯
+    // 目前先寫死，等 API 規格確認後再更新
+    const appliedStatus = '已申請'; // TODO: 更新為實際的狀態值
+    return rowData.NEEDS_STATUS_NAME !== appliedStatus;
+  };
 }
