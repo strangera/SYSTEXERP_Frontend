@@ -25,6 +25,15 @@ import { YearMonthComponent } from '../fin11020/query-year-month/query-year-mont
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { NgIf } from '@angular/common';
 
+type RuleError = {
+  /** 哪一個欄位出錯（用來 setErrors / markAsTouched） */
+  controlName: string;
+  /** 告訴使用者的訊息 */
+  message: string;
+  /** 錯誤 key（方便 UI 顯示、或後續客製） */
+  key: string;
+};
+
 @Component({
   selector: 'app-fin13010-cru',
   templateUrl: './fin13010-cru.component.html',
@@ -57,7 +66,8 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
     { value: '22', label: '22-進項二聯式收銀機統一發票、載有稅額之其他憑證' },
     {
       value: '23',
-      label: '23-三聯式、電子計算機及三聯式收銀機統一發票之進貨退出或折讓證明單',
+      label:
+        '23-三聯式、電子計算機及三聯式收銀機統一發票之進貨退出或折讓證明單',
     },
     {
       value: '24',
@@ -100,10 +110,7 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
   dataForm = this.formBuilder.nonNullable.group({
     id: [null as number | null],
 
-    TXN_Ret_No: [
-      '系統自動帶入',
-      [Validators.required, Validators.maxLength(20)],
-    ],
+    TXN_Ret_No: ['系統自動帶入', [Validators.required, Validators.maxLength(20)]],
     GUI_Track: ['', [Validators.required, Validators.maxLength(2)]],
     PUR_GUINo: ['', [Validators.required, Validators.maxLength(10)]],
     InvoiceNumber_Correspond: [''],
@@ -157,8 +164,7 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
       this.dataForm.patchValue(
         {
           id: row.id ?? row.ID ?? null,
-          TXN_Ret_No:
-            row.TXN_Ret_No ?? this.dataForm.get('TXN_Ret_No')?.value,
+          TXN_Ret_No: row.TXN_Ret_No ?? this.dataForm.get('TXN_Ret_No')?.value,
           GUI_Track:
             row.GUI_Track ??
             row.InvoiceTrack ??
@@ -167,43 +173,29 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
             row.PUR_GUINo ??
             row.InvoiceNumber ??
             this.dataForm.get('PUR_GUINo')?.value,
-          Inv_Date:
-            row.Inv_Date ??
-            row.InvoiceDate ??
-            this.dataForm.get('Inv_Date')?.value,
+          Inv_Date: row.Inv_Date ?? row.InvoiceDate ?? this.dataForm.get('Inv_Date')?.value,
           PUR_GUIDate:
-            row.PUR_GUIDate ??
-            row.Ret_Date ??
-            this.dataForm.get('PUR_GUIDate')?.value,
+            row.PUR_GUIDate ?? row.Ret_Date ?? this.dataForm.get('PUR_GUIDate')?.value,
 
           PUR_VoucherType: this.normalizeVoucherType(rawVoucherType),
-
           PUR_RepYYYYMM: this.normalizeYYYYMMForControl(repRaw),
-          Credit_Type:
-            row.Credit_Type ?? this.dataForm.get('Credit_Type')?.value,
-          PUR_TaxType:
-            row.PUR_TaxType ?? this.dataForm.get('PUR_TaxType')?.value,
-          Inv_Net:
-            row.Inv_Net ??
-            row.PUR_Net ??
-            this.dataForm.get('Inv_Net')?.value,
-          Inv_Tax:
-            row.Inv_Tax ??
-            row.PUR_Tax ??
-            this.dataForm.get('Inv_Tax')?.value,
+
+          Credit_Type: row.Credit_Type ?? this.dataForm.get('Credit_Type')?.value,
+          PUR_TaxType: row.PUR_TaxType ?? this.dataForm.get('PUR_TaxType')?.value,
+
+          Inv_Net: row.Inv_Net ?? row.PUR_Net ?? this.dataForm.get('Inv_Net')?.value,
+          Inv_Tax: row.Inv_Tax ?? row.PUR_Tax ?? this.dataForm.get('Inv_Tax')?.value,
+
           PUR_Net: row.PUR_Net ?? this.dataForm.get('PUR_Net')?.value,
           PUR_Tax: row.PUR_Tax ?? this.dataForm.get('PUR_Tax')?.value,
           PUR_Amt: row.PUR_Amt ?? this.dataForm.get('PUR_Amt')?.value,
+
           Total_hitory_PUR_Amt:
-            row.Total_hitory_PUR_Amt ??
-            this.dataForm.get('Total_hitory_PUR_Amt')?.value,
-          Total_Amt:
-            row.Total_Amt ?? this.dataForm.get('Total_Amt')?.value,
-          Source_Doc_No:
-            row.Source_Doc_No ??
-            this.dataForm.get('Source_Doc_No')?.value,
-          Voucher_No:
-            row.Voucher_No ?? this.dataForm.get('Voucher_No')?.value,
+            row.Total_hitory_PUR_Amt ?? this.dataForm.get('Total_hitory_PUR_Amt')?.value,
+          Total_Amt: row.Total_Amt ?? this.dataForm.get('Total_Amt')?.value,
+
+          Source_Doc_No: row.Source_Doc_No ?? this.dataForm.get('Source_Doc_No')?.value,
+          Voucher_No: row.Voucher_No ?? this.dataForm.get('Voucher_No')?.value,
         },
         { emitEvent: false },
       );
@@ -220,24 +212,17 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
       const month = today.getMonth() + 1;
 
       let evenMonth = month % 2 === 0 ? month : month + 1;
-      if (evenMonth > 12) {
-        evenMonth = 12;
-      }
+      if (evenMonth > 12) evenMonth = 12;
+
       const repYYYYMM = `${year}${String(evenMonth).padStart(2, '0')}`;
 
       this.dataForm.patchValue(
-        {
-          PUR_GUIDate: today,
-          PUR_RepYYYYMM: repYYYYMM,
-        },
+        { PUR_GUIDate: today, PUR_RepYYYYMM: repYYYYMM },
         { emitEvent: false },
       );
     }
 
-    if (
-      this.crudstatus === CRUDStatus.Edit ||
-      this.crudstatus === CRUDStatus.Read
-    ) {
+    if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
       this.loadInvoiceInfoByCurrentGUINo();
     }
 
@@ -256,15 +241,10 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
 
     const track = trackRaw?.trim();
     const guiNo = guiNoRaw?.trim();
-
     if (!track || !guiNo) return;
 
     const full = `${track}${guiNo}`;
-
-    this.dataForm.patchValue(
-      { InvoiceNumber_Correspond: full },
-      { emitEvent: false },
-    );
+    this.dataForm.patchValue({ InvoiceNumber_Correspond: full }, { emitEvent: false });
 
     this.fin13010Service
       .queryCorrespondByGUINoCorrespond({ PUR_GUINo_Correspond: full })
@@ -272,10 +252,7 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
         const detail = res?.Data?.[0];
         if (detail) {
           const rawVoucherType =
-            (detail as any).PUR_VoucherType ??
-            (detail as any).InvoiceType ??
-            '';
-
+            (detail as any).PUR_VoucherType ?? (detail as any).InvoiceType ?? '';
           const voucherType = this.normalizeVoucherType(rawVoucherType);
 
           const rawOriginal =
@@ -285,20 +262,14 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
             null;
 
           const original =
-            rawOriginal !== null && rawOriginal !== undefined
-              ? Number(rawOriginal)
-              : null;
+            rawOriginal !== null && rawOriginal !== undefined ? Number(rawOriginal) : null;
 
           this.originalRemainingAmt =
-            original !== null && !isNaN(original)
-              ? this.roundToInt(original)
-              : null;
+            original !== null && !isNaN(original) ? this.roundToInt(original) : null;
 
           const currentAmtRaw = this.dataForm.get('PUR_Amt')?.value;
           const currentTotal =
-            currentAmtRaw === null ||
-            currentAmtRaw === undefined ||
-            currentAmtRaw === ''
+            currentAmtRaw === null || currentAmtRaw === undefined || currentAmtRaw === ''
               ? null
               : this.roundToInt(Number(currentAmtRaw));
 
@@ -312,16 +283,13 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
 
           this.dataForm.patchValue(
             {
-              Inv_Date:
-                (detail as any).PUR_GUIDate ??
-                (detail as any).InvoiceDate,
+              Inv_Date: (detail as any).PUR_GUIDate ?? (detail as any).InvoiceDate,
               Inv_Net: (detail as any).PUR_Net,
               Inv_Tax: (detail as any).PUR_Tax,
               PUR_VoucherType: voucherType ? String(voucherType) : '',
               PUR_TaxType: (detail as any).PUR_TaxType,
               Total_hitory_PUR_Amt:
-                (detail as any).Total_history_PUR_Amt ??
-                (detail as any).Total_hitory_PUR_Amt,
+                (detail as any).Total_history_PUR_Amt ?? (detail as any).Total_hitory_PUR_Amt,
               Total_Amt: remaining,
             },
             { emitEvent: false },
@@ -346,30 +314,38 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
           );
         }
 
-        // 撈完資料後重新算一次是否合法
         this.refreshAmountValidFlag();
       });
   }
 
   private setupTrackNoWatcher(): void {
     const trackControl = this.dataForm.get('GUI_Track');
+    if (!trackControl) return;
 
-    if (trackControl) {
-      trackControl.valueChanges.subscribe((trackNo) => {
-        if (typeof trackNo === 'string' && trackNo.trim().length >= 2) {
-          this.fin13010Service
-            .queryINV1000List({ GUI_Track: trackNo.trim() })
-            .subscribe((res) => {
-              this.guiNumberOptions = (res.Data || []).map((item: any) => ({
-                label: item.PUR_GUINo,
-                value: item.PUR_GUINo,
-              }));
-            });
-        } else {
-          this.guiNumberOptions = [];
-        }
-      });
-    }
+    trackControl.valueChanges.subscribe((trackNo) => {
+      if (typeof trackNo === 'string' && trackNo.trim().length >= 2) {
+        this.fin13010Service
+          .queryINV1000List({ GUI_Track: trackNo.trim() })
+          .subscribe((res) => {
+            this.guiNumberOptions = (res.Data || []).map((item: any) => ({
+              label: item.PUR_GUINo,
+              value: item.PUR_GUINo,
+            }));
+          });
+      } else {
+        this.guiNumberOptions = [];
+      }
+    });
+  }
+
+  private setupGuiNoAndCorrespondWatcher(): void {
+    const trackControl = this.dataForm.get('GUI_Track');
+    const noControl = this.dataForm.get('PUR_GUINo');
+    if (!trackControl || !noControl) return;
+
+    const trigger = () => this.loadInvoiceInfoByCurrentGUINo();
+    trackControl.valueChanges.subscribe(trigger);
+    noControl.valueChanges.subscribe(trigger);
   }
 
   private normalizeVoucherType(raw: any): string {
@@ -377,17 +353,6 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
     if (v === '21' || v === '25') return '23';
     if (v === '22') return '24';
     return v;
-  }
-
-  private setupGuiNoAndCorrespondWatcher(): void {
-    const trackControl = this.dataForm.get('GUI_Track');
-    const noControl = this.dataForm.get('PUR_GUINo');
-
-    if (trackControl && noControl) {
-      const trigger = () => this.loadInvoiceInfoByCurrentGUINo();
-      trackControl.valueChanges.subscribe(trigger);
-      noControl.valueChanges.subscribe(trigger);
-    }
   }
 
   /* ==================== 欄位啟用 / 停用 ==================== */
@@ -402,13 +367,11 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
         'PUR_Amt',
         'Voucher_No',
       ];
+
       Object.keys(this.dataForm.controls).forEach((key) => {
         const control = this.dataForm.get(key);
-        if (editableFields.includes(key)) {
-          control?.enable();
-        } else {
-          control?.disable();
-        }
+        if (editableFields.includes(key)) control?.enable();
+        else control?.disable();
       });
     } else if (this.crudstatus === CRUDStatus.Read) {
       this.dataForm.disable();
@@ -416,6 +379,7 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
       this.dataForm.enable();
     }
 
+    // 一律鎖死（你想改哪些可編輯，就把它移到上面 editableFields 控制）
     this.dataForm.get('TXN_Ret_No')?.disable();
     this.dataForm.get('PUR_Tax')?.disable();
     this.dataForm.get('PUR_TaxType')?.disable();
@@ -429,7 +393,7 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
     this.dataForm.get('Voucher_No')?.disable();
   }
 
-  /* ==================== 金額互算 + 區別判斷（不強制修正超出數值） ==================== */
+  /* ==================== 金額互算（不強制修正超出數值，只是同步計算） ==================== */
 
   private setupAmountRelations(): void {
     const netControl = this.dataForm.get('PUR_Net');
@@ -437,9 +401,7 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
     const amtControl = this.dataForm.get('PUR_Amt');
     const remainingControl = this.dataForm.get('Total_Amt');
 
-    if (!netControl || !taxControl || !amtControl || !remainingControl) {
-      return;
-    }
+    if (!netControl || !taxControl || !amtControl || !remainingControl) return;
 
     let updatingFromNet = false;
     let updatingFromAmt = false;
@@ -453,9 +415,7 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
       if (netVal === null) {
         taxControl.setValue(null, { emitEvent: false });
         amtControl.setValue(null, { emitEvent: false });
-        remainingControl.setValue(this.originalRemainingAmt, {
-          emitEvent: false,
-        });
+        remainingControl.setValue(this.originalRemainingAmt, { emitEvent: false });
         this.updateCreditTypeByAmount(null);
         updatingFromNet = false;
         return;
@@ -488,9 +448,7 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
       if (totalVal === null) {
         netControl.setValue(null, { emitEvent: false });
         taxControl.setValue(null, { emitEvent: false });
-        remainingControl.setValue(this.originalRemainingAmt, {
-          emitEvent: false,
-        });
+        remainingControl.setValue(this.originalRemainingAmt, { emitEvent: false });
         this.updateCreditTypeByAmount(null);
         updatingFromAmt = false;
         return;
@@ -522,7 +480,6 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
 
     if (
       totalAmt === null ||
-      totalAmt === undefined ||
       isNaN(totalAmt) ||
       totalAmt <= 0 ||
       this.originalRemainingAmt === null ||
@@ -536,38 +493,107 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
     const t = this.roundToInt(totalAmt);
     const origin = this.roundToInt(this.originalRemainingAmt);
 
-    if (t === origin) {
-      creditControl.setValue('R', { emitEvent: false }); // 退出
-    } else if (t < origin) {
-      creditControl.setValue('C', { emitEvent: false }); // 折讓
-    } else {
-      creditControl.setValue('', { emitEvent: false });
+    if (t === origin) creditControl.setValue('R', { emitEvent: false }); // 退出
+    else if (t < origin) creditControl.setValue('C', { emitEvent: false }); // 折讓
+    else creditControl.setValue('', { emitEvent: false });
+  }
+
+  /* ==================== submit 時：清楚告訴使用者違反哪個規則 ==================== */
+
+  /** 回傳所有違反的規則（可一次顯示多個） */
+  private collectBusinessRuleErrors(form: FormGroup): RuleError[] {
+    const raw = form.getRawValue() as any;
+
+    const totalAmt = this.parseAmount(raw.PUR_Amt);
+    const netAmt = this.parseAmount(raw.PUR_Net);
+
+    const invNet =
+      this.parseAmount(raw.Inv_Net) ??
+      this.parseAmount(this.dataForm.get('Inv_Net')?.value);
+
+    // 「剩餘總金額」的上限來源：優先 originalRemainingAmt；沒有才用表單上的 Total_Amt
+    const remainingBaseRawFromForm = this.parseAmount(raw.Total_Amt);
+    const remainingBaseRaw =
+      this.originalRemainingAmt !== null && !isNaN(this.originalRemainingAmt)
+        ? this.originalRemainingAmt
+        : remainingBaseRawFromForm;
+
+    const remainingBase =
+      remainingBaseRaw !== null && !isNaN(remainingBaseRaw) ? remainingBaseRaw : 0;
+
+    const errors: RuleError[] = [];
+
+    // 規則 A：退回/折讓總金額 ≤ 剩餘總金額
+    if (totalAmt !== null && !isNaN(totalAmt) && totalAmt > remainingBase) {
+      errors.push({
+        controlName: 'PUR_Amt',
+        key: 'amtOverRemaining',
+        message: `退回/折讓總金額不可大於剩餘總金額（目前：${totalAmt}，上限：${remainingBase}）`,
+      });
+    }
+
+    // 規則 B：退出/折讓金額 ≤ 銷售額
+    if (
+      invNet !== null &&
+      netAmt !== null &&
+      !isNaN(invNet) &&
+      !isNaN(netAmt) &&
+      netAmt > invNet
+    ) {
+      errors.push({
+        controlName: 'PUR_Net',
+        key: 'netOverInvNet',
+        message: `退出/折讓金額不可大於銷售額（目前：${netAmt}，銷售額：${invNet}）`,
+      });
+    }
+
+    return errors;
+  }
+
+  /** 清掉舊的 business rule errors */
+  private clearBusinessRuleErrors(form: FormGroup): void {
+    const keys = ['amtOverRemaining', 'netOverInvNet'];
+
+    const clearOnControl = (controlName: string) => {
+      const ctrl = form.get(controlName);
+      if (!ctrl?.errors) return;
+
+      const newErrors = { ...ctrl.errors };
+      keys.forEach((k) => delete (newErrors as any)[k]);
+      ctrl.setErrors(Object.keys(newErrors).length ? newErrors : null);
+    };
+
+    clearOnControl('PUR_Amt');
+    clearOnControl('PUR_Net');
+
+    // form-level（如果你也想放 form 的 errors）
+    if (form.errors) {
+      const newFormErrors = { ...form.errors };
+      keys.forEach((k) => delete (newFormErrors as any)[k]);
+      form.setErrors(Object.keys(newFormErrors).length ? newFormErrors : null);
     }
   }
 
-  private roundToInt(value: number): number {
-    return Math.round(value);
+  /** 套用 errors + 提示訊息 */
+  private applyAndShowBusinessRuleErrors(form: FormGroup, errors: RuleError[]): void {
+    if (!errors.length) return;
+
+    // 一次把所有錯的欄位都標記 touched
+    errors.forEach((e) => {
+      const ctrl = form.get(e.controlName);
+      ctrl?.setErrors({ ...(ctrl.errors || {}), [e.key]: true });
+      ctrl?.markAsTouched();
+    });
+
+    form.markAsDirty();
+
+    // 逐條提示（你也可以改成合併成一個訊息）
+    errors.forEach((e) => this.messageService.errorBubble(e.message));
   }
 
-  /** 把畫面上的金額轉成 number，支援千分位 / 空字串 */
-  private parseAmount(raw: any): number | null {
-    if (raw === null || raw === undefined || raw === '') {
-      return null;
-    }
-
-    if (typeof raw === 'number') {
-      return isNaN(raw) ? null : raw;
-    }
-
-    if (typeof raw === 'string') {
-      const cleaned = raw.replace(/,/g, '').trim();
-      if (!cleaned) return null;
-      const n = Number(cleaned);
-      return isNaN(n) ? null : n;
-    }
-
-    const n = Number(raw);
-    return isNaN(n) ? null : n;
+  private refreshAmountValidFlag(): void {
+    const errors = this.collectBusinessRuleErrors(this.dataForm);
+    this.isAmountValid = errors.length === 0;
   }
 
   /* ==================== 年月處理 ==================== */
@@ -609,179 +635,65 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
     return null;
   }
 
-  /* ========= 依目前 UI 值，計算 isAmountValid（不出訊息、只算布林） ========= */
-
-  private refreshAmountValidFlag(): void {
-    const raw = this.dataForm.getRawValue() as any;
-
-    const totalAmt = this.parseAmount(raw.PUR_Amt);
-    const netAmt = this.parseAmount(raw.PUR_Net);
-
-    const invNet =
-      this.parseAmount(raw.Inv_Net) ??
-      this.parseAmount(this.dataForm.get('Inv_Net')?.value);
-
-    const remainingBaseRawFromForm = this.parseAmount(raw.Total_Amt);
-    const remainingBaseRaw =
-      this.originalRemainingAmt !== null && !isNaN(this.originalRemainingAmt)
-        ? this.originalRemainingAmt
-        : remainingBaseRawFromForm;
-
-    const remainingBase =
-      remainingBaseRaw !== null && !isNaN(remainingBaseRaw)
-        ? remainingBaseRaw
-        : 0;
-
-    let ok = true;
-
-    if (
-      totalAmt !== null &&
-      !isNaN(totalAmt) &&
-      totalAmt > remainingBase
-    ) {
-      ok = false;
+  private parseAmount(raw: any): number | null {
+    if (raw === null || raw === undefined || raw === '') return null;
+    if (typeof raw === 'number') return isNaN(raw) ? null : raw;
+    if (typeof raw === 'string') {
+      const cleaned = raw.replace(/,/g, '').trim();
+      if (!cleaned) return null;
+      const n = Number(cleaned);
+      return isNaN(n) ? null : n;
     }
-
-    if (
-      invNet !== null &&
-      netAmt !== null &&
-      !isNaN(invNet) &&
-      !isNaN(netAmt) &&
-      netAmt > invNet
-    ) {
-      ok = false;
-    }
-
-    this.isAmountValid = ok;
+    const n = Number(raw);
+    return isNaN(n) ? null : n;
   }
 
-  /* ==================== 送出前的商業邏輯檢核（會出訊息） ==================== */
-
-  private validateBusinessRules(form: FormGroup): boolean {
-    const raw = form.getRawValue() as any;
-
-    const totalAmt = this.parseAmount(raw.PUR_Amt);
-    const netAmt = this.parseAmount(raw.PUR_Net);
-    const invNet =
-      this.parseAmount(raw.Inv_Net) ??
-      this.parseAmount(this.dataForm.get('Inv_Net')?.value);
-
-    const purAmtControl = form.get('PUR_Amt');
-    const purNetControl = form.get('PUR_Net');
-
-    const remainingBaseRawFromForm = this.parseAmount(raw.Total_Amt);
-    const remainingBaseRaw =
-      this.originalRemainingAmt !== null && !isNaN(this.originalRemainingAmt)
-        ? this.originalRemainingAmt
-        : remainingBaseRawFromForm;
-
-    const remainingBase =
-      remainingBaseRaw !== null && !isNaN(remainingBaseRaw)
-        ? remainingBaseRaw
-        : 0;
-
-    const clearErrorKey = (control: any, key: string) => {
-      if (!control) return;
-      const errors = control.errors;
-      if (!errors || !errors[key]) return;
-      const { [key]: _, ...rest } = errors;
-      control.setErrors(Object.keys(rest).length ? rest : null);
-    };
-
-    clearErrorKey(purAmtControl, 'businessRule');
-    clearErrorKey(purNetControl, 'businessRule');
-    clearErrorKey(form, 'businessRule');
-
-    this.isAmountValid = true;
-
-    if (
-      totalAmt !== null &&
-      !isNaN(totalAmt) &&
-      totalAmt > remainingBase
-    ) {
-      this.messageService.errorBubble('退回/折讓總金額不可大於剩餘總金額');
-
-      purAmtControl?.setErrors({
-        ...(purAmtControl?.errors || {}),
-        businessRule: true,
-      });
-      form.setErrors({
-        ...(form.errors || {}),
-        businessRule: true,
-      });
-
-      purAmtControl?.markAsTouched();
-      form.markAsDirty();
-
-      this.isAmountValid = false;
-      return false;
-    }
-
-    if (
-      invNet !== null &&
-      netAmt !== null &&
-      !isNaN(invNet) &&
-      !isNaN(netAmt) &&
-      netAmt > invNet
-    ) {
-      this.messageService.errorBubble('退出/折讓金額不可大於銷售額');
-
-      purNetControl?.setErrors({
-        ...(purNetControl?.errors || {}),
-        businessRule: true,
-      });
-      form.setErrors({
-        ...(form.errors || {}),
-        businessRule: true,
-      });
-
-      purNetControl?.markAsTouched();
-      form.markAsDirty();
-
-      this.isAmountValid = false;
-      return false;
-    }
-
-    this.isAmountValid = true;
-    return true;
+  private roundToInt(value: number): number {
+    return Math.round(value);
   }
 
   /* ==================== 送出 ==================== */
 
   onSubmit(form: FormGroup): void {
-    // 最終安全檢查
-    if (!this.canSubmit) {
-      this.messageService.warnBubble('請先修正表單錯誤');
+    // 你若有 submitted flag（BasicCruPageComponent 常見），這裡順便打開
+    this.submitted = true;
+
+    // 先清掉舊的 business rule errors
+    this.clearBusinessRuleErrors(form);
+
+    // 先跑「一般必填/格式」驗證：讓使用者知道哪個必填沒填
+    form.markAllAsTouched();
+    form.updateValueAndValidity({ emitEvent: false });
+
+    if (form.invalid) {
+      this.messageService.warnBubble('欄位驗證未通過，請先修正紅框欄位');
       return;
     }
 
+    // 再跑「商業規則」：一次收集全部錯誤，清楚告訴使用者違反哪些規則
+    const ruleErrors = this.collectBusinessRuleErrors(form);
+    this.isAmountValid = ruleErrors.length === 0;
+
+    if (ruleErrors.length) {
+      this.applyAndShowBusinessRuleErrors(form, ruleErrors);
+      return;
+    }
+
+    // 到這裡才真的送出
     this.handleSubmit(form, () => {
-      if (!this.validateBusinessRules(form)) {
-        return;
-      }
-
-      if (form.invalid) {
-        this.messageService.warnBubble('請先修正表單錯誤');
-        return;
-      }
-
       const raw = form.getRawValue() as any;
       raw.PUR_RepYYYYMM = this.toYYYYMM(raw.PUR_RepYYYYMM);
 
       if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
         this.fin13010Service.insertFIN13010(raw).subscribe({
           next: () => {
-            this.messageService.successBubble(
-              this.translate.instant('success_message'),
-            );
+            this.messageService.successBubble(this.translate.instant('success_message'));
             this.router.navigate(['/account/fin', 'fin13010'], {
               state: { fromCru: true },
             });
           },
           error: () => {
-            this.messageService.errorBubble(
-              this.translate.instant('create_failed'),
-            );
+            this.messageService.errorBubble(this.translate.instant('create_failed'));
           },
         });
       } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
@@ -797,9 +709,7 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
             });
           },
           error: () => {
-            this.messageService.errorBubble(
-              this.translate.instant('update_failed'),
-            );
+            this.messageService.errorBubble(this.translate.instant('update_failed'));
           },
         });
       }

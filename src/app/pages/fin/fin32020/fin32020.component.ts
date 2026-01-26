@@ -85,7 +85,7 @@ export class FIN32020Component
     { field: 'ADJ_No', header: '調整單號' },
     {
       field: 'ADJ_Date',
-      header: '調整日期',
+      header: '收款日期',
       format: (v: string) => this.formatDate(v),
     },
     { field: 'Remark', header: '備註' },
@@ -387,14 +387,27 @@ export class FIN32020Component
     this.onCreate(undefined, this.queryForm.value);
   }
 
-  override onEdit(row: Fin32020Row, queryConditions?: any): void {
-    // ✅ 進 CRU 前先存狀態（避免返回沒還原）
-    this.saveQueryState();
-    super.onEdit(row, this.queryForm.value);
-  }
+
 
   override onDetail(row: Fin32020Row, queryConditions?: any): void {
     this.saveQueryState();
     super.onDetail(row, this.queryForm.value);
   }
+
+get canShowEdit(): boolean {
+  return Array.isArray(this.data) && this.data.some((r) => (r as any)?.['CanEdit'] === true);
+}
+
+override onEdit(row: Fin32020Row, queryConditions?: any): void {
+  this.saveQueryState();
+
+  if ((row as any)?.['CanEdit'] !== true) {
+    super.onDetail(row, this.queryForm.value);
+    return;
+  }
+
+  super.onEdit(row, this.queryForm.value);
+}
+
+
 }

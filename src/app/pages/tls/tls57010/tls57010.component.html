@@ -20,16 +20,10 @@
             <app-dropdown label="廠商編號/名稱" controlName="VEN_No" [options]="VEN_NoOptions | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>
           </div>
-          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [showOverlay]="false"
-            [control]="queryForm.controls.PLU_MagNo" templateLabel="label" [submitted]="submitted"
-            optionLabel="PLU_MagNo" optionValue="PLU_MagNo" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
-            (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
-            [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
-            [totalRecords]="opTotalRecords">
-            <app-input-text class="col-12 md:col-6" label="管理編號" controlName="queryNo"
-              [control]="opForm.controls.queryNo" />
-            <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
-              [control]="opForm.controls.PLU_Name" />
+          <!-- 國際條碼/商品管理編號/廠商貨號 -->
+          <app-dropdown-table class="col-12" [showOverlay]="false" [control]="queryForm.controls.PLU_MagNo"
+            [submitted]="submitted" optionLabel="label" optionValue="PLU_No" [suggestions]="suggestions"
+            [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)">
           </app-dropdown-table>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="單據狀態" controlName="PO_StatusList" [options]="PO_StatusListOptions"
@@ -55,9 +49,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-customFooter-table *ngIf="columns?.length && columns.length > 0" tableKey="tls57070" dataKey="LOGO_No"
-    [data]="data" [columns]="columns" [totalRecords]="totalRecords" [footerData]="footerData" [lazy]="true"
-    [loading]="loading" (lazyLoadData)="onLazyLoadData($event, queryForm)" [showReportMode]="false" [showManage]="false"
+  <app-customFooter-table *ngIf="columns && columns.length > 0" tableKey="tls57070" dataKey="LOGO_No" [data]="data"
+    [columns]="columns" [totalRecords]="totalRecords" [footerData]="footerData" [lazy]="true" [loading]="loading"
+    (lazyLoadData)="onLazyLoadData($event, queryForm)" [showReportMode]="false" [showManage]="false"
     [showDelete]="false" [subTotalData]="DetailSumData" [showTotal]="true" [columnGroup]="columnGroup"
     [groupRowsBy]="queryForm.value.ShowType === 'D' ? 'PO_No' : ''" [multiSortMeta]="[
       queryForm.value.ShowType === 'M' ?

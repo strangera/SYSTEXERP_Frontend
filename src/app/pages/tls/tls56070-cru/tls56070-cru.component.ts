@@ -177,61 +177,27 @@ export class TLS56070CRUComponent extends BasicCruPageComponent<POS2023DAMRespon
   }
 
   // ------------------------------------ 搜尋框邏輯 ------------------------------------
-  opLoading = false;
-  opForm = this.formBuilder.nonNullable.group({
-    queryNo: [''], // 商品管理編號/國際條碼/廠商貨號
-    PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
-    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
-  });
   suggestions: POS2004DetailResponse[] = [];
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼 - 商品名稱', mainDataField: true },
+    { field: 'PLU_No', header: '國際條碼/商品管理編號 - 商品名稱', mainDataField: true },
   ];
-  opData: POS2004DetailResponse[] = [];// overlayPanel 裡面的table
-  opColumns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號' },
-    { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_Name', header: '商品名稱' },
-  ];
-  opTotalRecords = 0;
-
-  onAutoCompleteInputChange(event: any) {
+  onAutoCompleteInputChange(event: Record<'label', string>) {
     if (!this.dataForm.controls.LOGO_No.value || !this.dataForm.controls.HOS_No.value) {
       this.suggestions = [];
       return;
     }
     const body = {
-      ...event,
       HOS_No: this.dataForm.controls.HOS_No.value,
       LOGO_No: this.dataForm.controls.LOGO_No.value,
-      queryNo: event.PLU_MagNo || '',
+      queryNo: event.label || '',
       pageSize: 30,
       pageIndex: 1,
-      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
+      SortBy: [{ field: 'PLU_No', order: 1 }],
     }
     this.tls56070Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
       this.suggestions = [...results.Data.map((item) => ({
-        ...item, label: item.PLU_MagNo + '/' + item.PLU_No + ' - ' + item.PLU_Name
+        ...item, label: item.PLU_No + '/' + item.PLU_MagNo + ' - ' + item.PLU_Name
       }))];
-    });
-  }
-
-  onformValueChanged(event: any) {
-    if (!this.dataForm.controls.LOGO_No.value || !this.dataForm.controls.HOS_No.value) {
-      this.opData = [];
-      this.opTotalRecords = 0;
-      return;
-    }
-    this.opLoading = true;
-    const body = {
-      ...event,
-      HOS_No: this.dataForm.controls.HOS_No.value,
-      LOGO_No: this.dataForm.controls.LOGO_No.value,
-    };
-    this.tls56070Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.opData = [...results.Data]; // 更新data資料
-      this.opTotalRecords = results.TotalCount;
-      this.opLoading = false;
     });
   }
   isRowSelectable(event: POS2024DAMResponse): boolean {

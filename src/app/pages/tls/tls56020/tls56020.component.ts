@@ -1,4 +1,3 @@
-import { AsyncPipe, NgIf, NgStyle } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -49,12 +48,8 @@ interface IQueryPOS2004DetailResponse {
 @Component({
   selector: 'app-tls56020',
   templateUrl: './tls56020.component.html',
-  styleUrls: ['./tls56020.component.scss'],
   standalone: true,
   imports: [
-    NgStyle,
-    NgIf,
-    AsyncPipe,
     MenubarComponent,
     ButtonComponent,
     AccordionModule,
@@ -186,62 +181,24 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
   }
 
   // === 商品查詢（供 app-dropdown-table 使用） ===
-  opLoading = false;
-  opForm = this.formBuilder.group({
-    queryNo: ['', [Validators.maxLength(20)]],
-    PLU_Name: ['', [Validators.maxLength(60)]],
-    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
-  });
   suggestions: IQueryPOS2004DetailResponse[] = [];
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
+    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
   ];
-  opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
-  opColumns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號' },
-    { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
-    { field: 'PLU_Name', header: '商品名稱' },
-  ];
-  opTotalRecords = 0;
-  // 自動完成輸入
-  onAutoCompleteInputChange(event: any) {
+  onAutoCompleteInputChange(event: Record<'label', string>) {
     const body = {
-      PageSize: 30,
-      PageIndex: 1,
-      OrderBy: '',
-      Offset: 0,
-      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
-      queryNo: event.PLU_MagNo || event.queryNo || '',
-      PLU_Name: event.PLU_Name || '',
-      LOGO_No: (this.queryForm.controls.LOGO_NoList.value || [])[0] ?? '',
-      HOS_No: (this.queryForm.controls.HOS_NoList.value || [])[0] ?? '',
-    };
-    this.tls52010Service.queryPOS2004Detail_TLS56020(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      const data = results?.Data ?? [];
-      this.suggestions = [...data.map((item: any) => ({
+      VEN_No: '',
+      LOGO_No: '',
+      queryNo: event.label || '',
+      pageSize: 30,
+      pageIndex: 1,
+      SortBy: [{ field: 'PLU_No', order: 1 }],
+    }
+    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.suggestions = [...results.Data.map(item => ({
         ...item,
-        label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo,
+        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
       }))];
-    });
-  }
-  onformValueChanged(event: IQueryPOS2004DetailRequest) {
-    this.opLoading = true;
-    const body = {
-      PageSize: 30,
-      PageIndex: 1,
-      OrderBy: '',
-      Offset: 0,
-      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
-      queryNo: (event as any).queryNo || (event as any).PLU_MagNo || '',
-      PLU_Name: event.PLU_Name || '',
-      LOGO_No: (this.queryForm.controls.LOGO_NoList.value || [])[0] ?? '',
-      HOS_No: (this.queryForm.controls.HOS_NoList.value || [])[0] ?? '',
-    };
-    this.tls52010Service.queryPOS2004Detail_TLS56020(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.opData = [...(results?.Data ?? [])]; // 更新data資料
-      this.opTotalRecords = results?.TotalCount ?? 0;
-      this.opLoading = false;
     });
   }
   canAuditSelected(): boolean {

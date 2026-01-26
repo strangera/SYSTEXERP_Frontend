@@ -29,20 +29,11 @@
               optionValue="value" [control]="queryForm.controls.CAT_SNo" [submitted]="submitted">
             </app-dropdown>
           </div>
-
-          <!-- 商品管理編號/國際條碼/廠商貨號 -->
-          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.PLU_MagNo"
-            [showOverlay]="false" templateLabel="label" [submitted]="submitted" optionLabel="PLU_MagNo"
-            optionValue="PLU_MagNo" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
-            (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
-            [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
-            [totalRecords]="opTotalRecords">
-            <app-input-text class="col-12 md:col-6" label="管理編號" controlName="queryNo"
-              [control]="opForm.controls.queryNo" />
-            <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
-              [control]="opForm.controls.PLU_Name" />
+          <!-- 國際條碼/商品管理編號/廠商貨號 -->
+          <app-dropdown-table class="col-12" [showOverlay]="false" [control]="queryForm.controls.PLU_MagNo"
+            [submitted]="submitted" optionLabel="label" optionValue="PLU_No" [suggestions]="suggestions"
+            [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)">
           </app-dropdown-table>
-
           <!-- 品牌代碼 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="品牌代碼" controlName="LOGO_No" [options]="brandCodeOptions" optionLabel="label"

@@ -16,7 +16,9 @@ export class Tls2h020Service {
   queryTLS2H020(params: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS2H020`, params);
   }
-
+  PrintTLS2H(params: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/PrintTLS2H`, params);
+  }
 
   generateTLS2H020(params: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/generateTLS2H020`, params);

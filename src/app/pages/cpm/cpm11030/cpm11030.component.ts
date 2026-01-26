@@ -53,6 +53,7 @@ interface DailyRow {
   Device_ID: string;
   Device_Name: string;
   Device_TotQty: number;
+  Device_TotQty_Readonly: boolean;
 }
 
 @UntilDestroy()
@@ -165,10 +166,16 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
   dailyRows: DailyRow[] = [];
   private dailyPriorQtyMap = new Map<string, number>();
 
+  get Device_TotQty_type(): string | undefined {
+    return this.dailyRows?.some(x => x.Device_TotQty_Readonly === false)
+      ? 'inputNumber'
+      : undefined;
+  }
+
   dailyColumns: Column[] = [
     { field: 'Device_ID', header: '設備代碼', visible: true, readonly: true } as any,
     { field: 'Device_Name', header: '設備名稱', visible: true, readonly: true } as any,
-    { field: 'Device_TotQty', header: '可借出量', visible: true, type: 'inputNumber' } as any,
+    { field: 'Device_TotQty', header: '可借出量', visible: true, type: this.Device_TotQty_type } as any,
   ];
 
   constructor(
@@ -538,7 +545,10 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
             Device_TotQty: r.CSS_CurrentQty !== null && r.CSS_CurrentQty !== undefined && r.CSS_CurrentQty !== 0
               ? Number(r.CSS_CurrentQty)
               : Number(r.Device_TotQty ?? 0),
+            Device_TotQty_Readonly: r.CSS_CurrentQty !== null && r.CSS_CurrentQty !== undefined && r.CSS_CurrentQty !== 0,
           }));
+
+          this.buildDailyColumns();
 
           this.dailyTableVer++;
           this.dailyLoading = false;
@@ -551,6 +561,23 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
           this.cdr.detectChanges();
         },
       });
+  }
+
+  private buildDailyColumns() {
+    const hasEditable = this.dailyRows.some(
+      x => x.Device_TotQty_Readonly === false
+    );
+
+    this.dailyColumns = [
+      { field: 'Device_ID', header: '設備代碼', visible: true, readonly: true } as any,
+      { field: 'Device_Name', header: '設備名稱', visible: true, readonly: true } as any,
+      {
+        field: 'Device_TotQty',
+        header: '可借出量',
+        visible: true,
+        type: hasEditable ? 'inputNumber' : undefined
+      } as any,
+    ];
   }
 
   onDailyRowEditSave(_e: RowEditSaveEvent) { }

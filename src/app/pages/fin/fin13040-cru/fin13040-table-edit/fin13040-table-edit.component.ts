@@ -240,6 +240,21 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       return;
     }
     this.tableDataEmpty = false;
+    // 若該列有尚未填入但在欄位設定中有 defaultValue，則在使用者輸入第一個欄位時先套用到目前列
+    // 這可避免預設值（例如數量=1）只出現在下一筆自動新增列的情況
+    try {
+      this.columns.forEach(c => {
+        if (c.defaultValue !== undefined) {
+          const v = rowData[c.field];
+          if (v === null || v === undefined || v === '') {
+            rowData[c.field] = c.defaultValue;
+          }
+        }
+      });
+    } catch (e) {
+      // 若發生錯誤，不阻斷後續流程
+      console.warn('apply default to row failed', e);
+    }
     // 如果資料是 Original 狀態，且有變更，則將狀態改為 Modified
     if (rowData[this.dataStatusField] === this.dataStatusValue.Original) {
       rowData[this.dataStatusField] = this.dataStatusValue.Modified;

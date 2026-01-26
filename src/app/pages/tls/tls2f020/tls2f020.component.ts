@@ -33,8 +33,8 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
   };
   queryForm = this.formBuilder.nonNullable.group({
     sam_yyymm: [new Date(), Validators.required],
-    sam_termno: [null],
-    COMM_MONEY_TYPE: [null],
+    sam_termno: [1],
+    COMM_MONEY_TYPE: ['30'],
     // 分頁欄位
     pageSize: [30],
     pageIndex: [1],
@@ -193,10 +193,7 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
         next: (res: any) => {
           this.messageService.successBubble(res?.Message ?? '產生完成');
         },
-        error: (err: any) => {
-          this.messageService.errorBubble(err?.message || '產生失敗');
-          console.error('execTLS2F020 error', err);
-        }
+
       });
   }
 
@@ -208,4 +205,5 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
       this.sam_termnoOptions = [];
     }
   }
+
 }

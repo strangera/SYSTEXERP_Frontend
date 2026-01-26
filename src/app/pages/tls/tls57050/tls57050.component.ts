@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
+import { IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
 import { DetailData, DetailFooter, QueryTLS57050Request, SummaryData, SummaryFooter, Tls57050Service } from '@service/api/tls/tls57050.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -12,7 +12,7 @@ import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropd
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatDate } from '@shared/componentkit/table-report/table-report.model';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
@@ -159,53 +159,25 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
     })
   }
   // 管理編號
-  opLoading = false;
-  opForm = this.formBuilder.group({
-    queryNo: ['', [Validators.maxLength(20)]], // 管理編號
-    PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
-    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
-  });
   suggestions: IQueryPOS2004DetailResponse[] = [];
+
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
+    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
   ];
-  opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
-  opColumns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號' },
-    { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
-    { field: 'PLU_Name', header: '商品名稱' },
-  ];
-  opTotalRecords = 0;
-  onAutoCompleteInputChange(event: any) {
+  onAutoCompleteInputChange(event: Record<'label', string>) {
     const body = {
-      ...event,
       VEN_No: '',
       LOGO_No: '',
-      queryNo: event.PLU_MagNo || '',
+      queryNo: event.label || '',
       pageSize: 30,
       pageIndex: 1,
-      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
+      SortBy: [{ field: 'PLU_No', order: 1 }],
     }
     this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
       this.suggestions = [...results.Data.map(item => ({
         ...item,
-        label: item.PLU_MagNo + '/' + item.PLU_No + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
+        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
       }))];
-    });
-  }
-  onformValueChanged(event: IQueryPOS2004DetailRequest) {
-    this.opLoading = true;
-    const body = {
-      queryNo: event.queryNo || '',
-      PLU_Name: event.PLU_Name || '',
-      VEN_No: '',
-      LOGO_No: '',
-    };
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.opData = [...results.Data]; // 更新data資料
-      this.opTotalRecords = results.TotalCount;
-      this.opLoading = false;
     });
   }
   btnLoading = false;
