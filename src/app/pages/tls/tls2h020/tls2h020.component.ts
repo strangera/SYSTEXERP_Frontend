@@ -10,7 +10,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
+import { AddButton, ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
 import { formatYN, formatYYYYMM } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -46,6 +46,7 @@ export class TLS2H020Component extends BasicQueryPageComponent<any> implements O
   data: any[] = [];
   selectedItems: any[] = [];
   tlt_noOptions = this.dropdown.queryTltTalent();
+  addButton: AddButton[] = [];
 
   columns: ReportColumn[] = [
     { field: 'SamYyyymm', header: '結算年月', visible: true, format: formatYYYYMM },
@@ -66,6 +67,66 @@ export class TLS2H020Component extends BasicQueryPageComponent<any> implements O
     private readonly dropDownListService: DropDownListService,
   ) {
     super();
+    this.addButton = [
+      { label: '預覽列印', icon: 'fa fa-file-pdf text-blue-500', action: (rowData: any) => { this.previewPrint(rowData); } }
+    ];
+  }
+
+  previewPrint(rowData: any): void {
+    const toYYYYMM = (val: any): string | null => {
+      if (val === null || val === undefined || val === '') return null;
+      let d: Date;
+      if (val instanceof Date) d = val;
+      else d = new Date(val);
+      if (isNaN(d.getTime())) return null;
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      return `${y}${m}`;
+    };
+
+    const sam = toYYYYMM(rowData?.SamYyyymm ?? rowData?.sam_yyymm ?? rowData?.SamYyyymm);
+    const params: any = {
+      GuiNo: rowData?.GuiNo ?? '',
+      SamYyyymm: sam ?? ''
+    };
+
+    this.loading = true;
+    this.messageService.blockUi();
+    this.tls2h020Service.PrintTLS2H(params).pipe(untilDestroyed(this), finalize(() => { this.loading = false; this.messageService.unblockUi(); }))
+      .subscribe({
+        next: (res: any) => {
+          try {
+            if (res instanceof Blob) {
+              const blob = res as Blob;
+              const url = window.URL.createObjectURL(blob);
+              window.open(url, '_blank');
+            } else if (res && res.Url) {
+              window.open(res.Url, '_blank');
+            } else {
+              if (res && res.File && typeof res.File === 'string') {
+                const byteCharacters = atob(res.File);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                  byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: 'application/pdf' });
+                const url = window.URL.createObjectURL(blob);
+                window.open(url, '_blank');
+              } else {
+                this.messageService.successBubble(res?.Message ?? '預覽已送出');
+              }
+            }
+          } catch (e) {
+            console.error('PrintTLS2H preview error', e, res);
+            this.messageService.errorBubble('預覽列印失敗');
+          }
+        },
+        error: (err: any) => {
+          console.error('PrintTLS2H error', err);
+          this.messageService.errorBubble(err?.message || '預覽列印失敗');
+        }
+      });
   }
 
   override onCreate() {
@@ -107,10 +168,7 @@ export class TLS2H020Component extends BasicQueryPageComponent<any> implements O
         next: () => {
           this.messageService.successBubble('產生發票成功', '完成');
         },
-        error: (err) => {
-          console.error('generateTLS2H020 error', err);
-          this.messageService.errorBubble('產生發票失敗', '錯誤');
-        }
+
       });
   }
   ngOnInit(): void {
