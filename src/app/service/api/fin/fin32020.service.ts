@@ -68,7 +68,7 @@ export interface Fin32020AdjAccRow {
 }
 
 /** ✅ 調整科目查詢 Request（你說的新 body） */
-export interface Fin32020GetAdjAccRequest {
+export interface Fin32020GetAdjAccRequest extends BaseQueryRequest {
   CAR_AccNo?: string | null;
   CAR_type?: string | null;
 }
