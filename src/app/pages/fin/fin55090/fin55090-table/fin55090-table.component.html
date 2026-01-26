@@ -61,8 +61,8 @@
   <ng-template pTemplate="footer" let-columns let-rowData>
     <tr *ngIf="footerData" class="font-bold text-sm bg-gray-200 text-primary">
       <ng-container *ngFor="let col of columns">
-        <td [class]="'text-' + (col.align || 'left')" [class.pl-2]="col.field === 'STYPE_NAME'"> <span
-            class="font-bold">
+        <td [class]="'text-' + (col.align || 'left')" [class.pl-2]="col.field === 'STYPE_NAME'">
+          <span class="font-bold">
             {{ col.format ? col.format(footerData[col.field]) : footerData[col.field] }}
           </span>
         </td>

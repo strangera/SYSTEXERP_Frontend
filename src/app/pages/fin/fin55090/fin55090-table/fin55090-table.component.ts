@@ -48,8 +48,6 @@ export class TableSubheaderGroupingComponent implements OnInit, OnChanges {
   // 新增屬性：用於儲存過濾掉小計後的明細資料
   public detailData: any[] = [];
 
-  constructor() { }
-
   ngOnInit() {
     this.processData();
   }
@@ -117,37 +115,42 @@ export class TableSubheaderGroupingComponent implements OnInit, OnChanges {
     return this.groupedFooters[groupKey]; // 回傳包含 { main, extra } 的物件
   }
 }
+// 修改後的金額格式化
 const formatAmount2 = (val: number | string | null | undefined): string => {
-  // 1. 檢查是否為 null 或 undefined，如果是，則回傳空字串 ' ' 或您希望顯示的值（例如 '-'）
-  if (val === null || val === undefined || val === '') {
-    return ''; // 或 return '-'; 顯示破折號
-  }
-
-  const num = Number(val);
-
-  // 2. 檢查是否為 NaN (非數字字串)，如果是，則回傳原始值
-  // 這裡需要注意的是，如果原始值是 'abc' 這樣的字串，它會回傳 'abc'
-  if (isNaN(num)) {
-    return String(val);
-  }
-
-  // 3. 如果是有效數字（包括 0），則進行本地化格式化
-  return num.toLocaleString(); // eg. 1,000,000
-};
-// 新增函式：百分比格式化，固定到小數點後兩位（不足補零）
-export const formatPercent2Decimals = (val: number | string | null | undefined): string => {
-  // 1. 檢查是否為 null, undefined 或空字串 ''，如果是，則直接回傳空字串
   if (val === null || val === undefined || val === '') {
     return '';
   }
 
   const num = Number(val);
-
-  // 2. 檢查是否為 NaN (非數字字串)，如果是，則回傳原始值
   if (isNaN(num)) {
     return String(val);
   }
 
-  // 3. 使用 toFixed(2) 確保兩位小數，不足補 0
-  return num.toFixed(2);
+  // 處理負數：轉正值後加括號
+  if (num < 0) {
+    return `(${Math.abs(num).toLocaleString()})`;
+  }
+
+  return num.toLocaleString();
+};
+
+// 修改後的百分比格式化 (同樣建議增加負數括號)
+const formatPercent2Decimals = (val: number | string | null | undefined): string => {
+  if (val === null || val === undefined || val === '') {
+    return '';
+  }
+
+  const num = Number(val);
+  if (isNaN(num)) {
+    return String(val);
+  }
+
+  const formatted = num.toFixed(2);
+
+  // 如果百分比也需要括號：
+  if (num < 0) {
+    return `(${Math.abs(num).toFixed(2)})`;
+  }
+
+  return formatted;
 };

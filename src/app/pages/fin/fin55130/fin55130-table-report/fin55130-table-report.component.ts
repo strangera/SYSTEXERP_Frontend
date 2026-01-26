@@ -188,6 +188,34 @@ export class Fin55130TableReportComponent {
     return total;
   }
 
+  /**
+ * 計算分類的差異百分比小計
+ * 公式：(該分類差異金額合計 / 該分類基準年月金額合計) * 100
+ */
+  calculateClassDiffPct(data: any[], currentIndex: number): number {
+    const currentClass = data[currentIndex]?.ClassNo;
+    const currentGroup = data[currentIndex]?.groupNo;
+
+    let totalBaseAmt = 0;
+    let totalDiffAmt = 0;
+
+    for (let i = currentIndex; i >= 0; i--) {
+      const item = data[i];
+      if (item.ClassNo === currentClass && item.groupNo === currentGroup) {
+        totalBaseAmt += (Number(item.BaseAmt) || 0);
+        totalDiffAmt += (Number(item.DiffAmt) || 0);
+      } else {
+        break;
+      }
+    }
+
+    // 避免除以 0
+    if (totalBaseAmt === 0) return 0;
+
+    // 回傳百分比數值 (不含 % 符號，交由 format 處理)
+    return (totalDiffAmt / totalBaseAmt) * 100;
+  }
+
   // 新增跳窗方法
   // 新增跳窗方法
   openDetail(rowData: any) {
