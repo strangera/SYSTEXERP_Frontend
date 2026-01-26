@@ -8,14 +8,11 @@ import { environment } from '../../../../environments/environment';
 /** 後端 queryFIN32020Response 對應 */
 export interface Fin32020Row {
   Id: number;
-
-  ADJ_No?: string | null;    // 調整單號
-  ADJ_Date?: string | null;  // 調整日期 (字串)
-  Remark?: string | null;    // 備註
-
-  _Details?: Fin32020DetailRow[] | null; // 明細清單
+  ADJ_No?: string | null;
+  ADJ_Date?: string | null;
+  Remark?: string | null;
+  _Details?: Fin32020DetailRow[] | null;
   TotalCount?: number;
-
   [key: string]: any;
 }
 
@@ -42,18 +39,18 @@ export interface Fin32020DetailRow {
 
 /** 查詢 Request：對應 queryFIN32020Request */
 export interface Fin32020QueryRequest extends BaseQueryRequest {
-  ADJ_No?: string | null;         // 調整單號
-  ADJ_Date_From?: string | null;  // 調整日期起 yyyy-MM-dd
-  ADJ_Date_To?: string | null;    // 調整日期迄 yyyy-MM-dd
-  Remark?: string | null;         // 備註 (模糊)
-  VouNo_From?: string | null;     // 傳票編號起
-  VouNo_To?: string | null;       // 傳票編號迄
+  ADJ_No?: string | null;
+  ADJ_Date_From?: string | null;
+  ADJ_Date_To?: string | null;
+  Remark?: string | null;
+  VouNo_From?: string | null;
+  VouNo_To?: string | null;
   [key: string]: any;
 }
 
 /** 新增 Request：對應 insertFIN32020Request */
 export interface Fin32020InsertRequest {
-  ADJ_Date: string; // yyyy-MM-dd
+  ADJ_Date: string;
   Remark?: string | null;
   _Details: Fin32020DetailRow[];
 }
@@ -68,6 +65,12 @@ export interface Fin32020AdjAccRow {
   CAR_AccNo: string;
   AccCName: string;
   CAR_type: string;
+}
+
+/** ✅ 調整科目查詢 Request（你說的新 body） */
+export interface Fin32020GetAdjAccRequest {
+  CAR_AccNo?: string | null;
+  CAR_type?: string | null;
 }
 
 /** 查詢應收帳款資料：對應 queryFIN32020GetARSResponse */
@@ -85,74 +88,75 @@ export interface Fin32020GetARSRequest extends BaseQueryRequest {
   VEN_No?: string | null;
   ARS_Date_From?: string | null;
   ARS_Date_To?: string | null;
+}
 
+/** ✅ GLS1005 下拉 */
+export interface Gls1005DropDownItem {
+  No: string;
+  Name: string;
+  ABAT_YN: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class FIN32020Service {
-  /** 對應 FIN32020Controller */
+  /** FIN0000/ARS1000 */
   private apiUrl = `${environment.ApiUrl}/FIN0000/ARS1000`;
 
-  constructor(private http: HttpClient) { }
+  /** GLS1005 下拉（你提供的 localhost 路徑） */
+  private glsUrl = `${environment.ApiUrl}`;
 
-  /** 查詢應收帳款調整作業列表：/queryFIN32020 */
-  queryFIN32020(
-    body: Fin32020QueryRequest
-  ): Observable<ApiResponse<Fin32020Row[]>> {
+  constructor(private http: HttpClient) {}
+
+  queryFIN32020(body: Fin32020QueryRequest): Observable<ApiResponse<Fin32020Row[]>> {
     return this.http.post<ApiResponse<Fin32020Row[]>>(
       `${this.apiUrl}/queryFIN32020`,
       body
     );
   }
 
-  /** 查詢明細：/queryFIN32020Detail */
-  queryFIN32020Detail(
-    ADJ_No: string
-  ): Observable<ApiResponse<Fin32020DetailRow[]>> {
+  queryFIN32020Detail(ADJ_No: string): Observable<ApiResponse<Fin32020DetailRow[]>> {
     return this.http.post<ApiResponse<Fin32020DetailRow[]>>(
       `${this.apiUrl}/queryFIN32020Detail`,
       { ADJ_No }
     );
   }
 
-  /** 新增：/insertFIN32020，回傳 ADJ_No */
-  insertFIN32020(
-    body: Fin32020InsertRequest
-  ): Observable<ApiResponse<string>> {
+  insertFIN32020(body: Fin32020InsertRequest): Observable<ApiResponse<string>> {
     return this.http.post<ApiResponse<string>>(
       `${this.apiUrl}/insertFIN32020`,
       body
     );
   }
 
-  /** 更新：/updateFIN32020，回傳 ADJ_No */
-  updateFIN32020(
-    body: Fin32020UpdateRequest
-  ): Observable<ApiResponse<string>> {
+  updateFIN32020(body: Fin32020UpdateRequest): Observable<ApiResponse<string>> {
     return this.http.post<ApiResponse<string>>(
       `${this.apiUrl}/updateFIN32020`,
       body
     );
   }
 
-  /** 查詢調整科目：/queryFIN32020GetAdjAcc */
-  getAdjAcc(): Observable<ApiResponse<Fin32020AdjAccRow[]>> {
+  /** ✅ 查詢調整科目：改成帶 body */
+  getAdjAcc(body: Fin32020GetAdjAccRequest): Observable<ApiResponse<Fin32020AdjAccRow[]>> {
     return this.http.post<ApiResponse<Fin32020AdjAccRow[]>>(
       `${this.apiUrl}/queryFIN32020GetAdjAcc`,
-      {}
+      body ?? {}
     );
   }
 
-  /** 查詢應收帳款資料：/queryFIN32020GetARS */
-  getARS(
-    body: Fin32020GetARSRequest
-  ): Observable<ApiResponse<Fin32020ARSRow[]>> {
+  getARS(body: Fin32020GetARSRequest): Observable<ApiResponse<Fin32020ARSRow[]>> {
     return this.http.post<ApiResponse<Fin32020ARSRow[]>>(
       `${this.apiUrl}/queryFIN32020GetARS`,
       body
     );
   }
+
+  /** ✅ GLS1005 科目下拉：/queryGLS1005_DropDownList */
+  getGLS1005DropDown(): Observable<ApiResponse<Gls1005DropDownItem[]>> {
+    return this.http.post<ApiResponse<Gls1005DropDownItem[]>>(
+      `${this.glsUrl}/queryGLS1005_DropDownList`,
+      {}
+    );
+  }
 }
 
 export { ApiResponse };
-
