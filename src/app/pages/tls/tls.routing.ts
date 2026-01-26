@@ -67,6 +67,13 @@ export const tlsRoutes: Routes = [
   { path: 'tls13010next2', loadComponent: () => import('./tls13010-next2/tls13010-next2.component').then(m => m.TLS13010Next2Component), data: { progNo: 'tls13010' } },
   // 專櫃契約書維護 NEXT3
   { path: 'tls13010next3', loadComponent: () => import('./tls13010-next3/tls13010-next3.component').then(m => m.Tls13010Next3Component), data: { progNo: 'tls13010' } },
+
+  // ========== TLS13010-V2 專櫃契約書維護 (重構版) ==========
+  // V2 查詢頁面
+  { path: 'tls13010v2', loadComponent: () => import('./tls13010-v2/components/query/query.component').then(m => m.QueryComponent), data: { progNo: 'TLS13010' } },
+  // V2 合約精靈 (單頁面包含所有步驟) - 使用 tls13010v2cru 作為主路由
+  { path: 'tls13010v2cru', loadComponent: () => import('./tls13010-v2/components/contract-wizard/contract-wizard.component').then(m => m.ContractWizardComponent), data: { progNo: 'TLS13010' } },
+
   // 傳票項目之會計科目設定作業_NEW
   { path: 'tls21020', loadComponent: () => import('./tls21020/tls21020.component').then(m => m.TLS21020Component), data: { progNo: 'TLS21020' } },
   // 對帳單備註維護作業

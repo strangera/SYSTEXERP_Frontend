@@ -1,0 +1,143 @@
+<div class="card">
+  <!-- 操作按鈕區域 -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button
+      btnType="back"
+      (click)="goBack()"
+      label="返回查詢"
+    ></app-button>
+    <app-button
+      btnType="previous"
+      (click)="goToPreviousStep()"
+      label="上一步"
+      icon="pi pi-arrow-left"
+    ></app-button>
+    <app-button
+      *ngIf="!isViewMode"
+      btnType="next"
+      (click)="goToNextStep()"
+      label="下一步(抽成設定)"
+    ></app-button>
+  </div>
+
+  <!-- 步驟指示器 -->
+  <div class="step-indicator mb-3">
+    <span class="step completed">1. 合約基本資料</span>
+    <span class="step active">2. 代扣款設定</span>
+    <span class="step">3. 抽成設定</span>
+    <span class="step">4. 條件設定</span>
+  </div>
+
+  <!-- 已選擇項目統計 -->
+  <div class="mb-3">
+    <span class="text-600">已選擇 {{ selectedCount }} 個代扣款項目</span>
+  </div>
+
+  <!-- 代扣款列表 -->
+  <p-table
+    [value]="fareItems"
+    [scrollable]="true"
+    scrollHeight="400px"
+    styleClass="p-datatable-sm"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 80px">選擇</th>
+        <th style="width: 200px">扣款項目</th>
+        <th style="width: 150px">金額</th>
+        <th style="width: 120px">費率(%)</th>
+        <th style="width: 120px">起始年月</th>
+        <th style="width: 120px">結束年月</th>
+        <th>備註</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-item>
+      <tr>
+        <td>
+          <p-checkbox
+            [(ngModel)]="item.is_selected"
+            [binary]="true"
+            [disabled]="isFormReadonly"
+            (onChange)="onItemSelect(item)"
+          ></p-checkbox>
+        </td>
+        <td>{{ item.fare_name }}</td>
+        <td>
+          <p-inputNumber
+            [(ngModel)]="item.fare_amount"
+            [disabled]="isFormReadonly || !item.is_selected"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="2"
+            mode="currency"
+            currency="TWD"
+            locale="zh-TW"
+            (onInput)="onItemChange(item)"
+          ></p-inputNumber>
+        </td>
+        <td>
+          <p-inputNumber
+            [(ngModel)]="item.fare_rate"
+            [disabled]="isFormReadonly || !item.is_selected"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="2"
+            suffix="%"
+            (onInput)="onItemChange(item)"
+          ></p-inputNumber>
+        </td>
+        <td>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="item.fare_bym"
+            [disabled]="isFormReadonly || !item.is_selected"
+            placeholder="YYYYMM"
+            maxlength="6"
+            (input)="onItemChange(item)"
+          />
+        </td>
+        <td>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="item.fare_eym"
+            [disabled]="isFormReadonly || !item.is_selected"
+            placeholder="YYYYMM"
+            maxlength="6"
+            (input)="onItemChange(item)"
+          />
+        </td>
+        <td>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="item.fare_remark"
+            [disabled]="isFormReadonly || !item.is_selected"
+            (input)="onItemChange(item)"
+          />
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="7" class="text-center">無代扣款項目資料</td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- 底部導航按鈕 -->
+  <div class="flex justify-content-end gap-2 mt-3">
+    <app-button
+      btnType="previous"
+      (click)="goToPreviousStep()"
+      label="上一步"
+      icon="pi pi-arrow-left"
+    ></app-button>
+    <app-button
+      *ngIf="!isViewMode"
+      btnType="next"
+      (click)="goToNextStep()"
+      label="下一步(抽成設定)"
+    ></app-button>
+  </div>
+</div>

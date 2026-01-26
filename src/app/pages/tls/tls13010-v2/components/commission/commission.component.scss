@@ -1,0 +1,55 @@
+/* TLS13010-V2 Commission Component Styles */
+
+:host {
+  display: block;
+}
+
+.card {
+  padding: 1rem;
+}
+
+/* 步驟指示器 */
+.step-indicator {
+  display: flex;
+  gap: 1rem;
+  padding: 0.5rem;
+  background-color: var(--surface-ground);
+  border-radius: 4px;
+
+  .step {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    background-color: var(--surface-card);
+    color: var(--text-color-secondary);
+    font-size: 0.875rem;
+
+    &.active {
+      background-color: var(--primary-color);
+      color: var(--primary-color-text);
+      font-weight: 600;
+    }
+
+    &.completed {
+      background-color: var(--green-500);
+      color: white;
+    }
+  }
+}
+
+/* Accordion 樣式調整 */
+:host ::ng-deep {
+  .p-accordion-content {
+    padding: 1rem;
+  }
+
+  .p-datatable {
+    .p-datatable-thead > tr > th {
+      background-color: var(--surface-ground);
+    }
+
+    .p-inputnumber,
+    .p-inputtext {
+      width: 100%;
+    }
+  }
+}

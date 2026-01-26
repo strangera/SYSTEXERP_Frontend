@@ -1,0 +1,324 @@
+<div class="card">
+  <!-- 操作按鈕區域 -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button
+      btnType="back"
+      (click)="goBack()"
+      label="返回查詢"
+    ></app-button>
+    <app-button
+      btnType="previous"
+      (click)="goToPreviousStep()"
+      label="上一步"
+      icon="pi pi-arrow-left"
+    ></app-button>
+    <app-button
+      *ngIf="!isViewMode"
+      btnType="submit"
+      (click)="onSave()"
+      label="儲存合約"
+      [loading]="isSaving"
+    ></app-button>
+  </div>
+
+  <!-- 步驟指示器 -->
+  <div class="step-indicator mb-3">
+    <span class="step completed">1. 合約基本資料</span>
+    <span class="step completed">2. 代扣款設定</span>
+    <span class="step completed">3. 抽成設定</span>
+    <span class="step active">4. 條件設定</span>
+  </div>
+
+  <!-- 抽成類型與說明 -->
+  <div class="mb-3 p-3 surface-ground border-round">
+    <div class="mb-2">
+      <span class="font-semibold">目前抽成類型：</span>
+      <span class="text-primary font-bold">{{ commissionTypeName }}</span>
+    </div>
+    <div class="text-600" *ngIf="conditionDescription">
+      <i class="pi pi-info-circle mr-2"></i>
+      {{ conditionDescription }}
+    </div>
+  </div>
+
+  <!-- 條件設定區域 -->
+  <div *ngIf="requiresCondition">
+    <!-- 新增按鈕（僅層級類型可新增多筆） -->
+    <div class="mb-2" *ngIf="!isFormReadonly && isGraduatedType">
+      <p-button
+        label="新增層級"
+        icon="pi pi-plus"
+        (onClick)="addConditionItem()"
+      ></p-button>
+    </div>
+
+    <!-- 根據抽成類型顯示不同的表單 -->
+    <div [ngSwitch]="currentCommissionType">
+
+      <!-- 固定租金 (1) -->
+      <div *ngSwitchCase="CommissionType.FIXED_RENT">
+        <div class="p-3 surface-card border-round" *ngFor="let item of getActiveItems()">
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6">
+              <label class="block mb-2 font-semibold">基本租金</label>
+              <p-inputNumber
+                [(ngModel)]="item.base_rent"
+                [disabled]="isFormReadonly"
+                mode="currency"
+                currency="TWD"
+                locale="zh-TW"
+                (onInput)="onItemChange(item)"
+              ></p-inputNumber>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 底租抽成取高者 (2) -->
+      <div *ngSwitchCase="CommissionType.BASE_RENT_HIGHER">
+        <div class="p-3 surface-card border-round" *ngFor="let item of getActiveItems()">
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6">
+              <label class="block mb-2 font-semibold">基本租金</label>
+              <p-inputNumber
+                [(ngModel)]="item.base_rent"
+                [disabled]="isFormReadonly"
+                mode="currency"
+                currency="TWD"
+                locale="zh-TW"
+                (onInput)="onItemChange(item)"
+              ></p-inputNumber>
+            </div>
+            <div class="col-12 md:col-6">
+              <label class="block mb-2 font-semibold">抽成比率(%)</label>
+              <p-inputNumber
+                [(ngModel)]="item.cag_charge_rate"
+                [disabled]="isFormReadonly"
+                [minFractionDigits]="0"
+                [maxFractionDigits]="2"
+                suffix="%"
+                (onInput)="onItemChange(item)"
+              ></p-inputNumber>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 包底抽成 (4) -->
+      <div *ngSwitchCase="CommissionType.BASE_COMMISSION">
+        <div class="p-3 surface-card border-round" *ngFor="let item of getActiveItems()">
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6">
+              <label class="block mb-2 font-semibold">包底金額</label>
+              <p-inputNumber
+                [(ngModel)]="item.package_base"
+                [disabled]="isFormReadonly"
+                mode="currency"
+                currency="TWD"
+                locale="zh-TW"
+                (onInput)="onItemChange(item)"
+              ></p-inputNumber>
+            </div>
+            <div class="col-12 md:col-6">
+              <label class="block mb-2 font-semibold">超過部分抽成比率(%)</label>
+              <p-inputNumber
+                [(ngModel)]="item.cag_charge_rate"
+                [disabled]="isFormReadonly"
+                [minFractionDigits]="0"
+                [maxFractionDigits]="2"
+                suffix="%"
+                (onInput)="onItemChange(item)"
+              ></p-inputNumber>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 層級抽成 (5) -->
+      <div *ngSwitchCase="CommissionType.GRADUATED">
+        <p-table
+          [value]="getActiveItems()"
+          styleClass="p-datatable-sm"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 80px">序號</th>
+              <th>起始金額</th>
+              <th>結束金額</th>
+              <th>抽成比率(%)</th>
+              <th style="width: 80px" *ngIf="!isFormReadonly">操作</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-item let-i="rowIndex">
+            <tr>
+              <td>{{ item.seq_no || (i + 1) }}</td>
+              <td>
+                <p-inputNumber
+                  [(ngModel)]="item.start_number"
+                  [disabled]="isFormReadonly"
+                  mode="currency"
+                  currency="TWD"
+                  locale="zh-TW"
+                  (onInput)="onItemChange(item)"
+                ></p-inputNumber>
+              </td>
+              <td>
+                <p-inputNumber
+                  [(ngModel)]="item.end_number"
+                  [disabled]="isFormReadonly"
+                  mode="currency"
+                  currency="TWD"
+                  locale="zh-TW"
+                  (onInput)="onItemChange(item)"
+                ></p-inputNumber>
+              </td>
+              <td>
+                <p-inputNumber
+                  [(ngModel)]="item.charge_rate"
+                  [disabled]="isFormReadonly"
+                  [minFractionDigits]="0"
+                  [maxFractionDigits]="2"
+                  suffix="%"
+                  (onInput)="onItemChange(item)"
+                ></p-inputNumber>
+              </td>
+              <td *ngIf="!isFormReadonly">
+                <p-button
+                  icon="pi pi-trash"
+                  severity="danger"
+                  [text]="true"
+                  (onClick)="removeConditionItem(i)"
+                ></p-button>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td [attr.colspan]="isFormReadonly ? 4 : 5" class="text-center">
+                尚未設定層級條件
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <!-- 包底加層級 (6) -->
+      <div *ngSwitchCase="CommissionType.BASE_TIER">
+        <!-- 包底設定 -->
+        <div class="p-3 surface-card border-round mb-3">
+          <h4 class="mt-0">包底設定</h4>
+          <div class="grid p-fluid" *ngIf="getActiveItems().length > 0">
+            <div class="col-12 md:col-6">
+              <label class="block mb-2 font-semibold">包底金額</label>
+              <p-inputNumber
+                [(ngModel)]="getActiveItems()[0].package_base"
+                [disabled]="isFormReadonly"
+                mode="currency"
+                currency="TWD"
+                locale="zh-TW"
+                (onInput)="onItemChange(getActiveItems()[0])"
+              ></p-inputNumber>
+            </div>
+          </div>
+        </div>
+
+        <!-- 層級設定 -->
+        <div class="p-3 surface-card border-round">
+          <h4 class="mt-0">層級設定</h4>
+          <p-table
+            [value]="getActiveItems()"
+            styleClass="p-datatable-sm"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width: 80px">序號</th>
+                <th>起始金額</th>
+                <th>結束金額</th>
+                <th>抽成比率(%)</th>
+                <th style="width: 80px" *ngIf="!isFormReadonly">操作</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-item let-i="rowIndex">
+              <tr>
+                <td>{{ item.seq_no || (i + 1) }}</td>
+                <td>
+                  <p-inputNumber
+                    [(ngModel)]="item.start_number"
+                    [disabled]="isFormReadonly"
+                    mode="currency"
+                    currency="TWD"
+                    locale="zh-TW"
+                    (onInput)="onItemChange(item)"
+                  ></p-inputNumber>
+                </td>
+                <td>
+                  <p-inputNumber
+                    [(ngModel)]="item.end_number"
+                    [disabled]="isFormReadonly"
+                    mode="currency"
+                    currency="TWD"
+                    locale="zh-TW"
+                    (onInput)="onItemChange(item)"
+                  ></p-inputNumber>
+                </td>
+                <td>
+                  <p-inputNumber
+                    [(ngModel)]="item.charge_rate"
+                    [disabled]="isFormReadonly"
+                    [minFractionDigits]="0"
+                    [maxFractionDigits]="2"
+                    suffix="%"
+                    (onInput)="onItemChange(item)"
+                  ></p-inputNumber>
+                </td>
+                <td *ngIf="!isFormReadonly">
+                  <p-button
+                    icon="pi pi-trash"
+                    severity="danger"
+                    [text]="true"
+                    (onClick)="removeConditionItem(i)"
+                    [disabled]="i === 0"
+                  ></p-button>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+
+      <!-- 一般抽成 (3) - 不需要條件設定 -->
+      <div *ngSwitchDefault>
+        <div class="text-center p-5 surface-ground border-round">
+          <i class="pi pi-check-circle text-green-500 text-3xl mb-3 block"></i>
+          <span class="text-lg">目前抽成類型不需要設定條件</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 不需要條件設定的提示 -->
+  <div *ngIf="!requiresCondition" class="text-center p-5 surface-ground border-round">
+    <i class="pi pi-check-circle text-green-500 text-3xl mb-3 block"></i>
+    <span class="text-lg">
+      目前抽成類型「{{ commissionTypeName }}」不需要設定條件
+    </span>
+  </div>
+
+  <!-- 底部導航按鈕 -->
+  <div class="flex justify-content-end gap-2 mt-3">
+    <app-button
+      btnType="previous"
+      (click)="goToPreviousStep()"
+      label="上一步"
+      icon="pi pi-arrow-left"
+    ></app-button>
+    <app-button
+      *ngIf="!isViewMode"
+      btnType="submit"
+      (click)="onSave()"
+      label="儲存合約"
+      [loading]="isSaving"
+    ></app-button>
+  </div>
+</div>
