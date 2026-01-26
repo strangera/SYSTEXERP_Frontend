@@ -14,6 +14,7 @@ import { CommonModule } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { formatDate } from '@shared/componentkit/table/table.model';
 import { finalize } from 'rxjs';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -25,7 +26,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
   templateUrl: './fin29120.component.html',
   styleUrl: './fin29120.component.scss',
   standalone: true,
-  imports: [CommonModule, DropdownComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [CommonModule, DropdownComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule, DropdownRangeComponent]
 })
 export class FIN29120Component extends BasicQueryPageComponent<any> implements OnInit {
   data: any[] = [
@@ -89,7 +90,7 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('FIN29120', '/FIN/FIN29120CRU', this.queryForm, (form) => this.onSubmit(form));
 
     this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.factoryIDOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, No: item.No }));
+      this.factoryIDOptions = response.Data.map(item => ({ ...item, label: `${item.VEN_No} - ${item.ShortName}`, value: item.VEN_No }));
     });
   }
 
