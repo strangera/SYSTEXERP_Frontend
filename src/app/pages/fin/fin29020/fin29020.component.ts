@@ -19,18 +19,6 @@ import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
-// 定義 API 回傳的介面 (方便您理解結構)
-interface ApiResult {
-  Total_PayAmount: number;
-  Total_RemitAmount: number;
-  fIN29020_SubTotals: {
-    RmtDate: string;
-    SubTotal_PayAmount: number; // 雖然 API 有給，但在 app-table 裡我們會用前端重算
-    fIN29020_Details: FIN29020Detail[];
-  }[];
-}
-
-
 @Component({
   selector: 'app-fin29020',
   templateUrl: './fin29020.component.html',
@@ -120,17 +108,20 @@ export class FIN29020Component extends BasicQueryPageComponent<FIN29020Detail> i
     this.loadOptions();
   }
 
-  // 定義一個警告閥值 (您可以依需求調整，例如 2000 或 5000)
+  // 定義一個警告閥值
   readonly DATA_WARNING_THRESHOLD = 3000;
 
   onSubmit(form: FormGroup) {
+    console.log('查詢條件:', form.getRawValue());
     this.handleSubmit(form, () => {
       this.fin29020Service.queryFIN29020(this.buildQueryPayload(form.getRawValue()))
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
         .subscribe((response) => {
 
           let result = response.Data as any;
+          console.log('API回傳資料:', result); // 檢查原始回傳資料
           let finalData: FIN29020Detail[] = [];
+
 
           // 剝皮處理
           // =========================================================
@@ -142,23 +133,18 @@ export class FIN29020Component extends BasicQueryPageComponent<FIN29020Detail> i
 
           // 1.資料處理
           // =========================================================
-          // 嘗試取得 SubTotals (現在 result 已經是正確的物件了)
+          // 嘗試取得 SubTotals
           const subTotals = result?.fIN29020_SubTotals || result?.FIN29020_SubTotals;
 
           if (Array.isArray(subTotals)) {
-            // --- 情境 A: 階層式資料 (有 SubTotals) ---
-            // 執行攤平 (FlatMap)
             finalData = subTotals.flatMap((group: any) =>
               group.fIN29020_Details || group.FIN29020_Details || []
             );
           }
           else if (Array.isArray(result)) {
-            // --- 情境 B: 純扁平陣列 ---
-            // 如果原本就是單純的 [Detail, Detail]，沒有被包在 SubTotals 裡
             finalData = result;
           }
 
-          // =========================================================
           // 2. 數量過多提醒
           // =========================================================
           if (finalData.length > this.DATA_WARNING_THRESHOLD) {
@@ -169,15 +155,13 @@ export class FIN29020Component extends BasicQueryPageComponent<FIN29020Detail> i
 
           // 3. 總計處理 (Footer)
           // =========================================================
-          // 這裡的 result 現在已經是正確的物件，可以取得到 Total_PayAmount
           this.footerData = {
             VendorName: '總計',
-            // 若 result 有 Total 值就用，沒有則前端計算
             PayAmount: result?.Total_PayAmount,
             RemitAmount: result?.Total_RemitAmount
           };
 
-          console.log('Processed Data:', this.data); // 確認最終資料
+          console.log('扁平化處理後，回傳資料:', this.data); // 確認最終資料
 
           this.totalRecords = response.TotalCount ?? this.data.length;
           this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
