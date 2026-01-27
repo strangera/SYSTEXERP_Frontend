@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { FIN29020Data, FIN29020Service } from '@service/api/fin/fin29020.service';
+import { FIN29020Detail, FIN29020Service } from '@service/api/fin/fin29020.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -30,12 +31,13 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
     ReactiveFormsModule,
     TranslateModule,
     CalendarRangeComponent,
+    CommonModule,
     TableComponent,
     InputTextRangeComponent,
     DropdownComponent
   ]
 })
-export class FIN29020Component extends BasicQueryPageComponent<FIN29020Data> implements OnInit {
+export class FIN29020Component extends BasicQueryPageComponent<FIN29020Detail> implements OnInit {
   constructor(
     private fin29020Service: FIN29020Service,
     private dropDownListService: DropDownListService,
@@ -47,43 +49,49 @@ export class FIN29020Component extends BasicQueryPageComponent<FIN29020Data> imp
 
   queryForm = this.formBuilder.group({
     DateFrom: [null],           // 匯款日期(起)
-    DateTo: [null],             // 匯款日期(迄)
-    BNK_No: [null],             // 匯款銀行代號
-    VEN_No: [null],             // 廠客代號
-    PamNoFrom: [null, this.validationService.numberValidator],          // 匯款單號(起)
-    PamNoTo: [null, this.validationService.numberValidator],            // 匯款單號(迄)
-    RmtStatus: [null],          // 匯款狀態
+    DateTo: [null],             // 匯款日期(迄)    
+    BNK_No: [null],             // 公司匯出銀行代號 APS3007.BNK_No
+    WslipNoFrom: [null, this.validationService.numberValidator],          // 匯款單號(起)
+    WslipNoTo: [null, this.validationService.numberValidator],            // 匯款單號(迄)
+    VEN_No: [null],             // 廠商代號 APS3004.PAM_Target
     ...createPaginationConfig([])
   });
 
-  data: FIN29020Data[] = [];
-  selectedItems: FIN29020Data[] = [];
+  data: FIN29020Detail[] = [];
+  // 設定預設排序依據為 "RmtDate" (匯款日期)，這對於分組顯示至關重要
+  multiSortMeta: any[] = [{ field: 'RmtDate', order: 1 }];
+  selectedItems: FIN29020Detail[] = [];
   totalRecords = 0;
   exportPDFbtnLoading = false;
   exportXLSXbtnLoading = false;
 
+  footerData: any = null;
+
   columns: Column[] = [
-    { field: 'PAM_No', header: '匯款單號', visible: true },
-    // TODO:缺銀行代號 日後待確認
-    { field: 'unknownField', header: '銀行代號', visible: true },
-    { field: 'RMT_Date', header: '匯款日期', visible: true },
-    { field: 'VEN_Name', header: '廠商名稱', visible: true },
-    { field: 'CompanyBNK_No', header: '匯款銀行代號', visible: true },
-    { field: 'VendorBNK_Name', header: '解款銀行名稱', visible: true },
-    { field: 'CompanyBNK_AccNo', header: '銀行帳號', visible: true },
-    { field: 'VendorBNK_AccName', header: '帳戶名稱', visible: true },
-    { field: 'Pay_TotNet', header: '帳款金額', visible: true, format: formatAmount },
-    { field: 'RMT_Amt', header: '匯款金額', visible: true, format: formatAmount },
-    { field: 'STO_No', header: '分店編號', visible: false },
-    { field: 'VEN_No', header: '廠商編號', visible: false },
-    { field: 'CompanyBNK_Name', header: '匯款銀行名稱', visible: false },
-    { field: 'CompanyBNK_BranchNo', header: '匯款銀行分行代號', visible: false },
-    { field: 'VendorBNK_No', header: '解款銀行代號', visible: false },
-    { field: 'VendorBNK_BranchNo', header: '解款銀行分行代號', visible: false },
-    { field: 'VendorBNK_AccNo', header: '解款帳號', visible: false },
-    { field: 'RMT_Fee', header: '匯款手續費', visible: false, format: formatAmount },
-    { field: 'RMT_Status', header: '匯款狀態', visible: false },
-    { field: 'RMT_ExpMediaCnt', header: '媒體匯出次數', visible: false },
+    { field: 'WslipNo', header: '匯款單號', visible: true },
+    { field: 'BankInfo', header: '銀行代號', visible: true },
+    { field: 'RmtDate', header: '匯款日期', visible: true },
+    { field: 'VendorName', header: '廠商名稱', visible: true },
+    { field: 'VendorBankNo', header: '匯款銀行帳號', visible: true },
+    { field: 'VendorBankNane', header: '解款銀行名稱', visible: true },
+    { field: 'VendorAccNo', header: '銀行帳號', visible: true },
+    { field: 'VendorAccName', header: '帳戶名稱', visible: true },
+    { field: 'PayAmount', header: '帳款金額', visible: true, format: formatAmount },
+    { field: 'RemitAmount', header: '匯款金額', visible: true, format: formatAmount },
+    // { field: 'STO_No', header: '分店編號', visible: false },
+    // { field: 'VEN_No', header: '廠商編號', visible: false },
+    // { field: 'CompanyBNK_Name', header: '匯款銀行名稱', visible: false },
+    // { field: 'CompanyBNK_BranchNo', header: '匯款銀行分行代號', visible: false },
+    // { field: 'VendorBNK_No', header: '解款銀行代號', visible: false },
+    // { field: 'VendorBNK_BranchNo', header: '解款銀行分行代號', visible: false },
+    // { field: 'VendorBNK_AccNo', header: '解款帳號', visible: false },
+    // { field: 'RMT_Fee', header: '匯款手續費', visible: false, format: formatAmount },
+    // { field: 'RMT_Status', header: '匯款狀態', visible: false },
+    // { field: 'RMT_ExpMediaCnt', header: '媒體匯出次數', visible: false },
+
+    // 加入 isSubTotal: true 讓 app-table 自動計算小計
+    { field: 'PayAmount', header: '帳款金額', visible: true, format: formatAmount, isSubTotal: true },
+    { field: 'RemitAmount', header: '匯款金額', visible: true, format: formatAmount, isSubTotal: true },
   ];
 
   //#region 下拉選單
@@ -101,11 +109,41 @@ export class FIN29020Component extends BasicQueryPageComponent<FIN29020Data> imp
   }
 
   onSubmit(form: FormGroup) {
+    console.log('FIN29020 onSubmit', form.getRawValue());
     this.handleSubmit(form, () => {
       this.fin29020Service.queryFIN29020(this.buildQueryPayload(form.getRawValue()))
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
         .subscribe((response) => {
-          this.data = response.Data ?? [];
+          // this.data = response.Data ?? [];
+          // console.log('FIN29020 query response', this.data);
+          // this.totalRecords = response.TotalCount ?? this.data.length;
+          // this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+
+          const result = response.Data as any;
+          this.data = [];
+
+          // --- 資料處理邏輯 ---
+
+          // 情境 1: API 回傳包含 SubTotals 的巢狀結構 (舊邏輯)
+          const subTotals = result.fIN29020_SubTotals || result.FIN29020_SubTotals || [];
+          if (Array.isArray(subTotals) && subTotals.length > 0) {
+            this.data = subTotals.flatMap((group: any) => group.fIN29020_Details || group.FIN29020_Details || []);
+          }
+          // 情境 2: API 直接回傳扁平陣列 (您現在遇到的情況)
+          else if (Array.isArray(result)) {
+            this.data = result;
+            console.log('FIN29020 query result', this.data);
+            // 這裡進來的資料是扁平的，但只要 HTML 有設 groupRowsBy="RmtDate"，Table 就會自動分組
+          }
+
+          // --- Footer 總計處理 ---
+          // 優先使用 API 回傳的總計，如果沒有則前端自己算
+          this.footerData = {
+            VendorName: '總計',
+            PayAmount: result.Total_PayAmount,
+            RemitAmount: result.Total_RemitAmount
+          };
+
           this.totalRecords = response.TotalCount ?? this.data.length;
           this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
         });
