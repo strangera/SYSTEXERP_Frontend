@@ -1,5 +1,3 @@
-// src/app/core/interceptors/error.interceptor.ts (功能型)
-
 import { HttpErrorResponse, HttpEvent, HttpHandlerFn, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core'; // 使用 inject 導入服務
 import { catchError, Observable, retry, throwError, timeout, TimeoutError, timer } from 'rxjs';
