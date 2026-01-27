@@ -652,6 +652,11 @@ this.fin13060Service.queryAPS2002DropDownList().subscribe((res) => {
       }
     });
   }
+  override onCancel(): void {
+  this.router.navigate(['/account/fin', 'fin13060'], {
+    state: { fromCru: true },
+  });
+}
 
   // 集中中文錯誤訊息（提交前使用）
   private showErrorsIfInvalid(form: FormGroup, labelMap: Record<string, string>): boolean {
