@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 // 查詢產生電匯付款資料 Request
@@ -53,6 +53,7 @@ export interface QueryAddFIN25010Request extends BaseQueryRequest {
 
 // 查詢產生電匯付款資料 新增查詢Response
 export interface QueryAddFIN25010Response {
+  UniqueKey?: string; // <--- 新增這一行
   ID: number;
   acp_no?: string;
   ven_no?: string;
@@ -113,7 +114,19 @@ export class FIN25010Service {
 
   // 新增頁面-查詢產生電匯付款資料
   queryAddFIN25010(req: QueryAddFIN25010Request): Observable<BaseQueryResponse<QueryAddFIN25010Response>> {
-    return this.http.post<BaseQueryResponse<QueryAddFIN25010Response>>(`${this.apiUrl}/query_addFIN25010`, req);
+    return this.http.post<BaseQueryResponse<QueryAddFIN25010Response>>(`${this.apiUrl}/query_addFIN25010`, req)
+      .pipe(
+        map(response => {
+          if (response.Data && response.Data.length > 0) {
+            response.Data = response.Data.map(item => ({
+              ...item,
+              // 生成唯一 Key: 來源別 + 原始ID
+              UniqueKey: `${item.IN_TYPE}_${item.ID}`
+            }));
+          }
+          return response;
+        })
+      );
   }
 
   // 新增 APS3009 資料表

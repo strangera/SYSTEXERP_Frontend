@@ -208,9 +208,13 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     });
   }
   onSort(event: any) {
-    if (this._loading || !this.lazy) {
+    if (!this.lazy) {
+      this.groupTotals = {};
+      this.updateGroupTotals(this.data);
+      this.cdr.detectChanges();
       return;
     }
+    if (this._loading) return;
     if (event.multiSortMeta && event.multiSortMeta.length > 0) {
       const lastSort = event.multiSortMeta[event.multiSortMeta.length - 1];
       this.dt.multiSortMeta = [lastSort];
@@ -254,6 +258,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
           this.virtualData = this.data;
         }
         this.selectedItems = [];
+        this.dataChange.emit(this.data);
       }
     });
   }
@@ -272,26 +277,22 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     }
   }
   onScroll(event: any) {
-    if (this._loading || !this.lazy) {
-      return;
-    }
-    this.selectedItems = [...this.selectedItems];
-    const pageSize = this.lastQueryBody?.pageSize || this.lastQueryBody?.PageSize || 30;
-    if (this.data.length >= this.totalRecords || this.data.length < pageSize) {
-      this.virtualData = [...this.data];
-      return;
-    }
-    if (event && event.originalEvent && event.originalEvent.target) {
-      const target = event.originalEvent.target as HTMLElement;
-      const scrollTop = target.scrollTop;
-      const scrollHeight = target.scrollHeight;
-      const clientHeight = target.clientHeight;
-      const threshold = 2; // 容錯值可自行調整，通常 1-2 像素就足夠
-      if (scrollHeight - scrollTop - clientHeight <= threshold) {
-        this.loadMoreData();
+    if (this._loading) return;
+    if (this.lazy) {
+      const target = event.originalEvent.target;
+      const pageSize = this.lastQueryBody?.pageSize || 30;
+      if (this.data.length < this.totalRecords && this.data.length >= pageSize) {
+        if (target.scrollHeight - target.scrollTop - target.clientHeight <= 2) {
+          this.loadMoreData();
+        }
       }
     }
-    this.cdr.detectChanges();
+    else {
+      if (this.selectedItems && this.selectedItems.length > 0) {
+        this.selectedItems = [...this.selectedItems];
+        this.cdr.detectChanges();
+      }
+    }
   }
   // 1. 處理單一勾選變更 (在 HTML 中對應 selectionChange)
   onSelectionChange(event: any[]) {
