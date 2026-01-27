@@ -15,6 +15,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { formatDate } from '@shared/componentkit/table/table.model';
 import { finalize } from 'rxjs';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -26,7 +27,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
   templateUrl: './fin29120.component.html',
   styleUrl: './fin29120.component.scss',
   standalone: true,
-  imports: [CommonModule, DropdownComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule, DropdownRangeComponent]
+  imports: [CommonModule, DropdownComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule, DropdownRangeComponent, InputTextRangeComponent,]
 })
 export class FIN29120Component extends BasicQueryPageComponent<any> implements OnInit {
   data: any[] = [
