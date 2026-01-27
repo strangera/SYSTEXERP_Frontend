@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
+import { IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
@@ -50,6 +50,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     KeyWord: ['', [Validators.maxLength(20)]], // 20260112調整: 商品管理編號/國際條碼/廠商貨號都以KeyWord送出
     PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
     LOGO_No: ['', [Validators.maxLength(4)]], // 品牌代碼
+    queryNo: [null, [Validators.maxLength(20)]], // 查詢編號 input //新增
     CAT_LNo: ['', [Validators.maxLength(6)]], // 大分類代碼 --POS2003
     CAT_MNo: ['', [Validators.maxLength(6)]], // 中分類代碼 POS20031
     CAT_SNo: ['', [Validators.maxLength(6)]], // 小分類代碼 POS20032
@@ -244,6 +245,8 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      // 將KeyWord值設定到queryNo
+      frm.get('queryNo')?.setValue(frm.get('KeyWord')?.value);
       console.log('query condition', frm.value);
       this.tls51070Service.queryTLS51070(frm.value).subscribe({
         next: (response) => {
@@ -503,56 +506,26 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
 
-  // #region 商品管理編號/國際條碼/廠商貨號
-  opLoading = false;
-  opForm = this.formBuilder.group({
-    PLU_MagNo: ['', [Validators.maxLength(20)]],   // ← 新增這行（關鍵修正）
-    PLU_Name: ['', [Validators.maxLength(60)]],
-    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
-  });
+  //!!! 國際條碼/商品管理編號/廠商貨號
   suggestions: IQueryPOS2004DetailResponse[] = [];
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
+    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
   ];
-  opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
-  opColumns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號' },
-    { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
-    { field: 'PLU_Name', header: '商品名稱' },
-  ];
-  opTotalRecords = 0;
-  onAutoCompleteInputChange(event: any) {
+  onAutoCompleteInputChange(event: Record<'label', string>) {
     const body = {
-      ...event,
       VEN_No: '',
       LOGO_No: '',
-      queryNo: event.PLU_MagNo || '',
+      queryNo: event.label || '',
       pageSize: 30,
       pageIndex: 1,
-      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
+      SortBy: [{ field: 'PLU_No', order: 1 }],
     }
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results: { Data: any[]; }) => {
+    // !!! 若有自己這隻的API請改成自己的
+    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
       this.suggestions = [...results.Data.map(item => ({
         ...item,
-        label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo,
+        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
       }))];
-    });
-  }
-
-  // 商品管理編號 / 國際條碼 / 廠商貨號 (合併查詢表單)
-  onformValueChanged(event: IQueryPOS2004DetailRequest) {
-    this.opLoading = true;
-    const body = {
-      queryNo: event.queryNo || '',
-      PLU_Name: event.PLU_Name || '',
-      VEN_No: '',
-      LOGO_No: '',
-    };
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results: { Data: any; TotalCount: number; }) => {
-      this.opData = [...results.Data]; // 更新data資料
-      this.opTotalRecords = results.TotalCount;
-      this.opLoading = false;
     });
   }
 
