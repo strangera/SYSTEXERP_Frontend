@@ -1,6 +1,5 @@
-import { NgFor, NgIf } from '@angular/common';
 import { Component, computed, OnInit, signal } from '@angular/core';
-import { FormArray, FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS12010Service } from '@service/api/ass/ass12010.service';
@@ -12,7 +11,8 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { NGXLogger } from 'ngx-logger';
 import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
@@ -36,11 +36,9 @@ import { ASS12010Data, ASS12010InsertRequest, ASS12010Item, ASS12010UpdateReques
     RippleModule,
     DropdownComponent,
     InputTextComponent,
-    InputTextareaComponent,
     CalendarComponent,
     MenubarComponent,
-    NgIf,
-    NgFor,
+    TableEditComponent,
   ]
 })
 export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> implements OnInit {
@@ -58,15 +56,14 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
     WH_ID: new FormControl<string | null>(null, [Validators.required]),
     /** 說明 */
     REMARK: new FormControl<string | null>(null),
-    /** 動態品項明細 */
-    items: this.formBuilder.array([this.createItem()]),
   });
   public readonly df = computed(() => this.dataForm.controls);
 
   public readonly tableLoading = signal<boolean>(false);
 
-  // Get the form array for dynamic items
-  get items(): FormArray { return this.dataForm.get('items') as FormArray; }
+  // 表格資料
+  public readonly tableData = signal<ASS12010Item[]>([]);
+  public selectedItems: ASS12010Item[] = [];
 
   // 下拉選單選項
   public readonly orgIdOptions = signal<{ label: string; value: string; Name?: string }[]>([]);
@@ -83,6 +80,55 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
   // 所有保管人選項（用於過濾）
   private allCustodianOptions: { label: string; value: string; Name?: string; ORG_ID?: string }[] = [];
 
+  // EditColumn 配置
+  public readonly editColumns: EditColumn[] = [
+    {
+      field: 'GOODS_ID',
+      header: '品項代碼',
+      type: 'dropdown',
+      options: () => this.goodsIdOptions(),
+      optionLabel: 'label',
+      optionValue: 'value',
+      showClear: true,
+    },
+    {
+      field: 'CUSTODY_UNIT',
+      header: '保管單位',
+      type: 'dropdown',
+      options: () => this.custodyUnitOptions(),
+      optionLabel: 'label',
+      optionValue: 'value',
+      showClear: true,
+    },
+    {
+      field: 'CUSTODIAN',
+      header: '保管人',
+      type: 'input',
+      maxLength: 6,
+      placeholder: '最多6個字',
+    },
+    {
+      field: 'UNIT',
+      header: '單位',
+      type: 'input',
+      maxLength: 8,
+      placeholder: '最多8個字',
+    },
+    {
+      field: 'QUANTITY',
+      header: '數量',
+      type: 'inputNumber',
+      min: 0,
+      maxFractionDigits: 0,
+    },
+    {
+      field: 'ITEM_REMARK',
+      header: '單項說明',
+      type: 'input',
+      placeholder: '單項說明',
+    },
+  ];
+
   constructor(
     public readonly service: ASS12010Service,
     private readonly dropDownListService: DropDownListService,
@@ -98,11 +144,6 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
 
     this.loadDropdownOptions();
     this.setupDepartmentCascade();
-
-    // 如果是編輯模式，載入資料
-    if (this.rowdata) {
-      this.loadEditData();
-    }
   }
 
   /**
@@ -155,10 +196,13 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
       untilDestroyed(this)
     ).subscribe(orgId => {
       if (orgId) {
-        // 1. 同步更新「保管單位」欄位
-        this.dataForm.controls.items.controls.forEach(itemControl => {
-          itemControl.get('CUSTODY_UNIT')?.setValue(orgId, { emitEvent: false });
-        });
+        // 1. 同步更新表格資料中所有項目的「保管單位」欄位
+        const currentData = this.tableData();
+        const updatedData = currentData.map(item => ({
+          ...item,
+          CUSTODY_UNIT: orgId,
+        }));
+        this.tableData.set(updatedData);
 
         // 2. 過濾「申請人」下拉選單（只顯示該部門人員）
         // TODO: 等 API 規格確認後，根據 ORG_ID 過濾
@@ -196,70 +240,6 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
   }
 
   /**
-   * 載入編輯資料
-   */
-  private loadEditData(): void {
-    if (!this.rowdata) return;
-
-    // 載入主檔資料
-    this.dataForm.patchValue({
-      ORG_ID: this.rowdata.ORG_ID ?? '',
-      EMP_ID: this.rowdata.EMP_ID ?? '',
-      APPLY_DATE: this.rowdata.APPLY_DATE ? new Date(this.rowdata.APPLY_DATE) : null,
-      WH_ID: this.rowdata.WH_ID ?? '',
-      // TODO: 等 API 規格確認後，載入其他欄位
-    });
-
-    // TODO: 等 API 規格確認後，載入品項明細
-    // 目前先保留預設的 1 筆空品項
-  }
-
-  /**
-   * 取得表單控制項（用於動態表單陣列）
-   */
-  public getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-
-  /**
-   * 建立品項表單群組
-   */
-  public createItem(): ReturnType<typeof this.formBuilder.group> {
-    return this.formBuilder.group({
-      GOODS_ID: new FormControl<string | null>(null),
-      CUSTODY_UNIT: new FormControl<string | null>(null),
-      CUSTODIAN: new FormControl<string | null>(null, [Validators.maxLength(6)]),
-      UNIT: new FormControl<string | null>(null, [Validators.maxLength(8)]),
-      QUANTITY: new FormControl<string | null>(null, [Validators.maxLength(8)]),
-      ITEM_REMARK: new FormControl<string | null>(null),
-    });
-  }
-
-  /**
-   * 新增品項
-   */
-  public onAddItem(): void {
-    this.items.push(this.createItem());
-    // 如果已選取部門代號，同步更新新品項的保管單位
-    const orgId = this.dataForm.controls.ORG_ID.value;
-    if (orgId) {
-      const lastIndex = this.items.length - 1;
-      this.items.at(lastIndex).get('CUSTODY_UNIT')?.setValue(orgId, { emitEvent: false });
-    }
-  }
-
-  /**
-   * 刪除品項
-   */
-  public onRemoveItem(index: number): void {
-    if (this.items.length > 1) {
-      this.items.removeAt(index);
-    } else {
-      this.notification.warnBubble('至少需要保留一筆品項');
-    }
-  }
-
-  /**
    * 清除上半部固定欄位
    */
   public onClearHeader(): void {
@@ -274,31 +254,53 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
   }
 
   /**
-   * 重置品項 FormArray 為預設的 1 筆
+   * 處理表格新增事件
    */
-  private resetItemsToDefault(): void {
-    // 清空所有品項
-    this.items.clear();
-    // 新增 1 筆預設品項
-    this.items.push(this.createItem());
+  public onTableInsert(): void {
+    const newItem = this.defaultNewItem();
+    const currentData = this.tableData();
+    this.tableData.set([...currentData, newItem as ASS12010Item]);
   }
 
   /**
-   * 覆寫 onCancel 方法，在新增模式下重置品項數量
-   */
-
-  public onResetForm(): void {
-    // 如果是新增模式，重置品項為預設的 1 筆
-    if (this.isFormCreateable) {
-      this.resetItemsToDefault();
-    }
+    * 提供新增行的預設值
+    */
+  public defaultNewItem(): Partial<ASS12010Item> {
+    const orgId = this.dataForm.controls.ORG_ID.value;
+    return {
+      GOODS_ID: undefined,
+      CUSTODY_UNIT: orgId || undefined,
+      CUSTODIAN: undefined,
+      UNIT: undefined,
+      QUANTITY: undefined,
+      ITEM_REMARK: undefined,
+    };
   }
+
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const raw = this.dataForm.getRawValue();
+      const tableItems = this.tableData();
+
+      // 驗證至少有一筆品項
+      if (tableItems.length === 0) {
+        this.notification.warnBubble('至少需要輸入一筆品項');
+        this.loading = false;
+        return;
+      }
 
       this.tableLoading.set(true);
+
+      // 轉換表格資料為 items 陣列格式
+      const items: ASS12010Item[] = tableItems.map((item) => ({
+        GOODS_ID: item.GOODS_ID || undefined,
+        CUSTODY_UNIT: item.CUSTODY_UNIT || undefined,
+        CUSTODIAN: item.CUSTODIAN || undefined,
+        UNIT: item.UNIT || undefined,
+        QUANTITY: item.QUANTITY || undefined,
+        ITEM_REMARK: item.ITEM_REMARK || undefined,
+      }));
 
       if (this.isFormCreateable) {
         // 新增
@@ -309,14 +311,7 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
           NEED_PERIOD: raw.NEED_PERIOD ?? undefined,
           WH_ID: raw.WH_ID ?? '',
           REMARK: raw.REMARK ?? undefined,
-          items: (raw.items as ASS12010Item[]).map((item) => ({
-            GOODS_ID: item.GOODS_ID || undefined,
-            CUSTODY_UNIT: item.CUSTODY_UNIT || undefined,
-            CUSTODIAN: item.CUSTODIAN || undefined,
-            UNIT: item.UNIT || undefined,
-            QUANTITY: item.QUANTITY || undefined,
-            ITEM_REMARK: item.ITEM_REMARK || undefined,
-          })) as ASS12010Item[],
+          items,
         };
         this.logger.debug(`onSubmit insert:`, [insertPayload]);
 
@@ -345,14 +340,7 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
           NEED_PERIOD: raw.NEED_PERIOD ?? undefined,
           WH_ID: raw.WH_ID ?? '',
           REMARK: raw.REMARK ?? undefined,
-          items: (raw.items as ASS12010Item[]).map((item) => ({
-            GOODS_ID: item.GOODS_ID || undefined,
-            CUSTODY_UNIT: item.CUSTODY_UNIT || undefined,
-            CUSTODIAN: item.CUSTODIAN || undefined,
-            UNIT: item.UNIT || undefined,
-            QUANTITY: item.QUANTITY || undefined,
-            ITEM_REMARK: item.ITEM_REMARK || undefined,
-          })) as ASS12010Item[],
+          items,
         };
         this.logger.debug(`onSubmit update:`, [updatePayload]);
 
