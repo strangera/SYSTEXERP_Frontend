@@ -193,8 +193,8 @@ adjAccNoOptions$ = this.fin32020Service.getGLS1005DropDown().pipe(
   // 1=加 2=減
   carTypeOptions = [
     { label: '全部', value: '' },
-    { label: '加項(1)', value: '1' },
-    { label: '減項(2)', value: '2' },
+    { label: '1-加項', value: '1' },
+    { label: '2-減項', value: '2' },
   ];
 
   adjAccSearchForm = this.formBuilder.nonNullable.group({
