@@ -1,0 +1,16 @@
+<!-- 專櫃契約書資訊 -->
+<p-accordion>
+  <p-accordionTab [header]="headerText" [selected]="expanded">
+    <app-expandable-edit-table
+      class="custom-table-red"
+      [data]="contractInfoData"
+      [mainColumns]="contractInfoColumns"
+      [readonly]="true"
+      [showAddButton]="false"
+      [showBatchDelete]="false"
+      [showCheckBox]="false"
+      [showPaginator]="false"
+      [detailKey]="''"
+    ></app-expandable-edit-table>
+  </p-accordionTab>
+</p-accordion>

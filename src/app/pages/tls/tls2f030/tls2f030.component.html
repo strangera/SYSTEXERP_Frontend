@@ -47,7 +47,9 @@
             ></app-multi-select>
           </div>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -68,6 +70,7 @@
     [showCheckBox]="false"
     [showDelete]="false"
     [lazy]="true"
+    [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
   ></app-table>
 </div>

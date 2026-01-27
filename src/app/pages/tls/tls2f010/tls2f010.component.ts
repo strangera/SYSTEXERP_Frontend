@@ -1,6 +1,6 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
@@ -15,7 +15,6 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
 import { formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
-import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -44,37 +43,37 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     '30': [1]
   };
   queryForm = this.formBuilder.nonNullable.group({
-    sam_yyymm: [''], // 結帳年月
-    tlt_no: [''],
-    PUR_GUIType: [''],
-    PUR_GUINO: ['', [Validators.maxLength(10)]],
+    sam_yyymm: [null], // 結帳年月
+    tlt_no: [null],
+    PUR_GUIType: [null],
+    PUR_GUINO: [null],
     PUR_GUIDate_Start: [null],
     PUR_GUIDate_End: [null],
-    COMM_MONEY_TYPE: [''],
-    COMM_YM: [null],
+    COMM_MONEY_TYPE: [null],
+    COMM_YM: [new Date()],
     sam_termno: [1],
     DEC_YM: [null],
-    ven_uniform: [''],
+    ven_uniform: [null],
     PUR_TaxType: [[]],
-    CRT_USR_No: [''],
-    PUR_GUIPaper: [''],
-    CRT_Date_Start: [''],
-    CRT_Date_End: [''],
-    PUR_GUIDate_From: [yesterday, [Validators.required]],
-    PUR_GUIDate_To: [yesterday, [Validators.required]],
-    ACP_GUIAmt_From: [0, [Validators.required]],
-    ACP_GUIAmt_To: [null, [Validators.required]],
-    ACP_GUINet_From: [0, [Validators.required]],
-    ACP_GUINet_To: [null, [Validators.required]],
+    CRT_USR_No: [null],
+    PUR_GUIPaper: [null],
+    CRT_Date_Start: [null],
+    CRT_Date_End: [null],
+    PUR_GUIDate_From: [null],
+    PUR_GUIDate_To: [null],
+    ACP_GUIAmt_From: [null],
+    ACP_GUIAmt_To: [null],
+    ACP_GUINet_From: [null],
+    ACP_GUINet_To: [null],
     floor_no: [[]],
-    PUR_PRType: [''],
-    INV_Type: [''],
-    ACP_GUITax_From: [0, [Validators.required]],
-    ACP_GUITax_To: [null, [Validators.required]],
-    CRT_Date_To: [null, [Validators.required]],
-    CRT_Date_From: [yesterday, [Validators.required]],
-    COMM_NUM_Start: [yesterday, [Validators.required]],
-    COMM_NUM_End: [yesterday, [Validators.required]],
+    PUR_PRType: [null],
+    INV_Type: [null],
+    ACP_GUITax_From: [null],
+    ACP_GUITax_To: [null],
+    CRT_Date_To: [null],
+    CRT_Date_From: [null],
+    COMM_NUM_Start: [null],
+    COMM_NUM_End: [null],
     // 分頁欄位
     pageSize: [30],
     pageIndex: [1],
@@ -155,6 +154,29 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
+  }
+
+  // Normalize payload: convert empty strings and empty arrays to null recursively
+  private normalizePayload<T = any>(obj: T): T {
+    const _norm = (v: any): any => {
+      if (v === '') return null;
+      if (v === undefined) return null;
+      if (v === null) return null;
+      if (Array.isArray(v)) {
+        if (v.length === 0) return null;
+        return v.map(_norm);
+      }
+      if (typeof v === 'object') {
+        const out: any = Array.isArray(v) ? [] : {};
+        for (const k of Object.keys(v)) {
+          out[k] = _norm((v as any)[k]);
+        }
+        return out;
+      }
+      return v;
+    };
+
+    return _norm(obj) as T;
   }
 
 
@@ -247,7 +269,8 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
         : (raw.floor_no ? [raw.floor_no] : []);
 
       this.loading = true;
-      this.tls2f010Service.queryTLS2F010(payload)
+      const body = this.normalizePayload(payload);
+      this.tls2f010Service.queryTLS2F010(body)
         .pipe(finalize(() => (this.loading = false)))
         .subscribe(res => {
           const respData = res?.Data ?? [];
@@ -285,7 +308,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
           }
 
           this.totalRecords = res?.TotalCount ?? this.data.length;
-          this.lastQueryBody = payload;
+          this.lastQueryBody = body;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
@@ -450,7 +473,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
 
   onExportExcel(): void {
     if (this.btnLoading2) return;
-    const params = this.lastQueryBody ?? this.buildExportPayloadFromForm();
+    const params = this.normalizePayload(this.lastQueryBody ?? this.buildExportPayloadFromForm());
     this.btnLoading2 = true;
 
     this.tls2f010Service.exportTLS2F010(params)
@@ -480,7 +503,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
 
   onExportPDF(): void {
     if (this.btnLoading) return;
-    const params = this.lastQueryBody ?? this.buildExportPayloadFromForm();
+    const params = this.normalizePayload(this.lastQueryBody ?? this.buildExportPayloadFromForm());
     this.btnLoading = true;
 
     this.tls2f010Service.exportTLS2F010PDF(params)

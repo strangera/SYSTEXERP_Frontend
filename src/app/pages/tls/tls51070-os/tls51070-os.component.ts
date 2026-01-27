@@ -5,6 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { AccordionModule } from 'primeng/accordion';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -155,6 +156,19 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label> implemen
     } else {
       return
     }
+
+    // 監聽 KeyWord 變化並觸發標籤檔預覽
+    this.queryForm.get('KeyWord')?.valueChanges.pipe(
+      debounceTime(500),    // 延遲 500ms，等待使用者停止輸入或完成選擇
+      distinctUntilChanged(), // 只有值真的改變時才觸發
+      untilDestroyed(this)  // 組件銷毀時取消訂閱
+    ).subscribe(value => {
+      if (value) {
+        this.previewLabel(); // 有值就呼叫預覽
+      } else {
+        this.previewLabelData = null; // 清空欄位時，清空預覽區塊
+      }
+    });
   }
 
   onSubmitLabel(frm: FormGroup) {
@@ -241,6 +255,14 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label> implemen
       return;
     }
 
+    if (this.labelTable) {
+      // 檢查是否正在編輯「主行」(editingRow 不為 null 代表有行正在編輯)
+      if (this.labelTable.editingRow !== null) {
+        this.messageService.warnBubble('明細表格尚有未儲存的編輯項目，請先點擊「打勾」儲存或「取消」結束編輯。');
+        return; // 中斷送出流程
+      }
+    }
+
     // 將 labelData 的每一筆物件複製一份，並移除 id 屬性
     const exportData = this.labelData.map(({ id, ...rest }) => rest);
     this.exportLabelService.ExportLabel_Other(exportData).subscribe();
@@ -255,6 +277,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label> implemen
       next: (response) => {
         if (response.Status === '0000' && response.Data && response.Data.length > 0) {
           const previewData = response.Data[0]; // 只取第一筆預覽
+          console.log('預覽資料:', previewData);
 
           this.previewLabelData = previewData; // ✅ 更新 HTML 預覽用變數
         } else {

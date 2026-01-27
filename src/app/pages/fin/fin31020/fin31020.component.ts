@@ -5,6 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -20,12 +21,12 @@ import { DropDownListService } from './../../../service/utility/dropDownList.ser
   templateUrl: './fin31020.component.html',
   styleUrl: './fin31020.component.scss',
   standalone: true,
-  imports: [DropdownComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, TableComponent, InputTextComponent, TranslateModule]
+  imports: [MultiSelectComponent, DropdownComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, TableComponent, InputTextComponent, TranslateModule]
 })
 export class FIN31020Component extends BasicQueryPageComponent<FIN31020Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     CAR_AccNo: [""],
-    CAR_Type: ['1'],
+    CAR_Type: [['1', '2']],
     Remark: ["", Validators.maxLength(100)],
     pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1

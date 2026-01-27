@@ -7,8 +7,14 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="收款單號" controlName="RCV_No"
-            [control]="queryForm.controls.RCV_No" [submitted]="submitted"></app-input-text>
+          <div class="col-12 md:col-6 lg:col-4">
+            <label for="RCV_No" class="p-d-block p-mb-1">收款單號</label>
+            <div class="flex gap-2" role="button" tabindex="0" aria-label="收款單號 選擇" (click)="rcvDialogVisible = true"
+              (keydown.enter)="$event.preventDefault(); rcvDialogVisible = true">
+              <app-input-text class="flex-1" controlName="RCV_No" [control]="queryForm.controls.RCV_No"
+                [submitted]="submitted" [readonly]="true"></app-input-text>
+            </div>
+          </div>
           <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="傳票日期" controlName="VouDate"
             [control]="queryForm.controls.VouDate" [submitted]="submitted" />
         </div>
@@ -20,3 +26,27 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+
+<app-dialog [visible]="rcvDialogVisible" header="選擇收貨單號" (visibleChange)="rcvDialogVisible = $event"
+  (save)="onSelectRCVNo()" [disable]="selectedItemsDialog.length === 0">
+  <form [formGroup]="dialogQueryForm" (ngSubmit)="onQueryRcvNo()">
+    <div class="grid p-fluid">
+      <div class="col-12 md:col-6">
+        <app-input-text class="col-12" label="收貨單號" controlName="RCV_No"
+          [control]="dialogQueryForm.controls.RCV_No"></app-input-text>
+      </div>
+    </div>
+    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <app-button btnType="clear" [form]="dialogQueryForm"></app-button>
+      <app-button btnType="query" [loading]="dialogLoading"></app-button>
+    </div>
+  </form>
+
+  <hr />
+  <app-table tableKey="fin33010RcvDialogTable" dataKey="No" [showReportMode]="false" [data]="dialogData"
+    [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
+    (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
+    [multiSortMeta]="[{ field: 'No', order: 1 }]" [totalRecords]="dialogTotalRecords" [lazy]="false"
+    [loading]="dialogLoading">
+  </app-table>
+</app-dialog>

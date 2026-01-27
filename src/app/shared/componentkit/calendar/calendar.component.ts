@@ -27,18 +27,31 @@ const FORMAT_RULES: Record<string, { lengths: number[], chars: string[] }> = {
 })
 export class CalendarComponent extends BasicKitComponent implements OnInit, OnDestroy {
   private valueChangeSubscription?: Subscription;
+  private _calendarType: CalendarType = 'dateOne';
+
   @Input() readonly = false;
   @Input() override label = '';
   @Input() showLabel = true;
   @Input() override controlName = '';
   @Input() control = new FormControl();
   @Input() submitted = false;
-  @Input() calendarType: CalendarType = 'dateOne';
-  @Input() timeOnly = true;
-  @Input() showTime = true;
+
+  // 使用 setter 確保 calendarType 變更時立即套用配置
+  @Input()
+  set calendarType(value: CalendarType) {
+    this._calendarType = value;
+    this.applyCalendarConfig();
+  }
+  get calendarType(): CalendarType {
+    return this._calendarType;
+  }
+
+  // 改為較安全的預設值 (不顯示時間)
+  @Input() timeOnly = false;
+  @Input() showTime = false;
   @Input() hourFormat = '24';
   @Input() dateFormat: string | undefined = 'yy/mm/dd';
-  @Input() view: 'date' | 'month' | 'year' = 'month';
+  @Input() view: 'date' | 'month' | 'year' = 'date';
   @Input() showSeconds = false;
   @Input() minDate: Date | undefined | null = null;
   @Input() maxDate: Date | undefined | null = null;
@@ -58,6 +71,22 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
     dateMonthOne: { timeOnly: false, showTime: false, dateFormat: 'yy/mm', view: 'month', customPlaceholder: '請選擇月份' },
     dateYearOne: { timeOnly: false, showTime: false, dateFormat: 'yy', view: 'year', customPlaceholder: '請選擇年份' },
   };
+
+  /**
+   * 套用 calendarType 對應的配置
+   */
+  private applyCalendarConfig(): void {
+    const config = this.calendarConfig[this._calendarType];
+    if (config) {
+      this.timeOnly = config.timeOnly;
+      this.showTime = config.showTime;
+      this.dateFormat = config.dateFormat;
+      this.view = config.view as 'date' | 'month' | 'year';
+      if (!this.customPlaceholder || this.customPlaceholder === '請選擇') {
+        this.placeholder = config.customPlaceholder;
+      }
+    }
+  }
 
   constructor(private validationService: ValidationService) {
     super();
@@ -79,29 +108,33 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
       this.control.disable();
     }
 
-    const config = this.calendarConfig[this.calendarType];
-    if (config) {
-      this.timeOnly = config.timeOnly;
-      this.showTime = config.showTime;
-      this.dateFormat = config.dateFormat;
-      this.view = config.view as 'date' | 'month' | 'year';
-      // 如果沒有自訂 placeholder，才使用預設值
-      if (!this.customPlaceholder || this.customPlaceholder === '請選擇') {
-        this.placeholder = config.customPlaceholder;
-      } else {
-        this.placeholder = this.customPlaceholder;
-      }
+    // 確保配置已套用 (calendarType setter 可能在某些情況下沒有被觸發)
+    this.applyCalendarConfig();
+
+    // 處理自訂 placeholder
+    if (this.customPlaceholder && this.customPlaceholder !== '請選擇') {
+      this.placeholder = this.customPlaceholder;
     }
 
-    // 🔧 改進:處理字串格式的日期
+    // 🔧 處理字串格式的日期，轉為 Date 物件並移除時間
     if (this.control.value && typeof this.control.value === 'string') {
       try {
-        const dateValue = new Date(this.control.value);
-        if (!isNaN(dateValue.getTime())) {
+        const dateValue = this.parseDateWithoutTime(this.control.value);
+        if (dateValue) {
           this.control.setValue(dateValue, { emitEvent: false });
         }
       } catch (error) {
         console.warn('日期格式轉換失敗:', this.control.value);
+      }
+    } else if (this.control.value instanceof Date) {
+      // 如果已經是 Date 物件，確保移除時間
+      const dateOnly = new Date(
+        this.control.value.getFullYear(),
+        this.control.value.getMonth(),
+        this.control.value.getDate()
+      );
+      if (dateOnly.getTime() !== this.control.value.getTime()) {
+        this.control.setValue(dateOnly, { emitEvent: false });
       }
     }
     // 監聽 control 值變化
@@ -257,6 +290,52 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
     }
 
     return value; // 若長度不符合規則則回傳原值
+  }
+
+  /**
+   * 解析日期字串並移除時間部分
+   * 支援格式: YYYY-MM-DD, YYYY/MM/DD, MM/DD/YYYY, MM-DD-YYYY (含或不含時間)
+   */
+  private parseDateWithoutTime(value: string): Date | null {
+    if (!value) return null;
+
+    const dateStr = value.trim();
+    if (!dateStr) return null;
+
+    // 移除時間部分
+    const datePart = dateStr.split(/[T\s]/)[0];
+
+    // 嘗試 YYYY-MM-DD 或 YYYY/MM/DD 格式
+    let match = datePart.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+    if (match) {
+      const year = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10) - 1;
+      const day = parseInt(match[3], 10);
+      const date = new Date(year, month, day);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    }
+
+    // 嘗試 MM/DD/YYYY 或 MM-DD-YYYY 格式
+    match = datePart.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+    if (match) {
+      const month = parseInt(match[1], 10) - 1;
+      const day = parseInt(match[2], 10);
+      const year = parseInt(match[3], 10);
+      const date = new Date(year, month, day);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    }
+
+    // 嘗試使用 new Date() 解析，但要確保移除時間
+    const parsed = new Date(value);
+    if (!isNaN(parsed.getTime())) {
+      return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+    }
+
+    return null;
   }
 
   ngOnDestroy() {

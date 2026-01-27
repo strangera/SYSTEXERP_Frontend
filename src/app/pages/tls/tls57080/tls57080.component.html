@@ -12,11 +12,10 @@
             <app-calendar-range-quick label="查詢日期" [startControl]="queryForm.controls.StartDate"
               [endControl]="queryForm.controls.EndDate" [submitted]="submitted"></app-calendar-range-quick>
           </div>
-          <!-- 管理編號 -->
-          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.PLU_MagNo"
-            templateLabel="label" [submitted]="submitted" optionLabel="PLU_MagNo" optionValue="PLU_MagNo"
-            [suggestions]="suggestions" [fieldsConfig]="fieldsConfig" [showOverlay]="false"
-            (inputValueChanged)="onAutoCompleteInputChange($event)">
+          <!-- 國際條碼/商品管理編號/廠商貨號 -->
+          <app-dropdown-table class="col-12" [showOverlay]="false" [control]="queryForm.controls.PLU_MagNo"
+            [submitted]="submitted" optionLabel="label" optionValue="PLU_No" [suggestions]="suggestions"
+            [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)">
           </app-dropdown-table>
           <!-- 國際條碼 -->
           <!-- <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.PLU_No"

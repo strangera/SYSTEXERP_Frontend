@@ -17,7 +17,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { Fin55120TableReportComponent } from './fin55120-table-report/fin55120-table-report.component';
-import { formatAmount } from './fin55120-table-report/fin55120-table-report.model';
 @Component({
   selector: 'app-fin55120',
   templateUrl: './fin55120.component.html',
@@ -44,12 +43,11 @@ export class FIN55120Component extends BasicQueryPageComponent<FIN55120DetailIte
   totalRecords = 0;
   lastQueryBody: QueryFIN55120Request | null = null;
   columns: ReportColumn[] = [
-    // { field: 'ItemTitle', header: '項目名稱' },
     { field: 'AccNo', header: '科目代號' },
     { field: 'AccCName', header: '科目名稱', align: 'left' },
     { field: 'Balance', header: '金額', isSubTotal: true, format: formatAmount, align: 'right' },
     { field: 'BalanceTotal', header: '合計', isSubTotal: true, format: formatAmount, align: 'right' },
-    { field: 'Pct', header: '百分比', isSubTotal: true, format: (v) => v, align: 'right' },
+    { field: 'Pct', header: '百分比', isSubTotal: true, format: formatAmount, align: 'right' },
   ];
   YM: Date | null = null;
 
@@ -103,3 +101,27 @@ export class FIN55120Component extends BasicQueryPageComponent<FIN55120DetailIte
     this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
 }
+
+const formatAmount = (val: number | string | null | undefined): string => {
+  // 1. 檢查是否為 null 或 undefined 或空字串
+  if (val === null || val === undefined || val === '') {
+    return '';
+  }
+
+  const num = Number(val);
+
+  // 2. 檢查是否為 NaN
+  if (isNaN(num)) {
+    return String(val);
+  }
+
+  // 3. 判斷負數邏輯
+  if (num < 0) {
+    // Math.abs(num) 會把 -10234 變成 10234
+    // 然後再進行千分位格式化，最後包上括號
+    return `(${Math.abs(num).toLocaleString()})`;
+  }
+
+  // 4. 正數或 0 則直接進行本地化格式化
+  return num.toLocaleString(); // eg. 1,000,000
+};

@@ -18,7 +18,7 @@ export class Tls56020Service {
     return this.http.post<any>(`${this.apiUrl}/queryTLS56020`, data);
   }
 
-  // 商品管理編號/國際條碼/廠商貨號查詢商品
+  // 國際條碼/商品管理編號/廠商貨號查詢商品
   queryPOS2004Detail_TLS56020(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryPOS2004Detail_TLS56020`, data);
   }

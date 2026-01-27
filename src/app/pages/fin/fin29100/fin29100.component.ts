@@ -13,14 +13,13 @@ import { Column, createPaginationConfig, formatAmount, formatDate } from '@share
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
-import { FIN29100Data, FIN29100Service, QueryFIN29100Request } from '../../../service/api/fin/fin29100.service';
+import { FIN29100Data, FIN29100Service, QueryBankAccountResponse, QueryFIN29100Request } from '../../../service/api/fin/fin29100.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { DropDownListService } from './../../../service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-fin29100',
@@ -56,12 +55,19 @@ export class FIN29100Component extends BasicQueryPageComponent<FIN29100Data> imp
     ...createPaginationConfig([]),
   });
 
-  BankOptions: { label: string; value: string }[] = []; // 銀行選項
+  BankOptions: (QueryBankAccountResponse & { displayLabel: string })[] = []; // 銀行選項
   TxnTypeOptions: { label: string; value: string }[] = [
     { label: '開票', value: '1' },
     { label: '匯款', value: '2' },
     { label: '調撥', value: '3' }
   ];
+
+  // 型態 對照表
+  TxnTypeMap: Record<string, string> = {
+    '1': '開票',
+    '2': '匯款',
+    '3': '調撥'
+  };
 
   data: FIN29100Data[] = [];
   totalRecords = 0;
@@ -69,7 +75,6 @@ export class FIN29100Component extends BasicQueryPageComponent<FIN29100Data> imp
   excelBtnLoading = false;
 
   columns: Column[] = [
-    { field: 'Seqno', header: '序號', visible: true },
     { field: 'TxnType', header: '型態', visible: true },
     {
       field: 'TxnDocumentNo',
@@ -93,7 +98,6 @@ export class FIN29100Component extends BasicQueryPageComponent<FIN29100Data> imp
   ];
 
   constructor(
-    private dropDownListService: DropDownListService,
     private fin29100Service: FIN29100Service,
     private datePipe: DatePipe
   ) {
@@ -106,17 +110,15 @@ export class FIN29100Component extends BasicQueryPageComponent<FIN29100Data> imp
   }
 
   private loadOptions(): void {
-    // 若系統有提供銀行下拉 API，可改為呼叫 DropDownListService；這裡示範用 service 查詢（如無資料，保持空陣列）
-    this.dropDownListService.queryGLS1005_DropDownList()
+    this.fin29100Service.queryBankAccount({})
       .pipe(untilDestroyed(this))
-      .subscribe({
-        next: res => {
-          // 假設回傳資料為 { No, Name }，我們把它當作銀行選項的來源
-          this.BankOptions = (res?.Data || []).map((x: { No: string; Name: string }) => ({ label: `${x.No} - ${x.Name}`, value: x.No }));
-        },
-        error: () => {
-          this.BankOptions = [];
-        }
+      .subscribe(response => {
+        // 格式化顯示: BNK_id - BNK_AccName
+        this.BankOptions = response.Data.map(item => ({
+          ...item,
+          displayLabel: `${item.BNK_id || item.id} - ${item.BNK_AccName}`
+        }));
+        console.log('Bank Options:', this.BankOptions);
       });
   }
 
@@ -148,7 +150,10 @@ export class FIN29100Component extends BasicQueryPageComponent<FIN29100Data> imp
         .subscribe({
           next: (response) => {
             if (response && response.Data) {
-              this.data = response.Data;
+              this.data = response.Data.map(x => ({
+                ...x,
+                TxnType: this.TxnTypeMap[x.TxnType] || x.TxnType
+              }));
               this.totalRecords = response.TotalCount || 0;
             } else {
               this.data = [];

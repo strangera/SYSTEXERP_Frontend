@@ -4,122 +4,57 @@
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <!-- 匯款來源單號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-table
-              [control]="queryForm.controls.PAM_No"
-              templateLabel="label"
-              [submitted]="submitted"
-              optionLabel="PAM_No"
-              optionValue="PAM_No"
-              [suggestions]="suggestions"
-              [fieldsConfig]="fieldsConfig"
-              (inputValueChanged)="onAutoCompleteInputChange($event)"
-              [formGroup]="opForm"
-              (formValueChanged)="onFormValueChanged($event)"
-              [dialogData]="opData"
-              [dialogColumns]="opColumns"
-              [loading]="opLoading"
-              [totalRecords]="opTotalRecords"
-            >
-              <app-calendar-range
-                class="col-12"
-                label="收/付款日"
-                controlName="PTA_Date_b"
-                [startControl]="opForm.controls.PTA_Date_b"
-                [endControl]="opForm.controls.PTA_Date_e"
-              />
-              <app-dropdown
-                class="col-6"
-                label="是否形成電匯"
-                controlName="Remit_Status"
-                [control]="opForm.controls.Remit_Status"
-                [options]="[
+            <app-dropdown-table [control]="queryForm.controls.PAM_No" templateLabel="label" [submitted]="submitted"
+              optionLabel="PAM_No" optionValue="PAM_No" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
+              (inputValueChanged)="onAutoCompleteInputChange($event)" [formGroup]="opForm"
+              (formValueChanged)="onFormValueChanged($event)" [dialogData]="opData" [dialogColumns]="opColumns"
+              [loading]="opLoading" [totalRecords]="opTotalRecords">
+              <app-calendar-range class="col-12" label="收/付款日" controlName="PTA_Date_b"
+                [startControl]="opForm.controls.PTA_Date_b" [endControl]="opForm.controls.PTA_Date_e" />
+              <app-dropdown class="col-6" label="是否形成電匯" controlName="Remit_Status"
+                [control]="opForm.controls.Remit_Status" [options]="[
                   { label: '是', value: 'Y' },
                   { label: '否', value: 'N' },
-                ]"
-                optionLabel="label"
-                optionValue="value"
-                [editable]="false"
-              />
-              <app-input-text
-                class="col-6"
-                label="匯款來源單號"
-                controlName="PAM_No"
-                [control]="opForm.controls.PAM_No"
-              />
+                ]" optionLabel="label" optionValue="value" [editable]="false" />
+              <app-input-text class="col-6" label="匯款來源單號" controlName="PAM_No" [control]="opForm.controls.PAM_No" />
             </app-dropdown-table>
           </div>
           <!-- 建立日期(起迄) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              label="建立日期"
-              controlName="D_Date_b"
-              [startControl]="queryForm.controls.D_Date_b"
-              [endControl]="queryForm.controls.D_Date_e"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range label="建立日期" controlName="D_Date_b" [startControl]="queryForm.controls.D_Date_b"
+              [endControl]="queryForm.controls.D_Date_e" [submitted]="submitted"></app-calendar-range>
           </div>
           <!-- 收/付款日(起迄) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              label="收/付款日"
-              controlName="PTA_Date_b"
-              [startControl]="queryForm.controls.PTA_Date_b"
-              [endControl]="queryForm.controls.PTA_Date_e"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range label="收/付款日" controlName="PTA_Date_b" [startControl]="queryForm.controls.PTA_Date_b"
+              [endControl]="queryForm.controls.PTA_Date_e" [submitted]="submitted"></app-calendar-range>
           </div>
           <!-- 是否形成電匯 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="是否形成電匯"
-              controlName="Remit_Status"
-              [control]="queryForm.controls.Remit_Status"
+            <app-dropdown label="是否形成電匯" controlName="Remit_Status" [control]="queryForm.controls.Remit_Status"
               [options]="[
                 { label: '是', value: 'Y' },
                 { label: '否', value: 'N' },
-              ]"
-              optionLabel="label"
-              optionValue="value"
-              [submitted]="submitted"
-              [editable]="false"
-            ></app-dropdown>
+              ]" optionLabel="label" optionValue="value" [submitted]="submitted" [editable]="false"></app-dropdown>
           </div>
           <!-- 匯款單號 -->
           <div class="col-12 md: col-6 lg:col-4">
-            <app-input-text
-              label="匯款單號"
-              controlName="WSLIP_NO"
-              [control]="queryForm.controls.WSLIP_NO"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="匯款單號" controlName="WSLIP_NO" [control]="queryForm.controls.WSLIP_NO"
+              [submitted]="submitted"></app-input-text>
           </div>
           <!-- 付款天數 -->
           <div class="col-12 md: col-6 lg:col-4">
-            <app-input-text
-              label="付款天數"
-              controlName="payday_Counts"
-              [control]="queryForm.controls.payday_Counts"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="付款天數" controlName="payday_Counts" [control]="queryForm.controls.payday_Counts"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -129,20 +64,8 @@
 </div>
 
 <div class="card">
-  <app-table
-    tableKey="FIN25010"
-    dataKey="ID"
-    [data]="data"
-    [columns]="columns"
-    [showCheckBox]="false"
-    [showDelete]="false"
-    [showManage]="false"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    [multiSortMeta]="[{ field: 'D_Date', order: -1 }]"
-    [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [lazy]="true"
-    [loading]="loading"
-  ></app-table>
+  <app-table-report tableKey="FIN25010" dataKey="ID" [data]="data" [columns]="columns" [showCheckBox]="false"
+    [showDelete]="false" [showManage]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="fin25010Service.queryFIN25010.bind(fin25010Service)" [loading]="loading"></app-table-report>
 </div>

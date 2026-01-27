@@ -269,6 +269,14 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       }
     }
 
+    if (this.detailTable) {
+      // 檢查是否正在編輯「主行」(editingRow 不為 null 代表有行正在編輯)
+      if (this.detailTable.editingRow !== null) {
+        this.messageService.warnBubble('明細表格尚有未儲存的編輯項目，請先點擊「打勾」儲存或「取消」結束編輯。');
+        return; // 中斷送出流程
+      }
+    }
+
     //將新的資料id指定為null
     const processedDetail = this.potentialDetail.map(item => {
       // 刪除 key 為空字串的欄位
