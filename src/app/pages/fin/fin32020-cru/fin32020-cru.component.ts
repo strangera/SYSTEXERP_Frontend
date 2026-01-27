@@ -241,16 +241,14 @@ adjAccNoOptions$ = this.fin32020Service.getGLS1005DropDown().pipe(
       this.dataForm.patchValue({ adjust_Date: new Date() });
     }
   }
-  private afterSaveSuccess(): void {
+ private afterSaveSuccess(): void {
   this.loading = false;
   this.submitted = false;
 
-  // ✅ 回查詢頁（沿用你 onBack 的路徑）
-   this.router.navigate(
-    ['account/fin/fin32020'],
-    { queryParams: { refresh: 1 } }   // ✅ 就加在這
-  );
-  
+  this.router.navigate(['account/fin/fin32020'], {
+    queryParams: { refresh: 1 },
+    state: { fromCru: true },
+  });
 }
 
 
@@ -330,9 +328,11 @@ adjAccNoOptions$ = this.fin32020Service.getGLS1005DropDown().pipe(
 
   /* ================= 應收帳款 Dialog ================= */
 onBack(): void {
-  // ⚠️ 這裡路徑請改成你實際 FIN32020 查詢頁 route
-  this.router.navigate(['account/fin/fin32020']);
+  this.router.navigate(['account/fin/fin32020'], {
+    state: { fromCru: true },
+  });
 }
+
   openARSDialog(): void {
     if (this.isFormReadable) return;
 

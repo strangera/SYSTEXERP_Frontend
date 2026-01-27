@@ -8,7 +8,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { map } from 'rxjs/operators';
+
 
 // UI
 import { TranslateModule } from '@ngx-translate/core';
@@ -42,6 +42,7 @@ interface SortItem {
   order: number;
 }
 
+import { map, take } from 'rxjs/operators';
 @UntilDestroy()
 @Component({
   selector: 'app-fin32020',
@@ -65,8 +66,7 @@ interface SortItem {
 })
 export class FIN32020Component
   extends BasicQueryPageComponent<Fin32020Row>
-  implements OnInit
-{
+  implements OnInit {
   /* ----------------- 主表狀態 ----------------- */
   data: Fin32020Row[] = [];
   totalRecords = 0; // 後端真實總筆數
@@ -133,38 +133,36 @@ export class FIN32020Component
   }
 
   /* ----------------- LifeCycle ----------------- */
-  ngOnInit(): void {
-    this.initializePage(
-      'FIN32020',
-      'fin/fin32020cru',
-      this.queryForm,
-      (form) => this.onSubmit(form)
-    );
+ngOnInit(): void {
+  this.initializePage(
+    'FIN32020',
+    'fin/fin32020cru',
+    this.queryForm,
+    (form) => this.onSubmit(form)
+  );
 
-    // ✅ 初始化 current sort
-    this._currentSortBy = this.defaultSort;
+  this._currentSortBy = this.defaultSort;
 
-    // ✅ 還原查詢條件（參考 FIN64010）
-    const saved = this.queryStateService.getQueryStateValue('FIN32020');
-    if (saved) {
-      // 1) formValue
-      const formValue = saved?.formValue ?? saved; // 兼容舊格式
-      if (formValue) {
-        this.queryForm.patchValue(formValue, { emitEvent: false });
-      }
+  const fromCru = !!(history.state && history.state['fromCru']);
 
-      // 2) sort / lastQueryBody
-      this._currentSortBy =
-        Array.isArray(saved?.currentSortBy) && saved.currentSortBy.length
-          ? saved.currentSortBy
-          : this.defaultSort;
-
-      this.lastQueryBody = saved?.lastQueryBody ?? null;
-
-      // 3) 自動查一次
-      Promise.resolve().then(() => this.onSubmit(this.queryForm));
+  this.formStatusService.waitForReady(this.ProgNo).pipe(take(1)).subscribe(() => {
+    if (fromCru) {
+      this.handleQueryRestore(this.queryForm, this.ProgNo, (f) => this.onSubmit(f));
+    } else {
+      this.onClear(this.queryForm);
+      this.data = [];
+      this.selectedItems = [];
+      this.totalRecords = 0;
+      this.viewTotalRecords = 0;
+      this.footerData = undefined;
+      this.lastQueryBody = null;
+      this.tableVer++;
     }
-  }
+  });
+}
+
+
+
 
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
@@ -202,16 +200,16 @@ export class FIN32020Component
     return cleaned.length ? cleaned : fallback;
   }
 
-  /** ✅ 存查詢狀態（參考 FIN64010） */
-  private saveQueryState(): void {
-    this.queryStateService.setQueryState('FIN32020', {
-      formValue: this.queryForm.getRawValue(),
-      currentSortBy: this._currentSortBy?.length
-        ? this._currentSortBy
-        : this.defaultSort,
-      lastQueryBody: this.lastQueryBody,
-    });
-  }
+private saveQueryState(): void {
+  // 給 handleQueryRestore 用：只存表單
+  this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+
+  // 你自己的還原資料：另外存
+  this.queryStateService.setQueryState(`${this.ProgNo}_ext`, {
+    currentSortBy: this._currentSortBy?.length ? this._currentSortBy : this.defaultSort,
+    lastQueryBody: this.lastQueryBody,
+  } as any);
+}
 
   /** 把表單 & table-report body 組成 request */
   private buildPayload(base: any): Fin32020QueryRequest {
@@ -230,11 +228,11 @@ export class FIN32020Component
     const orderBy =
       sort && sort.length
         ? sort
-            .map((s) => {
-              const dir = s.order === -1 ? 'DESC' : 'ASC';
-              return `${s.field} ${dir}`;
-            })
-            .join(', ')
+          .map((s) => {
+            const dir = s.order === -1 ? 'DESC' : 'ASC';
+            return `${s.field} ${dir}`;
+          })
+          .join(', ')
         : null;
 
     const req: Fin32020QueryRequest = {
@@ -272,8 +270,8 @@ export class FIN32020Component
           const rows: Fin32020Row[] = Array.isArray(src)
             ? src
             : src
-            ? [src]
-            : [];
+              ? [src]
+              : [];
           const totalCount =
             Number((res as any)?.TotalCount ?? rows.length) ||
             rows.length;
@@ -357,33 +355,37 @@ export class FIN32020Component
   }
 
   /* ----------------- 清除 ----------------- */
-  onClear(frm: FormGroup) {
-    frm.reset(
-      {
-        adjust_ID: null,
-        adjust_Date_From: null,
-        adjust_Date_To: null,
-        remark: '',
-        summons_ID_From: null,
-        summons_ID_To: null,
-        ...createPaginationConfig([{ field: 'ADJ_Date', order: -1 }]),
-      } as any,
-      { emitEvent: false }
-    );
+onClear(frm: FormGroup) {
+  frm.reset(
+    {
+      adjust_ID: null,
+      adjust_Date_From: null,
+      adjust_Date_To: null,
+      remark: '',
+      summons_ID_From: null,
+      summons_ID_To: null,
+      ...createPaginationConfig([{ field: 'ADJ_Date', order: -1 }]),
+    } as any,
+    { emitEvent: false }
+  );
 
-    this.submitted = false;
-    this.data = [];
-    this.totalRecords = 0;
-    this.viewTotalRecords = 0;
-    this.footerData = undefined;
+  this.submitted = false;
+  this.data = [];
+  this.totalRecords = 0;
+  this.viewTotalRecords = 0;
+  this.footerData = undefined;
 
-    this.lastQueryBody = null;
-    this._currentSortBy = this.defaultSort;
-    this.saveQueryState();
-  }
+  this.lastQueryBody = null;
+  this._currentSortBy = this.defaultSort;
+
+  // ✅ 清掉 restore 狀態（不要再 setQueryState）
+  this.queryStateService.clearQueryState(this.ProgNo);
+}
+
 
   /* ----------------- 建立 / 編輯 / 明細 ----------------- */
   onClickCreate() {
+    this.saveQueryState();
     this.onCreate(undefined, this.queryForm.value);
   }
 
@@ -394,20 +396,20 @@ export class FIN32020Component
     super.onDetail(row, this.queryForm.value);
   }
 
-get canShowEdit(): boolean {
-  return Array.isArray(this.data) && this.data.some((r) => (r as any)?.['CanEdit'] === true);
-}
-
-override onEdit(row: Fin32020Row, queryConditions?: any): void {
-  this.saveQueryState();
-
-  if ((row as any)?.['CanEdit'] !== true) {
-    super.onDetail(row, this.queryForm.value);
-    return;
+  get canShowEdit(): boolean {
+    return Array.isArray(this.data) && this.data.some((r) => (r as any)?.['CanEdit'] === true);
   }
 
-  super.onEdit(row, this.queryForm.value);
-}
+  override onEdit(row: Fin32020Row, queryConditions?: any): void {
+    this.saveQueryState();
+
+    if ((row as any)?.['CanEdit'] !== true) {
+      super.onDetail(row, this.queryForm.value);
+      return;
+    }
+
+    super.onEdit(row, this.queryForm.value);
+  }
 
 
 }
