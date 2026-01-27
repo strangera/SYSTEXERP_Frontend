@@ -75,19 +75,18 @@
       </div>
 
       <!-- Footer -->
-      <div
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-      >
-        <app-button
-          btnType="cancel"
-          [type]="'button'"
-          (click)="onCancel()"
-        ></app-button>
-        <app-button btnType="submit" [loading]="loading"></app-button>
-      </div>
-    </form>
-  </p-panel>
+<div
+  class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+  *ngIf="!isFormReadable"
+>
+  <app-button
+    btnType="cancel"
+    [type]="'button'"
+    (click)="onCancel()"
+  ></app-button>
+  <app-button btnType="submit" [loading]="loading"></app-button>
 </div>
+
 
 <!-- ====== 應收帳款 Dialog：可輸入 ARS_No 搜尋 ====== -->
 <app-dialog
