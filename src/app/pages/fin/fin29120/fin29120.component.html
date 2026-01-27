@@ -51,27 +51,17 @@
               [submitted]="submitted"
             ></app-dropdown-range>
           </div>
-        </div>
 
-        <div class="grid p-fluid">
-          <!-- 發票號碼起 -->
+          <!-- 發票號碼(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="發票號碼(判斷前兩碼英文, 後八碼數字, 填滿10位)"
-              controlName="startserialticket"
-              [control]="queryForm.controls.startserialticket"
+            <app-input-text-range
+              label="發票號碼"
+              controlNameStart="startserialticket"
+              controlNameEnd="endserialticket"
+              [startControl]="queryForm.controls.startserialticket"
+              [endControl]="queryForm.controls.endserialticket"
               [submitted]="submitted"
-            ></app-input-text>
-          </div>
-
-          <!-- 發票號碼迄 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="　"
-              controlName="endserialticket"
-              [control]="queryForm.controls.endserialticket"
-              [submitted]="submitted"
-            ></app-input-text>
+            ></app-input-text-range>
           </div>
         </div>
 

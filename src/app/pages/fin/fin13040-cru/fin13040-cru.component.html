@@ -6,11 +6,11 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
+        <!-- <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="發票類型" controlName="InvoiceType" [options]="InvoiceType_Options" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.InvoiceType" [submitted]="submitted">
           </app-dropdown>
-        </div>
+        </div> -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="使用別" controlName="SAL_Type" [options]="SAL_Type_Options" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.SAL_Type" [submitted]="submitted">

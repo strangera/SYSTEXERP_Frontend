@@ -39,16 +39,16 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
     VEN_Tel: ['', [Validators.maxLength(20)]],                             // 電話
     VEN_Fax: ['', [Validators.maxLength(20)]],                             // 傳真
     VEN_Uniform: [''],                         // 統一編號
-    VEN_RemitFeeMode: [''],                    // 郵電負擔模式
-    VEN_DiscYN: [''],                          // 貼現廠商 (單一字串)
-    VEN_CTRLYN: [''],                          // 禁止背書轉讓 (單一字串)
-    VEN_PayType: [''],                         // 付款方式 (單一字串)
+    VEN_RemitFeeMode: [[]],                    // 郵電負擔模式
+    VEN_DiscYN: [[]],                          // 貼現廠商 (單一字串)
+    VEN_CTRLYN: [[]],                          // 禁止背書轉讓 (單一字串)
+    VEN_PayType: [[]],                         // 付款方式 (單一字串)
     VEN_BNK_No: ['', [Validators.maxLength(5)]],                          // 廠商匯款銀行代號
     VEN_BankAccountNo: ['', [Validators.maxLength(50)]],                   // 廠商銀行帳號
     VEN_AccountName: ['', [Validators.maxLength(80)]],                     // 廠商帳戶名稱
     VEN_PayConditionDay: [''],                  // 付款期限
     VEN_CheckTitle: [''],                      // 票據抬頭
-    VEN_Status: [''],                          // 審核狀態 (dropdown)
+    VEN_Status: [[]],                          // 審核狀態 (dropdown)
     ...createPaginationConfig([{ field: 'VEN_No', order: 1 }]),
 
   });
@@ -192,15 +192,36 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
     this.messageService.blockUi();
     const raw = frm.getRawValue();
     const payload: any = { ...raw };
-    // 若 VEN_DiscYN 是陣列（UI 可能回傳 single-select as array），改為傳單一字串
-    if (Array.isArray(raw.VEN_DiscYN)) {
-      payload.VEN_DiscYN = raw.VEN_DiscYN.length ? raw.VEN_DiscYN[0] : '';
-      if (payload.VEN_DiscYN === '') delete payload.VEN_DiscYN;
-    }
+    // 保持多選欄位為陣列送出；若為單一值則轉為陣列；若為空則移除該欄位
+    const multiSelectFields = ['VEN_RemitFeeMode', 'VEN_DiscYN', 'VEN_CTRLYN', 'VEN_PayType', 'VEN_Status'];
+    multiSelectFields.forEach(field => {
+      const val = (raw as any)[field];
+      if (Array.isArray(val)) {
+        if (val.length) {
+          payload[field] = val;
+        } else {
+          delete payload[field];
+        }
+      } else if (val === null || val === undefined || val === '') {
+        delete payload[field];
+      } else {
+        payload[field] = [String(val)];
+      }
+    });
     if (raw.VEN_PayConditionDay !== null && raw.VEN_PayConditionDay !== undefined && raw.VEN_PayConditionDay !== '') {
       payload.VEN_PayConditionDay = Number(raw.VEN_PayConditionDay);
     } else {
       delete payload.VEN_PayConditionDay;
+    }
+
+    // 清理 VEN_Uniform：trim，若為空或全為 0 則移除該欄位
+    if (payload.VEN_Uniform !== undefined && payload.VEN_Uniform !== null) {
+      const u = String(payload.VEN_Uniform).trim();
+      if (u === '' || /^0+$/.test(u)) {
+        delete payload.VEN_Uniform;
+      } else {
+        payload.VEN_Uniform = u;
+      }
     }
 
     this.fin21030Service.queryFIN21030(payload)
@@ -214,6 +235,11 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
           this.totalRecords = res?.TotalCount || 0;
           this.queryStateService.setQueryState(this.ProgNo, payload);
         },
+        error: (err) => {
+          console.error('queryFIN21030 error', err);
+          const msg = err?.error?.Message || err?.message || '查詢失敗，請查看 Console';
+          this.messageService.errorBubble(msg);
+        }
       });
   }
 }
