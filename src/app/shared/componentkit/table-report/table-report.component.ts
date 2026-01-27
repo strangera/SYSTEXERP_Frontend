@@ -17,7 +17,7 @@ import { finalize, Observable } from 'rxjs';
 import { TableCaptionComponent } from '../table/table-caption/table-caption.component';
 import { TableExpansionComponent } from '../table/table-expansion/table-expansion.component';
 import { TableReportUtilityService } from './table-report-utility.service';
-import { AddButton, ColumnGroup, expandAnimation, formatAmount2, ReportColumn } from './table-report.model';
+import { AddButton, ColumnGroup, expandAnimation, formatAmount2, ReportColumn, TableQueryPayload } from './table-report.model';
 
 @Component({
   selector: 'app-table-report',
@@ -57,6 +57,9 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   // Header 相關
   @Input() showCaption = true;            // 是否顯示 Caption
   @Input() showSort = true;              // 是否顯示 排序
+  public get multiSortMeta() { // 暴露內部 p-table 的多重排序狀態
+    return this.dt?.multiSortMeta || [];
+  }
   @Input() allowMultilineHeader = false; // 是否允許標題使用 \n 換行
   // Header(左) 相關
   @Input() showFilter = true;      // 是否顯示 Filter
@@ -261,6 +264,32 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         this.dataChange.emit(this.data);
       }
     });
+  }
+  customSort(event: TableQueryPayload) {
+    this.data.sort((data1, data2) => {
+      for (const sortMeta of event.multiSortMeta!) {
+        const value1 = data1[sortMeta.field];
+        const value2 = data2[sortMeta.field];
+        let result = 0;
+        if (value1 == null && value2 != null) result = -1;
+        else if (value1 != null && value2 == null) result = 1;
+        else if (value1 == null && value2 == null) result = 0;
+        else if (typeof value1 === 'string' && typeof value2 === 'string')
+          result = value1.localeCompare(value2, undefined, { numeric: true, sensitivity: 'base' });
+        else
+          result = value1 < value2 ? -1 : value1 > value2 ? 1 : 0;
+
+        if (result !== 0) {
+          return sortMeta.order * result;
+        }
+      }
+      return 0;
+    });
+    // 3. 排序完成後更新
+    this.virtualData = this.data; // 確保虛擬滾動看到的也是排序後的
+    this.groupTotals = {};
+    this.updateGroupTotals(this.data);
+    this.cdr.markForCheck();
   }
   onLazyLoad() {
     if (this.isAllSelected) {
