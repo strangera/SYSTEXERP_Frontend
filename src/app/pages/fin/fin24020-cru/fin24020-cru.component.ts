@@ -240,13 +240,51 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
         }))
         .subscribe(res => {
           const items = (res?.Data ?? []) as any[];
+          // 支援兩種回傳：1) 直接明細陣列 2) wrapper 格式 { Data:{...}, Details:[...] }
           if (items && items.length) {
-            this.tableData = items.map(it => ({
-              RET_Date: it.RET_Date ? new Date(it.RET_Date + 'T00:00:00') : null,
-              RET_Amt: Number(it.RET_Amt ?? it.ACP_ReserveAmt ?? 0),
-              Remark: it.NoteDesc ?? '',
-              STATUS: this.toStatusCode(it.STATUS)
-            }));
+            const first = items[0];
+            // wrapper 格式
+            if (first && first.Data && Array.isArray(first.Details)) {
+              const header = first.Data || {};
+              // 從 header 填入表單欄位（若尚未填）
+              try {
+                this.dataForm.patchValue({
+                  ACP_Amt: header.ACP_Amt ?? this.dataForm.value.ACP_Amt,
+                  ACP_ReserveAmt: header.ACP_ReserveAmt ?? this.dataForm.value.ACP_ReserveAmt,
+                  ACP_BalanceAmt: header.ACP_BalanceAmt ?? this.dataForm.value.ACP_BalanceAmt,
+                  ACP_Date: header.ACP_Date ? new Date(header.ACP_Date + 'T00:00:00') : this.dataForm.value.ACP_Date,
+                }, { emitEvent: false });
+              } catch (e) { /* ignore */ }
+              // 將 Details 展成 tableData
+              const details = (first.Details || []);
+              this.tableData = details.map((d: any) => ({
+                RET_Date: d.RET_Date ? new Date(d.RET_Date + 'T00:00:00') : null,
+                RET_Amt: Number(d.RET_Amt ?? d.ACP_ReserveAmt ?? 0),
+                Remark: d.NoteDesc ?? '',
+                STATUS: this.toStatusCode(d.STATUS),
+                ACP_Amt: d.ACP_Amt,
+                ACP_BalanceAmt: d.ACP_BalanceAmt
+              }));
+              // 如果 header 沒有金額，嘗試從第一筆明細帶入
+              const firstDetail = details[0];
+              const totalRet = details.reduce((s: number, it: any) => s + (Number(it.RET_Amt) || 0), 0);
+              try {
+                this.dataForm.patchValue({
+                  ACP_Amt: header.ACP_Amt ?? firstDetail?.ACP_Amt ?? this.dataForm.value.ACP_Amt,
+                  ACP_BalanceAmt: header.ACP_BalanceAmt ?? firstDetail?.ACP_BalanceAmt ?? this.dataForm.value.ACP_BalanceAmt,
+                  RET_Amt: totalRet ?? this.dataForm.value.RET_Amt,
+                  sam: totalRet ?? this.dataForm.value.sam
+                }, { emitEvent: false });
+              } catch (e) { /* ignore */ }
+            } else {
+              // 非 wrapper，items 為明細列
+              this.tableData = items.map(it => ({
+                RET_Date: it.RET_Date ? new Date(it.RET_Date + 'T00:00:00') : null,
+                RET_Amt: Number(it.RET_Amt ?? it.ACP_ReserveAmt ?? 0),
+                Remark: it.NoteDesc ?? '',
+                STATUS: this.toStatusCode(it.STATUS)
+              }));
+            }
           } else {
             this.tableData = [{
               RET_Date: retDate,

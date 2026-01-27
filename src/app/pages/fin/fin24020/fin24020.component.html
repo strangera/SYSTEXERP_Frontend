@@ -58,9 +58,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report apiUrl="queryFIN24020" tableKey="FIN24020query" dataKey="RowNo" [lastQueryBody]="lastQueryBody"
-    [showReportMode]="false" [totalRecords]="totalRecords" [data]="data"
-    (edit)="onEdit($event, queryForm.getRawValue())" (detail)="onDetail($event, queryForm.getRawValue())"
-    [columns]="columns" [loading]="loading" [showDelete]="false" [editDisabled]="editDisabledByVouNo"
-    [queryFunction]="queryFIN24020WithStatusLabel.bind(this)"></app-table-report>
+  <app-table tableKey="FIN24020" dataKey="ACP_No" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
+    [loading]="loading" [showDelete]="false" [editDisabled]="editDisabledByVouNo" [showDetail]="true"
+    expansionDataKey="Details" [expansionColumns]="detailColumns" (edit)="onEdit($event, queryForm.getRawValue())"
+    (detail)="onDetail($event, queryForm.getRawValue())" [lazy]="true"
+    (lazyLoadData)="handleLazyLoad($event)"></app-table>
 </div>
