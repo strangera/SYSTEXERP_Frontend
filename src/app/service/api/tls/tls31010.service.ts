@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 export interface TLS31010Request {
@@ -42,6 +42,21 @@ export interface TLS31010QueryData {
   CompletionRate: number
 }
 
+export interface TLS31010QueryFooterData {
+  budget: number
+  AVN_TotSaleAmt: number
+  AchievementRate: number
+  BudgetRate: number
+  PerformanceRate: number
+  TxnCount: number
+  AvgTicket: number
+  tlt_space: number
+  MonthlyPSM: number
+  MonthlyBudgetTotal: number
+  MonthlySalesTotal: number
+  CompletionRate: number
+}
+
 export interface TLS31010TotalData {
   TotalBudget: number,
   TotalSales: number,
@@ -60,6 +75,10 @@ export interface TLS31010Response {
   TotalData: TLS31010TotalData;
 }
 
+export interface TLS31010FormattedResponse extends ApiResponse<TLS31010QueryData[]> {
+  TotalData?: TLS31010TotalData;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -67,11 +86,36 @@ export class Tls31010Service {
   apiUrl: string = environment.ApiUrl + '/TLS0000/TLS3000';
   constructor(private http: HttpClient) { }
 
-  queryTLS31010(body: TLS31010Request): Observable<ApiResponse<TLS31010Response>> {
-    return this.http.post<ApiResponse<TLS31010Response>>(`${this.apiUrl}/queryTLS31010`, body);
+  queryTLS31010(body: TLS31010Request): Observable<TLS31010FormattedResponse> {
+    return this.http.post<ApiResponse<TLS31010Response>>(`${this.apiUrl}/queryTLS31010`, body).pipe(
+      map(res => {
+        // 將 TotalData 映射到與 columns 相符的 key 名稱
+        const mappedTotalData = res.Data?.TotalData ? {
+          budget: res.Data.TotalData.TotalBudget,
+          AVN_TotSaleAmt: res.Data.TotalData.TotalSales,
+          AchievementRate: res.Data.TotalData.AvgAchievementRate,
+          TxnCount: res.Data.TotalData.TotalTxnCount,
+          AvgTicket: res.Data.TotalData.AvgTicket,
+          tlt_space: res.Data.TotalData.TotalSpace,
+          MonthlyPSM: res.Data.TotalData.AvgPSM,
+          MonthlyBudgetTotal: res.Data.TotalData.TotalMonthlyBudget,
+          MonthlySalesTotal: res.Data.TotalData.TotalMonthlySales,
+          CompletionRate: res.Data.TotalData.AvgCompletionRate,
+          // 如果有其他欄位需要對應，繼續寫在這裡
+          building_desc: '總計', // 選擇性：給予一個標籤讓 Footer 顯示
+        } : null;
+
+        return {
+          ...res,
+          Data: res.Data?.QueryData || [],
+          TotalData: mappedTotalData, // 這裡傳出的已經是處理過的結構
+          TotalCount: res.TotalCount || 0
+        } as any; // 這裡可以用 any 避開類型檢查，或更新 TLS31010FormattedResponse 的定義
+      })
+    );
   }
 
-  printTLS31010(body: TLS31010Request): Observable<ApiResponse<{ Print_URL: string }>> {
+  printTLS31010(body: TLS31010Request | null): Observable<ApiResponse<{ Print_URL: string }>> {
     return this.http.post<ApiResponse<{ Print_URL: string }>>(`${this.apiUrl}/printTLS31010`, body);
   }
 }
