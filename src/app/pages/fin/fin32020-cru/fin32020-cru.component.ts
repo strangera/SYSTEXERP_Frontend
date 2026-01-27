@@ -90,7 +90,7 @@ adjAccLastQueryBody: any = null;
 adjAccQueryFn = (body: any) => this.fin32020Service.getAdjAcc(body);
   /** 主檔表單 */
   dataForm = this.formBuilder.nonNullable.group({
-    adjust_ID: [{ value: '', disabled: true } as any], // ADJ_No（顯示用）
+    adjust_ID: [{ value: '系統自動帶入', disabled: true } as any], // ADJ_No（顯示用）
     adjust_Date: [null as Date | null, [Validators.required]], // ADJ_Date（顯示改名：收款日期）
     remark: ['', [Validators.maxLength(30)]], // Remark 長度 30
   });
