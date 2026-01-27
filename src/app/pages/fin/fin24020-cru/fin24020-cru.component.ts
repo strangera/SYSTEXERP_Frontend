@@ -16,7 +16,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { QueryStateService } from '@shared/service/query-state.service';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
@@ -73,8 +73,8 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
     { field: 'ACP_No', header: '應付帳款編號' },
     { field: 'VEN_No', header: '廠客代號' },
     { field: 'VEN_Name', header: '廠客名稱' },
-    { field: 'ACP_Amt', header: '應付金額' },
-    { field: 'ACP_Date', header: '立帳日期' },
+    { field: 'ACP_Amt', header: '應付金額', format: formatAmount },
+    { field: 'ACP_Date', header: '立帳日期', format: formatDate },
   ];
 
   statusOptions = [
@@ -87,14 +87,16 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
       header: '保留退款日期',
       type: 'date',
       validate: [validateRequired],
+      width: '10rem'
     },
     {
       field: 'RET_Amt',
       header: '保留退款金額',
       type: 'inputNumber',
       validate: [validateRequired],
+      width: '10rem'
     },
-    { field: 'Remark', header: '備註', type: 'input', width: '10rem' },
+    { field: 'Remark', header: '備註', type: 'input', textAlign: 'left' },
     {
       field: 'STATUS',
       header: '是否已付款',
@@ -102,7 +104,8 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
       options: this.statusOptions,
       optionLabel: 'label',
       optionValue: 'value',
-      width: '6rem',
+      width: '8rem',
+      hidden: () => this.isFormCreateable,
       validate: [validateRequired],
       disabled: () => !this.isFormCreateable,
     },
@@ -117,11 +120,30 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
   ) {
     super();
   }
+  private lastAcpSelectTime = 0;
+  private lastAcpNo = '';
 
   ngOnInit(): void {
     this.initializePage('FIN24020', this.dataForm, { useReadonly: true });
+
+    try {
+      if (this.isFormCreateable) {
+        this.editColumns = (this.editColumns || []).filter(c => c.field !== 'STATUS');
+      }
+    } catch (e) { /* ignore */ }
     this.loadAPS3001List();
     this.initializeFormFromRowData();
+
+    // 若 dropdown-table 在選取後觸發 parent form reset()，當 ACP_No 被清空時在短時間內自動恢復
+    this.dialogQueryForm.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
+      try {
+        const now = Date.now();
+        if ((value?.ACP_No === null || value?.ACP_No === undefined || String(value?.ACP_No).trim() === '')
+          && this.lastAcpNo && (now - this.lastAcpSelectTime) < 1000) {
+          this.dialogQueryForm.patchValue({ ACP_No: this.lastAcpNo }, { emitEvent: false });
+        }
+      } catch (e) { /* ignore */ }
+    });
 
     // 當使用者修改關鍵金額欄位或明細時，若先前因驗證失敗導致 submitted/loading/block，則清除狀態讓使用者可以重送
     this.dataForm.get('ACP_Amt')?.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
@@ -202,12 +224,45 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
         ACP_No: row.ACP_No ?? '',
       });
 
-      this.tableData = [{
-        RET_Date: retDate,
-        RET_Amt: retAmt,
-        Remark: row.NoteDesc ?? '',
-        STATUS: statusCode,
-      }];
+      const queryBody: any = {
+        PageSize: 9999,
+        PageIndex: 1,
+        pageSize: 9999,
+        pageIndex: 1,
+        Offset: 0,
+        OrderBy: '',
+        SortBy: [],
+        ACP_No: row.ACP_No ?? ''
+      };
+      this.fin24020Service.queryFIN24020(queryBody)
+        .pipe(untilDestroyed(this), finalize(() => {
+          // no-op
+        }))
+        .subscribe(res => {
+          const items = (res?.Data ?? []) as any[];
+          if (items && items.length) {
+            this.tableData = items.map(it => ({
+              RET_Date: it.RET_Date ? new Date(it.RET_Date + 'T00:00:00') : null,
+              RET_Amt: Number(it.RET_Amt ?? it.ACP_ReserveAmt ?? 0),
+              Remark: it.NoteDesc ?? '',
+              STATUS: this.toStatusCode(it.STATUS)
+            }));
+          } else {
+            this.tableData = [{
+              RET_Date: retDate,
+              RET_Amt: retAmt,
+              Remark: row.NoteDesc ?? '',
+              STATUS: statusCode,
+            }];
+          }
+        }, () => {
+          this.tableData = [{
+            RET_Date: retDate,
+            RET_Amt: retAmt,
+            Remark: row.NoteDesc ?? '',
+            STATUS: statusCode,
+          }];
+        });
     } else {
       this.dataForm.patchValue({ STATUS: 'N' });
       this.tableData = [{
@@ -233,7 +288,6 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
       const reserveAmt = Number(frm.value.ACP_ReserveAmt) || 0;
       const totalRetAmt = detailRows.reduce((sum, r) => sum + (Number(r.RET_Amt) || 0), 0);
 
-      // 新增時檢查：單筆或合計的保留退款金額不得超過保留款金額
       if (this.isFormCreateable) {
         const anyRowTooLarge = detailRows.some(r => (Number(r.RET_Amt) || 0) > reserveAmt);
         if (anyRowTooLarge) {
@@ -248,6 +302,15 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
           try { this.messageService.unblockUi(); } catch (e) { }
           this.submitted = false;
           this.messageService.errorBubble('保留款退款金額合計不可大於保留款金額');
+          return;
+        }
+        // 新增檢查：保留款金額減退保留款金額不得大於應付帳款餘額
+        const acpBalance = Number(frm.value.ACP_BalanceAmt) || 0;
+        if ((reserveAmt - totalRetAmt) > acpBalance) {
+          this.loading = false;
+          try { this.messageService.unblockUi(); } catch (e) { }
+          this.submitted = false;
+          this.messageService.errorBubble('保留款金額減退保留款金額不可大於應付帳款餘額');
           return;
         }
       }
@@ -371,7 +434,6 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   override onCancel(returnValue?: any) {
-    // 儲存查詢條件到 QueryStateService，讓查詢頁能還原（頁面層處理）
     try { this.queryStateService.setQueryState(this.ProgNo, this.queryData); } catch (e) { /* ignore */ }
 
     const queryPageRoute = this.previousRoute?.includes('account/')
@@ -431,17 +493,43 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
     return s;
   }
   private fillFormFromApsItem(item: IAPS3001Item): void {
-    this.dataForm.patchValue({
-      ACP_No: item.ACP_No ?? '',
-      VEN_No: item.VEN_No ?? '',
-      VEN_Name: item.VEN_Name ?? '',
-      ACP_Amt: item.ACP_Amt ?? 0,
-      ACP_Date: item.ACP_Date
-        ? new Date(item.ACP_Date + 'T00:00:00')
-        : null,
-    });
+    const patch: any = {};
+    if (item.ACP_No !== undefined && item.ACP_No !== null && String(item.ACP_No).trim() !== '') {
+      patch.ACP_No = item.ACP_No;
+    }
+    if (item.VEN_No !== undefined && item.VEN_No !== null && String(item.VEN_No).trim() !== '') {
+      patch.VEN_No = item.VEN_No;
+    }
+    if (item.VEN_Name !== undefined && item.VEN_Name !== null && String(item.VEN_Name).trim() !== '') {
+      patch.VEN_Name = item.VEN_Name;
+    }
+    if (item.ACP_Amt !== undefined && item.ACP_Amt !== null) {
+      patch.ACP_Amt = item.ACP_Amt;
+    }
+    if (item.ACP_Date) {
+      patch.ACP_Date = new Date(item.ACP_Date + 'T00:00:00');
+    }
+
+    if (Object.keys(patch).length) {
+      this.dataForm.patchValue(patch);
+    }
   }
   onApsSelect(item: IAPS3001Item): void {
+    const now = Date.now();
+    const id = item?.ACP_No ?? '';
+    if (id === this.lastAcpNo && (now - this.lastAcpSelectTime) < 500) {
+      return;
+    }
+    this.lastAcpNo = id;
+    this.lastAcpSelectTime = now;
+
     this.fillFormFromApsItem(item);
+    try {
+      setTimeout(() => {
+        this.dialogQueryForm.patchValue({ ACP_No: item?.ACP_No ?? '' }, { emitEvent: false });
+      }, 0);
+    } catch (e) {
+      // ignore
+    }
   }
 }
