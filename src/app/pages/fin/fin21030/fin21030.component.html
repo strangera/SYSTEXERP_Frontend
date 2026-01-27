@@ -49,13 +49,13 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="郵電負擔模式" controlName="VEN_RemitFeeMode" [control]="queryForm.controls.VEN_RemitFeeMode"
-              [options]="remitFeeOptions" optionLabel="label" optionValue="value"
-              [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="郵電負擔模式" controlName="VEN_RemitFeeMode"
+              [control]="queryForm.controls.VEN_RemitFeeMode" [options]="remitFeeOptions" optionLabel="label"
+              optionValue="value" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="貼現廠商" controlName="VEN_DiscYN" [options]="VEN_DiscYNOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.VEN_DiscYN" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="貼現廠商" controlName="VEN_DiscYN" [options]="VEN_DiscYNOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.VEN_DiscYN" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="禁止背書轉讓" controlName="VEN_CTRLYN" [options]="VEN_CTRLYNOptions" optionLabel="label"
@@ -92,8 +92,8 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="審核狀態" controlName="VEN_Status" [options]="approvalOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.VEN_Status" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="審核狀態" controlName="VEN_Status" [options]="approvalOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.VEN_Status" [submitted]="submitted"></app-multi-select>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
