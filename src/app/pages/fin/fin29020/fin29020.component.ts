@@ -76,8 +76,6 @@ export class FIN29020Component extends BasicQueryPageComponent<FIN29020Detail> i
     { field: 'VendorBankNane', header: '解款銀行名稱', visible: true },
     { field: 'VendorAccNo', header: '銀行帳號', visible: true },
     { field: 'VendorAccName', header: '帳戶名稱', visible: true },
-    { field: 'PayAmount', header: '帳款金額', visible: true, format: formatAmount },
-    { field: 'RemitAmount', header: '匯款金額', visible: true, format: formatAmount },
     // { field: 'STO_No', header: '分店編號', visible: false },
     // { field: 'VEN_No', header: '廠商編號', visible: false },
     // { field: 'CompanyBNK_Name', header: '匯款銀行名稱', visible: false },
@@ -118,7 +116,7 @@ export class FIN29020Component extends BasicQueryPageComponent<FIN29020Detail> i
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
         .subscribe((response) => {
 
-          let result = response.Data as any;
+          let result = response.Data;
           console.log('API回傳資料:', result); // 檢查原始回傳資料
           let finalData: FIN29020Detail[] = [];
 
@@ -134,7 +132,7 @@ export class FIN29020Component extends BasicQueryPageComponent<FIN29020Detail> i
           // 1.資料處理
           // =========================================================
           // 嘗試取得 SubTotals
-          const subTotals = result?.fIN29020_SubTotals || result?.FIN29020_SubTotals;
+          const subTotals = result?.fIN29020_SubTotals
 
           if (Array.isArray(subTotals)) {
             finalData = subTotals.flatMap((group: any) =>
