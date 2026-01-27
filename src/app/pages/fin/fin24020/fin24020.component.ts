@@ -1,4 +1,4 @@
-import { AsyncPipe, DatePipe } from '@angular/common';
+import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -10,9 +10,9 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatDate } from '@shared/componentkit/table/table.model';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { formatDate, formatYN } from '@shared/componentkit/table/table.model';
 import { QueryStateService } from '@shared/service/query-state.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, map } from 'rxjs';
@@ -27,7 +27,7 @@ import { formatAmount, formatYYYYMM } from './../../../shared/componentkit/table
   templateUrl: './fin24020.component.html',
   styleUrl: './fin24020.component.scss',
   standalone: true,
-  imports: [AsyncPipe, CalendarRangeQuickComponent, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, InputTextComponent, ButtonComponent, TranslateModule]
+  imports: [AsyncPipe, NgIf, CalendarRangeQuickComponent, TableComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, InputTextComponent, ButtonComponent, TranslateModule]
 })
 export class FIN24020Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -48,16 +48,24 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
   totalRecords = 0;
   data: any[] = [];
   lastQueryBody: any | null = null;
+  detailColumns: ReportColumn[] = [
+    // { field: 'ACP_No', header: '應付ID' },
+    { field: 'ACP_YYYYMM', header: '應付帳款年月', format: formatYYYYMM },
+    { field: 'acp_termno', header: '帳次' },
+    // { field: 'VEN_No', header: '廠商編號' },
+    // { field: 'VEN_Name', header: '廠商名稱' },
+    { field: 'ACP_Amt', header: '應付金額', format: formatAmount, align: 'right' },
+    { field: 'ACP_BalanceAmt', header: '應付帳款餘額', format: formatAmount, align: 'right' },
+    { field: 'RET_Amt', header: '退保留款金額', format: formatAmount, align: 'right' },
+    { field: 'RET_Date', header: '退保留款日期', format: formatDate },
+    { field: 'STATUS', header: '是否已付款', format: formatYN },
+  ];
   columns: ReportColumn[] = [
     { field: 'ACP_No', header: '應付ID' },
     { field: 'VEN_No', header: '廠商編號' },
     { field: 'VEN_Name', header: '廠商名稱' },
     { field: 'ACP_YYYYMM', header: '應付帳款年月', format: formatYYYYMM },
-    { field: 'acp_termno', header: '帳次', format: formatAmount },
-    { field: 'ACP_ReserveAmt', header: '退保留款金額', format: formatAmount, align: 'right' },
-    { field: 'RET_Date', header: '退保留款日期', format: formatDate },
-    { field: 'STATUS', header: '是否產生付款資料' },
-    { field: 'NoteDesc', header: '備註' },
+
   ];
   VEN_No_ParamOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
   PTA_KeyOptions = [
@@ -85,8 +93,6 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('FIN24020', 'fin/FIN24020cru', this.queryForm, (form) => this.onSubmit(form));
-
-    // 若是從 CRU 返回並帶有 queryConditions，立即還原表單欄位（頁面層）
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     if (state?.['queryConditions']) {
       try { this.queryForm.patchValue(state['queryConditions'], { emitEvent: false }); } catch (e) { /* ignore */ }
@@ -97,11 +103,12 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
   queryFIN24020WithStatusLabel(body: any) {
     return this.fin24020Service.queryFIN24020(body).pipe(
       map((res: any) => {
-        const rows = res?.Data ?? [];
-        const mappedRows = rows.map((r: any) => ({
-          ...r,
-          STATUS: this.PTA_KeyOptions.find(opt => String(opt.value) === String(r.STATUS))?.label ?? r.STATUS
-        }));
+        const wrappers = res?.Data ?? [];
+        const mappedRows = wrappers.map((w: any) => {
+          const row = { ...(w.Data ?? {}), Details: w.Details ?? [] } as any;
+          row.STATUS = this.PTA_KeyOptions.find(opt => String(opt.value) === String(row.STATUS))?.label ?? row.STATUS;
+          return row;
+        });
         return { ...res, Data: mappedRows };
       })
     );
@@ -146,10 +153,8 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
         Remark: frm.value.Remark ?? ''
       };
 
-      // 儲存查詢條件到 QueryStateService（頁面層），方便 CRU 回到查詢頁時還原
       try { this.queryStateService.setQueryState(this.ProgNo, body); } catch (e) { /* ignore */ }
 
-      // 儲存查詢欄位值以便 CRU 返回時還原（頁面層）
       try { this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue()); } catch (e) { /* ignore */ }
 
       this.queryFIN24020WithStatusLabel(body)
@@ -161,5 +166,17 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
           this.lastQueryBody = body;
         });
     });
+  }
+
+  handleLazyLoad(event: any) {
+    if (!event) return;
+    this.pageIndex = event.pageIndex ?? this.pageIndex ?? 1;
+    this.pageSize = event.pageSize ?? this.pageSize ?? 20;
+    // 觸發查詢，保留當前 queryForm 條件
+    this.onSubmit(this.queryForm);
+  }
+
+  override onDetail(row: any, queryConditions?: any) {
+    super.onDetail(row, queryConditions);
   }
 }
