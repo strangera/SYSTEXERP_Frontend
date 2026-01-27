@@ -19,6 +19,18 @@ import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
+// 定義 API 回傳的介面 (方便您理解結構)
+interface ApiResult {
+  Total_PayAmount: number;
+  Total_RemitAmount: number;
+  fIN29020_SubTotals: {
+    RmtDate: string;
+    SubTotal_PayAmount: number; // 雖然 API 有給，但在 app-table 裡我們會用前端重算
+    fIN29020_Details: FIN29020Detail[];
+  }[];
+}
+
+
 @Component({
   selector: 'app-fin29020',
   templateUrl: './fin29020.component.html',
@@ -108,41 +120,64 @@ export class FIN29020Component extends BasicQueryPageComponent<FIN29020Detail> i
     this.loadOptions();
   }
 
+  // 定義一個警告閥值 (您可以依需求調整，例如 2000 或 5000)
+  readonly DATA_WARNING_THRESHOLD = 3000;
+
   onSubmit(form: FormGroup) {
-    console.log('FIN29020 onSubmit', form.getRawValue());
     this.handleSubmit(form, () => {
       this.fin29020Service.queryFIN29020(this.buildQueryPayload(form.getRawValue()))
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
         .subscribe((response) => {
-          // this.data = response.Data ?? [];
-          // console.log('FIN29020 query response', this.data);
-          // this.totalRecords = response.TotalCount ?? this.data.length;
-          // this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
 
-          const result = response.Data as any;
-          this.data = [];
+          let result = response.Data as any;
+          let finalData: FIN29020Detail[] = [];
 
-          // --- 資料處理邏輯 ---
-
-          // 情境 1: API 回傳包含 SubTotals 的巢狀結構 (舊邏輯)
-          const subTotals = result.fIN29020_SubTotals || result.FIN29020_SubTotals || [];
-          if (Array.isArray(subTotals) && subTotals.length > 0) {
-            this.data = subTotals.flatMap((group: any) => group.fIN29020_Details || group.FIN29020_Details || []);
+          // 剝皮處理
+          // =========================================================
+          // 如果 result 是陣列，且第一筆資料裡面包含 'fIN29020_SubTotals'
+          // [ { Total..., SubTotals... } 先要把外層陣列剝掉
+          if (Array.isArray(result) && result.length > 0 && (result[0]?.fIN29020_SubTotals || result[0]?.FIN29020_SubTotals)) {
+            result = result[0];
           }
-          // 情境 2: API 直接回傳扁平陣列 (您現在遇到的情況)
+
+          // 1.資料處理
+          // =========================================================
+          // 嘗試取得 SubTotals (現在 result 已經是正確的物件了)
+          const subTotals = result?.fIN29020_SubTotals || result?.FIN29020_SubTotals;
+
+          if (Array.isArray(subTotals)) {
+            // --- 情境 A: 階層式資料 (有 SubTotals) ---
+            // 執行攤平 (FlatMap)
+            finalData = subTotals.flatMap((group: any) =>
+              group.fIN29020_Details || group.FIN29020_Details || []
+            );
+          }
           else if (Array.isArray(result)) {
-            this.data = result;
-            console.log('FIN29020 query result', this.data);
-            // 這裡進來的資料是扁平的，但只要 HTML 有設 groupRowsBy="RmtDate"，Table 就會自動分組
+            // --- 情境 B: 純扁平陣列 ---
+            // 如果原本就是單純的 [Detail, Detail]，沒有被包在 SubTotals 裡
+            finalData = result;
           }
 
-          // --- Footer 總計處理 ---
-          // 優先使用 API 回傳的總計，如果沒有則前端自己算
+          // =========================================================
+          // 2. 數量過多提醒
+          // =========================================================
+          if (finalData.length > this.DATA_WARNING_THRESHOLD) {
+            this.messageService.warnBubble?.('資料量過大提醒', `共 ${finalData.length} 筆資料`);
+          }
+
+          this.data = finalData;
+
+          // 3. 總計處理 (Footer)
+          // =========================================================
+          // 這裡的 result 現在已經是正確的物件，可以取得到 Total_PayAmount
           this.footerData = {
             VendorName: '總計',
-            PayAmount: result.Total_PayAmount,
-            RemitAmount: result.Total_RemitAmount
+            // 若 result 有 Total 值就用，沒有則前端計算
+            PayAmount: result?.Total_PayAmount,
+            RemitAmount: result?.Total_RemitAmount
           };
+
+          console.log('Processed Data:', this.data); // 確認最終資料
 
           this.totalRecords = response.TotalCount ?? this.data.length;
           this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
