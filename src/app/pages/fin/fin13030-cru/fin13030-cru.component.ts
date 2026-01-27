@@ -86,11 +86,9 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> im
 
   ngOnInit(): void {
     this.initializePage('FIN13030', this.dataForm);
-    // 帶入零稅率發票資料
     if (this.crudstatus === CRUDStatus.Create) {
       const state = this.router.lastSuccessfulNavigation?.extras.state;
       this.zeroTaxGUIData = state?.['rowdata'];
-      // 帶入表單預設值
       this.dataForm.patchValue({
         INV_GUINo: this.zeroTaxGUIData.INV_GUINo,
         INV_GUIDate: this.zeroTaxGUIData.INV_GUIDate,
@@ -100,13 +98,10 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> im
         INV_DeclareYM_Display: formatYYYYMM(this.zeroTaxGUIData.INV_DeclareYM),
         INV_PassType: '1', // 預設通關方式註記為 1
       });
-      // 根據預設值設置金額欄位
       this.handlePassTypeChange('1');
-      // 進一步呼叫 API 取得 zeroTaxGUI 的最終範圍並帶入表單（若服務提供不同值）
       this.getZeroTaxGUIData(this.dataForm);
     }
-    else if (this.crudstatus === CRUDStatus.Edit) {
-      // 若為 Edit，先從 router state 的 rowdata 帶入顯示欄位（若有），再呼叫 API 取得最新 zeroTaxGUI 範圍
+    else if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
       const stateRow = this.rowdata as any;
       if (stateRow) {
         this.dataForm.patchValue({
