@@ -183,7 +183,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
 
     // Disable 一些欄位
     [
-      'ECR_KBLevel', 'ECR_KBType', 'ECR_Scanner', 'ECR_MSR', 'ECR_ScrType', 'ECR_CD', 'ECR_ExtScr',
+      'ECR_KBType', 'ECR_Scanner', 'ECR_MSR', 'ECR_ScrType', 'ECR_CD', 'ECR_ExtScr',
       'ECR_GUIPrn', 'ECR_SlipPrn', 'ECR_OrderPrn', 'ECR_LablePrn', 'ECR_EDC', 'ECR_EDC2',
       'ECR_ElecSVCrdA', 'ECR_ElecSVCrdB', 'ECR_ElecSVCrdC', 'ECR_ElecPay', 'ECR_Drawer',
       'CRT_Date', 'CRT_USR_No', 'CRT_USR_Name', 'UPD_Date', 'UPD_USR_No', 'UPD_USR_Name',
@@ -294,7 +294,13 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
         if (detail) {
           const patchObj: any = {};
           Object.keys(this.dataForm.controls).forEach(key => {
-            if (detail[key] !== undefined) patchObj[key] = detail[key];
+            if (detail[key] !== undefined) {
+              if ((key === 'ECR_MSRCom' || key === 'ECR_OrderPrnCom') && (detail[key] === null || detail[key] === undefined)) {
+                patchObj[key] = 0;
+              } else {
+                patchObj[key] = detail[key];
+              }
+            }
           });
           this.dataForm.patchValue(patchObj);
         }
@@ -334,6 +340,14 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
           error: (err) => console.error('呼叫 queryTLT_NoInfo 失敗:', err),
         });
       });
+
+    // 若後端/範本回傳 null/undefined 的連接埠欄位，畫面預設顯示 0
+    ['ECR_MSRCom', 'ECR_OrderPrnCom'].forEach(field => {
+      const ctrl = this.dataForm.get(field);
+      if (ctrl && (ctrl.value === null || ctrl.value === undefined)) {
+        ctrl.setValue(0, { emitEvent: false });
+      }
+    });
 
 
   }
@@ -430,6 +444,8 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       CRT_Date: rawValue.CRT_Date ?? undefined,
       UPD_Date: rawValue.UPD_Date ?? undefined,
       ECR_SettleHHNN: settleHHNN,
+      ECR_MSRCom: rawValue.ECR_MSRCom ?? 0,
+      ECR_OrderPrnCom: rawValue.ECR_OrderPrnCom ?? 0,
       ECR_SchNo: this.isFormCreateable
         ? '自動編號'
         : (rawValue.ECR_SchNo || this.rowdata?.ECR_SchNo || '自動編號')

@@ -140,7 +140,13 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     { field: 'sam_yyymm', header: '所屬結帳年月', visible: true, format: formatYYYYMM },
     { field: 'money_type_desc', header: '結帳方式', visible: true },
     { field: 'sam_termno', header: '帳次', visible: true },
-    { field: 'ven_no', header: '廠商統一編號', visible: true },
+    {
+      field: 'ven_no', header: '廠商統一編號', visible: true, format: (_v: any, _i?: number, rowData?: any) => {
+        const no = rowData?.ven_no ?? '';
+        const name = rowData?.VEN_Name ?? rowData?.ven_name ?? '';
+        return name ? `${no} - ${name}` : no;
+      }
+    },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
     { field: 'sam_ap_notaxamt', header: '應付貨款(免稅)', visible: true, format: formatAmount, align: 'right' },
@@ -172,7 +178,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   detailDefaultInsert: any = {};
   columns3: EditColumn[] = [
     { field: 'GUIType', header: '單據別', type: 'dropdown', width: '120px', options: this.invoiceTypeOptions, optionLabel: 'label', optionValue: 'value', showClear: true },
-    { field: 'VEN_No', header: '廠商編號', type: 'dropdown', width: '140px', options: () => this.vendorTLS2F010Options, optionLabel: 'label', optionValue: 'value', showClear: true },
+    { field: 'VEN_No', header: '廠商編號', type: 'dropdown', width: '200px', options: () => this.vendorTLS2F010Options, optionLabel: 'label', optionValue: 'value', showClear: true },
     { field: 'PUR_GUINO', header: '發票/收據編號', type: 'input', width: '140px' },
     { field: 'PUR_GUIDate', header: '發票/收據日期', type: 'date', width: '120px', dateFormat: 'yy-mm-dd', view: 'date' },
     { field: 'DEC_YM', header: '申報年月', type: 'date', width: '120px', dateFormat: 'yy-mm', view: 'month' },
@@ -180,7 +186,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       field: 'ven_uniform',
       header: '廠商統一編號',
       type: 'dropdown',
-      width: '120px',
+      width: '200px',
       options: () => this.dropdown.queryPos2013({ VEN_Flag: '' }).pipe(
         map(list => (list ?? []).map(item => ({
           label: `${item['No']} - ${item['Name']}`,
@@ -259,7 +265,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     }).subscribe((res: any) => {
       const data = res?.Data ?? [];
       this.vendorTLS2F010Options = data.map((item: any) => ({
-        label: item.ven_no,
+        label: `${item.ven_no}${item.VEN_Name ? ' - ' + item.VEN_Name : ''}`,
         value: item.ven_no,
       }));
     });
