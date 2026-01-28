@@ -36,9 +36,14 @@ export const finRoutes: Routes = [
   // 收款項目對照會計科目維護
   { path: 'fin31010', loadComponent: () => import('./fin31010/fin31010.component').then(m => m.FIN31010Component), data: { progNo: 'FIN31010' } },
   { path: 'fin31010cru', loadComponent: () => import('./fin31010-cru/fin31010-cru.component').then(m => m.FIN31010CRUComponent), data: { progNo: 'FIN31010' } },
+  // 應收帳款帳齡分析表
+  { path: 'fin34040', loadComponent: () => import('./fin34040/fin34040.component').then(m => m.FIN34040Component), data: { progNo: 'FIN34040' } },
   // 存入保證金維護作業
   { path: 'fin35010', loadComponent: () => import('./fin35010/fin35010.component').then(m => m.FIN35010Component), data: { progNo: 'FIN35010' } },
   { path: 'fin35010cru', loadComponent: () => import('./fin35010-cru/fin35010-cru.component').then(m => m.FIN35010CRUComponent), data: { progNo: 'FIN35010' } },
+  // 資材系統
+  { path: 'fin51010', loadComponent: () => import('./fin51010/fin51010.component').then(m => m.FIN51010Component), data: { progNo: 'FIN51010' } },
+  { path: 'fin51010cru', loadComponent: () => import('./fin51010-cru/fin51010-cru.component').then(m => m.FIN51010CRUComponent), data: { progNo: 'FIN51010' } },
   // 總帳報表-日記帳表
   { path: 'fin55020', loadComponent: () => import('./fin55020/fin55020.component').then(m => m.FIN55020Component), data: { progNo: 'FIN55020' } },
   // 總帳報表-損益表
