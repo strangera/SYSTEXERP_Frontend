@@ -22,9 +22,9 @@ import { InputNumberRangeComponent } from '../../../shared/componentkit/input-nu
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 // ✅ app-table（你貼的 TableComponent）
+import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
-import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
 // Base
 import {
   Aps1002BankDropDownRow,
@@ -248,6 +248,7 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     billNumber: ['' as string],
     vendorCode: ['' as string],
     bankAccountCode: ['' as string, Validators.required],
+    // bankAccountCode: ['' as string],
 
     issueDateStart: [null as Date | null],
     issueDateEnd: [null as Date | null],
@@ -366,8 +367,8 @@ ngOnInit(): void {
         next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
           const list = Array.isArray(res?.Data) ? res.Data : [];
           this.BankCodeOptions = list.map((x) => ({
-            label: `${x.BNK_DepositAccNo}-${x.BNK_BRANCHNAME}`,
-            value: x.BNK_DepositAccNo,
+            label: `${x.BNK_id}-${x.BNK_AccName}`,
+            value: x.BNK_id,
             raw: x,
           }));
         },
@@ -384,8 +385,8 @@ ngOnInit(): void {
       .subscribe((res) => {
         const rows = Array.isArray(res?.Data) ? res.Data : [];
         this.VendorNoOptions = rows.map((x: any) => ({
-          label: `${x.No} - ${x.Name}`,
-          value: x.No,
+          label: `${x.VEN_No} - ${x.Name}`,
+          value: x.VEN_No,
         }));
       });
 
