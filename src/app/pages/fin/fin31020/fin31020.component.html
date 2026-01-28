@@ -14,8 +14,8 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="加減項" controlName="CAR_Type" [options]="minusOption" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.CAR_Type" [submitted]="submitted"></app-multi-select>
+            <app-dropdown label="加減項" controlName="CAR_Type" [options]="minusOption" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.CAR_Type" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="備註" controlName="Remark" [control]="queryForm.controls.Remark"
@@ -31,9 +31,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" [showDelete]="true" (detail)="onDetail($event)"
-    [showReportMode]="false" [showManage]="true" dataKey="SeqNo" [multiSortMeta]="[{ field: 'CAR_AccNo', order: 1 }]"
-    [totalRecords]="totalRecords" [showCheckBox]="true" [showEdit]="true"
+  <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" [showDelete]="false" (detail)="onDetail($event)"
+    [showReportMode]="false" [showManage]="true" dataKey="Id" [multiSortMeta]="[{ field: 'CAR_AccNo', order: 1 }]"
+    [totalRecords]="totalRecords" [showCheckBox]="false" [showEdit]="true"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showExcel]="false">
   </app-table>
