@@ -11,7 +11,7 @@ import { ReportColumn } from '@shared/componentkit/table-report/table-report.mod
 import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize, of, switchMap } from 'rxjs';
-import { APS3009Item, FIN25010Data, FIN25010Service, InsertFIN25010Request, QueryAddFIN25010Request, QueryAddFIN25010Response } from '../../../service/api/fin/fin25010.service';
+import { APS3009Item, FIN25010Data, FIN25010Service, InsertFIN25010Request, QueryAddFIN25010Request, QueryAddFIN25010Response, QueryDetailFIN25010Request } from '../../../service/api/fin/fin25010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -50,8 +50,13 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
     pageSize: [1780],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'ven_no', order: 1 }]],
-  });
 
+    // 檢視
+    PAM_No: [null],  // 匯款來源單號
+    D_Date: [null],  // 建立日期
+    PTA_Date: [null],  // 收/付款日
+    WSLIP_NO: [null],  // 匯款單號
+  });
   // 廠客代號選項
   venNoOptions = this.dropDown.queryPos2013({ VEN_Flag: '' });
   // 傳票型態選項
@@ -130,6 +135,43 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
 
   ngOnInit(): void {
     this.initializePage('FIN25010', this.dataForm);
+    if (this.isFormReadable) {
+      this.loadDetailData();
+    }
+  }
+
+  /**
+ * 載入檢視模式的資料
+ */
+  loadDetailData(): void {
+    // 從路由 state 取得 rowdata (通常是主檔的資料)
+    if (!this.rowdata || !this.rowdata.PAM_No) {
+      this.messageService.errorBubble('缺少單號資訊，無法讀取資料');
+      return;
+    }
+
+    const req: QueryDetailFIN25010Request = {
+      PAM_No: this.rowdata.PAM_No,
+      PageIndex: 1,
+      PageSize: 9999, // 檢視模式通常一次全列出
+      SortBy: [{ field: 'id', order: 1 }]
+    };
+
+    this.loading = true;
+    this.fin25010Service.queryDetailFIN25010(req)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.loading = false)
+      )
+      .subscribe(response => {
+        this.data = response.Data || [];
+        this.totalRecords = response.TotalCount;
+
+        // 在檢視模式下，我們可能希望預設「全選」來顯示統計金額
+        // 或者根據業務邏輯計算 footer，這裡強制計算一次
+        this.selectedItems = [...this.data];
+        this.calculateFooter();
+      });
   }
 
   onSubmit(form: FormGroup): void {
