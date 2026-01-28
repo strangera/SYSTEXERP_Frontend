@@ -57,8 +57,8 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
     NCML_TmID: [null as string | null, [Validators.maxLength(8)]], // 收銀機代號
     NCML_BatCloseDate: [null as Date | null, [Validators.required]], // 批次結帳日期
     NCML_ApprovalCode: [null as string | null, [Validators.maxLength(6)]], // 授權碼
-    NCML_EntryFg: [null as string | null, [Validators.required, Validators.maxLength(2)]], // 輸入狀況
-    NCML_CrdTxnFg: [null as string | null, [Validators.maxLength(1)]], // 交易類別
+    NCML_EntryFg: ['2', [Validators.required, Validators.maxLength(2)]], // 輸入狀況
+    NCML_CrdTxnFg: ['0', [Validators.maxLength(1)]], // 交易類別
     NCML_TermNo: [null as string | null, [Validators.max(99)]], // 期數
     // NCML_TermNo: ['', [Validators.max(99)]],// 期數
     NCML_TxnTime: [null as Date | null, [Validators.required]], // 銷售時間
@@ -70,7 +70,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
     CTBC_TxnTime: [null as Date | null, [Validators.required]], // 銷售日期 (DateTime)
     TLT_No: [null as string | null, [Validators.required]], // 專櫃編號
     CTBC_Date: [new Date(), [Validators.required]],// 請款日期
-    CTBC_DataType: [null as string | null, [Validators.required, Validators.maxLength(1)]], // 資料型態
+    CTBC_DataType: ['C', [Validators.required, Validators.maxLength(1)]], // 資料型態
     CRD_Type: [null as string | null, [Validators.required, Validators.maxLength(6)]], // 卡別
     CTBC_CrdNo: [null as string | null, [Validators.maxLength(19)]], // 卡號
     CTBC_TmID: [null as string | null, [Validators.required, Validators.maxLength(8)]], // 收銀機代號
@@ -79,7 +79,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
     PRM_CTBC_TxnAmt: [null as number | null, [Validators.max(999999999999)]], // 原交易金額
     CTBC_PayDate: [null as Date | null, [Validators.required]],// 入帳日
     CTBC_ApprovalCode: [null as string | null, [Validators.maxLength(6)]],// 授權碼
-    CTBC_EntryFg: [null as string | null, [Validators.required, Validators.maxLength(2)]],// 輸入狀況
+    CTBC_EntryFg: ['2', [Validators.required, Validators.maxLength(2)]],// 輸入狀況
     CTBC_TermNo: [null as string | null, [Validators.maxLength(2)]],
     // CTBC_TermNo: ['', [Validators.maxLength(2)]],// 期數
   });
@@ -98,7 +98,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
     CTBC_PayDate: [null as Date | null, [Validators.required]], // 入帳日
     CTBC_TmID: [null as string | null, [Validators.maxLength(8)]], // 收銀機代號
     CTBC_ApprovalCode: [null as string | null, [Validators.maxLength(6)]], // 授權碼
-    CTBC_EntryFg: [null as string | null, [Validators.required, Validators.maxLength(2)]], // 輸入狀況
+    CTBC_EntryFg: ['2', [Validators.required, Validators.maxLength(2)]], // 輸入狀況
   });
 
   PayCrdTypeOptions = getSYS1000Options('NCML_PayCrdType');
