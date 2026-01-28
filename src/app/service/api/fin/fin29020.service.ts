@@ -1,7 +1,7 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 // 查詢 Request
@@ -51,16 +51,56 @@ export interface FIN29020QueryResponse {
   TotalCount?: number;
   TotalPage?: number;
 }
-
+export interface FIN29020ProcessedResponse {
+  Status: string;
+  Data: FIN29020Detail[];       // 所有的明細 (List)
+  SubTotals: any[];             // 所有的分組小計 (List)
+  Totals: {                     // 總計物件
+    PayAmount: number;
+    RemitAmount: number;
+  };
+  TotalCount: number;
+}
 @Injectable({ providedIn: 'root' })
 export class FIN29020Service {
   private apiUrl = environment.ApiUrl + '/FIN0000/APS1000';
 
   constructor(private http: HttpClient) { }
 
-  /** 查詢匯款明細表 */
-  queryFIN29020(req: FIN29020QueryRequest): Observable<FIN29020QueryResponse> {
-    return this.http.post<FIN29020QueryResponse>(`${this.apiUrl}/queryFIN29020`, req);
+  /** 查詢匯款明細表 - 包含資料預處理 *//** 查詢匯款明細表 - 包含資料預處理 */
+  queryFIN29020(req: FIN29020QueryRequest): Observable<FIN29020ProcessedResponse> {
+    return this.http.post<any>(`${this.apiUrl}/queryFIN29020`, req).pipe(
+      map(res => {
+        const rawResponse = Array.isArray(res) ? res[0] : res;
+        let rawData = rawResponse.Data;
+        if (Array.isArray(rawData)) {
+          rawData = rawData[0] || {};
+        } else {
+          rawData = rawData || {};
+        }
+        const rawSubTotals = rawData.fIN29020_SubTotals || rawData.FIN29020_SubTotals || [];
+        const allDetails = rawSubTotals.flatMap((sub: any) =>
+          sub.fIN29020_Details || sub.FIN29020_Details || []
+        );
+        const subTotals = rawSubTotals.map((sub: any) => ({
+          RmtDate: sub.RmtDate,
+          PayAmount: sub.SubTotal_PayAmount ?? 0,
+          RemitAmount: sub.SubTotal_RemitAmount ?? 0,
+        }));
+        const totals = {
+          PayAmount: rawData.Total_PayAmount ?? 0,
+          RemitAmount: rawData.Total_RemitAmount ?? 0
+        };
+
+        return {
+          Status: rawResponse.Status,
+          Data: allDetails,
+          SubTotals: subTotals,
+          Totals: totals,
+          TotalCount: rawResponse.TotalCount ?? allDetails.length
+        };
+      })
+    );
   }
 
   /** 匯出匯款明細表 */
