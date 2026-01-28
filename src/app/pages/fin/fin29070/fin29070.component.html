@@ -33,11 +33,11 @@
 <div class="card">
   <!-- 右上角工具列：匯出 PDF & Excel -->
   <div class="flex justify-content-end gap-2 mb-2">
-    <app-button label="匯出 PDF" icon="pi pi-file-pdf" (click)="onExportPDF(queryForm)" [loading]="exportPDFbtnLoading"
+    <app-button label="廠商應付對應科目明細表.PDF" icon="pi pi-file-pdf" (click)="onExportPDF(queryForm)" [loading]="exportPDFbtnLoading"
       [disabled]="loading || (data.length || 0) === 0">
     </app-button>
 
-    <app-button label="匯出 Excel" icon="pi pi-file-excel" (click)="onExportExcel(queryForm)"
+    <app-button label="廠商應付對應科目明細表.Excel" icon="pi pi-file-excel" (click)="onExportExcel(queryForm)"
       [loading]="exportExcelbtnLoading" [disabled]="loading || (data.length || 0) === 0">
     </app-button>
   </div>
