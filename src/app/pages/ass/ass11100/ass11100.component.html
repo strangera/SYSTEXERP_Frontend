@@ -1,30 +1,41 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
+
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab [header]="'query-conditions' | translate"
+                    [selected]="true"
+                    class="line-height-3 m-0"
+                    [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm"
+            id="queryForm"
+            (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="倉別" controlName="WH_ID" [control]="queryForm.controls.WH_ID"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="倉別名稱" controlName="WH_NAME" [control]="queryForm.controls.WH_NAME"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="部門代號" controlName="ATT_ORG_ID" [options]="organizationOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.ATT_ORG_ID"
-              [submitted]="submitted"></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="備註" controlName="NOTES" [control]="queryForm.controls.NOTES"
-              [submitted]="submitted"></app-input-text>
-          </div>
+          <app-input-text class="col-12 md:col-6 lg:col-4"
+                          label="倉別"
+                          controlName="WH_ID"
+                          [control]="qf().WH_ID"
+                          [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4"
+                          label="倉別名稱"
+                          controlName="WH_NAME"
+                          [control]="qf().WH_NAME"
+                          [submitted]="submitted"></app-input-text>
+          <app-dropdown class="col-12 md:col-6 lg:col-4"
+                        label="部門代號"
+                        controlName="ATT_ORG_ID"
+                        [options]="organizationOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        [control]="qf().ATT_ORG_ID"
+                        [submitted]="submitted"></app-dropdown>
+          <app-input-text class="col-12 md:col-6 lg:col-4"
+                          label="備註"
+                          controlName="NOTES"
+                          [control]="qf().NOTES"
+                          [submitted]="submitted"></app-input-text>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
@@ -34,10 +45,23 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
-  <app-table tableKey="ASS11100" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
-    [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'WH_ID', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [isRowSelectable]="isRowSelectable" [loading]="loading" [showPage]="true"></app-table>
+  <div class="col-12">
+    <app-table-report [data]="tableData()"
+                      dataKey="_pk"
+                      tableKey="ASS11100_Data"
+                      [columns]="columns"
+                      [totalRecords]="totalRecords()"
+                      [loading]="tableLoading()"
+                      [lastQueryBody]="lastQueryBody"
+                      [queryFunction]="queryFunction"
+                      [showCheckBox]="true"
+                      [selectedItems]="selectedItems"
+                      (selectionChange)="selectedItems = $event"
+                      (edit)="onEdit($event)"
+                      (detail)="onDetail($event)"
+                      (delete)="onDelete($event)"
+                      [isRowSelectable]="isRowSelectable"></app-table-report>
+  </div>
 </div>

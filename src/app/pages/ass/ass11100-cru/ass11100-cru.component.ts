@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -13,6 +13,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
 
 //3.1.1.10 倉別設定作業 CRU
 @UntilDestroy()
@@ -34,12 +35,13 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
   ]
 })
 export class ASS11100CRUComponent extends BasicCruPageComponent<ASS11100Data> implements OnInit {
+  readonly tableLoading = signal<boolean>(false);
+
   dataForm = this.formBuilder.nonNullable.group({
-    id: [],
-    WH_ID: ['', [Validators.required, Validators.maxLength(10)]], // 倉別，必填，最長10個字
-    WH_NAME: ['', [Validators.required, Validators.maxLength(50)]], // 倉別名稱，必填，最長50個字
-    ATT_ORG_ID: [null as string | null, [Validators.required]], // 部門代號，必填
-    NOTES: ['', [Validators.maxLength(160)]], // 備註，非必填，最長160個字
+    WH_ID: ['', [Validators.required, Validators.maxLength(10)]], // 倉別代號
+    WH_NAME: ['', [Validators.required, Validators.maxLength(50)]], // 倉別
+    ATT_ORG_ID: [null as string | null, [Validators.required]], // 所屬部門代號
+    NOTES: ['', [Validators.maxLength(160)]], // 備註
   });
 
   organizationOptions: Array<{ label: string; value: string }> = [];
@@ -77,48 +79,56 @@ export class ASS11100CRUComponent extends BasicCruPageComponent<ASS11100Data> im
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      this.tableLoading.set(true);
+      const v = frm.getRawValue();
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
-            const formValue = frm.getRawValue();
-            this.ass11100Service.insertASS11100(formValue).subscribe({
-              next: (response) => {
-                if (response.Status === '0000') {
-                  this.messageService.successBubble('新增成功');
-                  this.dataForm.reset(); // 重置表單
-                  this.submitted = false;
-                } else {
-                  this.messageService.errorBubble(response.Message || '新增失敗');
-                }
+            const payload = {
+              WH_ID: v.WH_ID,
+              WH_NAME: v.WH_NAME,
+              ATT_ORG_ID: v.ATT_ORG_ID ?? '',
+              NOTES: v.NOTES || undefined,
+              WH_ATTR: '1' as const,
+              CRT_USR_No: this.user.user_No,
+              CRT_USR_Name: this.user.user_Name,
+            };
+            this.ass11100Service.insertASS11100(payload).pipe(
+              finalize(() => {
+                this.tableLoading.set(false);
                 this.loading = false;
-                this.messageService.unblockUi();
+              })
+            ).subscribe({
+              next: res => {
+                if (res.Status !== '0000') return;
+                this.messageService.successBubble('新增成功');
+                this.onCancel();
               },
-              error: (err) => {
-                console.error('新增失敗:', err);
-                this.loading = false;
-                this.messageService.unblockUi();
-              }
             });
           }
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            const formValue = frm.getRawValue();
-            this.ass11100Service.updateASS11100(formValue).subscribe({
-              next: (response) => {
-                if (response.Status === '0000') {
-                  this.messageService.successBubble('更新成功');
-                  this.onCancel(); // 儲存後，會返回列表
-                } else {
-                  this.loading = false;
-                  this.messageService.unblockUi();
-                }
-              },
-              error: (err) => {
-                console.error('更新失敗:', err);
+            const payload = {
+              WH_ID: v.WH_ID,
+              WH_NAME: v.WH_NAME,
+              ATT_ORG_ID: v.ATT_ORG_ID ?? '',
+              NOTES: v.NOTES || undefined,
+              WH_ATTR: '1' as const,
+              UPD_USR_No: this.user.user_No,
+              UPD_USR_Name: this.user.user_Name,
+            };
+            this.ass11100Service.updateASS11100(payload).pipe(
+              finalize(() => {
+                this.tableLoading.set(false);
                 this.loading = false;
-                this.messageService.unblockUi();
-              }
+              })
+            ).subscribe({
+              next: res => {
+                if (res.Status !== '0000') return;
+                this.messageService.successBubble('更新成功');
+                this.onCancel();
+              },
             });
           }
           break;
