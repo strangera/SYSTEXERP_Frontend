@@ -8,7 +8,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { QueryTLS2F030Data, QueryTLS2F030SumData, Tls2f030Service } from '../../../service/api/tls/tls2f030.service';
+import { QueryTLS2F030Data, Tls2f030Service } from '../../../service/api/tls/tls2f030.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -44,7 +44,7 @@ export class TLS2F030Component extends BasicQueryPageComponent<QueryTLS2F030Data
     sam_termno: [1 as number | null], // 帳次，預設1
     floor_no: [[] as string[]], // 樓層
     // 分頁欄位
-    pageSize: [20],
+    pageSize: [40],
     pageIndex: [1],
     SortBy: [[{ field: 'tlt_no', order: 1 }]],
   });
