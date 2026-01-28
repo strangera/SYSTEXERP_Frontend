@@ -59,6 +59,7 @@ export interface ChargeSettingAPIModel {
   sst_rate?: number | null;
   cap_saletype1: string; // 'Y' | 'N'
   cap_saletype2: string; // 'Y' | 'N'
+  cap_saletype3: string; // 'Y' | 'N' - 收取禮卷
   cap_saletype5: string; // 'Y' | 'N'
   cag_remark: string;
 
@@ -182,6 +183,7 @@ export interface ChargeSettingFormData {
   sst_rate?: number | null;
   cap_saletype1: boolean;
   cap_saletype2: boolean;
+  cap_saletype3: boolean; // 收取禮卷
   cap_saletype5: boolean;
 
   cag_remark: string;
@@ -290,6 +292,7 @@ export interface CleanChargeSettingData {
   sst_rate?: number | null;
   cap_saletype1: string; // 'Y' | 'N'
   cap_saletype2: string; // 'Y' | 'N'
+  cap_saletype3: string; // 'Y' | 'N' - 收取禮卷
   cap_saletype5: string;
 
   cag_remark: string;
@@ -495,6 +498,7 @@ export class TLS12040DataTransformer {
       sst_rate: businessData.sst_rate,
       cap_saletype1: businessData.cap_saletype1 === 'Y',
       cap_saletype2: businessData.cap_saletype2 === 'Y',
+      cap_saletype3: businessData.cap_saletype3 === 'Y',
       cap_saletype5: businessData.cap_saletype5 === 'Y',
       cag_remark: businessData.cag_remark
     };
@@ -516,6 +520,7 @@ export class TLS12040DataTransformer {
       sst_rate: formData.sst_rate,
       cap_saletype1: formData.cap_saletype1 ? 'Y' : 'N',
       cap_saletype2: formData.cap_saletype2 ? 'Y' : 'N',
+      cap_saletype3: formData.cap_saletype3 ? 'Y' : 'N',
       cap_saletype5: formData.cap_saletype5 ? 'Y' : 'N',
       cag_remark: formData.cag_remark
     };
@@ -601,6 +606,7 @@ export class TLS12040DataTransformer {
       sst_rate: business.sst_rate,
       cap_saletype1: business.cap_saletype1,
       cap_saletype2: business.cap_saletype2,
+      cap_saletype3: business.cap_saletype3,
       cap_saletype5: business.cap_saletype5,
       cag_remark: business.cag_remark
     };

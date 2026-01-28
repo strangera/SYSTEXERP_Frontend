@@ -174,6 +174,15 @@ export interface TLS12040FareItem {
   down_payment?: number;
   period_nos?: number;
   tpy_rate?: number;
+
+  // D 類型專用欄位
+  cap_saletype?: string;    // 銷售類型
+  instms_type?: string;     // 期數（下拉）
+  edc_bank?: string;        // 收單行
+  pay_no?: string;          // 支付編號
+  calc_type?: string;       // 券類計算方式
+  over_base_rate?: number;  // 超過基準比率
+  rent_plus_rate?: number;  // 加抽比率
 }
 
 /**
@@ -216,6 +225,7 @@ export interface TLS12040CommissionMaster {
   sst_rate?: number;
   cap_saletype1?: string;
   cap_saletype2?: string;
+  cap_saletype3?: string;
   cap_saletype5?: string;
   cag_bdate: string;
   cag_edate: string;
@@ -422,12 +432,22 @@ export class TLS12040DataCleanerClass {
     const toUpdate: TLS12040FareItem[] = [];
     const toDelete: TLS12040FareItem[] = [];
 
-    console.log('🧹 DataCleaner 開始處理扣款項目:', {
+    console.log('🧹 DataCleaner.cleanDeductionItems 開始處理:', {
       總數: rawItems.length,
-      刪除狀態項目: rawItems.filter(item => item._status === 'deleted').length
+      已勾選: rawItems.filter(item => item.is_selected).length,
+      狀態new: rawItems.filter(item => item._status === 'new').length,
+      狀態modified: rawItems.filter(item => item._status === 'modified').length,
+      狀態deleted: rawItems.filter(item => item._status === 'deleted').length,
+      勾選且new: rawItems.filter(item => item.is_selected && item._status === 'new').length
     });
 
-    rawItems.forEach(item => {
+    // 🔥 顯示前5筆資料
+    console.log('📋 rawItems 前5筆:');
+    rawItems.slice(0, 5).forEach((item, idx) => {
+      console.log(`  [${idx}] cap_item: ${item.cap_item}, is_selected: ${item.is_selected}, _status: ${item._status}`);
+    });
+
+    rawItems.forEach((item, index) => {
       // 刪除的項目處理
       if (item._status === 'deleted') {
         console.log('🗑️ 發現刪除項目:', {
@@ -447,7 +467,13 @@ export class TLS12040DataCleanerClass {
       }
 
       // 只有被勾選的項目才處理新增/修改
-      if (!item.is_selected) return;
+      if (!item.is_selected) {
+        // 🔥 記錄被跳過的項目（僅前3筆）
+        if (index < 3) {
+          console.log(`⏩ 跳過未勾選項目 [${index}]: cap_item=${item.cap_item}, _status=${item._status}`);
+        }
+        return;
+      }
 
       const cleanItem: TLS12040FareItem = {
         ...(this.hasValidId(item.id) ? { id: Number(item.id) } : {}),
@@ -466,7 +492,16 @@ export class TLS12040DataCleanerClass {
         interval: this.parseNumber(item.interval),
         down_payment: this.parseNumber(item.down_payment),
         period_nos: this.parseNumber(item.period_nos),
-        tpy_rate: this.parseNumber(item.tpy_rate)
+        tpy_rate: this.parseNumber(item.tpy_rate),
+
+        // D 類型專用欄位
+        cap_saletype: item.cap_saletype,
+        instms_type: item.instms_type,
+        edc_bank: item.edc_bank,
+        pay_no: item.pay_no,
+        calc_type: item.calc_type,
+        over_base_rate: this.parseNumber(item.over_base_rate),
+        rent_plus_rate: this.parseNumber(item.rent_plus_rate)
       };
 
       switch (item._status) {

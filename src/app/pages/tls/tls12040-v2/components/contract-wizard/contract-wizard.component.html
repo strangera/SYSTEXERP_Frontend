@@ -1,0 +1,104 @@
+<div class="card">
+  <!-- Header -->
+  <div class="flex gap-2 mb-3">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+
+  <!-- Steps Navigation -->
+  <div class="mb-4">
+    <p-steps
+      [model]="steps"
+      [activeIndex]="visualStepIndex"
+      [readonly]="false"
+      (activeIndexChange)="goToStep($event)"
+    ></p-steps>
+  </div>
+
+  <!-- Commission Type Change Warning -->
+  <div *ngIf="hasCommissionTypeChanged()" class="p-3 mb-3 border-round surface-200">
+    <i class="pi pi-exclamation-triangle text-orange-500 mr-2"></i>
+    <span class="text-orange-700">
+      抽成別已變更，部分設定可能需要重新調整
+    </span>
+  </div>
+
+  <!-- Step Content -->
+  <div [ngSwitch]="currentStep" class="step-content">
+    <!-- Step 1: Contract Info -->
+    <app-step1-contract-info
+      *ngSwitchCase="0"
+      [form]="dataForm"
+      [locationData]="wizardState.locationData"
+      [isViewMode]="isViewMode"
+      [submitted]="submitted"
+      (dataChange)="onStep1DataChange($event)"
+    ></app-step1-contract-info>
+
+    <!-- Step 2: Deduction -->
+    <app-step2-deduction
+      *ngSwitchCase="1"
+      [fareItems]="wizardState.fareItems"
+      [contractInfo]="wizardState.contractInfo"
+      [isViewMode]="isViewMode"
+      (dataChange)="onStep2DataChange($event)"
+    ></app-step2-deduction>
+
+    <!-- Step 3: Commission -->
+    <app-step3-commission
+      *ngSwitchCase="2"
+      [commissionItems]="wizardState.commissionItems"
+      [contractInfo]="wizardState.contractInfo"
+      [isViewMode]="isViewMode"
+      (dataChange)="onStep3DataChange($event)"
+    ></app-step3-commission>
+
+    <!-- Step 4: Condition -->
+    <app-step4-condition
+      *ngSwitchCase="3"
+      [conditionItems]="wizardState.conditionItems"
+      [contractInfo]="wizardState.contractInfo"
+      [commissionType]="currentCommissionType"
+      [isViewMode]="isViewMode"
+      (dataChange)="onStep4DataChange($event)"
+    ></app-step4-condition>
+  </div>
+
+  <!-- Navigation Buttons -->
+  <div class="flex justify-content-between mt-4 pt-3 border-top-1 surface-border">
+    <div>
+      <app-button
+        *ngIf="!isFirstStep"
+        btnType="default"
+        label="上一步"
+        icon="pi pi-arrow-left"
+        (click)="goToPreviousStep()"
+      ></app-button>
+    </div>
+
+    <div class="flex gap-2">
+      <app-button
+        btnType="cancel"
+        label="取消"
+        (click)="onCancel()"
+      ></app-button>
+
+      <app-button
+        *ngIf="!isLastStep"
+        btnType="default"
+        label="下一步"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        (click)="goToNextStep()"
+      ></app-button>
+
+      <app-button
+        *ngIf="isLastStep && !isViewMode"
+        btnType="submit"
+        label="儲存"
+        icon="pi pi-save"
+        [loading]="isSaving"
+        (click)="onSave()"
+      ></app-button>
+    </div>
+  </div>
+</div>

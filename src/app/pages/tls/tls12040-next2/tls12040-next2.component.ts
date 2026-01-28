@@ -362,12 +362,12 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
    *  改進:統一的抽成資料載入方法
    */
   async loadCommissionData(): Promise<void> {
-    // 先檢查是否有暫存資料
+    // ✅ 【優先】檢查是否有暫存資料（包含用戶修改的內容）
     const savedData = this.flowService.getStepData('next2');
 
     if (savedData?.data?.commissionData && savedData.data.commissionData.length > 0) {
-      //  有暫存，直接用暫存資料
-      console.log('📦 從暫存載入抽成資料');
+      //  有暫存，直接用暫存資料（優先於續約資料，避免覆蓋用戶修改）
+      console.log('📦 從暫存載入抽成資料（包含用戶修改）');
       this.commissionData = savedData.data.commissionData;
 
       // 🔍 檢查載入的資料中 is_selected 的初始狀態
@@ -375,7 +375,8 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         console.log(`📊 Commission Item ${index + 1}:`, {
           tlt_id: item.tlt_id,
           ChargeDetails_count: item.ChargeDetails?.length,
-          ChargeDetails_selected: item.ChargeDetails?.filter(d => d.is_selected).map(d => d.cag_barcode)
+          ChargeDetails_selected: item.ChargeDetails?.filter((d: any) => d.is_selected).map((d: any) => d.cag_barcode),
+          _status: item._status
         });
 
         // 🔥 從暫存載入時也要排序
@@ -392,7 +393,18 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       return;
     }
 
-    // ❌ 沒有暫存，才打 API
+    // ✅ 沒有暫存時，檢查是否為續約模式（只在第一次進入時載入續約資料）
+    if (this.flowService.isRenewalMode()) {
+      console.log('🔄 續約模式：檢查是否有續約抽成資料');
+      const renewalChargeData = this.flowService.getRenewalChargeData();
+      if (renewalChargeData && renewalChargeData.length > 0) {
+        console.log('✅ 首次使用續約抽成資料，共', renewalChargeData.length, '筆');
+        this.loadRenewalChargeData(renewalChargeData);
+        return;
+      }
+    }
+
+    // ❌ 沒有暫存也沒有續約資料，才打 API
     console.log('🌐 從 API 載入抽成資料');
     await this.dataFlowService.loadData(
       this.currentApplyNo,
@@ -423,6 +435,84 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
     this.dataLoaded = true;
     this.commissionDataLoaded = true;
+  }
+
+  /**
+   * 載入續約抽成資料
+   * 將原合約的抽成資料轉換為新合約格式（移除 ID，標記為新增）
+   */
+  private loadRenewalChargeData(renewalChargeData: any): void {
+    console.log('🔄 開始載入續約抽成資料');
+
+    try {
+      if (renewalChargeData && Array.isArray(renewalChargeData)) {
+        // 轉換續約資料（移除 ID，標記為新增，清空日期以便套用新契約日期）
+        this.commissionData = renewalChargeData.map((item: any, itemIndex: number) => {
+          // 🔥 主設定也根據 is_selected 來決定狀態
+          const masterSelected = Boolean(item.is_selected);
+          return {
+            ...item,
+            tlt_id: item.tlt_id,         // 🔥 使用原始 API 值（通常是 0）
+            apply_no: '',                // 清空 apply_no
+            talent_id: '',               // 清空 talent_id
+            _status: masterSelected ? 'new' : undefined,  // 🔥 只有勾選的才標記為新增
+            _isNew: masterSelected,
+            is_selected: masterSelected, // 🔥 保留 API 回傳的選擇狀態
+            // 處理 ChargeDetails（清空日期以便套用新契約日期）
+            ChargeDetails: item.ChargeDetails?.map((detail: any, detailIndex: number) => {
+              const isSelected = Boolean(detail.is_selected);
+              return {
+                ...detail,
+                id: `renewal_charge_${Date.now()}_${itemIndex}_${detailIndex}_${Math.random().toString(36).substring(2, 9)}`,  // 🔥 產生唯一 ID
+                apply_no: '',
+                tlt_bdate: null,           // 🔥 清空起始日期（由 ensureDataConsistency 套用新契約日期）
+                tlt_edate: null,           // 🔥 清空結束日期（由 ensureDataConsistency 套用新契約日期）
+                _status: isSelected ? 'new' : undefined,  // 🔥 只有勾選的才標記為新增
+                _isNew: isSelected,
+                is_selected: isSelected    // 🔥 保留 API 回傳的選擇狀態
+              };
+            }) || [],
+            // 處理 LevelChargeDetails（清空日期以便套用新契約日期）
+            LevelChargeDetails: item.LevelChargeDetails?.map((detail: any, levelIndex: number) => {
+              const isSelected = Boolean(detail.is_selected);
+              return {
+                ...detail,
+                id: `renewal_level_${Date.now()}_${itemIndex}_${levelIndex}_${Math.random().toString(36).substring(2, 9)}`,  // 🔥 產生唯一 ID
+                apply_no: '',
+                tlt_bdate: null,           // 🔥 清空起始日期（由 ensureDataConsistency 套用新契約日期）
+                tlt_edate: null,           // 🔥 清空結束日期（由 ensureDataConsistency 套用新契約日期）
+                _status: isSelected ? 'new' : undefined,  // 🔥 只有勾選的才標記為新增
+                _isNew: isSelected,
+                is_selected: isSelected    // 🔥 保留 API 回傳的選擇狀態
+              };
+            }) || []
+          };
+        });
+
+        // 排序
+        this.commissionData.forEach(item => {
+          if (item.ChargeDetails) {
+            item.ChargeDetails = this.sortDiscountItems(item.ChargeDetails);
+          }
+          if (item.LevelChargeDetails) {
+            item.LevelChargeDetails = this.sortDiscountItems(item.LevelChargeDetails);
+          }
+        });
+
+        console.log('📊 續約抽成資料載入完成:', this.commissionData.length, '筆');
+        this.messageService.successBubble('已載入原合約抽成資料');
+      }
+
+      this.dataLoaded = true;
+      this.commissionDataLoaded = true;
+      this.cdr.detectChanges();
+
+    } catch (error) {
+      console.error('❌ 載入續約抽成資料失敗:', error);
+      this.messageService.warnBubble('載入續約抽成資料失敗');
+      this.dataLoaded = true;
+      this.commissionDataLoaded = true;
+    }
   }
 
 
@@ -1189,6 +1279,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     const applyNo = cruData?.apply_no || '';  // 允許空字串
     const defaultCapSaletype1 = cruData?.cap_saletype1 || 'N';
     const defaultCapSaletype2 = cruData?.cap_saletype2 || 'N';
+    const defaultCapSaletype3 = cruData?.cap_saletype3 || 'N';
     const defaultCapSaletype5 = cruData?.cap_saletype5 || 'N';
 
     const newItem: ChargeSettingBusinessModel = {
@@ -1204,6 +1295,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       // 使用從 CRU 資料讀取的預設值
       cap_saletype1: defaultCapSaletype1,
       cap_saletype2: defaultCapSaletype2,
+      cap_saletype3: defaultCapSaletype3,
       cap_saletype5: defaultCapSaletype5,
       cag_remark: '',
       _status: 'new',
@@ -1576,7 +1668,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       }
 
       // 處理 master 項目的欄位變更
-      if (fieldName === 'cap_saletype1' || fieldName === 'cap_saletype2' || fieldName === 'cap_saletype5') {
+      if (fieldName === 'cap_saletype1' || fieldName === 'cap_saletype2' || fieldName === 'cap_saletype3' || fieldName === 'cap_saletype5') {
         const ynValue = newValue ? 'Y' : 'N';
         (this.commissionData[index] as any)[fieldName] = ynValue;
       } else {
@@ -1926,6 +2018,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       const processedItem = { ...item };
       (processedItem as any).cap_saletype1 = item.cap_saletype1 === 'Y';
       (processedItem as any).cap_saletype2 = item.cap_saletype2 === 'Y';
+      (processedItem as any).cap_saletype3 = item.cap_saletype3 === 'Y';
       (processedItem as any).cap_saletype5 = item.cap_saletype5 === 'Y';
       // 根據當前選中的標籤,設定對應的資料到統一的屬性名稱
       switch (this.selectedSettingTab) {

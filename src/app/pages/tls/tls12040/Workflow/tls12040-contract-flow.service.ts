@@ -40,6 +40,30 @@ export interface TLS12040DataCleaner<T = any> {
   validate(data: T): boolean;
 }
 
+// ========== 續約資料結構 ==========
+
+/** 續約資料結構 - 儲存從最新版次契約查詢的資料 */
+export interface RenewalDataStructure {
+  /** 來源契約的 talent_id */
+  sourceContractId: string;
+  /** 來源契約的 apply_no */
+  sourceApplyNo: string;
+  /** 來源契約的版次 */
+  sourceContractSubno: number;
+  /** 建議的新版次 */
+  nextContractSubno: number;
+  /** 基本資訊 */
+  basicInfo: any;
+  /** 位置資訊 */
+  locations: any[];
+  /** 扣款資料 (Next1) */
+  fareData: any;
+  /** 抽成資料 (Next2) */
+  chargeData: any;
+  /** 條件資料 (Next3) */
+  commissionData: any;
+}
+
 // 各步驟的資料清理器
 class CruDataCleaner implements TLS12040DataCleaner {
   clean(data: TLS12040DetailModel) {
@@ -318,6 +342,10 @@ export class TLS12040FlowService {
   private viewModeSubject = new BehaviorSubject<boolean>(false);
   public isViewMode$ = this.viewModeSubject.asObservable();
 
+  // ========== 續約相關 ==========
+  private readonly RENEWAL_STORAGE_KEY = 'TLS12040_RENEWAL_DATA';
+  private renewalData: RenewalDataStructure | null = null;
+
   constructor(private crudModeService: CrudModeService) {
     this.loadFromStorage();
   }
@@ -547,13 +575,40 @@ export class TLS12040FlowService {
    * 生成 TLS12040 專用的提交資料
    */
   generateTLS12040SubmitData(): TLS12040SubmitData {
-    console.log('開始生成 TLS12040 提交資料...');
+    console.log('🚀 開始生成 TLS12040 提交資料...');
 
-    // 取得各步驟資料
+    // 取得 CRU 資料
     const cruData = this.getCruData();
+
+    // 🔥 簡化邏輯：直接用 crudstatus 判斷
+    // - Create → 全部 toInsert（新增、續約都是 Create）
+    // - Edit → 正常邏輯（可能有 toInsert、toUpdate、toDelete）
+    const currentCrudStatus = this._state.status || this.CRUDStatus$.value || CRUDStatus.Edit;
+    const isCreateMode = currentCrudStatus === CRUDStatus.Create;
+
+    console.log('📊 當前 workflow 狀態:', {
+      crudStatus: currentCrudStatus,
+      isCreateMode,
+      applyNo: this._state.applyNo,
+      cruApplyType: cruData?.apply_type,
+      completedSteps: Array.from(this._state.completedSteps)
+    });
     const next1Data = this.getNext1Data();
     const next2Data = this.getNext2Data();
     const next3Data = this.getNext3Data();
+
+    // 🔥 詳細記錄 next1Data
+    console.log('\n📦 Next1 資料詳細檢查:');
+    console.log('next1Data 存在:', !!next1Data);
+    if (next1Data) {
+      console.log('next1Data 結構:', {
+        hasSelectedItems: !!(next1Data as any).selectedItems,
+        selectedItemsLength: (next1Data as any).selectedItems?.length || 0,
+        hasOriginalFareData: !!(next1Data as any).originalFareData,
+        originalFareDataKeys: (next1Data as any).originalFareData ? Object.keys((next1Data as any).originalFareData) : [],
+        timestamp: (next1Data as any).timestamp
+      });
+    }
 
     console.log('\n📦 Step 4 (Next3) 資料檢查:');
     console.log('Next3 資料存在:', !!next3Data);
@@ -568,26 +623,27 @@ export class TLS12040FlowService {
     });
 
     // 1. 處理合約基本資料
+    // Create → INSERT, Edit → UPDATE
     const contractInfo = {
-      operation: this._state.isNewContract ? 'INSERT' as const : 'UPDATE' as const,
+      operation: isCreateMode ? 'INSERT' as const : 'UPDATE' as const,
       data: TLS12040DataCleanerClass.cleanContractInfo(cruData)
     };
 
     // 2. 處理代扣款資料 (來自 Next1)
-    const deductions = this.processNext1DeductionData(next1Data);
+    const deductions = this.processNext1DeductionData(next1Data, isCreateMode);
 
     // 3. 處理抽成資料 (來自 Next2)
-    const commissions = this.processNext2CommissionData(next2Data);
+    const commissions = this.processNext2CommissionData(next2Data, isCreateMode);
 
     // 4. 處理條件資料 (來自 Next3)
-    const conditions = this.processNext3ConditionData(next3Data);
+    const conditions = this.processNext3ConditionData(next3Data, isCreateMode);
 
     // 5. 生成元數據
     const metadata = {
       apply_no: this._state.applyNo,
       contractId: this._state.contractId,
       commissionType: cruData?.tlt_term_type || '3',
-      isNewContract: this._state.isNewContract,
+      isNewContract: isCreateMode,  // Create 模式 = 全部 INSERT
       submittedAt: new Date().toISOString(),
       totalOperations: this.calculateTotalOperations(deductions, commissions, conditions)
     };
@@ -613,37 +669,98 @@ export class TLS12040FlowService {
 
   /**
    * 處理 Next1 代扣款資料
+   * @param next1Data Next1 資料
+   * @param isCreateMode 是否為 Create 模式（CRUDStatus.Create）
    */
-  private processNext1DeductionData(next1Data: any): any {
-    console.log('處理 Next1 代扣款資料...');
+  private processNext1DeductionData(next1Data: any, isCreateMode: boolean = false): any {
+    console.log('🔍 處理 Next1 代扣款資料...');
+    console.log('📦 next1Data 結構:', {
+      hasNext1Data: !!next1Data,
+      hasSelectedItems: !!next1Data?.selectedItems,
+      selectedItemsLength: next1Data?.selectedItems?.length || 0,
+      hasOriginalFareData: !!next1Data?.originalFareData,
+      isCreateMode
+    });
 
     if (!next1Data?.selectedItems) {
-      console.log('沒有 Next1 代扣款資料');
+      console.log('❌ 沒有 Next1 代扣款資料 (selectedItems 不存在)');
       return { toInsert: [], toUpdate: [], toDelete: [] };
     }
 
-    return TLS12040DataCleanerClass.cleanDeductionItems(next1Data.selectedItems);
+    // Create 模式：所有已勾選的項目都是 'new'（全部 toInsert）
+    let items = next1Data.selectedItems;
+    if (isCreateMode) {
+      console.log('🔧 Create 模式：強制將所有已勾選項目設為 new');
+      items = items.map((item: any) => {
+        if (item._status === 'deleted') {
+          return item;
+        }
+        if (item.is_selected) {
+          if (item._status !== 'new') {
+            console.log(`  🔧 修復項目 ${item.cap_item}: ${item._status || 'undefined'} → 'new'`);
+          }
+          return { ...item, _status: 'new' };
+        }
+        return item;
+      });
+    }
+
+    // 🔥 詳細記錄 selectedItems 的狀態（修復後）
+    console.log('📊 selectedItems 詳細分析（修復後）:', {
+      總數: items.length,
+      已勾選: items.filter((i: any) => i.is_selected).length,
+      狀態為new: items.filter((i: any) => i._status === 'new').length,
+      狀態為modified: items.filter((i: any) => i._status === 'modified').length,
+      狀態為deleted: items.filter((i: any) => i._status === 'deleted').length,
+      同時勾選且new: items.filter((i: any) => i.is_selected && i._status === 'new').length
+    });
+
+    // 🔥 顯示前3筆資料的詳細結構
+    if (items.length > 0) {
+      console.log('📋 前3筆 selectedItems 範例:');
+      items.slice(0, 3).forEach((item: any, index: number) => {
+        console.log(`  [${index}]:`, {
+          cap_item: item.cap_item,
+          cap_type: item.cap_type,
+          is_selected: item.is_selected,
+          _status: item._status,
+          id: item.id
+        });
+      });
+    }
+
+    const result = TLS12040DataCleanerClass.cleanDeductionItems(items);
+
+    console.log('📤 cleanDeductionItems 結果:', {
+      toInsert: result.toInsert.length,
+      toUpdate: result.toUpdate.length,
+      toDelete: result.toDelete.length
+    });
+
+    return result;
   }
 
   /**
    * 處理 Next2 抽成資料
+   * @param next2Data Next2 資料
+   * @param isCreateMode 是否為 Create 模式（CRUDStatus.Create）
    */
-  private processNext2CommissionData(next2Data: any): any {
+  private processNext2CommissionData(next2Data: any, isCreateMode: boolean = false): any {
     console.log('🔍 處理 Next2 抽成資料...');
     console.log('Next2Data 結構:', {
       hasNext2Data: !!next2Data,
       hasData: !!next2Data?.data,
       hasCommissionData: !!next2Data?.data?.commissionData,
-      hasPreparedData: !!next2Data?.data?.preparedSubmitData
+      hasPreparedData: !!next2Data?.data?.preparedSubmitData,
+      isCreateMode
     });
 
-    // 🔥 優先使用已準備好的資料
+    // 優先使用已準備好的資料
     if (next2Data?.data?.preparedSubmitData) {
       console.log('✅ 使用 Next2 準備好的 preparedSubmitData');
       return next2Data.data.preparedSubmitData;
     }
 
-    // 🔥 修正：正確的讀取路徑
     if (!next2Data?.data?.commissionData) {
       console.log('❌ 沒有 Next2 抽成資料');
       return {
@@ -654,8 +771,21 @@ export class TLS12040FlowService {
       };
     }
 
-    // 🔥 使用正確的路徑
-    const commissionData = next2Data.data.commissionData;
+    let commissionData = next2Data.data.commissionData;
+
+    // Create 模式：所有非刪除的項目都是 'new'（全部 toInsert）
+    if (isCreateMode) {
+      console.log('🔧 Create 模式：強制將所有抽成項目設為 new');
+      commissionData = commissionData.map((commission: any) => {
+        if (commission._status === 'deleted') {
+          return commission;
+        }
+        if (commission._status !== 'new') {
+          console.log(`  🔧 修復主檔 ${commission.tlt_id}: ${commission._status || 'undefined'} → 'new'`);
+        }
+        return { ...commission, _status: 'new' };
+      });
+    }
     console.log('📦 找到 commissionData:', {
       length: commissionData.length,
       sample: commissionData[0]
@@ -894,10 +1024,12 @@ export class TLS12040FlowService {
   }
 
   /**
- * 處理 Next3 條件資料
- */
-  private processNext3ConditionData(next3Data: any): any {
-    console.log('🔍 處理 Next3 條件資料...');
+   * 處理 Next3 條件資料
+   * @param next3Data Next3 資料
+   * @param isCreateMode 是否為 Create 模式（CRUDStatus.Create）
+   */
+  private processNext3ConditionData(next3Data: any, isCreateMode: boolean = false): any {
+    console.log('🔍 處理 Next3 條件資料...', { isCreateMode });
 
     if (!next3Data || !Array.isArray(next3Data)) {
       console.log('❌ 沒有 Next3 條件資料');
@@ -910,6 +1042,21 @@ export class TLS12040FlowService {
       };
     }
 
+    // Create 模式：所有非刪除的項目都是 'new'（全部 toInsert）
+    let conditionData = next3Data;
+    if (isCreateMode) {
+      console.log('🔧 Create 模式：強制將所有條件項目設為 new');
+      conditionData = next3Data.map((condition: any) => {
+        if (condition._status === 'deleted') {
+          return condition;
+        }
+        if (condition._status !== 'new') {
+          console.log(`  🔧 修復條件: ${condition._status || 'undefined'} → 'new'`);
+        }
+        return { ...condition, _status: 'new' };
+      });
+    }
+
     //  從合約資訊中取得抽成類型
     const cruData = this.getCruData();
     const commissionType = cruData?.tlt_term_type || '3';
@@ -917,7 +1064,7 @@ export class TLS12040FlowService {
     console.log('📊 Next3 資料處理:', {
       抽成類型: commissionType,
       抽成類型名稱: this.getCommissionTypeName(commissionType),
-      資料數量: next3Data.length
+      資料數量: conditionData.length
     });
 
     const result = {
@@ -928,7 +1075,7 @@ export class TLS12040FlowService {
       baseTier: { toInsert: [] as any[], toUpdate: [] as any[], toDelete: [] as any[] }
     };
 
-    next3Data.forEach((condition: any, index: number) => {
+    conditionData.forEach((condition: any, index: number) => {
       console.log(`\n🔄 處理條件 ${index + 1}:`, {
         id: condition.id,
         _status: condition._status,
@@ -1168,12 +1315,275 @@ export class TLS12040FlowService {
     this.CRUDStatus$.next(CRUDStatus.Edit);
     this.notifyStateChange();
     sessionStorage.removeItem(this.STORAGE_KEY);
+    this.clearRenewalData();  // 🔥 同時清除續約資料
   }
 
   /**
    * 提交成功後清理
    */
   onSubmitSuccess = () => this.clearAll();
+
+  // ========== 續約資料管理 ==========
+
+  /**
+   * 設定續約資料
+   */
+  setRenewalData(data: RenewalDataStructure): void {
+    this.renewalData = data;
+    sessionStorage.setItem(this.RENEWAL_STORAGE_KEY, JSON.stringify(data));
+    console.log('✅ 續約資料已儲存:', {
+      sourceContractId: data.sourceContractId,
+      sourceContractSubno: data.sourceContractSubno,
+      nextContractSubno: data.nextContractSubno
+    });
+  }
+
+  /**
+   * 取得續約資料
+   */
+  getRenewalData(): RenewalDataStructure | null {
+    if (!this.renewalData) {
+      const stored = sessionStorage.getItem(this.RENEWAL_STORAGE_KEY);
+      if (stored) {
+        try {
+          this.renewalData = JSON.parse(stored);
+          console.log('📥 從 sessionStorage 載入續約資料');
+        } catch (e) {
+          console.error('解析續約資料失敗:', e);
+        }
+      }
+    }
+    return this.renewalData;
+  }
+
+  /**
+   * 是否為續約模式
+   */
+  isRenewalMode(): boolean {
+    return this.getRenewalData() !== null;
+  }
+
+  /**
+   * 清除續約資料
+   */
+  clearRenewalData(): void {
+    this.renewalData = null;
+    sessionStorage.removeItem(this.RENEWAL_STORAGE_KEY);
+    console.log('🗑️ 續約資料已清除');
+  }
+
+  /**
+   * 取得續約用的 Next1 扣款資料（清除 ID）
+   * 返回扁平化的扣款項目陣列，供組件直接使用
+   */
+  getRenewalFareData(): any[] | null {
+    console.log('🔍 getRenewalFareData 被呼叫');
+    const renewalData = this.getRenewalData();
+    console.log('📦 renewalData:', {
+      hasRenewalData: !!renewalData,
+      hasFareData: !!renewalData?.fareData,
+      fareDataType: renewalData?.fareData ? typeof renewalData.fareData : 'N/A',
+      fareDataKeys: renewalData?.fareData ? Object.keys(renewalData.fareData) : []
+    });
+
+    if (!renewalData?.fareData) {
+      console.log('❌ 沒有續約扣款資料');
+      return null;
+    }
+
+    const result = this.cleanFareDataForRenewal(renewalData.fareData);
+    console.log('📊 cleanFareDataForRenewal 結果:', {
+      總數: result.length,
+      已勾選: result.filter(i => i.is_selected).length,
+      狀態new: result.filter(i => i._status === 'new').length
+    });
+
+    return result;
+  }
+
+  /**
+   * 清理扣款資料供續約使用
+   * 將 FaresByType 結構轉為扁平陣列
+   */
+  private cleanFareDataForRenewal(fareData: any): any[] {
+    const cleanItems = (items: any[]) => {
+      if (!Array.isArray(items)) return [];
+      return items.map(item => {
+        // 🔥 保留 API 回傳的 is_selected 狀態
+        const isSelected = Boolean(item.is_selected);
+        return {
+          ...item,
+          id: undefined,
+          mid: undefined,
+          apply_no: undefined,
+          talent_id: undefined,
+          // 🔥 只有已選擇的項目才標記為 'new'
+          _status: isSelected ? 'new' : undefined,
+          is_selected: isSelected
+        };
+      });
+    };
+
+    const capTypes = ['A', 'B', 'C', 'D', 'E'];
+
+    // 處理 FaresByType 結構 - 合併為扁平陣列
+    if (fareData.FaresByType) {
+      const allItems: any[] = [];
+      capTypes.forEach(type => {
+        const items = cleanItems(fareData.FaresByType[type] || []);
+        allItems.push(...items);
+      });
+      console.log('🔄 續約扣款資料扁平化完成 (FaresByType):', allItems.length, '筆');
+      return allItems;
+    }
+
+    // 🔥 新增：處理 FareData 直接是 { A: [...], B: [...], ... } 結構的情況
+    const hasCapTypeKeys = capTypes.some(type => Array.isArray(fareData[type]));
+    if (hasCapTypeKeys) {
+      const allItems: any[] = [];
+      capTypes.forEach(type => {
+        const items = cleanItems(fareData[type] || []);
+        allItems.push(...items);
+      });
+      console.log('🔄 續約扣款資料扁平化完成 (直接結構):', allItems.length, '筆');
+      return allItems;
+    }
+
+    // 如果已經是陣列，直接清理返回
+    if (Array.isArray(fareData)) {
+      return cleanItems(fareData);
+    }
+
+    console.warn('⚠️ 無法識別的 FareData 結構:', fareData);
+    return [];
+  }
+
+  /**
+   * 取得續約用的 Next2 抽成資料（清除 ID）
+   * 返回抽成設定陣列，供組件直接使用
+   */
+  getRenewalChargeData(): any[] | null {
+    const renewalData = this.getRenewalData();
+    if (!renewalData?.chargeData) return null;
+
+    return this.cleanChargeDataForRenewal(renewalData.chargeData);
+  }
+
+  /**
+   * 清理抽成資料供續約使用
+   * 提取 ChargeSettings 陣列
+   */
+  private cleanChargeDataForRenewal(chargeData: any): any[] {
+    const cleanChargeSettings = (settings: any[]) => {
+      if (!Array.isArray(settings)) return [];
+      return settings.map(setting => {
+        // 🔥 主設定也需要根據 is_selected 決定狀態
+        const isSelected = Boolean(setting.is_selected);
+        return {
+          ...setting,
+          id: undefined,
+          apply_no: undefined,
+          talent_id: undefined,
+          _status: isSelected ? 'new' : undefined,
+          is_selected: isSelected,
+          ChargeDetails: (setting.ChargeDetails || []).map((detail: any) => {
+            const detailSelected = Boolean(detail.is_selected);
+            return {
+              ...detail,
+              id: undefined,
+              apply_no: undefined,
+              _status: detailSelected ? 'new' : undefined,
+              is_selected: detailSelected
+            };
+          }),
+          YearChargeDetails: (setting.YearChargeDetails || []).map((detail: any) => {
+            const detailSelected = Boolean(detail.is_selected);
+            return {
+              ...detail,
+              id: undefined,
+              apply_no: undefined,
+              _status: detailSelected ? 'new' : undefined,
+              is_selected: detailSelected
+            };
+          }),
+          LevelChargeDetails: (setting.LevelChargeDetails || []).map((detail: any) => {
+            const detailSelected = Boolean(detail.is_selected);
+            return {
+              ...detail,
+              id: undefined,
+              charged_id: undefined,
+              apply_no: undefined,
+              _status: detailSelected ? 'new' : undefined,
+              is_selected: detailSelected
+            };
+          })
+        };
+      });
+    };
+
+    // 提取 ChargeSettings 陣列
+    if (chargeData.ChargeSettings) {
+      const result = cleanChargeSettings(chargeData.ChargeSettings);
+      console.log('🔄 續約抽成資料清理完成:', result.length, '筆');
+      return result;
+    }
+
+    // 如果已經是陣列，直接清理返回
+    if (Array.isArray(chargeData)) {
+      return cleanChargeSettings(chargeData);
+    }
+
+    console.warn('⚠️ 無法識別的 ChargeData 結構:', chargeData);
+    return [];
+  }
+
+  /**
+   * 取得續約用的 Next3 條件資料（清除 ID）
+   * 返回條件項目陣列，供組件直接使用
+   */
+  getRenewalCommissionData(): any[] | null {
+    const renewalData = this.getRenewalData();
+    if (!renewalData?.commissionData) return null;
+
+    return this.cleanCommissionDataForRenewal(renewalData.commissionData);
+  }
+
+  /**
+   * 清理條件資料供續約使用
+   * 提取 ExistingData 陣列
+   */
+  private cleanCommissionDataForRenewal(commissionData: any): any[] {
+    const cleanItems = (items: any[]) => {
+      if (!Array.isArray(items)) return [];
+      return items.map(item => {
+        // 🔥 條件資料通常跟隨主設定，如果有 is_selected 就使用，否則預設為 true
+        const isSelected = item.is_selected !== undefined ? Boolean(item.is_selected) : true;
+        return {
+          ...item,
+          id: undefined,
+          apply_no: undefined,
+          talent_id: undefined,
+          _status: isSelected ? 'new' : undefined,
+          is_selected: isSelected
+        };
+      });
+    };
+
+    // 提取 ExistingData 陣列
+    if (commissionData?.ExistingData && Array.isArray(commissionData.ExistingData)) {
+      const result = cleanItems(commissionData.ExistingData);
+      console.log('🔄 續約條件資料清理完成:', result.length, '筆');
+      return result;
+    }
+
+    // 如果已經是陣列，直接清理返回
+    if (Array.isArray(commissionData)) {
+      return cleanItems(commissionData);
+    }
+
+    console.warn('⚠️ 無法識別的 CommissionData 結構:', commissionData);
+    return [];
+  }
 
   // ========== 私有輔助方法 ==========
 
