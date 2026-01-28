@@ -4,14 +4,23 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
 
     <!-- 步驟切換按鈕 -->
-    <app-button label="收款基本資料" (click)="switchButton(1)"
-      [severity]="buttonID === 1 ? undefined : 'secondary'"></app-button>
+    <app-button
+      label="收款基本資料"
+      (click)="switchButton(1)"
+      [severity]="buttonID === 1 ? undefined : 'secondary'"
+    ></app-button>
 
-    <app-button label="票據資訊" (click)="switchButton(2)"
-      [severity]="buttonID === 2 ? undefined : 'secondary'"></app-button>
+    <app-button
+      label="票據資訊"
+      (click)="switchButton(2)"
+      [severity]="buttonID === 2 ? undefined : 'secondary'"
+    ></app-button>
 
-    <app-button label="應收帳款確認" (click)="switchButton(3)"
-      [severity]="buttonID === 3 ? undefined : 'secondary'"></app-button>
+    <app-button
+      label="應收帳款確認"
+      (click)="switchButton(3)"
+      [severity]="buttonID === 3 ? undefined : 'secondary'"
+    ></app-button>
 
     <app-button btnType="back" label="離開" (click)="onCancel()"></app-button>
   </div>
@@ -20,34 +29,71 @@
   <!-- 步驟 1: 收款基本資料與收款項目 -->
   <!-- ============================================ -->
   <ng-container *ngIf="buttonID === 1">
-    <p-panel header="收款基本資料" class="mb-3">
+    <p-panel header="收款基本資料" [style]="{ 'margin-bottom': '1.5rem' }">
       <form [formGroup]="step1Form">
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="收款單號" controlName="RCV_No"
-            [control]="step1Form.controls.RCV_No" [readonly]="true"
-            [customPlaceholder]="isFormCreateable ? '系統自動產生' : ''" />
-          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="收款日期" controlName="RCV_Date"
-            [control]="step1Form.controls.RCV_Date" />
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="業務員代號" controlName="Sales_Id" [options]="salesOptions"
-            optionLabel="label" optionValue="value" [control]="step1Form.controls.Sales_Id" [showClear]="true"
-            [filter]="true" />
-          <app-input-text class="col-12" label="備註" controlName="Remark" [control]="step1Form.controls.Remark" />
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="收款單號"
+            controlName="RCV_No"
+            [control]="step1Form.controls.RCV_No"
+            [readonly]="true"
+            [customPlaceholder]="isFormCreateable ? '系統自動產生' : ''"
+          />
+          <app-calendar
+            class="col-12 md:col-6 lg:col-4"
+            calendarType="dateOne"
+            label="收款日期"
+            controlName="RCV_Date"
+            [control]="step1Form.controls.RCV_Date"
+          />
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="業務員代號"
+            controlName="Sales_Id"
+            [options]="salesOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="step1Form.controls.Sales_Id"
+            [showClear]="true"
+            [filter]="true"
+          />
+          <app-input-text
+            class="col-12"
+            label="備註"
+            controlName="Remark"
+            [control]="step1Form.controls.Remark"
+          />
         </div>
       </form>
     </p-panel>
 
     <!-- 收款項目明細 -->
     <p-panel header="收款項目明細">
-      <app-table-edit tableKey="Step1Items" [data]="step2TableData" [columns]="step2Columns" [disabled]="isFormReadable"
-        [canInsert]="!isFormReadable" [showFooter]="true" [tableRequired]="true" [showDelete]="!isFormReadable"
-        (dataChange)="onStep2DataChange($event)"></app-table-edit>
+      <app-table-edit
+        tableKey="Step1Items"
+        [data]="step2TableData"
+        [columns]="step2Columns"
+        [disabled]="isFormReadable"
+        [canInsert]="!isFormReadable"
+        [showFooter]="true"
+        [tableRequired]="true"
+        [showDelete]="!isFormReadable"
+        (dataChange)="onStep2DataChange($event)"
+      ></app-table-edit>
     </p-panel>
 
     <!-- 步驟1按鈕 -->
     @if (!isFormReadable) {
-    <div class="flex justify-content-end gap-2 pt-3">
-      <app-button btnType="next" label="票據修改下一步" icon="pi pi-arrow-right" iconPos="right" (click)="switchButton(2)" />
-    </div>
+      <div class="flex justify-content-end gap-2 pt-3">
+        <app-button
+          btnType="next"
+          label="票據修改下一步"
+          icon="pi pi-arrow-right"
+          iconPos="right"
+          (click)="switchButton(2)"
+        />
+      </div>
     }
   </ng-container>
 
@@ -57,23 +103,50 @@
   <ng-container *ngIf="buttonID === 2">
     <!-- 票據總金額顯示 -->
     <div class="grid p-fluid mb-3">
-      <app-input-number class="col-12 md:col-6 lg:col-4" label="票據總金額" [control]="billTotalAmountControl"
-        [readonly]="true" [minFractionDigits]="2" [maxFractionDigits]="2" />
+      <app-input-number
+        class="col-12 md:col-6 lg:col-4"
+        label="票據總金額"
+        [control]="billTotalAmountControl"
+        [readonly]="true"
+        [minFractionDigits]="2"
+        [maxFractionDigits]="2"
+      />
     </div>
 
     <p-panel header="票據明細">
-      <app-table-edit tableKey="Step2Checks" [data]="step3TableData" [columns]="step3Columns"
-        [disabled]="isFormReadable" [canInsert]="!isFormReadable" [showFooter]="true" [footerData]="step3FooterData"
-        [tableRequired]="false" [scrollable]="false" [showCheckBox]="true" [showDelete]="!isFormReadable"
-        (dataChange)="onStep3DataChange($event)"></app-table-edit>
+      <app-table-edit
+        tableKey="Step2Checks"
+        [data]="step3TableData"
+        [columns]="step3Columns"
+        [disabled]="isFormReadable"
+        [canInsert]="!isFormReadable"
+        [showFooter]="true"
+        [footerData]="step3FooterData"
+        [tableRequired]="false"
+        [scrollable]="false"
+        [showCheckBox]="true"
+        [showDelete]="!isFormReadable"
+        (dataChange)="onStep3DataChange($event)"
+      ></app-table-edit>
     </p-panel>
 
     <!-- 步驟2按鈕 -->
     @if (!isFormReadable) {
-    <div class="flex justify-content-between gap-2 pt-3">
-      <app-button btnType="back" label="回上一頁" icon="pi pi-arrow-left" (click)="switchButton(1)" />
-      <app-button btnType="next" label="帳款修改下一步" icon="pi pi-arrow-right" iconPos="right" (click)="switchButton(3)" />
-    </div>
+      <div class="flex justify-content-between gap-2 pt-3">
+        <app-button
+          btnType="back"
+          label="回上一頁"
+          icon="pi pi-arrow-left"
+          (click)="switchButton(1)"
+        />
+        <app-button
+          btnType="next"
+          label="帳款修改下一步"
+          icon="pi pi-arrow-right"
+          iconPos="right"
+          (click)="switchButton(3)"
+        />
+      </div>
     }
   </ng-container>
 
@@ -82,50 +155,117 @@
   <!-- ============================================ -->
   <ng-container *ngIf="buttonID === 3">
     <p-panel header="應收帳款">
-      <app-table-edit tableKey="Step3AR" [data]="step4TableData" [columns]="step4Columns" [disabled]="isFormReadable"
-        [canInsert]="!isFormReadable" [showFooter]="true" [tableRequired]="true" [showCheckBox]="isFormCreateable"
-        [showDelete]="isFormCreateable" (dataChange)="onStep4DataChange($event)"></app-table-edit>
+      <app-table-edit
+        tableKey="Step3AR"
+        [data]="step4TableData"
+        [columns]="step4Columns"
+        [disabled]="isFormReadable"
+        [canInsert]="!isFormReadable"
+        [showFooter]="true"
+        [tableRequired]="true"
+        [showCheckBox]="isFormCreateable"
+        [showDelete]="isFormCreateable"
+        (dataChange)="onStep4DataChange($event)"
+      ></app-table-edit>
     </p-panel>
 
     <!-- 步驟3按鈕 -->
     <div class="flex justify-content-between gap-2 pt-3">
-      <app-button btnType="back" label="回上一頁" icon="pi pi-arrow-left" (click)="switchButton(2)" />
+      <app-button
+        btnType="back"
+        label="回上一頁"
+        icon="pi pi-arrow-left"
+        (click)="switchButton(2)"
+      />
       @if (!isFormReadable) {
-      <app-button btnType="submit" label="確定修改" icon="pi pi-check" [loading]="loading" (click)="onFinalSubmit()" />
+        <app-button
+          btnType="submit"
+          label="確定修改"
+          icon="pi pi-check"
+          [loading]="loading"
+          (click)="onFinalSubmit()"
+        />
       }
     </div>
   </ng-container>
 </div>
 
 <!-- 應收未收查詢 Dialog -->
-<p-dialog header="應收未收查詢" [(visible)]="showARDialog" [modal]="true" [style]="{ width: '80vw' }"
-  (onHide)="showARDialog = false">
+<p-dialog
+  header="應收未收查詢"
+  [(visible)]="showARDialog"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  (onHide)="showARDialog = false"
+>
   <!-- Query Form -->
   <form [formGroup]="arQueryForm" class="grid p-fluid mb-3">
-    <app-input-text class="col-12 md:col-6 lg:col-3" label="應收ID" controlName="ARS_ID"
-      [control]="arQueryForm.controls.ARS_ID" />
-    <app-dropdown class="col-12 md:col-6 lg:col-3" label="廠客代號" controlName="VEN_No"
-      [control]="arQueryForm.controls.VEN_No" [options]="vendorOptions" optionLabel="label" optionValue="value"
-      [showClear]="true" [filter]="true" />
+    <app-input-text
+      class="col-12 md:col-6 lg:col-3"
+      label="應收ID"
+      controlName="ARS_ID"
+      [control]="arQueryForm.controls.ARS_ID"
+    />
+    <app-dropdown
+      class="col-12 md:col-6 lg:col-3"
+      label="廠客代號"
+      controlName="VEN_No"
+      [control]="arQueryForm.controls.VEN_No"
+      [options]="vendorOptions"
+      optionLabel="label"
+      optionValue="value"
+      [showClear]="true"
+      [filter]="true"
+    />
     <div class="col-12 md:col-6 lg:col-6">
-      <app-calendar-range calendarType="dateRange" label="立帳日期" [startControl]="arQueryForm.controls.DateFrom"
-        [endControl]="arQueryForm.controls.DateTo"></app-calendar-range>
+      <app-calendar-range
+        calendarType="dateRange"
+        label="立帳日期"
+        [startControl]="arQueryForm.controls.DateFrom"
+        [endControl]="arQueryForm.controls.DateTo"
+      ></app-calendar-range>
     </div>
   </form>
   <div class="flex justify-content-end mb-2">
-    <app-button label="查詢" icon="pi pi-search" (click)="onQueryAR()" [loading]="arDialogLoading"></app-button>
+    <app-button
+      label="查詢"
+      icon="pi pi-search"
+      (click)="onQueryAR()"
+      [loading]="arDialogLoading"
+    ></app-button>
   </div>
 
   <!-- Results Table - 單選模式（點擊整行選擇） -->
-  <app-table #arDialogTable tableKey="ARQuery" dataKey="ARS_ID" [data]="arDialogData" [columns]="arDialogColumns"
-    [loading]="arDialogLoading" [showPaginator]="true" [rows]="20" [totalRecords]="arDialogTotalRecords"
-    [scrollable]="true" [scrollHeight]="'400px'" [showCheckBox]="true" [showManage]="false" [showFilter]="false"
-    [showDelete]="false" [showCaption]="false" selectionMode="single" [lazy]="true"
-    (lazyLoadData)="onLazyLoadData($event, arQueryForm); onQueryAR()" (select)="onARRowSelect($event)"></app-table>
+  <app-table
+    #arDialogTable
+    tableKey="ARQuery"
+    dataKey="ARS_ID"
+    [data]="arDialogData"
+    [columns]="arDialogColumns"
+    [loading]="arDialogLoading"
+    [showPaginator]="true"
+    [rows]="20"
+    [totalRecords]="arDialogTotalRecords"
+    [scrollable]="true"
+    [scrollHeight]="'400px'"
+    [showCheckBox]="true"
+    [showManage]="false"
+    [showFilter]="false"
+    [showDelete]="false"
+    [showCaption]="false"
+    selectionMode="single"
+    [lazy]="true"
+    (lazyLoadData)="onLazyLoadData($event, arQueryForm); onQueryAR()"
+    (select)="onARRowSelect($event)"
+  ></app-table>
 
   <!-- Footer -->
   <ng-template pTemplate="footer">
-    <app-button label="取消" severity="secondary" (click)="closeARDialog()"></app-button>
+    <app-button
+      label="取消"
+      severity="secondary"
+      (click)="closeARDialog()"
+    ></app-button>
     <app-button label="確定" (click)="confirmARSelection()"></app-button>
   </ng-template>
 </p-dialog>
