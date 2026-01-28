@@ -142,15 +142,16 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
         fromRoute: window.location.pathname,
         ts: Date.now(),
       };
-      localStorage.setItem('FIN29050_CRU_HANDOFF', JSON.stringify(handoff));
-      localStorage.setItem('FIN29050_CRU_PROGNO', 'FIN29050');
-      console.log('[FIN29050] 已儲存 handoff:', handoff);
+      // 導到 FIN55050 的 CRU，使用 FIN55050 的 localStorage key
+      localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
+      localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050');
+      console.log('[FIN29050] 已儲存 handoff(for FIN55050):', handoff);
     } catch (err) {
       console.error('[FIN29050] handoff save failed:', err);
       this.messageService?.warnBubble?.('寫入交接資料失敗。');
     }
 
-    const externalUrl = this.location.prepareExternalUrl('/account/fin/fin29050cru');
+    const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55050cru');
     const finalUrl = `${window.location.origin}${externalUrl}`;
     window.open(finalUrl, '_blank', 'noopener');
   }

@@ -37,15 +37,15 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton label="未付款是否顯示" groupname="ShowUnpaid" [control]="queryForm.controls.ShowUnpaid" [options]="[
-                { label: '顯示', value: 1 },
-                { label: '不顯示', value: 0 },
+                { label: '顯示', value: true },
+                { label: '不顯示', value: false },
               ]" [submitted]="submitted"></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton label="帳款餘額為零是否顯示" groupname="ShowZeroBalance"
               [control]="queryForm.controls.ShowZeroBalance" [options]="[
-                { label: '顯示', value: 1 },
-                { label: '不顯示', value: 0 },
+                { label: '顯示', value: true },
+                { label: '不顯示', value: false },
               ]" [submitted]="submitted"></app-radiobutton>
           </div>
         </div>
@@ -64,9 +64,9 @@
     </ng-template>
 
     <app-fin29060-table-subheader [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-      [lastQueryBody]="lastQueryBody" [queryFunction]="fin29060Service.queryFIN29060.bind(fin29060Service)"
-      [lazyBatchSize]="lazyBatchSize" [showManage]="false" (dataChange)="data = $event" [groupRowsBy]="'VendorNo'"
-      [fullData]="fullData" [totalData]="totalData" [groupRowsByName]="'廠商編號'" [showSubTotal]="true" [showTotal]="true"
+      [lastQueryBody]="lastQueryBody" [lazyBatchSize]="lazyBatchSize" [showManage]="false" (dataChange)="data = $event"
+      [groupRowsBy]="'VendorNo'" [fullData]="fullData" [totalData]="totalData" [groupRowsByName]="'廠商編號'"
+      [showSubTotal]="true" [showTotal]="true" [subtotalLabel]="'小計'"
       (detailWithColValue)="onDetailWithColValue($event)">
       <header>
         <div class="flex justify-content-end align-items-center gap-2">
