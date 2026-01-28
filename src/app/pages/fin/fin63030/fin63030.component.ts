@@ -170,15 +170,15 @@ columns: Column[] = [
 
           // 查詢下拉：用 BNK_DepositAccNo
           this.CompanyAccNoOptions = list.map((x: any) => ({
-            label: `${x.BNK_DepositAccNo}-${accNameOf(x)}`,
-            value: x.BNK_DepositAccNo,
+                   label: `${x.BNK_id}-${x.BNK_AccName}`,
+            value: x.BNK_id,
             raw: x,
           }));
 
           // Dialog 下拉：用 BNK_No（公司銀行代號）
           this.CompanyBankNoOptions = list.map((x: any) => ({
-            label: `${x.BNK_No}-${x.BNK_DepositAccNo}-${accNameOf(x)}`,
-            value: x.BNK_No,
+                       label: `${x.BNK_id}-${x.BNK_AccName}`,
+            value: x.BNK_id,
             raw: x,
           }));
         },

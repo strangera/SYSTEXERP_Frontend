@@ -247,8 +247,8 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     billNumber: ['' as string],
     vendorCode: ['' as string],
-    // bankAccountCode: ['' as string, Validators.required],
-    bankAccountCode: ['' as string],
+    bankAccountCode: ['' as string, Validators.required],
+    // bankAccountCode: ['' as string],
 
     issueDateStart: [null as Date | null],
     issueDateEnd: [null as Date | null],
@@ -292,16 +292,16 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     private dropdownApiService: DropdownApiService,
     private fin26010Service: Fin26010Service,
     private fin55050Service: FIN55050Service,
-
+    
     private cdr: ChangeDetectorRef
   ) {
     super();
   }
-  ngOnInit(): void {
-    this.initializePage('FIN63020', 'fin/fin63020cru', this.queryForm, (form) =>
-      this.onSubmit(form)
-    );
-    // 獲取組織下拉選項
+ngOnInit(): void {
+  this.initializePage('FIN63020', 'fin/fin63020cru', this.queryForm, (form) =>
+    this.onSubmit(form)
+  );
+      // 獲取組織下拉選項
     this.dropDownListService.querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
@@ -311,32 +311,32 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
           label: `${item.No} - ${item.Name}`,
         }));
       })
-    // // 活動
-    // this.dropDownListService.getActivityOptions({
-    //   mid: 0,
-    //   str_no: '10',
-    //   pod_type: ['1', '2', '8'],
-    //   pod_status: '1',
-    // })
-    //   .pipe(untilDestroyed(this))
-    //   .subscribe(response => {
-    //     this.eventCodeOptions = response?.Data?.map((item: any) => ({
-    //       label: `${item.pod_no} - ${item.pod_desc}`,
-    //       value: item.pod_no,
-    //     })) ?? [];
-    //   });
+          // // 活動
+          // this.dropDownListService.getActivityOptions({
+          //   mid: 0,
+          //   str_no: '10',
+          //   pod_type: ['1', '2', '8'],
+          //   pod_status: '1',
+          // })
+          //   .pipe(untilDestroyed(this))
+          //   .subscribe(response => {
+          //     this.eventCodeOptions = response?.Data?.map((item: any) => ({
+          //       label: `${item.pod_no} - ${item.pod_desc}`,
+          //       value: item.pod_no,
+          //     })) ?? [];
+          //   });
 
 
-    // ✅ 1. 還原查詢條件（不管從哪頁回來）
-    const saved = this.queryStateService.getQueryStateValue('FIN63020');
-    if (saved?.formValue) {
-      this.queryForm.patchValue(saved.formValue, { emitEvent: false });
-      this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
-      this.lastQueryBody = saved.lastQueryBody ?? null;
+  // ✅ 1. 還原查詢條件（不管從哪頁回來）
+  const saved = this.queryStateService.getQueryStateValue('FIN63020');
+  if (saved?.formValue) {
+    this.queryForm.patchValue(saved.formValue, { emitEvent: false });
+    this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
+    this.lastQueryBody = saved.lastQueryBody ?? null;
 
-      // ✅ 自動重查（回來就看到資料）
-      Promise.resolve().then(() => this.onSubmit(this.queryForm));
-    }
+    // ✅ 自動重查（回來就看到資料）
+    Promise.resolve().then(() => this.onSubmit(this.queryForm));
+  }
 
     // 載入活動代碼下拉選單
     this.dropDownListService.queryTALPORDERM_DropDownList()
@@ -349,14 +349,14 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
         }));
       });
 
-    this.fin55050Service.queryGLS1016_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        this.targetCodeOptions = response.Data?.map((item: any) => ({
-          label: `${item.No} - ${item.Name}`,
-          value: item.No,
-        })) ?? [];
-      });
+          this.fin55050Service.queryGLS1016_DropDownList()
+            .pipe(untilDestroyed(this))
+            .subscribe(response => {
+              this.targetCodeOptions = response.Data?.map((item: any) => ({
+                label: `${item.No} - ${item.Name}`,
+                value: item.No,
+              })) ?? [];
+            });
     // 公司銀行科目代號（Aps1001）
 
 
@@ -367,8 +367,8 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
         next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
           const list = Array.isArray(res?.Data) ? res.Data : [];
           this.BankCodeOptions = list.map((x) => ({
-            label: `${x.BNK_AccNo}-${x.BNK_AccName}`,
-            value: x.BNK_AccNo,
+            label: `${x.BNK_id}-${x.BNK_AccName}`,
+            value: x.BNK_id,
             raw: x,
           }));
         },
@@ -385,8 +385,8 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
       .subscribe((res) => {
         const rows = Array.isArray(res?.Data) ? res.Data : [];
         this.VendorNoOptions = rows.map((x: any) => ({
-          label: `${x.No} - ${x.Name}`,
-          value: x.No,
+          label: `${x.VEN_No} - ${x.Name}`,
+          value: x.VEN_No,
         }));
       });
 
@@ -398,7 +398,7 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
   override onDetail(row: QueryFIN63020Row) {
     const chkNo = String(row?.CheckNo ?? '').trim();
     if (!chkNo) return;
-    this.saveQueryState();
+ this.saveQueryState();
     this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
       queryParams: { ChkNo: chkNo },
       state: {
@@ -414,7 +414,7 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
   override onEdit(row: QueryFIN63020Row) {
     const chkNo = String(row?.CheckNo ?? '').trim();
     if (!chkNo) return;
-    this.saveQueryState();
+ this.saveQueryState();
     this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
       queryParams: { ChkNo: chkNo },
       state: {
@@ -676,7 +676,7 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
           this._currentSortBy = payload.SortBy ?? this.defaultSort;
           this.loading = false;
           this.cdr.detectChanges();
-          this.saveQueryState();
+            this.saveQueryState();
         },
         error: (err: any) => {
           console.error('FIN63020 query API error:', err);
@@ -687,13 +687,13 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
         },
       });
   }
-  private saveQueryState(): void {
-    this.queryStateService.setQueryState('FIN63020', {
-      formValue: this.queryForm.getRawValue(),
-      currentSortBy: this._currentSortBy,
-      lastQueryBody: this.lastQueryBody,
-    });
-  }
+private saveQueryState(): void {
+  this.queryStateService.setQueryState('FIN63020', {
+    formValue: this.queryForm.getRawValue(),
+    currentSortBy: this._currentSortBy,
+    lastQueryBody: this.lastQueryBody,
+  });
+}
   onClear(frm: any) {
     frm.reset({
       billNumber: '',

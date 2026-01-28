@@ -270,8 +270,8 @@ ngOnInit(): void {
       next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
         const list = Array.isArray(res?.Data) ? res.Data : [];
         this.BankCodeOptions = list.map((x) => ({
-          label: `${x.BNK_DepositAccNo}-${x.BNK_BRANCHNAME}`,
-          value: x.BNK_DepositAccNo,
+             label: `${x.BNK_id}-${x.BNK_AccName}`,
+            value: x.BNK_id,
           raw: x,
         }));
       },
