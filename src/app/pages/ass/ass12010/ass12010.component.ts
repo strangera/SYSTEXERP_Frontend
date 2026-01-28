@@ -10,7 +10,7 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AddButton, ReportColumn, formatDate } from '@shared/componentkit/table-report/table-report.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { Actions } from '@shared/service/permission-guard.service';
 import { removeEmptyValues } from '@shared/utils/object-utils';
@@ -74,7 +74,7 @@ export class ASS12010Component extends BasicQueryPageComponent<ASS12010Data> imp
     { field: 'WH_ID', header: '倉別' },
     { field: 'ORG_ID', header: '部門代號' },
     { field: 'ORG_NAME', header: '部門名稱' },
-    { field: 'APPLY_DATE', header: '需求日期', type: 'date' },
+    { field: 'APPLY_DATE', header: '需求日期', format: formatDate },
     { field: 'NEEDS_STATUS_NAME', header: '請購申請狀態' },
   ];
 
