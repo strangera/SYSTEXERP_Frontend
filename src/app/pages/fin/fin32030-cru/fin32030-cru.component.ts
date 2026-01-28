@@ -193,7 +193,14 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       header: '備註',
       type: 'input',
       maxLength: 100
-    }
+    },
+    // {
+    //   field: 'TEST_Field',
+    //   header: '沖帳代號',
+    //   type: 'dropdown',
+    //   maxLength: 100,
+    //   hidden: true
+    // }
   ];
 
   // 步驟3: 票據資訊表格資料
