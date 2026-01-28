@@ -43,8 +43,8 @@
         <app-input-text
           class="col-12 md:col-6"
           label="需求期限(天)"
-          controlName="NEED_PERIOD"
-          [control]="df().NEED_PERIOD"
+          controlName="NEED_NUM"
+          [control]="df().NEED_NUM"
           [disabled]="isFormReadable"
           [submitted]="submitted"
         ></app-input-text>
@@ -70,13 +70,9 @@
           [submitted]="submitted"
         ></app-input-text>
       </div>
-    </form>
-  </p-panel>
-</div>
 
-<div class="card">
-  <p-panel header="資料" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
+      <br />
+
       <app-table-edit
         tableKey="ASS12010_items"
         [data]="tableData()"

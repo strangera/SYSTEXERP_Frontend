@@ -9,9 +9,10 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { FileExportService } from '@shared/service/file-export.service';
+import { Actions } from '@shared/service/permission-guard.service';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { NGXLogger } from 'ngx-logger';
@@ -32,7 +33,6 @@ import { ASS12010Data, ASS12010QueryRequest } from './ass12010.model';
     TranslateModule,
     ButtonComponent,
     DropdownComponent,
-    InputTextComponent,
     CalendarRangeComponent,
     MenubarComponent,
     TableReportComponent,
@@ -52,9 +52,9 @@ export class ASS12010Component extends BasicQueryPageComponent<ASS12010Data> imp
     /** 部門代號 */
     ORG_ID: new FormControl<string | null>(null),
     /** 需求日期(起) */
-    APPLY_DATE_FROM: new FormControl<Date | null>(null),
+    APPLY_DATE_S: new FormControl<Date | null>(null),
     /** 需求日期(迄) */
-    APPLY_DATE_TO: new FormControl<Date | null>(null),
+    APPLY_DATE_E: new FormControl<Date | null>(null),
     /** 請購申請狀態 */
     NEEDS_STATUS: new FormControl<string | null>(null),
     pageSize: new FormControl<number>(30),
@@ -74,7 +74,7 @@ export class ASS12010Component extends BasicQueryPageComponent<ASS12010Data> imp
     { field: 'WH_ID', header: '倉別' },
     { field: 'ORG_ID', header: '部門代號' },
     { field: 'ORG_NAME', header: '部門名稱' },
-    { field: 'APPLY_DATE', header: '需求日期' },
+    { field: 'APPLY_DATE', header: '需求日期', type: 'date' },
     { field: 'NEEDS_STATUS_NAME', header: '請購申請狀態' },
   ];
 
@@ -91,6 +91,7 @@ export class ASS12010Component extends BasicQueryPageComponent<ASS12010Data> imp
     private readonly dropdownApiService: DropdownApiService,
     private readonly dropDownListService: DropDownListService,
     private readonly logger: NGXLogger,
+    private readonly fileExportService: FileExportService,
   ) {
     super();
   }
@@ -158,8 +159,8 @@ export class ASS12010Component extends BasicQueryPageComponent<ASS12010Data> imp
       GOODS_ID: rawFormValue.GOODS_ID || undefined,
       EMP_ID: rawFormValue.EMP_ID || undefined,
       ORG_ID: rawFormValue.ORG_ID || undefined,
-      APPLY_DATE_FROM: rawFormValue.APPLY_DATE_FROM || undefined,
-      APPLY_DATE_TO: rawFormValue.APPLY_DATE_TO || undefined,
+      APPLY_DATE_S: rawFormValue.APPLY_DATE_S || undefined,
+      APPLY_DATE_E: rawFormValue.APPLY_DATE_E || undefined,
       NEEDS_STATUS: rawFormValue.NEEDS_STATUS || undefined,
       PageSize: body.PageSize,
       PageIndex: body.PageIndex,
@@ -179,8 +180,8 @@ export class ASS12010Component extends BasicQueryPageComponent<ASS12010Data> imp
         GOODS_ID: rawFormValue.GOODS_ID || undefined,
         EMP_ID: rawFormValue.EMP_ID || undefined,
         ORG_ID: rawFormValue.ORG_ID || undefined,
-        APPLY_DATE_FROM: rawFormValue.APPLY_DATE_FROM || undefined,
-        APPLY_DATE_TO: rawFormValue.APPLY_DATE_TO || undefined,
+        APPLY_DATE_S: rawFormValue.APPLY_DATE_S || undefined,
+        APPLY_DATE_E: rawFormValue.APPLY_DATE_E || undefined,
         NEEDS_STATUS: rawFormValue.NEEDS_STATUS || undefined,
         PageSize: rawFormValue.pageSize || 30,
         PageIndex: rawFormValue.pageIndex || 1,
@@ -206,12 +207,137 @@ export class ASS12010Component extends BasicQueryPageComponent<ASS12010Data> imp
 
   /**
    * 編輯按鈕禁用邏輯
-   * TODO: 等 API 規格確認「已申請」狀態值後，更新此邏輯
    */
   public editDisabled = (rowData: ASS12010Data): boolean => {
-    // 只有狀態為「已申請」時才可編輯
-    // 目前先寫死，等 API 規格確認後再更新
-    const appliedStatus = '已申請'; // TODO: 更新為實際的狀態值
-    return rowData.NEEDS_STATUS_NAME !== appliedStatus;
+    return rowData.NEEDS_STATUS !== '1';
   };
+
+  /**
+   * 管理欄位自定義按鈕
+   */
+  public readonly addButton: AddButton[] = [
+    {
+      label: '刪除',
+      icon: 'pi pi-trash',
+      action: (rowData: ASS12010Data) => this.onDelete(rowData),
+      disabled: () => {
+        return !this.hasPermission(Actions.Delete);
+      }
+    },
+    {
+      label: '審核',
+      icon: 'pi pi-check',
+      action: (rowData: ASS12010Data) => this.onApprove(rowData),
+      disabled: () => {
+        return !this.hasPermission(Actions.Audit);
+      }
+    },
+    {
+      label: '下載報表',
+      icon: 'pi pi-download',
+      action: (rowData: ASS12010Data) => this.onDownloadReport(rowData),
+      disabled: () => {
+        return !this.hasPermission(Actions.Report);
+      }
+    }
+  ];
+
+  /**
+   * 刪除請購申請資料
+   */
+  public onDelete(rowData: ASS12010Data): void {
+    if (!rowData.NEED_ID) {
+      this.logger.warn('ASS12010 onDelete: NEED_ID is empty', [rowData]);
+      return;
+    }
+
+    this.messageService.confirm({
+      message: `確定要刪除需求單號 ${rowData.NEED_ID} 嗎？`,
+      header: '刪除確認',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: '確定',
+      rejectLabel: '取消',
+      accept: () => {
+        this.messageService.blockUi();
+        this.service.deleteASS12010({ NEED_ID: rowData.NEED_ID! }).pipe(
+          finalize(() => this.messageService.unblockUi())
+        ).subscribe({
+          next: (res) => {
+            if (res.Status === '0000') {
+              this.messageService.successBubble('刪除成功');
+              this.onSubmit(); // 重新查詢
+            } else {
+              this.messageService.errorBubble(res.Message || '刪除失敗');
+            }
+          },
+          error: (err) => {
+            this.logger.error('ASS12010 delete error:', err);
+            this.messageService.errorBubble('刪除失敗，請重試或聯繫管理員');
+          }
+        });
+      },
+      reject: () => {
+        this.messageService.infoBubble('已取消刪除');
+      }
+    });
+  }
+
+  /**
+   * 審核請購申請資料
+   */
+  public onApprove(rowData: ASS12010Data): void {
+    if (!rowData.NEED_ID) {
+      this.logger.warn('ASS12010 onApprove: NEED_ID is empty', [rowData]);
+      return;
+    }
+
+    this.messageService.confirm({
+      message: `確定要審核需求單號 ${rowData.NEED_ID} 嗎？`,
+      header: '審核確認',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: '確定',
+      rejectLabel: '取消',
+      accept: () => {
+        this.messageService.blockUi();
+        this.service.approveASS12010({ NEED_ID: rowData.NEED_ID! }).pipe(
+          finalize(() => this.messageService.unblockUi())
+        ).subscribe({
+          next: (res) => {
+            if (res.Status === '0000') {
+              this.messageService.successBubble('審核成功');
+              this.onSubmit(); // 重新查詢
+            } else {
+              this.messageService.errorBubble(res.Message || '審核失敗');
+            }
+          },
+          error: (err) => {
+            this.logger.error('ASS12010 approve error:', err);
+            this.messageService.errorBubble('審核失敗，請重試或聯繫管理員');
+          }
+        });
+      },
+      reject: () => {
+        this.messageService.infoBubble('已取消審核');
+      }
+    });
+  }
+
+  /**
+   * 下載請購申請報表
+   */
+  public onDownloadReport(rowData: ASS12010Data): void {
+    if (!rowData.NEED_ID) {
+      this.logger.warn('ASS12010 onDownloadReport: NEED_ID is empty', [rowData]);
+      return;
+    }
+
+    // 使用 FileExportService 處理下載
+    const download$ = this.service.downloadReportASS12010({ NEED_ID: rowData.NEED_ID! });
+
+    this.fileExportService.executeFileExport(
+      download$,
+      '.pdf' // 假設是 PDF，根據實際 API 回傳格式調整
+    ).subscribe();
+  }
+
 }

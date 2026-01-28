@@ -13,12 +13,13 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { NGXLogger } from 'ngx-logger';
 import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
 import { RippleModule } from 'primeng/ripple';
 import { finalize } from 'rxjs';
-import { ASS12010Data, ASS12010InsertRequest, ASS12010Item, ASS12010UpdateRequest } from '../ass12010/ass12010.model';
+import { ASS12010Data, ASS12010DetailItem, ASS12010DetailResponse, ASS12010InsertRequest, ASS12010Item, ASS12010UpdateRequest } from '../ass12010/ass12010.model';
 
 // 請購申請作業 CRU
 @Component({
@@ -51,7 +52,7 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
     /** 需求日期 */
     APPLY_DATE: new FormControl<Date | null>(null, [Validators.required]),
     /** 需求期限(天) */
-    NEED_PERIOD: new FormControl<string | null>(null, [Validators.maxLength(2)]),
+    NEED_NUM: new FormControl<string | null>(null),
     /** 倉別 */
     WH_ID: new FormControl<string | null>(null, [Validators.required]),
     /** 說明 */
@@ -144,6 +145,77 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
 
     this.loadDropdownOptions();
     this.setupDepartmentCascade();
+
+    // 從 router state 的 rowdata 取得 NEED_ID（非新增模式時）
+    if (!this.isFormCreateable && this.rowdata) {
+      const needId = (this.rowdata as ASS12010Data)?.NEED_ID;
+      if (needId) {
+        this.loadDetail(needId);
+      }
+    }
+  }
+
+  /**
+   * 載入詳細資料
+   */
+  private loadDetail(needId: string): void {
+    this.messageService.blockUi();
+    this.loading = true;
+    this.tableLoading.set(true);
+
+    this.service.detailASS12010({ NEED_ID: needId })
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: ApiResponse<ASS12010DetailResponse>) => {
+          if (res.Status !== '0000') {
+            this.notification.errorBubble(res.Message || '載入詳細資料失敗');
+            return;
+          }
+
+          const detailData = res.Data;
+          if (!detailData || !detailData.Header) {
+            this.logger.warn('ASS12010 loadDetail: Invalid response data', [res]);
+            return;
+          }
+
+          const header = detailData.Header;
+          const details = detailData.Details || [];
+
+          // 填入表單資料
+          this.dataForm.patchValue({
+            ORG_ID: header.ORG_ID || null,
+            EMP_ID: header.EMP_ID || null,
+            APPLY_DATE: header.APPLY_DATE ? new Date(header.APPLY_DATE) : null,
+            NEED_NUM: header.NEED_NUM || null,
+            WH_ID: header.WH_ID || null,
+            REMARK: header.NOTE || null, // API 回傳的是 NOTE，表單欄位是 REMARK
+          }, { emitEvent: false });
+
+          // 轉換並填入表格資料
+          // 注意：API 回傳的 Details 結構與 ASS12010Item 不同，需要轉換
+          const tableItems: ASS12010Item[] = details.map((detail: ASS12010DetailItem) => ({
+            GOODS_ID: detail.GOODS_ID,
+            CUSTODY_UNIT: detail.HOLD_ORG_ID, // 保管部門對應到 CUSTODY_UNIT
+            CUSTODIAN: detail.HOLD_EMP_ID, // 保管人員對應到 CUSTODIAN
+            UNIT: undefined, // API 沒有此欄位
+            QUANTITY: detail.QTY,
+            ITEM_REMARK: detail.NOTES, // API 的 NOTES 對應到 ITEM_REMARK
+          }));
+
+          this.tableData.set(tableItems);
+
+          this.logger.debug('ASS12010 detail loaded:', [header, details]);
+        },
+        error: (err) => {
+          this.logger.error('ASS12010 loadDetail error:', err);
+          this.notification.errorBubble('載入詳細資料時發生錯誤');
+        },
+        complete: () => {
+          this.loading = false;
+          this.tableLoading.set(false);
+          this.messageService.unblockUi();
+        }
+      });
   }
 
   /**
@@ -207,7 +279,7 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
         // 2. 過濾「申請人」下拉選單（只顯示該部門人員）
         // TODO: 等 API 規格確認後，根據 ORG_ID 過濾
         // 目前先顯示全部選項
-        const filtered = this.allEmpIdOptions.filter(emp => {
+        const filtered = this.allEmpIdOptions.filter(() => {
           // TODO: 等 API 規格確認後，使用 emp.ORG_ID === orgId 過濾
           return true; // 暫時不過濾
         });
@@ -215,7 +287,7 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
 
         // 3. 過濾「保管人」下拉選單（只顯示該部門人員）
         // TODO: 等 API 規格確認後，根據 ORG_ID 過濾
-        const filteredCustodians = this.allCustodianOptions.filter(cust => {
+        const filteredCustodians = this.allCustodianOptions.filter(() => {
           // TODO: 等 API 規格確認後，使用 cust.ORG_ID === orgId 過濾
           return true; // 暫時不過濾
         });
@@ -247,7 +319,7 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
       ORG_ID: '',
       EMP_ID: '',
       APPLY_DATE: null,
-      NEED_PERIOD: '',
+      NEED_NUM: '',
       WH_ID: '',
       REMARK: '',
     });
@@ -263,8 +335,8 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
   }
 
   /**
-    * 提供新增行的預設值
-    */
+   * 提供新增行的預設值
+   */
   public defaultNewItem(): Partial<ASS12010Item> {
     const orgId = this.dataForm.controls.ORG_ID.value;
     return {
@@ -292,26 +364,38 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
 
       this.tableLoading.set(true);
 
-      // 轉換表格資料為 items 陣列格式
-      const items: ASS12010Item[] = tableItems.map((item) => ({
-        GOODS_ID: item.GOODS_ID || undefined,
-        CUSTODY_UNIT: item.CUSTODY_UNIT || undefined,
-        CUSTODIAN: item.CUSTODIAN || undefined,
-        UNIT: item.UNIT || undefined,
-        QUANTITY: item.QUANTITY || undefined,
-        ITEM_REMARK: item.ITEM_REMARK || undefined,
-      }));
-
       if (this.isFormCreateable) {
-        // 新增
+        // 新增：使用新的 API 規格
+        // 轉換表格資料為明細項目格式
+        const items = tableItems
+          .filter(item => item.GOODS_ID && item.QUANTITY) // 過濾掉未完成的項目
+          .map((item) => ({
+            GOODS_ID: item.GOODS_ID!,
+            QTY: Number(item.QUANTITY) || 0,
+            HOLD_ORG_ID: item.CUSTODY_UNIT || raw.ORG_ID || '', // 保管部門，如果沒有則使用申請部門
+            HOLD_EMP_ID: item.CUSTODIAN || '', // 保管人員
+            NOTES: item.ITEM_REMARK || undefined,
+          }));
+
+        // 驗證轉換後的資料
+        if (items.length === 0) {
+          this.notification.warnBubble('至少需要輸入一筆完整的品項資料（品項代號和數量）');
+          this.tableLoading.set(false);
+          this.loading = false;
+          return;
+        }
+
+        // 將明細陣列序列化為 JSON 字串
+        const detailJson = JSON.stringify(items);
+
         const insertPayload: ASS12010InsertRequest = {
-          ORG_ID: raw.ORG_ID ?? '',
           EMP_ID: raw.EMP_ID ?? '',
-          APPLY_DATE: raw.APPLY_DATE ?? new Date(),
-          NEED_PERIOD: raw.NEED_PERIOD ?? undefined,
+          ORG_ID: raw.ORG_ID ?? '',
           WH_ID: raw.WH_ID ?? '',
-          REMARK: raw.REMARK ?? undefined,
-          items,
+          APPLY_DATE: raw.APPLY_DATE ?? new Date(),
+          NEED_NUM: raw.NEED_NUM || undefined,
+          NOTE: raw.REMARK || undefined, // 表單欄位是 REMARK，API 需要 NOTE
+          DetailJson: detailJson,
         };
         this.logger.debug(`onSubmit insert:`, [insertPayload]);
 
@@ -331,16 +415,44 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
           },
         });
       } else {
-        // 更新
+        // 更新：使用新的 API 規格
+        // 從 router state 的 rowdata 取得 NEED_ID
+        const needId = (this.rowdata as ASS12010Data)?.NEED_ID || '';
+        if (!needId) {
+          this.notification.errorBubble('無法取得需求單號');
+          this.tableLoading.set(false);
+          this.loading = false;
+          return;
+        }
+
+        // 轉換表格資料為新的 API 規格
+        const details = tableItems
+          .filter(item => item.GOODS_ID && item.QUANTITY) // 過濾掉未完成的項目
+          .map((item) => ({
+            GOODS_ID: item.GOODS_ID!,
+            QTY: Number(item.QUANTITY) || 0,
+            HOLD_ORG_ID: item.CUSTODY_UNIT || raw.ORG_ID || '', // 保管部門，如果沒有則使用申請部門
+            HOLD_EMP_ID: item.CUSTODIAN || '', // 保管人員
+            NOTES: item.ITEM_REMARK || undefined,
+          }));
+
+        // 驗證轉換後的資料
+        if (details.length === 0) {
+          this.notification.warnBubble('至少需要輸入一筆完整的品項資料（品項代號和數量）');
+          this.tableLoading.set(false);
+          this.loading = false;
+          return;
+        }
+
         const updatePayload: ASS12010UpdateRequest = {
-          NEED_ID: this.rowdata?.NEED_ID ?? '',
-          ORG_ID: raw.ORG_ID ?? '',
+          NEED_ID: needId,
           EMP_ID: raw.EMP_ID ?? '',
-          APPLY_DATE: raw.APPLY_DATE ?? new Date(),
-          NEED_PERIOD: raw.NEED_PERIOD ?? undefined,
+          ORG_ID: raw.ORG_ID ?? '',
           WH_ID: raw.WH_ID ?? '',
-          REMARK: raw.REMARK ?? undefined,
-          items,
+          APPLY_DATE: raw.APPLY_DATE ?? new Date(),
+          NEED_NUM: raw.NEED_NUM || undefined,
+          NOTE: raw.REMARK || undefined, // 表單欄位是 REMARK，API 需要 NOTE
+          Details: details,
         };
         this.logger.debug(`onSubmit update:`, [updatePayload]);
 

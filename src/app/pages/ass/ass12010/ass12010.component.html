@@ -68,10 +68,10 @@
           <app-calendar-range class="col-12 md:col-6 lg:col-4"
                               calendarType="dateRange"
                               label="需求日期"
-                              startControlName="APPLY_DATE_FROM"
-                              endControlName="APPLY_DATE_TO"
-                              [startControl]="qf().APPLY_DATE_FROM"
-                              [endControl]="qf().APPLY_DATE_TO"
+                              startControlName="APPLY_DATE_S"
+                              endControlName="APPLY_DATE_E"
+                              [startControl]="qf().APPLY_DATE_S"
+                              [endControl]="qf().APPLY_DATE_E"
                               [submitted]="submitted"></app-calendar-range>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -96,6 +96,7 @@
                       [showDelete]="false"
                       [showReportMode]="false"
                       [editDisabled]="editDisabled"
+                      [addButton]="addButton"
                       (edit)="onEdit($event)"
                       (detail)="onDetail($event)"></app-table-report>
   </div>
