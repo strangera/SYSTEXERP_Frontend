@@ -1,31 +1,31 @@
-import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
+import { CommonModule, DatePipe, formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableModule } from 'primeng/table';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, ColumnGroup, createPaginationConfig, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { yesterday } from '@shared/models/system/query-form.model';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { debounceTime, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
-import { ButtonModule } from 'primeng/button';
-import { environment } from 'src/environments/environment';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TranslateModule } from '@ngx-translate/core';
+import { TLS26050Service } from '@service/api/tls/tls26050.service';
+import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { TLS31050Item, TLS31050PrintRequest, TLS31050Request, TLS31050Response, Tls31050Service } from '@service/api/tls/tls31050.service';
+import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { CommonModule, DatePipe, formatDate } from '@angular/common';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { TLS26050Service } from '@service/api/tls/tls26050.service';
-import { TLS31050Item, TLS31050PrintRequest, TLS31050Request, TLS31050Response, Tls31050Service } from '@service/api/tls/tls31050.service';
-import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { TableModule } from 'primeng/table';
+import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
+import { environment } from 'src/environments/environment';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 @Component({
   selector: 'app-tls31050',
@@ -291,8 +291,8 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response>
     ).subscribe(result => {
 
       const groupedData = result.selectedMValues.reduce((accumulator, mValue) => {
-      const groupKey = `${mValue.bus_type}_${mValue.No}`;
-      const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
+        const groupKey = `${mValue.bus_type}_${mValue.No}`;
+        const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
 
         //  過濾小分類資料對應到當前中分類
         const items = result.data
@@ -381,8 +381,8 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response>
       // SortBy: undefined,
       // pageIndex: undefined,
       // pageSize: undefined,
-      bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
-      bus_sclass: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
+      bus_class: (frm.getRawValue().bus_class || []).map((x: any) => [x.bus_type, x.No]),
+      bus_sclass: (frm.getRawValue().bus_sclass || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
       TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
       TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
     } as TLS31050PrintRequest;
