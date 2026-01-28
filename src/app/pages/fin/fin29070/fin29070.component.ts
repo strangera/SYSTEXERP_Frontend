@@ -28,7 +28,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
     ReactiveFormsModule,
     TranslateModule,
     CalendarRangeComponent,
-    InputTextComponent,
+    // InputTextComponent,
     TableComponent,
     DropdownRangeComponent
   ]

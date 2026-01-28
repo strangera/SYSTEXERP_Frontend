@@ -274,8 +274,8 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
         next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
           const list = Array.isArray(res?.Data) ? res.Data : [];
           this.bankOptions = list.map((x) => ({
-            label: `${x.BNK_No}-${x.BNK_AccName}`,
-            value: x.BNK_No,
+            label: `${x.BNK_id}-${x.BNK_AccName}`,
+            value: x.BNK_id,
             raw: x,
           }));
         },

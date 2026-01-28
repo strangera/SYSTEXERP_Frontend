@@ -65,6 +65,7 @@ export interface Aps1002BankDropDownRow {
   BNK_AccName: string;         // 科目名稱
   BNK_No: string;           // 銀行代號
   BNK_BRANCHNAME: string;   // 銀行名稱
+  BNK_id: string;         // 銀行代號 (同 BNK_DepositAccNo) 
 }
 
 @Injectable({ providedIn: 'root' })
