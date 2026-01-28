@@ -1,31 +1,31 @@
-import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
+import { CommonModule, DatePipe, formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableModule } from 'primeng/table';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, ColumnGroup, createPaginationConfig, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { yesterday } from '@shared/models/system/query-form.model';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { debounceTime, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
-import { ButtonModule } from 'primeng/button';
-import { environment } from 'src/environments/environment';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { TLS31060Item, TLS31060PrintRequest, TLS31060Request, TLS31060Response, Tls31060Service } from '@service/api/tls/tls31060.service';
-import { CommonModule, DatePipe, formatDate } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
+import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { TLS31060Item, TLS31060PrintRequest, TLS31060Request, TLS31060Response, Tls31060Service } from '@service/api/tls/tls31060.service';
+import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { TableModule } from 'primeng/table';
+import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
+import { environment } from 'src/environments/environment';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 @Component({
   selector: 'app-tls31060',
@@ -258,7 +258,7 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Response>
       }
     });
     // 監聽中分類變化，獲取小分類並分組
-this.queryForm.controls.bus_class.valueChanges.pipe(
+    this.queryForm.controls.bus_class.valueChanges.pipe(
       debounceTime(300),
       untilDestroyed(this),
       map(selectedMValues => selectedMValues || []),
@@ -292,8 +292,8 @@ this.queryForm.controls.bus_class.valueChanges.pipe(
     ).subscribe(result => {
 
       const groupedData = result.selectedMValues.reduce((accumulator, mValue) => {
-      const groupKey = `${mValue.bus_type}_${mValue.No}`;
-      const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
+        const groupKey = `${mValue.bus_type}_${mValue.No}`;
+        const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
 
         //  過濾小分類資料對應到當前中分類
         const items = result.data
@@ -333,19 +333,19 @@ this.queryForm.controls.bus_class.valueChanges.pipe(
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-          const formValue = {
-            ...frm.getRawValue(),
-            bus_class: (frm.getRawValue().bus_class || []).map((x: any) => [x.bus_type, x.No]),
-            bus_sclass: (frm.getRawValue().bus_sclass || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
-    
-            TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
-            TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
-          } as TLS31060Request;
-    
-          console.log('送出query請求', formValue);
-          this.tls31060Service.queryTLS31060(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      const formValue = {
+        ...frm.getRawValue(),
+        bus_class: (frm.getRawValue().bus_class || []).map((x: any) => [x.bus_type, x.No]),
+        bus_sclass: (frm.getRawValue().bus_sclass || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
 
-            this.data = res.Data ?? [];               // 查詢資料
+        TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
+        TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
+      } as TLS31060Request;
+
+      console.log('送出query請求', formValue);
+      this.tls31060Service.queryTLS31060(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+
+        this.data = res.Data ?? [];               // 查詢資料
         this.footerTotal = res.TotalData ?? null;;    // 總計資料
 
         this.footershowTotal = this.footerTotal ? {          // 人工轉換欄位
@@ -372,36 +372,36 @@ this.queryForm.controls.bus_class.valueChanges.pipe(
 
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-          })
-        })
+      })
+    })
   }
   btnLoading = false;
   onReport(frm: FormGroup, isExcel: boolean) {
     const printData = this.queryStateService.getQueryStateValue(this.ProgNo);
-        const formValue = {
-          ...printData,
-          IsExcel: isExcel,
-          IsMerge: true,
-          SortBy: undefined,
-          pageIndex: undefined,
-          pageSize: undefined,
-          bus_class: (frm.getRawValue().bus_class || []).map((x: any) => [x.bus_type, x.No]),
-          bus_sclass: (frm.getRawValue().bus_sclass || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
-          TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
-          TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
-        } as TLS31060PrintRequest;
-    
-        console.log('送出print請求', formValue);
-    
-        this.btnLoading = true;
-        this.tls31060Service.printTLS31060(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
-          .subscribe(res => {
-            this.messageService.successBubble(res.Message);
-            if (res.Data && res.Data.Print_URL) {
-              const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-              window.open(downloadUrl, '_blank');
-            }
-          });
+    const formValue = {
+      ...printData,
+      IsExcel: isExcel,
+      IsMerge: true,
+      SortBy: undefined,
+      pageIndex: undefined,
+      pageSize: undefined,
+      bus_class: (frm.getRawValue().bus_class || []).map((x: any) => [x.bus_type, x.No]),
+      bus_sclass: (frm.getRawValue().bus_sclass || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
+      TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
+      TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
+    } as TLS31060PrintRequest;
+
+    console.log('送出print請求', formValue);
+
+    this.btnLoading = true;
+    this.tls31060Service.printTLS31060(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
+      .subscribe(res => {
+        this.messageService.successBubble(res.Message);
+        if (res.Data && res.Data.Print_URL) {
+          const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+          window.open(downloadUrl, '_blank');
+        }
+      });
   }
 
   // #region 日期選單事件

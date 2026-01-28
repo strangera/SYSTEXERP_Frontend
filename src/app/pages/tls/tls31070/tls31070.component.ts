@@ -1,31 +1,31 @@
-import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
+import { CommonModule, DatePipe, formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableModule } from 'primeng/table';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { yesterday } from '@shared/models/system/query-form.model';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
-import { ButtonModule } from 'primeng/button';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { TLS31070Item, TLS31070PrintDetailRequest, TLS31070PrintRequest, TLS31070Request, TLS31070Response, Tls31070Service } from '@service/api/tls/tls31070.service';
-import { CommonModule, DatePipe, formatDate } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
+import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { TLS31070Item, TLS31070PrintRequest, TLS31070Request, TLS31070Response, Tls31070Service } from '@service/api/tls/tls31070.service';
+import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { TableModule } from 'primeng/table';
+import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 @Component({
   selector: 'app-tls31070',
@@ -224,7 +224,7 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
       this.area_no_Option = res.Data;
     })
     this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-        this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
+      this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     })
     // 獲取大分類下拉選項
     this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
@@ -296,8 +296,8 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
     ).subscribe(result => {
 
       const groupedData = result.selectedMValues.reduce((accumulator, mValue) => {
-      const groupKey = `${mValue.bus_type}_${mValue.No}`;
-      const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
+        const groupKey = `${mValue.bus_type}_${mValue.No}`;
+        const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
 
         //  過濾小分類資料對應到當前中分類
         const items = result.data
@@ -336,8 +336,8 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
     this.handleSubmit(frm, () => {
       const formValue = {
         ...frm.getRawValue(),
-        bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
-        bus_sclass: frm.getRawValue().bus_sclass.map((item: IDropdownItem) => item.No),
+        bus_class: (frm.getRawValue().bus_class || []).map((x: any) => [x.bus_type, x.No]),
+        bus_sclass: (frm.getRawValue().bus_sclass || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
         TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
         TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
       } as TLS31070Request;
@@ -384,8 +384,8 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
       // SortBy: undefined,
       // pageIndex: undefined,
       // pageSize: undefined,
-      bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
-      bus_sclass: frm.getRawValue().bus_sclass.map((item: IDropdownItem) => item.No),
+      bus_class: (frm.getRawValue().bus_class || []).map((x: any) => [x.bus_type, x.No]),
+      bus_sclass: (frm.getRawValue().bus_sclass || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
       TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
       TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
     } as TLS31070PrintRequest;
