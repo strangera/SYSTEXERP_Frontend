@@ -296,7 +296,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
    * 導航到精靈頁面
    */
   private navigateToWizard(mode: WizardMode, rowData?: ContractItem): void {
-    this.router.navigate(['/tls/tls12040v2cru'], {
+    this.router.navigate(['/account/tls/tls12040v2cru'], {
       state: {
         mode,
         rowData,

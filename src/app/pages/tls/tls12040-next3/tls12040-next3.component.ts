@@ -413,10 +413,15 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
   private initializeNewContractConditionData(commissionType: string): void {
     console.log('新增模式：初始化條件設定，抽成類型:', commissionType);
 
-    // 修正：使用 currentApplyNo 而非 currentTalentId
-    this.allConditionItems = this.conditionDataManager.initializeEmptyConditions(
+    // 取得契約起迄日期，確保帳務起迄與契約起迄一致
+    const { startDate, endDate } = this.getContractDates();
+
+    // 使用智能初始化方法，帶入契約起迄日期
+    this.allConditionItems = this.conditionDataManager.initializeSmartConditions(
       commissionType,
-      this.currentApplyNo
+      this.currentApplyNo,
+      startDate,
+      endDate
     );
 
     this.categorizeConditionItems();
