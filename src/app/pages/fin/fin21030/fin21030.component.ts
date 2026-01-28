@@ -167,20 +167,32 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('FIN21030', 'fin/fin21030cru', this.queryForm, form => this.onSubmit(form));
     this.dropDownListService.queryPOS2013_DropDownList({}).subscribe(res => {
       this.venderOptions = (res.Data ?? []).map((item: any) => ({
-        label: `${item.No} - ${item.Name}`,
+        label: `${item.VEN_No} - ${item.Name}`,
         value: item.VEN_No,
       }));
     });
     this.dropDownListService.queryPOS2013_DropDownList().subscribe(res => {
       if (res?.Data) {
-        this.VEN_UniformOptions = res.Data.map(item => ({
-          value: item.No,
-          label: `${item.No} - ${item.Name} - ${item.VEN_No}`,
-          No: item.No,
-          Name: item.Name,
-          VEN_No: item.VEN_No,
-          ShortName: item.ShortName,
-        }));
+        const uniqueMap = new Map<string, any>();
+
+        res.Data.forEach(item => {
+          // 組合 No 和 Name 作為唯一鍵
+          const key = `${item.No}-${item.Name}`;
+
+          // 如果唯一鍵尚未存在,則將項目加入 uniqueMap
+          if (!uniqueMap.has(key)) {
+            uniqueMap.set(key, {
+              value: item.No,
+              label: `${item.No} - ${item.Name}`,
+              No: item.No,
+              Name: item.Name,
+              VEN_No: item.VEN_No,
+              ShortName: item.ShortName,
+            });
+          }
+        });
+
+        this.VEN_UniformOptions = Array.from(uniqueMap.values());
       }
     });
 
