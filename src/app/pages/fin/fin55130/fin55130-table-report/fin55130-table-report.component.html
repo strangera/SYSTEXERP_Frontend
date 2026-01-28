@@ -112,7 +112,19 @@
         </span>
 
         <span *ngIf="col.isSubTotal" class="font-bold text-blue-600">
-          {{ calculateClassTotal(data, rowIndex, col.field) | number: (col.field.includes('Pct') ? '1.2-2' : '1.0-0') }}
+          <ng-container [ngSwitch]="col.field">
+
+            <ng-container *ngSwitchCase="'DiffPct'">
+              {{ col.format ? col.format(calculateClassDiffPct(data, rowIndex)) : (calculateClassDiffPct(data, rowIndex)
+              | number:'1.2-2') }}
+            </ng-container>
+
+            <ng-container *ngSwitchDefault>
+              {{ col.format ? col.format(calculateClassTotal(data, rowIndex, col.field)) : (calculateClassTotal(data,
+              rowIndex, col.field) | number:'1.0-0') }}
+            </ng-container>
+
+          </ng-container>
         </span>
       </td>
     </tr>

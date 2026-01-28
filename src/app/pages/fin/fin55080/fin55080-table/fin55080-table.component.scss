@@ -176,4 +176,29 @@
   .wrap-header {
     white-space: normal; /* 讓文字可以正常換行 */
   }
+
+  .p-datatable {
+    .p-datatable-tbody > tr {
+      // 強制設定行高
+      height: 28px !important;
+
+      > td {
+        // 減少內距以達到 28px 的緊湊高度
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        height: 28px !important;
+      }
+    }
+
+    // 如果 Header 也要同步變矮，可以加這段
+    .p-datatable-thead > tr > th {
+      padding: 2px !important; // 稍微壓縮 Header
+      height: 35px;
+    }
+
+    // 分組標題 (groupheader) 通常需要稍微明顯一點，可以調成 30-32px
+    .p-rowgroup-header {
+      height: 32px !important;
+    }
+  }
 }

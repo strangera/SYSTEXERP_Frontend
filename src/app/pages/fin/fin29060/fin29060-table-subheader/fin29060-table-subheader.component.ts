@@ -115,6 +115,8 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   groupedDataCache = new Map();
   /** 是否顯示群組小計 @default false */
   @Input() showSubTotal = false;
+  /** 群組小計顯示文字，預設 '小計' */
+  @Input() subtotalLabel = '小計';
   groupTotals: Record<string, Record<string, number>> = {};
   // 資料總計
   /** 是否顯示總計 @default false */
@@ -214,18 +216,22 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
     // 如果 parent 更新 fullData，但沒有同步 data，則用 fullData 初始化 data（僅在 data 為空時）
     if (changes['fullData']) {
       console.log('[ngOnChanges] fullData 改變', { fullDataLength: this.fullData?.length });
-      if ((!this.data || this.data.length === 0) && this.fullData && this.fullData.length) {
-        const batch = this.lazyBatchSize || (this.lastQueryBody?.pageSize) || 30;
-        this.data = this.fullData.slice(0, batch);
-        this.virtualData = [...this.data];
-        this.totalRecords = this.totalRecords || this.fullData.length;
-        console.log('[ngOnChanges] 使用 fullData 初始化 data', { initLength: this.data.length });
-        this.dataChange.emit(this.data);
-        if (this.dt) {
-          this.dt.totalRecords = this.totalRecords;
-          this.dt.rows = batch;
+      if (this.fullData && this.fullData.length) {
+        // deterministic sort to avoid random order between requests when backend returns unsorted data
+        this.sortFullDataIfNeeded();
+        if ((!this.data || this.data.length === 0)) {
+          const batch = this.lazyBatchSize || (this.lastQueryBody?.pageSize) || 30;
+          this.data = this.fullData.slice(0, batch);
+          this.virtualData = [...this.data];
+          this.totalRecords = this.totalRecords || this.fullData.length;
+          console.log('[ngOnChanges] 使用 fullData 初始化 data', { initLength: this.data.length });
+          this.dataChange.emit(this.data);
+          if (this.dt) {
+            this.dt.totalRecords = this.totalRecords;
+            this.dt.rows = batch;
+          }
+          this.cd.detectChanges();
         }
-        this.cd.detectChanges();
       }
     }
 
@@ -625,6 +631,54 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
     }
 
     return this.tableUtilityService.getTotal(this.data, field);
+  }
+  // 計算單一 ACP_No 的未沖餘額小計（優先用 fullData，fallback 到 data）
+  getACPSubtotal(acpNo: string): number {
+    try {
+      const source = (this.fullData && this.fullData.length) ? this.fullData : this.data;
+      return (source || [])
+        .filter(d => String(d?.ACP_No ?? '') === String(acpNo ?? ''))
+        .reduce((s, r) => s + (Number(r?.NotPayAmy ?? r?.NotPayAmy === 0 ? r.NotPayAmy : 0) || 0), 0);
+    } catch (e) {
+      return 0;
+    }
+  }
+  // 若 fullData 存在且沒有後端排序要求，對 fullData 做 deterministic sort
+  private sortFullDataIfNeeded() {
+    try {
+      const groupField = this.groupRowsBy || 'VendorNo';
+      // 印出前 5 筆原始樣本供 debug
+      try {
+        const sampleBefore = (this.fullData || []).slice(0, 5).map((r: any) => ({ ACP_No: r?.ACP_No, VendorNo: r?.VendorNo }));
+        console.log('[sortFullDataIfNeeded] fullData sample BEFORE sort', sampleBefore);
+      } catch (e) { /* ignore */ }
+
+      // 使用穩定排序（強制排序，忽略 server SortBy），把 index 當作最後的 tiebreaker
+      const mapped = this.fullData.map((item: any, idx: number) => ({ item, idx }));
+      mapped.sort((x: any, y: any) => {
+        const a = x.item;
+        const b = y.item;
+        const ga = String(a?.[groupField] ?? '').localeCompare(String(b?.[groupField] ?? ''));
+        if (ga !== 0) return ga;
+        const pa = a?.PostDate ? new Date(a.PostDate).getTime() : 0;
+        const pb = b?.PostDate ? new Date(b.PostDate).getTime() : 0;
+        if (pa !== pb) return pa - pb;
+        const aa = String(a?.ACP_No ?? '');
+        const ab = String(b?.ACP_No ?? '');
+        const ca = aa.localeCompare(ab);
+        if (ca !== 0) return ca;
+        return x.idx - y.idx;
+      });
+      this.fullData = mapped.map(m => m.item);
+
+      try {
+        const sampleAfter = (this.fullData || []).slice(0, 5).map((r: any) => ({ ACP_No: r?.ACP_No, VendorNo: r?.VendorNo }));
+        console.log('[sortFullDataIfNeeded] fullData sample AFTER sort', sampleAfter);
+      } catch (e) { /* ignore */ }
+    } catch (e) {
+      // ignore sort errors
+      console.warn('[sortFullDataIfNeeded] 排序失敗', e);
+    }
   }
   // 欄位調整
   onColReorder(event: TableColumnReorderEvent) {

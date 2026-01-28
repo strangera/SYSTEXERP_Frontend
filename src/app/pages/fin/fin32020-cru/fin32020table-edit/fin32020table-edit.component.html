@@ -245,7 +245,7 @@
       }"
     >
       <!-- Reorder + 新增列 + 號 -->
-      <td *ngIf="_tableData.length && showReorder" class="w-3rem text-center">
+      <td *ngIf="_tableData.length && showReorder && !disabled" class="w-3rem text-center">
         <!-- 一般資料列：拖曳 -->
         <ng-container
           *ngIf="!rowData._isAutoInsertCandidate; else insertRowTpl"

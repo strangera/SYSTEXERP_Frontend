@@ -2334,12 +2334,52 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     const oldValue = rowData[fieldName];
     rowData[fieldName] = numericValue;
 
-    // 🔥 添加這行：觸發 fieldChange 事件
-    this.fieldChange.emit({
-      fieldName,
-      newValue: numericValue,
-      rowData
-    });
+    // 🔥 根據是否為 detail 項目觸發不同的事件
+    if (isDetail) {
+      // 找到父項目和索引
+      let foundParent = false;
+      for (let rowIndex = 0; rowIndex < this.data.length; rowIndex++) {
+        const mainItem = this.data[rowIndex];
+        if (mainItem[this.detailKey] && Array.isArray(mainItem[this.detailKey])) {
+          const detailIndex = mainItem[this.detailKey].indexOf(rowData);
+          if (detailIndex > -1) {
+            console.log('🔥 Detail 數字變更，觸發 detailFieldChange:', {
+              fieldName,
+              newValue: numericValue,
+              detailId: rowData[this.dataKey],
+              parentId: mainItem[this.dataKey],
+              rowIndex,
+              detailIndex
+            });
+            this.triggerDetailFieldChangeEvent(
+              fieldName,
+              numericValue,
+              rowData,
+              rowIndex,
+              detailIndex,
+              oldValue
+            );
+            foundParent = true;
+            break;
+          }
+        }
+      }
+      if (!foundParent) {
+        console.warn('⚠️ 無法找到 detail 項目的父項目，改用一般 fieldChange');
+        this.fieldChange.emit({
+          fieldName,
+          newValue: numericValue,
+          rowData
+        });
+      }
+    } else {
+      // 一般欄位：觸發 fieldChange 事件
+      this.fieldChange.emit({
+        fieldName,
+        newValue: numericValue,
+        rowData
+      });
+    }
 
     // 🔥 強制變更檢測
     this.cdr.detectChanges();
@@ -2410,12 +2450,50 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
     console.log(`Input 事件更新 ${fieldName}: ${oldValue} → ${numericValue}`);
 
-    // 立即觸發欄位變更事件
-    this.fieldChange.emit({
-      fieldName,
-      newValue: numericValue,
-      rowData
-    });
+    // 🔥 根據是否為 detail 項目觸發不同的事件
+    if (isDetail) {
+      // 找到父項目和索引
+      let foundParent = false;
+      for (let rowIndex = 0; rowIndex < this.data.length; rowIndex++) {
+        const mainItem = this.data[rowIndex];
+        if (mainItem[this.detailKey] && Array.isArray(mainItem[this.detailKey])) {
+          const detailIndex = mainItem[this.detailKey].indexOf(rowData);
+          if (detailIndex > -1) {
+            console.log('🔥 Detail Input 事件，觸發 detailFieldChange:', {
+              fieldName,
+              newValue: numericValue,
+              detailId: rowData[this.dataKey],
+              rowIndex,
+              detailIndex
+            });
+            this.triggerDetailFieldChangeEvent(
+              fieldName,
+              numericValue,
+              rowData,
+              rowIndex,
+              detailIndex,
+              oldValue
+            );
+            foundParent = true;
+            break;
+          }
+        }
+      }
+      if (!foundParent) {
+        this.fieldChange.emit({
+          fieldName,
+          newValue: numericValue,
+          rowData
+        });
+      }
+    } else {
+      // 立即觸發欄位變更事件
+      this.fieldChange.emit({
+        fieldName,
+        newValue: numericValue,
+        rowData
+      });
+    }
 
     // 處理直接編輯模式
     this.handleDirectEditForNumber(fieldName, numericValue, rowData, isDetail);

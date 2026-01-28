@@ -17,7 +17,7 @@ export interface QueryTLS57140Request {
   HOS_No?: string[];
   /** 品牌代碼 (複選) */
   LOGO_No?: string[];
-  /** 商品管理編號/國際條碼/廠商貨號 */
+  /** 國際條碼/商品管理編號/廠商貨號 */
   PLU_MagNo?: string;
   /** 分頁索引 */
   PageIndex: number;

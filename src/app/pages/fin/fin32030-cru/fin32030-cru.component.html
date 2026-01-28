@@ -13,7 +13,7 @@
     <app-button label="應收帳款確認" (click)="switchButton(3)"
       [severity]="buttonID === 3 ? undefined : 'secondary'"></app-button>
 
-    <app-button btnType="back" label="回上一頁" (click)="onCancel()"></app-button>
+    <app-button btnType="back" label="離開" (click)="onCancel()"></app-button>
   </div>
 
   <!-- ============================================ -->
@@ -46,7 +46,7 @@
     <!-- 步驟1按鈕 -->
     @if (!isFormReadable) {
     <div class="flex justify-content-end gap-2 pt-3">
-      <app-button btnType="next" label="暫擋修改下一步" icon="pi pi-arrow-right" iconPos="right" (click)="switchButton(2)" />
+      <app-button btnType="next" label="票據修改下一步" icon="pi pi-arrow-right" iconPos="right" (click)="switchButton(2)" />
     </div>
     }
   </ng-container>
@@ -55,6 +55,12 @@
   <!-- 步驟 2: 票據資訊設定 -->
   <!-- ============================================ -->
   <ng-container *ngIf="buttonID === 2">
+    <!-- 票據總金額顯示 -->
+    <div class="grid p-fluid mb-3">
+      <app-input-number class="col-12 md:col-6 lg:col-4" label="票據總金額" [control]="billTotalAmountControl"
+        [readonly]="true" [minFractionDigits]="2" [maxFractionDigits]="2" />
+    </div>
+
     <p-panel header="票據明細">
       <app-table-edit tableKey="Step2Checks" [data]="step3TableData" [columns]="step3Columns"
         [disabled]="isFormReadable" [canInsert]="!isFormReadable" [showFooter]="true" [footerData]="step3FooterData"
@@ -66,7 +72,7 @@
     @if (!isFormReadable) {
     <div class="flex justify-content-between gap-2 pt-3">
       <app-button btnType="back" label="回上一頁" icon="pi pi-arrow-left" (click)="switchButton(1)" />
-      <app-button btnType="next" label="暫擋修改下一步" icon="pi pi-arrow-right" iconPos="right" (click)="switchButton(3)" />
+      <app-button btnType="next" label="帳款修改下一步" icon="pi pi-arrow-right" iconPos="right" (click)="switchButton(3)" />
     </div>
     }
   </ng-container>
@@ -96,10 +102,11 @@
   (onHide)="showARDialog = false">
   <!-- Query Form -->
   <form [formGroup]="arQueryForm" class="grid p-fluid mb-3">
-    <app-input-text class="col-12 md:col-6 lg:col-3" label="組織編號" controlName="STO_No"
-      [control]="arQueryForm.controls.STO_No" />
-    <app-input-text class="col-12 md:col-6 lg:col-3" label="廠客代號" controlName="VEN_No"
-      [control]="arQueryForm.controls.VEN_No" />
+    <app-input-text class="col-12 md:col-6 lg:col-3" label="應收ID" controlName="ARS_ID"
+      [control]="arQueryForm.controls.ARS_ID" />
+    <app-dropdown class="col-12 md:col-6 lg:col-3" label="廠客代號" controlName="VEN_No"
+      [control]="arQueryForm.controls.VEN_No" [options]="vendorOptions" optionLabel="label" optionValue="value"
+      [showClear]="true" [filter]="true" />
     <div class="col-12 md:col-6 lg:col-6">
       <app-calendar-range calendarType="dateRange" label="立帳日期" [startControl]="arQueryForm.controls.DateFrom"
         [endControl]="arQueryForm.controls.DateTo"></app-calendar-range>

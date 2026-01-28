@@ -14,7 +14,7 @@
   <div class="col pb-0">
     <p-inputGroup id="input-text-start">
       <app-dropdown class="w-full" [controlName]="startControlName" [options]="options" [optionLabel]="optionLabel"
-        [optionValue]="optionValue" [control]="startControl" [submitted]="submitted"
+        [optionValue]="optionValue" [control]="startControl" [submitted]="submitted" [loading]="loading"
         (changeEvent)="onStartDropdownChange($event)" />
     </p-inputGroup>
   </div>
@@ -24,7 +24,7 @@
   <div class="col pb-0">
     <p-inputGroup id="input-text-end">
       <app-dropdown class="w-full" [controlName]="endControlName" [options]="options" [optionLabel]="optionLabel"
-        [optionValue]="optionValue" [control]="endControl" [submitted]="submitted"
+        [optionValue]="optionValue" [control]="endControl" [submitted]="submitted" [loading]="loading"
         (changeEvent)="onEndDropdownChange($event)" [errorForGroup]="errorForGroup" />
     </p-inputGroup>
   </div>

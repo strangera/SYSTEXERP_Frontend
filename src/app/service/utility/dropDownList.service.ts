@@ -204,6 +204,11 @@ export interface IPOS1018GUITrackRequest {
   GUI_Type: string[];
 }
 
+// ARS4001 收貨單編號請求參數
+export interface IARS4001RCVNORequest {
+  MID: number;
+  STO_No: string;
+}
 export interface IPOS1018GUITrackResponse {
   GuiTracks: string[];
 }
@@ -541,6 +546,10 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IPOS1018GUITrackResponse>>(`${this.apiUrl}/Share/queryPOS1018_GUI_TRACK_DropDownList`, params);
   }
 
+  // 查詢 ARS4001 收貨單編號 下拉選單
+  queryARS4001RCVNO_DropDownList(params: IARS4001RCVNORequest): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/Share/queryARS4001RCVNO_DropDownList`, params);
+  }
   // 查詢發票格式(TDS1007)資料表下拉選單
   queryTDS1007_DropDownList(params: ITDS1007Request): Observable<ApiResponse<ITDS1007Response>> {
     return this.http.post<ApiResponse<ITDS1007Response>>(`${this.apiUrl}/Share/queryTDS1007_DropDownList`, params);

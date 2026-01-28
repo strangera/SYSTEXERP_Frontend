@@ -35,6 +35,8 @@ export interface QueryFIN32030Request extends BaseQueryRequest {
 export interface QueryFIN32030ARRequest extends BaseQueryRequest {
   /** 組織編號 */
   STO_No?: string | null;
+  /** 應收ID */
+  ARS_ID?: string | null;
   /** 廠客代號 */
   VEN_No?: string | null;
   /** 立帳日期起 */
@@ -531,6 +533,12 @@ export interface QueryCapItemDropdownResponse {
   CAP_Item?: string | null;
   /** 收款項目名稱 */
   CAP_Name?: string | null;
+  /** 會計科目 */
+  AccNo?: string | null;
+  /** 傳票格式 (1=票據/2=應收票據/E=票據) */
+  Voucher_Type?: string | null;
+  /** 是否為立沖科目 (Y/N) */
+  ABAT_YN?: string | null;
 }
 
 /**

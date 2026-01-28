@@ -81,7 +81,8 @@
         </span>
 
         <span *ngIf="col.field === 'BalanceTotal'" class="font-bold text-blue-600">
-          {{ calculateClassBalanceTotal(data, rowIndex) | number:'1.0-0' }}
+          {{ col.format ? col.format(calculateClassBalanceTotal(data, rowIndex)) : calculateClassBalanceTotal(data,
+          rowIndex) }}
         </span>
 
         <span *ngIf="col.field === 'Pct'" class="font-bold text-blue-600">

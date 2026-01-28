@@ -179,12 +179,14 @@ export class TLS13010Service {
     });
 
     // 對應後端 CleanContractRequest 的完整結構
+    // [FromBody] 直接綁定整個 request body
     const requestPayload = {
       contractInfo: cleanData.contractInfo,
       deductions: cleanData.deductions,
       commissions: cleanData.commissions,
       conditions: cleanData.conditions,
-      metadata: cleanData.metadata
+      metadata: cleanData.metadata,
+      commissionTypeChange: cleanData.commissionTypeChange
     };
 
     console.log('🚀 TLS13010Service: 發送 API 請求到:', `${this.apiUrl}/TLS0000/TLS1000/submitFinalTLS13010`);

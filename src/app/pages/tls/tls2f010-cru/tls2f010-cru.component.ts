@@ -140,7 +140,13 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     { field: 'sam_yyymm', header: '所屬結帳年月', visible: true, format: formatYYYYMM },
     { field: 'money_type_desc', header: '結帳方式', visible: true },
     { field: 'sam_termno', header: '帳次', visible: true },
-    { field: 'ven_no', header: '廠商統一編號', visible: true },
+    {
+      field: 'ven_no', header: '廠商統一編號', visible: true, format: (_v: any, _i?: number, rowData?: any) => {
+        const no = rowData?.ven_no ?? '';
+        const name = rowData?.VEN_Name ?? rowData?.ven_name ?? '';
+        return name ? `${no} - ${name}` : no;
+      }
+    },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
     { field: 'sam_ap_notaxamt', header: '應付貨款(免稅)', visible: true, format: formatAmount, align: 'right' },
@@ -169,32 +175,48 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   footer2: any = null;
 
   detailEditData: any[] = [];
+  detailDefaultInsert: any = {};
   columns3: EditColumn[] = [
-    { field: 'GUIType', header: '單據別', type: 'dropdown', width: '200px', options: this.invoiceTypeOptions, optionLabel: 'label', optionValue: 'value', showClear: true },
-    { field: 'VEN_No', header: '廠商編號', type: 'dropdown', width: '120px', options: () => this.vendorTLS2F010Options, optionLabel: 'label', optionValue: 'value', showClear: true },
+    { field: 'GUIType', header: '單據別', type: 'dropdown', width: '120px', options: this.invoiceTypeOptions, optionLabel: 'label', optionValue: 'value', showClear: true },
+    { field: 'VEN_No', header: '廠商編號', type: 'dropdown', width: '200px', options: () => this.vendorTLS2F010Options, optionLabel: 'label', optionValue: 'value', showClear: true },
     { field: 'PUR_GUINO', header: '發票/收據編號', type: 'input', width: '140px' },
-    { field: 'PUR_GUIDate', header: '發票/收據日期', type: 'date', width: '200px', dateFormat: 'yy-mm-dd', view: 'date' },
+    { field: 'PUR_GUIDate', header: '發票/收據日期', type: 'date', width: '120px', dateFormat: 'yy-mm-dd', view: 'date' },
     { field: 'DEC_YM', header: '申報年月', type: 'date', width: '120px', dateFormat: 'yy-mm', view: 'month' },
-    { field: 'ven_uniform', header: '廠商統一編號', type: 'input', width: '140px' },
     {
-      field: 'TAX_TYPE', header: '課稅別', type: 'dropdown', width: '200px', options: this.taxTypeOptions, optionLabel: 'label', optionValue: 'value', showClear: true,
+      field: 'ven_uniform',
+      header: '廠商統一編號',
+      type: 'dropdown',
+      width: '200px',
+      options: () => this.dropdown.queryPos2013({ VEN_Flag: '' }).pipe(
+        map(list => (list ?? []).map(item => ({
+          label: `${item['No']} - ${item['Name']}`,
+          value: item['No'],
+        })))
+      ),
+      optionLabel: 'label',
+      optionValue: 'value',
+      showClear: true,
+      optionsAsync: true,
+    },
+    {
+      field: 'TAX_TYPE', header: '課稅別', type: 'dropdown', width: '120px', options: this.taxTypeOptions, optionLabel: 'label', optionValue: 'value', showClear: true,
       disabled: (_v, _i, row) => {
         const guiLabel = this.mapValueToLabel(this.invoiceTypeOptions, row?.GUIType);
         return (guiLabel ?? String(row?.GUIType ?? '')).includes('收據');
       }
     },
     {
-      field: 'Deduct_Code', header: '扣抵代號', type: 'dropdown', width: '120px', options: this.discountOptions, optionLabel: 'label', optionValue: 'value', showClear: true,
+      field: 'Deduct_Code', header: '扣抵代號', type: 'dropdown', width: '180px', options: this.discountOptions, optionLabel: 'label', optionValue: 'value', showClear: true,
       disabled: (_v, _i, row) => {
         const guiLabel = this.mapValueToLabel(this.invoiceTypeOptions, row?.GUIType);
         return (guiLabel ?? String(row?.GUIType ?? '')).includes('收據');
       }
     },
-    { field: 'GUINet', header: '未稅金額', type: 'inputNumber', width: '140px', textAlign: 'right' },
-    { field: 'GUITax', header: '稅額', type: 'inputNumber', width: '200px', textAlign: 'right' },
+    { field: 'GUINet', header: '未稅金額', type: 'inputNumber', width: '120px', textAlign: 'right' },
+    { field: 'GUITax', header: '稅額', type: 'inputNumber', width: '120px', textAlign: 'right' },
     { field: 'GUIAmt', header: '應稅金額', type: 'inputNumber', width: '120px', textAlign: 'right', disabled: () => true },
-    { field: 'PUR_GUIPaper', header: '發票格式', type: 'dropdown', width: '140px', options: this.invoiceFormatOptions, optionLabel: 'label', optionValue: 'value', showClear: true },
-    { field: 'INV_UseType', header: '發票用途', type: 'input', width: '140px' },
+    { field: 'PUR_GUIPaper', header: '發票格式', type: 'dropdown', width: '180px', options: this.invoiceFormatOptions, optionLabel: 'label', optionValue: 'value', showClear: true },
+    { field: 'INV_UseType', header: '發票用途', type: 'input', width: '120px' },
   ];
 
   constructor(
@@ -243,7 +265,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     }).subscribe((res: any) => {
       const data = res?.Data ?? [];
       this.vendorTLS2F010Options = data.map((item: any) => ({
-        label: item.ven_no,
+        label: `${item.ven_no}${item.VEN_Name ? ' - ' + item.VEN_Name : ''}`,
         value: item.ven_no,
       }));
     });
@@ -385,6 +407,34 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
           this.changeEditData = mains;
           this.sourceInvoiceData = details;
 
+          // 設定新增明細候選列的預設值（取自後端回傳的第一筆明細）
+          const firstDetail = details[0] ?? null;
+          const firstMain = mains[0] ?? null;
+          if (firstDetail || firstMain) {
+            // TAX_TYPE 與 Deduct (Deduct_Code) 要找對應的 option value
+            const taxVal = (this.taxTypeOptions ?? []).find((o: any) => String(o.label ?? '').includes('應稅'))?.value ?? '';
+            const deductVal = (this.discountOptions ?? []).find((o: any) => String(o.label ?? '').includes('代表進項可扣抵'))?.value ?? '';
+
+            this.detailDefaultInsert = {
+              // 從 Mains 帶入 VEN_No
+              VEN_No: firstMain?.ven_no ?? '',
+              // 從 Details 帶入 ven_uniform
+              ven_uniform: firstDetail?.ven_uniform ?? '',
+              // 不預設 PUR_GUINO
+              PUR_GUINO: '',
+              // 預設發票日期/申報年月（若後端有提供）
+              PUR_GUIDate: firstDetail?.PUR_GUIDate ? new Date(firstDetail.PUR_GUIDate) : null,
+              DEC_YM: firstDetail?.DEC_YM ? this.ymToDate(firstDetail.DEC_YM) : null,
+              // 預設課稅別為「應稅」
+              TAX_TYPE: taxVal,
+              // 預設扣抵代號為「代表進項可扣抵之進貨及費用」
+              Deduct_Code: deductVal,
+              // 預設發票格式為 21
+              PUR_GUIPaper: '21',
+            };
+          } else {
+            this.detailDefaultInsert = {};
+          }
           // 取出未登錄餘額(免稅/含稅)做為第二個表格的 footer 總計（只在 footer 顯示，不當成欄位）
           if (data.length > 0) {
             const first = data[0];

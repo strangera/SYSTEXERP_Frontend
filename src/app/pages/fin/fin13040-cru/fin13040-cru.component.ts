@@ -46,7 +46,8 @@ import { EditColumn } from './fin13040-table-edit/fin13040-table-edit.model';
 export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   /** 表單定義 */
   dataForm = this.formBuilder.nonNullable.group({
-    InvoiceType: ['', Validators.required],
+    // InvoiceType hidden in UI; default to '35' so backend receives 35 when creating
+    InvoiceType: ['35', Validators.required],
     SAL_Type: ['', Validators.required],
     GUI_Track: ['', [Validators.maxLength(2)]],
     INV_GUINumber: ['', [Validators.required, Validators.pattern(/^[A-Za-z]{2}\d{8}$/)]],
@@ -144,6 +145,17 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         }
       }
     });
+
+    // 初始檢查：若預設值為 '35'（例如已把 InvoiceType 預設為 '35'）且為新增模式，則一開始也要停用發票號碼
+    try {
+      const currentInvType = this.dataForm.get('InvoiceType')?.value;
+      if (this.crudstatus === CRUDStatus.Create && currentInvType === '35') {
+        this.dataForm.controls.INV_GUINumber.setValue('', { emitEvent: false });
+        this.dataForm.controls.INV_GUINumber.disable({ emitEvent: false });
+      }
+    } catch (e) {
+      // ignore
+    }
 
     const rowData = history.state?.rowdata;
     console.log('主檔資料:', rowData);
@@ -551,7 +563,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       MID: 0,
       STO_No: history.state?.rowdata?.STO_No ?? '10',
       ID: this.currentDetailId ?? history.state?.rowdata?.ID ?? history.state?.rowdata?.id ?? history.state?.rowdata?.No ?? 0,
-      InvoiceType: v.InvoiceType,
+      InvoiceType: v.InvoiceType ?? '35',
       SAL_Type: v.SAL_Type,
       InvoiceNumber: v.INV_GUINumber,
       InvoiceDate: toISO(v.InvoiceDate),

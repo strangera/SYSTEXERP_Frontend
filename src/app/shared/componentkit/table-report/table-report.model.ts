@@ -1,4 +1,5 @@
 import { animate, style, transition, trigger } from '@angular/animations'; // 1. 引入動畫相關函式
+import { SortMeta } from 'primeng/api';
 import { TableTypes } from '../table/table.model';
 
 export interface ReportColumn {
@@ -15,7 +16,7 @@ export interface ReportColumn {
   sortField?: string; // 排序欄位(預設為 field)
   align?: 'left' | 'center' | 'right';
   type?: TableTypes; // 欄位類型
-  cellClass?: (rowData: any) => string;// 新增動態樣式 Callback，不影響舊邏輯
+  cellClass?: (rowData: any, field?: string) => string;// 新增動態樣式 Callback，不影響舊邏輯
   link?: boolean; // 是否為連結
   linkDisabled?: (rowData: any) => boolean;
 }
@@ -30,6 +31,15 @@ export interface AddButton {
   icon: string;
   action: (rowData: any, event?: Event) => void;
   disabled?: (rowData: any) => boolean;
+}
+/**
+ * 通用的表格資料與排序酬載 (Payload)
+ * 常用於匯出報表或向後端發送排序請求
+ */
+export interface TableQueryPayload {
+  data: any;
+  mode: 'single' | 'multiple';
+  multiSortMeta: SortMeta[];
 }
 //formatDate：會輸出 2024/05/27 格式
 export const formatDate = (dateStr: string) => {

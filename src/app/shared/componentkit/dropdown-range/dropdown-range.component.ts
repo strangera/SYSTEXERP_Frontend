@@ -62,6 +62,15 @@ export class DropdownRangeComponent extends BasicKitComponent implements OnInit 
   ngOnInit(): void {
     this.checkRequiredValidator(this.startControl, 0);
     this.checkRequiredValidator(this.endControl, 1);
+    // 監聽開始值變化
+    this.startControl.valueChanges.subscribe(() => {
+      this.validateRange();
+    });
+
+    // 監聽結束值變化
+    this.endControl.valueChanges.subscribe(() => {
+      this.validateRange();
+    });
   }
 
   onStartDropdownChange(event: DropdownChangeEvent) {
@@ -69,5 +78,42 @@ export class DropdownRangeComponent extends BasicKitComponent implements OnInit 
   }
   onEndDropdownChange(event: DropdownChangeEvent) {
     this.endChangeEvent.emit(event);
+  }
+
+  /**
+   * 範圍驗證：開始必須小於等於結束
+   * 支援 String (0-Z) 與 Number 比較
+   */
+  validateRange() {
+    const startVal = this.startControl.value;
+    const endVal = this.endControl.value;
+
+    // 取得目前 startControl 所有的錯誤 (保留既有的必填等錯誤)
+    const errors = this.startControl.errors || {};
+
+    // 只有在兩者都有值的情況下才執行區間驗證
+    if (startVal !== null && startVal !== undefined && startVal !== '' &&
+      endVal !== null && endVal !== undefined && endVal !== '') {
+
+      // 直接使用 JavaScript 的大於比較，字串會按字典順序 (0-9 < A-Z)，數字則按數值比較
+      if (startVal > endVal) {
+        // 設定錯誤標記
+        this.startControl.setErrors({ ...errors, textRange: true });
+      } else {
+        // 移除錯誤標記
+        if (errors['textRange']) {
+          delete errors['textRange'];
+        }
+        const remainingErrors = Object.keys(errors).length > 0 ? errors : null;
+        this.startControl.setErrors(remainingErrors);
+      }
+    } else {
+      // 若其中一邊為空，移除此欄位的區間錯誤標記
+      if (errors['textRange']) {
+        delete errors['textRange'];
+        const remainingErrors = Object.keys(errors).length > 0 ? errors : null;
+        this.startControl.setErrors(remainingErrors);
+      }
+    }
   }
 }

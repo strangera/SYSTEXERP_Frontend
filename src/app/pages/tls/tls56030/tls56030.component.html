@@ -10,8 +10,8 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="領用單退回編號" controlName="RPM_No"
-              [control]="queryForm.controls.RPM_No" [submitted]="submitted"></app-input-text>
+            <app-input-text label="領用單退回編號" controlName="RPM_No" [control]="queryForm.controls.RPM_No"
+              [submitted]="submitted"></app-input-text>
           </div>
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉別" controlName="HOS_No"
             [options]="warehouseOptions" optionLabel="label" optionValue="value"
@@ -36,7 +36,8 @@
         <div class="grid p-fluid">
           <!-- 申請人員 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="申請人編號" controlName="APPLY_USR" [options]="userOptions"
-            optionLabel="label" optionValue="value" [control]="queryForm.controls.APPLY_USRList" [submitted]="submitted" />
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.APPLY_USRList"
+            [submitted]="submitted" />
           <!-- 申請日期 -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
             [startControl]="queryForm.controls.APPLY_Date_Start" [endControl]="queryForm.controls.APPLY_Date_End"

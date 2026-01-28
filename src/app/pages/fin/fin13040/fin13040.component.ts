@@ -99,7 +99,8 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
   };
 
   queryForm = this.formBuilder.group({
-    InvoiceType: [[]],
+    // InvoiceType UI removed; default query to ['35'] per requirement
+    InvoiceType: [['35']],
     GUI_Track: ['', [Validators.maxLength(2)]],
     InvoiceNo_S: ['', [Validators.maxLength(8)]],
     InvoiceNo_E: ['', [Validators.maxLength(8)]],
@@ -239,6 +240,10 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
       const payload = Object.fromEntries(
         Object.entries(v).map(([k, val]) => [k, dp(val, k)])
       );
+      // Ensure InvoiceType defaults to ['35'] when UI hidden/removed
+      if (!payload['InvoiceType'] || (Array.isArray(payload['InvoiceType']) && payload['InvoiceType'].length === 0)) {
+        (payload as any)['InvoiceType'] = ['35'];
+      }
 
       this.fin13040Service
         .queryFIN13040(payload)

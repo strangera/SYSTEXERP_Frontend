@@ -9,13 +9,12 @@ import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
 import { debounceTime } from 'rxjs/operators';
-import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
+import { IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
@@ -43,7 +42,6 @@ interface IPLULOGOItem {
     TableComponent,
     TranslateModule,
     DropdownTableComponent,
-    InputTextComponent,
     TableModule,
     MultiSelectComponent
   ]
@@ -66,38 +64,23 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
 
 
   // 管理編號
-  opLoading = false;
-  opForm = this.formBuilder.group({
-    queryNo: ['', [Validators.maxLength(20)]], // 管理編號
-    PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
-    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
-  });
   suggestions: IQueryPOS2004DetailResponse[] = [];
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
+    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
   ];
-  opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
-  opColumns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號' },
-    { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
-    { field: 'PLU_Name', header: '商品名稱' },
-  ];
-  opTotalRecords = 0;
-  onAutoCompleteInputChange(event: any) {
+  onAutoCompleteInputChange(event: Record<'label', string>) {
     const body = {
-      ...event,
       VEN_No: '',
       LOGO_No: '',
-      queryNo: event.PLU_MagNo || '',
+      queryNo: event.label || '',
       pageSize: 30,
       pageIndex: 1,
-      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
+      SortBy: [{ field: 'PLU_No', order: 1 }],
     }
     this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
       this.suggestions = [...results.Data.map(item => ({
         ...item,
-        label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo,
+        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
       }))];
     });
   }
@@ -242,21 +225,6 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
         this.managementIdOptions = [];
         this.queryForm.patchValue({ generalCode: null }, { emitEvent: false });
       }
-    });
-  }
-
-  onformValueChanged(event: IQueryPOS2004DetailRequest) {
-    this.opLoading = true;
-    const body = {
-      queryNo: event.queryNo || '',
-      PLU_Name: event.PLU_Name || '',
-      VEN_No: '',
-      LOGO_No: '',
-    };
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.opData = [...results.Data];
-      this.opTotalRecords = results.TotalCount;
-      this.opLoading = false;
     });
   }
 

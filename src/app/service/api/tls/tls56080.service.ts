@@ -79,7 +79,7 @@ export interface IQueryPOS2004DetailRequest {
   PageSize?: number;
   PageIndex?: number;
   SortBy?: { field: string; order: number }[];
-  queryNo?: string; // 查詢編號 (商品管理編號/國際條碼/廠商貨號)
+  queryNo?: string; // 查詢編號 (國際條碼/商品管理編號/廠商貨號)
   PLU_Name?: string; // 商品名稱
   LOGO_No?: string; // 廠商貨號
   HOS_No?: string; // 品牌編號
@@ -111,7 +111,7 @@ export interface IQueryPOS2004DetailResponse {
  */
 export interface IQuerySTORETRADEDRequest {
   TRD_No: string; // 交易單號
-  OUT_HOS_No?: string; // 查詢編號 (商品管理編號/國際條碼/廠商貨號)
+  OUT_HOS_No?: string; // 查詢編號 (國際條碼/商品管理編號/廠商貨號)
 }
 
 /**

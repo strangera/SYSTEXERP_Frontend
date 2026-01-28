@@ -1,0 +1,71 @@
+import { Routes } from '@angular/router';
+
+export const finRoutes: Routes = [
+  // 發票基本資料維護
+  { path: 'fin11020', loadComponent: () => import('./fin11020/fin11020.component').then(m => m.FIN11020Component), data: { progNo: 'FIN11020' } },
+  { path: 'fin11020cru', loadComponent: () => import('./fin11020-cru/fin11020-cru.component').then(m => m.FIN11020CRUComponent), data: { progNo: 'FIN11020' } },
+  // 發票基本資料維護
+  { path: 'fin11030', loadComponent: () => import('./fin11030/fin11030.component').then(m => m.FIN11030Component), data: { progNo: 'FIN11030' } },
+  { path: 'fin11030cru', loadComponent: () => import('./fin11030-cru/fin11030-cru.component').then(m => m.FIN11030CRUComponent), data: { progNo: 'FIN11030' } },
+  // 銷項品項資料設定
+  { path: 'fin11040', loadComponent: () => import('./fin11040/fin11040.component').then(m => m.FIN11040Component), data: { progNo: 'FIN11040' } },
+  { path: 'fin11040cru', loadComponent: () => import('./fin11040-cru/fin11040-cru.component').then(m => m.FIN11040CRUComponent), data: { progNo: 'FIN11040' } },
+  { path: 'fin11090', loadComponent: () => import('./fin11090/fin11090.component').then(m => m.FIN11090Component), data: { progNo: 'FIN11090' } },
+  // 電子發票配號作業
+  { path: 'fin11200', loadComponent: () => import('./fin11200/fin11200.component').then(m => m.FIN11200Component), data: { progNo: 'FIN11200' } },
+  { path: 'fin11200cru', loadComponent: () => import('./fin11200-cru/fin11200-cru.component').then(m => m.FIN11200CRUComponent), data: { progNo: 'FIN11200' } },
+  { path: 'fin11210cru', loadComponent: () => import('./fin11210-cru/fin11210-cru.component').then(m => m.FIN11210CRUComponent), data: { progNo: 'FIN11210' } },
+  // 電子式發票各系統配號維護
+  { path: 'fin12010', loadComponent: () => import('./fin12010/fin12010.component').then(m => m.FIN12010Component), data: { progNo: 'FIN12010' } },
+  { path: 'fin12010cru', loadComponent: () => import('./fin12010-cru/fin12010-cru.component').then(m => m.FIN12010CRUComponent), data: { progNo: 'FIN12010' } },
+  // 費率對照維護
+  { path: 'fin21020', loadComponent: () => import('./fin21020/fin21020.component').then(m => m.FIN21020Component), data: { progNo: 'FIN21020' } },
+  { path: 'fin21020cru', loadComponent: () => import('./fin21020-cru/fin21020-cru.component').then(m => m.FIN21020CRUComponent), data: { progNo: 'FIN21020' } },
+  // 應付帳款維護
+  { path: 'fin24010', loadComponent: () => import('./fin24010/fin24010.component').then(m => m.FIN24010Component), data: { progNo: 'FIN24010' } },
+  { path: 'fin24010cru', loadComponent: () => import('./fin24010-cru/fin24010-cru.component').then(m => m.FIN24010CRUComponent), data: { progNo: 'FIN24010' } },
+  // 產生電匯付款資料
+  { path: 'fin25010', loadComponent: () => import('./fin25010/fin25010.component').then(m => m.FIN25010Component), data: { progNo: 'FIN25010' } },
+  { path: 'fin25010cru', loadComponent: () => import('./fin25010-cru/fin25010-cru.component').then(m => m.FIN25010CRUComponent), data: { progNo: 'FIN25010' } },
+  // 保留款彙總表
+  { path: 'fin29010', loadComponent: () => import('./fin29010/fin29010.component').then(m => m.FIN29010Component), data: { progNo: 'FIN29010' } },
+  // 匯款明細表
+  { path: 'fin29020', loadComponent: () => import('./fin29020/fin29020.component').then(m => m.FIN29020Component), data: { progNo: 'FIN29020' } },
+  // 應付帳款帳齡分析表
+  { path: 'fin29110', loadComponent: () => import('./fin29110/fin29110.component').then(m => m.FIN29110Component), data: { progNo: 'FIN29110' } },
+  // 收款項目對照會計科目維護
+  { path: 'fin31010', loadComponent: () => import('./fin31010/fin31010.component').then(m => m.FIN31010Component), data: { progNo: 'FIN31010' } },
+  { path: 'fin31010cru', loadComponent: () => import('./fin31010-cru/fin31010-cru.component').then(m => m.FIN31010CRUComponent), data: { progNo: 'FIN31010' } },
+  // 存入保證金維護作業
+  { path: 'fin35010', loadComponent: () => import('./fin35010/fin35010.component').then(m => m.FIN35010Component), data: { progNo: 'FIN35010' } },
+  { path: 'fin35010cru', loadComponent: () => import('./fin35010-cru/fin35010-cru.component').then(m => m.FIN35010CRUComponent), data: { progNo: 'FIN35010' } },
+  // 總帳報表-日記帳表
+  { path: 'fin55020', loadComponent: () => import('./fin55020/fin55020.component').then(m => m.FIN55020Component), data: { progNo: 'FIN55020' } },
+  // 總帳報表-損益表
+  { path: 'fin55080', loadComponent: () => import('./fin55080/fin55080.component').then(m => m.FIN55080Component), data: { progNo: 'FIN55080' } },
+  // 總帳報表-當期/累計損益表
+  { path: 'fin55090', loadComponent: () => import('./fin55090/fin55090.component').then(m => m.FIN55090Component), data: { progNo: 'FIN55090' } },
+  // 總帳報表-損益比較表
+  { path: 'fin55100', loadComponent: () => import('./fin55100/fin55100.component').then(m => m.FIN55100Component), data: { progNo: 'FIN55100' } },
+  // 總帳報表-部門科目明細表
+  { path: 'fin55110', loadComponent: () => import('./fin55110/fin55110.component').then(m => m.FIN55110Component), data: { progNo: 'FIN55110' } },
+  // 總帳報表-資產負債表
+  { path: 'fin55120', loadComponent: () => import('./fin55120/fin55120.component').then(m => m.FIN55120Component), data: { progNo: 'FIN55120' } },
+  { path: 'fin55120cru', loadComponent: () => import('./fin55120/fin55120cru/fin55120cru.component').then(m => m.Fin55120cruComponent), data: { progNo: 'FIN55120' } },
+  { path: 'fin55120detail', loadComponent: () => import('./fin55120/fin55120-detail/fin55120-detail.component').then(m => m.Fin55120DetailComponent), data: { progNo: 'FIN55120' } },
+  // 總帳報表-資產負債比較表
+  { path: 'fin55130', loadComponent: () => import('./fin55130/fin55130.component').then(m => m.FIN55130Component), data: { progNo: 'FIN55130' } },
+  { path: 'fin55130cru', loadComponent: () => import('./fin55130/fin55130cru/fin55130cru.component').then(m => m.Fin55130cruComponent), data: { progNo: 'FIN55130' } },
+  { path: 'fin55130detail', loadComponent: () => import('./fin55130/fin55130-detail/fin55130-detail.component').then(m => m.Fin55130DetailComponent), data: { progNo: 'FIN55130' } },
+  // 業務員資料維護
+  { path: 'fin61020', loadComponent: () => import('./fin61020/fin61020.component').then(m => m.FIN61020Component), data: { progNo: 'FIN61020' } },
+  { path: 'fin61020cru', loadComponent: () => import('./fin61020-cru/fin61020-cru.component').then(m => m.FIN61020CRUComponent), data: { progNo: 'FIN61020' } },
+  // 銀行調撥作業
+  { path: 'fin62010', loadComponent: () => import('./fin62010/fin62010.component').then(m => m.FIN62010Component), data: { progNo: 'FIN62010' } },
+  { path: 'fin62010cru', loadComponent: () => import('./fin62010-cru/fin62010-cru.component').then(m => m.FIN62010CRUComponent), data: { progNo: 'FIN62010' } },
+  // 銀行資金調撥單
+  { path: 'fin62020', loadComponent: () => import('./fin62020/fin62020.component').then(m => m.FIN62020Component), data: { progNo: 'FIN62020' } },
+  // 應付票據撤票作業
+  { path: 'fin63050', loadComponent: () => import('./fin63050/fin63050.component').then(m => m.FIN63050Component), data: { progNo: 'FIN63050' } },
+  { path: 'fin63050cru', loadComponent: () => import('./fin63050-cru/fin63050-cru.component').then(m => m.FIN63050CRUComponent), data: { progNo: 'FIN63050' } },
+];

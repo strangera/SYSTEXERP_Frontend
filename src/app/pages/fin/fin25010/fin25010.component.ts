@@ -5,16 +5,16 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { FIN25010Data, FIN25010Service, QueryDropFIN25010Response } from '../../../service/api/fin/fin25010.service';
+import { FIN25010Data, FIN25010Service, QueryDropFIN25010Response, QueryFIN25010Request } from '../../../service/api/fin/fin25010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 @Component({
   selector: 'app-fin25010',
@@ -28,7 +28,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     CalendarRangeComponent,
     DropdownTableComponent
@@ -44,13 +44,15 @@ export class FIN25010Component extends BasicQueryPageComponent<FIN25010Data> imp
     Remit_Status: [null],                               // 是否形成電匯
     WSLIP_NO: [null, Validators.maxLength(12)],        // 匯款單號
     payday_Counts: [null, this.validationService.numberValidator], // 付款天數
-    ...createPaginationConfig([{ field: 'D_Date', order: -1 }])
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'D_Date', order: -1 }]],
   });
 
   data: FIN25010Data[] = [];
   selectedItems: FIN25010Data[] = [];
   totalRecords = 0;
-
+  lastQueryBody: QueryFIN25010Request | null = null;
   columns: Column[] = [
     { field: 'ID', header: '序號', hidden: true },
     { field: 'PAM_No', header: '匯款來源單號', visible: true },
@@ -112,8 +114,8 @@ export class FIN25010Component extends BasicQueryPageComponent<FIN25010Data> imp
   //#endregion
 
   constructor(
-    private fin25010Service: FIN25010Service,
-    private validationService: ValidationService
+    public readonly fin25010Service: FIN25010Service,
+    private readonly validationService: ValidationService
   ) {
     super();
   }
@@ -129,6 +131,7 @@ export class FIN25010Component extends BasicQueryPageComponent<FIN25010Data> imp
         .subscribe(response => {
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
+          this.lastQueryBody = form.getRawValue();
           this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
         });
     });

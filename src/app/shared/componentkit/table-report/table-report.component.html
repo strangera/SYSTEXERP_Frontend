@@ -1,9 +1,10 @@
 <p-table #dt [columns]="selectedColumns" [value]="virtualData" [scrollable]="true" [dataKey]="dataKey"
   [scrollHeight]="autoHeight ? undefined : '450px'" [(selection)]="selectedItems" sortMode="multiple"
-  (onSort)="onSort($event)" [selectionMode]="showCheckBox ? 'multiple' : null" [rowTrackBy]="trackByFn"
-  [resizableColumns]="true" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
-  (onLazyLoad)="onLazyLoad()" styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
-  [selectAll]="isAllSelected" (selectAllChange)="onSelectAllChange($event)" (onLazyLoad)="onLazyLoad()"
+  (onSort)="onSort($event)" (sortFunction)="customSort($event)" [customSort]="!lazy" [resetPageOnSort]="false"
+  [selectionMode]="showCheckBox ? 'multiple' : null" [rowTrackBy]="trackByFn" [resizableColumns]="true"
+  [reorderableColumns]="true" (onColReorder)="onColReorder($event)" (onLazyLoad)="onLazyLoad()"
+  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" [selectAll]="isAllSelected"
+  (selectAllChange)="onSelectAllChange($event)" (onLazyLoad)="onLazyLoad()"
   (selectionChange)="onSelectionChange($event)" [rowSelectable]="rowSelectableWrapper" [lazy]="lazy"
   [virtualScrollItemSize]="46" [virtualScrollDelay]="0" [virtualScrollOptions]="{
     inline: true,
@@ -181,7 +182,7 @@
       </td>
       <ng-container *ngFor="let col of columns">
         <td [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
-          [ngClass]="[col.cellClass ? col.cellClass(rowData) || '' : '']">
+          [ngClass]="[col.cellClass ? col.cellClass(rowData, 'subtotal') || '' : '']">
           <span class="font-bold"> {{ getGroupSubtotal(rowData, col) }}</span>
         </td>
       </ng-container>
@@ -211,7 +212,7 @@
 
       <ng-container *ngFor="let col of columns">
         <td [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
-          [ngClass]="[ col.cellClass ? col.cellClass(rowData) || '' : '']">
+          [ngClass]="[ col.cellClass ? col.cellClass(rowData, 'footer') || '' : '']">
           <span class="font-bold">
             <ng-container *ngIf="allowFooterHtml && (col.type === 'html' || col.htmlFormat)">
               <div

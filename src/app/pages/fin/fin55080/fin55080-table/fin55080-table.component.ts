@@ -1,4 +1,4 @@
-import { NgClass, NgFor, NgIf } from '@angular/common';
+import { NgClass, NgFor, NgIf, NgSwitch, NgSwitchCase, NgSwitchDefault } from '@angular/common';
 import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core'; // 增加 OnChanges, SimpleChanges
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
@@ -17,7 +17,7 @@ export interface Finfin55080Column {
   templateUrl: 'fin55080-table.component.html',
   styleUrls: ['fin55080-table.component.scss'],
   standalone: true,
-  imports: [TableModule, TagModule, NgFor, NgIf, NgClass],
+  imports: [TableModule, TagModule, NgFor, NgIf, NgClass, NgSwitch, NgSwitchCase, NgSwitchDefault],
 })
 // 實作 OnChanges 接口
 export class TableSubheaderGroupingComponent implements OnInit, OnChanges {
@@ -92,36 +92,29 @@ export class TableSubheaderGroupingComponent implements OnInit, OnChanges {
   }
 }
 const formatAmount2 = (val: number | string | null | undefined): string => {
-  // 1. 檢查是否為 null 或 undefined，如果是，則回傳空字串 ' ' 或您希望顯示的值（例如 '-'）
-  if (val === null || val === undefined || val === '') {
-    return ''; // 或 return '-'; 顯示破折號
-  }
+  if (val === null || val === undefined || val === '') return '';
 
   const num = Number(val);
+  if (isNaN(num)) return String(val);
 
-  // 2. 檢查是否為 NaN (非數字字串)，如果是，則回傳原始值
-  // 這裡需要注意的是，如果原始值是 'abc' 這樣的字串，它會回傳 'abc'
-  if (isNaN(num)) {
-    return String(val);
+  // 負數處理：(1,234,567)
+  if (num < 0) {
+    return `(${Math.abs(num).toLocaleString()})`;
   }
 
-  // 3. 如果是有效數字（包括 0），則進行本地化格式化
-  return num.toLocaleString(); // eg. 1,000,000
+  return num.toLocaleString();
 };
-// 新增函式：百分比格式化，固定到小數點後兩位（不足補零）
-export const formatPercent2Decimals = (val: number | string | null | undefined): string => {
-  // 1. 檢查是否為 null, undefined 或空字串 ''，如果是，則直接回傳空字串
-  if (val === null || val === undefined || val === '') {
-    return '';
-  }
+
+const formatPercent2Decimals = (val: number | string | null | undefined): string => {
+  if (val === null || val === undefined || val === '') return '';
 
   const num = Number(val);
+  if (isNaN(num)) return String(val);
 
-  // 2. 檢查是否為 NaN (非數字字串)，如果是，則回傳原始值
-  if (isNaN(num)) {
-    return String(val);
+  // 負數處理：(25.50) 並確保兩位小數，不帶 %
+  if (num < 0) {
+    return `(${Math.abs(num).toFixed(2)})`;
   }
 
-  // 3. 使用 toFixed(2) 確保兩位小數，不足補 0
   return num.toFixed(2);
 };

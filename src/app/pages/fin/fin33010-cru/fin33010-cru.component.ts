@@ -235,6 +235,8 @@ export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements 
         C_Amt: Number(r.C_Amt) || 0,
         Org_Id: r.Org_Id || '',
         PTA: r.PTA || '',
+        ProjectNo: r.ProjectNo || '',
+        SubDetailNo: r.SubDetailNo || '',
       })),
     };
 

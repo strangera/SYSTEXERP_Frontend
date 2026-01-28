@@ -147,6 +147,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 資料總計
   /** 是否顯示總計 @default false */
   @Input() showTotal = false;
+  /** 外部傳入的總計資料 (用於顯示後端計算的全部資料總計) @default null */
+  @Input() sumData: Record<string, number> | null = null;
 
   // rowEdit 相關
   /** 是否顯示 Row編輯按鈕 @default false */
@@ -504,6 +506,10 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   }
   // 全表總計
   getTotal(field: string): number {
+    // 優先使用外部傳入的 sumData
+    if (this.sumData && this.sumData[field] !== undefined) {
+      return this.sumData[field];
+    }
     return this.tableUtilityService.getTotal(this.data, field);
   }
   // 獲取後端圖片

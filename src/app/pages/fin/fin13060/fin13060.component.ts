@@ -188,22 +188,31 @@ export class FIN13060Component extends BasicQueryPageComponent<any> implements A
   // ──────────────────────────────────────────────────────────
   // 初始化
   // ──────────────────────────────────────────────────────────
-  ngOnInit(): void {
-    // 只初始化頁面資訊 & 權限
-    this.initializePage('FIN13060', '/FIN/FIN13060CRU', this.queryForm);
-    this.loadDropdownOptions();
+ngOnInit(): void {
+  // ✅ 初始化頁面 + 權限
+  this.initializePage('FIN13060', '/FIN/FIN13060CRU', this.queryForm);
 
-    // 回填查詢條件（不自動查詢）
+  // ✅ 下拉（不影響是否還原）
+  this.loadDropdownOptions();
+
+  // ✅ 判斷是否從 CRU 回來
+  const fromCru = !!(history.state && history.state['fromCru']);
+
+  if (fromCru) {
+    // ─────────────────────────────────────────────
+    // ✅ 只有從 CRU 回來才還原查詢條件（可選：是否自動查詢）
+    // ─────────────────────────────────────────────
     const saved = this.queryStateService.getQueryStateValue(this.ProgNo);
     if (saved) {
       this.queryForm.patchValue(
         {
           ...saved,
 
-          // 查詢快取裡的 INV_YM / INV_DeclareYM 我們統一轉成 'YYYYMM' 字串
+          // 查詢快取裡的 INV_YM / INV_DeclareYM 統一轉成 'YYYYMM'
           INV_YM: this.normalizeYm(saved?.INV_YM),
           INV_DeclareYM: this.normalizeYm(saved?.INV_DeclareYM),
 
+          // 日期欄位還原成 Date
           TXN_Date_Start: this.asDate(saved?.TXN_Date_Start),
           TXN_Date_End: this.asDate(saved?.TXN_Date_End),
 
@@ -214,37 +223,84 @@ export class FIN13060Component extends BasicQueryPageComponent<any> implements A
         },
         { emitEvent: false }
       );
+
+      // ⭐ 你要「從 CRU 回來就自動查詢」→ 打開這行
+      // const payload = this.buildPayload(this.queryForm);
+      // this.runQuery(payload);
     }
+  } else {
+    // ─────────────────────────────────────────────
+    // ✅ 非 CRU 回來：不還原、不要自動查詢、帶預設值
+    // ─────────────────────────────────────────────
 
-    // 下拉資料
-    this.counterNameService.getCounters().subscribe((res: any) => {
-      this.CounterOptions =
-        res?.map((x: any) => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })) ?? [];
-    });
+    // (1) 清掉舊的 queryState（避免下一次誤還原）
+    //     你如果希望「離開頁面但不經 CRU」還能保留，也可以拿掉這行
+    this.queryStateService.clearQueryState(this.ProgNo);
 
-    this.fin13060Service.queryAPS2002DropDownList().subscribe((res: any) => {
-      const list = res?.Data ?? [];
-      this.INV_GUITypeOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
-    });
+    // (2) 預設：page / sort
+    this.queryForm.patchValue(
+      {
+        pageSize: 20,
+        pageIndex: 1,
+        SortBy: [{ field: 'INV_GUINumber', order: 1 }],
+      },
+      { emitEvent: false }
+    );
 
-    this.fin13050Service.querySYS1000DropDownList('PLU_TaxType').subscribe((res: any) => {
-      const list = res?.Data ?? [];
-      this.taxTypeOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
-    });
-
-    this.fin13050Service.querySYS1000DropDownList('AssetType').subscribe((res: any) => {
-      const list = res?.Data ?? [];
-      this.AssetNoteOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
-    });
-
-    this.fin13050Service.querySYS1000DropDownList('SYS_ORIGIN').subscribe((res: any) => {
-      const list = res?.Data ?? [];
-      this.System_IDOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
-    });
-
-    // ⭐ 金額欄位限制最多 10 碼（FormControl 再加一層保險）
-    this.setupAmountMaxDigitsLimit();
+    // (3) ⭐ 預設申報年月（偶數月 YYYYMM）
+    this.setDefaultDeclareYmForQuery();
   }
+
+  // ─────────────────────────────────────────────
+  // 下拉資料（你原本的 subscribe 都留著）
+  // ─────────────────────────────────────────────
+
+  this.counterNameService.getCounters().subscribe((res: any) => {
+    this.CounterOptions =
+      res?.map((x: any) => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })) ?? [];
+  });
+
+  this.fin13060Service.queryAPS2002DropDownList().subscribe((res: any) => {
+    const list = res?.Data ?? [];
+    this.INV_GUITypeOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
+  });
+
+  this.fin13050Service.querySYS1000DropDownList('PLU_TaxType').subscribe((res: any) => {
+    const list = res?.Data ?? [];
+    this.taxTypeOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
+  });
+
+  this.fin13050Service.querySYS1000DropDownList('AssetType').subscribe((res: any) => {
+    const list = res?.Data ?? [];
+    this.AssetNoteOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
+  });
+
+  this.fin13050Service.querySYS1000DropDownList('SYS_ORIGIN').subscribe((res: any) => {
+    const list = res?.Data ?? [];
+    this.System_IDOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
+  });
+
+  // ⭐ 金額欄位限制最多 10 碼（FormControl 再加一層保險）
+  this.setupAmountMaxDigitsLimit();
+}
+/** 查詢頁：申報年月預設帶入系統年月（偶數月 YYYYMM） */
+private setDefaultDeclareYmForQuery(): void {
+  const now = new Date();
+  let year = now.getFullYear();
+  let month = now.getMonth() + 1;
+
+  if (month % 2 !== 0) {
+    month += 1;
+    if (month > 12) {
+      month = 2;
+      year += 1;
+    }
+  }
+
+  const yyyymm = `${year}${String(month).padStart(2, '0')}`;
+  this.queryForm.patchValue({ INV_DeclareYM: yyyymm }, { emitEvent: false });
+}
+
 
   /** 金額格式 */
   moneyFormat(value: number): string {

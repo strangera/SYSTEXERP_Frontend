@@ -10,7 +10,7 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox'; // 引入 Checkbox 模組
@@ -91,27 +91,6 @@ export class TLS57150Component extends BasicQueryPageComponent<QueryTLS57150Deta
   btnLoading = false;
   historyRequestBody: QueryTLS57150Request | null = null;
   subTotalData: QueryTLS57150DetailSubTotal[] = [];
-
-  // --- 商品管理編號 (Dropdown-Table) 相關屬性 ---
-  opLoading = false;
-  opForm = this.formBuilder.group({
-    queryNo: ['', [Validators.maxLength(20)]], // 管理編號 (模糊查詢用)
-    PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱 (模糊查詢用)
-    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
-  });
-  suggestions: QueryPLUResponse[] = [];
-  opData: QueryPLUResponse[] = [];
-  opTotalRecords = 0;
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
-  ];
-  opColumns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號' },
-    { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
-    { field: 'PLU_Name', header: '商品名稱' },
-  ];
-  // --- 商品管理編號 (Dropdown-Table) 相關屬性結束 ---
 
   constructor(
     private readonly dropDownListService: DropDownListService,
@@ -318,41 +297,26 @@ export class TLS57150Component extends BasicQueryPageComponent<QueryTLS57150Deta
     return `download${defaultExtension}`;
   }
 
-  // --- 商品管理編號 (dropdown-table) 相關方法 ---
-
-  // 商品管理編號 (dropdown-table) 的自動完成輸入事件
-  onAutoCompleteInputChange(event: any) {
+  // --- 商品管理編號 (Dropdown-Table) 相關屬性 ---
+  suggestions: QueryPLUResponse[] = [];
+  fieldsConfig: FieldsConfig[] = [
+    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
+  ];
+  onAutoCompleteInputChange(event: Record<'label', string>) {
     // 確保 event.PLU_MagNo 是字串或 null，並將其賦予 queryNo
     const body = {
-      queryNo: event.PLU_MagNo || '',
+      queryNo: event.label || '',
       PLU_MagNo: undefined, // 不需要傳遞給後端，由 queryNo 負責模糊查詢
       pageSize: 30,
       pageIndex: 1,
-      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
+      SortBy: [{ field: 'PLU_No', order: 1 }],
     }
     // 使用 Tls57040Service 進行商品查詢
     this.tls57040Service.queryPLUForDropdown(body).pipe(untilDestroyed(this), debounceTime(300)).subscribe((results) => {
       this.suggestions = [...results.Data.map(item => ({
         ...item,
-        label: `${item.PLU_MagNo} - ${item.PLU_Name}`
+        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
       }))];
     });
   }
-
-  // 商品管理編號 (dropdown-table) 的表單值改變事件 (表格查詢)
-  onformValueChanged(event: any) {
-    this.opLoading = true;
-    const body = {
-      ...event,
-      queryNo: event.queryNo || undefined, // 模糊查詢欄位
-      PLU_Name: event.PLU_Name || undefined, // 商品名稱模糊查詢欄位
-    };
-    // 使用 Tls57040Service 進行商品查詢
-    this.tls57040Service.queryPLUForDropdown(body).pipe(untilDestroyed(this), debounceTime(300)).subscribe((results) => {
-      this.opData = [...results.Data]; // 更新data資料
-      this.opTotalRecords = results.TotalCount;
-      this.opLoading = false;
-    });
-  }
-  // --- 商品管理編號 (dropdown-table) 相關方法結束 ---
 }
