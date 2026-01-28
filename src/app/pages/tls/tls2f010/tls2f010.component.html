@@ -27,18 +27,19 @@
               [startControl]="queryForm.controls.PUR_GUIDate_From" [endControl]="queryForm.controls.PUR_GUIDate_To"
               [submitted]="submitted"></app-calendar-range>
           </div>
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="申報年月" controlName="DEC_YM"
+            [control]="queryForm.controls.DEC_YM" [submitted]="submitted" />
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="結帳方式" controlName="COMM_MONEY_TYPE" [options]="money_typeOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.COMM_MONEY_TYPE" [submitted]="submitted"></app-dropdown>
           </div>
-          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="請款付款年月"
-            controlName="COMM_YM" [control]="queryForm.controls.COMM_YM" [submitted]="submitted" />
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="帳次" controlName="sam_termno" [options]="sam_termnoOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.sam_termno" [submitted]="submitted"></app-dropdown>
           </div>
-          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="申報年月" controlName="DEC_YM"
-            [control]="queryForm.controls.DEC_YM" [submitted]="submitted" />
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="請款付款年月"
+            controlName="COMM_YM" [control]="queryForm.controls.COMM_YM" [submitted]="submitted" />
+
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
@@ -97,9 +98,9 @@
 </div>
 <div class="card">
   <app-table-report tableKey="tls2f010" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-    [lastQueryBody]="lastQueryBody" [queryFunction]="getCurrentQueryFunction()" [showDelete]="true"
-    [showReportMode]="false" [showCheckBox]="true" (edit)="onEdit($event)" [footerData]="footerData" [showManage]="true"
-    [showExcel]="true" (detail)="onDetail($event)" (importExcel)="onImportExcel($event)" (delete)="onDelete($event)"
+    [lastQueryBody]="lastQueryBody" [queryFunction]="getCurrentQueryFunction()" [showDelete]="false"
+    [showReportMode]="false" [showCheckBox]="false" (edit)="onEdit($event)" [footerData]="footerData"
+    [showManage]="true" [showExcel]="true" (detail)="onDetail($event)" (delete)="onDelete($event)"
     [showExcelExport]="true" [exportExcelLoading]="excelLoading" (exportExcel)="downloadTemplate()"
     (importExcel)="onImportExcel($event)" [loading]="loading">
     <header>

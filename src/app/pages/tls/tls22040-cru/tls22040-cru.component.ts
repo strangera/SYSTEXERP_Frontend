@@ -6,15 +6,15 @@ import {
   FormsModule,
   ReactiveFormsModule,
 } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { Column } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { Tls22040Service } from '../../../service/api/tls/tls22040.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { AccordionModule } from 'primeng/accordion';
-import { TranslateModule } from '@ngx-translate/core';
-import { Tls22040Service } from '../../../service/api/tls/tls22040.service';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Column } from '@shared/componentkit/table/table.model';
-import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-tls22040-cru',
@@ -43,7 +43,15 @@ export class TLS22040CRUComponent extends BasicCruPageComponent<any> implements 
     { field: 'MIG_Type', header: '發票類別代碼' },
     { field: 'MIG_Type_Name', header: '發票類別名稱' },
     { field: 'ECR_No', header: '機台編號' },
-    { field: 'TXN_No', header: '交易序號' },
+    {
+      field: 'TXN_No',
+      header: '交易序號',
+      format: (value: any) => {
+        if (value === null || value === undefined || value === '') return '';
+        const s = String(value);
+        return s.padStart(6, '0');
+      }
+    },
     { field: 'TXN_GUINo', header: '發票號碼' },
   ];
 
