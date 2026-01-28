@@ -163,7 +163,7 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
   historyRequestBody: TLS32050Request | null = null; //歷史查詢條件
 
   columns: Column[] = [
-    { field: 'RowType', header: '列別', visible: true },
+    // { field: 'RowType', header: '列別', visible: true },
     { field: 'BuildingName', header: '館別', visible: true },
     { field: 'TeamId', header: '單位代碼', visible: true },
     { field: 'TeamName', header: '單位名稱', visible: true },
@@ -262,7 +262,7 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
       this.area_no_Option = res.Data;
     })
     this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.tlt_no_id_Option = res.Data;
+      this.tlt_no_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     })
     // 獲取大分類下拉選項
     this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
@@ -393,7 +393,7 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
             const blobUrl = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = blobUrl;
-            a.download = 'TLS32050.xlsx'; // 可以依需求改檔名
+            a.download = '中分類業績報表.xlsx'; // 可以依需求改檔名
             a.click();
             URL.revokeObjectURL(blobUrl);
           }
@@ -428,7 +428,7 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
             const blobUrl = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = blobUrl;
-            a.download = 'TLS32050.pdf'; // 可以依需求改檔名
+            a.download = '中分類業績報表.pdf'; // 可以依需求改檔名
             a.click();
             URL.revokeObjectURL(blobUrl);
           }
