@@ -80,7 +80,6 @@ export class FIN32010CRUComponent extends BasicCruPageComponent<any> implements 
 
   ngOnInit(): void {
     this.initializePage('FIN32010', this.dataForm);
-
     // 如果後端回傳為 yyyyMM 字串（例如 "202512"），將其轉為 Date 物件以便日曆元件正確顯示為 yyyy-mm
     const samVal: any = this.dataForm.get('Sam_Yyymm')?.value;
     if (typeof samVal === 'string') {
@@ -97,7 +96,6 @@ export class FIN32010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   onSubmit(form: FormGroup): void {
-    // 構建更新 payload: { ARS_No, PTA_Date, NoteDesc, ARS_Status }
     const rawPta = form.get('PTA_Date')?.value;
     let ptaDate: string | null = null;
     if (rawPta) {
@@ -111,11 +109,31 @@ export class FIN32010CRUComponent extends BasicCruPageComponent<any> implements 
       ptaDate = null;
     }
 
+    const rawStatus = form.get('ARS_StatusCode')?.value ?? form.get('ARS_StatusName')?.value ?? '';
+    const normalizeStatus = (s: any): string => {
+      if (s === null || s === undefined || s === '') return '';
+      const v = String(s).trim();
+      // handle old flags
+      if (v.toLowerCase() === 'n') return '0';
+      if (v.toLowerCase() === 'y') return '2';
+      // handle sys1000 codes like '10' -> '0', '20' -> '2'
+      if (!isNaN(Number(v))) {
+        const num = Number(v);
+        if (num === 10) return '0';
+        if (num === 20) return '2';
+        // if already 0/2, keep
+        if (num === 0) return '0';
+        if (num === 2) return '2';
+      }
+      // fallback: return first char
+      return v.charAt(0);
+    };
+
     const updateBody = {
       ARS_No: form.get('ARS_No')?.value ?? form.get('ARS_ID')?.value ?? '',
       PTA_Date: ptaDate,
       NoteDesc: form.get('NoteDesc')?.value ?? '',
-      ARS_Status: form.get('ARS_StatusCode')?.value ?? form.get('ARS_StatusName')?.value ?? ''
+      ARS_Status: normalizeStatus(rawStatus)
     };
 
     this.loading = true;
