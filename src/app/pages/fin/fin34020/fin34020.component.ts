@@ -193,13 +193,13 @@ export class FIN34020Component
     }
 
     // 還原查詢條件
-    const saved = this.queryStateService.getQueryStateValue('FIN34020');
-    if (saved?.formValue) {
-      this.queryForm.patchValue(saved.formValue, { emitEvent: false });
-      this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
-      this.lastQueryBody = saved.lastQueryBody ?? null;
-      Promise.resolve().then(() => this.onSubmit(this.queryForm));
-    }
+    // const saved = this.queryStateService.getQueryStateValue('FIN34020');
+    // if (saved?.formValue) {
+    //   this.queryForm.patchValue(saved.formValue, { emitEvent: false });
+    //   this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
+    //   this.lastQueryBody = saved.lastQueryBody ?? null;
+    //   Promise.resolve().then(() => this.onSubmit(this.queryForm));
+    // }
   }
 
   // ===== helpers =====
