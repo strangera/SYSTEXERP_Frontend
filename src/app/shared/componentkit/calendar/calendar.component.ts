@@ -1,6 +1,6 @@
 import { NgClass, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ValidationService } from '@shared/service/validation.service';
 import { PrimeTemplate } from 'primeng/api';
 import { CalendarModule, CalendarMonthChangeEvent, CalendarYearChangeEvent } from 'primeng/calendar';
@@ -28,6 +28,13 @@ const FORMAT_RULES: Record<string, { lengths: number[], chars: string[] }> = {
 export class CalendarComponent extends BasicKitComponent implements OnInit, OnDestroy {
   private valueChangeSubscription?: Subscription;
   private _calendarType: CalendarType = 'dateOne';
+  private readonly calendarMaxLength: Record<CalendarType, number> = {
+    timeOne: 5,
+    dateOne: 10,
+    dateTimeOne: 16,
+    dateMonthOne: 7,
+    dateYearOne: 4
+  };
 
   @Input() readonly = false;
   @Input() override label = '';
@@ -82,6 +89,16 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
       this.showTime = config.showTime;
       this.dateFormat = config.dateFormat;
       this.view = config.view as 'date' | 'month' | 'year';
+
+      const maxLen = this.calendarMaxLength[this._calendarType];
+      this.maxLength = maxLen; // 這是 BasicKitComponent 的屬性，會連動影響 placeholder
+
+      if (this.control) {
+        // 更新驗證器，保留原有的，但加入 maxLength
+        const currentValidators = this.control.validator ? [this.control.validator] : [];
+        this.control.setValidators([...currentValidators, Validators.maxLength(maxLen)]);
+        this.control.updateValueAndValidity({ emitEvent: false });
+      }
       if (!this.customPlaceholder || this.customPlaceholder === '請選擇') {
         this.placeholder = config.customPlaceholder;
       }

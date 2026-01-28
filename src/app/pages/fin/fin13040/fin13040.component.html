@@ -9,11 +9,11 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="發票類型" controlName="InvoiceType" [options]="InvoiceType_Options" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.InvoiceType" [submitted]="submitted">
             </app-multi-select>
-          </div>
+          </div> -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="使用別" controlName="SAL_Type" [options]="SAL_Type_Options" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.SAL_Type" [submitted]="submitted">

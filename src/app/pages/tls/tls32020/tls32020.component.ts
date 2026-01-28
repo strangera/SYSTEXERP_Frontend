@@ -211,6 +211,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
       this.setWeekOptions(this.queryForm.controls.year.value); // 年份變動時，更新週次選項
       this.calculateDateRanges(this.queryForm.controls.DayType.value)
     });
+    this.calculateDateRanges(this.queryForm.controls.DayType.value);
     this.queryForm.controls.week.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
     this.queryForm.controls.month.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
     this.queryForm.controls.halfYear.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
@@ -230,23 +231,34 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
    * @param compareYearNum 比較年度 (例如 2024)
    */
   private updateColumnGroupHeader(baseYearNum: number, compareYearNum: number): void {
-    // 基準期標頭
-    const baseYearStr = String(baseYearNum);
-    this.columnGroup.find(g => g.field === 'revenue')!.header = `${baseYearStr} 營業額`;
-    this.columnGroup.find(g => g.field === 'atv')!.header = `${baseYearStr} 客單價`;
-    this.columnGroup.find(g => g.field === 'salesPerArea')!.header = `${baseYearStr} 營業坪效`;
+    const baseYearStr = `${baseYearNum}年`;
+    const compareYearStr = `${compareYearNum}年`;
 
-    // 比較期標頭
-    const compareYearStr = String(compareYearNum);
-    this.columnGroup.find(g => g.field === 'compareRevenue')!.header = `${compareYearStr} 營業額`;
-    this.columnGroup.find(g => g.field === 'compareATV')!.header = `${compareYearStr} 客單價`;
-    this.columnGroup.find(g => g.field === 'compareSalesPerArea')!.header = `${compareYearStr} 營業坪效`;
+    this.columnGroup.forEach(group => {
+      switch (group.field) {
+        case 'revenue':
+        case 'atv':
+        case 'salesPerArea':
+          group.header = `${baseYearStr} ${this.getOriginHeader(group.field)}`;
+          break;
+        case 'compareRevenue':
+        case 'compareATV':
+        case 'compareSalesPerArea':
+          group.header = `${compareYearStr} ${this.getOriginHeader(group.field)}`;
+          break;
+      }
+    });
   }
-  /** 根據 Date 物件取得中文星期幾 */
-  private getDayOfWeekInChinese(date: Date): string {
-    const day = date.getDay(); // 0 (Sunday) to 6 (Saturday)
-    const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-    return weekdays[day];
+  // 輔助方法：保持標頭後半段字串一致
+  private getOriginHeader(field: string): string {
+    if (field.includes('Revenue')) return '營業額';
+    if (field.includes('ATV')) return '客單價';
+    if (field.includes('SalesPerArea')) return '營業坪效';
+    // 根據你原始定義的欄位名稱對應
+    if (field === 'revenue') return '營業額';
+    if (field === 'atv') return '客單價';
+    if (field === 'salesPerArea') return '營業坪效';
+    return '';
   }
   /**
     * 根據報表類型計算基準日期和比較日期區間，並更新表單欄位。
@@ -337,11 +349,28 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
         break;
     }
 
-    // 更新表單欄位
-    this.queryForm.controls.BaseDateFrom.setValue(baseRange?.from || null, { emitEvent: false });
-    this.queryForm.controls.BaseDateTo.setValue(baseRange?.to || null, { emitEvent: false });
-    this.queryForm.controls.CompareDateFrom.setValue(compareRange?.from || null, { emitEvent: false });
-    this.queryForm.controls.CompareDateTo.setValue(compareRange?.to || null, { emitEvent: false });
+    this.queryForm.patchValue({
+      BaseDateFrom: baseRange?.from || null,
+      BaseDateTo: baseRange?.to || null,
+      CompareDateFrom: compareRange?.from || null,
+      CompareDateTo: compareRange?.to || null
+    }, { emitEvent: false });
+
+    // 3. 處理標頭顯示年份 (關鍵點)
+    let bYearNum: number;
+    let cYearNum: number;
+
+    if (type === '1') {
+      // 如果日報強制要比「今年」與「去年」
+      bYearNum = new Date().getFullYear();
+      cYearNum = bYearNum - 1;
+    } else {
+      // 其他類型則跟隨下拉選單選取的年份
+      bYearNum = baseYear.getFullYear();
+      cYearNum = compareYear.getFullYear();
+    }
+
+    this.updateColumnGroupHeader(bYearNum, cYearNum);
   }
 
   /**
@@ -620,17 +649,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
         } else {
           this.footerData = null;
         }
-
         this.totalRecords = this.data.length;
-
-        // --- 動態更新欄位標頭 (確保提交成功後更新標頭) ---
-        this.updateYMColumnHeader(formValue.DayType);
-
-        // 【新增】動態更新欄位群組標頭 (YYYY/XXXX)
-        const baseYearNum = formValue.year.getFullYear();
-        const compareYearNum = formValue.CompareYear.getFullYear();
-        this.updateColumnGroupHeader(baseYearNum, compareYearNum);
-
       });
     });
   }

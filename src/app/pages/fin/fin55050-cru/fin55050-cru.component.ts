@@ -13,7 +13,7 @@ import { Column, formatAmount } from '@shared/componentkit/table/table.model';
 import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 
-type DetailRow = {
+interface DetailRow {
   VouDate?: string | null;
   VouNo?: string | null;
   VouType_Name?: string | null;
@@ -26,14 +26,14 @@ type DetailRow = {
   AccAmt_C?: number | null;
   Ven_Name?: string | null;
   Remark?: string | null;
-};
+}
 
-type VoucherMeta = {
+interface VoucherMeta {
   vouDate: string;
   vouType: string;
   vouNo: string;
   vouStatus: string;
-};
+}
 
 @Component({
   selector: 'app-fin55050-cru',
@@ -61,15 +61,17 @@ export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements 
   vouNo = '';
   initialized = false;
   meta: VoucherMeta | null = null;
-  rows: Array<DetailRow & { __rowid: number; AccSubject: string }> = [];
+  rows: (DetailRow & { __rowid: number; AccSubject: string })[] = [];
+  // 後端提供的總計（對應欄位名稱）
+  sumData: Record<string, number> | null = null;
 
   columns: Column[] = [
     { field: 'AccSubject', header: '會計科目', visible: true },
     { field: 'Ven_Name', header: '廠商編號/簡稱', visible: true },
     { field: 'Org_Name', header: '部門名稱', visible: true },
     { field: 'NoteDesc', header: '摘要', visible: true },
-    { field: 'AccAmt_D', header: '借方金額', visible: true, format: formatAmount },
-    { field: 'AccAmt_C', header: '貸方金額', visible: true, format: formatAmount },
+    { field: 'AccAmt_D', header: '借方金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'AccAmt_C', header: '貸方金額', visible: true, format: formatAmount, isTotal: true },
     { field: 'Remark', header: '備註', visible: true },
   ];
 
@@ -146,6 +148,11 @@ export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements 
             __rowid: i + 1,
             AccSubject: [r.ACCNO ?? '', r.AccCName ?? ''].filter(Boolean).join(' ')
           }));
+          // 後端總計欄位 -> 放到 sumData，table 會優先使用 sumData 顯示 footer
+          this.sumData = {
+            AccAmt_D: Number(resp?.Data?.SUM_AccAmt_D) || 0,
+            AccAmt_C: Number(resp?.Data?.SUM_AccAmt_C) || 0
+          };
           // 清除 handoff（避免舊資料干擾）
           localStorage.removeItem('FIN55050_CRU_HANDOFF');
         },

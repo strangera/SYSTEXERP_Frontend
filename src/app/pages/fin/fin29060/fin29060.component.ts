@@ -49,8 +49,8 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
     AccNo_From: [null],
     AccNo_To: [null],
     ACP_Desc: [null],
-    ShowUnpaid: [true],
-    ShowZeroBalance: [true],
+    ShowUnpaid: [false],
+    ShowZeroBalance: [false],
   });
   VendorNoOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
   AccNoOptions = this.dropdown.queryGls1005();
@@ -126,6 +126,11 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
         ...raw,
         pageIndex: 1,
         pageSize: this.lazyBatchSize,
+        SortBy: [
+          { field: 'ACP_No', order: 1 },
+          { field: 'PostDate', order: 1 },
+          { field: 'VendorNo', order: 1 }
+        ]
       };
       this.fin29060Service.queryFIN29060(this.lastQueryBody).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe((res) => {
         console.log('29060 res', res);

@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **For detailed development patterns, code examples, and API references, see [DEV_PATTERNS.md](./DEV_PATTERNS.md)**
+
 ## Project Overview
 
 TSRDERP_Frontend is an Angular 18 application for a Taiwan ERP (Enterprise Resource Planning) system built with TypeScript, PrimeNG UI components, and SCSS styling. The application serves as the frontend for南紡ERP (Tainan Spinning ERP) with multiple business modules including Asset Management (ASS), Customer/Personnel Management (CPM), Finance (FIN), System (SYS), and Tenant Lease System (TLS).
@@ -53,6 +55,8 @@ These base components provide:
 - Query state persistence
 - Standard CRUD operations
 
+> **See [DEV_PATTERNS.md](./DEV_PATTERNS.md#1-base-component-classes) for complete API reference and usage examples**
+
 #### Component Kit System
 Reusable UI components in `src/app/shared/componentkit/`:
 - Form controls (input-text, dropdown, calendar, etc.)
@@ -60,6 +64,8 @@ Reusable UI components in `src/app/shared/componentkit/`:
 - File upload components
 - Multi-select and tree components
 - Advanced table components (expandable-edit-table)
+
+> **See [DEV_PATTERNS.md](./DEV_PATTERNS.md#3-component-kit) for component API and usage examples**
 
 ### Service Architecture
 
@@ -165,3 +171,22 @@ Development API endpoints configured in `src/environments/environment.ts`:
 - Component reusability through base classes and component kit
 
 When working with this codebase, focus on maintaining the established patterns for component inheritance, service architecture, and the complex workflow implementations, especially in the TLS13010 contract management system which serves as the most sophisticated example of the application's capabilities.
+
+---
+
+## Related Documentation
+
+| Document | Description |
+|----------|-------------|
+| [DEV_PATTERNS.md](./DEV_PATTERNS.md) | Detailed development patterns, API references, code examples |
+
+### Quick Reference (see DEV_PATTERNS.md for details)
+
+| Task | Pattern |
+|------|---------|
+| Create query page | Extend `BasicQueryPageComponent`, call `initializePage()` in `ngOnInit` |
+| Create CRU page | Extend `BasicCruPageComponent`, call `initializePage()` in `ngOnInit` |
+| Check permission | `this.hasPermission('20')` (Create) / `'30'` (Edit) / `'40'` (Delete) |
+| Navigate to CRU | `this.navigateWithState(CRUDStatus.Edit, rowdata)` |
+| Submit form | `this.handleSubmit(form, () => { /* API call */ })` |
+| Auto-unsubscribe | `pipe(untilDestroyed(this))` with `@UntilDestroy()` decorator |

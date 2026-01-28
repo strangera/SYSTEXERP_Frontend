@@ -13,7 +13,7 @@ import {
   BusClassItem,
   BusClassQuery,
   BusSClassItem,
-  BusSClassQuery,
+  BusSClassRequest,
   Css1003Query,
   Css1005Query,
   CssDropDownItem,
@@ -207,8 +207,8 @@ export class DropdownApiService {
   }
 
   /** 查詢小分類設定檔(TLTBUSSCLASS)資料表 */
-  queryTltBusSClass(body?: BusSClassQuery): Observable<BusSClassItem[] | null> {
-    return this.queryDropdownWithParams<BusSClassItem, BusSClassQuery | object>('/queryTLTBUSSCLASS_DropDownList', body ?? {}).pipe(
+  queryTltBusSClass(body: BusSClassRequest): Observable<BusSClassItem[] | null> {
+    return this.queryDropdownWithParams<BusSClassItem, BusSClassRequest | object>('/queryTLTBUSSCLASS_DropDownList', body ?? {}).pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
