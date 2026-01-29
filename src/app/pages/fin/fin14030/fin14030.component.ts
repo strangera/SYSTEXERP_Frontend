@@ -115,28 +115,16 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
             No: item.STO_TaxNo,
             STO_Status: item.STO_Status
           }));
-          console.log('稅籍編號 options', response);
 
-          // 找出 STO_Status === '1' 的稅籍
-          const active = this.REP_TaxNo_Options.find(x => x.STO_Status === '1');
+          // 規格更新， 只使用STO_Status === '1' 的REP_TaxNo_Options
+          this.REP_TaxNo_Options = this.REP_TaxNo_Options.filter(x => x.STO_Status === '1');
+          console.log('稅籍編號 options', this.REP_TaxNo_Options);
 
-          // 排序：使用中(1) 的排在未使用中(2) 前面，但保持其他順序
-          this.REP_TaxNo_Options.sort((a, b) => {
-            if (a.STO_Status === '1' && b.STO_Status !== '1') return -1;
-            if (a.STO_Status !== '1' && b.STO_Status === '1') return 1;
-            return 0; // 都一樣就保持原順序
-          });
-
-          console.log('排序後稅籍編號', this.REP_TaxNo_Options);
-
-
-          if (active) { //如果有使用中的設定為稅及編號預設值
-            console.log('當期使用中的稅籍編號', active);
+          // 預設第一筆 作為表單內容
+          if (this.REP_TaxNo_Options.length > 0) {
             this.queryForm.patchValue({
-              REP_TaxNo: active.No as any,
+              REP_TaxNo: this.REP_TaxNo_Options[0].No as any,
             });
-          } else {
-            console.log('當期無使用中的稅籍編號', active);
           }
         },
         error: (error) => {
