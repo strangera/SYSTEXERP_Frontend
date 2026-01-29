@@ -219,7 +219,26 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
 
 
   getCurrentQueryFunction() {
-    return this.tls2f010Service.queryTLS2F010.bind(this.tls2f010Service);
+    // 返回一個 wrapper，將後端回應標準化為 TableReport 預期的 { Data: rows[], TotalCount } 結構
+    return (body: any) => this.tls2f010Service.queryTLS2F010(body).pipe(map((res: any) => {
+      const respData = res?.Data ?? [];
+      let rows: any[] = [];
+      let totalCount: number | null = res?.TotalCount ?? null;
+
+      if (Array.isArray(respData) && respData.length && respData[0] && respData[0].Details) {
+        rows = respData[0].Details || [];
+        // 嘗試從內層 Total 擷取總筆數（若後端提供）
+        totalCount = totalCount ?? (respData[0].Total?.TotalCount ?? null);
+      } else if (Array.isArray(respData)) {
+        rows = respData;
+        totalCount = totalCount ?? (res?.Total?.TotalCount ?? res?.TotalCount ?? rows.length);
+      } else {
+        rows = [];
+        totalCount = totalCount ?? 0;
+      }
+
+      return { Data: rows, TotalCount: totalCount };
+    }));
   }
 
 

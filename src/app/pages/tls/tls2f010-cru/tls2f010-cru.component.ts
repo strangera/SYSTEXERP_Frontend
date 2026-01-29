@@ -92,7 +92,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
         value: item['No']
       }))
     )
-  );
+  ).pipe(shareReplay(1));
   vendorTLS2F010Options: { label: string; value: string }[] = [];
 
 
@@ -212,12 +212,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       header: '廠商統一編號',
       type: 'dropdown',
       width: '200px',
-      options: () => this.dropdown.queryPos2013({ VEN_Flag: '' }).pipe(
-        map(list => (list ?? []).map(item => ({
-          label: `${item['No']} - ${item['Name']}`,
-          value: item['No'],
-        })))
-      ),
+      options: () => this.ven_noOptions,
       optionLabel: 'label',
       optionValue: 'value',
       showClear: true,
@@ -506,8 +501,25 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   onSubmit(frm: any): void {
     this.messageService.blockUi();
     this.submitted = true;
+    console.log('[TLS2F010CRU] onSubmit called', { submitted: this.submitted, invalid: this.dataForm.invalid });
+
+    // 若 backend/interface 仍使用 money_type，而 UI 使用 COMM_MONEY_TYPE，嘗試同步值以避免表單驗證失敗
+    try {
+      const commMoneyCtrl = this.dataForm.controls.COMM_MONEY_TYPE as any;
+      const moneyCtrl = this.dataForm.controls.money_type as any;
+      if (moneyCtrl && (moneyCtrl.value == null || moneyCtrl.value === '') && commMoneyCtrl) {
+        const val = Array.isArray(commMoneyCtrl.value) && commMoneyCtrl.value.length ? commMoneyCtrl.value[0] : commMoneyCtrl.value;
+        moneyCtrl.setValue(val, { emitEvent: false });
+      }
+    } catch (e) {
+      console.warn('[TLS2F010CRU] sync money_type failed', e);
+    }
 
     if (this.dataForm.invalid) {
+      const controls = this.dataForm.controls as Record<string, any>;
+      const invalidControls = Object.keys(controls).filter(k => controls[k] && controls[k].invalid);
+      console.log('[TLS2F010CRU] form invalid', { invalidControls });
+      this.messageService.errorBubble('表單驗證失敗，請檢查必填欄位');
       this.messageService.unblockUi();
       this.loading = false;
       return;
@@ -516,6 +528,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     if (!this.isFormCreateable && !this.isFormEditable) {
       this.messageService.unblockUi();
       this.submitted = false;
+      this.loading = false;
       return;
     }
 
@@ -593,6 +606,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       tlt_no: formValue.tlt_no ?? '',
       // 優先使用選取的主資料的 talent_id，若無則 fallback 到 rowdata
       talent_id: (this.selectedMain && this.selectedMain.talent_id) ? this.selectedMain.talent_id : ((this.rowdata as any)?.talent_id ?? 0),
+      COMM_YM: this.formatYearMonth(formValue.COMM_YM),
       details,
     };
 
