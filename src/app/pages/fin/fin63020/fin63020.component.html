@@ -271,29 +271,28 @@
 
 <!-- ✅ 列表：改用 app-table 才有內建 checkbox + isRowSelectable -->
 <div class="card">
-  <app-table
-    #finTable
-    [tableKey]="'FIN63020_TABLE'"
-    [dataKey]="'CheckNo'"
-    [columns]="columns"
-    [data]="data"
-    [totalRecords]="totalRecords"
-    [loading]="loading"
-    [showSerialNo]="true"
-    [showCheckBox]="true"
-    [selectionMode]="'multiple'"
-    [(selectedItems)]="selectedItems"
-    [isRowSelectable]="isRowSelectable"
-    [showManage]="true"
-    [showDetail]="true"
-    [showReportMode]="false"
-    [showDelete]="false"
-    [showEdit]="true"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [lazy]="true"
-   
-  >
+<app-table
+  #finTable
+  [tableKey]="'FIN63020_TABLE'"
+  [dataKey]="'CheckNo'"
+  [columns]="columns"
+  [data]="data"
+  [totalRecords]="totalRecords"
+  [loading]="loading"
+  [showSerialNo]="true"
+  [showCheckBox]="true"
+  [selectionMode]="'multiple'"
+  [(selectedItems)]="selectedItems"
+  [isRowSelectable]="isRowSelectable"
+  [showManage]="true"
+  [showDetail]="true"
+  [showReportMode]="false"
+  [showDelete]="false"
+  [showEdit]="false"
+  [lazy]="true"
+  (detail)="onDetail($event)"
+>
+
 
    <header>
       <div class="flex justify-content-between align-items-center w-full">

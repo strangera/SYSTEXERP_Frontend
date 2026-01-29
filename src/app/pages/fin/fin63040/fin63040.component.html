@@ -10,13 +10,8 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 公司銀行科目代號（必填） -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="公司銀行科目代號"
@@ -29,7 +24,6 @@
             ></app-dropdown>
           </div>
 
-          <!-- 兌現日 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
@@ -40,7 +34,6 @@
             ></app-calendar-range>
           </div>
 
-          <!-- 到期日 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
@@ -51,7 +44,6 @@
             ></app-calendar-range>
           </div>
 
-          <!-- 票據號碼 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="票據號碼"
@@ -65,7 +57,7 @@
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button
             [type]="'button'"
-            label="支票兌現"
+            label="票據兌現"
             (clickEvent)="onCash()"
           ></app-button>
 
@@ -82,7 +74,6 @@
   </p-accordion>
 </div>
 
-<!-- ✅ 列表：lazy=true + #finTable（套用 FIN63020 的排序修正） -->
 <div class="card">
   <app-table
     #finTable
@@ -100,7 +91,7 @@
     [showManage]="true"
     [showDetail]="true"
     [showEdit]="true"
-        [showReportMode]="false"
+    [showReportMode]="false"
     [showDelete]="false"
     [lazy]="true"
     (edit)="onEdit($event)"
@@ -134,9 +125,8 @@
   </app-table>
 </div>
 
-<!-- ✅ 支票兌現 Dialog -->
 <p-dialog
-  header="支票兌現"
+  header="票據兌現"
   [(visible)]="cashDialogVisible"
   [modal]="true"
   [draggable]="false"
@@ -156,7 +146,7 @@
       </div>
 
       <div class="col-12 text-600">
-        ※ ChkNoList 會自動取用目前勾選的票據號碼（僅「可兌現=Y」才會送出）
+        ※兌現日要大於等於到期日
       </div>
     </div>
   </form>
@@ -172,6 +162,7 @@
       <p-button
         label="確認兌現"
         [loading]="btnLoading"
+        [disabled]="isCashConfirmDisabled()"
         (onClick)="onCashConfirm()"
       ></p-button>
     </div>
