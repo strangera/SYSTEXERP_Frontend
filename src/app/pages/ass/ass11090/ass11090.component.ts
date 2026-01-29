@@ -1,4 +1,4 @@
-import { Component, computed, OnInit, signal } from '@angular/core';
+import { Component, computed, OnInit, signal, ViewChild } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS11010Service } from '@service/api/ass/ass11010.service';
@@ -68,6 +68,8 @@ export class ASS11090Component extends BasicQueryPageComponent<ASS11090Data> imp
   public readonly totalRecords = signal<number>(0);
   public readonly tableLoading = signal<boolean>(false);
   public lastQueryBody?: ASS11090QueryRequest;
+
+  @ViewChild('tableReport') tableReport?: TableReportComponent;
 
   public readonly columns: ReportColumn[] = [
     { field: 'B_CLASS_ID', header: '大分類代碼' },
@@ -158,6 +160,7 @@ export class ASS11090Component extends BasicQueryPageComponent<ASS11090Data> imp
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
       const rawFormValue = this.queryForm.getRawValue();
+      const currentSort = this.tableReport?.multiSortMeta ?? [];
       const payload = {
         B_CLASS_ID: rawFormValue.B_CLASS_ID || undefined,
         M_CLASS_ID: rawFormValue.M_CLASS_ID || undefined,
@@ -171,6 +174,7 @@ export class ASS11090Component extends BasicQueryPageComponent<ASS11090Data> imp
         NOTES_KW: rawFormValue.NOTES_KW || undefined,
         PageSize: rawFormValue.PageSize || 30,
         PageIndex: rawFormValue.PageIndex || 1,
+        SortBy: currentSort.length > 0 ? currentSort : undefined,
       };
       const cleanPayload = removeEmptyValues(payload) as ASS11090QueryRequest;
 

@@ -89,18 +89,30 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
   });
 
   // 明細表格欄位定義
+  /** 會計/費用科目選項：若該列有 AccNo 且不在清單中，動態加入一筆以顯示 AccNo-AccName */
+  private accountingOptionsWithRow = (rowData: any): Option[] => {
+    const list = this.accountingOptions;
+    const code = rowData?.AccNo ?? rowData?.AccountingCode ?? rowData?.ExpenseCode;
+    const name = rowData?.AccName ?? rowData?.AccountingName ?? rowData?.ExpenseName ?? '';
+    if (!code) return list;
+    if (list.some((o: Option) => o.value === code)) return list;
+    return [{ value: code, label: `${code}-${name}` }, ...list];
+  };
+
   purchaseAccountColumns = computed<EditColumn[]>(() => [
     {
       field: 'AccountingCode',
       header: '會計科目(借)代號/名稱',
       type: this.isFormCreateable || this.isFormEditable ? 'dropdown' : undefined,
       required: true,
-      options: () => this.accountingOptions,
+      options: (rowData: any) => this.accountingOptionsWithRow(rowData),
       optionLabel: 'label',
       optionValue: 'value',
       format: (v, i, r) => {
-        if (!r?.AccountingCode) return '';
-        return `${r.AccountingCode}-${r.AccountingName || ''}`;
+        const code = r?.AccNo ?? r?.AccountingCode;
+        const name = r?.AccName ?? r?.AccountingName ?? '';
+        if (!code) return '';
+        return `${code}-${name}`;
       },
     },
     {
@@ -111,10 +123,10 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
       optionLabel: 'label',
       optionValue: 'value',
       format: (v, i, r) => {
-        if (!r?.OrganizationCode) return '';
-        const option = this.organizationOptions.find(opt => opt.value === r.OrganizationCode);
-        const orgName = option?.label?.split('-').slice(1).join('-') || '';
-        return `${r.OrganizationCode}-${orgName}`;
+        const orgId = r?.OrganizationCode;
+        if (!orgId) return '';
+        const option = this.organizationOptions.find(opt => opt.value === orgId);
+        return option ? option.label : `${orgId}-`;
       },
     },
   ]);
@@ -125,12 +137,14 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
       header: '費用科目代號/名稱',
       type: this.isFormCreateable || this.isFormEditable ? 'dropdown' : undefined,
       required: true,
-      options: () => this.accountingOptions,
+      options: (rowData: any) => this.accountingOptionsWithRow(rowData),
       optionLabel: 'label',
       optionValue: 'value',
       format: (v, i, r) => {
-        if (!r?.ExpenseCode) return '';
-        return `${r.ExpenseCode}-${r.ExpenseName || ''}`;
+        const code = r?.AccNo ?? r?.ExpenseCode;
+        const name = r?.AccName ?? r?.ExpenseName ?? '';
+        if (!code) return '';
+        return `${code}-${name}`;
       },
     },
     {
@@ -141,10 +155,10 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
       optionLabel: 'label',
       optionValue: 'value',
       format: (v, i, r) => {
-        if (!r?.OrganizationCode) return '';
-        const option = this.organizationOptions.find(opt => opt.value === r.OrganizationCode);
-        const orgName = option?.label?.split('-').slice(1).join('-') || '';
-        return `${r.OrganizationCode}-${orgName}`;
+        const orgId = r?.OrganizationCode;
+        if (!orgId) return '';
+        const option = this.organizationOptions.find(opt => opt.value === orgId);
+        return option ? option.label : `${orgId}-`;
       },
     },
   ]);
@@ -155,12 +169,14 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
       header: '費用科目代號/名稱',
       type: this.isFormCreateable || this.isFormEditable ? 'dropdown' : undefined,
       required: true,
-      options: () => this.accountingOptions,
+      options: (rowData: any) => this.accountingOptionsWithRow(rowData),
       optionLabel: 'label',
       optionValue: 'value',
       format: (v, i, r) => {
-        if (!r?.ExpenseCode) return '';
-        return `${r.ExpenseCode}-${r.ExpenseName || ''}`;
+        const code = r?.AccNo ?? r?.ExpenseCode;
+        const name = r?.AccName ?? r?.ExpenseName ?? '';
+        if (!code) return '';
+        return `${code}-${name}`;
       },
     },
     {
@@ -171,10 +187,10 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
       optionLabel: 'label',
       optionValue: 'value',
       format: (v, i, r) => {
-        if (!r?.OrganizationCode) return '';
-        const option = this.organizationOptions.find(opt => opt.value === r.OrganizationCode);
-        const orgName = option?.label?.split('-').slice(1).join('-') || '';
-        return `${r.OrganizationCode}-${orgName}`;
+        const orgId = r?.OrganizationCode;
+        if (!orgId) return '';
+        const option = this.organizationOptions.find(opt => opt.value === orgId);
+        return option ? option.label : `${orgId}-`;
       },
     },
   ]);
@@ -270,11 +286,11 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
    */
   private mapApiDataToForm(data: ASS11090Data): void {
     this.dataForm.patchValue({
-      // 基本資料
+      // 基本資料（檢視/編輯時顯示為 代碼-名稱）
       BigCategoryCode: data.B_CLASS_ID ?? null,
-      BigCategoryName: data.B_CLASS_NAME ?? '',
+      BigCategoryName: `${data.B_CLASS_ID ?? ''}-${data.B_CLASS_NAME ?? ''}`,
       MidCategoryCode: data.M_CLASS_ID ?? null,
-      MidCategoryName: data.M_CLASS_NAME ?? '',
+      MidCategoryName: `${data.M_CLASS_ID ?? ''}-${data.M_CLASS_NAME ?? ''}`,
       // 採買入帳科目區塊
       AccountingDebitCode: data.STYPE_ACCNO ?? null,
       AccountingDebitName: data.STYPE_ACCNO_NAME ?? '',
@@ -305,6 +321,8 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
           const orgOption = this.organizationOptions.find(opt => opt.value === d.ORG_ID);
           return {
             SerialNo: i + 1,
+            AccNo: d.AccNo,
+            AccName: d.AccName,
             AccountingCode: d.AccNo,
             AccountingName: d.AccName,
             OrganizationCode: d.ORG_ID,
@@ -320,6 +338,8 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
           const orgOption = this.organizationOptions.find(opt => opt.value === d.ORG_ID);
           return {
             SerialNo: i + 1,
+            AccNo: d.AccNo,
+            AccName: d.AccName,
             ExpenseCode: d.AccNo,
             ExpenseName: d.AccName,
             OrganizationCode: d.ORG_ID,
@@ -335,6 +355,8 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
           const orgOption = this.organizationOptions.find(opt => opt.value === d.ORG_ID);
           return {
             SerialNo: i + 1,
+            AccNo: d.AccNo,
+            AccName: d.AccName,
             ExpenseCode: d.AccNo,
             ExpenseName: d.AccName,
             OrganizationCode: d.ORG_ID,
