@@ -1,27 +1,27 @@
-import { ChangeDetectorRef, Component, Inject, inject, OnDestroy, OnInit } from '@angular/core';
-import { MenubarComponent } from "@shared/component/menubar/menubar.component";
-import { ButtonComponent } from "@shared/componentkit/button/button.component";
-import { ProgressSpinnerModule } from "primeng/progressspinner";
-import { AccordionModule } from "primeng/accordion";
-import { debounceTime, distinctUntilChanged, lastValueFrom, Subscription } from 'rxjs';
-import { ColumnDef, ExpandableEditTableComponent } from "@shared/componentkit/expandable-edit-table/expandable-edit-table.component";
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ActivatedRoute, NavigationExtras } from '@angular/router';
-import { TLS12040Service } from '@service/api/tls/tls12040.service';
-import { TLS12040FlowService } from '../tls12040/Workflow/tls12040-contract-flow.service';
-import { CruData, SimpleContractInfo } from '../tls12040-next1/models/tls12040-next1.model';
 import { NgIf } from '@angular/common';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { DialogModule } from "primeng/dialog";
-import { ChargeDetailBusinessModel, ChargeSettingBusinessModel, LevelChargeDetailBusinessModel, YearChargeDetailBusinessModel, TLS12040ChargeQueryResponse } from './models/tls12040-next2.model';
+import { ChangeDetectorRef, Component, Inject, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { TLS12040Next2ColumnsConfig } from './services/tls12040-next2-columns.config';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { ActivatedRoute, NavigationExtras } from '@angular/router';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
-import { TLS12040DataFlowService } from './services/tls12040-data-flow.service';
-import { TLS12040DetailModel } from '../tls12040-cru/models/tls12040-cru.model';
+import { TLS12040Service } from '@service/api/tls/tls12040.service';
+import { MenubarComponent } from "@shared/component/menubar/menubar.component";
+import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from "@shared/componentkit/button/button.component";
+import { ColumnDef, ExpandableEditTableComponent } from "@shared/componentkit/expandable-edit-table/expandable-edit-table.component";
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { AccordionModule } from "primeng/accordion";
 import { Button } from "primeng/button";
+import { DialogModule } from "primeng/dialog";
+import { ProgressSpinnerModule } from "primeng/progressspinner";
+import { debounceTime, distinctUntilChanged, lastValueFrom, Subscription } from 'rxjs';
 import { DateUtils } from 'src/app/core/utils/date-utils';
+import { TLS12040DetailModel } from '../tls12040-cru/models/tls12040-cru.model';
+import { SimpleContractInfo } from '../tls12040-next1/models/tls12040-next1.model';
+import { TLS12040FlowService } from '../tls12040/Workflow/tls12040-contract-flow.service';
+import { ChargeDetailBusinessModel, ChargeSettingBusinessModel, LevelChargeDetailBusinessModel, YearChargeDetailBusinessModel } from './models/tls12040-next2.model';
+import { TLS12040DataFlowService } from './services/tls12040-data-flow.service';
+import { TLS12040Next2ColumnsConfig } from './services/tls12040-next2-columns.config';
 interface CategoryItem {
   id: number;
 }
@@ -404,17 +404,22 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       }
     }
 
-    // ❌ 沒有暫存也沒有續約資料，才打 API
-    console.log('🌐 從 API 載入抽成資料');
-    await this.dataFlowService.loadData(
-      this.currentApplyNo,
-      this.discountOptions,
-      this.getContractDate('start'),
-      this.getContractDate('end')
-    );
+    // 根據 CRUDStatus 判斷：新增模式初始化空資料，編輯/檢視模式呼叫 API 載入
+    if (this.isCreateMode) {
+      console.log('新增模式(CRUDStatus.Create)：初始化空的抽成資料，由使用者透過 + 按鈕新增');
+      this.commissionData = [];
+    } else {
+      console.log('編輯/檢視模式：從 API 載入抽成資料');
+      await this.dataFlowService.loadData(
+        this.currentApplyNo,
+        this.discountOptions,
+        this.getContractDate('start'),
+        this.getContractDate('end')
+      );
 
-    // 從 dataFlowService 取得資料
-    this.commissionData = this.dataFlowService.getVisibleData();
+      // 從 dataFlowService 取得資料
+      this.commissionData = this.dataFlowService.getVisibleData();
+    }
 
     // 🔍 檢查載入的資料中 is_selected 的初始狀態
     this.commissionData.forEach((item, index) => {
@@ -815,7 +820,8 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     const contractEndDate = this.getContractDate('end');
 
     return this.discountOptions.map((option, index) => {
-      // 關鍵修正：預設都不勾選，由用戶自己決定要勾選哪些
+      // 正品(000)預設勾選，其他不勾選
+      const isDefault = option.value === '000';
       const item = {
         id: this.generateTempId(),
         apply_no: parentItem.apply_no,
@@ -825,14 +831,14 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         tlt_edate: contractEndDate,
         cag_charge_rate: 0,
         barcode_desc: option.label || '',
-        is_configured: false,  // 預設不配置
-        is_enabled: false,     // 預設不啟用
+        is_configured: isDefault,
+        is_enabled: isDefault,
         _status: 'new',
-        is_selected: false,    // 關鍵：預設都不勾選
+        is_selected: isDefault,
         _originalType: 'discount'
       };
 
-      console.log(`建立項目: ${option.value} (${option.label}) - 預設不勾選`);
+      console.log(`建立項目: ${option.value} (${option.label}) - ${isDefault ? '預設勾選' : '預設不勾選'}`);
       return item;
     });
   }
@@ -862,7 +868,8 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
       const chargedId = correspondingDiscount?.id || null;
 
-      // 關鍵修正：Level 預設都不勾選，由 Discount 的勾選狀態決定
+      // 正品(000)預設勾選，其他由 Discount 的勾選狀態決定
+      const isDefault = option.value === '000';
       const item = {
         id: this.generateTempId(),
         charged_id: chargedId,  // 🔥 設定 charged_id，關聯到對應的 discount
@@ -874,14 +881,14 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         level_eamount: 0,
         level_charge_rate: 0,
         barcode_desc: option.label || '',
-        is_configured: false,   // 預設不配置
-        is_enabled: false,      // 預設不啟用
+        is_configured: isDefault,
+        is_enabled: isDefault,
         _status: 'new',
-        is_selected: false,     // 關鍵：預設都不勾選，由 Discount 控制
+        is_selected: isDefault,
         _originalType: 'level'
       };
 
-      console.log(`建立層級項目: ${option.value} (${option.label}) - charged_id=${chargedId}, 預設不勾選`);
+      console.log(`建立層級項目: ${option.value} (${option.label}) - charged_id=${chargedId}, ${isDefault ? '預設勾選' : '預設不勾選'}`);
       return item;
     });
   }
@@ -1282,10 +1289,15 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     const defaultCapSaletype3 = cruData?.cap_saletype3 || 'N';
     const defaultCapSaletype5 = cruData?.cap_saletype5 || 'N';
 
+    // 先產生一致的 tlt_id，再建立 ChargeDetails 供 LevelChargeDetails 關聯
+    const newTltId = this.generateNewTltId();
+    const tempParent = { apply_no: applyNo, tlt_id: newTltId } as ChargeSettingBusinessModel;
+    const chargeDetails = this.createDefaultDiscountItems(tempParent);
+
     const newItem: ChargeSettingBusinessModel = {
       id: this.generateTempId(),
       apply_no: applyNo,  // 可以是空字串
-      tlt_id: this.generateNewTltId(),
+      tlt_id: newTltId,
       tlt_id_desc: '新抽成類別',
       cag_bdate: this.getContractDate('start'),
       cag_edate: this.getContractDate('end'),
@@ -1299,16 +1311,20 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       cap_saletype5: defaultCapSaletype5,
       cag_remark: '',
       _status: 'new',
-      ChargeDetails: this.createDefaultDiscountItems({
-        apply_no: applyNo,
-        tlt_id: this.generateNewTltId()
-      } as ChargeSettingBusinessModel),
+      ChargeDetails: chargeDetails,
       YearChargeDetails: [],
       LevelChargeDetails: this.createDefaultLevelItems({
         apply_no: applyNo,
-        tlt_id: this.generateNewTltId()
+        tlt_id: newTltId,
+        ChargeDetails: chargeDetails
       } as ChargeSettingBusinessModel)
     };
+
+    // 產生折扣摘要
+    newItem.remark = this.formatRemarkText(newItem);
+
+    // 新增項目時強制切回 discount 分頁，避免顯示異常
+    this.selectedSettingTab = 'discount';
 
     this.commissionData = [...this.commissionData, newItem];
     this.saveToWorkflow();

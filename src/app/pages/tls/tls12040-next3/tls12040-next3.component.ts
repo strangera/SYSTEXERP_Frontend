@@ -313,29 +313,33 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
 
     console.log('載入資料優先順序判定:', {
       commissionType,
-      isNewContract: this.contractFlowService.getCurrentState().isNewContract,
+      crudstatus: this.crudstatus,
+      isCreateMode: this.isCreateMode,
+      isEditMode: this.isEditMode,
+      isReadOnlyMode: this.isReadOnlyMode,
       currentApplyNo: this.currentApplyNo,
       isViewMode: this.isViewMode,
       isRenewalMode: this.contractFlowService.isRenewalMode()
     });
 
-    // ✅ 【優先】檢查是否有 Next3 暫存資料（包含用戶修改的內容）
-    const savedNext3Data = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
+    // 【優先】檢查是否有 Next3 暫存資料（包含用戶修改的內容）
+    const savedNext3StepData = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
+    const cachedConditionItems = savedNext3StepData?.data;
 
-    if (savedNext3Data && Array.isArray(savedNext3Data) && savedNext3Data.length > 0) {
-      console.log('✅ 使用 Next3 暫存資料（包含用戶修改），項目數量:', savedNext3Data.length);
-      this.loadConditionDataFromCache(savedNext3Data);
+    if (cachedConditionItems && Array.isArray(cachedConditionItems) && cachedConditionItems.length > 0) {
+      console.log('使用 Next3 暫存資料（包含用戶修改），項目數量:', cachedConditionItems.length);
+      this.loadConditionDataFromCache(cachedConditionItems);
       this.conditionDataLoaded = true;
       this.dataLoaded = true;
       return;
     }
 
-    // ✅ 沒有暫存時，檢查是否為續約模式（只在第一次進入時載入續約資料）
+    // 沒有暫存時，檢查是否為續約模式（只在第一次進入時載入續約資料）
     if (this.contractFlowService.isRenewalMode()) {
-      console.log('🔄 續約模式：檢查是否有續約條件資料');
+      console.log('續約模式：檢查是否有續約條件資料');
       const renewalCommissionData = this.contractFlowService.getRenewalCommissionData();
       if (renewalCommissionData && renewalCommissionData.length > 0) {
-        console.log('✅ 首次使用續約條件資料，共', renewalCommissionData.length, '筆');
+        console.log('首次使用續約條件資料，共', renewalCommissionData.length, '筆');
         this.loadRenewalCommissionData(renewalCommissionData, commissionType || '3');
         this.conditionDataLoaded = true;
         this.dataLoaded = true;
@@ -343,12 +347,12 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
       }
     }
 
-    // ❌ 沒有暫存也沒有續約資料
-    if (this.contractFlowService.getCurrentState().isNewContract) {
-      console.log('新增模式：初始化空的條件設定');
+    // 根據 CRUDStatus 判斷：新增模式初始化空資料，編輯/檢視模式呼叫 API 載入
+    if (this.isCreateMode) {
+      console.log('新增模式(CRUDStatus.Create)：初始化空的條件設定');
       this.initializeNewContractConditionData(commissionType || '3');
     } else {
-      console.log('編輯模式：載入條件設定');
+      console.log('編輯/檢視模式：從 API 載入條件設定');
       this.loadExistingConditionData();
     }
 

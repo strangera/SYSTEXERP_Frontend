@@ -366,7 +366,7 @@ export class TLS12040FlowService {
       currentStep: 'cru',
       completedSteps: new Set<string>(),
       stepData: new Map(),
-      status: CRUDStatus.Edit,
+      status: coreData.isNewContract ? CRUDStatus.Create : CRUDStatus.Edit,
       metadata: {
         createdAt: new Date(),
         lastModified: new Date(),
@@ -1745,8 +1745,13 @@ export class TLS12040FlowService {
           completedSteps: completedStepsSet,
           applyNo: correctedApplyNo,
           isNewContract: correctedIsNewContract,
-          contractId: correctedIsNewContract ? data.contractId : correctedApplyNo,
-          status: loadedCrudStatus  // 儲存載入的 crudstatus
+          contractId: correctedIsNewContract ? (data.contractId || `new_${Date.now()}`) : correctedApplyNo,
+          status: loadedCrudStatus,
+          metadata: data.metadata || {
+            createdAt: new Date(),
+            lastModified: new Date(),
+            version: 1
+          }
         };
 
         this.notifyStateChange();

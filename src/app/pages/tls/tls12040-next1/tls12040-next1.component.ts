@@ -437,8 +437,10 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       }
     }
 
-    // 🔥 沒有有效暫存也沒有續約資料：從 API 載入
-    console.log('📡 從 API 載入（apply_no:', this.currentApplyNo || '空(新增模式)', ')');
+    // 不管新增或編輯都需要打 API 取得扣款項目清單
+    // 新增模式 apply_no 為空 → 後端回傳所有項目（分常用/不常用）
+    // 編輯模式 apply_no 有值 → 後端回傳該合約的扣款資料
+    console.log('從 API 載入扣款資料（apply_no:', this.currentApplyNo || '空(新增模式)', ')');
     this.loadFareDataFromAPI();
   }
 
