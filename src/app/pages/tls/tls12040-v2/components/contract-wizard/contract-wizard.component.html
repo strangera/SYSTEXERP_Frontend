@@ -1,7 +1,28 @@
 <div class="card">
-  <!-- Header -->
-  <div class="flex gap-2 mb-3">
+  <!-- 頂部操作按鈕 -->
+  <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button
+      btnType="back"
+      label="上一步"
+      (click)="onCancel()"
+    ></app-button>
+    <!-- 非最後一步：顯示下一步 -->
+    <app-button
+      *ngIf="!isLastStep"
+      btnType="create"
+      [label]="nextStepLabel"
+      (click)="goToNextStep()"
+    ></app-button>
+    <!-- 最後一步 + 非檢視模式：顯示確認 -->
+    <app-button
+      *ngIf="isLastStep && !isViewMode"
+      btnType="submit"
+      label="確認"
+      (click)="onSave()"
+      [loading]="isSaving"
+    ></app-button>
+    <app-button btnType="back" (click)="onClearAndExit()"></app-button>
   </div>
 
   <!-- Steps Navigation -->
@@ -30,8 +51,10 @@
       [form]="dataForm"
       [locationData]="wizardState.locationData"
       [isViewMode]="isViewMode"
+      [isCreateMode]="isFormCreateable"
       [submitted]="submitted"
       (dataChange)="onStep1DataChange($event)"
+      (renewalDataLoaded)="onRenewalDataLoaded($event)"
     ></app-step1-contract-info>
 
     <!-- Step 2: Deduction -->
@@ -49,6 +72,7 @@
       [commissionItems]="wizardState.commissionItems"
       [contractInfo]="wizardState.contractInfo"
       [isViewMode]="isViewMode"
+      [discountOptions]="discountOptions"
       (dataChange)="onStep3DataChange($event)"
     ></app-step3-commission>
 
@@ -63,42 +87,30 @@
     ></app-step4-condition>
   </div>
 
-  <!-- Navigation Buttons -->
-  <div class="flex justify-content-between mt-4 pt-3 border-top-1 surface-border">
-    <div>
-      <app-button
-        *ngIf="!isFirstStep"
-        btnType="default"
-        label="上一步"
-        icon="pi pi-arrow-left"
-        (click)="goToPreviousStep()"
-      ></app-button>
-    </div>
-
-    <div class="flex gap-2">
-      <app-button
-        btnType="cancel"
-        label="取消"
-        (click)="onCancel()"
-      ></app-button>
-
-      <app-button
-        *ngIf="!isLastStep"
-        btnType="default"
-        label="下一步"
-        icon="pi pi-arrow-right"
-        iconPos="right"
-        (click)="goToNextStep()"
-      ></app-button>
-
-      <app-button
-        *ngIf="isLastStep && !isViewMode"
-        btnType="submit"
-        label="儲存"
-        icon="pi pi-save"
-        [loading]="isSaving"
-        (click)="onSave()"
-      ></app-button>
-    </div>
+  <!-- 底部操作按鈕 -->
+  <div
+    class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+  >
+    <app-button
+      btnType="back"
+      label="上一步"
+      (click)="onCancel()"
+    ></app-button>
+    <!-- 非最後一步：顯示下一步 -->
+    <app-button
+      *ngIf="!isLastStep"
+      btnType="create"
+      [label]="nextStepLabel"
+      (click)="goToNextStep()"
+    ></app-button>
+    <!-- 最後一步 + 非檢視模式：顯示確認 -->
+    <app-button
+      *ngIf="isLastStep && !isViewMode"
+      btnType="submit"
+      label="確認"
+      (click)="onSave()"
+      [loading]="isSaving"
+    ></app-button>
+    <app-button btnType="back" (click)="onClearAndExit()"></app-button>
   </div>
 </div>

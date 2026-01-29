@@ -69,6 +69,8 @@ export interface ChargeDetail {
   is_configured?: boolean;
   /** 是否啟用 */
   is_enabled?: boolean;
+  /** 是否勾選 (UI 用) */
+  is_selected?: boolean;
   /** 資料狀態 */
   _status?: DataStatus;
 }
@@ -123,6 +125,8 @@ export interface LevelChargeDetail {
   is_configured?: boolean;
   /** 是否啟用 */
   is_enabled?: boolean;
+  /** 是否勾選 (UI 用) */
+  is_selected?: boolean;
   /** 資料狀態 */
   _status?: DataStatus;
 }

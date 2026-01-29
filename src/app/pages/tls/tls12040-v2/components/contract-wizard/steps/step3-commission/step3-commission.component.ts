@@ -12,6 +12,7 @@ import { ExpandableEditTableComponent, ColumnDef } from '@shared/componentkit/ex
 import { CommissionItem, ChargeDetail, YearChargeDetail, LevelChargeDetail } from '../../../../core/models/commission/commission-item.interface';
 import { ContractInfo } from '../../../../core/models/contract/contract-info.interface';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
+import { DataStatus } from '../../../../core/constants/workflow-step.enum';
 import { Subscription } from 'rxjs';
 
 interface TabOption {
@@ -42,6 +43,7 @@ export class Step3CommissionComponent implements OnInit, OnDestroy {
   @Input() commissionItems: CommissionItem[] = [];
   @Input() contractInfo: ContractInfo | null = null;
   @Input() isViewMode = false;
+  @Input() discountOptions: any[] = [];
 
   @Output() dataChange = new EventEmitter<CommissionItem[]>();
 
@@ -61,22 +63,31 @@ export class Step3CommissionComponent implements OnInit, OnDestroy {
 
   // 抽成主表欄位
   commissionColumns: ColumnDef[] = [
-    { field: 'tlt_id_desc', header: '銷售類別', type: 'dropdown', editable: true, style: 'min-width: 150px', options: [] },
-    { field: 'cag_bdate', header: '開始日期', type: 'date', editable: true, style: 'min-width: 120px' },
-    { field: 'cag_edate', header: '結束日期', type: 'date', editable: true, style: 'min-width: 120px' },
-    { field: 'cag_taxtype', header: '稅別', type: 'dropdown', editable: true, style: 'min-width: 100px', options: [] },
-    { field: 'sst_amount', header: '底抽金額', type: 'number', editable: true, style: 'min-width: 120px' },
-    { field: 'sst_rate', header: '底抽%數', type: 'number', editable: true, style: 'min-width: 100px' },
-    { field: 'remark', header: '折扣摘要', type: 'text', editable: false, style: 'min-width: 200px' }
+    { field: 'tlt_id', header: '抽成類別', editable: false },
+    { field: 'tlt_id_desc', header: '抽成類別名稱', editable: true, type: 'text' },
+    { field: 'cag_taxtype', header: '稅別', editable: true, type: 'dropdown', options: [] },
+    { field: 'sst_amount', header: '單筆交易金額(含)以上', editable: true, type: 'number' },
+    { field: 'sst_rate', header: '特價抽成(%)', editable: true, type: 'number', allowDecimal: true, decimalPlaces: 3 },
+    {
+      field: 'remark',
+      header: '折扣摘要',
+      type: 'textarea',
+      editable: false,
+      style: 'max-width: 250px; white-space: pre-wrap; word-break: break-word; text-align: left;'
+    },
+    { field: 'cap_saletype2', header: '會員卡集點', editable: true, type: 'checkbox' },
+    { field: 'cap_saletype1', header: '滿件送佰', editable: true, type: 'checkbox' },
+    { field: 'cap_saletype3', header: '收取禮卷', editable: true, type: 'checkbox' },
+    { field: 'cap_saletype5', header: '收取商品提貨單', editable: true, type: 'checkbox' }
   ];
 
   // 折扣設定明細欄位
   discountColumns: ColumnDef[] = [
-    { field: 'is_enabled', header: '選用', type: 'checkbox', editable: true, style: 'width: 60px' },
-    { field: 'barcode_desc', header: '折扣項目', type: 'text', editable: false },
-    { field: 'tlt_bdate', header: '開始日期', type: 'date', editable: true },
-    { field: 'tlt_edate', header: '結束日期', type: 'date', editable: true },
-    { field: 'cag_charge_rate', header: '抽成%數', type: 'number', editable: true }
+    { field: 'is_selected', header: '是否新增', type: 'checkbox', editable: true, style: 'width: 80px' },
+    { field: 'barcode_desc', header: '折扣別', type: 'text', editable: false },
+    { field: 'tlt_bdate', header: '合約起始日', type: 'date', editable: true },
+    { field: 'tlt_edate', header: '合約終止日', type: 'date', editable: true },
+    { field: 'cag_charge_rate', header: '抽成率(%)', type: 'number', editable: true }
   ];
 
   // 年度業績抽成明細欄位
@@ -89,20 +100,23 @@ export class Step3CommissionComponent implements OnInit, OnDestroy {
 
   // 層級抽成明細欄位
   levelColumns: ColumnDef[] = [
-    { field: 'is_enabled', header: '選用', type: 'checkbox', editable: true, style: 'width: 60px' },
-    { field: 'barcode_desc', header: '層級項目', type: 'text', editable: false },
-    { field: 'seq_no', header: '層級序號', type: 'number', editable: false },
-    { field: 'level_bmount', header: '業績起始金額', type: 'number', editable: true },
-    { field: 'level_eamount', header: '業績結束金額', type: 'number', editable: true },
-    { field: 'level_charge_rate', header: '抽成%數', type: 'number', editable: true }
+    { field: 'is_selected', header: '是否新增', type: 'checkbox', editable: true, style: 'width: 80px' },
+    { field: 'barcode_desc', header: '折扣別', type: 'text', editable: false },
+    { field: 'contract_period', header: '合約期間', type: 'text', editable: false },
+    { field: 'level_bmount', header: '業績計算金額(起)', type: 'number', editable: true },
+    { field: 'level_eamount', header: '業績計算金額(迄)', type: 'number', editable: true },
+    { field: 'level_charge_rate', header: '抽成率(%)', type: 'number', editable: true }
   ];
 
   // 明細頁籤設定
   settingTabs: TabOption[] = [
-    { id: 'discount', label: '折扣設定', allowAdd: true, allowBatchDelete: true, showCheckbox: true },
-    { id: 'annual', label: '年度業績', allowAdd: true, allowBatchDelete: true, showCheckbox: true },
-    { id: 'level', label: '層級抽成', allowAdd: true, allowBatchDelete: true, showCheckbox: true }
+    { id: 'discount', label: '折扣設定', allowAdd: false, allowBatchDelete: false, showCheckbox: false },
+    { id: 'level', label: '折扣別層級抽成設定', allowAdd: false, allowBatchDelete: false, showCheckbox: false },
+    { id: 'annual', label: '年度總業績抽成設定', allowAdd: true, allowBatchDelete: true, showCheckbox: true }
   ];
+
+  // 當前內層分頁
+  selectedSettingTab = 'discount';
 
   // 處理後的資料
   processedCommissionData: any[] = [];
@@ -114,13 +128,11 @@ export class Step3CommissionComponent implements OnInit, OnDestroy {
   showConfirmDialog = false;
 
   // 選項
-  salesTypeOptions: any[] = [];
   taxTypeOptions: any[] = [];
 
   constructor(
     private sharedDropdownService: SharedDropdownService
   ) {
-    // 初始化稅別選項
     this.taxTypeOptions = [
       { label: '應稅', value: '1' },
       { label: '免稅', value: '0' }
@@ -137,32 +149,15 @@ export class Step3CommissionComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
-  /**
-   * 載入下拉選項
-   */
+  // ========== 下拉選項 ==========
   private loadDropdownOptions(): void {
-    // 設定銷售類別選項 (從 T109 系統參數載入，這裡先用預設值)
-    this.salesTypeOptions = [
-      { label: '01-正常銷售', value: '01' },
-      { label: '02-退貨', value: '02' },
-      { label: '03-折扣', value: '03' }
-    ];
-
-    // 更新欄位選項
-    const salesTypeColumn = this.commissionColumns.find(c => c.field === 'tlt_id_desc');
-    if (salesTypeColumn) {
-      salesTypeColumn.options = this.salesTypeOptions;
-    }
-
     const taxTypeColumn = this.commissionColumns.find(c => c.field === 'cag_taxtype');
     if (taxTypeColumn) {
       taxTypeColumn.options = this.taxTypeOptions;
     }
   }
 
-  /**
-   * 更新合約資訊顯示
-   */
+  // ========== 合約資訊 ==========
   private updateContractInfoDisplay(): void {
     if (this.contractInfo) {
       this.contractInfoData = [{
@@ -172,9 +167,6 @@ export class Step3CommissionComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * 取得抽成別描述
-   */
   private getCommissionTypeDesc(type: string): string {
     const typeMap: { [key: string]: string } = {
       '1': '固定租金',
@@ -187,17 +179,29 @@ export class Step3CommissionComponent implements OnInit, OnDestroy {
     return typeMap[type] || type;
   }
 
+  // ========== 資料處理 ==========
+
   /**
    * 處理抽成資料（加入 detailItems 用於表格顯示）
    */
-  private processCommissionData(): void {
+  processCommissionData(): void {
     this.processedCommissionData = this.commissionItems
       .filter(item => item._status !== 'deleted')
-      .map(item => ({
-        ...item,
-        detailItems: this.getDetailItemsForTab('discount', item),
-        remark: this.generateDiscountRemark(item)
-      }));
+      .map(item => {
+        const processedItem: any = {
+          ...item,
+          cap_saletype1: item.cap_saletype1 === 'Y',
+          cap_saletype2: item.cap_saletype2 === 'Y',
+          cap_saletype3: item.cap_saletype3 === 'Y',
+          cap_saletype5: item.cap_saletype5 === 'Y',
+          remark: this.formatRemarkText(item)
+        };
+
+        // 根據當前分頁設定 detailItems
+        processedItem.detailItems = this.getDetailItemsForTab(this.selectedSettingTab, item);
+
+        return processedItem;
+      });
   }
 
   /**
@@ -206,82 +210,214 @@ export class Step3CommissionComponent implements OnInit, OnDestroy {
   private getDetailItemsForTab(tabValue: string, item: CommissionItem): any[] {
     switch (tabValue) {
       case 'discount':
-        return item.ChargeDetails?.filter(d => d._status !== 'deleted') || [];
+        return (item.ChargeDetails || [])
+          .filter(d => d._status !== 'deleted')
+          .map(d => ({ ...d, _originalType: 'discount' }));
+
+      case 'level': {
+        // Level 只顯示對應已勾選 discount 的項目
+        const selectedDiscountIds = new Set(
+          (item.ChargeDetails || [])
+            .filter(d => (d as any).is_selected && d._status !== 'deleted')
+            .map(d => d.id)
+        );
+
+        return (item.LevelChargeDetails || [])
+          .filter(d => d._status !== 'deleted' && d.charged_id && selectedDiscountIds.has(d.charged_id))
+          .map(d => {
+            const correspondingDiscount = (item.ChargeDetails || []).find(cd => cd.id === d.charged_id);
+            return {
+              ...d,
+              _originalType: 'level',
+              is_selected: true,
+              contract_period: this.formatContractPeriod(correspondingDiscount?.tlt_bdate, correspondingDiscount?.tlt_edate)
+            };
+          });
+      }
+
       case 'annual':
-        return item.YearChargeDetails?.filter(d => d._status !== 'deleted') || [];
-      case 'level':
-        return item.LevelChargeDetails?.filter(d => d._status !== 'deleted') || [];
+        return (item.YearChargeDetails || [])
+          .filter(d => d._status !== 'deleted')
+          .map(d => ({ ...d, _originalType: 'annual' }));
+
       default:
         return [];
     }
   }
 
-  /**
-   * 產生折扣摘要
-   */
-  private generateDiscountRemark(item: CommissionItem): string {
-    const enabledDiscounts = item.ChargeDetails?.filter(d => d.is_enabled && d._status !== 'deleted') || [];
-    if (enabledDiscounts.length === 0) return '';
+  // ========== 折扣摘要 ==========
 
-    return enabledDiscounts.map(d => d.barcode_desc).join(', ');
+  private formatRemarkText(item: CommissionItem): string {
+    const selectedDiscounts = (item.ChargeDetails || [])
+      .filter(d => (d as any).is_selected && d._status !== 'deleted');
+
+    if (selectedDiscounts.length === 0) return '';
+
+    return selectedDiscounts
+      .sort((a, b) => (a.cag_barcode || '').localeCompare(b.cag_barcode || ''))
+      .map(d => {
+        const startDate = this.formatDateString(d.tlt_bdate);
+        const endDate = this.formatDateString(d.tlt_edate);
+        const rate = (d.cag_charge_rate || 0);
+        return `${d.cag_barcode}-(${startDate}-${endDate})-${rate}`;
+      })
+      .join(',');
   }
 
-  /**
-   * 檢查是否有抽成資料
-   */
+  private formatDateString(date: any): string {
+    if (!date) return '';
+    if (date instanceof Date) {
+      return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
+    }
+    return String(date).replace(/-/g, '/');
+  }
+
+  private formatContractPeriod(startDate: any, endDate: any): string {
+    const start = this.formatDateString(startDate);
+    const end = this.formatDateString(endDate);
+    if (!start || !end) return '';
+    return `${start} ~ ${end}`;
+  }
+
+  // ========== 預設項目建立 ==========
+
+  private createDefaultDiscountItems(parentItem: CommissionItem): ChargeDetail[] {
+    if (!this.discountOptions || this.discountOptions.length === 0) {
+      return [];
+    }
+
+    const contractStartDate = this.contractInfo?.tlt_contract_bdate || '';
+    const contractEndDate = this.contractInfo?.tlt_contract_edate || '';
+
+    return this.discountOptions.map(option => {
+      const isDefault = option.value === '000';
+      return {
+        id: `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+        apply_no: parentItem.apply_no,
+        tlt_id: parentItem.tlt_id,
+        cag_barcode: option.value,
+        tlt_bdate: contractStartDate,
+        tlt_edate: contractEndDate,
+        cag_charge_rate: 0,
+        barcode_desc: option.label || '',
+        is_configured: isDefault,
+        is_enabled: isDefault,
+        is_selected: isDefault,
+        _status: 'new' as DataStatus
+      } as ChargeDetail;
+    });
+  }
+
+  private createDefaultLevelItems(parentItem: CommissionItem): LevelChargeDetail[] {
+    if (!this.discountOptions || this.discountOptions.length === 0) {
+      return [];
+    }
+
+    return this.discountOptions.map((option, index) => {
+      const correspondingDiscount = (parentItem.ChargeDetails || []).find(
+        d => d.cag_barcode === option.value
+      );
+      const isDefault = option.value === '000';
+
+      return {
+        id: `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+        charged_id: correspondingDiscount?.id || undefined,
+        apply_no: parentItem.apply_no,
+        tlt_id: parentItem.tlt_id,
+        seq_no: index + 1,
+        cag_barcode: option.value,
+        level_bmount: 0,
+        level_eamount: 0,
+        level_charge_rate: 0,
+        barcode_desc: option.label || '',
+        is_configured: isDefault,
+        is_enabled: isDefault,
+        is_selected: isDefault,
+        _status: 'new' as DataStatus
+      } as LevelChargeDetail;
+    });
+  }
+
+  private generateNewTltId(): string {
+    const existingIds = this.commissionItems
+      .filter(item => item._status !== 'deleted')
+      .map(item => parseInt(item.tlt_id))
+      .filter(id => !isNaN(id))
+      .sort((a, b) => a - b);
+
+    for (let i = 0; i <= 9; i++) {
+      if (!existingIds.includes(i)) {
+        return i.toString();
+      }
+    }
+    return '0';
+  }
+
+  // ========== 狀態查詢 ==========
+
   hasCommissionData(): boolean {
     return this.commissionItems.some(item => item._status !== 'deleted');
   }
 
-  /**
-   * 取得抽成項目數量
-   */
   getCommissionItemCount(): number {
     return this.commissionItems.filter(item => item._status !== 'deleted').length;
   }
 
-  /**
-   * 新增抽成項目
-   */
+  // ========== 新增 ==========
+
   onAddCommissionItem(): void {
+    const applyNo = this.contractInfo?.apply_no || '';
+    const newTltId = this.generateNewTltId();
+
+    // 先建立 ChargeDetails，再用它來建立 LevelChargeDetails（需要 charged_id 關聯）
+    const tempParent: CommissionItem = {
+      apply_no: applyNo,
+      tlt_id: newTltId
+    } as CommissionItem;
+    const chargeDetails = this.createDefaultDiscountItems(tempParent);
+
     const newItem: CommissionItem = {
       id: `temp_${Date.now()}`,
-      apply_no: this.contractInfo?.apply_no || '',
-      tlt_id: '',
-      tlt_id_desc: '',
+      apply_no: applyNo,
+      tlt_id: newTltId,
+      tlt_id_desc: '新抽成類別',
       cag_bdate: this.contractInfo?.tlt_contract_bdate || '',
       cag_edate: this.contractInfo?.tlt_contract_edate || '',
       cag_taxtype: '1',
       sst_amount: 0,
       sst_rate: 0,
-      cap_saletype1: 'N',
-      cap_saletype2: 'N',
-      cap_saletype3: 'N',
-      cap_saletype5: 'N',
+      cap_saletype1: this.contractInfo?.cap_saletype1 || 'N',
+      cap_saletype2: this.contractInfo?.cap_saletype2 || 'N',
+      cap_saletype3: this.contractInfo?.cap_saletype3 || 'N',
+      cap_saletype5: this.contractInfo?.cap_saletype5 || 'N',
       cag_remark: '',
-      ChargeDetails: [],
+      ChargeDetails: chargeDetails,
       YearChargeDetails: [],
-      LevelChargeDetails: [],
+      LevelChargeDetails: this.createDefaultLevelItems({
+        apply_no: applyNo,
+        tlt_id: newTltId,
+        ChargeDetails: chargeDetails
+      } as CommissionItem),
       _status: 'new'
     };
+
+    // 新增時強制切回 discount 分頁
+    this.selectedSettingTab = 'discount';
 
     this.commissionItems.push(newItem);
     this.processCommissionData();
     this.emitDataChange();
   }
 
-  /**
-   * 新增明細項目
-   */
   onAddDetailItem(event: any): void {
     const { masterId, tabValue } = event;
     const masterItem = this.commissionItems.find(item => item.id === masterId);
     if (!masterItem) return;
 
     switch (tabValue) {
-      case 'discount':
+      case 'discount': {
         const newDiscount: ChargeDetail = {
-          id: Date.now(),
+          id: `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
           apply_no: masterItem.apply_no,
           tlt_id: masterItem.tlt_id,
           cag_barcode: '',
@@ -293,9 +429,10 @@ export class Step3CommissionComponent implements OnInit, OnDestroy {
         if (!masterItem.ChargeDetails) masterItem.ChargeDetails = [];
         masterItem.ChargeDetails.push(newDiscount);
         break;
-      case 'annual':
+      }
+      case 'annual': {
         const newAnnual: YearChargeDetail = {
-          id: Date.now(),
+          id: `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
           apply_no: masterItem.apply_no,
           tlt_id: masterItem.tlt_id,
           tlt_bdate: masterItem.cag_bdate,
@@ -307,9 +444,10 @@ export class Step3CommissionComponent implements OnInit, OnDestroy {
         if (!masterItem.YearChargeDetails) masterItem.YearChargeDetails = [];
         masterItem.YearChargeDetails.push(newAnnual);
         break;
-      case 'level':
+      }
+      case 'level': {
         const newLevel: LevelChargeDetail = {
-          id: Date.now(),
+          id: `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
           apply_no: masterItem.apply_no,
           tlt_id: masterItem.tlt_id,
           seq_no: (masterItem.LevelChargeDetails?.length || 0) + 1,
@@ -321,6 +459,7 @@ export class Step3CommissionComponent implements OnInit, OnDestroy {
         if (!masterItem.LevelChargeDetails) masterItem.LevelChargeDetails = [];
         masterItem.LevelChargeDetails.push(newLevel);
         break;
+      }
     }
 
     if (masterItem._status !== 'new') {
@@ -331,14 +470,17 @@ export class Step3CommissionComponent implements OnInit, OnDestroy {
     this.emitDataChange();
   }
 
-  /**
-   * 主表欄位變更
-   */
+  // ========== 欄位變更 ==========
+
   onFieldChange(event: any): void {
     const { fieldName, newValue, rowData } = event;
     const item = this.commissionItems.find(i => i.id === rowData.id);
     if (item) {
-      (item as any)[fieldName] = newValue;
+      if (['cap_saletype1', 'cap_saletype2', 'cap_saletype3', 'cap_saletype5'].includes(fieldName)) {
+        (item as any)[fieldName] = newValue ? 'Y' : 'N';
+      } else {
+        (item as any)[fieldName] = newValue;
+      }
       if (item._status !== 'new') {
         item._status = 'modified';
       }
@@ -347,15 +489,11 @@ export class Step3CommissionComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * 明細欄位變更
-   */
   onDetailFieldChange(event: any): void {
     const { fieldName, newValue, rowData, masterId } = event;
     const masterItem = this.commissionItems.find(i => i.id === masterId);
     if (!masterItem) return;
 
-    // 更新明細資料
     const detailTypes = ['ChargeDetails', 'YearChargeDetails', 'LevelChargeDetails'] as const;
     for (const type of detailTypes) {
       const detailArray = masterItem[type];
@@ -366,6 +504,12 @@ export class Step3CommissionComponent implements OnInit, OnDestroy {
         if ((detail as any)._status !== 'new') {
           (detail as any)._status = 'modified';
         }
+
+        // discount 的 is_selected 變更時同步 level
+        if (type === 'ChargeDetails' && fieldName === 'is_selected') {
+          this.syncDiscountSelectionToLevel(masterItem, detail as ChargeDetail, newValue);
+        }
+
         break;
       }
     }
@@ -378,30 +522,50 @@ export class Step3CommissionComponent implements OnInit, OnDestroy {
     this.emitDataChange();
   }
 
-  /**
-   * 明細頁籤變更
-   */
-  onDetailTabChange(event: any): void {
-    const { masterId, tabValue } = event;
-    const masterItem = this.processedCommissionData.find(item => item.id === masterId);
-    if (masterItem) {
-      const originalItem = this.commissionItems.find(i => i.id === masterId);
-      if (originalItem) {
-        masterItem.detailItems = this.getDetailItemsForTab(tabValue, originalItem);
+  private syncDiscountSelectionToLevel(masterItem: CommissionItem, discountItem: ChargeDetail, selected: boolean): void {
+    if (!masterItem.LevelChargeDetails) return;
+
+    if (selected) {
+      const existingLevel = masterItem.LevelChargeDetails.find(
+        l => l.charged_id === discountItem.id && l._status !== 'deleted'
+      );
+      if (!existingLevel) {
+        const newLevel: LevelChargeDetail = {
+          id: `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+          charged_id: discountItem.id,
+          apply_no: masterItem.apply_no,
+          tlt_id: masterItem.tlt_id,
+          seq_no: masterItem.LevelChargeDetails.length + 1,
+          cag_barcode: discountItem.cag_barcode,
+          barcode_desc: discountItem.barcode_desc,
+          level_bmount: 0,
+          level_eamount: 0,
+          level_charge_rate: 0,
+          is_configured: true,
+          is_enabled: true,
+          _status: 'new'
+        };
+        masterItem.LevelChargeDetails.push(newLevel);
       }
+    } else {
+      masterItem.LevelChargeDetails
+        .filter(l => l.charged_id === discountItem.id)
+        .forEach(l => { (l as any).is_selected = false; });
     }
   }
 
-  /**
-   * 主表項目編輯
-   */
-  onItemEdit(event: any): void {
-    // 編輯模式進入
+  // ========== 頁籤切換 ==========
+
+  onDetailTabChange(event: any): void {
+    const { tabValue } = event;
+    this.selectedSettingTab = tabValue || 'discount';
+    this.processCommissionData();
   }
 
-  /**
-   * 主表項目儲存
-   */
+  // ========== 編輯/儲存/取消 ==========
+
+  onItemEdit(event: any): void { }
+
   onItemSave(event: any): void {
     const { row } = event;
     const item = this.commissionItems.find(i => i.id === row.id);
@@ -411,44 +575,24 @@ export class Step3CommissionComponent implements OnInit, OnDestroy {
     this.emitDataChange();
   }
 
-  /**
-   * 主表項目取消
-   */
   onItemCancel(event: any): void {
     this.processCommissionData();
   }
 
-  /**
-   * 明細編輯
-   */
-  onDetailEdit(event: any): void {
-    // 編輯模式進入
-  }
+  onDetailEdit(event: any): void { }
 
-  /**
-   * 明細儲存
-   */
   onDetailSave(event: any): void {
     this.emitDataChange();
   }
 
-  /**
-   * 儲存前處理
-   */
-  onBeforeDetailSave(event: any): void {
-    // 驗證等處理
-  }
+  onBeforeDetailSave(event: any): void { }
 
-  /**
-   * 明細取消
-   */
   onDetailCancel(event: any): void {
     this.processCommissionData();
   }
 
-  /**
-   * 批次刪除主表項目
-   */
+  // ========== 刪除 ==========
+
   onBatchDelete(items: any[]): void {
     items.forEach(item => {
       const masterItem = this.commissionItems.find(i => i.id === item.id);
@@ -465,9 +609,6 @@ export class Step3CommissionComponent implements OnInit, OnDestroy {
     this.emitDataChange();
   }
 
-  /**
-   * 批次刪除明細項目
-   */
   onDetailBatchDelete(event: any): void {
     const { masterId, items } = event;
     const masterItem = this.commissionItems.find(i => i.id === masterId);
@@ -499,23 +640,16 @@ export class Step3CommissionComponent implements OnInit, OnDestroy {
     this.emitDataChange();
   }
 
-  /**
-   * 下拉選單變更
-   */
+  // ========== 其他事件 ==========
+
   onDropdownChange(event: any): void {
     this.onFieldChange(event);
   }
 
-  /**
-   * 明細按鈕點擊
-   */
-  onDetailButtonClick(event: any): void {
-    // 處理按鈕點擊事件
-  }
+  onDetailButtonClick(event: any): void { }
 
-  /**
-   * 發送資料變更事件
-   */
+  // ========== 資料發送 ==========
+
   private emitDataChange(): void {
     this.dataChange.emit([...this.commissionItems]);
   }

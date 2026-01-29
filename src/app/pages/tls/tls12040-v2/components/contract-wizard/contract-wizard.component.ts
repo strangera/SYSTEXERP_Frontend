@@ -190,6 +190,9 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
   // 原始抽成別（編輯模式用）
   originalCommissionType?: string;
 
+  // 折扣選項 (Step 3 專用)
+  discountOptions: any[] = [];
+
   // 子組件參考
   @ViewChild(Step1ContractInfoComponent) step1Component?: Step1ContractInfoComponent;
   @ViewChild(Step2DeductionComponent) step2Component?: Step2DeductionComponent;
@@ -210,6 +213,9 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
   async ngOnInit(): Promise<void> {
     // 使用 BasicCruPageComponent 的 initializePage
     this.initializePage('TLS12040', this.dataForm, { useReadonly: true });
+
+    // 載入 Step 3 所需的折扣選項（需在 handleRouterState 之前載入）
+    await this.loadDiscountOptions();
 
     // 設定動態驗證監聽器
     this.setupDynamicValidators();
@@ -576,6 +582,16 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     }
   }
 
+  private async loadDiscountOptions(): Promise<void> {
+    try {
+      const options = await this.sharedDropdownService.getPaperTypeOptions('T102').toPromise();
+      this.discountOptions = options || [];
+    } catch (error) {
+      console.error('載入折扣選項失敗:', error);
+      this.discountOptions = [];
+    }
+  }
+
   private async loadRenewalData(venNo: string): Promise<void> {
     try {
       const response = await this.apiService.queryContractForRenewal(venNo).toPromise();
@@ -856,6 +872,16 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     this.wizardState.contractInfo = data.formValue as ContractInfo;
   }
 
+  onRenewalDataLoaded(renewalData: any): void {
+    this.isRenewalMode = true;
+    this.wizardState.renewalData = {
+      sourceContractId: renewalData.source_talent_id,
+      sourceApplyNo: renewalData.source_apply_no,
+      sourceContractSubno: renewalData.source_contract_subno,
+      nextContractSubno: renewalData.next_contract_subno
+    };
+  }
+
   onStep2DataChange(fareItems: FareItem[]): void {
     this.wizardState.fareItems = fareItems;
   }
@@ -886,7 +912,32 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     return this.originalCommissionType !== this.currentCommissionType;
   }
 
-  override onCancel(): void {
+  /**
+   * 取得「下一步」按鈕的動態標籤
+   * 依照下一步的步驟名稱顯示，例如「下一步(代扣款設定)」
+   */
+  get nextStepLabel(): string {
+    const nextVisualIndex = this.visualStepIndex + 1;
+    if (nextVisualIndex >= this.steps.length) return '下一步';
+    const nextStepName = this.steps[nextVisualIndex]?.label || '';
+    return `下一步(${nextStepName})`;
+  }
+
+  /**
+   * 離開（回到列表頁）
+   */
+  onClearAndExit(): void {
     this.router.navigate(['/tls/tls12040v2']);
+  }
+
+  /**
+   * 上一步：第一步時回列表，其餘回上一步
+   */
+  override onCancel(): void {
+    if (this.isFirstStep) {
+      this.router.navigate(['/tls/tls12040v2']);
+    } else {
+      this.goToPreviousStep();
+    }
   }
 }
