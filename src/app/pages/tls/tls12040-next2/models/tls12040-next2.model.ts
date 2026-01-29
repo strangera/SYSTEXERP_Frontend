@@ -469,17 +469,39 @@ export class TLS12040DataTransformer {
       _status: 'original' as DataStatus,
       ChargeDetails: item.ChargeDetails.map(detail => ({
         ...detail,
-        _status: 'original' as DataStatus
+        _status: 'original' as DataStatus,
+        // API 存 decimal (0.05) → 前端顯示 percentage (5)
+        cag_charge_rate: this.convertRateToPercentage(detail.cag_charge_rate)
       })),
       YearChargeDetails: item.YearChargeDetails.map(detail => ({
         ...detail,
-        _status: 'original' as DataStatus
+        _status: 'original' as DataStatus,
+        // API 存 decimal (0.05) → 前端顯示 percentage (5)
+        extra_rate: this.convertRateToPercentage(detail.extra_rate)
       })),
       LevelChargeDetails: item.LevelChargeDetails.map(detail => ({
         ...detail,
-        _status: 'original' as DataStatus
+        _status: 'original' as DataStatus,
+        // API 存 decimal (0.05) → 前端顯示 percentage (5)
+        level_charge_rate: this.convertRateToPercentage(detail.level_charge_rate)
       }))
     }));
+  }
+
+  /**
+   * API decimal (0.05) → 前端 percentage (5)
+   */
+  private static convertRateToPercentage(rate: number | null | undefined): number {
+    if (rate === null || rate === undefined) return 0;
+    return rate * 100;
+  }
+
+  /**
+   * 前端 percentage (5) → API decimal (0.05)
+   */
+  private static convertPercentageToRate(percentage: number | null | undefined): number {
+    if (percentage === null || percentage === undefined) return 0;
+    return percentage / 100;
   }
 
   /**
@@ -635,6 +657,18 @@ export class TLS12040DataTransformer {
         delete clean[key];
       }
     });
+
+    // 前端 percentage → API decimal（送後端前轉回小數）
+    if (clean.cag_charge_rate !== undefined) {
+      clean.cag_charge_rate = this.convertPercentageToRate(clean.cag_charge_rate);
+    }
+    if (clean.extra_rate !== undefined) {
+      clean.extra_rate = this.convertPercentageToRate(clean.extra_rate);
+    }
+    if (clean.level_charge_rate !== undefined) {
+      clean.level_charge_rate = this.convertPercentageToRate(clean.level_charge_rate);
+    }
+
     return clean;
   }
 }

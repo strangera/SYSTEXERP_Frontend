@@ -302,7 +302,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       .map(d => {
         const startDate = this.formatDateString(d.tlt_bdate).replace(/-/g, '/');
         const endDate = this.formatDateString(d.tlt_edate).replace(/-/g, '/');
-        const rate = (d.cag_charge_rate || 0) * 100;
+        const rate = (d.cag_charge_rate || 0).toFixed(2).replace(/\.?0+$/, '');
         return `${d.cag_barcode}-(${startDate}-${endDate})-${rate}`;
       });
 
@@ -390,6 +390,8 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
       this.dataLoaded = true;
       this.commissionDataLoaded = true;
+      // 🔥 確保載入後永遠預設展開 discount 標籤
+      this.selectedSettingTab = 'discount';
       return;
     }
 
@@ -440,6 +442,9 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
     this.dataLoaded = true;
     this.commissionDataLoaded = true;
+
+    // 🔥 確保載入後永遠預設展開 discount 標籤，避免顯示異常
+    this.selectedSettingTab = 'discount';
   }
 
   /**
@@ -472,9 +477,25 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
                 apply_no: '',
                 tlt_bdate: null,           // 🔥 清空起始日期（由 ensureDataConsistency 套用新契約日期）
                 tlt_edate: null,           // 🔥 清空結束日期（由 ensureDataConsistency 套用新契約日期）
+                cag_charge_rate: (detail.cag_charge_rate != null ? detail.cag_charge_rate * 100 : 0),  // 🔥 小數轉百分比
                 _status: isSelected ? 'new' : undefined,  // 🔥 只有勾選的才標記為新增
                 _isNew: isSelected,
                 is_selected: isSelected    // 🔥 保留 API 回傳的選擇狀態
+              };
+            }) || [],
+            // 處理 YearChargeDetails（清空日期以便套用新契約日期）
+            YearChargeDetails: item.YearChargeDetails?.map((detail: any, yearIndex: number) => {
+              const isSelected = Boolean(detail.is_selected);
+              return {
+                ...detail,
+                id: `renewal_year_${Date.now()}_${itemIndex}_${yearIndex}_${Math.random().toString(36).substring(2, 9)}`,
+                apply_no: '',
+                tlt_bdate: null,
+                tlt_edate: null,
+                extra_rate: (detail.extra_rate != null ? detail.extra_rate * 100 : 0),  // 🔥 小數轉百分比
+                _status: isSelected ? 'new' : undefined,
+                _isNew: isSelected,
+                is_selected: isSelected
               };
             }) || [],
             // 處理 LevelChargeDetails（清空日期以便套用新契約日期）
@@ -486,6 +507,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
                 apply_no: '',
                 tlt_bdate: null,           // 🔥 清空起始日期（由 ensureDataConsistency 套用新契約日期）
                 tlt_edate: null,           // 🔥 清空結束日期（由 ensureDataConsistency 套用新契約日期）
+                level_charge_rate: (detail.level_charge_rate != null ? detail.level_charge_rate * 100 : 0),  // 🔥 小數轉百分比
                 _status: isSelected ? 'new' : undefined,  // 🔥 只有勾選的才標記為新增
                 _isNew: isSelected,
                 is_selected: isSelected    // 🔥 保留 API 回傳的選擇狀態

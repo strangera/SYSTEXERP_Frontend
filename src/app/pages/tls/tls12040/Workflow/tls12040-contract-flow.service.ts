@@ -580,11 +580,13 @@ export class TLS12040FlowService {
     // 取得 CRU 資料
     const cruData = this.getCruData();
 
-    // 🔥 簡化邏輯：直接用 crudstatus 判斷
-    // - Create → 全部 toInsert（新增、續約都是 Create）
-    // - Edit → 正常邏輯（可能有 toInsert、toUpdate、toDelete）
+    // 🔥 簡化邏輯：用 crudstatus + 續約模式判斷
+    // - Create → 全部 toInsert（新增）
+    // - Edit + 續約(apply_type=2) → 也視為 INSERT（續約 = 建立新合約）
+    // - Edit（非續約）→ 正常邏輯（可能有 toInsert、toUpdate、toDelete）
     const currentCrudStatus = this._state.status || this.CRUDStatus$.value || CRUDStatus.Edit;
-    const isCreateMode = currentCrudStatus === CRUDStatus.Create;
+    const isRenewal = cruData?.apply_type === '2' && this.isRenewalMode();
+    const isCreateMode = currentCrudStatus === CRUDStatus.Create || isRenewal;
 
     console.log('📊 當前 workflow 狀態:', {
       crudStatus: currentCrudStatus,
@@ -898,27 +900,25 @@ export class TLS12040FlowService {
         cag_barcode: detail.cag_barcode || '',
         tlt_bdate: this.formatDate(detail.tlt_bdate),
         tlt_edate: this.formatDate(detail.tlt_edate),
-        cag_charge_rate: this.parseNumber(detail.cag_charge_rate) || 0
+        cag_charge_rate: (this.parseNumber(detail.cag_charge_rate) || 0) / 100
       };
 
-      switch (detail._status) {
-        case 'new': {
-          // 🔥 新增項目：保留臨時 id (可能是 temp_ 開頭)，用於關聯 level
-          const newDetail = {
-            ...cleanDetail,
-            id: detail.id  // 保留原始 id（包括臨時 id）
-          };
-          discountSettings.toInsert.push(newDetail);
-          break;
+      // 🔥 關鍵：沒有有效數字 ID 的項目一律視為新增（續約場景）
+      const isNewItem = !this.hasValidId(detail.id);
+
+      if (detail._status === 'deleted') {
+        if (this.hasValidId(detail.id)) {
+          discountSettings.toDelete.push({ id: Number(detail.id) } as any);
         }
-        case 'modified':
-          discountSettings.toUpdate.push(cleanDetail);
-          break;
-        case 'deleted':
-          if (this.hasValidId(detail.id)) {
-            discountSettings.toDelete.push({ id: Number(detail.id) } as any);
-          }
-          break;
+      } else if (isNewItem || detail._status === 'new') {
+        // 🔥 新增項目：保留臨時 id (可能是 temp_ 或 renewal_ 開頭)，用於關聯 level
+        const newDetail = {
+          ...cleanDetail,
+          id: detail.id  // 保留原始 id（包括臨時 id）
+        };
+        discountSettings.toInsert.push(newDetail);
+      } else if (detail._status === 'modified') {
+        discountSettings.toUpdate.push(cleanDetail);
       }
     });
 
@@ -930,21 +930,20 @@ export class TLS12040FlowService {
         tlt_bdate: this.formatDate(detail.tlt_bdate),
         tlt_edate: this.formatDate(detail.tlt_edate),
         year_amount: this.parseNumber(detail.year_amount) || 0,
-        extra_rate: this.parseNumber(detail.extra_rate) || 0
+        extra_rate: (this.parseNumber(detail.extra_rate) || 0) / 100
       };
 
-      switch (detail._status) {
-        case 'new':
-          annualSettings.toInsert.push(cleanAnnual);
-          break;
-        case 'modified':
-          annualSettings.toUpdate.push(cleanAnnual);
-          break;
-        case 'deleted':
-          if (this.hasValidId(detail.id)) {
-            annualSettings.toDelete.push({ id: Number(detail.id) });
-          }
-          break;
+      // 🔥 關鍵：沒有有效數字 ID 的項目一律視為新增（續約場景）
+      const isNewItem = !this.hasValidId(detail.id);
+
+      if (detail._status === 'deleted') {
+        if (this.hasValidId(detail.id)) {
+          annualSettings.toDelete.push({ id: Number(detail.id) });
+        }
+      } else if (isNewItem || detail._status === 'new') {
+        annualSettings.toInsert.push(cleanAnnual);
+      } else if (detail._status === 'modified') {
+        annualSettings.toUpdate.push(cleanAnnual);
       }
     });
 
@@ -976,7 +975,7 @@ export class TLS12040FlowService {
         cag_barcode: detail.cag_barcode || '',
         level_bmount: this.parseNumber(detail.level_bmount) || 0,
         level_eamount: this.parseNumber(detail.level_eamount) || 0,
-        level_charge_rate: this.parseNumber(detail.level_charge_rate) || 0
+        level_charge_rate: (this.parseNumber(detail.level_charge_rate) || 0) / 100
       };
 
       console.log(`  📦 cleanLevel 建立完成:`, {
@@ -985,40 +984,37 @@ export class TLS12040FlowService {
         cag_barcode: cleanLevel.cag_barcode
       });
 
-      switch (detail._status) {
-        case 'new': {
-          // 🔥 新增項目：必須包含 charged_id 來關聯對應的 discount
-          const newLevel = {
-            ...cleanLevel,
-            charged_id: String(detail.charged_id || '')  // 🔥 保留 charged_id（明確轉為字串）
-          };
-          console.log(`  ✅ 加入 toInsert:`, {
-            id: newLevel.id,
-            charged_id: newLevel.charged_id,
-            cag_barcode: newLevel.cag_barcode
-          });
-          levelSettings.toInsert.push(newLevel);
-          break;
+      // 🔥 關鍵：沒有有效數字 ID 的項目一律視為新增（續約場景）
+      const isNewItem = !this.hasValidId(detail.id);
+
+      if (detail._status === 'deleted') {
+        if (this.hasValidId(detail.id)) {
+          levelSettings.toDelete.push({ id: Number(detail.id) });
         }
-        case 'modified': {
-          // 🔥 修改項目：也需要保留 charged_id
-          const modifiedLevel = {
-            ...cleanLevel,
-            charged_id: String(detail.charged_id || '')  // 🔥 明確轉為字串
-          };
-          console.log(`  ✅ 加入 toUpdate:`, {
-            id: modifiedLevel.id,
-            charged_id: modifiedLevel.charged_id,
-            cag_barcode: modifiedLevel.cag_barcode
-          });
-          levelSettings.toUpdate.push(modifiedLevel);
-          break;
-        }
-        case 'deleted':
-          if (this.hasValidId(detail.id)) {
-            levelSettings.toDelete.push({ id: Number(detail.id) });
-          }
-          break;
+      } else if (isNewItem || detail._status === 'new') {
+        // 🔥 新增項目：必須包含 charged_id 來關聯對應的 discount
+        const newLevel = {
+          ...cleanLevel,
+          charged_id: String(detail.charged_id || '')
+        };
+        console.log(`  ✅ 加入 toInsert:`, {
+          id: newLevel.id,
+          charged_id: newLevel.charged_id,
+          cag_barcode: newLevel.cag_barcode
+        });
+        levelSettings.toInsert.push(newLevel);
+      } else if (detail._status === 'modified') {
+        // 🔥 修改項目：也需要保留 charged_id
+        const modifiedLevel = {
+          ...cleanLevel,
+          charged_id: String(detail.charged_id || '')
+        };
+        console.log(`  ✅ 加入 toUpdate:`, {
+          id: modifiedLevel.id,
+          charged_id: modifiedLevel.charged_id,
+          cag_barcode: modifiedLevel.cag_barcode
+        });
+        levelSettings.toUpdate.push(modifiedLevel);
       }
     });
   }
