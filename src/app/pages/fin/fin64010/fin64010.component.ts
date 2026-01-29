@@ -281,13 +281,28 @@ AmtTo: [null as number | string | null],
   
 
     // 還原查詢條件
-    const saved = this.queryStateService.getQueryStateValue('FIN64010');
-    if (saved?.formValue) {
-      this.queryForm.patchValue(saved.formValue, { emitEvent: false });
-      this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
-      this.lastQueryBody = saved.lastQueryBody ?? null;
-      Promise.resolve().then(() => this.onSubmit(this.queryForm));
-    }
+const fromCru = !!(history.state && history.state['fromCru']);
+
+if (fromCru) {
+  const saved = this.queryStateService.getQueryStateValue('FIN64010');
+  if (saved?.formValue) {
+    this.queryForm.patchValue(saved.formValue, { emitEvent: false });
+    this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
+    this.lastQueryBody = saved.lastQueryBody ?? null;
+
+    Promise.resolve().then(() => this.onSubmit(this.queryForm)); // 需要就保留
+  }
+} else {
+  // ✅ 從其他頁回來：回到預設條件（並清掉上次的還原狀態）
+  this.queryStateService.clearQueryState('FIN64010');
+
+  // 你要的「預設條件」是什麼，就在這裡定義
+  // 目前你的預設就是全空 + 預設排序/分頁
+  this.onClear(this.queryForm);
+
+  // 如果你不想 onClear 觸發任何東西，且只想 reset form：
+  // this.queryForm.reset({ ...你的預設值..., ...createPaginationConfig(this.defaultSort) }, { emitEvent:false });
+}
   }
 
   moneyFormat(value: any): string {
