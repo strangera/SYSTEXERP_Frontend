@@ -13,22 +13,12 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="專櫃編號"
-              controlName="tlt_no"
-              [control]="queryForm.controls.tlt_no"
-              [submitted]="submitted">
-            </app-input-text>
+  
+                 <app-dropdown label="專櫃編號" controlName="TLT_No" [options]="CounterOptions"
+              optionLabel="formLabel" optionValue="value" [control]="queryForm.controls.tlt_no" [submitted]="submitted">
+            </app-dropdown>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="專櫃名稱"
-              controlName="tlt_name"
-              [control]="queryForm.controls.tlt_name"
-              [submitted]="submitted">
-            </app-input-text>
-          </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
