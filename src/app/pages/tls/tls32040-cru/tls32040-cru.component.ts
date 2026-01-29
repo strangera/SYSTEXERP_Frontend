@@ -68,24 +68,24 @@ export class Tls32040CRUComponent extends BasicCruPageComponent<TLS32040DetailRe
     { field: 'Base_Target', header: '本期銷售目標', visible: true, format: formatAmount },
     { field: 'Base_SaleAmt', header: '本期銷售金額', visible: true, format: formatAmount },
     { field: 'Base_AchieveRate', header: '本期達成率', visible: true, format: (value) => formatPercentage(value, 2) },
-    { field: 'Base_TxnCnt', header: '本期交易筆數', visible: true },
+    { field: 'Base_TxnCnt', header: '本期交易筆數', visible: true, format: formatAmount },
     { field: 'Base_AvgTicket', header: '本期客單價', visible: true, format: formatAmount },
 
     { field: 'Comp_SaleAmt', header: '上期銷售金額', visible: true, format: formatAmount },
-    { field: 'Comp_TxnCnt', header: '上期交易筆數', visible: true },
+    { field: 'Comp_TxnCnt', header: '上期交易筆數', visible: true, format: formatAmount },
     { field: 'Comp_AvgTicket', header: '上期客單價', visible: true, format: formatAmount },
     { field: 'Growth_SaleAmtPct', header: '成長比', visible: true, format: (value) => formatPercentage(value, 2) },
 
     { field: 'Diff_SaleAmt', header: '銷售金額差異', visible: true, format: formatAmount },
-    { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true },
+    { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true, format: formatAmount },
     { field: 'Diff_AvgTicket', header: '客單價差異', visible: true, format: formatAmount },
-    { field: 'Space', header: '營業坪數', visible: true },
+    { field: 'Space', header: '營業坪數', visible: true, format: formatAmount },
 
-    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true },
-    { field: 'BaseCustCnt', header: '本期顧客數', visible: true },
-    { field: 'CompCustCnt', header: '上期顧客數', visible: true },
-    { field: 'TotalSpace', header: '總坪數', visible: true },
-    { field: 'BaseDays', header: '基準天數', visible: true },
+    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true, format: formatAmount },
+    { field: 'BaseCustCnt', header: '本期顧客數', visible: true, format: formatAmount },
+    { field: 'CompCustCnt', header: '上期顧客數', visible: true, format: formatAmount },
+    { field: 'TotalSpace', header: '總坪數', visible: true, format: formatAmount },
+    { field: 'BaseDays', header: '基準天數', visible: true, format: formatAmount },
   ];
   tlt_kind_Option = [
     { value: "1", label: "正櫃" },

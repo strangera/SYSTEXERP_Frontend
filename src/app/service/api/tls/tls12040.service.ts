@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, map, Observable, tap } from 'rxjs';
+import { catchError, map, Observable, tap, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 import { CleanSubmitData } from '../../../pages/tls/tls13010/tls13010.model';
@@ -27,6 +27,107 @@ interface UNAPPROVE_TLS12040Request {
 
 interface VOID_TLS12040Request {
   apply_no: string;
+}
+
+// ========== 續約查詢介面 ==========
+
+/** 續約查詢請求 */
+export interface RenewalQueryRequest {
+  ven_no: string;
+}
+
+/** 續約用基本資訊 */
+export interface RenewalBasicInfo {
+  tlt_no: string;
+  tlt_shortname: string;
+  tlt_name: string;
+  ven_uniform: string;
+  ven_no: string;
+  VEN_Name: string;
+  VEN_Address: string;
+  paper_type: string;
+  org_id: string;
+  bus_type: string;
+  bus_class: string;
+  bus_sclass: string;
+  tlt_term_type: string;
+  comm_comp_type: string;
+  tlt_kind: string;
+  deco_type: string;
+  edc_yn: string;
+  tlt_ctype_mtotal: string;
+  overall_status: string;
+  rent_ahead: string;
+  rent_period: number;
+  base_rent: number;
+  deposit: number;
+  rece_yn: string;
+  pos_yn: string;
+  cash_yn: string;
+  comm_yn: string;
+  money_type: string;
+  store_way: string;
+  check_type: string;
+  paytype: string;
+  vip_yn: string;
+  credit_card: number;
+  total_amt: number;
+  total_amt_vendor: number;
+  total_amt_unit: string;
+  total_amt_vendor_unit: string;
+  open_deposit: string;
+  open_fees: number;
+  construct_deposit: string;
+  construct_fees: number;
+  expiration_deposit: string;
+  expiration_fees: number;
+  ticket_remarks: string;
+  check_day: number;
+  invoice_type: string;
+  email: string;
+  invoice_email: string;
+  CHECK_TITLE: string;
+  store_tel: string;
+  bank_id: string;
+  vendor_acct_name: string;
+  vendor_acct_no: string;
+  contact_tel: string;
+  contact_fax: string;
+  contact_addr: string;
+  water_flag: string;
+  electric_flag: string;
+  gas_flag: string;
+  cap_saletype1: string;
+  cap_saletype2: string;
+  cap_saletype3: string;
+  cap_saletype4: string;
+  cap_saletype5: string;
+  tlt_remark: string;
+}
+
+/** 續約用位置資訊 */
+export interface RenewalLocationInfo {
+  location_no: string;
+  tlt_building: string;
+  tlt_floor: string;
+  area_no: string;
+  tlt_space: number;
+  building_desc: string;
+  floor_desc: string;
+  area_desc: string;
+}
+
+/** 續約查詢回應 */
+export interface RenewalQueryResponse {
+  source_talent_id: string;
+  source_apply_no: string;
+  source_contract_subno: number;
+  next_contract_subno: number;
+  BasicInfo: RenewalBasicInfo;
+  Locations: RenewalLocationInfo[];
+  FareData: any;
+  ChargeData: any;
+  CommissionData: any;
 }
 
 @Injectable({
@@ -198,6 +299,59 @@ export class TLS12040Service {
   voidTLS12040(request: VOID_TLS12040Request) {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/voidTLS12040`, request).pipe(
       tap((res) => console.log('作廢結果:', res)),
+    );
+  }
+
+  // ========== 續約查詢 ==========
+
+  /**
+   * 續約用 - 查詢廠商最新版次契約完整資料
+   * @param ven_no 廠商編號 (唯一值，如 27669188-1)
+   * @returns 最新版次契約的完整資料（含扣款、抽成、條件）
+   * @description 此方法不使用通用錯誤處理器，由呼叫端自行處理錯誤訊息
+   */
+  queryContractForRenewal(ven_no: string): Observable<RenewalQueryResponse> {
+    const payload: RenewalQueryRequest = { ven_no };
+
+    console.log('🔄 查詢續約資料，廠商編號:', ven_no);
+
+    return this.http.post<any>(
+      `${this.apiUrl}/TLS0000/TLS1000/queryContractForRenewal`,
+      payload
+    ).pipe(
+      tap((res) => console.log('查詢續約資料結果:', res)),
+      map((response) => {
+        if (response.Status === '0000') {
+          console.log('✅ 續約資料查詢成功:', {
+            source_talent_id: response.Data.source_talent_id,
+            source_contract_subno: response.Data.source_contract_subno,
+            next_contract_subno: response.Data.next_contract_subno
+          });
+          return response.Data as RenewalQueryResponse;
+        }
+        // 非成功狀態，拋出包含後端訊息的錯誤
+        const errorMsg = response.Data || response.Message || '查詢續約資料失敗';
+        throw { isBusinessError: true, message: errorMsg, status: response.Status };
+      }),
+      catchError((error) => {
+        // 不使用通用錯誤處理器，避免重複顯示錯誤訊息
+        // 由呼叫端 (component) 自行處理錯誤訊息顯示
+        console.warn('⚠️ 查詢續約資料失敗:', error);
+
+        // 提取後端回傳的錯誤訊息
+        let errorMessage = '查詢續約資料失敗';
+        if (error.isBusinessError) {
+          errorMessage = error.message;
+        } else if (error?.error?.Data) {
+          errorMessage = error.error.Data;
+        } else if (error?.error?.Message) {
+          errorMessage = error.error.Message;
+        } else if (error?.status === 404) {
+          errorMessage = '該廠商尚無契約資料';
+        }
+
+        return throwError(() => ({ message: errorMessage, originalError: error }));
+      })
     );
   }
 }
