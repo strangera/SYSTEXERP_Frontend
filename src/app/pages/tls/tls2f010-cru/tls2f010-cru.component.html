@@ -79,10 +79,6 @@
             [options]="taxTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
             [control]="dataForm.controls.PUR_TaxType" [submitted]="submitted"></app-dropdown>
 
-          <app-input-number label="發票/收據號碼" controlName="PUR_GUINO" [control]="dataForm.controls.PUR_GUINO"
-            class="col-12 md:col-6 lg:col-4" [useGrouping]="true" label="發票總額"
-            [submitted]="submitted"></app-input-number>
-
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="扣抵代號" [control]="dataForm.controls.PUR_DiscNo" [options]="discountOptions"
               optionLabel="label" optionValue="value" [submitted]="submitted">
@@ -118,7 +114,7 @@
       <ng-container *ngIf="showResultTables">
         <app-table-report tableKey="TLS2F010ChangeEdit" class="col-12" [columns]="columns1" [data]="changeEditData"
           [totalRecords]="changeEditData.length" [loading]="queryLoading" [lazy]="false" [showManage]="false"
-          [showDelete]="false" [showReportMode]="false" [showFilter]="false" [showCheckBox]="true"
+          [showDelete]="false" [showReportMode]="false" [showFilter]="false" [showCheckBox]="false"
           [selectedItems]="selectedMainItems" (selectionChange)="onChangeEditSelection($event)">
         </app-table-report>
         <br />

@@ -22,7 +22,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PanelModule } from 'primeng/panel';
 import { SelectButtonModule } from 'primeng/selectbutton';
-import { distinctUntilChanged, map, shareReplay, startWith, switchMap } from 'rxjs';
+import { distinctUntilChanged, finalize, map, shareReplay, startWith, switchMap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
@@ -312,6 +312,29 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     if (this.isFormEditable) {
       this.applyEditModeReadonly();
     }
+
+    // 若在編輯/新增模式時允許在主表輸入未稅金額，當未稅金額變化時自動計算稅額與發票總額
+    try {
+      const guinetCtrl = this.dataForm.controls.ACP_GUINet as any;
+      if (guinetCtrl && guinetCtrl.valueChanges) {
+        guinetCtrl.valueChanges.pipe(untilDestroyed(this)).subscribe((v: any) => {
+          const net = Number(v ?? 0);
+          if (!isNaN(net)) {
+            const tax = Math.round(net * 0.05);
+            try {
+              const taxCtrl = this.dataForm.controls.ACP_GUITax as any;
+              const amtCtrl = this.dataForm.controls.ACP_GUIAmt as any;
+              if (taxCtrl) taxCtrl.setValue(tax, { emitEvent: false });
+              if (amtCtrl) amtCtrl.setValue(net + tax, { emitEvent: false });
+            } catch (e) {
+              // ignore
+            }
+          }
+        });
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 
   private updateSamTermnoOptions(moneyType: string | null): void {
@@ -346,6 +369,9 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       'PUR_GUIPaper',
       'PUR_DiscNo'
     ]);
+
+    // 允許在編輯時輸入明細未稅金額（ACP_GUINet），其餘如 ACP_GUITax/ACP_GUIAmt 為系統計算
+    editableFields.add('ACP_GUINet');
 
     Object.keys(this.dataForm.controls).forEach(key => {
       const control = this.dataForm.get(key);
@@ -610,17 +636,22 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       details,
     };
 
-    this.tls2f010Service.insertTLS2F010(body).subscribe({
-      next: () => {
-        this.messageService.successBubble('新增成功');
-        this.onCancel();
-      },
-      complete: () => {
+    this.tls2f010Service.insertTLS2F010(body)
+      .pipe(finalize(() => {
         this.loading = false;
         this.messageService.unblockUi();
         this.submitted = false;
-      },
-    });
+      }))
+      .subscribe({
+        next: () => {
+          this.messageService.successBubble('新增成功');
+          this.onCancel();
+        },
+        error: (err: any) => {
+          console.error('[TLS2F010CRU] insertTLS2F010 error', err);
+          // 主要錯誤訊息交由全域 error handler 顯示，此處僅確保 UI 狀態正確
+        }
+      });
   }
 
 
