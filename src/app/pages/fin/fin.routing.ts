@@ -222,8 +222,8 @@ export const finRoutes: Routes = [
   // 部門科目明細表(由總帳管理系統移至預算管理系統)
   // { path: 'fin42060', loadComponent: () => import('./fin42060/fin42060.component').then(m => m.Fin42060Component),data:{progNo:'Fin42060'} },
   // 資材系統
-  // { path: 'fin51010', loadComponent: () => import('./fin51010/fin51010.component').then(m => m.FIN51010Component),data:{progNo:'FIN51010'} },
-  // { path: 'fin51010cru', loadComponent: () => import('./fin51010-cru/fin51010-cru.component').then(m => m.FIN51010CRUComponent),data: { progNo: 'FIN51010'} },
+  { path: 'fin51010', loadComponent: () => import('./fin51010/fin51010.component').then(m => m.FIN51010Component), data: { progNo: 'FIN51010' } },
+  { path: 'fin51010cru', loadComponent: () => import('./fin51010-cru/fin51010-cru.component').then(m => m.FIN51010CRUComponent), data: { progNo: 'FIN51010' } },
   // 基本資料作業-總帳參數維護
   { path: 'fin52010', loadComponent: () => import('./fin52010/fin52010.component').then(m => m.FIN52010Component), data: { progNo: 'FIN52010' } },
   // 基本資料作業-傳票型態設定維護

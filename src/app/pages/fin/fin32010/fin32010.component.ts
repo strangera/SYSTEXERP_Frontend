@@ -63,9 +63,9 @@ export class FIN32010Component extends BasicQueryPageComponent<any> implements O
   columns: ReportColumn[] = [
     { field: 'RowNo', header: '序號', visible: false },
     { field: 'ARS_ID', header: '應收ID' },
-    { field: 'ARS_Amt', header: '應收金額', format: formatAmount },
-    { field: 'PTA_Amt', header: '沖帳金額', format: formatAmount },
-    { field: 'ARS_BalAmt', header: '應收帳款餘額', format: formatAmount },
+    { field: 'ARS_Amt', header: '應收金額', format: formatAmount, align: 'right' },
+    { field: 'PTA_Amt', header: '沖帳金額', format: formatAmount, align: 'right' },
+    { field: 'ARS_BalAmt', header: '應收帳款餘額', format: formatAmount, align: 'right' },
     { field: 'ARS_Date', header: '立帳日期', format: formatDate },
     { field: 'PTA_Date', header: '預計收款日', format: formatDate },
     { field: 'CustInfo', header: '廠商編號' },
@@ -120,10 +120,29 @@ export class FIN32010Component extends BasicQueryPageComponent<any> implements O
         .subscribe(response => {
           const rows = response.Data ?? [];
           // 把狀態代碼轉成文字顯示
-          this.data = rows.map((r: any) => ({
-            ...r,
-            ARS_StatusName: this.ACP_Status_ParamOptions.find(opt => String(opt.value) === String(r.ARS_StatusCode))?.label ?? r.ARS_StatusCode
-          }));
+          this.data = rows.map((r: any) => {
+            const rawCode = r.ARS_StatusCode;
+            const normalizeCode = (() => {
+              if (rawCode === null || rawCode === undefined) return '';
+              const s = String(rawCode).trim();
+              if (s.toLowerCase() === 'n') return '0';
+              if (s.toLowerCase() === 'y') return '2';
+              // sometimes backend may send '10'/'20' meaning sys values mapped to 0/2
+              if (!isNaN(Number(s))) {
+                const num = Number(s);
+                if (num === 10) return '0';
+                if (num === 20) return '2';
+                return String(num);
+              }
+              return s;
+            })();
+
+            const label = this.ACP_Status_ParamOptions.find(opt => String(opt.value) === String(normalizeCode))?.label
+              ?? this.ACP_Status_ParamOptions.find(opt => String(opt.value) === String(rawCode))?.label
+              ?? rawCode;
+
+            return { ...r, ARS_StatusName: label };
+          });
           this.totalRecords = response.TotalCount;
           this.lastQueryBody = body;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);

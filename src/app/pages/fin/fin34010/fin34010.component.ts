@@ -324,15 +324,15 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
     this.loadDropdownOptions();
 
     // 🔄 還原查詢條件
-    const saved = this.queryStateService.getQueryStateValue('FIN34010');
-    if (saved?.formValue) {
-      this.queryForm.patchValue(saved.formValue, { emitEvent: false });
-      this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
-      this.lastQueryBody = saved.lastQueryBody ?? null;
+    // const saved = this.queryStateService.getQueryStateValue('FIN34010');
+    // if (saved?.formValue) {
+    //   this.queryForm.patchValue(saved.formValue, { emitEvent: false });
+    //   this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
+    //   this.lastQueryBody = saved.lastQueryBody ?? null;
 
-      // 等 patch 完成後再觸發查詢
-      Promise.resolve().then(() => this.onSubmit(this.queryForm));
-    }
+    //   // 等 patch 完成後再觸發查詢
+    //   Promise.resolve().then(() => this.onSubmit(this.queryForm));
+    // }
   }
 
   /* ----------------- Submit ----------------- */

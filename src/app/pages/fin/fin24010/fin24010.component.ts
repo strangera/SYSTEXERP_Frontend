@@ -71,16 +71,20 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
   totalRecords = 0;
   // 1. 原始查詢欄位 (預設/通用)
   columns: ReportColumn[] = [
-    { field: 'VEN_No', header: '廠商編號' },
-    { field: 'VEN_Name', header: '廠商名稱' },
-    { field: 'NoteDesc', header: '摘要' },
-    { field: 'ACP_Date', header: '立帳日期', format: formatDate },
-    { field: 'VouNo', header: '傳票編號' },
+    { field: 'ACP_No', header: '應付ID' },
+    { field: 'ACP_YYYYMM', header: '帳款年月' },
     { field: 'ACP_Amt', header: '應付金額', format: formatAmount },
     { field: 'PTA_Amt', header: '沖帳金額', format: formatAmount },
-    { field: 'ACP_ReserveAmt', header: '保留款金額', format: formatAmount },
-    { field: 'RetReserveAmt', header: '退保留款金額', format: formatAmount },
-    { field: 'ACP_Balance', header: '未付金額', format: formatAmount },
+    { field: 'ACP_Balance', header: '應付帳款餘額', format: formatAmount },
+    { field: 'VEN_PayType_Name', header: '付款方式' }, // 註：此處顯示的是代碼(1,2,3)，若需顯示中文可能需另外處理 mapping
+    { field: 'ACP_Date', header: '立帳日期', format: formatDate },
+    { field: 'ACP_ExpectPayDate', header: '預計付款日', format: formatDate },
+    { field: 'VEN_No', header: '廠客代號' },
+    { field: 'VEN_Name', header: '廠商名稱' }, // 視需求保留，通常廠客代號後會接名稱
+    { field: 'NoteDesc', header: '摘要' },
+    { field: 'VouNo', header: '傳票編號' },
+    { field: 'Vou_PostFlagName', header: '傳票狀態' }, // 使用後端給的中文說明欄位
+    { field: 'ACP_Status_Name', header: '狀態' }, // 應付帳款狀態 (0=作廢 2=建立)
   ];
 
   // 2. 是否只顯示銀行資料有差異專屬欄位 (新增)

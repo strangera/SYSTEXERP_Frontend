@@ -170,14 +170,40 @@ adjAccNoOptions$ = this.fin32020Service.getGLS1005DropDown().pipe(
   arsSelectedRows: Fin32020ARSRow[] = [];
   VEN_No_Options = this.dropDown.queryPos2013({ VEN_Flag: '' });
 
-  arsColumns: Column[] = [
-    { field: 'ARS_No', header: '應收帳款單號' },
-    { field: 'VEN_No', header: '廠客代號' },
-    { field: 'ARS_Date', header: '立帳日' },
-    { field: 'PTA_Date', header: '預計收款日' },
-    { field: 'ARS_Amt', header: '應收金額', format: this.moneyFormat },
-    { field: 'NoteDesc', header: '備註' },
-  ];
+arsColumns: Column[] = [
+  { field: 'ARS_No', header: '應收帳款單號' },
+  { field: 'VEN_No', header: '廠客代號' },
+  { field: 'ARS_Date', header: '立帳日', format: (v: any) => this.formatYMD(v) },
+  { field: 'PTA_Date', header: '預計收款日', format: (v: any) => this.formatYMD(v) },
+  { field: 'ARS_Amt', header: '應收金額', format: this.moneyFormat },
+  { field: 'NoteDesc', header: '備註' },
+];
+  /** 後端可能回 yyyy-MM-dd / yyyy-MM-ddTHH:mm:ss / Date，都統一顯示 yyyy/MM/dd */
+formatYMD = (v: any): string => {
+  if (v === null || v === undefined || v === '') return '';
+
+  // 已經是 Date
+  if (v instanceof Date) {
+    if (isNaN(v.getTime())) return '';
+    const y = v.getFullYear();
+    const m = String(v.getMonth() + 1).padStart(2, '0');
+    const d = String(v.getDate()).padStart(2, '0');
+    return `${y}/${m}/${d}`;
+  }
+
+  // 字串/數字等
+  const dt = new Date(v);
+  if (isNaN(dt.getTime())) {
+    // 有些後端可能直接給 yyyyMMdd / yyyy-MM-dd 以外的格式，這裡保守回傳原值
+    return String(v);
+  }
+
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth() + 1).padStart(2, '0');
+  const d = String(dt.getDate()).padStart(2, '0');
+  return `${y}/${m}/${d}`;
+};
+
 
   // ✅ 加入 ARS_No，可在對話框輸入搜尋
   arsSearchForm = this.formBuilder.nonNullable.group({

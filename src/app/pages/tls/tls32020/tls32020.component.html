@@ -168,15 +168,8 @@
               optionValue="No" [control]="queryForm.controls.AreaList" [submitted]="submitted"></app-multi-select>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="大分類" controlName="BusTypeList" [options]="businessTypeCodeOptions | async"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.BusTypeList"
-              [submitted]="submitted"></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="中分類" controlName="BusClassList" [options]="BusClassListOptions | async"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.BusClassList"
-              [submitted]="submitted"></app-multi-select>
+          <div class="col-12">
+            <app-category-select formControlName="category"></app-category-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="櫃別" controlName="CounterKindList" [options]="operationsOptions" optionLabel="label"

@@ -11,6 +11,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { CategorySelectComponent } from '@shared/componentkit/category-select/category-select.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
@@ -30,7 +31,7 @@ import { TableReportComponent } from './tls32020-table/tls32020-table.component'
     CalendarComponent, DropdownComponent, NgIf, DividerModule,
     ButtonModule, TableReportComponent, AsyncPipe, MenubarComponent,
     ButtonComponent, AccordionModule, ReactiveFormsModule, TranslateModule, RadiobuttonComponent,
-    MultiSelectComponent, CalendarRangeQuickComponent
+    MultiSelectComponent, CalendarRangeQuickComponent, CategorySelectComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -64,8 +65,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     FloorList: [null],
     AreaList: [null],
     BuildingList: [null], // **新增**：館別
-    BusTypeList: [null],
-    BusClassList: [null],
+    category: [null],
     CounterKindList: [null],
     OrgList: [null],
     TalentNoList: [null],
@@ -101,7 +101,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   BusClassListOptions = this.dropdown.queryTltBusType();
   commissionTypeOptions = getSYS1000Options('tlt_term_type');
   // 櫃別 (假設 querySYS1000_DropDownList("TLT_Kind") 是這個)
-  operationsOptions = getSYS1000Options('store_way');
+  operationsOptions = getSYS1000Options('TLT_Kind');
   counterCodeOptions = this.dropdown.queryTltTalent();
   taxOptions = [{ value: 'I', label: '含稅' }, { value: 'N', label: '未稅' }];
 
@@ -589,24 +589,20 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const formValue = frm.value;
-
-      // 1. 轉換多選 List 欄位為逗號分隔字串
-      const convertedListBody = {
-        BuildingList: this.formatListForBackend(formValue.BuildingList), // 這裡 BuildingList
-        FloorList: this.formatListForBackend(formValue.FloorList),
-        AreaList: this.formatListForBackend(formValue.AreaList),
-        BusTypeList: this.formatListForBackend(formValue.BusTypeList),
-        BusClassList: this.formatListForBackend(formValue.BusClassList),
-        CounterKindList: this.formatListForBackend(formValue.CounterKindList),
-        TermTypeList: this.formatListForBackend(formValue.TermTypeList),
-        OrgList: this.formatListForBackend(formValue.OrgList),
-        TalentNoList: this.formatListForBackend(formValue.TalentNoList),
-      };
-
+      const cat = formValue.category || { bus_type: [], bus_class: [], bus_sclass: [] };
       // 2. 組裝最終傳輸給後端的 Body
       const body: TLS32020QueryRequest = {
         ...formValue,
-        ...convertedListBody,
+        BuildingList: formValue.BuildingList || null, // 這裡 BuildingList
+        FloorList: formValue.FloorList || null,
+        AreaList: formValue.AreaList || null,
+        CounterKindList: formValue.CounterKindList || null,
+        TermTypeList: formValue.TermTypeList || null,
+        OrgList: formValue.OrgList || null,
+        TalentNoList: formValue.TalentNoList || null,
+        BusTypeList: cat.bus_type || null,
+        BusClassList: cat.bus_class?.map((c: any) => [c.bus_type, c.No]) || null,
+        BusSClassList: cat.bus_sclass?.map((s: any) => [s.bus_type, s.bus_class, s.No]) || null,
         // **變更**：覆蓋四個日期欄位格式化
         BaseDateFrom: this.datePipe.transform(formValue.BaseDateFrom, 'yyyy-MM-dd'),
         BaseDateTo: this.datePipe.transform(formValue.BaseDateTo, 'yyyy-MM-dd'),
@@ -617,6 +613,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
         week: undefined,
         month: undefined,
         halfYear: undefined,
+        category: undefined
       } as TLS32020QueryRequest;
 
       this.tls32020Service.queryTLS32020(body).pipe(
@@ -652,16 +649,6 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
         this.totalRecords = this.data.length;
       });
     });
-  }
-
-  /**
-    * 輔助函數：將陣列轉換為逗號分隔的字串
-    */
-  private formatListForBackend(list: any[] | null): string | null {
-    if (Array.isArray(list) && list.length > 0) {
-      return list.map(item => String(item)).join(',');
-    }
-    return null;
   }
 
   onExportPDF() {

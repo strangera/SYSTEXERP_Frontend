@@ -102,15 +102,10 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     id: [{ value: null, disabled: true }], // 主鍵，自動編號
     // --先選 專櫃活動設定主檔TALPORDERM--
     pod_no: [{ value: '系統產生代碼', disabled: true }], // YYYYMMDDSSS(活動起始日期+流水號)
-    pod_type: ['8', [Validators.required]], // 固定寫入8
-
-    act_no: [''], // 活動編號
-    pod_desc: ['', [Validators.required, Validators.maxLength(100)]], // 活動名稱(使用者輸入)，開放下拉
     pod_sdate: [null as Date | null, [Validators.required]], // 活動起始日 (Date)
     pod_edate: [null as Date | null, [Validators.required]], // 活動終止日 (Date)
-    // pod_desc: ['Eugeme測試', [Validators.required, Validators.maxLength(100)]], // 使用者輸入  for 測試
-    // pod_sdate: [yesterday, [Validators.required]], // 活動起始日 (Date) // for 測試
-    // pod_edate: [yesterday, [Validators.required]], // 活動終止日 (Date) // for 測試
+    pod_type: ['8', [Validators.required]], // 固定寫入8
+    pod_desc: ['', [Validators.required, Validators.maxLength(100)]], // 活動名稱(使用者輸入)，開放下拉
     pod_status: ['', Validators.required], // 活動建立=0 /核准=1 /反核准=0 /刪除=9
 
     // 核准不會再新增進行
@@ -296,40 +291,27 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
     console.log('Final Body:', body); // Debug 用，上線移除
 
-    const userInfo = this.authService?.getUserInfo?.();
-    const commonRequest = {
-      ...body,
-      "str_no": userInfo?.SYS_StoreNo || ''
-    };
-
     // 6. 發送請求
     if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-      const createReq = { ...commonRequest, "pod_no": null }; // 確保主檔也是 null
-      console.log('Create Request:', createReq); // Debug 用，上線移除
-      this.messageService.infoBubble('API需調整，目前準備中');
-
-      // this.tls29010Service.insertTLS29010(createReq).pipe(untilDestroyed(this)).subscribe({
-      //   next: () => {
-      //     this.messageService.successBubble('新增成功');
-      //     this.messageService.unblockUi(); // 確保在 subscribe 內解鎖
-      //   },
-      //   error: () => {
-      //     this.messageService.unblockUi();
-      //   }
-      // });
+      this.tls29010Service.insertTLS29010(body).pipe(untilDestroyed(this)).subscribe({
+        next: () => {
+          this.messageService.successBubble('新增成功');
+          this.messageService.unblockUi(); // 確保在 subscribe 內解鎖
+        },
+        error: () => {
+          this.messageService.unblockUi();
+        }
+      });
     } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-      console.log('Update Request:', commonRequest); // Debug 用，上線移除
-      this.messageService.infoBubble('API需調整，目前準備中');
-      // this.tls29010Service.updateTLS29010(commonRequest).pipe(untilDestroyed(this)).subscribe({
-      //   next: () => {
-      //     // this.messageService.successBubble('更新成功');
-      //     this.onCancel();
-      //     this.messageService.unblockUi();
-      //   },
-      //   error: () => {
-      //     this.messageService.unblockUi();
-      //   }
-      // });
+      this.tls29010Service.updateTLS29010(body).pipe(untilDestroyed(this)).subscribe({
+        next: () => {
+          this.onCancel();
+          this.messageService.unblockUi();
+        },
+        error: () => {
+          this.messageService.unblockUi();
+        }
+      });
     } else {
       this.messageService.unblockUi();
     }

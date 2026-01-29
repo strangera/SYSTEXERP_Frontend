@@ -453,11 +453,6 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
         },
         error: (err: any) => {
           this.queryLoading = false;
-          try {
-            this.messageService.errorBubble(err?.Message ?? err?.message ?? '查詢失敗');
-          } catch (e) {
-            // 若 messageService 不可用，忽略
-          }
         },
         complete: () => {
           this.queryLoading = false;
