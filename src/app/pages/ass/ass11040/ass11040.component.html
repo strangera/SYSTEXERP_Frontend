@@ -7,17 +7,17 @@
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <!-- Row 1: 品項代碼、品項名稱 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="品項代碼" controlName="itemCode"
-              [control]="queryForm.controls.itemCode" [submitted]="submitted"></app-input-number>
+            <app-input-text label="品項代碼" controlName="itemCode" [control]="queryForm.controls.itemCode"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="品項名稱" controlName="itemName" [control]="queryForm.controls.itemName"
               [submitted]="submitted"></app-input-text>
           </div>
-        </div>
-        <div class="grid p-fluid">
+          <!-- Row 2: 大分類代碼、中分類代碼、小分類代碼 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="大分類代碼" controlName="bigCategoryCode" [options]="bigCategoryCodeOptions"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.bigCategoryCode"
@@ -33,8 +33,7 @@
               optionLabel="label" optionValue="value" [control]="queryForm.controls.smlCategoryCode"
               [submitted]="submitted"></app-dropdown>
           </div>
-        </div>
-        <div class="grid p-fluid">
+          <!-- Row 3: 品項類別區分、基本單位、包裝單位 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="品項類別區分" controlName="itemCategory" [options]="itemCategoryOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.itemCategory" [submitted]="submitted"></app-dropdown>
@@ -43,12 +42,11 @@
             <app-dropdown label="基本單位" controlName="itemUnit" [options]="itemUnitOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.itemUnit" [submitted]="submitted"></app-dropdown>
           </div>
-        </div>
-        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="包裝單位" controlName="packageUnit" [options]="packageUnitOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.packageUnit" [submitted]="submitted"></app-dropdown>
           </div>
+          <!-- Row 4: 保固方式、保養方式 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="保固方式" controlName="warrantyMethod" [options]="warrantyMethodOptions"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.warrantyMethod"
@@ -59,11 +57,10 @@
               optionLabel="label" optionValue="value" [control]="queryForm.controls.maintenanceMethod"
               [submitted]="submitted"></app-dropdown>
           </div>
-        </div>
-        <div class="grid p-fluid">
+          <!-- Row 5: 說明 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-textarea label="說明" controlName="illustrate" [control]="queryForm.controls.illustrate"
-              [submitted]="submitted"></app-input-textarea>
+            <app-input-text label="說明" controlName="illustrate" [control]="queryForm.controls.illustrate"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -75,8 +72,11 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    (delete)="onDelete($event)" [totalRecords]="totalRecords" [loading]="loading"
-    (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [lastQueryBody]="lastQuery"
-    [showDelete]="false" [queryFunction]="ass11040Service.queryFASITEM.bind(ass11040Service)"></app-table-report>
+  <div class="col-12">
+    <app-table-report [data]="tableData()" dataKey="ID" tableKey="ASS11040_Data" [columns]="columns"
+      [totalRecords]="totalRecords()" [loading]="tableLoading()" [lastQueryBody]="lastQueryBody"
+      [queryFunction]="queryFunction" [showCheckBox]="false" [selectedItems]="selectedRows"
+      (selectionChange)="selectedRows = $event" [showDelete]="false" [showReportMode]="false" (edit)="onEdit($event)"
+      (detail)="onDetail($event)"></app-table-report>
+  </div>
 </div>

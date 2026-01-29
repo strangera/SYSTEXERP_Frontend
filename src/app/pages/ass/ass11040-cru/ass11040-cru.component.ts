@@ -4,11 +4,17 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 
-import { ASS11040Service, QueryASS11040Response } from '@service/api/ass/ass11040.service';
+import {
+  ASS11040Service,
+  QueryASS11040Response,
+  SP_FASITEM_CreateRequest,
+  SP_FASITEM_UpdateRequest,
+} from '@service/api/ass/ass11040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -124,25 +130,62 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
     });
   }
 
-  onSubmit(frm: FormGroup) {
+  onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      // TODO: 等 API 準備好後再串接
-      // const params = {
-      //   ...frm.getRawValue()
-      // };
-      // const $request = this.isFormCreateable
-      //   ? this.ass11040Service.insertASS11040(params)
-      //   : this.ass11040Service.updateASS11040(params);
-      // $request.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-      //   this.messageService.successBubble(response.Message);
-      //   if (this.isFormCreateable) {
-      //     this.dataForm.reset();
-      //   } else {
-      //     this.onCancel();
-      //   }
-      // });
-      this.messageService.warnBubble('新增/修改 API 尚未實作');
-      this.loading = false;
+      const raw = frm.getRawValue();
+      const createPayload: SP_FASITEM_CreateRequest = {
+        GOODS_ID: raw.itemCode ?? '',
+        GOODS_NAME: raw.itemName ?? null,
+        B_CLASS_ID: raw.bigCategoryCode ?? null,
+        M_CLASS_ID: raw.midCategoryCode ?? null,
+        S_CLASS_ID: raw.smlCategoryCode ?? null,
+        MATERIAL_TYPE: raw.itemCategory ?? null,
+        UNIT: raw.itemUnit ?? null,
+        PACK_UNIT: raw.packageUnit ?? null,
+        MT_MODE: raw.warrantyMethod ?? null,
+        IVN_MODE: raw.maintenanceMethod ?? null,
+        NOTES: raw.illustrate ?? null,
+      };
+
+      if (this.isFormCreateable) {
+        this.ass11040Service
+          .spFASITEMCreate(createPayload)
+          .pipe(
+            untilDestroyed(this),
+            finalize(() => (this.loading = false))
+          )
+          .subscribe({
+            next: res => {
+              if (res.Status !== '0000') return;
+              this.messageService.successBubble(res.Message ?? '新增成功');
+              this.dataForm.reset();
+            },
+          });
+      } else {
+        const id = (this.rowdata as QueryASS11040Response)?.ID;
+        if (id == null) {
+          this.messageService.warnBubble('無法取得品項 ID');
+          this.loading = false;
+          return;
+        }
+        const updatePayload: SP_FASITEM_UpdateRequest = {
+          ID: id,
+          ...createPayload,
+        };
+        this.ass11040Service
+          .spFASITEMUpdate(updatePayload)
+          .pipe(
+            untilDestroyed(this),
+            finalize(() => (this.loading = false))
+          )
+          .subscribe({
+            next: res => {
+              if (res.Status !== '0000') return;
+              this.messageService.successBubble(res.Message ?? '更新成功');
+              this.onCancel();
+            },
+          });
+      }
     });
   }
 }

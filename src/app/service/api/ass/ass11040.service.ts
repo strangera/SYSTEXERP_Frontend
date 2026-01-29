@@ -36,6 +36,64 @@ export interface QueryASS11040Request extends BaseQueryRequest {
 }
 
 /**
+ * SP_FASITEM_Create 新增品項請求（自訂欄位，後端規格出來後可調整）
+ */
+export interface SP_FASITEM_CreateRequest {
+  /** 品項代碼（必填） */
+  GOODS_ID: string;
+  /** 品項名稱 */
+  GOODS_NAME?: string | null;
+  /** 大分類代碼 */
+  B_CLASS_ID?: string | null;
+  /** 中分類代碼 */
+  M_CLASS_ID?: string | null;
+  /** 小分類代碼 */
+  S_CLASS_ID?: string | null;
+  /** 品項類別區分 */
+  MATERIAL_TYPE?: string | null;
+  /** 基本單位 */
+  UNIT?: string | null;
+  /** 包裝單位 */
+  PACK_UNIT?: string | null;
+  /** 保固方式 0=廠商 1=公司 */
+  MT_MODE?: string | null;
+  /** 保養方式 0=廠商 1=公司 */
+  IVN_MODE?: string | null;
+  /** 說明 */
+  NOTES?: string | null;
+}
+
+/**
+ * SP_FASITEM_Update 更新品項請求（自訂欄位，後端規格出來後可調整）
+ */
+export interface SP_FASITEM_UpdateRequest {
+  /** 主鍵，指定要更新的品項 */
+  ID: number;
+  /** 品項代碼 */
+  GOODS_ID?: string | null;
+  /** 品項名稱 */
+  GOODS_NAME?: string | null;
+  /** 大分類代碼 */
+  B_CLASS_ID?: string | null;
+  /** 中分類代碼 */
+  M_CLASS_ID?: string | null;
+  /** 小分類代碼 */
+  S_CLASS_ID?: string | null;
+  /** 品項類別區分 */
+  MATERIAL_TYPE?: string | null;
+  /** 基本單位 */
+  UNIT?: string | null;
+  /** 包裝單位 */
+  PACK_UNIT?: string | null;
+  /** 保固方式 0=廠商 1=公司 */
+  MT_MODE?: string | null;
+  /** 保養方式 0=廠商 1=公司 */
+  IVN_MODE?: string | null;
+  /** 說明 */
+  NOTES?: string | null;
+}
+
+/**
  * 大分類查詢
  */
 export interface QueryFACLASSMRequest {
@@ -212,6 +270,9 @@ export interface QueryASS11040Response {
   UPD_USR_Name?: string | null;
 }
 
+/** 品項資料明細（與 API QueryASS11040Data 對應） */
+export type QueryASS11040Data = QueryASS11040Response;
+
 /**
  * 大分類查詢回應 (外層包裝)
  */
@@ -294,10 +355,24 @@ export class ASS11040Service {
   constructor(private http: HttpClient) { }
 
   /**
-   * 品項資料查詢
+   * 品項資料查詢（SP_FASITEM_Query）
    */
   queryFASITEM(params: QueryASS11040Request): Observable<ApiResponse<QueryASS11040DataWrapper>> {
     return this.http.post<ApiResponse<QueryASS11040DataWrapper>>(`${this.apiUrl}/queryFASITEM`, params);
+  }
+
+  /**
+   * 新增品項（SP_FASITEM_Create）
+   */
+  spFASITEMCreate(params: SP_FASITEM_CreateRequest): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${this.apiUrl}/SP_FASITEM_Create`, params);
+  }
+
+  /**
+   * 更新品項（SP_FASITEM_Update）
+   */
+  spFASITEMUpdate(params: SP_FASITEM_UpdateRequest): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${this.apiUrl}/SP_FASITEM_Update`, params);
   }
 
   /**
