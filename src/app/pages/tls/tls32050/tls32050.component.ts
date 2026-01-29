@@ -749,7 +749,7 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     if (event.RowType == 'TEAM') // TEAM才會進入明細查詢
       this.onDetail(event, queryConditions);
     else
-      console.log('TEAM才會進入明細查詢');
+      this.messageService.infoBubble('非合計欄位才可查看明細');
   }
 
   // 算比較表單的週數

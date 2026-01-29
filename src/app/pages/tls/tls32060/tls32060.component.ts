@@ -757,8 +757,6 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);
     if (event.RowType == 'TEAM') // TEAM才會進入明細查詢
       this.onDetail(event, queryConditions);
-    else
-      console.log('TEAM才會進入明細查詢');
   }
 
   // 算比較表單的週數

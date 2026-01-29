@@ -844,7 +844,10 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
   onDetail1(event: any) {
     const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);
-    this.onDetail(event, queryConditions);
+    if (event.RowType == 'TEAM') // TEAM才會進入明細查詢
+      this.onDetail(event, queryConditions);
+    else
+      this.messageService.infoBubble('非合計欄位才可查看明細');
   }
 
   // 算比較表單的週數
