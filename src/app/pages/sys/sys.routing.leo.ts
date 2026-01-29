@@ -3,6 +3,8 @@ import { Routes } from '@angular/router';
 export const sysRoutes: Routes = [
   { path: 'sysbc00', loadComponent: () => import('./sysbc00/sysbc00.component').then(m => m.SYSBC00Component), data: { progNo: 'SYSBC00' } }, // 銀行基本資料維護作業
   { path: 'sysbc00cru', loadComponent: () => import('./sysbc00.cru/sysbc00.cru.component').then(m => m.SYSBC00CRUComponent), data: { progNo: 'SYSBC00' } }, // 銀行基本資料維護作業 CRU
+  { path: 'sysbr10', loadComponent: () => import('./sysbr10/sysbr10.component').then(m => m.SYSBR10Component), data: { progNo: 'SYSBR10' } }, // 佈告欄管理作業
+  { path: 'sysbr10cru', loadComponent: () => import('./sysbr10.cru/sysbr10.cru.component').then(m => m.SYSBR10CRUComponent), data: { progNo: 'SYSBR10' } }, // 佈告欄管理作業 CRU
   { path: 'sysbp00', loadComponent: () => import('./sysbp00/sysbp00.component').then(m => m.SYSBP00Component), data: { progNo: 'SYSBP00' } }, // 參數資料設定維護
   { path: 'sysbp00cru', loadComponent: () => import('./sysbp00.cru/sysbp00.cru.component').then(m => m.SYSBP00CRUComponent), data: { progNo: 'SYSBP00' } }, // 參數資料設定維護 CRU
   { path: 'sys0110', loadComponent: () => import('./sys0110/sys0110.component').then(m => m.SYS0110Component), data: { progNo: 'SYS0110' } }, // 使用者基本資料維護

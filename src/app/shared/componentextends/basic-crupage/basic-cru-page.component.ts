@@ -15,6 +15,7 @@ import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 @UntilDestroy()
 export abstract class BasicCruPageComponent<T> {
+  protected readonly now: Date = new Date();
   // constructor
   authService = inject(AuthService);
   router = inject(Router);

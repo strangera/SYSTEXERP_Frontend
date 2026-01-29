@@ -576,8 +576,8 @@ export class DropdownApiService {
   }
 
   /** 查詢角色代碼(tblRole) */
-  queryTblRole(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/querytblRole_DropDownList').pipe(
+  queryTblRole(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/querytblRole_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
