@@ -252,23 +252,31 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
     console.log('開始載入工作流程資料');
 
     const workflowData = this.contractFlowService.getCurrentState();
+    const cruData = this.contractFlowService.getCruData();
 
-    if (workflowData.contractId || this.contractFlowService.getCurrentState().isNewContract) {
+    // 🔥 更寬鬆的驗證：只要有 contractId、isNewContract 或有效的 CRU 資料，就視為有效
+    // 這樣當使用者切換抽成別時，只要有 CRU 資料就能繼續流程
+    const hasValidWorkflow = workflowData.contractId ||
+                             workflowData.isNewContract ||
+                             cruData;
+
+    if (hasValidWorkflow) {
       const state = this.contractFlowService.getCurrentState();
-      this.currentApplyNo = state.applyNo || ''; // 修正：從 applyNo 取值
-      this.currentContractData = this.contractFlowService.getCruData();
+      this.currentApplyNo = state.applyNo || cruData?.apply_no || '';
+      this.currentContractData = cruData;
 
       console.log('工作流程狀態確認:', {
         isNewContract: state.isNewContract,
         currentApplyNo: this.currentApplyNo,
-        contractId: state.contractId
+        contractId: state.contractId,
+        hasCruData: !!cruData
       });
 
       this.prepareContractInfoDisplay();
       this.loadDataWithPriority();
     } else {
       console.warn('沒有有效的工作流程資料，重導向到前一步');
-      this.router.navigate(['account/tls/tls13010cru']);
+      this.router.navigate(['account/tls/tls12040cru']);
     }
   }
 
@@ -305,22 +313,46 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
 
     console.log('載入資料優先順序判定:', {
       commissionType,
-      isNewContract: this.contractFlowService.getCurrentState().isNewContract,
+      crudstatus: this.crudstatus,
+      isCreateMode: this.isCreateMode,
+      isEditMode: this.isEditMode,
+      isReadOnlyMode: this.isReadOnlyMode,
       currentApplyNo: this.currentApplyNo,
-      isViewMode: this.isViewMode
+      isViewMode: this.isViewMode,
+      isRenewalMode: this.contractFlowService.isRenewalMode()
     });
 
-    // 第一優先：檢查是否有 Next3 暫存資料
-    const savedNext3Data = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
+    // 【優先】檢查是否有 Next3 暫存資料（包含用戶修改的內容）
+    const savedNext3StepData = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
+    const cachedConditionItems = savedNext3StepData?.data;
 
-    if (savedNext3Data && Array.isArray(savedNext3Data) && savedNext3Data.length > 0) {
-      console.log('使用 Next3 暫存資料，項目數量:', savedNext3Data.length);
-      this.loadConditionDataFromCache(savedNext3Data);
-    } else if (this.contractFlowService.getCurrentState().isNewContract) {
-      console.log('新增模式：初始化空的條件設定');
+    if (cachedConditionItems && Array.isArray(cachedConditionItems) && cachedConditionItems.length > 0) {
+      console.log('使用 Next3 暫存資料（包含用戶修改），項目數量:', cachedConditionItems.length);
+      this.loadConditionDataFromCache(cachedConditionItems);
+      this.conditionDataLoaded = true;
+      this.dataLoaded = true;
+      return;
+    }
+
+    // 沒有暫存時，檢查是否為續約模式（只在第一次進入時載入續約資料）
+    if (this.contractFlowService.isRenewalMode()) {
+      console.log('續約模式：檢查是否有續約條件資料');
+      const renewalCommissionData = this.contractFlowService.getRenewalCommissionData();
+      if (renewalCommissionData && renewalCommissionData.length > 0) {
+        console.log('首次使用續約條件資料，共', renewalCommissionData.length, '筆');
+        this.loadRenewalCommissionData(renewalCommissionData, commissionType || '3');
+        this.conditionDataLoaded = true;
+        this.dataLoaded = true;
+        return;
+      }
+    }
+
+    // 根據 CRUDStatus 判斷：新增模式初始化空資料，編輯/檢視模式呼叫 API 載入
+    if (this.isCreateMode) {
+      console.log('新增模式(CRUDStatus.Create)：初始化空的條件設定');
       this.initializeNewContractConditionData(commissionType || '3');
     } else {
-      console.log('編輯模式：載入條件設定');
+      console.log('編輯/檢視模式：從 API 載入條件設定');
       this.loadExistingConditionData();
     }
 
@@ -329,15 +361,71 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
   }
 
   /**
+   * 載入續約條件資料
+   * 將原合約的條件資料轉換為新合約格式（移除 ID，標記為新增）
+   */
+  private loadRenewalCommissionData(renewalCommissionData: any, commissionType: string): void {
+    console.log('🔄 開始載入續約條件資料');
+
+    // 取得新契約的起訖日期
+    const cruData = this.contractFlowService.getCruData();
+    const contractStartDate = cruData?.tlt_contract_bdate || cruData?.tlt_bdate || null;
+    const contractEndDate = cruData?.tlt_contract_edate || cruData?.tlt_edate || null;
+
+    console.log('📅 新契約日期:', { contractStartDate, contractEndDate });
+
+    try {
+      if (renewalCommissionData && Array.isArray(renewalCommissionData)) {
+        // 轉換續約資料（移除 ID，標記為新增，使用新契約日期）
+        this.allConditionItems = renewalCommissionData.map((item: any, index: number) => {
+          // 🔥 條件資料根據 is_selected 決定狀態，如果不存在就預設為 true（因為是從原合約帶過來的）
+          const isSelected = item.is_selected !== undefined ? Boolean(item.is_selected) : true;
+          return {
+            ...item,
+            id: `renewal_condition_${Date.now()}_${index}_${Math.random().toString(36).substring(2, 9)}`,  // 🔥 產生唯一 ID
+            apply_no: '',                // 清空 apply_no
+            talent_id: '',               // 清空 talent_id
+            cag_bdate: contractStartDate, // 🔥 使用新契約起始日期
+            cag_edate: contractEndDate,   // 🔥 使用新契約結束日期
+            _status: isSelected ? 'new' : undefined,  // 🔥 只有勾選的才標記為新增
+            _isNew: isSelected,
+            is_selected: isSelected
+          };
+        });
+
+        // 分類條件項目
+        this.categorizeConditionItems();
+
+        console.log('📊 續約條件資料載入完成:', this.allConditionItems.length, '筆');
+        this.notificationService.successBubble('已載入原合約條件設定');
+      } else {
+        // 如果沒有續約資料，初始化空的條件設定
+        console.log('⚠️ 續約條件資料為空，初始化新的條件設定');
+        this.initializeNewContractConditionData(commissionType);
+      }
+
+    } catch (error) {
+      console.error('❌ 載入續約條件資料失敗:', error);
+      this.notificationService.warnBubble('載入續約條件資料失敗');
+      this.initializeNewContractConditionData(commissionType);
+    }
+  }
+
+  /**
    * 更新新契約初始化方法以使用智能日期
    */
   private initializeNewContractConditionData(commissionType: string): void {
     console.log('新增模式：初始化條件設定，抽成類型:', commissionType);
 
-    // 修正：使用 currentApplyNo 而非 currentTalentId
-    this.allConditionItems = this.conditionDataManager.initializeEmptyConditions(
+    // 取得契約起迄日期，確保帳務起迄與契約起迄一致
+    const { startDate, endDate } = this.getContractDates();
+
+    // 使用智能初始化方法，帶入契約起迄日期
+    this.allConditionItems = this.conditionDataManager.initializeSmartConditions(
       commissionType,
-      this.currentApplyNo
+      this.currentApplyNo,
+      startDate,
+      endDate
     );
 
     this.categorizeConditionItems();

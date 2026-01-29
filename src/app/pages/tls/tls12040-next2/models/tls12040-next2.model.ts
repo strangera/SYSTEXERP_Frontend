@@ -59,6 +59,7 @@ export interface ChargeSettingAPIModel {
   sst_rate?: number | null;
   cap_saletype1: string; // 'Y' | 'N'
   cap_saletype2: string; // 'Y' | 'N'
+  cap_saletype3: string; // 'Y' | 'N' - 收取禮卷
   cap_saletype5: string; // 'Y' | 'N'
   cag_remark: string;
 
@@ -182,6 +183,7 @@ export interface ChargeSettingFormData {
   sst_rate?: number | null;
   cap_saletype1: boolean;
   cap_saletype2: boolean;
+  cap_saletype3: boolean; // 收取禮卷
   cap_saletype5: boolean;
 
   cag_remark: string;
@@ -290,6 +292,7 @@ export interface CleanChargeSettingData {
   sst_rate?: number | null;
   cap_saletype1: string; // 'Y' | 'N'
   cap_saletype2: string; // 'Y' | 'N'
+  cap_saletype3: string; // 'Y' | 'N' - 收取禮卷
   cap_saletype5: string;
 
   cag_remark: string;
@@ -466,17 +469,39 @@ export class TLS12040DataTransformer {
       _status: 'original' as DataStatus,
       ChargeDetails: item.ChargeDetails.map(detail => ({
         ...detail,
-        _status: 'original' as DataStatus
+        _status: 'original' as DataStatus,
+        // API 存 decimal (0.05) → 前端顯示 percentage (5)
+        cag_charge_rate: this.convertRateToPercentage(detail.cag_charge_rate)
       })),
       YearChargeDetails: item.YearChargeDetails.map(detail => ({
         ...detail,
-        _status: 'original' as DataStatus
+        _status: 'original' as DataStatus,
+        // API 存 decimal (0.05) → 前端顯示 percentage (5)
+        extra_rate: this.convertRateToPercentage(detail.extra_rate)
       })),
       LevelChargeDetails: item.LevelChargeDetails.map(detail => ({
         ...detail,
-        _status: 'original' as DataStatus
+        _status: 'original' as DataStatus,
+        // API 存 decimal (0.05) → 前端顯示 percentage (5)
+        level_charge_rate: this.convertRateToPercentage(detail.level_charge_rate)
       }))
     }));
+  }
+
+  /**
+   * API decimal (0.05) → 前端 percentage (5)
+   */
+  private static convertRateToPercentage(rate: number | null | undefined): number {
+    if (rate === null || rate === undefined) return 0;
+    return rate * 100;
+  }
+
+  /**
+   * 前端 percentage (5) → API decimal (0.05)
+   */
+  private static convertPercentageToRate(percentage: number | null | undefined): number {
+    if (percentage === null || percentage === undefined) return 0;
+    return percentage / 100;
   }
 
   /**
@@ -495,6 +520,7 @@ export class TLS12040DataTransformer {
       sst_rate: businessData.sst_rate,
       cap_saletype1: businessData.cap_saletype1 === 'Y',
       cap_saletype2: businessData.cap_saletype2 === 'Y',
+      cap_saletype3: businessData.cap_saletype3 === 'Y',
       cap_saletype5: businessData.cap_saletype5 === 'Y',
       cag_remark: businessData.cag_remark
     };
@@ -516,6 +542,7 @@ export class TLS12040DataTransformer {
       sst_rate: formData.sst_rate,
       cap_saletype1: formData.cap_saletype1 ? 'Y' : 'N',
       cap_saletype2: formData.cap_saletype2 ? 'Y' : 'N',
+      cap_saletype3: formData.cap_saletype3 ? 'Y' : 'N',
       cap_saletype5: formData.cap_saletype5 ? 'Y' : 'N',
       cag_remark: formData.cag_remark
     };
@@ -601,6 +628,7 @@ export class TLS12040DataTransformer {
       sst_rate: business.sst_rate,
       cap_saletype1: business.cap_saletype1,
       cap_saletype2: business.cap_saletype2,
+      cap_saletype3: business.cap_saletype3,
       cap_saletype5: business.cap_saletype5,
       cag_remark: business.cag_remark
     };
@@ -629,6 +657,18 @@ export class TLS12040DataTransformer {
         delete clean[key];
       }
     });
+
+    // 前端 percentage → API decimal（送後端前轉回小數）
+    if (clean.cag_charge_rate !== undefined) {
+      clean.cag_charge_rate = this.convertPercentageToRate(clean.cag_charge_rate);
+    }
+    if (clean.extra_rate !== undefined) {
+      clean.extra_rate = this.convertPercentageToRate(clean.extra_rate);
+    }
+    if (clean.level_charge_rate !== undefined) {
+      clean.level_charge_rate = this.convertPercentageToRate(clean.level_charge_rate);
+    }
+
     return clean;
   }
 }

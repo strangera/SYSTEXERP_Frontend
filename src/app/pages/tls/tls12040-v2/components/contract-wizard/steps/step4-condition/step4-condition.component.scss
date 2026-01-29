@@ -1,0 +1,13 @@
+// Step 4 - Condition Component Styles
+
+:host {
+  display: block;
+}
+
+::ng-deep {
+  .custom-table-red {
+    .p-datatable-thead > tr > th {
+      background-color: var(--red-50);
+    }
+  }
+}

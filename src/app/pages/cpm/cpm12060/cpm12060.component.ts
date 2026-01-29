@@ -60,7 +60,7 @@ export class CPM12060Component extends BasicQueryPageComponent<CPM12060Data> imp
   ]
 
   columns: Column[] = [
-    { field: 'SEQ_ID', header: '單號', visible: true },
+    { field: 'SEQ_ID', header: '顧客意見編號', visible: true },
     { field: 'CUST_NAME', header: '客戶名稱', visible: true },
     {
       field: 'SEX', header: '性別', visible: true, format: (value: string) =>
@@ -100,19 +100,4 @@ export class CPM12060Component extends BasicQueryPageComponent<CPM12060Data> imp
         });
     });
   }
-
-  // onDelete(selectedItems: CPM11020Data[]) {
-  //   this.messageService.confirm({
-  //     header: `是否確認刪除 ${selectedItems.length} 筆資料？`,
-  //     accept: () => {
-  //       const idList = selectedItems.map(item => item.ID);
-  //       this.cpm11020Service.deleteCPM11020({ IdList: idList })
-  //         .pipe(untilDestroyed(this))
-  //         .subscribe(() => {
-  //           this.messageService.successBubble('刪除成功');
-  //           this.onSubmit(this.queryForm);
-  //         });
-  //     }
-  //   });
-  // }
 }

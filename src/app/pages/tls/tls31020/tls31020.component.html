@@ -220,6 +220,19 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
+              label="小分類代碼/名稱"
+              controlName="bus_sclass"
+              [options]="bus_sclass_Option"
+              optionLabel="label"
+              [control]="queryForm.controls.bus_sclass"
+              [submitted]="submitted"
+              optionGroupLabel="label"
+              optionGroupChildren="items"
+              [group]="true"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
               label="櫃別"
               controlName="tlt_kind"
               [options]="tlt_kind_Option"

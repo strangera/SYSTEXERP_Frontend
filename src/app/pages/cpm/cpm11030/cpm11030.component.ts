@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { finalize, map } from 'rxjs/operators';
@@ -101,7 +101,15 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
     { field: 'Loan_Date', header: '出借日期', format: (v: string) => this.formatDate(v) },
     { field: 'Loan_Time', header: '出借時間' },
     { field: 'Service_Id', header: '服務中心位置編號' },
-    { field: 'Loan_Status', header: '出借狀態' },
+    {
+      field: 'Loan_Status',
+      header: '出借狀態',
+      format: (v: any) =>
+        String(v) === '1' ? '已出借' :
+          String(v) === '2' ? '已歸還' :
+            (v ?? ''),
+    },
+
     { field: 'User_Name', header: '借用人姓名' },
     { field: 'Cert_Type', header: '證件類型' },
     { field: 'Cert_No', header: '證件編號' },
