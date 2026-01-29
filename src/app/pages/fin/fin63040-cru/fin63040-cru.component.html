@@ -6,8 +6,6 @@
 
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-
-      <!-- 區塊1：基本 -->
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
@@ -73,7 +71,6 @@
         </div>
       </div>
 
-      <!-- 區塊2：日期 -->
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar
@@ -126,7 +123,6 @@
         </div>
       </div>
 
-      <!-- 區塊3：狀態/其他 -->
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
@@ -136,6 +132,18 @@
             optionLabel="label"
             optionValue="value"
             [control]="dataForm.controls.NoEndorseYn"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="狀態"
+            controlName="CheckStatus"
+            [options]="checkStatusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.CheckStatus"
             [submitted]="submitted"
           ></app-dropdown>
         </div>
@@ -165,12 +173,15 @@
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
+          <app-dropdown
             label="組織代號"
             controlName="OrgId"
+            [options]="organizationCodeOptions"
+            optionLabel="label"
+            optionValue="value"
             [control]="dataForm.controls.OrgId"
             [submitted]="submitted"
-          ></app-input-text>
+          ></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -187,6 +198,15 @@
             label="應付票據開票單號"
             controlName="PamNo"
             [control]="dataForm.controls.PamNo"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="應付票據會計科目"
+            controlName="CompanyAccDisplay"
+            [control]="dataForm.controls.CompanyAccDisplay"
             [submitted]="submitted"
           ></app-input-text>
         </div>
@@ -219,12 +239,10 @@
         </div>
       </div>
 
-      <!-- 按鈕列：Read 不顯示 -->
       <div class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3" *ngIf="!isRead">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
-
     </form>
   </p-panel>
 </div>

@@ -425,5 +425,9 @@ private getRouteId(): number | null {
   const n = Number(v);
   return Number.isFinite(n) && n > 0 ? n : null;
 }
-
+override onCancel(): void {
+  this.router.navigate(['/account/fin', 'fin64010'], {
+    state: { fromCru: true },
+  });
+}
 }
