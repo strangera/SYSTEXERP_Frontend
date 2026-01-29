@@ -1,19 +1,19 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { NgIf } from '@angular/common';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
 import { InsertTLS27020, TLS27020Data, TLS27020Service, UpdateTLS27020 } from '@service/api/tls/tls27020.service';
 import { DropDownListService, ITalentOption } from '@service/utility/dropDownList.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { combineLatest, distinctUntilChanged, filter, finalize } from 'rxjs';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { PanelModule } from 'primeng/panel';
+import { combineLatest, distinctUntilChanged, filter, finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 @Component({
   selector: 'app-tls27020-cru',
@@ -31,7 +31,6 @@ export class TLS27020CRUComponent extends BasicCruPageComponent<TLS27020Data> im
     PayAmt: [{ value: '', disabled: true }], /*顯示用金額*/
     MOD_PayAmt: [null, [Validators.max(99999999), Validators.required]], /*實際金額*/
   });
-  now = new Date();
   TLTTALENT_DropDownList: ITalentOption[] = [];
   ECR_NoOptions: { No: string, Name: string, label: string }[] = [];
   IsExist = false;
@@ -96,7 +95,7 @@ export class TLS27020CRUComponent extends BasicCruPageComponent<TLS27020Data> im
         : this.tLS27020Service.updateTLS27020(this.updateTLS27020(frm));
       serviceCall.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe({
         next: (res) => {
-          if(res.Data){
+          if (res.Data) {
             this.messageService.successBubble(res.Message);
             if (this.isFormCreateable) {
               this.dataForm.reset();
@@ -104,7 +103,7 @@ export class TLS27020CRUComponent extends BasicCruPageComponent<TLS27020Data> im
               this.onCancel();
             }
           }
-          else{
+          else {
             this.messageService.warnBubble(res.Message);
           }
         },
