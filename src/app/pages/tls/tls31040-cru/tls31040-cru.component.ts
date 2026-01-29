@@ -168,6 +168,8 @@ export class Tls31040CRUComponent extends BasicCruPageComponent<TLS31040Response
       ...this.queryConditions,
       IsExcel: isExcel,
       tlt_kind: this.dataForm.get('tlt_kind')?.value ?? '',
+      bus_class: (this.queryConditions.bus_class || []).map((x: any) => [x.bus_type, x.No]),
+      bus_sclass: (this.queryConditions.bus_sclass || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
       TXN_DateS: formatDate(this.queryConditions.TXN_DateS, 'yyyy-MM-dd', 'en-US'),
       TXN_DateE: formatDate(this.queryConditions.TXN_DateE, 'yyyy-MM-dd', 'en-US'),
     } as TLS31040PrintDetailRequest;
@@ -190,6 +192,8 @@ export class Tls31040CRUComponent extends BasicCruPageComponent<TLS31040Response
     const request: TLS31040DetailRequest = {
       ...this.queryConditions,
       tlt_kind: this.dataForm.get('tlt_kind')?.value ?? '',
+      bus_class: (this.queryConditions.bus_class || []).map((x: any) => [x.bus_type, x.No]),
+      bus_sclass: (this.queryConditions.bus_sclass || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
       TXN_DateS: formatDate(this.queryConditions.TXN_DateS, 'yyyy-MM-dd', 'en-US'),
       TXN_DateE: formatDate(this.queryConditions.TXN_DateE, 'yyyy-MM-dd', 'en-US'),
     };

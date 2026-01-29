@@ -14,6 +14,9 @@ export interface QueryFIN29050Request extends BaseQueryRequest {
   ACP_Amt_To?: number;       // 應付金額(迄)
   AccNo_From?: string;       // 科目代號(起)
   AccNo_To?: string;         // 科目代號(迄)
+  // 額外查詢選項
+  ShowZeroBalance?: 'A' | 'N';        // 帳款餘額為零是否顯示: 'A' = 顯示全部(預設), 'N' = 不顯示帳款餘額
+  UnpaidIncludeReserve?: 'Y' | 'N';   // 未付金額是否包含保留款餘額: 'Y' = 包含(預設), 'N' = 不包含
 }
 
 // 查詢結果資料介面

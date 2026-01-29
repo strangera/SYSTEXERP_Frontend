@@ -73,26 +73,56 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
     super();
   }
 
-  ngOnInit(): void {
-    this.initializePage('TLS11020', 'tls/tls11020cru', this.queryForm, (f) => this.onSubmit(f));
-    const map = this.deductionCategoryOptions.map((o: any) => ({ [String(o.value)]: String(o.label) }));
-    this.columns = this.columns.map(c =>
-      c.field === 'CAP_Type' ? { ...c, exportFormat: map } : c
+ngOnInit(): void {
+  this.initializePage('TLS11020', 'tls/tls11020cru', this.queryForm, (f) => this.onSubmit(f));
+
+  // 欄位 exportFormat（CAP_Type）
+  const map = this.deductionCategoryOptions.map((o: any) => ({
+    [String(o.value)]: String(o.label),
+  }));
+  this.columns = this.columns.map((c) =>
+    c.field === 'CAP_Type' ? { ...c, exportFormat: map } : c
+  );
+
+  // accountOptions
+  this.accountingaccountService.getOptions().subscribe((data) => {
+    this.accountOptions = (data || []).map((x) => ({
+      label: x.Name,
+      formLabel: `${x.No} - ${x.Name}`,
+      value: x.No,
+    }));
+
+    const mapAcc = this.accountOptions.map((o) => ({
+      [String(o.value)]: String(o.label),
+    }));
+
+    this.columns = this.columns.map((c) =>
+      c.field === 'AccNo' && c.header === '會計科目名稱'
+        ? { ...c, exportFormat: mapAcc }
+        : c
     );
-    this.accountingaccountService.getOptions().subscribe((data) => {
-      this.accountOptions = (data || []).map(x => ({
-        label: x.Name,
-        formLabel: `${x.No} - ${x.Name}`,
-        value: x.No
-      }));
-      const mapAcc = this.accountOptions.map(o => ({ [String(o.value)]: String(o.label) }));
-      this.columns = this.columns.map(c =>
-        c.field === 'AccNo' && c.header === '會計科目名稱'
-          ? { ...c, exportFormat: mapAcc }
-          : c
-      );
-    });
+  });
+
+  // ✅ 只從 CRU 回來才做還原 + 自動查詢
+  const fromCru = !!history.state?.['fromCru'];
+  if (fromCru) {
+    this.handleQueryRestore(this.queryForm, this.ProgNo, (f) => this.onSubmit(f));
+  } else {
+    this.setDefaultQueryValues();
   }
+}
+
+/** 查詢頁預設值（你要什麼預設就集中放這裡） */
+private setDefaultQueryValues(): void {
+  // 若你想預設 CAP_Type 為空陣列（避免 null）
+  this.queryForm.patchValue(
+    {
+      CAP_Type: [],
+    },
+    { emitEvent: false }
+  );
+}
+
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
@@ -104,7 +134,7 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
       // 將空字串轉為 null（配合後端 char? 欄位處理）
       if (formValue.CAP_Item === '') formValue.CAP_Item = null;
       if (formValue.CAP_Name === '') formValue.CAP_Name = null;
-       if (formValue.CAP_BaseRate === '') formValue.CAP_BaseRate = null;
+      if (formValue.CAP_BaseRate === '') formValue.CAP_BaseRate = null;
       if (formValue.CAP_Remark === '') formValue.CAP_Remark = null;
 
 

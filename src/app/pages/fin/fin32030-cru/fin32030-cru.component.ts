@@ -193,7 +193,14 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       header: '備註',
       type: 'input',
       maxLength: 100
-    }
+    },
+    // {
+    //   field: 'TEST_Field',
+    //   header: '沖帳代號',
+    //   type: 'dropdown',
+    //   maxLength: 100,
+    //   hidden: true
+    // }
   ];
 
   // 步驟3: 票據資訊表格資料
@@ -421,6 +428,36 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
 
   /** 切換顯示的步驟 */
   switchButton(buttonID: number): void {
+    // 非檢視模式才需要卡控順序和驗證
+    if (!this.isFormReadable) {
+      // 切換到步驟3(應收帳款確認)時，需要驗證票據資訊
+      if (buttonID === 3) {
+        // 檢查是否有應收票據項目 (Voucher_Type=2)
+        if (this.hasVoucherType2Item()) {
+          // 有應收票據項目，必須檢查票據資訊
+          if (!this.hasValidCheckData()) {
+            this.messageService.errorBubble('收款項目包含應收票據，請先填寫至少一筆票據資訊');
+            // 自動導向到票據資訊步驟
+            this.buttonID = 2;
+            this.cdr.detectChanges();
+            return;
+          }
+
+          // 檢查票據總金額是否等於票據明細總計
+          const billTotal = this.billTotalAmountControl.value || 0;
+          const checkTotal = this.totalCheckAmount;
+          if (billTotal !== checkTotal) {
+            const billTotalStr = billTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const checkTotalStr = checkTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            this.messageService.errorBubble(`票據總金額(${billTotalStr})與票據明細總計(${checkTotalStr})不符`);
+            this.buttonID = 2;
+            this.cdr.detectChanges();
+            return;
+          }
+        }
+      }
+    }
+
     this.buttonID = buttonID;
 
     // 切換到步驟2(票據明細)時,強制重新賦值以觸發 table-edit 的 ngOnChanges
@@ -431,6 +468,26 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
         console.log('切換到步驟2 - 強制更新 step3TableData');
       }, 0);
     }
+  }
+
+  /** 檢查收款項目是否有 Voucher_Type=2 (應收票據) 的項目 */
+  hasVoucherType2Item(): boolean {
+    return this.step2TableData.some(item => {
+      if (!item.CAP_Item) return false;
+      const recvItem = this.recvItemOptions.find(opt => opt.value === item.CAP_Item);
+      return recvItem?.Voucher_Type === '2';
+    });
+  }
+
+  /** 檢查票據資訊是否至少有一筆有效資料 */
+  hasValidCheckData(): boolean {
+    // 過濾掉自動插入的候選行和空白行
+    const validChecks = this.step3TableData.filter(check => {
+      const isCandidate = (check as any)._isAutoInsertCandidate;
+      const hasCheckNo = !!check.CHK_No;
+      return !isCandidate && hasCheckNo;
+    });
+    return validChecks.length > 0;
   }
 
   /** 驗證步驟1: 收款基本資料與收款項目 */
@@ -884,6 +941,26 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     if (this.step2TableData.length === 0) {
       this.messageService.errorBubble('請至少新增一個收款項目');
       return;
+    }
+
+    // 檢查是否有應收票據項目，若有則必須填寫票據資訊
+    if (this.hasVoucherType2Item()) {
+      if (!this.hasValidCheckData()) {
+        this.messageService.errorBubble('收款項目包含應收票據，請先填寫至少一筆票據資訊');
+        this.buttonID = 2; // 導向到票據資訊步驟
+        return;
+      }
+
+      // 檢查票據總金額是否等於票據明細總計
+      const billTotal = this.billTotalAmountControl.value || 0;
+      const checkTotal = this.totalCheckAmount;
+      if (billTotal !== checkTotal) {
+        const billTotalStr = billTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const checkTotalStr = checkTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        this.messageService.errorBubble(`票據總金額(${billTotalStr})與票據明細總計(${checkTotalStr})不符`);
+        this.buttonID = 2; // 導向到票據資訊步驟
+        return;
+      }
     }
 
     if (this.step4TableData.length === 0) {

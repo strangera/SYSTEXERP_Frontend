@@ -54,8 +54,7 @@ type ApiSort = { field: string; order: number };
 })
 export class TLS41020Component
   extends BasicQueryPageComponent<any>
-  implements OnInit, AfterViewInit
-{
+  implements OnInit, AfterViewInit {
   @ViewChild('tlsTable') tlsTable!: TableComponent;
 
   selectedItems: any[] = [];
@@ -131,13 +130,9 @@ export class TLS41020Component
     this.ECRNoSvc.getECRNo()
       .pipe(untilDestroyed(this))
       .subscribe((res) => {
-        this.ECRNoOptions =
-          res?.map((x: any) => ({
-            label: x.label,
-            formLabel: `${x.value} - ${x.label}`,
-            value: x.value,
-          })) || [];
+        this.ECRNoOptions = res || []; // res 裡的 label 本來就已是 "No - Name"
       });
+
 
     // 專櫃/櫃位下拉
     this.counterNameService.getCounters()
@@ -343,50 +338,50 @@ export class TLS41020Component
         return field;
     }
   }
-onClearForm(): void {
-  // 你要的「一律用 pageSize」：這裡決定預設 pageSize
-  const defaultPageSize = 20;
+  onClearForm(): void {
+    // 你要的「一律用 pageSize」：這裡決定預設 pageSize
+    const defaultPageSize = 20;
 
-  this.queryForm.reset(
-    {
-      // === 查詢欄位 ===
-      ECR_No: null,
-      EDC_No: null,
-      EDC_BegDate_From: null,
-      EDC_BegDate_To: null,
-      EDC_EdnDate_From: null,
-      EDC_EdnDate_To: null,
-      EDC_Status1: null,
-      EDC_Status2: null,
-      ECR_TLT_No: null,
-      EDC_IP1: null,
-      EDC_IP2: null,
-      EDC_IP3: null,
-      EDC_TmID1: null,
-      EDC_TmID2: null,
-      EDC_TmID3: null,
+    this.queryForm.reset(
+      {
+        // === 查詢欄位 ===
+        ECR_No: null,
+        EDC_No: null,
+        EDC_BegDate_From: null,
+        EDC_BegDate_To: null,
+        EDC_EdnDate_From: null,
+        EDC_EdnDate_To: null,
+        EDC_Status1: null,
+        EDC_Status2: null,
+        ECR_TLT_No: null,
+        EDC_IP1: null,
+        EDC_IP2: null,
+        EDC_IP3: null,
+        EDC_TmID1: null,
+        EDC_TmID2: null,
+        EDC_TmID3: null,
 
-      // === 分頁/排序欄位（⚠️ 用「單值」不要用 createPaginationConfig）===
-      pageIndex: 1,
-      pageSize: defaultPageSize,
-      SortBy: this.defaultSort, // SortMeta[]（一維）
-    } as any,
-    { emitEvent: false }
-  );
+        // === 分頁/排序欄位（⚠️ 用「單值」不要用 createPaginationConfig）===
+        pageIndex: 1,
+        pageSize: defaultPageSize,
+        SortBy: this.defaultSort, // SortMeta[]（一維）
+      } as any,
+      { emitEvent: false }
+    );
 
-  this.submitted = false;
-  this.data = [];
-  this.totalRecords = 0;
-  this.lastQueryBody = null;
+    this.submitted = false;
+    this.data = [];
+    this.totalRecords = 0;
+    this.lastQueryBody = null;
 
-  // 同步清掉狀態
-  this._currentSortBy = this.defaultSort;
-  this.queryStateService.setQueryState('TLS41020', {
-    formValue: this.queryForm.getRawValue(),
-    currentSortBy: this._currentSortBy,
-    lastQueryBody: null,
-  });
-}
+    // 同步清掉狀態
+    this._currentSortBy = this.defaultSort;
+    this.queryStateService.setQueryState('TLS41020', {
+      formValue: this.queryForm.getRawValue(),
+      currentSortBy: this._currentSortBy,
+      lastQueryBody: null,
+    });
+  }
 
 
   /** 刪除：改用 id 作為鍵值（支援單筆或多筆） */

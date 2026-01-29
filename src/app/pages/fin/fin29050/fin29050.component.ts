@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { AsyncPipe, DatePipe, Location } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -6,6 +6,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
 import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
@@ -16,6 +17,7 @@ import { FIN29050Data, FIN29050Service, QueryFIN29050Request } from '../../../se
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { DropDownListService } from './../../../service/utility/dropDownList.service';
 
@@ -24,6 +26,8 @@ import { DropDownListService } from './../../../service/utility/dropDownList.ser
   templateUrl: './fin29050.component.html',
   standalone: true,
   imports: [
+    AsyncPipe,
+    DropdownComponent,
     ButtonModule,
     TableSubheaderComponent,
     DropdownRangeComponent,
@@ -35,7 +39,8 @@ import { DropDownListService } from './../../../service/utility/dropDownList.ser
     ButtonComponent,
     TableComponent,
     TranslateModule,
-    InputNumberRangeComponent
+    InputNumberRangeComponent,
+    RadiobuttonComponent
   ]
 })
 export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> implements OnInit {
@@ -48,14 +53,17 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
     ACP_Amt_To: [null],
     AccNo_From: [null],
     AccNo_To: [null],
+    ShowZeroBalance: ['N'],
+    UnpaidIncludeReserve: ['N'],
     ...createPaginationConfig([]),
   });
 
   VendorNoOptions: any[] = []; // 廠商編號選項
   AccNoOptions: any[] = []; // 科目代號選項
-
   data: FIN29050Data[] = [];
   totalRecords = 0;
+  // 是否於查詢後自動載入剩餘頁（不修改共用元件）
+  autoLoadAll = true;
   pdfBtnLoading = false;
   excelBtnLoading = false;
 
@@ -75,7 +83,8 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
   constructor(
     private dropDownListService: DropDownListService,
     private fin29050Service: FIN29050Service,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
+    private location: Location
   ) {
     super();
   }
@@ -124,33 +133,41 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
         fromRoute: window.location.pathname,
         ts: Date.now(),
       };
-      localStorage.setItem('FIN29050_CRU_HANDOFF', JSON.stringify(handoff));
-      localStorage.setItem('FIN29050_CRU_PROGNO', 'FIN29050');
-      console.log('[FIN29050] 已儲存 handoff:', handoff);
+      // 導到 FIN55050 的 CRU，使用 FIN55050 的 localStorage key
+      localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
+      localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050');
+      console.log('[FIN29050] 已儲存 handoff(for FIN55050):', handoff);
     } catch (err) {
       console.error('[FIN29050] handoff save failed:', err);
       this.messageService?.warnBubble?.('寫入交接資料失敗。');
     }
 
-    window.open('/account/fin/fin29050cru', '_blank', 'noopener');
+    const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55050cru');
+    const finalUrl = `${window.location.origin}${externalUrl}`;
+    window.open(finalUrl, '_blank', 'noopener');
   }
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      const formValue = frm.value;
+      const raw = frm.getRawValue();
       this.loading = true;
-
+      const pageSize = Number(raw.pageSize) || 0;
+      const pageIndex = Number(raw.pageIndex) || 0;
       const requestData: QueryFIN29050Request = {
-        ...formValue,
-        VEN_No_From: formValue.VEN_No_From || '',
-        VEN_No_To: formValue.VEN_No_To || '',
-        ACP_Date_From: this.datePipe.transform(formValue.ACP_Date_From!, 'yyyy-MM-dd') || '',
-        ACP_Date_To: this.datePipe.transform(formValue.ACP_Date_To!, 'yyyy-MM-dd') || '',
-        ACP_Amt_From: formValue.ACP_Amt_From ?? undefined,
-        ACP_Amt_To: formValue.ACP_Amt_To ?? undefined,
-        AccNo_From: formValue.AccNo_From || '',
-        AccNo_To: formValue.AccNo_To || ''
-      };
+        PageSize: pageSize,
+        PageIndex: pageIndex,
+        OrderBy: '',
+        Offset: Math.max(pageIndex - 1, 0) * pageSize,
+        SortBy: raw.SortBy || [],
+        VEN_No_From: raw.VEN_No_From || '',
+        VEN_No_To: raw.VEN_No_To || '',
+        ACP_Date_From: this.datePipe.transform(raw.ACP_Date_From, 'yyyy-MM-dd') || '',
+        ACP_Date_To: this.datePipe.transform(raw.ACP_Date_To, 'yyyy-MM-dd') || '',
+        ACP_Amt_From: raw.ACP_Amt_From ?? undefined,
+        ACP_Amt_To: raw.ACP_Amt_To ?? undefined,
+        AccNo_From: raw.AccNo_From || '',
+        AccNo_To: raw.AccNo_To || ''
+      } as QueryFIN29050Request;
 
       this.fin29050Service
         .queryFIN29050(requestData)
@@ -169,6 +186,10 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
               this.data = [];
               this.totalRecords = 0;
             }
+            this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+            if (this.autoLoadAll && this.totalRecords > (this.data?.length || 0) && pageSize > 0) {
+              this.fetchRemainingPages(pageIndex, pageSize, raw);
+            }
           },
           error: () => {
             this.data = [];
@@ -183,7 +204,11 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
     const raw = this.queryForm.getRawValue();
 
     return {
-      ...raw,
+      PageSize: 0,
+      PageIndex: 0,
+      OrderBy: '',
+      Offset: 0,
+      SortBy: raw.SortBy || [],
       VEN_No_From: raw.VEN_No_From || '',
       VEN_No_To: raw.VEN_No_To || '',
       ACP_Date_From: this.datePipe.transform(raw.ACP_Date_From, 'yyyy-MM-dd') || '',
@@ -191,8 +216,10 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
       ACP_Amt_From: raw.ACP_Amt_From ?? undefined,
       ACP_Amt_To: raw.ACP_Amt_To ?? undefined,
       AccNo_From: raw.AccNo_From || '',
-      AccNo_To: raw.AccNo_To || ''
-    };
+      AccNo_To: raw.AccNo_To || '',
+      ShowZeroBalance: raw.ShowZeroBalance === 'N' ? 'N' : 'A',
+      UnpaidIncludeReserve: raw.UnpaidIncludeReserve === 'N' ? 'N' : 'Y'
+    } as QueryFIN29050Request;
   }
 
   onExportExcel() {
@@ -219,7 +246,6 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
     }
 
     const payload = this.buildExportPayload();
-
     this.pdfBtnLoading = true;
     this.fin29050Service.exportFIN29050_PDF(payload)
       .pipe(finalize(() => this.pdfBtnLoading = false))
@@ -238,5 +264,48 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
     a.download = fileName;
     a.click();
     window.URL.revokeObjectURL(url);
+  }
+
+  private fetchRemainingPages(currentPageIndex: number, pageSize: number, baseRaw: any) {
+    const totalPages = Math.ceil((this.totalRecords || 0) / pageSize);
+    const next = currentPageIndex + 1;
+    const fetchNext = (idx: number) => {
+      if (idx > totalPages) {
+        this.loading = false;
+        return;
+      }
+
+      const req: QueryFIN29050Request = {
+        PageSize: pageSize,
+        PageIndex: idx,
+        OrderBy: '',
+        Offset: Math.max(idx - 1, 0) * pageSize,
+        SortBy: baseRaw.SortBy || [],
+        VEN_No_From: baseRaw.VEN_No_From || '',
+        VEN_No_To: baseRaw.VEN_No_To || '',
+        ACP_Date_From: this.datePipe.transform(baseRaw.ACP_Date_From, 'yyyy-MM-dd') || '',
+        ACP_Date_To: this.datePipe.transform(baseRaw.ACP_Date_To, 'yyyy-MM-dd') || '',
+        ACP_Amt_From: baseRaw.ACP_Amt_From ?? undefined,
+        ACP_Amt_To: baseRaw.ACP_Amt_To ?? undefined,
+        AccNo_From: baseRaw.AccNo_From || '',
+        AccNo_To: baseRaw.AccNo_To || '',
+        ShowZeroBalance: baseRaw.ShowZeroBalance === 'N' ? 'N' : 'A',
+        UnpaidIncludeReserve: baseRaw.UnpaidIncludeReserve === 'N' ? 'N' : 'Y'
+      } as QueryFIN29050Request;
+
+      this.fin29050Service.queryFIN29050(req).pipe(untilDestroyed(this)).subscribe({
+        next: (res) => {
+          if (res && res.Data && res.Data.length) {
+            this.data = [...this.data, ...res.Data];
+          }
+          fetchNext(idx + 1);
+        },
+      });
+    };
+
+    if (next <= totalPages) {
+      this.loading = true;
+      fetchNext(next);
+    }
   }
 }

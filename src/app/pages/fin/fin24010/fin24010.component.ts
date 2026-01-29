@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Fin24010Service, QueryFIN24010Request, QueryFIN24010Response } from '@service/api/fin/fin24010.service';
+import { Fin24010Service, QueryBankAccountRequest, QueryFIN24010Request, QueryFIN24010Response } from '@service/api/fin/fin24010.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -63,7 +63,7 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
     ACP_Status_Param: [null], // 應付狀態 (VARCHAR(1))
     SubDetailNo_Param: [null], // 對象別編號 (VARCHAR(30))
     HasUnpaid: [null], // 是否有未付款
-    CheckChangedUser: [null], // 異動帳號檢核
+    CheckChangedUser: [null], // 是否只顯示銀行資料有差異
   });
   data: QueryFIN24010Response[] = [];
   selectedItems: QueryFIN24010Response[] = [];
@@ -71,19 +71,23 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
   totalRecords = 0;
   // 1. 原始查詢欄位 (預設/通用)
   columns: ReportColumn[] = [
-    { field: 'VEN_No', header: '廠商編號' },
-    { field: 'VEN_Name', header: '廠商名稱' },
-    { field: 'NoteDesc', header: '摘要' },
-    { field: 'ACP_Date', header: '立帳日期', format: formatDate },
-    { field: 'VouNo', header: '傳票編號' },
+    { field: 'ACP_No', header: '應付ID' },
+    { field: 'ACP_YYYYMM', header: '帳款年月' },
     { field: 'ACP_Amt', header: '應付金額', format: formatAmount },
     { field: 'PTA_Amt', header: '沖帳金額', format: formatAmount },
-    { field: 'ACP_ReserveAmt', header: '保留款金額', format: formatAmount },
-    { field: 'RetReserveAmt', header: '退保留款金額', format: formatAmount },
-    { field: 'ACP_Balance', header: '未付金額', format: formatAmount },
+    { field: 'ACP_Balance', header: '應付帳款餘額', format: formatAmount },
+    { field: 'VEN_PayType_Name', header: '付款方式' }, // 註：此處顯示的是代碼(1,2,3)，若需顯示中文可能需另外處理 mapping
+    { field: 'ACP_Date', header: '立帳日期', format: formatDate },
+    { field: 'ACP_ExpectPayDate', header: '預計付款日', format: formatDate },
+    { field: 'VEN_No', header: '廠客代號' },
+    { field: 'VEN_Name', header: '廠商名稱' }, // 視需求保留，通常廠客代號後會接名稱
+    { field: 'NoteDesc', header: '摘要' },
+    { field: 'VouNo', header: '傳票編號' },
+    { field: 'Vou_PostFlagName', header: '傳票狀態' }, // 使用後端給的中文說明欄位
+    { field: 'ACP_Status_Name', header: '狀態' }, // 應付帳款狀態 (0=作廢 2=建立)
   ];
 
-  // 2. 異動帳號檢核專屬欄位 (新增)
+  // 2. 是否只顯示銀行資料有差異專屬欄位 (新增)
   checkChangedUserColumns: ReportColumn[] = [
     { field: 'VEN_No', header: '廠商編號' },
     { field: 'VEN_Name', header: '廠商名稱' },
@@ -100,16 +104,16 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
 
   // 下拉選單/多選列表的 Options 宣告 (必須與 HTML 中的 options 屬性對應)
   Org_IdOptions = this.dropDown.querySys3100(); // 組織代碼
-  PayTypeOptions = [{ label: '電匯', value: '1' }, { label: '開票', value: '2' }, { label: '現金', value: '3' }] // 付款方式 1:電匯,2:開票,3:現金
-  VEN_BNK_No_ParamOptions = this.dropDown.queryAps1001NoBranch(); // 匯款銀行代號
-  CTRLYNOptions = [{ label: '是', value: 'Y' }, { label: '否', value: 'N' }]; // 票據禁止背書轉讓 (Y/N)
+  PayTypeOptions = getSYS1000Options('VEN_PayType'); // 付款方式 1:電匯,2:開票,3:現金
+  VEN_BNK_No_ParamOptions: QueryBankAccountRequest[] = []; // 匯款銀行代號
   VEN_No_ParamOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
   AccNo_ParamOptions = this.dropDown.queryGls1005(); // 會計科目代號
   VouStatusOptions = getSYS1000Options('VOU_Status'); // 傳票狀態
   ACP_Status_ParamOptions = getSYS1000Options('ACP_Status'); // 應付狀態
   SubDetailNo_ParamOptions = this.dropDown.queryGLS1016();  // 對象別編號
+  CTRLYNOptions = getSYS1000Options('YES_NO'); // 票據禁止背書轉讓 (Y/N)
   HasUnpaidOptions = [{ label: '是', value: 'Y' }, { label: '否', value: null }]; // 是否有未付款 (Y/N)
-  CheckChangedUserOptions = [{ label: '是', value: 'Y' }, { label: '否', value: null }]; // 異動帳號檢核
+  CheckChangedUserOptions = [{ label: '是', value: 'Y' }, { label: '否', value: null }]; // 是否只顯示銀行資料有差異
 
   constructor(
     public readonly fin24010Service: Fin24010Service,
@@ -121,6 +125,9 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
 
   ngOnInit(): void {
     this.initializePage('FIN24010', 'fin/fin24010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.fin24010Service.queryBankAccount().pipe(untilDestroyed(this)).subscribe(response => {
+      this.VEN_BNK_No_ParamOptions = response.Data;
+    });
   }
 
   // ----------------------------------------------------------------
@@ -132,6 +139,10 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
         pageIndex: 1, // 第一次查詢預設從第一頁開始
         pageSize: 30, // 第一次查詢預設30筆
         ACP_YYYYMM: this.datePipe.transform(frm.value.ACP_YYYYMM, 'yyyyMM'),
+        ExpectPayDate_From: this.datePipe.transform(frm.value.ExpectPayDate_From, 'yyyy-MM-dd'),
+        ExpectPayDate_To: this.datePipe.transform(frm.value.ExpectPayDate_To, 'yyyy-MM-dd'),
+        ACP_Date_From: this.datePipe.transform(frm.value.ACP_Date_From, 'yyyy-MM-dd'),
+        ACP_Date_To: this.datePipe.transform(frm.value.ACP_Date_To, 'yyyy-MM-dd'),
       }
       this.fin24010Service.queryFIN24010(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
         this.data = response.Data;
@@ -150,6 +161,10 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
       pageIndex: 1, // 第一次查詢預設從第一頁開始
       pageSize: 30, // 第一次查詢預設30筆
       ACP_YYYYMM: this.datePipe.transform(frm.value.ACP_YYYYMM, 'yyyyMM'),
+      ExpectPayDate_From: this.datePipe.transform(frm.value.ExpectPayDate_From, 'yyyy-MM-dd'),
+      ExpectPayDate_To: this.datePipe.transform(frm.value.ExpectPayDate_To, 'yyyy-MM-dd'),
+      ACP_Date_From: this.datePipe.transform(frm.value.ACP_Date_From, 'yyyy-MM-dd'),
+      ACP_Date_To: this.datePipe.transform(frm.value.ACP_Date_To, 'yyyy-MM-dd'),
       CheckChangedUser: 'Y'
     }
     this.fin24010Service.queryFIN24010(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
@@ -166,6 +181,8 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
       ACP_No_List: this.selectedItems.map(item => item.ACP_No)
     }).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this)).subscribe(response => {
       this.messageService.successBubble(response.Message);
+      this.onCheckChangedUser(this.queryForm);
+      this.selectedItems = [];
     });
   }
 }

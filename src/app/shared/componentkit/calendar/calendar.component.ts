@@ -1,6 +1,6 @@
 import { NgClass, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ValidationService } from '@shared/service/validation.service';
 import { PrimeTemplate } from 'primeng/api';
 import { CalendarModule, CalendarMonthChangeEvent, CalendarYearChangeEvent } from 'primeng/calendar';
@@ -28,6 +28,13 @@ const FORMAT_RULES: Record<string, { lengths: number[], chars: string[] }> = {
 export class CalendarComponent extends BasicKitComponent implements OnInit, OnDestroy {
   private valueChangeSubscription?: Subscription;
   private _calendarType: CalendarType = 'dateOne';
+  private readonly calendarMaxLength: Record<CalendarType, number> = {
+    timeOne: 5,
+    dateOne: 10,
+    dateTimeOne: 16,
+    dateMonthOne: 7,
+    dateYearOne: 4
+  };
 
   @Input() readonly = false;
   @Input() override label = '';
@@ -82,6 +89,16 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
       this.showTime = config.showTime;
       this.dateFormat = config.dateFormat;
       this.view = config.view as 'date' | 'month' | 'year';
+
+      const maxLen = this.calendarMaxLength[this._calendarType];
+      this.maxLength = maxLen; // 這是 BasicKitComponent 的屬性，會連動影響 placeholder
+
+      if (this.control) {
+        // 更新驗證器，保留原有的，但加入 maxLength
+        const currentValidators = this.control.validator ? [this.control.validator] : [];
+        this.control.setValidators([...currentValidators, Validators.maxLength(maxLen)]);
+        this.control.updateValueAndValidity({ emitEvent: false });
+      }
       if (!this.customPlaceholder || this.customPlaceholder === '請選擇') {
         this.placeholder = config.customPlaceholder;
       }
@@ -294,7 +311,7 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
 
   /**
    * 解析日期字串並移除時間部分
-   * 支援格式: YYYY-MM-DD, YYYY/MM/DD, MM/DD/YYYY, MM-DD-YYYY (含或不含時間)
+   * 支援格式: YYYYMM, YYYYMMDD, YYYY-MM-DD, YYYY/MM/DD 等
    */
   private parseDateWithoutTime(value: string): Date | null {
     if (!value) return null;
@@ -302,6 +319,24 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
     const dateStr = value.trim();
     if (!dateStr) return null;
 
+    // --- 新增：處理純數字字串 (YYYYMM 或 YYYYMMDD) ---
+    if (/^\d+$/.test(dateStr)) {
+      // 情況 A: YYYYMM (長度 6)
+      if (dateStr.length === 6) {
+        const year = parseInt(dateStr.substring(0, 4), 10);
+        const month = parseInt(dateStr.substring(4, 6), 10) - 1;
+        return new Date(year, month, 1); // 預設為該月 1 號
+      }
+      // 情況 B: YYYYMMDD (長度 8)
+      if (dateStr.length === 8) {
+        const year = parseInt(dateStr.substring(0, 4), 10);
+        const month = parseInt(dateStr.substring(4, 6), 10) - 1;
+        const day = parseInt(dateStr.substring(6, 8), 10);
+        return new Date(year, month, day);
+      }
+    }
+
+    // --- 以下為原本處理帶分隔符號的邏輯 ---
     // 移除時間部分
     const datePart = dateStr.split(/[T\s]/)[0];
 
@@ -312,24 +347,18 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
       const month = parseInt(match[2], 10) - 1;
       const day = parseInt(match[3], 10);
       const date = new Date(year, month, day);
-      if (!isNaN(date.getTime())) {
-        return date;
-      }
+      return isNaN(date.getTime()) ? null : date;
     }
 
-    // 嘗試 MM/DD/YYYY 或 MM-DD-YYYY 格式
-    match = datePart.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+    // 處理 YYYY/MM 格式 (dateMonthOne 常見格式)
+    match = datePart.match(/^(\d{4})[-/](\d{1,2})$/);
     if (match) {
-      const month = parseInt(match[1], 10) - 1;
-      const day = parseInt(match[2], 10);
-      const year = parseInt(match[3], 10);
-      const date = new Date(year, month, day);
-      if (!isNaN(date.getTime())) {
-        return date;
-      }
+      const year = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10) - 1;
+      return new Date(year, month, 1);
     }
 
-    // 嘗試使用 new Date() 解析，但要確保移除時間
+    // 最後嘗試原生解析
     const parsed = new Date(value);
     if (!isNaN(parsed.getTime())) {
       return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());

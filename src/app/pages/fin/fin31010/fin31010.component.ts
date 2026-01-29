@@ -83,10 +83,15 @@ export class FIN31010Component extends BasicQueryPageComponent<QueryFin31010Resp
     });
   }
   onDelete() {
-    const capItems = this.selectedRows.map(item => item.CAP_Item);
-    this.fin31010Service.deleteFin31010(capItems).subscribe(res => {
-      this.messageService.successBubble(res.Message);
-      this.onSubmit(this.queryForm); // 重新載入資料
-    });
+    this.messageService.confirm({
+      header: `是否確定刪除 ${this.selectedRows.length} 筆資料?`,
+      accept: () => {
+        const capItems = this.selectedRows.map(item => item.CAP_Item);
+        this.fin31010Service.deleteFin31010(capItems).subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          this.onSubmit(this.queryForm); // 重新載入資料
+        });
+      }
+    })
   }
 }

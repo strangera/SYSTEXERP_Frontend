@@ -162,7 +162,9 @@ export class FIN13060CRUComponent
     INV_NoneTax: new FormControl<string | null>('0', { validators: [Validators.required] }),
     INV_Cancel: new FormControl<'N' | 'Y' | null>('N', { validators: [Validators.required] }),
 
-    INV_GUIType: new FormControl<string | null>(null, { validators: [Validators.required] }),
+    INV_GUIType: new FormControl<string | null>(null, {
+  validators: [Validators.required, Validators.pattern(/^(31|32)$/)],
+}),
     INV_GUITrack: new FormControl<string | null>('', {
       validators: [
         Validators.required,
@@ -212,7 +214,7 @@ export class FIN13060CRUComponent
       ],
     }),
     Voucher_No: new FormControl<string | null>(null),
-    SAL_Type: new FormControl<string | null>(null),
+    SAL_Type: new FormControl<string | null>('G'),
     AssetType: new FormControl<string | null>(null),
     INV_Remark: new FormControl<string | null>(null),
     Tlt_No: new FormControl<string | null>(null),
@@ -234,10 +236,19 @@ export class FIN13060CRUComponent
     this.hydrateStoreInfoFromLocalStorage(); // mid、SYS_StoreNo 由 localStorage 帶入
 
     // 系統別（SYS_ORIGIN -> 下拉用在別處，如果不用可以略）
-    this.fin13050Service.querySYS1000DropDownList('SYS_ORIGIN').subscribe((res: any) => {
-      const list = res?.Data ?? [];
-      this.System_IDOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
-    });
+this.fin13050Service.querySYS1000DropDownList('SYS_ORIGIN').subscribe((res) => {
+  const list = res?.Data ?? [];
+  this.SAL_TypeOptions = list.map((x: any) => ({
+    value: String(x.No),
+    label: `${x.No}-${x.Name}`,
+  }));
+
+  // ⭐ 新增模式：若尚未選值，預設 G（且確保 options 內有 G）
+  if (this.crudstatus === CRUDStatus.Create && !this.dataForm.controls.SAL_Type.value) {
+    const hasG = this.SAL_TypeOptions.some(o => o.value === 'G');
+    if (hasG) this.dataForm.controls.SAL_Type.setValue('G', { emitEvent: false });
+  }
+});
 
     // 專櫃清單
     this.counterNameService.getCounters().subscribe((res) => {
@@ -271,10 +282,23 @@ export class FIN13060CRUComponent
     });
 
     // 發票格式
-    this.fin13060Service.queryAPS2002DropDownList().subscribe((res) => {
-      const list = res?.Data ?? [];
-      this.INV_GUITypeOptions = list.map(x => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
-    });
+this.fin13060Service.queryAPS2002DropDownList().subscribe((res) => {
+  const list = res?.Data ?? [];
+  const allow = new Set(['31', '32']);
+
+  this.INV_GUITypeOptions = list
+    .map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }))
+    .filter(o => allow.has(o.value));
+
+  // ⭐ 若 Create 模式且目前沒有值 / 值不在 31/32，預設 31
+  const cur = this.dataForm.controls.INV_GUIType.value;
+  if (this.crudstatus === CRUDStatus.Create && (!cur || !allow.has(String(cur)))) {
+    const defaultValue = this.INV_GUITypeOptions.some(o => o.value === '31') ? '31'
+      : (this.INV_GUITypeOptions[0]?.value ?? null);
+
+    this.dataForm.controls.INV_GUIType.setValue(defaultValue, { emitEvent: false });
+  }
+});
 
     // 收銀機號
     this.ECRNoService.getECRNo().subscribe(res => {
@@ -628,6 +652,11 @@ export class FIN13060CRUComponent
       }
     });
   }
+  override onCancel(): void {
+  this.router.navigate(['/account/fin', 'fin13060'], {
+    state: { fromCru: true },
+  });
+}
 
   // 集中中文錯誤訊息（提交前使用）
   private showErrorsIfInvalid(form: FormGroup, labelMap: Record<string, string>): boolean {

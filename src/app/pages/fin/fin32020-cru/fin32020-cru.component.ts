@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import {
   FormGroup,
@@ -27,6 +27,7 @@ import {
   Fin32020InsertRequest,
   Fin32020Row,
   Fin32020UpdateRequest,
+  
 } from '../../../service/api/fin/fin32020.service';
 
 // ⭐ Table2
@@ -55,6 +56,7 @@ import { ReportColumn } from '@shared/componentkit/table-report/table-report.mod
     MenubarComponent,
     PanelModule,
     FormsModule,
+    NgIf,
     ReactiveFormsModule,
     CalendarComponent,
     InputTextComponent,
@@ -90,7 +92,7 @@ adjAccLastQueryBody: any = null;
 adjAccQueryFn = (body: any) => this.fin32020Service.getAdjAcc(body);
   /** 主檔表單 */
   dataForm = this.formBuilder.nonNullable.group({
-    adjust_ID: [{ value: '', disabled: true } as any], // ADJ_No（顯示用）
+    adjust_ID: [{ value: '系統自動帶入', disabled: true } as any], // ADJ_No（顯示用）
     adjust_Date: [null as Date | null, [Validators.required]], // ADJ_Date（顯示改名：收款日期）
     remark: ['', [Validators.maxLength(30)]], // Remark 長度 30
   });
@@ -157,7 +159,8 @@ adjAccNoOptions$ = this.fin32020Service.getGLS1005DropDown().pipe(
 
     // ✅ 傳票單號（不論新增/編輯/檢視，都顯示；你說要 disable）
     // ⚠️ 若 table-edit 支援欄位 readonly/disabled，可再加屬性；否則至少在檢視/不可編輯狀態會鎖住。
-    { field: 'vouNo', header: '傳票單號', type: 'input', width: '180px', textAlign: 'left' },
+    { field: 'vouNo', header: '傳票單號', type: 'input', width: '180px', textAlign: 'left', disabled: () => true },
+
   ];
 
   // ================== 應收帳款 Dialog ==================
@@ -167,14 +170,40 @@ adjAccNoOptions$ = this.fin32020Service.getGLS1005DropDown().pipe(
   arsSelectedRows: Fin32020ARSRow[] = [];
   VEN_No_Options = this.dropDown.queryPos2013({ VEN_Flag: '' });
 
-  arsColumns: Column[] = [
-    { field: 'ARS_No', header: '應收帳款單號' },
-    { field: 'VEN_No', header: '廠客代號' },
-    { field: 'ARS_Date', header: '立帳日' },
-    { field: 'PTA_Date', header: '預計收款日' },
-    { field: 'ARS_Amt', header: '應收金額', format: this.moneyFormat },
-    { field: 'NoteDesc', header: '備註' },
-  ];
+arsColumns: Column[] = [
+  { field: 'ARS_No', header: '應收帳款單號' },
+  { field: 'VEN_No', header: '廠客代號' },
+  { field: 'ARS_Date', header: '立帳日', format: (v: any) => this.formatYMD(v) },
+  { field: 'PTA_Date', header: '預計收款日', format: (v: any) => this.formatYMD(v) },
+  { field: 'ARS_Amt', header: '應收金額', format: this.moneyFormat },
+  { field: 'NoteDesc', header: '備註' },
+];
+  /** 後端可能回 yyyy-MM-dd / yyyy-MM-ddTHH:mm:ss / Date，都統一顯示 yyyy/MM/dd */
+formatYMD = (v: any): string => {
+  if (v === null || v === undefined || v === '') return '';
+
+  // 已經是 Date
+  if (v instanceof Date) {
+    if (isNaN(v.getTime())) return '';
+    const y = v.getFullYear();
+    const m = String(v.getMonth() + 1).padStart(2, '0');
+    const d = String(v.getDate()).padStart(2, '0');
+    return `${y}/${m}/${d}`;
+  }
+
+  // 字串/數字等
+  const dt = new Date(v);
+  if (isNaN(dt.getTime())) {
+    // 有些後端可能直接給 yyyyMMdd / yyyy-MM-dd 以外的格式，這裡保守回傳原值
+    return String(v);
+  }
+
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth() + 1).padStart(2, '0');
+  const d = String(dt.getDate()).padStart(2, '0');
+  return `${y}/${m}/${d}`;
+};
+
 
   // ✅ 加入 ARS_No，可在對話框輸入搜尋
   arsSearchForm = this.formBuilder.nonNullable.group({
@@ -193,8 +222,8 @@ adjAccNoOptions$ = this.fin32020Service.getGLS1005DropDown().pipe(
   // 1=加 2=減
   carTypeOptions = [
     { label: '全部', value: '' },
-    { label: '加項(1)', value: '1' },
-    { label: '減項(2)', value: '2' },
+    { label: '1-加項', value: '1' },
+    { label: '2-減項', value: '2' },
   ];
 
   adjAccSearchForm = this.formBuilder.nonNullable.group({
@@ -238,6 +267,16 @@ adjAccNoOptions$ = this.fin32020Service.getGLS1005DropDown().pipe(
       this.dataForm.patchValue({ adjust_Date: new Date() });
     }
   }
+ private afterSaveSuccess(): void {
+  this.loading = false;
+  this.submitted = false;
+
+  this.router.navigate(['account/fin/fin32020'], {
+    queryParams: { refresh: 1 },
+    state: { fromCru: true },
+  });
+}
+
 
   /** Query row → CRU mapping */
   private patchFromRowdata(row: Fin32020Row): void {
@@ -315,9 +354,11 @@ adjAccNoOptions$ = this.fin32020Service.getGLS1005DropDown().pipe(
 
   /* ================= 應收帳款 Dialog ================= */
 onBack(): void {
-  // ⚠️ 這裡路徑請改成你實際 FIN32020 查詢頁 route
-  this.router.navigate(['account/fin/fin32020']);
+  this.router.navigate(['account/fin/fin32020'], {
+    state: { fromCru: true },
+  });
 }
+
   openARSDialog(): void {
     if (this.isFormReadable) return;
 
@@ -527,26 +568,26 @@ onSearchAdjAcc(): void {
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  private buildDetailList(): Fin32020DetailRow[] {
-    return (this.detailData || [])
-      .map((row, idx) => {
-        const accNo = String(row.adjustID ?? '').trim();
-        const arsNo = String(row.receiveID ?? '').trim();
-        const amt = Number(row.adjustAmount ?? 0);
-        const vouNo = String(row.vouNo ?? '').trim();
+private buildDetailList(): Fin32020DetailRow[] {
+  return (this.detailData || [])
+    .map((row, idx) => {
+      const accNo = String(row.adjustID ?? '').trim();
+      const arsNo = String(row.receiveID ?? '').trim();
+      const amt = Number(row.adjustAmount ?? 0);
 
-        return {
-          SeqNo: idx + 1,
-          AccNo: accNo || null,
-          ADJ_Amt: Number.isFinite(amt) ? amt : 0,
-          Detail_Remark: row.adjustRemark ?? null,
-          ARS_No: arsNo || null,
-          VouNo: vouNo || null,                 // ✅ 保留 VouNo
-          gls3001_id: row.gls3001_id ?? null,
-        } as Fin32020DetailRow;
-      })
-      .filter(d => (d.ARS_No?.trim() || d.AccNo?.trim() || (d.ADJ_Amt ?? 0) !== 0));
-  }
+      return {
+        SeqNo: idx + 1,
+        AccNo: accNo || null,
+        ADJ_Amt: Number.isFinite(amt) ? amt : 0,
+        Detail_Remark: row.adjustRemark ?? null,
+        ARS_No: arsNo || null,
+        // ✅ VouNo 不傳
+        gls3001_id: row.gls3001_id ?? null,
+      } as Fin32020DetailRow;
+    })
+    .filter(d => (d.ARS_No?.trim() || d.AccNo?.trim() || (d.ADJ_Amt ?? 0) !== 0));
+}
+
 
   private buildInsertPayload(): Fin32020InsertRequest {
     const raw = this.dataForm.getRawValue();
@@ -580,21 +621,40 @@ onSearchAdjAcc(): void {
       if (!tableValid) return;
     }
 
-    this.handleSubmit(frm, () => {
-      if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-        const payload = this.buildInsertPayload();
-        this.fin32020Service.insertFIN32020(payload).subscribe({
-          next: (res) => console.log('FIN32020 Insert success:', res),
-          error: (_err) => (this.loading = false),
-        });
-      } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-        const payload = this.buildUpdatePayload();
-        this.fin32020Service.updateFIN32020(payload).subscribe({
-          next: (res) => console.log('FIN32020 Update success:', res),
-          error: (_err) => (this.loading = false),
-        });
-      }
+this.handleSubmit(frm, () => {
+  if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
+    const payload = this.buildInsertPayload();
+
+    this.fin32020Service.insertFIN32020(payload).subscribe({
+      next: (res) => {
+        console.log('FIN32020 Insert success:', res);
+        this.afterSaveSuccess();
+      },
+      error: (err) => {
+        console.error('FIN32020 Insert error:', err);
+        this.loading = false;
+      },
     });
+
+  } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
+    const payload = this.buildUpdatePayload();
+
+    this.fin32020Service.updateFIN32020(payload).subscribe({
+      next: (res) => {
+        console.log('FIN32020 Update success:', res);
+        this.afterSaveSuccess();
+      },
+      error: (err) => {
+        console.error('FIN32020 Update error:', err);
+        this.loading = false;
+      },
+    });
+  } else {
+    // 沒權限或不是 Create/Edit 的情況
+    this.loading = false;
+  }
+});
+
   }
 
   submitForm(frm: FormGroup) {

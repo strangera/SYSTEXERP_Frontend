@@ -160,6 +160,21 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "leo": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/app/app.routes.ts",
+                  "with": "src/app/app.routes.leo.ts"
+                },
+                {
+                  "replace": "src/app/pages/pages.routes.ts",
+                  "with": "src/app/pages/pages.routes.leo.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -175,6 +190,9 @@
             },
             "staging": {
               "buildTarget": "TSRDERP_Frontend:build:staging"
+            },
+            "leo": {
+              "buildTarget": "TSRDERP_Frontend:build:leo"
             }
           },
           "defaultConfiguration": "development",
