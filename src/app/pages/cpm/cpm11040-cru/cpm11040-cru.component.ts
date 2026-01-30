@@ -160,10 +160,16 @@ export class CPM11040CRUComponent extends BasicCruPageComponent<any> implements 
         return;
       }
 
-      // 格式化日期為 YYYY-MM-DD
-      const formattedDate = returnDate instanceof Date
-        ? returnDate.toISOString().split('T')[0]
-        : returnDate;
+      // 格式化日期為 YYYY-MM-DD（使用本地時間，避免 UTC 時差導致日期偏移）
+      let formattedDate = '';
+      if (returnDate instanceof Date) {
+        const yyyy = returnDate.getFullYear();
+        const mm = String(returnDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(returnDate.getDate()).padStart(2, '0');
+        formattedDate = `${yyyy}-${mm}-${dd}`;
+      } else {
+        formattedDate = returnDate;
+      }
 
       // 格式化時間為 HH:mm
       let formattedTime = '';

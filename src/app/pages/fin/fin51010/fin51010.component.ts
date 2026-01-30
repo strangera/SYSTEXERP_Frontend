@@ -42,7 +42,7 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
   });
 
   // 下拉選單 Options
-  SrcSheetTypeOptions: { label: string, value: string }[] = [];
+  SrcSheetTypeOptions = this.dropDown.queryGls1010();
   TransStatusOptions = getSYS1000Options('Trans_Status'); // 拋轉狀態
   PostFlagOptions = getSYS1000Options('PostFlag'); // 過帳狀態
   AccNoOptions = this.dropDown.queryGls1005(); // 會計科目
@@ -88,12 +88,6 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
         if (res.Data) {
           // 儲存原始統計資料供頂部儀表板使用
           this.countData = res.Data;
-
-          // 格式化下拉選單選項
-          this.SrcSheetTypeOptions = res.Data.map(item => ({
-            label: `${item.Voucher_Name} (${item.CNT})`,
-            value: item.SrcSheetType
-          }));
         }
       });
   }

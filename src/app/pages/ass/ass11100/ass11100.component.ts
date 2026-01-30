@@ -1,123 +1,200 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-// Shared
+import { Component, computed, OnInit, signal } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS11100Service } from '@service/api/ass/ass11100.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-//
+import { finalize } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { ASS11100Data, ASS11100QueryRequest } from './ass11100.model';
 
-//3.1.1.10 倉別設定作業
+// 3.1.1.10 倉別設定作業
 @Component({
   selector: 'app-ass11100',
   templateUrl: './ass11100.component.html',
   styleUrl: './ass11100.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, EditorTextComponent, TableComponent, TranslateModule]
+  imports: [
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    ButtonComponent,
+    DropdownComponent,
+    InputTextComponent,
+    MenubarComponent,
+    TableReportComponent,
+  ],
 })
-export class ASS11100Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    storageType: [, [Validators.maxLength(10)]], // 倉別
-    storageName: ['', [Validators.maxLength(40)]], // 倉別名稱
-    organizationNumber: [], // 部門代號
-    remark: [,], // 備註
+export class ASS11100Component extends BasicQueryPageComponent<ASS11100Data> implements OnInit {
+
+  public readonly queryForm = this.formBuilder.group({
+    WH_ID: new FormControl<string | null>(null),        // 倉別
+    WH_NAME: new FormControl<string | null>(null),      // 倉別名稱
+    ATT_ORG_ID: new FormControl<string | null>(null),   // 部門代號
+    NOTES: new FormControl<string | null>(null),        // 備註
+    pageSize: new FormControl<number>(30),              // 每頁筆數
+    pageIndex: new FormControl<number>(1),              // 頁碼
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+  public readonly qf = computed(() => this.queryForm.controls);
+
+  public readonly tableData = signal<(ASS11100Data & { _pk: string })[]>([]);
+  public readonly totalRecords = signal<number>(0);
+  public readonly tableLoading = signal<boolean>(false);
+  public lastQueryBody?: ASS11100QueryRequest;
+
+  public selectedItems: (ASS11100Data & { _pk: string })[] = [];
+  public organizationOptions: Array<{ label: string; value: string }> = [];
+
+  public readonly columns: ReportColumn[] = [
+    { field: 'WH_ID', header: '倉別' },
+    { field: 'WH_NAME', header: '倉別名稱' },
+    { field: 'ATT_ORG_ID', header: '部門代號' },
+    { field: 'NOTES', header: '備註' },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '倉別', visible: true },
-    { field: 'col2', header: '倉別名稱', visible: true },
-    { field: 'col3', header: '部門代號', visible: true },
-    { field: 'col4', header: '備註', visible: true },
 
-    // { field: 'col5', header: '所屬會計科目(借)', visible: true },
-    // { field: 'col6', header: '所屬會計科目(貸)', visible: true },
-    // { field: 'col7', header: '進項稅額科目(借)', visible: true },
-    // { field: 'col8', header: '費用科目', visible: true },
-    // { field: 'col9', header: '折舊科目(借)', visible: true },
-    // { field: 'col10', header: '累計折舊科目(貸)', visible: true },
-    // { field: 'col11', header: '折舊年限', visible: true },
-    // { field: 'col12', header: '說明', visible: true },
-
-    // { field: 'col13', header: '公司地址', visible: true },
-    // { field: 'col14', header: '付款方式', visible: true },
-    // { field: 'col15', header: '營運模式', visible: true },
-    // { field: 'col16', header: '票期', visible: true },
-    // { field: 'col17', header: '備註', visible: true },
-    // { field: 'col18', header: '訂貨傳真', visible: true },
-
-    // { field: 'col19', header: '工廠地址', visible: true },
-    // { field: 'col20', header: '工廠電話', visible: true },
-    // { field: 'col21', header: '工廠傳真', visible: true },
-
-    // { field: 'col22', header: '送貨方式', visible: true },
-    // { field: 'col23', header: '退貨處理方式', visible: true },
-    // { field: 'col24', header: '廠商送貨期限', visible: true },
-
-    // { field: 'col25', header: '附註', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  //
-  organizationNumberOptions: any[] = [];
-
-  //
   constructor(
-    private formBuilder: FormBuilder,
+    public readonly service: ASS11100Service,
+    private readonly dropDownListService: DropDownListService,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310010';
-    this.cruPage = '/ASS1000/ASS11100CRU';
+    this.initializePage('ASS11100', 'ass/ass11100cru', this.queryForm, this.onSubmit.bind(this));
+    this.loadOrganizationOptions();
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-
+  /**
+   * 載入部門下拉選單
+   */
+  private loadOrganizationOptions(): void {
+    this.dropDownListService.querySYS3100_DropDownList().subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        this.organizationOptions = res.Data.map(item => ({
+          label: `${item.No || ''}-${item.Name || ''}`,
+          value: item.No || ''
+        }));
+      },
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+  /**
+   * 查詢函數（供 table-report 分頁查詢使用）
+   */
+  public queryFunction = (body: any) => {
+    const rawFormValue = this.queryForm.getRawValue();
+    // 支援大小寫（table-report loadMore 使用小寫）
+    const pageSize = body.pageSize ?? body.PageSize ?? 30;
+    const pageIndex = body.pageIndex ?? body.PageIndex ?? 1;
+    const payload: ASS11100QueryRequest = {
+      WH_ID: rawFormValue.WH_ID || undefined,
+      WH_NAME: rawFormValue.WH_NAME || undefined,
+      ATT_ORG_ID: rawFormValue.ATT_ORG_ID || undefined,
+      NOTES: rawFormValue.NOTES || undefined,
+      PageSize: body.pageSize ?? 30,
+      PageIndex: body.pageIndex ?? 1,
+      SortBy: body.SortBy,
+    };
+    const cleanPayload = removeEmptyValues(payload) as ASS11100QueryRequest;
+    return this.service.queryASS11100(cleanPayload).pipe(
+      map((res) => ({
+        ...res,
+        Data: (res.Data || []).map((r) => ({
+          ...r,
+          _pk: `${r.WH_ID ?? ''}|${r.ATT_ORG_ID ?? ''}`,
+        })),
+      }))
+    );
+  };
+
+  public onSubmit(): void {
+    this.handleSubmit(this.queryForm, () => {
+      const rawFormValue = this.queryForm.getRawValue();
+      this.lastQueryBody = {
+        WH_ID: rawFormValue.WH_ID || undefined,
+        WH_NAME: rawFormValue.WH_NAME || undefined,
+        ATT_ORG_ID: rawFormValue.ATT_ORG_ID || undefined,
+        NOTES: rawFormValue.NOTES || undefined,
+        PageSize: rawFormValue.pageSize || 30,
+        PageIndex: rawFormValue.pageIndex || 1,
+      } as ASS11100QueryRequest;
+
+      this.tableLoading.set(true);
+      this.queryStateService.setQueryState(this.ProgNo, rawFormValue);
+      this.queryFunction(this.lastQueryBody).pipe(
+        finalize(() => {
+          this.tableLoading.set(false);
+          this.loading = false;
+        }),
+      ).subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
+          this.tableData.set(res.Data);
+          this.totalRecords.set(res.TotalCount || 0);
+        },
+      });
+    });
   }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
+  /**
+   * 刪除項目（以 WH_ID + ATT_ORG_ID 識別）
+   */
+  public onDelete(data: (ASS11100Data & { _pk?: string }) | (ASS11100Data & { _pk?: string })[]): void {
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) return;
+
+    const valid = items.filter(
+      (row) => row && (row.WH_ID != null && row.WH_ID !== '') && (row.ATT_ORG_ID != null && row.ATT_ORG_ID !== '')
+    );
+    if (valid.length === 0) {
+      this.messageService.warnBubble('未找到有效的刪除項目（需有倉別代號與所屬部門代號）');
+      return;
     }
+
+    this.messageService.confirm({
+      header: `是否確認刪除 ${valid.length} 筆資料?`,
+      accept: () => {
+        const payload = {
+          Items: valid.map((row) => ({
+            WH_ID: row.WH_ID ?? null,
+            ATT_ORG_ID: row.ATT_ORG_ID ?? null,
+          })),
+        };
+        this.service.deleteASS11100(payload).subscribe({
+          next: (res) => {
+            if (res.Status !== '0000') {
+              this.messageService.errorBubble(`刪除失敗: ${res.Message ?? '刪除失敗'}`);
+            } else {
+              this.messageService.successBubble('選中項目刪除成功');
+            }
+          },
+          error: (err) => {
+            console.error('API error:', err);
+            this.messageService.errorBubble('刪除失敗');
+          },
+          complete: () => {
+            this.onSubmit();
+            this.selectedItems = [];
+          },
+        });
+      },
+    });
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-    }
-  }
-
-  onDetail(data: any) {
+  /**
+   * 判斷行是否可選
+   */
+  public isRowSelectable(rowData: ASS11100Data): boolean {
+    return true;
   }
 }
