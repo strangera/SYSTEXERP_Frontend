@@ -20,6 +20,19 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
+// SYSBR10佈告欄管理作業
+// 公告主檔 POS5101 (I/O)
+// 公告明細檔 POS5102 (I/O)
+
+// 公告資料，其中公告類別 3=自動公告，其內容為人事異動資料，資料會由系統排程與HR系統將人事異動資料自動寫入公告主檔，公告明檔的對象會自動帶入組織代碼為全公司。
+// 公告資料查詢出來後，可以預覽，預覽的內容是顯示公告事項及公告內容以HTML方式顯示。
+// 主程式顯示公告資料時，顯示有效的公告資料。
+
+// 預覽格式如下:
+// 順序：緊急公告🡪一般公告🡪自動公告
+// 公告期間: 9999/99/99 HH:NN:SS ~ 9999/99/99 HH:NN:SS
+// 公告事項：ＸＸＸＸＸＸＸＸＸＸＸＸＸＸＸ
+// 公告內容：ＨＴＭＬ內容
 @Component({
   selector: 'app-sysbr10',
   templateUrl: './sysbr10.component.html',
@@ -47,8 +60,8 @@ export class SYSBR10Component extends BasicQueryPageComponent<QuerySYSBR10Respon
     Pub_EndDate_End: [null], // 公告結束日 (迄)
     User_No: [null], // 使用者代號
     Org_ID: [null], // 組織代號
-    Pub_Type: [null], // 公告類型
-    pub_enable: [null], // 是否啟用
+    Pub_Type: [null], // 公告類型 1. 一般公告 2. 緊急公告 3. 自動公告(與HR串接)
+    pub_enable: [null], // 是否啟用 Y/N
     Pub_Event: [], // 公告主題關鍵字
     pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1
