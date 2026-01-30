@@ -25,7 +25,8 @@
           <app-dropdown label="失物狀態" controlName="SEQ_TYPE" [options]="Type3Options" optionLabel="Name" optionValue="No"
             [control]="dataForm.controls.SEQ_TYPE" [submitted]="submitted"></app-dropdown>
         </div>
-        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="遺失/拾獲日期" controlName="LOST_DATE"
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne"
+          [label]="getLabel('LOST_DATE_HEADER','遺失/拾獲日期')" controlName="LOST_DATE"
           [control]="dataForm.controls.LOST_DATE" [submitted]="submitted" />
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -62,17 +63,19 @@
         </div>
       </div>
       <div class="card">
-        <h4>遺失/拾獲基本資料</h4>
+        <h4>{{ getLabel('SECTION_TITLE','遺失/拾獲基本資料') }}</h4>
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="報失者/拾獲者姓名" controlName="REGISTRANT"
-            [control]="dataForm.controls.REGISTRANT" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" [label]="getLabel('REGISTRANT','報失者/拾獲者姓名')"
+            controlName="REGISTRANT" [control]="dataForm.controls.REGISTRANT" [submitted]="submitted"></app-input-text>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="報失者/拾獲者身分別" controlName="Identity_KIND" [options]="USER5Options" optionLabel="Name"
-              optionValue="No" [control]="dataForm.controls.Identity_KIND" [submitted]="submitted"></app-dropdown>
+            <app-dropdown [label]="getLabel('IDENTITY_KIND','報失者/拾獲者身分別')" controlName="Identity_KIND"
+              [options]="USER5Options" optionLabel="Name" optionValue="No" [control]="dataForm.controls.Identity_KIND"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="報失者/拾獲者性別" controlName="SEX" [options]="USER6Options" optionLabel="Name"
-              optionValue="No" [control]="dataForm.controls.SEX" [submitted]="submitted"></app-dropdown>
+            <app-dropdown [label]="getLabel('SEX','報失者/拾獲者性別')" controlName="SEX" [options]="USER6Options"
+              optionLabel="Name" optionValue="No" [control]="dataForm.controls.SEX"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <app-input-text class="col-12 md:col-6 lg:col-4" label="電話" controlName="TEL"
             [control]="dataForm.controls.TEL" [submitted]="submitted"></app-input-text>

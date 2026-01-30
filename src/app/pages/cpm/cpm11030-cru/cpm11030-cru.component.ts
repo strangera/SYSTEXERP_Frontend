@@ -89,7 +89,7 @@ export class CPM11030CRUComponent extends BasicCruPageComponent<any> implements 
     Loan_Time: [null as Date | null],
 
     /** 出借狀態：1/2（nullable:true） */
-    Loan_Status: ['' as string],
+    Loan_Status: ['1' as string],
 
     /** 其他欄位皆 nullable:true */
     User_Name: ['' as string, [Validators.maxLength(50)]],

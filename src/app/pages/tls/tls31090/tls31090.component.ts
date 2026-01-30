@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS31090Request, TLS31090Response, Tls31090Service } from '@service/api/tls/tls31090.service';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
@@ -21,7 +21,7 @@ import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
-import { debounceTime, finalize } from 'rxjs';
+import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
@@ -65,6 +65,7 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
     Areas: [[]], //區域代號，多選以逗號分隔
     CatLNos: [[] as string[]], //大分類代號，多選以逗號分隔
     CatMNos: [[] as IDropdownItem[]], //中分類代號，多選以逗號分隔
+    CatSNos: [[] as IDropdownItem[]],//小分類
     CabinetKinds: [[]], //櫃別類型，多選以逗號分隔 (TLTTALENT.tlt_kind)
     OrgIds: [[]], //組織代號，多選以逗號分隔
     CounterNos: [[]], //專櫃代號，多選以逗號分隔 (TLTTALENT.tlt_no)
@@ -148,6 +149,7 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
   area_no_Option: IDropdownItem[] = []; // 區域
   bus_type_Option: IDropdownItem[] = []; // 大分類
   bus_class_Option: IDropdownItem[] = []; // 中分類
+  bus_sclass_Option: IDropdownItem[] = []; // 小分類
   org_id_Option: IDropdownItem[] = []; // 組織
   CounterNos_Option: IDropdownItem[] = []; // 專櫃代號
 
@@ -207,8 +209,80 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
         });
       } else {
         this.bus_class_Option = [];
+        this.bus_sclass_Option = [];
+        this.queryForm.controls.CatSNos.setValue([]);
         this.queryForm.controls.CatMNos.setValue([]);
       }
+    });
+    // 監聽中分類變化，獲取小分類並分組
+    this.queryForm.controls.CatMNos.valueChanges.pipe(
+      debounceTime(300),
+      untilDestroyed(this),
+      map(selectedMValues => selectedMValues || []),
+
+      // 使用 switchMap 取消前一次的請求，確保只處理最新的選取
+      switchMap((selectedMValues: IDropdownItem[]) => {
+        if (selectedMValues.length === 0) {
+          this.bus_sclass_Option = [];
+          this.queryForm.controls.CatSNos.setValue([]);
+          //  統一回傳型別，避免 TypeScript 推斷成 never[]
+          return of({ selectedMValues: [], data: [] });
+        }
+
+        //  組成符合新 API 的請求格式
+        const queryTLTBUSSCLASSInfos: ITLTBUSSCLASSInfo[] = selectedMValues
+          .filter(v => v && v.bus_type) // 過濾 undefined
+          .map(v => ({
+            bus_type: v.bus_type!,   // 非空斷言
+            bus_class: v.No
+          }));
+
+        //  呼叫新 API（一次呼整包）
+        return this.dropDownListService.queryTLTBUSSCLASS_DropDownList_new({ queryTLTBUSSCLASSInfos }).pipe(
+          map(res => ({ selectedMValues, data: res.Data }))
+        );
+      }),
+
+      tap(result => {
+        console.log('所有 API 呼叫結果：', result);
+      })
+    ).subscribe(result => {
+
+      const groupedData = result.selectedMValues.reduce((accumulator, mValue) => {
+        const groupKey = `${mValue.bus_type}_${mValue.No}`;
+        const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
+
+        //  過濾小分類資料對應到當前中分類
+        const items = result.data
+          .filter(item => item.bus_type === mValue.bus_type && item.bus_class === mValue.No)
+          .map(item => ({
+            ...item,
+            label: `${item.No} - ${item.Name}`,
+            bus_type: mValue.bus_type,
+            bus_type_name: mValue.bus_type_name,
+            CAT_MNo: mValue.No,
+            CAT_MName: mValue.Name
+          }));
+
+        //  去重
+        const uniqueItemsMap = new Map<string, typeof items[0]>();
+        items.forEach(item => {
+          if (!uniqueItemsMap.has(item.No)) {
+            uniqueItemsMap.set(item.No, item);
+          }
+        });
+
+
+        accumulator[groupKey] = {
+          label: groupLabel,
+          items: Array.from(uniqueItemsMap.values())
+        };
+
+        return accumulator;
+      }, {} as Record<string, any>);
+
+      this.bus_sclass_Option = Object.values(groupedData);
+      console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
     });
   }
   onSubmit(frm: FormGroup) {
@@ -223,8 +297,8 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
         TxnDate: formatDate(frm.getRawValue().TxnDate, 'yyyy-MM-dd', 'en-US'),
 
         // 分類轉成編號
-        CatLNos: (raw.CatLNos || []).map((x: any) => x.No ?? x).join(','),
-        CatMNos: (raw.CatMNos || []).map((x: any) => x.No ?? x).join(','),
+        CatMNos: (frm.getRawValue().CatMNos || []).map((x: any) => [x.bus_type, x.No]),
+        CatSNos: (frm.getRawValue().CatSNos || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
 
         // 多選陣列轉成逗號字串
         Floors: (raw.Floors || []).join(','),
@@ -254,8 +328,8 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
       TxnDate: formatDate(frm.getRawValue().TxnDate, 'yyyy-MM-dd', 'en-US'),
 
       // 分類轉成編號
-      CatLNos: (raw.CatLNos || []).map((x: any) => x.No ?? x).join(','),
-      CatMNos: (raw.CatMNos || []).map((x: any) => x.No ?? x).join(','),
+      CatMNos: (frm.getRawValue().CatMNos || []).map((x: any) => [x.bus_type, x.No]),
+      CatSNos: (frm.getRawValue().CatSNos || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
 
       // 多選陣列轉成逗號字串
       Floors: (raw.Floors || []).join(','),
@@ -326,8 +400,9 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
     const formValue: TLS31090Request = {
       ...rawQuery,
       TxnDate: formatDate(rawQuery.TxnDate, 'yyyy-MM-dd', 'en-US'),
-      CatLNos: (rawQuery.CatLNos || []).map((x: any) => x.No ?? x).join(','),
-      CatMNos: (rawQuery.CatMNos || []).map((x: any) => x.No ?? x).join(','),
+      CatMNos: (rawQuery.CatMNos || []).map((x: any) => [x.bus_type, x.No]),
+      CatSNos: (rawQuery.CatSNos || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
+
       Floors: (rawQuery.Floors || []).join(','),
       Areas: (rawQuery.Areas || []).join(','),
       CabinetKinds: (rawQuery.CabinetKinds || []).join(','),

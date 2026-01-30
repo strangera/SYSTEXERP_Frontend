@@ -7,9 +7,9 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-dropdown-range class="col-12 md:col-8" startLabel="收銀機號(起)" endLabel="收銀機號(迄)"
+          <app-dropdown-range class="col-12 md:col-8" startLabel="收銀機號/名稱(起)" endLabel="收銀機號/名稱(迄)"
             startControlName="ECR_No_Start" endControlName="ECR_No_End" [startControl]="queryForm.controls.ECR_No_Start"
-            [options]="ECR_NoOptions | async" optionLabel="Name" optionValue="value" [errorForGroup]="true"
+            [options]="ECR_NoOptions | async" optionLabel="label" optionValue="value" [errorForGroup]="true"
             [endControl]="queryForm.controls.ECR_No_End" [submitted]="submitted"></app-dropdown-range>
         </div>
         <div class="grid p-fluid">

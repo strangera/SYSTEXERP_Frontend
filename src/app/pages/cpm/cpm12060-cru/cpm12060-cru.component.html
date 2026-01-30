@@ -70,23 +70,28 @@
         />
       </div>
       <div class="grid p-fluid">
-        <app-input-text
+        <app-dropdown
           class="col-12 md:col-6 lg:col-4"
           label="客戶意見類別"
           controlName="KIND_ID"
+          [options]="kindOption"
+          optionLabel="label"
+          optionValue="value"
           [control]="mainForm.controls.KIND_ID"
           [submitted]="submitted"
           [readonly]="true"
-        />
-
-        <app-input-text
+        ></app-dropdown>
+        <app-dropdown
           class="col-12 md:col-6 lg:col-4"
           label="客戶意見子類別"
+          [options]="KIND_SubIDOptions$ | async"
+          optionLabel="label"
+          optionValue="value"
           controlName="KIND_ID_SUB"
           [control]="mainForm.controls.KIND_ID_SUB"
           [submitted]="submitted"
           [readonly]="true"
-        />
+        ></app-dropdown>
       </div>
 
       <div class="grid p-fluid">

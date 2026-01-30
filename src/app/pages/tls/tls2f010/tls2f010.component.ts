@@ -51,7 +51,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     PUR_GUIDate_End: [null],
     COMM_MONEY_TYPE: [null],
     COMM_YM: [new Date()],
-    sam_termno: [1],
+    sam_termno: [null],
     DEC_YM: [null],
     ven_uniform: [null],
     PUR_TaxType: [[]],
@@ -105,6 +105,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
   ];
   invoiceFormatOptions = [
     { value: '21', label: '21/進項三聯式、電子計算機統一發票' },
+    { value: '25', label: '25-進項三聯式收銀機統一發票' },
     { value: '27', label: '27/彙總登陸每張稅額五百元以下之進項二聯式收銀機統一發票、載有稅額之其他憑證' },
   ];
 
@@ -197,7 +198,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
       if (Array.isArray(val) && val.length) moneyType = String(val[0]);
       else if (val != null && val !== '') moneyType = String(val);
       this.updateSamTermnoOptions(moneyType);
-      this.queryForm.controls.sam_termno.setValue(1);
+      this.queryForm.controls.sam_termno.setValue(null);
     });
     // 初始載入時也更新一次，支援單選字串或多選陣列
     const initialVal = moneyCtrl.value as any;
@@ -218,7 +219,26 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
 
 
   getCurrentQueryFunction() {
-    return this.tls2f010Service.queryTLS2F010.bind(this.tls2f010Service);
+    // 返回一個 wrapper，將後端回應標準化為 TableReport 預期的 { Data: rows[], TotalCount } 結構
+    return (body: any) => this.tls2f010Service.queryTLS2F010(body).pipe(map((res: any) => {
+      const respData = res?.Data ?? [];
+      let rows: any[] = [];
+      let totalCount: number | null = res?.TotalCount ?? null;
+
+      if (Array.isArray(respData) && respData.length && respData[0] && respData[0].Details) {
+        rows = respData[0].Details || [];
+        // 嘗試從內層 Total 擷取總筆數（若後端提供）
+        totalCount = totalCount ?? (respData[0].Total?.TotalCount ?? null);
+      } else if (Array.isArray(respData)) {
+        rows = respData;
+        totalCount = totalCount ?? (res?.Total?.TotalCount ?? res?.TotalCount ?? rows.length);
+      } else {
+        rows = [];
+        totalCount = totalCount ?? 0;
+      }
+
+      return { Data: rows, TotalCount: totalCount };
+    }));
   }
 
 

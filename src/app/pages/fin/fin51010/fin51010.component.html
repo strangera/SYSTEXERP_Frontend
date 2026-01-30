@@ -10,8 +10,9 @@
         <div class="grid p-fluid">
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="傳票型態" controlName="SrcSheetType" [options]="SrcSheetTypeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.SrcSheetType" [submitted]="submitted">
+            <app-dropdown label="傳票型態" controlName="SrcSheetType" [options]="SrcSheetTypeOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.SrcSheetType"
+              [submitted]="submitted">
             </app-dropdown>
           </div>
 

@@ -470,7 +470,7 @@ export interface TlttalentTltSpaceItem {
 
 /** CSS1003 查詢參數 */
 export interface Css1003Query {
-  KIND_ID: string;
+  KIND_ID: string | null;
 }
 
 /** CSS1005 查詢參數 */

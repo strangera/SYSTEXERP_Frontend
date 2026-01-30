@@ -27,8 +27,8 @@ export interface QueryCPM11090Response {
   missinG_PEOPLE: string;
   relations: string;
   relations_Name: string;
-  broadcasT_YN: string;
-  IsFinished: string;
+  broadcasT_YN: string; // 是否廣播 (Y/N/null)
+  IsFinished: string;   // 是否結案 (已結案/未結案 或 true/false)
 }
 
 /** 明細結果 Interface (編輯/檢視用) */
@@ -69,12 +69,13 @@ export interface InsertCPM11090Request {
 
 /** 編輯資料 Interface */
 export interface UpdateCPM11090Request {
-  seQ_ID: string;             // 登錄編號
-  by_MISSING_PEOPLE: string;  // 被尋人姓名
-  salutation?: string;        // 被尋人稱謂
-  collectioN_SITES: string;   // 集合地點
-  missinG_PEOPLE?: string;    // 尋人者
-  relations?: string;         // 與被尋人關係
+  seQ_ID: string;
+  by_MISSING_PEOPLE: string;
+  salutation?: string;
+  collectioN_SITES: string;
+  missinG_PEOPLE?: string;
+  relations?: string;
+  broadcast_YN?: string; // 新增此欄位
 }
 
 @Injectable({
@@ -95,7 +96,10 @@ export class Cpm11090Service {
           ...res,
           Data: res.Data.map(item => ({
             ...item,
+            // 處理稱謂轉換
             salutation: getSYS1000Options('SALUTATION').find(opt => opt.label === item.SalutationName)?.value || '',
+            // 處理廣播狀態顯示文字 (可選：視後端回傳格式而定)
+            broadcasT_YN: item.broadcasT_YN === 'Y' ? '已廣播' : (item.broadcasT_YN === 'N' ? '不廣播' : '待廣播')
           }))
         };
       })

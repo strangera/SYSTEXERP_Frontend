@@ -122,7 +122,7 @@ export class CPM11010Component extends BasicQueryPageComponent<CPM11010Data> imp
     });
     // 載入營業區域選項
     this.dropdownApiService.querySys3A00().subscribe(options => {
-      this.areaNoOptions = options?.map(item => ({ label: `${item.No}-${item.Name}`, value: item.No })) || [];
+      this.areaNoOptions = options?.map(item => ({ label: item.Name, value: item.No })) || [];
     });
     // 載入服務台位置編號選項
     this.dropDownListService.queryCPM11010_ServiceId_DropDownList().subscribe(response => {

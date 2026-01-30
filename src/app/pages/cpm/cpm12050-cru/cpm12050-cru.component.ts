@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
@@ -34,10 +35,21 @@ import { InputTextareaComponent } from '../../../shared/componentkit/input-texta
     InputTextareaComponent,
     DropdownComponent,
     TranslateModule,
-    TableEditComponent
+    TableEditComponent,
+    CalendarComponent
   ]
 })
 export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> implements OnInit {
+  // 若觸發高權限編輯，則強制允許編輯 (繞過一般權限判斷)
+  forceEditAll = false;
+
+  // 當需要強制高權限編輯時，覆寫 canEdit 判斷
+  override canEdit(): boolean {
+    if (this.forceEditAll) {
+      return true;
+    }
+    return super.canEdit();
+  }
   dataForm = this.formBuilder.nonNullable.group({
     KIND_ID: [null as string | null, Validators.required],                        // 意見類型（必填）
     KIND_ID_SUB: [null as string | null, Validators.required],                    // 意見子類型（必填）
@@ -51,11 +63,27 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     CONTACT_TEL: [null, Validators.maxLength(30)],                                // 聯絡電話
     CELL_PHONE: [null, Validators.maxLength(30)],                                 // 手機號碼
     E_MAIL: [null, [Validators.email, Validators.maxLength(100)]],                // Email
-    SUGG_SOURCE_OTHER: [null, Validators.required],                               // 其他建議來源
+    // SUGG_SOURCE_OTHER: [null, Validators.required],                               // 其他建議來源
     MEMBER_ID: [null],                                                            // 會員編號
-    CRT_USR_No: [null],                                                           // 建檔人編號
-    CRT_USR_Name: [null]                                                          // 建檔人姓名
+    CRT_USR_No: [null as string | null],                                           // 建檔人編號
+    CRT_USR_Name: [null as string | null],
+    COMPLAIN_DATE: [null],
+    ALERT_DATE: [null],
+    ANSWER_YN: [null],
+    SUGG_TYPE: [null],
+    CLASS_EMAIL: [null],
   });
+  ANSWER_YNOptions = [
+    { label: '已建立', value: 'S' },
+    { label: '已派單', value: 'W' },
+    { label: '處理中', value: 'Y' },
+    { label: '結案', value: 'Z' }
+  ];
+  SUGG_TYPEOptions = [
+    { label: '客訴', value: '0' },
+    { label: '表揚', value: '1' },
+
+  ];
 
   //#region 下拉選單
   // 性別選項
@@ -89,28 +117,23 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
   columns: EditColumn[] = [
     {
       field: 'ANSWER',
-      header: '回覆內容',
+      header: '處理記錄',
       type: 'input',
+      validate: [validateRequired]
+    },
+    {
+      field: 'ANSWER_DATE',
+      header: '處理日期時間',
+      type: 'date',
       validate: [validateRequired]
     },
     {
       field: 'ANSWER_ID',
-      header: '回覆人員編號',
+      header: '處理者',
       type: 'input',
       validate: [validateRequired]
     },
-    {
-      field: 'CRT_USR_No',
-      header: '使用者編號',
-      type: 'input',
-      validate: [validateRequired]
-    },
-    {
-      field: 'CRT_USR_Name',
-      header: '使用者名稱',
-      type: 'input',
-      validate: [validateRequired]
-    }
+
   ];
 
   constructor(
@@ -123,6 +146,9 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
 
   ngOnInit(): void {
     this.initializePage('CPM12050', this.dataForm);
+    // 讀取導航 state 是否帶入 forceEditAll
+    const state = this.router.lastSuccessfulNavigation?.extras.state;
+    this.forceEditAll = !!state?.['forceEditAll'];
     this.loadOptions();
     // 若為編輯或檢視狀態，帶回資料
     if (this.rowdata) {
@@ -146,6 +172,53 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
           this.data = response.Data
         });
     }
+
+    // 隱藏的建檔人欄位需自動帶入目前使用者，送出時傳至後端
+    const user = this.authService.getUserInfo();
+    if (user) {
+      this.dataForm.patchValue({
+        CRT_USR_No: user.user_No ?? null,
+        CRT_USR_Name: user.user_Name ?? null
+      });
+    }
+
+    // 設定表單控制項的可編輯狀態：
+    // - 若由高權限打開（forceEditAll），則全部可編輯
+    // - 若為 Edit 模式，僅允許特定欄位可編輯，其餘欄位設為唯讀/disabled
+    this.configureFormControls();
+  }
+
+  // 依照 crudstatus 與 forceEditAll 設定各 form 控制項 enable/disable
+  configureFormControls() {
+    const editableOnEdit = ['CONTACT_ADDR', 'CONTACT_TEL', 'CELL_PHONE', 'E_MAIL'];
+    // 若為高權限，全部啟用
+    if (this.forceEditAll) {
+      const ctrls: any = this.dataForm.controls as any;
+      Object.keys(ctrls).forEach((name: string) => {
+        ctrls[name].enable();
+      });
+      return;
+    }
+    // Create：全部啟用； Read：保持現狀（initializePage 會處理 disable）； Edit：只啟用白名單
+    if (this.crudstatus === CRUDStatus.Create) {
+      const ctrls: any = this.dataForm.controls as any;
+      Object.keys(ctrls).forEach((name: string) => {
+        ctrls[name].enable();
+      });
+      return;
+    }
+    if (this.crudstatus === CRUDStatus.Edit) {
+      const ctrls: any = this.dataForm.controls as any;
+      Object.keys(ctrls).forEach((name: string) => {
+        if (editableOnEdit.includes(name)) {
+          ctrls[name].enable();
+        } else {
+          ctrls[name].disable();
+        }
+      });
+      return;
+    }
+    // Read 模式：由 initializePage 控制是否 disable，這裡不強制修改
   }
 
   onSubmit(form: FormGroup): void {
@@ -252,19 +325,17 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
           }))
         );
       })
-  }
-
-  onOrgQueryChange(orgId: string) {
-    if (!orgId) {
-      this.orgIdOptions = [];
-      this.dataForm.patchValue({ ORG_ID: null });
-      return
-    };
-    this.dropdownApiService.queryCss1005({ ORG_ID: orgId })
+    // 直接載入責任單位選項，與 ORG_ID_QUERY 無關，保持獨立
+    this.dropdownApiService.queryCss1005()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
         this.orgIdOptions = res || [];
       });
+  }
+
+  onOrgQueryChange(orgId: string) {
+    // 不更動 orgIdOptions，讓 ORG_ID 與 ORG_ID_QUERY 完全獨立
+    return;
   }
 
   onKindChange(kindId: string) {
