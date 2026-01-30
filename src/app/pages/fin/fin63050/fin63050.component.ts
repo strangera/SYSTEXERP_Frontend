@@ -1,5 +1,3 @@
-
-
 import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -40,7 +38,12 @@ export class FIN63050Component extends BasicQueryPageComponent<Fin63050ListData>
   data: Fin63050ListData[] = [];
   selectedItems: Fin63050ListData[] = [];
   isRowSelectable(row: Fin63050ListData) {
-    return row.CheckStatus !== '兌現' && row.PayDate === null;
+    // 1. 兌現不可勾選
+    // 2. PayDate 有值不可勾選
+    // 3. 狀態為「撤票」不可勾選
+    return row.CheckStatus !== '兌現' &&
+      row.CheckStatus !== '撤票' &&
+      row.PayDate === null;
   }
   editDisabled(rowdata: Fin63050ListData) {
     return rowdata.CheckStatus === '兌現' || rowdata.PickupStatus === '已領';
