@@ -19,7 +19,7 @@ import { Option } from '../../../service/utility/dropdown-api.model';
 import { TableEditComponent } from '../../../shared/componentkit/table-edit/table-edit.component';
 import { EditColumn, FieldChangeEvent } from '../../../shared/componentkit/table-edit/table-edit.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 
 //3.1.1.9 資材中分類會計科目維護作業 CRU
 @UntilDestroy()
@@ -50,7 +50,7 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
   bigCategoryOptions: Option[] = []; // 大分類下拉選單（API 尚未開發，先保留欄位）
   midCategoryOptions: Option[] = []; // 中分類下拉選單（API 尚未開發，先保留欄位）
   accountingOptions: Option[] = []; // 所有會計科目下拉選單（共用 queryGLS1005）
-  organizationOptions: Option[] = []; // 組織代號下拉選單
+  organizationOptions = signal<Option[]>([]); // 組織代號下拉選單（signal 讓 columns 依賴後 org 載入時會重算）
 
   // 明細表格資料（使用 signal 管理，類似 fin53010-cru）
   purchaseAccountDetails = signal<PurchaseAccountDetail[]>([]);
@@ -99,7 +99,9 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
     return [{ value: code, label: `${code}-${name}` }, ...list];
   };
 
-  purchaseAccountColumns = computed<EditColumn[]>(() => [
+  purchaseAccountColumns = computed<EditColumn[]>(() => {
+    this.organizationOptions(); // 依賴：org 載入後會重算 columns
+    return [
     {
       field: 'AccountingCode',
       header: '會計科目(借)代號/名稱',
@@ -119,19 +121,22 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
       field: 'OrganizationCode',
       header: '組織代號',
       type: this.isFormCreateable || this.isFormEditable ? 'dropdown' : undefined,
-      options: () => this.organizationOptions,
+      options: (_rowData: any) => this.organizationOptions(),
       optionLabel: 'label',
       optionValue: 'value',
       format: (v, i, r) => {
         const orgId = r?.OrganizationCode;
         if (!orgId) return '';
-        const option = this.organizationOptions.find(opt => opt.value === orgId);
-        return option ? option.label : `${orgId}-`;
+        const option = this.organizationOptions().find(opt => opt.value === orgId);
+        return (option ? option.label : null) ?? orgId ?? '';
       },
     },
-  ]);
+  ];
+  });
 
-  expenseTransferColumns = computed<EditColumn[]>(() => [
+  expenseTransferColumns = computed<EditColumn[]>(() => {
+    this.organizationOptions();
+    return [
     {
       field: 'ExpenseCode',
       header: '費用科目代號/名稱',
@@ -151,19 +156,22 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
       field: 'OrganizationCode',
       header: '組織代號',
       type: this.isFormCreateable || this.isFormEditable ? 'dropdown' : undefined,
-      options: () => this.organizationOptions,
+      options: (_rowData: any) => this.organizationOptions(),
       optionLabel: 'label',
       optionValue: 'value',
       format: (v, i, r) => {
         const orgId = r?.OrganizationCode;
         if (!orgId) return '';
-        const option = this.organizationOptions.find(opt => opt.value === orgId);
-        return option ? option.label : `${orgId}-`;
+        const option = this.organizationOptions().find(opt => opt.value === orgId);
+        return (option ? option.label : null) ?? orgId ?? '';
       },
     },
-  ]);
+  ];
+  });
 
-  depreciationColumns = computed<EditColumn[]>(() => [
+  depreciationColumns = computed<EditColumn[]>(() => {
+    this.organizationOptions();
+    return [
     {
       field: 'ExpenseCode',
       header: '費用科目代號/名稱',
@@ -183,17 +191,18 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
       field: 'OrganizationCode',
       header: '組織代號',
       type: this.isFormCreateable || this.isFormEditable ? 'dropdown' : undefined,
-      options: () => this.organizationOptions,
+      options: (_rowData: any) => this.organizationOptions(),
       optionLabel: 'label',
       optionValue: 'value',
       format: (v, i, r) => {
         const orgId = r?.OrganizationCode;
         if (!orgId) return '';
-        const option = this.organizationOptions.find(opt => opt.value === orgId);
-        return option ? option.label : `${orgId}-`;
+        const option = this.organizationOptions().find(opt => opt.value === orgId);
+        return (option ? option.label : null) ?? orgId ?? '';
       },
     },
-  ]);
+  ];
+  });
 
   constructor(
     private ass11090Service: ASS11090Service,
@@ -231,10 +240,10 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
     this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe({
       next: (response) => {
         if (response.Status === '0000' && response.Data) {
-          this.organizationOptions = response.Data.map(item => ({
+          this.organizationOptions.set(response.Data.map(item => ({
             label: `${item.No || ''}-${item.Name || ''}`,
             value: item.No || ''
-          }));
+          })));
         }
       },
       error: (err) => {
@@ -248,7 +257,7 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
 
   /**
    * 載入明細資料
-   * 呼叫 detailASS11090 API 取得完整資料
+   * 編輯/查看模式：先與組織下拉並行取得，再先設定 organizationOptions 再 mapApiDataToForm，確保表格初次渲染時組織代號能顯示 label
    */
   private loadDetailData(): void {
     const payload: ASS11090DetailRequest = {
@@ -257,27 +266,38 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
     };
 
     this.loading = true;
-    this.ass11090Service.queryASS11090Detail(payload).pipe(
-      finalize(() => this.loading = false),
-      untilDestroyed(this)
-    ).subscribe({
-      next: (res) => {
-        if (res.Status !== '0000') return;
-        // 保存原始資料用於比較變更
-        this.originalData = res.Data;
-        // 將 API 資料映射到表單
-        this.mapApiDataToForm(res.Data);
-        // 編輯模式下，大分類和中分類欄位設為 disabled
-        this.dataForm.get('BigCategoryCode')?.disable();
-        this.dataForm.get('BigCategoryName')?.disable();
-        this.dataForm.get('MidCategoryCode')?.disable();
-        this.dataForm.get('MidCategoryName')?.disable();
-      },
-      error: (err) => {
-        console.error('載入資料失敗:', err);
-        this.messageService.errorBubble('載入資料失敗');
-      }
-    });
+    forkJoin({
+      org: this.dropDownListService.querySYS3100_DropDownList(),
+      detail: this.ass11090Service.queryASS11090Detail(payload),
+    })
+      .pipe(
+        finalize(() => (this.loading = false)),
+        untilDestroyed(this)
+      )
+      .subscribe({
+        next: ({ org, detail: res }) => {
+          if (org?.Status === '0000' && org?.Data) {
+            this.organizationOptions.set(org.Data.map((item: { No?: string; Name?: string }) => ({
+              label: `${item.No || ''}-${item.Name || ''}`,
+              value: item.No || '',
+            })));
+          }
+          if (res.Status !== '0000') return;
+          // 保存原始資料用於比較變更
+          this.originalData = res.Data;
+          // 將 API 資料映射到表單（此時 organizationOptions 已就緒）
+          this.mapApiDataToForm(res.Data);
+          // 編輯模式下，大分類和中分類欄位設為 disabled
+          this.dataForm.get('BigCategoryCode')?.disable();
+          this.dataForm.get('BigCategoryName')?.disable();
+          this.dataForm.get('MidCategoryCode')?.disable();
+          this.dataForm.get('MidCategoryName')?.disable();
+        },
+        error: (err) => {
+          console.error('載入資料失敗:', err);
+          this.messageService.errorBubble('載入資料失敗');
+        },
+      });
   }
 
   /**
@@ -318,7 +338,7 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
       const stypeDetails = data.VouAccDetails
         .filter(d => d.AccKind === 'STYPE')
         .map((d, i) => {
-          const orgOption = this.organizationOptions.find(opt => opt.value === d.ORG_ID);
+          const orgOption = this.organizationOptions().find(opt => opt.value === d.ORG_ID);
           return {
             SerialNo: i + 1,
             AccNo: d.AccNo,
@@ -335,7 +355,7 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
       const feesDetails = data.VouAccDetails
         .filter(d => d.AccKind === 'FEES')
         .map((d, i) => {
-          const orgOption = this.organizationOptions.find(opt => opt.value === d.ORG_ID);
+          const orgOption = this.organizationOptions().find(opt => opt.value === d.ORG_ID);
           return {
             SerialNo: i + 1,
             AccNo: d.AccNo,
@@ -352,7 +372,7 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
       const depreDetails = data.VouAccDetails
         .filter(d => d.AccKind === 'DEPRE')
         .map((d, i) => {
-          const orgOption = this.organizationOptions.find(opt => opt.value === d.ORG_ID);
+          const orgOption = this.organizationOptions().find(opt => opt.value === d.ORG_ID);
           return {
             SerialNo: i + 1,
             AccNo: d.AccNo,
@@ -424,7 +444,7 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
       const option = this.accountingOptions.find(opt => opt.value === event.value);
       rowData.AccountingName = option?.label ?? '';
     } else if (event.field === 'OrganizationCode') {
-      const option = this.organizationOptions.find(opt => opt.value === event.value);
+      const option = this.organizationOptions().find(opt => opt.value === event.value);
       rowData.OrganizationName = option?.label ?? '';
     }
   }
@@ -435,7 +455,7 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
       const option = this.accountingOptions.find(opt => opt.value === event.value);
       rowData.ExpenseName = option?.label ?? '';
     } else if (event.field === 'OrganizationCode') {
-      const option = this.organizationOptions.find(opt => opt.value === event.value);
+      const option = this.organizationOptions().find(opt => opt.value === event.value);
       rowData.OrganizationName = option?.label ?? '';
     }
   }
@@ -446,7 +466,7 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
       const option = this.accountingOptions.find(opt => opt.value === event.value);
       rowData.ExpenseName = option?.label ?? '';
     } else if (event.field === 'OrganizationCode') {
-      const option = this.organizationOptions.find(opt => opt.value === event.value);
+      const option = this.organizationOptions().find(opt => opt.value === event.value);
       rowData.OrganizationName = option?.label ?? '';
     }
   }
