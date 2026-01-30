@@ -29,11 +29,16 @@ export class CPM11090CRUComponent extends BasicCruPageComponent<QueryCPM11090Res
     MISSING_PEOPLE: [null as string | null, [Validators.maxLength(20)]], // 尋人者
     RelationsCode: [null as string | null], // 與被尋人關係
     REC_DATE: [new Date(), [Validators.required]], // 登錄日期
-    BROADCAST_YN: [{ value: 'N', disabled: true }], // 是否傳播
+    BROADCAST_YN: ['N'], // 預設為 N // 是否傳播
     IsFinished: [{ value: false, disabled: true }] // 是否結案
   });
   SALUTATIONOPTIONS = getSYS1000Options('SALUTATION');
   RELATIONSOPTIONS = getSYS1000Options('RELATIONS');
+  broadcastOptions = [
+    { label: '已廣播', value: 'Y', disabled: true }, // 預設「已廣播」不能手動點選
+    { label: '待廣播', value: null, disabled: false },
+    { label: '不廣播', value: 'N', disabled: false },
+  ];
   constructor(
     private readonly cpm11090Service: Cpm11090Service,
     private readonly datePipe: DatePipe
@@ -43,25 +48,43 @@ export class CPM11090CRUComponent extends BasicCruPageComponent<QueryCPM11090Res
 
   ngOnInit(): void {
     this.initializePage('CPM11090', this.dataForm);
+
     if (!this.isFormCreateable) {
-      this.cpm11090Service.getCPM11090Detail(String(this.dataForm.getRawValue().SeqId)).pipe(untilDestroyed(this)).subscribe(response => {
-        this.dataForm.patchValue(response.Data);
-      })
-      this.dataForm.get('REC_DATE')?.disable();
+      const seqId = String(this.dataForm.getRawValue().SeqId);
+      this.cpm11090Service.getCPM11090Detail(seqId)
+        .pipe(untilDestroyed(this))
+        .subscribe(response => {
+          const dbData = response.Data;
+          this.dataForm.patchValue(dbData);
+
+          // --- 核心邏輯控制 ---
+          const control = this.dataForm.get('BROADCAST_YN');
+
+          if (dbData.IsFinished || dbData.BROADCAST_YN === 'Y') {
+            // 如果已結案 或 已經是已廣播，整組 Radio 不能點
+            control?.disable();
+          } else {
+            // 如果是待廣播或不廣播，確保組件是可用的
+            control?.enable();
+            // 此時「已廣播」選項會因為陣列裡的 disabled: true 而無法被選取
+          }
+        });
     }
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      const rawValue = frm.getRawValue(); // 使用 getRawValue 獲取包含被 disabled 的欄位值
       const params = {
-        ...frm.getRawValue(),
-        seQ_ID: this.isFormCreateable ? undefined : String(frm.getRawValue().SeqId),
-        by_MISSING_PEOPLE: frm.getRawValue().BY_MISSING_PEOPLE,
-        SALUTATION: frm.getRawValue().SalutationCode,
-        collectioN_SITES: frm.getRawValue().COLLECTION_SITES,
-        missinG_PEOPLE: frm.getRawValue().MISSING_PEOPLE,
-        relations: frm.getRawValue().RelationsCode,
-        reC_DATE: this.datePipe.transform(frm.getRawValue().REC_DATE, 'yyyy-MM-dd') || ''
-      }
+        ...rawValue,
+        seQ_ID: this.isFormCreateable ? undefined : String(rawValue.SeqId),
+        by_MISSING_PEOPLE: rawValue.BY_MISSING_PEOPLE,
+        SALUTATION: rawValue.SalutationCode,
+        collectioN_SITES: rawValue.COLLECTION_SITES,
+        missinG_PEOPLE: rawValue.MISSING_PEOPLE,
+        relations: rawValue.RelationsCode,
+        reC_DATE: this.datePipe.transform(rawValue.REC_DATE, 'yyyy-MM-dd') || '',
+        BROADCAST_YN: rawValue.BROADCAST_YN
+      };
       const $request = this.isFormCreateable ? this.cpm11090Service.insertCPM11090(params) : this.cpm11090Service.updateCPM11090(params);
       $request.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.messageService.successBubble(response.Message);

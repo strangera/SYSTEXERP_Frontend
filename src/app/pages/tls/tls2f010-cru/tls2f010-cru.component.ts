@@ -22,7 +22,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PanelModule } from 'primeng/panel';
 import { SelectButtonModule } from 'primeng/selectbutton';
-import { map, shareReplay } from 'rxjs';
+import { distinctUntilChanged, finalize, map, shareReplay, startWith, switchMap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
@@ -39,16 +39,15 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
 
   dataForm = this.formBuilder.nonNullable.group({
     tlt_no: ['', [Validators.required]],
-    sam_yyymm: [new Date()],
-    money_type: [null],
-    sam_termno: [1],
-    COMM_YM: [new Date()],
-    COMM_MONEY_TYPE: [''],
+    sam_yyymm: [new Date(), [Validators.required]],
+    money_type: [null, [Validators.required]],
+    sam_termno: [1, [Validators.required]],
+    COMM_YM: [new Date(), [Validators.required]],
+    COMM_MONEY_TYPE: ['', [Validators.required]],
     // 以下為從查詢頁帶入的條件，用於編輯模式顯示，不一定都參與送出
     PUR_GUIType: [null],
     PUR_GUINO: [''],
-    PUR_GUIDate_From: [null],
-    PUR_GUIDate_To: [null],
+    PUR_GUIDate: [null],
     PUR_TaxType: [[]],
     ACP_GUIAmt_From: [null],
     ACP_GUIAmt_To: [null],
@@ -60,10 +59,9 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     COMM_NUM_Start: [null],
     COMM_NUM_End: [null],
     CRT_USR_No: [''],
-    CRT_Date_From: [null],
-    CRT_Date_To: [null],
     floor_no: [[]],
-
+    ACP_GUIAmt: [null],
+    CRT_Date: [null],
     ven_uniform: [''],
     DEC_YM: [null],
     ACP_GUINet: [null],
@@ -94,21 +92,45 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
         value: item['No']
       }))
     )
-  );
+  ).pipe(shareReplay(1));
   vendorTLS2F010Options: { label: string; value: string }[] = [];
 
 
-  private readonly tltNoData$ = this.tls2f010Service.queryTLS2F010_TLT_No({
-    PageSize: 0,
-    PageIndex: 0,
-    OrderBy: '',
-    Offset: 0,
-    SortBy: [],
-    keyword: '',
-  }).pipe(shareReplay(1));
+  // tlt options depend on selected sam_yyymm — call API with sam_yyymm and share the result
+  private readonly tltNoData$ = ((): any => {
+    const formatYm = (v: any): string => {
+      if (!v) return '';
+      const d = v instanceof Date ? v : new Date(v);
+      if (isNaN(d.getTime())) {
+        const s = String(v);
+        return s.length === 6 && !isNaN(+s) ? s : '';
+      }
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      return `${yyyy}${mm}`;
+    };
+
+    const control = this.dataForm.controls.sam_yyymm as any;
+    const source$ = control.valueChanges.pipe(
+      startWith(control.value),
+      map(formatYm),
+      distinctUntilChanged(),
+      switchMap((sam_yyymm: string) => this.tls2f010Service.queryTLS2F010_TLT_No({
+        PageSize: 0,
+        PageIndex: 0,
+        OrderBy: '',
+        Offset: 0,
+        SortBy: [],
+        keyword: '',
+        sam_yyymm: sam_yyymm || ''
+      }))
+    );
+
+    return source$.pipe(shareReplay(1));
+  })();
 
   tlt_noOptions = this.tltNoData$.pipe(
-    map(res => (res?.Data ?? []).map((item: any) => ({
+    map((res: any) => (res?.Data ?? []).map((item: any) => ({
       ...item,
       No: item.tlt_no,
       Name: item.tlt_name,
@@ -125,6 +147,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   invoiceTypeOptions = getSYS1000Options('invoice_type');
   invoiceFormatOptions = [
     { value: '21', label: '21/進項三聯式、電子計算機統一發票' },
+    { value: '25', label: '25-進項三聯式收銀機統一發票' },
     { value: '27', label: '27/彙總登陸每張稅額五百元以下之進項二聯式收銀機統一發票、載有稅額之其他憑證' },
   ];
   queryLoading = false;
@@ -189,12 +212,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       header: '廠商統一編號',
       type: 'dropdown',
       width: '200px',
-      options: () => this.dropdown.queryPos2013({ VEN_Flag: '' }).pipe(
-        map(list => (list ?? []).map(item => ({
-          label: `${item['No']} - ${item['Name']}`,
-          value: item['No'],
-        })))
-      ),
+      options: () => this.ven_noOptions,
       optionLabel: 'label',
       optionValue: 'value',
       showClear: true,
@@ -294,6 +312,29 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     if (this.isFormEditable) {
       this.applyEditModeReadonly();
     }
+
+    // 若在編輯/新增模式時允許在主表輸入未稅金額，當未稅金額變化時自動計算稅額與發票總額
+    try {
+      const guinetCtrl = this.dataForm.controls.ACP_GUINet as any;
+      if (guinetCtrl && guinetCtrl.valueChanges) {
+        guinetCtrl.valueChanges.pipe(untilDestroyed(this)).subscribe((v: any) => {
+          const net = Number(v ?? 0);
+          if (!isNaN(net)) {
+            const tax = Math.round(net * 0.05);
+            try {
+              const taxCtrl = this.dataForm.controls.ACP_GUITax as any;
+              const amtCtrl = this.dataForm.controls.ACP_GUIAmt as any;
+              if (taxCtrl) taxCtrl.setValue(tax, { emitEvent: false });
+              if (amtCtrl) amtCtrl.setValue(net + tax, { emitEvent: false });
+            } catch (e) {
+              // ignore
+            }
+          }
+        });
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 
   private updateSamTermnoOptions(moneyType: string | null): void {
@@ -317,8 +358,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     const editableFields = new Set<string>([
       'PUR_GUINO',
       'PUR_GUIType',
-      'PUR_GUIDate_From',
-      'PUR_GUIDate_To',
+      'PUR_GUIDate',
       'PUR_TaxType',
       'DEC_YM',
       'ven_uniform',
@@ -329,6 +369,9 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       'PUR_GUIPaper',
       'PUR_DiscNo'
     ]);
+
+    // 允許在編輯時輸入明細未稅金額（ACP_GUINet），其餘如 ACP_GUITax/ACP_GUIAmt 為系統計算
+    editableFields.add('ACP_GUINet');
 
     Object.keys(this.dataForm.controls).forEach(key => {
       const control = this.dataForm.get(key);
@@ -390,7 +433,6 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       sam_yyymm: this.formatYearMonth(formValue.sam_yyymm),
       money_type: formValue.COMM_MONEY_TYPE,
       sam_termno: formValue.sam_termno,
-      COMM_YM: this.formatYearMonth(formValue.COMM_YM),
     };
 
     this.tls2f010Service.queryTLS2F010InsertData(params)
@@ -468,7 +510,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
 
       PUR_GUIType: formValue.PUR_GUIType ?? '',
       PUR_GUINO: formValue.PUR_GUINO ?? '',
-      PUR_GUIDate: this.formatDateOnly(formValue.PUR_GUIDate_From),
+      PUR_GUIDate: this.formatDateOnly(formValue.PUR_GUIDate),
       DEC_YM: this.formatYearMonth(formValue.DEC_YM),
       ven_uniform: formValue.ven_uniform ?? '',
       PUR_TaxType: Array.isArray(formValue.PUR_TaxType)
@@ -485,8 +527,25 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   onSubmit(frm: any): void {
     this.messageService.blockUi();
     this.submitted = true;
+    console.log('[TLS2F010CRU] onSubmit called', { submitted: this.submitted, invalid: this.dataForm.invalid });
+
+    // 若 backend/interface 仍使用 money_type，而 UI 使用 COMM_MONEY_TYPE，嘗試同步值以避免表單驗證失敗
+    try {
+      const commMoneyCtrl = this.dataForm.controls.COMM_MONEY_TYPE as any;
+      const moneyCtrl = this.dataForm.controls.money_type as any;
+      if (moneyCtrl && (moneyCtrl.value == null || moneyCtrl.value === '') && commMoneyCtrl) {
+        const val = Array.isArray(commMoneyCtrl.value) && commMoneyCtrl.value.length ? commMoneyCtrl.value[0] : commMoneyCtrl.value;
+        moneyCtrl.setValue(val, { emitEvent: false });
+      }
+    } catch (e) {
+      console.warn('[TLS2F010CRU] sync money_type failed', e);
+    }
 
     if (this.dataForm.invalid) {
+      const controls = this.dataForm.controls as Record<string, any>;
+      const invalidControls = Object.keys(controls).filter(k => controls[k] && controls[k].invalid);
+      console.log('[TLS2F010CRU] form invalid', { invalidControls });
+      this.messageService.errorBubble('表單驗證失敗，請檢查必填欄位');
       this.messageService.unblockUi();
       this.loading = false;
       return;
@@ -495,6 +554,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     if (!this.isFormCreateable && !this.isFormEditable) {
       this.messageService.unblockUi();
       this.submitted = false;
+      this.loading = false;
       return;
     }
 
@@ -572,20 +632,26 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       tlt_no: formValue.tlt_no ?? '',
       // 優先使用選取的主資料的 talent_id，若無則 fallback 到 rowdata
       talent_id: (this.selectedMain && this.selectedMain.talent_id) ? this.selectedMain.talent_id : ((this.rowdata as any)?.talent_id ?? 0),
+      COMM_YM: this.formatYearMonth(formValue.COMM_YM),
       details,
     };
 
-    this.tls2f010Service.insertTLS2F010(body).subscribe({
-      next: () => {
-        this.messageService.successBubble('新增成功');
-        this.onCancel();
-      },
-      complete: () => {
+    this.tls2f010Service.insertTLS2F010(body)
+      .pipe(finalize(() => {
         this.loading = false;
         this.messageService.unblockUi();
         this.submitted = false;
-      },
-    });
+      }))
+      .subscribe({
+        next: () => {
+          this.messageService.successBubble('新增成功');
+          this.onCancel();
+        },
+        error: (err: any) => {
+          console.error('[TLS2F010CRU] insertTLS2F010 error', err);
+          // 主要錯誤訊息交由全域 error handler 顯示，此處僅確保 UI 狀態正確
+        }
+      });
   }
 
 
