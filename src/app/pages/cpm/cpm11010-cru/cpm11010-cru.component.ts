@@ -36,7 +36,7 @@ export class CPM11010CRUComponent extends BasicCruPageComponent<CPM11010Data> im
   dataForm = this.formBuilder.nonNullable.group({
     building_no: [null, Validators.required],   // 館別
     FLOOR_NO: [null, Validators.required],      // 營業樓層
-    AREA_NO: [null, Validators.required],       // 營業區域
+    AREA_desc: [null, Validators.required],       // 營業區域
     Service_Id: ['系統自動產生'],    // 服務台位置編號
     Service_Name: ['', [Validators.required, Validators.maxLength(60)]] // 服務台位置名稱
   });
@@ -61,7 +61,7 @@ export class CPM11010CRUComponent extends BasicCruPageComponent<CPM11010Data> im
       // 除了 Service_Name 其他欄位皆不可編輯
       this.dataForm.get('building_no')?.disable();
       this.dataForm.get('FLOOR_NO')?.disable();
-      this.dataForm.get('AREA_NO')?.disable();
+      this.dataForm.get('AREA_desc')?.disable();
     }
   }
 
@@ -73,7 +73,7 @@ export class CPM11010CRUComponent extends BasicCruPageComponent<CPM11010Data> im
         const insertRequest: InsertCPM11010Request = {
           building_no: formValue.building_no || '',
           FLOOR_NO: formValue.FLOOR_NO || '',
-          AREA_NO: formValue.AREA_NO || '',
+          AREA_NO: formValue.AREA_desc || '',
           Service_Name: formValue.Service_Name || ''
         }
         this.cpm11010Service.insertCPM11010(insertRequest)

@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { map, Observable } from 'rxjs';
@@ -118,5 +118,25 @@ export class Fin62020Service {
         } as Fin62020ApiResult; // 強制轉換為我們期望的類型
       })
     ) as Observable<Fin62020ApiResult>; // 確保整個 Observable 流的類型正確
+  }
+  exportFIN62020PDF(
+    body: Fin62020QueryRequest
+  ): Observable<HttpResponse<Blob>> { // 將回傳類型改為 HttpResponse<Blob>
+    return this.http.post(
+      `${this.baseUrl}/exportFIN62020PDF`,
+      body,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      }
+    );
+  }
+  exportFIN62020Excel(body: Fin62020QueryRequest): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.baseUrl}/exportFIN62020Excel`, body,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      }
+    );
   }
 }
