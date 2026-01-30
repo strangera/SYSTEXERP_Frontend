@@ -349,6 +349,19 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
+              label="小分類代碼/名稱"
+              controlName="BusSClassList"
+              [options]="bus_sclass_Option"
+              optionLabel="label"
+              [control]="queryForm.controls.BusSClassList"
+              [submitted]="submitted"
+              optionGroupLabel="label"
+              optionGroupChildren="items"
+              [group]="true"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
               label="櫃別"
               controlName="TltKindList"
               [options]="tlt_kind_Option"
