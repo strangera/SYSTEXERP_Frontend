@@ -193,15 +193,9 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
       this.messageService.warnBubble('請先執行查詢以產生報表。');
       return;
     }
-
     const export$ = this.tls57090Service.exportTLS57090PDF(this.historyRequestBody);
 
-    // 呼叫 Service 執行匯出，並將直到銷毀的邏輯加入
-    this.fileExportService.executeFileExport(
-      export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
-      '.pdf',
-      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
-    ).subscribe();
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
 
   onExportXLSX() {
@@ -209,13 +203,7 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
       this.messageService.warnBubble('請先執行查詢以產生報表。');
       return;
     }
-
     const export$ = this.tls57090Service.exportTLS57090Excel(this.historyRequestBody);
-
-    this.fileExportService.executeFileExport(
-      export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
-      '.xlsx',
-      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
-    ).subscribe();
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
 }
