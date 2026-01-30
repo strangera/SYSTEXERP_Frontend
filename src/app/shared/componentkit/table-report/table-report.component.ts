@@ -143,6 +143,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
           this.dt.virtualScroll = false;
           this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
         } else {
+          if (this.data.length === this.totalRecords) { this.dt.lazy = false; }
           this.dt.virtualScroll = true;
           this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
           this.virtualData = Array.from({ length: this.data.length });
@@ -187,7 +188,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     return [{ label: '', value: this.formatValue(d) }];
   }
   loadMoreData() {
-    if (this._loading || !this.queryFunction || !this.lastQueryBody || this.data.length >= this.totalRecords || !this.lazy) {
+    if (this._loading || !this.queryFunction || !this.lastQueryBody) {
       return; // 如果正在載入、沒有查詢函式、沒有查詢條件或已載入全部資料，則退出
     }
     const pageSize = this.lastQueryBody?.pageSize || this.lastQueryBody?.PageSize || 30;
