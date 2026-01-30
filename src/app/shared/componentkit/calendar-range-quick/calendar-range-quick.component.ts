@@ -37,6 +37,7 @@ export class CalendarRangeQuickComponent extends BasicKitComponent implements On
   @Input() startControl = new FormControl; // 起始日期
   @Input() endControl = new FormControl; // 結束日期
   @Input() submitted = false; // 檢查欄位是否標準
+  @Input() descLabel = '(起迄)'; // 標籤說明
   // PrimeNG 設置
   @Input() timeOnly = false;
   @Input() showTime = false;

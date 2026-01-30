@@ -32,6 +32,7 @@ export class InputNumberRangeComponent extends BasicKitComponent implements OnIn
   @Input() startControl = new FormControl(); // 開始值的 FormControl
   @Input() endControl = new FormControl(); // 結束值的 FormControl
   @Input() submitted = false;
+  @Input() descLabel = '(起迄)'; // 標籤說明
   // Primeng 相關屬性
   @Input() minFractionDigits = 0; // 最小小數位數
   @Input() maxFractionDigits = 0; // 最大小數位數
