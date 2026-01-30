@@ -14,15 +14,15 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="收銀機號"
-              controlName="ECR_No"
-              [options]="ECRNoOptions"
-              optionLabel="value"
-              optionValue="value"
-              [control]="queryForm.controls.ECR_No"
-              [submitted]="submitted"
-            ></app-multi-select>
+  <app-multi-select
+  label="收銀機號"
+  controlName="ECR_No"
+  [options]="ECRNoOptions"
+  optionLabel="label"
+  optionValue="value"
+  [control]="queryForm.controls.ECR_No"
+  [submitted]="submitted"
+></app-multi-select>
           </div>
 
     

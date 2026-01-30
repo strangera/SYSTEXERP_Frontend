@@ -24,6 +24,8 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { MultiLocationFilterComponent } from '../../../shared/componentkit/multi-location-filter/multi-location-filter.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 
 // untilDestroyed
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -40,13 +42,14 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    InputTextComponent,
+    // InputTextComponent,
     MultiSelectComponent,
     MultiLocationFilterComponent,
     CalendarRangeQuickComponent,
     ButtonComponent,
     TableComponent,
     TranslateModule,
+    DropdownComponent,
   ],
 })
 export class TLS13040Component extends BasicQueryPageComponent<any> {
@@ -68,7 +71,7 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
   selectedItems: any[] = [];
-
+CounterOptions: any[] = [];
   queryForm = this.formBuilder.group({
     tlt_no: [''],
     tlt_name: [''],
@@ -198,6 +201,7 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     private floorService: FloorService,
     private bigCategoryCodeService: BigCategoryCodeService,
     private tls11010Service: Tls11010Service,
+    private counterNameService: CounterNameService,
   ) {
     super();
   }
@@ -212,6 +216,13 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     this.bigCategoryCodeService.getSystemTypes()
       .pipe(untilDestroyed(this))
       .subscribe(data => this.bus_typeOptions = data);
+         this.counterNameService.getCounters()
+      .pipe(untilDestroyed(this))
+      .subscribe(v => this.CounterOptions = (v || []).map((x) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })));
 
     this.floorService.getFloors()
       .pipe(untilDestroyed(this))

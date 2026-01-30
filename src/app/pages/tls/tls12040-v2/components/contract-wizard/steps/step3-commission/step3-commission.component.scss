@@ -1,0 +1,17 @@
+// Step 3 - Commission Component Styles
+
+:host {
+  display: block;
+}
+
+.setting-content {
+  margin-top: 1rem;
+}
+
+::ng-deep {
+  .custom-table-red {
+    .p-datatable-thead > tr > th {
+      background-color: var(--red-50);
+    }
+  }
+}

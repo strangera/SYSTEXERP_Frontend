@@ -17,6 +17,7 @@ import { FIN29050Data, FIN29050Service, QueryFIN29050Request } from '../../../se
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { DropDownListService } from './../../../service/utility/dropDownList.service';
 
@@ -38,7 +39,8 @@ import { DropDownListService } from './../../../service/utility/dropDownList.ser
     ButtonComponent,
     TableComponent,
     TranslateModule,
-    InputNumberRangeComponent
+    InputNumberRangeComponent,
+    RadiobuttonComponent
   ]
 })
 export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> implements OnInit {
@@ -51,24 +53,13 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
     ACP_Amt_To: [null],
     AccNo_From: [null],
     AccNo_To: [null],
-    ShowZeroBalance: ['A'],
-    UnpaidIncludeReserve: ['Y'],
+    ShowZeroBalance: ['N'],
+    UnpaidIncludeReserve: ['N'],
     ...createPaginationConfig([]),
   });
 
   VendorNoOptions: any[] = []; // 廠商編號選項
   AccNoOptions: any[] = []; // 科目代號選項
-
-  ShowZeroBalanceOptions: any[] = [
-    { label: '顯示全部', value: 'A' },
-    { label: '不顯示帳款餘額', value: 'N' }
-  ];
-
-  UnpaidIncludeReserveOptions: any[] = [
-    { label: '未付金額包含保留款', value: 'Y' },
-    { label: '未付金額不含保留款', value: 'N' }
-  ];
-
   data: FIN29050Data[] = [];
   totalRecords = 0;
   // 是否於查詢後自動載入剩餘頁（不修改共用元件）

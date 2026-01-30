@@ -311,7 +311,7 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
 
   /**
    * 解析日期字串並移除時間部分
-   * 支援格式: YYYY-MM-DD, YYYY/MM/DD, MM/DD/YYYY, MM-DD-YYYY (含或不含時間)
+   * 支援格式: YYYYMM, YYYYMMDD, YYYY-MM-DD, YYYY/MM/DD 等
    */
   private parseDateWithoutTime(value: string): Date | null {
     if (!value) return null;
@@ -319,6 +319,24 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
     const dateStr = value.trim();
     if (!dateStr) return null;
 
+    // --- 新增：處理純數字字串 (YYYYMM 或 YYYYMMDD) ---
+    if (/^\d+$/.test(dateStr)) {
+      // 情況 A: YYYYMM (長度 6)
+      if (dateStr.length === 6) {
+        const year = parseInt(dateStr.substring(0, 4), 10);
+        const month = parseInt(dateStr.substring(4, 6), 10) - 1;
+        return new Date(year, month, 1); // 預設為該月 1 號
+      }
+      // 情況 B: YYYYMMDD (長度 8)
+      if (dateStr.length === 8) {
+        const year = parseInt(dateStr.substring(0, 4), 10);
+        const month = parseInt(dateStr.substring(4, 6), 10) - 1;
+        const day = parseInt(dateStr.substring(6, 8), 10);
+        return new Date(year, month, day);
+      }
+    }
+
+    // --- 以下為原本處理帶分隔符號的邏輯 ---
     // 移除時間部分
     const datePart = dateStr.split(/[T\s]/)[0];
 
@@ -329,24 +347,18 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
       const month = parseInt(match[2], 10) - 1;
       const day = parseInt(match[3], 10);
       const date = new Date(year, month, day);
-      if (!isNaN(date.getTime())) {
-        return date;
-      }
+      return isNaN(date.getTime()) ? null : date;
     }
 
-    // 嘗試 MM/DD/YYYY 或 MM-DD-YYYY 格式
-    match = datePart.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+    // 處理 YYYY/MM 格式 (dateMonthOne 常見格式)
+    match = datePart.match(/^(\d{4})[-/](\d{1,2})$/);
     if (match) {
-      const month = parseInt(match[1], 10) - 1;
-      const day = parseInt(match[2], 10);
-      const year = parseInt(match[3], 10);
-      const date = new Date(year, month, day);
-      if (!isNaN(date.getTime())) {
-        return date;
-      }
+      const year = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10) - 1;
+      return new Date(year, month, 1);
     }
 
-    // 嘗試使用 new Date() 解析，但要確保移除時間
+    // 最後嘗試原生解析
     const parsed = new Date(value);
     if (!isNaN(parsed.getTime())) {
       return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());

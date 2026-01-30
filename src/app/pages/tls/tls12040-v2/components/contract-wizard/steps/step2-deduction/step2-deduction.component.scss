@@ -1,0 +1,40 @@
+// Step 2 - Deduction Component Styles
+
+:host {
+  display: block;
+}
+
+.compact-table-d {
+  ::ng-deep {
+    .p-datatable {
+      .p-datatable-thead > tr > th,
+      .p-datatable-tbody > tr > td {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+      }
+    }
+  }
+}
+
+.result-card {
+  min-width: 120px;
+}
+
+.green-button {
+  background-color: var(--green-500);
+  border-color: var(--green-500);
+
+  &:hover {
+    background-color: var(--green-600);
+    border-color: var(--green-600);
+  }
+}
+
+.red-button {
+  color: var(--red-500);
+  border-color: var(--red-500);
+
+  &:hover {
+    background-color: var(--red-50);
+  }
+}

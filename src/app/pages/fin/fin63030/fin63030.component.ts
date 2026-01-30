@@ -148,46 +148,64 @@ columns: Column[] = [
     this.initializePage('FIN63030', 'fin/fin63030cru', this.queryForm, (form) => this.onSubmit(form));
 
     // ✅ 還原查詢條件
-    const saved = this.queryStateService.getQueryStateValue('FIN63030');
-    if (saved?.formValue) {
-      this.queryForm.patchValue(saved.formValue, { emitEvent: false });
-      this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
-      this.lastQueryBody = saved.lastQueryBody ?? null;
+    // const saved = this.queryStateService.getQueryStateValue('FIN63030');
+    // if (saved?.formValue) {
+    //   this.queryForm.patchValue(saved.formValue, { emitEvent: false });
+    //   this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
+    //   this.lastQueryBody = saved.lastQueryBody ?? null;
 
-      Promise.resolve().then(() => this.onSubmit(this.queryForm));
-    }
+    //   Promise.resolve().then(() => this.onSubmit(this.queryForm));
+    // }
 
     // ✅ 公司銀行科目下拉（APS1002）
-    this.fin26010Service
-      .queryAPS1002DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
-          const list = Array.isArray(res?.Data) ? res.Data : [];
+this.fin26010Service
+  .queryAPS1002DropDownList()
+  .pipe(untilDestroyed(this))
+  .subscribe({
+    next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
+      const list = Array.isArray(res?.Data) ? res.Data : [];
 
-          const accNameOf = (x: any) =>
-            String(x?.BNK_BRANCHNAME ?? x?.BNK_AccName ?? x?.BNK_Accname ?? '').trim();
+      const sorted = list.slice().sort((a: any, b: any) => {
+        const aId = String(a?.BNK_id ?? '').trim();
+        const bId = String(b?.BNK_id ?? '').trim();
 
-          // 查詢下拉：用 BNK_DepositAccNo
-          this.CompanyAccNoOptions = list.map((x: any) => ({
-            label: `${x.BNK_DepositAccNo}-${accNameOf(x)}`,
-            value: x.BNK_DepositAccNo,
-            raw: x,
-          }));
+        const aNum = Number(aId);
+        const bNum = Number(bId);
+        const aIsNum = Number.isFinite(aNum);
+        const bIsNum = Number.isFinite(bNum);
 
-          // Dialog 下拉：用 BNK_No（公司銀行代號）
-          this.CompanyBankNoOptions = list.map((x: any) => ({
-            label: `${x.BNK_No}-${x.BNK_DepositAccNo}-${accNameOf(x)}`,
-            value: x.BNK_No,
-            raw: x,
-          }));
-        },
-        error: (err) => {
-          console.error('載入公司銀行下拉失敗', err);
-          this.CompanyAccNoOptions = [];
-          this.CompanyBankNoOptions = [];
-        },
+        // 兩個都是純數字：用數字大小排
+        if (aIsNum && bIsNum) return aNum - bNum;
+
+        // 其中一個是數字：數字排前面（你想數字排後面就反過來）
+        if (aIsNum && !bIsNum) return -1;
+        if (!aIsNum && bIsNum) return 1;
+
+        // 都不是純數字：用字串排序（支援中文/數字混合）
+        return aId.localeCompare(bId, 'zh-Hant', { numeric: true, sensitivity: 'base' });
       });
+
+      // 查詢下拉：用 BNK_id
+      this.CompanyAccNoOptions = sorted.map((x: any) => ({
+        label: `${x.BNK_id}-${x.BNK_AccName}`,
+        value: x.BNK_id,
+        raw: x,
+      }));
+
+      // Dialog 下拉：用 BNK_id
+      this.CompanyBankNoOptions = sorted.map((x: any) => ({
+        label: `${x.BNK_id}-${x.BNK_AccName}`,
+        value: x.BNK_id,
+        raw: x,
+      }));
+    },
+    error: (err) => {
+      console.error('載入公司銀行下拉失敗', err);
+      this.CompanyAccNoOptions = [];
+      this.CompanyBankNoOptions = [];
+    },
+  });
+
   }
 
   moneyFormat(value: any): string {

@@ -86,6 +86,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Output() detail = new EventEmitter<any>();// 明細事件
   @Input() showEdit = true;     // 是否顯示 管理欄位(編輯按鈕)
   @Input() editDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
+  @Input() detailDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止明細條件
   @Output() edit = new EventEmitter<any>(); // 編輯事件
   @Input() addButton: AddButton[] = [];  // 自定義 管理按鈕
   @Input() buttonsLoading = false;   // 按鈕們 loading

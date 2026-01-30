@@ -37,6 +37,7 @@ export class FIN62010CRUComponent extends BasicCruPageComponent<QueryFIN62010Res
     Remark: [null],
   });
   BNK_NoOptions = this.dropdown.queryGls1005_BNK_DepositAcc();
+  userOptions = this.dropdown.queryTblUser();
   ngOnInit(): void {
     this.initializePage('FIN62010', this.dataForm);
   }

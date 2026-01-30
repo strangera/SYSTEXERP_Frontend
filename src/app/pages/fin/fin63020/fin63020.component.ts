@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { HttpResponse } from '@angular/common/http';
+import { AfterViewInit, ChangeDetectorRef, Component, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { map } from 'rxjs/operators';
-
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
@@ -14,37 +12,34 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
-// ✅ app-table（你貼的 TableComponent）
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
-import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
-// Base
-import {
-  Aps1002BankDropDownRow,
-  Fin26010Service
-} from '../../../service/api/fin/fin26010.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
-// Service
-import { HttpResponse } from '@angular/common/http';
-import { ViewChild } from '@angular/core';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+
+import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
+import { Aps1002BankDropDownRow, Fin26010Service } from '../../../service/api/fin/fin26010.service';
+
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+
 import {
   ApiResponse,
   Fin63020Service,
   QueryFIN63020Request,
   SortItem,
 } from '../../../service/api/fin/fin63020.service';
+
 export interface QueryFIN63020Row {
-  CanPickupYn?: string; // 只是顯示用：可勾選=空白，不可勾選=X
+  CanPickupYn?: string;
   CheckNo?: string;
   VendorNo?: string;
   VEN_Name?: string;
@@ -65,10 +60,10 @@ export interface QueryFIN63020Row {
   OrgId?: string;
   Org_Name?: string;
 
-  CheckStatus?: string;
-  StatusFlag?: string;
+  CheckStatus?: string;    // 可能是代碼或文字
+  StatusFlag?: string;     // 可能是代碼或文字
 
-  PickupStatus?: string; // 0 未領 / 1 已領 / 2 郵寄
+  PickupStatus?: string;   // 可能是代碼或文字
   PickupDate?: string | null;
 
   VoucherNoIssued?: string | null;
@@ -76,7 +71,6 @@ export interface QueryFIN63020Row {
 
   [key: string]: any;
 }
-
 
 @UntilDestroy()
 @Component({
@@ -93,18 +87,19 @@ export interface QueryFIN63020Row {
     AccordionModule,
     ButtonModule,
     DialogModule,
-
     InputTextComponent,
     DropdownComponent,
     CalendarRangeComponent,
     CalendarComponent,
     InputNumberRangeComponent,
     ButtonComponent,
-
     TableComponent,
   ],
 })
-export class FIN63020Component extends BasicQueryPageComponent<any> {
+export class FIN63020Component
+  extends BasicQueryPageComponent<any>
+  implements AfterViewInit
+{
   /* ----------------- 列表狀態 ----------------- */
   data: QueryFIN63020Row[] = [];
   totalRecords = 0;
@@ -119,10 +114,37 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
   /** ✅ dialog form */
   pickupForm = this.formBuilder.group({
     PickName: ['', [Validators.required, Validators.maxLength(20)]],
-    PickupDate: [new Date() as Date | null, Validators.required], // 預設今天
+    PickupDate: [new Date() as Date | null, Validators.required],
   });
 
   readonly defaultSort: SortItem[] = [{ field: 'CheckNo', order: 1 }];
+  private _currentSortBy: SortItem[] = this.defaultSort;
+
+  /** ✅ 勾選條件：PickupStatus === '0' 才能勾選 */
+  isRowSelectable = (row: QueryFIN63020Row) => this.isPickup0(row?.PickupStatus);
+
+  /** ✅ 讓查詢頁「編輯按鈕不顯示」：已領 or 兌現 or 拋轉…都不顯示 */
+  editHidden = (row: QueryFIN63020Row): boolean => {
+    const pickupStatus = String(row?.PickupStatus ?? '').trim();
+    const checkStatus = String(row?.CheckStatus ?? '').trim();
+    const statusFlag = String(row?.StatusFlag ?? '').trim();
+
+    // ✅ 已領(1/已領/郵寄) 就不給編
+    if (!this.isPickup0(pickupStatus)) return true;
+
+    // ✅ 兌現(3/兌現) 就不給編
+    if (this.isCashed(checkStatus)) return true;
+
+    // ✅ 已拋轉(2/拋轉) 你若也不想給編，就加這行
+    if (this.isPosted(statusFlag)) return true;
+
+    return false;
+  };
+
+  /** ✅ 如果你也想同步禁用（例如沒權限時），保留 disabled 條件 */
+  editDisabled = (row: QueryFIN63020Row): boolean => {
+    return this.editHidden(row); // 這裡讓 disabled 跟 hidden 同步
+  };
 
   // ====== 顯示轉換 ======
   private yesNoText(v: any): string {
@@ -164,17 +186,9 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     return n.toLocaleString('en-US');
   }
 
-  /** ✅ 勾選條件：PickupStatus === '0' 才能勾選 */
-  isRowSelectable = (row: QueryFIN63020Row) => String(row?.PickupStatus ?? '') === '0';
-
-  /** ✅ columns：加一欄 CanPickupYn 顯示 X（不可勾選） */
+  /** ✅ columns */
   columns: Column[] = [
-
-
-    {
-      field: 'CheckNo',
-      header: '票據號碼',
-    },
+    { field: 'CheckNo', header: '票據號碼' },
     { field: 'VendorNo', header: '廠客代號' },
     { field: 'VEN_Name', header: '廠商名稱' },
 
@@ -231,23 +245,15 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     { value: '2', label: '郵寄' },
   ];
 
-  organizationCodeOptions: any[] = [
-
-  ];
-
-  eventCodeOptions: any[] = [
-
-  ];
-
-  targetCodeOptions: any[] = [
-
-  ];
+  organizationCodeOptions: any[] = [];
+  eventCodeOptions: any[] = [];
+  targetCodeOptions: any[] = [];
 
   /* ----------------- 查詢表單 ----------------- */
   queryForm = this.formBuilder.group({
     billNumber: ['' as string],
     vendorCode: ['' as string],
-    bankAccountCode: ['' as string, Validators.required],
+    bankAccountCode: ['' as string],
 
     issueDateStart: [null as Date | null],
     issueDateEnd: [null as Date | null],
@@ -291,54 +297,48 @@ export class FIN63020Component extends BasicQueryPageComponent<any> {
     private dropdownApiService: DropdownApiService,
     private fin26010Service: Fin26010Service,
     private fin55050Service: FIN55050Service,
-    
     private cdr: ChangeDetectorRef
   ) {
     super();
   }
-ngOnInit(): void {
-  this.initializePage('FIN63020', 'fin/fin63020cru', this.queryForm, (form) =>
-    this.onSubmit(form)
-  );
-      // 獲取組織下拉選項
-    this.dropDownListService.querySYS3100_DropDownList()
+
+  override ngOnInit(): void {
+    this.initializePage('FIN63020', 'fin/fin63020cru', this.queryForm, (form) =>
+      this.onSubmit(form)
+    );
+
+    const fromCru = !!(history.state && history.state['fromCru'] === true);
+
+    if (fromCru) {
+      const saved = this.queryStateService.getQueryStateValue('FIN63020');
+      if (saved?.formValue) {
+        this.queryForm.patchValue(saved.formValue, { emitEvent: false });
+        this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
+        this.lastQueryBody = saved.lastQueryBody ?? null;
+        Promise.resolve().then(() => this.onSubmit(this.queryForm));
+      }
+    } else {
+      this.onClear(this.queryForm);
+      this.queryStateService.clearQueryState?.('FIN63020');
+      this.lastQueryBody = null;
+      this._currentSortBy = this.defaultSort;
+    }
+
+    // 組織
+    this.dropDownListService
+      .querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        this.organizationCodeOptions = res.Data.map(item => ({
+      .subscribe((res) => {
+        this.organizationCodeOptions = (res?.Data ?? []).map((item: any) => ({
           ...item,
           value: item.No,
           label: `${item.No} - ${item.Name}`,
         }));
-      })
-          // // 活動
-          // this.dropDownListService.getActivityOptions({
-          //   mid: 0,
-          //   str_no: '10',
-          //   pod_type: ['1', '2', '8'],
-          //   pod_status: '1',
-          // })
-          //   .pipe(untilDestroyed(this))
-          //   .subscribe(response => {
-          //     this.eventCodeOptions = response?.Data?.map((item: any) => ({
-          //       label: `${item.pod_no} - ${item.pod_desc}`,
-          //       value: item.pod_no,
-          //     })) ?? [];
-          //   });
+      });
 
-
-  // ✅ 1. 還原查詢條件（不管從哪頁回來）
-  const saved = this.queryStateService.getQueryStateValue('FIN63020');
-  if (saved?.formValue) {
-    this.queryForm.patchValue(saved.formValue, { emitEvent: false });
-    this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
-    this.lastQueryBody = saved.lastQueryBody ?? null;
-
-    // ✅ 自動重查（回來就看到資料）
-    Promise.resolve().then(() => this.onSubmit(this.queryForm));
-  }
-
-    // 載入活動代碼下拉選單
-    this.dropDownListService.queryTALPORDERM_DropDownList()
+    // 活動
+    this.dropDownListService
+      .queryTALPORDERM_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe((res) => {
         const rows = Array.isArray(res?.Data) ? res.Data : [];
@@ -348,56 +348,58 @@ ngOnInit(): void {
         }));
       });
 
-          this.fin55050Service.queryGLS1016_DropDownList()
-            .pipe(untilDestroyed(this))
-            .subscribe(response => {
-              this.targetCodeOptions = response.Data?.map((item: any) => ({
-                label: `${item.No} - ${item.Name}`,
-                value: item.No,
-              })) ?? [];
-            });
-    // 公司銀行科目代號（Aps1001）
-
-
-    this.fin26010Service
-      .queryAPS1002DropDownList()
+    // 對象代碼
+    this.fin55050Service
+      .queryGLS1016_DropDownList()
       .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
-          const list = Array.isArray(res?.Data) ? res.Data : [];
-          this.BankCodeOptions = list.map((x) => ({
-            label: `${x.BNK_DepositAccNo}-${x.BNK_BRANCHNAME}`,
-            value: x.BNK_DepositAccNo,
-            raw: x,
-          }));
-        },
-        error: (err) => {
-          console.error('載入銀行代號下拉失敗', err);
-          this.BankCodeOptions = [];
-        },
+      .subscribe((response) => {
+        this.targetCodeOptions =
+          response.Data?.map((item: any) => ({
+            label: `${item.No} - ${item.Name}`,
+            value: item.No,
+          })) ?? [];
       });
 
-    // 廠客代號（POS2013_DropDownList）
+    // 公司銀行科目（APS1002）
+this.fin26010Service
+  .queryAPS1002DropDownList()
+  .pipe(untilDestroyed(this))
+  .subscribe({
+    next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
+      const list = Array.isArray(res?.Data) ? res.Data : [];
+      this.BankCodeOptions = list
+        .slice()
+        .sort((a, b) => String(a.BNK_id).localeCompare(String(b.BNK_id)))
+        .map((x) => ({
+          label: `${x.BNK_id}-${x.BNK_AccName}`,
+          value: x.BNK_id,
+          raw: x,
+        }));
+    },
+    error: () => {
+      this.BankCodeOptions = [];
+    },
+  });
+
+    // 廠客代號（POS2013）
     this.dropDownListService
       .queryPOS2013_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe((res) => {
         const rows = Array.isArray(res?.Data) ? res.Data : [];
         this.VendorNoOptions = rows.map((x: any) => ({
-          label: `${x.No} - ${x.Name}`,
-          value: x.No,
+          label: `${x.VEN_No} - ${x.Name}`,
+          value: x.VEN_No,
         }));
       });
-
-    // ✅ 預載假資料測試（你要的 3 筆）
-
   }
 
   /** ✅ 點明細 */
   override onDetail(row: QueryFIN63020Row) {
     const chkNo = String(row?.CheckNo ?? '').trim();
     if (!chkNo) return;
- this.saveQueryState();
+
+    this.saveQueryState();
     this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
       queryParams: { ChkNo: chkNo },
       state: {
@@ -411,9 +413,11 @@ ngOnInit(): void {
 
   /** ✅ 點編輯 */
   override onEdit(row: QueryFIN63020Row) {
+    if (this.editHidden(row)) return; // ✅ double safety
     const chkNo = String(row?.CheckNo ?? '').trim();
     if (!chkNo) return;
- this.saveQueryState();
+
+    this.saveQueryState();
     this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
       queryParams: { ChkNo: chkNo },
       state: {
@@ -425,8 +429,7 @@ ngOnInit(): void {
     });
   }
 
-
-  /** ✅ 按「支票領取」：有勾選才開 dialog */
+  /** ✅ 支票領取：有勾選才開 dialog */
   onPickup(): void {
     const chkNoList = this.getSelectedChkNoList();
     if (!chkNoList.length) {
@@ -434,12 +437,7 @@ ngOnInit(): void {
       return;
     }
 
-    // reset dialog form（日期預設今天）
-    this.pickupForm.reset({
-      PickName: '',
-      PickupDate: new Date(),
-    });
-
+    this.pickupForm.reset({ PickName: '', PickupDate: new Date() });
     this.pickupDialogVisible = true;
     this.cdr.detectChanges();
   }
@@ -460,7 +458,6 @@ ngOnInit(): void {
 
     this.btnLoading = true;
 
-    // ✅ 你 service 若已經有這支：updateFIN63020Detail(body)
     this.fin63020Service
       .updateFIN63020Detail({
         PickName: pickName,
@@ -478,7 +475,6 @@ ngOnInit(): void {
           this.messageService.successBubble('支票領取成功');
           this.pickupDialogVisible = false;
 
-          // ✅ 前端立即更新(把被領取的改成已領 + 日期)
           this.data = this.data.map((r) => {
             const no = String(r?.CheckNo ?? '').trim();
             if (chkNoList.includes(no)) {
@@ -487,7 +483,6 @@ ngOnInit(): void {
             return r;
           });
 
-          // 清勾選
           this.selectedItems = [];
           this.cdr.detectChanges();
         },
@@ -504,7 +499,6 @@ ngOnInit(): void {
     this.pickupDialogVisible = false;
   }
 
-  /** ✅ 只抓「可勾選」(PickupStatus=0) 的 CheckNo */
   private getSelectedChkNoList(): string[] {
     const list = Array.isArray(this.selectedItems) ? this.selectedItems : [];
     return list
@@ -513,10 +507,7 @@ ngOnInit(): void {
       .filter(Boolean);
   }
 
-  /* ----------------- 下面查詢邏輯保留你的，略微調整 parse & mock ----------------- */
-
-
-
+  // ---------- 查詢 ----------
   private formatDate(val: any): string {
     if (!val) return '';
     const d = new Date(val);
@@ -545,11 +536,8 @@ ngOnInit(): void {
   }
 
   private buildQueryPayload(base: any): QueryFIN63020Request {
-    const pageIndex =
-      Number.isFinite(base?.pageIndex) && base.pageIndex >= 1 ? base.pageIndex : 1;
-    const pageSize =
-      Number.isFinite(base?.pageSize) && base?.pageSize > 0 ? base.pageSize : 30;
-
+    const pageIndex = Number.isFinite(base?.pageIndex) && base.pageIndex >= 1 ? base.pageIndex : 1;
+    const pageSize = Number.isFinite(base?.pageSize) && base?.pageSize > 0 ? base.pageSize : 30;
     const sort = this.normalizeSort(base?.SortBy, this.defaultSort);
 
     const payload: QueryFIN63020Request = {
@@ -560,7 +548,7 @@ ngOnInit(): void {
       ChkNo: (base?.billNumber ?? '').trim() || undefined,
       VenNo: (base?.vendorCode ?? '').trim() || undefined,
 
-      CompanyAccNo: String(base?.bankAccountCode ?? '').trim(),
+      CompanyAccNo: String(base?.bankAccountCode ?? '').trim() || undefined,
 
       IssueDateFrom: this.toYmd(base?.issueDateStart),
       IssueDateTo: this.toYmd(base?.issueDateEnd),
@@ -569,14 +557,8 @@ ngOnInit(): void {
       PayDateFrom: this.toYmd(base?.cashDateStart),
       PayDateTo: this.toYmd(base?.cashDateEnd),
 
-      AmtFrom:
-        base?.amountStart == null || base?.amountStart === ''
-          ? undefined
-          : Number(base.amountStart),
-      AmtTo:
-        base?.amountEnd == null || base?.amountEnd === ''
-          ? undefined
-          : Number(base.amountEnd),
+      AmtFrom: base?.amountStart == null || base?.amountStart === '' ? undefined : Number(base.amountStart),
+      AmtTo: base?.amountEnd == null || base?.amountEnd === '' ? undefined : Number(base.amountEnd),
 
       ChkTitle: (base?.billTitle ?? '').trim() || undefined,
       VenCtrlYN: (base?.endorsementProhibited ?? '').trim() || undefined,
@@ -624,8 +606,7 @@ ngOnInit(): void {
         null;
 
       if (innerArr) {
-        const total =
-          Number(data?.TotalCount ?? res?.TotalCount ?? innerArr.length) || innerArr.length;
+        const total = Number(data?.TotalCount ?? res?.TotalCount ?? innerArr.length) || innerArr.length;
         return { rows: innerArr, total };
       }
 
@@ -637,7 +618,6 @@ ngOnInit(): void {
     return { rows: [], total: 0 };
   }
 
-  /** ✅ 你的 queryFunction 先保留（但本頁改用 app-table 可不需要） */
   public queryFIN63020ForReport = (body: any) =>
     this.fin63020Service.queryFIN63020(this.buildQueryPayload(body || {})).pipe(
       map((res: ApiResponse<any>) => {
@@ -675,7 +655,7 @@ ngOnInit(): void {
           this._currentSortBy = payload.SortBy ?? this.defaultSort;
           this.loading = false;
           this.cdr.detectChanges();
-            this.saveQueryState();
+          this.saveQueryState();
         },
         error: (err: any) => {
           console.error('FIN63020 query API error:', err);
@@ -686,13 +666,15 @@ ngOnInit(): void {
         },
       });
   }
-private saveQueryState(): void {
-  this.queryStateService.setQueryState('FIN63020', {
-    formValue: this.queryForm.getRawValue(),
-    currentSortBy: this._currentSortBy,
-    lastQueryBody: this.lastQueryBody,
-  });
-}
+
+  private saveQueryState(): void {
+    this.queryStateService.setQueryState('FIN63020', {
+      formValue: this.queryForm.getRawValue(),
+      currentSortBy: this._currentSortBy,
+      lastQueryBody: this.lastQueryBody,
+    });
+  }
+
   onClear(frm: any) {
     frm.reset({
       billNumber: '',
@@ -739,6 +721,8 @@ private saveQueryState(): void {
     this.selectedItems = [];
     this.lastQueryBody = null;
   }
+
+  // ========= 匯出 =========
   private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
     if (!contentDisposition) return `download${defaultExtension}`;
 
@@ -764,6 +748,7 @@ private saveQueryState(): void {
 
     return `download${defaultExtension}`;
   }
+
   private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
     const contentDisposition = response.headers.get('Content-Disposition');
     const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
@@ -782,7 +767,7 @@ private saveQueryState(): void {
       this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
     }
   }
-  // ========= 匯出 =========
+
   onExportPDF() {
     if (!this.lastQueryBody) {
       this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
@@ -834,8 +819,8 @@ private saveQueryState(): void {
         complete: () => (this.btnLoading = false),
       });
   }
+
   override onLazyLoadData(e: any) {
-    // e = { pageIndex, pageSize, SortBy }
     const raw = this.queryForm.getRawValue();
     const payload = this.buildQueryPayload({
       ...raw,
@@ -865,13 +850,14 @@ private saveQueryState(): void {
         },
       });
   }
+
   @ViewChild('finTable') finTable!: TableComponent;
 
   ngAfterViewInit(): void {
     setTimeout(() => {
       try {
         (this.finTable as any).IsPrint = true;
-      } catch { }
+      } catch {}
 
       const dt: any = (this.finTable as any).dt;
 
@@ -880,49 +866,37 @@ private saveQueryState(): void {
           const pageSize = Number(e?.rows ?? 30);
           const first = Number(e?.first ?? 0);
           const pageIndex = Math.floor(first / pageSize) + 1;
-
           this.fireQueryByPage(pageIndex, pageSize, e?.multiSortMeta);
         });
       }
     });
   }
-  private _currentSortBy: SortItem[] = this.defaultSort;
 
-  private readonly _allowSortFields = new Set(
-    this.columns.map(c => c.field).filter(Boolean) as string[]
-  );
+  private readonly _allowSortFields = new Set(this.columns.map((c) => c.field).filter(Boolean) as string[]);
 
   private fireQueryByPage(pageIndex: number, pageSize: number, sortMeta?: any) {
     const raw = this.queryForm.getRawValue();
 
-    // 1) 轉 sortMeta -> SortItem，但只接受 columns 裡存在的欄位
     let sortBy: SortItem[] | undefined;
 
     if (Array.isArray(sortMeta) && sortMeta.length) {
       const filtered = sortMeta
         .filter((s: any) => this._allowSortFields.has(String(s?.field)))
         .map((s: any) => ({ field: String(s.field), order: Number(s.order) || 1 }));
-
       if (filtered.length) sortBy = filtered;
     }
 
-    // 2) 如果 table 給了奇怪的 ID，就沿用上一個 sort（避免跳掉）
     if (!sortBy || !sortBy.length) {
       sortBy = this._currentSortBy?.length ? this._currentSortBy : this.defaultSort;
     }
 
-    const payload = this.buildQueryPayload({
-      ...raw,
-      pageIndex,
-      pageSize,
-      SortBy: sortBy,
-    });
+    const payload = this.buildQueryPayload({ ...raw, pageIndex, pageSize, SortBy: sortBy });
 
-    // 3) 記住本次 sort，下一頁沿用
     this._currentSortBy = payload.SortBy ?? this.defaultSort;
 
     this.loading = true;
-    this.fin63020Service.queryFIN63020(payload)
+    this.fin63020Service
+      .queryFIN63020(payload)
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (res: ApiResponse<any>) => {
@@ -943,5 +917,19 @@ private saveQueryState(): void {
       });
   }
 
+  // ---------- 狀態判斷（支援代碼 & 文字） ----------
+  private isPickup0(v: any): boolean {
+    const s = String(v ?? '').trim();
+    return s === '0' || s === '未領';
+  }
 
+  private isCashed(v: any): boolean {
+    const s = String(v ?? '').trim();
+    return s === '3' || s === '兌現';
+  }
+
+  private isPosted(v: any): boolean {
+    const s = String(v ?? '').trim();
+    return s === '2' || s === '拋轉';
+  }
 }

@@ -1,0 +1,41 @@
+// TLS12040-v2 Contract Wizard Component Styles
+
+:host {
+  display: block;
+}
+
+.card {
+  padding: 1.5rem;
+  background: var(--surface-card);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+}
+
+// Steps styling
+::ng-deep {
+  .p-steps {
+    .p-steps-item {
+      &.p-highlight {
+        .p-steps-number {
+          background: var(--primary-color);
+          color: var(--primary-color-text);
+        }
+      }
+
+      .p-steps-title {
+        font-size: 0.875rem;
+      }
+    }
+  }
+}
+
+// Step content area
+.step-content {
+  min-height: 400px;
+  padding: 1rem 0;
+}
+
+// Navigation buttons
+.border-top-1 {
+  border-top: 1px solid var(--surface-border);
+}

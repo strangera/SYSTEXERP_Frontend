@@ -81,25 +81,24 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     super();
   }
 
-  ngOnInit(): void {
-    // 初始化，帶入 crudstatus / rowdata / 權限
-    this.initializePage('TLS11020', this.dataForm);
+ngOnInit(): void {
+  this.initializePage('TLS11020', this.dataForm);
 
-    // 編輯時 CAP_Type 不可改
-    if (this.crudstatus === CRUDStatus.Edit) {
-      this.dataForm.get('CAP_Type')?.disable();
-    }
-
-    this.accountingaccountService.getOptions().subscribe((data) => {
-      this.accountOptions = (data || []).map((x: any) => ({
-        label: `${x.No} - ${x.Name}`,
-        formLabel: `${x.No} - ${x.Name}`,
-        value: x.No,
-      }));
-    });
-
-    // 檢視模式(Read) 時整個表單會在 Base 裡被 disable
+  if (this.crudstatus === CRUDStatus.Edit) {
+    this.dataForm.get('CAP_Type')?.disable();
   }
+
+  this.accountingaccountService.getOptions().subscribe((data) => {
+    this.accountOptions = (data || []).map((x: any) => ({
+      label: `${x.No} - ${x.Name}`,
+      formLabel: `${x.No} - ${x.Name}`,
+      value: x.No,
+    }));
+  });
+
+  // ✅ 在「表單值 & disable 狀態」都確定後，存起來當作清除時要回到的預設
+  this.initialFormSnapshot = this.dataForm.getRawValue();
+}
 
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
@@ -153,17 +152,30 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
   }
 
   // 自訂清除：保留 CAP_Item & CAP_Type
-  onClear(): void {
-    const keepValues = {
-      CAP_Item: this.dataForm.get('CAP_Item')?.value,
-      CAP_Type: this.dataForm.get('CAP_Type')?.value,
-    };
-
-    this.dataForm.reset();
-    this.dataForm.patchValue(keepValues);
-    this.dataForm.markAsPristine();
+onClear(): void {
+  // 沒快照就退回你原本的 resetFormToDefault()
+  if (!this.initialFormSnapshot) {
+    this.resetFormToDefault();
+    return;
   }
 
+  // 1) 先 reset
+  this.dataForm.reset();
+
+  // 2) 再回填「進頁面時的預設值」
+  this.dataForm.patchValue(this.initialFormSnapshot, { emitEvent: false });
+
+  // 3) 還原 disabled 狀態（CAP_Item 永遠 disabled；Edit 時 CAP_Type disabled）
+  this.dataForm.get('CAP_Item')?.disable();
+  if (this.crudstatus === CRUDStatus.Edit) {
+    this.dataForm.get('CAP_Type')?.disable();
+  }
+
+  this.dataForm.markAsPristine();
+  this.dataForm.markAsUntouched();
+}
+
+private initialFormSnapshot: any = null;
   private resetFormToDefault(): void {
     this.dataForm.reset();
     this.dataForm.get('CAP_Item')?.disable();
@@ -177,4 +189,9 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     });
     this.dataForm.markAsPristine();
   }
+  override onCancel(): void {
+  this.router.navigate(['/account/tls', 'tls11020'], {
+    state: { fromCru: true },
+  });
+}
 }

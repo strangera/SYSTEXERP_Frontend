@@ -4,13 +4,12 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { CPM12030Data, CPM12030Request, Cpm12030Service } from '@service/api/cpm/cpm12030.service';
-import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, Observable, of, startWith, switchMap } from 'rxjs';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -48,19 +47,7 @@ export class CPM12030Component extends BasicQueryPageComponent<CPM12030Data> imp
   ];
   KIND_IDOptions$ = this.dropdown.queryCss1002();
   // 子類別選單 (連動 KIND_ID)
-  KIND_SubIDOptions$: Observable<Option[] | null> = this.queryForm.controls.KIND_ID.valueChanges.pipe(
-    untilDestroyed(this), startWith(this.queryForm.controls.KIND_ID.value), switchMap(kindId => {
-      // 當主類別改變，清空子類別已選值
-      if (this.queryForm.controls.KIND_SubID.value) {
-        this.queryForm.controls.KIND_SubID.setValue(null);
-      }
-      if (!kindId) {
-        return of([]); // 若沒選主類別，子類別選單為空
-      }
-      // 呼叫 CSS1003 (帶 KIND_ID 參數)
-      return this.dropdown.queryCss1003({ KIND_ID: kindId });
-    })
-  );
+  KIND_SubIDOptions$ = this.dropdown.queryCss1003({ KIND_ID: null });
 
   constructor(
     public readonly cpm12030Service: Cpm12030Service,

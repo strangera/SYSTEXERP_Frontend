@@ -163,7 +163,7 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
   historyRequestBody: TLS32060Request | null = null; //歷史查詢條件
 
   columns: Column[] = [
-    { field: 'RowType', header: '列別', visible: true },
+    // { field: 'RowType', header: '列別', visible: true },
     { field: 'BuildingName', header: '館別', visible: true },
     { field: 'TeamId', header: '單位代碼', visible: true },
     { field: 'TeamName', header: '單位名稱', visible: true },
@@ -183,20 +183,20 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     { field: 'Base_Target', header: '本期銷售目標', visible: true, format: formatAmount },
     { field: 'Base_SaleAmt', header: '本期銷售金額', visible: true, format: formatAmount },
     { field: 'Base_AchieveRate', header: '本期達成率', visible: true, format: (value) => formatPercentage(value, 2) },
-    { field: 'Base_TxnCnt', header: '本期交易筆數', visible: true },
-    { field: 'Base_CustCnt', header: '本期來客數', visible: true },
+    { field: 'Base_TxnCnt', header: '本期交易筆數', visible: true, format: formatAmount },
+    { field: 'Base_CustCnt', header: '本期來客數', visible: true, format: formatAmount },
     { field: 'Base_AvgTicket', header: '本期客單價', visible: true, format: formatAmount },
 
     { field: 'Comp_SaleAmt', header: '上期銷售金額', visible: true, format: formatAmount },
-    { field: 'Comp_TxnCnt', header: '上期交易筆數', visible: true },
+    { field: 'Comp_TxnCnt', header: '上期交易筆數', visible: true, format: formatAmount },
     { field: 'Comp_AvgTicket', header: '上期客單價', visible: true, format: formatAmount },
     { field: 'Growth_SaleAmtPct', header: '成長比', visible: true, format: (value) => formatPercentage(value, 2) },
 
     { field: 'Diff_SaleAmt', header: '銷售金額差異', visible: true, format: formatAmount },
-    { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true },
+    { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true, format: formatAmount },
     { field: 'Diff_AvgTicket', header: '客單價差異', visible: true, format: formatAmount },
-    { field: 'Space', header: '營業坪數', visible: true },
-    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true }
+    { field: 'Space', header: '營業坪數', visible: true, format: formatAmount },
+    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true, format: formatAmount }
   ];
   tlt_kind_Option = [
     { value: "1", label: "正櫃" },
@@ -269,7 +269,7 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
       this.area_no_Option = res.Data;
     })
     this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.tlt_no_id_Option = res.Data;
+      this.tlt_no_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     })
     // 獲取大分類下拉選項
     this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
@@ -401,7 +401,7 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
             const blobUrl = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = blobUrl;
-            a.download = 'TLS32060.xlsx'; // 可以依需求改檔名
+            a.download = '各櫃業績報表.xlsx'; // 可以依需求改檔名
             a.click();
             URL.revokeObjectURL(blobUrl);
           }
@@ -437,7 +437,7 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
             const blobUrl = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = blobUrl;
-            a.download = 'TLS32060.pdf'; // 可以依需求改檔名
+            a.download = '各櫃業績報表.pdf'; // 可以依需求改檔名
             a.click();
             URL.revokeObjectURL(blobUrl);
           }
@@ -757,8 +757,6 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);
     if (event.RowType == 'TEAM') // TEAM才會進入明細查詢
       this.onDetail(event, queryConditions);
-    else
-      console.log('TEAM才會進入明細查詢');
   }
 
   // 算比較表單的週數

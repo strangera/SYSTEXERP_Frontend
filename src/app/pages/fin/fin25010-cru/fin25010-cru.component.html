@@ -7,7 +7,25 @@
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
-      <div class="grid p-fluid">
+      <div *ngIf="isFormReadable" class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="應付帳款ID" controlName="PAM_No" [control]="dataForm.controls.PAM_No"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-calendar label="收/付款日" controlName="PTA_Date" [control]="dataForm.controls.PTA_Date"
+            [submitted]="submitted"></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-calendar label="建立日期" controlName="D_Date" [control]="dataForm.controls.D_Date"
+            [submitted]="submitted"></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="匯款單號" controlName="WSLIP_NO" [control]="dataForm.controls.WSLIP_NO"
+            [submitted]="submitted"></app-input-text>
+        </div>
+      </div>
+      <div *ngIf="!isFormReadable" class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar label="收/付款日" controlName="ACP_ExpectPayDate" [control]="dataForm.controls.ACP_ExpectPayDate"
             [submitted]="submitted"></app-calendar>
@@ -32,7 +50,7 @@
             [editable]="false"></app-dropdown>
         </div>
       </div>
-      <div class="col-12">
+      <div *ngIf="!isFormReadable" class="col-12">
         <ul class="line-height-3 pl-4">
           <li>
             挑選應付帳款維護中付款方式為電匯,預計付款日<=收 /付款日且尚未付款完畢資料 </li>
@@ -47,16 +65,14 @@
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="query" [loading]="loading"></app-button>
       </div>
+      <hr>
     </form>
+    <app-table-report tableKey="FIN25010cru" dataKey="UniqueKey" [data]="data" [columns]="columns"
+      [showCheckBox]="isFormCreateable" [showDelete]="false" [showManage]="false" [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event; calculateFooter()" [totalRecords]="totalRecords" [loading]="loading"
+      [showReportMode]="false" [lastQueryBody]="lastQueryBody" [showCaption]="false"
+      [queryFunction]="fin25010Service.queryAddFIN25010.bind(fin25010Service)" groupRowsBy="ven_no"
+      [subTotalData]="subTotalData" [footerData]="footerData" [lazy]="false">
+    </app-table-report>
   </p-panel>
-</div>
-
-<div class="card">
-  <app-table-report tableKey="FIN25010cru" dataKey="UniqueKey" [data]="data" [columns]="columns" [showCheckBox]="true"
-    [showDelete]="false" [showManage]="false" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event; calculateFooter()" [totalRecords]="totalRecords" [loading]="loading"
-    [showReportMode]="false" [lastQueryBody]="lastQueryBody" [showSort]="false"
-    [queryFunction]="fin25010Service.queryAddFIN25010.bind(fin25010Service)" groupRowsBy="ven_no"
-    [subTotalData]="subTotalData" [footerData]="footerData" [lazy]="false">
-  </app-table-report>
 </div>

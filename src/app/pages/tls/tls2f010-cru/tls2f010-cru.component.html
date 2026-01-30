@@ -8,12 +8,13 @@
     <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <ng-container *ngIf="showQueryArea">
         <div class="grid p-fluid">
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="所屬結帳年月"
+            controlName="sam_yyymm" [control]="dataForm.controls.sam_yyymm" [submitted]="submitted" />
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="專櫃編號/名稱" controlName="tlt_no" [options]="tlt_noOptions | async" optionLabel="label"
               optionValue="value" [control]="dataForm.controls.tlt_no" [submitted]="submitted"></app-dropdown>
           </div>
-          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="所屬結帳年月"
-            controlName="COMM_YM" [control]="dataForm.controls.COMM_YM" [submitted]="submitted" />
 
         </div>
 
@@ -51,23 +52,22 @@
             <app-input-text label="發票/收據號碼" controlName="PUR_GUINO" [control]="dataForm.controls.PUR_GUINO"
               [submitted]="submitted"></app-input-text>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="單據日期"
-              [startControl]="dataForm.controls.PUR_GUIDate_From" [endControl]="dataForm.controls.PUR_GUIDate_To"
-              [submitted]="submitted"></app-calendar-range>
-          </div>
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="請款付款年月"
+            controlName="COMM_YM" [control]="dataForm.controls.COMM_YM" [submitted]="submitted" />
+
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="申報年月" controlName="DEC_YM"
+            [control]="dataForm.controls.DEC_YM" [submitted]="submitted" />
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="單據日期" controlName="PUR_GUIDate"
+            [control]="dataForm.controls.PUR_GUIDate" [submitted]="submitted" />
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="結帳方式" controlName="COMM_MONEY_TYPE" [options]="money_typeOptions" optionLabel="label"
               optionValue="value" [control]="dataForm.controls.COMM_MONEY_TYPE" [submitted]="submitted"></app-dropdown>
           </div>
-          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="請款付款年月"
-            controlName="COMM_YM" [control]="dataForm.controls.COMM_YM" [submitted]="submitted" />
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="帳次" controlName="sam_termno" [options]="sam_termnoOptions" optionLabel="label"
               optionValue="value" [control]="dataForm.controls.sam_termno" [submitted]="submitted"></app-dropdown>
           </div>
-          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="申報年月" controlName="DEC_YM"
-            [control]="dataForm.controls.DEC_YM" [submitted]="submitted" />
+
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
@@ -79,15 +79,14 @@
             [options]="taxTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
             [control]="dataForm.controls.PUR_TaxType" [submitted]="submitted"></app-dropdown>
 
-          <app-input-number label="發票/收據號碼" controlName="PUR_GUINO" [control]="dataForm.controls.PUR_GUINO"
-            class="col-12 md:col-6 lg:col-4" [useGrouping]="true" label="發票總額"
-            [submitted]="submitted"></app-input-number>
-
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="扣抵代號" [control]="dataForm.controls.PUR_DiscNo" [options]="discountOptions"
               optionLabel="label" optionValue="value" [submitted]="submitted">
             </app-dropdown>
           </div>
+          <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="true" label="發票總額"
+            [control]="dataForm.controls.ACP_GUIAmt" [submitted]="submitted"></app-input-number>
+
           <app-input-number class="col-12 md:col-6 lg:col-4" [useGrouping]="true" label="未稅金額"
             [control]="dataForm.controls.ACP_GUINet" [submitted]="submitted"></app-input-number>
 
@@ -102,21 +101,20 @@
         </div>
         <hr />
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="傳送日期" [startControl]="dataForm.controls.COMM_NUM_Start"
-              [endControl]="dataForm.controls.COMM_NUM_End" [submitted]="submitted"></app-calendar-range>
-          </div>
+
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="傳送日期" controlName="CRT_Date"
+            [control]="dataForm.controls.CRT_Date" [submitted]="submitted" />
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear" [form]="dataForm"></app-button>
-          <app-button btnType="query" [loading]="loading"></app-button>
+        <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="cancel" [form]="dataForm"></app-button>
+          <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit(dataForm)" />
         </div>
       </ng-container>
 
       <ng-container *ngIf="showResultTables">
         <app-table-report tableKey="TLS2F010ChangeEdit" class="col-12" [columns]="columns1" [data]="changeEditData"
           [totalRecords]="changeEditData.length" [loading]="queryLoading" [lazy]="false" [showManage]="false"
-          [showDelete]="false" [showReportMode]="false" [showFilter]="false" [showCheckBox]="true"
+          [showDelete]="false" [showReportMode]="false" [showFilter]="false" [showCheckBox]="false"
           [selectedItems]="selectedMainItems" (selectionChange)="onChangeEditSelection($event)">
         </app-table-report>
         <br />
@@ -134,7 +132,7 @@
         </app-table-edit>
         <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="cancel" [form]="dataForm"></app-button>
-          <app-button btnType="submit" [loading]="loading" />
+          <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit(dataForm)" />
         </div>
       </ng-container>
 

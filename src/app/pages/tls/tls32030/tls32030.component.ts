@@ -20,7 +20,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
@@ -32,7 +31,7 @@ import { Column, createPaginationConfig } from '../../../shared/componentkit/tab
   imports: [
     AsyncPipe, NgIf, FormsModule, ReactiveFormsModule, TranslateModule, AccordionModule, ButtonModule,
     MenubarComponent, ButtonComponent, CalendarComponent, DividerModule,
-    CalendarRangeQuickComponent, InputNumberComponent, DropdownComponent,
+    CalendarRangeQuickComponent, DropdownComponent,
     MultiSelectComponent, RadiobuttonComponent, TableReportComponent
   ]
 })

@@ -172,8 +172,8 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
     PayDateFrom: [null as Date | null],
     PayDateTo: [null as Date | null],
 
-    AmtFrom: [null as number | null],
-    AmtTo: [null as number | null],
+AmtFrom: [null as number | string | null],
+AmtTo: [null as number | string | null],
 
     ChkType: ['' as string],
     TicketYN: ['' as string],
@@ -270,8 +270,8 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
           const list = Array.isArray(res?.Data) ? res.Data : [];
           const filtered = list.filter((x: any) => String((x as any)?.BNK_AccType ?? '') !== '1');
           this.companyAccOptions = filtered.map((x: any) => ({
-            label: `${x.BNK_DepositAccNo}-${x.ACCCNAME}`,
-            value: x.BNK_DepositAccNo,
+                 label: `${x.BNK_id}-${x.BNK_AccName}`,
+            value: x.BNK_id,
             raw: x,
           }));
         },
@@ -281,13 +281,28 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
   
 
     // 還原查詢條件
-    const saved = this.queryStateService.getQueryStateValue('FIN64010');
-    if (saved?.formValue) {
-      this.queryForm.patchValue(saved.formValue, { emitEvent: false });
-      this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
-      this.lastQueryBody = saved.lastQueryBody ?? null;
-      Promise.resolve().then(() => this.onSubmit(this.queryForm));
-    }
+const fromCru = !!(history.state && history.state['fromCru']);
+
+if (fromCru) {
+  const saved = this.queryStateService.getQueryStateValue('FIN64010');
+  if (saved?.formValue) {
+    this.queryForm.patchValue(saved.formValue, { emitEvent: false });
+    this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
+    this.lastQueryBody = saved.lastQueryBody ?? null;
+
+    Promise.resolve().then(() => this.onSubmit(this.queryForm)); // 需要就保留
+  }
+} else {
+  // ✅ 從其他頁回來：回到預設條件（並清掉上次的還原狀態）
+  this.queryStateService.clearQueryState('FIN64010');
+
+  // 你要的「預設條件」是什麼，就在這裡定義
+  // 目前你的預設就是全空 + 預設排序/分頁
+  this.onClear(this.queryForm);
+
+  // 如果你不想 onClear 觸發任何東西，且只想 reset form：
+  // this.queryForm.reset({ ...你的預設值..., ...createPaginationConfig(this.defaultSort) }, { emitEvent:false });
+}
   }
 
   moneyFormat(value: any): string {
@@ -320,6 +335,19 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
       .map((x) => ({ field: String(x.field), order: x.order as number }));
     return cleaned.length ? cleaned : fallback;
   }
+  private parseMoneyToNumber(v: any): number | undefined {
+  if (v == null) return undefined;
+
+  // 已經是 number
+  if (typeof v === 'number') return Number.isFinite(v) ? v : undefined;
+
+  // 字串：去掉逗號與空白
+  const s = String(v).trim().replace(/,/g, '');
+  if (!s) return undefined;
+
+  const n = Number(s);
+  return Number.isFinite(n) ? n : undefined;
+}
 
   private buildQueryPayload(raw: any): QueryFIN64010Request {
     const pageIndex = Number.isFinite(raw?.pageIndex) && raw.pageIndex >= 1 ? raw.pageIndex : 1;
@@ -358,8 +386,9 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
       PayDateFrom: this.toYmd(raw?.PayDateFrom),
       PayDateTo: this.toYmd(raw?.PayDateTo),
 
-      AmtFrom: raw?.AmtFrom == null || raw?.AmtFrom === '' ? undefined : Number(raw.AmtFrom),
-      AmtTo: raw?.AmtTo == null || raw?.AmtTo === '' ? undefined : Number(raw.AmtTo),
+      AmtFrom: this.parseMoneyToNumber(raw?.AmtFrom),
+AmtTo: this.parseMoneyToNumber(raw?.AmtTo),
+
 
       ChkType: (raw?.ChkType ?? '').trim() || undefined,
       TicketYN: (raw?.TicketYN ?? '').trim() || undefined,
@@ -378,10 +407,11 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
     };
 
     // 清掉空值
-    Object.keys(payload).forEach((k) => {
-      const v = (payload as any)[k];
-      if (v === '' || v == null) delete (payload as any)[k];
-    });
+  Object.keys(payload).forEach((k) => {
+  const v = (payload as any)[k];
+  if (v === '' || v == null) delete (payload as any)[k];
+  if (typeof v === 'number' && !Number.isFinite(v)) delete (payload as any)[k]; // ✅ NaN/Infinity
+});
 
     return payload;
   }
@@ -614,4 +644,5 @@ override onDetail(row: QueryFIN64010Row) {
         },
       });
   }
+
 }

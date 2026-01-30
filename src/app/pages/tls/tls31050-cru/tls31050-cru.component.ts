@@ -1,26 +1,26 @@
-import { IDropdownItem } from '@service/utility/dropDownList.service';
+import { formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableModule } from 'primeng/table';
-import { TranslateModule } from '@ngx-translate/core';
-import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { ButtonModule } from 'primeng/button';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { TLS31050DetailItem, TLS31050DetailRequest, TLS31050PrintDetailRequest, TLS31050Response, Tls31050Service } from '@service/api/tls/tls31050.service';
+import { IDropdownItem } from '@service/utility/dropDownList.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { TLS31050DetailItem, TLS31050DetailRequest, TLS31050PrintDetailRequest, TLS31050Response, Tls31050Service } from '@service/api/tls/tls31050.service';
-import { formatDate } from '@angular/common';
-import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 @Component({
   selector: 'app-tls31050-cru',
@@ -43,7 +43,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
   ],
   templateUrl: './tls31050-cru.component.html'
 })
-export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response> implements OnInit{
+export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     tlt_term_type: [''],//抽成別代碼
     tlt_term_desc: [''],//抽成別名稱
@@ -83,7 +83,7 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
 
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
     { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },
-    
+
     { field: 'NormalSales', header: '正品', groupField: 'budgetAmt', visible: true }, // 正品
     { field: 'SpecialSales', header: '特價 ', groupField: 'budgetAmt', visible: true }, // 特價
     { field: 'Discount95Sales', header: '95折 ', groupField: 'budgetAmt', visible: true }, // 95折
@@ -91,7 +91,7 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
     { field: 'Discount80Sales', header: '8折 ', groupField: 'budgetAmt', visible: true }, // 8折
     { field: 'Discount70Sales', header: '7折 ', groupField: 'budgetAmt', visible: true }, // 7折
     { field: 'AchievementRate', header: '達成率', groupField: 'budgetAmt', visible: true, format: (value) => formatPercentage(value, 2) },
-    
+
     { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
     { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
 
@@ -104,7 +104,7 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
 
     // { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
     // { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
-    
+
     { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2) },
   ];
   columnGroup: ColumnGroup[] = [
@@ -142,7 +142,7 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
 
   // ----------------------------------------------------------------
   constructor(
-    public readonly tls31050Service: Tls31050Service  ) {
+    public readonly tls31050Service: Tls31050Service) {
     super(); // 呼叫父類建構子
   }
 
@@ -171,6 +171,8 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
       ...this.queryConditions,
       IsExcel: isExcel,
       tlt_term_type: this.dataForm.get('tlt_term_type')?.value ?? '',
+      bus_class: (this.queryConditions.bus_class || []).map((x: any) => [x.bus_type, x.No]),
+      bus_sclass: (this.queryConditions.bus_sclass || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
       TXN_DateS: formatDate(this.queryConditions.TXN_DateS, 'yyyy-MM-dd', 'en-US'),
       TXN_DateE: formatDate(this.queryConditions.TXN_DateE, 'yyyy-MM-dd', 'en-US'),
     } as TLS31050PrintDetailRequest;
@@ -179,12 +181,12 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
 
     this.btnLoading = true;
     this.tls31050Service.printTLS31050Detail(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this)).subscribe(res => {
-        this.messageService.successBubble(res.Message);
-        if (res.Data && res.Data.Print_URL) {
-          const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-          window.open(downloadUrl, '_blank');
-        }
-      });
+      this.messageService.successBubble(res.Message);
+      if (res.Data && res.Data.Print_URL) {
+        const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+        window.open(downloadUrl, '_blank');
+      }
+    });
   }
 
   queryTLS31050Detail() {
@@ -192,6 +194,8 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
     const request: TLS31050DetailRequest = {
       ...this.queryConditions,
       tlt_term_type: this.dataForm.get('tlt_term_type')?.value ?? '',
+      bus_class: (this.queryConditions.bus_class || []).map((x: any) => [x.bus_type, x.No]),
+      bus_sclass: (this.queryConditions.bus_sclass || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
       TXN_DateS: formatDate(this.queryConditions.TXN_DateS, 'yyyy-MM-dd', 'en-US'),
       TXN_DateE: formatDate(this.queryConditions.TXN_DateE, 'yyyy-MM-dd', 'en-US'),
     };

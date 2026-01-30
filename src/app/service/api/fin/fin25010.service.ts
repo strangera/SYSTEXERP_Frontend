@@ -94,6 +94,11 @@ export interface APS3009Item {
   Remit_Status?: string;      // 是否產生電匯(Y/N) (0=作廢N 2=建立Y)
 }
 
+// 檢視頁面查詢 Request
+export interface QueryDetailFIN25010Request extends BaseQueryRequest {
+  PAM_No: string; // 必要條件
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -107,6 +112,10 @@ export class FIN25010Service {
     return this.http.post<BaseQueryResponse<FIN25010Data>>(`${this.apiUrl}/queryFIN25010`, req);
   }
 
+  // 在 FIN25010Service 類別中新增此方法
+  queryDetailFIN25010(req: QueryDetailFIN25010Request): Observable<BaseQueryResponse<QueryAddFIN25010Response>> {
+    return this.http.post<BaseQueryResponse<QueryAddFIN25010Response>>(`${this.apiUrl}/query_detailFIN25010`, req);
+  }
   // 查詢下拉選單
   queryDropFIN25010(req: QueryDropFIN25010Request): Observable<BaseQueryResponse<QueryDropFIN25010Response>> {
     return this.http.post<BaseQueryResponse<QueryDropFIN25010Response>>(`${this.apiUrl}/query_dropFIN25010`, req);

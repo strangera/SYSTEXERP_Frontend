@@ -578,7 +578,7 @@ export class TLS12040DataFlowService {
     itemType: string
   ): void {
     // 處理 cap_saletype 同步邏輯
-    if ((fieldName === 'cap_saletype1' || fieldName === 'cap_saletype2') && itemType === 'master') {
+    if ((fieldName === 'cap_saletype1' || fieldName === 'cap_saletype2' || fieldName === 'cap_saletype3') && itemType === 'master') {
       const stringValue = this.convertToYNString(newValue);
       this.syncCapSaletypeToAllMasters(fieldName, stringValue);
     }
@@ -595,6 +595,9 @@ export class TLS12040DataFlowService {
           this.updateItemStatus(master);
         } else if (fieldName === 'cap_saletype2' && master.cap_saletype2 !== newValue) {
           master.cap_saletype2 = newValue;
+          this.updateItemStatus(master);
+        } else if (fieldName === 'cap_saletype3' && master.cap_saletype3 !== newValue) {
+          master.cap_saletype3 = newValue;
           this.updateItemStatus(master);
         }
       }
@@ -638,6 +641,7 @@ export class TLS12040DataFlowService {
           sst_rate: null,
           cap_saletype1: 'N',
           cap_saletype2: 'N',
+          cap_saletype3: 'N',
           cap_saletype5: 'N',
           cag_remark: '',
           _status: 'new',

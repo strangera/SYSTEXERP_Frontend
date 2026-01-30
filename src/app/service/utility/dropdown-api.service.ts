@@ -269,6 +269,17 @@ export class DropdownApiService {
     );
   }
 
+  /** 查詢傳票型態(GLS1010) (用於 FIN55050) */
+  queryGls1010(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>(
+      '/queryGLS1010_DropDownList',
+      'No',
+      'Name'
+    ).pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢
+    );
+  }
+
   /** 查詢扣款代碼檔(APS1003) */
   queryAps1003(body: Aps1003Query): Observable<Option[] | null> {
     // 使用新的泛型底層方法 queryAndMapDropdown
@@ -576,8 +587,8 @@ export class DropdownApiService {
   }
 
   /** 查詢角色代碼(tblRole) */
-  queryTblRole(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/querytblRole_DropDownList').pipe(
+  queryTblRole(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/querytblRole_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }

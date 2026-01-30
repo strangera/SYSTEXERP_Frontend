@@ -15,7 +15,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import {
   Fin63020Service,
   Fin63020DetailRow,
@@ -45,7 +45,6 @@ export class FIN63020CRUComponent extends BasicCruPageComponent<any> implements 
   readonly CRUD = CRUDStatus;
   override loading = false;
 
-  // ✅ Dropdown options
   endorsementProhibitedOptions = [
     { value: 'Y', label: '是' },
     { value: 'N', label: '否' },
@@ -56,13 +55,9 @@ export class FIN63020CRUComponent extends BasicCruPageComponent<any> implements 
     { value: '2', label: '拋轉' },
   ];
 
-  billStatusOptions = [
+  checkStatusOptions = [
     { value: '2', label: '到期' },
     { value: '3', label: '兌現' },
-    { value: '0', label: '作廢' },
-    { value: '1', label: '未異動' },
-    { value: '4', label: '撤票' },
-    { value: '5', label: '退票' },
   ];
 
   pickupTypeOptions = [
@@ -70,88 +65,86 @@ export class FIN63020CRUComponent extends BasicCruPageComponent<any> implements 
     { value: '1', label: '已領' },
     { value: '2', label: '郵寄' },
   ];
-
-  // ✅ 表單（顯示欄位 + 可更新欄位）
+organizationCodeOptions: any[] = [];
   dataForm = this.formBuilder.group({
-    // --- 顯示用(多數不可改) ---
     CheckNo: ['', [Validators.required, Validators.maxLength(10)]],
     VendorNo: [''],
     VEN_Name: [''],
-
     CompanyAccNo: [''],
     CompanyAccName: [''],
-
     IssueDate: [{ value: null as Date | null, disabled: true }],
     ExpireDate: [{ value: null as Date | null, disabled: true }],
-
     CheckAmount: [{ value: null as number | null, disabled: true }],
-
     OrgId: [''],
     ProjectNo: [''],
     PamNo: [''],
-
     VoucherNoIssued: [''],
     VouNo_paid: [''],
-
-    // --- ✅ 可更新欄位（依 Swagger updateFIN63020Request）---
     CheckTitle: ['', [Validators.required, Validators.maxLength(100)]],
-    Remark: ['', [ Validators.maxLength(160)]],
-
+    Remark: ['', [Validators.maxLength(160)]],
+    CompanyAccDisplay: [{ value: '', disabled: true }],
     NoEndorseYn: ['' as any, [Validators.required, Validators.maxLength(1)]],
     StatusFlag: ['' as any, [Validators.required, Validators.maxLength(1)]],
     PickupType: ['' as any, [Validators.required, Validators.maxLength(1)]],
-
-    PickupDate: [null as Date | null],     // nullable
-    PayDate: [null as Date | null],        // nullable
-    WithdrawDate: [null as Date | null],   // nullable
-
-    // 顯示用：票據狀態/狀態（如果你仍要顯示，可保留）
-    CheckStatus: [{ value: '', disabled: true }],
+    PickupDate: [null as Date | null],
+    PayDate: [null as Date | null],
+    WithdrawDate: [null as Date | null],
+    CheckStatus: [{ value: null as any, disabled: true }],
   });
+
+  private _pickupStatus: string = '';
+  private _checkStatus: string = '';
 
   constructor(
     private fin63020Service: Fin63020Service,
+     private dropDownListService: DropDownListService,
     private route: ActivatedRoute
   ) {
     super();
   }
 
-  ngOnInit(): void {
-    this.initializePage('FIN63020', this.dataForm);
+ngOnInit(): void {
+  this.initializePage('FIN63020', this.dataForm);
+  this.applyCrudDisabledState();
 
-    // ✅ Read 模式：整張表單不可改
-    // ✅ Edit 模式：只開放指定欄位；其餘 disabled
-    this.applyCrudDisabledState();
+  this.dropDownListService
+    .querySYS3100_DropDownList()
+    .pipe(untilDestroyed(this))
+    .subscribe((res) => {
+      this.organizationCodeOptions = (res?.Data ?? []).map((item: any) => ({
+        ...item,
+        value: item.No,
+        label: `${item.No} - ${item.Name}`,
+      }));
+    });
 
-    // ✅ 從 Query 頁帶過來 ?ChkNo=
-    this.route.queryParams
-      .pipe(untilDestroyed(this))
-      .subscribe((params) => {
-        const chkNo = String(params?.['ChkNo'] ?? '').trim();
-        if (!chkNo) return;
+  this.route.queryParams
+    .pipe(untilDestroyed(this))
+    .subscribe((params) => {
+      const chkNo = String(params?.['ChkNo'] ?? '').trim();
+      if (!chkNo) return;
 
-        this.dataForm.patchValue({ CheckNo: chkNo }, { emitEvent: false });
-        this.loadDetail(chkNo);
-      });
-  }
+      this.dataForm.patchValue({ CheckNo: chkNo }, { emitEvent: false });
+      this.loadDetail(chkNo);
+    });
+}
 
-  /** ✅ 依 CRUDStatus 套用可編輯欄位 */
+
   private applyCrudDisabledState(): void {
-    // 先全部 disable（避免漏網）
     Object.keys(this.dataForm.controls).forEach((k) => {
       this.dataForm.controls[k as keyof typeof this.dataForm.controls].disable({ emitEvent: false });
     });
 
-    // CheckNo 永遠不給改，但要顯示
     this.dataForm.controls.CheckNo.disable({ emitEvent: false });
 
-    // Read：全部不開
-    if (this.crudstatus === CRUDStatus.Read) return;
+    const pickupStatus = String(this._pickupStatus ?? '').trim();
+    const checkStatus = String(this._checkStatus ?? '').trim();
+    const forbidEdit = pickupStatus === '1' || checkStatus === '3';
+    if (forbidEdit) return;
 
-    // Create：本需求不處理（你也說不提供新增）
+    if (this.crudstatus === CRUDStatus.Read) return;
     if (this.crudstatus === CRUDStatus.Create) return;
 
-    // Edit：只開放 Swagger 指定可更新欄位
     if (this.crudstatus === CRUDStatus.Edit) {
       const editableKeys: (keyof typeof this.dataForm.controls)[] = [
         'CheckTitle',
@@ -163,18 +156,11 @@ export class FIN63020CRUComponent extends BasicCruPageComponent<any> implements 
         'PayDate',
         'WithdrawDate',
       ];
-
-      editableKeys.forEach((k) => {
-        this.dataForm.controls[k].enable({ emitEvent: false });
-      });
-
-      // 另外這些是顯示用（要看你要不要可編輯；你需求沒列就不開）
-      // this.dataForm.controls.OrgId.enable({ emitEvent: false });
-      // this.dataForm.controls.ProjectNo.enable({ emitEvent: false });
+      editableKeys.forEach((k) => this.dataForm.controls[k].enable({ emitEvent: false }));
+      this.dataForm.controls.CheckStatus.enable({ emitEvent: false });
     }
   }
 
-  // ✅ /FIN0000/NTS1000/queryFIN63020Detail  { "ChkNo": "string" }
   private loadDetail(chkNo: string): void {
     this.messageService.blockUi();
     this.loading = true;
@@ -184,15 +170,10 @@ export class FIN63020CRUComponent extends BasicCruPageComponent<any> implements 
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (res: any) => {
-          const d: Fin63020DetailRow =
-            res?.Data?.QueryData ??
-            res?.Data ??
-            res ??
-            ({} as any);
-
+          const d: Fin63020DetailRow = res?.Data?.QueryData ?? res?.Data ?? res ?? ({} as any);
           this.patchFromDetail(d);
-
-          // 打完明細後再套一次（避免 patchValue 影響 disable 狀態）
+          this._pickupStatus = String((d as any).PickupStatus ?? (d as any).PickupType ?? '').trim();
+          this._checkStatus = String((d as any).CheckStatus ?? '').trim();
           this.applyCrudDisabledState();
         },
         error: () => {
@@ -207,37 +188,42 @@ export class FIN63020CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   private patchFromDetail(d: Fin63020DetailRow): void {
+    const rawCheckStatus = String((d as any).CheckStatus ?? '').trim();
+    const checkStatusValue = rawCheckStatus === '到期' ? '2' : rawCheckStatus === '兌現' ? '3' : rawCheckStatus || null;
+
     this.dataForm.patchValue(
       {
         CheckNo: (d as any).CheckNo ?? '',
         VendorNo: (d as any).VendorNo ?? '',
         VEN_Name: (d as any).VEN_Name ?? '',
-
         CompanyAccNo: (d as any).CompanyAccNo ?? '',
         CompanyAccName: (d as any).CompanyAccName ?? '',
-
         IssueDate: this.parseDate((d as any).IssueDate),
         ExpireDate: this.parseDate((d as any).ExpireDate),
-
         PayDate: this.parseDate((d as any).PayDate),
         PickupDate: this.parseDate((d as any).PickupDate),
         WithdrawDate: this.parseDate((d as any).WithdrawDate),
-
+        CompanyAccDisplay: (() => {
+          const no = String((d as any).CompanyAccNo ?? '').trim();
+          const name = String((d as any).CompanyAccName ?? '').trim();
+          if (!no && !name) return '';
+          return name ? `${no}-${name}` : no;
+        })(),
         CheckAmount: (d as any).CheckAmount ?? null,
         CheckTitle: (d as any).CheckTitle ?? '',
-
         NoEndorseYn: (d as any).NoEndorseYn ?? '',
         Remark: (d as any).Remark ?? '',
-
-        OrgId: (d as any).OrgId ?? '',
+        OrgId: (() => {
+          const id = String((d as any).OrgId ?? '').trim();
+          const name = String((d as any).Org_Name ?? (d as any).OrgName ?? '').trim();
+          if (!id) return '';
+          return name ? `${id}-${name}` : id;
+        })(),
         StatusFlag: (d as any).StatusFlag ?? '',
-        CheckStatus: (d as any).CheckStatus ?? '',
-
+        CheckStatus: checkStatusValue,
         PickupType: (d as any).PickupType ?? '',
-
         ProjectNo: (d as any).ProjectNo ?? '',
         PamNo: (d as any).PamNo ?? '',
-
         VoucherNoIssued: (d as any).VoucherNoIssued ?? '',
         VouNo_paid: (d as any).VouNo_paid ?? '',
       },
@@ -250,70 +236,55 @@ export class FIN63020CRUComponent extends BasicCruPageComponent<any> implements 
     const d = new Date(v);
     return isNaN(d.getTime()) ? null : d;
   }
-  
 
-  // ✅ 送出（只在 Edit 才打 updateFIN63020）
   onSubmit(form: FormGroup): void {
-  if (this.isRead) return;
+    if (this.isRead) return;
 
-  this.handleSubmit(form, () => {
-    if (this.crudstatus !== CRUDStatus.Edit) {
-      this.messageService.errorBubble('此功能目前僅提供編輯更新');
-      return;
-    }
+    this.handleSubmit(form, () => {
+      if (this.crudstatus !== CRUDStatus.Edit) {
+        this.messageService.errorBubble('此功能目前僅提供編輯更新');
+        return;
+      }
 
-    const raw = this.dataForm.getRawValue();
-const remark = String(raw.Remark ?? '').trim();
-    const payload: Fin63020UpdateRequest = {
-      CheckNo: String(raw.CheckNo ?? '').trim(),
-      CheckTitle: String(raw.CheckTitle ?? '').trim(),
-      ...(remark ? { Remark: remark } : {}), // ← 這裡讓 Remark 變成 optional
-      NoEndorseYn: raw.NoEndorseYn as 'Y' | 'N',
-      StatusFlag: raw.StatusFlag as '1' | '2',
-      PickupType: raw.PickupType as '0' | '1' | '2',
+      const raw = this.dataForm.getRawValue();
+      const remark = String(raw.Remark ?? '').trim();
 
-      PickupDate: raw.PickupDate ? this.toYMD(raw.PickupDate) : null,
-      PayDate: raw.PayDate ? this.toYMD(raw.PayDate) : null,
-      WithdrawDate: raw.WithdrawDate ? this.toYMD(raw.WithdrawDate) : null,
-    };
+      const payload: Fin63020UpdateRequest = {
+        CheckNo: String(raw.CheckNo ?? '').trim(),
+        CheckTitle: String(raw.CheckTitle ?? '').trim(),
+        ...(remark ? { Remark: remark } : {}),
+        NoEndorseYn: raw.NoEndorseYn as 'Y' | 'N',
+        StatusFlag: raw.StatusFlag as '1' | '2',
+        PickupType: raw.PickupType as '0' | '1' | '2',
+        PickupDate: raw.PickupDate ? this.toYMD(raw.PickupDate) : null,
+        PayDate: raw.PayDate ? this.toYMD(raw.PayDate) : null,
+        WithdrawDate: raw.WithdrawDate ? this.toYMD(raw.WithdrawDate) : null,
+        CheckStatus: raw.CheckStatus ? String(raw.CheckStatus) : null,
+      };
 
-    // 👉 如果你 service 還是 index signature，就用這個
-    if (
-      !payload['CheckNo'] ||
-      !payload['CheckTitle'] ||
-      !payload['Remark'] ||
-      !payload['NoEndorseYn'] ||
-      !payload['StatusFlag'] ||
-      !payload['PickupType']
-    ) {
-      this.messageService.errorBubble('必填欄位請填寫完整');
-      return;
-    }
+      this.messageService.blockUi();
+      this.loading = true;
 
-    this.messageService.blockUi();
-    this.loading = true;
-
-    this.fin63020Service
-      .updateFIN63020(payload)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res: any) => {
-          if (res?.IsSuccess === false) {
-            this.messageService.errorBubble(res?.Message ?? '更新失敗');
-            return;
-          }
-          this.messageService.successBubble('更新成功');
-          this.onCancel();
-        },
-        error: () => this.messageService.errorBubble('更新失敗'),
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-      });
-  });
-}
-
+      this.fin63020Service
+        .updateFIN63020(payload)
+        .pipe(untilDestroyed(this))
+        .subscribe({
+          next: (res: any) => {
+            if (res?.IsSuccess === false) {
+              this.messageService.errorBubble(res?.Message ?? '更新失敗');
+              return;
+            }
+            this.messageService.successBubble('更新成功');
+            this.onCancel();
+          },
+          error: () => this.messageService.errorBubble('更新失敗'),
+          complete: () => {
+            this.loading = false;
+            this.messageService.unblockUi();
+          },
+        });
+    });
+  }
 
   get isRead(): boolean {
     return this.crudstatus === CRUDStatus.Read;
@@ -324,5 +295,9 @@ const remark = String(raw.Remark ?? '').trim();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${y}-${m}-${day}`;
+  }
+
+  override onCancel(): void {
+    this.router.navigate(['/account/fin', 'fin63020'], { state: { fromCru: true } });
   }
 }
