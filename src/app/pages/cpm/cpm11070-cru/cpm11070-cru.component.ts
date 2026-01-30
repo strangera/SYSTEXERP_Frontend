@@ -94,6 +94,30 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
     { Name: '女性', No: '2' },
   ];
   RebroadcastLoading = false;
+  // 模式：L = 遺失, F = 拾獲
+  mode?: 'L' | 'F';
+
+  private labelMap: Record<string, Record<string, string>> = {
+    L: {
+      LOST_DATE_HEADER: '遺失日期',
+      SECTION_TITLE: '遺失基本資料',
+      REGISTRANT: '遺失者姓名',
+      IDENTITY_KIND: '報失者身分別',
+      SEX: '報失者性別',
+    },
+    F: {
+      LOST_DATE_HEADER: '拾獲日期',
+      SECTION_TITLE: '拾獲基本資料',
+      REGISTRANT: '拾獲者姓名',
+      IDENTITY_KIND: '拾獲者身分別',
+      SEX: '拾獲者性別',
+    },
+  };
+
+  getLabel(key: string, defaultLabel: string): string {
+    const m = this.mode ? this.labelMap[this.mode] : undefined;
+    return (m && m[key]) ? m[key] : defaultLabel;
+  }
 
   constructor(
     private dropdownApiService: DropdownApiService,
@@ -105,6 +129,8 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
 
   ngOnInit(): void {
     this.initializePage('CPM11070', this.dataForm);
+    // 讀取從查詢頁傳入的 mode
+    this.mode = (this.rowdata as any)?.mode as any;
     const seqId = (this.rowdata as any)?.SeqId ?? (this.rowdata as any)?.SEQ_ID;
     if (seqId) {
       this.cpm11070Service.queryCPM11070Detail({ SeqId: seqId }).subscribe(res => {

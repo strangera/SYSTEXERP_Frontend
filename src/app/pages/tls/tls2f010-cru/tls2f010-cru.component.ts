@@ -488,6 +488,11 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
             this.showQueryArea = false;
             this.showResultTables = true;
           }
+          // 若後端只回傳單一 main，預設選取該筆以帶入 talent_id
+          if (mains.length === 1 && !this.selectedMain) {
+            this.selectedMain = mains[0];
+            this.selectedMainItems = [mains[0]];
+          }
         },
         error: (err: any) => {
           this.queryLoading = false;
