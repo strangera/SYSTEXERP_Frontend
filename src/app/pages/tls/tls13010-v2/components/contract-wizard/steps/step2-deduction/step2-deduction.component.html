@@ -170,3 +170,49 @@
     </ng-container>
   </div>
 </div>
+
+<!-- 自動計算確認對話框 -->
+<app-dialog
+  [visible]="showCalculationDialog"
+  (visibleChange)="onCalculationDialogClose($event)"
+  (save)="onCalculationSave()"
+  header="自動計算確認"
+  width="500px"
+  height="auto"
+  maxWidth="600px"
+  [showFooter]="true"
+>
+  <div class="calculation-content" *ngIf="calculationResult">
+    <div class="result-summary text-center mb-4">
+      <h4 class="text-primary mb-3">計算結果</h4>
+
+      <div class="result-cards flex gap-3 justify-content-center">
+        <div class="result-card bg-blue-50 p-3 border-round text-center flex-1">
+          <div class="text-sm text-gray-600 mb-1">每月金額</div>
+          <div class="text-2xl font-bold text-primary">
+            {{ calculationResult.monthlyAmount | number }}
+          </div>
+          <div class="text-sm text-gray-500">元</div>
+        </div>
+
+        <div class="result-card bg-green-50 p-3 border-round text-center flex-1">
+          <div class="text-sm text-gray-600 mb-1">首期金額</div>
+          <div class="text-2xl font-bold text-green-600">
+            {{ calculationResult.downPayment | number }}
+          </div>
+          <div class="text-sm text-gray-500">元</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="summary-info text-center">
+      <div class="text-lg text-gray-600">
+        總金額
+        <strong>{{ calculationResult.totalAmount | number }}</strong>
+        元 分
+        <strong>{{ calculationResult.periods }}</strong>
+        期攤還
+      </div>
+    </div>
+  </div>
+</app-dialog>

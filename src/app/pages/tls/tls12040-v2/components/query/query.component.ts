@@ -27,7 +27,7 @@ import { SharedDropdownService } from '@shared/services/shared-dropdown.service'
 import { TLS12040Service } from '@service/api/tls/tls12040.service';
 
 // Models
-import { WizardMode } from '../../core/constants/workflow-step.enum';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 // i18n
 import { TranslateModule } from '@ngx-translate/core';
@@ -94,12 +94,6 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
       icon: 'pi pi-times-circle text-red-500',
       action: (rowData: ContractItem) => this.onVoid(rowData),
       disabled: (rowData: ContractItem) => this.isVoidDisabled(rowData) || !this.hasPermission(Actions.Invalidate)
-    },
-    {
-      label: '續約',
-      icon: 'pi pi-refresh text-blue-500',
-      action: (rowData: ContractItem) => this.onRenewal(rowData),
-      disabled: (rowData: ContractItem) => rowData.approve_status !== '2' || !this.hasPermission(Actions.Create)
     }
   ];
 
@@ -291,68 +285,38 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
     this.queryForm.reset();
   }
 
-  // ========== 導航 ==========
-  /**
-   * 導航到精靈頁面
-   */
-  private navigateToWizard(mode: WizardMode, rowData?: ContractItem): void {
-    this.router.navigate(['/account/tls/tls12040v2cru'], {
-      state: {
-        mode,
-        rowData,
-        fromQuery: true
-      }
-    });
-  }
+  // ========== 導航（使用 BasicQueryPageComponent 標準模式）==========
 
   /**
-   * 新增
-   */
-  override onCreate(): void {
-    if (this.hasPermission(Actions.Create)) {
-      this.navigateToWizard('create');
-    }
-  }
-
-  /**
-   * 編輯
+   * 編輯 - 額外檢查合約是否可編輯
    */
   override onEdit(rowData: ContractItem): void {
     if (this.hasPermission(Actions.Edit) && this.canEditContract(rowData)) {
-      this.navigateToWizard('edit', rowData);
+      this.navigateWithState(CRUDStatus.Edit, rowData);
     }
   }
 
-  /**
-   * 檢視
-   */
-  override onDetail(rowData: ContractItem): void {
-    if (this.hasPermission(Actions.Query)) {
-      this.navigateToWizard('view', rowData);
-    }
-  }
-
-  /**
-   * 續約
-   */
-  onRenewal(rowData: ContractItem): void {
-    if (this.hasPermission(Actions.Create)) {
-      this.navigateToWizard('renewal', rowData);
-    }
-  }
+  // /**
+  //  * 續約
+  //  */
+  // onRenewal(rowData: ContractItem): void {
+  //   if (this.hasPermission(Actions.Create)) {
+  //     this.navigateToWizard('renewal', rowData);
+  //   }
+  // }
 
   /**
    * 點擊行
    */
   onRowClick(rowData: ContractItem): void {
     if (this.hasPermission(Actions.Edit) && this.canEditContract(rowData)) {
-      this.navigateToWizard('edit', rowData);
+      this.navigateWithState(CRUDStatus.Edit, rowData);
     }
   }
 
   onDetailClick(rowData: ContractItem): void {
     if (this.hasPermission(Actions.Query)) {
-      this.navigateToWizard('view', rowData);
+      this.navigateWithState(CRUDStatus.Read, rowData);
     }
   }
 

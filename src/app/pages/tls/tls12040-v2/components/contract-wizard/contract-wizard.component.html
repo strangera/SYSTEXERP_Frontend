@@ -25,8 +25,8 @@
     <app-button btnType="back" (click)="onClearAndExit()"></app-button>
   </div>
 
-  <!-- Steps Navigation -->
-  <div class="mb-4">
+  <!-- 步驟指示器 -->
+  <div class="steps-header">
     <p-steps
       [model]="steps"
       [activeIndex]="visualStepIndex"
@@ -50,6 +50,7 @@
       *ngSwitchCase="0"
       [form]="dataForm"
       [locationData]="wizardState.locationData"
+      [dataReady]="step1DataReady"
       [isViewMode]="isViewMode"
       [isCreateMode]="isFormCreateable"
       [submitted]="submitted"
@@ -61,7 +62,9 @@
     <app-step2-deduction
       *ngSwitchCase="1"
       [fareItems]="wizardState.fareItems"
-      [contractInfo]="wizardState.contractInfo"
+      [contractForm]="dataForm"
+      [locationData]="wizardState.locationData"
+      [crudstatus]="crudstatus"
       [isViewMode]="isViewMode"
       (dataChange)="onStep2DataChange($event)"
     ></app-step2-deduction>

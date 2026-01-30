@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, inject, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
@@ -58,12 +58,14 @@ interface DropdownOption {
     ExpandableEditTableComponent
   ]
 })
-export class Step1ContractInfoComponent implements OnInit, OnDestroy {
+export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy {
   @Input() form!: FormGroup;
   @Input() locationData: LocationItem[] = [];
   @Input() isViewMode = false;
   @Input() submitted = false;
   @Input() isCreateMode = false;
+  /** 父元件 API 載入完成後設為 true，通知 step1 載入依賴下拉 */
+  @Input() dataReady = false;
 
   @Output() dataChange = new EventEmitter<{
     formValue: any;
@@ -208,6 +210,17 @@ export class Step1ContractInfoComponent implements OnInit, OnDestroy {
     this.applyTypeOptions = this.sharedDropdownService.applyTypeOptions;
     this.contractTypeOptions = this.sharedDropdownService.contractTypeOptions;
     this.applyStatusOptions = this.sharedDropdownService.applyStatusOptions;
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // locationData 從父元件更新時，自動刷新顯示
+    if (changes['locationData']) {
+      this.updateDisplayLocationData();
+    }
+    // 父元件 API 載入完成，載入依賴下拉（中分類、小分類）
+    if (changes['dataReady'] && this.dataReady && this.form?.get('bus_type')?.value) {
+      this.loadDependentDropdowns();
+    }
   }
 
   ngOnInit(): void {
