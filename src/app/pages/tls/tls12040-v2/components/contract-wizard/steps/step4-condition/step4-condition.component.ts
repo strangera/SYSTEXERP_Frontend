@@ -170,51 +170,51 @@ export class Step4ConditionComponent implements OnInit, OnDestroy {
   private initializeColumnDefinitions(): void {
     // 固定租金欄位
     this.columnData.fixedRentColumns = [
-      { field: 'cag_bdate', header: '開始日期', type: 'date', editable: true },
-      { field: 'cag_edate', header: '結束日期', type: 'date', editable: true },
-      { field: 'rent_amount', header: '租金金額', type: 'number', editable: true },
-      { field: 'cag_remark', header: '備註', type: 'text', editable: true }
+      { field: 'cag_bdate', header: '開始日期', type: 'date', editable: true, style: 'width: 25%' },
+      { field: 'cag_edate', header: '結束日期', type: 'date', editable: true, style: 'width: 25%' },
+      { field: 'rent_amount', header: '租金金額', type: 'number', editable: true, style: 'width: 25%' },
+      { field: 'cag_remark', header: '備註', type: 'text', editable: true, style: 'width: 25%' }
     ];
 
     // 底租抽成取高者欄位
     this.columnData.baseRentHigherColumns = [
-      { field: 'cag_bdate', header: '開始日期', type: 'date', editable: true },
-      { field: 'cag_edate', header: '結束日期', type: 'date', editable: true },
-      { field: 'base_rent', header: '底租金額', type: 'number', editable: true },
-      { field: 'comm_rate', header: '抽成比例(%)', type: 'number', editable: true },
-      { field: 'cag_remark', header: '備註', type: 'text', editable: true }
+      { field: 'cag_bdate', header: '開始日期', type: 'date', editable: true, style: 'width: 20%' },
+      { field: 'cag_edate', header: '結束日期', type: 'date', editable: true, style: 'width: 20%' },
+      { field: 'base_rent', header: '底租金額', type: 'number', editable: true, style: 'width: 20%' },
+      { field: 'comm_rate', header: '抽成比例(%)', type: 'number', editable: true, style: 'width: 20%' },
+      { field: 'cag_remark', header: '備註', type: 'text', editable: true, style: 'width: 20%' }
     ];
 
     // 包底抽成欄位
     this.columnData.baseCommissionColumns = [
-      { field: 'cag_bdate', header: '開始日期', type: 'date', editable: true },
-      { field: 'cag_edate', header: '結束日期', type: 'date', editable: true },
-      { field: 'base_amount', header: '包底金額', type: 'number', editable: true },
-      { field: 'comm_rate', header: '抽成比例(%)', type: 'number', editable: true },
-      { field: 'cag_remark', header: '備註', type: 'text', editable: true }
+      { field: 'cag_bdate', header: '開始日期', type: 'date', editable: true, style: 'width: 20%' },
+      { field: 'cag_edate', header: '結束日期', type: 'date', editable: true, style: 'width: 20%' },
+      { field: 'base_amount', header: '包底金額', type: 'number', editable: true, style: 'width: 20%' },
+      { field: 'comm_rate', header: '抽成比例(%)', type: 'number', editable: true, style: 'width: 20%' },
+      { field: 'cag_remark', header: '備註', type: 'text', editable: true, style: 'width: 20%' }
     ];
 
     // 層級抽成欄位
     this.columnData.graduatedColumns = [
-      { field: 'cag_bdate', header: '開始日期', type: 'date', editable: true },
-      { field: 'cag_edate', header: '結束日期', type: 'date', editable: true },
-      { field: 'level_no', header: '層級', type: 'number', editable: false },
-      { field: 'level_bamt', header: '起始金額', type: 'number', editable: true },
-      { field: 'level_eamt', header: '結束金額', type: 'number', editable: true },
-      { field: 'comm_rate', header: '抽成比例(%)', type: 'number', editable: true },
-      { field: 'cag_remark', header: '備註', type: 'text', editable: true }
+      { field: 'cag_bdate', header: '開始日期', type: 'date', editable: true, style: 'width: 14%' },
+      { field: 'cag_edate', header: '結束日期', type: 'date', editable: true, style: 'width: 14%' },
+      { field: 'level_no', header: '層級', type: 'number', editable: false, style: 'width: 14%' },
+      { field: 'level_bamt', header: '起始金額', type: 'number', editable: true, style: 'width: 14%' },
+      { field: 'level_eamt', header: '結束金額', type: 'number', editable: true, style: 'width: 14%' },
+      { field: 'comm_rate', header: '抽成比例(%)', type: 'number', editable: true, style: 'width: 14%' },
+      { field: 'cag_remark', header: '備註', type: 'text', editable: true, style: 'width: 14%' }
     ];
 
     // 包底加層級欄位
     this.columnData.baseTierColumns = [
-      { field: 'cag_bdate', header: '開始日期', type: 'date', editable: true },
-      { field: 'cag_edate', header: '結束日期', type: 'date', editable: true },
-      { field: 'base_amount', header: '包底金額', type: 'number', editable: true },
-      { field: 'level_no', header: '層級', type: 'number', editable: false },
-      { field: 'level_bamt', header: '起始金額', type: 'number', editable: true },
-      { field: 'level_eamt', header: '結束金額', type: 'number', editable: true },
-      { field: 'comm_rate', header: '抽成比例(%)', type: 'number', editable: true },
-      { field: 'cag_remark', header: '備註', type: 'text', editable: true }
+      { field: 'cag_bdate', header: '開始日期', type: 'date', editable: true, style: 'width: 12%' },
+      { field: 'cag_edate', header: '結束日期', type: 'date', editable: true, style: 'width: 12%' },
+      { field: 'base_amount', header: '包底金額', type: 'number', editable: true, style: 'width: 12%' },
+      { field: 'level_no', header: '層級', type: 'number', editable: false, style: 'width: 12%' },
+      { field: 'level_bamt', header: '起始金額', type: 'number', editable: true, style: 'width: 12%' },
+      { field: 'level_eamt', header: '結束金額', type: 'number', editable: true, style: 'width: 12%' },
+      { field: 'comm_rate', header: '抽成比例(%)', type: 'number', editable: true, style: 'width: 12%' },
+      { field: 'cag_remark', header: '備註', type: 'text', editable: true, style: 'width: 12%' }
     ];
   }
 

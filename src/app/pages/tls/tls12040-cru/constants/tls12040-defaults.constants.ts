@@ -171,6 +171,7 @@ export const TLS12040_CONDITIONAL_DEFAULTS = {
 
 export function getTodayDate(addDays: number = 0): Date {
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   if (addDays !== 0) {
     today.setDate(today.getDate() + addDays);

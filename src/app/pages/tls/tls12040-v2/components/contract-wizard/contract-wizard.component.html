@@ -73,10 +73,17 @@
     <app-step3-commission
       *ngSwitchCase="2"
       [commissionItems]="wizardState.commissionItems"
-      [contractInfo]="wizardState.contractInfo"
-      [isViewMode]="isViewMode"
+      [commissionType]="currentCommissionType"
+      [crudstatus]="crudstatus"
+      [contractStartDate]="dataForm.get('tlt_bdate')?.value || ''"
+      [contractEndDate]="dataForm.get('tlt_edate')?.value || ''"
+      [contractInfo]="$any(wizardState.contractInfo)"
       [discountOptions]="discountOptions"
-      (dataChange)="onStep3DataChange($event)"
+      [isViewMode]="isViewMode"
+      [capSaletype1]="dataForm.get('cap_saletype1')?.value"
+      [capSaletype2]="dataForm.get('cap_saletype2')?.value"
+      [capSaletype5]="dataForm.get('cap_saletype5')?.value"
+      (commissionItemsChange)="onStep3DataChange($event)"
     ></app-step3-commission>
 
     <!-- Step 4: Condition -->

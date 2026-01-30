@@ -38,7 +38,7 @@ import {
   CommissionType,
   DataStatus
 } from '../../core';
-import { CommissionItem } from '../../core/models/commission';
+import { CommissionItem as V2CommissionItem } from '../../../tls13010-v2/core/models/commission/commission-item.interface';
 import { ConditionItem } from '../../core/models/condition';
 import { ContractInfo, LocationItem } from '../../core/models/contract';
 import { FareItem } from '../../core/models/deduction';
@@ -61,7 +61,7 @@ interface WizardState {
   fareItems: FareItem[];
 
   // Step 3 資料
-  commissionItems: CommissionItem[];
+  commissionItems: V2CommissionItem[];
 
   // Step 4 資料
   conditionItems: ConditionItem[];
@@ -627,10 +627,52 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       if (response?.Status === '0000' && response.Data) {
         const chargeSettings = response.Data.ChargeSettings || [];
 
+        // 將 API 資料映射為 TLS13010-v2 的 CommissionItem 格式
         this.wizardState.commissionItems = chargeSettings.map((item: any) => ({
-          ...item,
+          id: item.id,
+          tlt_id: item.tlt_id || '',
+          tlt_id_desc: item.tlt_id_desc || '',
+          cag_taxtype: item.cag_taxtype ?? '',
+          discountSummary: item.discountSummary || '',
+          sst_amount: item.sst_amount || 0,
+          sst_rate: item.sst_rate || 0,
+          cap_saletype2: item.cap_saletype2 || false,
+          cap_saletype1: item.cap_saletype1 || false,
+          cap_saletype5: item.cap_saletype5 || false,
+          selectedSettingOption: item.selectedSettingOption || '',
+          charge_rate: item.charge_rate || 0,
+          cag_bdate: item.cag_bdate || '',
+          cag_edate: item.cag_edate || '',
+          cag_remark: item.cag_remark || '',
+          remark: item.cag_remark || '',
+          mainStartDate: item.cag_bdate || '',
+          mainEndDate: item.cag_edate || '',
+          // 明細映射：ChargeDetails → discountSettingItems
+          discountSettingItems: (item.ChargeDetails || []).map((d: Record<string, unknown>) => ({
+            ...d,
+            selected: (d['is_selected'] ?? d['selected'] ?? false) as boolean,
+            is_configured: (d['is_configured'] ?? true) as boolean,
+            is_enabled: (d['is_enabled'] ?? true) as boolean,
+            _status: 'original' as DataStatus
+          })),
+          // 明細映射：YearChargeDetails → annualPerformanceItems
+          annualPerformanceItems: (item.YearChargeDetails || []).map((d: Record<string, unknown>) => ({
+            ...d,
+            selected: (d['is_selected'] ?? d['selected'] ?? false) as boolean,
+            _status: 'original' as DataStatus
+          })),
+          // 明細映射：LevelChargeDetails → discountLevelItems
+          discountLevelItems: (item.LevelChargeDetails || []).map((d: Record<string, unknown>) => ({
+            ...d,
+            selected: (d['is_selected'] ?? d['selected'] ?? false) as boolean,
+            is_configured: (d['is_configured'] ?? true) as boolean,
+            is_enabled: (d['is_enabled'] ?? true) as boolean,
+            _status: 'original' as DataStatus
+          })),
+          detailItems: [],
+          currentTab: 'discount',
           _status: 'original' as DataStatus
-        }));
+        } as V2CommissionItem));
       }
     } catch (error) {
       console.error('載入抽成資料失敗:', error);
@@ -728,17 +770,61 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
           this.wizardState.fareItems = allItems;
         }
 
-        // 載入抽成資料
+        // 載入抽成資料（映射為 TLS13010-v2 格式）
         if (response.ChargeData) {
           const chargeSettings = response.ChargeData.ChargeSettings || [];
 
-          this.wizardState.commissionItems = chargeSettings.map((item: any) => ({
-            ...item,
-            id: undefined,
-            apply_no: undefined,
-            talent_id: undefined,
+          this.wizardState.commissionItems = chargeSettings.map((item: Record<string, unknown>) => ({
+            id: '',
+            tlt_id: (item['tlt_id'] as string) || '',
+            tlt_id_desc: (item['tlt_id_desc'] as string) || '',
+            cag_taxtype: item['cag_taxtype'] ?? '',
+            discountSummary: (item['discountSummary'] as string) || '',
+            sst_amount: (item['sst_amount'] as number) || 0,
+            sst_rate: (item['sst_rate'] as number) || 0,
+            cap_saletype2: item['cap_saletype2'] || false,
+            cap_saletype1: item['cap_saletype1'] || false,
+            cap_saletype5: item['cap_saletype5'] || false,
+            selectedSettingOption: (item['selectedSettingOption'] as string) || '',
+            charge_rate: (item['charge_rate'] as number) || 0,
+            cag_bdate: item['cag_bdate'] || '',
+            cag_edate: item['cag_edate'] || '',
+            cag_remark: item['cag_remark'] || '',
+            remark: item['cag_remark'] || '',
+            mainStartDate: item['cag_bdate'] || '',
+            mainEndDate: item['cag_edate'] || '',
+            discountSettingItems: ((item['ChargeDetails'] as unknown[]) || []).map((d: unknown) => {
+              const detail = d as Record<string, unknown>;
+              return {
+                ...detail,
+                selected: (detail['is_selected'] ?? detail['selected'] ?? false) as boolean,
+                is_configured: (detail['is_configured'] ?? true) as boolean,
+                is_enabled: (detail['is_enabled'] ?? true) as boolean,
+                _status: 'new' as DataStatus
+              };
+            }),
+            annualPerformanceItems: ((item['YearChargeDetails'] as unknown[]) || []).map((d: unknown) => {
+              const detail = d as Record<string, unknown>;
+              return {
+                ...detail,
+                selected: (detail['is_selected'] ?? detail['selected'] ?? false) as boolean,
+                _status: 'new' as DataStatus
+              };
+            }),
+            discountLevelItems: ((item['LevelChargeDetails'] as unknown[]) || []).map((d: unknown) => {
+              const detail = d as Record<string, unknown>;
+              return {
+                ...detail,
+                selected: (detail['is_selected'] ?? detail['selected'] ?? false) as boolean,
+                is_configured: (detail['is_configured'] ?? true) as boolean,
+                is_enabled: (detail['is_enabled'] ?? true) as boolean,
+                _status: 'new' as DataStatus
+              };
+            }),
+            detailItems: [],
+            currentTab: 'discount',
             _status: 'new' as DataStatus
-          }));
+          } as unknown as V2CommissionItem));
         }
 
         // 載入條件資料
@@ -965,7 +1051,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     this.wizardState.fareItems = fareItems;
   }
 
-  onStep3DataChange(commissionItems: CommissionItem[]): void {
+  onStep3DataChange(commissionItems: V2CommissionItem[]): void {
     this.wizardState.commissionItems = commissionItems;
   }
 

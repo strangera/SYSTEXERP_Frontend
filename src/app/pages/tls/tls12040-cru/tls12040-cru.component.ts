@@ -35,6 +35,7 @@ import { EmailValidationService } from '../tls13010-cru/validation/email-validat
 import { LocationDetails, TLS12040DetailModel, TLS12040RequestModel, Tls12040SelectorTableColumn } from './models/tls12040-cru.model';
 import { BusinessClassificationService } from './services/business-classification.service';
 import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
+import { sanitizeDateFields } from '@shared/services/tls/tls-form-defaults.constants';
 import { TLS12040ValidationService } from './validation/tls12040-validation.service';
 
 interface CategoryItem {
@@ -2252,8 +2253,11 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       // ⚠️ 設定旗標
       this.isLoadingExistingData = true;
 
-      // 使用 { emitEvent: false } 避免觸發監聽器
-      this.dataForm.patchValue(existingData, { emitEvent: false });
+      // 將 ISO 日期字串轉為 Date 物件（避免日期欄位顯示時間戳）
+      const sanitizedData = sanitizeDateFields(existingData);
+
+      // 使用 { emitEvent: false } 避免觸發監聯器
+      this.dataForm.patchValue(sanitizedData, { emitEvent: false });
 
       this.locationInfo = existingData.locationInfo || [];
       this.displayLocationData = this.locationInfo.filter(item => item._status !== 'deleted');
@@ -2547,11 +2551,15 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     dateFields.forEach(field => {
       const dateString = parsedData[field];
       if (dateString && typeof dateString === 'string') {
-        // 嘗試解析日期字串，如果解析失敗則保留原值
-        const dateObject = new Date(dateString);
-        // 檢查是否為有效的日期，並進行賦值
-        if (!isNaN(dateObject.getTime())) {
-          parsedData[field] = dateObject;
+        // 移除時間部分，只取日期
+        const datePart = dateString.split(/[T\s]/)[0];
+        const match = datePart.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+        if (match) {
+          parsedData[field] = new Date(
+            parseInt(match[1], 10),
+            parseInt(match[2], 10) - 1,
+            parseInt(match[3], 10)
+          );
         }
       }
     });

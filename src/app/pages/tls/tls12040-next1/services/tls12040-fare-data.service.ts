@@ -207,7 +207,10 @@ export class Tls12040FareDataService {
       pay_no: item.pay_no,
       is_commonly_used: item.is_commonly_used,
       cap_tax_type: item.cap_tax_type,
-      acc_no: item.acc_no
+      acc_no: item.acc_no,
+      calc_type: item.calc_type,
+      rent_plus_rate: item.rent_plus_rate,
+      over_base_rate: item.over_base_rate
     };
 
     return cleanedItem;

@@ -41,6 +41,11 @@ export interface TLS12040FareItem {
   instms_type?: string | null;   // 分期類型
   pay_no?: string | null;        // 付款編號
 
+  // D類型專用欄位 (比率分攤)
+  calc_type?: string | null;         // 券類計算方式
+  rent_plus_rate?: number | null;    // 加抽比率
+  over_base_rate?: number | null;    // 超過基準比率
+
   // 分類標記
   is_commonly_used?: string;     // 是否常用 Y/N
   cap_tax_type?: string;         // 稅別類型
