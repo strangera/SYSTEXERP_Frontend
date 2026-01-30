@@ -2,17 +2,17 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { FIN62030Data, FIN62030Service } from '@service/api/fin/fin62030.service';
+import { FIN62030Data, FIN62030Service, QueryFIN62030Request } from '@service/api/fin/fin62030.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from "@shared/componentkit/dropdown/dropdown.component";
-import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Column, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 @Component({
   selector: 'app-fin62030',
@@ -24,7 +24,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     DropdownComponent,
     ButtonModule
@@ -34,11 +34,13 @@ export class FIN62030Component extends BasicQueryPageComponent<FIN62030Data> imp
   queryForm = this.formBuilder.group({
     Tran_NoFrom: [null],   // 調撥單號(起)
     Tran_NoTo: [null],   // 調撥單號(迄)
-    ...createPaginationConfig([])
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
   });
 
   data: FIN62030Data[] = [];
   selectedItems: FIN62030Data[] = [];
+  lastQueryBody: QueryFIN62030Request | null = null;
   totalRecords = 0;
   tranNoOptions: any[] = [];
 
@@ -56,14 +58,13 @@ export class FIN62030Component extends BasicQueryPageComponent<FIN62030Data> imp
   ];
 
   constructor(
-    private fin62030Service: FIN62030Service
+    public readonly fin62030Service: FIN62030Service
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN62030', 'fin/fin62030cru', this.queryForm, (form) => this.onSubmit(form));
-    // 載入調撥單號選項
     this.fin62030Service.queryAPS4001Tran_No().subscribe(res => {
       this.tranNoOptions = res.Data.map((tranNo: string) => ({ label: tranNo, value: tranNo }));
     });
@@ -75,6 +76,7 @@ export class FIN62030Component extends BasicQueryPageComponent<FIN62030Data> imp
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
+          this.lastQueryBody = form.getRawValue();
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
         });
