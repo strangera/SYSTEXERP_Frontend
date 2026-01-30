@@ -143,8 +143,8 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
       } catch (error) {
         console.warn('日期格式轉換失敗:', this.control.value);
       }
-    } else if (this.control.value instanceof Date) {
-      // 如果已經是 Date 物件，確保移除時間
+    } else if (this.control.value instanceof Date && !this.timeOnly) {
+      // 如果已經是 Date 物件，確保移除時間（timeOnly 模式需保留時間）
       const dateOnly = new Date(
         this.control.value.getFullYear(),
         this.control.value.getMonth(),
