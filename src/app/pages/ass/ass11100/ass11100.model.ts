@@ -26,12 +26,17 @@ export interface ASS11100QueryDataWrapper {
   QueryData: ASS11100Data[];
 }
 
+/** 單筆刪除項目（對應後端 deleteASS11100Item） */
+export interface ASS11100DeleteItem {
+  WH_ID?: string | null;       // 倉別代號
+  ATT_ORG_ID?: string | null;  // 所屬部門代號
+}
+
 /**
- * ASS11100 刪除請求參數（不以 BaseDeleteRequest 的 idList 識別）
+ * ASS11100 刪除請求參數（對應後端 deleteASS11100Request： Items[]）
  */
 export interface ASS11100DeleteRequest {
-  WH_ID?: string;       // 倉別代號
-  ATT_ORG_ID?: string;  // 所屬部門代號
+  Items?: ASS11100DeleteItem[] | null;  // 待刪除項目清單
 }
 
 /**

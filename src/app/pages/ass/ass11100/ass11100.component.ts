@@ -12,7 +12,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, forkJoin } from 'rxjs';
+import { finalize } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ASS11100Data, ASS11100QueryRequest } from './ass11100.model';
 
@@ -164,15 +164,16 @@ export class ASS11100Component extends BasicQueryPageComponent<ASS11100Data> imp
     this.messageService.confirm({
       header: `是否確認刪除 ${valid.length} 筆資料?`,
       accept: () => {
-        const calls = valid.map((row) =>
-          this.service.deleteASS11100({ WH_ID: row.WH_ID, ATT_ORG_ID: row.ATT_ORG_ID })
-        );
-        forkJoin(calls).subscribe({
-          next: (responses) => {
-            const failed = responses.some((r) => r.Status !== '0000');
-            if (failed) {
-              const msg = responses.find((r) => r.Status !== '0000')?.Message;
-              this.messageService.errorBubble(`刪除失敗: ${msg ?? '部分項目刪除失敗'}`);
+        const payload = {
+          Items: valid.map((row) => ({
+            WH_ID: row.WH_ID ?? null,
+            ATT_ORG_ID: row.ATT_ORG_ID ?? null,
+          })),
+        };
+        this.service.deleteASS11100(payload).subscribe({
+          next: (res) => {
+            if (res.Status !== '0000') {
+              this.messageService.errorBubble(`刪除失敗: ${res.Message ?? '刪除失敗'}`);
             } else {
               this.messageService.successBubble('選中項目刪除成功');
             }
