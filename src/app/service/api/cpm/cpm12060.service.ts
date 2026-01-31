@@ -26,8 +26,11 @@ export interface CPM12060Data {
 }
 
 // 查詢 CPS3006 資料表_點開主檔
-export interface detailCPM12060Request {
+export interface mainCPM12060Request {
   ID: number; // 主鍵識別碼
+}
+export interface detailCPM12060Request {
+  SEQ_ID: string; // 主鍵識別碼
 }
 
 export interface main12060Data {
@@ -82,7 +85,7 @@ export class Cpm12060Service {
   }
 
   // 查詢 CPS3006 資料表_點開主檔
-  queryCPM12060_Main(req: detailCPM12060Request): Observable<BaseQueryResponse<main12060Data>> {
+  queryCPM12060_Main(req: mainCPM12060Request): Observable<BaseQueryResponse<main12060Data>> {
     return this.http.post<BaseQueryResponse<main12060Data>>(`${this.apiUrl}/queryCPM12060_Main`, req);
   }
 
