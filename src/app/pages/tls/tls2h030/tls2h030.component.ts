@@ -17,7 +17,8 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectButtonModule } from 'primeng/selectbutton';
-import { finalize, forkJoin } from 'rxjs';
+import { finalize } from 'rxjs';
+import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
@@ -74,21 +75,9 @@ export class TLS2H030Component extends BasicQueryPageComponent<any> implements O
     ];
   }
   previewPrint(rowData: any): void {
-    const toYYYYMM = (val: any): string | null => {
-      if (val === null || val === undefined || val === '') return null;
-      let d: Date;
-      if (val instanceof Date) d = val;
-      else d = new Date(val);
-      if (isNaN(d.getTime())) return null;
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      return `${y}${m}`;
-    };
-
-    const sam = toYYYYMM(rowData?.SamYyyymm ?? rowData?.sam_yyymm ?? rowData?.SamYyyymm);
     const params: any = {
       GuiNo: rowData?.GuiNo ?? '',
-      SamYyyymm: sam ?? '',
+      SamYyyymm: rowData?.SamYyyymm ?? '',
       TltNo: rowData?.TltNo ?? ''
     };
 
@@ -97,34 +86,11 @@ export class TLS2H030Component extends BasicQueryPageComponent<any> implements O
     this.tls2h030Service.PrintTLS2H(params).pipe(untilDestroyed(this), finalize(() => { this.loading = false; this.messageService.unblockUi(); }))
       .subscribe({
         next: (res: any) => {
-          try {
-            if (res instanceof Blob) {
-              const blob = res as Blob;
-              const url = window.URL.createObjectURL(blob);
-              window.open(url, '_blank');
-            } else if (res && res.Url) {
-              window.open(res.Url, '_blank');
-            } else {
-              if (res && res.File && typeof res.File === 'string') {
-                const byteCharacters = atob(res.File);
-                const byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {
-                  byteNumbers[i] = byteCharacters.charCodeAt(i);
-                }
-                const byteArray = new Uint8Array(byteNumbers);
-                const blob = new Blob([byteArray], { type: 'application/pdf' });
-                const url = window.URL.createObjectURL(blob);
-                window.open(url, '_blank');
-              } else {
-                this.messageService.successBubble(res?.Message ?? '預覽已送出');
-              }
-            }
-          } catch (e) {
-            console.error('PrintTLS2H preview error', e, res);
-            this.messageService.errorBubble('預覽列印失敗');
+          const url = res.Data?.Print_URL || '';
+          if (url) {
+            window.open(environment.ApiUrl + url);
           }
         },
-
       });
   }
 
@@ -132,47 +98,34 @@ export class TLS2H030Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('TLS2H030', 'tls/tls2h030cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  override onCreate() {
-    if (!this.selectedItems || this.selectedItems.length === 0) {
-      this.messageService.errorBubble('請先選擇資料', '未選取');
-      return;
-    }
+  onCreateInvoice(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const toYYYYMM = (val: any): string | null => {
+        if (val === null || val === undefined || val === '') return null;
+        let d: Date;
+        if (val instanceof Date) d = val;
+        else d = new Date(val);
+        if (isNaN(d.getTime())) return null;
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        return `${y}${m}`;
+      };
+      const sam = toYYYYMM(frm.value.SamYyyymm);
 
-    const toYYYYMM = (val: any): string | null => {
-      if (val === null || val === undefined || val === '') return null;
-      let d: Date;
-      if (val instanceof Date) d = val;
-      else d = new Date(val);
-      if (isNaN(d.getTime())) return null;
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      return `${y}${m}`;
-    };
-
-    const samSet = new Set<string>();
-    this.selectedItems.forEach(it => {
-      const raw = it.SamYyyymm ?? it.sam_yyymm ?? it.SamYyyymm;
-      const yyyyMM = toYYYYMM(raw);
-      if (yyyyMM) samSet.add(yyyyMM);
+      this.loading = true;
+      this.tls2h030Service.generateTLS2H030({ SamYyyymm: sam }).pipe(untilDestroyed(this), finalize(() => { this.loading = false; this.messageService.unblockUi(); }))
+        .subscribe({
+          next: () => {
+            this.messageService.successBubble('產生發票成功', '完成');
+            // 可按需重新查詢
+          },
+          error: (err) => {
+            console.error('generateTLS2H010 error', err);
+            this.messageService.errorBubble('產生發票失敗', '錯誤');
+          }
+        });
     });
 
-    if (samSet.size === 0) {
-      this.messageService.errorBubble('所選資料缺少結算年月', '錯誤');
-      return;
-    }
-
-    const calls = Array.from(samSet).map(sam => this.tls2h030Service.generateTLS2H030({ SamYyyymm: sam }));
-
-    this.loading = true;
-    this.messageService.blockUi();
-
-    forkJoin(calls).pipe(untilDestroyed(this), finalize(() => { this.loading = false; this.messageService.unblockUi(); }))
-      .subscribe({
-        next: () => {
-          this.messageService.successBubble('產生發票成功', '完成');
-        },
-
-      });
   }
 
   onSubmit(frm: FormGroup) {
