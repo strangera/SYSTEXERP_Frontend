@@ -67,7 +67,7 @@ export class TLS2H010Component extends BasicQueryPageComponent<any> implements O
   ) {
     super();
     this.addButton = [
-      { label: '預覽列印', icon: 'fa fa-file-pdf text-blue-500', action: (rowData: any) => { this.previewPrint(rowData); } }
+      { label: '預覽列印', icon: 'fa fa-file-pdf text-blue-500', action: (rowData: any) => { this.previewPrint(rowData); }, disabled: (rowData: any) => !rowData?.GuiNo }
     ];
   }
 
@@ -86,7 +86,8 @@ export class TLS2H010Component extends BasicQueryPageComponent<any> implements O
     const sam = toYYYYMM(rowData?.SamYyyymm ?? rowData?.sam_yyymm ?? rowData?.SamYyyymm);
     const params: any = {
       GuiNo: rowData?.GuiNo ?? '',
-      SamYyyymm: sam ?? ''
+      SamYyyymm: sam ?? '',
+      TltNo: rowData?.TltNo ?? ''
     };
 
     this.loading = true;

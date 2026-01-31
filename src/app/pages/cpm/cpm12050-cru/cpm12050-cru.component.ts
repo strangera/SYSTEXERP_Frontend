@@ -13,8 +13,8 @@ import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
-import { finalize, forkJoin } from 'rxjs';
-import { CPM12050Data, CPM12050Service, InsertCPM12050DetailRequest, InsertCPM12050Request, UpdateCPM12050DetailRequest, UpdateCPM12050Request } from '../../../service/api/cpm/cpm12050.service';
+import { Observable, finalize, forkJoin } from 'rxjs';
+import { CPM12050Data, CPM12050Service, InsertCPM12050DetailRequest, InsertCPM12050Request, UpdateCPM12050Request } from '../../../service/api/cpm/cpm12050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
@@ -136,6 +136,10 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
 
   ];
 
+  // 判斷是否為已存在的明細（有 SEQ_ID 的為既有資料，不可編輯）
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  isExistingDetail = (rowData: Record<string, any>): boolean => !!rowData['SEQ_ID'];
+
   constructor(
     private cpm12050Service: CPM12050Service,
     private dropDownListService: DropDownListService,
@@ -224,10 +228,12 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
   onSubmit(form: FormGroup): void {
     const formValue = form.getRawValue();
     this.handleSubmit(form, () => {
-      const valid = this.tableEditComponent.validateAndShowErrors();
-      if (!valid) {
-        this.loading = false;
-        return;
+      if (this.tableEditComponent) {
+        const valid = this.tableEditComponent.validateAndShowErrors();
+        if (!valid) {
+          this.loading = false;
+          return;
+        }
       }
       switch (this.crudstatus) {
         case CRUDStatus.Create:
@@ -239,22 +245,8 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
               USR_NAME: formValue.CRT_USR_Name
             }
 
-            // 新增明細request
-            const insertDetailRequest: InsertCPM12050DetailRequest[] = this.data
-              .map(item => ({
-                ...item,
-                ID: this.rowdata?.ID || 0,
-                USR_NO: item.CRT_USR_No,
-                USR_NAME: item.CRT_USR_Name
-              }));
-
-            // 使用 forkJoin 同時呼叫主檔和明細新增 API
-            const requests = [
-              this.cpm12050Service.insertCPM12050(insertRequest),
-              this.cpm12050Service.insertCPM12050Detail(insertDetailRequest)
-            ];
-
-            forkJoin(requests)
+            // 只呼叫主檔新增（新增模式無明細資料）
+            this.cpm12050Service.insertCPM12050(insertRequest)
               .pipe(
                 untilDestroyed(this),
                 finalize(() => this.loading = false)
@@ -271,23 +263,30 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
             // 修改主檔request
             const updateRequest: UpdateCPM12050Request = {
               ...formValue,
+              ID: this.rowdata?.ID || 0,
               USR_NO: formValue.CRT_USR_No,
               USR_NAME: formValue.CRT_USR_Name,
               STATUS: this.rowdata?.STATUS!
             }
-            // 修改明細request
-            const updateDetailRequest: UpdateCPM12050DetailRequest[] = this.data
+            // 過濾出新增的明細（沒有 SEQ_ID 的是新資料）
+            const newDetails: InsertCPM12050DetailRequest[] = this.data
+              .filter(item => !item.SEQ_ID)
               .map(item => ({
                 ...item,
-                ID: this.rowdata?.ID || 0,
-                USR_NO: item.CRT_USR_No,
-                USR_NAME: item.CRT_USR_Name
+                SEQ_ID: this.rowdata?.SEQ_ID || '',
+                USR_NO: formValue.CRT_USR_No,
+                USR_NAME: formValue.CRT_USR_Name
               }));
-            // 使用 forkJoin 同時呼叫主檔和明細修改 API
-            const requests = [
-              this.cpm12050Service.updateCPM12050(updateRequest),
-              this.cpm12050Service.updateCPM12050Detail(updateDetailRequest)
+
+            // 組合 API 請求：主檔修改 + 新明細新增（若有）
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const requests: Observable<any>[] = [
+              this.cpm12050Service.updateCPM12050(updateRequest)
             ];
+            if (newDetails.length > 0) {
+              requests.push(this.cpm12050Service.insertCPM12050Detail(newDetails));
+            }
+
             forkJoin(requests)
               .pipe(
                 untilDestroyed(this),

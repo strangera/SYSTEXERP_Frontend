@@ -91,7 +91,7 @@ export interface InsertCPM12050Request {
 
 // 新增客戶意見明細 Request
 export interface InsertCPM12050DetailRequest {
-  ID: number;                // 主鍵ID
+  SEQ_ID: string;            // 主檔意見編號（CSS3006.SEQ_ID）
   ANSWER?: string;           // 回覆內容
   ANSWER_ID?: string;        // 回覆人員編號
   USR_NO?: string;           // 使用者編號
@@ -190,7 +190,7 @@ export class CPM12050Service {
     return this.http.post(`${this.apiUrl}/insertCPM12050`, req);
   }
 
-  // 明細新增
+  // 明細新增（多筆）
   insertCPM12050Detail(req: InsertCPM12050DetailRequest[]): Observable<any> {
     return this.http.post(`${this.apiUrl}/insertCPM12050Detail`, req);
   }
@@ -201,7 +201,7 @@ export class CPM12050Service {
   }
 
   // 明細修改
-  updateCPM12050Detail(req: UpdateCPM12050DetailRequest[]): Observable<any> {
+  updateCPM12050Detail(req: UpdateCPM12050DetailRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/updateCPM12050Detail`, req);
   }
 
