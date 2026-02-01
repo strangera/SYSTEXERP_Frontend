@@ -281,6 +281,7 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
       USR_NO: this.authService.getUserInfo()?.user_No,
       USR_NAME: this.authService.getUserInfo()?.user_Name
     }
+    console.log('closeCPM12050 req', req);
     this.cpm12050Service.closeCPM12050(req)
       .pipe(untilDestroyed(this))
       .subscribe(() => {
