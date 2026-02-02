@@ -80,7 +80,7 @@ export class CPM11030CRUComponent extends BasicCruPageComponent<any> implements 
     Loan_No: [{ value: '' as string, disabled: true }],
 
     /** nullable:true（你要強制必填可加 Validators.required） */
-    Service_Id: ['' as string, [Validators.maxLength(7)]],
+    Service_Id: ['' as string, [Validators.required, Validators.maxLength(7)]],
 
     /** 出借日期：string($date-time)（通常必填比較合理，但規格寫 nullable:true 就先不強制） */
     Loan_Date: [null as Date | null, [Validators.required]],
@@ -96,7 +96,7 @@ export class CPM11030CRUComponent extends BasicCruPageComponent<any> implements 
     Cert_Type: ['' as string, [Validators.maxLength(2)]],
     Cert_No: ['' as string, [Validators.maxLength(50)]],
     Loan_Phone: ['' as string, [Validators.maxLength(20)]],
-    Device_ID: ['' as string, [Validators.maxLength(50)]],
+    Device_ID: ['' as string, [Validators.required, Validators.maxLength(50)]],
     Device_Name: ['' as string, [Validators.maxLength(50)]],
   });
 

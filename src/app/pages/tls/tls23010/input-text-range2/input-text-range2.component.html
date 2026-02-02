@@ -1,0 +1,72 @@
+<!-- input-text-range2.component.html -->
+<div class="flex" style="height: 18px;">
+  <label class="col p-0 m-0 pr-2" [hidden]="!showLabel" [for]="startControlName">
+    {{ label === '' ? startLabel : label }}
+    <span *ngIf="isRequired" class="text-red-500">*</span>
+  </label>
+
+  <div class="col-fixed py-0">
+    <span class="text-center"></span>
+  </div>
+
+  <label class="col p-0 m-0" [hidden]="!showLabel || label !== ''" [for]="endControlName">
+    {{ endLabel }}
+    <span *ngIf="isRequired" class="text-red-500">*</span>
+  </label>
+</div>
+
+<div class="grid p-fluid">
+  <!-- START -->
+  <div class="col pb-0">
+    <p-inputGroup id="input-text-start">
+      <input
+        pInputText
+        type="text"
+        [class]="getStartInputClasses()"
+        [id]="startControlName"
+        [formControl]="startControl"
+        [readonly]="readonly"
+        [style.text-align]="textAlign"
+        [placeholder]="customPlaceholderStart || ''"
+        [attr.maxlength]="getMaxAttr('start')"
+        [attr.inputmode]="getInputMode('start')"
+        [attr.pattern]="getPattern('start')"
+        [pKeyFilter]="keyFilter"
+        (compositionstart)="onCompositionStart('start')"
+        (compositionend)="onCompositionEnd('start', $event)"
+        (input)="onInput('start', $event)"
+        (blur)="onBlur('start', $event)"
+        (keydown.enter)="$event.preventDefault()"
+      />
+    </p-inputGroup>
+  </div>
+
+  <div class="flex flex-column justify-content-center align-items-center pt-3" [ngStyle]="{ height: '33.56px' }">
+    <span class="text-center" [ngStyle]="{ 'line-height': '2.8' }">~</span>
+  </div>
+
+  <!-- END -->
+  <div class="col pb-0">
+    <p-inputGroup id="input-text-end">
+      <input
+        pInputText
+        type="text"
+        [class]="getEndInputClasses()"
+        [id]="endControlName"
+        [formControl]="endControl"
+        [readonly]="readonly"
+        [style.text-align]="textAlign"
+        [placeholder]="customPlaceholderEnd || ''"
+        [attr.maxlength]="getMaxAttr('end')"
+        [attr.inputmode]="getInputMode('end')"
+        [attr.pattern]="getPattern('end')"
+        [pKeyFilter]="keyFilter"
+        (compositionstart)="onCompositionStart('end')"
+        (compositionend)="onCompositionEnd('end', $event)"
+        (input)="onInput('end', $event)"
+        (blur)="onBlur('end', $event)"
+        (keydown.enter)="$event.preventDefault()"
+      />
+    </p-inputGroup>
+  </div>
+</div>
