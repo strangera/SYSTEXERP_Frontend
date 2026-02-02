@@ -332,8 +332,8 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Response>
     })
 
     // ---進入時讀取比較表單的query資訊---
-    if (this.queryStateService.getQueryStateValue('tls31020_Date')) {
-      this.dateForm = this.queryStateService.getQueryStateValue('tls31020_Date');
+    if (this.queryStateService.getQueryStateValue('tls31060_Date')) {
+      this.dateForm = this.queryStateService.getQueryStateValue('tls31060_Date');
     }
     // ------
   }
@@ -379,7 +379,7 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Response>
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         // ---同步儲存比較表單的query資訊---
-        this.queryStateService.setQueryState('tls31020_Date', this.dateForm);
+        this.queryStateService.setQueryState('tls31060_Date', this.dateForm);
         // ------
       })
     })
