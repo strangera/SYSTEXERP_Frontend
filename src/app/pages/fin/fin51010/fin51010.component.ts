@@ -1,4 +1,4 @@
-import { AsyncPipe, DatePipe, NgClass, NgFor } from '@angular/common';
+import { AsyncPipe, NgClass, NgFor } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -70,7 +70,6 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
   constructor(
     public readonly fin51010Service: Fin51010Service,
     private readonly dropDown: DropdownApiService,
-    private readonly datePipe: DatePipe
   ) {
     super();
   }
@@ -136,33 +135,53 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
   /** 執行拋轉作業 */
   onTransfer() {
     if (this.selectedItems.length === 0) return;
+
     this.messageService.confirm({
       header: '拋轉確認',
       message: '是否拋轉所選項目?',
       accept: () => {
         const idList = this.selectedItems.map(item => item.id).join(',');
-        const body = {
-          GLS6001_IDList: idList
-        }
+        const body = { GLS6001_IDList: idList };
+
         this.btnLoading = true;
-        this.fin51010Service.transferFIN51010(body).pipe(finalize(() => { this.btnLoading = false; }), untilDestroyed(this)).subscribe(res => {
-          if (res.Data.ErrCode === 0) {
-            this.messageService.successBubble(res.Data.ErrMsg || '拋轉成功');
-            this.selectedItems = []; // 清空選取
-            this.onSubmit(this.queryForm); // 重新查詢更新列表與統計筆數
-            this.loadSheetTypeCount(); // 儀表板數字也要同步更新
-          } else {
-            this.messageService.errorBubble(res.Data.ErrMsg || '拋轉失敗');
-            this.messageService.confirm({
-              header: '拋轉失敗',
-              message: res.Data.ErrMsg || '拋轉失敗',
-              icon: 'pi pi-info-circle',
-              acceptLabel: '關閉',
-              showRejectButton: false
-            })
-          }
-        });
+        this.fin51010Service.transferFIN51010(body)
+          .pipe(
+            finalize(() => { this.btnLoading = false; }),
+            untilDestroyed(this)
+          )
+          .subscribe(res => {
+            if (res.Data.ErrCode === 0) {
+              // --- 關鍵修改：使用 setTimeout 避開 UI 關閉衝突 ---
+              setTimeout(() => {
+                this.messageService.confirm({
+                  header: '拋轉成功',
+                  message: res.Data.ErrMsg || '資料已成功拋轉！',
+                  icon: 'pi pi-check-circle',
+                  acceptLabel: '確定',
+                  showRejectButton: false,
+                  accept: () => {
+                    // 按下確定後，才刷新資料
+                    this.selectedItems = [];
+                    this.onSubmit(this.queryForm);
+                    this.loadSheetTypeCount();
+                  }
+                });
+              }, 200); // 延遲 200 毫秒
+
+            } else {
+              // 失敗時同樣建議稍微延遲
+              setTimeout(() => {
+                this.messageService.confirm({
+                  header: '拋轉失敗',
+                  message: res.Data.ErrMsg || '拋轉失敗',
+                  icon: 'pi pi-exclamation-triangle',
+                  acceptLabel: '關閉',
+                  showRejectButton: false
+                });
+              }, 200);
+            }
+          });
       }
-    })
+    });
   }
 }
