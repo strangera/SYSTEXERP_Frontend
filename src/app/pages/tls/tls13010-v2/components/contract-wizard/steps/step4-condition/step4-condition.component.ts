@@ -249,7 +249,9 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['conditionItems'] || changes['commissionType']) {
+    // 只在首次接收或 commissionType 變更時重新分類
+    // 避免 emit → 父組件寫回 → ngOnChanges → 重複 categorize 的浪費
+    if (changes['conditionItems']?.firstChange || changes['commissionType']) {
       this.categorizeConditionItems();
       this.initializeIfEmpty();
     }

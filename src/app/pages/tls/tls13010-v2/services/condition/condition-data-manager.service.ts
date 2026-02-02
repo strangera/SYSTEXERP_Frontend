@@ -6,17 +6,13 @@ import { Injectable } from '@angular/core';
 import { CommissionType } from '../../core/constants';
 import {
   ConditionItem,
-  ConditionItemStatus,
   FixedRentCondition,
   BaseRentHigherCondition,
   BaseCommissionCondition,
   GraduatedCommissionCondition,
   BaseTierCondition,
-  CategorizedConditions,
-  ConditionValidationResult,
-  ConditionItemCounts
+  CategorizedConditions
 } from '../../core/models/condition';
-import { RentSettingApiData } from '../../core/models/workflow';
 
 @Injectable({
   providedIn: 'root'
@@ -191,40 +187,6 @@ export class ConditionDataManagerService {
   }
 
   /**
-   * 將後端資料映射到前端模型
-   */
-  mapBackendDataToFrontend(apiData: RentSettingApiData, commissionType: string): ConditionItem[] {
-    const conditions: ConditionItem[] = [];
-
-    switch (commissionType) {
-      case CommissionType.FIXED_RENT:
-        conditions.push(...this.mapRentData(apiData));
-        break;
-      case CommissionType.BASE_RENT_HIGHER:
-        conditions.push(...this.mapBaseRentHigherData(apiData));
-        break;
-      case CommissionType.BASE_COMMISSION:
-        conditions.push(...this.mapBaseCommissionData(apiData));
-        break;
-      case CommissionType.GRADUATED:
-        conditions.push(...this.mapGraduatedData(apiData));
-        break;
-      case CommissionType.BASE_TIER:
-        conditions.push(...this.mapBaseTierData(apiData));
-        break;
-    }
-
-    // 確保所有從後端映射的資料都有 original 狀態
-    conditions.forEach(condition => {
-      if (!condition._status) {
-        condition._status = 'original';
-      }
-    });
-
-    return conditions;
-  }
-
-  /**
    * 將條件項目按類型分類
    */
   categorizeConditionItems(items: ConditionItem[]): CategorizedConditions {
@@ -268,159 +230,6 @@ export class ConditionDataManagerService {
     return items.filter(item => item._status !== 'deleted');
   }
 
-  /**
-   * 統計各狀態的項目數量
-   */
-  getItemCounts(items: ConditionItem[]): ConditionItemCounts {
-    return {
-      total: items.length,
-      display: this.filterDisplayItems(items).length,
-      new: items.filter(item => item._status === 'new').length,
-      modified: items.filter(item => item._status === 'modified').length,
-      deleted: items.filter(item => item._status === 'deleted').length,
-      original: items.filter(item => item._status === 'original').length
-    };
-  }
-
-  /**
-   * 驗證條件資料的完整性
-   */
-  validateConditions(conditions: ConditionItem[], commissionType: string): ConditionValidationResult {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-
-    // 過濾出非刪除的項目進行驗證
-    const activeConditions = this.filterDisplayItems(conditions);
-
-    // 基本驗證
-    if (activeConditions.length === 0) {
-      errors.push('至少需要一個條件設定項目');
-    }
-
-    // 按類型進行特定驗證
-    switch (commissionType) {
-      case CommissionType.FIXED_RENT:
-        this.validateFixedRentConditions(activeConditions as FixedRentCondition[], errors, warnings);
-        break;
-      case CommissionType.BASE_RENT_HIGHER:
-        this.validateBaseRentHigherConditions(activeConditions as BaseRentHigherCondition[], errors, warnings);
-        break;
-      case CommissionType.BASE_COMMISSION:
-        this.validateBaseCommissionConditions(activeConditions as BaseCommissionCondition[], errors, warnings);
-        break;
-      case CommissionType.GRADUATED:
-        this.validateGraduatedConditions(activeConditions as GraduatedCommissionCondition[], errors, warnings);
-        break;
-      case CommissionType.BASE_TIER:
-        this.validateBaseTierConditions(activeConditions as BaseTierCondition[], errors, warnings);
-        break;
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-      warnings
-    };
-  }
-
-  // =============== 私有方法：資料映射 ===============
-
-  private mapRentData(data: RentSettingApiData): FixedRentCondition[] {
-    if (!data.RentDetails?.length) return [];
-
-    return data.RentDetails.map((item: any) => ({
-      id: item.id,
-      talent_id: String(item.talent_id),
-      tlt_id: item.tlt_id || '',
-      cag_bdate: this.formatDate(item.cag_bdate),
-      cag_edate: this.formatDate(item.cag_edate),
-      base_rent: item.base_rent || 0,
-      _status: 'original' as ConditionItemStatus
-    }));
-  }
-
-  private mapBaseRentHigherData(data: RentSettingApiData): BaseRentHigherCondition[] {
-    if (!data.RentDetails?.length) return [];
-
-    return data.RentDetails.map((rentItem: any, index: number) => ({
-      id: rentItem.id,
-      talent_id: String(rentItem.talent_id),
-      tlt_id: rentItem.tlt_id || '',
-      cag_bdate: this.formatDate(rentItem.cag_bdate),
-      cag_edate: this.formatDate(rentItem.cag_edate),
-      base_rent: rentItem.base_rent || 0,
-      cag_charge_rate: data.ChargedDetails?.[index]?.cag_charge_rate || 0,
-      _status: 'original' as ConditionItemStatus
-    }));
-  }
-
-  private mapBaseCommissionData(data: RentSettingApiData): BaseCommissionCondition[] {
-    if (!data.LimitDetails?.length) return [];
-
-    return data.LimitDetails.map((item: any) => ({
-      id: item.id,
-      talent_id: String(item.talent_id),
-      tlt_id: item.tlt_id || '',
-      cag_bdate: this.formatDate(item.cag_bdate),
-      cag_edate: this.formatDate(item.cag_edate),
-      limit_amt: item.limit_amt || 0,
-      limit_charge_rate: item.limit_charge_rate || 0,
-      _status: 'original' as ConditionItemStatus
-    }));
-  }
-
-  private mapGraduatedData(data: RentSettingApiData): GraduatedCommissionCondition[] {
-    if (!data.LevelDetails?.length) return [];
-
-    return data.LevelDetails.map((item: any) => ({
-      id: item.id,
-      talent_id: String(item.talent_id),
-      seq_no: item.seq_no || 0,
-      cag_bdate: this.formatDate(item.cag_bdate),
-      cag_edate: this.formatDate(item.cag_edate),
-      start_number: item.start_number || 0,
-      end_number: item.end_number || 0,
-      charge_rate: item.charge_rate || 0,
-      _status: 'original' as ConditionItemStatus
-    }));
-  }
-
-  private mapBaseTierData(data: RentSettingApiData): BaseTierCondition[] {
-    // 第一優先：使用新的 BottomTierDetails（如果存在）
-    if (data.BottomTierDetails?.length) {
-      return data.BottomTierDetails.map((item: any) => ({
-        id: item.id,
-        talent_id: String(item.talent_id),
-        seq_no: item.seq_no || 0,
-        tlt_id: '',
-        cag_bdate: this.formatDate(item.cag_bdate),
-        cag_edate: this.formatDate(item.cag_edate),
-        limit_amt: item.limit_amt || 0,
-        start_number: item.start_number || 0,
-        end_number: item.end_number || 0,
-        charge_rate: item.charge_rate || 0,
-        _status: 'original' as ConditionItemStatus
-      }));
-    }
-
-    // 第二優先：使用 LevelDetails
-    if (!data.LevelDetails?.length) return [];
-
-    return data.LevelDetails.map((levelItem: any) => ({
-      id: levelItem.id,
-      talent_id: String(levelItem.talent_id),
-      seq_no: levelItem.seq_no || 0,
-      tlt_id: '',
-      cag_bdate: this.formatDate(levelItem.cag_bdate),
-      cag_edate: this.formatDate(levelItem.cag_edate),
-      limit_amt: levelItem.limit_amt || data.LimitDetails?.[0]?.limit_amt || 0,
-      start_number: levelItem.start_number || 0,
-      end_number: levelItem.end_number || 0,
-      charge_rate: levelItem.charge_rate || 0,
-      _status: 'original' as ConditionItemStatus
-    }));
-  }
-
   // =============== 私有方法：類型判斷 ===============
 
   private isFixedRentCondition(item: any): boolean {
@@ -443,112 +252,7 @@ export class ConditionDataManagerService {
     return 'limit_amt' in item && 'seq_no' in item;
   }
 
-  // =============== 私有方法：驗證 ===============
-
-  private validateFixedRentConditions(conditions: FixedRentCondition[], errors: string[], warnings: string[]): void {
-    conditions.forEach((item, index) => {
-      if (!item.base_rent || item.base_rent <= 0) {
-        errors.push(`第 ${index + 1} 項：租金金額必須大於 0`);
-      }
-      if (!item.cag_bdate) {
-        errors.push(`第 ${index + 1} 項：帳務起日期為必填`);
-      }
-      if (!item.cag_edate) {
-        errors.push(`第 ${index + 1} 項：帳務迄日期為必填`);
-      }
-    });
-  }
-
-  private validateBaseRentHigherConditions(conditions: BaseRentHigherCondition[], errors: string[], warnings: string[]): void {
-    conditions.forEach((item, index) => {
-      if (!item.base_rent || item.base_rent <= 0) {
-        errors.push(`第 ${index + 1} 項：租金金額必須大於 0`);
-      }
-      if (!item.cag_bdate) {
-        errors.push(`第 ${index + 1} 項：帳務起日期為必填`);
-      }
-      if (!item.cag_edate) {
-        errors.push(`第 ${index + 1} 項：帳務迄日期為必填`);
-      }
-    });
-  }
-
-  private validateBaseCommissionConditions(conditions: BaseCommissionCondition[], errors: string[], warnings: string[]): void {
-    conditions.forEach((item, index) => {
-      if (!item.limit_amt || item.limit_amt <= 0) {
-        errors.push(`第 ${index + 1} 項：包底金額必須大於 0`);
-      }
-      if (!item.limit_charge_rate || item.limit_charge_rate <= 0) {
-        errors.push(`第 ${index + 1} 項：抽成率必須大於 0`);
-      }
-      if (!item.cag_bdate) {
-        errors.push(`第 ${index + 1} 項：帳務起日期為必填`);
-      }
-      if (!item.cag_edate) {
-        errors.push(`第 ${index + 1} 項：帳務迄日期為必填`);
-      }
-    });
-  }
-
-  private validateGraduatedConditions(conditions: GraduatedCommissionCondition[], errors: string[], warnings: string[]): void {
-    conditions.forEach((item, index) => {
-      if (item.start_number >= item.end_number) {
-        errors.push(`第 ${index + 1} 項：起值必須小於迄值`);
-      }
-      if (!item.charge_rate || item.charge_rate <= 0) {
-        errors.push(`第 ${index + 1} 項：抽成率必須大於 0`);
-      }
-      if (!item.cag_bdate) {
-        errors.push(`第 ${index + 1} 項：帳務起日期為必填`);
-      }
-      if (!item.cag_edate) {
-        errors.push(`第 ${index + 1} 項：帳務迄日期為必填`);
-      }
-    });
-  }
-
-  private validateBaseTierConditions(conditions: BaseTierCondition[], errors: string[], warnings: string[]): void {
-    conditions.forEach((item, index) => {
-      if (!item.limit_amt || item.limit_amt <= 0) {
-        errors.push(`第 ${index + 1} 項：包底金額必須大於 0`);
-      }
-      if (item.start_number >= item.end_number) {
-        errors.push(`第 ${index + 1} 項：起值必須小於迄值`);
-      }
-      if (!item.charge_rate || item.charge_rate <= 0) {
-        errors.push(`第 ${index + 1} 項：抽成率必須大於 0`);
-      }
-      if (!item.cag_bdate) {
-        errors.push(`第 ${index + 1} 項：帳務起日期為必填`);
-      }
-      if (!item.cag_edate) {
-        errors.push(`第 ${index + 1} 項：帳務迄日期為必填`);
-      }
-    });
-  }
-
   // =============== 工具方法 ===============
-
-  private formatDate(date: any): string {
-    if (!date) return '';
-    try {
-      if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
-        return date;
-      }
-
-      if (date instanceof Date || typeof date === 'string') {
-        const d = new Date(date);
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      }
-
-      return String(date).split('T')[0] || '';
-    } catch {
-      return '';
-    }
-  }
 
   private getDefaultStartDate(): string {
     return new Date().toISOString().split('T')[0];
