@@ -148,7 +148,9 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
       });
 
     // 載入明細資料
-    this.cpm12060Service.queryCPM12060_Detail({ ID: id })
+    const SEQ_ID = this.dataForm.get('SEQ_ID')?.value;
+    if (!SEQ_ID) return;
+    this.cpm12060Service.queryCPM12060_Detail({ SEQ_ID: SEQ_ID })
       .pipe(untilDestroyed(this))
       .subscribe(response => {
         // console.log('明細資料:', response.Data);
