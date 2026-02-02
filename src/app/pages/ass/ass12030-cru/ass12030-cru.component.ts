@@ -73,16 +73,25 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
   /** 新增時套用模式（從查詢頁傳入） */
   createMode: CreateMode | undefined;
 
-  /** 申請人、部門下拉 */
+  /** 申請人下拉選項 */
   empIdOptions: { value: string; label: string }[] = [];
+  /** 委託部門下拉選項 */
   orgIdOptions: { value: string; label: string }[] = [];
-  /** 未實作下拉 */
-  goodsIdOptions: { value: string; label: string }[] = [];
-  needIdOptions: { value: string; label: string }[] = [];
+  /** 稅別下拉選項 */
   taxTypeOptions: { value: string; label: string }[] = [];
+
+  // TODO: 未實作下拉選項
+  /** 品項編號下拉選項 */
+  goodsIdOptions: { value: string; label: string }[] = [];
+  /** 需求單號下拉選項 */
+  needIdOptions: { value: string; label: string }[] = [];
+  /** 供應商下拉選項 */
   supplierIdOptions: { value: string; label: string }[] = [];
+  /** 支出類型下拉選項 */
   expendTypeOptions: { value: string; label: string }[] = [];
+  /** 倉別下拉選項 */
   whIdOptions: { value: string; label: string }[] = [];
+  /** 商品類型下拉選項 */
   goodsTypeOptions: { value: string; label: string }[] = [];
 
   editColumns: EditColumn[] = [
@@ -238,6 +247,13 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
           label: `${item.No ?? ''} - ${item.Name ?? ''}`,
         }));
       });
+
+    this.taxTypeOptions = [
+      { value: '1', label: '應稅' },
+      { value: '2', label: '免稅' },
+    ]
+
+    // TODO: 未實作下拉選項
   }
 
   /** 開啟套用請購清單 dialog（取得詢價清單） */
@@ -403,9 +419,9 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
         this.crudstatus === CRUDStatus.Create
           ? this.ass12030Service.insertASS12030(payload)
           : this.ass12030Service.updateASS12030((this.rowdata as ASS12030Detail)?.id as number | string, {
-              ...payload,
-              id: (this.rowdata as ASS12030Detail)?.id as number | string,
-            });
+            ...payload,
+            id: (this.rowdata as ASS12030Detail)?.id as number | string,
+          });
       req
         .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
         .subscribe({
