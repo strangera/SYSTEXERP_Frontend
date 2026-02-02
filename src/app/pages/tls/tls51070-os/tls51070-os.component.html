@@ -18,39 +18,18 @@
           (ngSubmit)="onSubmitLabel(queryForm)"
         >
           <div class="grid p-fluid">
-            <!-- 商品管理編號 / 國際條碼 / 廠商貨號 (合併查詢) -->
+            <!--!!! 國際條碼/商品管理編號/廠商貨號 -->
             <app-dropdown-table
-              class="col-12 md:col-6 lg:col-4"
+              class="col-12"
+              [showOverlay]="false"
               [control]="queryForm.controls.KeyWord"
-              templateLabel="label"
               [submitted]="submitted"
-              optionLabel="PLU_MagNo"
-              optionValue="PLU_MagNo"
+              optionLabel="label"
+              optionValue="PLU_No"
               [suggestions]="suggestions"
               [fieldsConfig]="fieldsConfig"
               (inputValueChanged)="onAutoCompleteInputChange($event)"
-              (formValueChanged)="onformValueChanged($event)"
-              [formGroup]="opForm"
-              [dialogData]="opData"
-              [dialogColumns]="opColumns"
-              [loading]="opLoading"
-              [totalRecords]="opTotalRecords"
-              [showOverlay]="false"
-            >
-              <!-- overlayPanel 查詢欄位 -->
-              <app-input-text
-                class="col-12 md:col-6"
-                label="商品管理編號"
-                controlName="PLU_MagNo"
-                [control]="opForm.controls.PLU_MagNo"
-              />
-              <app-input-text
-                class="col-12 md:col-6"
-                label="商品名稱"
-                controlName="PLU_Name"
-                [control]="opForm.controls.PLU_Name"
-              />
-            </app-dropdown-table>
+            ></app-dropdown-table>
           </div>
           <div class="grid p-fluid">
             <div class="col-12 md:col-6 lg:col-4">
@@ -110,39 +89,18 @@
           (ngSubmit)="onSubmitPrice(queryPriceForm)"
         >
           <div class="grid p-fluid">
-            <!-- 商品管理編號 / 國際條碼 / 廠商貨號 (合併查詢) -->
+            <!--!!! 國際條碼/商品管理編號/廠商貨號 -->
             <app-dropdown-table
-              class="col-12 md:col-6 lg:col-4"
+              class="col-12"
+              [showOverlay]="false"
               [control]="queryPriceForm.controls.KeyWord"
-              templateLabel="label"
               [submitted]="submitted"
-              optionLabel="PLU_MagNo"
-              optionValue="PLU_MagNo"
+              optionLabel="label"
+              optionValue="PLU_No"
               [suggestions]="suggestions"
               [fieldsConfig]="fieldsConfig"
               (inputValueChanged)="onAutoCompleteInputChange($event)"
-              (formValueChanged)="onformValueChanged($event)"
-              [formGroup]="opForm"
-              [dialogData]="opData"
-              [dialogColumns]="opColumns"
-              [loading]="opLoading"
-              [totalRecords]="opTotalRecords"
-              [showOverlay]="false"
-            >
-              <!-- overlayPanel 查詢欄位 -->
-              <app-input-text
-                class="col-12 md:col-6"
-                label="商品管理編號"
-                controlName="PLU_MagNo"
-                [control]="opForm.controls.PLU_MagNo"
-              />
-              <app-input-text
-                class="col-12 md:col-6"
-                label="商品名稱"
-                controlName="PLU_Name"
-                [control]="opForm.controls.PLU_Name"
-              />
-            </app-dropdown-table>
+            ></app-dropdown-table>
           </div>
           <!-- <div> -->
           <div

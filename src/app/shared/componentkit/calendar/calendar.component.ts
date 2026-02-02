@@ -1,6 +1,6 @@
 import { NgClass, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ValidationService } from '@shared/service/validation.service';
 import { PrimeTemplate } from 'primeng/api';
 import { CalendarModule, CalendarMonthChangeEvent, CalendarYearChangeEvent } from 'primeng/calendar';
@@ -27,18 +27,38 @@ const FORMAT_RULES: Record<string, { lengths: number[], chars: string[] }> = {
 })
 export class CalendarComponent extends BasicKitComponent implements OnInit, OnDestroy {
   private valueChangeSubscription?: Subscription;
+  private _calendarType: CalendarType = 'dateOne';
+  private readonly calendarMaxLength: Record<CalendarType, number> = {
+    timeOne: 5,
+    dateOne: 10,
+    dateTimeOne: 16,
+    dateMonthOne: 7,
+    dateYearOne: 4
+  };
+
   @Input() readonly = false;
   @Input() override label = '';
   @Input() showLabel = true;
   @Input() override controlName = '';
   @Input() control = new FormControl();
   @Input() submitted = false;
-  @Input() calendarType: CalendarType = 'dateOne';
-  @Input() timeOnly = true;
-  @Input() showTime = true;
+
+  // 使用 setter 確保 calendarType 變更時立即套用配置
+  @Input()
+  set calendarType(value: CalendarType) {
+    this._calendarType = value;
+    this.applyCalendarConfig();
+  }
+  get calendarType(): CalendarType {
+    return this._calendarType;
+  }
+
+  // 改為較安全的預設值 (不顯示時間)
+  @Input() timeOnly = false;
+  @Input() showTime = false;
   @Input() hourFormat = '24';
   @Input() dateFormat: string | undefined = 'yy/mm/dd';
-  @Input() view: 'date' | 'month' | 'year' = 'month';
+  @Input() view: 'date' | 'month' | 'year' = 'date';
   @Input() showSeconds = false;
   @Input() minDate: Date | undefined | null = null;
   @Input() maxDate: Date | undefined | null = null;
@@ -58,6 +78,32 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
     dateMonthOne: { timeOnly: false, showTime: false, dateFormat: 'yy/mm', view: 'month', customPlaceholder: '請選擇月份' },
     dateYearOne: { timeOnly: false, showTime: false, dateFormat: 'yy', view: 'year', customPlaceholder: '請選擇年份' },
   };
+
+  /**
+   * 套用 calendarType 對應的配置
+   */
+  private applyCalendarConfig(): void {
+    const config = this.calendarConfig[this._calendarType];
+    if (config) {
+      this.timeOnly = config.timeOnly;
+      this.showTime = config.showTime;
+      this.dateFormat = config.dateFormat;
+      this.view = config.view as 'date' | 'month' | 'year';
+
+      const maxLen = this.calendarMaxLength[this._calendarType];
+      this.maxLength = maxLen; // 這是 BasicKitComponent 的屬性，會連動影響 placeholder
+
+      if (this.control) {
+        // 更新驗證器，保留原有的，但加入 maxLength
+        const currentValidators = this.control.validator ? [this.control.validator] : [];
+        this.control.setValidators([...currentValidators, Validators.maxLength(maxLen)]);
+        this.control.updateValueAndValidity({ emitEvent: false });
+      }
+      if (!this.customPlaceholder || this.customPlaceholder === '請選擇') {
+        this.placeholder = config.customPlaceholder;
+      }
+    }
+  }
 
   constructor(private validationService: ValidationService) {
     super();
@@ -79,29 +125,33 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
       this.control.disable();
     }
 
-    const config = this.calendarConfig[this.calendarType];
-    if (config) {
-      this.timeOnly = config.timeOnly;
-      this.showTime = config.showTime;
-      this.dateFormat = config.dateFormat;
-      this.view = config.view as 'date' | 'month' | 'year';
-      // 如果沒有自訂 placeholder，才使用預設值
-      if (!this.customPlaceholder || this.customPlaceholder === '請選擇') {
-        this.placeholder = config.customPlaceholder;
-      } else {
-        this.placeholder = this.customPlaceholder;
-      }
+    // 確保配置已套用 (calendarType setter 可能在某些情況下沒有被觸發)
+    this.applyCalendarConfig();
+
+    // 處理自訂 placeholder
+    if (this.customPlaceholder && this.customPlaceholder !== '請選擇') {
+      this.placeholder = this.customPlaceholder;
     }
 
-    // 🔧 改進:處理字串格式的日期
+    // 🔧 處理字串格式的日期，轉為 Date 物件並移除時間
     if (this.control.value && typeof this.control.value === 'string') {
       try {
-        const dateValue = new Date(this.control.value);
-        if (!isNaN(dateValue.getTime())) {
+        const dateValue = this.parseDateWithoutTime(this.control.value);
+        if (dateValue) {
           this.control.setValue(dateValue, { emitEvent: false });
         }
       } catch (error) {
         console.warn('日期格式轉換失敗:', this.control.value);
+      }
+    } else if (this.control.value instanceof Date && !this.timeOnly) {
+      // 如果已經是 Date 物件，確保移除時間（timeOnly 模式需保留時間）
+      const dateOnly = new Date(
+        this.control.value.getFullYear(),
+        this.control.value.getMonth(),
+        this.control.value.getDate()
+      );
+      if (dateOnly.getTime() !== this.control.value.getTime()) {
+        this.control.setValue(dateOnly, { emitEvent: false });
       }
     }
     // 監聽 control 值變化
@@ -257,6 +307,64 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
     }
 
     return value; // 若長度不符合規則則回傳原值
+  }
+
+  /**
+   * 解析日期字串並移除時間部分
+   * 支援格式: YYYYMM, YYYYMMDD, YYYY-MM-DD, YYYY/MM/DD 等
+   */
+  private parseDateWithoutTime(value: string): Date | null {
+    if (!value) return null;
+
+    const dateStr = value.trim();
+    if (!dateStr) return null;
+
+    // --- 新增：處理純數字字串 (YYYYMM 或 YYYYMMDD) ---
+    if (/^\d+$/.test(dateStr)) {
+      // 情況 A: YYYYMM (長度 6)
+      if (dateStr.length === 6) {
+        const year = parseInt(dateStr.substring(0, 4), 10);
+        const month = parseInt(dateStr.substring(4, 6), 10) - 1;
+        return new Date(year, month, 1); // 預設為該月 1 號
+      }
+      // 情況 B: YYYYMMDD (長度 8)
+      if (dateStr.length === 8) {
+        const year = parseInt(dateStr.substring(0, 4), 10);
+        const month = parseInt(dateStr.substring(4, 6), 10) - 1;
+        const day = parseInt(dateStr.substring(6, 8), 10);
+        return new Date(year, month, day);
+      }
+    }
+
+    // --- 以下為原本處理帶分隔符號的邏輯 ---
+    // 移除時間部分
+    const datePart = dateStr.split(/[T\s]/)[0];
+
+    // 嘗試 YYYY-MM-DD 或 YYYY/MM/DD 格式
+    let match = datePart.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+    if (match) {
+      const year = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10) - 1;
+      const day = parseInt(match[3], 10);
+      const date = new Date(year, month, day);
+      return isNaN(date.getTime()) ? null : date;
+    }
+
+    // 處理 YYYY/MM 格式 (dateMonthOne 常見格式)
+    match = datePart.match(/^(\d{4})[-/](\d{1,2})$/);
+    if (match) {
+      const year = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10) - 1;
+      return new Date(year, month, 1);
+    }
+
+    // 最後嘗試原生解析
+    const parsed = new Date(value);
+    if (!isNaN(parsed.getTime())) {
+      return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+    }
+
+    return null;
   }
 
   ngOnDestroy() {

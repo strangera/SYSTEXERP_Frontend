@@ -214,7 +214,7 @@ export class Tls56070Service {
   }
 
   /**
-   * 查詢商品管理編號/國際條碼/廠商貨號
+   * 查詢國際條碼/商品管理編號/廠商貨號
    * @param request 查詢條件
    * @returns Observable<ApiResponse<POS2004DetailResponse[]>>
    */

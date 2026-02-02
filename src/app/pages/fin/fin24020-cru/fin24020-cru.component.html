@@ -30,23 +30,26 @@
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="應付金額" controlName="ACP_Amt"
+          <app-input-number [useGrouping]="true" label="應付金額" controlName="ACP_Amt"
             [control]="dataForm.controls.ACP_Amt" [submitted]="submitted" [readonly]="true"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="保留款金額" controlName="ACP_ReserveAmt"
+          <app-input-number [useGrouping]="true" label="保留款金額" controlName="ACP_ReserveAmt"
             [control]="dataForm.controls.ACP_ReserveAmt" [submitted]="submitted"
             [readonly]="isFormReadable"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="應付帳款餘額" controlName="ACP_BalanceAmt"
+          <app-input-number [useGrouping]="true" label="應付帳款餘額" controlName="ACP_BalanceAmt"
             [control]="dataForm.controls.ACP_BalanceAmt" [submitted]="submitted" [readonly]="true"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="已產生保留款" controlName="sam" [control]="dataForm.controls.sam"
+          <app-input-number [useGrouping]="true" label="退保留款金額" controlName="RET_Amt"
+            [control]="dataForm.controls.RET_Amt" [submitted]="submitted" [readonly]="true"></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number [useGrouping]="true" label="已產生保留款" controlName="sam" [control]="dataForm.controls.sam"
             [submitted]="submitted" [readonly]="true"></app-input-number>
         </div>
-
       </div>
 
       <!-- 保留退款明細編輯 Table -->

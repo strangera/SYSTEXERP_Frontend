@@ -62,9 +62,11 @@ export interface ExportFin26010TxtRequest {
  */
 export interface Aps1002BankDropDownRow {
   BNK_DepositAccNo: string; // 公司銀行科目代號 (對應 BNK_id)
-  ACCCNAME: string;         // 科目名稱
+  BNK_AccName: string;         // 科目名稱
   BNK_No: string;           // 銀行代號
   BNK_BRANCHNAME: string;   // 銀行名稱
+  BNK_id: string;         // 銀行代號 (同 BNK_DepositAccNo) 
+ BNK_AccNo: string;       // 銀行帳號
 }
 
 @Injectable({ providedIn: 'root' })
@@ -107,7 +109,7 @@ export class Fin26010Service {
   /** 銀行代號下拉：/queryAPS1002_DropDownList，POST {} */
   queryAPS1002DropDownList(): Observable<ApiResponse<Aps1002BankDropDownRow[]>> {
     return this.http.post<ApiResponse<Aps1002BankDropDownRow[]>>(
-      `${environment.ApiUrl}/queryAPS1002_DropDownList`,
+      `${environment.ApiUrl}/FIN0000/APS1000/queryBankAccount`,
       {}
     );
   }

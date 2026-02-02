@@ -1,26 +1,26 @@
-import { IDropdownItem } from '@service/utility/dropDownList.service';
+import { formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableModule } from 'primeng/table';
-import { TranslateModule } from '@ngx-translate/core';
-import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { ButtonModule } from 'primeng/button';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { TLS31030DetailItem, TLS31030DetailRequest, TLS31030PrintDetailRequest, Tls31030Service } from '@service/api/tls/tls31030.service';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { TLS31030DetailItem, TLS31030DetailRequest, TLS31030PrintDetailRequest, Tls31030Service } from '@service/api/tls/tls31030.service';
+import { IDropdownItem } from '@service/utility/dropDownList.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { formatDate } from '@angular/common';
-import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 @Component({
   selector: 'app-tls31030-cru',
@@ -146,7 +146,7 @@ export class Tls31030CruComponent extends BasicCruPageComponent<TLS31030DetailIt
     this.initializePage('TLS31030', this.dataForm);
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     this.queryConditions = state?.['queryConditions'];
-    console.log('這是前面的查詢條件', this.rowdata);
+    console.log('這是前面的查詢條件', this.queryConditions);
     console.log('讀取資料', this.dataForm.value);
 
     // 重新讀取類別資料
@@ -161,27 +161,43 @@ export class Tls31030CruComponent extends BasicCruPageComponent<TLS31030DetailIt
     this.dataForm.reset(); // 重置表單
   }
 
-  btnLoading = false;
+  btnPDFLoading = false;
+  btnExcelLoading = false;
   onReport(isExcel: boolean) {
     const formValue = {
       ...this.queryConditions,
       IsExcel: isExcel,
       bus_type: this.dataForm.get('bus_type')?.value ?? '',
+      bus_class: (this.queryConditions.bus_class || []).map((x: any) => [x.bus_type, x.No]),
+      bus_sclass: (this.queryConditions.bus_sclass || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
       TXN_DateS: formatDate(this.queryConditions.TXN_DateS, 'yyyy-MM-dd', 'en-US'),
       TXN_DateE: formatDate(this.queryConditions.TXN_DateE, 'yyyy-MM-dd', 'en-US'),
     } as TLS31030PrintDetailRequest;
 
     console.log('單大分類之營業報表print請求', JSON.stringify(formValue, null, 2));
 
-    this.btnLoading = true;
-    this.tls31030Service.printTLS31030Detail(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
-      .subscribe(res => {
-        this.messageService.successBubble(res.Message);
-        if (res.Data && res.Data.Print_URL) {
-          const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-          window.open(downloadUrl, '_blank');
-        }
-      });
+    if (isExcel) {
+      this.btnExcelLoading = true;
+      this.tls31030Service.printTLS31030Detail(formValue).pipe(finalize(() => this.btnExcelLoading = false), untilDestroyed(this))
+        .subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          if (res.Data && res.Data.Print_URL) {
+            const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+            window.open(downloadUrl, '_blank');
+          }
+        });
+    } else {
+      this.btnPDFLoading = true;
+      this.tls31030Service.printTLS31030Detail(formValue).pipe(finalize(() => this.btnPDFLoading = false), untilDestroyed(this))
+        .subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          if (res.Data && res.Data.Print_URL) {
+            const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+            window.open(downloadUrl, '_blank');
+          }
+        });
+    }
+
   }
 
   queryTLS31030Detail() {
@@ -189,6 +205,8 @@ export class Tls31030CruComponent extends BasicCruPageComponent<TLS31030DetailIt
     const request: TLS31030DetailRequest = {
       ...this.queryConditions,
       bus_type: this.dataForm.get('bus_type')?.value ?? '',
+      bus_class: (this.queryConditions.bus_class || []).map((x: any) => [x.bus_type, x.No]),
+      bus_sclass: (this.queryConditions.bus_sclass || []).map((x: any) => [x.bus_type, x.bus_class, x.No]),
       TXN_DateS: formatDate(this.queryConditions.TXN_DateS, 'yyyy-MM-dd', 'en-US'),
       TXN_DateE: formatDate(this.queryConditions.TXN_DateE, 'yyyy-MM-dd', 'en-US'),
     };
@@ -201,28 +219,28 @@ export class Tls31030CruComponent extends BasicCruPageComponent<TLS31030DetailIt
       this.data = res.Data ?? [];               // 查詢資料
       this.footerTotal = res.TotalData ?? null;;    // 總計資料
       this.footershowTotal = this.footerTotal ? {          // 人工轉換欄位
-          budget: this.footerTotal.TotalBudget,
-          AVN_TotSaleAmt: this.footerTotal.TotalSales,
-          TxnCount: this.footerTotal.TotalTxnCount,
-          AvgTicket: this.footerTotal.AvgTicket,
-          tlt_space: this.footerTotal.TotalSpace,
-          MonthlyPSM: this.footerTotal.AvgPSM,
-          MonthlyPayment: this.footerTotal.AvgMonthlyPayment,
-          // TempCounterSaleAmt: this.footerTotal.TotalTempCounterSales,
+        budget: this.footerTotal.TotalBudget,
+        AVN_TotSaleAmt: this.footerTotal.TotalSales,
+        TxnCount: this.footerTotal.TotalTxnCount,
+        AvgTicket: this.footerTotal.AvgTicket,
+        tlt_space: this.footerTotal.TotalSpace,
+        MonthlyPSM: this.footerTotal.AvgPSM,
+        MonthlyPayment: this.footerTotal.AvgMonthlyPayment,
+        // TempCounterSaleAmt: this.footerTotal.TotalTempCounterSales,
 
-          MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
-          MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
+        MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
+        MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
 
-          AchievementRate: this.footerTotal.AvgAchievementRate,
-          CompletionRate: this.footerTotal.AvgCompletionRate,
-        } : null;
-        // this.footershowPercent = this.footerTotal ? {    // 人工轉換百分比欄位
-          
-        // } : null;
+        AchievementRate: this.footerTotal.AvgAchievementRate,
+        CompletionRate: this.footerTotal.AvgCompletionRate,
+      } : null;
+      // this.footershowPercent = this.footerTotal ? {    // 人工轉換百分比欄位
+
+      // } : null;
 
       this.historyRequestBody = request;                 // 查詢條件
-      console.log('明細資料',this.data)
-      console.log('明細總計',this.footerTotal);
+      console.log('明細資料', this.data)
+      console.log('明細總計', this.footerTotal);
       console.log('明細總計(轉換後)', this.footershowTotal);
       // console.log('明細條件',this.historyRequestBody);
       this.totalRecords = res.TotalCount;

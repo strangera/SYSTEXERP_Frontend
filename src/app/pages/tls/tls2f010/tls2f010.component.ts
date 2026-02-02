@@ -1,6 +1,6 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
@@ -15,7 +15,6 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
 import { formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
-import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -44,37 +43,37 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     '30': [1]
   };
   queryForm = this.formBuilder.nonNullable.group({
-    sam_yyymm: [''], // 結帳年月
-    tlt_no: [''],
-    PUR_GUIType: [''],
-    PUR_GUINO: ['', [Validators.maxLength(10)]],
+    sam_yyymm: [null], // 結帳年月
+    tlt_no: [null],
+    PUR_GUIType: [null],
+    PUR_GUINO: [null],
     PUR_GUIDate_Start: [null],
     PUR_GUIDate_End: [null],
-    COMM_MONEY_TYPE: [''],
-    COMM_YM: [null],
-    sam_termno: [1],
+    COMM_MONEY_TYPE: [null],
+    COMM_YM: [new Date()],
+    sam_termno: [null],
     DEC_YM: [null],
-    ven_uniform: [''],
+    ven_uniform: [null],
     PUR_TaxType: [[]],
-    CRT_USR_No: [''],
-    PUR_GUIPaper: [''],
-    CRT_Date_Start: [''],
-    CRT_Date_End: [''],
-    PUR_GUIDate_From: [yesterday, [Validators.required]],
-    PUR_GUIDate_To: [yesterday, [Validators.required]],
-    ACP_GUIAmt_From: [0, [Validators.required]],
-    ACP_GUIAmt_To: [null, [Validators.required]],
-    ACP_GUINet_From: [0, [Validators.required]],
-    ACP_GUINet_To: [null, [Validators.required]],
+    CRT_USR_No: [null],
+    PUR_GUIPaper: [null],
+    CRT_Date_Start: [null],
+    CRT_Date_End: [null],
+    PUR_GUIDate_From: [null],
+    PUR_GUIDate_To: [null],
+    ACP_GUIAmt_From: [null],
+    ACP_GUIAmt_To: [null],
+    ACP_GUINet_From: [null],
+    ACP_GUINet_To: [null],
     floor_no: [[]],
-    PUR_PRType: [''],
-    INV_Type: [''],
-    ACP_GUITax_From: [0, [Validators.required]],
-    ACP_GUITax_To: [null, [Validators.required]],
-    CRT_Date_To: [null, [Validators.required]],
-    CRT_Date_From: [yesterday, [Validators.required]],
-    COMM_NUM_Start: [yesterday, [Validators.required]],
-    COMM_NUM_End: [yesterday, [Validators.required]],
+    PUR_PRType: [null],
+    INV_Type: [null],
+    ACP_GUITax_From: [null],
+    ACP_GUITax_To: [null],
+    CRT_Date_To: [null],
+    CRT_Date_From: [null],
+    COMM_NUM_Start: [null],
+    COMM_NUM_End: [null],
     // 分頁欄位
     pageSize: [30],
     pageIndex: [1],
@@ -106,6 +105,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
   ];
   invoiceFormatOptions = [
     { value: '21', label: '21/進項三聯式、電子計算機統一發票' },
+    { value: '25', label: '25-進項三聯式收銀機統一發票' },
     { value: '27', label: '27/彙總登陸每張稅額五百元以下之進項二聯式收銀機統一發票、載有稅額之其他憑證' },
   ];
 
@@ -157,6 +157,29 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     return `${yyyy}-${mm}-${dd}`;
   }
 
+  // Normalize payload: convert empty strings and empty arrays to null recursively
+  private normalizePayload<T = any>(obj: T): T {
+    const _norm = (v: any): any => {
+      if (v === '') return null;
+      if (v === undefined) return null;
+      if (v === null) return null;
+      if (Array.isArray(v)) {
+        if (v.length === 0) return null;
+        return v.map(_norm);
+      }
+      if (typeof v === 'object') {
+        const out: any = Array.isArray(v) ? [] : {};
+        for (const k of Object.keys(v)) {
+          out[k] = _norm((v as any)[k]);
+        }
+        return out;
+      }
+      return v;
+    };
+
+    return _norm(obj) as T;
+  }
+
 
   constructor(
     private readonly dropdown: DropdownApiService,
@@ -175,7 +198,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
       if (Array.isArray(val) && val.length) moneyType = String(val[0]);
       else if (val != null && val !== '') moneyType = String(val);
       this.updateSamTermnoOptions(moneyType);
-      this.queryForm.controls.sam_termno.setValue(1);
+      this.queryForm.controls.sam_termno.setValue(null);
     });
     // 初始載入時也更新一次，支援單選字串或多選陣列
     const initialVal = moneyCtrl.value as any;
@@ -196,7 +219,26 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
 
 
   getCurrentQueryFunction() {
-    return this.tls2f010Service.queryTLS2F010.bind(this.tls2f010Service);
+    // 返回一個 wrapper，將後端回應標準化為 TableReport 預期的 { Data: rows[], TotalCount } 結構
+    return (body: any) => this.tls2f010Service.queryTLS2F010(body).pipe(map((res: any) => {
+      const respData = res?.Data ?? [];
+      let rows: any[] = [];
+      let totalCount: number | null = res?.TotalCount ?? null;
+
+      if (Array.isArray(respData) && respData.length && respData[0] && respData[0].Details) {
+        rows = respData[0].Details || [];
+        // 嘗試從內層 Total 擷取總筆數（若後端提供）
+        totalCount = totalCount ?? (respData[0].Total?.TotalCount ?? null);
+      } else if (Array.isArray(respData)) {
+        rows = respData;
+        totalCount = totalCount ?? (res?.Total?.TotalCount ?? res?.TotalCount ?? rows.length);
+      } else {
+        rows = [];
+        totalCount = totalCount ?? 0;
+      }
+
+      return { Data: rows, TotalCount: totalCount };
+    }));
   }
 
 
@@ -247,7 +289,8 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
         : (raw.floor_no ? [raw.floor_no] : []);
 
       this.loading = true;
-      this.tls2f010Service.queryTLS2F010(payload)
+      const body = this.normalizePayload(payload);
+      this.tls2f010Service.queryTLS2F010(body)
         .pipe(finalize(() => (this.loading = false)))
         .subscribe(res => {
           const respData = res?.Data ?? [];
@@ -285,7 +328,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
           }
 
           this.totalRecords = res?.TotalCount ?? this.data.length;
-          this.lastQueryBody = payload;
+          this.lastQueryBody = body;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
@@ -450,7 +493,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
 
   onExportExcel(): void {
     if (this.btnLoading2) return;
-    const params = this.lastQueryBody ?? this.buildExportPayloadFromForm();
+    const params = this.normalizePayload(this.lastQueryBody ?? this.buildExportPayloadFromForm());
     this.btnLoading2 = true;
 
     this.tls2f010Service.exportTLS2F010(params)
@@ -480,7 +523,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
 
   onExportPDF(): void {
     if (this.btnLoading) return;
-    const params = this.lastQueryBody ?? this.buildExportPayloadFromForm();
+    const params = this.normalizePayload(this.lastQueryBody ?? this.buildExportPayloadFromForm());
     this.btnLoading = true;
 
     this.tls2f010Service.exportTLS2F010PDF(params)

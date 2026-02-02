@@ -367,7 +367,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     // 2. 載入合約資訊
     this.loadContractInfo();
 
-    // ✅ 3. 優先載入暫存，沒有才打 API
+    // ✅ 3. 【優先】檢查 workflow 暫存資料（包含用戶修改的內容）
     const next1Data = this.flowService.getNext1Data<Next1Data>();
 
     console.log('🔍 檢查 next1 暫存資料:', {
@@ -386,7 +386,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       );
 
       if (hasActualData) {
-        console.log('✅ 使用 workflow 暫存的費用資料');
+        console.log('✅ 使用 workflow 暫存的費用資料（包含用戶修改）');
 
         // 🔥 深拷貝暫存的 originalFareData（包含所有用戶修改）
         this.originalFareData = JSON.parse(JSON.stringify(next1Data.originalFareData));
@@ -399,6 +399,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
           E: this.originalFareData['E']?.length || 0,
           總數: Object.values(this.originalFareData).reduce((sum, items) => sum + (items?.length || 0), 0),
           已選: Object.values(this.originalFareData).flat().filter(item => item.is_selected).length,
+          狀態new: Object.values(this.originalFareData).flat().filter(item => item._status === 'new').length,
           修改: Object.values(this.originalFareData).flat().filter(item => item._status === 'modified').length
         });
 
@@ -417,7 +418,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
           this.syncOrgIdFromPrevious();
         }, 100);
 
-        return; // 🔥 重要：成功載入暫存後直接返回
+        return; // 🔥 重要：成功載入暫存後直接返回，不會被續約資料覆蓋
       } else {
         console.warn('⚠️ originalFareData 存在但為空，需要重新載入');
       }
@@ -425,9 +426,94 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       console.log('📡 暫存無資料或 originalFareData 不存在');
     }
 
-    // 🔥 沒有有效暫存：從 API 載入
-    console.log('📡 從 API 載入（apply_no:', this.currentApplyNo || '空(新增模式)', ')');
+    // ✅ 4. 沒有暫存時，檢查是否為續約模式（只在第一次進入時載入續約資料）
+    if (this.flowService.isRenewalMode()) {
+      console.log('🔄 續約模式：檢查是否有續約扣款資料');
+      const renewalFareData = this.flowService.getRenewalFareData();
+      if (renewalFareData && renewalFareData.length > 0) {
+        console.log('✅ 首次使用續約扣款資料，共', renewalFareData.length, '筆');
+        this.loadRenewalFareData(renewalFareData);
+        return;
+      }
+    }
+
+    // 不管新增或編輯都需要打 API 取得扣款項目清單
+    // 新增模式 apply_no 為空 → 後端回傳所有項目（分常用/不常用）
+    // 編輯模式 apply_no 有值 → 後端回傳該合約的扣款資料
+    console.log('從 API 載入扣款資料（apply_no:', this.currentApplyNo || '空(新增模式)', ')');
     this.loadFareDataFromAPI();
+  }
+
+  /**
+   * 載入續約扣款資料
+   * 將原合約的扣款資料轉換為新合約格式（移除 ID，標記為新增）
+   */
+  private loadRenewalFareData(renewalFareData: any): void {
+    console.log('🔄 開始載入續約扣款資料');
+
+    this.loading = true;
+    this.messageService.blockUi();
+
+    try {
+      // 初始化資料結構
+      this.initializeDataStructure();
+
+      // 處理續約扣款資料（移除 ID，標記為新增，清空日期以便套用新契約日期）
+      if (renewalFareData && Array.isArray(renewalFareData)) {
+        renewalFareData.forEach((item: any, index: number) => {
+          const capType = item.cap_type || 'A';
+          if (this.originalFareData[capType]) {
+            // 🔥 產生唯一 ID（避免相同 cap_item 的項目被混淆）
+            const uniqueId = `renewal_${capType}_${item.cap_item}_${Date.now()}_${index}_${Math.random().toString(36).substring(2, 9)}`;
+
+            // 建立新的扣款項目（使用新的唯一 ID）
+            const isSelected = Boolean(item.is_selected);
+            const newItem: TLS12040FareItem = {
+              ...item,
+              id: uniqueId,            // 🔥 使用唯一 ID（而非 undefined）
+              apply_no: '',            // 清空 apply_no（新合約尚無）
+              talent_id: '',           // 清空 talent_id（新合約尚無）
+              tpy_bdate: null,         // 🔥 清空扣款起始日期（由 applyDefaultValues 套用新契約日期）
+              tpy_edate: null,         // 🔥 清空扣款結束日期（由 applyDefaultValues 套用新契約日期）
+              is_selected: isSelected, // 🔥 保留 API 回傳的選擇狀態
+              _status: isSelected ? 'new' : undefined,  // 🔥 只有勾選的才標記為新增
+              _isNew: isSelected
+            };
+            this.originalFareData[capType].push(newItem);
+          }
+        });
+      }
+
+      console.log('📊 續約扣款資料載入統計:', {
+        A: this.originalFareData['A']?.length || 0,
+        B: this.originalFareData['B']?.length || 0,
+        C: this.originalFareData['C']?.length || 0,
+        D: this.originalFareData['D']?.length || 0,
+        E: this.originalFareData['E']?.length || 0,
+        總數: Object.values(this.originalFareData).reduce((sum, items) => sum + (items?.length || 0), 0)
+      });
+
+      // 過濾資料以顯示
+      this.filterData();
+
+      // 套用預設值
+      setTimeout(() => {
+        this.applyDefaultValuesToAllItems();
+        this.saveFareDataToWorkflow();
+      }, 100);
+
+      this.messageService.successBubble('已載入原合約扣款資料');
+
+    } catch (error) {
+      console.error('❌ 載入續約扣款資料失敗:', error);
+      this.messageService.warnBubble('載入續約扣款資料失敗');
+      // 失敗時載入預設項目
+      this.loadDefaultFareItems();
+    } finally {
+      this.loading = false;
+      this.messageService.unblockUi();
+      this.cdr.detectChanges();
+    }
   }
 
   // 2. 新增專門的方法，在資料載入完成後一次性套用所有預設值

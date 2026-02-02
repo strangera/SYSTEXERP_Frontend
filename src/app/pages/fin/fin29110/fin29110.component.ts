@@ -58,8 +58,8 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 export class FIN29110Component extends BasicQueryPageComponent<Fin29110Row> implements OnInit {
   queryForm = this.formBuilder.group({
     AnalysisDate: [new Date() as Date | null, [Validators.required]],// 分析日期（必填）
-    BucketDays: [99, [Validators.required, Validators.min(1), Validators.max(99)]],// 分析區間/期數
-    Periods: [10, [Validators.required, Validators.min(1), Validators.max(10)]],// 分析區間/期數
+    BucketDays: [null, [Validators.required, Validators.min(1), Validators.max(99)]],// 分析區間/期數
+    Periods: [null, [Validators.required, Validators.min(1), Validators.max(10)]],// 分析區間/期數
     DateType: ['E' as string, [Validators.required]],// 分析日期別（立帳日 / 預計付款日）
     VEN_No_From: [null as string | null],// 廠商編號 起迄
     VEN_No_To: [null as string | null],

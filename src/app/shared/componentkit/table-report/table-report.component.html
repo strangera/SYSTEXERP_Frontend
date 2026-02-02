@@ -1,9 +1,10 @@
 <p-table #dt [columns]="selectedColumns" [value]="virtualData" [scrollable]="true" [dataKey]="dataKey"
   [scrollHeight]="autoHeight ? undefined : '450px'" [(selection)]="selectedItems" sortMode="multiple"
-  (onSort)="onSort($event)" [selectionMode]="showCheckBox ? 'multiple' : null" [rowTrackBy]="trackByFn"
-  [resizableColumns]="true" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
-  (onLazyLoad)="onLazyLoad()" styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
-  [selectAll]="isAllSelected" (selectAllChange)="onSelectAllChange($event)" (onLazyLoad)="onLazyLoad()"
+  (onSort)="onSort($event)" (sortFunction)="customSort($event)" [customSort]="!lazy" [resetPageOnSort]="false"
+  [selectionMode]="showCheckBox ? 'multiple' : null" [rowTrackBy]="trackByFn" [resizableColumns]="true"
+  [reorderableColumns]="true" (onColReorder)="onColReorder($event)" (onLazyLoad)="onLazyLoad()"
+  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" [selectAll]="isAllSelected"
+  (selectAllChange)="onSelectAllChange($event)" (onLazyLoad)="onLazyLoad()"
   (selectionChange)="onSelectionChange($event)" [rowSelectable]="rowSelectableWrapper" [lazy]="lazy"
   [virtualScrollItemSize]="46" [virtualScrollDelay]="0" [virtualScrollOptions]="{
     inline: true,
@@ -140,10 +141,14 @@
           <div [innerHTML]="sanitizer.bypassSecurityTrustHtml(rowData[col.field])" class="html-cell"></div>
         </ng-container>
         <ng-container *ngIf="col.type === 'link'">
-          <p-button [link]="true"
+          <p-button *ngIf="!(col.linkDisabled && col.linkDisabled(rowData)); else linkDisabled" [link]="true"
             [label]="col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field]"
-            (click)="!(col.linkDisabled && col.linkDisabled(rowData)) && linkClick.emit({rowData: rowData, field: col.field})"
-            [disabled]="col.linkDisabled && col.linkDisabled(rowData)" class="text-left"></p-button>
+            (click)="!(col.linkDisabled && col.linkDisabled(rowData)) && linkClick.emit({rowData: rowData, field: col.field})"></p-button>
+          <ng-template #linkDisabled>
+            <span>
+              {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+            </span>
+          </ng-template>
         </ng-container>
         <span *ngIf="!col.type">
           {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
@@ -156,7 +161,7 @@
           (click)="edit.emit(rowData)" *ngIf="showEdit" [disabled]="editDisabled(rowData) || !hasPermission('30')"
           [loading]="buttonsLoading" />
         <p-button pTooltip="查看" tooltipPosition="top" icon="pi pi-eye" (click)="detail.emit(rowData)" *ngIf="showDetail"
-          [loading]="buttonsLoading" [disabled]="!hasPermission('10')" />
+          [loading]="buttonsLoading" [disabled]="detailDisabled(rowData) || !hasPermission('10')" />
         <ng-container *ngIf="addButton.length">
           <div [ngStyle]="{ border: '1px solid var(--surface-border)', 'border-left': '0'}"></div>
           <p-button *ngFor="let btn of addButton" [pTooltip]="btn.label" tooltipPosition="top" [icon]="btn.icon"
@@ -181,7 +186,7 @@
       </td>
       <ng-container *ngFor="let col of columns">
         <td [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
-          [ngClass]="[col.cellClass ? col.cellClass(rowData) || '' : '']">
+          [ngClass]="[col.cellClass ? col.cellClass(rowData, 'subtotal') || '' : '']">
           <span class="font-bold"> {{ getGroupSubtotal(rowData, col) }}</span>
         </td>
       </ng-container>
@@ -211,7 +216,7 @@
 
       <ng-container *ngFor="let col of columns">
         <td [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
-          [ngClass]="[ col.cellClass ? col.cellClass(rowData) || '' : '']">
+          [ngClass]="[ col.cellClass ? col.cellClass(rowData, 'footer') || '' : '']">
           <span class="font-bold">
             <ng-container *ngIf="allowFooterHtml && (col.type === 'html' || col.htmlFormat)">
               <div

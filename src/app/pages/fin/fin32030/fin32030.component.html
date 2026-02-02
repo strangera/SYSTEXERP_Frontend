@@ -86,13 +86,12 @@
     [columns]="columns"
     (edit)="onEdit($event)"
     (detail)="onDetail($event)"
-    [showEdit]="true"
+    [showEdit]="false"
     [showCheckBox]="false"
     [showReportMode]="false"
     [showReportExcel]="false"
     [showReportPDF]="false"
     [showDelete]="false"
-    [showEdit]="true"
     [multiSortMeta]="[{ field: 'RCV_No', order: 1 }]"
     [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
@@ -114,18 +113,23 @@
     <div class="grid">
       <div class="col-12 md:col-6 lg:col-3">
         <app-input-text
-          label="組織編號"
-          controlName="STO_No"
-          [control]="arQueryForm.controls.STO_No"
+          label="應收ID"
+          controlName="ARS_ID"
+          [control]="arQueryForm.controls.ARS_ID"
         ></app-input-text>
       </div>
 
       <div class="col-12 md:col-6 lg:col-3">
-        <app-input-text
+        <app-dropdown
           label="廠客代號"
           controlName="VEN_No"
           [control]="arQueryForm.controls.VEN_No"
-        ></app-input-text>
+          [options]="vendorOptions"
+          optionLabel="label"
+          optionValue="value"
+          [showClear]="true"
+          [filter]="true"
+        ></app-dropdown>
       </div>
 
       <div class="col-12 md:col-6 lg:col-6">
@@ -156,9 +160,7 @@
     [columns]="arDialogColumns"
     [totalRecords]="arDialogTotalRecords"
     [loading]="arDialogLoading"
-    [showCheckBox]="true"
-    [selectionMode]="'multiple'"
-    [(selectedItems)]="arSelectedItems"
+    [showCheckBox]="false"
     [showSerialNo]="true"
     [showManage]="false"
     [showReportMode]="false"

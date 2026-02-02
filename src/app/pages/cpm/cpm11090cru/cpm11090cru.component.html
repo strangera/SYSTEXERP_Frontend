@@ -37,13 +37,13 @@
             [submitted]="submitted"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-radiobutton label="是否廣播" controlName="BROADCAST_YN" [control]="dataForm.controls.BROADCAST_YN"
-            [submitted]="submitted"
-            [options]="[{ label: '已廣播', value: 'Y' }, { label: '不廣播', value: 'N' }, { label: '待廣播', value: null }]"></app-radiobutton>
+          <app-radiobutton groupname="BROADCAST_YN" label="是否廣播" controlName="BROADCAST_YN"
+            [control]="dataForm.controls.BROADCAST_YN" [submitted]="submitted"
+            [options]="broadcastOptions"></app-radiobutton>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-radiobutton label="是否結案" controlName="IsFinished" [control]="dataForm.controls.IsFinished"
-            [submitted]="submitted"
+          <app-radiobutton groupname="IsFinished" label="是否結案" controlName="IsFinished"
+            [control]="dataForm.controls.IsFinished" [submitted]="submitted"
             [options]="[{ label: '是', value: true }, { label: '否', value: false }]"></app-radiobutton>
         </div>
       </div>

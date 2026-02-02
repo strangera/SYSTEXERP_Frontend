@@ -2,9 +2,10 @@ import { NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
+import { IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { AccordionModule } from 'primeng/accordion';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -47,6 +48,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label> implemen
   // 查詢 標籤檔定加入欄位
   queryForm = this.formBuilder.group({
     KeyWord: ['', [Validators.maxLength(20)]], // 20260112調整: 商品管理編號/國際條碼/廠商貨號都以KeyWord送出
+
     Label_Qty: [1], // 標籤數量
 
     //分頁查詢
@@ -155,9 +157,24 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label> implemen
     } else {
       return
     }
+
+    // 監聽 KeyWord 變化並觸發標籤檔預覽
+    this.queryForm.get('KeyWord')?.valueChanges.pipe(
+      debounceTime(500),    // 延遲 500ms，等待使用者停止輸入或完成選擇
+      distinctUntilChanged(), // 只有值真的改變時才觸發
+      untilDestroyed(this)  // 組件銷毀時取消訂閱
+    ).subscribe(value => {
+      if (value) {
+        this.previewLabel(); // 有值就呼叫預覽
+      } else {
+        this.previewLabelData = null; // 清空欄位時，清空預覽區塊
+      }
+    });
   }
 
   onSubmitLabel(frm: FormGroup) {
+    // 將KeyWord值設定到queryNo
+    frm.get('queryNo')?.setValue(frm.get('KeyWord')?.value);
     this.handleSubmit(frm, () => {
       console.log('query condition', frm.value);
       this.loading = false;
@@ -199,6 +216,8 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label> implemen
 
   // 變價紀錄 查詢
   onSubmitPrice(frm: FormGroup) {
+    // 將KeyWord值設定到queryNo
+    frm.get('queryNo')?.setValue(frm.get('KeyWord')?.value);
     this.handleSubmit(frm, () => {
       console.log('query condition', frm.value);
       // 有資料的管理碼  "PLU_MagNo": "0700000002799"
@@ -241,6 +260,14 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label> implemen
       return;
     }
 
+    if (this.labelTable) {
+      // 檢查是否正在編輯「主行」(editingRow 不為 null 代表有行正在編輯)
+      if (this.labelTable.editingRow !== null) {
+        this.messageService.warnBubble('明細表格尚有未儲存的編輯項目，請先點擊「打勾」儲存或「取消」結束編輯。');
+        return; // 中斷送出流程
+      }
+    }
+
     // 將 labelData 的每一筆物件複製一份，並移除 id 屬性
     const exportData = this.labelData.map(({ id, ...rest }) => rest);
     this.exportLabelService.ExportLabel_Other(exportData).subscribe();
@@ -255,6 +282,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label> implemen
       next: (response) => {
         if (response.Status === '0000' && response.Data && response.Data.length > 0) {
           const previewData = response.Data[0]; // 只取第一筆預覽
+          console.log('預覽資料:', previewData);
 
           this.previewLabelData = previewData; // ✅ 更新 HTML 預覽用變數
         } else {
@@ -310,56 +338,26 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label> implemen
     return maxId + 1;
   }
 
-  // #region 商品管理編號/國際條碼/廠商貨號
-  opLoading = false;
-  opForm = this.formBuilder.group({
-    PLU_MagNo: ['', [Validators.maxLength(20)]],   // ← 新增這行（關鍵修正）
-    PLU_Name: ['', [Validators.maxLength(60)]],
-    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
-  });
+  //!!! 國際條碼/商品管理編號/廠商貨號
   suggestions: IQueryPOS2004DetailResponse[] = [];
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
+    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
   ];
-  opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
-  opColumns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號' },
-    { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
-    { field: 'PLU_Name', header: '商品名稱' },
-  ];
-  opTotalRecords = 0;
-  onAutoCompleteInputChange(event: any) {
+  onAutoCompleteInputChange(event: Record<'label', string>) {
     const body = {
-      ...event,
       VEN_No: '',
       LOGO_No: '',
-      queryNo: event.PLU_MagNo || '',
+      queryNo: event.label || '',
       pageSize: 30,
       pageIndex: 1,
-      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
+      SortBy: [{ field: 'PLU_No', order: 1 }],
     }
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results: { Data: any[]; }) => {
+    // !!! 若有自己這隻的API請改成自己的
+    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
       this.suggestions = [...results.Data.map(item => ({
         ...item,
-        label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo,
+        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
       }))];
-    });
-  }
-
-  // 商品管理編號 / 國際條碼 / 廠商貨號 (合併查詢表單)
-  onformValueChanged(event: IQueryPOS2004DetailRequest) {
-    this.opLoading = true;
-    const body = {
-      queryNo: event.queryNo || '',
-      PLU_Name: event.PLU_Name || '',
-      VEN_No: '',
-      LOGO_No: '',
-    };
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results: { Data: any; TotalCount: number; }) => {
-      this.opData = [...results.Data]; // 更新data資料
-      this.opTotalRecords = results.TotalCount;
-      this.opLoading = false;
     });
   }
 }

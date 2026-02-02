@@ -89,53 +89,49 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
   };
 
   // ===== 表單：全面改成後端欄位命名 =====
-  queryForm = this.formBuilder.group({
-    // 後端分頁排序；不包含 Offset / OrderBy
-    ...createPaginationConfig([
-      { field: 'PUR_GUINo', order: 1 } as any,
-      { field: 'PUR_GUIDate', order: 1 } as any,
-    ]),
+queryForm = this.formBuilder.group({
+  ...createPaginationConfig([
+    { field: 'PUR_GUINo', order: 1 } as any,
+    { field: 'PUR_GUIDate', order: 1 } as any,
+  ]),
 
-    // 主條件（全部使用後端命名）
-    PUR_VoucherType: [], // 發票格式
-    PUR_GUINo: [, [Validators.maxLength(10)]], // 發票號碼（字軌＋數字，共10碼）
+  PUR_VoucherType: [],
+  PUR_GUINo: [, [Validators.maxLength(10)]],
 
-    PUR_GUIDate_Start: [], // 發票日期 起
-    PUR_GUIDate_End: [], // 發票日期 迄
-    PUR_GUIDate_YYYYMM: [
-      ,
-      [
-        // this.validationService.evenMonthValidator,
-      ],
-    ], // 發票日期(年月)
+  PUR_GUIDate_Start: [],
+  PUR_GUIDate_End: [],
 
-    PUR_RepYYYYMM: [, []], // 資料所屬年月
-    PUR_VenUniform: [], // 廠商編號(統編)
+  // ✅ 這兩個改型別（重點）
+  PUR_GUIDate_YYYYMM: [null as Date | null],
+  PUR_RepYYYYMM: [null as Date | null],
 
-    PUR_Amt_Small: [], // 發票總金額 起
-    PUR_Amt_Big: [], // 發票總金額 迄
-    PUR_Net_Small: [], // 未稅金額 起
-    PUR_Net_Big: [], // 未稅金額 迄
-    PUR_Tax_Small: [], // 稅額 起
-    PUR_Tax_Big: [], // 稅額 迄
+  PUR_VenUniform: [],
 
-    PUR_DirectType: [], // 發票用途
-    PUR_TaxType: [], // 課稅別
-    PUR_DiscNo: [], // 扣抵代號
-    PUR_Type: [], // 類別區分
-    SYS_ORIGIN: [], // 系統別
-    Source_Doc_No: [, [Validators.maxLength(14)]], // 憑證單號
-    Voucher_No: [, [Validators.maxLength(11)]], // 傳票號碼
-    SAL_Type: [], // 銷售類型/系統別（依後端定義）
-    PUR_Remark: [, [Validators.maxLength(100)]], // 備註
+  PUR_Amt_Small: [],
+  PUR_Amt_Big: [],
+  PUR_Net_Small: [],
+  PUR_Net_Big: [],
+  PUR_Tax_Small: [],
+  PUR_Tax_Big: [],
 
-    CRT_USR_Name: [],
-    CRT_Date_Start: [],
-    CRT_Date_End: [],
-    UPD_USR_Name: [],
-    UPD_Date_Start: [],
-    UPD_Date_End: [],
-  });
+  PUR_DirectType: [],
+  PUR_TaxType: [],
+  PUR_DiscNo: [],
+  PUR_Type: [],
+  SYS_ORIGIN: [],
+  Source_Doc_No: [, [Validators.maxLength(14)]],
+  Voucher_No: [, [Validators.maxLength(11)]],
+  SAL_Type: [],
+  PUR_Remark: [, [Validators.maxLength(100)]],
+
+  CRT_USR_Name: [],
+  CRT_Date_Start: [],
+  CRT_Date_End: [],
+  UPD_USR_Name: [],
+  UPD_Date_Start: [],
+  UPD_Date_End: [],
+});
+
 
   // ===== Table 欄位：用後端回傳欄位 =====
   columns: any[] = [
@@ -170,135 +166,142 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
     super();
   }
 
-  ngOnInit(): void {
-    // ---- 小工具：把 YYYYMM / YYYY-MM / YYYY/MM / YYYYMMDD 轉為該月 1 號的 Date ----
-    const toMonthDate = (val: any): Date | null => {
-      if (val == null || val === '') return null;
-      if (val instanceof Date && !isNaN(val.getTime())) return val;
+ngOnInit(): void {
+  // ---- 小工具：把 YYYYMM / YYYY-MM / YYYY/MM / YYYYMMDD 轉為該月 1 號的 Date ----
+  const toMonthDate = (val: any): Date | null => {
+    if (val == null || val === '') return null;
+    if (val instanceof Date && !isNaN(val.getTime())) return val;
 
-      const s = String(val).trim();
-      const digits = s.replace(/\D/g, '');
+    const s = String(val).trim();
+    const digits = s.replace(/\D/g, '');
 
-      if (/^\d{8}$/.test(digits)) {
-        const y = Number(digits.slice(0, 4));
-        const m = Number(digits.slice(4, 6)) - 1;
-        return isFinite(y) && isFinite(m) ? new Date(y, m, 1) : null;
-      }
+    if (/^\d{8}$/.test(digits)) {
+      const y = Number(digits.slice(0, 4));
+      const m = Number(digits.slice(4, 6)) - 1;
+      return isFinite(y) && isFinite(m) ? new Date(y, m, 1) : null;
+    }
 
-      if (/^\d{6}$/.test(digits)) {
-        const y = Number(digits.slice(0, 4));
-        const m = Number(digits.slice(4, 6)) - 1;
-        return isFinite(y) && isFinite(m) ? new Date(y, m, 1) : null;
-      }
+    if (/^\d{6}$/.test(digits)) {
+      const y = Number(digits.slice(0, 4));
+      const m = Number(digits.slice(4, 6)) - 1;
+      return isFinite(y) && isFinite(m) ? new Date(y, m, 1) : null;
+    }
 
-      const m2 = s.match(/^(\d{4})[-\/](\d{1,2})$/);
-      if (m2) {
-        const y = Number(m2[1]);
-        const m = Number(m2[2]) - 1;
-        return isFinite(y) && isFinite(m) ? new Date(y, m, 1) : null;
-      }
+    const m2 = s.match(/^(\d{4})[-\/](\d{1,2})$/);
+    if (m2) {
+      const y = Number(m2[1]);
+      const m = Number(m2[2]) - 1;
+      return isFinite(y) && isFinite(m) ? new Date(y, m, 1) : null;
+    }
 
-      return null;
-    };
+    return null;
+  };
 
-    const normalizeMonthControl = (ctrl: any) => {
-      const v = ctrl?.value;
-      if (v == null) return;
-      if (!(v instanceof Date)) {
-        const d = toMonthDate(v);
-        if (d) ctrl.patchValue(d, { emitEvent: false });
-      }
-    };
+  const normalizeMonthControl = (ctrl: any) => {
+    const v = ctrl?.value;
+    if (v == null) return;
+    if (!(v instanceof Date)) {
+      const d = toMonthDate(v);
+      if (d) ctrl.patchValue(d, { emitEvent: false });
+    }
+  };
 
-    // === 頁面初始化 ===
-    this.initializePage('FIN13050', '/fin/FIN13050cru', this.queryForm);
+  const setDefaultRepYYYYMMByToday = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
 
-    // === 下拉資料 ===
-    this.fin13050Service.queryVendorList().subscribe((res) => {
-      const list = res?.Data ?? [];
-      this.vendorOptions = list.map((v: any) => ({
-        label: `${v.VEN_No} - ${v.VEN_Name}`,
-        value: v.VEN_No,
-      }));
-      this.vendorMap = Object.fromEntries(list.map((v: any) => [v.VEN_No, v]));
-    });
+    let evenMonth = month % 2 === 0 ? month : month + 1;
+    if (evenMonth > 12) evenMonth = 12;
 
-    this.fin13050Service.queryAPS2002DropDownList().subscribe((res) => {
-      const list = res?.Data ?? [];
-      this.PUR_VoucherTypeOptions = list.map((x: any) => ({
-        value: String(x.No),
-        label: `${x.No}-${x.Name}`,
-      }));
-    });
+    // FIN13050 的 PUR_RepYYYYMM 目前是 Date 型態（你也有 normalizeMonthControl）
+    this.queryForm.patchValue(
+      { PUR_RepYYYYMM: new Date(year, evenMonth - 1, 1) },
+      { emitEvent: false },
+    );
+  };
 
-    this.fin13050Service
-      .querySYS1000DropDownList('PUR_DirectType')
-      .subscribe((res) => {
-        const list = res?.Data ?? [];
-        this.directTypeOptions = list.map((x: any) => ({
-          value: String(x.No),
-          label: `${x.No}-${x.Name}`,
-        }));
-      });
+  // === 頁面初始化 ===
+  this.initializePage('FIN13050', '/fin/FIN13050cru', this.queryForm);
 
-    this.fin13050Service
-      .querySYS1000DropDownList('PUR_TaxType')
-      .subscribe((res) => {
-        const list = res?.Data ?? [];
-        this.taxTypeOptions = list.map((x: any) => ({
-          value: String(x.No),
-          label: `${x.No}-${x.Name}`,
-        }));
-      });
+  // === 下拉資料 ===
+  this.fin13050Service.queryVendorList().subscribe((res) => {
+    const list = res?.Data ?? [];
+    this.vendorOptions = list.map((v: any) => ({
+      label: `${v.VEN_No} - ${v.VEN_Name}`,
+      value: v.VEN_No,
+    }));
+    this.vendorMap = Object.fromEntries(list.map((v: any) => [v.VEN_No, v]));
+  });
 
-    this.fin13050Service
-      .querySYS1000DropDownList('PUR_DiscNo')
-      .subscribe((res) => {
-        const list = res?.Data ?? [];
-        this.PUR_DiscNoOptions = list.map((x: any) => ({
-          value: String(x.No),
-          label: `${x.No}-${x.Name}`,
-        }));
-      });
+  this.fin13050Service.queryAPS2002DropDownList().subscribe((res) => {
+    const list = res?.Data ?? [];
+    this.PUR_VoucherTypeOptions = list.map((x: any) => ({
+      value: String(x.No),
+      label: `${x.No}-${x.Name}`,
+    }));
+  });
 
-    this.fin13050Service
-      .querySYS1000DropDownList('PUR_Type')
-      .subscribe((res) => {
-        const list = res?.Data ?? [];
-        this.typeOptions = list.map((x: any) => ({
-          value: String(x.No),
-          label: `${x.No}-${x.Name}`,
-        }));
-      });
+  this.fin13050Service.querySYS1000DropDownList('PUR_DirectType').subscribe((res) => {
+    const list = res?.Data ?? [];
+    this.directTypeOptions = list.map((x: any) => ({
+      value: String(x.No),
+      label: `${x.No}-${x.Name}`,
+    }));
+  });
 
-    this.fin13050Service
-      .querySYS1000DropDownList('SYS_ORIGIN')
-      .subscribe((res) => {
-        const list = res?.Data ?? [];
-        this.SYS_ORIGINOptions = list.map((x: any) => ({
-          value: String(x.No),
-          label: `${x.No}-${x.Name}`,
-        }));
-      });
+  this.fin13050Service.querySYS1000DropDownList('PUR_TaxType').subscribe((res) => {
+    const list = res?.Data ?? [];
+    this.taxTypeOptions = list.map((x: any) => ({
+      value: String(x.No),
+      label: `${x.No}-${x.Name}`,
+    }));
+  });
 
-    // 發票號碼輸入：若被輸入數字，改成字串避免被格式化
-    const toStr = (v: any) => (v == null ? v : String(v));
-    this.queryForm.controls.PUR_GUINo?.valueChanges.subscribe((v) => {
-      if (typeof v === 'number') {
-        this.queryForm.controls.PUR_GUINo.patchValue(toStr(v), {
-          emitEvent: false,
-        });
-      }
-    });
+  this.fin13050Service.querySYS1000DropDownList('PUR_DiscNo').subscribe((res) => {
+    const list = res?.Data ?? [];
+    this.PUR_DiscNoOptions = list.map((x: any) => ({
+      value: String(x.No),
+      label: `${x.No}-${x.Name}`,
+    }));
+  });
 
-    // 先 normalize 初始的年月欄位
-    normalizeMonthControl(this.queryForm.controls.PUR_RepYYYYMM);
-    normalizeMonthControl(this.queryForm.controls.PUR_GUIDate_YYYYMM);
+  this.fin13050Service.querySYS1000DropDownList('PUR_Type').subscribe((res) => {
+    const list = res?.Data ?? [];
+    this.typeOptions = list.map((x: any) => ({
+      value: String(x.No),
+      label: `${x.No}-${x.Name}`,
+    }));
+  });
 
-    // ✅ 還原查詢條件
+  this.fin13050Service.querySYS1000DropDownList('SYS_ORIGIN').subscribe((res) => {
+    const list = res?.Data ?? [];
+    this.SYS_ORIGINOptions = list.map((x: any) => ({
+      value: String(x.No),
+      label: `${x.No}-${x.Name}`,
+    }));
+  });
+
+  // 發票號碼輸入：若被輸入數字，改成字串避免被格式化
+  const toStr = (v: any) => (v == null ? v : String(v));
+  this.queryForm.controls.PUR_GUINo?.valueChanges.subscribe((v) => {
+    if (typeof v === 'number') {
+      this.queryForm.controls.PUR_GUINo.patchValue(toStr(v), { emitEvent: false });
+    }
+  });
+
+  // 先 normalize 初始的年月欄位
+  normalizeMonthControl(this.queryForm.controls.PUR_RepYYYYMM);
+  normalizeMonthControl(this.queryForm.controls.PUR_GUIDate_YYYYMM);
+
+  // ✅ 只從 CRU 回來才還原
+  const fromCru = !!(history.state && history.state['fromCru']);
+
+  if (fromCru) {
     const saved = this.queryStateService.getQueryStateValue('FIN13050');
     if (saved) {
       const formValue = saved.formValue ?? saved;
+
       if (formValue) {
         this.queryForm.patchValue(formValue, { emitEvent: false });
 
@@ -317,14 +320,30 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
 
       this.lastQueryBody = saved.lastQueryBody ?? null;
 
-      // 自動查一次
+      // ✅ 自動查一次
       Promise.resolve().then(() => this.onSubmit(this.queryForm));
     }
+  } else {
+    // 不是從 CRU 回來：清掉狀態，走預設值
+    this.queryStateService.clearQueryState('FIN13050');
+    this._currentSortBy = this.defaultSort;
+    this.lastQueryBody = null;
 
-    this.queryForm.valueChanges.subscribe(() => {
-      // 需要的話這裡可以做狀態同步
-    });
+    setDefaultRepYYYYMMByToday();
+
+    // 你若要「進來就自動查」也可以打開：
+    // Promise.resolve().then(() => this.onSubmit(this.queryForm));
   }
+
+  // 需要的話這裡可以做狀態同步
+  this.queryForm.valueChanges.subscribe(() => {
+    // noop
+  });
+
+  // 可選：避免瀏覽器 back/forward 保留 state 造成下次誤判 fromCru
+  // history.replaceState({}, '', location.href);
+}
+
 
   /** 將多選值正規化為陣列（空陣列=>undefined 不送） */
   private arr<T = any>(

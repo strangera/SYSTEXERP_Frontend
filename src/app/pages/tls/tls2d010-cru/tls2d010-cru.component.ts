@@ -768,7 +768,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     }
   }
 
-  /** normal 模式：上方表單扣款金額變更事件（直接由 template 綁定） */
   onNormalFormAmountChange(amount: any): void {
     const ctrl = this.dataFormNormal.get('tpy_net');
     if (ctrl) {
@@ -821,7 +820,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     return String(field);
   }
 
-  /** 依 CAP_Item 取得對應的 CAP_Name（從後端下拉資料中找） */
   private getCAPNameByItem(capItem: any): string | null {
     if (capItem == null || capItem === '') return null;
     let code: string | null = null;
@@ -858,10 +856,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     };
   }
 
-  /**
-   * 解析後端可能的日期字串格式，回傳 Date 或 null。
-   * 支援格式：MM/DD/YYYY[ HH:mm:ss]、YYYY-MM-DD[ ...]、以及 ISO 可被 Date.parse 辨識者。
-   */
   private parseBackendDate(value: any): Date | null {
     if (!value) return null;
     if (value instanceof Date) return value;
@@ -907,12 +901,10 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       return;
     }
 
-    // 判斷是否為更新
     const mainRow = this.data?.find(row => row.tlt_no) || this.data[0];
     const isUpdate = !!(mainRow?.id && mainRow.id > 0);
 
     if (isUpdate) {
-      // ===== 更新 =====
       let payload: any;
 
       if (this.currentCreateType === 'counter') {
@@ -972,7 +964,8 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         // counter 從 form 抓
         const counterValue = this.dataFormCounter.getRawValue();
         const tltInfoFull = this.buildTltInfo(counterValue.tlt_no, counterValue.pod_no);
-        const feeList = this.data
+        // 建立 feeItems 後再去重，避免當同一筆費用套用到多個專櫃時被重複送出
+        const feeItems = this.data
           .filter(i => !i._isAutoInsertCandidate)
           .map(i => ({
             tpy_date: i.tpy_date ? formatDate(i.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
@@ -986,19 +979,30 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             remarks: i.remarks || ''
           }));
 
+        const feeMap = new Map<string, any>();
+        for (const f of feeItems) {
+          const key = `${f.tpy_date || ''}|${f.CAP_Type}|${f.CAP_Item}|${f.org_id}|${f.AccNo}|${f.GUI_FLAG}|${f.cap_taxtype}|${f.tpy_net}|${f.remarks || ''}`;
+          if (!feeMap.has(key)) {
+            feeMap.set(key, f);
+          }
+        }
+        let feeList = Array.from(feeMap.values());
         const tltList = [{
           tlt_no: tltInfoFull?.tlt_no || '',
           talent_id: Number(tltInfoFull?.talent_id ?? 0),
           pod_no: tltInfoFull?.pod_no || ''
         }];
 
+        if (tltList && tltList.length > 1 && feeList.length > 1) {
+          feeList = [feeList[0]];
+        }
+
         payload = { tltList, feeList };
 
 
       } else {
-        // normal 從 table-edit 抓
         const normalValue = this.dataFormNormal.getRawValue();
-        const feeList = this.data
+        const feeItems = this.data
           .filter(i => !i._isAutoInsertCandidate)
           .map(i => ({
             tpy_date: i.tpy_date ? formatDate(i.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
@@ -1012,7 +1016,14 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             remarks: i.remarks || normalValue.remarks || ''
           }));
 
-        // 根據 table 中實際出現的專櫃，動態產生多筆 tltList，符合後端 spec
+        const feeMap = new Map<string, any>();
+        for (const f of feeItems) {
+          const key = `${f.tpy_date || ''}|${f.CAP_Type}|${f.CAP_Item}|${f.org_id}|${f.AccNo}|${f.GUI_FLAG}|${f.cap_taxtype}|${f.tpy_net}|${f.remarks || ''}`;
+          if (!feeMap.has(key)) {
+            feeMap.set(key, f);
+          }
+        }
+        let feeList = Array.from(feeMap.values());
         const tltMap = new Map<string, { tlt_no: string; talent_id: number; pod_no: string }>();
         for (const row of this.data.filter(i => !i._isAutoInsertCandidate)) {
           const rowTlt = row.tlt_no || normalValue.tlt_no;
@@ -1031,6 +1042,9 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         }
 
         const tltList = Array.from(tltMap.values());
+        if (tltList && tltList.length > 1 && feeList.length > 1) {
+          feeList = [feeList[0]];
+        }
         if (tltList.length === 0) {
           this.messageService.errorBubble('請先選擇至少一筆專櫃');
           return;

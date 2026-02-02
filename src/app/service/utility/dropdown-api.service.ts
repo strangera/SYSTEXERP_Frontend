@@ -13,7 +13,7 @@ import {
   BusClassItem,
   BusClassQuery,
   BusSClassItem,
-  BusSClassQuery,
+  BusSClassRequest,
   Css1003Query,
   Css1005Query,
   CssDropDownItem,
@@ -207,8 +207,8 @@ export class DropdownApiService {
   }
 
   /** 查詢小分類設定檔(TLTBUSSCLASS)資料表 */
-  queryTltBusSClass(body?: BusSClassQuery): Observable<BusSClassItem[] | null> {
-    return this.queryDropdownWithParams<BusSClassItem, BusSClassQuery | object>('/queryTLTBUSSCLASS_DropDownList', body ?? {}).pipe(
+  queryTltBusSClass(body: BusSClassRequest): Observable<BusSClassItem[] | null> {
+    return this.queryDropdownWithParams<BusSClassItem, BusSClassRequest | object>('/queryTLTBUSSCLASS_DropDownList', body ?? {}).pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
@@ -266,6 +266,17 @@ export class DropdownApiService {
   queryGLS1016(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<IDropdownItem>('/queryGLS1016_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  /** 查詢傳票型態(GLS1010) (用於 FIN55050) */
+  queryGls1010(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>(
+      '/queryGLS1010_DropDownList',
+      'No',
+      'Name'
+    ).pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢
     );
   }
 
@@ -576,8 +587,8 @@ export class DropdownApiService {
   }
 
   /** 查詢角色代碼(tblRole) */
-  queryTblRole(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/querytblRole_DropDownList').pipe(
+  queryTblRole(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/querytblRole_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }

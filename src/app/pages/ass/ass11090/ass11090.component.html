@@ -1,216 +1,88 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <!-- <div >
-            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-        </div> -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
+          <!-- 大分類代碼/名稱（合併） -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="大分類代碼"
-              controlName="bigCategoryCode"
-              [options]="bigCategoryCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.bigCategoryCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="大分類代碼/名稱" controlName="BigCategoryCode" [options]="bigCategoryOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.BigCategoryCode"
+              [submitted]="submitted">
+            </app-dropdown>
           </div>
+          <!-- 中分類代碼/名稱（合併） -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="大分類名稱"
-              controlName="bigCategoryName"
-              [control]="queryForm.controls.bigCategoryName"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="中分類代碼"
-              controlName="midCategoryCode"
-              [options]="midCategoryCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.midCategoryCode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="中分類名稱"
-              controlName="midCategoryName"
-              [control]="queryForm.controls.midCategoryName"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-dropdown label="中分類代碼/名稱" controlName="MidCategoryCode" [options]="midCategoryOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.MidCategoryCode"
+              [submitted]="submitted">
+            </app-dropdown>
           </div>
         </div>
         <hr />
         <div class="grid p-fluid">
+          <!-- 所屬會計科目(借) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="所屬會計科目(借)"
-              controlName="accounting_Borrow"
-              [options]="accounting_Borrow_Options"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.accounting_Borrow"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="所屬會計科目(借)" controlName="AccountingDebitCode" [options]="accountingDebitOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.AccountingDebitCode"
+              [submitted]="submitted">
+            </app-dropdown>
           </div>
+          <!-- 所屬會計科目(貸) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="所屬會計科目(貸)"
-              controlName="accounting_Credit"
-              [options]="accounting_Credit_Options"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.accounting_Credit"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="所屬會計科目(貸)" controlName="AccountingCreditCode" [options]="accountingCreditOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.AccountingCreditCode"
+              [submitted]="submitted">
+            </app-dropdown>
           </div>
+          <!-- 進項稅額科目(借) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="進項稅額科目(借)"
-              controlName="tax_Borrow"
-              [options]="tax_Borrow_Options"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.tax_Borrow"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="會計科目名稱"
-              controlName="accountName_accBorrow"
-              [control]="queryForm.controls.accountName_accBorrow"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="會計科目名稱"
-              controlName="accountName_accCredit"
-              [control]="queryForm.controls.accountName_accCredit"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="會計科目名稱"
-              controlName="accountName_taxBorrow"
-              [control]="queryForm.controls.accountName_taxBorrow"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-dropdown label="進項稅額科目(借)" controlName="InputTaxDebitCode" [options]="inputTaxDebitOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.InputTaxDebitCode"
+              [submitted]="submitted">
+            </app-dropdown>
           </div>
         </div>
         <hr />
         <div class="grid p-fluid">
+          <!-- 費用科目 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="費用科目"
-              controlName="cost"
-              [options]="costOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.cost"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="費用科目" controlName="ExpenseAccountCode" [options]="expenseAccountOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.ExpenseAccountCode"
+              [submitted]="submitted">
+            </app-dropdown>
           </div>
+          <!-- 折舊科目(借) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="折舊科目(借)"
-              controlName="depreciation"
-              [control]="queryForm.controls.depreciation"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-dropdown label="折舊科目(借)" controlName="DepreciationDebitCode" [options]="depreciationDebitOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.DepreciationDebitCode"
+              [submitted]="submitted">
+            </app-dropdown>
           </div>
+          <!-- 累計折舊科目(貸) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="累計折舊科目(貸)"
-              controlName="totalDepreciation"
-              [control]="queryForm.controls.totalDepreciation"
-              [submitted]="submitted"
-            ></app-input-number>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="會計科目名稱"
-              controlName="accountName_cost"
-              [control]="queryForm.controls.accountName_cost"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="會計科目名稱"
-              controlName="accountName_depreciation"
-              [control]="queryForm.controls.accountName_depreciation"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="會計科目名稱"
-              controlName="accountName_totalDepreciation"
-              [control]="queryForm.controls.accountName_totalDepreciation"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-dropdown label="累計折舊科目(貸)" controlName="AccumulatedDepreciationCreditCode"
+              [options]="accumulatedDepreciationCreditOptions" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.AccumulatedDepreciationCreditCode" [submitted]="submitted">
+            </app-dropdown>
           </div>
         </div>
         <hr />
         <div class="grid p-fluid">
+          <!-- 折舊年限 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="折舊年限"
-              controlName="depreciationLife"
-              [control]="queryForm.controls.depreciationLife"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-text label="折舊年限" controlName="DepreciationLife" [control]="queryForm.controls.DepreciationLife"
+              [submitted]="submitted">
+            </app-input-text>
           </div>
         </div>
-        <hr />
-        <app-editor-text
-          label="說明"
-          controlName="remark"
-          [control]="queryForm.controls.remark"
-          [style]="{ height: '100px' }"
-          [submitted]="submitted"
-        ></app-editor-text>
-        <hr />
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -218,11 +90,10 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+    <app-table tableKey="ASS11090" [data]="data" [columns]="columns" (edit)="onEdit($event)" [showDelete]="false"
+      [showEdit]="true" [showDetail]="false" [multiSortMeta]="[{ field: 'BigCategoryCode', order: 1 }]"
+      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true" [loading]="loading" dataKey="id">
+    </app-table>
   </div>
 </div>

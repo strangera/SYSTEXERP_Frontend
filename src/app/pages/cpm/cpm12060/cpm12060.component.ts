@@ -60,7 +60,7 @@ export class CPM12060Component extends BasicQueryPageComponent<CPM12060Data> imp
   ]
 
   columns: Column[] = [
-    { field: 'SEQ_ID', header: '單號', visible: true },
+    { field: 'SEQ_ID', header: '顧客意見編號', visible: true },
     { field: 'CUST_NAME', header: '客戶名稱', visible: true },
     {
       field: 'SEX', header: '性別', visible: true, format: (value: string) =>
@@ -68,10 +68,14 @@ export class CPM12060Component extends BasicQueryPageComponent<CPM12060Data> imp
         value
     },
     { field: 'COMPLAIN_DATE', header: '提供日期', visible: true, format: formatDateTime },
-    { field: 'CRT_USR_Name', header: '建立者姓名', visible: true },
-    { field: 'ORG_ID', header: '處理單位', visible: true },
+    // { field: 'ANSWER_NAME', header: '處理單位', visible: true },
+    // { field: 'ALERT_DATE', header: '通知日期', visible: true, format: formatDateTime },
+    // { field: 'ANSWER_NAME', header: '處理者', visible: true },
+    // { field: 'ANSWER_YN', header: '處理狀況', visible: true },
+    // { field: 'STATUS', header: '是否結案', visible: true },
+    // 暫時先用下面的過
+    { field: 'CLASS_ID', header: '處理單位', visible: true },
     { field: 'STATUS', header: '處理狀態', visible: true },
-    { field: 'ANSWER_DATE_MM', header: '處理-時', visible: true },
   ];
 
   constructor(
@@ -100,19 +104,4 @@ export class CPM12060Component extends BasicQueryPageComponent<CPM12060Data> imp
         });
     });
   }
-
-  // onDelete(selectedItems: CPM11020Data[]) {
-  //   this.messageService.confirm({
-  //     header: `是否確認刪除 ${selectedItems.length} 筆資料？`,
-  //     accept: () => {
-  //       const idList = selectedItems.map(item => item.ID);
-  //       this.cpm11020Service.deleteCPM11020({ IdList: idList })
-  //         .pipe(untilDestroyed(this))
-  //         .subscribe(() => {
-  //           this.messageService.successBubble('刪除成功');
-  //           this.onSubmit(this.queryForm);
-  //         });
-  //     }
-  //   });
-  // }
 }

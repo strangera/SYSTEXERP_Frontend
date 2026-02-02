@@ -118,7 +118,7 @@
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
     <tr [attr.data-key]="rowData[dataKey]" [pSelectableRowIndex]="rowIndex" [pSelectableRowDisabled]="
-        !isRowSelectable(rowData, rowIndex, _tableData) || disabled
+        !isRowSelectable(rowData, rowIndex, _tableData) || disabled || !!rowEditDisabled(rowData)
       " [pSelectableRow]="rowData" [pReorderableRow]="!rowData._isAutoInsertCandidate ? rowIndex : -1" [ngClass]="{
         'invalid-row': this.validationService.hasRowError(rowData),
         'insert-row': rowData._isAutoInsertCandidate,
@@ -160,7 +160,7 @@
       </td>
       <td *ngIf="showCheckBox && !disabled && !rowData._isAutoInsertCandidate" class="w-1rem text-center">
         <p-tableCheckbox class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData" [disabled]="
-            !isRowSelectable(rowData, rowIndex, _tableData) || disabled
+            !isRowSelectable(rowData, rowIndex, _tableData) || disabled || !!rowEditDisabled(rowData)
           " />
       </td>
       <td *ngFor="let col of columns; let colIndex = index" (click)="col.type ? $event.stopPropagation() : null"

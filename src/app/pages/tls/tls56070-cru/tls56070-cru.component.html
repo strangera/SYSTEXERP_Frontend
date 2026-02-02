@@ -48,15 +48,9 @@
   [disable]="selectedItemsDialog.length === 0">
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
     <div class="grid p-fluid">
-      <app-dropdown-table class="col-12 md:col-6" [control]="dialogQueryForm.controls.queryNo" [submitted]="submitted"
-        templateLabel="label" optionLabel="label" optionValue="PLU_MagNo" [suggestions]="suggestions"
-        [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
-        (formValueChanged)="onformValueChanged($event)" [formGroup]="opForm" [dialogData]="opData"
-        [dialogColumns]="opColumns" [loading]="opLoading" [totalRecords]="opTotalRecords">
-        <app-input-text class="col-12 md:col-6" label="商品管理編號/國際條碼" controlName="queryNo"
-          [control]="opForm.controls.queryNo" />
-        <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
-          [control]="opForm.controls.PLU_Name" />
+      <app-dropdown-table class="col-12 md:col-6" [showOverlay]="false" [control]="dialogQueryForm.controls.queryNo"
+        [submitted]="submitted" optionLabel="label" optionValue="PLU_No" [suggestions]="suggestions"
+        [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)">
       </app-dropdown-table>
       <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
         [control]="dialogQueryForm.controls.PLU_Name" />

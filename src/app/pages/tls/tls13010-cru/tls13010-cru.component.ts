@@ -35,6 +35,7 @@ import { FormStateService } from './services/form-state.service';
 import { LocationDataManagementService } from './services/location-data-management.service';
 import { RentCalculationService } from './services/rent-calculation.service';
 import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
+import { sanitizeDateFields } from '@shared/services/tls/tls-form-defaults.constants';
 import { DateValidationService } from './validation/date-validation.service';
 import { EmailValidationService } from './validation/email-validation.service';
 import { TLS13010ValidationService } from './validation/tls13010-validation.service';
@@ -738,7 +739,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       sessionData.check_typeList = sessionData.check_typeList.map((x: any) => String(x));
     }
 
-    this.dataForm.patchValue(sessionData, { emitEvent: false });
+    // 將 ISO 日期字串轉為 Date 物件（避免日期欄位顯示時間戳）
+    const sanitizedData = sanitizeDateFields(sessionData);
+    this.dataForm.patchValue(sanitizedData, { emitEvent: false });
 
     if (sessionData.selectedBankInfo) {
       this.selectedBankInfo = sessionData.selectedBankInfo;
@@ -819,7 +822,8 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       console.log('     cleanedData.check_typeList:', cleanedData.check_typeList);
       console.log('     checkTypeOptions:', this.checkTypeOptions);
       // Readonly 模式：enable → 填充 → 重新建立陣列參照 → disable → 觸發變更檢測
-      this.dataForm.enable();
+      // 使用 emitEvent: false 避免 enable 觸發 valueChanges，防止驗證服務覆蓋 API 載入的值
+      this.dataForm.enable({ emitEvent: false });
       this.dataForm.patchValue(cleanedData, { emitEvent: false });
       console.log('     填充後 check_typeList 值:', this.dataForm.get('check_typeList')?.value);
       // ✅ 關鍵修正：重新建立 checkTypeOptions 陣列參照，觸發 Angular 變更檢測（參考 TLS12040）
@@ -838,6 +842,17 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     }
 
     console.log('     表單資料填充完成');
+
+    //  步驟 3.5: 載入位置資料（Locations）
+    if (detailData.Locations && Array.isArray(detailData.Locations) && detailData.Locations.length > 0) {
+      this.locationData = detailData.Locations.map((item: LocationItem) => ({
+        ...item,
+        _status: item._status || 'original',
+        _isNew: false
+      }));
+      this.displayLocationData = this.getDisplayLocationData();
+      console.log('     ✅ 已載入位置資料:', this.locationData.length, '筆');
+    }
 
     //  步驟 4: 載入相關分類資料
     if (detailData.bus_type) {
@@ -866,9 +881,15 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       const dateString = parsedData[field];
       if (dateString && typeof dateString === 'string') {
         try {
-          const dateObject = new Date(dateString);
-          if (!isNaN(dateObject.getTime())) {
-            parsedData[field] = dateObject;  //  Date 物件
+          // 移除時間部分，只取日期
+          const datePart = dateString.split(/[T\s]/)[0];
+          const match = datePart.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+          if (match) {
+            parsedData[field] = new Date(
+              parseInt(match[1], 10),
+              parseInt(match[2], 10) - 1,
+              parseInt(match[3], 10)
+            );
             console.log(`      📅 ${field}: "${dateString}" → Date`);
           }
         } catch (error) {
@@ -993,6 +1014,12 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   private performInitialValidation(): void {
     console.log('📝 步驟 9: 執行初始驗證');
+
+    // 檢視模式不需要執行驗證（避免驗證服務的商業規則覆蓋 API 載入的實際值）
+    if (this.crudstatus === CRUDStatus.Read || this.isFormReadonly) {
+      console.log('   檢視模式：跳過初始驗證');
+      return;
+    }
 
     this.validationService.updateAllValidators(this.dataForm);
     this.validateWorkflowData();

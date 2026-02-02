@@ -56,6 +56,15 @@
             optionValue="value"
           ></app-dropdown>
         </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="責任單位電子信箱"
+            controlName="CLASS_EMAIL"
+            [control]="dataForm.controls.CLASS_EMAIL"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
         <!-- 建議來源 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
@@ -68,15 +77,55 @@
             optionValue="value"
           ></app-dropdown>
         </div>
-        <!-- 其他建議來源 -->
+        <app-calendar
+          class="col-12 md:col-6 lg:col-4"
+          calendarType="dateOne"
+          label="接件日期"
+          controlName="COMPLAIN_DATE"
+          [control]="dataForm.controls.COMPLAIN_DATE"
+          [submitted]="submitted"
+        />
+        <app-calendar
+          class="col-12 md:col-6 lg:col-4"
+          calendarType="dateOne"
+          label="通知相關單位處理日期"
+          controlName="ALERT_DATE"
+          [control]="dataForm.controls.ALERT_DATE"
+          [submitted]="submitted"
+          [disabled]="isFormCreateable"
+        />
         <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="處理狀況"
+            controlName="ANSWER_YN"
+            [control]="dataForm.controls.ANSWER_YN"
+            [options]="ANSWER_YNOptions"
+            [submitted]="submitted"
+            optionLabel="label"
+            optionValue="value"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="類別資訊"
+            controlName="SUGG_TYPE"
+            [control]="dataForm.controls.SUGG_TYPE"
+            [options]="SUGG_TYPEOptions"
+            [submitted]="submitted"
+            optionLabel="label"
+            optionValue="value"
+          ></app-dropdown>
+        </div>
+
+        <!-- 其他建議來源 -->
+        <!-- <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="其他建議來源"
             controlName="SUGG_SOURCE_OTHER"
             [control]="dataForm.controls.SUGG_SOURCE_OTHER"
             [submitted]="submitted"
           ></app-input-text>
-        </div>
+        </div> -->
         <!-- 顧客意見內容 -->
         <div class="col-12">
           <app-input-textarea
@@ -157,30 +206,23 @@
           ></app-input-text>
         </div>
         <!-- 建檔人編號 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="建檔人編號"
-            controlName="CRT_USR_No"
-            [control]="dataForm.controls.CRT_USR_No"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
+        <!-- <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="建檔人編號" controlName="CRT_USR_No" [control]="dataForm.controls.CRT_USR_No"
+            [submitted]="submitted"></app-input-text>
+        </div> -->
         <!-- 建檔人姓名 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="建檔人姓名"
-            controlName="CRT_USR_Name"
-            [control]="dataForm.controls.CRT_USR_Name"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
+        <!-- <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="建檔人姓名" controlName="CRT_USR_Name" [control]="dataForm.controls.CRT_USR_Name"
+            [submitted]="submitted"></app-input-text>
+        </div> -->
       </div>
-      <div class="col-12">
+      <div class="col-12" *ngIf="!isFormCreateable">
         <app-table-edit
           [columns]="columns"
           [data]="data"
           [tableRequired]="true"
           [disabled]="isFormReadable"
+          [rowEditDisabled]="isExistingDetail"
           (dataChange)="data = $event"
           [loading]="loading"
         ></app-table-edit>

@@ -1,9 +1,10 @@
 import { getSYS1000, getSYS1000Options } from "@service/system/sys1000.service";
 import { transformOptionsForExport } from "@shared/componentextends/basic-print/basic-print-data.component";
-import { Column, formatDateTime } from "../../../shared/componentkit/table/table.model";
+import { ReportColumn } from "@shared/componentkit/table-report/table-report.model";
+import { formatDateTime } from "../../../shared/componentkit/table/table.model";
 
 
-export const columns: Column[] = [
+export const columns: ReportColumn[] = [
   { field: 'INV_ItemNo', header: '品項代號', visible: true },
   { field: 'INV_ItemName', header: '品項名稱', visible: true },
   { field: 'INV_UsageType', header: '使用別', visible: true, format: (val: string) => getSYS1000('T205', val), exportFormat: transformOptionsForExport(getSYS1000Options('T205')) },

@@ -618,6 +618,8 @@ export class TLS12040FareColumnDefinitions {
         header: '超過基準比率',
         type: 'number',
         editable: true,
+        allowDecimal: true,
+        decimalPlaces: 2,
         style: 'width: 70px; min-width: 70px; font-size: 0.65rem;'
       },
       {

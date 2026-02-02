@@ -1,7 +1,4 @@
-import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
-import { Tls56020Service } from '../../../service/api/tls/tls56020.service';
-
-import { AsyncPipe, NgClass, NgIf } from '@angular/common';
+import { NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -10,9 +7,11 @@ import { LogoAccorHosItem, Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { PanelModule } from 'primeng/panel';
 import { debounceTime, finalize, forkJoin, map } from 'rxjs';
 import { IPODetail, IPOS2004DetailData, IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, ITLS52010Data, Tls52010Service } from '../../../service/api/tls/tls52010.service';
+import { Tls56020Service } from '../../../service/api/tls/tls56020.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -21,11 +20,10 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column } from '../../../shared/componentkit/table/table.model';
 
 // 2.5.2.1  採購單維護作業 CRU
 @Component({
@@ -40,16 +38,13 @@ import { Column, createPaginationConfig } from '../../../shared/componentkit/tab
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
-    NgClass,
     NgIf,
-    InputNumberComponent,
     CalendarComponent,
     InputTextareaComponent,
     TableComponent,
     DialogComponent,
     DropdownTableComponent,
     TranslateModule,
-    AsyncPipe,
     TableEditComponent
   ],
 })
@@ -692,57 +687,24 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       });
     });
   }
-  opLoading = false;
-  opForm = this.formBuilder.group({
-    queryNo: ['', [Validators.maxLength(20)]], // 商品管理編號/國際條碼/廠商貨號
-    PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
-    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
-  });
   suggestions: IQueryPOS2004DetailResponse[] = [];
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號 - 商品名稱', mainDataField: true },
+    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號 - 商品名稱', mainDataField: true },
   ];
-  opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
-  opColumns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號' },
-    { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
-    { field: 'PLU_Name', header: '商品名稱' },
-  ];
-  opTotalRecords = 0;
-  onAutoCompleteInputChange(event: any) {
+  onAutoCompleteInputChange(event: Record<'label', string>) {
     const body = {
       PageSize: 30,
       PageIndex: 1,
-      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
-      queryNo: event.PLU_MagNo || '',
+      SortBy: [{ field: 'PLU_No', order: 1 }],
+      queryNo: event.label || '',
       PLU_Name: null,
       LOGO_No: this.dataForm.controls.LOGO_No.value,
       HOS_No: this.dataForm.controls.HOS_No.value,
-    } as any;
+    };
     this.tls56020Service.queryPOS2004Detail_TLS56020(body).pipe(untilDestroyed(this)).subscribe((results) => {
       this.suggestions = [...(results.Data || []).map((item: IQueryPOS2004DetailResponse) => ({
-        ...item, label: (item.PLU_MagNo || '') + '/' + (item.PLU_No || '') + '/' + (item.PLU_OrgPLUNo || '') + ' - ' + (item.PLU_Name || '')
+        ...item, label: (item.PLU_No || '') + '/' + (item.PLU_MagNo || '') + '/' + (item.PLU_OrgPLUNo || '') + ' - ' + (item.PLU_Name || '')
       }))];
-    });
-  }
-  onformValueChanged(event: IQueryPOS2004DetailRequest) {
-    this.opLoading = true;
-    const ev: any = event;
-    const body = {
-      ...ev,
-      PageSize: ev.PageSize ?? 30,
-      PageIndex: ev.PageIndex ?? 1,
-      SortBy: ev.SortBy ?? [{ field: 'PLU_MagNo', order: 1 }],
-      queryNo: ev.queryNo ?? '',
-      PLU_Name: ev.PLU_Name ?? null,
-      LOGO_No: this.dataForm.controls.LOGO_No.value,
-      HOS_No: this.dataForm.controls.HOS_No.value,
-    } as any;
-    this.tls56020Service.queryPOS2004Detail_TLS56020(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.opData = [...(results.Data || [])];
-      this.opTotalRecords = results.TotalCount || 0;
-      this.opLoading = false;
     });
   }
   onReset() {

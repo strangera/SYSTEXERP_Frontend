@@ -345,26 +345,11 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
     this.selectedItems = [];
     this.calculateTotals();
   }
-
-  opLoading = false;
-  opForm = this.formBuilder.group({
-    queryNo: ['', [Validators.maxLength(20)]],
-    PLU_Name: ['', [Validators.maxLength(60)]],
-    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
-  });
   suggestions: IQueryPOS2004DetailForTLS56040Response[] = [];
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
+    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號 - 商品名稱', mainDataField: true },
   ];
-  opData: IQueryPOS2004DetailForTLS56040Response[] = [];
-  opColumns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號' },
-    { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_Name', header: '商品名稱' },
-  ];
-  opTotalRecords = 0;
-
-  onAutoCompleteInputChange(event: any) {
+  onAutoCompleteInputChange(event: Record<'label', string>) {
     if (!this.dataForm.controls.LOGO_No.value || !this.dataForm.controls.OUT_HOS_No.value) {
       this.suggestions = [];
       return;
@@ -372,39 +357,16 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
     const body: IQueryPOS2004DetailForTLS56040Request = {
       PageSize: 30,
       PageIndex: 1,
-      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
-      queryNo: event.PLU_MagNo || '',
+      SortBy: [{ field: 'PLU_No', order: 1 }],
+      queryNo: event.label || '',
       PLU_Name: '',
       LOGO_No: this.dataForm.controls.LOGO_No.value,
       HOS_No: this.dataForm.controls.OUT_HOS_No.value
     };
     this.tls56040Service.queryPOS2004DetailForTLS56040(body).pipe(untilDestroyed(this)).subscribe((results) => {
       this.suggestions = [...results.Data.map(item => ({
-        ...item,
-        label: item.PLU_MagNo + '/' + item.PLU_No + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
+        ...item, label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
       }))];
-    });
-  }
-
-  onformValueChanged(event: any) {
-    if (!this.dataForm.controls.LOGO_No.value || !this.dataForm.controls.OUT_HOS_No.value) {
-      this.opData = [];
-      this.opTotalRecords = 0;
-      return;
-    }
-    this.opLoading = true;
-    const body: IQueryPOS2004DetailForTLS56040Request = {
-      PageSize: event.pageSize,
-      PageIndex: event.pageIndex,
-      SortBy: event.SortBy,
-      queryNo: event.queryNo,
-      PLU_Name: event.PLU_Name,
-      LOGO_No: this.dataForm.controls.LOGO_No.value,
-      HOS_No: this.dataForm.controls.OUT_HOS_No.value
-    };
-    this.tls56040Service.queryPOS2004DetailForTLS56040(body).pipe(untilDestroyed(this), finalize(() => this.opLoading = false)).subscribe((results) => {
-      this.opData = [...results.Data];
-      this.opTotalRecords = results.TotalCount;
     });
   }
   isRowSelectable(event: IPOS2022Data): boolean {
@@ -412,9 +374,9 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
   }
 }
 // 調撥數量不能大於目前庫存
-export function validateTransferQty(value: string, rowData: any): { isValid: boolean; errorMessage: string[] } {
+export function validateTransferQty(value: string, rowData: IPOS2022Data): { isValid: boolean; errorMessage: string[] } {
   return {
-    isValid: rowData.APPLY_Qty <= rowData.STK_CurrentQty,
+    isValid: (rowData.APPLY_Qty || 0) <= (rowData.STK_CurrentQty || 0),
     errorMessage: [`調撥數量不能大於目前庫存`, '資料錯誤'],
   };
 }

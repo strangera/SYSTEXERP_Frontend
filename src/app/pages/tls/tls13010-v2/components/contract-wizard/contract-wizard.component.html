@@ -1,0 +1,140 @@
+<!-- 頂部操作按鈕 -->
+<div class="flex gap-2 mb-2">
+  <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  <ng-container>
+    <app-button
+      *ngIf="!isFirstStep"
+      btnType="back"
+      label="上一步"
+      (click)="goToPreviousStep()"
+    ></app-button>
+    <app-button
+      *ngIf="!isLastStep && !isViewMode"
+      btnType="next"
+      [label]="nextStepLabel"
+      (click)="goToNextStep()"
+    ></app-button>
+    <app-button
+      *ngIf="isLastStep && !isViewMode"
+      btnType="submit"
+      label="儲存"
+      [loading]="isSaving"
+      (click)="onSave()"
+    ></app-button>
+    <app-button btnType="back" label="離開" (click)="onCancel()"></app-button>
+  </ng-container>
+</div>
+
+<div class="wizard-container">
+  <!-- 步驟指示器 (使用 visualStepIndex 對應動態步驟) -->
+  <div class="steps-header">
+    <p-steps [model]="steps" [activeIndex]="visualStepIndex" [readonly]="false" (activeIndexChange)="goToStep($event)">
+    </p-steps>
+  </div>
+
+  <!-- 步驟內容 -->
+  <div class="step-content" [ngSwitch]="currentStep">
+    <!-- Step 1: 合約基本資料 -->
+    <app-step1-contract-info
+      *ngSwitchCase="0"
+      [form]="step1Form"
+      [locationData]="wizardState.locationData"
+      [crudstatus]="crudstatus"
+      [dropdownService]="dropdownService"
+      [originalCommissionType]="originalCommissionType || ''"
+      (locationDataChange)="wizardState.locationData = $event"
+    ></app-step1-contract-info>
+
+    <!-- Step 2: 代扣款設定 -->
+    <app-step2-deduction
+      *ngSwitchCase="1"
+      [fareItems]="wizardState.fareItems"
+      [crudstatus]="crudstatus"
+      [contractForm]="step1Form"
+      [locationData]="wizardState.locationData"
+      [talentId]="step1Form.get('talent_id')?.value"
+      (fareItemsChange)="onStep2DataChange($event)"
+    ></app-step2-deduction>
+
+    <!-- Step 3: 抽成設定 -->
+    <app-step3-commission
+      *ngSwitchCase="2"
+      [commissionItems]="wizardState.commissionItems"
+      [commissionType]="currentCommissionType"
+      [contractStartDate]="step1Form.get('tlt_bdate')?.value || ''"
+      [contractEndDate]="step1Form.get('tlt_edate')?.value || ''"
+      [crudstatus]="crudstatus"
+      [contractInfo]="wizardState.contractInfo"
+      [discountOptions]="discountOptions"
+      [capSaletype1]="step1Form.get('cap_saletype1')?.value"
+      [capSaletype2]="step1Form.get('cap_saletype2')?.value"
+      [capSaletype5]="step1Form.get('cap_saletype5')?.value"
+      (commissionItemsChange)="onStep3DataChange($event)"
+    ></app-step3-commission>
+
+    <!-- Step 4: 條件設定（租金設定） -->
+    <app-step4-condition
+      *ngSwitchCase="3"
+      [conditionItems]="wizardState.conditionItems"
+      [commissionType]="currentCommissionType"
+      [crudstatus]="crudstatus"
+      [talentId]="step1Form.get('talent_id')?.value || ''"
+      [contractStartDate]="step1Form.get('tlt_bdate')?.value || ''"
+      [contractEndDate]="step1Form.get('tlt_edate')?.value || ''"
+      [contractInfoData]="contractInfoDataForStep4"
+      (conditionItemsChange)="onStep4DataChange($event)"
+    ></app-step4-condition>
+  </div>
+
+  <!-- 底部按鈕列 -->
+  <div class="wizard-footer">
+    <div class="left-buttons">
+      <app-button
+        label="取消"
+        icon="pi pi-times"
+        [styleClass]="'p-button-secondary'"
+        (clickEvent)="onCancel()"
+      ></app-button>
+    </div>
+
+    <div class="right-buttons">
+      <!-- 上一步按鈕 -->
+      <app-button
+        *ngIf="!isFirstStep"
+        label="上一步"
+        icon="pi pi-arrow-left"
+        [styleClass]="'p-button-outlined'"
+        (clickEvent)="goToPreviousStep()"
+      ></app-button>
+
+      <!-- 下一步按鈕 -->
+      <app-button
+        *ngIf="!isLastStep"
+        label="下一步"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        [styleClass]="'p-button-primary'"
+        (clickEvent)="goToNextStep()"
+      ></app-button>
+
+      <!-- 儲存按鈕 (最後一步且非檢視模式) -->
+      <app-button
+        *ngIf="isLastStep && !isViewMode"
+        label="儲存"
+        icon="pi pi-save"
+        [styleClass]="'p-button-success'"
+        [loading]="isSaving"
+        (clickEvent)="onSave()"
+      ></app-button>
+
+      <!-- 離開按鈕 (檢視模式最後一步) -->
+      <app-button
+        *ngIf="isLastStep && isViewMode"
+        label="離開"
+        icon="pi pi-times"
+        [styleClass]="'p-button-secondary'"
+        (clickEvent)="onCancel()"
+      ></app-button>
+    </div>
+  </div>
+</div>

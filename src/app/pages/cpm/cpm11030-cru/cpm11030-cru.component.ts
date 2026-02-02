@@ -89,7 +89,7 @@ export class CPM11030CRUComponent extends BasicCruPageComponent<any> implements 
     Loan_Time: [null as Date | null],
 
     /** 出借狀態：1/2（nullable:true） */
-    Loan_Status: ['' as string],
+    Loan_Status: ['1' as string],
 
     /** 其他欄位皆 nullable:true */
     User_Name: ['' as string, [Validators.maxLength(50)]],
@@ -187,10 +187,13 @@ export class CPM11030CRUComponent extends BasicCruPageComponent<any> implements 
     }
   }
 
-  /** Loan_Date：送 ISO datetime */
+  /** Loan_Date：送本地日期 ISO datetime（不帶 Z，避免 UTC 時區偏移） */
   private toIso(d: Date | null | undefined): string {
     const dt = d instanceof Date ? d : new Date();
-    return dt.toISOString();
+    const yyyy = dt.getFullYear();
+    const MM = String(dt.getMonth() + 1).padStart(2, '0');
+    const dd = String(dt.getDate()).padStart(2, '0');
+    return `${yyyy}-${MM}-${dd}`;
   }
 
   /** Loan_Time：依規格送 HHMM（不是 HH:mm:ss） */

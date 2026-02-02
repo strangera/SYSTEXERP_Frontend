@@ -6,152 +6,69 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <app-calendar
-          class="col-12 md:col-6 lg:col-4"
-          calendarType="dateOne"
-          label="建立日期"
-          controlName="CreateDate"
-          [control]="dataForm.controls.CreateDate"
-          [submitted]="submitted"
-        />
-        <app-calendar
-          class="col-12 md:col-6 lg:col-4"
-          calendarType="dateOne"
-          label="匯款日期"
-          controlName="TransferDate"
-          [control]="dataForm.controls.TransferDate"
-          [submitted]="submitted"
-        />
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="建立日期" controlName="CreateDate"
+          [control]="dataForm.controls.CreateDate" [submitted]="submitted" />
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="匯款日期" controlName="TransferDate"
+          [control]="dataForm.controls.TransferDate" [submitted]="submitted" />
       </div>
       <div class="grid p-fluid">
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="銀行帳戶"
-          controlName="BNK_id"
-          [options]="bankOptions"
-          optionLabel="displayLabel"
-          optionValue="BNK_id"
-          [control]="dataForm.controls.BNK_id"
-          [submitted]="submitted"
-          [showClear]="true"
-          [filter]="true"
-        />
-        <div
-          class="col-12 md:col-6 lg:col-4"
-          [class.cursor-pointer]="!isFormReadable"
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="銀行帳戶" controlName="BNK_id" [options]="bankOptions"
+          optionLabel="displayLabel" optionValue="BNK_id" [control]="dataForm.controls.BNK_id" [submitted]="submitted"
+          [showClear]="true" [filter]="true" />
+        <div class="col-12 md:col-6 lg:col-4" [class.cursor-pointer]="!isFormReadable"
           (click)="!isFormReadable && openTransferSourceDialog()"
           (keydown.enter)="!isFormReadable && openTransferSourceDialog()"
-          (keydown.space)="!isFormReadable && openTransferSourceDialog()"
-          [attr.tabindex]="isFormReadable ? null : 0"
-          [style.cursor]="isFormReadable ? 'default' : 'pointer'"
-        >
-          <app-input-text
-            label="匯款來源單號"
-            controlName="TransferSourceNo"
-            [control]="dataForm.controls.TransferSourceNo"
-            [submitted]="submitted"
-            [readonly]="true"
-            [customPlaceholder]="isFormReadable ? '' : '點擊選擇匯款來源單號'"
-          />
+          (keydown.space)="!isFormReadable && openTransferSourceDialog()" [attr.tabindex]="isFormReadable ? null : 0"
+          [style.cursor]="isFormReadable ? 'default' : 'pointer'">
+          <app-input-text label="匯款來源單號" controlName="TransferSourceNo" [control]="dataForm.controls.TransferSourceNo"
+            [submitted]="submitted" [readonly]="true" [customPlaceholder]="isFormReadable ? '' : '點擊選擇匯款來源單號'" />
         </div>
       </div>
       <div class="grid p-fluid"></div>
 
       <!-- 檢視模式：顯示電匯明細表格 -->
       @if (isFormReadable) {
-        <div class="mt-3">
-          <!-- <h3 class="mb-2">電匯明細資料</h3> -->
-          <app-table
-            tableKey="RemitDetail"
-            dataKey="VEN_No"
-            [data]="remitDetailData"
-            [columns]="remitDetailColumns"
-            [showManage]="false"
-            [showFilter]="false"
-            [showDelete]="false"
-            [showCheckBox]="false"
-            [showPaginator]="false"
-            [showCaption]="false"
-            [showTotal]="true"
-          ></app-table>
-        </div>
+      <div class="mt-3">
+        <!-- <h3 class="mb-2">電匯明細資料</h3> -->
+        <app-table tableKey="RemitDetail" dataKey="VEN_No" [data]="remitDetailData" [columns]="remitDetailColumns"
+          [showManage]="false" [showFilter]="false" [showDelete]="false" [showCheckBox]="false" [showPaginator]="false"
+          [showCaption]="false" [showTotal]="true"></app-table>
+      </div>
       }
 
-      <div
-        class="grid justify-content-end gap-2 m-0 mt-3 border-top-1 surface-border pt-3"
-      >
-        <app-button btnType="cancel" (click)="onCancel()" />
+      <div class="grid justify-content-end gap-2 m-0 mt-3 border-top-1 surface-border pt-3">
+
         @if (!isFormReadable) {
-          <app-button
-            btnType="submit"
-            label="確認"
-            icon="pi pi-check"
-            [loading]="loading"
-            (click)="onSubmit(dataForm)"
-          />
+        <app-button btnType="submit" label="確認" icon="pi pi-check" [loading]="loading" (click)="onSubmit(dataForm)" />
         }
+        <app-button btnType="cancel" (click)="onCancel()" *ngIf="!isFormReadable" />
       </div>
     </form>
   </p-panel>
 </div>
 
 <!-- 匯款來源單號查詢對話框 -->
-<p-dialog
-  header="查詢匯款來源單號"
-  [(visible)]="showTransferSourceDialog"
-  [modal]="true"
-  [style]="{ width: '80vw' }"
-  [draggable]="false"
-  [resizable]="false"
->
+<p-dialog header="查詢匯款來源單號" [(visible)]="showTransferSourceDialog" [modal]="true" [style]="{ width: '80vw' }"
+  [draggable]="false" [resizable]="false">
   <form [formGroup]="transferSourceQueryForm">
     <div class="grid p-fluid mb-3">
-      <app-input-text
-        class="col-12 md:col-4"
-        label="匯款來源單號"
-        controlName="PAM_No"
-        [control]="transferSourceQueryForm.controls.PAM_No"
-      />
-      <app-calendar
-        class="col-12 md:col-3"
-        calendarType="dateOne"
-        label="建立日期(起)"
-        controlName="D_Date_Start"
-        [control]="transferSourceQueryForm.controls.D_Date_Start"
-      />
-      <app-calendar
-        class="col-12 md:col-3"
-        calendarType="dateOne"
-        label="建立日期(迄)"
-        controlName="D_Date_End"
-        [control]="transferSourceQueryForm.controls.D_Date_End"
-      />
+      <app-input-text class="col-12 md:col-4" label="匯款來源單號" controlName="PAM_No"
+        [control]="transferSourceQueryForm.controls.PAM_No" />
+      <app-calendar class="col-12 md:col-3" calendarType="dateOne" label="建立日期(起)" controlName="D_Date_Start"
+        [control]="transferSourceQueryForm.controls.D_Date_Start" />
+      <app-calendar class="col-12 md:col-3" calendarType="dateOne" label="建立日期(迄)" controlName="D_Date_End"
+        [control]="transferSourceQueryForm.controls.D_Date_End" />
       <div class="col-12 md:col-2 flex align-items-end">
-        <app-button
-          btnType="query"
-          (click)="onQueryTransferSource()"
-        ></app-button>
+        <app-button btnType="query" (click)="onQueryTransferSource()"></app-button>
       </div>
     </div>
   </form>
 
-  <app-table
-    tableKey="TransferSourceQuery"
-    dataKey="PAM_No"
-    [data]="transferSourceData"
-    [columns]="transferSourceColumns"
-    [showManage]="false"
-    [showFilter]="false"
-    [showDelete]="false"
-    [showCheckBox]="false"
-    [showCaption]="false"
-    (detail)="onSelectTransferSource($event)"
-  ></app-table>
+  <app-table tableKey="TransferSourceQuery" dataKey="PAM_No" [data]="transferSourceData"
+    [columns]="transferSourceColumns" [showManage]="false" [showFilter]="false" [showDelete]="false"
+    [showCheckBox]="false" [showCaption]="false" (detail)="onSelectTransferSource($event)"></app-table>
 
   <ng-template pTemplate="footer">
-    <app-button
-      btnType="cancel"
-      (click)="showTransferSourceDialog = false"
-    ></app-button>
+    <app-button btnType="cancel" (click)="showTransferSourceDialog = false"></app-button>
   </ng-template>
 </p-dialog>

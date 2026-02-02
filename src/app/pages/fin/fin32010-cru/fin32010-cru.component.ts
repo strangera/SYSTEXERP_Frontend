@@ -56,7 +56,7 @@ export class FIN32010CRUComponent extends BasicCruPageComponent<any> implements 
     VouNo: [{ value: null, disabled: true }],
     VouStatus: [{ value: null, disabled: false }],
     ARS_StatusName: [null],
-    Sam_Yyymm: [{ value: null, disabled: true }],
+    Sam_Yyymm: [{ value: null as unknown as Date | null, disabled: true }],
     Sam_TermNo: [{ value: null, disabled: true }],
     ORG_ID: [{ value: null, disabled: true }],
     CustNo: [{ value: null, disabled: true }],
@@ -80,10 +80,22 @@ export class FIN32010CRUComponent extends BasicCruPageComponent<any> implements 
 
   ngOnInit(): void {
     this.initializePage('FIN32010', this.dataForm);
+    // 如果後端回傳為 yyyyMM 字串（例如 "202512"），將其轉為 Date 物件以便日曆元件正確顯示為 yyyy-mm
+    const samVal: any = this.dataForm.get('Sam_Yyymm')?.value;
+    if (typeof samVal === 'string') {
+      const nums = (samVal as string).replace(/\D/g, '');
+      if (nums.length === 6) {
+        const y = parseInt(nums.substring(0, 4), 10);
+        const m = parseInt(nums.substring(4, 6), 10);
+        if (!isNaN(y) && !isNaN(m)) {
+          const dt = new Date(y, m - 1, 1);
+          this.dataForm.patchValue({ Sam_Yyymm: dt });
+        }
+      }
+    }
   }
 
   onSubmit(form: FormGroup): void {
-    // 構建更新 payload: { ARS_No, PTA_Date, NoteDesc, ARS_Status }
     const rawPta = form.get('PTA_Date')?.value;
     let ptaDate: string | null = null;
     if (rawPta) {
@@ -97,11 +109,31 @@ export class FIN32010CRUComponent extends BasicCruPageComponent<any> implements 
       ptaDate = null;
     }
 
+    const rawStatus = form.get('ARS_StatusCode')?.value ?? form.get('ARS_StatusName')?.value ?? '';
+    const normalizeStatus = (s: any): string => {
+      if (s === null || s === undefined || s === '') return '';
+      const v = String(s).trim();
+      // handle old flags
+      if (v.toLowerCase() === 'n') return '0';
+      if (v.toLowerCase() === 'y') return '2';
+      // handle sys1000 codes like '10' -> '0', '20' -> '2'
+      if (!isNaN(Number(v))) {
+        const num = Number(v);
+        if (num === 10) return '0';
+        if (num === 20) return '2';
+        // if already 0/2, keep
+        if (num === 0) return '0';
+        if (num === 2) return '2';
+      }
+      // fallback: return first char
+      return v.charAt(0);
+    };
+
     const updateBody = {
       ARS_No: form.get('ARS_No')?.value ?? form.get('ARS_ID')?.value ?? '',
       PTA_Date: ptaDate,
       NoteDesc: form.get('NoteDesc')?.value ?? '',
-      ARS_Status: form.get('ARS_StatusCode')?.value ?? form.get('ARS_StatusName')?.value ?? ''
+      ARS_Status: normalizeStatus(rawStatus)
     };
 
     this.loading = true;

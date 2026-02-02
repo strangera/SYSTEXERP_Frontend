@@ -52,7 +52,7 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
     VEN_BossFax: ['', [Validators.maxLength(18)]], // 聯絡人傳真
     contact_Date: [null, [Validators.required]], // 訪談日期（必填）
     contact_Time: [null, [Validators.required]], // 訪談時間(24H)（必填）
-    building_no: ['', [Validators.required]], // 館別
+    building_no: [''], // 館別
     willing_level: ['', [Validators.required]], //
     FLOOR_NO: [''], // 樓層編號
     LOCATION_No: [null, [Validators.maxLength(60)]], // 擬洽位置編號

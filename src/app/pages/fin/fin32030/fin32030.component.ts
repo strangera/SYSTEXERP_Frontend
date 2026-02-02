@@ -7,10 +7,12 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
 import { FIN32030Service, QueryFIN32030ARResponse, QueryFIN32030Response } from '../../../service/api/fin/fin32030.service';
+import { DropDownListService } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
@@ -31,6 +33,7 @@ import { Column, formatAmountWithFraction, formatDate } from '../../../shared/co
     FormsModule,
     ReactiveFormsModule,
     CalendarRangeComponent,
+    DropdownComponent,
     InputNumberRangeComponent,
     InputTextComponent,
     TableComponent,
@@ -64,8 +67,8 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
 
   // AR Dialog 查詢表單
   arQueryForm = this.formBuilder.group({
-    STO_No: ['', [Validators.maxLength(20)]], // 組織編號
-    VEN_No: ['', [Validators.maxLength(20)]], // 廠客代號
+    ARS_ID: ['', [Validators.maxLength(50)]], // 應收ID
+    VEN_No: [null as string | null], // 廠客代號
     DateFrom: [null], // 立帳日期起
     DateTo: [null], // 立帳日期迄
     pageSize: [20],
@@ -78,10 +81,10 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
     { field: 'ARS_ID', header: '應收ID', visible: true },
     { field: 'VEN_No', header: '廠客代號', visible: true },
     { field: 'VEN_Name', header: '廠客名稱', visible: true },
-    { field: 'ARS_Amt', header: '應收金額', visible: true, format: formatAmountWithFraction, style: 'text-right' },
+    { field: 'ARS_Amt', header: '應收金額', visible: true, format: formatAmountWithFraction, align: 'right' },
     { field: 'ARS_Date', header: '立帳日', visible: true, format: formatDate },
-    { field: 'PaidAmt', header: '已收款金額', visible: true, format: formatAmountWithFraction, style: 'text-right' },
-    { field: 'UnpaidAmt', header: '未收款金額', visible: true, format: formatAmountWithFraction, style: 'text-right' },
+    { field: 'PaidAmt', header: '已收款金額', visible: true, format: formatAmountWithFraction, align: 'right' },
+    { field: 'UnpaidAmt', header: '未收款金額', visible: true, format: formatAmountWithFraction, align: 'right' },
     { field: 'PTA_Date', header: '預計收款日', visible: true, format: formatDate },
     { field: 'NoteDesc', header: '摘要', visible: true },
   ];
@@ -91,12 +94,16 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
     { field: 'RCV_Date', header: '收款日期', visible: true, format: formatDate },
     { field: 'Sales_Id', header: '業務員代號', visible: true },
     { field: 'VouNo', header: '傳票號碼', visible: true },
-    { field: 'TotalAmount', header: '總金額', visible: true, format: formatAmountWithFraction, style: 'text-right' },
+    { field: 'TotalAmount', header: '總金額', visible: true, format: formatAmountWithFraction, align: 'right' },
     { field: 'Remark', header: '備註', visible: true },
   ];
 
+  // 廠客代號下拉選項
+  vendorOptions: { label: string; value: string }[] = [];
+
   constructor(
     private readonly fin32030Service: FIN32030Service,
+    private readonly dropDownListService: DropDownListService,
     private readonly cdr: ChangeDetectorRef
   ) {
     super();
@@ -104,6 +111,21 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
 
   ngOnInit(): void {
     this.initializePage('FIN32030', 'fin/fin32030cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadVendorOptions();
+  }
+
+  /** 載入廠客下拉選項 */
+  loadVendorOptions(): void {
+    this.dropDownListService.queryPOS2013_DropDownList({ VEN_Flag: '1' })
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        if (response.Data) {
+          this.vendorOptions = response.Data.map(item => ({
+            label: `${item.VEN_No || ''} - ${item.Name || ''}`,
+            value: item.VEN_No || ''
+          }));
+        }
+      });
   }
 
   onSubmit(frm: FormGroup) {
@@ -143,8 +165,8 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
   onOpenARDialog() {
     // 重置表單
     this.arQueryForm.reset({
-      STO_No: '',
-      VEN_No: '',
+      ARS_ID: '',
+      VEN_No: null,
       DateFrom: null,
       DateTo: null,
       pageSize: 20,
@@ -160,6 +182,9 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
     // 打開 Dialog
     this.arDialogVisible = true;
     this.cdr.detectChanges();
+
+    // 預設顯示全部資料
+    this.onARDialogSubmit();
   }
 
   /** AR Dialog 查詢 */
@@ -172,7 +197,7 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
     const formValue = this.arQueryForm.value;
 
     const queryParams = {
-      STO_No: formValue.STO_No || undefined,
+      ARS_ID: formValue.ARS_ID || undefined,
       VEN_No: formValue.VEN_No || undefined,
       DateFrom: formValue.DateFrom || undefined,
       DateTo: formValue.DateTo || undefined,

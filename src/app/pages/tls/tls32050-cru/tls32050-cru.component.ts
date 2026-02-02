@@ -80,24 +80,24 @@ export class Tls32050CRUComponent extends BasicCruPageComponent<TLS32050DetailRe
     { field: 'Base_Target', header: '本期銷售目標', visible: true, format: formatAmount },
     { field: 'Base_SaleAmt', header: '本期銷售金額', visible: true, format: formatAmount },
     { field: 'Base_AchieveRate', header: '本期達成率', visible: true, format: (value) => formatPercentage(value, 2) },
-    { field: 'Base_TxnCnt', header: '本期交易筆數', visible: true },
+    { field: 'Base_TxnCnt', header: '本期交易筆數', visible: true, format: formatAmount },
     { field: 'Base_AvgTicket', header: '本期客單價', visible: true, format: formatAmount },
 
     { field: 'Comp_SaleAmt', header: '上期銷售金額', visible: true, format: formatAmount },
-    { field: 'Comp_TxnCnt', header: '上期交易筆數', visible: true },
+    { field: 'Comp_TxnCnt', header: '上期交易筆數', visible: true, format: formatAmount },
     { field: 'Comp_AvgTicket', header: '上期客單價', visible: true, format: formatAmount },
     { field: 'Growth_SaleAmtPct', header: '成長比', visible: true, format: (value) => formatPercentage(value, 2) },
 
     { field: 'Diff_SaleAmt', header: '銷售金額差異', visible: true, format: formatAmount },
-    { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true },
+    { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true, format: formatAmount },
     { field: 'Diff_AvgTicket', header: '客單價差異', visible: true, format: formatAmount },
-    { field: 'Space', header: '營業坪數', visible: true },
+    { field: 'Space', header: '營業坪數', visible: true, format: formatAmount },
 
-    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true },
-    { field: 'BaseCustCnt', header: '本期顧客數', visible: true },
-    { field: 'CompCustCnt', header: '上期顧客數', visible: true },
-    { field: 'TotalSpace', header: '總坪數', visible: true },
-    { field: 'BaseDays', header: '基準天數', visible: true },
+    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true, format: formatAmount },
+    { field: 'BaseCustCnt', header: '本期顧客數', visible: true, format: formatAmount },
+    { field: 'CompCustCnt', header: '上期顧客數', visible: true, format: formatAmount },
+    { field: 'TotalSpace', header: '總坪數', visible: true, format: formatAmount },
+    { field: 'BaseDays', header: '基準天數', visible: true, format: formatAmount },
   ];
   tlt_kind_Option = [
     { value: "1", label: "正櫃" },
@@ -159,6 +159,19 @@ export class Tls32050CRUComponent extends BasicCruPageComponent<TLS32050DetailRe
       IsExcel: isExcel,
       IsMerge: true,
       OrgId: this.dataForm.get('OrgId')?.value ?? '',
+      BusTypeList: this.queryConditions.BusTypeList,
+      // 結果範例：[["10", "01"], ["10", "02"]]
+      BusClassList: this.toArray(this.queryConditions.BusClassList).map((item: any) => [
+        item.bus_type,
+        item.No
+      ]),
+
+      // 結果範例：[["10", "01", "001"], ["10", "01", "002"]]
+      BusSClassList: this.toArray(this.queryConditions.BusSClassList).map((item: any) => [
+        item.bus_type,
+        item.bus_class, // 注意：請確認 item 內的屬性名稱是 bus_class 還是 CAT_MNo
+        item.No
+      ]),
       BaseDateFrom: formatDate(this.queryConditions.BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
       BaseDateTo: formatDate(this.queryConditions.BaseDateTo, 'yyyy-MM-dd', 'en-US'),
       CompareDateFrom: formatDate(this.queryConditions.CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
@@ -178,51 +191,6 @@ export class Tls32050CRUComponent extends BasicCruPageComponent<TLS32050DetailRe
     //   });
   }
 
-  // queryTLS32050Detail() {
-
-  //   // 把 OrgId 從 string[] 轉成 string
-  //   const request = {
-  //     BaseDateFrom: formatDate(this.queryConditions.BaseDateFrom, 'yyyy-MM-dd', 'en-US'),
-  //     BaseDateTo: formatDate(this.queryConditions.BaseDateTo, 'yyyy-MM-dd', 'en-US'),
-  //     CompareDateFrom: formatDate(this.queryConditions.CompareDateFrom, 'yyyy-MM-dd', 'en-US'),
-  //     CompareDateTo: formatDate(this.queryConditions.CompareDateTo, 'yyyy-MM-dd', 'en-US'),
-
-  //     OrgId: this.dataForm.get('OrgId')?.value ?? '',
-  //     BusClass: this.dataForm.get('Bus_Class')?.value ?? '',
-  //     TltNo: '', // 找對應的專櫃編號
-
-  //     AmtTaxMode: ([] as string[]).concat(this.queryConditions.AmtTaxMode || []).join(','),
-  //     ReceFilter: ([] as string[]).concat(this.queryConditions.ReceFilter || []).join(','),
-
-  //     FloorList: ([] as string[]).concat(this.queryConditions.FloorList || []).join(','),
-  //     AreaList: ([] as string[]).concat(this.queryConditions.AreaList || []).join(','),
-
-  //     BusTypeList: this.toArray(this.queryConditions.BusTypeList),
-  //     BusClassList: this.toArray(this.queryConditions.BusClassList).map((item: any) => ({
-  //       BusType: item.bus_type ?? '',
-  //       BusClass: item.No ?? ''
-  //     })),
-
-  //     TltKindList: ([] as string[]).concat(this.queryConditions.TltKindList || []).join(','),
-  //     OrgList: ([] as string[]).concat(this.queryConditions.OrgList || []).join(','),
-  //     TltNoList: ([] as string[]).concat(this.queryConditions.TltNoList || []).join(','),
-  //     TermTypeList: ([] as string[]).concat(this.queryConditions.TermTypeList || []).join(','),
-  //     BuildingList: ([] as string[]).concat(this.queryConditions.BuildingList || []).join(','),
-
-  //   } as TLS32050DetailRequest;
-
-  //   console.log('單中分類之營業報表request', request);
-  //   // console.log('單組織之營業報表request', JSON.stringify(request, null, 2));
-
-  //   this.tls32050Service.queryTLS32050Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-  //     console.log('單組織之營業報表response', res.Data);
-  //     this.data = res.Data ?? [];               // 查詢資料
-  //     this.historyRequestBody = request;        // 查詢條件
-  //     console.log('明細資料', res.Data);
-  //     this.totalRecords = res.TotalCount;        // 等候端
-  //   })
-  // }
-
   toArray(value: any): any[] {
     if (!value) return [];
     if (Array.isArray(value)) return value;
@@ -233,12 +201,7 @@ export class Tls32050CRUComponent extends BasicCruPageComponent<TLS32050DetailRe
 
   queryTLS32050Detail() {
     this.loading = true; // 開始加載
-    // const targetName = this.dataForm.get('TltKindName')?.value ?? '';
-
-    // console.log('明細組織代號', this.dataForm.get('OrgId')?.value ?? '')
-    // console.log('明細中分類', this.dataForm.get('Bus_Class')?.value ?? '')
-    // console.log('櫃別名稱', this.dataForm.get('TltKindName')?.value ?? '')
-
+    console.log('查詢條件', this.queryConditions);
     const tltKindName = this.dataForm.get('TltKindName')?.value ?? '';
 
     // 🔎 由名稱找對應的編號
@@ -264,19 +227,28 @@ export class Tls32050CRUComponent extends BasicCruPageComponent<TLS32050DetailRe
       FloorList: ([] as string[]).concat(this.queryConditions.FloorList || []).join(','),
       AreaList: ([] as string[]).concat(this.queryConditions.AreaList || []).join(','),
 
-      BusTypeList: this.toArray(this.queryConditions.BusTypeList),
-      BusClassList: this.toArray(this.queryConditions.BusClassList).map((item: any) => ({
-        BusType: item.bus_type ?? '',
-        BusClass: item.No ?? ''
-      })),
+      BusTypeList: this.queryConditions.BusTypeList,
+      // 結果範例：[["10", "01"], ["10", "02"]]
+      BusClassList: this.toArray(this.queryConditions.BusClassList).map((item: any) => [
+        item.bus_type,
+        item.No
+      ]),
+
+      // 結果範例：[["10", "01", "001"], ["10", "01", "002"]]
+      BusSClassList: this.toArray(this.queryConditions.BusSClassList).map((item: any) => [
+        item.bus_type,
+        item.bus_class, // 注意：請確認 item 內的屬性名稱是 bus_class 還是 CAT_MNo
+        item.No
+      ]),
 
       TltKindList: ([] as string[]).concat(this.queryConditions.TltKindList || []).join(','),
       OrgList: ([] as string[]).concat(this.queryConditions.OrgList || []).join(','),
       TltNoList: ([] as string[]).concat(this.queryConditions.TltNoList || []).join(','),
       TermTypeList: ([] as string[]).concat(this.queryConditions.TermTypeList || []).join(','),
       BuildingList: ([] as string[]).concat(this.queryConditions.BuildingList || []).join(','),
+    } as unknown as TLS32050DetailRequest;
 
-    } as TLS32050DetailRequest;
+    console.log('單中分類之營業報表request', request);
 
     this.btnLoading = false;
     this.tls32050Service.queryTLS32050Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {

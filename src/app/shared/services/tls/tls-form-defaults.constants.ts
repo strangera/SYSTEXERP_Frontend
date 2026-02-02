@@ -10,6 +10,7 @@
  */
 export function getTodayDate(addDays: number = 0): Date {
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
   if (addDays !== 0) {
     today.setDate(today.getDate() + addDays);
   }
@@ -238,4 +239,46 @@ export function getTLS12040FormDefaults() {
     ...TLS12040_SPECIFIC_DEFAULTS,
     ...TLS_CREATE_MODE_DEFAULTS
   };
+}
+
+/**
+ * 日期欄位清單（需要從 ISO 字串轉回 Date 物件的欄位）
+ */
+const DATE_FIELDS = [
+  'apply_date', 'tlt_bdate', 'tlt_edate',
+  'tlt_contract_bdate', 'tlt_contract_edate',
+  'feedback_date', 'due_date', 'contact_Date'
+];
+
+/**
+ * 將 ISO 日期字串轉換為不含時間的 Date 物件
+ * 用於從 sessionStorage 載入的暫存資料，避免日期欄位顯示時間戳
+ * @param data 從暫存載入的資料物件
+ * @returns 處理過的資料物件（日期字串已轉為 Date）
+ */
+export function sanitizeDateFields<T extends Record<string, any>>(data: T): T {
+  if (!data) return data;
+  const result = { ...data };
+  for (const field of DATE_FIELDS) {
+    const val = result[field];
+    if (val && typeof val === 'string') {
+      // 處理 ISO 格式 "2026-01-30T15:57:51.833Z" 或一般日期 "2026-01-30"
+      const datePart = val.split(/[T\s]/)[0];
+      const match = datePart.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+      if (match) {
+        (result as any)[field] = new Date(
+          parseInt(match[1], 10),
+          parseInt(match[2], 10) - 1,
+          parseInt(match[3], 10)
+        );
+      }
+    } else if (val instanceof Date) {
+      // 確保 Date 物件也移除時間
+      const dateOnly = new Date(val.getFullYear(), val.getMonth(), val.getDate());
+      if (dateOnly.getTime() !== val.getTime()) {
+        (result as any)[field] = dateOnly;
+      }
+    }
+  }
+  return result;
 }

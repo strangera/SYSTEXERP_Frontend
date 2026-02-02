@@ -16,11 +16,11 @@ export const assRoutes: Routes = [
   // { path: 'ass11060cru', loadComponent: () => import('./ass11060-cru/ass11060-cru.component').then(m => m.ASS11060CRUComponent),data: {progNo:'ASS11060'} },
   // { path: 'ass11070', loadComponent: () => import('./ass11070/ass11070.component').then(m => m.ASS11070Component),data: {progNo:'ASS11070'} }, // 備用供應商資料維護作業
   // { path: 'ass11070cru', loadComponent: () => import('./ass11070-cru/ass11070-cru.component').then(m => m.ASS11070CRUComponent),data: {progNo:'ASS11070'} },
-  { path: 'ass11080', loadComponent: () => import('./ass11080/ass11080.component').then(m => m.ASS11080Component), data: { progNo: 'ASS11080' } }, // 處分資產基本設定
-  // { path: 'ass11090', loadComponent: () => import('./ass11090/ass11090.component').then(m => m.ASS11090Component),data: {progNo:'ASS11090'} }, // 資材中分類會計科目維護作業
-  // { path: 'ass11090cru', loadComponent: () => import('./ass11090-cru/ass11090-cru.component').then(m => m.ASS11090CRUComponent),data: {progNo:'ASS11090'} },
-  // { path: 'ass11100', loadComponent: () => import('./ass11100/ass11100.component').then(m => m.ASS11100Component),data: {progNo:'ASS11100'} }, // 倉別設定作業
-  // { path: 'ass11100cru', loadComponent: () => import('./ass11100-cru/ass11100-cru.component').then(m => m.ASS11100CRUComponent),data: {progNo:'ASS11100'} },
+  // { path: 'ass11080', loadComponent: () => import('./ass11080/ass11080.component').then(m => m.ASS11080Component), data: { progNo: 'ASS11080' } }, // 處分資產基本設定
+  { path: 'ass11090', loadComponent: () => import('./ass11090/ass11090.component').then(m => m.ASS11090Component), data: { progNo: 'ASS11090' } }, // 資材中分類會計科目維護作業
+  { path: 'ass11090cru', loadComponent: () => import('./ass11090-cru/ass11090-cru.component').then(m => m.ASS11090CRUComponent), data: { progNo: 'ASS11090' } },
+  { path: 'ass11100', loadComponent: () => import('./ass11100/ass11100.component').then(m => m.ASS11100Component), data: { progNo: 'ASS11100' } }, // 倉別設定作業
+  { path: 'ass11100cru', loadComponent: () => import('./ass11100-cru/ass11100-cru.component').then(m => m.ASS11100CRUComponent), data: { progNo: 'ASS11100' } },
   { path: 'ass12010', loadComponent: () => import('./ass12010/ass12010.component').then(m => m.ASS12010Component), data: { progNo: 'ASS12010' } }, // 請購申請作業
   { path: 'ass12010cru', loadComponent: () => import('./ass12010-cru/ass12010-cru.component').then(m => m.ASS12010CRUComponent), data: { progNo: 'ASS12010' } },
   // { path: 'ass12020', loadComponent: () => import('./ass12020/ass12020.component').then(m => m.ASS12020Component),data: {progNo:'ASS12020'} }, // 詢價登錄作業

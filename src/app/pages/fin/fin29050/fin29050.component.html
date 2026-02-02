@@ -29,6 +29,21 @@
               [endControl]="queryForm.controls.AccNo_To" [submitted]="submitted" [options]="AccNoOptions"
               optionLabel="label" optionValue="value"></app-dropdown-range>
           </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton label="帳款餘額為零是否顯示" groupname="ShowZeroBalance"
+              [control]="queryForm.controls.ShowZeroBalance" [options]="[
+                { label: '顯示', value: 'A' },
+                { label: '不顯示', value: 'N' },
+              ]" [submitted]="submitted"></app-radiobutton>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton label="未付金額是否包含保留款餘額" groupname="UnpaidIncludeReserve"
+              [control]="queryForm.controls.UnpaidIncludeReserve" [options]="[
+                { label: '是', value: 'A' },
+                { label: '否', value: 'N' },
+              ]" [submitted]="submitted"></app-radiobutton>
+          </div>
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

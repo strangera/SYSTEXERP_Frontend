@@ -23,12 +23,11 @@
       <tr class="font-bold text-sm bg-gray-200 text-primary">
         <ng-container *ngFor="let col of columns">
           <td [class]="{
-                'text-left': col.align === 'left' || !col.align,
-                'text-center': col.align === 'center',
-                'text-right': col.align === 'right'
-              }">
+              'text-left': col.align === 'left' || !col.align,
+              'text-center': col.align === 'center',
+              'text-right': col.align === 'right'
+            }">
             <span class="font-bold">
-              <!-- 修正: 必須使用 groupFooter[col.field] 而非 footerData[col.field] -->
               {{ col.format ? col.format(groupFooter[col.field]) : groupFooter[col.field] }}
             </span>
           </td>
@@ -37,16 +36,40 @@
     </ng-container>
   </ng-template>
 
-  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
+  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns">
     <tr [ngClass]="{'font-bold text-sm text-primary': rowData.STYPE_NAME && rowData.STYPE_NAME.includes('小計')}">
-      <td *ngFor="let col of columns" style="text-overflow: ellipsis; min-width: 55px" [class]="{
-                'text-left': col.align === 'left' || !col.align,
-                'text-center': col.align === 'center',
-                'text-right': col.align === 'right'
-              }">
+      <td *ngFor="let col of columns" [class]="{
+          'text-left': col.align === 'left' || !col.align,
+          'text-center': col.align === 'center',
+          'text-right': col.align === 'right',
+          'pl-5': col.field === 'STYPE_NAME'
+        }">
+
         <span>
-          {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+          <ng-container [ngSwitch]="col.field">
+
+            <ng-container *ngSwitchCase="'SUM_LTYPE_AMT'">
+              {{ (rowData.STYPE_NAME && rowData.STYPE_NAME.includes('小計')) ? (col.format ?
+              col.format(rowData[col.field]) : rowData[col.field]) : '' }}
+            </ng-container>
+
+            <ng-container *ngSwitchCase="'Cur_LTYPE_SUM'">
+              {{ (rowData.STYPE_NAME && rowData.STYPE_NAME.includes('小計')) ? (col.format ?
+              col.format(rowData[col.field]) : rowData[col.field]) : '' }}
+            </ng-container>
+
+            <ng-container *ngSwitchCase="'YTD_LTYPE_SUM'">
+              {{ (rowData.STYPE_NAME && rowData.STYPE_NAME.includes('小計')) ? (col.format ?
+              col.format(rowData[col.field]) : rowData[col.field]) : '' }}
+            </ng-container>
+
+            <ng-container *ngSwitchDefault>
+              {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+            </ng-container>
+
+          </ng-container>
         </span>
+
       </td>
     </tr>
   </ng-template>
@@ -54,12 +77,11 @@
   <ng-template pTemplate="footer" let-columns let-rowData>
     <tr *ngIf="footerData" class="font-bold text-sm bg-gray-200 text-primary">
       <ng-container *ngFor="let col of columns">
-        <!-- 根據 col.align 修正對齊 -->
         <td [class]="{
-              'text-left': col.align === 'left' || !col.align,
-              'text-center': col.align === 'center',
-              'text-right': col.align === 'right'
-            }">
+            'text-left': col.align === 'left' || !col.align,
+            'text-center': col.align === 'center',
+            'text-right': col.align === 'right'
+          }">
           <span class="font-bold">
             {{ col.format ? col.format(footerData[col.field]) : footerData[col.field] }}
           </span>

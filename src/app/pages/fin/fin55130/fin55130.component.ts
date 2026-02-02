@@ -16,7 +16,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { Fin55130TableReportComponent } from './fin55130-table-report/fin55130-table-report.component';
-import { ColumnGroup, formatAmount, ReportColumn } from './fin55130-table-report/fin55130-table-report.model';
+import { ColumnGroup, ReportColumn } from './fin55130-table-report/fin55130-table-report.model';
 @Component({
   selector: 'app-fin55130',
   templateUrl: './fin55130.component.html',
@@ -49,7 +49,7 @@ export class FIN55130Component extends BasicQueryPageComponent<FIN55130DetailIte
     { field: 'BaseAmt', header: '金額', isSubTotal: true, format: formatAmount, align: 'right', groupField: '基準年月' },
     { field: 'CompareAmt', header: '金額', isSubTotal: true, format: formatAmount, align: 'right', groupField: '比較年月' },
     { field: 'DiffAmt', header: '金額', isSubTotal: true, format: formatAmount, align: 'right', groupField: '差異' },
-    { field: 'DiffPct', header: '百分比', isSubTotal: true, format: (v) => v ? v : '', align: 'right', groupField: '差異' },
+    { field: 'DiffPct', header: '百分比', isSubTotal: true, format: formatAmount, align: 'right', groupField: '差異' },
   ];
   columnGroup: ColumnGroup[] = [
     { field: '基準年月', header: 'YYYY年M月' },
@@ -117,3 +117,27 @@ export class FIN55130Component extends BasicQueryPageComponent<FIN55130DetailIte
     this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
 }
+
+const formatAmount = (val: number | string | null | undefined): string => {
+  // 1. 檢查是否為 null 或 undefined 或空字串
+  if (val === null || val === undefined || val === '') {
+    return '';
+  }
+
+  const num = Number(val);
+
+  // 2. 檢查是否為 NaN
+  if (isNaN(num)) {
+    return String(val);
+  }
+
+  // 3. 判斷負數邏輯
+  if (num < 0) {
+    // Math.abs(num) 會把 -10234 變成 10234
+    // 然後再進行千分位格式化，最後包上括號
+    return `(${Math.abs(num).toLocaleString()})`;
+  }
+
+  // 4. 正數或 0 則直接進行本地化格式化
+  return num.toLocaleString(); // eg. 1,000,000
+};

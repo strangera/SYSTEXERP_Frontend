@@ -133,6 +133,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
 
   // ---------------- Dropdown Data ----------------
   pos1008Map: Record<string, { width: number; height: number }> = {};
+  // 模板提供的按鍵預設寬高（若下拉只回傳整體模板尺寸）
+  templateDefaultKeySize: { width: number; height: number } = { width: 1, height: 1 };
   TSB_NameOptions: IDropdownItem[] = [];
   ECR_KBTypeOptions: IDropdownItem[] = [];
   KB_StyleOptions: IDropdownItem[] = [];
@@ -366,10 +368,30 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   private loadDropdowns() {
     this.dropDownListService.queryPOS1008DropDownList().subscribe({
       next: (res) => {
-        this.TSB_NameOptions = res?.Data?.map((item: any) => ({ No: item.TSB_Name, Name: item.TSB_Name })) ?? [];
-        res?.Data?.forEach((item: any) => {
+        const data: any[] = res?.Data ?? [];
+        this.TSB_NameOptions = data.map((item: any) => ({ No: item.TSB_Name, Name: item.TSB_Name })) ?? [];
+
+        // 若後端回傳的是模板層級的欄位（TSB_XCount/TSB_YCount/TSB_Width/TSB_Height），
+        // 以第一筆為預設模板，更新 grid 大小與模板按鍵預設尺寸
+        if (data.length) {
+          const t: any = data[0];
+          if (t.TSB_XCount != null) this.xCount = Number(t.TSB_XCount) || this.xCount;
+          if (t.TSB_YCount != null) this.yCount = Number(t.TSB_YCount) || this.yCount;
+          if (t.TSB_Width != null || t.TSB_Height != null) {
+            this.templateDefaultKeySize = {
+              width: Number(t.TSB_Width) || 1,
+              height: Number(t.TSB_Height) || 1,
+            };
+          }
+        }
+
+        // 若回傳為逐鍵設定則填入 pos1008Map（以 KB_ScanCode 為 key）
+        data.forEach((item: any) => {
           if (item.KB_ScanCode) {
-            this.pos1008Map[item.KB_ScanCode] = { width: item.KB_Width ?? 1, height: item.KB_Height ?? 1 };
+            this.pos1008Map[item.KB_ScanCode] = {
+              width: Number(item.KB_Width) || 1,
+              height: Number(item.KB_Height) || 1,
+            };
           }
         });
       }
@@ -691,7 +713,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
             k.KB_Style !== '1' ||
             k.KB_Font !== 'Microsoft JhengHei' ||
             k.KB_Size !== 12);
-        const pos1008 = this.pos1008Map[k.code] ?? { width: 1, height: 1 };
+        const pos1008 = this.pos1008Map[k.code] ?? this.templateDefaultKeySize ?? { width: 1, height: 1 };
         const mergeRight = k.mergeRight || 0;
         const mergeDown = k.mergeDown || 0;
         const mergeValue = mergeRight > 0 || mergeDown > 0 ? `${mergeRight},${mergeDown}` : '';

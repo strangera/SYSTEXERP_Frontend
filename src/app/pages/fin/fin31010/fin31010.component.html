@@ -37,9 +37,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="CAP_Item" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [showCheckBox]="true" (delete)="onDelete()" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
-    [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading"></app-table>
+  <app-table-report dataKey="CAP_Item" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [showCheckBox]="true" (delete)="onDelete()" (selectionChange)="selectedRows = $event"
+    [selectedItems]="selectedRows" [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="fin31010Service.queryFin31010.bind(fin31010Service)" [loading]="loading"></app-table-report>
 </div>

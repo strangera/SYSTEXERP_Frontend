@@ -1,187 +1,168 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-
+import { AsyncPipe, DatePipe, NgClass, NgFor } from '@angular/common';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { AccordionModule } from 'primeng/accordion';
+import { Fin51010Service, QueryFIN51010CountResponse, QueryFIN51010Request, QueryFIN51010Response } from '@service/api/fin/fin51010.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { Accordion, AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { DataViewModule } from 'primeng/dataview';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 @Component({
   selector: 'app-fin51010',
   templateUrl: './fin51010.component.html',
-  styleUrl: './fin51010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [ButtonModule, NgClass, DataViewModule, NgFor, AsyncPipe, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, InputTextComponent, ButtonComponent, TranslateModule]
 })
-export class FIN51010Component extends BasicQpageComponent implements OnInit {
-  // Upload files
-  fileType: string = '';
-  uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
+export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Response> implements OnInit {
+  @ViewChild('queryAccordion') queryAccordion!: Accordion;
   queryForm = this.formBuilder.group({
-    year: [],
-    version: [],
-    organizationNumber: [, Validators.required],
-    month: [],
-    amountStart: [], // 金額 起
-    amountEnd: [], // 金額 迄
-    remark: [],
-    status: [],
-    department: [],
-    unit: [],
-    type: [],
-    compareyear: [],
-    version1: [],
-    version2: [],
-    year1: [],
-    year2: [],
-    Subpoenatype: [],
-    startdate: [],
-    enddate: [],
-    Subpoenastatus: [],
-    Subpoenacode: [],
-    SummonsSummary: [],
-    accountingaccount: [],
-    vendorCode: [],
-    code: [],
-    Summonscode: [],
-    Summary: [],
+    SrcSheetType: [null as string | null, [Validators.required]],
+    VouDate_From: [null],
+    VouDate_To: [null],
+    Trans_Status: [null as string | null],
+    PostFlag: [null],
+    VouNo: [null, [Validators.maxLength(12)]],
+    Remark: [null, [Validators.maxLength(200)]],
+    AccNo: [null, [Validators.maxLength(14)]],
+    DetailNo: [null, [Validators.maxLength(20)]],
+    NoteDesc: [null, [Validators.maxLength(160)]],
+    SubDetailNo: [null, [Validators.maxLength(30)]]
   });
 
-  // Dropdown options
+  // 下拉選單 Options
+  SrcSheetTypeOptions = this.dropDown.queryGls1010();
+  TransStatusOptions = getSYS1000Options('Trans_Status'); // 拋轉狀態
+  PostFlagOptions = getSYS1000Options('PostFlag'); // 過帳狀態
+  AccNoOptions = this.dropDown.queryGls1005(); // 會計科目
+  DetailNoOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商/明細編號
+  SubDetailNoOptions = this.dropDown.queryGLS1016(); // 對象別編號
 
-  FNCCodeOptions: any[] = [];
-  AccountcodeOptions: any[] = [];
-  departmentOptions: any[] = [];
-  displayOptions2: any[] = [];
-  AnalysisdateCOptions: any[] = [];
-  vendorOptions: any[] = [];
-  FlippingstateOptions: any[] = [];
-  organizationNumberOptions: any[] = [];
-  statusOptions: any[] = [{ value: 1, label: '未拋轉' },
-  { value: 2, label: '已拋轉' },
-  { value: 2, label: '已退回' }];
-  unitOptions: any[] = [{ value: 1, label: '元' },
-  { value: 2, label: '千' },
-  { value: 3, label: '萬' }];
-  typeOptions: any[] = [{ value: 1, label: '統制' },
-  { value: 2, label: '明細' },];
+  data: QueryFIN51010Response[] = [];
+  selectedItems: QueryFIN51010Response[] = [];
+  totalRecords = 0;
+  lastQuery: QueryFIN51010Request | null = null;
 
-  SubpoenatypeOptions: any[] = [{ value: 1, label: '資材報廢' },
-  { value: 2, label: '資材折舊' }, { value: 2, label: '月結庫存' }, { value: 2, label: '資材變賣' }, { value: 2, label: '資材進貨' },];
-  SubpoenastatusOptions: any[] = [{ value: 1, label: '作廢' },
-  { value: 2, label: '建立' }, { value: 2, label: '確認' }, { value: 2, label: '過帳' }, { value: 2, label: '刪除' },];
-  accountingaccountOptions: any[] = [];
-  codeOptions: any[] = [
-    { value: 1, label: '68919301_臺南紡織股份有限公司' }, { value: 2, label: '73251209_統一企業股份有限公司' }, { value: 3, label: '96978370_統正開發股份有限公司' }
+  btnLoading = false;
 
-
+  columns: ReportColumn[] = [
+    { field: 'SrcSheetType', header: '傳票型態' },
+    { field: 'Voucher_Name', header: '傳票名稱' },
+    { field: 'VouDate', header: '傳票日期', format: formatDate },
+    { field: 'Remark', header: '傳票摘要' },
+    { field: 'Debit_Amt', header: '借方金額', format: formatAmount },
+    { field: 'Credit_Amt', header: '貸方金額', format: formatAmount },
   ];
 
-
-  // Table data
-  data: any[] = [
-
-    // Other data
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'isCarryOver', header: '是否拋轉', visible: true },
-    { field: 'voucherDate', header: '傳票日期', visible: true },
-    { field: 'voucherTransferStatus', header: '傳票拋轉狀態', visible: true },
-    { field: 'voucherStatus', header: '傳票狀態', visible: true },
-    { field: 'voucherSummary', header: '傳票摘要', visible: true },
-    { field: 'debitCumulativeDiscount', header: '借方 - 累計折舊-減損數值', visible: true },
-    { field: 'debitAccountNumber', header: '借方 - 科目代號', visible: true },
-    { field: 'debitSubAccountLoss', header: '借方 - 虛分資產損失', visible: true },
-    { field: 'debitTotal', header: '借方合計', visible: true },
-    { field: 'debitAccountingNote', header: '借方 - 會計附註', visible: true },
-    { field: 'creditCumulativeDiscount', header: '貸方 - 累計折舊-減損數值', visible: true },
-    { field: 'creditAccountNumber', header: '貸方 - 科目代號', visible: true },
-    { field: 'creditTotal', header: '貸方合計', visible: true }
-  ];
-
+  countData: QueryFIN51010CountResponse[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
+    public readonly fin51010Service: Fin51010Service,
+    private readonly dropDown: DropdownApiService,
+    private readonly datePipe: DatePipe
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '150001';
-    // Initialize dropdown options
+    this.initializePage('FIN51010', 'fin/fin51010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadSheetTypeCount();
+  }
+
+  /** 載入憑證種類與儀表板 */
+  loadSheetTypeCount() {
+    this.fin51010Service.queryFIN51010Count()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        if (res.Data) {
+          // 儲存原始統計資料供頂部儀表板使用
+          this.countData = res.Data;
+        }
+      });
+  }
+
+  /** 2. 儀表板點擊事件：帶入種類並自動查詢 */
+  onSelectType(item: QueryFIN51010CountResponse) {
+    this.queryForm.patchValue({
+      SrcSheetType: item.SrcSheetType,
+      Trans_Status: '0',
+      VouNo: null,
+      NoteDesc: null
+    });
+
+    // 自動收合查詢區塊，讓表格往上提
+    if (this.queryAccordion) {
+      this.queryAccordion.tabs[0].selected = false;
+    }
+
+    this.onSubmit(this.queryForm);
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-    this.router.navigate(['FIN5000/FIN51010CRU']);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
+    this.handleSubmit(frm, () => {
+      const body: QueryFIN51010Request = {
+        ...frm.value,
+        PageIndex: 1,
+        PageSize: 30,
+        VouDate_From: frm.value.VouDate_From ? frm.value.VouDate_From : null,
+        VouDate_To: frm.value.VouDate_To ? frm.value.VouDate_To : null
       };
-      this.router.navigate(['FIN5000/FIN51010CRU'], extras);
-    }
+
+      this.fin51010Service.queryFIN51010(body)
+        .pipe(
+          finalize(() => this.loading = false),
+          untilDestroyed(this)
+        )
+        .subscribe(res => {
+          this.data = res.Data;
+          this.totalRecords = res.TotalCount;
+          this.lastQuery = body;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        });
+    });
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+  /** 執行拋轉作業 */
+  onTransfer() {
+    if (this.selectedItems.length === 0) return;
+    this.messageService.confirm({
+      header: '拋轉確認',
+      message: '是否拋轉所選項目?',
+      accept: () => {
+        const idList = this.selectedItems.map(item => item.id).join(',');
+        const body = {
+          GLS6001_IDList: idList
+        }
+        this.btnLoading = true;
+        this.fin51010Service.transferFIN51010(body).pipe(finalize(() => { this.btnLoading = false; }), untilDestroyed(this)).subscribe(res => {
+          if (res.Data.ErrCode === 0) {
+            this.messageService.successBubble(res.Data.ErrMsg || '拋轉成功');
+            this.selectedItems = []; // 清空選取
+            this.onSubmit(this.queryForm); // 重新查詢更新列表與統計筆數
+            this.loadSheetTypeCount(); // 儀表板數字也要同步更新
+          } else {
+            this.messageService.errorBubble(res.Data.ErrMsg || '拋轉失敗');
+            this.messageService.confirm({
+              header: '拋轉失敗',
+              message: res.Data.ErrMsg || '拋轉失敗',
+              icon: 'pi pi-info-circle',
+              acceptLabel: '關閉',
+              showRejectButton: false
+            })
+          }
+        });
+      }
+    })
   }
 }

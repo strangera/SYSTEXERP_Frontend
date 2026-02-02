@@ -46,6 +46,7 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
   @Input() buttonLabel = '';
   @Input() buttonLoading = false;
   @Input() copyControl = new FormControl();
+  @Input() helpMsg?: string;
   @Input() showErrorMessage = true;
   @Input() disabled = false;
   @Input() weightedMax: number | null = null;
@@ -56,6 +57,8 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
   @Input() padLength = 16; // 新增：補零後的總長度
   @Input() padOnBlur = true; // 新增：是否在失焦時補零（而非即時補零）
   @Input() textAlign: 'left' | 'center' | 'right' = 'left'; // 新增：文字對齊方式
+
+
 
   @Output() clickButton = new EventEmitter<unknown>();
   @Output() inputChange = new EventEmitter<Event>();

@@ -19,7 +19,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
 import { VendorCategoryOptionsService } from '@service/api/dropdownservice/vendor-category-options.service';
 import { Tls12010Service } from '@service/api/tls/tls12010.service';
-import { TLS12040Service } from '@service/api/tls/tls12040.service';
+import { TLS12040Service, RenewalBasicInfo, RenewalLocationInfo } from '@service/api/tls/tls12040.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ColumnDef, ExpandableEditTableComponent } from "@shared/componentkit/expandable-edit-table/expandable-edit-table.component";
 import { InputTextareaComponent } from "@shared/componentkit/input-textarea/input-textarea.component";
@@ -35,6 +35,7 @@ import { EmailValidationService } from '../tls13010-cru/validation/email-validat
 import { LocationDetails, TLS12040DetailModel, TLS12040RequestModel, Tls12040SelectorTableColumn } from './models/tls12040-cru.model';
 import { BusinessClassificationService } from './services/business-classification.service';
 import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
+import { sanitizeDateFields } from '@shared/services/tls/tls-form-defaults.constants';
 import { TLS12040ValidationService } from './validation/tls12040-validation.service';
 
 interface CategoryItem {
@@ -54,6 +55,8 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
   displayLocationData: LocationDetails[] = [];
   private subscriptions: Subscription[] = [];
   private isLoadingExistingData = false;
+  private isLoadingRenewalData = false;
+  private lastRenewalVenNo: string | null = null;
 
   locationColumns: ColumnDef[] = [
     {
@@ -820,23 +823,22 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
         ? data.check_type.split(',').map((s: string) => s.trim())
         : []
     };
-    this.dataForm.patchValue(processedData, {
-      emitEvent: false  // 關鍵：不觸發 valueChanges
-    });
 
+    // 🔧 將日期字串轉換為 Date 物件，確保 Calendar 元件正確顯示
     dateFields.forEach(field => {
       if (processedData[field]) {
-        // 如果是字串,保持原樣 (Calendar component 會自動轉換)
-        // 如果是 Date,也保持原樣
-        console.log(`📅 日期欄位 ${field}:`, {
-          原始值: processedData[field],
-          型別: typeof processedData[field]
-        });
+        const dateValue = this.parseDateToDateObject(processedData[field]);
+        if (dateValue) {
+          processedData[field] = dateValue;
+          console.log(`📅 日期欄位 ${field}: 已轉換為 Date 物件`, dateValue);
+        }
       }
     });
 
     // 填充表單
-    this.dataForm.patchValue(processedData);
+    this.dataForm.patchValue(processedData, {
+      emitEvent: false  // 關鍵：不觸發 valueChanges
+    });
 
     //  在 readonly 模式下,立即保存到 session
     if (this.crudstatus === CRUDStatus.Read) {
@@ -1007,10 +1009,17 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     console.log('✅ 已設定表單值');
     this.messageService.successBubble('已自動填入廠商編號、廠商名稱、公司登記地址和帳戶名稱');
 
-    // B. 📞 載入潛在客戶資料
-    const venUniform = vendorData.No || '';
-    if (venUniform) {
-      this.loadPotentialCustomerData(venUniform);
+    // B. 📞 載入潛在客戶資料或續約資料
+    if (vendorVenNo) {
+      // 檢查是否為續約模式
+      const applyType = this.dataForm.get('apply_type')?.value;
+      if (applyType === '2') {
+        // 續約模式：載入原合約資料 (使用 ven_no 作為唯一識別)
+        this.loadRenewalData(vendorVenNo);
+      } else {
+        // 非續約模式：載入潛在客戶資料
+        this.loadPotentialCustomerData(vendorData.No || '');
+      }
     }
   }
 
@@ -2244,8 +2253,11 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       // ⚠️ 設定旗標
       this.isLoadingExistingData = true;
 
-      // 使用 { emitEvent: false } 避免觸發監聽器
-      this.dataForm.patchValue(existingData, { emitEvent: false });
+      // 將 ISO 日期字串轉為 Date 物件（避免日期欄位顯示時間戳）
+      const sanitizedData = sanitizeDateFields(existingData);
+
+      // 使用 { emitEvent: false } 避免觸發監聯器
+      this.dataForm.patchValue(sanitizedData, { emitEvent: false });
 
       this.locationInfo = existingData.locationInfo || [];
       this.displayLocationData = this.locationInfo.filter(item => item._status !== 'deleted');
@@ -2539,15 +2551,440 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     dateFields.forEach(field => {
       const dateString = parsedData[field];
       if (dateString && typeof dateString === 'string') {
-        // 嘗試解析日期字串，如果解析失敗則保留原值
-        const dateObject = new Date(dateString);
-        // 檢查是否為有效的日期，並進行賦值
-        if (!isNaN(dateObject.getTime())) {
-          parsedData[field] = dateObject;
+        // 移除時間部分，只取日期
+        const datePart = dateString.split(/[T\s]/)[0];
+        const match = datePart.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+        if (match) {
+          parsedData[field] = new Date(
+            parseInt(match[1], 10),
+            parseInt(match[2], 10) - 1,
+            parseInt(match[3], 10)
+          );
         }
       }
     });
 
     return parsedData;
+  }
+
+  // ========== 續約功能 ==========
+
+  /**
+   * 申請案件內容變更事件
+   * 當使用者選擇續約(apply_type = '2')時，需要特殊處理
+   */
+  onApplyTypeChange(applyType: string): void {
+    console.log('📋 申請案件內容變更:', applyType);
+
+    if (applyType === '2') {
+      // 續約模式
+      console.log('🔄 進入續約模式');
+      this.messageService.infoBubble('請選擇廠商統一編號以載入原合約資料');
+
+      // 檢查是否已選擇廠商 (使用 ven_no 作為唯一識別)
+      const venNo = this.dataForm.get('ven_no')?.value;
+      if (venNo) {
+        // 已有廠商，詢問是否載入續約資料
+        this.loadRenewalData(venNo);
+      }
+    } else {
+      // 非續約模式，清除續約資料
+      this.flowService.clearRenewalData();
+      this.lastRenewalVenNo = null; // 重置，允許下次進入續約模式時重新載入
+    }
+  }
+
+  /**
+   * 載入續約資料
+   * @param venNo 廠商編號 (唯一值，如 27669188-1)
+   */
+  private loadRenewalData(venNo: string): void {
+    // 防止重複呼叫：如果正在載入則跳過
+    if (this.isLoadingRenewalData) {
+      console.log('⏳ 續約資料載入中，跳過重複請求');
+      return;
+    }
+    // 如果是相同廠商且已有資料，跳過重複請求
+    if (this.lastRenewalVenNo === venNo && this.flowService.getRenewalData()) {
+      console.log('✅ 已載入相同廠商的續約資料，跳過重複請求');
+      return;
+    }
+
+    console.log('🔄 開始載入續約資料，廠商編號:', venNo);
+
+    // 🔥 載入新資料前，先清除舊的續約資料
+    this.clearPreviousRenewalData();
+
+    this.isLoadingRenewalData = true;
+    this.lastRenewalVenNo = venNo;
+    this.loading = true;
+    this.tls12040Service.queryContractForRenewal(venNo).subscribe({
+      next: (renewalData) => {
+        console.log('✅ 續約資料載入成功:', renewalData);
+
+        // 儲存續約資料到 FlowService
+        this.flowService.setRenewalData({
+          sourceContractId: renewalData.source_talent_id,
+          sourceApplyNo: renewalData.source_apply_no,
+          sourceContractSubno: renewalData.source_contract_subno,
+          nextContractSubno: renewalData.next_contract_subno,
+          basicInfo: renewalData.BasicInfo,
+          locations: renewalData.Locations,
+          fareData: renewalData.FareData,
+          chargeData: renewalData.ChargeData,
+          commissionData: renewalData.CommissionData
+        });
+
+        // 回填基本資料到表單
+        this.patchFormForRenewal(renewalData.BasicInfo, renewalData.next_contract_subno);
+
+        // 回填位置資料
+        if (renewalData.Locations && renewalData.Locations.length > 0) {
+          this.patchLocationForRenewal(renewalData.Locations);
+        }
+
+        this.messageService.successBubble(
+          `已載入原合約資料（第 ${renewalData.source_contract_subno} 版），將建立第 ${renewalData.next_contract_subno} 版續約`
+        );
+
+        this.isLoadingRenewalData = false;
+        this.loading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.warn('⚠️ 載入續約資料失敗:', error);
+        // 顯示後端回傳的具體錯誤訊息，而非通用訊息
+        const errorMessage = error?.message || '查無原合約資料或載入失敗';
+        this.messageService.warnBubble(errorMessage);
+        this.flowService.clearRenewalData();
+        this.lastRenewalVenNo = null; // 重置，允許重新嘗試
+        this.isLoadingRenewalData = false;
+        this.loading = false;
+      }
+    });
+  }
+
+  /**
+   * 清除先前載入的續約資料（在載入新資料前呼叫）
+   * 並重設為表單預設值
+   */
+  private clearPreviousRenewalData(): void {
+    console.log('🗑️ 清除先前的續約資料並重設為預設值');
+
+    // 清除 FlowService 中的續約資料
+    this.flowService.clearRenewalData();
+
+    // 清除位置資料
+    this.locationInfo = [];
+    this.displayLocationData = [];
+
+    // 重設表單欄位為預設值（保留廠商資訊）
+    // 取得今天日期 (Date 物件，供 Calendar 使用)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // 計算回函截止日 (今天 + 15 天)
+    const dueDate = new Date();
+    dueDate.setHours(0, 0, 0, 0);
+    dueDate.setDate(dueDate.getDate() + 15);
+
+    // 取得當前使用者資訊
+    const currentUser = this.authService.currentUserValue;
+
+    const defaultValues: Record<string, string | number | string[] | Date> = {
+      // 專櫃基本資訊
+      tlt_no: '',
+      tlt_shortname: '',
+      tlt_name: '',
+      paper_type: '',
+      org_id: '',
+
+      // 業種分類
+      bus_type: '',
+      bus_class: '',
+      bus_sclass: '',
+
+      // 狀態欄位
+      approve_status: '1',        // 預設值 '1' (未審核)
+      tlt_openflag: '9',          // 預設值 '9' (合約未生效)
+
+      // 商務條件 - 帶入預設值 (依據 tls12040-defaults.constants.ts)
+      tlt_term_type: '3',         // 預設值 '3' (一般抽成)
+      comm_comp_type: '2',        // 預設值 '2' (除稅)
+      tlt_kind: '1',              // 預設值 '1' (正櫃)
+      deco_type: '1',             // 預設值 '1' (統設統裝)
+      edc_yn: 'Y',                // 預設值 'Y' (是)
+      tlt_ctype_mtotal: '',       // 預設值 '' (清空)
+      overall_status: '1',        // 預設值 '1' (全部)
+      rent_ahead: 'N',            // 預設值 'N'
+      rent_period: 0,             // 預設值 0
+      base_rent: 0,               // 預設值 0
+      deposit: 0,                 // 預設值 0
+
+      // 業務設定 - 帶入預設值 (依據 tls12040-defaults.constants.ts)
+      rece_yn: 'Y',               // 預設值 'Y' (是)
+      pos_yn: 'Y',                // 預設值 'Y' (是)
+      cash_yn: 'N',               // 預設值 'N' (否)
+      comm_yn: 'Y',               // 預設值 'Y' (是)
+      vip_yn: 'N',                // 預設值 'N' (否)
+      money_type: '30',           // 預設值 '30' (月結)
+      store_way: '1',             // 預設值 '1' (專櫃)
+      check_type: '3',            // 預設值 '3' (網路)
+      check_typeList: ['1', '2', '3'],  // 預設值 ['1', '2', '3'] (郵寄、Email、網路)
+      paytype: '1',               // 預設值 '1' (匯款)
+      credit_card: 0,             // 預設值 0
+      total_amt: 0,               // 預設值 0
+      total_amt_vendor: 0,        // 預設值 0
+      total_amt_unit: 'M',        // 預設值 'M' (月)
+      total_amt_vendor_unit: 'M', // 預設值 'M' (月)
+      paymentMethods: [],         // 預設值 []
+
+      // 保證金 - 帶入預設值 (依據 tls12040-defaults.constants.ts)
+      open_deposit: '',           // 預設值 '' (清空)
+      open_fees: 0,               // 預設值 0
+      construct_deposit: '',      // 預設值 '' (清空)
+      construct_fees: 0,          // 預設值 0
+      expiration_deposit: '',     // 預設值 '' (清空)
+      expiration_fees: 0,         // 預設值 0
+
+      // 其他設定
+      ticket_remarks: '',
+      check_day: 0,               // 預設值 0
+      invoice_type: '0',          // 預設值 '0' (發票)
+
+      // 聯絡資訊
+      email: '',
+      invoice_email: '',
+      CHECK_TITLE: '',
+      store_tel: '',
+      bank_id: '',
+      vendor_acct_name: '',
+      vendor_acct_no: '',
+      contact_tel: '',
+      contact_fax: '',
+      contact_addr: '',
+      company_addr: '',
+
+      // 公用事業 - 帶入預設值 (依據 tls12040-defaults.constants.ts)
+      water_flag: 'N',            // 預設值 'N' (否)
+      electric_flag: 'N',         // 預設值 'N' (否)
+      gas_flag: 'N',              // 預設值 'N' (否)
+
+      // 銷售類型 - 帶入預設值 (依據 tls12040-defaults.constants.ts)
+      cap_saletype1: 'N',         // 預設值 'N' (否)
+      cap_saletype2: 'N',         // 預設值 'N' (否)
+      cap_saletype3: 'N',         // 預設值 'N' (否)
+      cap_saletype4: 'N',         // 預設值 'N' (否)
+      cap_saletype5: 'N',         // 預設值 'N' (否)
+
+      // 備註
+      tlt_remark: '',
+
+      // 版次 - 預設值 '1'
+      contract_subno: '1',
+
+      // 日期欄位 - 設定預設值
+      apply_date: today,          // 申請日期 - 預設今天
+      tlt_bdate: today,           // 契約起始日 - 預設今天
+      tlt_edate: '',              // 契約截止日 - 清空
+      tlt_contract_bdate: today,  // 營運起始日 - 預設今天
+      tlt_contract_edate: '',     // 營運截止日 - 清空
+      contact_Date: today,        // 洽談日期 - 預設今天
+      feedback_date: today,       // 回函日期 - 預設今天
+      due_date: dueDate,          // 回函截止日 - 預設今天 + 15 天
+
+      // 洽談者資訊 - 設定當前使用者
+      contact_USR_No: currentUser?.user_No || '',
+      contact_USR_Name: currentUser?.user_Name || '',
+    };
+
+    this.dataForm.patchValue(defaultValues, { emitEvent: false });
+
+    // 清空中分類和小分類選項 (因為大分類被清空了)
+    this.busClassOptions = [];
+    this.busSClassOptions = [];
+  }
+
+  /**
+   * 將日期字串轉換為 Date 物件
+   * 支援格式: YYYY-MM-DD, YYYY/MM/DD, ISO 格式 (含時間)
+   * @param value 日期字串或 Date 物件
+   * @returns Date 物件或 null
+   */
+  private parseDateToDateObject(value: string | Date | null | undefined): Date | null {
+    if (!value) return null;
+
+    // 已經是 Date 物件
+    if (value instanceof Date && !isNaN(value.getTime())) {
+      return value;
+    }
+
+    if (typeof value !== 'string') return null;
+
+    const dateStr = value.trim();
+    if (!dateStr) return null;
+
+    // 移除時間部分 (處理 ISO 格式如 2026-01-26T16:00:00.000Z)
+    const datePart = dateStr.split(/[T\s]/)[0];
+
+    // 嘗試 YYYY-MM-DD 或 YYYY/MM/DD 格式
+    const match = datePart.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+    if (match) {
+      const year = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10) - 1; // JavaScript 月份從 0 開始
+      const day = parseInt(match[3], 10);
+      const date = new Date(year, month, day);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * 將續約基本資料回填到表單
+   */
+  private patchFormForRenewal(basicInfo: RenewalBasicInfo, nextContractSubno: number): void {
+    console.log('📝 回填續約基本資料');
+
+    // 需要從原合約帶入的欄位（不包含 ID 類欄位）
+    const renewalFields = {
+      // 專櫃基本資訊
+      tlt_no: basicInfo.tlt_no,
+      tlt_shortname: basicInfo.tlt_shortname,
+      tlt_name: basicInfo.tlt_name,
+      paper_type: basicInfo.paper_type,
+      org_id: basicInfo.org_id,
+
+      // 業種分類
+      bus_type: basicInfo.bus_type,
+      bus_class: basicInfo.bus_class,
+      bus_sclass: basicInfo.bus_sclass,
+
+      // 商務條件
+      tlt_term_type: basicInfo.tlt_term_type,
+      comm_comp_type: basicInfo.comm_comp_type,
+      tlt_kind: basicInfo.tlt_kind,
+      deco_type: basicInfo.deco_type,
+      edc_yn: basicInfo.edc_yn,
+      tlt_ctype_mtotal: basicInfo.tlt_ctype_mtotal,
+      overall_status: basicInfo.overall_status,
+      rent_ahead: basicInfo.rent_ahead,
+      rent_period: basicInfo.rent_period,
+      base_rent: basicInfo.base_rent,
+      deposit: basicInfo.deposit,
+
+      // 業務設定
+      rece_yn: basicInfo.rece_yn,
+      pos_yn: basicInfo.pos_yn,
+      cash_yn: basicInfo.cash_yn,
+      comm_yn: basicInfo.comm_yn,
+      money_type: basicInfo.money_type,
+      store_way: basicInfo.store_way,
+      check_type: basicInfo.check_type,
+      paytype: basicInfo.paytype,
+      vip_yn: basicInfo.vip_yn,
+      credit_card: basicInfo.credit_card,
+      total_amt: basicInfo.total_amt,
+      total_amt_vendor: basicInfo.total_amt_vendor,
+      total_amt_unit: basicInfo.total_amt_unit,
+      total_amt_vendor_unit: basicInfo.total_amt_vendor_unit,
+
+      // 保證金
+      open_deposit: basicInfo.open_deposit,
+      open_fees: basicInfo.open_fees,
+      construct_deposit: basicInfo.construct_deposit,
+      construct_fees: basicInfo.construct_fees,
+      expiration_deposit: basicInfo.expiration_deposit,
+      expiration_fees: basicInfo.expiration_fees,
+
+      // 其他設定
+      ticket_remarks: basicInfo.ticket_remarks,
+      check_day: basicInfo.check_day,
+      invoice_type: basicInfo.invoice_type,
+
+      // 聯絡資訊
+      email: basicInfo.email,
+      invoice_email: basicInfo.invoice_email,
+      CHECK_TITLE: basicInfo.CHECK_TITLE,
+      store_tel: basicInfo.store_tel,
+      bank_id: basicInfo.bank_id,
+      vendor_acct_name: basicInfo.vendor_acct_name,
+      vendor_acct_no: basicInfo.vendor_acct_no,
+      contact_tel: basicInfo.contact_tel,
+      contact_fax: basicInfo.contact_fax,
+      contact_addr: basicInfo.contact_addr,
+
+      // 公用事業
+      water_flag: basicInfo.water_flag,
+      electric_flag: basicInfo.electric_flag,
+      gas_flag: basicInfo.gas_flag,
+
+      // 銷售類型
+      cap_saletype1: basicInfo.cap_saletype1,
+      cap_saletype2: basicInfo.cap_saletype2,
+      cap_saletype3: basicInfo.cap_saletype3,
+      cap_saletype4: basicInfo.cap_saletype4,
+      cap_saletype5: basicInfo.cap_saletype5,
+
+      // 備註
+      tlt_remark: basicInfo.tlt_remark,
+
+      // 更新版次（新的版次號）
+      contract_subno: nextContractSubno.toString(),
+
+      // 處理 check_typeList（對帳方式多選）
+      check_typeList: basicInfo.check_type ? basicInfo.check_type.split(',').map((s: string) => s.trim()) : []
+    };
+
+    // 設定旗標避免觸發不必要的監聽
+    this.isLoadingExistingData = true;
+
+    // 回填表單
+    this.dataForm.patchValue(renewalFields, { emitEvent: false });
+
+    // 載入分類選項
+    if (basicInfo.bus_type) {
+      this.loadDependentDropdowns(basicInfo as unknown as TLS12040DetailModel);
+    }
+
+    // 延遲重置旗標
+    setTimeout(() => {
+      this.isLoadingExistingData = false;
+    }, 500);
+  }
+
+  /**
+   * 將續約位置資料回填到 locationInfo
+   */
+  private patchLocationForRenewal(locations: RenewalLocationInfo[]): void {
+    console.log('📍 回填續約位置資料:', locations.length, '筆');
+
+    // 將原合約位置轉換為新的位置資料（移除 ID，標記為新增）
+    this.locationInfo = locations.map((loc) => ({
+      id: this.generateTempId(),
+      apply_no: '', // 新合約，尚無 apply_no
+      location_no: loc.location_no,
+      tlt_building: loc.tlt_building,
+      tlt_floor: loc.tlt_floor,
+      area_no: loc.area_no,
+      tlt_space: loc.tlt_space,
+      building_desc: loc.building_desc,
+      floor_desc: loc.floor_desc,
+      area_desc: loc.area_desc,
+      _status: 'new' as const,
+      _isNew: true,
+      _isEmpty: false
+    }));
+
+    this.updateDisplayLocationData();
+  }
+
+  /**
+   * 檢查是否為續約模式
+   */
+  isRenewalMode(): boolean {
+    return this.dataForm.get('apply_type')?.value === '2' && this.flowService.isRenewalMode();
   }
 }

@@ -44,9 +44,11 @@ export interface BusSClassItem extends IDropdownItem {
 /**
  * 查詢 TLTBUSSCLASS 時的請求 body
  */
-export interface BusSClassQuery {
-  bus_type: string[];
-  bus_class: string[];
+export interface BusSClassRequest {
+  queryTLTBUSSCLASSInfos: {
+    bus_type: string;
+    bus_class: string;
+  }[];
 }
 
 /**
@@ -468,7 +470,7 @@ export interface TlttalentTltSpaceItem {
 
 /** CSS1003 查詢參數 */
 export interface Css1003Query {
-  KIND_ID: string;
+  KIND_ID: string | null;
 }
 
 /** CSS1005 查詢參數 */

@@ -1,10 +1,10 @@
+import { NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { EditorInitEvent, EditorTextChangeEvent, EditorModule } from 'primeng/editor';
-import { editorModules, validateHtmlContent } from './editor.model';
-import { NgIf } from '@angular/common';
+import { EditorInitEvent, EditorModule, EditorTextChangeEvent } from 'primeng/editor';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
+import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
+import { editorModules, validateHtmlContent } from './editor.model';
 @Component({
   selector: 'app-editor-text',
   templateUrl: './editor-text.component.html',
@@ -32,8 +32,7 @@ export class EditorTextComponent extends BasicKitComponent implements OnInit {
     super();
   }
   ngOnInit(): void {
-    this.checkRequiredValidator(this.control);
-    this.checkIntLengthValidator(this.control);
+    this.initControl(this.control);
     validateHtmlContent(this.control.value, this.control);
     // 因為輸入後再全空會有剩下html標籤，所以把他刪掉
     this.control.valueChanges.subscribe((value) => {

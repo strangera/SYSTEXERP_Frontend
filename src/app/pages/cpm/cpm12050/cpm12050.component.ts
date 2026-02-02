@@ -9,6 +9,7 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
@@ -87,6 +88,8 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
 
   // 責任單位選項
   orgIdOptions: any[] = [];
+  // 全部責任單位備份
+  orgIdAllOptions: any[] = [];
   //#endregion
 
   // table設定
@@ -129,6 +132,24 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
       icon: '',
       action: (rowData: CPM12050Data) => this.onClose(rowData),
       disabled: (rowData: CPM12050Data) => rowData.STATUS === 'Z'
+    },
+    {
+      label: '高權限',
+      displayText: '高權限',
+      icon: '',
+      action: (rowData: CPM12050Data) => {
+        const extras = {
+          state: {
+            crudstatus: CRUDStatus.Edit,
+            rowdata: rowData,
+            fromRoute: this.router.url,
+            queryConditions: this.queryForm.getRawValue(),
+            forceEditAll: true
+          }
+        };
+        this.router.navigate([`account/${this.cruPage.toLocaleLowerCase()}`], extras);
+      },
+      disabled: () => false
     },
   ];
 
@@ -189,19 +210,30 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
           }))
         );
       })
+    // 直接載入責任單位選項，讓使用者不需先選組織即能下拉
+    this.dropdownApiService.queryCss1005()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.orgIdAllOptions = res || [];
+        this.orgIdOptions = this.orgIdAllOptions;
+      });
   }
 
   onOrgQueryChange(orgId: string) {
-    if (!orgId) {
-      this.orgIdOptions = [];
-      this.queryForm.patchValue({ ORG_ID: null });
-      return
-    };
-    this.dropdownApiService.queryCss1005({ ORG_ID: orgId })
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        this.orgIdOptions = res || [];
-      });
+    // 不影響 ORG_ID 下拉選單：保持 ORG_ID 與 ORG_ID_QUERY 完全獨立
+    // 此處保留為空以供未來擴充（例如僅做查詢條件相關動作），但不會修改 orgIdOptions 或 ORG_ID 控件
+    return;
+  }
+
+  // 判斷是否禁用編輯按鈕: 若後端回傳為 label (例如 '已派單','結案') 或 code ('W','Z') 時禁用
+  editDisabled = (rowData: any): boolean => {
+    const status = rowData?.STATUS;
+    if (!status) return false;
+    const disabledLabels = ['已派單', '結案'];
+    const disabledValues = this.statusOptions
+      .filter(o => disabledLabels.includes(o.label))
+      .map(o => o.value);
+    return disabledLabels.includes(status) || disabledValues.includes(status);
   }
 
   expansionLoadFn = (rowData: CPM12050Data): Observable<any> => {
@@ -249,6 +281,7 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
       USR_NO: this.authService.getUserInfo()?.user_No,
       USR_NAME: this.authService.getUserInfo()?.user_Name
     }
+    console.log('closeCPM12050 req', req);
     this.cpm12050Service.closeCPM12050(req)
       .pipe(untilDestroyed(this))
       .subscribe(() => {

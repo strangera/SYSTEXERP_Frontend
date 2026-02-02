@@ -17,7 +17,7 @@ import { finalize, Observable } from 'rxjs';
 import { TableCaptionComponent } from '../table/table-caption/table-caption.component';
 import { TableExpansionComponent } from '../table/table-expansion/table-expansion.component';
 import { TableReportUtilityService } from './table-report-utility.service';
-import { AddButton, ColumnGroup, expandAnimation, formatAmount2, ReportColumn } from './table-report.model';
+import { AddButton, ColumnGroup, expandAnimation, formatAmount2, ReportColumn, TableQueryPayload } from './table-report.model';
 
 @Component({
   selector: 'app-table-report',
@@ -57,6 +57,9 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   // Header 相關
   @Input() showCaption = true;            // 是否顯示 Caption
   @Input() showSort = true;              // 是否顯示 排序
+  public get multiSortMeta() { // 暴露內部 p-table 的多重排序狀態
+    return this.dt?.multiSortMeta || [];
+  }
   @Input() allowMultilineHeader = false; // 是否允許標題使用 \n 換行
   // Header(左) 相關
   @Input() showFilter = true;      // 是否顯示 Filter
@@ -83,6 +86,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Output() detail = new EventEmitter<any>();// 明細事件
   @Input() showEdit = true;     // 是否顯示 管理欄位(編輯按鈕)
   @Input() editDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
+  @Input() detailDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止明細條件
   @Output() edit = new EventEmitter<any>(); // 編輯事件
   @Input() addButton: AddButton[] = [];  // 自定義 管理按鈕
   @Input() buttonsLoading = false;   // 按鈕們 loading
@@ -139,6 +143,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
           this.dt.virtualScroll = false;
           this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
         } else {
+          if (this.data.length === this.totalRecords) { this.dt.lazy = false; }
           this.dt.virtualScroll = true;
           this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
           this.virtualData = Array.from({ length: this.data.length });
@@ -183,7 +188,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     return [{ label: '', value: this.formatValue(d) }];
   }
   loadMoreData() {
-    if (this._loading || !this.queryFunction || !this.lastQueryBody || this.data.length >= this.totalRecords || !this.lazy) {
+    if (this._loading || !this.queryFunction || !this.lastQueryBody) {
       return; // 如果正在載入、沒有查詢函式、沒有查詢條件或已載入全部資料，則退出
     }
     const pageSize = this.lastQueryBody?.pageSize || this.lastQueryBody?.PageSize || 30;
@@ -208,9 +213,13 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     });
   }
   onSort(event: any) {
-    if (this._loading || !this.lazy) {
+    if (!this.lazy) {
+      this.groupTotals = {};
+      this.updateGroupTotals(this.data);
+      this.cdr.detectChanges();
       return;
     }
+    if (this._loading) return;
     if (event.multiSortMeta && event.multiSortMeta.length > 0) {
       const lastSort = event.multiSortMeta[event.multiSortMeta.length - 1];
       this.dt.multiSortMeta = [lastSort];
@@ -254,8 +263,35 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
           this.virtualData = this.data;
         }
         this.selectedItems = [];
+        this.dataChange.emit(this.data);
       }
     });
+  }
+  customSort(event: TableQueryPayload) {
+    this.data.sort((data1, data2) => {
+      for (const sortMeta of event.multiSortMeta!) {
+        const value1 = data1[sortMeta.field];
+        const value2 = data2[sortMeta.field];
+        let result = 0;
+        if (value1 == null && value2 != null) result = -1;
+        else if (value1 != null && value2 == null) result = 1;
+        else if (value1 == null && value2 == null) result = 0;
+        else if (typeof value1 === 'string' && typeof value2 === 'string')
+          result = value1.localeCompare(value2, undefined, { numeric: true, sensitivity: 'base' });
+        else
+          result = value1 < value2 ? -1 : value1 > value2 ? 1 : 0;
+
+        if (result !== 0) {
+          return sortMeta.order * result;
+        }
+      }
+      return 0;
+    });
+    // 3. 排序完成後更新
+    this.virtualData = this.data; // 確保虛擬滾動看到的也是排序後的
+    this.groupTotals = {};
+    this.updateGroupTotals(this.data);
+    this.cdr.markForCheck();
   }
   onLazyLoad() {
     if (this.isAllSelected) {
@@ -272,26 +308,22 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     }
   }
   onScroll(event: any) {
-    if (this._loading || !this.lazy) {
-      return;
-    }
-    this.selectedItems = [...this.selectedItems];
-    const pageSize = this.lastQueryBody?.pageSize || this.lastQueryBody?.PageSize || 30;
-    if (this.data.length >= this.totalRecords || this.data.length < pageSize) {
-      this.virtualData = [...this.data];
-      return;
-    }
-    if (event && event.originalEvent && event.originalEvent.target) {
-      const target = event.originalEvent.target as HTMLElement;
-      const scrollTop = target.scrollTop;
-      const scrollHeight = target.scrollHeight;
-      const clientHeight = target.clientHeight;
-      const threshold = 2; // 容錯值可自行調整，通常 1-2 像素就足夠
-      if (scrollHeight - scrollTop - clientHeight <= threshold) {
-        this.loadMoreData();
+    if (this._loading) return;
+    if (this.lazy) {
+      const target = event.originalEvent.target;
+      const pageSize = this.lastQueryBody?.pageSize || 30;
+      if (this.data.length < this.totalRecords && this.data.length >= pageSize) {
+        if (target.scrollHeight - target.scrollTop - target.clientHeight <= 2) {
+          this.loadMoreData();
+        }
       }
     }
-    this.cdr.detectChanges();
+    else {
+      if (this.selectedItems && this.selectedItems.length > 0) {
+        this.selectedItems = [...this.selectedItems];
+        this.cdr.detectChanges();
+      }
+    }
   }
   // 1. 處理單一勾選變更 (在 HTML 中對應 selectionChange)
   onSelectionChange(event: any[]) {

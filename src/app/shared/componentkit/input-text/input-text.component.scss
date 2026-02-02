@@ -5,10 +5,11 @@
 }
 
 input {
-  width: 100%;
-  padding: 0.5rem 30px 0.5rem 0.75rem !important;  // 與 calendar 一致的 padding，加上 !important 確保優先級
-  line-height: 1.5 !important;  // 確保行高一致
-  font-size: 1rem !important;  // 確保字體大小一致
+  // !!! 預設已經為padding: 0.5rem 0.75rem; 只需更改padding-right
+  padding-right: 30px !important;
+  // padding: 0.5rem 30px 0.5rem 0.75rem !important; // 與 calendar 一致的 padding，加上 !important 確保優先級
+  // line-height: 1.5 !important; // 確保行高一致 // !!! 不要設定字體大小，會影響 input 的高度 跟其他元件不同 ex. dropdown
+  // font-size: 1rem !important;  // 確保字體大小一致 // !!! 不要設定字體大小，會影響 input 的高度 跟其他元件不同 ex. dropdown，primeNg預設為12px
 }
 
 .copy-button {
@@ -31,7 +32,7 @@ input {
   color: #495057 !important;
   cursor: text !important;
   font-weight: 500;
-  padding: 0.5rem 0.75rem !important;  // 確保 readonly 模式的 padding 一致
+  padding: 0.5rem 0.75rem !important; // 確保 readonly 模式的 padding 一致
   line-height: 1.5 !important;
   font-size: 1rem !important;
 
