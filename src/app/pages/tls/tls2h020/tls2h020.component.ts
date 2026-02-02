@@ -11,7 +11,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
-import { formatYN, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { formatYYYYMM } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -59,8 +59,7 @@ export class TLS2H020Component extends BasicQueryPageComponent<any> implements O
     //  { field: 'GuiAmt', header: '發票金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'GuiNo', header: '發票號碼', visible: true },
     { field: 'GuiPrintTimes', header: '發票列印次數', visible: true },
-    { field: 'IsPrinted', header: '是否已列印', visible: true, format: formatYN },
-
+    { field: 'IsPrinted', header: '是否已列印', visible: true, format: (v: any) => (v ? '是' : '否') },
   ];
   constructor(
     public readonly tls2h020Service: Tls2h020Service,
