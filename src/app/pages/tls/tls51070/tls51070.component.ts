@@ -337,7 +337,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   loadOptions() {
     //查詢 商品單位
     this.tls51070Service
-      .queryPLUUNIT_DropDownList({})
+      .queryPLUUNIT_DropDownList({}).pipe(untilDestroyed(this))
       .subscribe((response) => {
         this.unitOptions = response.Data.map((item: apiOption) => ({
           No: item.No,
@@ -350,7 +350,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
 
     // 查詢 品牌代碼
     this.tls51070Service
-      .queryPLULOGO_DropDownList({})
+      .queryPLULOGO_DropDownList({}).pipe(untilDestroyed(this))
       .subscribe((response) => {
         this.brandOption = response.Data.map((item: apiOption) => ({
           No: item.No,
@@ -362,7 +362,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
       });
 
     // 查詢 專櫃編號
-    this.tls51070Service.queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList({}).subscribe((response) => {
+    this.tls51070Service.queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.TLT_NO_Option = response.Data.map((item: any) => ({
         No: item.No, // 專櫃編號代碼
         Label: item.No + '-' + item.Name, // 組合成顯示用的Label
@@ -376,7 +376,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     {
       //查詢 大分類
       this.tls51070Service
-        .queryCAT_LNo_DropDownList({})
+        .queryCAT_LNo_DropDownList({}).pipe(untilDestroyed(this))
         .subscribe((response) => {
           this.largeOption = response.Data.map((item: apiOption) => ({
             No: item.No,

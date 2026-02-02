@@ -68,14 +68,14 @@ export class CPM12060Component extends BasicQueryPageComponent<CPM12060Data> imp
         value
     },
     { field: 'COMPLAIN_DATE', header: '提供日期', visible: true, format: formatDateTime },
-    // { field: 'ANSWER_NAME', header: '處理單位', visible: true },
-    // { field: 'ALERT_DATE', header: '通知日期', visible: true, format: formatDateTime },
-    // { field: 'ANSWER_NAME', header: '處理者', visible: true },
-    // { field: 'ANSWER_YN', header: '處理狀況', visible: true },
-    // { field: 'STATUS', header: '是否結案', visible: true },
-    // 暫時先用下面的過
+    { field: 'ALERT_DATE', header: '通知日期', visible: true, format: formatDateTime },
+    { field: 'ANSWER_NAME', header: '處理者', visible: true },
+    { field: 'ANSWER_YN', header: '處理狀況', visible: true },
+    { field: 'STATUS', header: '是否結案', visible: true },
     { field: 'CLASS_ID', header: '處理單位', visible: true },
-    { field: 'STATUS', header: '處理狀態', visible: true },
+    // 暫時先用下面的過
+    // { field: 'CLASS_ID', header: '處理單位', visible: true },
+    // { field: 'STATUS', header: '處理狀態', visible: true },
   ];
 
   constructor(
