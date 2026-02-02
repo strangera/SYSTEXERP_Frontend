@@ -1493,6 +1493,25 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
         errorFields.push('cag_bdate', 'cag_edate');
       }
 
+      // 驗證日期在契約期間內
+      const contractStartDate = this.step1Form.get('tlt_bdate')?.value;
+      const contractEndDate = this.step1Form.get('tlt_edate')?.value;
+      if (contractStartDate && contractEndDate) {
+        const contractStart = this.parseDate(contractStartDate);
+        const contractEnd = this.parseDate(contractEndDate);
+
+        if (condStart && contractStart && condStart < contractStart) {
+          errorCount++;
+          errorTypes.add('日期超出契約期間');
+          if (!errorFields.includes('cag_bdate')) errorFields.push('cag_bdate');
+        }
+        if (condEnd && contractEnd && condEnd > contractEnd) {
+          errorCount++;
+          errorTypes.add('日期超出契約期間');
+          if (!errorFields.includes('cag_edate')) errorFields.push('cag_edate');
+        }
+      }
+
       // 根據抽成別驗證特定欄位
       const data = item as unknown as Record<string, unknown>;
       switch (commissionType) {

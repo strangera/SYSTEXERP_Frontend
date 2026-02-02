@@ -162,6 +162,7 @@ export class ConditionDataManagerService {
 
   /**
    * 根據抽成類型建立新項目
+   * 自動計算起始日期：接續既有項目最晚截止日的隔天
    */
   createConditionItem(
     commissionType: string,
@@ -170,17 +171,21 @@ export class ConditionDataManagerService {
     endDate: string,
     existingItems: ConditionItem[] = []
   ): ConditionItem | null {
+    const smartStartDate = this.getNextStartDate(existingItems, startDate, endDate);
+    if (smartStartDate === null) {
+      return null;
+    }
     switch (commissionType) {
       case CommissionType.FIXED_RENT:
-        return this.createFixedRentItem(talentId, startDate, endDate);
+        return this.createFixedRentItem(talentId, smartStartDate, endDate);
       case CommissionType.BASE_RENT_HIGHER:
-        return this.createBaseRentHigherItem(talentId, startDate, endDate);
+        return this.createBaseRentHigherItem(talentId, smartStartDate, endDate);
       case CommissionType.BASE_COMMISSION:
-        return this.createBaseCommissionItem(talentId, startDate, endDate);
+        return this.createBaseCommissionItem(talentId, smartStartDate, endDate);
       case CommissionType.GRADUATED:
-        return this.createGraduatedItem(talentId, startDate, endDate, existingItems as GraduatedCommissionCondition[]);
+        return this.createGraduatedItem(talentId, smartStartDate, endDate, existingItems as GraduatedCommissionCondition[]);
       case CommissionType.BASE_TIER:
-        return this.createBaseTierItem(talentId, startDate, endDate, existingItems as BaseTierCondition[]);
+        return this.createBaseTierItem(talentId, smartStartDate, endDate, existingItems as BaseTierCondition[]);
       default:
         return null;
     }
@@ -260,5 +265,59 @@ export class ConditionDataManagerService {
 
   private getDefaultEndDate(): string {
     return new Date().toISOString().split('T')[0];
+  }
+
+  /**
+   * 計算新增項目的起始日期
+   * 取既有未刪除項目中最晚的 cag_edate + 1 天
+   * 若無既有項目則回傳契約起始日，若已超過契約截止日則回傳 null（不允許新增）
+   */
+  getNextStartDate(existingItems: ConditionItem[], contractStartDate: string, contractEndDate: string): string | null {
+    const activeItems = existingItems.filter(item => item._status !== 'deleted');
+    if (activeItems.length === 0) {
+      return contractStartDate;
+    }
+
+    let latestEnd: Date | null = null;
+    for (const item of activeItems) {
+      if (!item.cag_edate) continue;
+      const d = this.parseDate(item.cag_edate);
+      if (d && (!latestEnd || d > latestEnd)) {
+        latestEnd = d;
+      }
+    }
+
+    if (!latestEnd) {
+      return contractStartDate;
+    }
+
+    // 最晚截止日 + 1 天
+    const nextDay = new Date(latestEnd);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    // 若超過契約截止日，不允許新增
+    const contractEnd = this.parseDate(contractEndDate);
+    if (contractEnd && nextDay > contractEnd) {
+      return null;
+    }
+
+    return this.formatDate(nextDay);
+  }
+
+  private parseDate(value: unknown): Date | null {
+    if (!value) return null;
+    if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
+    const str = String(value);
+    // 支援 yyyy/MM/dd 和 yyyy-MM-dd
+    const normalized = str.replace(/\//g, '-');
+    const d = new Date(normalized);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  private formatDate(date: Date): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}/${m}/${d}`;
   }
 }
