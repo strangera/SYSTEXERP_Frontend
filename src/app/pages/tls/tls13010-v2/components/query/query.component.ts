@@ -143,9 +143,9 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
 
     // 專櫃日期範圍
     tlt_bdate_start_from: [],
-    tlt_bdate_end_to: [],
+    tlt_bdate_start_to: [],
     tlt_edate_start_from: [],
-    tlt_edate_end_to: [],
+    tlt_edate_start_to: [],
 
     // 合約日期範圍
     tlt_contract_bdate_from: [],
