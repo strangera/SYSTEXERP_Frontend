@@ -556,6 +556,17 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     if (end) this.queryForm.get('TXN_DateE')?.setValue(end);
   }
 
+  //清除日期查詢條件
+  onClearDate() {
+    //dateForm設定為日營業報，日期今天
+    this.dateForm.reset({
+      reportType: '1',
+      onedatedd: yesterday,
+    });
+
+    this.setReadOnlyFields();
+    this.syncDateToQueryForm();
+  }
 
   onDetail1(event: any) {
     const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);
