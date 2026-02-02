@@ -228,11 +228,11 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
     return;
   }
 
-  // 判斷是否禁用編輯按鈕: 若後端回傳為 label (例如 '已派單','結案') 或 code ('W','Z') 時禁用
+  // 判斷是否禁用編輯按鈕: 只有結案（label '結案' 或 value 'Z'）為不可編輯
   editDisabled = (rowData: any): boolean => {
     const status = rowData?.STATUS;
     if (!status) return false;
-    const disabledLabels = ['已派單', '結案'];
+    const disabledLabels = ['結案'];
     const disabledValues = this.statusOptions
       .filter(o => disabledLabels.includes(o.label))
       .map(o => o.value);
