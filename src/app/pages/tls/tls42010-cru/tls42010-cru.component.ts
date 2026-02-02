@@ -1000,13 +1000,30 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     // 先處理常見 Delphi 名稱（例如使用者直接輸入 clBtnFace / clWindowText）
     const name = (tcolor || '').toString().trim().toLowerCase();
     const nameMap: Record<string, string> = {
+      'clblack': 'RGB:0,0,0',
+      'clmaroon': 'RGB:128,0,0',
+      'clgreen': 'RGB:0,128,0',
+      'clolive': 'RGB:128,128,0',
+      'clnavy': 'RGB:0,0,128',
+      'clpurple': 'RGB:128,0,128',
+      'clteal': 'RGB:0,128,128',
+      'clgray': 'RGB:128,128,128',
+      'clsilver': 'RGB:192,192,192',
+      'clred': 'RGB:255,0,0',
+      'cllime': 'RGB:0,255,0',
+      'clyellow': 'RGB:255,255,0',
+      'clblue': 'RGB:0,0,255',
+      'clfuchsia': 'RGB:255,0,255',
+      'claqua': 'RGB:0,255,255',
+      'clltgray': 'RGB:192,192,192',
+      'cldkgray': 'RGB:128,128,128',
+      'clwhite': 'RGB:255,255,255',
+      'clmoneygreen': 'RGB:192,220,192',
+      'clskyblue': 'RGB:166,202,240',
+      'clcream': 'RGB:255,251,240',
+      'clmedgray': 'RGB:160,160,164',
       'clbtnface': 'RGB:240,240,240',
       'clwindowtext': 'RGB:0,0,0',
-      'clmoneygreen': 'RGB:192,220,192',
-      'clskyblue': 'RGB:240,202,166',
-      'clcream': 'RGB:240,251,255',
-      'clwhite': 'RGB:255,255,255',
-      'clblack': 'RGB:0,0,0',
       'clnone': '',
       'cldefault': ''
     };
@@ -1024,12 +1041,12 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       // 若高位元非 00（代表系統色參考），嘗試匹配常見系統色的 hex
       const high = parseInt(up.substring(0, 2), 16);
       if (high !== 0) {
-        // 常見系統色 hex 對應（若後端使用系統色的具體 hex）
-        const sysMap: Record<string, string> = {
-          '00F0F0F0': 'RGB:240,240,240', // btnface
-          '00000000': 'RGB:0,0,0', // black/window text
-        };
+        // 若為系統色（高位元非 00），嘗試以尾 6 碼匹配常見顏色
         const tail6 = up.slice(-6);
+        const sysMap: Record<string, string> = {
+          'F0F0F0': 'RGB:240,240,240', // btnface-like
+          '000000': 'RGB:0,0,0', // black/window text
+        };
         if (sysMap[tail6]) return sysMap[tail6];
         return '';
       }
