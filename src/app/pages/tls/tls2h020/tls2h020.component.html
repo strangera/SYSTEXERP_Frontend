@@ -2,7 +2,8 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button label="產生發票" icon="pi pi-plus" (click)="onCreateInvoice(queryForm)" [loading]="loading"></app-button>
-    <!-- <app-button btnType="create" (click)="onCreate()" label="重新列印" [disabled]="selectedItems.length === 0"></app-button> -->
+    <app-button btnType="create" (click)="onReprint(queryForm)" label="重新列印" [loading]="loading"
+      [disabled]="selectedItems.length === 0"></app-button>
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
