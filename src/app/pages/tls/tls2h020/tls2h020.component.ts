@@ -8,10 +8,10 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
-import { formatYN, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { formatYYYYMM } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -28,7 +28,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
   selector: 'app-tls2h020',
   templateUrl: './tls2h020.component.html',
   standalone: true,
-  imports: [ButtonModule, InputNumberRangeComponent, CalendarComponent, SelectButtonModule, TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, CheckboxModule, TranslateModule]
+  imports: [ButtonModule, InputTextRangeComponent, CalendarComponent, SelectButtonModule, TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, CheckboxModule, TranslateModule]
 })
 export class TLS2H020Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -59,8 +59,7 @@ export class TLS2H020Component extends BasicQueryPageComponent<any> implements O
     //  { field: 'GuiAmt', header: '發票金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'GuiNo', header: '發票號碼', visible: true },
     { field: 'GuiPrintTimes', header: '發票列印次數', visible: true },
-    { field: 'IsPrinted', header: '是否已列印', visible: true, format: formatYN },
-
+    { field: 'IsPrinted', header: '是否已列印', visible: true, format: (v: any) => (v ? '是' : '否') },
   ];
   constructor(
     public readonly tls2h020Service: Tls2h020Service,
