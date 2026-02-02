@@ -331,6 +331,12 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
       this.bus_sclass_Option = Object.values(groupedData);
       console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
     });
+
+    // ---進入時讀取比較表單的query資訊---
+    if (this.queryStateService.getQueryStateValue('tls31020_Date')) {
+      this.dateForm = this.queryStateService.getQueryStateValue('tls31020_Date');
+    }
+    // ------
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -371,6 +377,9 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
 
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        // ---同步儲存比較表單的query資訊---
+        this.queryStateService.setQueryState('tls31020_Date', this.dateForm);
+        // ------
       })
     })
   }
