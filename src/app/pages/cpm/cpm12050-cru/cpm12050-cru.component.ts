@@ -70,6 +70,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     COMPLAIN_DATE: [null],
     ALERT_DATE: [null],
     ANSWER_YN: [null],
+    STATUS: [null],
     SUGG_TYPE: [null],
     CLASS_EMAIL: [null],
   });
@@ -159,13 +160,29 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
       // 預先載入下拉選項
       this.onKindChange(this.rowdata.KIND_ID!);
       this.onOrgQueryChange(this.rowdata.ORG_ID!);
-      // 設定表單值
+      // 設定表單值（帶入 master 欄位）
       this.dataForm.patchValue({
         KIND_ID: this.rowdata.KIND_ID,
         KIND_ID_SUB: this.rowdata.KIND_ID_SUB,
         ORG_ID_QUERY: this.rowdata.ORG_ID,
         ORG_ID: this.rowdata.CLASS_ID,
-      });
+        COMPLAIN_NOTES: this.rowdata.COMPLAIN_NOTES ?? null,
+        CUST_NAME: this.rowdata.CUST_NAME ?? null,
+        SEX: this.rowdata.SEX ?? null,
+        CONTACT_ADDR: this.rowdata.CONTACT_ADDR ?? null,
+        CONTACT_TEL: this.rowdata.CONTACT_TEL ?? null,
+        CELL_PHONE: this.rowdata.CELL_PHONE ?? null,
+        E_MAIL: this.rowdata.E_MAIL ?? null,
+        MEMBER_ID: this.rowdata.MEMBER_ID ?? null,
+        CLASS_EMAIL: (this.rowdata as any).CLASS_EMAIL ?? null,
+        COMPLAIN_DATE: this.rowdata.COMPLAIN_DATE ? new Date(this.rowdata.COMPLAIN_DATE) : null,
+        ALERT_DATE: this.rowdata.ALERT_DATE ? new Date(this.rowdata.ALERT_DATE) : null,
+        ANSWER_YN: (this.rowdata.ANSWER_YN ?? (this.rowdata as any).STATUS)
+          ? String((this.rowdata.ANSWER_YN ?? (this.rowdata as any).STATUS)).toUpperCase()
+          : null,
+        SUGG_TYPE: (this.rowdata as any).SUGG_TYPE ?? null,
+        STATUS: (this.rowdata as any).STATUS ?? null
+      } as any);
       // 帶回明細資料
       this.cpm12050Service.queryCPM12050Detail({
         ID: this.rowdata.ID,
@@ -240,10 +257,26 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
           if (this.canAdd()) {
             // 新增主檔request
             const insertRequest: InsertCPM12050Request = {
-              ...formValue,
+              KIND_ID: formValue.KIND_ID,
+              KIND_ID_SUB: formValue.KIND_ID_SUB,
+              SUGG_SOURCE: formValue.SUGG_SOURCE,
+              ORG_ID: formValue.ORG_ID,
+              COMPLAIN_NOTES: formValue.COMPLAIN_NOTES,
+              CUST_NAME: formValue.CUST_NAME,
+              SEX: formValue.SEX,
+              CONTACT_ADDR: formValue.CONTACT_ADDR,
+              CONTACT_TEL: formValue.CONTACT_TEL,
+              CELL_PHONE: formValue.CELL_PHONE,
+              E_MAIL: formValue.E_MAIL,
+              SUGG_SOURCE_OTHER: (formValue as any).SUGG_SOURCE_OTHER ?? '',
+              MEMBER_ID: formValue.MEMBER_ID,
+              ANSWER_YN: formValue.ANSWER_YN ? String(formValue.ANSWER_YN).toUpperCase() : formValue.ANSWER_YN,
+              STATUS: formValue.STATUS ?? formValue.ANSWER_YN ?? 'S',
+              SUGG_TYPE: formValue.SUGG_TYPE,
+              CLASS_EMAIL: formValue.CLASS_EMAIL,
               USR_NO: formValue.CRT_USR_No,
               USR_NAME: formValue.CRT_USR_Name
-            }
+            };
 
             // 只呼叫主檔新增（新增模式無明細資料）
             this.cpm12050Service.insertCPM12050(insertRequest)
@@ -251,8 +284,38 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
                 untilDestroyed(this),
                 finalize(() => this.loading = false)
               )
-              .subscribe(() => {
+              .subscribe((response: any) => {
+                console.log('insertCPM12050 response', response);
+                // 嘗試從 response 中找回新建立的識別（優先 SEQ_ID，否則 ID）
+                const seq = response?.Data?.SEQ_ID ?? (Array.isArray(response?.Data) ? response.Data[0]?.SEQ_ID : undefined) ?? response?.SEQ_ID;
+                const newId = response?.ID ?? (Array.isArray(response?.Data) ? response.Data[0]?.ID : undefined);
+
                 this.messageService.successBubble('新增成功');
+
+                // 若能取得 SEQ_ID 或 ID，立即呼叫查詢剛新增的那筆，確保 UI 與後端同步
+                if (seq) {
+                  this.cpm12050Service.queryCPM12050({ SEQ_ID: seq })
+                    .pipe(untilDestroyed(this))
+                    .subscribe(r => {
+                      // 如果需要把查到的資料帶入 CRU 或轉導到編輯頁，可在此處處理
+                      console.log('queried new record by SEQ_ID', r);
+                      // 例如回列表或關閉 CRU
+                      this.onCancel();
+                    });
+                  return;
+                }
+
+                if (newId) {
+                  this.cpm12050Service.queryCPM12050({ ID: newId })
+                    .pipe(untilDestroyed(this))
+                    .subscribe(r => {
+                      console.log('queried new record by ID', r);
+                      this.onCancel();
+                    });
+                  return;
+                }
+
+                // 無法取得識別則維持原行為
                 this.dataForm.reset(); // 重置表單
               });
 
@@ -262,12 +325,27 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
           if (this.canEdit()) {
             // 修改主檔request
             const updateRequest: UpdateCPM12050Request = {
-              ...formValue,
               ID: this.rowdata?.ID || 0,
+              KIND_ID: formValue.KIND_ID,
+              KIND_ID_SUB: formValue.KIND_ID_SUB,
+              CUST_NAME: formValue.CUST_NAME,
+              SEX: formValue.SEX,
+              CONTACT_ADDR: formValue.CONTACT_ADDR,
+              CONTACT_TEL: formValue.CONTACT_TEL,
+              CELL_PHONE: formValue.CELL_PHONE,
+              E_MAIL: formValue.E_MAIL,
+              COMPLAIN_NOTES: formValue.COMPLAIN_NOTES,
+              SUGG_SOURCE: formValue.SUGG_SOURCE,
+              SUGG_SOURCE_OTHER: (formValue as any).SUGG_SOURCE_OTHER ?? '',
+              ORG_ID: formValue.ORG_ID,
+              MEMBER_ID: formValue.MEMBER_ID,
+              SUGG_TYPE: formValue.SUGG_TYPE,
+              ANSWER_YN: formValue.ANSWER_YN ? String(formValue.ANSWER_YN).toUpperCase() : this.rowdata?.ANSWER_YN ?? undefined,
+              CLASS_EMAIL: formValue.CLASS_EMAIL,
+              STATUS: formValue.STATUS ?? formValue.ANSWER_YN ?? this.rowdata?.STATUS ?? '',
               USR_NO: formValue.CRT_USR_No,
-              USR_NAME: formValue.CRT_USR_Name,
-              STATUS: this.rowdata?.STATUS!
-            }
+              USR_NAME: formValue.CRT_USR_Name
+            };
             // 過濾出新增的明細（沒有 SEQ_ID 的是新資料）
             const newDetails: InsertCPM12050DetailRequest[] = this.data
               .filter(item => !item.SEQ_ID)

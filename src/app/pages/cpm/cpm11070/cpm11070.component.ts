@@ -8,7 +8,7 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -41,7 +41,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> implements OnInit {
   queryForm = this.formBuilder.group({
     SeqId: ['', [Validators.maxLength(11)]],
-    RecDateFrom: [null as Date | null, [Validators.required,]],
+    RecDateFrom: [new (Date), [Validators.required,]],
     RecDateTo: [null as Date | null],
     LostDateFrom: [null as Date | null],
     LostDateTo: [null as Date | null],
@@ -81,6 +81,7 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
     { No: 'L', Name: '遺失' },
     { No: 'F', Name: '拾獲' },
   ];
+  addButton: AddButton[] = [];
   Type3Options = [
     { Name: '登錄', No: '1' },
     { Name: '已通知', No: '3' },
@@ -135,6 +136,22 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
 
   ngOnInit(): void {
     this.initializePage('CPM11070', '/CPM/CPM11070CRU', this.queryForm, (frm) => this.onSubmit(frm));
+
+    // 設定自訂管理按鈕：領回 -> 開啟編輯頁面以進行領回流程
+    this.addButton = [
+      {
+        label: '領回',
+        icon: 'pi pi-check-circle',
+        action: (row: CPM11070Data) => {
+          if (this.isClosed(row)) {
+            this.messageService.errorBubble('已轉出或已領回資料不可領回');
+            return;
+          }
+          this.onEdit({ ...row, _openMode: 'receive' } as any);
+        },
+        disabled: (row: CPM11070Data) => this.isClosed(row),
+      },
+    ];
 
   }
 

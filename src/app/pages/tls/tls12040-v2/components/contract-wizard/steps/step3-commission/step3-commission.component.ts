@@ -2,36 +2,36 @@
  * TLS12040-v2 Step 3: 抽成設定
  * 直接複用 TLS13010-v2 的子組件和服務
  */
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, inject } from '@angular/core';
 
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 // 使用 TLS13010-v2 的常數、模型、服務
 import { CommissionType, CommissionTypeLabels } from '../../../../../tls13010-v2/core/constants';
 import {
-  CommissionItem,
-  DiscountSettingItem,
-  DiscountLevelItem,
-  AnnualPerformanceItem,
-  ContractInfo,
-  DropdownOption
-} from '../../../../../tls13010-v2/core/models';
-import {
-  getContractInfoColumns,
-  getCommissionMainColumns,
-  getDiscountColumns,
   getAnnualColumns,
+  getCommissionMainColumns,
+  getContractInfoColumns,
+  getDiscountColumns,
   getLevelColumns
 } from '../../../../../tls13010-v2/core/constants/commission-columns';
+import {
+  AnnualPerformanceItem,
+  CommissionItem,
+  ContractInfo,
+  DiscountLevelItem,
+  DiscountSettingItem,
+  DropdownOption
+} from '../../../../../tls13010-v2/core/models';
 
 // 服務
-import { CommissionSyncService } from '../../../../../tls13010-v2/services/commission/commission-sync.service';
 import { CommissionCopyService } from '../../../../../tls13010-v2/services/commission/commission-copy.service';
-import { CommissionRemarkService } from '../../../../../tls13010-v2/services/commission/commission-remark.service';
 import { CommissionCrudService, DetailType } from '../../../../../tls13010-v2/services/commission/commission-crud.service';
+import { CommissionRemarkService } from '../../../../../tls13010-v2/services/commission/commission-remark.service';
+import { CommissionSyncService } from '../../../../../tls13010-v2/services/commission/commission-sync.service';
 import { CommissionDateValidatorService } from '../../../../../tls13010-v2/services/validation/commission-date-validator.service';
 
 // 子組件
@@ -39,14 +39,14 @@ import {
   CommissionInfoComponent
 } from '../../../../../tls13010-v2/components/contract-wizard/steps/step3-commission/commission-info/commission-info.component';
 import {
-  CommissionTableComponent,
-  FieldChangeEvent,
-  DetailFieldChangeEvent,
-  TabChangeEvent,
   AddDetailEvent,
   BatchDeleteEvent,
+  ButtonClickEvent,
+  CommissionTableComponent,
   DetailBatchDeleteEvent,
-  ButtonClickEvent
+  DetailFieldChangeEvent,
+  FieldChangeEvent,
+  TabChangeEvent
 } from '../../../../../tls13010-v2/components/contract-wizard/steps/step3-commission/commission-table/commission-table.component';
 
 @Component({
@@ -82,6 +82,7 @@ export class Step3CommissionComponent implements OnInit, OnChanges {
   // 參加資訊（同步自第一步驟）
   @Input() capSaletype1: boolean | string = false;
   @Input() capSaletype2: boolean | string = false;
+  @Input() capSaletype3: boolean | string = false;
   @Input() capSaletype5: boolean | string = false;
 
   // === 輸出事件 ===
@@ -115,7 +116,7 @@ export class Step3CommissionComponent implements OnInit, OnChanges {
 
   get requiresCommission(): boolean {
     return this.commissionType !== '' &&
-           this.commissionType !== CommissionType.FIXED_RENT;
+      this.commissionType !== CommissionType.FIXED_RENT;
   }
 
   get contractInfoDataArray(): ContractInfo[] {

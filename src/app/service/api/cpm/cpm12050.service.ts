@@ -7,6 +7,7 @@ import { environment } from 'src/environments/environment';
 // 查詢客戶意見 Request
 export interface QueryCPM12050Request extends BaseQueryRequest {
   SEQ_ID?: string;           // 客戶意見編號
+  ID?: number;               // 主鍵ID（可用於查單筆）
   CUST_NAME?: string;        // 客戶姓名
   SEX?: string;              // 性別
   STATUS?: string;           // 處理狀況
@@ -58,6 +59,7 @@ export interface CPM12050Data {
   ANSWER_DATE_SS?: string;   // 回覆日期(秒)
   SUGG_SOURCE_OTHER?: string;// 其他建議來源
   COMPLAIN_DATE_MM?: string; // 接件日期(月)
+  // (處理狀況說明移至上方 ANSWER_YN 註解)
   COMPLAIN_DATE_SS?: string; // 接件日期(秒)
   FileName1?: string;        // 附件檔名1
   FileName2?: string;        // 附件檔名2
@@ -84,6 +86,10 @@ export interface InsertCPM12050Request {
   CELL_PHONE?: string;       // 手機號碼
   E_MAIL?: string;           // Email
   SUGG_SOURCE_OTHER?: string; // 其他建議來源
+  ANSWER_YN?: string;        // 是否已回覆（Y/N/S 等）
+  STATUS?: string;          // 處理狀態（S:已建立 W:已派單 Y:處理中 Z:結案）
+  SUGG_TYPE?: string;        // 建議類型 (客訴/表揚)
+  CLASS_EMAIL?: string;      // 分類 Email
   MEMBER_ID?: string;        // 會員編號
   USR_NO?: string;           // 使用者編號
   USR_NAME?: string;         // 使用者名稱
@@ -112,6 +118,9 @@ export interface UpdateCPM12050Request {
   COMPLAIN_NOTES?: string;   // 顧客意見內容
   SUGG_SOURCE?: string;      // 建議來源
   SUGG_SOURCE_OTHER?: string; // 其他建議來源
+  SUGG_TYPE?: string;        // 建議類型 (客訴/表揚)
+  ANSWER_YN?: string;        // 是否已回覆（Y/N/S 等）
+  CLASS_EMAIL?: string;      // 分類 Email
   ORG_ID?: string;           // 責任單位
   MEMBER_ID?: string;        // 會員編號
   STATUS?: string;           // 處理狀況

@@ -1,4 +1,5 @@
-<label *ngIf="label" [for]="endControl" class="flex align-content-center gap-1">{{ label }}(起迄)
+<label *ngIf="label" [for]="endControl" class="flex align-content-center gap-1">
+  {{ label }}{{ descLabel }}
   <span *ngIf="isRequired" class="text-red-500">*</span>
   <p-button icon="pi pi-cog" [rounded]="true" [raised]="true" size="small" styleClass="p-0"
     [style]="{'width': '16px','height':'16px'}" (onClick)="op.toggle($event)"

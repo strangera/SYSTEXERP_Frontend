@@ -101,7 +101,7 @@
 <div class="card">
   <app-table-report [data]="data" [columns]="columns" (edit)="onEdit($event)" [showDelete]="false"
     (detail)="onDetail($event)" dataKey="SeqId" [totalRecords]="totalRecords" [loading]="loading"
-    [editDisabled]="editDisabled" [lastQueryBody]="lastQueryBody"
+    [editDisabled]="editDisabled" [lastQueryBody]="lastQueryBody" [addButton]="addButton"
     [queryFunction]="cpm11070Service.queryCPM11070.bind(cpm11070Service)">
 
   </app-table-report>

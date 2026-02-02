@@ -26,7 +26,6 @@ import { CommissionSyncService } from '../../../../services/commission/commissio
 import { CommissionCopyService } from '../../../../services/commission/commission-copy.service';
 import { CommissionRemarkService } from '../../../../services/commission/commission-remark.service';
 import { CommissionCrudService, DetailType } from '../../../../services/commission/commission-crud.service';
-import { CommissionDataService } from '../../../../services/commission/commission-data.service';
 import { CommissionDateValidatorService } from '../../../../services/validation/commission-date-validator.service';
 import { CommissionSubmitValidatorService } from '../../../../services/validation/commission-submit-validator.service';
 
@@ -52,7 +51,6 @@ export class Step3CommissionComponent implements OnInit, OnChanges {
   private copyService = inject(CommissionCopyService);
   private remarkService = inject(CommissionRemarkService);
   private crudService = inject(CommissionCrudService);
-  private dataService = inject(CommissionDataService);
   private dateValidator = inject(CommissionDateValidatorService);
   private submitValidator = inject(CommissionSubmitValidatorService);
 
@@ -68,6 +66,7 @@ export class Step3CommissionComponent implements OnInit, OnChanges {
   // 參加資訊（同步自第一步驟）
   @Input() capSaletype1: boolean | string = false;
   @Input() capSaletype2: boolean | string = false;
+  @Input() capSaletype3: boolean | string = false;
   @Input() capSaletype5: boolean | string = false;
 
   // === 輸出事件 ===
@@ -165,59 +164,46 @@ export class Step3CommissionComponent implements OnInit, OnChanges {
     const detail = detailData as DiscountSettingItem | AnnualPerformanceItem | DiscountLevelItem;
     const originalType = (detail as { _originalType?: string })._originalType || 'discount';
 
-    console.log('[onDetailFieldChange] 接收欄位變更:', {
-      fieldName,
-      newValue,
-      originalType,
-      detailId: detail.id,
-      hasOriginalType: !!(detail as { _originalType?: string })._originalType,
-      currentTab: parentData.currentTab,
-      statusBefore: detail._status  // 添加狀態追蹤
-    });
+    // 找到來源陣列中的原始項目（單向資料流：直接修改來源）
+    if (detail.id == null) return;
+    const sourceItem = this.findSourceItem(parentData, detail.id, originalType as DetailType);
+    if (!sourceItem) return;
 
     // 日期驗證
     if (fieldName === 'tlt_bdate' || fieldName === 'tlt_edate') {
-      if (!this.validateDateField(detail, fieldName, newValue)) {
+      if (!this.validateDateField(sourceItem, fieldName, newValue)) {
         return;
       }
     }
 
-    // 更新欄位值
+    // 更新來源陣列中的欄位值
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (detail as any)[fieldName] = newValue;
+    (sourceItem as any)[fieldName] = newValue;
 
     // 特殊處理：selected 欄位
     if (fieldName === 'selected' && originalType === 'discount') {
-      this.handleDiscountSelectedChange(detail as DiscountSettingItem, parentData, newValue as boolean);
+      this.handleDiscountSelectedChange(sourceItem as DiscountSettingItem, parentData, newValue as boolean);
     }
 
     // 同步 discount 日期到 level
     if ((fieldName === 'tlt_bdate' || fieldName === 'tlt_edate') && originalType === 'discount') {
-      this.syncService.syncDiscountDateToLevel(detail as DiscountSettingItem, parentData);
+      this.syncService.syncDiscountDateToLevel(sourceItem as DiscountSettingItem, parentData);
       parentData.remark = this.remarkService.formatRemarkText(parentData);
     }
 
     // 更新狀態
-    this.crudService.updateItemStatus(detail);
+    this.crudService.updateItemStatus(sourceItem);
     this.crudService.updateItemStatus(parentData);
 
-    console.log('[onDetailFieldChange] 狀態更新後:', {
-      detailId: detail.id,
-      statusAfter: detail._status,
-      originalType
-    });
-
-    this.syncDetailToParentArray(detail, parentData, originalType as DetailType);
+    // 重新產生 detailItems（單向流：來源→顯示）
+    this.crudService.updateDetailItems(parentData);
     this.emitChanges();
   }
 
   onDetailTabChange(event: TabChangeEvent): void {
     const { rowData, tabId } = event;
 
-    // 先同步當前標籤的資料
-    this.forceSyncCurrentTabData(rowData);
-
-    // 切換標籤
+    // 切換標籤（來源陣列已是最新，不需要同步）
     rowData.currentTab = tabId;
 
     // 如果切換到 level 標籤，需要同步折扣設定
@@ -244,6 +230,7 @@ export class Step3CommissionComponent implements OnInit, OnChanges {
       // 同步第一步驟的參加資訊
       defaultCapSaletype1: this.capSaletype1 === 'Y' || this.capSaletype1 === true,
       defaultCapSaletype2: this.capSaletype2 === 'Y' || this.capSaletype2 === true,
+      defaultCapSaletype3: this.capSaletype3 === 'Y' || this.capSaletype3 === true,
       defaultCapSaletype5: this.capSaletype5 === 'Y' || this.capSaletype5 === true
     });
 
@@ -375,6 +362,25 @@ export class Step3CommissionComponent implements OnInit, OnChanges {
   }
 
   // === 私有方法 ===
+
+  /**
+   * 根據 id 和類型，從來源陣列中找到原始項目
+   */
+  private findSourceItem(
+    parentItem: CommissionItem,
+    itemId: string | number,
+    type: DetailType
+  ): DiscountSettingItem | AnnualPerformanceItem | DiscountLevelItem | undefined {
+    switch (type) {
+      case 'discount':
+        return parentItem.discountSettingItems.find(d => d.id === itemId);
+      case 'annual':
+        return parentItem.annualPerformanceItems.find(a => a.id === itemId);
+      case 'level':
+        return parentItem.discountLevelItems.find(l => l.id === itemId);
+    }
+  }
+
   private handleDiscountSelectedChange(
     discountItem: DiscountSettingItem,
     parentData: CommissionItem,
@@ -455,108 +461,6 @@ export class Step3CommissionComponent implements OnInit, OnChanges {
     return true;
   }
 
-  private syncDetailToParentArray(
-    detail: DiscountSettingItem | AnnualPerformanceItem | DiscountLevelItem,
-    parentItem: CommissionItem,
-    type: DetailType
-  ): void {
-    let array: (DiscountSettingItem | AnnualPerformanceItem | DiscountLevelItem)[];
-
-    switch (type) {
-      case 'discount':
-        array = parentItem.discountSettingItems;
-        break;
-      case 'annual':
-        array = parentItem.annualPerformanceItems;
-        break;
-      case 'level':
-        array = parentItem.discountLevelItems;
-        break;
-    }
-
-    const index = array.findIndex(item => item.id === detail.id);
-
-    console.log('[syncDetailToParentArray] 同步明細資料:', {
-      type,
-      detailId: detail.id,
-      detailIdType: typeof detail.id,
-      foundIndex: index,
-      arrayLength: array.length,
-      arrayIds: array.map(a => ({ id: a.id, type: typeof a.id })),
-      detailStatus: detail._status
-    });
-
-    if (index > -1) {
-      // 保留原始 _status，除非 detail 有更新的 _status
-      const originalStatus = array[index]._status;
-      const detailStatus = detail._status;
-
-      console.log('[syncDetailToParentArray] 同步前狀態:', {
-        type,
-        detailId: detail.id,
-        arrayItemStatus: originalStatus,
-        detailStatus: detailStatus
-      });
-
-      Object.assign(array[index], detail);
-      // 確保 _status 正確更新
-      if (detail._status) {
-        array[index]._status = detail._status;
-      } else if (originalStatus === 'original') {
-        array[index]._status = 'modified';
-      }
-
-      console.log('[syncDetailToParentArray] 同步後狀態:', {
-        type,
-        detailId: detail.id,
-        finalStatus: array[index]._status,
-        updatedItem: { id: array[index].id, _status: array[index]._status, selected: array[index].selected }
-      });
-    } else {
-      console.warn('[syncDetailToParentArray] 找不到匹配的項目! detailId:', detail.id, 'arrayIds:', array.map(a => a.id));
-    }
-  }
-
-  private forceSyncCurrentTabData(commissionItem: CommissionItem): void {
-    const currentTab = commissionItem.currentTab || 'discount';
-
-    if (!commissionItem.detailItems || commissionItem.detailItems.length === 0) {
-      return;
-    }
-
-    // 轉換為具有 id 和 _originalType 的型別陣列
-    const currentTabItems = (commissionItem.detailItems as { id?: number | string; _originalType?: string }[]).filter(
-      item => item._originalType === currentTab
-    );
-
-    switch (currentTab) {
-      case 'discount':
-        currentTabItems.forEach(item => {
-          const index = commissionItem.discountSettingItems.findIndex(d => d.id === item.id);
-          if (index > -1) {
-            Object.assign(commissionItem.discountSettingItems[index], item);
-          }
-        });
-        break;
-      case 'annual':
-        currentTabItems.forEach(item => {
-          const index = commissionItem.annualPerformanceItems.findIndex(a => a.id === item.id);
-          if (index > -1) {
-            Object.assign(commissionItem.annualPerformanceItems[index], item);
-          }
-        });
-        break;
-      case 'level':
-        currentTabItems.forEach(item => {
-          const index = commissionItem.discountLevelItems.findIndex(l => l.id === item.id);
-          if (index > -1) {
-            Object.assign(commissionItem.discountLevelItems[index], item);
-          }
-        });
-        break;
-    }
-  }
-
   private ensureDataConsistency(item: CommissionItem): void {
     // 每次進入 Step 3 時，強制重置 currentTab 為 'discount'
     // 確保從其他步驟切換回來時，預設顯示折扣設定 tab
@@ -579,72 +483,12 @@ export class Step3CommissionComponent implements OnInit, OnChanges {
 
   /**
    * 公開方法：在儲存前同步所有資料
-   * 確保 detailItems 中的當前 tab 資料同步回來源陣列
    * 由 contract-wizard 在 onSave 前呼叫
    *
-   * 注意：由於 detailItems 只包含當前 tab 的項目，
-   * 其他 tab 的資料應該已經在 onDetailFieldChange 時同步到來源陣列了。
-   * 這個方法主要是確保當前 tab 的最新編輯被同步。
+   * 單向資料流架構下，來源陣列已經是最新的，不需要額外同步。
+   * 保留此方法以維持 contract-wizard 的呼叫介面。
    */
   public syncAllDataBeforeSave(): void {
-    console.log('[syncAllDataBeforeSave] 開始同步所有抽成資料...');
-
-    this.commissionItems.forEach((commission, idx) => {
-      const currentTab = commission.currentTab || 'discount';
-
-      console.log(`[syncAllDataBeforeSave] Commission ${idx}:`, {
-        currentTab,
-        hasDetailItems: !!commission.detailItems?.length,
-        detailItemsCount: commission.detailItems?.length || 0,
-        discountCount: commission.discountSettingItems?.length || 0,
-        annualCount: commission.annualPerformanceItems?.length || 0,
-        levelCount: commission.discountLevelItems?.length || 0
-      });
-
-      // 先同步當前 tab 的 detailItems 回來源陣列
-      if (commission.detailItems && commission.detailItems.length > 0) {
-        // 只同步當前 tab 的項目 (因為 detailItems 只包含當前 tab)
-        commission.detailItems.forEach(item => {
-          const detailWithMeta = item as { id?: number | string; _originalType?: string; _status?: string };
-          const originalType = detailWithMeta._originalType;
-
-          if (originalType === 'discount') {
-            const index = commission.discountSettingItems.findIndex(d => d.id === detailWithMeta.id);
-            if (index > -1) {
-              Object.assign(commission.discountSettingItems[index], item);
-            }
-          } else if (originalType === 'annual') {
-            const index = commission.annualPerformanceItems.findIndex(a => a.id === detailWithMeta.id);
-            if (index > -1) {
-              Object.assign(commission.annualPerformanceItems[index], item);
-              console.log(`[syncAllDataBeforeSave] 同步 annual 項目:`, {
-                id: detailWithMeta.id,
-                _status: detailWithMeta._status,
-                year_amount: (item as AnnualPerformanceItem).year_amount,
-                extra_rate: (item as AnnualPerformanceItem).extra_rate
-              });
-            }
-          } else if (originalType === 'level') {
-            const index = commission.discountLevelItems.findIndex(l => l.id === detailWithMeta.id);
-            if (index > -1) {
-              Object.assign(commission.discountLevelItems[index], item);
-            }
-          }
-        });
-      }
-
-      // 輸出最終來源陣列的狀態（用於診斷）
-      console.log(`[syncAllDataBeforeSave] Commission ${idx} 來源陣列狀態:`, {
-        annualItems: commission.annualPerformanceItems?.map(a => ({
-          id: a.id,
-          selected: a.selected,
-          _status: a._status,
-          year_amount: a.year_amount,
-          extra_rate: a.extra_rate
-        }))
-      });
-    });
-
-    console.log('[syncAllDataBeforeSave] 同步完成');
+    // 來源陣列已經是最新的（單向資料流），不需要額外同步
   }
 }
