@@ -6,6 +6,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
@@ -35,6 +36,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
     TableComponent,
     TranslateModule,
     CalendarRangeComponent,
+    CalendarComponent,
     InputTextareaComponent,
     DialogComponent
   ]
@@ -159,7 +161,8 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
   closeForm = this.formBuilder.group({
     USR_NO: [''],          // 使用者編號
     USR_NAME: [''],        // 使用者名稱
-    CLOSE_MEMO: ['', [Validators.required, Validators.maxLength(1000)]]  // 結案備註
+    CLOSE_MEMO: ['', [Validators.required, Validators.maxLength(1000)]],  // 結案備註
+    ALERT_DATE: [null, Validators.required] // 通知相關單位處理日期 (必填)
   });
 
   constructor(
@@ -275,11 +278,21 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
   }
 
   saveDialog() {
+    const alertVal: any = this.closeForm.get('ALERT_DATE')!.value;
+    let alertIso: string | null = null;
+    try {
+      if ((alertVal as any) instanceof Date) alertIso = (alertVal as Date).toISOString();
+      else if (typeof alertVal === 'string' && alertVal) alertIso = new Date(alertVal).toISOString();
+    } catch (e) {
+      alertIso = null;
+    }
+
     const req = {
       ID: this.selectedRowDataId,
       CLOSE_MEMO: this.closeForm.get('CLOSE_MEMO')!.value || '',
       USR_NO: this.authService.getUserInfo()?.user_No,
-      USR_NAME: this.authService.getUserInfo()?.user_Name
+      USR_NAME: this.authService.getUserInfo()?.user_Name,
+      ALERT_DATE: alertIso
     }
     console.log('closeCPM12050 req', req);
     this.cpm12050Service.closeCPM12050(req)

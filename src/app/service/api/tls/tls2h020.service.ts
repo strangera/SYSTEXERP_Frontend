@@ -23,4 +23,7 @@ export class Tls2h020Service {
   generateTLS2H020(params: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/generateTLS2H020`, params);
   }
+  RePrintTLS2H020(params: any): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/RePrintTLS2H020`, params, { observe: 'response', responseType: 'blob' }) as Observable<HttpResponse<Blob>>;
+  }
 }

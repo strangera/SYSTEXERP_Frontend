@@ -328,6 +328,12 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     })
+
+    // ---進入時讀取比較表單的query資訊---
+    if (this.queryStateService.getQueryStateValue('tls31020_Date')) {
+      this.dateForm = this.queryStateService.getQueryStateValue('tls31020_Date');
+    }
+    // ------
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -374,6 +380,10 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
 
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+
+        // ---同步儲存比較表單的query資訊---
+        this.queryStateService.setQueryState('tls31020_Date', this.dateForm);
+        // ------
       })
     })
   }
@@ -562,6 +572,19 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     if (start) this.queryForm.get('TXN_DateS')?.setValue(start);
     if (end) this.queryForm.get('TXN_DateE')?.setValue(end);
   }
+
+  //清除日期查詢條件
+  onClearDate() {
+    //dateForm設定為日營業報，日期今天
+    this.dateForm.reset({
+      reportType: '1',
+      onedatedd: yesterday,
+    });
+
+    this.setReadOnlyFields();
+    this.syncDateToQueryForm();
+  }
+
 
   onDetail1(event: any) {
     const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);

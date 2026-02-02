@@ -15,6 +15,16 @@
     font-family: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
     padding: 8px;
   }
+  .p-editor-container {
+    .ql-editor {
+      img {
+        max-width: 300px !important; /* 寬度不超過編輯器 */
+        height: auto; /* 等比例縮放 */
+        display: block; /* 避免下方出現空白間隙 */
+        margin: 10px 0; /* 給圖片一點上下間距 */
+      }
+    }
+  }
 }
 
 .errorMessage {

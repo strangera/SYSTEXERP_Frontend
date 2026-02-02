@@ -149,6 +149,13 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     super();
   }
 
+  getAnswerYnLabel(code: any): string {
+    if (code === null || code === undefined || code === '') return '';
+    const key = String(code).toUpperCase();
+    const found = this.ANSWER_YNOptions.find(o => String(o.value).toUpperCase() === key);
+    return found ? found.label : String(code);
+  }
+
   ngOnInit(): void {
     this.initializePage('CPM12050', this.dataForm);
     // 讀取導航 state 是否帶入 forceEditAll
@@ -181,8 +188,17 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
           ? String((this.rowdata.ANSWER_YN ?? (this.rowdata as any).STATUS)).toUpperCase()
           : null,
         SUGG_TYPE: (this.rowdata as any).SUGG_TYPE ?? null,
-        STATUS: (this.rowdata as any).STATUS ?? null
+        STATUS: (this.rowdata as any).STATUS ? String((this.rowdata as any).STATUS).toUpperCase() : null
       } as any);
+      // 如果是檢視模式（Read），將 ANSWER_YN 與 STATUS 設為唯讀
+      if (this.crudstatus === CRUDStatus.Read && !this.forceEditAll) {
+        try {
+          (this.dataForm.controls as any).ANSWER_YN.disable();
+          (this.dataForm.controls as any).STATUS.disable();
+        } catch (e) {
+          // ignore if controls not exist
+        }
+      }
       // 帶回明細資料
       this.cpm12050Service.queryCPM12050Detail({
         ID: this.rowdata.ID,
@@ -326,25 +342,26 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
             // 修改主檔request
             const updateRequest: UpdateCPM12050Request = {
               ID: this.rowdata?.ID || 0,
-              KIND_ID: formValue.KIND_ID,
-              KIND_ID_SUB: formValue.KIND_ID_SUB,
-              CUST_NAME: formValue.CUST_NAME,
-              SEX: formValue.SEX,
-              CONTACT_ADDR: formValue.CONTACT_ADDR,
-              CONTACT_TEL: formValue.CONTACT_TEL,
-              CELL_PHONE: formValue.CELL_PHONE,
-              E_MAIL: formValue.E_MAIL,
-              COMPLAIN_NOTES: formValue.COMPLAIN_NOTES,
-              SUGG_SOURCE: formValue.SUGG_SOURCE,
-              SUGG_SOURCE_OTHER: (formValue as any).SUGG_SOURCE_OTHER ?? '',
-              ORG_ID: formValue.ORG_ID,
-              MEMBER_ID: formValue.MEMBER_ID,
-              SUGG_TYPE: formValue.SUGG_TYPE,
+              KIND_ID: formValue.KIND_ID ?? this.rowdata?.KIND_ID,
+              KIND_ID_SUB: formValue.KIND_ID_SUB ?? this.rowdata?.KIND_ID_SUB,
+              CUST_NAME: formValue.CUST_NAME ?? this.rowdata?.CUST_NAME,
+              SEX: formValue.SEX ?? this.rowdata?.SEX,
+              CONTACT_ADDR: formValue.CONTACT_ADDR ?? this.rowdata?.CONTACT_ADDR,
+              CONTACT_TEL: formValue.CONTACT_TEL ?? this.rowdata?.CONTACT_TEL,
+              CELL_PHONE: formValue.CELL_PHONE ?? this.rowdata?.CELL_PHONE,
+              E_MAIL: formValue.E_MAIL ?? this.rowdata?.E_MAIL,
+              COMPLAIN_NOTES: formValue.COMPLAIN_NOTES ?? this.rowdata?.COMPLAIN_NOTES,
+              SUGG_SOURCE: formValue.SUGG_SOURCE ?? this.rowdata?.SUGG_SOURCE,
+              SUGG_SOURCE_OTHER: (formValue as any).SUGG_SOURCE_OTHER ?? this.rowdata?.SUGG_SOURCE_OTHER ?? '',
+              ORG_ID: formValue.ORG_ID ?? this.rowdata?.ORG_ID,
+              MEMBER_ID: formValue.MEMBER_ID ?? this.rowdata?.MEMBER_ID,
+              SUGG_TYPE: formValue.SUGG_TYPE ?? (this.rowdata as any)?.SUGG_TYPE,
               ANSWER_YN: formValue.ANSWER_YN ? String(formValue.ANSWER_YN).toUpperCase() : this.rowdata?.ANSWER_YN ?? undefined,
-              CLASS_EMAIL: formValue.CLASS_EMAIL,
-              STATUS: formValue.STATUS ?? formValue.ANSWER_YN ?? this.rowdata?.STATUS ?? '',
-              USR_NO: formValue.CRT_USR_No,
-              USR_NAME: formValue.CRT_USR_Name
+              CLASS_EMAIL: formValue.CLASS_EMAIL ?? (this.rowdata as any)?.CLASS_EMAIL,
+              // If forceEditAll (高權限) allow STATUS from form; otherwise default to 'W'
+              STATUS: this.forceEditAll ? (formValue.STATUS ?? this.rowdata?.STATUS) : 'W',
+              USR_NO: formValue.CRT_USR_No ?? this.rowdata?.CRT_USR_No,
+              USR_NAME: formValue.CRT_USR_Name ?? this.rowdata?.CRT_USR_Name
             };
             // 過濾出新增的明細（沒有 SEQ_ID 的是新資料）
             const newDetails: InsertCPM12050DetailRequest[] = this.data
@@ -357,9 +374,24 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
               }));
 
             // 組合 API 請求：主檔修改 + 新明細新增（若有）
+            // 對後端容易受 null 影響的 string 欄位做清理（null -> ''），並印出 payload 便於檢查
+            const payload: any = { ...updateRequest } as any;
+            const stringFields = [
+              'KIND_ID', 'KIND_ID_SUB', 'CUST_NAME', 'SEX', 'CONTACT_ADDR', 'CONTACT_TEL', 'CELL_PHONE', 'E_MAIL',
+              'COMPLAIN_NOTES', 'SUGG_SOURCE', 'SUGG_SOURCE_OTHER', 'ORG_ID', 'MEMBER_ID', 'SUGG_TYPE', 'ANSWER_YN', 'CLASS_EMAIL', 'STATUS', 'USR_NO', 'USR_NAME'
+            ];
+            stringFields.forEach(f => {
+              // keep null for missing optional fields (backend may expect null rather than empty string)
+              if (payload[f] === undefined || payload[f] === '') payload[f] = null;
+              if (payload[f] === null) return;
+              // ensure status and answer flags are upper-case strings
+              if (f === 'STATUS' || f === 'ANSWER_YN') payload[f] = String(payload[f]).toUpperCase();
+            });
+            console.log('updateCPM12050 req', payload);
+
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const requests: Observable<any>[] = [
-              this.cpm12050Service.updateCPM12050(updateRequest)
+              this.cpm12050Service.updateCPM12050(payload)
             ];
             if (newDetails.length > 0) {
               requests.push(this.cpm12050Service.insertCPM12050Detail(newDetails));
@@ -370,9 +402,16 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
                 untilDestroyed(this),
                 finalize(() => this.loading = false)
               )
-              .subscribe(() => {
-                this.messageService.successBubble('修改成功');
-                this.onCancel();
+              .subscribe({
+                next: () => {
+                  this.messageService.successBubble('修改成功');
+                  this.onCancel();
+                },
+                error: (err) => {
+                  console.error('updateCPM12050 error', err);
+                  const msg = err?.error?.Message || err?.message || '修改失敗（後端錯誤）';
+                  this.messageService.errorBubble(msg);
+                }
               });
           }
           break;
