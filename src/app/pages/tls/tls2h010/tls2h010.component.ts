@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AsyncPipe } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -12,15 +14,16 @@ import { InputNumberRangeComponent } from '@shared/componentkit/input-number-ran
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn, formatAmount, formatYN } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
 import { AddButton, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { saveAs } from 'file-saver';
+import JSZip from 'jszip';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectButtonModule } from 'primeng/selectbutton';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 // 2.2.17.1 租金發票套印作業
@@ -28,7 +31,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
   selector: 'app-tls2h010',
   templateUrl: './tls2h010.component.html',
   standalone: true,
-  imports: [ButtonModule, InputNumberRangeComponent, CalendarComponent, SelectButtonModule, TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, CheckboxModule, TranslateModule]
+  imports: [ButtonModule, InputNumberRangeComponent, CalendarComponent, SelectButtonModule, TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CheckboxModule, TranslateModule]
 })
 export class TLS2H010Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -90,6 +93,131 @@ export class TLS2H010Component extends BasicQueryPageComponent<any> implements O
           }
         },
       });
+  }
+
+  onReprint(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      if (!this.selectedItems || this.selectedItems.length === 0) {
+        this.messageService.infoBubble('請選擇要列印的發票', '提示');
+        return;
+      }
+
+      const toYYYYMM = (val: any): string | null => {
+        if (val === null || val === undefined || val === '') return null;
+        // If already a yyyymm string
+        if (typeof val === 'string') {
+          const digits = val.replace(/\D/g, '');
+          if (/^\d{6}$/.test(digits)) return digits;
+          if (/^\d{8}$/.test(digits)) return digits.substring(0, 6);
+        }
+        let d: Date;
+        if (val instanceof Date) d = val;
+        else d = new Date(val);
+        if (isNaN(d.getTime())) return null;
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        return `${y}${m}`;
+      };
+
+      const selectedSnapshot = this.selectedItems.map(x => ({ ...x }));
+      const obs = this.selectedItems.map(row => {
+        const params: any = {
+          GuiNo: row?.GuiNo ?? '',
+          SamYyyymm: toYYYYMM(row?.SamYyyymm) ?? '',
+          TltNo: row?.TltNo ?? ''
+        };
+        return this.tls2h010Service.RePrintTLS2H010(params);
+      });
+
+      this.loading = true;
+      this.messageService.blockUi();
+
+      forkJoin(obs).pipe(untilDestroyed(this), finalize(() => { this.loading = false; this.messageService.unblockUi(); }))
+        .subscribe({
+          next: async (responses: HttpResponse<Blob>[]) => {
+            const files: { filename: string, blob: Blob }[] = [];
+            const errors: string[] = [];
+
+            for (const res of responses) {
+              const contentDisposition = res.headers.get('content-disposition') || '';
+              const contentTypeHeader = res.headers.get('content-type') || res.body?.type || '';
+
+              // If server returned JSON in blob (error), read and parse
+              if ((contentTypeHeader && contentTypeHeader.indexOf('application/json') !== -1) || !res.body || (res.body.size === 0)) {
+                try {
+                  const text = await (res.body?.text?.() ?? Promise.resolve(''));
+                  if (text) {
+                    const parsed = JSON.parse(text);
+                    if (parsed?.Message) errors.push(parsed.Message);
+                    else errors.push('伺服器回傳錯誤');
+                  } else {
+                    errors.push('伺服器未回傳檔案');
+                  }
+                } catch (err) {
+                  console.error('parse error', err);
+                  errors.push('解析錯誤回應失敗');
+                }
+                continue;
+              }
+
+              // determine filename
+              let filename = 'reprint.pdf';
+              if (contentDisposition) {
+                const match = contentDisposition.match(/filename\*=UTF-8''(.+?)(;|$)/);
+                if (match && match[1]) filename = decodeURIComponent(match[1]);
+                else {
+                  const m2 = contentDisposition.match(/filename="?([^";]+)"?/);
+                  if (m2 && m2[1]) filename = m2[1];
+                }
+              }
+
+              const bodyContent = res.body ?? new Blob();
+              const blob = bodyContent instanceof Blob ? bodyContent : new Blob([bodyContent as any], { type: 'application/pdf' });
+              if (blob.size === 0) {
+                errors.push(`${filename} 空檔`);
+              } else {
+                files.push({ filename, blob });
+              }
+            }
+
+            if (files.length === 0) {
+              // debug: log responses
+              console.debug('RePrint responses:', responses);
+              // fallback: package raw responses (preserve order using selectedSnapshot)
+              const zip = new JSZip();
+              responses.forEach((res, idx) => {
+                const bodyContent = res.body ?? new Blob();
+                const blob = bodyContent instanceof Blob ? bodyContent : new Blob([bodyContent as any]);
+                const item = selectedSnapshot[idx] || {} as any;
+                const name = item?.GuiNo ? `${item.GuiNo}.bin` : `file_${idx + 1}.bin`;
+                zip.file(name, blob);
+              });
+              const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+              zip.generateAsync({ type: 'blob' }).then((content: Blob) => {
+                saveAs(content, `RePrintTLS2H_fallback_${timestamp}.zip`);
+                this.messageService.errorBubble(errors.join('\n') || '伺服器未回傳可用檔案，已打包 raw 回應供檢查', '錯誤');
+              });
+              return;
+            }
+
+            if (files.length === 1) {
+              saveAs(files[0].blob, files[0].filename);
+            } else {
+              const zip = new JSZip();
+              files.forEach(f => zip.file(f.filename, f.blob));
+              const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+              zip.generateAsync({ type: 'blob' }).then((content: Blob) => {
+                saveAs(content, `RePrintTLS2H_${timestamp}.zip`);
+              });
+            }
+
+            if (errors.length > 0) {
+              this.messageService.warnBubble(errors.join('\n'), '部分檔案失敗');
+            }
+          },
+
+        });
+    });
   }
 
   ngOnInit(): void {
