@@ -3,45 +3,55 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
   </div>
+
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
+
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range calendarType="dateTimeRange" label="起始時間"
               [startControl]="queryForm.controls.Pub_StartDate_Start"
-              [endControl]="queryForm.controls.Pub_StartDate_End" [submitted]="submitted"></app-calendar-range>
+              [endControl]="queryForm.controls.Pub_StartDate_End" [submitted]="submitted">
+            </app-calendar-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range calendarType="dateTimeRange" label="結束時間"
               [startControl]="queryForm.controls.Pub_EndDate_Start" [endControl]="queryForm.controls.Pub_EndDate_End"
-              [submitted]="submitted"></app-calendar-range>
+              [submitted]="submitted">
+            </app-calendar-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="公告使用者" controlName="User_No" [options]="User_NoOptions | async" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.User_No" [submitted]="submitted"></app-multi-select>
+            <app-multi-select label="公告使用者" controlName="User_No" [options]="User_NoOptions$ | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.User_No" [submitted]="submitted">
+            </app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="公告組織" controlName="Org_ID" [options]="Org_IDOptions | async" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.Org_ID" [submitted]="submitted"></app-multi-select>
+            <app-multi-select label="公告組織" controlName="Org_ID" [options]="Org_IDOptions$ | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.Org_ID" [submitted]="submitted">
+            </app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="公告類別" controlName="Pub_Type" [options]="Pub_TypeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.Pub_Type" [submitted]="submitted"></app-multi-select>
+              optionValue="value" [control]="queryForm.controls.Pub_Type" [submitted]="submitted">
+            </app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton-yn label="是否啟用" groupname="pub_enable" [control]="queryForm.controls.pub_enable"
-              [submitted]="submitted" [showAll]="true"></app-radiobutton-yn>
+              [submitted]="submitted" [showAll]="true">
+            </app-radiobutton-yn>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="公告事項" controlName="Pub_Event" [control]="queryForm.controls.Pub_Event"
-              [submitted]="submitted"></app-input-text>
+              [submitted]="submitted">
+            </app-input-text>
           </div>
         </div>
 
@@ -55,10 +65,11 @@
 </div>
 
 <div class="card">
-  <app-table-report dataKey="id" [data]="data" [columns]="columns" [expansionColumns]="detailcolumns"
+  <app-table-report dataKey="id" [data]="data()" [columns]="columns" [expansionColumns]="detailcolumns"
     expansionDataKey="children" (detail)="onDetail($event)" [showEdit]="true" [showCheckBox]="true"
-    (delete)="onDelete($event)" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
-    [isRowSelectable]="isRowSelectable" [totalRecords]="totalRecords" [editDisabled]="editDisabled"
+    (delete)="onDelete($event)" (selectionChange)="selectedItems.set($event)" [selectedItems]="selectedItems()"
+    [isRowSelectable]="isRowSelectable" [totalRecords]="totalRecords()" [editDisabled]="editDisabled"
     (edit)="onEdit($event)" [loading]="loading" [lastQueryBody]="lastQueryBody" [expansionLoadFn]="expansionLoadFn"
-    [queryFunction]="sysbr10Service.querySYSBR10.bind(sysbr10Service)" [addButton]="addButton"></app-table-report>
+    [queryFunction]="sysbr10Service.querySYSBR10.bind(sysbr10Service)" [addButton]="addButton">
+  </app-table-report>
 </div>

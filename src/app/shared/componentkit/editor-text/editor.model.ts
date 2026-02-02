@@ -9,6 +9,7 @@ export const editorModules = {
     ],
     [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
     // ['blockquote', 'code-block'],
+    ['image'],
     // ['link', 'image', 'video', 'formula'],
     // [{ 'header': 1 }, { 'header': 2 }],               // custom button values
     // [{ 'script': 'sub' }, { 'script': 'super' }],      // superscript/subscript
@@ -29,7 +30,7 @@ export function validateHtmlContent(value: string, control: FormControl): void {
   const parser = new DOMParser();
   const doc = parser.parseFromString(value, 'text/html');
   // 允許的標籤
-  const allowedTags = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'u', 's', 'ol', 'ul', 'li', 'span'];
+  const allowedTags = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'u', 's', 'ol', 'ul', 'li', 'span', 'br', 'img'];
   // 允許的 style 屬性 (僅 color 和 background-color)
   const allowedStyles = ['color', 'background-color'];
   const validRgbRegex = /^rgb\(\s?\d{1,3},\s?\d{1,3},\s?\d{1,3}\s?\)$/;
@@ -58,6 +59,12 @@ export function validateHtmlContent(value: string, control: FormControl): void {
           isValid = false;
           return;
         }
+      }
+    } else if (tagName === 'img') {
+      const src = node.getAttribute('src') || '';
+      // 禁止 Base64 格式 (data:image/...)，允許正常的 URL 路徑
+      if (src.startsWith('data:')) {
+        isValid = false;
       }
     }
   });
