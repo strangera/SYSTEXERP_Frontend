@@ -9,7 +9,7 @@
  * - 支援常用項目/全部項目切換
  * - 顯示專櫃契約書資訊
  */
-import { NgIf, NgFor, NgClass } from '@angular/common';
+import { NgIf, NgFor, NgClass, DecimalPipe } from '@angular/common';
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -21,6 +21,7 @@ import { ToggleButtonModule } from 'primeng/togglebutton';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ColumnDef, ExpandableEditTableComponent } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
 import { TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '../../../../../tls13010/tls13010.dropdown';
@@ -61,11 +62,13 @@ interface ContractInfo {
     NgIf,
     NgFor,
     NgClass,
+    DecimalPipe,
     AccordionModule,
     ButtonModule,
     ToggleButtonModule,
     ExpandableEditTableComponent,
-    ButtonComponent
+    ButtonComponent,
+    DialogComponent
   ]
 })
 export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
@@ -133,6 +136,12 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
 
   /** 常駐編輯模式 */
   forceEditMode = true;
+
+  /** 自動計算對話框 */
+  showCalculationDialog = false;
+  calculationResult: { totalAmount: number; periods: number; monthlyAmount: number; downPayment: number } | null = null;
+  private currentCalculatingItem: FareItem | null = null;
+  private currentCalculatingCapType = '';
 
   constructor(
     private apiService: TLS13010Service,
@@ -779,15 +788,44 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     const totalAmt = parseFloat(String(rowData.tpy_totalamt || 0));
     const periods = this.calculatePeriods(rowData.tpy_bdate, rowData.tpy_edate);
 
-    if (totalAmt > 0 && periods > 0) {
-      const monthlyAmt = Math.floor(totalAmt / periods);
-      rowData.tpy_amount = monthlyAmt;
-      rowData.period_nos = periods;
-      rowData.down_payment = totalAmt - (monthlyAmt * (periods - 1));
+    if (totalAmt <= 0 || periods < 1) return;
 
-      this.updateItemStatus(rowData, 'C');
-      this.emitChanges();
+    const monthlyAmt = Math.ceil(totalAmt / periods);
+    const downPayment = Math.ceil(totalAmt - (monthlyAmt * (periods - 1)));
+
+    this.calculationResult = {
+      totalAmount: totalAmt,
+      periods,
+      monthlyAmount: monthlyAmt,
+      downPayment
+    };
+    this.currentCalculatingItem = rowData;
+    this.currentCalculatingCapType = 'C';
+    this.showCalculationDialog = true;
+  }
+
+  onCalculationDialogClose(visible: boolean): void {
+    this.showCalculationDialog = visible;
+    if (!visible) {
+      this.currentCalculatingItem = null;
+      this.calculationResult = null;
     }
+  }
+
+  onCalculationSave(): void {
+    if (this.currentCalculatingItem && this.calculationResult) {
+      this.currentCalculatingItem.tpy_amount = this.calculationResult.monthlyAmount;
+      this.currentCalculatingItem.period_nos = this.calculationResult.periods;
+      this.currentCalculatingItem.down_payment = this.calculationResult.downPayment;
+
+      this.updateItemStatus(this.currentCalculatingItem, this.currentCalculatingCapType);
+      this.emitChanges();
+      this.cdr.detectChanges();
+    }
+
+    this.showCalculationDialog = false;
+    this.currentCalculatingItem = null;
+    this.calculationResult = null;
   }
 
   // ========== 資料載入 ==========

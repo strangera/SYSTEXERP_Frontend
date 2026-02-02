@@ -21,8 +21,8 @@ export const assRoutes: Routes = [
   { path: 'ass11090cru', loadComponent: () => import('./ass11090-cru/ass11090-cru.component').then(m => m.ASS11090CRUComponent), data: { progNo: 'ASS11090' } },
   { path: 'ass11100', loadComponent: () => import('./ass11100/ass11100.component').then(m => m.ASS11100Component), data: { progNo: 'ASS11100' } }, // 倉別設定作業
   { path: 'ass11100cru', loadComponent: () => import('./ass11100-cru/ass11100-cru.component').then(m => m.ASS11100CRUComponent), data: { progNo: 'ASS11100' } },
-  // { path: 'ass12010', loadComponent: () => import('./ass12010/ass12010.component').then(m => m.ASS12010Component),data: {progNo:'ASS12010'} }, // 請購申請作業
-  // { path: 'ass12010cru', loadComponent: () => import('./ass12010-cru/ass12010-cru.component').then(m => m.ASS12010CRUComponent),data: {progNo:'ASS12010'} },
+  { path: 'ass12010', loadComponent: () => import('./ass12010/ass12010.component').then(m => m.ASS12010Component), data: { progNo: 'ASS12010' } }, // 請購申請作業
+  { path: 'ass12010cru', loadComponent: () => import('./ass12010-cru/ass12010-cru.component').then(m => m.ASS12010CRUComponent), data: { progNo: 'ASS12010' } },
   // { path: 'ass12020', loadComponent: () => import('./ass12020/ass12020.component').then(m => m.ASS12020Component),data: {progNo:'ASS12020'} }, // 詢價登錄作業
   // { path: 'ass12020cru', loadComponent: () => import('./ass12020-cru/ass12020-cru.component').then(m => m.ASS12020CRUComponent),data: {progNo:'ASS12020'} },
   // { path: 'ass12030', loadComponent: () => import('./ass12030/ass12030.component').then(m => m.ASS12030Component),data: {progNo:'ASS12030'} }, // 採購申請作業

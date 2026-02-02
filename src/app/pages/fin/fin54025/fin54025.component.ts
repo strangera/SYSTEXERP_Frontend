@@ -127,8 +127,8 @@ export class FIN54025Component extends BasicQueryPageComponent<any> implements O
     this.handleSubmit(frm, () => {
       const v = frm.value;
       const basePayload = {
-        VouDateFrom: v.VouDateFrom ? formatDateToYYYY_MM_DD(v.VouDateFrom) : '',
-        VouDateTo: v.VouDateTo ? formatDateToYYYY_MM_DD(v.VouDateTo) : '',
+        VouDateFrom: v.VouDateFrom,
+        VouDateTo: v.VouDateTo,
         VouNoFrom: (v.VouNoFrom ?? '').toString().trim(),
         VouNoTo: (v.VouNoTo ?? '').toString().trim(),
         VoucherType: (v.VoucherType ?? '').toString().trim(),

@@ -233,7 +233,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       }
     },
     { field: 'GUINet', header: '未稅金額', type: 'inputNumber', width: '120px', textAlign: 'right' },
-    { field: 'GUITax', header: '稅額', type: 'inputNumber', width: '120px', textAlign: 'right' },
+    { field: 'GUITax', header: '稅額', type: 'inputNumber', width: '120px', textAlign: 'right', disabled: () => true },
     { field: 'GUIAmt', header: '應稅金額', type: 'inputNumber', width: '120px', textAlign: 'right', disabled: () => true },
     { field: 'PUR_GUIPaper', header: '發票格式', type: 'dropdown', width: '180px', options: this.invoiceFormatOptions, optionLabel: 'label', optionValue: 'value', showClear: true },
     { field: 'INV_UseType', header: '發票用途', type: 'input', width: '120px' },
@@ -461,8 +461,8 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
               // 不預設 PUR_GUINO
               PUR_GUINO: '',
               // 預設發票日期/申報年月（若後端有提供）
-              PUR_GUIDate: firstDetail?.PUR_GUIDate ? new Date(firstDetail.PUR_GUIDate) : null,
-              DEC_YM: firstDetail?.DEC_YM ? this.ymToDate(firstDetail.DEC_YM) : null,
+              PUR_GUIDate: new Date(),
+              DEC_YM: this.dataForm.controls.COMM_YM.value || null,
               // 預設課稅別為「應稅」
               TAX_TYPE: taxVal,
               // 預設扣抵代號為「代表進項可扣抵之進貨及費用」
@@ -487,6 +487,11 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
           if (mains.length > 0 || details.length > 0) {
             this.showQueryArea = false;
             this.showResultTables = true;
+          }
+          // 若後端只回傳單一 main，預設選取該筆以帶入 talent_id
+          if (mains.length === 1 && !this.selectedMain) {
+            this.selectedMain = mains[0];
+            this.selectedMainItems = [mains[0]];
           }
         },
         error: (err: any) => {
@@ -696,6 +701,16 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
         // 設定欄位值（若 table-edit 使用的是同一物件則畫面會自動更新）
         row.TAX_TYPE = taxVal ?? row.TAX_TYPE;
         row.Deduct_Code = deductVal ?? row.Deduct_Code;
+      }
+    }
+    // 當未稅金額 (GUINet) 變更時，自動計算稅額與發票總額
+    if (ev.field === 'GUINet') {
+      const row = ev.rowData ?? {};
+      const net = Number(ev.value ?? 0);
+      if (!isNaN(net)) {
+        const tax = Math.round(net * 0.05);
+        row.GUITax = tax;
+        row.GUIAmt = net + tax;
       }
     }
   }

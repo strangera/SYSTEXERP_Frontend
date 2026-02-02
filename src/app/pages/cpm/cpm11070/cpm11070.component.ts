@@ -4,9 +4,11 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -14,11 +16,8 @@ import { CPM11070Data, CPM11070Service, QueryCPM11070Request } from '../../../se
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-cpm11070',
@@ -31,10 +30,10 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    CalendarRangeComponent,
+    CalendarRangeQuickComponent,
     DropdownComponent,
     TranslateModule,
-    TableComponent,
+    TableReportComponent,
     RadiobuttonComponent,
     InputTextareaComponent
   ],
@@ -42,7 +41,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> implements OnInit {
   queryForm = this.formBuilder.group({
     SeqId: ['', [Validators.maxLength(11)]],
-    RecDateFrom: [null as Date | null, [Validators.required,]],
+    RecDateFrom: [new (Date), [Validators.required,]],
     RecDateTo: [null as Date | null],
     LostDateFrom: [null as Date | null],
     LostDateTo: [null as Date | null],
@@ -71,29 +70,32 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
     Tel: ['', [Validators.maxLength(10)]],
     MobilePhone: ['', [Validators.maxLength(10)]],
     IdNo: ['', [Validators.maxLength(20)]],
-    ...createPaginationConfig([{ field: 'SeqId', order: 1 }]),
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'SeqId', order: 1 }]],
   });
-  selectedItems: CPM11070Data[] = [];
   totalRecords = 0;
   data: CPM11070Data[] = [];
-  Type1Options: any[] = [
+  lastQueryBody: QueryCPM11070Request | null = null;
+  Type1Options = [
     { No: 'L', Name: '遺失' },
     { No: 'F', Name: '拾獲' },
   ];
-  Type3Options: any[] = [
+  addButton: AddButton[] = [];
+  Type3Options = [
     { Name: '登錄', No: '1' },
     { Name: '已通知', No: '3' },
     { Name: '領回', No: '4' },
     { Name: '轉出', No: '6' },
   ];
   Type2Options = getSYS1000Options('LOST_GOODS_TYPE');
-  SPACE3Options: any[] = [ //是否廣播
+  SPACE3Options = [ //是否廣播
     { label: '已廣播', value: 'Y' },
     { label: '不廣播', value: 'N' },
     { label: '全部', value: 'A' },
   ];
   SPACE1Options = getSYS1000Options('LOCATION');
-  USER5Options: any[] = [
+  USER5Options = [
     { Name: '遊客', No: '1' },
     { Name: '員工', No: '2' },
   ];
@@ -107,7 +109,7 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
   editDisabled = (row: CPM11070Data): boolean => {
     return this.isClosed(row);
   };
-  columns: any[] = [
+  columns: ReportColumn[] = [
     { field: 'GoodsType', header: '物品類別', visible: true },
     { field: 'GoodsDesc', header: '物品敘述', visible: true },
     { field: 'SeqId', header: '登錄編號', visible: true },
@@ -125,8 +127,7 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
 
   ];
   constructor(
-    private dropdownApiService: DropdownApiService,
-    private readonly cpm11070Service: CPM11070Service,
+    public readonly cpm11070Service: CPM11070Service,
     private readonly datePipe: DatePipe,
   ) {
     super();
@@ -135,6 +136,22 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
 
   ngOnInit(): void {
     this.initializePage('CPM11070', '/CPM/CPM11070CRU', this.queryForm, (frm) => this.onSubmit(frm));
+
+    // 設定自訂管理按鈕：領回 -> 開啟編輯頁面以進行領回流程
+    this.addButton = [
+      {
+        label: '領回',
+        icon: 'pi pi-check-circle',
+        action: (row: CPM11070Data) => {
+          if (this.isClosed(row)) {
+            this.messageService.errorBubble('已轉出或已領回資料不可領回');
+            return;
+          }
+          this.onEdit({ ...row, _openMode: 'receive' } as any);
+        },
+        disabled: (row: CPM11070Data) => this.isClosed(row),
+      },
+    ];
 
   }
 
@@ -200,6 +217,7 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
         .subscribe({
           next: (res) => {
             this.data = res.Data || [];
+            this.lastQueryBody = payload;
             this.totalRecords = res.TotalCount || this.data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
           },

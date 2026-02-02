@@ -1,146 +1,184 @@
-<!-- 載入中指示器 -->
-<div *ngIf="loading" class="flex justify-content-center align-items-center p-4">
-  <p-progressSpinner></p-progressSpinner>
-  <span class="ml-2">載入扣款資料中...</span>
-</div>
-
-<!-- 主要內容 -->
-<div *ngIf="!loading">
-  <!-- 全域控制按鈕 -->
-  <div class="flex gap-2 mb-3 p-3 bg-blue-50 border-round">
-    <div class="flex align-items-center gap-2">
-      <app-button
-        [label]="getAllCommonModeText()"
-        icon="pi pi-arrows-v"
-        (click)="toggleAllCommonMode()"
-        styleClass="p-button-info"
-      ></app-button>
-      <span class="text-sm text-gray-600 ml-2">
-        {{ getAllDisplayMode() }}
-      </span>
-    </div>
-    <div class="flex-1"></div>
-    <div class="flex align-items-center">
-      <span class="font-semibold">已選擇項目：{{ getTotalSelectedCount() }} 項</span>
-    </div>
+<div class="step2-container">
+  <!-- 載入中提示 -->
+  <div
+    *ngIf="loading"
+    class="flex justify-content-center align-items-center p-4"
+  >
+    <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+    <span class="ml-2">載入扣款資料中...</span>
   </div>
 
-  <!-- 合約基本資訊顯示 -->
-  <p-accordion *ngIf="contractInfo">
-    <p-accordionTab
-      header="專櫃契約書資訊"
-      [selected]="true"
-      class="line-height-3 m-0"
-    >
-      <div class="col-12">
-        <app-expandable-edit-table
-          class="custom-table-red"
-          [data]="contractInfoData"
-          [mainColumns]="contractInfoColumns"
-          [showCheckBox]="false"
-          [showPaginator]="false"
-          [showAddButton]="false"
-          [showBatchDelete]="false"
-          [loading]="loading"
-          dataKey="id"
-          [readonly]="true"
-          detailKey=""
-          emptyMessage="沒有合約資訊"
-        ></app-expandable-edit-table>
+  <div *ngIf="!loading">
+    <!-- 全域控制按鈕 -->
+    <div class="flex gap-2 mb-3 p-3 bg-blue-50 border-round">
+      <div class="flex align-items-center gap-2">
+        <app-button
+          [label]="getAllCommonModeText()"
+          icon="pi pi-arrows-v"
+          (click)="toggleAllCommonMode()"
+          styleClass="p-button-info"
+        ></app-button>
+        <span class="text-sm text-gray-600 ml-2">
+          {{ getAllDisplayMode() }}
+        </span>
       </div>
-    </p-accordionTab>
-  </p-accordion>
+      <div class="flex align-items-center gap-3 ml-auto">
+        <span class="text-500" *ngIf="totalLocationSpace > 0">
+          總坪數:
+          <strong>{{ totalLocationSpace }}</strong>
+          坪
+        </span>
+      </div>
+    </div>
 
-  <!-- 動態生成各類型扣款表格 -->
-  <div *ngFor="let capTypeInfo of capTypes">
-    <p-accordion>
-      <p-accordionTab [header]="capTypeInfo.name" [selected]="true">
-        <!-- 每個群組獨立的模式控制按鈕 -->
-        <div class="flex gap-2 mb-3 p-3 bg-blue-50 border-round">
-          <div class="flex align-items-center gap-2">
-            <app-button
-              [label]="getCommonModeTextByType(capTypeInfo.key)"
-              icon="pi pi-filter"
-              (click)="toggleCommonModeByType(capTypeInfo.key)"
-              [outlined]="isOutlinedMode(capTypeInfo.key)"
-            ></app-button>
-            <span class="text-sm text-gray-600 ml-2">
-              目前模式: {{ getCurrentDisplayModeByType(capTypeInfo.key) }}
-            </span>
-          </div>
-        </div>
-
-        <!-- 無資料顯示 -->
-        <div
-          *ngIf="!hasDataForType(capTypeInfo.key)"
-          class="text-center p-4 bg-yellow-50 border-round border-1 border-yellow-200"
-        >
-          <i class="pi pi-info-circle text-3xl text-yellow-600 mb-2"></i>
-          <p class="text-gray-700 font-semibold mb-2">
-            {{ capTypeInfo.name }}：常用項目未設定
-          </p>
-          <p class="text-gray-600 text-sm mb-3">
-            目前「常用項目」模式下沒有可顯示的資料
-          </p>
-          <app-button
-            label="顯示全部項目"
-            icon="pi pi-eye"
-            styleClass="p-button-sm p-button-warning"
-            (click)="toggleCommonModeByType(capTypeInfo.key)"
-          ></app-button>
-        </div>
-
-        <!-- 使用 expandable-edit-table 組件 -->
-        <div *ngIf="hasDataForType(capTypeInfo.key)" class="col-12" [ngClass]="{'compact-table-d': capTypeInfo.key === 'D'}">
+    <!-- 專櫃契約書資訊 -->
+    <p-accordion *ngIf="contractInfoData.length > 0">
+      <p-accordionTab header="專櫃契約書資訊" [selected]="true">
+        <div class="col-12">
           <app-expandable-edit-table
-            [data]="getDisplayDataForType(capTypeInfo.key)"
-            [mainColumns]="getColumnsForType(capTypeInfo.key)"
-            (buttonClick)="onButtonClick($event, capTypeInfo.key)"
+            class="custom-table-red"
+            [data]="contractInfoData"
+            [mainColumns]="contractInfoColumns"
             [showCheckBox]="false"
-            (selectionChange)="onItemSelectionChange(capTypeInfo.key)"
-            (fieldChange)="onFieldChange($event.fieldName, $event.newValue, $event.rowData, capTypeInfo.key)"
+            [showSequenceNumber]="true"
             [showPaginator]="false"
             [showAddButton]="false"
             [showBatchDelete]="false"
-            [loading]="loading"
-            dataKey="id"
-            detailKey=""
-            [emptyMessage]="'尚未設定' + capTypeInfo.name + '項目'"
-            [forceEditMode]="shouldForceEdit"
             [showActionColumn]="false"
-            [showSequenceNumber]="false"
-            [minColumnWidth]="capTypeInfo.key === 'D' ? 45 : 80"
-            [maxColumnWidth]="capTypeInfo.key === 'D' ? 120 : 350"
-            (save)="onFareTableSave($event, capTypeInfo.key)"
-            (edit)="onFareTableEdit($event, capTypeInfo.key)"
-            (cancel)="onFareTableCancel($event, capTypeInfo.key)"
-            (beforeSave)="onBeforeSave($event, capTypeInfo.key)"
+            [readonly]="true"
+            [dataKey]="'id'"
+            [detailKey]="''"
+            [emptyMessage]="'沒有合約資訊'"
           ></app-expandable-edit-table>
-        </div>
-
-        <!-- 底部操作按鈕 -->
-        <div
-          *ngIf="hasDataForType(capTypeInfo.key) && !isViewMode"
-          class="flex justify-content-between align-items-center mt-3 pt-3 border-top-1 border-gray-200"
-        >
-          <div class="flex gap-2">
-            <app-button
-              label="全部選擇"
-              icon="pi pi-check-square"
-              styleClass="green-button"
-              (click)="selectAllByType(capTypeInfo.key)"
-            ></app-button>
-            <app-button
-              label="取消選擇"
-              icon="pi pi-times"
-              styleClass="red-button"
-              [outlined]="true"
-              (click)="deselectAllByType(capTypeInfo.key)"
-            ></app-button>
-          </div>
         </div>
       </p-accordionTab>
     </p-accordion>
+
+    <!-- 動態生成各類型扣款表格 -->
+    <ng-container *ngFor="let capType of capTypes">
+      <p-accordion>
+        <p-accordionTab [header]="getCapTypeName(capType)" [selected]="true">
+          <!-- 每個群組獨立的模式控制按鈕 -->
+          <div class="flex gap-2 mb-3 p-3 bg-blue-50 border-round">
+            <div class="flex align-items-center gap-2">
+              <app-button
+                [label]="getCommonModeTextByType(capType)"
+                icon="pi pi-filter"
+                (click)="toggleCommonModeByType(capType)"
+                [outlined]="isOutlinedMode(capType)"
+              ></app-button>
+              <span class="text-sm text-gray-600 ml-2">
+                目前模式: {{ getCurrentDisplayModeByType(capType) }}
+              </span>
+            </div>
+            <!-- 變更統計 -->
+            <div class="flex align-items-center gap-2 ml-auto">
+              <span class="text-500 text-sm">
+                (已選 {{ getSelectedCount(capType) }} /
+                {{ getTotalCount(capType) }} 項)
+              </span>
+              <ng-container *ngIf="getChangeCount(capType) as changes">
+                <span *ngIf="changes.newCount > 0" class="p-tag p-tag-success">
+                  +{{ changes.newCount }} 新增
+                </span>
+                <span
+                  *ngIf="changes.modifiedCount > 0"
+                  class="p-tag p-tag-warning"
+                >
+                  {{ changes.modifiedCount }} 修改
+                </span>
+                <span
+                  *ngIf="changes.deletedCount > 0"
+                  class="p-tag p-tag-danger"
+                >
+                  -{{ changes.deletedCount }} 刪除
+                </span>
+              </ng-container>
+            </div>
+          </div>
+
+          <!-- 無資料顯示 -->
+          <div
+            *ngIf="!hasDataForType(capType)"
+            class="text-center p-4 bg-yellow-50 border-round border-1 border-yellow-200"
+          >
+            <i class="pi pi-info-circle text-3xl text-yellow-600 mb-2"></i>
+            <p class="text-gray-700 font-semibold mb-2">
+              {{ getCapTypeName(capType) }}：常用項目未設定
+            </p>
+            <p class="text-gray-600 text-sm mb-3">
+              目前「常用項目」模式下沒有可顯示的資料
+            </p>
+            <app-button
+              label="顯示全部項目"
+              icon="pi pi-eye"
+              styleClass="p-button-sm p-button-warning"
+              (click)="toggleCommonModeByType(capType)"
+            ></app-button>
+          </div>
+
+          <!-- 代扣款表格 -->
+          <div
+            *ngIf="hasDataForType(capType)"
+            class="col-12"
+            [ngClass]="{ 'compact-table-d': capType === 'D' }"
+          >
+            <app-expandable-edit-table
+              [data]="getDisplayDataForType(capType)"
+              [mainColumns]="getColumnsForType(capType)"
+              [forceEditMode]="shouldForceEdit"
+              [showCheckBox]="false"
+              [showSequenceNumber]="false"
+              [showPaginator]="false"
+              [showAddButton]="false"
+              [showBatchDelete]="false"
+              [showActionColumn]="false"
+              [dataKey]="'id'"
+              [detailKey]="''"
+              [minColumnWidth]="capType === 'D' ? 45 : 80"
+              [maxColumnWidth]="capType === 'D' ? 120 : 350"
+              [emptyMessage]="'尚未設定' + getCapTypeName(capType) + '項目'"
+              (fieldChange)="
+                onFieldChange(
+                  $event.fieldName,
+                  $event.newValue,
+                  $event.rowData,
+                  capType
+                )
+              "
+              (buttonClick)="onButtonClick($event, capType)"
+              (selectionChange)="onItemSelectionChange(capType)"
+              (save)="onFareTableSave($event, capType)"
+              (edit)="onFareTableEdit($event, capType)"
+              (cancel)="onFareTableCancel($event, capType)"
+              (beforeSave)="onBeforeSave($event, capType)"
+            ></app-expandable-edit-table>
+          </div>
+
+          <!-- 底部操作按鈕 -->
+          <div
+            *ngIf="hasDataForType(capType) && !isViewMode"
+            class="flex justify-content-between align-items-center mt-3 pt-3 border-top-1 border-gray-200"
+          >
+            <div class="flex gap-2">
+              <app-button
+                label="全部選擇"
+                icon="pi pi-check-square"
+                styleClass="green-button"
+                (click)="selectAllByType(capType)"
+              ></app-button>
+              <app-button
+                label="取消選擇"
+                icon="pi pi-times"
+                styleClass="red-button"
+                [outlined]="true"
+                (click)="deselectAllByType(capType)"
+              ></app-button>
+            </div>
+          </div>
+        </p-accordionTab>
+      </p-accordion>
+    </ng-container>
   </div>
 </div>
 
@@ -168,7 +206,9 @@
           <div class="text-sm text-gray-500">元</div>
         </div>
 
-        <div class="result-card bg-green-50 p-3 border-round text-center flex-1">
+        <div
+          class="result-card bg-green-50 p-3 border-round text-center flex-1"
+        >
           <div class="text-sm text-gray-600 mb-1">首期金額</div>
           <div class="text-2xl font-bold text-green-600">
             {{ calculationResult.downPayment | number }}
@@ -180,8 +220,11 @@
 
     <div class="summary-info text-center">
       <div class="text-lg text-gray-600">
-        總金額 <strong>{{ calculationResult.totalAmount | number }}</strong> 元
-        分 <strong>{{ calculationResult.periods }}</strong> 期攤還
+        總金額
+        <strong>{{ calculationResult.totalAmount | number }}</strong>
+        元 分
+        <strong>{{ calculationResult.periods }}</strong>
+        期攤還
       </div>
     </div>
   </div>

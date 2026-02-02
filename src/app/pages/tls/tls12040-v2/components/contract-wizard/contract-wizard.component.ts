@@ -9,7 +9,7 @@
  *
  * 資料統一在此組件管理，不需要 Session Storage
  */
-import { NgIf, NgSwitch, NgSwitchCase, CommonModule } from '@angular/common';
+import { CommonModule, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -29,22 +29,19 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 
 // V2 服務
 import { TLS12040Service } from '@service/api/tls/tls12040.service';
-import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
+import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
+import { CrudTrackingService } from '../../../tls13010-v2/core/services/crud-tracking.service';
 
 // V2 類型
 import {
   CommissionType,
-  COMMISSION_TYPES_WITH_STEP3,
-  COMMISSION_TYPES_WITH_STEP4,
-  WizardMode,
   DataStatus
 } from '../../core';
+import { CommissionItem as V2CommissionItem } from '../../../tls13010-v2/core/models/commission/commission-item.interface';
+import { ConditionItem } from '../../core/models/condition';
 import { ContractInfo, LocationItem } from '../../core/models/contract';
 import { FareItem } from '../../core/models/deduction';
-import { CommissionItem } from '../../core/models/commission';
-import { ConditionItem } from '../../core/models/condition';
-import { SubmitData } from '../../core/models/submit';
 
 // 子組件
 import { Step1ContractInfoComponent } from './steps/step1-contract-info/step1-contract-info.component';
@@ -64,7 +61,7 @@ interface WizardState {
   fareItems: FareItem[];
 
   // Step 3 資料
-  commissionItems: CommissionItem[];
+  commissionItems: V2CommissionItem[];
 
   // Step 4 資料
   conditionItems: ConditionItem[];
@@ -189,6 +186,9 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   // 原始抽成別（編輯模式用）
   originalCommissionType?: string;
+
+  // API 資料載入完成信號（通知 step1 載入依賴下拉）
+  step1DataReady = false;
 
   // 折扣選項 (Step 3 專用)
   discountOptions: any[] = [];
@@ -458,17 +458,14 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
     // 編輯/檢視模式 - 載入資料
     if ((this.isFormEditable || this.isFormReadable) && this.rowdata) {
-      const applyNo = (this.rowdata as any).apply_no;
-      if (applyNo) {
-        await this.loadContractData(applyNo);
-      }
+      await this.loadContractData(this.rowdata as any);
     }
   }
 
   // ========== 資料載入 ==========
-  private async loadContractData(applyNo: string): Promise<void> {
+  private async loadContractData(rowData: any): Promise<void> {
     try {
-      const request = { apply_no: applyNo, id: null as any };
+      const request = { apply_no: rowData.apply_no, id: rowData.id };
       const response = await this.apiService.queryTLS12040Detail(request).toPromise();
 
       if (response?.Status === '0000' && response.Data) {
@@ -480,8 +477,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
           this.originalCommissionType = data.tlt_term_type;
         }
 
+        // 資料預處理（與 v1 CRU populateForm 一致）
+        const processedData = this.preprocessApiData(data);
+
         // 填充表單
-        this.dataForm.patchValue(data, { emitEvent: false });
+        this.dataForm.patchValue(processedData, { emitEvent: false });
 
         // 更新驗證器
         this.updateDynamicValidators();
@@ -490,23 +490,36 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
         // 同步 contractInfo
         this.wizardState.contractInfo = this.dataForm.getRawValue() as ContractInfo;
 
-        // 載入位置資料
-        if (data.Locations && Array.isArray(data.Locations)) {
-          this.wizardState.locationData = data.Locations.map((loc: any) => ({
-            ...loc,
-            tlt_space: typeof loc.tlt_space === 'string' ? parseFloat(loc.tlt_space) : loc.tlt_space,
+        // 載入位置資料（與 v1 loadLocationData 一致）
+        const locationDetails = data.LocationDetails || [];
+        if (Array.isArray(locationDetails) && locationDetails.length > 0) {
+          this.wizardState.locationData = locationDetails.map((item: any) => ({
+            id: item.id,
+            mid: item.mid || '',
+            apply_no: item.apply_no || '',
+            location_no: item.location_no || '',
+            tlt_building: item.tlt_building || '',
+            tlt_floor: item.tlt_floor || '',
+            area_no: item.area_no || '',
+            tlt_space: Number(item.tlt_space) || 0,
+            building_desc: item.building_desc || '',
+            floor_desc: item.floor_desc || '',
+            area_desc: item.area_desc || '',
             _status: 'original' as DataStatus
           }));
         }
 
+        // 通知 step1：API 資料已就緒，觸發 ngOnChanges → loadDependentDropdowns
+        this.step1DataReady = true;
+
         // 載入 Step 2 代扣款資料
-        await this.loadFareData(applyNo);
+        await this.loadFareData(rowData.apply_no);
 
         // 載入 Step 3 抽成資料
-        await this.loadCommissionData(applyNo);
+        await this.loadCommissionData(rowData.apply_no);
 
         // 載入 Step 4 條件資料
-        await this.loadConditionData(applyNo, data.tlt_term_type);
+        await this.loadConditionData(rowData.apply_no, data.tlt_term_type);
       }
     } catch (error) {
       console.error('載入合約資料失敗:', error);
@@ -514,9 +527,65 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     }
   }
 
+  /**
+   * API 回傳資料預處理（與 v1 CRU populateForm 一致）
+   * - 日期字串轉 Date 物件（Calendar 元件需要）
+   * - vendor_ven_no 映射
+   * - check_type CSV 轉 check_typeList 陣列
+   */
+  private preprocessApiData(data: any): any {
+    const dateFields = [
+      'apply_date', 'tlt_bdate', 'tlt_edate',
+      'tlt_contract_bdate', 'tlt_contract_edate',
+      'feedback_date', 'due_date', 'contact_Date'
+    ];
+
+    const processedData = {
+      ...data,
+      vendor_ven_no: data.ven_no || data.vendor_ven_no || '',
+      check_typeList: data.check_type
+        ? data.check_type.split(',').map((s: string) => s.trim())
+        : []
+    };
+
+    // 日期字串轉 Date 物件（Calendar 元件需要）
+    dateFields.forEach(field => {
+      if (processedData[field]) {
+        const dateValue = this.parseDateToDateObject(processedData[field]);
+        if (dateValue) {
+          processedData[field] = dateValue;
+        }
+      }
+    });
+
+    return processedData;
+  }
+
+  /**
+   * 日期字串轉 Date 物件
+   */
+  private parseDateToDateObject(value: string | Date | null | undefined): Date | null {
+    if (!value) return null;
+    if (value instanceof Date && !isNaN(value.getTime())) return value;
+    if (typeof value !== 'string') return null;
+
+    const dateStr = value.trim();
+    if (!dateStr) return null;
+
+    const datePart = dateStr.split(/[T\s]/)[0];
+    const match = datePart.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+    if (match) {
+      const year = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10) - 1;
+      const day = parseInt(match[3], 10);
+      return new Date(year, month, day);
+    }
+    return null;
+  }
+
   private async loadFareData(applyNo: string): Promise<void> {
     try {
-      const request = { apply_no: applyNo, showAll: false };
+      const request = { apply_no: applyNo, showAll: true };
       const response = await this.apiService.queryTLS12040Fare(request).toPromise();
 
       if (response?.Status === '0000' && response.Data) {
@@ -526,11 +595,21 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
         ['A', 'B', 'C', 'D', 'E'].forEach(type => {
           const items = faresByType[type] || [];
           items.forEach((item: any) => {
-            allItems.push({
-              ...item,
-              cap_type: type as any,
-              _status: 'original' as DataStatus
-            });
+            // 判斷是否為契約既有項目
+            const isExisting = item.data_source === 'CONTRACT_EXISTING' ||
+              (item.is_selected && !item.is_new_item);
+
+            // 確保 cap_type 和基本欄位
+            item.cap_type = type;
+            item.data_source = isExisting ? 'CONTRACT_EXISTING' : (item.data_source || '');
+
+            // 使用 CrudTrackingService.initializeItem 設定 _originalData
+            const initializedItem = CrudTrackingService.initializeItem(
+              item,
+              isExisting
+            ) as unknown as FareItem;
+
+            allItems.push(initializedItem);
           });
         });
 
@@ -548,10 +627,52 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       if (response?.Status === '0000' && response.Data) {
         const chargeSettings = response.Data.ChargeSettings || [];
 
+        // 將 API 資料映射為 TLS13010-v2 的 CommissionItem 格式
         this.wizardState.commissionItems = chargeSettings.map((item: any) => ({
-          ...item,
+          id: item.id,
+          tlt_id: item.tlt_id || '',
+          tlt_id_desc: item.tlt_id_desc || '',
+          cag_taxtype: item.cag_taxtype ?? '',
+          discountSummary: item.discountSummary || '',
+          sst_amount: item.sst_amount || 0,
+          sst_rate: item.sst_rate || 0,
+          cap_saletype2: item.cap_saletype2 || false,
+          cap_saletype1: item.cap_saletype1 || false,
+          cap_saletype5: item.cap_saletype5 || false,
+          selectedSettingOption: item.selectedSettingOption || '',
+          charge_rate: item.charge_rate || 0,
+          cag_bdate: item.cag_bdate || '',
+          cag_edate: item.cag_edate || '',
+          cag_remark: item.cag_remark || '',
+          remark: item.cag_remark || '',
+          mainStartDate: item.cag_bdate || '',
+          mainEndDate: item.cag_edate || '',
+          // 明細映射：ChargeDetails → discountSettingItems
+          discountSettingItems: (item.ChargeDetails || []).map((d: Record<string, unknown>) => ({
+            ...d,
+            selected: (d['is_selected'] ?? d['selected'] ?? false) as boolean,
+            is_configured: (d['is_configured'] ?? true) as boolean,
+            is_enabled: (d['is_enabled'] ?? true) as boolean,
+            _status: 'original' as DataStatus
+          })),
+          // 明細映射：YearChargeDetails → annualPerformanceItems
+          annualPerformanceItems: (item.YearChargeDetails || []).map((d: Record<string, unknown>) => ({
+            ...d,
+            selected: (d['is_selected'] ?? d['selected'] ?? false) as boolean,
+            _status: 'original' as DataStatus
+          })),
+          // 明細映射：LevelChargeDetails → discountLevelItems
+          discountLevelItems: (item.LevelChargeDetails || []).map((d: Record<string, unknown>) => ({
+            ...d,
+            selected: (d['is_selected'] ?? d['selected'] ?? false) as boolean,
+            is_configured: (d['is_configured'] ?? true) as boolean,
+            is_enabled: (d['is_enabled'] ?? true) as boolean,
+            _status: 'original' as DataStatus
+          })),
+          detailItems: [],
+          currentTab: 'discount',
           _status: 'original' as DataStatus
-        }));
+        } as V2CommissionItem));
       }
     } catch (error) {
       console.error('載入抽成資料失敗:', error);
@@ -649,17 +770,61 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
           this.wizardState.fareItems = allItems;
         }
 
-        // 載入抽成資料
+        // 載入抽成資料（映射為 TLS13010-v2 格式）
         if (response.ChargeData) {
           const chargeSettings = response.ChargeData.ChargeSettings || [];
 
-          this.wizardState.commissionItems = chargeSettings.map((item: any) => ({
-            ...item,
-            id: undefined,
-            apply_no: undefined,
-            talent_id: undefined,
+          this.wizardState.commissionItems = chargeSettings.map((item: Record<string, unknown>) => ({
+            id: '',
+            tlt_id: (item['tlt_id'] as string) || '',
+            tlt_id_desc: (item['tlt_id_desc'] as string) || '',
+            cag_taxtype: item['cag_taxtype'] ?? '',
+            discountSummary: (item['discountSummary'] as string) || '',
+            sst_amount: (item['sst_amount'] as number) || 0,
+            sst_rate: (item['sst_rate'] as number) || 0,
+            cap_saletype2: item['cap_saletype2'] || false,
+            cap_saletype1: item['cap_saletype1'] || false,
+            cap_saletype5: item['cap_saletype5'] || false,
+            selectedSettingOption: (item['selectedSettingOption'] as string) || '',
+            charge_rate: (item['charge_rate'] as number) || 0,
+            cag_bdate: item['cag_bdate'] || '',
+            cag_edate: item['cag_edate'] || '',
+            cag_remark: item['cag_remark'] || '',
+            remark: item['cag_remark'] || '',
+            mainStartDate: item['cag_bdate'] || '',
+            mainEndDate: item['cag_edate'] || '',
+            discountSettingItems: ((item['ChargeDetails'] as unknown[]) || []).map((d: unknown) => {
+              const detail = d as Record<string, unknown>;
+              return {
+                ...detail,
+                selected: (detail['is_selected'] ?? detail['selected'] ?? false) as boolean,
+                is_configured: (detail['is_configured'] ?? true) as boolean,
+                is_enabled: (detail['is_enabled'] ?? true) as boolean,
+                _status: 'new' as DataStatus
+              };
+            }),
+            annualPerformanceItems: ((item['YearChargeDetails'] as unknown[]) || []).map((d: unknown) => {
+              const detail = d as Record<string, unknown>;
+              return {
+                ...detail,
+                selected: (detail['is_selected'] ?? detail['selected'] ?? false) as boolean,
+                _status: 'new' as DataStatus
+              };
+            }),
+            discountLevelItems: ((item['LevelChargeDetails'] as unknown[]) || []).map((d: unknown) => {
+              const detail = d as Record<string, unknown>;
+              return {
+                ...detail,
+                selected: (detail['is_selected'] ?? detail['selected'] ?? false) as boolean,
+                is_configured: (detail['is_configured'] ?? true) as boolean,
+                is_enabled: (detail['is_enabled'] ?? true) as boolean,
+                _status: 'new' as DataStatus
+              };
+            }),
+            detailItems: [],
+            currentTab: 'discount',
             _status: 'new' as DataStatus
-          }));
+          } as unknown as V2CommissionItem));
         }
 
         // 載入條件資料
@@ -886,7 +1051,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     this.wizardState.fareItems = fareItems;
   }
 
-  onStep3DataChange(commissionItems: CommissionItem[]): void {
+  onStep3DataChange(commissionItems: V2CommissionItem[]): void {
     this.wizardState.commissionItems = commissionItems;
   }
 
@@ -927,7 +1092,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
    * 離開（回到列表頁）
    */
   onClearAndExit(): void {
-    this.router.navigate(['/tls/tls12040v2']);
+    this.router.navigate(['account/tls/tls12040v2']);
   }
 
   /**
@@ -935,7 +1100,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
    */
   override onCancel(): void {
     if (this.isFirstStep) {
-      this.router.navigate(['/tls/tls12040v2']);
+      this.router.navigate(['account/tls/tls12040v2']);
     } else {
       this.goToPreviousStep();
     }

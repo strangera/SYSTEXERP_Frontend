@@ -115,8 +115,8 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
         ...frm.value,
         PageIndex: 1,
         PageSize: 30,
-        VouDate_From: frm.value.VouDate_From ? this.datePipe.transform(frm.value.VouDate_From, 'yyyy/MM/dd') : null,
-        VouDate_To: frm.value.VouDate_To ? this.datePipe.transform(frm.value.VouDate_To, 'yyyy/MM/dd') : null
+        VouDate_From: frm.value.VouDate_From ? frm.value.VouDate_From : null,
+        VouDate_To: frm.value.VouDate_To ? frm.value.VouDate_To : null
       };
 
       this.fin51010Service.queryFIN51010(body)
