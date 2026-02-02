@@ -321,7 +321,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     // 抽成別
     this.tls29010Service.dropdownTLS29010bytalentid({ "talent_id": "" }).pipe(untilDestroyed(this)).subscribe(res => {
       this.allBarcodeOptions = res.Data;
-      console.log('所有抽成別 下拉:', res);
+      console.log('所有折扣別 下拉:', res);
     });
     // 專櫃編號
     this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
@@ -350,16 +350,23 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   loadDetailData(pod_no: string): void {
     this.tls29010Service.queryTLS29010_Detail({ POD_No: pod_no })
       .pipe(untilDestroyed(this))
-      .subscribe((res) => {
+      .subscribe(async (res) => {
         if (res.Status === '0000') {
-          this.opendisc_Detail = res.Data.map((item: any) => ({
+          const mappedData = res.Data.map((item: any) => ({
             ...item,
             status: 'original',
-            _tempId: `id_${Math.random().toString(36).substr(2, 9)}` // 產生前端唯一識別碼
+            _tempId: `id_${Math.random().toString(36).substr(2, 9)}`
           }));
-          this.originalData = JSON.parse(JSON.stringify(this.opendisc_Detail));
 
-          // ★★★ 初始化快照：這裡存的是最原始的狀態 ★★★
+          // ★ 關鍵：載入後立即為每一列初始化下拉選單資料
+          for (const row of mappedData) {
+            if (row.tlt_no) {
+              await this.fetchTltDetails(row);
+            }
+          }
+
+          this.opendisc_Detail = mappedData;
+          this.originalData = JSON.parse(JSON.stringify(this.opendisc_Detail));
           this.lastDetailSnapshot = JSON.parse(JSON.stringify(this.opendisc_Detail));
         }
       });
