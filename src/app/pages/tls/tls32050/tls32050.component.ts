@@ -375,6 +375,12 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     })
+
+    // ---進入時讀取比較表單的query資訊---
+    if (this.queryStateService.getQueryStateValue('tls32050_Date')) {
+      this.dateForm = this.queryStateService.getQueryStateValue('tls32050_Date');
+    }
+    // ------
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -409,6 +415,9 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
         this.totalRecords = res.Data.length;              // 等候端
         console.log('主查詢結果', res.Data);
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        // ---同步儲存比較表單的query資訊---
+        this.queryStateService.setQueryState('tls32050_Date', this.dateForm);
+        // ------
       })
     })
   }

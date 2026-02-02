@@ -331,6 +331,12 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
       this.bus_sclass_Option = Object.values(groupedData);
       console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
     });
+
+    // ---進入時讀取比較表單的query資訊---
+    if (this.queryStateService.getQueryStateValue('tls31070_Date')) {
+      this.dateForm = this.queryStateService.getQueryStateValue('tls31070_Date');
+    }
+    // ------
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -371,6 +377,9 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
 
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        // ---同步儲存比較表單的query資訊---
+        this.queryStateService.setQueryState('tls31070_Date', this.dateForm);
+        // ------
       })
     })
   }
@@ -545,6 +554,18 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
     // 套用到 queryForm
     if (start) this.queryForm.get('TXN_DateS')?.setValue(start);
     if (end) this.queryForm.get('TXN_DateE')?.setValue(end);
+  }
+
+  //清除日期查詢條件
+  onClearDate() {
+    //dateForm設定為日營業報，日期今天
+    this.dateForm.reset({
+      reportType: '1',
+      onedatedd: yesterday,
+    });
+
+    this.setReadOnlyFields();
+    this.syncDateToQueryForm();
   }
 
   onDetail1(event: any) {
