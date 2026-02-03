@@ -238,16 +238,37 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     this.initializePage('TLS32040', 'TLS/TLS32040cru', this.queryForm, (frm) => this.onSubmit(frm));
     console.log('test');
 
-    // 日期表單控制
+    // 1. 初始化 UI 狀態與驗證器
     this.onReportTypeChange('DAY');
     this.setReadOnlyFields();
 
-    // 監聽 dateForm 的變化，套用日期到 queryForm(比較日是基準日帶入結果，不進行自行控制)
-    this.dateForm.valueChanges.subscribe(() => {
-      this.syncDateToQueryForm();
-    });
+    // 2. 【關鍵】先從 State 還原資料（純資料 patchValue）
+    // 處理基準日期表單
+    const savedDate = this.queryStateService.getQueryStateValue('tls32040_Date');
+    if (savedDate) {
+      // 如果 savedDate 是整個 FormGroup 物件，則取 .value；如果是 rawValue 則直接用
+      const dateVal = savedDate.value ? savedDate.value : savedDate;
+      this.dateForm.patchValue(dateVal, { emitEvent: false });
+    }
 
-    //同步自定義比較表單
+    // 處理自定義比較表單
+    const savedCDate = this.queryStateService.getQueryStateValue('tls32040_CDate');
+    if (savedCDate) {
+      const cDateVal = savedCDate.value ? savedCDate.value : savedCDate;
+      this.c_dateForm.patchValue(cDateVal, { emitEvent: false });
+    }
+
+    // 3. 【關鍵】還原後手動執行同步，確保 queryForm 拿到正確的初始日期
+    this.syncDateToQueryForm();
+    this.syncCDateToQueryForm();
+
+    // 4. 最後才啟動監聽 (這時後的監聽才會持續有效且不會被覆蓋)
+    this.dateForm.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(() => {
+        this.syncDateToQueryForm();
+      });
+
     this.c_dateForm.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe(() => {
