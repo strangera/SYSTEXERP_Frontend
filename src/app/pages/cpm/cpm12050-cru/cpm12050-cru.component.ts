@@ -3,6 +3,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -100,11 +101,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
   kindIdSubOptions: any[] = [];
 
   // 建議來源選項
-  suggSourceOptions = [
-    { label: 'WEB', value: 'WEB' },
-    { label: 'APP', value: 'APP' },
-  ];
-
+  suggSourceOptions = getSYS1000Options('SUGG_SOURCE');
   // 組織選項
   orgIdQueryOptions: any[] = [];
 
@@ -115,6 +112,10 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
   // 編輯table設定
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   data: any[] = [];
+  // 用來記錄明細上次的有效筆數（不含 candidate row），用來判斷是否為第一次新增明細
+  private _detailCountPrev = 0;
+  // 載入時是否已提供 ALERT_DATE（用來判斷唯讀觸發來源）
+  private _alertDateInitiallyProvided = false;
   columns: EditColumn[] = [
     {
       field: 'ANSWER',
@@ -138,8 +139,14 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
   ];
 
   // 判斷是否為已存在的明細（有 SEQ_ID 的為既有資料，不可編輯）
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   isExistingDetail = (rowData: Record<string, any>): boolean => !!rowData['SEQ_ID'];
+  detailRowSelectable: (rowData: any, rowIndex: number, data: any) => boolean | undefined = (rowData) => {
+    try {
+      return !this.isExistingDetail(rowData);
+    } catch (e) {
+      return true;
+    }
+  }
 
   constructor(
     private cpm12050Service: CPM12050Service,
@@ -149,11 +156,92 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     super();
   }
 
+  // ALERT_DATE 與 STATUS 聯動：
+  // - 新增時預設 STATUS = 'S'
+  // - 若 STATUS 為 'Y' 或 'Z'，則 ALERT_DATE 為必填；若已有值則將其 disable (唯讀)
+  // - 若 STATUS 非 'Y'/'Z'，則移除必填並確保 ALERT_DATE 可編輯
+  private setupAlertDateValidation(): void {
+    const statusCtrl: any = (this.dataForm.controls as any).STATUS;
+    const alertCtrl: any = (this.dataForm.controls as any).ALERT_DATE;
+    if (!statusCtrl || !alertCtrl) return;
+
+    // debug: 監聽 ALERT_DATE 狀態變化，便於找出何時被 disable
+    try {
+      alertCtrl.statusChanges.pipe(untilDestroyed(this)).subscribe((s: any) => {
+        console.log('DEBUG ALERT_DATE statusChanges ->', s, 'disabled=', alertCtrl.disabled);
+      });
+    } catch (e) { }
+
+    // 若為新增，預設 STATUS 為 'S'
+    if (this.crudstatus === CRUDStatus.Create) {
+      try { statusCtrl.setValue('S', { emitEvent: false }); } catch (e) { /* ignore */ }
+    }
+
+    const applyRules = (status: any) => {
+      const key = status ? String(status).toUpperCase() : '';
+      const isRequired = key === 'Y' || key === 'Z';
+      if (isRequired) {
+        alertCtrl.setValidators([Validators.required]);
+        alertCtrl.updateValueAndValidity({ emitEvent: true });
+        // 不在此處改變 enable/disable，以避免在使用者互動時被自動鎖定
+      } else {
+        alertCtrl.clearValidators();
+        alertCtrl.updateValueAndValidity({ emitEvent: true });
+        // 非必填時由後續邏輯決定是否 enable（例如檢視模式）
+      }
+    };
+
+    // 先套用一次當前狀態（只設定驗證規則）
+    applyRules(statusCtrl.value);
+
+    // 當 STATUS 改變時僅更新驗證器，不自動鎖定欄位
+    statusCtrl.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((s: any) => applyRules(s));
+
+    // 不監聽 ALERT_DATE 的 valueChanges 避免在使用者輸入後被自動鎖住
+
+    // 初始化後：若為檢視模式且不允許強制編輯，或是後端載入時已有 ALERT_DATE 且狀態為 Y/Z，則把欄位設為唯讀
+    try {
+      const statusKey = statusCtrl.value ? String(statusCtrl.value).toUpperCase() : '';
+      const isYorZ = statusKey === 'Y' || statusKey === 'Z';
+      if (this.crudstatus === CRUDStatus.Read && !this.forceEditAll) {
+        console.log('DEBUG: init disable ALERT_DATE because Read mode');
+        alertCtrl.disable({ emitEvent: false });
+      } else if (this._alertDateInitiallyProvided && isYorZ) {
+        // 如果後端原本就有 ALERT_DATE 且狀態為 Y/Z，則初始化為唯讀
+        console.log('DEBUG: init disable ALERT_DATE because backend provided + status Y/Z');
+        alertCtrl.disable({ emitEvent: false });
+      } else {
+        // 其他情況（新增、編輯且無後端 ALERT_DATE），保持可編輯
+        console.log('DEBUG: init enable ALERT_DATE');
+        alertCtrl.enable({ emitEvent: false });
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
   getAnswerYnLabel(code: any): string {
     if (code === null || code === undefined || code === '') return '';
     const key = String(code).toUpperCase();
     const found = this.ANSWER_YNOptions.find(o => String(o.value).toUpperCase() === key);
     return found ? found.label : String(code);
+  }
+
+  // 依據目前模式與狀態回傳 STATUS 下拉選項
+  get statusOptions() {
+    try {
+      const statusCtrl: any = (this.dataForm.controls as any).STATUS;
+      const current = statusCtrl && statusCtrl.value ? String(statusCtrl.value).toUpperCase() : (this.rowdata ? String((this.rowdata as any).STATUS ?? '').toUpperCase() : '');
+      // 編輯模式且目前為處理中（Y）時，僅允許保留 Y 或變更為 Z
+      if (this.crudstatus === CRUDStatus.Edit && current === 'Y') {
+        return this.ANSWER_YNOptions.filter(o => String(o.value).toUpperCase() === 'Y' || String(o.value).toUpperCase() === 'Z');
+      }
+    } catch (e) {
+      // ignore
+    }
+    return this.ANSWER_YNOptions;
   }
 
   ngOnInit(): void {
@@ -164,6 +252,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     this.loadOptions();
     // 若為編輯或檢視狀態，帶回資料
     if (this.rowdata) {
+
       // 預先載入下拉選項
       this.onKindChange(this.rowdata.KIND_ID!);
       this.onOrgQueryChange(this.rowdata.ORG_ID!);
@@ -190,6 +279,8 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
         SUGG_TYPE: (this.rowdata as any).SUGG_TYPE ?? null,
         STATUS: (this.rowdata as any).STATUS ? String((this.rowdata as any).STATUS).toUpperCase() : null
       } as any);
+      // 記錄載入時 ALERT_DATE 是否存在（若存在代表後端預設已填，則可依規則設為唯讀）
+      this._alertDateInitiallyProvided = !!this.rowdata.ALERT_DATE;
       // 如果是檢視模式（Read），將 ANSWER_YN 與 STATUS 設為唯讀
       if (this.crudstatus === CRUDStatus.Read && !this.forceEditAll) {
         try {
@@ -206,7 +297,9 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
       })
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
-          this.data = response.Data
+          this.data = response.Data;
+          // 初始化 prev count
+          this._detailCountPrev = Array.isArray(this.data) ? this.data.length : 0;
         });
     }
 
@@ -223,11 +316,36 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     // - 若由高權限打開（forceEditAll），則全部可編輯
     // - 若為 Edit 模式，僅允許特定欄位可編輯，其餘欄位設為唯讀/disabled
     this.configureFormControls();
+    // 一般情況也要啟動 ALERT_DATE 與 STATUS 的互動規則
+    this.setupAlertDateValidation();
+  }
+
+  // 當 table-edit 發生 dataChange（clean data）時會觸發此處理
+  // 若從 0 筆變成 >0 筆（使用者新增第一筆處理紀錄），則自動將 STATUS 設為 'Y'（處理中）
+  onTableDataChange(cleanData: any[]) {
+    const prev = this._detailCountPrev || 0;
+    const curr = Array.isArray(cleanData) ? cleanData.length : 0;
+    // 更新本地 data
+    this.data = cleanData || [];
+    // 若先前為 0，且現在大於 0，代表使用者新增了第一筆明細
+    if (prev === 0 && curr > 0) {
+      const statusCtrl: any = (this.dataForm.controls as any).STATUS;
+      try {
+        // 只有在狀態不是 Z（結案）時才改為 Y
+        const cur = statusCtrl && statusCtrl.value ? String(statusCtrl.value).toUpperCase() : '';
+        if (cur !== 'Z') {
+          statusCtrl.setValue('Y');
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    this._detailCountPrev = curr;
   }
 
   // 依照 crudstatus 與 forceEditAll 設定各 form 控制項 enable/disable
   configureFormControls() {
-    const editableOnEdit = ['CONTACT_ADDR', 'CONTACT_TEL', 'CELL_PHONE', 'E_MAIL'];
+    const editableOnEdit = ['CONTACT_ADDR', 'CONTACT_TEL', 'CELL_PHONE', 'E_MAIL', 'ALERT_DATE', 'STATUS'];
     // 若為高權限，全部啟用
     if (this.forceEditAll) {
       const ctrls: any = this.dataForm.controls as any;
@@ -290,6 +408,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
               STATUS: formValue.STATUS ?? formValue.ANSWER_YN ?? 'S',
               SUGG_TYPE: formValue.SUGG_TYPE,
               CLASS_EMAIL: formValue.CLASS_EMAIL,
+              ALERT_DATE: formValue.ALERT_DATE ? (new Date(formValue.ALERT_DATE)).toISOString() : undefined,
               USR_NO: formValue.CRT_USR_No,
               USR_NAME: formValue.CRT_USR_Name
             };
@@ -318,6 +437,10 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
                       // 例如回列表或關閉 CRU
                       this.onCancel();
                     });
+                  // ALERT_DATE 與 STATUS 聯動：
+                  // - 新增時預設 STATUS = 'S'
+                  // - 若 STATUS 為 'Y' 或 'Z'，則 ALERT_DATE 為必填；若已有值則將其 disable (唯讀)
+                  // - 若 STATUS 非 'Y'/'Z'，則移除必填並確保 ALERT_DATE 可編輯
                   return;
                 }
 
@@ -358,8 +481,9 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
               SUGG_TYPE: formValue.SUGG_TYPE ?? (this.rowdata as any)?.SUGG_TYPE,
               ANSWER_YN: formValue.ANSWER_YN ? String(formValue.ANSWER_YN).toUpperCase() : this.rowdata?.ANSWER_YN ?? undefined,
               CLASS_EMAIL: formValue.CLASS_EMAIL ?? (this.rowdata as any)?.CLASS_EMAIL,
-              // If forceEditAll (高權限) allow STATUS from form; otherwise default to 'W'
-              STATUS: this.forceEditAll ? (formValue.STATUS ?? this.rowdata?.STATUS) : 'W',
+              // If forceEditAll (高權限) allow STATUS from form; otherwise default to 'Y'
+              STATUS: this.forceEditAll ? (formValue.STATUS ?? this.rowdata?.STATUS) : 'Y',
+              ALERT_DATE: formValue.ALERT_DATE ? (new Date(formValue.ALERT_DATE)).toISOString() : (this.rowdata?.ALERT_DATE ? (new Date(this.rowdata.ALERT_DATE)).toISOString() : undefined),
               USR_NO: formValue.CRT_USR_No ?? this.rowdata?.CRT_USR_No,
               USR_NAME: formValue.CRT_USR_Name ?? this.rowdata?.CRT_USR_Name
             };
@@ -378,7 +502,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
             const payload: any = { ...updateRequest } as any;
             const stringFields = [
               'KIND_ID', 'KIND_ID_SUB', 'CUST_NAME', 'SEX', 'CONTACT_ADDR', 'CONTACT_TEL', 'CELL_PHONE', 'E_MAIL',
-              'COMPLAIN_NOTES', 'SUGG_SOURCE', 'SUGG_SOURCE_OTHER', 'ORG_ID', 'MEMBER_ID', 'SUGG_TYPE', 'ANSWER_YN', 'CLASS_EMAIL', 'STATUS', 'USR_NO', 'USR_NAME'
+              'COMPLAIN_NOTES', 'SUGG_SOURCE', 'SUGG_SOURCE_OTHER', 'ORG_ID', 'MEMBER_ID', 'SUGG_TYPE', 'ANSWER_YN', 'CLASS_EMAIL', 'STATUS', 'ALERT_DATE', 'USR_NO', 'USR_NAME'
             ];
             stringFields.forEach(f => {
               // keep null for missing optional fields (backend may expect null rather than empty string)

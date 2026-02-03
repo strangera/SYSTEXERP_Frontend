@@ -180,8 +180,19 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       header: '折扣別',
       width: '150px',
       type: 'dropdown',
-      // 從 rowData 讀取專屬的折扣別選項
-      options: (rowData: any) => rowData._barcodeOptions || this.allBarcodeOptions,
+      // 從 rowData 讀取專屬的折扣別選項 (不會有排除項和明細相同的狀況)
+      options: (rowData: any) => rowData._barcodeOptions,
+      // 從 rowData 讀取專屬的折扣別選項 (更新: original或modified 可能明細和排除向一致，因此該情況開放全部折扣別選項)
+      // options: (rowData: any) => {
+      //   // 如果是原始資料 (original) 且不是新增模式下，開放所有選項
+      //   // 或者你可以根據 rowData.status 判斷
+      //   if (rowData.status === 'original' || rowData.status === 'modified') {
+      //     return this.allBarcodeOptions;
+      //   }
+      //   // 否則（新增或編輯時）維持原本的過濾邏輯
+      //   return rowData._barcodeOptions;
+      // },
+
       optionLabel: 'label',
       optionValue: 'value',
       validate: [validateRequired],

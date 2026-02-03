@@ -17,7 +17,6 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
-import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { ChartModule } from 'primeng/chart';
@@ -29,6 +28,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { TLS32040ChartResponse } from './../../../service/api/tls/tls32040.service';
 
 const today = new Date();
+const yesterday = new Date(today);
 
 @Component({
   selector: 'app-tls32040',
@@ -236,6 +236,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
   ngOnInit(): void {
     this.initializePage('TLS32040', 'TLS/TLS32040cru', this.queryForm, (frm) => this.onSubmit(frm));
+    console.log('test');
 
     // 日期表單控制
     this.onReportTypeChange('DAY');
@@ -307,6 +308,9 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     if (this.queryStateService.getQueryStateValue('tls32040_Date')) {
       this.dateForm = this.queryStateService.getQueryStateValue('tls32040_Date');
     }
+    if (this.queryStateService.getQueryStateValue('tls32040_CDate')) {
+      this.c_dateForm = this.queryStateService.getQueryStateValue('tls32040_CDate');
+    }
     // ------
   }
   onSubmit(frm: FormGroup) {
@@ -360,6 +364,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         // ---同步儲存比較表單的query資訊---
         this.queryStateService.setQueryState('tls32040_Date', this.dateForm);
+        this.queryStateService.setQueryState('tls32040_CDate', this.c_dateForm);
         // ------
       })
     })
@@ -850,6 +855,28 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     // console.log('比較日期(起)', compareStart);
     // console.log('比較日期(迄)', compareEnd);
   }
+
+  //清除日期查詢條件
+  onClearDate() {
+    //dateForm設定為日營業報，日期今天
+    this.dateForm.reset({
+      reportType: 'DAY',
+      onedatedd: today,
+    });
+
+    //c_dateForm設定為日營業報，日期昨天
+    this.c_dateForm.reset({
+      reportType: 'DAY',
+      onedatedd: yesterday,
+    });
+
+    // 2. 手動觸發一次驗證與同步，確保畫面與 queryForm 狀態正確
+    this.onReportTypeChange('DAY');
+    this.setReadOnlyFields();
+    this.syncDateToQueryForm();
+  }
+
+  //能否顯示明細的row控制項
 
   onDetail1(event: any) {
     const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);

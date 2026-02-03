@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -78,12 +79,7 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
 
   // 意見類型選項
   kindIdOptions: any[] = [];
-
-  // 建議來源選項
-  suggSourceOptions = [
-    { label: 'WEB', value: 'WEB' },
-    { label: 'APP', value: 'APP' },
-  ];
+  suggSourceOptions = getSYS1000Options('SUGG_SOURCE');
 
   // 組織選項
   orgIdQueryOptions: any[] = [];
@@ -228,11 +224,11 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
     return;
   }
 
-  // 判斷是否禁用編輯按鈕: 若後端回傳為 label (例如 '已派單','結案') 或 code ('W','Z') 時禁用
+  // 判斷是否禁用編輯按鈕: 只有結案（label '結案' 或 value 'Z'）為不可編輯
   editDisabled = (rowData: any): boolean => {
     const status = rowData?.STATUS;
     if (!status) return false;
-    const disabledLabels = ['已派單', '結案'];
+    const disabledLabels = ['結案'];
     const disabledValues = this.statusOptions
       .filter(o => disabledLabels.includes(o.label))
       .map(o => o.value);

@@ -68,9 +68,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="MVM_No" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [multiSortMeta]="[{ field: 'MVM_No', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [addButton]="addButton" [buttonsLoading]="btnLoading" [editDisabled]="editDisabled"
-    [showDelete]="false"></app-table>
+  <app-table-report dataKey="MVM_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [totalRecords]="totalRecords" [loading]="loading" [addButton]="addButton"
+    [buttonsLoading]="btnLoading" [editDisabled]="editDisabled" [showDelete]="false" [lastQueryBody]="lastQuery"
+    [queryFunction]="tls56040Service.queryTLS56040.bind(tls56040Service)"></app-table-report>
 </div>
