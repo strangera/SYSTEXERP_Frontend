@@ -17,7 +17,6 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
-import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -27,6 +26,10 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 
 const today = new Date();
+const yesterday = new Date(today);
+yesterday.setDate(yesterday.getDate() - 1);
+const dayBeforeYesterday = new Date(yesterday);
+dayBeforeYesterday.setDate(dayBeforeYesterday.getDate() - 1);
 
 @Component({
   selector: 'app-tls32050',
@@ -380,6 +383,9 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     if (this.queryStateService.getQueryStateValue('tls32050_Date')) {
       this.dateForm = this.queryStateService.getQueryStateValue('tls32050_Date');
     }
+    if (this.queryStateService.getQueryStateValue('tls32050_CDate')) {
+      this.c_dateForm = this.queryStateService.getQueryStateValue('tls32050_CDate');
+    }
     // ------
   }
   onSubmit(frm: FormGroup) {
@@ -417,6 +423,7 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         // ---同步儲存比較表單的query資訊---
         this.queryStateService.setQueryState('tls32050_Date', this.dateForm);
+        this.queryStateService.setQueryState('tls32050_CDate', this.c_dateForm);
         // ------
       })
     })
@@ -805,6 +812,26 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
 
     // console.log('比較日期(起)', compareStart);
     // console.log('比較日期(迄)', compareEnd);
+  }
+
+  //清除日期查詢條件
+  onClearDate() {
+    //dateForm設定為日營業報，日期今天
+    this.dateForm.reset({
+      reportType: '1',
+      onedatedd: yesterday,
+    });
+
+    //c_dateForm設定為日營業報，日期昨天
+    this.c_dateForm.reset({
+      reportType: '1',
+      onedatedd: dayBeforeYesterday,
+    });
+
+    // 2. 手動觸發一次驗證與同步，確保畫面與 queryForm 狀態正確
+    this.onReportTypeChange('1');
+    this.setReadOnlyFields();
+    this.syncDateToQueryForm();
   }
 
   onDetail1(event: TLS32050Response) {
