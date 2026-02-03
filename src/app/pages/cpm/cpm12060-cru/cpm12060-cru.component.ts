@@ -128,7 +128,6 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
 
     // 載入主檔資料
     const id = this.dataForm.get('ID')?.value;
-    const SEQ_ID = this.dataForm.get('SEQ_ID')?.value || '';
     if (!id) return;
     this.loading = true; // 開啟載入狀態
     this.cpm12060Service.queryCPM12060_Main({ ID: id })
@@ -149,6 +148,8 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
       });
 
     // 載入明細資料
+    const SEQ_ID = this.dataForm.get('SEQ_ID')?.value;
+    if (!SEQ_ID) return;
     this.cpm12060Service.queryCPM12060_Detail({ SEQ_ID: SEQ_ID })
       .pipe(untilDestroyed(this))
       .subscribe(response => {

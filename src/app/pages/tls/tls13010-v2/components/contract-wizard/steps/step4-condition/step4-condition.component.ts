@@ -13,6 +13,7 @@ import { Button } from 'primeng/button';
 import { PrimeTemplate } from 'primeng/api';
 
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { ColumnDef, ExpandableEditTableComponent } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { CommissionType } from '../../../../core/constants';
 import {
@@ -175,6 +176,7 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
   // === 注入服務 ===
   private tableConfigService = inject(ConditionTableConfigService);
   private dataManagerService = inject(ConditionDataManagerService);
+  private messageService = inject(NotificationService);
   private cdr = inject(ChangeDetectorRef);
 
   // === 輸入屬性 ===
@@ -249,7 +251,9 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['conditionItems'] || changes['commissionType']) {
+    // 只在首次接收或 commissionType 變更時重新分類
+    // 避免 emit → 父組件寫回 → ngOnChanges → 重複 categorize 的浪費
+    if (changes['conditionItems']?.firstChange || changes['commissionType']) {
       this.categorizeConditionItems();
       this.initializeIfEmpty();
     }
@@ -378,6 +382,8 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
   }
 
   // === 新增項目方法 ===
+  private readonly DATE_FULL_MSG = '已超過契約截止日，無法再新增項目';
+
   onAddFixedRentItem(): void {
     if (this.crudstatus === CRUDStatus.Read) return;
 
@@ -392,6 +398,8 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
     if (newItem) {
       this.fixedRentItems = [...this.fixedRentItems, newItem as FixedRentCondition];
       this.emitConditionItemsChange();
+    } else {
+      this.messageService.warnBubble(this.DATE_FULL_MSG);
     }
   }
 
@@ -409,6 +417,8 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
     if (newItem) {
       this.baseRentHigherItems = [...this.baseRentHigherItems, newItem as BaseRentHigherCondition];
       this.emitConditionItemsChange();
+    } else {
+      this.messageService.warnBubble(this.DATE_FULL_MSG);
     }
   }
 
@@ -426,6 +436,8 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
     if (newItem) {
       this.baseCommissionItems = [...this.baseCommissionItems, newItem as BaseCommissionCondition];
       this.emitConditionItemsChange();
+    } else {
+      this.messageService.warnBubble(this.DATE_FULL_MSG);
     }
   }
 
@@ -443,6 +455,8 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
     if (newItem) {
       this.graduatedItems = [...this.graduatedItems, newItem as GraduatedCommissionCondition];
       this.emitConditionItemsChange();
+    } else {
+      this.messageService.warnBubble(this.DATE_FULL_MSG);
     }
   }
 
@@ -460,6 +474,8 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
     if (newItem) {
       this.baseTierItems = [...this.baseTierItems, newItem as BaseTierCondition];
       this.emitConditionItemsChange();
+    } else {
+      this.messageService.warnBubble(this.DATE_FULL_MSG);
     }
   }
 

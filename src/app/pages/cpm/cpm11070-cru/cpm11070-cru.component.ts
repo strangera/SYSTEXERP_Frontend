@@ -230,6 +230,29 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
               }
             } catch { }
           });
+          // 對領回相關欄位加入必填驗證，以符合領回流程要求
+          try {
+            const rCtrl = this.dataForm.get('RECEIVE_DATE');
+            const nameCtrl = this.dataForm.get('RECAPTION_NAME');
+            const phoneCtrl = this.dataForm.get('RECAPTION_PHONE');
+            const procCtrl = this.dataForm.get('PROCESSING_USER');
+            if (rCtrl) {
+              rCtrl.setValidators([Validators.required]);
+              rCtrl.updateValueAndValidity();
+            }
+            if (nameCtrl) {
+              nameCtrl.setValidators([Validators.required, Validators.maxLength(10)]);
+              nameCtrl.updateValueAndValidity();
+            }
+            if (phoneCtrl) {
+              phoneCtrl.setValidators([Validators.required, Validators.maxLength(10)]);
+              phoneCtrl.updateValueAndValidity();
+            }
+            if (procCtrl) {
+              procCtrl.setValidators([Validators.required, Validators.maxLength(20)]);
+              procCtrl.updateValueAndValidity();
+            }
+          } catch { }
           this.showReceiveInfo = true;
         }
       });

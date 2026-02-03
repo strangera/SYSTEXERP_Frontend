@@ -2,7 +2,7 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" (click)="onCancel()"></app-button>
-    <app-button btnType="default" icon="pi pi-plus" (click)="onGenerate()" label="產生電匯付款"
+    <app-button *ngIf="isFormCreateable" btnType="default" icon="pi pi-plus" (click)="onGenerate()" label="產生電匯付款"
       [disabled]="selectedItems.length === 0 || !canGenerate" [loading]="loading"></app-button>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">

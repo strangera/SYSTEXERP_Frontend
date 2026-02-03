@@ -11,28 +11,39 @@
           <app-calendar-range calendarType="dateTimeRange" startLabel="起始時間" endLabel="結束時間"
             startControlName="Pub_StartDate" endControlName="Pub_EndDate"
             [startControl]="dataForm.controls.Pub_StartDate" [endControl]="dataForm.controls.Pub_EndDate"
-            [submitted]="submitted"></app-calendar-range>
+            [submitted]="submitted">
+          </app-calendar-range>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="公告類別" controlName="Pub_Type" [options]="Pub_TypeOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.Pub_Type" [submitted]="submitted"></app-dropdown>
+            optionValue="value" [control]="dataForm.controls.Pub_Type" [submitted]="submitted">
+          </app-dropdown>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="公告事項" controlName="Pub_Event" [control]="dataForm.controls.Pub_Event"
-            [submitted]="submitted"></app-input-text>
+            [submitted]="submitted">
+          </app-input-text>
         </div>
+
         <div class="col-12">
           <app-editor-text label="公告內容" controlName="Pub_Description" [control]="dataForm.controls.Pub_Description"
-            [submitted]="submitted"></app-editor-text>
+            [submitted]="submitted">
+          </app-editor-text>
         </div>
       </div>
-      <app-table-edit title="公告顯示範圍" tableKey="sysbr10" [columns]="detailcolumns" [data]="detailList"
-        [disabled]="isFormReadable" (dataChange)="detailList = $event" [tableRequired]="true">
+
+      <app-table-edit title="公告顯示範圍" tableKey="sysbr10" [columns]="detailcolumns" [data]="detailList()"
+        [disabled]="isFormReadable" (dataChange)="detailList.set($event)" [tableRequired]="true">
       </app-table-edit>
-      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+
+      @if (!isFormReadable) {
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" (click)="onCancel()"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
+      }
     </form>
   </p-panel>
 </div>

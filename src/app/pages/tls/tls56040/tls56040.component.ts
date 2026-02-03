@@ -4,14 +4,14 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
-import { ITLS56040Data, Tls56040Service } from '@service/api/tls/tls56040.service';
+import { IQueryTLS56040Request, ITLS56040Data, Tls56040Service } from '@service/api/tls/tls56040.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AddButton, Column, formatDate } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -41,7 +41,7 @@ export const enum MVMStatus {
     InputTextComponent,
     DropdownComponent,
     TranslateModule,
-    TableComponent,
+    TableReportComponent,
     CommonModule,
     MultiSelectComponent,
     DropdownTableComponent,
@@ -62,10 +62,13 @@ export class TLS56040Component extends BasicQueryPageComponent<ITLS56040Data> im
     APRV_USR: [null as string | null], // 對應 APRV_USR
     APRV_Date_Start: [null],
     APRV_Date_End: [null],
-    ...createPaginationConfig([{ field: 'MVM_No', order: 1 }]),
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'MVM_No', order: 1 }]],
   });
   totalRecords = 0;
   data: ITLS56040Data[] = [];
+  lastQuery: IQueryTLS56040Request | null = null;
   columns: Column[] = [
     { field: 'MVM_No', header: '調撥單編號', visible: true },
     { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDate },
@@ -100,8 +103,8 @@ export class TLS56040Component extends BasicQueryPageComponent<ITLS56040Data> im
   userOptions: { label: string; value: string }[] = [];
 
   constructor(
-    private tls56040Service: Tls56040Service,
-    private dropDownListService: DropDownListService,
+    public readonly tls56040Service: Tls56040Service,
+    private readonly dropDownListService: DropDownListService,
     private readonly tls52010Service: Tls52010Service
   ) {
     super();
@@ -136,6 +139,7 @@ export class TLS56040Component extends BasicQueryPageComponent<ITLS56040Data> im
       };
       this.tls56040Service.queryTLS56040(params).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.data = response.Data;
+        this.lastQuery = params;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });

@@ -73,6 +73,10 @@ export const tlsRoutes: Routes = [
   { path: 'tls32020', loadComponent: () => import('./tls32020/tls32020.component').then(m => m.TLS32020Component), data: { progNo: 'TLS32020' } },
   // 成長率分析報表
   { path: 'tls32030', loadComponent: () => import('./tls32030/tls32030.component').then(m => m.TLS32030Component), data: { progNo: 'TLS32030' } },
+  // 收銀機基本資料維護
+  { path: 'tls41010', loadComponent: () => import('./tls41010/tls41010.component').then(m => m.TLS41010Component), data: { progNo: 'TLS41010' } },
+  // 收銀機基本資料維護 CRU
+  { path: 'tls41010cru', loadComponent: () => import('./tls41010-cru/tls41010-cru.component').then(m => m.TLS41010CRUComponent), data: { progNo: 'TLS41010' } },
   // 訊息登錄作業
   { path: 'tls43010', loadComponent: () => import('./tls43010/tls43010.component').then(m => m.TLS43010Component), data: { progNo: 'TLS43010' } },
   // 訊息登錄作業 CRU

@@ -180,8 +180,19 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       header: '折扣別',
       width: '150px',
       type: 'dropdown',
-      // 從 rowData 讀取專屬的折扣別選項
-      options: (rowData: any) => rowData._barcodeOptions || this.allBarcodeOptions,
+      // 從 rowData 讀取專屬的折扣別選項 (不會有排除項和明細相同的狀況)
+      options: (rowData: any) => rowData._barcodeOptions,
+      // 從 rowData 讀取專屬的折扣別選項 (更新: original或modified 可能明細和排除向一致，因此該情況開放全部折扣別選項)
+      // options: (rowData: any) => {
+      //   // 如果是原始資料 (original) 且不是新增模式下，開放所有選項
+      //   // 或者你可以根據 rowData.status 判斷
+      //   if (rowData.status === 'original' || rowData.status === 'modified') {
+      //     return this.allBarcodeOptions;
+      //   }
+      //   // 否則（新增或編輯時）維持原本的過濾邏輯
+      //   return rowData._barcodeOptions;
+      // },
+
       optionLabel: 'label',
       optionValue: 'value',
       validate: [validateRequired],
@@ -321,7 +332,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     // 抽成別
     this.tls29010Service.dropdownTLS29010bytalentid({ "talent_id": "" }).pipe(untilDestroyed(this)).subscribe(res => {
       this.allBarcodeOptions = res.Data;
-      console.log('所有抽成別 下拉:', res);
+      console.log('所有折扣別 下拉:', res);
     });
     // 專櫃編號
     this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
@@ -350,16 +361,23 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   loadDetailData(pod_no: string): void {
     this.tls29010Service.queryTLS29010_Detail({ POD_No: pod_no })
       .pipe(untilDestroyed(this))
-      .subscribe((res) => {
+      .subscribe(async (res) => {
         if (res.Status === '0000') {
-          this.opendisc_Detail = res.Data.map((item: any) => ({
+          const mappedData = res.Data.map((item: any) => ({
             ...item,
             status: 'original',
-            _tempId: `id_${Math.random().toString(36).substr(2, 9)}` // 產生前端唯一識別碼
+            _tempId: `id_${Math.random().toString(36).substr(2, 9)}`
           }));
-          this.originalData = JSON.parse(JSON.stringify(this.opendisc_Detail));
 
-          // ★★★ 初始化快照：這裡存的是最原始的狀態 ★★★
+          // ★ 關鍵：載入後立即為每一列初始化下拉選單資料
+          for (const row of mappedData) {
+            if (row.tlt_no) {
+              await this.fetchTltDetails(row);
+            }
+          }
+
+          this.opendisc_Detail = mappedData;
+          this.originalData = JSON.parse(JSON.stringify(this.opendisc_Detail));
           this.lastDetailSnapshot = JSON.parse(JSON.stringify(this.opendisc_Detail));
         }
       });
