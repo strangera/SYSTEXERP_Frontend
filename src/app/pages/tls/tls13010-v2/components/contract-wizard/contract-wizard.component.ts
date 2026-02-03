@@ -297,11 +297,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
   private updateDynamicValidators(): void {
     const tltTermType = this.step1Form.get('tlt_term_type')?.value || '';
 
-    // 包底類別驗證 (抽成別 2, 4, 6 需要)
+    // 包底類別驗證 (抽成別 4, 6 需要)
     const baodiControl = this.step1Form.get('tlt_ctype_mtotal');
     if (baodiControl) {
       baodiControl.clearValidators();
-      if (['2', '4', '6'].includes(tltTermType)) {
+      if (['4', '6'].includes(tltTermType)) {
         baodiControl.setValidators([Validators.required]);
       }
       baodiControl.updateValueAndValidity();
@@ -868,7 +868,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
           }
 
           case '6': { // 包底加層級 - 有 limit_amt 和 seq_no
-            const levelDetails6 = data.LevelDetails || data.levelDetails || [];
+            // 優先從 BottomTierDetails 讀取，若無則從 LevelDetails 讀取
+            const levelDetails6 = data.BottomTierDetails || data.bottomTierDetails || data.LevelDetails || data.levelDetails || [];
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             conditionItems = levelDetails6.map((item: any) => ({
               id: item.id || item.ID,
@@ -1005,8 +1006,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
     // 動態驗證：根據抽成別驗證相關欄位
     const tltTermType = this.step1Form.get('tlt_term_type')?.value || '';
 
-    // 包底類別 (抽成別 2, 4, 6 需要)
-    if (['2', '4', '6'].includes(tltTermType)) {
+    // 包底類別 (抽成別 4, 6 需要)
+    if (['4', '6'].includes(tltTermType)) {
       const baodiValue = this.step1Form.get('tlt_ctype_mtotal')?.value;
       if (!baodiValue) {
         this.messageService.warnBubble('當前抽成別需要選擇包底類別');
@@ -1472,45 +1473,45 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
     for (const item of activeItems) {
       const errorFields: string[] = [];
 
-      // 通用驗證：帳務起迄日期必填
-      if (!item.cag_bdate) {
-        errorCount++;
-        errorTypes.add('必填欄位未填');
-        errorFields.push('cag_bdate');
-      }
-      if (!item.cag_edate) {
-        errorCount++;
-        errorTypes.add('必填欄位未填');
-        errorFields.push('cag_edate');
-      }
+      // [暫時註解] 通用驗證：帳務起迄日期必填
+      // if (!item.cag_bdate) {
+      //   errorCount++;
+      //   errorTypes.add('必填欄位未填');
+      //   errorFields.push('cag_bdate');
+      // }
+      // if (!item.cag_edate) {
+      //   errorCount++;
+      //   errorTypes.add('必填欄位未填');
+      //   errorFields.push('cag_edate');
+      // }
 
-      // 驗證日期順序
-      const condStart = this.parseDate(item.cag_bdate);
-      const condEnd = this.parseDate(item.cag_edate);
-      if (condStart && condEnd && condStart > condEnd) {
-        errorCount++;
-        errorTypes.add('日期順序錯誤');
-        errorFields.push('cag_bdate', 'cag_edate');
-      }
+      // [暫時註解] 驗證日期順序
+      // const condStart = this.parseDate(item.cag_bdate);
+      // const condEnd = this.parseDate(item.cag_edate);
+      // if (condStart && condEnd && condStart > condEnd) {
+      //   errorCount++;
+      //   errorTypes.add('日期順序錯誤');
+      //   errorFields.push('cag_bdate', 'cag_edate');
+      // }
 
-      // 驗證日期在契約期間內
-      const contractStartDate = this.step1Form.get('tlt_bdate')?.value;
-      const contractEndDate = this.step1Form.get('tlt_edate')?.value;
-      if (contractStartDate && contractEndDate) {
-        const contractStart = this.parseDate(contractStartDate);
-        const contractEnd = this.parseDate(contractEndDate);
+      // [暫時註解] 驗證日期在契約期間內
+      // const contractStartDate = this.step1Form.get('tlt_bdate')?.value;
+      // const contractEndDate = this.step1Form.get('tlt_edate')?.value;
+      // if (contractStartDate && contractEndDate) {
+      //   const contractStart = this.parseDate(contractStartDate);
+      //   const contractEnd = this.parseDate(contractEndDate);
 
-        if (condStart && contractStart && condStart < contractStart) {
-          errorCount++;
-          errorTypes.add('日期超出契約期間');
-          if (!errorFields.includes('cag_bdate')) errorFields.push('cag_bdate');
-        }
-        if (condEnd && contractEnd && condEnd > contractEnd) {
-          errorCount++;
-          errorTypes.add('日期超出契約期間');
-          if (!errorFields.includes('cag_edate')) errorFields.push('cag_edate');
-        }
-      }
+      //   if (condStart && contractStart && condStart < contractStart) {
+      //     errorCount++;
+      //     errorTypes.add('日期超出契約期間');
+      //     if (!errorFields.includes('cag_bdate')) errorFields.push('cag_bdate');
+      //   }
+      //   if (condEnd && contractEnd && condEnd > contractEnd) {
+      //     errorCount++;
+      //     errorTypes.add('日期超出契約期間');
+      //     if (!errorFields.includes('cag_edate')) errorFields.push('cag_edate');
+      //   }
+      // }
 
       // 根據抽成別驗證特定欄位
       const data = item as unknown as Record<string, unknown>;
@@ -1581,16 +1582,16 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
       }
     }
 
-    // 日期區間重疊驗證
-    const overlapCount = this.checkDateOverlap(
-      activeItems as unknown as Record<string, unknown>[],
-      'cag_bdate',
-      'cag_edate'
-    );
-    if (overlapCount > 0) {
-      errorCount += overlapCount;
-      errorTypes.add('日期區間重疊');
-    }
+    // [暫時註解] 日期區間重疊驗證
+    // const overlapCount = this.checkDateOverlap(
+    //   activeItems as unknown as Record<string, unknown>[],
+    //   'cag_bdate',
+    //   'cag_edate'
+    // );
+    // if (overlapCount > 0) {
+    //   errorCount += overlapCount;
+    //   errorTypes.add('日期區間重疊');
+    // }
 
     if (errorCount > 0) {
       // 觸發變更檢測
@@ -1689,7 +1690,9 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
 
         // 延遲返回查詢頁，讓使用者看到成功訊息
         setTimeout(() => {
-          this.router.navigate(['account/tls/tls13010v2']);
+          this.router.navigate(['account/tls/tls13010v2'], {
+            state: { fromRoute: '/tls/tls13010v2cru' }
+          });
         }, 2000);
       } else {
         throw new Error(response?.message || '儲存失敗');
@@ -1704,7 +1707,9 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
   }
 
   override onCancel(): void {
-    this.router.navigate(['account/tls/tls13010v2']);
+    this.router.navigate(['account/tls/tls13010v2'], {
+      state: { fromRoute: '/tls/tls13010v2cru' }
+    });
   }
 
   /**

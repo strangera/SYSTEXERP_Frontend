@@ -2146,7 +2146,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
    */
   private handleInitializationFailure(): void {
     this.messageService.errorBubble('載入資料失敗，請重新選擇要檢視的項目');
-    this.router.navigate(['account/tls/tls13010']);
+    this.router.navigate(['account/tls/tls13010'], {
+      state: { fromRoute: this.router.url }
+    });
   }
 
   /**
@@ -2367,15 +2369,15 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.messageService
     );
 
-    // 設定保證金付款方式變更監聽
-    ['open_deposit', 'construct_deposit', 'expiration_deposit'].forEach(fieldName => {
-      const sub = this.dataForm.get(fieldName)?.valueChanges
-        .pipe(distinctUntilChanged())
-        .subscribe(() => {
-          this.validationService.updateDepositValidators(this.dataForm);
-        });
-      if (sub) this.subscriptions.push(sub);
-    });
+    // [暫時註解] 保證金付款方式變更監聽 - 選擇付款方式時金額變必填
+    // ['open_deposit', 'construct_deposit', 'expiration_deposit'].forEach(fieldName => {
+    //   const sub = this.dataForm.get(fieldName)?.valueChanges
+    //     .pipe(distinctUntilChanged())
+    //     .subscribe(() => {
+    //       this.validationService.updateDepositValidators(this.dataForm);
+    //     });
+    //   if (sub) this.subscriptions.push(sub);
+    // });
 
     // 將訂閱加入管理
     if (termTypeSub) this.subscriptions.push(termTypeSub);
