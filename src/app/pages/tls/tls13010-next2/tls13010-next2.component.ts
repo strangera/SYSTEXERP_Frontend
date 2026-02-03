@@ -631,7 +631,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       fieldName,
       newValue,
       itemId: rowData.id,
-      是否為cap_saletype: fieldName === 'cap_saletype1' || fieldName === 'cap_saletype2'
+      是否為cap_saletype: fieldName === 'cap_saletype1' || fieldName === 'cap_saletype2' || fieldName === 'cap_saletype3' || fieldName === 'cap_saletype5'
     });
     rowData[fieldName] = newValue;
     // 更新狀態

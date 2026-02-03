@@ -407,12 +407,12 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
       this.validationService.updatePaymentValidators(this.form);
     });
 
-    // 設定保證金付款方式變更監聽
-    ['open_deposit', 'construct_deposit', 'expiration_deposit'].forEach(fieldName => {
-      this.form.get(fieldName)?.valueChanges.subscribe(() => {
-        this.validationService.updateDepositValidators(this.form);
-      });
-    });
+    // [暫時註解] 保證金付款方式變更監聽 - 選擇付款方式時金額變必填
+    // ['open_deposit', 'construct_deposit', 'expiration_deposit'].forEach(fieldName => {
+    //   this.form.get(fieldName)?.valueChanges.subscribe(() => {
+    //     this.validationService.updateDepositValidators(this.form);
+    //   });
+    // });
 
     // 設定日期驗證器
     this.dateValidationService.setupDateValidators(this.form, this.messageService);

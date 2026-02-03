@@ -1422,41 +1422,8 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   }
 
   private validateNext2DataConsistency(): boolean {
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
-
-    if (commissionType !== '2') {
-      return true; // 非底租抽成取高者不需檢查
-    }
-
-    try {
-      const cleanData = this.contractFlowService.generateCleanSubmitData();
-
-      const next2MasterCount = cleanData.commissions.masters.toInsert.length +
-        cleanData.commissions.masters.toUpdate.length;
-      const next3RentCount = cleanData.conditions.baseRentHigher.toInsert.length +
-        cleanData.conditions.baseRentHigher.toUpdate.length;
-
-      console.log('Next3: 數量一致性檢查:', {
-        next2MasterCount,
-        next3RentCount,
-        isConsistent: next2MasterCount === next3RentCount
-      });
-
-      if (next2MasterCount !== next3RentCount) {
-        this.notificationService.errorBubble(
-          `資料不一致：抽成設定有 ${next2MasterCount} 個項目，` +
-          `但條件設定有 ${next3RentCount} 個項目。請檢查資料後再送出。`
-        );
-        return false;
-      }
-
-      return true;
-
-    } catch (error) {
-      console.error('Next3: 一致性檢查失敗:', error);
-      this.notificationService.warnBubble('無法驗證資料一致性，請檢查資料完整性');
-      return true; // 允許繼續，但給出警告
-    }
+    // 移除抽成設定與條件設定數量一致性檢查，直接返回 true
+    return true;
   }
 
   // ===== 導航方法 =====

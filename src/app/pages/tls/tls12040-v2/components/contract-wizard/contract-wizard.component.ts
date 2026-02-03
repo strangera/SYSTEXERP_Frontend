@@ -374,11 +374,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
   private updateDynamicValidators(): void {
     const tltTermType = this.dataForm.get('tlt_term_type')?.value || '';
 
-    // 包底類別驗證
+    // 包底類別驗證 (抽成別 4, 6 需要)
     const baodiControl = this.dataForm.get('tlt_ctype_mtotal');
     if (baodiControl) {
       baodiControl.clearValidators();
-      if (['2', '4', '6'].includes(tltTermType)) {
+      if (['4', '6'].includes(tltTermType)) {
         baodiControl.setValidators([Validators.required]);
       }
       baodiControl.updateValueAndValidity();
@@ -975,7 +975,9 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
       if (response?.success) {
         this.messageService.successBubble('儲存成功');
-        this.router.navigate(['/tls/tls12040v2']);
+        this.router.navigate(['/tls/tls12040v2'], {
+          state: { fromRoute: '/tls/tls12040v2cru' }
+        });
       } else {
         this.messageService.errorBubble(response?.message || '儲存失敗');
       }
@@ -1094,7 +1096,9 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
    * 離開（回到列表頁）
    */
   onClearAndExit(): void {
-    this.router.navigate(['account/tls/tls12040v2']);
+    this.router.navigate(['account/tls/tls12040v2'], {
+      state: { fromRoute: '/tls/tls12040v2cru' }
+    });
   }
 
   /**
@@ -1102,7 +1106,9 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
    */
   override onCancel(): void {
     if (this.isFirstStep) {
-      this.router.navigate(['account/tls/tls12040v2']);
+      this.router.navigate(['account/tls/tls12040v2'], {
+        state: { fromRoute: '/tls/tls12040v2cru' }
+      });
     } else {
       this.goToPreviousStep();
     }
