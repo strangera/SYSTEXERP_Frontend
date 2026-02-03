@@ -1,21 +1,21 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { QueryPLUResponse, QueryTLS57040Request, Tls57040Service } from '@service/api/tls/tls57040.service';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
+import { debounceTime } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { QueryPLUResponse, QueryTLS57040Request, Tls57040Service } from '@service/api/tls/tls57040.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { debounceTime } from 'rxjs';
-import { yesterday } from '@shared/models/system/query-form.model';
 
 @Component({
   selector: 'app-tls57060',
@@ -31,7 +31,7 @@ import { yesterday } from '@shared/models/system/query-form.model';
     CalendarRangeComponent,
     ButtonComponent,
     TranslateModule,
-    TableComponent,
+    TableReportComponent,
     DropdownTableComponent
   ],
 })
@@ -45,6 +45,8 @@ export class TLS57060Component extends BasicQueryPageComponent<any> implements O
     PLU_MagNo: ['', Validators.maxLength(20)],
     PLU_No: ['', Validators.maxLength(13)],
     VEN_No: [null],
+    pageSize: [30],
+    pageIndex: [1],
   });
   totalRecords = 0;
   displayModeOptions = [
@@ -72,6 +74,7 @@ export class TLS57060Component extends BasicQueryPageComponent<any> implements O
     { field: 'PLU_Name', header: '商品名稱' },
   ];
   data: any[] = [];
+  lastQueryBody: any = {};
   columns: Column[] = [
     { field: 'salesOrderNumber', header: '銷售單號', visible: true },
     { field: 'salesDate', header: '銷售日期', visible: true },
@@ -88,7 +91,7 @@ export class TLS57060Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private readonly dropDownListService: DropDownListService,
-    private readonly tls57040Service: Tls57040Service
+    public readonly tls57040Service: Tls57040Service
   ) { super(); }
 
   ngOnInit(): void {
