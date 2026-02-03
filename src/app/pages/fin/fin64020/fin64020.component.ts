@@ -1,7 +1,7 @@
 import { AsyncPipe, CommonModule, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -21,7 +21,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
-@UntilDestroy()
 @Component({
   selector: 'app-fin64020',
   templateUrl: './fin64020.component.html',
@@ -108,7 +107,6 @@ export class FIN64020Component extends BasicQueryPageComponent<QueryFIN64020Row>
         this.data = res.Data;
         this.totalRecords = res.TotalCount || 0;
         this.lastQueryBody = body;
-        this.queryStateService.setQueryState('FIN64020', frm.value);
       })
     });
   }
