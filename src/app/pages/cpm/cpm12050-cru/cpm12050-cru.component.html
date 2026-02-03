@@ -48,13 +48,13 @@
           <ng-container *ngIf="!isFormReadable">
             <!-- 編輯/建立模式：以 STATUS 控制項為來源（優先使用 STATUS） -->
             <app-dropdown label="處理狀況" controlName="STATUS" [control]="dataForm.controls.STATUS"
-              [options]="ANSWER_YNOptions" [submitted]="submitted" optionLabel="label" optionValue="value"
+              [options]="statusOptions" [submitted]="submitted" optionLabel="label" optionValue="value"
               [disabled]="isFormReadable"></app-dropdown>
           </ng-container>
           <ng-container *ngIf="isFormReadable">
             <!-- 顯示一個 disabled 的下拉以確保樣式一致且不可互動，優先使用 STATUS 值 -->
             <app-dropdown label="處理狀況" controlName="STATUS" [control]="dataForm.controls.STATUS"
-              [options]="ANSWER_YNOptions" [submitted]="submitted" optionLabel="label" optionValue="value"
+              [options]="statusOptions" [submitted]="submitted" optionLabel="label" optionValue="value"
               [disabled]="true"></app-dropdown>
           </ng-container>
         </div>
@@ -128,9 +128,9 @@
         </div> -->
       </div>
       <div class="col-12" *ngIf="!isFormCreateable">
-        <app-table-edit [columns]="columns" [data]="data" [tableRequired]="true" [disabled]="isFormReadable"
-          [rowEditDisabled]="isExistingDetail" (dataChange)="onTableDataChange($event)"
-          [loading]="loading"></app-table-edit>
+        <app-table-edit [columns]="columns" [data]="data" [tableRequired]="false" [disabled]="isFormReadable"
+          [rowEditDisabled]="isExistingDetail" [isRowSelectable]="detailRowSelectable"
+          (dataChange)="onTableDataChange($event)" [loading]="loading"></app-table-edit>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
