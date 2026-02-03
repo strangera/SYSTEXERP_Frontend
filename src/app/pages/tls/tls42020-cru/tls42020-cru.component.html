@@ -20,12 +20,12 @@
       </div>
 
       <!-- 明細 -->
-      <app-table class="col-12" tableKey="TLS42020Detail" dataKey="ID" [columns]="columns" [data]="data"
-        [showEdit]="false" [showDetail]="false" [showCheckBox]="true" [showInsert]="true" [showRowEdit]="true"
-        (delete)="onDelete($event)" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
-        [showCaption]="!isFormReadable" [showManage]="!isFormReadable" [showCheckBox]="!isFormReadable"
-        [insertRowData]="true" (dataChange)="data = $event" [showReportMode]="false"
-        (fieldChange)="onFieldChange($event)" [showFilter]="false"></app-table>
+      <app-table-edit class="col-12" tableKey="TLS42020Detail" dataKey="ID" [columns]="columns" [data]="data"
+        [disabled]="isFormReadable" [showCheckBox]="!isFormReadable" [showInsert]="false" [canInsert]="!isFormReadable"
+        [showDelete]="!isFormReadable" [rowEditDisabled]="rowEditDisabledFn" (delete)="onDelete($event)"
+        (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" (dataChange)="data = $event"
+        (fieldChange)="onFieldChange($event)">
+      </app-table-edit>
 
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
