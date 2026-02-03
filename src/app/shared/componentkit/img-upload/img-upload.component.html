@@ -20,7 +20,7 @@
     </ng-template>
   </p-carousel>
 </div>
-<p-fileUpload @slideInOut *ngIf="disabled && showEdit" id="custom-file-upload" #fileUpload name="myfile[]" [url]="''"
+<p-fileUpload @slideInOut *ngIf="!disabled && showEdit" id="custom-file-upload" #fileUpload name="myfile[]" [url]="''"
   [multiple]="multiple" [accept]="accept" [maxFileSize]="maxFileSize" [customUpload]="true"
   [invalidFileSizeMessageSummary]="INVALID_FILE_SIZE_MESSAGE_SUMMARY"
   [invalidFileSizeMessageDetail]="INVALID_FILE_SIZE_MESSAGE_DETAIL"
