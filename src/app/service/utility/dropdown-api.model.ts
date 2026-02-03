@@ -320,6 +320,8 @@ export interface TalentQuery {
   tlt_no?: string;
   tlt_name?: string;
   ven_no?: string;
+  tlt_bdate?: string | null;
+  tlt_edate?: string | null;
 }
 
 /**

@@ -218,6 +218,6 @@
                     [totalRecords]="dialogTotalRecords()"
                     [loading]="dialogLoading()"
                     [lastQueryBody]="{}"
-                    [queryFunction]="service.getTLTTalentOptions.bind(service)">
+                    [queryFunction]="fetchTltTalentOptions.bind(this)">
   </app-table-report>
 </app-dialog>
