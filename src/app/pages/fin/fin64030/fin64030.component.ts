@@ -50,7 +50,58 @@ export class FIN64030Component extends BasicQueryPageComponent<QueryFIN64030Row>
     CashDate: [this.datePipe.transform(new Date(), 'yyyy/MM/dd'), [Validators.required]]
   });
 
-  data: QueryFIN64030Row[] = [];
+  data: QueryFIN64030Row[] = [
+    {
+      ID: 2001,
+      SEQ_NO: 1,
+      CHK_No: 'CK2026001',
+      VEN_No: 'C001',
+      VEN_Name: '測試客戶(託收中)',
+      BNK_No: '0050012',
+      BNK_Name: '土地銀行',
+      CHK_ExpireDate: '2026-02-01',
+      CHK_Amt: 150000,
+      CHK_BNK_No: '0070018',
+      VouNo_Expire: 'VOU2026020101',
+      CHK_Status: '2', // 託收
+      CHK_Status_Name: '託收',
+      IsSelectable: 'Y'
+    },
+    {
+      ID: 2002,
+      SEQ_NO: 2,
+      CHK_No: 'CK2026002',
+      VEN_No: 'C002',
+      VEN_Name: '測試客戶(未異動)',
+      BNK_No: '0130025',
+      BNK_Name: '國泰世華',
+      CHK_ExpireDate: '2026-02-15',
+      CHK_Amt: 45000,
+      CHK_BNK_No: '',
+      VouNo_Expire: '',
+      CHK_Status: '1', // 未異動
+      CHK_Status_Name: '未異動',
+      IsSelectable: 'N'
+    },
+    {
+      ID: 2003,
+      SEQ_NO: 3,
+      CHK_No: 'CK2026003',
+      VEN_No: 'C003',
+      VEN_Name: '測試客戶(已兌現)',
+      BNK_No: '8220010',
+      BNK_Name: '中國信託',
+      CHK_ExpireDate: '2026-01-10',
+      CHK_Amt: 20000,
+      CHK_BNK_No: '0040012',
+      VouNo_Expire: 'VOU2026011005',
+      CHK_Status: '3', // 兌現
+      CHK_Status_Name: '兌現',
+      IsSelectable: 'N'
+    }
+  ];
+
+  // 別忘了同步更新總筆數
   totalRecords = 0;
   selectedItems: QueryFIN64030Row[] = [];
   dialogVisible = false;
@@ -73,7 +124,7 @@ export class FIN64030Component extends BasicQueryPageComponent<QueryFIN64030Row>
   ];
 
   companyAccOptions$ = this.dropDown.queryAps1002().pipe(
-    map(options => options ? options.filter(opt => opt['BNK_AccType'] !== '1') : null)
+    map(options => options ? options.filter(opt => opt['BNK_AccType'] === '1') : null)
   );
 
   chkStatusOptions = [

@@ -112,7 +112,7 @@ export class FIN64020Component extends BasicQueryPageComponent<QueryFIN64020Row>
   }
   dialogVisible = false;
   companyAccOptions2$ = this.dropDown.queryAps1002().pipe(
-    map(options => options ? options.filter(opt => opt['BNK_AccType'] === '1') : null)
+    map(options => options ? options.filter(opt => opt['BNK_AccType'] !== '1') : null)
   );
   dialogLoading = false;
   dialogQueryForm = this.formBuilder.group({
