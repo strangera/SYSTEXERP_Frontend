@@ -205,9 +205,20 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
   ngOnInit(): void {
     this.initializePage('TLS31070', 'TLS/TLS31070cru', this.queryForm, (frm) => this.onSubmit(frm));
 
-    // 日期表單控制
+    // 1. 先處理下拉選單與唯讀設定
     this.onReportTypeChange('1');
     this.setReadOnlyFields();
+
+    // 2. 從 State 讀取資料並「還原」值，而不是替換整個物件
+    const savedDateState = this.queryStateService.getQueryStateValue('tls31070_Date');
+    if (savedDateState) {
+      // 注意：如果是存整個 FormGroup 物件，這裡建議存取它的 .value
+      // 如果你之前存的是 FormGroup，請確保這裡拿到的是純資料
+      const stateValue = savedDateState.value ? savedDateState.value : savedDateState;
+      this.dateForm.patchValue(stateValue, { emitEvent: false });
+      // 強制執行一次同步，確保 queryForm 的日期跟上
+      this.syncDateToQueryForm();
+    }
 
     // 監聽 dateForm 的變化，套用日期到 queryForm
     this.dateForm.valueChanges.subscribe(() => {
@@ -331,12 +342,6 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
       this.bus_sclass_Option = Object.values(groupedData);
       console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
     });
-
-    // ---進入時讀取比較表單的query資訊---
-    if (this.queryStateService.getQueryStateValue('tls31070_Date')) {
-      this.dateForm = this.queryStateService.getQueryStateValue('tls31070_Date');
-    }
-    // ------
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
