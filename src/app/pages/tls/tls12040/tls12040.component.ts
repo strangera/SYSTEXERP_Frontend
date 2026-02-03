@@ -137,9 +137,9 @@ export class TLS12040Component extends BasicQueryPageComponent<ContractItem> imp
     contact_Date_to: [], // 洽談日期
     paper_typeList: [[]], // 營業型態
     tlt_bdate_start_from: [], // 契約起始日
-    tlt_bdate_end_to: [], // 契約起始日
+    tlt_bdate_start_to: [], // 契約起始日
     tlt_edate_start_from: [], // 契約截止日
-    tlt_edate_end_to: [], // 契約截止日
+    tlt_edate_start_to: [], // 契約截止日
     tlt_contract_bdate_from: [], // 營運起始日
     tlt_contract_bdate_to: [], // 營運起始日
     tlt_contract_edate_from: [], // 營運截止日

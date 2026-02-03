@@ -229,13 +229,20 @@ export class TLS2H010Component extends BasicQueryPageComponent<any> implements O
 
       this.loading = true;
       this.tls2h010Service.generateTLS2H010({ SamYyyymm: sam }).pipe(untilDestroyed(this), finalize(() => { this.loading = false; this.messageService.unblockUi(); })).subscribe({
-        next: () => {
-          this.messageService.successBubble('產生發票成功', '完成');
-          // 可按需重新查詢
+        next: (res: any) => {
+          try {
+            if (res?.Data?.TotalCount > 0) {
+              this.messageService.successBubble(`產生${res.Data.SuccessCount}張發票`, '成功');
+            } else {
+              this.messageService.warnBubble('本月無產生發票需求', '警告');
+            }
+          } catch (e) {
+            console.error('generateTLS2H010 parse result error', e);
+            this.messageService.successBubble('產生發票成功', '完成');
+          }
+          try { this.onSubmit(frm); } catch (e) { /* ignore */ }
         },
-        error: () => {
-          this.messageService.errorBubble('產生發票失敗', '錯誤');
-        }
+
       });
     });
   }

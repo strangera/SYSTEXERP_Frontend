@@ -8,113 +8,59 @@
       <div class="grid p-fluid">
         <!-- 意見類型 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="意見類型"
-            controlName="KIND_ID"
-            [control]="dataForm.controls.KIND_ID"
-            [options]="kindIdOptions"
-            [submitted]="submitted"
-            optionLabel="label"
-            optionValue="value"
-            (valueChange)="onKindChange($event)"
-          ></app-dropdown>
+          <app-dropdown label="意見類型" controlName="KIND_ID" [control]="dataForm.controls.KIND_ID"
+            [options]="kindIdOptions" [submitted]="submitted" optionLabel="label" optionValue="value"
+            (valueChange)="onKindChange($event)"></app-dropdown>
         </div>
         <!-- 意見子類型 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="意見子類型"
-            controlName="KIND_ID_SUB"
-            [control]="dataForm.controls.KIND_ID_SUB"
-            [options]="kindIdSubOptions"
-            [submitted]="submitted"
-            optionLabel="label"
-            optionValue="value"
-          ></app-dropdown>
+          <app-dropdown label="意見子類型" controlName="KIND_ID_SUB" [control]="dataForm.controls.KIND_ID_SUB"
+            [options]="kindIdSubOptions" [submitted]="submitted" optionLabel="label" optionValue="value"></app-dropdown>
         </div>
         <!-- 組織 -->
         <div class="col-12 md:col-6 lg:col-2">
-          <app-dropdown
-            label="組織"
-            controlName="ORG_ID_QUERY"
-            [control]="dataForm.controls.ORG_ID_QUERY"
-            [options]="orgIdQueryOptions"
-            [submitted]="submitted"
-            optionLabel="label"
-            optionValue="value"
-            (valueChange)="onOrgQueryChange($event)"
-          ></app-dropdown>
+          <app-dropdown label="組織" controlName="ORG_ID_QUERY" [control]="dataForm.controls.ORG_ID_QUERY"
+            [options]="orgIdQueryOptions" [submitted]="submitted" optionLabel="label" optionValue="value"
+            (valueChange)="onOrgQueryChange($event)"></app-dropdown>
         </div>
         <!-- 責任單位 -->
         <div class="col-12 md:col-6 lg:col-2">
-          <app-dropdown
-            label="責任單位"
-            controlName="ORG_ID"
-            [control]="dataForm.controls.ORG_ID"
-            [options]="orgIdOptions"
-            [submitted]="submitted"
-            optionLabel="label"
-            optionValue="value"
-          ></app-dropdown>
+          <app-dropdown label="責任單位" controlName="ORG_ID" [control]="dataForm.controls.ORG_ID" [options]="orgIdOptions"
+            [submitted]="submitted" optionLabel="label" optionValue="value"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="責任單位電子信箱"
-            controlName="CLASS_EMAIL"
-            [control]="dataForm.controls.CLASS_EMAIL"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="責任單位電子信箱" controlName="CLASS_EMAIL" [control]="dataForm.controls.CLASS_EMAIL"
+            [submitted]="submitted"></app-input-text>
         </div>
 
         <!-- 建議來源 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="建議來源"
-            controlName="SUGG_SOURCE"
-            [control]="dataForm.controls.SUGG_SOURCE"
-            [options]="suggSourceOptions"
-            [submitted]="submitted"
-            optionLabel="label"
-            optionValue="value"
-          ></app-dropdown>
+          <app-dropdown label="建議來源" controlName="SUGG_SOURCE" [control]="dataForm.controls.SUGG_SOURCE"
+            [options]="suggSourceOptions" [submitted]="submitted" optionLabel="label"
+            optionValue="value"></app-dropdown>
         </div>
-        <app-calendar
-          class="col-12 md:col-6 lg:col-4"
-          calendarType="dateOne"
-          label="接件日期"
-          controlName="COMPLAIN_DATE"
-          [control]="dataForm.controls.COMPLAIN_DATE"
-          [submitted]="submitted"
-        />
-        <app-calendar
-          class="col-12 md:col-6 lg:col-4"
-          calendarType="dateOne"
-          label="通知相關單位處理日期"
-          controlName="ALERT_DATE"
-          [control]="dataForm.controls.ALERT_DATE"
-          [submitted]="submitted"
-          [disabled]="isFormCreateable"
-        />
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="接件日期" controlName="COMPLAIN_DATE"
+          [control]="dataForm.controls.COMPLAIN_DATE" [submitted]="submitted" />
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="通知相關單位處理日期"
+          controlName="ALERT_DATE" [control]="dataForm.controls.ALERT_DATE" [submitted]="submitted"
+          [disabled]="isFormReadable" />
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="處理狀況"
-            controlName="ANSWER_YN"
-            [control]="dataForm.controls.ANSWER_YN"
-            [options]="ANSWER_YNOptions"
-            [submitted]="submitted"
-            optionLabel="label"
-            optionValue="value"
-          ></app-dropdown>
+          <ng-container *ngIf="!isFormReadable">
+            <!-- 編輯/建立模式：以 STATUS 控制項為來源（優先使用 STATUS） -->
+            <app-dropdown label="處理狀況" controlName="STATUS" [control]="dataForm.controls.STATUS"
+              [options]="ANSWER_YNOptions" [submitted]="submitted" optionLabel="label" optionValue="value"
+              [disabled]="isFormReadable"></app-dropdown>
+          </ng-container>
+          <ng-container *ngIf="isFormReadable">
+            <!-- 顯示一個 disabled 的下拉以確保樣式一致且不可互動，優先使用 STATUS 值 -->
+            <app-dropdown label="處理狀況" controlName="STATUS" [control]="dataForm.controls.STATUS"
+              [options]="ANSWER_YNOptions" [submitted]="submitted" optionLabel="label" optionValue="value"
+              [disabled]="true"></app-dropdown>
+          </ng-container>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="類別資訊"
-            controlName="SUGG_TYPE"
-            [control]="dataForm.controls.SUGG_TYPE"
-            [options]="SUGG_TYPEOptions"
-            [submitted]="submitted"
-            optionLabel="label"
-            optionValue="value"
-          ></app-dropdown>
+          <app-dropdown label="類別資訊" controlName="SUGG_TYPE" [control]="dataForm.controls.SUGG_TYPE"
+            [options]="SUGG_TYPEOptions" [submitted]="submitted" optionLabel="label" optionValue="value"></app-dropdown>
         </div>
 
         <!-- 其他建議來源 -->
@@ -128,12 +74,8 @@
         </div> -->
         <!-- 顧客意見內容 -->
         <div class="col-12">
-          <app-input-textarea
-            label="顧客意見內容"
-            controlName="COMPLAIN_NOTES"
-            [control]="dataForm.controls.COMPLAIN_NOTES"
-            [submitted]="submitted"
-          ></app-input-textarea>
+          <app-input-textarea label="顧客意見內容" controlName="COMPLAIN_NOTES" [control]="dataForm.controls.COMPLAIN_NOTES"
+            [submitted]="submitted"></app-input-textarea>
         </div>
         <!-- 分隔線 -->
         <div class="col-12">
@@ -141,69 +83,38 @@
         </div>
         <!-- 客戶姓名 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="客戶姓名"
-            controlName="CUST_NAME"
-            [control]="dataForm.controls.CUST_NAME"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="客戶姓名" controlName="CUST_NAME" [control]="dataForm.controls.CUST_NAME"
+            [submitted]="submitted"></app-input-text>
         </div>
         <!-- 性別 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="性別"
-            controlName="SEX"
-            [control]="dataForm.controls.SEX"
-            [options]="sexOptions"
-            [submitted]="submitted"
-            optionLabel="label"
-            optionValue="value"
-          ></app-dropdown>
+          <app-dropdown label="性別" controlName="SEX" [control]="dataForm.controls.SEX" [options]="sexOptions"
+            [submitted]="submitted" optionLabel="label" optionValue="value"></app-dropdown>
         </div>
         <!-- 會員編號 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="會員編號"
-            controlName="MEMBER_ID"
-            [control]="dataForm.controls.MEMBER_ID"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="會員編號" controlName="MEMBER_ID" [control]="dataForm.controls.MEMBER_ID"
+            [submitted]="submitted"></app-input-text>
         </div>
         <!-- 聯絡地址 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="聯絡地址"
-            controlName="CONTACT_ADDR"
-            [control]="dataForm.controls.CONTACT_ADDR"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="聯絡地址" controlName="CONTACT_ADDR" [control]="dataForm.controls.CONTACT_ADDR"
+            [submitted]="submitted"></app-input-text>
         </div>
         <!-- 聯絡電話 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="聯絡電話"
-            controlName="CONTACT_TEL"
-            [control]="dataForm.controls.CONTACT_TEL"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="聯絡電話" controlName="CONTACT_TEL" [control]="dataForm.controls.CONTACT_TEL"
+            [submitted]="submitted"></app-input-text>
         </div>
         <!-- 手機號碼 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="手機號碼"
-            controlName="CELL_PHONE"
-            [control]="dataForm.controls.CELL_PHONE"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="手機號碼" controlName="CELL_PHONE" [control]="dataForm.controls.CELL_PHONE"
+            [submitted]="submitted"></app-input-text>
         </div>
         <!-- Email -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="Email"
-            controlName="E_MAIL"
-            [control]="dataForm.controls.E_MAIL"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="Email" controlName="E_MAIL" [control]="dataForm.controls.E_MAIL"
+            [submitted]="submitted"></app-input-text>
         </div>
         <!-- 建檔人編號 -->
         <!-- <div class="col-12 md:col-6 lg:col-4">
@@ -217,20 +128,11 @@
         </div> -->
       </div>
       <div class="col-12" *ngIf="!isFormCreateable">
-        <app-table-edit
-          [columns]="columns"
-          [data]="data"
-          [tableRequired]="true"
-          [disabled]="isFormReadable"
-          [rowEditDisabled]="isExistingDetail"
-          (dataChange)="data = $event"
-          [loading]="loading"
-        ></app-table-edit>
+        <app-table-edit [columns]="columns" [data]="data" [tableRequired]="true" [disabled]="isFormReadable"
+          [rowEditDisabled]="isExistingDetail" (dataChange)="onTableDataChange($event)"
+          [loading]="loading"></app-table-edit>
       </div>
-      <div
-        *ngIf="!isFormReadable"
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-      >
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
