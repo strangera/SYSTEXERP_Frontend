@@ -236,6 +236,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
   ngOnInit(): void {
     this.initializePage('TLS32040', 'TLS/TLS32040cru', this.queryForm, (frm) => this.onSubmit(frm));
+    console.log('test');
 
     // 日期表單控制
     this.onReportTypeChange('DAY');
