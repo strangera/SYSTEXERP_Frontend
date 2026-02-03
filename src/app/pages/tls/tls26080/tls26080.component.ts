@@ -54,7 +54,8 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   public readonly totalRecords = signal(0);
   public readonly selectedItems = signal<TLS26080Data[]>([]);
 
-  public readonly editDisabled = (rowData: TLS26080Data) => !rowData.CanEdit;
+  public readonly editDisabled = (rowData: TLS26080Data) =>
+    !rowData.CanEdit || rowData.pod_status === ApprovalStatus.已核准;
   public readonly isRowSelectable = (rowData: TLS26080Data) => rowData.pod_status !== ApprovalStatus.刪除;
 
   /** 組裝查詢 payload，供 onSubmit 與 queryFunction 使用 */
@@ -124,6 +125,10 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   }
 
   public onDelete(event: TLS26080Data[]): void {
+    if (event.some(item => item.pod_status === ApprovalStatus.已核准)) {
+      this.messageService.warnBubble('已審核資料不可刪除');
+      return;
+    }
     this.messageService.confirm({
       header: '確認刪除',
       message: `是否確認刪除 ${event.length} 筆資料？`,
