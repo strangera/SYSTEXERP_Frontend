@@ -29,9 +29,6 @@ import { TLS32040ChartResponse } from './../../../service/api/tls/tls32040.servi
 
 const today = new Date();
 const yesterday = new Date(today);
-yesterday.setDate(yesterday.getDate() - 1);
-const dayBeforeYesterday = new Date(yesterday);
-dayBeforeYesterday.setDate(dayBeforeYesterday.getDate() - 1);
 
 @Component({
   selector: 'app-tls32040',
@@ -864,13 +861,13 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     //dateForm設定為日營業報，日期今天
     this.dateForm.reset({
       reportType: 'DAY',
-      onedatedd: yesterday,
+      onedatedd: today,
     });
 
     //c_dateForm設定為日營業報，日期昨天
     this.c_dateForm.reset({
       reportType: 'DAY',
-      onedatedd: dayBeforeYesterday,
+      onedatedd: yesterday,
     });
 
     // 2. 手動觸發一次驗證與同步，確保畫面與 queryForm 狀態正確
@@ -878,6 +875,8 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     this.setReadOnlyFields();
     this.syncDateToQueryForm();
   }
+
+  //能否顯示明細的row控制項
 
   onDetail1(event: any) {
     const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);

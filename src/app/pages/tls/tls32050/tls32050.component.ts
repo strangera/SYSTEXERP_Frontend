@@ -819,13 +819,13 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     //dateForm設定為日營業報，日期今天
     this.dateForm.reset({
       reportType: '1',
-      onedatedd: yesterday,
+      onedatedd: today,
     });
 
     //c_dateForm設定為日營業報，日期昨天
     this.c_dateForm.reset({
       reportType: '1',
-      onedatedd: dayBeforeYesterday,
+      onedatedd: yesterday,
     });
 
     // 2. 手動觸發一次驗證與同步，確保畫面與 queryForm 狀態正確
