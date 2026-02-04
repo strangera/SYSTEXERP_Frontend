@@ -34,9 +34,9 @@ export class TLS26080Service {
   });
 
   // 共享資料讀取狀態
-  public readonly capItemsLoading = signal<boolean>(!1);
-  public readonly tltTalentOptionsLoading = signal<boolean>(!1);
-  public readonly tltTalentChargeOptionsLoading = signal<boolean>(!1);
+  public readonly capItemsLoading = signal<boolean>(false);
+  public readonly tltTalentOptionsLoading = signal<boolean>(false);
+  public readonly tltTalentChargeOptionsLoading = signal<boolean>(false);
 
   // 下拉選單資料
   public departmentItems = signal<Option[]>([]);
@@ -76,20 +76,23 @@ export class TLS26080Service {
   ) { }
 
   public loadAPS1003(cap_typeList: string[]): void {
-    if (this.capItemsLoading()) return void (this.capItemsLoading.set(!1));
-    this.capItemsLoading.set(!0);
+    if (this.capItemsLoading()) {
+      this.capItemsLoading.set(false);
+      return;
+    }
+    this.capItemsLoading.set(true);
     this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/queryAPS1003_DropDownList`, { cap_typeList }).pipe(
       take(1),
       tap(res => {
         this.capItems.set(res.Data?.map(item => ({ value: item.No, label: item.Name })) || []);
         this.logger.debug(`APS1003查詢結果:`, [res]);
       }),
-      finalize(() => this.capItemsLoading.set(!1))
+      finalize(() => this.capItemsLoading.set(false))
     ).subscribe();
   }
 
   public queryTltTalentCharge(talent_id: number): Observable<Option[]> {
-    this.tltTalentChargeOptionsLoading.set(!0);
+    this.tltTalentChargeOptionsLoading.set(true);
     return this.dropdown.queryTltTalentCharge({ talent_id }).pipe(
       take(1),
       tap(res => this.logger.debug(`queryTltTalentCharge:`, [res])),
@@ -99,7 +102,7 @@ export class TLS26080Service {
         value: item.tlt_id,
       }) as unknown as Option) || []),
       tap(res => this.tltTalentChargeOptions.set(res)),
-      finalize(() => this.tltTalentChargeOptionsLoading.set(!1)),
+      finalize(() => this.tltTalentChargeOptionsLoading.set(false)),
     );
   }
 
@@ -205,14 +208,14 @@ export class TLS26080Service {
   }
 
   private formatQueryDate(value?: Date | string | null): string | undefined {
-    if (!value) return void 0;
+    if (!value) return undefined;
     const date = typeof value === 'string' ? new Date(value) : value;
-    if (isNaN(date.getTime())) return void 0;
+    if (isNaN(date.getTime())) return undefined;
     return formatDate(date, 'yyyy-MM-dd', 'en-US');
   }
 
   public getTLTTalentOptions(query: { tlt_bdate?: string | Date | null; tlt_edate?: string | Date | null; approve_status?: string } = {}): Observable<Option[]> {
-    this.tltTalentOptionsLoading.set(!0);
+    this.tltTalentOptionsLoading.set(true);
     const tlt_bdate = this.formatQueryDate(query.tlt_bdate);
     const tlt_edate = this.formatQueryDate(query.tlt_edate);
     const payload: TalentQuery = {
@@ -234,7 +237,7 @@ export class TLS26080Service {
         this.tltTalentOptions.set(res ?? []);
         this.logger.debug(`getTLTTalentOptions:`, [payload, res]);
       }),
-      finalize(() => this.tltTalentOptionsLoading.set(!1))
+      finalize(() => this.tltTalentOptionsLoading.set(false))
     );
   }
 

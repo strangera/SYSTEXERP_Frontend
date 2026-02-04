@@ -58,15 +58,15 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public readonly dt = viewChild.required<TableEditComponent>('dt');
   public readonly fileUpload = viewChild.required<FileUpload>('fileUpload');
 
-  private fieldChangeDebounceTimer: ReturnType<typeof setTimeout> | void = void 0;
+  private fieldChangeDebounceTimer: ReturnType<typeof setTimeout> | undefined = undefined;
 
   private readonly usrData = computed(() => ({
     ...this.authService.currentUserValue,
   }));
 
   public readonly dialogQueryForm = this.formBuilder.group({
-    No: new FormControl<string | void>(void 0), // 專櫃編號
-    Name: new FormControl<string | void>(void 0), // 專櫃名稱
+    No: new FormControl<string | undefined>(undefined), // 專櫃編號
+    Name: new FormControl<string | undefined>(undefined), // 專櫃名稱
     ...createPaginationConfig([{ field: 'No', order: 1 }]),
   });
   public readonly dqf = computed(() => this.dialogQueryForm.controls);
@@ -74,8 +74,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   private readonly dqfNameSignal = toSignal(this.dqf().Name.valueChanges);
 
   public readonly campaignForm = this.formBuilder.group({
-    CampaignId: new FormControl<string | void>(void 0), // 活動編號
-    CampaignName: new FormControl<string | void>(void 0), // 活動名稱
+    CampaignId: new FormControl<string | undefined>(undefined), // 活動編號
+    CampaignName: new FormControl<string | undefined>(undefined), // 活動名稱
     ...createPaginationConfig([{ field: 'CampaignId', order: 1 }]),
   });
   public readonly cf = computed(() => this.campaignForm.controls);
@@ -129,7 +129,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public readonly selectedItems = signal<TLS26080EditTable[]>([]);
   public readonly selectedItemsDialog = signal<Option[]>([]);
   public readonly displayDialog = signal<boolean>(false);
-  public readonly fieldChanges = signal<FieldChangeEvent<TLS26080EditTable> | void>(void 0, { equal: (a, b) => a?.field === b?.field && a?.index === b?.index && a?.value === b?.value });
+  public readonly fieldChanges = signal<FieldChangeEvent<TLS26080EditTable> | undefined>(undefined, { equal: (a, b) => a?.field === b?.field && a?.index === b?.index && a?.value === b?.value });
 
   // 頁面專屬 Loading 狀態
   public readonly tableLoading = signal<boolean>(false);
@@ -148,11 +148,11 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   ];
 
   public readonly getPodNo = computed(() => {
-    return this.rowdata?.pod_no || void 0;
+    return this.rowdata?.pod_no ?? undefined;
   });
 
   public readonly isSubmitDisabled = computed(() => {
-    void this.dfSignal(); // 僅用於觸發 computed 依賴（表單變更時重算）
+    this.dfSignal(); // 僅用於觸發 computed 依賴（表單變更時重算）
     const data = this.tableData()?.filter(item => !item._isAutoInsertCandidate) || [];
     this.logger.debug(`isSubmitDisabled:`, [this.dataForm.valid, data]);
 
@@ -167,8 +167,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       if (!item.tlt_no || !item.calc_date_type) return true;
 
       // 檢查 tpy_rate_D16 和 tpy_rate_D17 是否有值
-      if (item.tpy_rate_D16 === void 0 || item.tpy_rate_D16 === null) return true;
-      if (item.tpy_rate_D17 === void 0 || item.tpy_rate_D17 === null) return true;
+      if (item.tpy_rate_D16 === undefined || item.tpy_rate_D16 === null) return true;
+      if (item.tpy_rate_D17 === undefined || item.tpy_rate_D17 === null) return true;
 
       const rate_D16 = Number(item.tpy_rate_D16);
       const rate_D17 = Number(item.tpy_rate_D17);
@@ -191,7 +191,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   /** 根據選擇的活動起始日期更新正檔日期 */
   public readonly busDateEffect = effect(() => {
     const sdate = this.selectedCampaign()?.StartTime;
-    if (sdate === void 0 || sdate === null) return;
+    if (sdate === undefined || sdate === null) return;
     const base = new Date(sdate);
     if (isNaN(base.getTime())) return;
 
@@ -235,8 +235,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public readonly fieldChangeEffect = effect(() => {
     const event = this.fieldChanges();
     const index = event?.index;
-    if (!event || index === void 0) return;
-    if (this.fieldChangeDebounceTimer !== void 0) clearTimeout(this.fieldChangeDebounceTimer);
+    if (!event || index === undefined) return;
+    if (this.fieldChangeDebounceTimer !== undefined) clearTimeout(this.fieldChangeDebounceTimer);
 
     this.fieldChangeDebounceTimer = setTimeout(() => {
       const tableData = untracked(() => this.tableData());
@@ -335,7 +335,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       {
         field: 'tlt_no',
         header: '專櫃編號',
-        type: this.isFormReadable ? void 0 : 'dropdown',
+        type: this.isFormReadable ? undefined : 'dropdown',
         showClear: false,
         options: this.service.tltTalentOptions(),
         optionLabel: 'label',
@@ -355,7 +355,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       {
         field: 'tlt_id',
         header: '抽成類別',
-        type: this.isFormReadable ? void 0 : 'dropdown',
+        type: this.isFormReadable ? undefined : 'dropdown',
         showClear: false,
         options: (r: any) => tltIdMap.get(r.talent_id) ?? [],
         optionLabel: 'label',
@@ -374,7 +374,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       {
         field: 'calc_date_type',
         header: '預售起日計算',
-        type: this.isFormReadable ? void 0 : 'dropdown',
+        type: this.isFormReadable ? undefined : 'dropdown',
         showClear: false,
         options: this.calcDateType,
         optionLabel: 'label',
@@ -387,7 +387,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         field: 'tpy_rate_D16',
         header: 'D16',
         groupField: 'groupField1',
-        type: this.isFormReadable ? void 0 : 'inputNumber',
+        type: this.isFormReadable ? undefined : 'inputNumber',
         validate: [validateRequired, this.numVal.bind(this)],
         maxFractionDigits: 2,
         disabled: (r) => !this.isRowEditable(r),
@@ -399,7 +399,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         field: 'tpy_rate_D17',
         header: 'D17',
         groupField: 'groupField1',
-        type: this.isFormReadable ? void 0 : 'inputNumber',
+        type: this.isFormReadable ? undefined : 'inputNumber',
         validate: [validateRequired, this.numVal.bind(this)],
         maxFractionDigits: 2,
         disabled: (r) => !this.isRowEditable(r),
@@ -513,7 +513,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       this.tableLoading.set(true);
-      // if (!this.dt().validateAndShowErrors()) return void this.tableLoading.set(false);
+      // if (!this.dt().validateAndShowErrors()) { this.tableLoading.set(false); return; }
 
       const rowData = this.rowdata!;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars -- 排除 pod_type2，僅用於表單不送 API
@@ -525,42 +525,49 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       // 驗證邏輯與錯誤提示
       if (this.dataForm.invalid) {
         this.messageService.errorBubble('表單資料有誤，請確認後再送出');
-        return void this.tableLoading.set(false);
+        this.tableLoading.set(false);
+        return;
       }
 
       if (!validTableData.length) {
         this.messageService.errorBubble('請至少新增一筆專櫃資料');
-        return void this.tableLoading.set(false);
+        this.tableLoading.set(false);
+        return;
       }
 
       // 逐筆驗證表格資料
       for (const item of validTableData) {
         if (!item.tlt_no || !item.calc_date_type) {
           this.messageService.errorBubble('專櫃編號及計算天數類型為必填欄位，請確認後再送出');
-          return void this.tableLoading.set(false);
+          this.tableLoading.set(false);
+          return;
         }
 
-        if (item.tpy_rate_D16 === void 0 || item.tpy_rate_D16 === null) {
+        if (item.tpy_rate_D16 === undefined || item.tpy_rate_D16 === null) {
           this.messageService.errorBubble('D16 費用比率為必填欄位，請確認後再送出');
-          return void this.tableLoading.set(false);
+          this.tableLoading.set(false);
+          return;
         }
-        if (item.tpy_rate_D17 === void 0 || item.tpy_rate_D17 === null) {
+        if (item.tpy_rate_D17 === undefined || item.tpy_rate_D17 === null) {
           this.messageService.errorBubble('D17 費用比率為必填欄位，請確認後再送出');
-          return void this.tableLoading.set(false);
+          this.tableLoading.set(false);
+          return;
         }
 
         const rate_D16 = Number(item.tpy_rate_D16);
         const rate_D17 = Number(item.tpy_rate_D17);
         if (isNaN(rate_D16) || isNaN(rate_D17)) {
           this.messageService.errorBubble('D16 和 D17 費用比率必須為有效的數字，請確認後再送出');
-          return void this.tableLoading.set(false);
+          this.tableLoading.set(false);
+          return;
         }
 
         const basisPoint_D16 = Math.round(rate_D16 * 100);
         const basisPoint_D17 = Math.round(rate_D17 * 100);
         if (basisPoint_D16 < 0 || basisPoint_D16 > 1e4 || basisPoint_D17 < 0 || basisPoint_D17 > 1e4) {
           this.messageService.errorBubble('D16 和 D17 費用比率必須介於 0% 到 100% 之間，請確認後再送出');
-          return void this.tableLoading.set(false);
+          this.tableLoading.set(false);
+          return;
         }
       }
 
@@ -581,12 +588,12 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
           calc_date_type: item.calc_date_type ?? 'Y',
           cap_item_D16: 'D16',
           cap_item_D17: 'D17',
-          approved_date: item.approved_date ? new Date(item.approved_date).toISOString() : void 0,
+        approved_date: item.approved_date ? new Date(item.approved_date).toISOString() : undefined,
           pod_status: item.pod_status ?? '0',
         })),
       };
       const payload = Object.fromEntries(Object.entries(raw).filter(([k, v]) =>
-        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0) && !k.startsWith('_')
+        v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0) && !k.startsWith('_')
       )) as unknown as TLS26080InsertPayload;
 
       const request = this.isFormEditable
@@ -665,9 +672,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       this.tableData.update(td => td.map(item => {
         if (!updateSet.has(item.tlt_no)) return item;
         item.pod_status = ApprovalStatus.未核准;
-        item.approved_usrno = void 0;
-        item.approved_usr_name = void 0;
-        item.approved_date = void 0;
+        item.approved_usrno = undefined;
+        item.approved_usr_name = undefined;
+        item.approved_date = undefined;
         return item;
       }));
     }
@@ -700,7 +707,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         cap_item_D17: 'D17',
         approved_usrno: '',
         approved_usr_name: '',
-        approved_date: void 0,
+        approved_date: undefined,
         pod_status: '0',
         pod_no: podNo,
       } as TLS26080EditTable));
@@ -711,7 +718,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         tpy_rate_D16: String(td.tpy_rate_D16).split('%')[0],
         tpy_rate_D17: String(td.tpy_rate_D17).split('%')[0],
       }))
-        .filter(td => td.id !== 0 && td.id !== void 0);
+        .filter(td => td.id !== 0 && td.id !== undefined);
 
     for (const item of newItems) {
       const payload = {
@@ -834,7 +841,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
             tpy_rate_D16: String(String(payload.tpy_rate_D16 ?? td.tpy_rate_D16).split('%')[0]),
             tpy_rate_D17: String(String(payload.tpy_rate_D17 ?? td.tpy_rate_D17).split('%')[0]),
           };
-        }).filter(td => td.id !== 0 && td.id !== void 0);
+        }).filter(td => td.id !== 0 && td.id !== undefined);
         this.logger.debug(`keyin payload:`, [payload, keyInData]);
 
         this.service.keyInTLS26080(payload, keyInData).subscribe(res => {
@@ -867,14 +874,14 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
           });
           this.logger.debug(`keyin updated tableData:`, [this.tableData()]);
           this.updateTltIdOptions(talentId);
-          return this.fieldChanges.set(void 0);
+          return this.fieldChanges.set(undefined);
         });
         break;
       }
 
       case 'approval_action': {
         this.toggleApprovalStatus([rowData]);
-        return this.fieldChanges.set(void 0);
+        return this.fieldChanges.set(undefined);
       }
       default: return;
     }
@@ -985,11 +992,11 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   }
 
   public onAutoCompleteInputChange(event: Record<string, string>): void {
-    return void this.logger.debug(`onAutoCompleteInputChange:`, [event]);
+    this.logger.debug(`onAutoCompleteInputChange:`, [event]);
   }
 
   public onformValueChanged(event: unknown): void {
-    return void this.logger.debug(`onformValueChanged:`, [event]);
+    this.logger.debug(`onformValueChanged:`, [event]);
   }
 
   private isRowEditable(rowData: TLS26080EditTable): boolean {
@@ -997,7 +1004,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   }
 
   private parseRateValue(value: unknown, fallback: number | null | undefined): number {
-    if (value === void 0 || value === null || value === '') {
+    if (value === undefined || value === null || value === '') {
       return fallback ?? 0;
     }
     if (typeof value === 'number') return value;

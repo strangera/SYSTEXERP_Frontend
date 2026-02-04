@@ -41,8 +41,8 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   public readonly queryForm = this.formBuilder.group({
     pod_no: new FormControl<string | undefined>(undefined, [Validators.maxLength(10)]), // 活動單號
     pod_desc: new FormControl<string | undefined>(undefined, [Validators.maxLength(100)]), // 活動名稱
-    pod_sdate: new FormControl<Date | void>(void 0), // 起始日期(起)
-    pod_edate: new FormControl<Date | void>(this.service.dateE), // 起始日期(迄)
+    pod_sdate: new FormControl<Date | undefined>(undefined), // 起始日期(起)
+    pod_edate: new FormControl<Date | undefined>(this.service.dateE), // 起始日期(迄)
     pod_busdate: new FormControl<Date | undefined>(undefined), // 活動正檔日期
     ...createPaginationConfig([...this.defaultSort]),
     pageSize: [30], // 查詢頁面預設 30 筆
@@ -62,7 +62,7 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   private buildQueryPayload(overrides?: Partial<Record<string, unknown>>): TLS26080Query {
     const raw = { ...this.queryForm.getRawValue(), ...overrides } as Record<string, unknown>;
     return Object.fromEntries(Object.entries(raw).filter(([, v]) =>
-      v !== null && v !== void 0 && (!(Array.isArray(v)) || (v as unknown[]).length > 0)
+      v !== null && v !== undefined && (!(Array.isArray(v)) || (v as unknown[]).length > 0)
     )) as TLS26080Query;
   }
 
