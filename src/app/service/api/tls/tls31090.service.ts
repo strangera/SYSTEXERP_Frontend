@@ -11,8 +11,9 @@ export interface TLS31090Request {
   StoreNos: string;
   Floors: string;
   Areas: string;
-  CatLNos: string;
-  CatMNos: string;
+  CatLNos: string[];
+  CatMNos: string[][];
+  CatSNos: string[][];
   CabinetKinds: string;
   OrgIds: string;
   CounterNos: string;

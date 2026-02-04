@@ -2,55 +2,22 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
-
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="退票日"
-              [startControl]="queryForm.controls.backDateStart"
-              [endControl]="queryForm.controls.backDateEnd"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range-quick label="退票日" [startControl]="queryForm.controls.BackDateFrom"
+              [endControl]="queryForm.controls.BackDateTo" [submitted]="submitted"></app-calendar-range-quick>
           </div>
-
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="票據號碼"
-              controlName="chkNo"
-              [control]="queryForm.controls.chkNo"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="票據號碼" controlName="ChkNo" [control]="queryForm.controls.ChkNo"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
-
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
-          <app-button
-            [type]="'button'"
-            label="支票退票"
-            (clickEvent)="onBounce()"
-          ></app-button>
-
-          <app-button
-            btnType="clear"
-            [type]="'button'"
-            (clickEvent)="onClear(queryForm)"
-          ></app-button>
-
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
@@ -58,98 +25,55 @@
   </p-accordion>
 </div>
 
-<!-- ✅ 列表：用 ID 當 dataKey 才能送 IdList -->
 <div class="card">
-  <app-table
-    #finTable
-    [tableKey]="'FIN64050_TABLE'"
-    [dataKey]="'ID'"
-    [columns]="columns"
-    [data]="data"
-    [totalRecords]="totalRecords"
-    [loading]="loading"
-    [showSerialNo]="true"
-    [showCheckBox]="true"
-    [selectionMode]="'multiple'"
-    [(selectedItems)]="selectedItems"
-    [isRowSelectable]="isRowSelectable"
-    [showManage]="true"
-    [showDetail]="false"
-    [showReportMode]="false"
-    [showDelete]="false"
-    [showEdit]="false"
-    [lazy]="true"
-  >
+  <app-table-report [tableKey]="'FIN64050_TABLE'" dataKey="ID" [columns]="columns" [data]="data"
+    [totalRecords]="totalRecords" [loading]="loading" [showCheckBox]="true" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [isRowSelectable]="isRowSelectable" [showManage]="false"
+    [showDelete]="false">
     <header>
-      <div class="flex justify-content-between align-items-center w-full">
-        <div class="flex gap-2">
-          <p-button
-            styleClass="p-2"
-            label="匯出應收票據退票作業.PDF"
-            [loading]="btnLoading"
-            icon="pi pi-file"
-            (click)="onExportPDF()"
-            [disabled]="data.length === 0"
-          ></p-button>
-
-          <p-button
-            styleClass="p-2"
-            label="匯出應收票據退票作業.XLSX"
-            [loading]="btnLoading"
-            icon="pi pi-file"
-            (click)="onExportXLSX()"
-            [disabled]="data.length === 0"
-          ></p-button>
-        </div>
+      <div class="flex justify-content-end align-items-center gap-2">
+        <p-button styleClass="p-2 p-button-danger" label="支票退票" icon="pi pi-exclamation-triangle"
+          (click)="dialogVisible = true" [disabled]="data.length === 0 || selectedItems.length === 0"
+          [loading]="loading">
+        </p-button>
       </div>
     </header>
-  </app-table>
+  </app-table-report>
 </div>
 
-<!-- ✅ 支票退票 Dialog -->
-<p-dialog
-  header="支票退票"
-  [(visible)]="bounceDialogVisible"
-  [modal]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [style]="{ width: '560px' }"
->
-  <form [formGroup]="bounceForm" class="p-fluid">
-    <div class="grid">
-      <div class="col-12">
-        <app-calendar
-          calendarType="dateOne"
-          label="退票日期"
-          controlName="BackDate"
-          [control]="bounceForm.controls.BackDate"
-          [submitted]="submitted"
-        ></app-calendar>
+<app-dialog [visible]="dialogVisible" header="支票退票作業" (visibleChange)="dialogVisible = $event" [showFooter]="false"
+  [width]="'600px'">
+  <form [formGroup]="dialogQueryForm" (ngSubmit)="saveDialog(dialogQueryForm)">
+    <div class="p-3">
+      <div class="mb-4">
+        <label for="chkNo" class="block mb-2 text-600 font-medium">已勾選票據號碼</label>
+        <div class="flex flex-wrap gap-2 p-3 surface-100 border-round border-1 surface-border"
+          style="min-height: 50px;">
+          <ng-container *ngFor="let item of selectedItems">
+            <span class="px-3 py-1 bg-white border-round-2xl border-1 surface-border text-sm shadow-1">
+              {{ item.CHK_No }}
+            </span>
+          </ng-container>
+          <div *ngIf="selectedItems.length === 0" class="text-400">尚未選擇任何票據</div>
+        </div>
       </div>
 
-      <div class="col-12">
-        <app-input-text
-          label="備註(選填)"
-          controlName="CHK_Comment"
-          [control]="bounceForm.controls.CHK_Comment"
-          [submitted]="submitted"
-        ></app-input-text>
+      <div class="grid p-fluid">
+        <div class="col-12">
+          <app-calendar label="退票日期" controlName="BackDate" [control]="dialogQueryForm.controls.BackDate"
+            [submitted]="true" />
+        </div>
+        <div class="col-12">
+          <app-input-text label="退票備註" controlName="CHK_Comment" [control]="dialogQueryForm.controls.CHK_Comment" />
+        </div>
+      </div>
+
+      <div class="flex justify-content-end gap-2 mt-4 pt-3 border-top-1 surface-border">
+        <p-button label="取消" icon="pi pi-times" styleClass="p-button-text p-button-secondary"
+          (click)="dialogVisible = false"></p-button>
+        <p-button label="確認退票" icon="pi pi-check" styleClass="p-button-danger" type="submit" [loading]="dialogLoading"
+          [disabled]="dialogQueryForm.invalid || selectedItems.length === 0"></p-button>
       </div>
     </div>
   </form>
-
-  <ng-template pTemplate="footer">
-    <div class="flex justify-content-end gap-2">
-      <p-button
-        label="取消"
-        severity="secondary"
-        (onClick)="onBounceCancel()"
-      ></p-button>
-      <p-button
-        label="確認"
-        [loading]="btnLoading"
-        (onClick)="onBounceConfirm()"
-      ></p-button>
-    </div>
-  </ng-template>
-</p-dialog>
+</app-dialog>

@@ -483,3 +483,14 @@ export interface CssDropDownItem {
   No: string;
   Name: string;
 }
+
+/**
+ * 查詢 APS1002_DropDownList 回傳的項目型別 (公司銀行科目)
+ */
+export interface Aps1002Item {
+  BNK_DepositAccNo: string; // 科目帳號/代碼
+  ACCCNAME: string;         // 科目名稱
+  BNK_No: string;           // 銀行代碼
+  BNK_BRANCHNAME: string;   // 分行名稱
+  BNK_AccType: string;      // 帳戶類型 (例如: 1-支存, 2-活存...)
+}

@@ -387,19 +387,6 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     })
   }
   onSubmit(frm: FormGroup) {
-    // if (this.dateForm.invalid) {
-    //   this.messageService.errorBubble('基準資料為必填');
-    //   console.log('基準資料為必填', this.dateForm);
-    //   return
-    // }
-    // if (this.c_dateForm.invalid) {
-    //   this.messageService.errorBubble('比較資料為必填');
-    //   console.log('比較資料為必填', this.c_dateForm);
-    //   return
-    // }
-
-    // console.log('大類表單', frm.getRawValue().BusTypeList);
-
     this.handleSubmit(frm, () => {
       const formValue = {
         ...frm.getRawValue(),
