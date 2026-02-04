@@ -288,7 +288,6 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
     this.initializePage('CPM11030', '/cpm/cpm11030cru', this.queryForm, (form) => this.onSubmit(form));
 
     const today = new Date();
-    this.queryForm.patchValue({ Loan_BDate: today, Loan_EDate: today }, { emitEvent: false });
 
     // ✅ 下拉：用 service 共用快取（Query/CRU 都共用，不會各打一次）
     this.loading = true;
