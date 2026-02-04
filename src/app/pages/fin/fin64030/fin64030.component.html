@@ -13,16 +13,20 @@
               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="兌換日" [startControl]="queryForm.controls.CashDateFrom"
-              [endControl]="queryForm.controls.CashDateTo" [submitted]="submitted"></app-calendar-range-quick>
+            <app-calendar-range-quick label="到期日" [startControl]="queryForm.controls.ExpireDateFrom"
+              [endControl]="queryForm.controls.ExpireDateTo" [submitted]="submitted"></app-calendar-range-quick>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="票據號碼" controlName="ChkNo" [control]="queryForm.controls.ChkNo"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="到期日" [startControl]="queryForm.controls.ExpireDateFrom"
-              [endControl]="queryForm.controls.ExpireDateTo" [submitted]="submitted"></app-calendar-range-quick>
+            <app-input-text label="到期傳票編號" controlName="VouNoExpire" [control]="queryForm.controls.VouNoExpire"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="狀態" controlName="ChkStatus" [options]="chkStatusOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ChkStatus" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
