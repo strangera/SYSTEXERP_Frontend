@@ -34,11 +34,11 @@ import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.s
 import { CrudTrackingService } from '../../../tls13010-v2/core/services/crud-tracking.service';
 
 // V2 類型
+import { CommissionItem as V2CommissionItem } from '../../../tls13010-v2/core/models/commission/commission-item.interface';
 import {
   CommissionType,
   DataStatus
 } from '../../core';
-import { CommissionItem as V2CommissionItem } from '../../../tls13010-v2/core/models/commission/commission-item.interface';
 import { ConditionItem } from '../../core/models/condition';
 import { ContractInfo, LocationItem } from '../../core/models/contract';
 import { FareItem } from '../../core/models/deduction';
@@ -636,10 +636,10 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
           discountSummary: item.discountSummary || '',
           sst_amount: item.sst_amount || 0,
           sst_rate: item.sst_rate || 0,
-          cap_saletype1: item.cap_saletype1 || false,
-          cap_saletype2: item.cap_saletype2 || false,
-          cap_saletype3: item.cap_saletype3 || false,
-          cap_saletype5: item.cap_saletype5 || false,
+          cap_saletype1: item.cap_saletype1 === 'Y' || item.cap_saletype1 === true,
+          cap_saletype2: item.cap_saletype2 === 'Y' || item.cap_saletype2 === true,
+          cap_saletype3: item.cap_saletype3 === 'Y' || item.cap_saletype3 === true,
+          cap_saletype5: item.cap_saletype5 === 'Y' || item.cap_saletype5 === true,
           selectedSettingOption: item.selectedSettingOption || '',
           charge_rate: item.charge_rate || 0,
           cag_bdate: item.cag_bdate || '',
@@ -659,7 +659,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
           // 明細映射：LevelChargeDetails → discountLevelItems
           discountLevelItems: (item.LevelChargeDetails || []).map((d: Record<string, unknown>) => ({
             ...d,
-            selected: (d['is_selected'] ?? d['selected'] ?? false) as boolean,
+            selected: (d['is_selected'] ?? d['selected'] ?? d['is_enabled'] ?? false) as boolean,
             is_configured: (d['is_configured'] ?? true) as boolean,
             is_enabled: (d['is_enabled'] ?? true) as boolean,
             _status: 'original' as DataStatus
@@ -685,17 +685,65 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       const request = { apply_no: applyNo, CurrentTltTermType: commissionType };
       const response = await this.apiService.queryTLS12040Commission(request).toPromise();
 
-      if (response?.Status === '0000' && response.Data) {
-        const existingData = response.Data.ExistingData || [];
+      if (response?.Status === '0000' && response.Data?.ExistingData) {
+        // ExistingData 是物件，需根據抽成類型取出對應陣列
+        const items = this.extractConditionItems(response.Data.ExistingData, commissionType);
 
-        this.wizardState.conditionItems = existingData.map((item: any) => ({
+        this.wizardState.conditionItems = items.map((item: any) => ({
           ...item,
+          cag_bdate: this.formatDateToString(item.cag_bdate),
+          cag_edate: this.formatDateToString(item.cag_edate),
           _status: 'original' as DataStatus
         }));
       }
     } catch (error) {
       console.error('載入條件資料失敗:', error);
     }
+  }
+
+  /**
+   * 從 ExistingData 物件中提取對應抽成類型的條件項目陣列
+   */
+  private extractConditionItems(existingData: any, commissionType: string): any[] {
+    switch (commissionType) {
+      case '1': // 固定租金
+        return existingData.RentDetails || [];
+
+      case '2': // 底租抽成取高者
+        return (existingData.RentDetails || []).map((item: any, index: number) => ({
+          ...item,
+          cag_charge_rate: existingData.ChargedDetails?.[index]?.cag_charge_rate || 0
+        }));
+
+      case '4': // 包底抽成
+        return existingData.LimitDetails || [];
+
+      case '5': // 層級抽成
+        return existingData.LevelDetails || [];
+
+      case '6': // 包底加層級
+        return existingData.BottomTierDetails || existingData.LevelDetails || [];
+
+      default:
+        return [];
+    }
+  }
+
+  /**
+   * 將日期值格式化為 YYYY-MM-DD 字串
+   */
+  private formatDateToString(value: any): string {
+    if (!value) return '';
+    if (typeof value === 'string') {
+      return value.split('T')[0];
+    }
+    if (value instanceof Date && !isNaN(value.getTime())) {
+      const y = value.getFullYear();
+      const m = String(value.getMonth() + 1).padStart(2, '0');
+      const d = String(value.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    return String(value);
   }
 
   private async loadDiscountOptions(): Promise<void> {
@@ -777,10 +825,10 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
             discountSummary: (item['discountSummary'] as string) || '',
             sst_amount: (item['sst_amount'] as number) || 0,
             sst_rate: (item['sst_rate'] as number) || 0,
-            cap_saletype1: item['cap_saletype1'] || false,
-            cap_saletype2: item['cap_saletype2'] || false,
-            cap_saletype3: item['cap_saletype3'] || false,
-            cap_saletype5: item['cap_saletype5'] || false,
+            cap_saletype1: item['cap_saletype1'] === 'Y' || item['cap_saletype1'] === true,
+            cap_saletype2: item['cap_saletype2'] === 'Y' || item['cap_saletype2'] === true,
+            cap_saletype3: item['cap_saletype3'] === 'Y' || item['cap_saletype3'] === true,
+            cap_saletype5: item['cap_saletype5'] === 'Y' || item['cap_saletype5'] === true,
             selectedSettingOption: (item['selectedSettingOption'] as string) || '',
             charge_rate: (item['charge_rate'] as number) || 0,
             cag_bdate: item['cag_bdate'] || '',
@@ -806,7 +854,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
               const detail = d as Record<string, unknown>;
               return {
                 ...detail,
-                selected: (detail['is_selected'] ?? detail['selected'] ?? false) as boolean,
+                selected: (detail['is_selected'] ?? detail['selected'] ?? detail['is_enabled'] ?? false) as boolean,
                 is_configured: (detail['is_configured'] ?? true) as boolean,
                 is_enabled: (detail['is_enabled'] ?? true) as boolean,
                 _status: 'new' as DataStatus
@@ -964,8 +1012,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
       if (response?.success) {
         this.messageService.successBubble('儲存成功');
-        this.router.navigate(['/tls/tls12040v2'], {
-          state: { fromRoute: '/tls/tls12040v2cru' }
+        this.router.navigate(['account/tls/tls12040v2'], {
+          state: { fromRoute: 'account/tls/tls12040v2cru' }
         });
       } else {
         this.messageService.errorBubble(response?.message || '儲存失敗');
@@ -983,6 +1031,15 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     const formValue = this.dataForm.getRawValue();
     const isNewContract = this.isFormCreateable || this.isRenewalMode;
 
+    // 提交前將 commission items 的布林欄位轉回 "Y"/"N" 字串（後端需要）
+    const commissionItemsForApi = this.wizardState.commissionItems.map(item => ({
+      ...item,
+      cap_saletype1: item.cap_saletype1 ? 'Y' : 'N',
+      cap_saletype2: item.cap_saletype2 ? 'Y' : 'N',
+      cap_saletype3: item.cap_saletype3 ? 'Y' : 'N',
+      cap_saletype5: item.cap_saletype5 ? 'Y' : 'N'
+    }));
+
     return {
       contractInfo: {
         operation: isNewContract ? 'INSERT' : 'UPDATE',
@@ -993,21 +1050,15 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       },
       deductions: this.categorizeItems(this.wizardState.fareItems),
       commissions: {
-        masters: this.categorizeItems(this.wizardState.commissionItems),
+        masters: this.categorizeItems(commissionItemsForApi),
         discountSettings: { toInsert: [], toUpdate: [], toDelete: [] },
         annualSettings: { toInsert: [], toUpdate: [], toDelete: [] },
         levelSettings: { toInsert: [], toUpdate: [], toDelete: [] }
       },
-      conditions: {
-        fixedRents: { toInsert: [], toUpdate: [], toDelete: [] },
-        baseRentHigher: { toInsert: [], toUpdate: [], toDelete: [] },
-        baseCommissions: { toInsert: [], toUpdate: [], toDelete: [] },
-        graduated: { toInsert: [], toUpdate: [], toDelete: [] },
-        baseTier: { toInsert: [], toUpdate: [], toDelete: [] }
-      },
+      conditions: this.assembleConditions(formValue.tlt_term_type),
       metadata: {
         apply_no: formValue.apply_no || '',
-        contractId: formValue.talent_id || '',
+        contractId: formValue.apply_no || '',
         commissionType: formValue.tlt_term_type,
         isNewContract,
         submittedAt: new Date().toISOString(),
@@ -1022,6 +1073,36 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       toUpdate: items.filter(i => i._status === 'modified'),
       toDelete: items.filter(i => i._status === 'deleted')
     };
+  }
+
+  /**
+   * 根據抽成類型將 conditionItems 分配到對應的條件 bucket
+   */
+  private assembleConditions(commissionType: string): Record<string, { toInsert: unknown[]; toUpdate: unknown[]; toDelete: unknown[] }> {
+    const empty = { toInsert: [] as unknown[], toUpdate: [] as unknown[], toDelete: [] as unknown[] };
+    const categorized = this.categorizeItems(this.wizardState.conditionItems);
+
+    const result: Record<string, { toInsert: unknown[]; toUpdate: unknown[]; toDelete: unknown[] }> = {
+      fixedRents: { ...empty },
+      baseRentHigher: { ...empty },
+      baseCommissions: { ...empty },
+      graduated: { ...empty },
+      baseTier: { ...empty }
+    };
+
+    const typeMap: Record<string, string> = {
+      '1': 'fixedRents',
+      '2': 'baseRentHigher',
+      '4': 'baseCommissions',
+      '5': 'graduated',
+      '6': 'baseTier'
+    };
+    const key = typeMap[String(commissionType).trim()];
+    if (key) {
+      result[key] = categorized;
+    }
+
+    return result;
   }
 
   // ========== 事件處理 ==========
