@@ -40,8 +40,8 @@
 
 <!-- 第一個表格 -->
 <div class="card1 mt-3">
-  <app-table dataKey="CardType" tableKey="header" [columns]="headerColumns" [data]="headerData" [showPaginator]="false" [showCaption]="false" [showManage]="false" [showFooter]="false"
-   [loading]="loadingHeader"></app-table>
+  <app-table dataKey="CardType" tableKey="header" [columns]="headerColumns" [data]="headerData" [showPaginator]="false"
+    [showCaption]="false" [showManage]="false" [showFooter]="false" [loading]="loadingHeader"></app-table>
 </div>
 
 <!-- 第二個表格 -->
@@ -50,7 +50,8 @@
     dataKey="TXN_Date" (lazyLoadData)="onLazyLoadData($event, queryForm);" [footerData]="footerData" [showFooter]="true"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [lazy]="true" [loading]="loading"
     [showManage]="false" [showDelete]="false" [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }]"
-    [showReportMode]="false" [showTotal]="true" (submit)="onSubmit(queryForm)">
+    [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
+    [rows]="30" [showReportMode]="false" [showTotal]="true" (submit)="onSubmit(queryForm)">
 
     <header>
       <div class="flex justify-content-between align-items-center gap-2">

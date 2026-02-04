@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin54045Service } from '@service/api/fin/fin54045.service';
@@ -22,7 +22,7 @@ import { Column, createPaginationConfig } from '../../../shared/componentkit/tab
 })
 export class FIN54045Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    vendorSName: [{ value: '', disabled: true }], //反年結（預設 disabled，會由後端填入並控制狀態）
+    vendorSName: ['', Validators.required], //反年結（預設 disabled，會由後端填入並控制狀態）
     ...createPaginationConfig([{ field: 'cls_date', order: -1 }])
   });
 

@@ -34,6 +34,8 @@
       [showDetail]="false" [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" dataKey="talent_id"
       [data]="data" [columns]="columns" (rowExpand)="onRowExpand($event)" (edit)="onEdit($event)"
-      (detail)="onDetail($event)" expansionDataKey="Mdeatil" [expansionColumns]="expansionColumns"></app-table>
+      [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
+      [rows]="30" (detail)="onDetail($event)" expansionDataKey="Mdeatil"
+      [expansionColumns]="expansionColumns"></app-table>
   </div>
 </div>

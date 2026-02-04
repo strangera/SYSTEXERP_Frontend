@@ -25,7 +25,8 @@
 
 <div class="card">
   <app-table tableKey="TLS22040" [data]="data" [columns]="columns" [showCheckBox]="false" dataKey="TXN_Date"
-    [multiSortMeta]="multiSortMeta" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
+    [multiSortMeta]="multiSortMeta" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading" [rows]="30"
+    [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
     (lazyLoadData)="onLazyLoadData($event, queryForm)" [showManage]="true" [showDelete]="false" [showDetail]="false"
     [showEdit]="false" [addButton]="addButton" [columnGroup]="columnGroup4"></app-table>
 </div>

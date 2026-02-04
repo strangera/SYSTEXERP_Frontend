@@ -53,7 +53,10 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
     TXN_TotSaleAmtEnd: [null],
     displayMode: ['M', [Validators.required]],
     ...createPaginationConfig([{ field: 'ECR_Group', order: 1 }]),
+    pageSize: [30],
   });
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
+
   selectedItems: any[] = [];
   totalRecords = 0;
   data: any[] = [];
@@ -97,7 +100,7 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
       .subscribe(res => {
         this.org_id_Options = (res.Data || []).map(item => ({
           ...item,
-          label: `${item.No} ${item.Name}`,
+          label: `${item.No}-${item.Name}`,
           value: item.No
         }));
       });

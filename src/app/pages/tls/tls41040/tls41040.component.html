@@ -43,7 +43,8 @@
 <div class="card">
   <div class="col-12">
     <app-table [showCheckBox]="true" tableKey="TLS41040" dataKey="ID" [data]="data"
-      [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
+      [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
+      [rows]="30" [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
       (detail)="onDetail($event)" (edit)="onEdit($event)" (delete)="onDelete($event)"
       [expansionColumns]="expansionColumns7" [columns]="columns7" expansionDataKey="Details"

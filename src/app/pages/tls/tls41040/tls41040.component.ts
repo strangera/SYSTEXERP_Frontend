@@ -75,7 +75,9 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
     NOT_Status: ['A'], // 通告狀態
     NOT_Remark: ['', [Validators.maxLength(200)]], // 改成和後端一樣
     ...createPaginationConfig([{ field: 'NOT_SeqNo', order: 1 }]),
+    pageSize: [30],
   });
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
   ECRNoOptions: { label: string; value: string }[] = [];
 
@@ -229,12 +231,27 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
   // ---- 刪除 ----
   onDelete(selectedRows: TLS41040Item[]): void {
     const idList = selectedRows.map(row => row.ID || row.id).filter((id): id is number => typeof id === 'number');
-    const deletePayload = { idList };
-    this.tls41040Service.deleteTLS41040(deletePayload).pipe(untilDestroyed(this)).subscribe({
-      next: () => {
-        this.onSubmit(this.queryForm);
-        this.selectedItems = [];
-      },
+    if (!idList.length) {
+      this.messageService.warnBubble('無有效的 ID 可供刪除');
+      return;
+    }
+
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: '是否刪除所選項目?',
+      accept: () => {
+        const deletePayload = { idList };
+        this.tls41040Service.deleteTLS41040(deletePayload).pipe(untilDestroyed(this)).subscribe({
+          next: () => {
+            this.onSubmit(this.queryForm);
+            this.selectedItems = [];
+          },
+          error: (err) => {
+            console.error('刪除失敗', err);
+            this.messageService.errorBubble('刪除失敗');
+          }
+        });
+      }
     });
   }
 

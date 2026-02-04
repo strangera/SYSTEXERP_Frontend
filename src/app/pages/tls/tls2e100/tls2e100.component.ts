@@ -111,7 +111,7 @@ export class TLS2E100Component extends BasicQueryPageComponent<any> implements O
       .subscribe(res => {
         if (res?.Data) {
           this.tltNoOptions = res.Data.map(item => ({
-            label: `${item.No} ${item.Name}`,
+            label: `${item.No}-${item.Name}`,
             value: item.No,
             No: item.No,
             Name: item.Name,

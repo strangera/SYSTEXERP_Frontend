@@ -42,7 +42,7 @@
   <app-customFooter-table tableKey="FIN15110" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
     [footerData]="footerData" dataKey="Ecr_No" [lazy]="true" [loading]="loading" [showManage]="false"
     [showDelete]="false" [multiSortMeta]="queryForm.controls.SortBy.value" [showReportMode]="false" [showTotal]="true"
-    (lazyLoadData)="onLazyLoadData($event)">
+    [rows]="30" [rowsPerPageOptions]="[30,60,90,120,150]" (lazyLoadData)="onLazyLoadData($event)">
 
     <header>
       <div class="flex justify-content-between align-items-center gap-2">

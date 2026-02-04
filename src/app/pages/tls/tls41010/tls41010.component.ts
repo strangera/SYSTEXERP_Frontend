@@ -414,18 +414,26 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       this.messageService.warnBubble('無有效的 ID 可供刪除');
       return;
     }
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: '是否刪除所選項目?',
+      accept: () => {
+        this.tls41010Service.deleteTLS41010(idList)
+          .pipe(untilDestroyed(this))
+          .subscribe({
+            next: (res) => {
+              if (res.Status === '0000') {
+                this.messageService.successBubble('選中項目刪除成功');
+                this.selectedItems = []; // 清空選中項目
+                this.onSubmit(this.queryForm); // 重新查詢刷新列表
+              } else {
+                console.error('API error:', res.Status, res.Message);
+                this.messageService.errorBubble(`刪除失敗: ${res.Message}`);
+              }
+            },
 
-    this.tls41010Service.deleteTLS41010(idList).subscribe({
-      next: (res) => {
-        if (res.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-          this.selectedItems = [];          // 清空選中項目
-          this.onSubmit(this.queryForm);    // 重新查詢刷新列表
-        } else {
-          console.error('API error:', res.Status, res.Message);
-          this.messageService.errorBubble(`刪除失敗: ${res.Message}`);
-        }
-      },
+          });
+      }
     });
   }
 }

@@ -147,7 +147,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   invoiceTypeOptions = getSYS1000Options('invoice_type');
   invoiceFormatOptions = [
     { value: '21', label: '21/進項三聯式、電子計算機統一發票' },
-    { value: '25', label: '25-進項三聯式收銀機統一發票' },
+    { value: '25', label: '25/進項三聯式收銀機統一發票' },
     { value: '27', label: '27/彙總登陸每張稅額五百元以下之進項二聯式收銀機統一發票、載有稅額之其他憑證' },
   ];
   queryLoading = false;

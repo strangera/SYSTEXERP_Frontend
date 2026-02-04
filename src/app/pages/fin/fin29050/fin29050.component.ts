@@ -47,8 +47,8 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
   queryForm = this.formBuilder.nonNullable.group({
     VEN_No_From: [null],
     VEN_No_To: [null],
-    ACP_Date_From: ['', Validators.required],
-    ACP_Date_To: ['', Validators.required],
+    ACP_Date_From: [new Date(), Validators.required],
+    ACP_Date_To: [new Date(), Validators.required],
     ACP_Amt_From: [null],
     ACP_Amt_To: [null],
     AccNo_From: [null],
