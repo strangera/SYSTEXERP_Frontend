@@ -38,8 +38,9 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
     TLT_NoList: [[]],
     budget_yy: [new Date()],
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]),
+    pageSize: [30],
   });
-
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
   data: any[] = [];
   totalRecords = 0;
   tltNoOptions: IDropdownItem[] = [];
@@ -105,9 +106,9 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
         ? new Date(raw.budget_yy).getFullYear().toString()
         : '',
       tlt_no: raw.TLT_NoList || [],
-      pageIndex: 1,
-      pageSize: 30,
-      SortBy: [{ field: 'tlt_no', order: 1 }],
+      pageIndex: Number(raw.pageIndex) || 1,
+      pageSize: Number(raw.pageSize) || 30,
+      SortBy: raw.SortBy && raw.SortBy.length ? raw.SortBy : [{ field: 'tlt_no', order: 1 }],
     };
 
     this.tls2g020Service.queryTLS2G020(payload)

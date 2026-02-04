@@ -84,7 +84,9 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
     issuanceNoteStatus: [null],
     issuanceType: [null],
     issuanceNoteCode: [null],
+    pageSize: [30],
   });
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
   // 下拉選項
   warehouseOptions: { label: string; value: string }[] = []; // 倉別
@@ -121,19 +123,20 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
     // 倉別
     this.dropDownListService.getPOS2034Options().pipe(
       untilDestroyed(this),
-      map(res => (res?.Data ?? []).map((x: any) => ({ label: x.Name, value: x.No })))
+      map(res => (res?.Data ?? []).map((x: any) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
     ).subscribe(options => this.warehouseOptions = options);
+
 
     // 品牌
     this.dropDownListService.queryPLULOGO_DropDownList().pipe(
       untilDestroyed(this),
-      map(res => (res?.Data ?? []).map((x: any) => ({ label: `${x.No} - ${x.Name}`, value: x.No })))
+      map(res => (res?.Data ?? []).map((x: any) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
     ).subscribe(options => this.brandOptions = options);
 
     // 人員
     this.dropDownListService.queryTBLUSER_DropDownList().pipe(
       untilDestroyed(this),
-      map(res => (res?.Data ?? []).map((x: any) => ({ label: x.Name, value: x.No })))
+      map(res => (res?.Data ?? []).map((x: any) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
     ).subscribe(options => this.userOptions = options);
   }
 

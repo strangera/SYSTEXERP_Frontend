@@ -69,7 +69,8 @@
     [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'VEN_No', order: 1 }]" [totalRecords]="totalRecords"
     [lazy]="true" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="true"
     [loading]="loading" [showDelete]="false" (selectionChange)="onSelectionChange($event)"
-    [selectedItems]="selectedItems" [buttonsLoading]="btnLoading" [isRowSelectable]="isRowSelectable">
+    [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
+    [rows]="30" [selectedItems]="selectedItems" [buttonsLoading]="btnLoading" [isRowSelectable]="isRowSelectable">
     <header>
       <div class="flex align-items-center gap-2">
         <p-button label="單據審核" [style]="{ height: '35px' }" pTooltip="僅限【已申請】單據" tooltipPosition="top" [rounded]="true"

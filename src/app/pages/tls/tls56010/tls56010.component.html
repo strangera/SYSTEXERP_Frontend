@@ -60,7 +60,9 @@
 <div class="card">
   <app-table tableKey="TLS56010" [data]="data" [columns]="columns" [showCheckBox]="false" dataKey="id" [showSort]="true"
     [multiSortMeta]="queryForm.value.SortBy || [{ field: 'PLU_MagNo', order: 1 }]" [totalRecords]="totalRecords"
-    [lazy]="true" [loading]="loading" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [rows]="30" [lazy]="true" [loading]="loading"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
     [showManage]="false" [showDelete]="false">
   </app-table>
 </div>

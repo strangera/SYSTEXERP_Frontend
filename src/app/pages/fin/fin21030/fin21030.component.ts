@@ -50,8 +50,10 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
     VEN_CheckTitle: [''],                      // 票據抬頭
     VEN_Status: [[]],                          // 審核狀態 (dropdown)
     ...createPaginationConfig([{ field: 'VEN_No', order: 1 }]),
-
+    pageSize: [30],
   });
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
+
   VEN_FLAG_MAP: Record<string, string> = {
     '1': '廠商統一編號',
     '2': '個人身分證字號',
