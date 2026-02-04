@@ -133,10 +133,17 @@ export class FIN64020Component extends BasicQueryPageComponent<QueryFIN64020Row>
     };
     this.dialogLoading = true;
     this.fin64020Service.updateFIN64020(body).pipe(untilDestroyed(this), finalize(() => this.dialogLoading = false)).subscribe(res => {
-      this.dialogVisible = false;
-      this.messageService.successBubble(res.Message || '更新成功');
-      this.selectedItems = []; // 清空選取
-      this.onSubmit(this.queryForm); // 重新查詢整理列表
+      this.messageService.confirm({
+        header: '支票託收成功',
+        message: res.Message || '託收處理成功',
+        showRejectButton: false,
+        accept: () => {
+          this.dialogVisible = false;
+          this.onSubmit(this.queryForm); // 刷新清單
+          this.selectedItems = [];
+          this.dialogQueryForm.reset();
+        },
+      })
     });
   }
 }

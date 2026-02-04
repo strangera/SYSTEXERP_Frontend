@@ -7,8 +7,8 @@ import { ApiResponse } from './fin26010.service';
 export interface QueryFIN64050Request {
   PageSize?: number;
   PageIndex?: number;
-  BackDateFrom?: string;
-  BackDateTo?: string;
+  BackDateFrom: string | null;
+  BackDateTo: string | null;
   ChkNo: string | null;
 }
 

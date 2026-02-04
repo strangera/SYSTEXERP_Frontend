@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
@@ -27,7 +28,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     CommonModule, FormsModule, ReactiveFormsModule, TranslateModule,
     MenubarComponent, AccordionModule, ButtonModule, DialogModule,
     CalendarRangeQuickComponent, CalendarComponent, InputTextComponent,
-    ButtonComponent, TableReportComponent, DialogComponent,
+    ButtonComponent, TableReportComponent, DialogComponent, InputTextareaComponent
   ],
   providers: [DatePipe]
 })
@@ -45,68 +46,7 @@ export class FIN64050Component extends BasicQueryPageComponent<QueryFIN64050Row>
     CHK_Comment: [null, [Validators.maxLength(160)]],
   });
 
-  data: QueryFIN64050Row[] = [
-    {
-      SEQ_NO: 1,
-      ID: 1001,
-      CHK_No: 'CH10000001',
-      VEN_No: 'V001',
-      VEN_Name: '測試供應商 A',
-      BNK_No: '0040012',
-      BNK_Name: '臺灣銀行-營業部',
-      CHK_ExpireDate: '2026-02-10',
-      CHK_Amt: 50000,
-      CHK_BNK_No: '0070015',
-      CHK_BackDate: '',
-      Bounce_Tran_Status: '',
-      Bounce_VouNo: '',
-      Bounce_Comment: '',
-      Bounce_RCV_No: '',
-      CHK_Status: '2', // 託收
-      CHK_Status_Name: '託收',
-      IsSelectable: 'Y'
-    },
-    {
-      SEQ_NO: 2,
-      ID: 1002,
-      CHK_No: 'CH10000002',
-      VEN_No: 'V002',
-      VEN_Name: '測試客戶 B',
-      BNK_No: '8220010',
-      BNK_Name: '中國信託-總行',
-      CHK_ExpireDate: '2026-02-15',
-      CHK_Amt: 125000,
-      CHK_BNK_No: '0130020',
-      CHK_BackDate: '2026-02-03',
-      Bounce_Tran_Status: '1',
-      Bounce_VouNo: 'VOU20260203001',
-      Bounce_Comment: '存款不足',
-      Bounce_RCV_No: 'RCV001',
-      CHK_Status: '5', // 退票
-      CHK_Status_Name: '退票',
-      IsSelectable: 'N'
-    },
-    {
-      SEQ_NO: 3,
-      ID: 1003,
-      CHK_No: 'CH10000003',
-      VEN_No: 'V003',
-      VEN_Name: '開發組測試行',
-      BNK_No: '0170001',
-      BNK_Name: '兆豐銀行',
-      CHK_ExpireDate: '2026-01-20',
-      CHK_Amt: 8800,
-      CHK_BNK_No: '0040012',
-      CHK_BackDate: '',
-      Bounce_Tran_Status: '',
-      Bounce_VouNo: '',
-      Bounce_Comment: '',
-      Bounce_RCV_No: '',
-      CHK_Status: '3', // 兌現
-      CHK_Status_Name: '兌現',
-      IsSelectable: 'N'
-    }
-  ];
+  data: QueryFIN64050Row[] = [];
   totalRecords = 0;
   selectedItems: QueryFIN64050Row[] = [];
   dialogVisible = false;
@@ -149,8 +89,8 @@ export class FIN64050Component extends BasicQueryPageComponent<QueryFIN64050Row>
       const raw = this.queryForm.getRawValue();
       const body: QueryFIN64050Request = {
         ...raw,
-        BackDateFrom: this.datePipe.transform(raw.BackDateFrom, 'yyyy-MM-dd') || '',
-        BackDateTo: this.datePipe.transform(raw.BackDateTo, 'yyyy-MM-dd') || '',
+        BackDateFrom: this.datePipe.transform(raw.BackDateFrom, 'yyyy-MM-dd') || null,
+        BackDateTo: this.datePipe.transform(raw.BackDateTo, 'yyyy-MM-dd') || null,
       };
       this.fin64050Service.queryFIN64050(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
         this.data = res.Data;
@@ -172,9 +112,18 @@ export class FIN64050Component extends BasicQueryPageComponent<QueryFIN64050Row>
     };
 
     this.fin64050Service.updateFIN64050(body).pipe(untilDestroyed(this), finalize(() => this.dialogLoading = false)).subscribe(res => {
-      this.dialogVisible = false;
-      this.messageService.successBubble(res.Message || '退票處理成功');
-      this.onSubmit(this.queryForm);
+
+      this.messageService.confirm({
+        header: '退票成功',
+        message: res.Message || '退票處理成功',
+        showRejectButton: false,
+        accept: () => {
+          this.dialogVisible = false;
+          this.onSubmit(this.queryForm); // 刷新清單
+          this.selectedItems = [];
+          this.dialogQueryForm.reset();
+        },
+      })
     });
   }
 }
