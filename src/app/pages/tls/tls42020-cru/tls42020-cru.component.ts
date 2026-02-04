@@ -89,7 +89,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       header: '商品管理碼',
       type: 'dropdown',
       options: (rowData?: any) => this.PLU_MagNoOptions, // 使用函數動態返回選項
-      optionLabel: 'PLU_Name',
+      optionLabel: 'PLU_MagNo', // 顯示 PLU_MagNo
       optionValue: 'PLU_MagNo',
       showClear: true,
     },
@@ -193,13 +193,30 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
     const rowData = anyEvent.rowData ?? (typeof index === 'number' ? this.data[index] : undefined);
 
     if (field === 'PLU_MagNo' && typeof index === 'number') {
-      const selectedProduct = this.PLU_MagNoOptions.find(item => item.PLU_MagNo === value);
+      let selectedProduct: any | undefined;
+      // 支援下拉回傳物件或僅回傳值的情況，並以字串比對避免型別不一致
+      if (value && typeof value === 'object') {
+        const valPLU_No = (value.PLU_No ?? value.PLUNo ?? value.value ?? '');
+        const valMag = (value.PLU_MagNo ?? value.PLU_MagNo ?? value.label ?? '');
+        selectedProduct = this.PLU_MagNoOptions.find(item => item === value || String(item.PLU_No) === String(valPLU_No) || String(item.PLU_MagNo) === String(valMag)) || value;
+      } else {
+        selectedProduct = this.PLU_MagNoOptions.find(item => String(item.PLU_No) === String(value) || String(item.PLU_MagNo) === String(value));
+      }
+
       if (selectedProduct && rowData) {
-        rowData.PLU_No = selectedProduct.PLU_No || selectedProduct.PLU_MagNo || '';
-        rowData.PLU_Name = selectedProduct.PLU_Name || '';
-        rowData.PLU_PrnName = selectedProduct.PLU_PrnName || selectedProduct.PLU_Name || '';
-        rowData.PLU_FixPrc = selectedProduct.PLU_FixPrc || selectedProduct.PLU_FixPrc || '';
-        rowData.PLU_SalePrc = selectedProduct.PLU_SalePrc || '';
+        // 只有當後端有回傳 PLU_MagNo 且非空白時，才寫入 PLU_MagNo
+        if (selectedProduct.PLU_MagNo && String(selectedProduct.PLU_MagNo).trim()) {
+          rowData.PLU_MagNo = selectedProduct.PLU_MagNo;
+        } else {
+          rowData.PLU_MagNo = rowData.PLU_MagNo ?? '';
+        }
+
+        // 永遠嘗試帶入其他 PLU 欄位（允許空字串）
+        rowData.PLU_No = selectedProduct.PLU_No ?? '';
+        rowData.PLU_Name = selectedProduct.PLU_Name ?? '';
+        rowData.PLU_PrnName = selectedProduct.PLU_PrnName ?? selectedProduct.PLU_Name ?? (rowData.PLU_PrnName ?? '');
+        rowData.PLU_FixPrc = selectedProduct.PLU_FixPrc ?? '';
+        rowData.PLU_SalePrc = selectedProduct.PLU_SalePrc ?? '';
         this.changeDetectorRef.detectChanges();
       }
     } else if (field === 'PLU_Name') {
@@ -308,7 +325,10 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
 
   private createUpdateRequestBody(): TLS42020UpdateRequest {
     const formValue = this.dataForm.getRawValue();
-    // 主檔資料
+    // 主檔資料：將日期轉為 ISO 字串（後端期望帶 Z 的 ISO）
+    const begDateISO = formValue.SBM_BegDate ? new Date(formValue.SBM_BegDate).toISOString() : '';
+    const endDateISO = formValue.SBM_EndDate ? new Date(formValue.SBM_EndDate).toISOString() : '';
+
     const mainData = {
       ID: this.rowdata!.id, // 從原始資料取得 ID
       MID: 0,
@@ -316,8 +336,8 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       SBM_Type: formValue.SBM_Type!,
       TLT_No: formValue.TLT_No!,
       TLT_Name: this.tltNoOptions.find(item => item.value === formValue.TLT_No)?.name ?? '',
-      SBM_BegDate: formValue.SBM_BegDate!,
-      SBM_EndDate: formValue.SBM_EndDate!
+      SBM_BegDate: begDateISO,
+      SBM_EndDate: endDateISO
     };
     // 取得目前明細資料的 ID 集合
     const currentDetailIds = new Set(this.data.map(item => item.ID).filter(id => id));
@@ -333,7 +353,8 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       SBM_EndDate: mainData.SBM_EndDate,
       // 明細資料
       SBM_SeqNo: item.SBM_SeqNo ?? '',  // 後端處理
-      PLU_MagNo: item.PLU_MagNo ?? '',  // 若為空則由後端產生
+      // 若 PLU_MagNo 為空，回退填入 PLU_No（避免傳空字串導致後端 SQL 組合錯誤）
+      PLU_MagNo: (item.PLU_MagNo && String(item.PLU_MagNo).trim()) ? item.PLU_MagNo : (item.PLU_No ?? ''),
       PLU_No: item.PLU_No,
       PLU_Name: item.PLU_Name,
       PLU_PrnName: item.PLU_PrnName,
@@ -383,16 +404,25 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
 
   // 載入 PLU_MagNo 選項
   loadPLU_MagNoOptions(tltNo: string): void {
-    this.tls42020Service.dropdownTLS42020({ TLT_NO: [tltNo ?? ''] })
-      .pipe(
-        untilDestroyed(this)
-      )
+    // 使用 QueryPLU_No 以支援依 TLT_No 與模糊關鍵字查詢
+    const body = { TLT_No: tltNo ?? '', PLU_No: '', PLU_Name: '' };
+    this.tls42020Service.QueryPLU_No(body)
+      .pipe(untilDestroyed(this))
       .subscribe(res => {
-        // 將後端回傳資料 map 成 dropdown 可用格式 (PLU_MagNo, PLU_Name)
-        this.PLU_MagNoOptions = (res.Data || []).map((item: any) => ({
-          PLU_MagNo: item.PLU_MagNo ?? item.No ?? item.Value ?? item.value ?? item.PLUMagNo ?? '',
-          PLU_Name: item.PLU_Name ?? item.Name ?? item.Label ?? item.label ?? item.PLUName ?? String(item)
-        }));
+        // 後端回傳結構預期為 { Status, Data: [...] }
+        const list = (res?.Data || []);
+        this.PLU_MagNoOptions = list.map((item: any) => {
+          const rawMag = item.PLU_MagNo;
+          const mag = rawMag && String(rawMag).trim() ? rawMag : '';
+          return {
+            PLU_MagNo: mag,
+            PLU_No: item.PLU_No ?? '',
+            PLU_Name: item.PLU_Name ?? item.Name ?? item.Label ?? item.label ?? item.PLUName ?? String(item),
+            PLU_PrnName: item.PLU_PrnName ?? '',
+            PLU_FixPrc: item.PLU_FixPrc ?? '',
+            PLU_SalePrc: item.PLU_SalePrc ?? ''
+          };
+        });
       });
   }
 }
