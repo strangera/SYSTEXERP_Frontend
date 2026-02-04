@@ -166,6 +166,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   CounterOptions: any[] = [];
   CashierOptions: IDropdownItem[] = [];
   LocOptions: IDropdownItem[] = [];
+  KBLevelOptions: any[] = []; // 機台鍵盤編號 下拉選項
   tmplDetailList: any[] = [];
 
   constructor(
@@ -253,6 +254,22 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
           value: item.No,
           label: item.Name
         }));
+      });
+
+    // 機台鍵盤編號下拉 (來自 TLS42010 下拉資料)
+    this.dropDownListService.queryTLS42010DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        const list = (res?.Data && Array.isArray(res.Data)) ? res.Data : (Array.isArray(res) ? res : (res && res.Data ? res.Data : []));
+        this.KBLevelOptions = (list || []).map((item: any) => {
+          if (!item || typeof item !== 'object') return { label: String(item ?? ''), value: item };
+          const keys = Object.keys(item);
+          const labelKey = keys.find(k => /value/i.test(k)) || keys.find(k => /name|label/i.test(k));
+          const valueKey = keys.find(k => /key|no|id/i.test(k)) || keys.find(k => /value/i.test(k)) || keys[0];
+          const label = labelKey ? item[labelKey] : (item.Name ?? item.label ?? Object.values(item)[1] ?? Object.values(item)[0]);
+          const value = valueKey ? item[valueKey] : (item.No ?? item.value ?? Object.values(item)[0]);
+          return { label: String(label ?? ''), value: value ?? '' };
+        });
       });
 
     this.dataForm.get('ECR_LocNo')?.valueChanges
