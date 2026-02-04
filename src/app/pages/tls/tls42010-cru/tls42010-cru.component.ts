@@ -466,7 +466,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     });
 
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'ECR_KBType' }).subscribe(res => {
-      this.ECR_KBTypeOptions = res?.Data ?? [];
+      // 過濾掉 No 為空字串的選項（例如 { No: "", Name: "無" }）
+      this.ECR_KBTypeOptions = (res?.Data ?? []).filter((item: any) => (item?.No ?? '') !== '');
     });
 
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'KB_Style' }).subscribe(res => {
@@ -715,7 +716,20 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   selectKey(k: KeyItem, event?: MouseEvent) {
     // 切換前，先把目前表單內容寫回目前選中的按鍵（編輯模式限定）
     if (this.crudstatus !== CRUDStatus.Read && this.selected) {
-      Object.assign(this.selected, this.selectedKeyForm.getRawValue());
+      // 只將使用者實際修改過的欄位回寫（避免把表單的預設值覆蓋按鍵原始設定）
+      const raw = this.selectedKeyForm.getRawValue();
+      const sel = this.selected; // local reference to satisfy TS narrowing in callbacks
+      Object.keys(this.selectedKeyForm.controls).forEach(ctrlName => {
+        const control = this.selectedKeyForm.controls[ctrlName];
+        if (control && control.dirty && sel) {
+          // 只回寫存在於 selected 的對應欄位
+          if (ctrlName in sel) {
+            (sel as any)[ctrlName] = raw[ctrlName];
+          }
+        }
+      });
+      // 重置表單 dirty 狀態（已寫回）
+      this.selectedKeyForm.markAsPristine();
     }
 
     // Shift 多選模式（只有在非 Read 模式才允許）
@@ -789,6 +803,11 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         const mergeRight = k.mergeRight || 0;
         const mergeDown = k.mergeDown || 0;
         const mergeValue = mergeRight > 0 || mergeDown > 0 ? `${mergeRight},${mergeDown}` : '';
+        // 判斷此按鍵是否為被隱藏（即屬於某個已合併的主鍵範圍內）
+        const isHidden = this.isKeyHidden(k, page);
+        // 如果不是被隱藏的主鍵，且有合併設定，則把寬高放大為合併後的尺寸
+        const kbWidth = !isHidden ? (pos1008.width * (mergeRight + 1)) : pos1008.width;
+        const kbHeight = !isHidden ? (pos1008.height * (mergeDown + 1)) : pos1008.height;
         const keyId =
           this.crudstatus === CRUDStatus.Create
             ? 0
@@ -813,8 +832,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
           KB_Fonttyped: hasConfig ? k.KB_Fonttyped || 'NNN' : 'NNN',
           KB_Style: hasConfig ? k.KB_Style || '1' : '1',
           KB_Switch: hasConfig ? k.KB_Switch || 'Y' : 'Y',
-          KB_Width: pos1008.width,
-          KB_Height: pos1008.height,
+          KB_Width: kbWidth,
+          KB_Height: kbHeight,
           KB_Merge: mergeValue,
           KB_Color: hasConfig ? k.KB_Color || 'RGB:255,255,255' : 'RGB:255,255,255',
           KB_FontColor: hasConfig ? k.KB_FontColor || 'RGB:0,0,0' : 'RGB:0,0,0',
