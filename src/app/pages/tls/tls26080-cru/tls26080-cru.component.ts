@@ -387,10 +387,10 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         field: 'tpy_rate_D16',
         header: 'D16',
         groupField: 'groupField1',
-        type: this.isFormReadable ? void 0 : 'percent',
+        type: this.isFormReadable ? void 0 : 'inputNumber',
         validate: [validateRequired, this.numVal.bind(this)],
         maxFractionDigits: 2,
-        disabled: (r) => r.pod_status !== '0',
+        disabled: (r) => !this.isRowEditable(r),
         format: v => this.isFormReadable ? String(v) + '%' : v,
         width: '4rem',
         textAlign: 'right',
@@ -399,10 +399,10 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         field: 'tpy_rate_D17',
         header: 'D17',
         groupField: 'groupField1',
-        type: this.isFormReadable ? void 0 : 'percent',
+        type: this.isFormReadable ? void 0 : 'inputNumber',
         validate: [validateRequired, this.numVal.bind(this)],
         maxFractionDigits: 2,
-        disabled: (r) => r.pod_status !== '0',
+        disabled: (r) => !this.isRowEditable(r),
         format: v => this.isFormReadable ? String(v) + '%' : v,
         width: '4rem',
         textAlign: 'right',
@@ -860,6 +860,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
                 talent_id: next.talent_id,
                 tlt_id: currentTltId?.value ?? next.tlt_id,
                 tlt_id_desc: currentTltId?.['tlt_id_desc'] ?? next.tlt_id_desc,
+                tpy_rate_D16: this.parseRateValue(next.tpy_rate_D16, t.tpy_rate_D16),
+                tpy_rate_D17: this.parseRateValue(next.tpy_rate_D17, t.tpy_rate_D17),
               };
             });
           });
@@ -988,6 +990,20 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public onformValueChanged(event: unknown): void {
     return void this.logger.debug(`onformValueChanged:`, [event]);
+  }
+
+  private isRowEditable(rowData: TLS26080EditTable): boolean {
+    return rowData.pod_status !== ApprovalStatus.已核准 && rowData.pod_status !== ApprovalStatus.刪除;
+  }
+
+  private parseRateValue(value: unknown, fallback: number | null | undefined): number {
+    if (value === void 0 || value === null || value === '') {
+      return fallback ?? 0;
+    }
+    if (typeof value === 'number') return value;
+    const normalized = String(value).replace('%', '').trim();
+    const parsed = Number(normalized);
+    return isNaN(parsed) ? (fallback ?? 0) : parsed;
   }
 
   public fetchTltTalentOptions(_body?: unknown, startDate?: Date | string, endDate?: Date | string): Observable<Option[]> {
