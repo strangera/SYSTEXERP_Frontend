@@ -492,6 +492,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public ngOnInit(): void {
     this.initializePage('TLS26080', this.dataForm);
+    if (this.isFormEditable) {
+      this.df().pod_desc.disable({ emitEvent: false });
+    }
 
     this.campaignLoading.set(true);
     this.dialogLoading.set(true);
