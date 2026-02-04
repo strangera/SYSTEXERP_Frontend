@@ -92,13 +92,14 @@
         <app-table-edit *ngIf="dataForm.controls.NOT_DtlLimit.value === 'Y'" class="col-12" tableKey="tls41040Detail"
           [columns]="columns" [data]="data" [dataStatusField]="'status'" [disabled]="false" [canInsert]="true"
           [tableRequired]="true" [selectedItems]="selectedRows" (selectionChange)="selectedRows = $event"
-          (dataChange)="onDataChange($event)" (delete)="onDelete($event)">
+          (dataChange)="onDataChange($event)" (delete)="onDelete($event)" [loading]="loading"
+          [disabled]="isFormReadable">
         </app-table-edit>
 
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
-        <app-button btnType="submit"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
     </form>
   </p-panel>

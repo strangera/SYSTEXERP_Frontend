@@ -53,7 +53,7 @@ export class FIN64050Component extends BasicQueryPageComponent<QueryFIN64050Row>
   dialogLoading = false;
 
   // 防呆：僅「非兌現(3)且非退票(5)」狀態可勾選
-  isRowSelectable = (row: QueryFIN64050Row) => row.CHK_Status !== '3' && row.CHK_Status !== '5';
+  isRowSelectable = (row: QueryFIN64050Row) => row.IsSelectable === 'Y';
 
   columns: ReportColumn[] = [
     { field: 'CHK_No', header: '票據號碼' },

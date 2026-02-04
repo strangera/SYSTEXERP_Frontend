@@ -1,19 +1,19 @@
 import { Component, OnInit } from '@angular/core';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { AccordionModule } from 'primeng/accordion';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { Tls13050Service } from '../../../service/api/tls/tls13050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
 @Component({
   selector: 'app-tls13050',
   templateUrl: './tls13050.component.html',
@@ -42,9 +42,11 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
     check_day_end: [null],
     Building_No: [[]],
     org_idList: [[]],
-    ...createPaginationConfig([{ field: 'apply_no', order: 1 }])
+    ...createPaginationConfig([{ field: 'apply_no', order: 1 }]),
+    pageSize: [30]
   });
-
+  // expansion 明細分頁選項（只在本頁使用）
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
   floorOptions: any[] = [];
   data: any[] = [];
@@ -106,7 +108,7 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
       .subscribe(res => {
         this.organizationCodeOptions = (res.Data || []).map(item => ({
           ...item,
-          formLabel: item.No + ' ' + item.Name,
+          formLabel: `${item.No}-${item.Name}`,
           value: item.No
         }));
       });

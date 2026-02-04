@@ -7,6 +7,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
@@ -27,7 +28,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
   imports: [
     CommonModule, FormsModule, ReactiveFormsModule, TranslateModule,
     MenubarComponent, AccordionModule, ButtonModule, DialogModule,
-    CalendarComponent,
+    CalendarComponent, DropdownComponent,
     InputTextComponent, ButtonComponent, TableReportComponent,
     DialogComponent, MultiSelectComponent, CalendarRangeQuickComponent
   ],
@@ -36,18 +37,19 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 export class FIN64030Component extends BasicQueryPageComponent<QueryFIN64030Row> implements OnInit {
   queryForm = this.formBuilder.group({
     CompanyAccNoList: [null, [Validators.required]],
-    CashDateFrom: [null],
-    CashDateTo: [null],
     ExpireDateFrom: [null],
     ExpireDateTo: [null],
     ChkNo: [null, [Validators.maxLength(10)]],
+    // --- 新增查詢條件 ---
+    VouNoExpire: [null, [Validators.maxLength(20)]],
+    ChkStatus: [null],
     pageSize: [30],
     pageIndex: [1],
   });
 
   // 兌現彈窗表單
   dialogQueryForm = this.formBuilder.group({
-    CashDate: [this.datePipe.transform(new Date(), 'yyyy/MM/dd'), [Validators.required]]
+    CashDate: [new Date(), [Validators.required]]
   });
 
   data: QueryFIN64030Row[] = [];
@@ -63,15 +65,14 @@ export class FIN64030Component extends BasicQueryPageComponent<QueryFIN64030Row>
 
   columns: ReportColumn[] = [
     { field: 'CHK_No', header: '票據號碼' },
-    { field: 'VEN_No', header: '廠客代號' },
     { field: 'VEN_Name', header: '廠客名稱' },
-    { field: 'BNK_No', header: '全省銀行代碼(含分行)' },
-    { field: 'BNK_Name', header: '票面銀行名稱' },
     { field: 'CHK_ExpireDate', header: '到期日', format: formatDate },
     { field: 'CHK_Amt', header: '票面金額', format: formatAmount },
-    { field: 'CHK_BNK_No', header: '託收銀行代碼(含分行)' },
-    { field: 'VouNo_Expire', header: '到期傳票編號' },
-    { field: 'CHK_Status_Name', header: '支票狀態' },
+    { field: 'CHK_BNK_No', header: '託收帳號' },
+    { field: 'ColleDate', header: '託收日期', format: formatDate }, // 新增
+    { field: 'Colle_BNK_AccNo', header: '託收銀行帳號' }, // 新增
+    { field: 'VouNo_Expire', header: '到期傳票' },
+    { field: 'CHK_Status_Name', header: '狀態' },
   ];
 
   companyAccOptions$ = this.dropDown.queryAps1002().pipe(

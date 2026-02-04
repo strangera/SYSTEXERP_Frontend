@@ -178,6 +178,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls2c030', loadComponent: () => import('./tls2c030/tls2c030.component').then(m => m.TLS2C030Component), data: { progNo: 'TLS2C030' } },
   // 專櫃暫存傳票查詢作業
   { path: 'tls2c040', loadComponent: () => import('./tls2c040/tls2c040.component').then(m => m.TLS2C040Component), data: { progNo: 'TLS2C040' } },
+  // 專櫃暫存傳票查詢作業 CRU
+  { path: 'tls2c040cru', loadComponent: () => import('./tls2c040-cru/tls2c040-cru.component').then(m => m.TLS2C040CRUComponent), data: { progNo: 'TLS2C040' } },
   // 發票匯總作業
   { path: 'tls2c050', loadComponent: () => import('./tls2c050/tls2c050.component').then(m => m.TLS2C050Component), data: { progNo: 'TLS2C050' } },
   // 代扣款補登作業
@@ -278,8 +280,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls2a030cru', loadComponent: () => import('./tls2a030-cru/tls2a030-cru.component').then(m => m.TLS2A030CRUComponent), data: { progNo: 'TLS2A030' } },
   // 第三方支付帳差報表 CRU
   { path: 'tls2a050cru', loadComponent: () => import('./tls2a050-cru/tls2a050-cru.component').then(m => m.TLS2A050CRUComponent), data: { progNo: 'TLS2A050' } },
-  // 專櫃暫存傳票查詢作業 CRU
-  { path: 'tls2c040cru', loadComponent: () => import('./tls2c040-cru/tls2c040-cru.component').then(m => m.TLS2C040CRUComponent), data: { progNo: 'TLS2C040' } },
   // 代扣款補登作業 CRU
   { path: 'tls2d010cru', loadComponent: () => import('./tls2d010-cru/tls2d010-cru.component').then(m => m.TLS2D010CRUComponent), data: { progNo: 'TLS2D010' } },
   // 專櫃結帳前調整作業 CRU

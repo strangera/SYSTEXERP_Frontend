@@ -13,14 +13,15 @@ export interface QueryFIN64030Request {
   PageIndex?: number | null;
   SortBy?: SortMeta[] | null;
   CompanyAccNoList?: string[] | null;
-  CashDateFrom?: string | null;  // 兌現日(起)
-  CashDateTo?: string | null;    // 兌現日(迄)
   ExpireDateFrom?: string | null;
   ExpireDateTo?: string | null;
   ChkNo?: string | null;
+  // --- 根據 SP 補上缺失的查詢欄位 ---
+  VouNoExpire?: string | null; // 到期傳票編號(模糊)
+  ChkStatus?: string | null;   // 狀態(0~5)
 }
 
-/** 查詢結果 Row (結構與 64020 相同) */
+/** 查詢結果 Row (完整對應 SP_FIN64030Query 欄位) */
 export interface QueryFIN64030Row {
   SEQ_NO: number;
   ID: number;
@@ -32,10 +33,18 @@ export interface QueryFIN64030Row {
   CHK_ExpireDate: string;
   CHK_Amt: number;
   CHK_BNK_No: string;
-  VouNo_Expire: string;
+  VouNo_Expire: string;    // 對應 SP 的 A4.VouNo_received
   CHK_Status: string;
   CHK_Status_Name: string;
   IsSelectable: string;
+  // --- 補上 SP 新增的託收檔 (ARS4006) 資訊 ---
+  ARS4006_ID?: number;
+  Colle_BNK_No?: string;
+  Colle_BNK_BranchNo?: string;
+  Colle_BNK_AccNo?: string;
+  ColleDate?: string;      // 託收日
+  Colle_Tran_Status?: string;
+  Colle_Comment?: string;
 }
 
 /** 兌現更新 Request */
