@@ -48,7 +48,11 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
     contact_USR_Name: [this.authService.currentUserValue?.user_No], // 訪談人員
     willing_level: [null], // 後端要 string，不要 null
     ...createPaginationConfig([{ field: 'location_no', order: 1 }]), // 原本是 ECR_LocNo
+    pageSize: [30], // 本頁預設送後端每頁 30 筆
   });
+
+  // expansion 明細分頁選項（只在本頁使用）
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
 
 
@@ -226,6 +230,22 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
     // 取出上次查詢條件
     const query = this.queryStateService.getQueryStateValue(progNo);
     if (query) {
+
+      // 將上次查詢條件回填到查詢表單（避免修改共用元件）
+      try {
+        const fill: any = { ...query };
+        // 將可能的 ISO/字符串時間轉回 Date
+        if (fill.InterviewDateStart) {
+          fill.InterviewDateStart = new Date(fill.InterviewDateStart);
+        }
+        if (fill.InterviewDateEnd) {
+          fill.InterviewDateEnd = new Date(fill.InterviewDateEnd);
+        }
+        // 如果保存時有 contact_Datestart/contact_Dateend，保留為 null（後端用），但不覆寫表單上的 InterviewDate* 欄位
+        this.queryForm.patchValue(fill);
+      } catch (e) {
+        // ignore patch errors
+      }
 
       if (onSubmit) {
         onSubmit(queryForm!);
