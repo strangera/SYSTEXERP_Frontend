@@ -86,7 +86,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
     },
     {
       field: 'PLU_MagNo',
-      header: '商品管理編號',
+      header: '商品管理碼',
       type: 'dropdown',
       options: (rowData?: any) => this.PLU_MagNoOptions, // 使用函數動態返回選項
       optionLabel: 'PLU_Name',
@@ -97,6 +97,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       field: 'PLU_No',
       header: '國際條碼',
       type: 'input',
+      disabled: (value: any, index?: number, rowData?: any) => !!rowData?.PLU_MagNo // 若選擇商品管理碼則禁用
     },
     {
       field: 'PLU_Name',
