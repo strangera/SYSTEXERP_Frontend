@@ -14,15 +14,15 @@
   <div class="col pb-0">
     <app-calendar class="w-full" [controlName]="startControlName" [control]="startControl" [submitted]="submitted"
       [calendarType]="calendarOneType" [minDate]="startMinDate" [maxDate]="startMaxDate" [disabled]="isEndDisabled"
-      (calendarEvent)="startDateChange.emit($event)"></app-calendar>
+      (calendarEvent)="startDateChange.emit($event)" (focusout)="fixStartOfDay()"></app-calendar>
   </div>
   <div class="flex flex-column justify-content-center align-items-center pt-3" [ngStyle]="{ 'height': '33.56px' }">
     <span class="text-center" [ngStyle]="{ 'line-height': '2.8' }">~</span>
   </div>
   <div class="col pb-0">
     <app-calendar class="w-full" [controlName]="endControlName" [control]="endControl" [submitted]="submitted"
-      [calendarType]="calendarOneType" [minDate]="endMinDate" [maxDate]="endMaxDate"
-      [disabled]="isEndDisabled"></app-calendar>
+      [calendarType]="calendarOneType" [minDate]="endMinDate" [maxDate]="endMaxDate" [disabled]="isEndDisabled"
+      (calendarEvent)="endDateChange.emit($event)" (focusout)="fixEndOfDay()"></app-calendar>
   </div>
 </div>
 <ng-content select="footer"></ng-content>
