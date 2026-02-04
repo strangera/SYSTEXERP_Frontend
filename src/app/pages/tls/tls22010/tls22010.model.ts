@@ -150,7 +150,7 @@ const formatTxnNo = (val: number | string | null | undefined): string => {
 };
 
 export const columns: ReportColumn[] = [
-  { field: 'ECR_No_Display', header: '收銀機號', visible: true, type: 'html', sortField: 'ECR_No' },
+  { field: 'ECR_No_Display', header: '收銀機號', visible: true, type: 'html', sortField: 'ECR_No', width: '100px' },
   { field: 'AREA_NO', header: '區域', visible: true },
   { field: 'FLOOR_Name', header: '樓層', visible: true }, // <--- 欄位定義不變，但 ITxnData 已經更新
   { field: 'TXN_TotSaleAmt', header: '銷售金額 (A)', visible: true, format: formatAmount, isTotal: true, align: 'right' },

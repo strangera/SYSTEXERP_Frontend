@@ -59,9 +59,9 @@
   <div class="col-12">
     <app-table-subheader tableKey="VoucherNo" dataKey="VoucherNo" [data]="data" [columns]="columns"
       [showCheckBox]="false" [showManage]="false" [showDelete]="false" (detail)="onDetail($event)" [multiSortMeta]="[]"
-      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [lazy]="true" [groupRowsBy]="''" [groupRowsByName]="''" [showGroupheader]="false" [loading]="loading"
-      [showSerialNo]="false" [showPaginator]="false" [showReportMode]="false" [showSort]="false">
+      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm)" [lazy]="true" [groupRowsBy]="''"
+      [groupRowsByName]="''" [showGroupheader]="false" [loading]="loading" [showSerialNo]="false" [showPage]="false"
+      [showPaginator]="false" [showReportMode]="false" [showSort]="false">
       <header>
         <div class="flex justify-content-end align-items-center gap-2">
           <p-button styleClass="p-2" label="應付帳款明細表.PDF" icon="pi pi-file" (click)="onExportPDF()"

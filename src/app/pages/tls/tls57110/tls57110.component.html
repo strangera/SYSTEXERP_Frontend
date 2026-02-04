@@ -35,7 +35,7 @@
 <div class="card">
   <app-customFooter-table *ngIf="columns?.length && columns.length > 0" tableKey="tls57110" dataKey="LOGO_No"
     [data]="data" [columns]="columns" [totalRecords]="totalRecords" [footerData]="footerData"
-    [rows]="queryForm.value.pgSize ?? 20" [lazy]="true" [loading]="loading"
+    [rows]="queryForm.value.pgSize ?? 30" [lazy]="true" [loading]="loading"
     (lazyLoadData)="onLazyLoadData($event, queryForm)" [showReportMode]="false" [showManage]="false"
     [showDelete]="false" [subTotalData]="subTotalData" [showTotal]="true"
     [groupRowsBy]="showType === 'D' ? 'LOGO_CH_NAME' : ''" [multiSortMeta]="[

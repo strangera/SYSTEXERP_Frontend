@@ -63,10 +63,10 @@
       <span>廠商編號：{{ row.VendorNo }}</span>
     </ng-template>
 
-    <app-fin29060-table-subheader [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-      [lastQueryBody]="lastQueryBody" [lazyBatchSize]="lazyBatchSize" [showManage]="false" (dataChange)="data = $event"
-      [groupRowsBy]="'VendorNo'" [fullData]="fullData" [totalData]="totalData" [groupRowsByName]="'廠商編號'"
-      [showSubTotal]="true" [showTotal]="true" [subtotalLabel]="'小計'"
+    <app-fin29060-table-subheader [data]="data" [columns]="columns" [totalRecords]="totalRecords" [showPage]="false"
+      [showFilter]="false" [lastQueryBody]="lastQueryBody" [lazyBatchSize]="lazyBatchSize" [showManage]="false"
+      (dataChange)="data = $event" [groupRowsBy]="'VendorNo'" [fullData]="fullData" [totalData]="totalData"
+      [groupRowsByName]="'廠商編號'" [showSubTotal]="true" [showTotal]="true" [subtotalLabel]="'小計'"
       (detailWithColValue)="onDetailWithColValue($event)">
       <header>
         <div class="flex justify-content-end align-items-center gap-2">

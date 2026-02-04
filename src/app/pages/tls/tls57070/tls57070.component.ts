@@ -1,23 +1,23 @@
+import { AsyncPipe, NgIf } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Tls57070DataItem, Tls57070Service } from '@service/api/tls/tls57070.service';
-import { HttpResponse } from '@angular/common/http';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
-import { ButtonModule } from 'primeng/button';
-import { ColumnGroup, ReportColumn, formatAmountWithDecimals } from '@shared/componentkit/table-report/table-report.model';
+import { TranslateModule } from '@ngx-translate/core';
+import { Tls57070DataItem, Tls57070Service } from '@service/api/tls/tls57070.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { AsyncPipe, NgIf } from '@angular/common';
-import { convertDateToYYYYMM, formatAmount, formatAmountCN, LazyLoadEvent } from '@shared/componentkit/table/table.model';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { ColumnGroup, formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { convertDateToYYYYMM, formatAmount, formatAmountCN, LazyLoadEvent } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 @Component({
   selector: 'app-tls57070',
@@ -42,7 +42,7 @@ import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-t
 export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     pageIndex: [1],
-    pageSize: [20],
+    pageSize: [30],
     SortBy: [[{ field: 'LOGO_No', order: 1 }]], // 預設排序
     STK_YM: [new Date(), [Validators.required]], // 存貨年月
     HOS_NOList: [null], // 倉別條件
