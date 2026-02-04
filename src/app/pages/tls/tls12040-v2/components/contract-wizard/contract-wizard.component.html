@@ -90,11 +90,15 @@
     <!-- Step 4: Condition -->
     <app-step4-condition
       *ngSwitchCase="3"
-      [conditionItems]="wizardState.conditionItems"
-      [contractInfo]="wizardState.contractInfo"
+      [conditionItems]="$any(wizardState.conditionItems)"
       [commissionType]="currentCommissionType"
+      [crudstatus]="crudstatus"
+      [talentId]="dataForm.get('talent_id')?.value || ''"
+      [contractStartDate]="dataForm.get('tlt_bdate')?.value || ''"
+      [contractEndDate]="dataForm.get('tlt_edate')?.value || ''"
+      [contractInfoData]="contractInfoDataForStep4"
       [isViewMode]="isViewMode"
-      (dataChange)="onStep4DataChange($event)"
+      (conditionItemsChange)="onStep4DataChange($any($event))"
     ></app-step4-condition>
   </div>
 

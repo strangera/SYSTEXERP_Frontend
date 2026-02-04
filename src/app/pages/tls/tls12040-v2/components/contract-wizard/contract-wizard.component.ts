@@ -648,14 +648,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
           remark: item.cag_remark || '',
           mainStartDate: item.cag_bdate || '',
           mainEndDate: item.cag_edate || '',
-          // 明細映射：ChargeDetails → discountSettingItems
-          discountSettingItems: (item.ChargeDetails || []).map((d: Record<string, unknown>) => ({
-            ...d,
-            selected: (d['is_selected'] ?? d['selected'] ?? false) as boolean,
-            is_configured: (d['is_configured'] ?? true) as boolean,
-            is_enabled: (d['is_enabled'] ?? true) as boolean,
-            _status: 'original' as DataStatus
-          })),
+          // 使用 buildCompleteDiscountItems 建立完整的折扣設定列表
+          discountSettingItems: this.buildCompleteDiscountItems(item.ChargeDetails || []),
           // 明細映射：YearChargeDetails → annualPerformanceItems
           annualPerformanceItems: (item.YearChargeDetails || []).map((d: Record<string, unknown>) => ({
             ...d,
@@ -795,16 +789,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
             remark: item['cag_remark'] || '',
             mainStartDate: item['cag_bdate'] || '',
             mainEndDate: item['cag_edate'] || '',
-            discountSettingItems: ((item['ChargeDetails'] as unknown[]) || []).map((d: unknown) => {
-              const detail = d as Record<string, unknown>;
-              return {
-                ...detail,
-                selected: (detail['is_selected'] ?? detail['selected'] ?? false) as boolean,
-                is_configured: (detail['is_configured'] ?? true) as boolean,
-                is_enabled: (detail['is_enabled'] ?? true) as boolean,
-                _status: 'new' as DataStatus
-              };
-            }),
+            // 續約模式：使用 buildCompleteDiscountItems 建立完整的折扣設定列表
+            discountSettingItems: this.buildCompleteDiscountItems(
+              (item['ChargeDetails'] as Record<string, unknown>[]) || [],
+              true  // forRenewal = true
+            ),
             annualPerformanceItems: ((item['YearChargeDetails'] as unknown[]) || []).map((d: unknown) => {
               const detail = d as Record<string, unknown>;
               return {
@@ -1082,6 +1071,27 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
   }
 
   /**
+   * Step 4 用的專櫃契約書資訊陣列
+   */
+  get contractInfoDataForStep4(): Record<string, unknown>[] {
+    const formData = this.dataForm.getRawValue();
+    return [{
+      id: formData.talent_id || 'new',
+      apply_no: formData.apply_no || '',
+      tlt_no: formData.tlt_no || '',
+      tlt_name: formData.tlt_name || '',
+      ven_uniform: formData.ven_uniform || '',
+      VEN_Name: formData.VEN_Name || '',
+      contract_subno: formData.contract_subno || '',
+      tlt_term_type: (formData.tlt_term_type || '').toString().trim(),
+      tlt_bdate: formData.tlt_bdate || '',
+      tlt_edate: formData.tlt_edate || '',
+      tlt_contract_bdate: formData.tlt_contract_bdate || '',
+      tlt_contract_edate: formData.tlt_contract_edate || ''
+    }];
+  }
+
+  /**
    * 取得「下一步」按鈕的動態標籤
    * 依照下一步的步驟名稱顯示，例如「下一步(代扣款設定)」
    */
@@ -1112,5 +1122,88 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     } else {
       this.goToPreviousStep();
     }
+  }
+
+  /**
+   * 生成臨時 ID
+   */
+  private generateTempId(): string {
+    return `temp_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+  }
+
+  /**
+   * 建立完整的折扣設定列表（包含所有折扣選項）
+   * API 資料中存在的會被標記為 selected，不存在的則為未選取狀態
+   * @param existingDetails 既有的折扣設定資料
+   * @param forRenewal 是否為續約模式（續約模式會將所有項目標記為 'new'）
+   */
+  private buildCompleteDiscountItems(
+    existingDetails: Record<string, unknown>[],
+    forRenewal = false
+  ): V2CommissionItem['discountSettingItems'] {
+    const contractStartDate = this.dataForm.get('tlt_bdate')?.value;
+    const contractEndDate = this.dataForm.get('tlt_edate')?.value;
+    const result: V2CommissionItem['discountSettingItems'] = [];
+
+    // 輔助函數：取得字串值
+    const getString = (obj: Record<string, unknown>, key1: string, key2: string, defaultVal = ''): string => {
+      return (obj[key1] || obj[key2] || defaultVal) as string;
+    };
+
+    // 續約模式下的狀態
+    const existingStatus: DataStatus = forRenewal ? 'new' : 'original';
+
+    // 為所有折扣選項建立項目
+    this.discountOptions.forEach((option) => {
+      // 找出此折扣別的既有資料
+      const existingItems = existingDetails.filter(
+        (detail) => getString(detail, 'cag_barcode', 'CAG_BARCODE', '') === option.value
+      );
+
+      if (existingItems.length > 0) {
+        // 有既有資料：為每筆既有資料建立項目（已勾選）
+        existingItems.forEach((existingItem) => {
+          result.push({
+            id: forRenewal ? this.generateTempId() : (existingItem['id'] as number | string),
+            selected: (existingItem['is_selected'] ?? existingItem['selected'] ?? true) as boolean,
+            cag_barcode: getString(existingItem, 'cag_barcode', 'CAG_BARCODE', ''),
+            tlt_bdate: (existingItem['tlt_bdate'] || existingItem['TLT_BDATE'] || contractStartDate) as Date | string,
+            tlt_edate: (existingItem['tlt_edate'] || existingItem['TLT_EDATE'] || contractEndDate) as Date | string,
+            cag_charge_rate: Number(existingItem['cag_charge_rate'] || existingItem['CAG_CHARGE_RATE'] || 0),
+            _status: existingStatus,
+            is_configured: true,
+            is_enabled: true
+          });
+        });
+      } else {
+        // 沒有既有資料：建立未勾選的項目（編輯模式不預設勾選）
+        result.push({
+          id: this.generateTempId(),
+          selected: false,
+          cag_barcode: option.value,
+          tlt_bdate: contractStartDate,
+          tlt_edate: contractEndDate,
+          cag_charge_rate: 0,
+          _status: 'new' as DataStatus,
+          is_configured: false,
+          is_enabled: false
+        });
+      }
+    });
+
+    // 排序：selected 為 true 的排在前面
+    return result.sort((a, b) => {
+      const aSelected = a.selected ? 1 : 0;
+      const bSelected = b.selected ? 1 : 0;
+
+      if (aSelected !== bSelected) {
+        return bSelected - aSelected;
+      }
+
+      // 相同 selected 狀態，按照 discountOptions 順序
+      const aIndex = this.discountOptions.findIndex(opt => opt.value === a.cag_barcode);
+      const bIndex = this.discountOptions.findIndex(opt => opt.value === b.cag_barcode);
+      return aIndex - bIndex;
+    });
   }
 }

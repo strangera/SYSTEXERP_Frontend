@@ -39,7 +39,9 @@ export interface main12060Data {
   ID: number;
   SEQ_ID: string;
   KIND_ID: string;
+  KIND_Name: string;
   KIND_ID_SUB: string;
+  KIND_SubName: string;
   CUST_NAME: string;
   SEX: string;
   CONTACT_ADDR: string;
@@ -49,6 +51,7 @@ export interface main12060Data {
   COMPLAIN_NOTES: string;
   COMPLAIN_DATE: Date;
   SUGG_SOURCE: string;
+  SUGG_SOURCE_NAME: string;
   SUGG_SOURCE_OTHER: string;
   ORG_ID: string;
   MEMBER_ID: string;

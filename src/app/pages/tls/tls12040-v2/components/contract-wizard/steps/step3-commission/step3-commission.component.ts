@@ -33,6 +33,7 @@ import { CommissionCrudService, DetailType } from '../../../../../tls13010-v2/se
 import { CommissionRemarkService } from '../../../../../tls13010-v2/services/commission/commission-remark.service';
 import { CommissionSyncService } from '../../../../../tls13010-v2/services/commission/commission-sync.service';
 import { CommissionDateValidatorService } from '../../../../../tls13010-v2/services/validation/commission-date-validator.service';
+import { CommissionSubmitValidatorService } from '../../../../../tls13010-v2/services/validation/commission-submit-validator.service';
 
 // 子組件
 import {
@@ -68,6 +69,7 @@ export class Step3CommissionComponent implements OnInit, OnChanges {
   private remarkService = inject(CommissionRemarkService);
   private crudService = inject(CommissionCrudService);
   private dateValidator = inject(CommissionDateValidatorService);
+  private submitValidator = inject(CommissionSubmitValidatorService);
 
   // === 輸入屬性 ===
   @Input() commissionItems: CommissionItem[] = [];
@@ -175,47 +177,55 @@ export class Step3CommissionComponent implements OnInit, OnChanges {
     const detail = detailData as DiscountSettingItem | AnnualPerformanceItem | DiscountLevelItem;
     const originalType = (detail as { _originalType?: string })._originalType || 'discount';
 
+    // 找到來源陣列中的原始項目（單向資料流：直接修改來源）
+    if (detail.id == null) return;
+    const sourceItem = this.findSourceItem(parentData, detail.id, originalType as DetailType);
+    if (!sourceItem) return;
+
     // 日期驗證
     if (fieldName === 'tlt_bdate' || fieldName === 'tlt_edate') {
-      if (!this.validateDateField(detail, fieldName, newValue)) {
+      if (!this.validateDateField(sourceItem, fieldName, newValue)) {
         return;
       }
     }
 
-    // 更新欄位值
+    // 更新來源陣列中的欄位值
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (detail as any)[fieldName] = newValue;
+    (sourceItem as any)[fieldName] = newValue;
 
     // 特殊處理：selected 欄位
     if (fieldName === 'selected' && originalType === 'discount') {
-      this.handleDiscountSelectedChange(detail as DiscountSettingItem, parentData, newValue as boolean);
+      this.handleDiscountSelectedChange(sourceItem as DiscountSettingItem, parentData, newValue as boolean);
     }
 
     // 同步 discount 日期到 level
     if ((fieldName === 'tlt_bdate' || fieldName === 'tlt_edate') && originalType === 'discount') {
-      this.syncService.syncDiscountDateToLevel(detail as DiscountSettingItem, parentData);
+      this.syncService.syncDiscountDateToLevel(sourceItem as DiscountSettingItem, parentData);
       parentData.remark = this.remarkService.formatRemarkText(parentData);
     }
 
     // 更新狀態
-    this.crudService.updateItemStatus(detail);
+    this.crudService.updateItemStatus(sourceItem);
     this.crudService.updateItemStatus(parentData);
 
-    this.syncDetailToParentArray(detail, parentData, originalType as DetailType);
+    // 重新產生 detailItems（單向流：來源→顯示）
+    this.crudService.updateDetailItems(parentData);
     this.emitChanges();
   }
 
   onDetailTabChange(event: TabChangeEvent): void {
     const { rowData, tabId } = event;
 
-    this.forceSyncCurrentTabData(rowData);
+    // 切換標籤（來源陣列已是最新，不需要同步）
     rowData.currentTab = tabId;
 
+    // 如果切換到 level 標籤，需要同步折扣設定
     if (tabId === 'level') {
       this.syncService.syncDiscountToLevel(rowData);
       this.syncService.fillLevelContractPeriod(rowData);
     }
 
+    // 更新顯示項目
     this.crudService.updateDetailItems(rowData);
     this.emitChanges();
   }
@@ -230,8 +240,10 @@ export class Step3CommissionComponent implements OnInit, OnChanges {
       contractStartDate: this.contractStartDate,
       contractEndDate: this.contractEndDate,
       discountOptions: this.discountOptions,
+      // 同步第一步驟的參加資訊
       defaultCapSaletype1: this.capSaletype1 === 'Y' || this.capSaletype1 === true,
       defaultCapSaletype2: this.capSaletype2 === 'Y' || this.capSaletype2 === true,
+      defaultCapSaletype3: this.capSaletype3 === 'Y' || this.capSaletype3 === true,
       defaultCapSaletype5: this.capSaletype5 === 'Y' || this.capSaletype5 === true
     });
 
@@ -335,6 +347,25 @@ export class Step3CommissionComponent implements OnInit, OnChanges {
   }
 
   // === 私有方法 ===
+
+  /**
+   * 根據 id 和類型，從來源陣列中找到原始項目
+   */
+  private findSourceItem(
+    parentItem: CommissionItem,
+    itemId: string | number,
+    type: DetailType
+  ): DiscountSettingItem | AnnualPerformanceItem | DiscountLevelItem | undefined {
+    switch (type) {
+      case 'discount':
+        return parentItem.discountSettingItems.find(d => d.id === itemId);
+      case 'annual':
+        return parentItem.annualPerformanceItems.find(a => a.id === itemId);
+      case 'level':
+        return parentItem.discountLevelItems.find(l => l.id === itemId);
+    }
+  }
+
   private handleDeleteLevel(levelItem: DiscountLevelItem, parentData: CommissionItem): void {
     if (levelItem.charged_id) {
       const relatedLevelItems = parentData.discountLevelItems?.filter(
@@ -425,82 +456,19 @@ export class Step3CommissionComponent implements OnInit, OnChanges {
     return true;
   }
 
-  private syncDetailToParentArray(
-    detail: DiscountSettingItem | AnnualPerformanceItem | DiscountLevelItem,
-    parentItem: CommissionItem,
-    type: DetailType
-  ): void {
-    let array: (DiscountSettingItem | AnnualPerformanceItem | DiscountLevelItem)[];
-
-    switch (type) {
-      case 'discount':
-        array = parentItem.discountSettingItems;
-        break;
-      case 'annual':
-        array = parentItem.annualPerformanceItems;
-        break;
-      case 'level':
-        array = parentItem.discountLevelItems;
-        break;
-    }
-
-    const index = array.findIndex(item => item.id === detail.id);
-
-    if (index > -1) {
-      const originalStatus = array[index]._status;
-      Object.assign(array[index], detail);
-      if (detail._status) {
-        array[index]._status = detail._status;
-      } else if (originalStatus === 'original') {
-        array[index]._status = 'modified';
-      }
-    }
-  }
-
-  private forceSyncCurrentTabData(commissionItem: CommissionItem): void {
-    const currentTab = commissionItem.currentTab || 'discount';
-
-    if (!commissionItem.detailItems || commissionItem.detailItems.length === 0) {
-      return;
-    }
-
-    const currentTabItems = (commissionItem.detailItems as { id?: number | string; _originalType?: string }[]).filter(
-      item => item._originalType === currentTab
-    );
-
-    switch (currentTab) {
-      case 'discount':
-        currentTabItems.forEach(item => {
-          const idx = commissionItem.discountSettingItems.findIndex(d => d.id === item.id);
-          if (idx > -1) {
-            Object.assign(commissionItem.discountSettingItems[idx], item);
-          }
-        });
-        break;
-      case 'annual':
-        currentTabItems.forEach(item => {
-          const idx = commissionItem.annualPerformanceItems.findIndex(a => a.id === item.id);
-          if (idx > -1) {
-            Object.assign(commissionItem.annualPerformanceItems[idx], item);
-          }
-        });
-        break;
-      case 'level':
-        currentTabItems.forEach(item => {
-          const idx = commissionItem.discountLevelItems.findIndex(l => l.id === item.id);
-          if (idx > -1) {
-            Object.assign(commissionItem.discountLevelItems[idx], item);
-          }
-        });
-        break;
-    }
-  }
-
   private ensureDataConsistency(item: CommissionItem): void {
+    // 每次進入 Step 3 時，強制重置 currentTab 為 'discount'
+    // 確保從其他步驟切換回來時，預設顯示折扣設定 tab
     item.currentTab = 'discount';
+
+    // 同步折扣到層級
     this.syncService.syncDiscountToLevel(item);
     this.syncService.fillLevelContractPeriod(item);
+
+    // 更新備註
     item.remark = this.remarkService.formatRemarkText(item);
+
+    // 更新 detailItems (基於 currentTab = 'discount')
     this.crudService.updateDetailItems(item);
   }
 
@@ -510,32 +478,12 @@ export class Step3CommissionComponent implements OnInit, OnChanges {
 
   /**
    * 公開方法：在儲存前同步所有資料
+   * 由 contract-wizard 在 onSave 前呼叫
+   *
+   * 單向資料流架構下，來源陣列已經是最新的，不需要額外同步。
+   * 保留此方法以維持 contract-wizard 的呼叫介面。
    */
   public syncAllDataBeforeSave(): void {
-    this.commissionItems.forEach(commission => {
-      if (commission.detailItems && commission.detailItems.length > 0) {
-        commission.detailItems.forEach(item => {
-          const detailWithMeta = item as { id?: number | string; _originalType?: string; _status?: string };
-          const originalType = detailWithMeta._originalType;
-
-          if (originalType === 'discount') {
-            const idx = commission.discountSettingItems.findIndex(d => d.id === detailWithMeta.id);
-            if (idx > -1) {
-              Object.assign(commission.discountSettingItems[idx], item);
-            }
-          } else if (originalType === 'annual') {
-            const idx = commission.annualPerformanceItems.findIndex(a => a.id === detailWithMeta.id);
-            if (idx > -1) {
-              Object.assign(commission.annualPerformanceItems[idx], item);
-            }
-          } else if (originalType === 'level') {
-            const idx = commission.discountLevelItems.findIndex(l => l.id === detailWithMeta.id);
-            if (idx > -1) {
-              Object.assign(commission.discountLevelItems[idx], item);
-            }
-          }
-        });
-      }
-    });
+    // 來源陣列已經是最新的（單向資料流），不需要額外同步
   }
 }
