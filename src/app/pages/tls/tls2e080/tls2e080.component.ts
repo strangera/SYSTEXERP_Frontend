@@ -165,8 +165,21 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
   }
 
   exportZip() {
-    const body = {
-      exportList: this.selectedItems.map(item => {
+    const body: any = {
+      tlt_noList: this.historyRequestBody?.tlt_noList || null,
+      tlt_term_typeList: this.historyRequestBody?.tlt_term_typeList || null,
+      tlt_floorList: this.historyRequestBody?.tlt_floorList || null,
+      sam_yyymm: this.historyRequestBody?.sam_yyymm || null,
+      money_typeList: this.historyRequestBody?.money_typeList || null,
+      sam_termnoList: this.historyRequestBody?.sam_termnoList || null,
+      tlt_buildingList: this.historyRequestBody?.tlt_buildingList || null,
+      check_typeList: this.historyRequestBody?.check_typeList || null,
+      ven_uniform: this.historyRequestBody?.ven_uniform || null,
+      exportList: []
+    };
+
+    if (this.selectedItems.length !== this.totalRecords) {
+      body.exportList = this.selectedItems.map(item => {
         let sam_yyymm_string = '';
         if (item.sam_yyymm) {
           const date = new Date(item.sam_yyymm);
