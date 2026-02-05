@@ -8,8 +8,8 @@ import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatDateTime } from '@shared/componentkit/table-report/table-report.model';
-import { Column, convertDateToYYYYMM, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { convertDateToYYYYMM, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -37,7 +37,7 @@ export class TLS2E060Component extends BasicQueryPageComponent<Tls2e060Data> imp
   totalRecords = 0;
   data: Tls2e060Data[] = [];
   selectedItems: Tls2e060Data[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'adj_no', header: '調整單號', visible: true },
     { field: 'adj_date', header: '調整日期', visible: true, format: formatDate },
     { field: 'sam_yyymm', header: '調整年月', visible: true, format: (v) => convertDateToYYYYMM(v) },

@@ -108,7 +108,7 @@
       <td *ngIf="expansionColumns.length" class="text-center">
         <p-button pRipple [text]="true" [rounded]="true" [plain]="true" severity="secondary"
           [raised]="!expandedRows[rowData?.[dataKey ?? index]]" [loading]="rowData?.expansionLoading"
-          [icon]=" expandedRows[rowData?.[dataKey ?? index]] ? 'pi pi-chevron-down': 'pi pi-chevron-right'" pButton
+          [icon]=" expandedRows[rowData?.[dataKey ?? index]] ? 'pi pi-chevron-down': 'pi pi-chevron-right'"
           (click)="tableUtility.toggleRowExpansionLogic(rowData, dataKey ?? 'id', expansionDataKey, expansionLoadFn, expandedRows, this)"
           [disabled]="rowData?.expansionLoading ||
         (!expansionLoadFn && !rowData?.[expansionDataKey]?.length)" />
@@ -175,7 +175,8 @@
         [attr.colspan]="this.columns.length + (showManage ? 1 : 0) + (showCheckBox ? 1 : 0) + (showReorder ? 1 : 0) + 1"
         class="p-0">
         <app-table-expansion [rowData]="rowData" [expansionDataKey]="expansionDataKey"
-          [expansionColumns]="expansionColumns" [expansionMultiSortMeta]="expansionMultiSortMeta" />
+          [expansionColumns]="expansionColumns" [expansionMultiSortMeta]="expansionMultiSortMeta"
+          [expansionShowSort]="expansionShowSort" [expansionShowReorder]="expansionShowReorder" />
       </td>
     </tr>
     <tr *ngIf="rowData && isGroupLastRow(rowData, rowIndex) && hasSubtotalColumns()"
