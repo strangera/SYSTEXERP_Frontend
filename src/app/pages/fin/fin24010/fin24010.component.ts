@@ -125,9 +125,6 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
 
   ngOnInit(): void {
     this.initializePage('FIN24010', 'fin/fin24010cru', this.queryForm, (form) => this.onSubmit(form));
-    this.fin24010Service.queryBankAccount().pipe(untilDestroyed(this)).subscribe(response => {
-      this.VEN_BNK_No_ParamOptions = response.Data;
-    });
   }
 
   // ----------------------------------------------------------------
