@@ -18,7 +18,6 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 @Component({
   selector: 'app-fin21030-cru',
   templateUrl: './fin21030-cru.component.html',
-  styleUrl: './fin21030-cru.component.scss',
   standalone: true,
   imports: [
     MultiSelectComponent,

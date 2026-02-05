@@ -54,8 +54,7 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   public readonly totalRecords = signal(0);
   public readonly selectedItems = signal<TLS26080Data[]>([]);
 
-  public readonly editDisabled = (rowData: TLS26080Data) =>
-    !rowData.CanEdit || rowData.pod_status === ApprovalStatus.已核准;
+  public readonly editDisabled = (rowData: TLS26080Data) => !rowData.CanEdit;
   public readonly isRowSelectable = (rowData: TLS26080Data) => rowData.pod_status !== ApprovalStatus.刪除;
 
   /** 組裝查詢 payload，供 onSubmit 與 queryFunction 使用 */
