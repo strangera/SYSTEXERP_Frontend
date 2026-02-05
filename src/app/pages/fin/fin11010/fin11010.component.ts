@@ -7,14 +7,20 @@ import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { ExportLabelService } from '@service/utility/exportLabel.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { FIN11010Data, FIN11010Service, FIN11010UpdateStatusRequest } from '../../../service/api/fin/fin11010.service';
+import {
+  FIN11010Data,
+  FIN11010QueryRequest,
+  FIN11010Service,
+  FIN11010UpdateStatusRequest
+} from '../../../service/api/fin/fin11010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig, formatYN } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { AddButton, formatYN, ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BaseDeleteRequest } from '../../../shared/models/api/base-api.interface';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
@@ -30,7 +36,7 @@ import { YearMonthComponent } from '../fin11020/query-year-month/query-year-mont
     ReactiveFormsModule,
     InputTextComponent,
     MultiSelectComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     YearMonthComponent
   ]
@@ -49,7 +55,7 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
 
   totalRecords = 0;
   data: FIN11010Data[] = [];
-  selectedItems: FIN11010Data[] = [];
+  lastQueryBody?: FIN11010QueryRequest;
 
   // #region 下拉選單選項定義
   // 總繳代號選項
@@ -62,7 +68,7 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
   cityOptions = getSYS1000Options('STO_City');
   // #endregion
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'id', header: '序號', visible: false },
     { field: 'STO_Uniform', header: '營業人統編', visible: true },
     { field: 'STO_TaxName', header: '營業人名稱', visible: true },
@@ -108,14 +114,55 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
     this.initializePage('FIN11010', 'fin/fin11010cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
+  queryFunction = (body: any) => {
+    const raw = this.queryForm.getRawValue();
+    const pageSize = body.pageSize ?? body.PageSize ?? 30;
+    const pageIndex = body.pageIndex ?? body.PageIndex ?? 1;
+    const payload: FIN11010QueryRequest = {
+      STO_Uniform: raw.STO_Uniform || undefined,
+      STO_TaxName: raw.STO_TaxName || undefined,
+      STO_Addr: raw.STO_Addr || undefined,
+      REP_OrgCodeList: (raw.REP_OrgCodeList as unknown as string[] | undefined)?.length
+        ? (raw.REP_OrgCodeList as unknown as string[])
+        : undefined,
+      STO_StatusList: (raw.STO_StatusList as unknown as string[] | undefined)?.length
+        ? (raw.STO_StatusList as unknown as string[])
+        : undefined,
+      REP_GUIYM_start: raw.REP_GUIYM_start || undefined,
+      REP_GUIYM_end: raw.REP_GUIYM_end || undefined,
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: body.SortBy,
+    };
+    return this.fin11010Service.queryFIN11010(payload);
+  };
+
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.fin11010Service.queryFIN11010(frm.value)
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+      const raw = frm.getRawValue();
+      this.lastQueryBody = {
+        STO_Uniform: raw.STO_Uniform || undefined,
+        STO_TaxName: raw.STO_TaxName || undefined,
+        STO_Addr: raw.STO_Addr || undefined,
+        REP_OrgCodeList: (raw.REP_OrgCodeList as unknown as string[] | undefined)?.length
+          ? (raw.REP_OrgCodeList as unknown as string[])
+          : undefined,
+        STO_StatusList: (raw.STO_StatusList as unknown as string[] | undefined)?.length
+          ? (raw.STO_StatusList as unknown as string[])
+          : undefined,
+        REP_GUIYM_start: raw.REP_GUIYM_start || undefined,
+        REP_GUIYM_end: raw.REP_GUIYM_end || undefined,
+        PageSize: raw.pageSize ?? 30,
+        PageIndex: raw.pageIndex ?? 1,
+        SortBy: raw.SortBy,
+      };
+      this.loading = true;
+      this.queryStateService.setQueryState(this.ProgNo, raw);
+      this.queryFunction(this.lastQueryBody)
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
         .subscribe(response => {
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
   }
