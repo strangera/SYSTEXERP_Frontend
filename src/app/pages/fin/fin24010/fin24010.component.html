@@ -72,7 +72,7 @@
           </div>
           <!-- VEN_BNK_No_Param: 匯款銀行代號 (Dropdown) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="匯款銀行代號" controlName="VEN_BNK_No_Param" [options]="VEN_BNK_No_ParamOptions"
+            <app-dropdown label="匯款銀行代號" controlName="VEN_BNK_No_Param" [options]="VEN_BNK_No_ParamOptions | async"
               optionLabel="DisplayText" optionValue="BNK_id" [control]="queryForm.controls.VEN_BNK_No_Param"
               [submitted]="submitted"></app-dropdown>
           </div>

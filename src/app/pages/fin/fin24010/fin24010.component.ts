@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Fin24010Service, QueryBankAccountRequest, QueryFIN24010Request, QueryFIN24010Response } from '@service/api/fin/fin24010.service';
+import { Fin24010Service, QueryFIN24010Request, QueryFIN24010Response } from '@service/api/fin/fin24010.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -105,7 +105,7 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
   // 下拉選單/多選列表的 Options 宣告 (必須與 HTML 中的 options 屬性對應)
   Org_IdOptions = this.dropDown.querySys3100(); // 組織代碼
   PayTypeOptions = getSYS1000Options('VEN_PayType'); // 付款方式 1:電匯,2:開票,3:現金
-  VEN_BNK_No_ParamOptions: QueryBankAccountRequest[] = []; // 匯款銀行代號
+  VEN_BNK_No_ParamOptions = this.dropDown.queryAps1001_DropDownList(); // 匯款銀行代號
   VEN_No_ParamOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
   AccNo_ParamOptions = this.dropDown.queryGls1005(); // 會計科目代號
   VouStatusOptions = getSYS1000Options('VOU_Status'); // 傳票狀態
