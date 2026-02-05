@@ -51,6 +51,7 @@ import {
   TalentChargeItem,
   TalentChargeQuery,
   TalentItem,
+  TalentOpenFlagQuery,
   TalentQuery,
   TalentStatusQuery,
   TalentStoreWayQuery,
@@ -569,6 +570,12 @@ export class DropdownApiService {
   /** 查詢專櫃(TLTTALENT) (依照館別、樓層、區域等查詢) */
   queryTalent(body: TalentQuery): Observable<TalentItem[] | null> {
     return this.queryDropdownWithParams<TalentItem, TalentQuery>('/queryTalentDropDownList', body).pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  queryTltTalentOpenFlag(body: TalentOpenFlagQuery): Observable<IDropdownItem[] | null> {
+    return this.queryDropdownWithParams<IDropdownItem, TalentOpenFlagQuery>('/queryTLTTALENT_tlt_openflag_DropDownList', body).pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }

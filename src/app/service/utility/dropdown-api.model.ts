@@ -222,6 +222,14 @@ export interface TalentChargeQuery {
 }
 
 /**
+ * 查詢 TLTTALENT_tlt_openflag_DropDownList 時的請求 body
+ */
+export interface TalentOpenFlagQuery {
+  /** 廠商編號 */
+  VEN_No: string;
+}
+
+/**
  * 查詢 queryTLTTALENTDropDownList 時的請求 body
  */
 export interface TLTTALENTItem {
@@ -320,6 +328,8 @@ export interface TalentQuery {
   tlt_no?: string;
   tlt_name?: string;
   ven_no?: string;
+  tlt_bdate?: string | null;
+  tlt_edate?: string | null;
 }
 
 /**

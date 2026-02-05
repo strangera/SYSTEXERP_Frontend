@@ -1,16 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn, ColumnGroup, formatDate } from '@shared/componentkit/table-report/table-report.model';
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { FIN11080Data, FIN11080Service } from '@service/api/fin/fin11080.service';
-import { DatePipe } from '@angular/common';
+import { FIN11080Data, FIN11080QueryRequest, FIN11080Service } from '@service/api/fin/fin11080.service';
+import { removeEmptyValues } from '@shared/utils/object-utils';
 import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
@@ -25,7 +25,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
     FormsModule,
     ReactiveFormsModule,
     CalendarRangeComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
   ]
 })
@@ -33,14 +33,16 @@ export class FIN11080Component extends BasicQueryPageComponent<FIN11080Data> imp
   queryForm = this.formBuilder.group({
     TXN_Date_Start: ['', Validators.required], // 銷售日期_起
     TXN_Date_End: ['', Validators.required], // 銷售日期_訖
-    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }])
+    pageSize: [30],
+    pageIndex: [1],
   });
 
-  totalRecords = 0;
-  data: FIN11080Data[] = [];
-  selectedItems: FIN11080Data[] = [];
+  readonly tableData = signal<FIN11080Data[]>([]);
+  readonly totalRecords = signal<number>(0);
+  readonly tableLoading = signal<boolean>(false);
+  lastQueryBody?: FIN11080QueryRequest;
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'TXN_Date', header: '交易日期', visible: true, format: formatDate },
     { field: 'TxnCount_Normal_A', header: '一般交易(A)', visible: true, groupField: 'group1' },
     { field: 'TxnCount_VoidOrReturn_B', header: '作廢退貨(B)', visible: true, groupField: 'group1' },
@@ -51,21 +53,20 @@ export class FIN11080Component extends BasicQueryPageComponent<FIN11080Data> imp
     { field: 'CNT', header: '發票是否重號', visible: true }
   ];
 
-  columnGroup = [
+  columnGroup: ColumnGroup[] = [
     { field: 'group1', header: '交易筆數' },
     { field: 'group2', header: '實際產生電子發票筆數' }
   ];
 
-  expansionColumns: Column[] = [
-    { field: 'TXN_Date', header: '交易日期', hidden: true, format: formatDate },
+  expansionColumns: ReportColumn[] = [
+    { field: 'TXN_Date', header: '交易日期', visible: false, format: formatDate },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true },
     { field: 'TXN_GUINo', header: '發票號碼', visible: true }
   ]
 
   constructor(
-    private fin11080Service: FIN11080Service,
-    private datePipe: DatePipe
+    private fin11080Service: FIN11080Service
   ) {
     super();
   }
@@ -74,20 +75,45 @@ export class FIN11080Component extends BasicQueryPageComponent<FIN11080Data> imp
     this.initializePage('FIN11080', 'fin/fin11080cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
+  queryFunction = (body: any) => {
+    const raw = this.queryForm.getRawValue();
+    const pageSize = body.pageSize ?? body.PageSize ?? 30;
+    const pageIndex = body.pageIndex ?? body.PageIndex ?? 1;
+    const payload: FIN11080QueryRequest = {
+      MID: 0,
+      SYS_StoreNo: '10',
+      TXN_Date_Start: raw.TXN_Date_Start ?? '',
+      TXN_Date_End: raw.TXN_Date_End ?? '',
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: body.SortBy,
+    };
+    const clean = removeEmptyValues(payload) as FIN11080QueryRequest;
+    return this.fin11080Service.queryFIN11080(clean);
+  };
+
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const requestData = {
-        MID: 0, // 固定為0
-        SYS_StoreNo: '10', // 固定為'10'
-        ...frm.getRawValue(),
-      };
+      const raw = frm.getRawValue();
+      this.lastQueryBody = {
+        MID: 0,
+        SYS_StoreNo: '10',
+        TXN_Date_Start: raw.TXN_Date_Start ?? '',
+        TXN_Date_End: raw.TXN_Date_End ?? '',
+        PageSize: raw.pageSize ?? 30,
+        PageIndex: raw.pageIndex ?? 1,
+      } as FIN11080QueryRequest;
 
-      this.fin11080Service.queryFIN11080(requestData)
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-        .subscribe(response => {
-          this.data = response.Data;
-          this.totalRecords = response.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+      this.tableLoading.set(true);
+      this.queryStateService.setQueryState(this.ProgNo, raw);
+      this.queryFunction(this.lastQueryBody)
+        .pipe(untilDestroyed(this), finalize(() => { this.tableLoading.set(false); this.loading = false; }))
+        .subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.tableData.set(res.Data ?? []);
+            this.totalRecords.set(res.TotalCount ?? 0);
+          },
         });
     });
   }

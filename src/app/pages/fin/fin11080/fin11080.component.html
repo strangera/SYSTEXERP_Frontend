@@ -23,10 +23,11 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="fin11080" dataKey="TXN_Date" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [lazy]="false" [loading]="loading" [showManage]="false" [showDelete]="false"
-    [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }]" [expansionColumns]="expansionColumns"
-    [expansionDataKey]="'TXN_GUINo'" [expansionLoadFn]="loadExpansionData" [columnGroup]="columnGroup">
-  </app-table>
+  <app-table-report tableKey="fin11080" dataKey="TXN_Date" [data]="tableData()" [columns]="columns"
+    [totalRecords]="totalRecords()" [loading]="tableLoading()"
+    [lastQueryBody]="lastQueryBody" [queryFunction]="queryFunction"
+    [showCheckBox]="false" [showManage]="false" [showDelete]="false"
+    [columnGroup]="columnGroup" [expansionColumns]="expansionColumns"
+    expansionDataKey="TXN_GUINo" [expansionLoadFn]="loadExpansionData">
+  </app-table-report>
 </div>
