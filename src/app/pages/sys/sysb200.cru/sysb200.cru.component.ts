@@ -37,7 +37,6 @@ function safeValidator(
 @Component({
   selector: 'app-sysb200-cru',
   templateUrl: './sysb200.cru.component.html',
-  styleUrls: ['./sysb200.cru.component.scss'],
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, RadiobuttonComponent, TableComponent, NgIf, AsyncPipe, TranslateModule, InputNumberComponent]
 })
