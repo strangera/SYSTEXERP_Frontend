@@ -48,7 +48,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 export class TLS57010Component extends BasicQueryPageComponent<Tls57010DataItem> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     pageIndex: [1],
-    pageSize: [20],
+    pageSize: [30],
     SortBy: [[{ field: 'PO_No', order: 1 }]], // 預設排序
     APPLY_Date_Start: [new Date()],
     APPLY_Date_End: [new Date()],

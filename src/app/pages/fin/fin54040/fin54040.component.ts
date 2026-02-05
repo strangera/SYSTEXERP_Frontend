@@ -60,6 +60,7 @@ export class FIN54040Component extends BasicQueryPageComponent<any> implements O
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+          this.messageService.successBubble(response.Message || '查詢成功');
         });
     });
   }

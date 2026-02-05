@@ -9,10 +9,8 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-
-          <app-input-text class=" col-12 md:col-6 lg:col-4 " label="反年結" controlName="vendorSName"
-            [control]="queryForm.controls.vendorSName" [submitted]="submitted" [readonly]="true"></app-input-text>
-
+          <app-calendar class="col-12 md:col-6 lg:col-4" label="反年結" calendarType="dateYearOne"
+            [control]="queryForm.controls.vendorSName" [submitted]="submitted"></app-calendar>
         </div>
         <div class="justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" style="display: flex;">
           <app-button btnType="clear" [form]="queryForm"></app-button>

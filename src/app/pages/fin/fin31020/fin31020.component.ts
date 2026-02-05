@@ -32,7 +32,10 @@ export class FIN31020Component extends BasicQueryPageComponent<FIN31020Data> imp
     pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'CAR_AccNo', order: 1 }]],
+
   });
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
+
   AccNoOptions: { label: string; value: string }[] = []; // 科目代號選項
   selectedItems: FIN31020Data[] = [];
   totalRecords = 0
