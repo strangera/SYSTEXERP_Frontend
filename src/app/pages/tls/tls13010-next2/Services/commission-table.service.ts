@@ -210,16 +210,19 @@ export class CommissionTableService {
     // 統一轉換為 Y/N 字串格式
     const defaultCapSaletype1 = this.convertToBoolean(step1Data?.cap_saletype1);
     const defaultCapSaletype2 = this.convertToBoolean(step1Data?.cap_saletype2);
+    const defaultCapSaletype3 = this.convertToBoolean(step1Data?.cap_saletype3);
     const defaultCapSaletype5 = this.convertToBoolean(step1Data?.cap_saletype5);
 
     console.log('🆕 新增抽成項目時的 cap_saletype 預設值:', {
       step1原始資料: {
         cap_saletype1: step1Data?.cap_saletype1,
-        cap_saletype2: step1Data?.cap_saletype2
+        cap_saletype2: step1Data?.cap_saletype2,
+        cap_saletype3: step1Data?.cap_saletype3
       },
       轉換後YN值: {
         defaultCapSaletype1,
-        defaultCapSaletype2
+        defaultCapSaletype2,
+        defaultCapSaletype3
       }
     });
 
@@ -236,6 +239,7 @@ export class CommissionTableService {
       // 關鍵修正：使用 Y/N 字串格式
       cap_saletype1: defaultCapSaletype1,
       cap_saletype2: defaultCapSaletype2,
+      cap_saletype3: defaultCapSaletype3,
       cap_saletype5: defaultCapSaletype5,
 
       selectedSettingOption: 'discount',

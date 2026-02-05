@@ -35,7 +35,9 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
     TXN_DateStart: [yesterday, Validators.required],
     TXN_DateEnd: [yesterday, Validators.required],
     ...createPaginationConfig(this.multiSortMeta),
+    pageSize: [30],
   });
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
   data: any[] = [];
   totalRecords = 0;

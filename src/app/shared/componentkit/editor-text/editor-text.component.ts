@@ -6,7 +6,7 @@ import { EditorInitEvent, EditorModule, EditorTextChangeEvent } from 'primeng/ed
 import { environment } from 'src/environments/environment';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { editorModules, validateHtmlContent } from './editor.model';
+import { editorModules } from './editor.model';
 @Component({
   selector: 'app-editor-text',
   templateUrl: './editor-text.component.html',
@@ -37,7 +37,7 @@ export class EditorTextComponent extends BasicKitComponent implements OnInit {
   }
   ngOnInit(): void {
     this.initControl(this.control);
-    validateHtmlContent(this.control.value, this.control);
+    // validateHtmlContent(this.control.value, this.control);
     // 因為輸入後再全空會有剩下html標籤，所以把他刪掉
     this.control.valueChanges.subscribe((value) => {
       if (!value) return;
@@ -45,7 +45,7 @@ export class EditorTextComponent extends BasicKitComponent implements OnInit {
       if (isOnlyHtmlTags) {
         this.control.setValue('');
       }
-      validateHtmlContent(value, this.control); // 驗證html標籤，自訂義
+      // validateHtmlContent(value, this.control); // 驗證html標籤，自訂義
     });
   }
 

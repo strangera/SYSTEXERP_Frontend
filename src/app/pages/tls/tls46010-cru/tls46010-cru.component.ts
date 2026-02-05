@@ -1,20 +1,20 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
 // import { Tls46010Service } from '../../../service/api/tls/tls46010.service';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Tls46010Service } from '../../../service/api/tls/tls46010.service';
-import { Subscription } from 'rxjs';
-import { UserInfo } from '../../../shared/models/system/userInfo';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common';
 import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { Subscription } from 'rxjs';
+import { Tls46010Service } from '../../../service/api/tls/tls46010.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { NgIf } from '@angular/common';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { UserInfo } from '../../../shared/models/system/userInfo';
 export interface Pos10015 {
   id: number;
   SYS_StoreNo: string;
@@ -41,11 +41,11 @@ export interface Pos10015 {
 
 
 @Component({
-    selector: 'app-tls46010-cru',
-    templateUrl: './tls46010-cru.component.html',
-    styleUrls: ['./tls46010-cru.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputNumberComponent, NgIf, TranslateModule]
+  selector: 'app-tls46010-cru',
+  templateUrl: './tls46010-cru.component.html',
+  styleUrls: ['./tls46010-cru.component.scss'],
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputNumberComponent, NgIf, TranslateModule]
 })
 export class TLS46010CRUComponent extends BasicCruPageComponent<Pos10015> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
@@ -54,9 +54,9 @@ export class TLS46010CRUComponent extends BasicCruPageComponent<Pos10015> implem
     SYS_SrvStatus: ['A', [Validators.required]],
     SYS_SrvIP: ['', [Validators.required, Validators.maxLength(40)]],
     SYS_SrvPort: [20, [Validators.required]],
-    SYS_SrvName: ['',[Validators.required, Validators.maxLength(40)]],
-    SYS_SrvUsrID: ['',[Validators.required, Validators.maxLength(20)]],
-    SYS_SrvUsrPwd: ['',[Validators.required, Validators.maxLength(20)]],
+    SYS_SrvName: ['', [Validators.required, Validators.maxLength(40)]],
+    SYS_SrvUsrID: ['', [Validators.required, Validators.maxLength(20)]],
+    SYS_SrvUsrPwd: ['', [Validators.required, Validators.maxLength(20)]],
     SYS_SRVDDir: [''],
     SYS_SRVUDir: [''],
     SYS_MyPOSDDir: ['/MyPOSDown'],
@@ -106,7 +106,7 @@ export class TLS46010CRUComponent extends BasicCruPageComponent<Pos10015> implem
           if (this.canAdd()) {
             this.apiService.insertTLS0000(body).subscribe(() => {
               this.messageService.successBubble(this.translate.instant('success_message'));
-              this.dataForm.reset();
+              this.onCancel();
             });
           }
           break;

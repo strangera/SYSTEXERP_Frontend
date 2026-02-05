@@ -179,4 +179,9 @@ export const tlsRoutes: Routes = [
   { path: 'tls57160', loadComponent: () => import('./tls57160/tls57160.component').then(m => m.TLS57160Component), data: { progNo: 'TLS57160' } },
   // 存貨評價分析表
   { path: 'tls57190', loadComponent: () => import('./tls57190/tls57190.component').then(m => m.TLS57190Component), data: { progNo: 'TLS57190' } },
+
+  // 專櫃暫存傳票查詢作業
+  { path: 'tls2c040', loadComponent: () => import('./tls2c040/tls2c040.component').then(m => m.TLS2C040Component), data: { progNo: 'TLS2C040' } },
+  // 專櫃暫存傳票查詢作業 CRU
+  { path: 'tls2c040cru', loadComponent: () => import('./tls2c040-cru/tls2c040-cru.component').then(m => m.TLS2C040CRUComponent), data: { progNo: 'TLS2C040' } },
 ];

@@ -36,7 +36,10 @@ export class TLS46030Component extends BasicQueryPageComponent<any> implements O
     ECR_SchFinTime_End: [null], // 排程作業完成時間(訖)
     ECR_FLD_ID: [''], // 異動類型
     ...createPaginationConfig([{ field: 'ECR_SchNo', order: 1 }]),
+    pageSize: [30],
   });
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
+
   selectedItems: any[] = [];
   data: any[] = [];
   totalRecords = 0;

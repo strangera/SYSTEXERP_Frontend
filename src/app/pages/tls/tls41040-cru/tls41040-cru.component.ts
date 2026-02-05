@@ -15,7 +15,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
 
@@ -38,7 +37,6 @@ export interface TLS41040Detail {
 @Component({
   selector: 'app-tls41040-cru',
   templateUrl: './tls41040-cru.component.html',
-  styleUrls: ['./tls41040-cru.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -51,14 +49,12 @@ export interface TLS41040Detail {
     RadiobuttonComponent,
     ButtonComponent,
     CommonModule,
-    TableComponent,
     InputTextareaComponent,
     TableEditComponent,
   ]
 })
 export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   private originalSnapshot: TLS41040Detail[] = [];
-  // ===== 主檔表單 =====
   dataForm = this.formBuilder.group({
     NOT_DateTime: [new Date(), [Validators.required]],
     NOT_BegDateTime: [new Date(), [Validators.required]],

@@ -143,16 +143,17 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
       } catch (error) {
         console.warn('日期格式轉換失敗:', this.control.value);
       }
-    } else if (this.control.value instanceof Date && !this.timeOnly) {
-      // 如果已經是 Date 物件，確保移除時間（timeOnly 模式需保留時間）
-      const dateOnly = new Date(
-        this.control.value.getFullYear(),
-        this.control.value.getMonth(),
-        this.control.value.getDate()
-      );
-      if (dateOnly.getTime() !== this.control.value.getTime()) {
-        this.control.setValue(dateOnly, { emitEvent: false });
-      }
+      // !!!此處造成時間被強制歸0，請在自己的作業提交前做轉換避免在共通元件做處理(不懂之處請參考PrimeNg文檔)
+      // } else if (this.control.value instanceof Date && !this.timeOnly) {
+      //   // 如果已經是 Date 物件，確保移除時間（timeOnly 模式需保留時間）
+      //   const dateOnly = new Date(
+      //     this.control.value.getFullYear(),
+      //     this.control.value.getMonth(),
+      //     this.control.value.getDate()
+      //   );
+      //   if (dateOnly.getTime() !== this.control.value.getTime()) {
+      //     this.control.setValue(dateOnly, { emitEvent: false });
+      //   }
     }
     // 監聽 control 值變化
     this.valueChangeSubscription = this.control.valueChanges.subscribe((val) => {

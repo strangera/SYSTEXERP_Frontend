@@ -1,18 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, EventEmitter, Input, OnInit, OnChanges, SimpleChanges, Output, ChangeDetectionStrategy } from '@angular/core';
+import { NgClass, NgFor, NgIf } from '@angular/common';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { TableRowSelectEvent } from 'primeng/table';
-import { DropdownChangeEvent } from 'primeng/dropdown';
-import { AutoCompleteCompleteEvent, AutoCompleteSelectEvent, AutoCompleteModule } from 'primeng/autocomplete';
-import { NgIf, NgClass, NgFor } from '@angular/common';
-import { PrimeTemplate } from 'primeng/api';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonDirective } from 'primeng/button';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
-import { DialogModule } from 'primeng/dialog';
-import { TableComponent } from '../table/table.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
+import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { PrimeTemplate } from 'primeng/api';
+import { AutoCompleteCompleteEvent, AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
+import { ButtonDirective } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { DropdownChangeEvent } from 'primeng/dropdown';
+import { InputTextModule } from 'primeng/inputtext';
+import { TableRowSelectEvent } from 'primeng/table';
 
 export interface InputGroupColumn {
   field: string;     // 欄位名稱 (資料的欄位名稱)

@@ -50,7 +50,7 @@ export class SYSBR10CRUComponent extends BasicCruPageComponent<QuerySYSBR10Respo
   detailList = signal<QuerySYSBR10DetailResponse[]>([]);
 
   dataForm = this.formBuilder.nonNullable.group({
-    Pub_StartDate: [null as Date | null, Validators.required],
+    Pub_StartDate: [new Date(), Validators.required],
     Pub_EndDate: [null as Date | null, Validators.required],
     pub_enable: ['N', Validators.required],
     Pub_Type: [null as string | null, Validators.required],

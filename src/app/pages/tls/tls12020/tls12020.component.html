@@ -4,99 +4,39 @@
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="位置編號"
-            controlName="location_no"
-            [options]="locationOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.location_no"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="位置編號" controlName="location_no"
+            [options]="locationOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.location_no" [submitted]="submitted"></app-dropdown>
 
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="廠商統一編號"
-            controlName="ven_uniform"
-            [options]="vendorUIDOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.ven_uniform"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商統一編號" controlName="ven_uniform"
+            [options]="vendorUIDOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.ven_uniform" [submitted]="submitted"></app-dropdown>
 
-          <app-input-text
-            class="col-12 md:col-6 lg:col-4"
-            label="廠商名稱(中文)"
-            controlName="VEN_Name"
-            [control]="queryForm.controls.VEN_Name"
-            [submitted]="submitted"
-          ></app-input-text>
-          <app-input-text
-            class="col-12 md:col-6 lg:col-4"
-            label="廠商名稱(英文)"
-            controlName="VEN_EngName"
-            [control]="queryForm.controls.VEN_EngName"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="廠商名稱(中文)" controlName="VEN_Name"
+            [control]="queryForm.controls.VEN_Name" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="廠商名稱(英文)" controlName="VEN_EngName"
+            [control]="queryForm.controls.VEN_EngName" [submitted]="submitted"></app-input-text>
 
-          <app-calendar-range
-            class="col-12 md:col-6 lg:col-4"
-            calendarType="dateRange"
-            label="訪談日期"
-            [startControl]="queryForm.controls.InterviewDateStart"
-            [endControl]="queryForm.controls.InterviewDateEnd"
-            [submitted]="submitted"
-          ></app-calendar-range>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="訪談日期"
+            [startControl]="queryForm.controls.InterviewDateStart" [endControl]="queryForm.controls.InterviewDateEnd"
+            [submitted]="submitted"></app-calendar-range>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="館別"
-              controlName="building_no"
-              [options]="buildingNoOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.building_no"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="館別" controlName="building_no" [options]="buildingNoOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.building_no" [submitted]="submitted"></app-dropdown>
           </div>
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="訪談人員"
-            controlName="contact_USR_Name"
-            [options]="contact_USR_NameOptions"
-            optionLabel="Name"
-            optionValue="No"
-            [control]="queryForm.controls.contact_USR_Name"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="訪談人員" controlName="contact_USR_Name"
+            [options]="contact_USR_NameOptions" optionLabel="Name" optionValue="No"
+            [control]="queryForm.controls.contact_USR_Name" [submitted]="submitted"></app-dropdown>
 
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="意願等級"
-            controlName="willing_level"
-            [options]="willinglevelOptions"
-            optionLabel="label"
-            optionValue="No"
-            [control]="queryForm.controls.willing_level"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="意願等級" controlName="willing_level"
+            [options]="willinglevelOptions" optionLabel="label" optionValue="No"
+            [control]="queryForm.controls.willing_level" [submitted]="submitted"></app-dropdown>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -106,22 +46,10 @@
 </div>
 
 <div class="card">
-  <app-table
-    dataKey="id"
-    [data]="data"
-    [columns]="columns"
-    (edit)="onEdit($event)"
-    [showCheckBox]="false"
-    (selectionChange)="selectedItems = $event"
-    [selectedItems]="selectedItems"
-    [multiSortMeta]="[{ field: 'location_no', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [lazy]="true"
-    [loading]="loading"
-    [showPaginator]="true"
-    [showReportMode]="true"
-    (detail)="onDetail($event)"
-  ></app-table>
+  <app-table dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)" [showCheckBox]="false"
+    [expansionRows]="30" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
+    [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]" [rows]="30" [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
+    [multiSortMeta]="[{ field: 'location_no', order: 1 }]" [totalRecords]="totalRecords" [showDelete]="false"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+    [showPaginator]="true" [showReportMode]="true" (detail)="onDetail($event)"></app-table>
 </div>

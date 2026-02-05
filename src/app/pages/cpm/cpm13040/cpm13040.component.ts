@@ -44,7 +44,10 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
     Org_ID: [''],
     TLT_No: [''],
     ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
+    pageSize: [30],
   });
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
+
   selectedItems: any[] = [];
   totalRecords = 0;
   data: any[] = []; // 明細表資料
@@ -95,7 +98,7 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
       .subscribe(res => {
         this.org_id_Options = (res.Data || []).map(item => ({
           ...item,
-          label: `${item.No} ${item.Name}`,
+          label: `${item.No}-${item.Name}`,
           value: item.No
         }));
       });

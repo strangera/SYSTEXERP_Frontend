@@ -166,7 +166,7 @@
           <div [ngStyle]="{ border: '1px solid var(--surface-border)', 'border-left': '0'}"></div>
           <p-button *ngFor="let btn of addButton" [pTooltip]="btn.label" tooltipPosition="top" [icon]="btn.icon"
             (click)="btn.action(rowData, $event)" [disabled]="btn.disabled ? btn.disabled(rowData) : false"
-            [loading]="buttonsLoading" />
+            [loading]="buttonsLoading" [label]="btn.icon ? undefined : btn.label" styleClass="p-button-text" />
         </ng-container>
       </td>
     </tr>
@@ -246,24 +246,6 @@
           </span>
         </td>
       </ng-container>
-      <td [hidden]="!showManage" class="text-center" alignFrozen="right" pFrozenColumn [frozen]="true"></td>
-    </tr>
-    <!-- 額外 footer（最小還原）：顯示不對應欄位的額外資料，不改變既有 footerData 行為 -->
-    <tr *ngIf="extraFooterData" class="bg-gray-200">
-      <td [colSpan]="(showReorder ? 1 : 0) + (showCheckBox ? 1 : 0)" pFrozenColumn></td>
-      <td *ngIf="expansionColumns.length"></td>
-      <td [attr.colspan]="columns.length" style="padding:6px">
-        <div style="display:flex;flex-wrap:nowrap;justify-content:flex-end;align-items:center;gap:12px">
-          <ng-container *ngFor="let item of getExtraFooterArray(); let last = last">
-            <div style="display:inline-flex;align-items:center;gap:8px;min-width:180px;white-space:nowrap;">
-              <span style="color:var(--text-secondary);font-size:0. ninerem">{{ item.label }} :</span>
-              <span class="font-bold">{{ item.value }}</span>
-              <span *ngIf="!last"
-                style="display:inline-block;width:1px;height:18px;background:var(--surface-border);margin-left:8px"></span>
-            </div>
-          </ng-container>
-        </div>
-      </td>
       <td [hidden]="!showManage" class="text-center" alignFrozen="right" pFrozenColumn [frozen]="true"></td>
     </tr>
   </ng-template>

@@ -27,12 +27,12 @@
   </p-accordion>
 </div>
 
-<app-dialog [visible]="rcvDialogVisible" header="選擇收貨單號" (visibleChange)="rcvDialogVisible = $event"
+<app-dialog [visible]="rcvDialogVisible" header="選擇收款單號" (visibleChange)="rcvDialogVisible = $event"
   (save)="onSelectRCVNo()" [disable]="selectedItemsDialog.length === 0">
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQueryRcvNo()">
     <div class="grid p-fluid">
       <div class="col-12 md:col-6">
-        <app-input-text class="col-12" label="收貨單號" controlName="RCV_No"
+        <app-input-text class="col-12" label="收款單號" controlName="RCV_No"
           [control]="dialogQueryForm.controls.RCV_No"></app-input-text>
       </div>
     </div>

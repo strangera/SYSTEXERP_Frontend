@@ -672,7 +672,9 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 3秒後返回列表頁面
     setTimeout(() => {
-      this.router.navigate(['account/tls/tls12040']);
+      this.router.navigate(['account/tls/tls12040'], {
+        state: { fromRoute: this.router.url }
+      });
     }, 3000);
   }
 
@@ -1904,12 +1906,12 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 設定預收租金相關監聽
     this.setupRentAheadCalculation();
 
-    // 設定保證金付款方式變更監聽
-    ['open_deposit', 'construct_deposit', 'expiration_deposit'].forEach(fieldName => {
-      this.dataForm.get(fieldName)?.valueChanges.subscribe(() => {
-        this.validationService.updateDepositValidators(this.dataForm);
-      });
-    });
+    // [暫時註解] 保證金付款方式變更監聽 - 選擇付款方式時金額變必填
+    // ['open_deposit', 'construct_deposit', 'expiration_deposit'].forEach(fieldName => {
+    //   this.dataForm.get(fieldName)?.valueChanges.subscribe(() => {
+    //     this.validationService.updateDepositValidators(this.dataForm);
+    //   });
+    // });
 
     // 初始驗證器設定
     this.validationService.updateAllValidators(this.dataForm);

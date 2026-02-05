@@ -9,6 +9,7 @@ import { environment } from 'src/environments/environment';
 import {
   Aps1001Item,
   Aps1001Query,
+  Aps1002Item,
   Aps1003Query,
   BusClassItem,
   BusClassQuery,
@@ -228,6 +229,18 @@ export class DropdownApiService {
   }
 
   // --- 會計與扣款相關 ---
+
+  /** 查詢公司銀行科目代號(APS1002) - 用於應收票據託收作業 */
+  queryAps1002(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<Aps1002Item>(
+      '/queryAPS1002_DropDownList',
+      'BNK_DepositAccNo',           // 這裡 TypeScript 會檢查 Aps1002Item 是否有此 Key
+      'ACCCNAME'
+    ).pipe(
+      // 如果不需要過濾，直接 shareReplay 即可
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
 
   /** 查詢會計科目設定檔(GLS1005) */
   queryGls1005(): Observable<Option[] | null> {

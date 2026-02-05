@@ -34,6 +34,7 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
   // 自訂義
   calendarOneType: 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne' = 'dateOne';  // 觸發事件
   @Output() startDateChange = new EventEmitter<any>();
+  @Output() endDateChange = new EventEmitter<any>();
 
   @Input() helpMsg?: string;
   @Input() showErrorMessage = true;
@@ -54,15 +55,7 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
     this.checkRequiredValidator(this.startControl, 0);
     this.checkRequiredValidator(this.endControl, 1);
 
-    this.endControl.valueChanges.subscribe((val) => {
-      if (val instanceof Date) {
-        const endOfDay = new Date(val);
-        endOfDay.setHours(23, 59, 59, 999);
-
-        if (val.getTime() !== endOfDay.getTime()) {
-          this.endControl.setValue(endOfDay, { emitEvent: false });
-        }
-      }
+    this.endControl.valueChanges.subscribe(() => {
       this.validateRange();
     });
 
@@ -98,5 +91,45 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
   get isEndDisabled() {
     return this.disabled || this.endControl?.disabled;
   }
+  /**
+   * 補全迄日的時分秒
+   */
+  fixEndOfDay() {
+    // 如果類型包含 Time，則尊重使用者選擇的時間，不強制補 23:59
+    if (this.calendarType === 'dateTimeRange' || this.calendarType === 'timeRange') {
+      return;
+    }
 
+    const val = this.endControl.value;
+    if (val instanceof Date) {
+      const endOfDay = new Date(val);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      if (val.getTime() !== endOfDay.getTime()) {
+        this.endControl.setValue(endOfDay, { emitEvent: false });
+        this.cdr.markForCheck();
+      }
+    }
+  }
+
+  /**
+   * 補全起日的時分秒
+   */
+  fixStartOfDay() {
+    // 如果類型包含 Time，則不強制補 00:00
+    if (this.calendarType === 'dateTimeRange' || this.calendarType === 'timeRange') {
+      return;
+    }
+
+    const val = this.startControl.value;
+    if (val instanceof Date) {
+      const startOfDay = new Date(val);
+      startOfDay.setHours(0, 0, 0, 0);
+
+      if (val.getTime() !== startOfDay.getTime()) {
+        this.startControl.setValue(startOfDay, { emitEvent: false });
+        this.cdr.markForCheck();
+      }
+    }
+  }
 }

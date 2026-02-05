@@ -167,26 +167,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     return String(v);
   }
 
-  // 將 extraFooterData 統一轉為陣列格式 [{label, value}, ...]
-  public getExtraFooterArray(): { label: string; value: any }[] {
-    const d = this.extraFooterData;
-    if (!d) return [];
-    if (Array.isArray(d)) {
-      return d.map((x: any) => {
-        if (x && typeof x === 'object' && ('label' in x || 'value' in x)) {
-          const rawLabel = x.label ?? '';
-          const mappedLabel = this.rawLabelMap[rawLabel] ?? rawLabel;
-          return { label: mappedLabel, value: this.formatValue(x.value ?? '') };
-        }
-        const rawLabel = String(x?.label ?? '');
-        return { label: this.rawLabelMap[rawLabel] ?? rawLabel, value: this.formatValue(x?.value ?? x) };
-      });
-    }
-    if (typeof d === 'object') {
-      return Object.keys(d).map(k => ({ label: this.rawLabelMap[k] ?? k, value: this.formatValue(d[k]) }));
-    }
-    return [{ label: '', value: this.formatValue(d) }];
-  }
+
   loadMoreData() {
     if (this._loading || !this.queryFunction || !this.lastQueryBody) {
       return; // 如果正在載入、沒有查詢函式、沒有查詢條件或已載入全部資料，則退出

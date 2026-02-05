@@ -1268,7 +1268,9 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
 
   onSubmitNext(): void {
     if (this.isReadOnlyMode) {
-      this.router.navigate(['account/tls/tls12040']);
+      this.router.navigate(['account/tls/tls12040'], {
+        state: { fromRoute: this.router.url }
+      });
       this.notificationService.infoBubble('已結束檢視');
       return;
     }
@@ -1525,7 +1527,9 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
     this.contractFlowService.onSubmitSuccess();
 
     setTimeout(() => {
-      this.router.navigate(['account/tls/tls12040']);
+      this.router.navigate(['account/tls/tls12040'], {
+        state: { fromRoute: this.router.url }
+      });
     }, 3000);
   }
 
