@@ -9,10 +9,10 @@ import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/drop
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate, LazyLoadEvent } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { finalize } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 import { FIN29050Data, FIN29050Service, QueryFIN29050Request } from '../../../service/api/fin/fin29050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -62,10 +62,14 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
   AccNoOptions: any[] = []; // 科目代號選項
   data: FIN29050Data[] = [];
   totalRecords = 0;
+  totalData: any[] = [];
   // 是否於查詢後自動載入剩餘頁（不修改共用元件）
-  autoLoadAll = true;
+  autoLoadAll = false; // 改為由 table 滾動觸發載入
   pdfBtnLoading = false;
   excelBtnLoading = false;
+  // 提供給子 table 用於滾動載入
+  lastQueryBody: any | null = null;
+  queryFn: ((body: any) => Observable<any>) | null = null;
 
   columns: Column[] = [
     { field: 'VendorNo', header: '廠客代號', visible: true },
@@ -73,11 +77,11 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
     { field: 'Summary', header: '摘要', visible: true },
     { field: 'BookDate', header: '立帳日期', visible: true, format: formatDate },
     { field: 'VoucherNo', header: '傳票編號', visible: true, type: 'detail' },
-    { field: 'PayableAmount', header: '應付金額', visible: true, format: formatAmount },
-    { field: 'OffsetAmount', header: '沖帳金額', visible: true, format: formatAmount },
-    { field: 'ReservationAmount', header: '保留款金額', visible: true, format: formatAmount },
-    { field: 'OffsetReservationAmount', header: '沖保留款金額', visible: true, format: formatAmount },
-    { field: 'UnpaidAmount', header: '未付金額', visible: true, format: formatAmount }
+    { field: 'PayableAmount', header: '應付金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'OffsetAmount', header: '沖帳金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'ReservationAmount', header: '保留款金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'OffsetReservationAmount', header: '沖保留款金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'UnpaidAmount', header: '未付金額', visible: true, format: formatAmount, isTotal: true }
   ];
 
   constructor(
@@ -180,16 +184,40 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
         .subscribe({
           next: (response) => {
             if (response && response.Data) {
-              this.data = response.Data;
+              const rows: any[] = response.Data || [];
+              // 檢查是否有後端回傳的頁尾總計列（IsTotal===1 或 VendorNo==='TOTAL' 或 VendorName==='總計'）
+              const totals = rows.filter(r => r?.IsTotal === 1 || String(r?.VendorNo) === 'TOTAL' || String(r?.VendorName) === '總計');
+              if (totals && totals.length) {
+                // 把總計轉成 totalData，並把原本的總計列從 data 中移除
+                this.totalData = totals.map(t => ({ ...t, VendorNo: '' }));
+                this.data = rows.filter(r => !(r?.IsTotal === 1 || String(r?.VendorNo) === 'TOTAL' || String(r?.VendorName) === '總計'));
+              } else {
+                this.totalData = [];
+                this.data = rows;
+              }
               this.totalRecords = response.TotalCount || 0;
             } else {
               this.data = [];
+              this.totalData = [];
               this.totalRecords = 0;
             }
             this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-            if (this.autoLoadAll && this.totalRecords > (this.data?.length || 0) && pageSize > 0) {
-              this.fetchRemainingPages(pageIndex, pageSize, raw);
-            }
+            // 設定給子元件，讓子元件可在滾動時以 queryFunction 載入下一頁
+            // 同時提供 child 常用的 pageSize/pageIndex 小寫欄位供判斷
+            this.lastQueryBody = { ...requestData, pageSize: requestData.PageSize, pageIndex: requestData.PageIndex };
+            // queryFn 會接受 child 傳進來的 body (小寫 pageSize/pageIndex)，這裡把它轉回 API 要求的格式
+            this.queryFn = (body: any) => {
+              const pageSize = body?.pageSize ?? body?.PageSize ?? requestData.PageSize ?? 30;
+              const pageIndex = body?.pageIndex ?? body?.PageIndex ?? 1;
+              const mapped: QueryFIN29050Request = {
+                ...requestData,
+                PageSize: pageSize,
+                PageIndex: pageIndex,
+                Offset: Math.max(pageIndex - 1, 0) * pageSize,
+              } as QueryFIN29050Request;
+              console.log('[FIN29050] queryFn mapped request ->', mapped);
+              return this.fin29050Service.queryFIN29050(mapped);
+            };
           },
           error: () => {
             this.data = [];
@@ -202,6 +230,7 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
 
   private buildExportPayload(): QueryFIN29050Request {
     const raw = this.queryForm.getRawValue();
+
 
     return {
       PageSize: 0,
@@ -220,6 +249,44 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
       ShowZeroBalance: raw.ShowZeroBalance === 'N' ? 'N' : 'A',
       UnpaidIncludeReserve: raw.UnpaidIncludeReserve === 'N' ? 'N' : 'Y'
     } as QueryFIN29050Request;
+  }
+
+  // 處理共用 table 的 lazyLoadData 事件（pageIndex, pageSize, SortBy）
+  override onLazyLoadData(event: LazyLoadEvent, queryForm?: FormGroup): void {
+    if (!event) return;
+    const pageSize = (event as any).pageSize ?? (event as any).rows ?? 30;
+    const pageIndex = (event as any).pageIndex ?? 1;
+    const body = { pageIndex, pageSize, SortBy: (event as any).SortBy ?? (event as any).multiSortMeta ?? [] };
+    console.log('[FIN29050] onLazyLoadData', { pageIndex, pageSize, body, queryFormExists: !!queryForm });
+
+    if (!this.queryFn) {
+      return;
+    }
+
+    this.loading = true;
+    console.log('[FIN29050] calling queryFn with', body);
+    this.queryFn(body)
+      .pipe(finalize(() => this.loading = false))
+      .subscribe({
+        next: (response) => {
+          console.log('[FIN29050] queryFn response ->', { pageIndex, pageSize, dataLength: response?.Data?.length, totalCount: response?.TotalCount, firstItem: response?.Data?.[0] });
+          if (response && response.Data) {
+            const rows: any[] = response.Data || [];
+            const totals = rows.filter(r => r?.IsTotal === 1 || String(r?.VendorNo) === 'TOTAL' || String(r?.VendorName) === '總計');
+            const payloadRows = rows.filter(r => !(r?.IsTotal === 1 || String(r?.VendorNo) === 'TOTAL' || String(r?.VendorName) === '總計'));
+
+            // 使用共用 table 的 lazy 模式時，p-table 期待收到當前頁的資料（非累積），
+            // 因此每次都以後端回傳的頁資料替換 `data`。
+            this.data = payloadRows;
+
+            this.totalData = totals.map(t => ({ ...t, VendorNo: '' })) || [];
+            this.totalRecords = response.TotalCount || this.totalRecords;
+          }
+        },
+        error: () => {
+          this.messageService?.warnBubble?.('資料載入失敗');
+        }
+      });
   }
 
   onExportExcel() {
