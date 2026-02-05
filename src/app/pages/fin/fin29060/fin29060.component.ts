@@ -10,7 +10,7 @@ import { Column, formatAmount, formatDate } from '@shared/componentkit/table/tab
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { finalize } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 import { FIN29060Data, FIN29060Service, FIN29060TotalData, QueryFIN29060Request } from '../../../service/api/fin/fin29060.service';
 import { FIN55050Detail } from '../../../service/api/fin/fin55050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -55,6 +55,7 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
   VendorNoOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
   AccNoOptions = this.dropdown.queryGls1005();
   lastQueryBody: any = null;
+  queryFn: ((body: any) => Observable<any>) | null = null;
   selectedItems: FIN29060Data[] = [];
   totalData: FIN29060TotalData[] = [];
   totalRecords = 0;
@@ -132,12 +133,12 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
           { field: 'VendorNo', order: 1 }
         ]
       };
+      this.queryFn = (body: any) => this.fin29060Service.queryFIN29060(body);
       this.fin29060Service.queryFIN29060(this.lastQueryBody).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe((res) => {
         console.log('29060 res', res);
-        this.fullData = res.Data;
         this.totalData = res.totalData || [];
         this.totalRecords = res.TotalCount;
-        this.data = this.fullData.slice(0, this.lazyBatchSize);
+        this.data = res.Data || [];
       });
     })
   }

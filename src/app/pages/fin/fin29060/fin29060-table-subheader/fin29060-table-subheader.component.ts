@@ -181,6 +181,8 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   @Input() lazyBatchSize = 30;
   /** 後端回傳的群組/總計資料 (例如 totalData) */
   @Input() totalData: any[] = [];
+  /** 若為 true，會在每次從後端載入分頁時，過濾掉可能為「頁尾總計」之列（例如 VendorNo === 'TOTAL' 或 VendorName === '總計'） */
+  @Input() skipPageTotalRows = false;
 
   constructor(
     private readonly sanitizer: DomSanitizer,
@@ -315,10 +317,28 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
       .pipe(finalize(() => (this._loading = false)))
       .subscribe((res) => {
         if (res?.Data?.length) {
-          this.data = [...this.data, ...res.Data];
-          this.virtualData = this.data;
-          this.totalRecords = res.TotalCount || this.totalRecords;
-          this.dataChange.emit(this.data);
+          let incoming = res.Data as any[];
+          if (this.skipPageTotalRows) {
+            incoming = incoming.filter(r => {
+              try {
+                const vals = Object.values(r || {});
+                for (const v of vals) {
+                  if (v === 'TOTAL' || v === '總計') return false;
+                  if (typeof v === 'string' && v.trim().toUpperCase() === 'TOTAL') return false;
+                }
+              } catch (e) {
+                // ignore and keep row
+              }
+              return true;
+            });
+          }
+
+          if (incoming.length) {
+            this.data = [...this.data, ...incoming];
+            this.virtualData = this.data;
+            this.totalRecords = res.TotalCount || this.totalRecords;
+            this.dataChange.emit(this.data);
+          }
         }
       });
   }
