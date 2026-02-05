@@ -31,8 +31,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS45030Table" dataKey="id" [data]="data" [showManage]="false" [columns]="columns"
-    [showCheckBox]="false" [showEdit]="false" [showDelete]="false" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading">
-  </app-table>
+  <app-table-report tableKey="TLS45030Table" dataKey="id" [data]="data" [showManage]="false" [columns]="columns"
+    [showCheckBox]="false" [showEdit]="false" [showDelete]="false" [totalRecords]="totalRecords" [loading]="loading"
+    [lastQueryBody]="lastQueryBody" [queryFunction]="tls45030Service.queryTLS45030.bind(tls45030Service)">
+  </app-table-report>
 </div>
