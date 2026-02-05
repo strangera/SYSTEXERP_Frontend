@@ -121,7 +121,8 @@ export class Tls2e060Service {
   }
 
   /** 查詢專櫃下拉選單資料 */
-  queryTltTalentDropdownList(): Observable<ApiResponse<Tls2e060DropDownListData[]>> {
-    return this.http.post<ApiResponse<Tls2e060DropDownListData[]>>(DROPDOWN_LIST_API_URL, {});
+  queryTltTalentDropdownList(sam_yyymm: string): Observable<ApiResponse<Tls2e060DropDownListData[]>> {
+    const body = { sam_yyymm };
+    return this.http.post<ApiResponse<Tls2e060DropDownListData[]>>(DROPDOWN_LIST_API_URL, body);
   }
 }

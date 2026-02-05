@@ -10,10 +10,11 @@
     <!-- 表頭 -->
     <ng-template pTemplate="header" let-columns>
       <tr>
-        <th class="w-1rem">序號</th>
-        <th *ngFor="let col of getFilterColumns(expansionColumns)" [pSortableColumn]="col.field" class="text-center">
+        <th *ngIf="expansionShowReorder" class="w-1rem">序號</th>
+        <th *ngFor="let col of getFilterColumns(expansionColumns)" [pSortableColumn]="col.field"
+          [pSortableColumnDisabled]="expansionShowSort === false" class="text-center">
           {{ col.header }}
-          <p-sortIcon [field]="col.field"></p-sortIcon>
+          <p-sortIcon *ngIf="expansionShowSort" [field]="col.field"></p-sortIcon>
         </th>
       </tr>
     </ng-template>
@@ -21,7 +22,7 @@
     <!-- 表身 -->
     <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
       <tr>
-        <td class="text-center">{{ first + rowIndex + 1 }}</td>
+        <td *ngIf="expansionShowReorder" class="text-center">{{ first + rowIndex + 1 }}</td>
         <td *ngFor="let col of getFilterColumns(expansionColumns)" class="text-center">
           <span *ngIf="rowData[col.field] !== undefined && rowData[col.field] !== null && !col.type">
             {{ col.format ? col.format(rowData[col.field], rowIndex, rowData) : rowData[col.field] }}

@@ -17,7 +17,7 @@ import { finalize, Observable } from 'rxjs';
 import { TableCaptionComponent } from '../table/table-caption/table-caption.component';
 import { TableExpansionComponent } from '../table/table-expansion/table-expansion.component';
 import { TableReportUtilityService } from './table-report-utility.service';
-import { AddButton, ColumnGroup, expandAnimation, formatAmount2, ReportColumn, TableQueryPayload } from './table-report.model';
+import { AddButton, ColumnGroup, expandAnimation, ReportColumn, TableQueryPayload } from './table-report.model';
 
 @Component({
   selector: 'app-table-report',
@@ -107,6 +107,8 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() expansionDataKey = 'details';
   @Input() expansionMultiSortMeta = [{ field: this.expansionDataKey, order: 1 }];
   @Input() expansionLoadFn?: (rowData: any) => Observable<any>;
+  @Input() expansionShowSort = true;
+  @Input() expansionShowReorder = true;
   expandedRows: Record<string, boolean> = {};
   // 連結
   @Output() linkClick = new EventEmitter<{ rowData: any, field: string }>();
@@ -153,20 +155,6 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       }
     }
   }
-
-  // 對 extraFooter 的 key 做中文對應
-  private rawLabelMap: Record<string, string> = {
-    UnPostedAmt_NoTax: '未登錄餘額(免稅)',
-    UnPostedAmt_WithTax: '未登錄餘額(含稅)',
-  };
-
-  private formatValue(v: any): any {
-    if (v === null || v === undefined || v === '') return '';
-    const num = Number(v);
-    if (!isNaN(num)) return formatAmount2(num);
-    return String(v);
-  }
-
 
   loadMoreData() {
     if (this._loading || !this.queryFunction || !this.lastQueryBody) {

@@ -18,6 +18,9 @@ export class TableExpansionComponent implements OnInit {
   @Input() expansionColumns: Column[] = [];
   @Input() rowData: any;
   @Input() expansionMultiSortMeta: SortMeta[] = [{ field: this.expansionDataKey, order: 1 }];
+  @Input() expansionShowSort = true;
+  @Input() expansionShowReorder = false;
+
 
   // 新增分頁相關參數
   @Input() showPaginator = false;          // 是否顯示分頁器

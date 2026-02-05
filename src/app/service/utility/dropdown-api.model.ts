@@ -173,6 +173,36 @@ export interface Aps1001Item extends IDropdownItem {
 }
 
 /**
+ * 查詢 APS1001_DropDownList 時的請求 body
+ */
+export interface Aps1001Query {
+  SearchKeyword: string;
+}
+
+/**
+ * 查詢 APS1001_DropDownList 回傳的項目型別
+ */
+export interface Aps1001Item extends IDropdownItem {
+  DisplayText: string;
+}
+
+/**
+ * 查詢 APS1001_DropDownList (Combo型態) 回傳的項目型別
+ */
+export interface Aps1001ComboItem {
+  No: string;
+  Name: string;
+  DisplayText: string;
+}
+
+/**
+ * 查詢 APS1001_DropDownList (Combo型態) 時的請求 body
+ */
+export interface Aps1001ComboQuery {
+  SearchKeyword: string;
+}
+
+/**
  * 查詢 TBLUSER_Orgid_DropDownList 回傳的項目型別
  */
 export interface TblUserOrgidItem {

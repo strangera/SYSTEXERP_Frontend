@@ -526,6 +526,16 @@ export interface QueryRecvItemResponse {
 }
 
 /**
+ * 收款項目下拉選單查詢
+ */
+export interface QueryCapItemDropdownRequest {
+  /** 收款項目代號 */
+  CAP_Item?: string | null;
+  /** 會計科目 */
+  AccNo?: string | null;
+}
+
+/**
  * 收款項目下拉選單回應
  */
 export interface QueryCapItemDropdownResponse {
@@ -535,10 +545,42 @@ export interface QueryCapItemDropdownResponse {
   CAP_Name?: string | null;
   /** 會計科目 */
   AccNo?: string | null;
+  /** 會計科目名稱 */
+  AccCName?: string | null;
   /** 傳票格式 (1=票據/2=應收票據/E=票據) */
   Voucher_Type?: string | null;
   /** 是否為立沖科目 (Y/N) */
   ABAT_YN?: string | null;
+}
+
+/**
+ * 沖帳代號查詢
+ */
+export interface QueryAbatAcctRequest {
+  /** 會計科目 */
+  AccNo?: string | null;
+}
+
+/**
+ * 沖帳代號查詢回應
+ */
+export interface QueryAbatAcctResponse {
+  /** 序號 */
+  RowNum?: number | null;
+  /** 傳票號碼 */
+  VouNo?: string | null;
+  /** 摘要 */
+  NoteDesc?: string | null;
+  /** 借方(餘額) */
+  DebitAmt?: number | null;
+  /** 貸方(餘額) */
+  CreditAmt?: number | null;
+  /** 立沖代號 */
+  PTA?: string | null;
+  /** 廠商代號 */
+  VEN_Uniform?: string | null;
+  /** 廠商簡稱 */
+  VEN_ShortName?: string | null;
 }
 
 /**
@@ -657,8 +699,8 @@ export class FIN32030Service {
   /**
    * 收款項目下拉選單查詢
    */
-  queryCapItemDropdown(): Observable<ApiResponse<QueryCapItemDropdownResponse[]>> {
-    return this.http.post<ApiResponse<QueryCapItemDropdownResponse[]>>(`${this.apiUrl}/queryCapItemDropdown`, {});
+  queryCapItemDropdown(params?: QueryCapItemDropdownRequest): Observable<ApiResponse<QueryCapItemDropdownResponse[]>> {
+    return this.http.post<ApiResponse<QueryCapItemDropdownResponse[]>>(`${this.apiUrl}/queryCapItemDropdown`, params || {});
   }
 
   /**
@@ -672,5 +714,12 @@ export class FIN32030Service {
    */
   queryARS1001Dropdown(): Observable<ApiResponse<QueryARS1001DropdownResponse[]>> {
     return this.http.post<ApiResponse<QueryARS1001DropdownResponse[]>>(`${this.apiUrl}/queryARS1001Dropdown`, {});
+  }
+
+  /**
+   * 沖帳代號查詢 (ARS3001)
+   */
+  queryAbatAcct(params: QueryAbatAcctRequest): Observable<ApiResponse<QueryAbatAcctResponse[]>> {
+    return this.http.post<ApiResponse<QueryAbatAcctResponse[]>>(`${this.apiUrl}/queryAbatAcct`, params);
   }
 }
