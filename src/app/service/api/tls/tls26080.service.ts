@@ -2,8 +2,9 @@ import { formatDate } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { CampaignData, TLS26080Data, TLS26080DetailResult, TLS26080DetailTable, TLS26080EditTable, TLS26080InsertPayload, TLS26080KeyInTable, TLS26080Query, TLS26080UpdatePayload, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
-import { Option, TalentQuery } from '@service/utility/dropdown-api.model';
+import { Option, TalentOpenFlagQuery } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
@@ -174,11 +175,11 @@ export class TLS26080Service {
         const { queryTLS26080_DetailResponses, ...rest } = res.Data;
         return {
           ...rest,
-          queryTLS26080_DetailResponses: queryTLS26080_DetailResponses.map(v => (<TLS26080DetailResult>{
+          queryTLS26080_DetailResponses: queryTLS26080_DetailResponses.map(v => ({
             ...v,
             tpy_rate_D16: Number(v.tpy_rate_D16.replace('%', '')).toFixed(2),
             tpy_rate_D17: Number(v.tpy_rate_D17.replace('%', '')).toFixed(2),
-          })),
+          } as TLS26080DetailResult)),
         };
       })
     );
@@ -214,29 +215,12 @@ export class TLS26080Service {
     return formatDate(date, 'yyyy-MM-dd', 'en-US');
   }
 
-  public getTLTTalentOptions(query: { tlt_bdate?: string | Date | null; tlt_edate?: string | Date | null; approve_status?: string } = {}): Observable<Option[]> {
+  public getTLTTalentOptions(query: { ven_no: string }): Observable<IDropdownItem[] | null> {
     this.tltTalentOptionsLoading.set(true);
-    const tlt_bdate = this.formatQueryDate(query.tlt_bdate);
-    const tlt_edate = this.formatQueryDate(query.tlt_edate);
-    const payload: TalentQuery = {
-      approve_status: query.approve_status ?? '2',
-      ...(tlt_bdate ? { tlt_bdate } : {}),
-      ...(tlt_edate ? { tlt_edate } : {}),
+    const payload: TalentOpenFlagQuery = {
+      VEN_No: query.ven_no,
     };
-
-    return this.dropdown.queryTalent(payload).pipe(
-      take(1),
-      map(res => res?.map(item => ({
-        ...item,
-        No: item.tlt_no,
-        Name: item.tlt_name,
-        value: item.tlt_no,
-        label: `${item.tlt_no} - ${item.tlt_name}`,
-      })) ?? []),
-      tap(res => {
-        this.tltTalentOptions.set(res ?? []);
-        this.logger.debug(`getTLTTalentOptions:`, [payload, res]);
-      }),
+    return this.dropdown.queryTltTalentOpenFlag(payload).pipe(
       finalize(() => this.tltTalentOptionsLoading.set(false))
     );
   }

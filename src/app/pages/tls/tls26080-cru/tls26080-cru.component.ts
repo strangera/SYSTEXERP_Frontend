@@ -4,7 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26080Service } from '@service/api/tls/tls26080.service';
-import { Option } from '@service/utility/dropdown-api.model';
+import { IDropdownItem, Option } from '@service/utility/dropdown-api.model';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -23,7 +23,7 @@ import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
 import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
-import { defer, finalize, map, Observable } from 'rxjs';
+import { finalize, map, Observable } from 'rxjs';
 import * as XLSX from 'xlsx';
 import { CampaignData, TLS26080Data, TLS26080EditTable, TLS26080InsertPayload, TLS26080KeyInTable, TLS26080UpdatePayload } from '../tls26080/tls26080.model';
 
@@ -116,8 +116,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   private readonly dfSignal = toSignal(this.dataForm.valueChanges);
   private readonly podDescSignal = toSignal(this.df().pod_desc.valueChanges);
-  private readonly podSdateSignal = toSignal(this.df().pod_sdate.valueChanges, { initialValue: this.df().pod_sdate.value });
-  private readonly podEdateSignal = toSignal(this.df().pod_edate.valueChanges, { initialValue: this.df().pod_edate.value });
 
   public readonly tls26080Data = signal<TLS26080Data[]>([]);
   public readonly tableData = signal<TLS26080EditTable[]>([]);
@@ -267,13 +265,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     if (!data || data.length === 0 || !this.selectedCampaign()) return;
     this.dataForm.patchValue({ pod_no: this.selectedCampaign()!.CampaignId });
     this.logger.debug(`campaignIdEffect:`, [data, this.selectedCampaign()]);
-  }, { allowSignalWrites: true });
-
-  /** 依活動起迄日載入專櫃選項 */
-  public readonly tltTalentEffect = effect(() => {
-    const sdate = this.podSdateSignal() ?? this.service.dateS;
-    const edate = this.podEdateSignal() ?? this.service.dateE;
-    this.fetchTltTalentOptions(sdate, edate).subscribe();
   }, { allowSignalWrites: true });
 
   /** 載入專櫃活動設定明細資料 */
@@ -510,6 +501,21 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         },
       });
 
+    this.fetchTltTalentOptions("").subscribe(res => {
+      if (res == null) return;
+      const options = res.map(item => ({
+        No: item.No,
+        Name: item.Name,
+        value: item.No,
+        label: `${item.No}-${item.Name}`,
+      }));
+      this.dialogData.set(options);
+      this.filteredDialogData.set(options);
+      this.dialogTotalRecords.set(res.length);
+      this.service.tltTalentOptions.set(options);
+      this.counterColumns();
+    });
+
     this.logger.debug(`init:`, [this.rowdata, this.campaignData(), this.dialogData()]);
   }
 
@@ -591,7 +597,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
           calc_date_type: item.calc_date_type ?? 'Y',
           cap_item_D16: 'D16',
           cap_item_D17: 'D17',
-        approved_date: item.approved_date ? new Date(item.approved_date).toISOString() : undefined,
+          approved_date: item.approved_date ? new Date(item.approved_date).toISOString() : undefined,
           pod_status: item.pod_status ?? '0',
         })),
       };
@@ -1016,23 +1022,16 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     return isNaN(parsed) ? (fallback ?? 0) : parsed;
   }
 
-  public fetchTltTalentOptions(_body?: unknown, startDate?: Date | string, endDate?: Date | string): Observable<Option[]> {
-    const sdate = startDate ?? this.df().pod_sdate.value ?? this.service.dateS;
-    const edate = endDate ?? this.df().pod_edate.value ?? this.service.dateE;
-    return defer(() => {
-      this.dialogLoading.set(true);
-      return this.service.getTLTTalentOptions({ tlt_bdate: sdate, tlt_edate: edate, approve_status: '2' })
-        .pipe(finalize(() => this.dialogLoading.set(false)));
-    }).pipe(
-      map(res => {
-        this.dialogData.set(res);
-        this.filteredDialogData.set(res);
-        this.dialogTotalRecords.set(res.length);
-        this.counterColumns();
-        return res;
-      })
+  public fetchTltTalentOptions(venNoOrBody: string | Record<string, unknown>): Observable<IDropdownItem[]> {
+    const ven_no = typeof venNoOrBody === 'string'
+      ? venNoOrBody
+      : (venNoOrBody?.['ven_no'] as string) ?? '';
+    return this.service.getTLTTalentOptions({ ven_no }).pipe(
+      map(res => res ?? []),
+      finalize(() => this.dialogLoading.set(false))
     );
   }
+
 }
 
 interface ValidationResult {
