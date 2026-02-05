@@ -10,6 +10,7 @@ import {
   ASS12030InsertRequest,
 } from '@pages/ass/ass12030/ass12030.model';
 import { ASS12030Service } from '@service/api/ass/ass12030.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -79,6 +80,8 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
   orgIdOptions: { value: string; label: string }[] = [];
   /** 稅別下拉選項 */
   taxTypeOptions: { value: string; label: string }[] = [];
+  /** 支出類型下拉選項 */
+  expendTypeOptions: { value: string; label: string }[] = getSYS1000Options('SUB_PAY_TYPE');
 
   // TODO: 未實作下拉選項
   /** 品項編號下拉選項 */
@@ -87,12 +90,10 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
   needIdOptions: { value: string; label: string }[] = [];
   /** 供應商下拉選項 */
   supplierIdOptions: { value: string; label: string }[] = [];
-  /** 支出類型下拉選項 */
-  expendTypeOptions: { value: string; label: string }[] = [];
   /** 倉別下拉選項 */
   whIdOptions: { value: string; label: string }[] = [];
   /** 商品類型下拉選項 */
-  goodsTypeOptions: { value: string; label: string }[] = [];
+  goodsTypeOptions: { value: string; label: string }[] = getSYS1000Options('PROD_TYPE');
 
   editColumns: EditColumn[] = [
     {
