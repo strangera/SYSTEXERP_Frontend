@@ -15,11 +15,10 @@
         <app-input-text class="col-12 md:col-6 lg:col-4" label="銀行簡稱" controlName="BNK_ShortName"
           [control]="dataForm.controls.BNK_ShortName" [submitted]="submitted">
         </app-input-text>
-        <app-table [showReportMode]="false" tableKey="SYSBC00Detail" class="col-12" [data]="data" [columns]="columns"
-          [showEdit]="false" [showDetail]="false" [showCheckBox]="true" [showInsert]="true" [showRowEdit]="true"
+        <app-table-edit tableKey="SYSBC00Detail" class="col-12" [data]="data" [columns]="columns" [showCheckBox]="true"
           (delete)="onDelete($event)" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
-          [showCaption]="!isFormReadable" [showManage]="!isFormReadable" [showCheckBox]="!isFormReadable"
-          [insertRowData]="true" (dataChange)="data = $event"></app-table>
+          [showCheckBox]="!isFormReadable" (dataChange)="data = $event" [disabled]="isFormReadable"
+          [tableRequired]="true"></app-table-edit>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" (clickEvent)="resetTable()"></app-button>

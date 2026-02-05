@@ -184,4 +184,9 @@ export const tlsRoutes: Routes = [
   { path: 'tls2c040', loadComponent: () => import('./tls2c040/tls2c040.component').then(m => m.TLS2C040Component), data: { progNo: 'TLS2C040' } },
   // 專櫃暫存傳票查詢作業 CRU
   { path: 'tls2c040cru', loadComponent: () => import('./tls2c040-cru/tls2c040-cru.component').then(m => m.TLS2C040CRUComponent), data: { progNo: 'TLS2C040' } },
+
+  // 廠商發票請款登入暨維護作業
+  { path: 'tls2f010', loadComponent: () => import('./tls2f010/tls2f010.component').then(m => m.TLS2F010Component), data: { progNo: 'TLS2F010' } },
+  // 廠商發票請款登入暨維護作業 CRU
+  { path: 'tls2f010cru', loadComponent: () => import('./tls2f010-cru/tls2f010-cru.component').then(m => m.TLS2F010CRUComponent), data: { progNo: 'TLS2F010' } },
 ];

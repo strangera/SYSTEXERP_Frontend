@@ -1,17 +1,18 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
-import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
-import { UserData } from '../../../shared/models/sys/user.model';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
+import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { UserData } from '../../../shared/models/sys/user.model';
 
 @Component({
   selector: 'app-sys0320',
@@ -24,7 +25,7 @@ import { finalize } from 'rxjs';
     ReactiveFormsModule,
     InputTextComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
   ],
 })
@@ -33,10 +34,14 @@ export class SYS0320Component extends BasicQueryPageComponent<UserData> implemen
   queryForm = this.formBuilder.group({
     user_No: ['', [Validators.maxLength(10)]], // 使用者編號
     user_Name: ['', [Validators.maxLength(30)]], // 使用者名稱
-    ...createPaginationConfig([{ field: 'user_No', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'user_No', order: 1 }]],
   });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
-  data: UserData[] = []; columns: Column[] = [
+  lastQueryBody: any
+  data: UserData[] = [];
+  columns: ReportColumn[] = [
     { field: 'user_No', header: '使用者編號', visible: true },
     { field: 'user_Name', header: '使用者名稱', visible: true },
     { field: 'status', header: '使用者狀態', visible: true, format: (value: string) => value === '1' ? '有效' : value === '2' ? '停用' : value },
@@ -48,7 +53,7 @@ export class SYS0320Component extends BasicQueryPageComponent<UserData> implemen
     { field: 'UPD_USR_Name', header: '變更人員名稱', visible: false },
   ];
   constructor(
-    private sys0110Service: Sys0110Service,
+    public readonly sys0110Service: Sys0110Service,
   ) {
     super();
   }
@@ -65,6 +70,7 @@ export class SYS0320Component extends BasicQueryPageComponent<UserData> implemen
           this.data = response.Data
           this.totalRecords = response.TotalCount || response.Data.length;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          this.lastQueryBody = frm.value;
         } else {
           this.data = [];
           this.totalRecords = 0;

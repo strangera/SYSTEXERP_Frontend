@@ -30,12 +30,11 @@
         </div>
 
         <div class="grid p-fluid">
-          <app-calendar-range class="col-12 md:col-6 lg:col-4"
-                              calendarType="dateRange"
-                              label="活動起始日期"
-                              [startControl]="qf().pod_sdate"
-                              [endControl]="qf().pod_edate"
-                              [submitted]="submitted"></app-calendar-range>
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4"
+                                    label="活動起始日期"
+                                    [startControl]="qf().pod_sdate"
+                                    [endControl]="qf().pod_edate"
+                                    [submitted]="submitted"></app-calendar-range-quick>
           <app-calendar class="col-12 md:col-6 lg:col-4"
                         label="活動正檔日期"
                         controlName="pod_busdate"
@@ -54,21 +53,23 @@
 </div>
 
 <div class="card">
-  <app-table [dataKey]="'pod_no'"
-             [tableKey]="'TLS26080'"
-             [showCheckBox]="!0"
-             [editDisabled]="editDisabled"
-             [isRowSelectable]="isRowSelectable"
-             (edit)="onEdit($event)"
-             (detail)="onDetail($event)"
-             (delete)="onDelete($event)"
-             [selectedItems]="selectedItems()"
-             (selectionChange)="selectedItems.set($event)"
-             [multiSortMeta]="qf().SortBy.value ?? []"
-             [data]="tableData()"
-             [columns]="columns"
-             [totalRecords]="totalRecords()"
-             (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
-             [lazy]="!0"
-             [loading]="tableLoading()"></app-table>
+  <app-table-report tableKey="TLS26080"
+                   dataKey="pod_no"
+                   [data]="tableData()"
+                   [columns]="columns"
+                   [totalRecords]="totalRecords()"
+                   [lastQueryBody]="lastQueryBody"
+                   [queryFunction]="queryFunction"
+                   [loading]="loading"
+                   [showCheckBox]="true"
+                   [showEdit]="true"
+                   [showDetail]="true"
+                   [showDelete]="true"
+                   [editDisabled]="editDisabled"
+                   [isRowSelectable]="isRowSelectable"
+                   [selectedItems]="selectedItems()"
+                   (selectionChange)="selectedItems.set($event)"
+                   (edit)="onEdit($event)"
+                   (detail)="onDetail($event)"
+                   (delete)="onDelete($event)"></app-table-report>
 </div>

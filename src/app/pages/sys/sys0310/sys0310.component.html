@@ -21,8 +21,7 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table apiUrl="queryRole" tableKey="sys0310" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-    [showDetail]="false" [multiSortMeta]="[{ field: 'Role_No', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showDelete]="false"></app-table>
+  <app-table-report apiUrl="queryRole" tableKey="sys0310" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    [showDetail]="false" [totalRecords]="totalRecords" [loading]="loading" [showDelete]="false"
+    [lastQueryBody]="lastQueryBody" [queryFunction]="sys0210Service.queryRole.bind(sys0210Service)"></app-table-report>
 </div>

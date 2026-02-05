@@ -22,7 +22,6 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 @Component({
   selector: 'app-fin21030',
   templateUrl: './fin21030.component.html',
-  styleUrl: './fin21030.component.scss',
   standalone: true,
   imports: [MenubarComponent, DropdownComponent,
     AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]

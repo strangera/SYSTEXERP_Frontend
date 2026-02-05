@@ -70,6 +70,9 @@ export const finRoutes: Routes = [
   { path: 'fin62010cru', loadComponent: () => import('./fin62010-cru/fin62010-cru.component').then(m => m.FIN62010CRUComponent), data: { progNo: 'FIN62010' } },
   // 銀行資金調撥單
   { path: 'fin62020', loadComponent: () => import('./fin62020/fin62020.component').then(m => m.FIN62020Component), data: { progNo: 'FIN62020' } },
+  // 銀行調撥傳票拋轉作業
+  { path: 'fin62030', loadComponent: () => import('./fin62030/fin62030.component').then(m => m.FIN62030Component), data: { progNo: 'FIN62030' } },
+  { path: 'fin62030cru', loadComponent: () => import('./fin62030-cru/fin62030-cru.component').then(m => m.FIN62030CRUComponent), data: { progNo: 'FIN62030' } },
   // 應付票據撤票作業
   { path: 'fin63050', loadComponent: () => import('./fin63050/fin63050.component').then(m => m.FIN63050Component), data: { progNo: 'FIN63050' } },
   { path: 'fin63050cru', loadComponent: () => import('./fin63050-cru/fin63050-cru.component').then(m => m.FIN63050CRUComponent), data: { progNo: 'FIN63050' } },

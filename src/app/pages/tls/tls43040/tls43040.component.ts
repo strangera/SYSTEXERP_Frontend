@@ -14,7 +14,6 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 
 @Component({
   templateUrl: './tls43040.component.html',
-  styleUrls: ['./tls43040.component.scss'],
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TableComponent, TranslateModule]
 })

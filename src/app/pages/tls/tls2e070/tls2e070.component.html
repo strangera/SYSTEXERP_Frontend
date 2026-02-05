@@ -25,10 +25,13 @@
             <app-dropdown label="帳次" controlName="sam_termno" [options]="sam_termnoOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.sam_termno" [submitted]="submitted"></app-dropdown>
           </div>
+        </div>
+        <hr />
+        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="專櫃編號/名稱" controlName="tlt_no" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.tlt_no" [options]="tlt_noOptions | async"
-              [submitted]="submitted"></app-dropdown>
+              [control]="queryForm.controls.tlt_no" [options]="tlt_noOptions | async" [submitted]="submitted"
+              helpMsg="僅【查詢】時使用"></app-dropdown>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

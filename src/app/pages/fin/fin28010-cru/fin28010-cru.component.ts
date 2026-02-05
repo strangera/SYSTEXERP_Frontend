@@ -23,7 +23,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 @Component({
   selector: 'app-fin28010-cru',
   templateUrl: './fin28010-cru.component.html',
-  styleUrl: './fin28010-cru.component.scss',
   standalone: true,
   imports: [
     NgIf,
@@ -81,8 +80,16 @@ export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   editColumns: EditColumn[] = [
-    { field: 'dc', header: '借/貸' },
+    {
+      field: 'dc', header: '借/貸',
+      format: (v: any, i?: any, r?: any) => {
+        if (v === 1 || v === '1') return '借';
+        if (v === 2 || v === '2') return '貸';
+        return v ?? '';
+      }
+    },
     { field: 'AccNo', header: '會計科目' },
+    { field: 'AccCName', header: '會計科目名稱' },
     { field: 'NoteDesc', header: '摘要', type: 'input', validate: [validateRequired], width: '250px' },
     {
       field: 'd_amt', header: '借方金額',
@@ -130,6 +137,9 @@ export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements 
     // 只開放「傳票摘要」欄位可編輯，其餘維持唯讀
     this.dataForm.get('Remark')?.enable({ emitEvent: false });
 
+    // // 確保傳票型態 VoucherType 為下拉可選（不要唯讀）
+    // this.dataForm.get('VoucherType')?.enable({ emitEvent: false });
+
     const details = this.queryData?.details as any[] | undefined;
     if (Array.isArray(details) && details.length) {
       this.editData = details;
@@ -146,11 +156,14 @@ export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements 
       this.dataForm.patchValue({ VouDate: queryForm.VouDate });
     }
 
-    // 載入傳票種類
+    // 載入傳票種類，顯示為 No-Name
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'entry_type' })
       .pipe(untilDestroyed(this))
       .subscribe(response => {
-        this.srcSheetTypeOptions = response.Data;
+        this.srcSheetTypeOptions = (response.Data || []).map((item: any) => ({
+          ...item,
+          Name: `${item.No}-${item.Name}`,
+        }));
       });
 
   }

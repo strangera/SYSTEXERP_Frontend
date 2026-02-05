@@ -7,6 +7,8 @@ import { Observable, of } from 'rxjs';
 import { catchError, map, shareReplay } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import {
+  Aps1001ComboItem,
+  Aps1001ComboQuery,
   Aps1001Item,
   Aps1001Query,
   Aps1002Item,
@@ -51,6 +53,7 @@ import {
   TalentChargeItem,
   TalentChargeQuery,
   TalentItem,
+  TalentOpenFlagQuery,
   TalentQuery,
   TalentStatusQuery,
   TalentStoreWayQuery,
@@ -573,6 +576,12 @@ export class DropdownApiService {
     );
   }
 
+  queryTltTalentOpenFlag(body: TalentOpenFlagQuery): Observable<IDropdownItem[] | null> {
+    return this.queryDropdownWithParams<IDropdownItem, TalentOpenFlagQuery>('/queryTLTTALENT_tlt_openflag_DropDownList', body).pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
   // 能源系列
 
   // 取得能源錶號
@@ -647,6 +656,18 @@ export class DropdownApiService {
       shareReplay({ bufferSize: 1, refCount: true })// 避免重複查詢
     );
   }
+  /** 查詢銀行+分行資料表(APS1001 JOIN APS1004)下拉選單 */
+  queryAps1001_DropDownList(body: Aps1001ComboQuery = { SearchKeyword: '' }): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<Aps1001ComboItem, Aps1001ComboQuery>(
+      '/queryAPS1001_DropDownList',
+      'No',
+      'Name',
+      body
+    ).pipe(
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
   queryTALPORDERM_DropDownListShare(body?: TALPORDERMQueryForShare): Observable<Option[] | null> {
     const request = {
       ...body,
