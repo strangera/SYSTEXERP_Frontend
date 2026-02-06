@@ -23,7 +23,9 @@
       (exportExcel)="exportExcel.emit()" (importExcel)="importExcel.emit($event)" [totalRecords]="dt.totalRecords"
       [apiUrl]="apiUrl" [DataKeyName]="DataKeyName" [PrintRemark]="PrintRemark" [customReport]="customReport"
       (exportEvent)="exportEvent.emit($event)" [Conditions]="Conditions">
-      <header><ng-content select="header"></ng-content></header>
+      <header>
+        <ng-content select="header"></ng-content>
+      </header>
     </app-table-caption>
   </ng-template>
   <ng-template pTemplate="header" let-columns>
