@@ -221,7 +221,6 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> implements 
     return isFinite(n) ? n.toLocaleString('en-US') : '0';
   }
 
-  goBack(): void { this.location.back(); }
 
   private ensureArray(v: any): string[] | null {
     if (v == null || v === '') return null;
@@ -393,4 +392,12 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> implements 
     const d = String(date.getDate()).padStart(2, '0');
     return `${y}/${m}/${d}`;
   }
+  goBack(): void {
+  this.router.navigate(['/account/tls/tls23120'], { state: { fromCru: true } });
+}
+
+// onCancel 也同樣
+override onCancel(): void {
+  this.router.navigate(['/account/tls/tls23120'], { state: { fromCru: true } });
+}
 }
