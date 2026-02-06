@@ -1,17 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { IUserResponse, Sys0110Service } from '@service/api/sys/sys0110.service';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TranslateModule } from '@ngx-translate/core';
+import { IUserResponse, Sys0110Service } from '@service/api/sys/sys0110.service';
 import { Sys0710Response, Sys0710Service } from '@service/api/sys/sys0710.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 @Component({
   selector: 'app-sys0710',
@@ -23,7 +23,7 @@ import { Sys0710Response, Sys0710Service } from '@service/api/sys/sys0710.servic
     FormsModule,
     ReactiveFormsModule,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     DropdownComponent
   ],
@@ -31,13 +31,16 @@ import { Sys0710Response, Sys0710Service } from '@service/api/sys/sys0710.servic
 // 使用者系統權限列表
 export class SYS0710Component extends BasicQueryPageComponent<Sys0710Response> implements OnInit {
   queryForm = this.formBuilder.group({
-    user_No: ['', [Validators.required]], // 使用者編號
-    ...createPaginationConfig([{ field: 'MainSystemCode', order: 1 }]), // 分頁和排序參數
+    user_No: [null, [Validators.required]], // 使用者編號
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'MainSystemCode', order: 1 }]],
   });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: Sys0710Response[] = [];
+  lastQueryBody: { user_No: string } | null = null;
   userNoOptions: IUserResponse[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'User_No', header: '使用者編號', visible: true, showSort: false },
     { field: 'User_Name', header: '使用者名稱', visible: true, showSort: false },
     { field: 'MainSystemCode', header: '主系統代碼', visible: true },
@@ -50,7 +53,7 @@ export class SYS0710Component extends BasicQueryPageComponent<Sys0710Response> i
   ];
   constructor(
     private readonly sys0110Service: Sys0110Service,
-    private readonly sys0710Service: Sys0710Service
+    public readonly sys0710Service: Sys0710Service
   ) {
     super();
   }
@@ -75,6 +78,7 @@ export class SYS0710Component extends BasicQueryPageComponent<Sys0710Response> i
       this.sys0710Service.querySys0710(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((response) => {
         if (response.Data) {
           this.data = response.Data
+          this.lastQueryBody = frm.value;
           this.totalRecords = response.TotalCount || response.Data.length;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
         } else {

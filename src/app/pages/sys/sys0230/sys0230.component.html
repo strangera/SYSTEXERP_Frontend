@@ -21,23 +21,20 @@
               [submitted]="submitted"></app-input-text>
           </div>
         </div>
-        <!-- <div> -->
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
-        <!-- </div> -->
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table apiUrl="queryRole" tableKey="SYS0230" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    <app-table-report apiUrl="queryRole" tableKey="SYS0230" [data]="data" [columns]="columns" (edit)="onEdit($event)"
       (detail)="onDetail($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-      (delete)="onDelete($event)" [showCheckBox]="false" [showDelete]="false" dataKey="id"
-      [multiSortMeta]="[{ field: 'Role_No', order: 1 }]" [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-      [loading]="loading"></app-table>
+      [showCheckBox]="false" [showDelete]="false" dataKey="id" [totalRecords]="totalRecords" [loading]="loading"
+      [lastQueryBody]="lastQueryBody"
+      [queryFunction]="sys0210Service.queryRole.bind(sys0210Service)"></app-table-report>
   </div>
 </div>

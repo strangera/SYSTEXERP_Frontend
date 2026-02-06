@@ -28,8 +28,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table apiUrl="queryUserLoginError" tableKey="sys0760" [data]="data" [columns]="columns" [showManage]="false"
-    [multiSortMeta]="[{ field: 'User_No', order: 1 }]" [totalRecords]="totalRecords" [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading"></app-table>
+  <app-table-report apiUrl="queryUserLoginError" tableKey="sys0760" [data]="data" [columns]="columns"
+    [showManage]="false" [totalRecords]="totalRecords" [showDelete]="false" [loading]="loading"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="sys0760Service.queryUserLoginError.bind(sys0760Service)"></app-table-report>
 </div>

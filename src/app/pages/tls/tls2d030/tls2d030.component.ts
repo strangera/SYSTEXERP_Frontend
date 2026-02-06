@@ -1,4 +1,4 @@
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -8,7 +8,7 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, convertDateToYYYYMM, formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { Column, formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -48,7 +48,8 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
   ];
   constructor(
     private readonly dropdown: DropdownApiService,
-    public readonly tls2d030Service: Tls2d030Service
+    public readonly tls2d030Service: Tls2d030Service,
+    private readonly datePipe: DatePipe
   ) {
     super();
   }
@@ -64,7 +65,7 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
   onSettle(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const body: ExecuteTls2d030Request = {
-        sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
+        sam_yyymm: this.datePipe.transform(frm.value.sam_yyymm, 'yyyyMM') as string,
         money_type: frm.value.money_type,
         tlt_no: frm.value.tlt_no,
         tlt_floor: frm.value.tlt_floor,
@@ -93,7 +94,7 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
     this.loading = true;
     const body: QueryTls2d030Request = {
       ...frm.value,
-      sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
+      sam_yyymm: this.datePipe.transform(frm.value.sam_yyymm, 'yyyyMM') as string
     };
     this.tls2d030Service.queryTLS2D030(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
       this.totalRecords = res.TotalCount;

@@ -1,29 +1,25 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-// Shared
-
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
-import { tblUser, apiOption, option, SYS1000 } from '../../../shared/models/sys/sysb000.model';
-import { UserData } from '../../../shared/models/sys/user.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { finalize } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { apiOption, option, SYS1000, tblUser } from '../../../shared/models/sys/sysb000.model';
+import { UserData } from '../../../shared/models/sys/user.model';
 
-// 4-2-2-4使用者之角色設定維護
 @Component({
   selector: 'app-sys0220',
   templateUrl: './sys0220.component.html',
-  styleUrls: ['./sys0220.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -34,7 +30,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
     MultiSelectComponent,
     CalendarRangeQuickComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
   ],
 })
@@ -58,13 +54,16 @@ export class SYS0220Component extends BasicQueryPageComponent<UserData> implemen
     user_priority: [[], Validators.maxLength(1)], // 使用者等級 (user fillin)
     // USER_PwdExpireDate: [''], // 密碼到期日 YYYY/MM/DD HH:NN:SS，若使用者登入系統的時間大於此日期，則需強制使用者變更密碼
 
-    ...createPaginationConfig([{ field: 'user_No', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'user_No', order: 1 }]],
   });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   // 表格資料
   data: UserData[] = [];
-  columns: Column[] = [
+  lastQueryBody: any;
+  columns: ReportColumn[] = [
     { field: 'user_No', header: '使用者編號', visible: true },
     { field: 'user_Name', header: '使用者名稱', visible: true },
     {
@@ -100,8 +99,8 @@ export class SYS0220Component extends BasicQueryPageComponent<UserData> implemen
   userTypeOptions: option[] = [];
 
   constructor(
-    private sysb400Service: Sysb400Service,
-    private sys0110Service: Sys0110Service,
+    private readonly sysb400Service: Sysb400Service,
+    public readonly sys0110Service: Sys0110Service,
   ) {
     super();
   }
@@ -129,7 +128,6 @@ export class SYS0220Component extends BasicQueryPageComponent<UserData> implemen
         Name: item.Name,
         Label: item.No + '-' + item.Name,
       }));
-      // console.log('SYS3100_Options', this.SYS3100_Options);
     });
 
     this.userTypeOptions = [
@@ -149,13 +147,12 @@ export class SYS0220Component extends BasicQueryPageComponent<UserData> implemen
   // 提交查詢：處理表單並呼叫查詢 API
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      console.log('查詢表單', frm.value);
       this.sys0110Service.queryUser(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((response) => {
         if (response.Data) {
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
-          console.log('0220response', response.Data);
+          this.lastQueryBody = frm.value;
         } else {
           this.data = [];
           this.totalRecords = 0;

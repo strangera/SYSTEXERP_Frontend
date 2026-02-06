@@ -1,6 +1,7 @@
 import { getSYS1000, getSYS1000Options } from "@service/system/sys1000.service";
-import { Column, formatAmount, formatDateTime, formatYN, formatYYYYMM } from "../../../shared/componentkit/table/table.model";
 import { transformOptionsForExport } from "@shared/componentextends/basic-print/basic-print-data.component";
+import { ReportColumn } from "@shared/componentkit/table-report/table-report.model";
+import { formatAmount, formatDateTime, formatYN, formatYYYYMM } from "../../../shared/componentkit/table/table.model";
 
 export interface APS2001Data {
   id: number;
@@ -30,7 +31,7 @@ export interface APS2001Data {
   UPD_USR_Name?: string; // 變更人員姓名 (可為空)
 }
 
-export const columns: Column[] = [
+export const columns: ReportColumn[] = [
   // { field: 'id', header: '序號', visible: true },
   { field: 'SAL_GUIYYYYMM', header: '發票年月', visible: true, format: formatYYYYMM },
   { field: 'SAL_GUIBegMM', header: '起始月份', visible: false },

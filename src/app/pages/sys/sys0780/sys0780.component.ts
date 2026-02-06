@@ -14,7 +14,6 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 @Component({
   selector: 'app-sys0780',
   templateUrl: './sys0780.component.html',
-  styleUrls: ['./sys0780.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,

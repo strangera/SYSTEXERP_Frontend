@@ -63,7 +63,9 @@ export interface IQueryData {
   tlt_no: string,
   contract_no: string,
   contract_subno: number,
-  tlt_name: string
+  tlt_name: string,
+  email: string,
+  VEN_Name: string,
 }
 
 // --- Service ---

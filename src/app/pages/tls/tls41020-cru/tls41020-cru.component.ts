@@ -186,4 +186,11 @@ export class TLS41020CRUComponent
     this.dataForm.reset();
     this.updateDisabledState();
   }
+  override onCancel(): void {
+  sessionStorage.setItem('TLS41020_fromCru', '1'); // 保險：避免瀏覽器上一頁沒帶 state
+  this.router.navigate(['/account/tls', 'tls41020'], {
+    state: { fromCru: true },
+  });
+}
+
 }

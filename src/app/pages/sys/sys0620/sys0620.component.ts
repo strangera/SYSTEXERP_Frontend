@@ -13,12 +13,9 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
-const now = new Date();
-
 @Component({
   selector: 'app-sys0620',
   templateUrl: './sys0620.component.html',
-  styleUrl: './sys0620.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -93,7 +90,7 @@ export class SYS0620Component extends BasicQpageComponent implements OnInit {
 
   onCreate() {
     if (this.canAdd()) {
-      let extras: NavigationExtras = {
+      const extras: NavigationExtras = {
         state: {
           crudstatus: CRUDStatus.Create,
           queryform: this.queryForm,
@@ -106,7 +103,7 @@ export class SYS0620Component extends BasicQpageComponent implements OnInit {
 
   onEdit(data: any) {
     if (this.canEdit()) {
-      let extras: NavigationExtras = {
+      const extras: NavigationExtras = {
         state: {
           crudstatus: CRUDStatus.Edit,
           rowdata: data,
@@ -119,7 +116,7 @@ export class SYS0620Component extends BasicQpageComponent implements OnInit {
   }
 
   onDetail(data: any) {
-    let extras: NavigationExtras = {
+    const extras: NavigationExtras = {
       state: {
         crudstatus: CRUDStatus.Read,
         rowdata: data,

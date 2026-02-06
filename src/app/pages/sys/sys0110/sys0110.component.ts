@@ -3,6 +3,8 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { SystemOption, SystemOptionsService } from '@service/system/sys1000.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
@@ -12,8 +14,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option, tblUser } from '../../../shared/models/sys/sysb000.model';
 import { UserData } from '../../../shared/models/sys/user.model';
 import { Sys0110Service } from './../../../service/api/sys/sys0110.service';
@@ -33,7 +34,7 @@ import { user_priorityOptions } from './sys0110.model';
     InputTextComponent,
     MultiSelectComponent,
     CalendarRangeQuickComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
   ],
 })
@@ -51,15 +52,17 @@ export class SYS0110Component extends BasicQueryPageComponent<UserData> implemen
     last_loginEnd: [null], // 帳號有效結束日期
     status: [[]], // 使用者狀態 1=有效 2=停用
     user_type: [[]], // 使用者型態 1=公司內部人員(default) 2=專櫃人員 3=其他
-    ...createPaginationConfig([{ field: 'user_No', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'user_No', order: 1 }]],
   });
 
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   user_priorityOptions = user_priorityOptions;
-
+  lastQueryBody: any;
   // 表格資料
   data: UserData[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'user_No', header: '使用者編號', visible: true },
     { field: 'user_Name', header: '使用者名稱', visible: true },
     {
@@ -104,8 +107,8 @@ export class SYS0110Component extends BasicQueryPageComponent<UserData> implemen
   userTypeOptions: option[] = [];
 
   constructor(
-    private sysb400Service: Sysb400Service,
-    private sys0110Service: Sys0110Service,
+    private readonly sysb400Service: Sysb400Service,
+    public readonly sys0110Service: Sys0110Service,
   ) {
     super(); // 呼叫父類別建構子
   }
@@ -135,6 +138,7 @@ export class SYS0110Component extends BasicQueryPageComponent<UserData> implemen
       this.sys0110Service.queryUser(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
         this.data = response.Data || [];
+        this.lastQueryBody = frm.value;
         this.totalRecords = response.TotalCount;
       });
     });
