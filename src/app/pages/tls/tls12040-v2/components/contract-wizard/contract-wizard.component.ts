@@ -33,6 +33,10 @@ import { SharedDropdownService } from '@shared/services/shared-dropdown.service'
 import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
 import { CrudTrackingService } from '../../../tls13010-v2/core/services/crud-tracking.service';
 
+// V2 服務
+import { ContractValidatorService } from '../../services/validation/contract-validator.service';
+import { SubmitDataService } from '../../services/submit/submit-data.service';
+
 // V2 類型
 import { CommissionItem as V2CommissionItem } from '../../../tls13010-v2/core/models/commission/commission-item.interface';
 import {
@@ -193,6 +197,10 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
   // 折扣選項 (Step 3 專用)
   discountOptions: any[] = [];
 
+  // 上次同步的契約日期（smart sync 用）
+  private lastSyncedStartDate: unknown = null;
+  private lastSyncedEndDate: unknown = null;
+
   // 子組件參考
   @ViewChild(Step1ContractInfoComponent) step1Component?: Step1ContractInfoComponent;
   @ViewChild(Step2DeductionComponent) step2Component?: Step2DeductionComponent;
@@ -203,7 +211,9 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     public override router: Router,
     private apiService: TLS12040Service,
     private tlsBaseService: TlsContractBaseService,
-    public sharedDropdownService: SharedDropdownService
+    public sharedDropdownService: SharedDropdownService,
+    private validatorService: ContractValidatorService,
+    private submitDataService: SubmitDataService
   ) {
     super();
     this.initializeForm();
@@ -462,17 +472,25 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       if (response?.Status === '0000' && response.Data) {
         const data = response.Data;
 
-        // 處理抽成別 trim
+        // 處理字串欄位 trim（資料庫固定長度欄位會帶空白）
         if (data.tlt_term_type) {
           data.tlt_term_type = String(data.tlt_term_type).trim();
           this.originalCommissionType = data.tlt_term_type;
+        }
+        if (data.apply_type) {
+          data.apply_type = String(data.apply_type).trim();
         }
 
         // 資料預處理（與 v1 CRU populateForm 一致）
         const processedData = this.preprocessApiData(data);
 
-        // 填充表單
+        // 填充表單（emitEvent:false 避免 valueChanges 監聽器在載入時連鎖觸發）
         this.dataForm.patchValue(processedData, { emitEvent: false });
+
+        // apply_type 下拉在 emitEvent:false 時可能不會同步 UI，顯式重設強制更新
+        if (processedData.apply_type) {
+          this.dataForm.get('apply_type')?.setValue(processedData.apply_type);
+        }
 
         // 更新驗證器
         this.updateDynamicValidators();
@@ -739,26 +757,6 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     return String(value);
   }
 
-  /**
-   * 將日期值格式化為 YYYYMM 字串 (例如 202602)
-   * 用於步驟二代扣款送出 API 時的日期格式
-   */
-  private formatDateToYearMonth(value: Date | string | null | undefined): string {
-    if (!value) return '';
-    if (value instanceof Date && !isNaN(value.getTime())) {
-      const y = value.getFullYear();
-      const m = String(value.getMonth() + 1).padStart(2, '0');
-      return `${y}${m}`;
-    }
-    if (typeof value === 'string') {
-      // 處理各種字串格式: "2026/02", "2026-02", "202602", "2026-02-05T..."
-      const cleaned = value.replace(/[/\-T]/g, '');
-      // 取前6碼 YYYYMM
-      return cleaned.substring(0, 6);
-    }
-    return String(value);
-  }
-
   private async loadDiscountOptions(): Promise<void> {
     try {
       const options = await this.sharedDropdownService.getPaperTypeOptions('T102').toPromise();
@@ -914,7 +912,12 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     const actualStep = this.stepIndexMap[visualIndex];
     if (actualStep === undefined) return;
 
+    // 往前跳需驗證；往回跳不需驗證
     if (actualStep > this.currentStep && !this.validateCurrentStep()) {
+      // 強制重設 p-steps 的視覺狀態（避免 header 與實際步驟不同步）
+      const saved = this.currentStep;
+      this.currentStep = -1;
+      Promise.resolve().then(() => { this.currentStep = saved; });
       return;
     }
 
@@ -945,50 +948,44 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   // ========== 驗證 ==========
   private validateCurrentStep(): boolean {
-    switch (this.currentStep) {
-      case 0:
-        return this.validateStep1();
-      case 1:
-        return this.validateStep2();
-      case 2:
-        return this.validateStep3();
-      case 3:
-        return this.validateStep4();
-      default:
-        return true;
+    try {
+      switch (this.currentStep) {
+        case 0:
+          return this.validateStep1();
+        case 1:
+          return this.validateStep2();
+        case 2:
+          return this.validateStep3();
+        case 3:
+          return this.validateStep4();
+        default:
+          return true;
+      }
+    } catch (error) {
+      console.error('[Wizard] 驗證錯誤:', error);
+      this.messageService.errorBubble('驗證程序發生錯誤，請聯繫系統管理員');
+      return false;
     }
   }
 
   private validateStep1(): boolean {
     this.wizardState.contractInfo = this.dataForm.getRawValue() as ContractInfo;
 
-    const requiredFields = [
-      { field: 'tlt_name', label: '專櫃名稱' },
-      { field: 'bus_type', label: '大分類' },
-      { field: 'bus_class', label: '中分類' },
-      { field: 'tlt_bdate', label: '契約起始日' },
-      { field: 'tlt_edate', label: '契約截止日' },
-      { field: 'org_id', label: '營運單位' },
-      { field: 'tlt_contract_bdate', label: '營運起始日' },
-      { field: 'tlt_contract_edate', label: '營運截止日' },
-      { field: 'tlt_term_type', label: '抽成別' }
-    ];
-
-    const missingFields: string[] = [];
-    for (const { field, label } of requiredFields) {
-      const control = this.dataForm.get(field);
-      if (!control?.value || (typeof control.value === 'string' && !control.value.trim())) {
-        missingFields.push(label);
-        control?.markAsTouched();
-      }
-    }
-
-    if (missingFields.length > 0) {
+    const result = this.validatorService.validateStep1(this.dataForm, this.wizardState.locationData);
+    if (!result.isValid) {
+      this.submitted = true;
       if (this.step1Component) {
         this.step1Component.submitted = true;
       }
-      this.messageService.warnBubble(`請填寫必填欄位：${missingFields.slice(0, 3).join('、')}${missingFields.length > 3 ? ' 等' : ''}`);
+      const firstErrors = result.errors.slice(0, 3).map(e => e.message);
+      const suffix = result.errors.length > 3 ? `...等 ${result.errors.length} 項` : '';
+      this.messageService.warnBubble(`請修正：${firstErrors.join('、')}${suffix}`);
       return false;
+    }
+
+    // 警告（不阻擋流程）
+    if (result.warnings.length > 0) {
+      this.messageService.warnBubble(result.warnings.map(w => w.message).join('、'));
     }
 
     // 離開 Step 1 時，同步契約起訖日到 Steps 2-4
@@ -998,57 +995,114 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
   }
 
   private validateStep2(): boolean {
-    // 代扣款驗證邏輯
+    if (this.isViewMode) return true;
+
+    const contractRange = {
+      tlt_bdate: this.dataForm.get('tlt_bdate')?.value,
+      tlt_edate: this.dataForm.get('tlt_edate')?.value
+    };
+    const result = this.validatorService.validateStep2(this.wizardState.fareItems, contractRange);
+
+    if (!result.isValid) {
+      // 觸發 Step2 重新渲染以顯示錯誤標記
+      this.wizardState.fareItems = [...this.wizardState.fareItems];
+      this.messageService.warnBubble(result.errorMessages.join('\n'));
+      return false;
+    }
     return true;
   }
 
   private validateStep3(): boolean {
-    // 抽成設定驗證邏輯
+    if (this.isViewMode) return true;
+
+    const result = this.validatorService.validateStep3(
+      this.wizardState.commissionItems,
+      this.currentCommissionType,
+      this.dataForm.get('tlt_bdate')?.value,
+      this.dataForm.get('tlt_edate')?.value
+    );
+
+    if (!result.isValid) {
+      this.wizardState.commissionItems = [...this.wizardState.commissionItems];
+      this.messageService.warnBubble(result.errorMessages.join('\n'));
+      return false;
+    }
     return true;
   }
 
   private validateStep4(): boolean {
-    // 條件設定驗證邏輯
+    if (this.isViewMode) return true;
+
+    const result = this.validatorService.validateStep4(
+      this.wizardState.conditionItems,
+      this.currentCommissionType
+    );
+
+    if (!result.isValid) {
+      this.wizardState.conditionItems = [...this.wizardState.conditionItems];
+      this.messageService.warnBubble(result.errorMessages.join('\n'));
+      return false;
+    }
     return true;
   }
 
   /**
-   * 同步 Step 1 的契約起訖日到 Steps 2-4 所有日期欄位
-   * 每次離開 Step 1 時觸發，確保日期一致
+   * Smart Sync: 同步 Step 1 的契約起訖日到 Steps 2-4
+   * - 日期沒變就跳過（避免無效覆蓋）
+   * - 跳過 _status === 'original' 的項目（保護使用者手動調整的既有資料）
    */
   private syncContractDatesToSteps(): void {
     const startDate = this.dataForm.get('tlt_bdate')?.value;
     const endDate = this.dataForm.get('tlt_edate')?.value;
     if (!startDate || !endDate) return;
 
-    // Step 2: 代扣款 tpy_bdate / tpy_edate
-    this.wizardState.fareItems = this.wizardState.fareItems.map(item => ({
-      ...item,
-      tpy_bdate: startDate,
-      tpy_edate: endDate
-    }));
+    // 日期沒有變更就跳過同步
+    if (this.areDatesEqual(startDate, this.lastSyncedStartDate) &&
+        this.areDatesEqual(endDate, this.lastSyncedEndDate)) {
+      return;
+    }
 
-    // Step 3: 抽成設定
-    this.wizardState.commissionItems = this.wizardState.commissionItems.map(item => ({
-      ...item,
-      cag_bdate: startDate,
-      cag_edate: endDate,
-      mainStartDate: startDate,
-      mainEndDate: endDate,
-      // 折扣設定明細日期
-      discountSettingItems: (item.discountSettingItems || []).map(d => ({
-        ...d,
-        tlt_bdate: startDate,
-        tlt_edate: endDate
-      }))
-    })) as typeof this.wizardState.commissionItems;
+    // Step 2: 代扣款（跳過既有項目）
+    this.wizardState.fareItems = this.wizardState.fareItems.map(item =>
+      item._status === 'original' ? item : { ...item, tpy_bdate: startDate, tpy_edate: endDate }
+    );
 
-    // Step 4: 條件設定 cag_bdate / cag_edate
-    this.wizardState.conditionItems = this.wizardState.conditionItems.map(item => ({
-      ...item,
-      cag_bdate: this.formatDateToString(startDate),
-      cag_edate: this.formatDateToString(endDate)
-    }));
+    // Step 3: 抽成設定（跳過既有項目）
+    this.wizardState.commissionItems = this.wizardState.commissionItems.map(item => {
+      if (item._status === 'original') return item;
+      return {
+        ...item,
+        cag_bdate: startDate,
+        cag_edate: endDate,
+        mainStartDate: startDate,
+        mainEndDate: endDate,
+        discountSettingItems: (item.discountSettingItems || []).map(d =>
+          d._status === 'original' ? d : { ...d, tlt_bdate: startDate, tlt_edate: endDate }
+        )
+      } as typeof item;
+    });
+
+    // Step 4: 條件設定（跳過既有項目）
+    this.wizardState.conditionItems = this.wizardState.conditionItems.map(item =>
+      item._status === 'original' ? item : {
+        ...item,
+        cag_bdate: this.formatDateToString(startDate),
+        cag_edate: this.formatDateToString(endDate)
+      }
+    );
+
+    // 更新追蹤日期
+    this.lastSyncedStartDate = startDate;
+    this.lastSyncedEndDate = endDate;
+  }
+
+  private areDatesEqual(date1: unknown, date2: unknown): boolean {
+    if (date1 === date2) return true;
+    if (!date1 || !date2) return false;
+    if (date1 instanceof Date && date2 instanceof Date) {
+      return date1.getTime() === date2.getTime();
+    }
+    return String(date1) === String(date2);
   }
 
   // ========== 儲存 ==========
@@ -1101,302 +1155,18 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private assembleSubmitData(): any {
-    const formValue = this.dataForm.getRawValue();
-    const isNewContract = this.isFormCreateable || this.isRenewalMode;
-
-    // 續約模式下確保 apply_type 為 '2'
-    if (this.isRenewalMode) {
-      formValue.apply_type = '2';
-    }
-
-    return {
-      contractInfo: {
-        operation: isNewContract ? 'INSERT' : 'UPDATE',
-        data: {
-          ...formValue,
-          // 位置資料：清理成 CRUD 結構
-          locationInfo: this.cleanLocationItems(this.wizardState.locationData)
-        }
-      },
-      // 代扣款：只送 is_selected 的項目
-      deductions: this.cleanDeductionItems(this.wizardState.fareItems, isNewContract),
-      // 抽成：主檔 + 三種明細分別拆開
-      commissions: this.cleanCommissionItems(this.wizardState.commissionItems, isNewContract),
-      // 條件：依抽成別分配到對應 bucket
-      conditions: this.assembleConditions(formValue.tlt_term_type),
-      metadata: {
-        apply_no: formValue.apply_no || '',
-        contractId: formValue.apply_no || '',
-        commissionType: formValue.tlt_term_type,
-        isNewContract,
-        submittedAt: new Date().toISOString(),
-        totalOperations: 0
-      }
-    };
-  }
-
-  // ========== 提交資料清理 ==========
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- 資料清理需要 any 處理各種 API 格式
-
-  /** 判斷 ID 是否為有效的資料庫 ID（非臨時 ID） */
-  private hasValidId(id: unknown): boolean {
-    if (!id) return false;
-    const str = String(id);
-    return !str.startsWith('temp_') && !str.includes('new_') && !isNaN(Number(str)) && Number(str) > 0;
-  }
-
-  /** 清理位置資料為 CRUD 結構 */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private cleanLocationItems(locations: LocationItem[]): any[] {
-    return locations.map(loc => ({
-      ...loc,
-      id: this.hasValidId(loc.id) ? loc.id : undefined
-    }));
-  }
-
-  /**
-   * 清理代扣款資料
-   * - 只有 is_selected === true 的項目才送新增/修改
-   * - 取消勾選的既有項目送刪除
-   * - 日期轉為 YYYYMM 格式
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private cleanDeductionItems(fareItems: FareItem[], isCreateMode: boolean): { toInsert: any[]; toUpdate: any[]; toDelete: any[] } {
-    const toInsert: any[] = [];
-    const toUpdate: any[] = [];
-    const toDelete: any[] = [];
-
-    fareItems.forEach(item => {
-      // 已刪除的項目：有效 ID 才送刪除
-      if (item._status === 'deleted') {
-        if (this.hasValidId(item.id)) {
-          toDelete.push({ id: Number(item.id) });
-        }
-        return;
-      }
-
-      // 未勾選的項目：既有的送刪除，新增的跳過
-      if (!item.is_selected) {
-        if (this.hasValidId(item.id)) {
-          toDelete.push({ id: Number(item.id) });
-        }
-        return;
-      }
-
-      // 已勾選的項目：清理欄位
-      const cleanItem: any = {
-        ...(this.hasValidId(item.id) ? { id: Number(item.id) } : {}),
-        cap_type: item.cap_type || '',
-        cap_item: item.cap_item || '',
-        tpy_bdate: this.formatDateToYearMonth(item.tpy_bdate),
-        tpy_edate: this.formatDateToYearMonth(item.tpy_edate),
-        tpy_type: item.tpy_type,
-        tpy_qty: Number(item.tpy_qty) || 0,
-        tpy_unitamt: Number(item.tpy_unitamt) || 0,
-        tpy_amount: Number(item.tpy_amount) || 0,
-        tpy_totalamt: Number(item.tpy_totalamt) || 0,
-        gui_flag: item.gui_flag,
-        day_account: item.day_account,
-        interval: Number(item.interval) || 0,
-        down_payment: Number(item.down_payment) || 0,
-        period_nos: Number(item.period_nos) || 0,
-        tpy_rate: Number(item.tpy_rate) || 0
-      };
-
-      // Create 模式：所有已勾選都是 insert
-      if (isCreateMode || item._status === 'new') {
-        toInsert.push(cleanItem);
-      } else if (item._status === 'modified') {
-        toUpdate.push(cleanItem);
-      }
-    });
-
-    return { toInsert, toUpdate, toDelete };
-  }
-
-  /**
-   * 清理抽成資料：主檔 + 三種明細分開成獨立 CRUD 結構
-   * 對應後端：masters / discountSettings / annualSettings / levelSettings
-   */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private cleanCommissionItems(commissionItems: V2CommissionItem[], isCreateMode: boolean): any {
-    const masters = { toInsert: [] as any[], toUpdate: [] as any[], toDelete: [] as any[] };
-    const discountSettings = { toInsert: [] as any[], toUpdate: [] as any[], toDelete: [] as any[] };
-    const annualSettings = { toInsert: [] as any[], toUpdate: [] as any[], toDelete: [] as any[] };
-    const levelSettings = { toInsert: [] as any[], toUpdate: [] as any[], toDelete: [] as any[] };
-
-    commissionItems.forEach(item => {
-      // 已刪除的主檔
-      if (item._status === 'deleted') {
-        if (this.hasValidId(item.id)) {
-          masters.toDelete.push({ id: Number(item.id) });
-        }
-        return;
-      }
-
-      // 清理主檔
-      const cleanMaster: any = {
-        ...(this.hasValidId(item.id) ? { id: Number(item.id) } : {}),
-        tlt_id: item.tlt_id || '',
-        tlt_id_desc: item.tlt_id_desc || '',
-        cag_taxtype: item.cag_taxtype,
-        sst_amount: Number(item.sst_amount) || 0,
-        sst_rate: Number(item.sst_rate) || 0,
-        cap_saletype1: item.cap_saletype1 ? 'Y' : 'N',
-        cap_saletype2: item.cap_saletype2 ? 'Y' : 'N',
-        cap_saletype3: item.cap_saletype3 ? 'Y' : 'N',
-        cap_saletype5: item.cap_saletype5 ? 'Y' : 'N',
-        cag_bdate: this.formatDateToString(item.cag_bdate),
-        cag_edate: this.formatDateToString(item.cag_edate),
-        cag_remark: item.remark || item.cag_remark || ''
-      };
-
-      if (isCreateMode || item._status === 'new') {
-        masters.toInsert.push(cleanMaster);
-      } else if (item._status === 'modified') {
-        masters.toUpdate.push(cleanMaster);
-      }
-
-      // 處理折扣設定明細 (discountSettingItems → discountSettings)
-      (item.discountSettingItems || []).forEach((detail: any) => {
-        if (detail._status === 'deleted') {
-          if (this.hasValidId(detail.id)) {
-            discountSettings.toDelete.push({ id: String(detail.id) });
-          }
-          return;
-        }
-        // 未勾選的項目：既有的送刪除，新增的跳過
-        if (!detail.selected) {
-          if (this.hasValidId(detail.id)) {
-            discountSettings.toDelete.push({ id: String(detail.id) });
-          }
-          return;
-        }
-        // 已勾選的項目
-        const cleanDetail: any = {
-          ...(this.hasValidId(detail.id) ? { id: String(detail.id) } : {}),
-          tlt_id: item.tlt_id || '',
-          cag_barcode: detail.cag_barcode || '',
-          tlt_bdate: this.formatDateToString(detail.tlt_bdate),
-          tlt_edate: this.formatDateToString(detail.tlt_edate),
-          cag_charge_rate: (Number(detail.cag_charge_rate) || 0) / 100 // UI 百分比 → API 小數
-        };
-        if (isCreateMode || detail._status === 'new' || !this.hasValidId(detail.id)) {
-          discountSettings.toInsert.push({ ...cleanDetail, id: String(detail.id || '') }); // 保留 ID 供 level charged_id 比對（後端要求 string）
-        } else if (detail._status === 'modified') {
-          discountSettings.toUpdate.push(cleanDetail);
-        }
-      });
-
-      // 處理年度業績明細 (annualPerformanceItems → annualSettings)
-      (item.annualPerformanceItems || []).forEach((detail: any) => {
-        if (detail._status === 'deleted') {
-          if (this.hasValidId(detail.id)) {
-            annualSettings.toDelete.push({ id: Number(detail.id) });
-          }
-          return;
-        }
-        const cleanDetail: any = {
-          ...(this.hasValidId(detail.id) ? { id: Number(detail.id) } : {}),
-          tlt_id: item.tlt_id || '',
-          tlt_bdate: this.formatDateToString(detail.tlt_bdate),
-          tlt_edate: this.formatDateToString(detail.tlt_edate),
-          year_amount: Number(detail.year_amount) || 0,
-          extra_rate: (Number(detail.extra_rate) || 0) / 100 // UI 百分比 → API 小數
-        };
-        if (isCreateMode || detail._status === 'new' || !this.hasValidId(detail.id)) {
-          annualSettings.toInsert.push(cleanDetail);
-        } else if (detail._status === 'modified') {
-          annualSettings.toUpdate.push(cleanDetail);
-        }
-      });
-
-      // 處理層級抽成明細 (discountLevelItems → levelSettings)
-      (item.discountLevelItems || []).forEach((detail: any, index: number) => {
-        if (detail._status === 'deleted') {
-          if (this.hasValidId(detail.id)) {
-            levelSettings.toDelete.push({ id: Number(detail.id) });
-          }
-          return;
-        }
-        // 未勾選的項目：既有的送刪除，新增的跳過
-        if (detail.selected === false || detail.is_enabled === false) {
-          if (this.hasValidId(detail.id)) {
-            levelSettings.toDelete.push({ id: Number(detail.id) });
-          }
-          return;
-        }
-        const cleanDetail: any = {
-          ...(this.hasValidId(detail.id) ? { id: Number(detail.id) } : {}),
-          tlt_id: item.tlt_id || '',
-          charged_id: String(detail.charged_id || ''), // 關聯折扣 ID
-          seq_no: index + 1,
-          cag_barcode: detail.cag_barcode || '',
-          level_bmount: Number(detail.level_bmount) || 0,
-          level_eamount: Number(detail.level_eamount) || 0,
-          level_charge_rate: (Number(detail.level_charge_rate) || 0) / 100 // UI 百分比 → API 小數
-        };
-        if (isCreateMode || detail._status === 'new' || !this.hasValidId(detail.id)) {
-          levelSettings.toInsert.push(cleanDetail);
-        } else if (detail._status === 'modified') {
-          levelSettings.toUpdate.push(cleanDetail);
-        }
-      });
-    });
-
-    return { masters, discountSettings, annualSettings, levelSettings };
-  }
-
-  /**
-   * 根據抽成類型將 conditionItems 分配到對應的條件 bucket
-   */
-  private assembleConditions(commissionType: string): Record<string, { toInsert: unknown[]; toUpdate: unknown[]; toDelete: unknown[] }> {
-    const emptyCrud = () => ({ toInsert: [] as unknown[], toUpdate: [] as unknown[], toDelete: [] as unknown[] });
-
-    const result: Record<string, { toInsert: unknown[]; toUpdate: unknown[]; toDelete: unknown[] }> = {
-      fixedRents: emptyCrud(),
-      baseRentHigher: emptyCrud(),
-      baseCommissions: emptyCrud(),
-      graduated: emptyCrud(),
-      baseTier: emptyCrud()
-    };
-
-    const typeMap: Record<string, string> = {
-      '1': 'fixedRents',
-      '2': 'baseRentHigher',
-      '4': 'baseCommissions',
-      '5': 'graduated',
-      '6': 'baseTier'
-    };
-    const key = typeMap[String(commissionType).trim()];
-    if (!key) return result;
-
-    const isCreateMode = this.isFormCreateable || this.isRenewalMode;
-    const bucket = result[key];
-
-    this.wizardState.conditionItems.forEach((item: any) => {
-      if (item._status === 'deleted') {
-        if (this.hasValidId(item.id)) {
-          bucket.toDelete.push({ id: Number(item.id) });
-        }
-        return;
-      }
-
-      const cleanItem = { ...item };
-      if (!this.hasValidId(cleanItem.id)) {
-        delete cleanItem.id;
-      }
-      delete cleanItem._status;
-
-      if (isCreateMode || item._status === 'new') {
-        bucket.toInsert.push(cleanItem);
-      } else if (item._status === 'modified') {
-        bucket.toUpdate.push(cleanItem);
-      }
-    });
-
-    return result;
+    return this.submitDataService.assembleSubmitData(
+      this.dataForm.getRawValue(),
+      this.wizardState.locationData,
+      this.wizardState.fareItems,
+      this.wizardState.commissionItems,
+      this.wizardState.conditionItems,
+      this.isFormCreateable || this.isRenewalMode,
+      this.isRenewalMode,
+      this.currentCommissionType
+    );
   }
 
   // ========== 事件處理 ==========

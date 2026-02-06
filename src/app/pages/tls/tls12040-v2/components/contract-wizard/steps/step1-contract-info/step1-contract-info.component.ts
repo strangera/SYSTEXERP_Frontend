@@ -861,6 +861,8 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     }));
 
     this.updateDisplayLocationData();
+    // 通知 wizard 更新 wizardState.locationData（續約位置資料）
+    this.emitDataChange();
   }
 
   // ========== 分類變更處理 ==========
