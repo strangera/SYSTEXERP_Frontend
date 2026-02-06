@@ -11,8 +11,8 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatDate } from '@shared/componentkit/table-report/table-report.model';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
@@ -64,7 +64,7 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
   vendorOptions = this.dropdown.queryPos2013TltTalent();// 廠商
   data: (DetailData[] | SummaryData[]) = [];
   footerData: (DetailFooter[] | SummaryFooter[]) = [];
-  columns: Column[] = [];
+  columns: ReportColumn[] = [];
   historyRequestBody: QueryTLS57050Request | null = null;
 
   constructor(
@@ -72,15 +72,11 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
     private readonly tls52010Service: Tls52010Service,
     private readonly dropdown: DropdownApiService,
     private readonly fileExportService: FileExportService,
-    private datePipe: DatePipe
+    private readonly datePipe: DatePipe
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS57050');
-    this.updateTableColumns(this.queryForm.controls.ReportType.value);
-    this.queryForm.controls.ReportType.valueChanges.pipe(untilDestroyed(this)).subscribe(mode => {
-      this.updateTableColumns(mode);
-    });
   }
   updateTableColumns(displayMode: number | null) {
     if (displayMode === 1) { // 彙總模式
@@ -98,7 +94,6 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
         { field: 'TotRebate', header: '整張折讓', format: formatAmount },
         { field: 'TotDisc', header: '整張折扣', format: formatAmount },
       ];
-      this.data = [];
     } else if (displayMode === 2) { // 明細模式
       this.columns = [
         { field: 'TXN_SaleNoteNo', header: '銷貨單號' },
@@ -112,12 +107,11 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
         { field: 'PLU_No', header: '國際條碼' },
         { field: 'PLU_Name', header: '商品名稱' },
         { field: 'TXN_Qty', header: '數量' },
-        { field: 'PLU_SalePrc', header: '銷售定價', format: formatAmount },
-        { field: 'TXN_SaleAmt', header: '銷售金額', format: formatAmount },
-        { field: 'TotRebate', header: '整張折讓', format: formatAmount },
-        { field: 'TotDisc', header: '整張折扣', format: formatAmount },
+        { field: 'PLU_SalePrc', header: '銷售定價', format: formatAmount, isSubTotal: true },
+        { field: 'TXN_SaleAmt', header: '銷售金額', format: formatAmount, isSubTotal: true },
+        { field: 'TotRebate', header: '整張折讓', format: formatAmount, isSubTotal: true },
+        { field: 'TotDisc', header: '整張折扣', format: formatAmount, isSubTotal: true },
       ];
-      this.data = [];
     } else {
       this.columns = [];
       this.data = [];
@@ -150,6 +144,7 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
           this.data = response.Data;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
           this.footerData = response.FooterData
+          this.updateTableColumns(displayMode);
         } else {
           this.data = [];
           this.totalRecords = 0;
