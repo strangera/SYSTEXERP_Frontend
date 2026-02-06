@@ -220,7 +220,18 @@ export class TLS26080Service {
     const payload: TalentOpenFlagQuery = {
       VEN_No: query.ven_no,
     };
+
     return this.dropdown.queryTltTalentOpenFlag(payload).pipe(
+      take(1),
+      map(res => res?.map(item => ({
+        ...item,
+        value: item.No,
+        label: `${item.No} - ${item.Name}`,
+      })) ?? []),
+      tap(res => {
+        this.tltTalentOptions.set(res ?? []);
+        this.logger.debug(`getTLTTalentOptions:`, [payload, res]);
+      }),
       finalize(() => this.tltTalentOptionsLoading.set(false))
     );
   }

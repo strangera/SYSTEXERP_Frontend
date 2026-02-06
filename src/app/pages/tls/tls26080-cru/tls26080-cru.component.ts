@@ -23,7 +23,7 @@ import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
 import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
-import { finalize, map, Observable } from 'rxjs';
+import { finalize, map, Observable, tap } from 'rxjs';
 import * as XLSX from 'xlsx';
 import { CampaignData, TLS26080Data, TLS26080EditTable, TLS26080InsertPayload, TLS26080KeyInTable, TLS26080UpdatePayload } from '../tls26080/tls26080.model';
 
@@ -1028,6 +1028,17 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       : (venNoOrBody?.['ven_no'] as string) ?? '';
     return this.service.getTLTTalentOptions({ ven_no }).pipe(
       map(res => res ?? []),
+      tap(res => {
+        const options = res.map(item => ({
+          ...item,
+          value: item.No,
+          label: `${item.No}-${item.Name}`,
+        }));
+        this.dialogData.set(options);
+        this.filteredDialogData.set(options);
+        this.dialogTotalRecords.set(options.length);
+        this.counterColumns();
+      }),
       finalize(() => this.dialogLoading.set(false))
     );
   }
