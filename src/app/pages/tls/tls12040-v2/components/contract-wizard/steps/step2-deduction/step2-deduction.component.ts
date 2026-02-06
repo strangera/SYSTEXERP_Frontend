@@ -413,7 +413,7 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     if (mode === 'common') {
       // 常用模式：顯示常用項目、已選取項目、契約既有項目、複製項目
       return data.some((item: FareItem) =>
-        item._status !== 'deleted' && (
+        (item._status !== 'deleted' || item.data_source === 'CONTRACT_EXISTING') && (
           item.is_commonly_used === 'Y' ||
           item.is_selected ||
           item.data_source === 'CONTRACT_EXISTING' ||
@@ -421,14 +421,17 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
         )
       );
     }
-    return data.some(item => item._status !== 'deleted');
+    return data.some(item => item._status !== 'deleted' || item.data_source === 'CONTRACT_EXISTING');
   }
 
   getDisplayDataForType(capType: string): FareItem[] {
     const data = this.fareData[capType as keyof FaresByType] || [];
     const mode = this.showModeByType[capType];
 
-    let filteredData = data.filter(item => item._status !== 'deleted');
+    // 過濾已刪除項目，但保留 CONTRACT_EXISTING 的（取消勾選仍需顯示）
+    let filteredData = data.filter(item =>
+      item._status !== 'deleted' || item.data_source === 'CONTRACT_EXISTING'
+    );
 
     if (mode === 'common') {
       // 常用模式：顯示常用項目、已選取項目、契約既有項目、複製項目
@@ -534,12 +537,13 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     // 更新欄位值
     (rowData as unknown as Record<string, unknown>)[fieldName] = newValue;
 
-    // 自動計算金額
-    if (['tpy_qty', 'tpy_unitamt'].includes(fieldName)) {
-      const qty = rowData.tpy_qty || 0;
-      const unitAmt = rowData.tpy_unitamt || 0;
-      rowData.tpy_amount = qty * unitAmt;
+    // 當單位改為「坪數」(tpy_type = '01') 時，自動帶入坪數總和
+    if (fieldName === 'tpy_type' && newValue === '01' && this.totalLocationSpace > 0) {
+      rowData.tpy_qty = this.totalLocationSpace;
     }
+
+    // 依類型自動計算金額
+    this.performCalculation(rowData, capType);
 
     // 使用 CrudTrackingService 判斷是否真的有修改
     this.updateItemStatus(rowData, capType);
@@ -562,10 +566,52 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
           rowData.tpy_edate = this.contractDates.edate;
         }
       }
+
+      // 如果選擇坪數單位，設定預設數量為總坪數
+      if (rowData.tpy_type === '01' && this.totalLocationSpace > 0) {
+        if (!rowData.tpy_qty || rowData.tpy_qty === 0 || rowData.tpy_qty === 1) {
+          rowData.tpy_qty = this.totalLocationSpace;
+        }
+      }
+
+      // 帶入日期/數量後自動計算金額
+      this.performCalculation(rowData, capType);
     }
 
     this.emitDataChange();
     this.cdr.detectChanges();
+  }
+
+  /**
+   * 依類型自動計算金額
+   * - A 類（一次性）: amount = ceil(unitamt × qty), edate = bdate
+   * - B 類（月繳）: amount = ceil(unitamt × qty)
+   * - C 類（分期）: 重算期數、首期金額
+   * - D/E 類（費率）: 不需要自動計算
+   */
+  private performCalculation(rowData: FareItem, capType: string): void {
+    switch (capType) {
+      case 'A': {
+        const qty = rowData.tpy_qty || 0;
+        const unitAmt = rowData.tpy_unitamt || 0;
+        rowData.tpy_amount = Math.ceil(unitAmt * qty);
+        // A 類結束日期永遠等於起始日期
+        if (rowData.tpy_bdate) {
+          rowData.tpy_edate = rowData.tpy_bdate;
+        }
+        break;
+      }
+      case 'B': {
+        const qty = rowData.tpy_qty || 0;
+        const unitAmt = rowData.tpy_unitamt || 0;
+        rowData.tpy_amount = Math.ceil(unitAmt * qty);
+        break;
+      }
+      case 'C':
+        this.recalculateTypeCFields(rowData);
+        break;
+      // D, E: 費率類，不需要自動計算金額
+    }
   }
 
   private updateItemStatus(rowData: FareItem, capType: string): void {
