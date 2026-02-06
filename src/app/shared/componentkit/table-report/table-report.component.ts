@@ -94,6 +94,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() footerPercentData: any;     // (百分比)頁尾資料
   @Input() extraFooterData: any; // 額外的 footer 資料（可為 object 或 array），會顯示於 footer 區塊，不對應欄位
   @Input() groupRowsBy?: string;    // (小計)群組欄位
+  @Input() subTotalLabel = '小計'; // 小計列左側標籤文字
   groupTotals: Record<string, Record<string, number>> = {}; // 用於儲存每個群組的總計
   @Input() subTotalData: any;    // (小計)頁尾資料
   @Output() selectButton = new EventEmitter<any>();    // 選擇 按鈕事件
