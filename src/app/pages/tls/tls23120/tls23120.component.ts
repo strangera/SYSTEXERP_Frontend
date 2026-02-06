@@ -109,7 +109,19 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
-    this.restoreQueryForm();
+    const fromCru = !!history.state?.fromCru;
+
+    if (fromCru) {
+      // ✅ 只有從 CRU 回來才還原
+      this.restoreQueryForm();
+    } else {
+      // ✅ 其他頁回來：清掉舊狀態 + 回預設
+      try {
+        this.queryStateService.clearQueryState(this.QUERY_KEY);
+      } catch { }
+      this.resetToDefault();
+    }
+
     this.initializePage('TLS23120', 'tls/tls23120cru', this.queryForm, (form) => this.onSubmit(form));
 
     this.sortMeta = this.defaultSort.map(s => ({ ...s }));
@@ -153,8 +165,11 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
+
   ngOnDestroy(): void {
-    this.saveQueryForm();
+    // ❌ 不要在 destroy 時存查詢條件
+    // this.saveQueryForm();
+
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -384,6 +399,35 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
   }
 
 
+  // TLS23120Component
+  private resetToDefault(): void {
+    // 先把整個表單回到你想要的預設
+    this.queryForm.reset(
+      {
+        TXN_Date: this.yesterday,
+        filterMode: 'counter' as FilterMode,
+
+        TLT_No: null,
+        bus_type: null,
+        ShowBusType: true,
+
+        tlt_building: null,
+        area_no: [],
+        tlt_floor: [],
+        org_id: null,
+      },
+      { emitEvent: false },
+    );
+
+    // 依預設 filterMode 做 enable/disable + required
+    this.applyFilterMode('counter');
+
+    // ShowBusType 預設顯示/隱藏欄位同步一次
+    this.syncBusTypeColumns(true);
+
+    // 排序也回預設（你有 defaultSort）
+    this.sortMeta = this.defaultSort.map(s => ({ ...s }));
+  }
 
   private reviveDate(x: any) {
     if (!x) return x;
