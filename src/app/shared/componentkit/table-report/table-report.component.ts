@@ -137,6 +137,9 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       if (this.data.length !== 0) {
         if (this.dt) {
           this.dt.virtualScroll = false;
+          setTimeout(() => {
+            this.syncTableSortMeta();
+          });
         }
         this.cdr.detectChanges();
         // 判斷是否需要進行虛擬滾動，如果資料小於 pageSize 則不進行
@@ -162,6 +165,9 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     }
     const pageSize = this.lastQueryBody?.pageSize || this.lastQueryBody?.PageSize || 30;
     const currentSort = this.dt?.multiSortMeta;
+    if (currentSort) {
+      this.lastQueryBody.SortBy = currentSort;
+    }
     const body = {
       ...this.lastQueryBody,
       pageIndex: Math.floor(this.data.length / pageSize) + 1,
@@ -175,6 +181,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         this.updateGroupTotals(res.Data);
         this.cdr.detectChanges();
         this.data = [...this.data, ...res.Data];
+        this.syncTableSortMeta();
         this.dataChange.emit(this.data);
         this.virtualData = this.data;
         this.totalRecords = res.TotalCount || this.data.length;
@@ -200,6 +207,10 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (!this.queryFunction || !this.lastQueryBody || !this.showSort) {
       return;
     }
+    this.lastQueryBody = {
+      ...this.lastQueryBody,
+      SortBy: this.dt.multiSortMeta
+    };
     const body = {
       ...this.lastQueryBody,
       pageIndex: 1, // 重新排序時，總是從第一頁開始
@@ -215,6 +226,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         this.groupTotals = {}; // 清空小計，因為這是新的一組資料
         this.updateGroupTotals(res.Data);
         this.data = res.Data;
+        this.syncTableSortMeta();
         this.cdr.detectChanges();
 
         // 判斷是否開啟虛擬滾動：將 30 改為 pageSize
@@ -453,5 +465,28 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         }
       });
     });
+  }
+  /**
+ * 將上次查詢的排序條件同步回 p-table 元件，確保 UI 狀態一致
+ */
+  private syncTableSortMeta() {
+    // 確保 dt 已初始化且有排序資料
+    if (!this.dt || !this.lastQueryBody?.SortBy) return;
+
+    const sortBy = this.lastQueryBody.SortBy;
+    const meta = Array.isArray(sortBy) ? [...sortBy] : [sortBy];
+
+    // 1. 同步資料
+    this.dt.multiSortMeta = meta.map(m => ({
+      field: m.field || m.Field,
+      order: m.order || m.Order
+    }));
+
+    // 3. 核心：通知 TableService 排序已變動，這會讓 Header 的小箭頭亮起來
+    // PrimeNG 內部是靠這個 Observable 來通知 Header 元件更新 UI
+    setTimeout(() => {
+      this.dt.tableService.onSort(this.dt.multiSortMeta || []);
+      this.cdr.detectChanges();
+    }, 0);
   }
 }
