@@ -130,7 +130,11 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   OrganizationCodeOptions: any[] = [];
   ECRNoOptions: any[] = [];
   CounterOptions: any[] = [];
-  WhetherOptions: any[] = [];
+    WhetherOptions: any[] = [
+    { value: 'Y', label: '是' },
+    { value: 'N', label: '否' },
+    { value: null, label: '全部' },
+  ];
   installmentPeriodOptions = getSYS1000Options('T109');
   acquiringBankOptions = getSYS1000Options('T113');
   connectionStatusOptions: any[] = [
