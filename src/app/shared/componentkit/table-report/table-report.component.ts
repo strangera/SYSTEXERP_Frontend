@@ -263,6 +263,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     this.cdr.markForCheck();
   }
   onLazyLoad() {
+    console.log('🔍 onLazyLoad');
     if (this.isAllSelected) {
       this.selectedItems = this.data.filter(rowData => {
         const selectable = this.isRowSelectable(rowData);
