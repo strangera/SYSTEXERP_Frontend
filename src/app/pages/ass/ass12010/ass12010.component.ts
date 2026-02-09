@@ -1,7 +1,9 @@
 import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { ASS12010Service } from '@service/api/ass/ass12010.service';
+import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -88,6 +90,8 @@ export class ASS12010Component extends BasicQueryPageComponent<ASS12010Data> imp
 
   constructor(
     public readonly service: ASS12010Service,
+    private readonly ass11100Service: ASS11100Service,
+    private readonly fin11040Service: Fin11040Service,
     private readonly dropdownApiService: DropdownApiService,
     private readonly dropDownListService: DropDownListService,
     private readonly logger: NGXLogger,
@@ -142,10 +146,36 @@ export class ASS12010Component extends BasicQueryPageComponent<ASS12010Data> imp
       },
     });
 
-    // TODO: 等 API 規格確認後，載入以下下拉選單
-    // - 倉別 (WH_ID)
-    // - 需求單號 (NEED_ID)
-    // - 品項代碼 (GOODS_ID)
+    // 倉別 (WH_ID)
+    this.ass11100Service.queryASS11100({ PageSize: 9999, PageIndex: 1 }).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = (res.Data ?? [])
+          .filter(item => item.WH_ID != null && item.WH_ID !== '')
+          .map(item => ({
+            label: `${item.WH_ID} - ${item.WH_NAME ?? ''}`,
+            value: item.WH_ID!,
+          }));
+        this.whIdOptions.set(options);
+      },
+    });
+
+    // 品項代碼 (GOODS_ID)
+    this.fin11040Service.queryFIN11040({ PageSize: 9999, PageIndex: 1 }).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const data: TDS1008Data[] = res.Data ?? [];
+        const options = data
+          .filter(item => item.INV_ItemNo != null && item.INV_ItemNo !== '')
+          .map(item => ({
+            label: `${item.INV_ItemNo} - ${item.INV_ItemName ?? ''}`,
+            value: item.INV_ItemNo,
+          }));
+        this.goodsIdOptions.set(options);
+      },
+    });
+
+    // TODO: 需求單號 (NEED_ID) 待 API 規格確認後載入
   }
 
   /**

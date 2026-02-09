@@ -97,7 +97,6 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     this.initializePage('FIN53010', '/FIN/FIN53010CRU', this.queryForm, this.onSubmit.bind(this));
 
     this.service.getVoucherTypeOptions();
-    this.service.getAccNoOptions();
     this.service.getUsrOptions();
   }
 

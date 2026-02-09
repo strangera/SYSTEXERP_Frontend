@@ -183,7 +183,8 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
   dailyColumns: Column[] = [
     { field: 'Device_ID', header: '設備代碼', visible: true, readonly: true } as any,
     { field: 'Device_Name', header: '設備名稱', visible: true, readonly: true } as any,
-    { field: 'Device_TotQty', header: '可借出量', visible: true, type: this.Device_TotQty_type } as any,
+    { field: 'Device_TotQty', header: '剩餘可出借數量', visible: true, type: this.Device_TotQty_type } as any,
+    { field: 'Device_PriorQty', header: '今日可出借數量', visible: true, readonly: true } as any,
   ];
 
   constructor(
@@ -553,6 +554,7 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
               ? Number(r.CSS_CurrentQty)
               : Number(r.Device_TotQty ?? 0),
             Device_TotQty_Readonly: r.CSS_CurrentQty !== null && r.CSS_CurrentQty !== undefined && r.CSS_CurrentQty !== 0,
+            Device_PriorQty: r.CSS_PriorQty,
           }));
 
           this.buildDailyColumns();
@@ -580,9 +582,15 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
       { field: 'Device_Name', header: '設備名稱', visible: true, readonly: true } as any,
       {
         field: 'Device_TotQty',
-        header: '可借出量',
+        header: '剩餘可出借數量',
         visible: true,
         type: hasEditable ? 'inputNumber' : undefined
+      } as any,
+      {
+        field: 'Device_PriorQty',
+        header: '今日可出借數量',
+        visible: true,
+        readonly: true
       } as any,
     ];
   }
@@ -612,14 +620,14 @@ export class CPM11030Component extends BasicQueryPageComponent<any> {
     const CSS_Date = this.toIso(raw.CSS_Date) ?? new Date().toISOString();
 
     const items: InsertDailyEquipAvailabilityRequest[] = this.dailyRows.map((r) => {
-      const prior = Number(this.dailyPriorQtyMap.get(r.Device_ID) ?? 0);
+      //const prior = Number(this.dailyPriorQtyMap.get(r.Device_ID) ?? 0);
       const current = Number.isFinite(r.Device_TotQty as any) ? Number(r.Device_TotQty) : 0;
 
       return {
         CSS_Date,
         Service_Id,
         Device_ID: r.Device_ID,
-        CSS_PriorQty: prior,
+        CSS_PriorQty: current,
         CSS_LendQty: 0,
         CSS_ReturnQty: 0,
         CSS_CurrentQty: current,

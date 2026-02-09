@@ -260,6 +260,13 @@ export interface TalentOpenFlagQuery {
 }
 
 /**
+ * 查詢 TLTTALENT_tlt_openflag_DropDownList 回傳的項目型別（含 talent_id）
+ */
+export interface TalentOpenFlagItem extends IDropdownItem {
+  talent_id: number;
+}
+
+/**
  * 查詢 queryTLTTALENTDropDownList 時的請求 body
  */
 export interface TLTTALENTItem {
@@ -533,4 +540,11 @@ export interface Aps1002Item {
   BNK_No: string;           // 銀行代碼
   BNK_BRANCHNAME: string;   // 分行名稱
   BNK_AccType: string;      // 帳戶類型 (例如: 1-支存, 2-活存...)
+}
+
+/**
+ * 查詢會計科目設定檔(GLS1005)下拉式選單(只顯示 GLS1005.ledger_MD=1)
+ */
+export interface IGLS1005LedgerMDItem extends IDropdownItem {
+  ABAT_YN: string; // 應收廠商
 }

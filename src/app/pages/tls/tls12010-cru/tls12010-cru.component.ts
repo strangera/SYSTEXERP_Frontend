@@ -145,9 +145,9 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
   org_potentialDetail: Potential_Customer_Detail[] = []; // 備份
   //欄位資訊
   Potential_Customer_Detail_Columns: ColumnDef[] = [
-    { field: 'other_shop', header: '其他商場', type: 'text', editable: true, autoWidth: true },
-    { field: 'shop_area', header: '面積', type: 'number', allowDecimal: true, decimalPlaces: 3, editable: true, autoWidth: true },
-    { field: 'total_amt', header: '營業額', type: 'number', allowDecimal: true, editable: true, autoWidth: true }
+    { field: 'other_shop', header: '其他商場', type: 'text', editable: true, autoWidth: true, style: 'width: 40%; min-width: 200px' },
+    { field: 'shop_area', header: '面積', type: 'number', allowDecimal: true, decimalPlaces: 3, editable: true, autoWidth: true, style: 'width: 30%; min-width: 100px' },
+    { field: 'total_amt', header: '營業額', type: 'number', allowDecimal: true, editable: true, autoWidth: true, style: 'width: 30%; min-width: 100px' }
   ];
   // 預設新項目模板
   defaultNewDetail: { id: number, PC_id: number | null; other_shop: string; shop_area: number; total_amt: number; status: string } = {
@@ -269,14 +269,6 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       }
     }
 
-    if (this.detailTable) {
-      // 檢查是否正在編輯「主行」(editingRow 不為 null 代表有行正在編輯)
-      if (this.detailTable.editingRow !== null) {
-        this.messageService.warnBubble('明細表格尚有未儲存的編輯項目，請先點擊「打勾」儲存或「取消」結束編輯。');
-        return; // 中斷送出流程
-      }
-    }
-
     //將新的資料id指定為null
     const processedDetail = this.potentialDetail.map(item => {
       // 刪除 key 為空字串的欄位
@@ -329,11 +321,13 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
   }
 
   onClearForm() {
-    // this.dataForm.reset(); // 重置表單
     if (this.crudstatus == CRUDStatus.Create)
       this.potentialDetail = []; // 清除明細
-    if (this.crudstatus == CRUDStatus.Edit)
-      this.potentialDetail = this.org_potentialDetail; // 還原明細
+    if (this.crudstatus == CRUDStatus.Edit) {
+      console.log('還原明細', this.org_potentialDetail);
+      // ✅ 修改這裡：確保還原回去的是全新的物件複本
+      this.potentialDetail = JSON.parse(JSON.stringify(this.org_potentialDetail));
+    }
   }
 
   // 讀取dopropdown選項
@@ -414,11 +408,15 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     console.log('要求PC_id資料:', PC_id);
     this.tls12010Service.queryTLS12010_Detail({ "PC_id": PC_id }).pipe(untilDestroyed(this)).subscribe((response) => {
       if (response.Status === '0000') {
-        this.potentialDetail = response.Data.map((item: any) => ({
+        const data = response.Data.map((item: any) => ({
           ...item,
-          status: 'original', // 有明細資料，讀取明細狀態設定為 'original';
+          status: 'original',
         }));
-        this.org_potentialDetail = [...this.potentialDetail]
+        this.potentialDetail = data;
+
+        // ✅ 修改這裡：使用深拷貝備份，避免物件引用連動
+        this.org_potentialDetail = JSON.parse(JSON.stringify(data));
+
         console.log('取得明細資料:', this.potentialDetail);
       } else {
         this.messageService.errorBubble(`讀取失敗: ${response.Message}`);
@@ -535,6 +533,22 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
 
   // 批次刪除 潛在明細檔
   onBatchDeleteDetail(selectedItems: any[]): void {
-    this.tls12010DetailService.deletePotential(selectedItems, this.potentialDetail);
+    // this.tls12010DetailService.deletePotential(selectedItems, this.potentialDetail);
+    if (!selectedItems || selectedItems.length === 0) {
+      this.messageService.warnBubble('請先勾選欲刪除的項目');
+      return;
+    }
+
+    this.messageService.confirm({
+      header: '確認刪除',
+      message: `是否確認刪除選中的 ${selectedItems.length} 個其他商場項目？`,
+      accept: () => {
+        // 呼叫 Service 執行刪除邏輯（將狀態改為 deleted 或從陣列移除）
+        this.tls12010DetailService.deletePotential(selectedItems, this.potentialDetail);
+
+        // 刪除成功後提示 (選用)
+        this.messageService.successBubble('已刪除');
+      },
+    });
   }
 }
