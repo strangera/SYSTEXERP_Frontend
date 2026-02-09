@@ -2,7 +2,9 @@ import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { ASS12010Service } from '@service/api/ass/ass12010.service';
+import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -66,15 +68,18 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
   public readonly tableData = signal<ASS12010Item[]>([]);
   public selectedItems: ASS12010Item[] = [];
 
-  // 下拉選單選項
+  /** 部門代號選項 */
   public readonly orgIdOptions = signal<{ label: string; value: string; Name?: string }[]>([]);
+  /** 申請人代號選項 */
   public readonly empIdOptions = signal<{ label: string; value: string; Name?: string }[]>([]);
-  public readonly filteredEmpIdOptions = signal<{ label: string; value: string; Name?: string }[]>([]);
+  /** 倉別選項 */
   public readonly whIdOptions = signal<{ label: string; value: string }[]>([]);
+  /** 品項代碼選項 */
   public readonly goodsIdOptions = signal<{ label: string; value: string }[]>([]);
+  /** 保管單位選項 */
   public readonly custodyUnitOptions = signal<{ label: string; value: string }[]>([]);
+  /** 保管人選項 */
   public readonly custodianOptions = signal<{ label: string; value: string; Name?: string }[]>([]);
-  public readonly filteredCustodianOptions = signal<{ label: string; value: string; Name?: string }[]>([]);
 
   // 所有申請人選項（用於過濾）
   private allEmpIdOptions: { label: string; value: string; Name?: string; ORG_ID?: string }[] = [];
@@ -104,9 +109,11 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
     {
       field: 'CUSTODIAN',
       header: '保管人',
-      type: 'input',
-      maxLength: 6,
-      placeholder: '最多6個字',
+      type: 'dropdown',
+      options: () => this.custodianOptions(),
+      optionLabel: 'label',
+      optionValue: 'value',
+      showClear: true,
     },
     {
       field: 'UNIT',
@@ -132,6 +139,8 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
 
   constructor(
     public readonly service: ASS12010Service,
+    private readonly ass11100Service: ASS11100Service,
+    private readonly fin11040Service: Fin11040Service,
     private readonly dropDownListService: DropDownListService,
     private readonly logger: NGXLogger,
     private readonly notification: NotificationService,
@@ -232,10 +241,11 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
           Name: item.Name,
         }));
         this.orgIdOptions.set(options);
+        this.custodyUnitOptions.set(options);
       },
     });
 
-    // 申請人代號（載入全部，用於過濾）
+    // 申請人代號與保管人
     this.dropDownListService.queryTBLUSER_DropDownList().subscribe({
       next: res => {
         if (res.Status !== '0000') return;
@@ -243,20 +253,42 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
           label: `${item.No} - ${item.Name}`,
           value: item.No,
           Name: item.Name,
-          // TODO: 等 API 規格確認後，加入 ORG_ID 欄位用於過濾
-          // ORG_ID: item.ORG_ID,
         }));
         this.allEmpIdOptions = options;
         this.empIdOptions.set(options);
-        this.filteredEmpIdOptions.set(options);
+        this.allCustodianOptions = options;
+        this.custodianOptions.set(options);
       },
     });
 
-    // TODO: 等 API 規格確認後，載入以下下拉選單
-    // - 倉別 (WH_ID)
-    // - 品項代碼 (GOODS_ID)
-    // - 保管單位
-    // - 保管人（載入全部，用於過濾）
+    // 倉別 (WH_ID)
+    this.ass11100Service.queryASS11100({ PageSize: 9999, PageIndex: 1 }).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = (res.Data ?? [])
+          .filter(item => item.WH_ID != null && item.WH_ID !== '')
+          .map(item => ({
+            label: `${item.WH_ID} - ${item.WH_NAME ?? ''}`,
+            value: item.WH_ID!,
+          }));
+        this.whIdOptions.set(options);
+      },
+    });
+
+    // 品項代碼 (GOODS_ID)
+    this.fin11040Service.queryFIN11040({ PageSize: 9999, PageIndex: 1 }).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const data: TDS1008Data[] = res.Data ?? [];
+        const options = data
+          .filter(item => item.INV_ItemNo != null && item.INV_ItemNo !== '')
+          .map(item => ({
+            label: `${item.INV_ItemNo} - ${item.INV_ItemName ?? ''}`,
+            value: item.INV_ItemNo,
+          }));
+        this.goodsIdOptions.set(options);
+      },
+    });
   }
 
   /**
@@ -276,22 +308,6 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
         }));
         this.tableData.set(updatedData);
 
-        // 2. 過濾「申請人」下拉選單（只顯示該部門人員）
-        // TODO: 等 API 規格確認後，根據 ORG_ID 過濾
-        // 目前先顯示全部選項
-        const filtered = this.allEmpIdOptions.filter(() => {
-          // TODO: 等 API 規格確認後，使用 emp.ORG_ID === orgId 過濾
-          return true; // 暫時不過濾
-        });
-        this.filteredEmpIdOptions.set(filtered);
-
-        // 3. 過濾「保管人」下拉選單（只顯示該部門人員）
-        // TODO: 等 API 規格確認後，根據 ORG_ID 過濾
-        const filteredCustodians = this.allCustodianOptions.filter(() => {
-          // TODO: 等 API 規格確認後，使用 cust.ORG_ID === orgId 過濾
-          return true; // 暫時不過濾
-        });
-        this.filteredCustodianOptions.set(filteredCustodians);
 
         // 4. 自動帶入部門主管
         // TODO: 等 API 規格確認後，實作取得部門主管的邏輯
@@ -303,10 +319,6 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
           //   this.dataForm.controls.EMP_ID.setValue(manager.value, { emitEvent: false });
           // }
         }
-      } else {
-        // 清空部門時，重置過濾
-        this.filteredEmpIdOptions.set(this.allEmpIdOptions);
-        this.filteredCustodianOptions.set(this.allCustodianOptions);
       }
     });
   }
