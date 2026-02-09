@@ -68,7 +68,6 @@ export interface POS2013 {
 @Component({
   selector: 'app-tls12010',
   templateUrl: './tls12010.component.html',
-  styleUrl: './tls12010.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, InputTextComponent, InputNumberComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, CalendarRangeComponent, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
 })
