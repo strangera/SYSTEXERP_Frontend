@@ -268,7 +268,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
 
   ngOnInit(): void {
     // 初始化頁面 - 使用 V2 精靈路由
-    this.initializePage('TLS13010', '/tls/tls13010v2cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS13010', '/tls/tls13010cru', this.queryForm, (form) => this.onSubmit(form));
     this.initializeDropdowns();
   }
 
@@ -318,7 +318,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   // ========== 新增功能 ==========
   override onCreate(): void {
     // 導航到精靈頁面 (新增模式)
-    this.router.navigate(['account/tls/tls13010v2cru'], {
+    this.router.navigate(['account/tls/tls13010cru'], {
       state: { mode: 'create' }
     });
     this.messageService.infoBubble('開始新增契約資料');
@@ -336,7 +336,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   private startEditWorkflow(rowData: ContractItem, isViewMode: boolean): void {
     // 要約書 → TLS12040-v2
     if (rowData.contract_type === '要約書') {
-      this.router.navigate(['account/tls/tls12040v2cru'], {
+      this.router.navigate(['account/tls/tls12040cru'], {
         state: {
           crudstatus: isViewMode ? CRUDStatus.Read : CRUDStatus.Edit,
           rowdata: rowData
@@ -347,7 +347,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
     }
 
     // 契約書 → TLS13010-v2
-    this.router.navigate(['account/tls/tls13010v2cru'], {
+    this.router.navigate(['account/tls/tls13010cru'], {
       state: {
         mode: isViewMode ? 'view' : 'edit',
         data: {

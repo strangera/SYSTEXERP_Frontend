@@ -1,4 +1,4 @@
-import { NgIf } from '@angular/common';
+﻿import { NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, NavigationExtras } from '@angular/router';
@@ -1616,7 +1616,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   onSubmitNext(): void {
     // 檢視模式：直接導航，不驗證
     if (this.crudstatus === CRUDStatus.Read) {
-      this.router.navigate(['account/tls/tls13010next1']);
+      this.router.navigate(['account/tls/tls13010v1next1']);
       return;
     }
 
@@ -1628,7 +1628,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 所有驗證通過，儲存並導航
     this.saveToWorkflow();
-    this.router.navigate(['account/tls/tls13010next1']);
+    this.router.navigate(['account/tls/tls13010v1next1']);
     // this.messageService.successBubble('Step 1 完成，進入下一步');
   }
 
@@ -1639,7 +1639,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     if (this.crudstatus === CRUDStatus.Read) {
       this.contractFlowService.clearViewMode();
       this.contractFlowService.clearTempData();
-      this.router.navigate(['account/tls/tls13010'], extras);
+      this.router.navigate(['account/tls/tls13010v1'], extras);
       this.messageService.infoBubble('已退出檢視模式');
       return;
     }
@@ -1650,7 +1650,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.saveToWorkflow();
       // }
     }
-    this.router.navigate(['account/tls/tls13010'], extras);
+    this.router.navigate(['account/tls/tls13010v1'], extras);
   }
 
   onClearForm(): void {
@@ -2146,7 +2146,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
    */
   private handleInitializationFailure(): void {
     this.messageService.errorBubble('載入資料失敗，請重新選擇要檢視的項目');
-    this.router.navigate(['account/tls/tls13010'], {
+    this.router.navigate(['account/tls/tls13010v1'], {
       state: { fromRoute: this.router.url }
     });
   }
@@ -2419,7 +2419,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     const extras: NavigationExtras = {
       state: { fromRoute: this.router.url },
     };
-    this.router.navigate(['account/tls/tls13010'], extras);
+    this.router.navigate(['account/tls/tls13010v1'], extras);
     this.messageService.infoBubble('已清空暫存資料並離開');
   }
 

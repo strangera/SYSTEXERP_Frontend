@@ -183,7 +183,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
 
   ngOnInit(): void {
     // 初始化頁面，導航到精靈頁面
-    this.initializePage('TLS12040', '/tls/tls12040v2cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS12040', '/tls/tls12040cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadDropdownOptions();
   }
 

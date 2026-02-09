@@ -450,10 +450,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   // ========== 路由狀態處理 ==========
   private async handleRouterState(): Promise<void> {
-    // 新增模式 - 初始化空表單
+    // 新增模式 - 初始化空表單 + 載入可用代扣款項目
     if (this.isFormCreateable) {
       this.tlsBaseService.initializeEmptyForm(this.dataForm, 'TLS12040');
       this.tlsBaseService.setCurrentUserAsNegotiator(this.dataForm);
+      await this.loadFareData('');
       return;
     }
 
@@ -1139,8 +1140,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
         // 延遲返回查詢頁，讓使用者看到成功訊息
         setTimeout(() => {
-          this.router.navigate(['account/tls/tls12040v2'], {
-            state: { fromRoute: 'account/tls/tls12040v2cru' }
+          this.router.navigate(['account/tls/tls12040'], {
+            state: { fromRoute: 'account/tls/tls12040cru' }
           });
         }, 2000);
       } else {
@@ -1277,8 +1278,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
    * 離開（回到列表頁）
    */
   onClearAndExit(): void {
-    this.router.navigate(['account/tls/tls12040v2'], {
-      state: { fromRoute: '/tls/tls12040v2cru' }
+    this.router.navigate(['account/tls/tls12040'], {
+      state: { fromRoute: '/tls/tls12040cru' }
     });
   }
 
@@ -1287,8 +1288,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
    */
   override onCancel(): void {
     if (this.isFirstStep) {
-      this.router.navigate(['account/tls/tls12040v2'], {
-        state: { fromRoute: '/tls/tls12040v2cru' }
+      this.router.navigate(['account/tls/tls12040'], {
+        state: { fromRoute: '/tls/tls12040cru' }
       });
     } else {
       this.goToPreviousStep();

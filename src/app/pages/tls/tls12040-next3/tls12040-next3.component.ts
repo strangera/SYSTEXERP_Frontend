@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+﻿import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, NavigationExtras } from '@angular/router';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
@@ -277,7 +277,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
       this.loadDataWithPriority();
     } else {
       console.warn('沒有有效的工作流程資料，重導向到前一步');
-      this.router.navigate(['account/tls/tls12040cru']);
+      this.router.navigate(['account/tls/tls12040v1cru']);
     }
   }
 
@@ -1268,7 +1268,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
 
   onSubmitNext(): void {
     if (this.isReadOnlyMode) {
-      this.router.navigate(['account/tls/tls12040'], {
+      this.router.navigate(['account/tls/tls12040v1'], {
         state: { fromRoute: this.router.url }
       });
       this.notificationService.infoBubble('已結束檢視');
@@ -1527,7 +1527,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
     this.contractFlowService.onSubmitSuccess();
 
     setTimeout(() => {
-      this.router.navigate(['account/tls/tls12040'], {
+      this.router.navigate(['account/tls/tls12040v1'], {
         state: { fromRoute: this.router.url }
       });
     }, 3000);
@@ -1579,11 +1579,11 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
     if (tltTermType === '1') {
       // 固定租金：返回 next1（因為 next2 被跳過）
       console.log('🔍 合約類型為固定租金(1)，返回 next1');
-      this.router.navigate(['account/tls/tls12040next1'], navigationExtras);
+      this.router.navigate(['account/tls/tls12040v1next1'], navigationExtras);
     } else {
       // 其他類型：正常返回 next2
       console.log('🔍 合約類型非固定租金，返回 next2');
-      this.router.navigate(['account/tls/tls12040next2'], navigationExtras);
+      this.router.navigate(['account/tls/tls12040v1next2'], navigationExtras);
     }
   }
 
@@ -1592,7 +1592,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
     const extras: NavigationExtras = {
       state: { fromRoute: this.router.url },
     };
-    this.router.navigate(['account/tls/tls12040'], extras);
+    this.router.navigate(['account/tls/tls12040v1'], extras);
     this.notificationService.infoBubble('已清空暫存資料並離開');
   }
 

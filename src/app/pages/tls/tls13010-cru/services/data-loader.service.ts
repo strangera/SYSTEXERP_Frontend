@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Observable, forkJoin, of } from 'rxjs';
@@ -61,7 +61,7 @@ export class TLS13010DataLoaderService {
       }
     } else {
       console.warn('❌ 沒有工作流程資料,重導向到查詢頁面');
-      this.router.navigate(['account/tls/tls13010'], {
+      this.router.navigate(['account/tls/tls13010v1'], {
         state: { fromRoute: this.router.url }
       });
     }
@@ -627,7 +627,7 @@ export class TLS13010DataLoaderService {
         } else {
           console.error('❌ 工作流程初始化失敗');
           this.messageService.errorBubble('載入資料失敗,請重新選擇要檢視的項目');
-          this.router.navigate(['account/tls/tls13010'], {
+          this.router.navigate(['account/tls/tls13010v1'], {
             state: { fromRoute: this.router.url }
           });
           return false;
@@ -642,7 +642,7 @@ export class TLS13010DataLoaderService {
     } catch (error) {
       console.error('❌ 處理 router state 失敗:', error);
       this.messageService.errorBubble('初始化失敗,請重新操作');
-      this.router.navigate(['account/tls/tls13010'], {
+      this.router.navigate(['account/tls/tls13010v1'], {
         state: { fromRoute: this.router.url }
       });
       return false;

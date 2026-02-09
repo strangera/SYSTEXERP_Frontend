@@ -139,6 +139,7 @@
             [control]="$any(form.controls['contract_type'])"
             [submitted]="submitted"
             [readonly]="isViewMode"
+            (valueChange)="onContractTypeChange($event)"
           ></app-dropdown>
         </div>
       </div>

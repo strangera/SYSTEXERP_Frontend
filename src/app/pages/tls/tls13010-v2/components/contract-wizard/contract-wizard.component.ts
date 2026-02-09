@@ -97,7 +97,7 @@ const DATE_FIELDS = [
 ];
 
 @Component({
-  selector: 'app-tls13010v2-contract-wizard',
+  selector: 'app-tls13010-contract-wizard',
   templateUrl: './contract-wizard.component.html',
   styleUrls: ['./contract-wizard.component.scss'],
   standalone: true,
@@ -1690,8 +1690,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
 
         // 延遲返回查詢頁，讓使用者看到成功訊息
         setTimeout(() => {
-          this.router.navigate(['account/tls/tls13010v2'], {
-            state: { fromRoute: '/tls/tls13010v2cru' }
+          this.router.navigate(['account/tls/tls13010'], {
+            state: { fromRoute: '/tls/tls13010cru' }
           });
         }, 2000);
       } else {
@@ -1707,8 +1707,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
   }
 
   override onCancel(): void {
-    this.router.navigate(['account/tls/tls13010v2'], {
-      state: { fromRoute: '/tls/tls13010v2cru' }
+    this.router.navigate(['account/tls/tls13010'], {
+      state: { fromRoute: '/tls/tls13010cru' }
     });
   }
 
