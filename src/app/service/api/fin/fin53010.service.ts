@@ -226,9 +226,9 @@ export class FIN53010Service {
 
   public getAccNoOptions(): void {
     this.accLoading.set(!0);
-    this.dropdownApi.queryGLS1005LedgerMD().pipe(
+    this.dropdownApi.queryGls1005_ledgerMD().pipe(
       take(1),
-      map(res => (res ?? []).map(o => ({ ...o, templateLabel: o.label } as Option))),
+      map(res => res as Option[] ?? []),
       tap(res => {
         this.accNoOptions.set(res);
         this.logger.debug('查詢AccNoOptions結果:', [res]);

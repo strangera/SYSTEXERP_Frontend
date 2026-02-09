@@ -17,13 +17,6 @@ export interface IDropdownItem {
 }
 
 /**
- * 查詢 queryGLS1005_ledgerMD_DropDownList 回傳的項目型別
- */
-export interface GLS1005LedgerMDItem extends IDropdownItem {
-  ABAT_YN: string;
-}
-
-/**
  * 查詢 TLTBUSCLASS 時的請求 body
  */
 export interface BusClassQuery {
