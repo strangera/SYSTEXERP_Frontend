@@ -213,13 +213,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         required: !0,
         showClear: !1,
         options: () => this.service.accNoOptions(),
-        optionLabel: 'templateLabel',
+        optionLabel: 'label',
         optionValue: 'value',
-        templateLabel: 'templateLabel',
+        templateLabel: 'label',
         format: (v, i, r) => {
           if (!r?.AccNo) return '';
           const accItem = accMap.get(String(r.AccNo));
-          return accItem?.['templateLabel'] ?? accItem?.label ?? '';
+          return accItem?.label ?? '';
         },
       },
       {
