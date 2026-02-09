@@ -89,7 +89,7 @@
   <app-table-edit tableKey="TLS2A010Detail" [data]="dialogData" [columns]="dialogColumns" [showCheckBox]="false"
     [canInsert]="false" [showInsert]="false" [loading]="false" [showDelete]="false" [disabled]="false"
     (dataChange)="onDataChange($event)"></app-table-edit>
-  <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+  <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
     <app-button btnType="cancel" (click)="onDialogClose(false)"></app-button>
     <app-button btnType="submit" [loading]="loading" (click)="onSaveDialog()" />
   </div>
