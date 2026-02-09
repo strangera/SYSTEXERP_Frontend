@@ -16,6 +16,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 import { CPM11040Data, CPM11040Service } from '../../../service/api/cpm/cpm11040.service';
+import { getSYS1000Options } from '../../../service/system/sys1000.service';
 
 @UntilDestroy()
 @Component({
@@ -51,7 +52,7 @@ export class CPM11040CRUComponent extends BasicCruPageComponent<any> implements 
     // 歸還時間 - 預設當下，disabled
     ReturnTime: [{ value: new Date(), disabled: true }, [Validators.required]],
     // 以下為查詢後帶入的 readonly 欄位
-    ServiceCode: [{ value: '', disabled: true }], // 服務台位置編號
+    ServiceID: [{ value: '', disabled: true }], // 服務台位置編號
     LoanDate: [{ value: null as Date | null, disabled: true }], // 出借日期
     UserName: [{ value: '', disabled: true }], // 姓名
     LoanPhone: [{ value: '', disabled: true }], // 連絡電話
@@ -68,6 +69,22 @@ export class CPM11040CRUComponent extends BasicCruPageComponent<any> implements 
 
   ngOnInit(): void {
     this.initializePage('CPM11040', this.dataForm);
+
+    // 詳情/檢視模式：格式化顯示欄位
+    if (this.rowdata) {
+      const certType = this.dataForm.getRawValue().CertType;
+      if (certType && !certType.includes('-')) {
+        const opt = getSYS1000Options('Cert_Type').find(o => o.value === certType);
+        if (opt) {
+          this.dataForm.patchValue({ CertType: `${opt.value}-${opt.label}` }, { emitEvent: false });
+        }
+      }
+      const serviceID = this.rowdata.ServiceID;
+      const serviceName = this.rowdata.ServiceName;
+      if (serviceID) {
+        this.dataForm.patchValue({ ServiceID: serviceName ? `${serviceID}-${serviceName}` : serviceID }, { emitEvent: false });
+      }
+    }
 
     // 取得當前使用者名稱
     const currentUser = this.authService.currentUserValue?.user_Name || '';
@@ -118,11 +135,14 @@ export class CPM11040CRUComponent extends BasicCruPageComponent<any> implements 
 
       // 填充表單資料
       this.dataForm.patchValue({
-        ServiceCode: data.ServiceName || '',
+        ServiceID: data.ServiceID && data.ServiceName ? `${data.ServiceID}-${data.ServiceName}` : data.ServiceName || data.ServiceID || '',
         LoanDate: data.LoanDate ? new Date(data.LoanDate) : null,
         UserName: data.UserName || '',
         LoanPhone: data.LoanPhone || '',
-        CertType: data.CertTypeName || '',
+        CertType: (() => {
+          const opt = getSYS1000Options('Cert_Type').find(o => o.value === data.CertType);
+          return opt ? `${opt.value}-${opt.label}` : data.CertType || '';
+        })(),
         DeviceName: data.DeviceName || ''
       });
       this.dataLoaded = true;
@@ -132,7 +152,7 @@ export class CPM11040CRUComponent extends BasicCruPageComponent<any> implements 
   // 清除表單資料
   clearFormData() {
     this.dataForm.patchValue({
-      ServiceCode: '',
+      ServiceID: '',
       LoanDate: null,
       UserName: '',
       LoanPhone: '',

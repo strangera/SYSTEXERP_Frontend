@@ -55,8 +55,8 @@
         <div class="col-12 md:col-4">
           <app-input-text
             label="服務台位置編號"
-            controlName="ServiceCode"
-            [control]="dataForm.controls.ServiceCode"
+            controlName="ServiceID"
+            [control]="dataForm.controls.ServiceID"
             [submitted]="submitted"
           ></app-input-text>
         </div>
@@ -110,6 +110,7 @@
       </div>
 
       <div
+        *ngIf="crudstatus !== CRUD.Read"
         class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
       >
         <app-button btnType="cancel" [form]="dataForm"></app-button>
