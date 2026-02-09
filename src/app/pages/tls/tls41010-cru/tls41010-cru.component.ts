@@ -85,6 +85,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_CustTypeEntry: ['N', [Validators.required, Validators.maxLength(1)]],
     ECR_ClerkEntry: ['N', [Validators.required, Validators.maxLength(1)]],
     ECR_ForceMember: ['N', [Validators.required, Validators.maxLength(1)]],
+    ECR_BoxReqCode: ['N', [Validators.required, Validators.maxLength(1)]],
     ECR_SelfReport: ['Y', [Validators.required, Validators.maxLength(1)]],
     ECR_SaleRpt1: ['Y', [Validators.required, Validators.maxLength(1)]],
     ECR_SaleRpt2: ['Y', [Validators.required, Validators.maxLength(1)]],

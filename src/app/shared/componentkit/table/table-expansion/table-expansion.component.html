@@ -30,6 +30,15 @@
         </td>
       </tr>
     </ng-template>
+    <ng-template pTemplate="summary">
+      <div class="flex align-items-center justify-content-between p-1" [style.background]="'var(--table-header-bg)'">
+        <div class="flex align-items-center">
+          <span>
+            明細總筆數: {{ totalRecords }} 筆
+          </span>
+        </div>
+      </div>
+    </ng-template>
     <!-- 空資料訊息 -->
     <ng-template pTemplate="emptymessage">
       <tr>

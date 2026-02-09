@@ -10,7 +10,6 @@ import { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DataViewModule } from 'primeng/dataview';
 import { InputTextModule } from 'primeng/inputtext';
-import { PaginatorModule } from 'primeng/paginator';
 import { TableModule } from 'primeng/table';
 import { TabMenuModule } from 'primeng/tabmenu';
 import { TLS44010Service } from '../../../service/api/tls/tls44010.service';
@@ -21,7 +20,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls44010',
@@ -43,8 +41,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     DataViewModule,
     DropdownComponent,
     MultiSelectComponent,
-    InputTextComponent,
-    PaginatorModule
+    InputTextComponent
   ]
 })
 export class TLS44010Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -57,7 +54,6 @@ export class TLS44010Component extends BasicQueryPageComponent<any> implements O
     EOS_IP: this.formBuilder.control<string>(''),
     EOS_Online: this.formBuilder.control<string>(''),
     Day: this.formBuilder.control<number>(0),
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
 
   items: MenuItem[] = [];
@@ -65,14 +61,9 @@ export class TLS44010Component extends BasicQueryPageComponent<any> implements O
 
   data: any[] = [];
   filteredData: any[] = [];
-  pagedData: any[] = [];
 
   globalFilter = '';
   layout: 'list' | 'grid' = 'grid';
-
-  rows = 15;
-  first = 0;
-  // loading = false;
   ECRNoOptions: any[] = [];
   CounterOptions: any[] = [];
   buildingNoOptions: IDropdownItem[] = [];
@@ -137,10 +128,8 @@ export class TLS44010Component extends BasicQueryPageComponent<any> implements O
     // 轉換需要陣列的欄位
     const payload = {
       ...rawValue,
-      PageSize: rawValue.PageSize ?? 20,
-      PageIndex: rawValue.PageIndex ?? 1,
-      OrderBy: rawValue.OrderBy ?? '',
-      Offset: rawValue.Offset ?? 0,
+      PageSize: 9999,  // 設定一個很大的數字來取得所有資料
+      PageIndex: 1,
 
       // 確保是陣列
       ECR_No: Array.isArray(rawValue.ECR_No)
@@ -174,8 +163,6 @@ export class TLS44010Component extends BasicQueryPageComponent<any> implements O
       next: (res) => {
         this.data = res?.Data || [];
         this.filteredData = [...this.data];
-        this.first = 0;
-        this.updatePagedData();
       },
       error: (err) => {
         console.error('查詢失敗', err);
@@ -197,8 +184,6 @@ export class TLS44010Component extends BasicQueryPageComponent<any> implements O
       // 離線：後端回傳 EOS_Online = 'N' 或為空/null 都視為離線
       this.filteredData = this.data.filter(d => d.EOS_Online === 'N' || d.EOS_Online === null || d.EOS_Online === '');
     }
-    this.first = 0;
-    this.updatePagedData();
   }
 
   applyFilter() {
@@ -215,22 +200,10 @@ export class TLS44010Component extends BasicQueryPageComponent<any> implements O
         (row.EOS_Online?.toLowerCase().includes(keyword))
       );
     }
-    this.first = 0;
-    this.updatePagedData();
   }
 
   onLayoutChange(event: any) {
     this.layout = event as 'list' | 'grid';
-  }
-
-  onPageChange(event: any) {
-    this.first = event.first;
-    this.rows = event.rows;
-    this.updatePagedData();
-  }
-
-  updatePagedData() {
-    this.pagedData = this.filteredData.slice(this.first, this.first + this.rows);
   }
 
   // 依據後端資料計算實際顯示的狀態：

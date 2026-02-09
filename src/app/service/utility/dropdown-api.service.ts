@@ -25,6 +25,7 @@ import {
   ENG1001Item,
   GLS1005LedgerMDItem,
   IDropdownItem,
+  IGLS1005LedgerMDItem,
   LogoAccorHosItem,
   LogoAccorHosQuery,
   Option,
@@ -54,6 +55,7 @@ import {
   TalentChargeItem,
   TalentChargeQuery,
   TalentItem,
+  TalentOpenFlagItem,
   TalentOpenFlagQuery,
   TalentQuery,
   TalentStatusQuery,
@@ -252,10 +254,10 @@ export class DropdownApiService {
     );
   }
 
-  /** 查詢會計科目設定檔(GLS1005) ledgerMD 下拉 - 用於 FIN53010 科目代號 */
-  queryGLS1005LedgerMD(): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<GLS1005LedgerMDItem>('/queryGLS1005_ledgerMD_DropDownList', 'No', 'Name').pipe(
-      shareReplay({ bufferSize: 1, refCount: true })
+  // 查詢會計科目設定檔(GLS1005)下拉式選單(只顯示 GLS1005.ledger_MD=1)
+  queryGls1005_ledgerMD(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IGLS1005LedgerMDItem>('/queryGLS1005_ledgerMD_DropDownList', 'No', 'Name').pipe(
+      shareReplay({ bufferSize: 1, refCount: true })// 避免重複查詢
     );
   }
 
@@ -584,8 +586,8 @@ export class DropdownApiService {
     );
   }
 
-  queryTltTalentOpenFlag(body: TalentOpenFlagQuery): Observable<IDropdownItem[] | null> {
-    return this.queryDropdownWithParams<IDropdownItem, TalentOpenFlagQuery>('/queryTLTTALENT_tlt_openflag_DropDownList', body).pipe(
+  queryTltTalentOpenFlag(body: TalentOpenFlagQuery): Observable<TalentOpenFlagItem[] | null> {
+    return this.queryDropdownWithParams<TalentOpenFlagItem, TalentOpenFlagQuery>('/queryTLTTALENT_tlt_openflag_DropDownList', body).pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }

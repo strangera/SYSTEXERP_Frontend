@@ -60,7 +60,7 @@ export class FIN31010Component extends BasicQueryPageComponent<QueryFin31010Resp
     { field: 'UPD_USR_Name', header: '變更人員名稱', visible: false },
   ];
   selectedRows: QueryFin31010Response[] = [];
-  AccNoOptions = this.dropdown.queryGls1005();
+  AccNoOptions = this.dropdown.queryGls1005_ledgerMD();
   constructor(
     public readonly fin31010Service: Fin31010Service,
     private readonly dropdown: DropdownApiService,
