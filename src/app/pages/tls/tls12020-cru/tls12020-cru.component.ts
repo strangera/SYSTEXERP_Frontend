@@ -72,6 +72,10 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
   LOCATION_Options: IDropdownItem[] = [];
   buildingNoOptions: IDropdownItem[] = [];
   btnLoading = false;
+  // store original values when editing
+  private originalContactDate: string | null = null; // formatted via formatDateOnly
+  private originalContactTime: string | null = null; // formatted via formatTime
+  private originalID: number | null = null;
   constructor(
     private fb: FormBuilder,
     private dropDownListService: DropDownListService,
@@ -87,6 +91,10 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
       const mapped = this.mapRowDataToForm(this.rowdata);
       // mapped prepared
       this.dataForm.patchValue(mapped);
+      // store original id and contact date/time defaults from the rowdata
+      this.originalID = (this.rowdata as any).ID ?? null;
+      this.originalContactDate = this.formatDateOnly(mapped.contact_Date);
+      this.originalContactTime = this.formatTime(mapped.contact_Time);
 
       // 若 navigation state 的 rowdata 只是一份快取，為保險起見以 ID 向後端抓最新完整資料再覆蓋
       const id = (this.rowdata as any).ID;
@@ -101,6 +109,10 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
                 if ((fresh as any).ID === id) {
                   const freshMapped = this.mapRowDataToForm(fresh);
                   this.dataForm.patchValue(freshMapped);
+                  // update stored originals to fresh values
+                  this.originalID = (fresh as any).ID ?? this.originalID;
+                  this.originalContactDate = this.formatDateOnly(freshMapped.contact_Date);
+                  this.originalContactTime = this.formatTime(freshMapped.contact_Time);
                 }
               }
             },
@@ -323,21 +335,46 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
         contact_USR_Name: formValue.contact_USR_Name,
       };
 
-      this.tls12020Service
-        .insertTLS12020(body)
-        .pipe(finalize(() => (this.btnLoading = false)))
-        .subscribe({
-          next: (res) => {
-            if (res.Status === '0000') {
-              this.messageService.successBubble(this.translate.instant('新增成功'));
-              this.dataForm.reset();
-            } else {
-              this.messageService.errorBubble(this.translate.instant('新增失敗') + '：' + (res.Message || ''));
-            }
-            this.onCancel();
-          },
+      // determine whether to call update or insert
+      const currentContactDate = body.contact_Date; // formatted YYYY-MM-DDT00:00:00
+      const currentContactTime = body.contact_Time; // formatted HHmm
 
-        });
+      const isSameDateTime = (this.originalContactDate !== null && this.originalContactTime !== null)
+        && (this.originalContactDate === currentContactDate) && (this.originalContactTime === currentContactTime);
+
+      if (isSameDateTime && this.originalID) {
+        // call update API
+        const updateBody = { ...body, ID: this.originalID };
+        this.tls12020Service
+          .updateTLS12020(updateBody)
+          .pipe(finalize(() => (this.btnLoading = false)))
+          .subscribe({
+            next: (res) => {
+              if (res.Status === '0000') {
+                this.messageService.successBubble(this.translate.instant('更新成功'));
+              } else {
+                this.messageService.errorBubble(this.translate.instant('更新失敗') + '：' + (res.Message || ''));
+              }
+              this.onCancel();
+            }
+          });
+      } else {
+        // call insert API
+        this.tls12020Service
+          .insertTLS12020(body)
+          .pipe(finalize(() => (this.btnLoading = false)))
+          .subscribe({
+            next: (res) => {
+              if (res.Status === '0000') {
+                this.messageService.successBubble(this.translate.instant('新增成功'));
+                this.dataForm.reset();
+              } else {
+                this.messageService.errorBubble(this.translate.instant('新增失敗') + '：' + (res.Message || ''));
+              }
+              this.onCancel();
+            },
+          });
+      }
     });
   }
   override onCancel(): void {
