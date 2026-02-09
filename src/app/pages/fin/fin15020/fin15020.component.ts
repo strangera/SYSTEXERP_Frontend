@@ -88,8 +88,8 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
   selectedItems: FIN15020Data[] = [];
   btnLoading = false;
 
+  // 不包含 No 欄，使 footer 合計與表頭 14 欄對齊（與 tls23010 用法一致）
   columns: ReportColumn[] = [
-    { field: 'No', header: '序號', visible: false },
     { field: 'TXN_Ret_No', header: '退出/折讓單號', visible: true },
     { field: 'PUR_VoucherType', header: '發票格式', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'GUI_Track', header: '字軌', visible: true },
