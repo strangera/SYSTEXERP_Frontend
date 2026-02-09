@@ -344,6 +344,10 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
       next: (response: any) => {
         if (response.Status === '0000') {
           this.messageService.successBubble('審核成功');
+          // 審核後刷新使用者資料權限
+          this.apiService.refreshUserDataPermissions().subscribe({
+            error: () => this.messageService.warnBubble('審核成功，但權限更新失敗。請重新登入以查看更新。')
+          });
           this.onSubmit(this.queryForm);
         } else {
           this.messageService.errorBubble(`審核失敗: ${response.Message || '未知錯誤'}`);
