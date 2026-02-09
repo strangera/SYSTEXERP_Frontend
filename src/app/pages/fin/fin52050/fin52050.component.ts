@@ -108,13 +108,19 @@ export class FIN52050Component extends BasicQueryPageComponent<GLS1003> implemen
   // 刪除控制_Grace 9/9: 
   // 9/9 SA註明: 該作業不可修改/刪除
   onDelete(selectedRows: GLS1003[]) {
-    const ids = selectedRows.map(row => row.ClassAttr);
-    this.fin52050Service.deleteFIN52050({ ids }).pipe(untilDestroyed(this)).subscribe({
-      next: () => {
-        this.onSubmit(this.queryForm);
-        this.selectedRows = [];
+    this.messageService.confirm({
+      message: `是否確認刪除選中的科目大分類?`,
+      header: `確認刪除`,
+      accept: () => {
+        const ids = selectedRows.map(row => row.ClassAttr);
+        this.fin52050Service.deleteFIN52050({ ids }).pipe(untilDestroyed(this)).subscribe({
+          next: () => {
+            this.onSubmit(this.queryForm);
+            this.selectedRows = [];
+          },
+          error: () => { this.loading = false; },
+        });
       },
-      error: () => { this.loading = false; },
     });
   }
 

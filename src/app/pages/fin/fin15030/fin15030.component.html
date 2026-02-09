@@ -186,24 +186,23 @@
     </div>
   </form>
 
-  <app-customFooter-table
-    tableKey="FIN15030"
+  <app-table-report
+    [data]="tableData()"
     dataKey="No"
-    [data]="data"
+    tableKey="FIN15030"
     [columns]="columns"
+    [totalRecords]="totalRecords()"
+    [loading]="tableLoading()"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="queryFunction"
+    [showCheckBox]="true"
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
-    [multiSortMeta]="[
-      { field: 'INV_GUIType', order: 1 },
-      { field: 'TXN_GUINo', order: 1 },
-    ]"
-    [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [lazy]="true"
-    [loading]="loading"
     [showManage]="false"
     [showDelete]="false"
     [showCaption]="false"
-    [footerData]="footerData"
-  ></app-customFooter-table>
+    [footerData]="footerRow"
+    [footerLabel]="'合計'"
+    [isRowSelectable]="isRowSelectable"
+  ></app-table-report>
 </div>

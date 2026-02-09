@@ -4,53 +4,117 @@
     <!-- <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button> -->
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="合約種類" controlName="contract_type" [options]="contact_type_Option"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.contract_type"
-              [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="合約種類"
+              controlName="contract_type"
+              [options]="contact_type_Option"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.contract_type"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="合約狀態" controlName="contract_status" [options]="contract_status_Option"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.contract_status"
-              [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="合約狀態"
+              controlName="contract_status"
+              [options]="contract_status_Option"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.contract_status"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="接洽日期" [startControl]="queryForm.controls.CreatedDateStart"
-              [endControl]="queryForm.controls.CreatedDateEnd" [submitted]="submitted" />
+            <app-calendar-range-quick
+              label="接洽日期"
+              [startControl]="queryForm.controls.CreatedDateStart"
+              [endControl]="queryForm.controls.CreatedDateEnd"
+              [submitted]="submitted"
+            />
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="接洽人員代碼/名稱" controlName="contact_USR" [options]="contact_USR_Option"
-              optionLabel="Label" optionValue="No" [control]="queryForm.controls.contact_USR"
-              [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="接洽人員代碼/名稱"
+              controlName="contact_USR"
+              [options]="contact_USR_Option"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.contact_USR"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="廠商統一編號" controlName="cus_uniform_id" [options]="cus_uniform_Option"
-              optionLabel="Label" optionValue="No" [control]="queryForm.controls.cus_uniform_id"
-              [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="廠商統一編號"
+              controlName="cus_uniform_id"
+              [options]="cus_uniform_Option"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.cus_uniform_id"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="大分類代碼/名稱" controlName="bus_type" [options]="bus_type_Option" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.bus_type" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="大分類代碼/名稱"
+              controlName="bus_type"
+              [options]="bus_type_Option"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.bus_type"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="區域" controlName="area" [options]="area_Option" optionLabel="Name" optionValue="No"
-              [control]="queryForm.controls.area" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="區域"
+              controlName="area"
+              [options]="area_Option"
+              optionLabel="Name"
+              optionValue="No"
+              [control]="queryForm.controls.area"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="樓層" controlName="floor" [options]="floor_Option" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.floor" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="樓層"
+              controlName="floor"
+              [options]="floor_Option"
+              optionLabel="Name"
+              optionValue="No"
+              [control]="queryForm.controls.floor"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="位置編號" controlName="location" [options]="location_Option" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.location" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="位置編號"
+              controlName="location"
+              [options]="location_Option"
+              optionLabel="Name"
+              optionValue="No"
+              [control]="queryForm.controls.location"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
         </div>
         <div class="grid p-fluid">
@@ -59,21 +123,40 @@
               [submitted]="submitted"></app-input-text>
           </div> -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="館別" controlName="tlt_building" [options]="tlt_building_Option" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.tlt_building" [submitted]="submitted">
-            </app-multi-select>
+            <app-multi-select
+              label="館別"
+              controlName="tlt_building"
+              [options]="tlt_building_Option"
+              optionLabel="Name"
+              optionValue="No"
+              [control]="queryForm.controls.tlt_building"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="版本編號" [startControl]="queryForm.controls.version_start"
-              [endControl]="queryForm.controls.version_end" [submitted]="submitted" />
+            <app-input-number-range
+              label="版本編號"
+              [startControl]="queryForm.controls.version_start"
+              [endControl]="queryForm.controls.version_end"
+              [submitted]="submitted"
+            />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="專櫃編號" controlName="counter" [options]="TLTTalent_Option" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.counter" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="專櫃編號"
+              controlName="counter"
+              [options]="TLTTalent_Option"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.counter"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
         </div>
         <!-- <div> -->
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -84,11 +167,25 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table tableKey="TLS12060" [data]="data" [columns]="columns"
-      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-      [showCheckBox]="false" [showManage]="false" [showDelete]="false"
-      dataKey="id" [multiSortMeta]="[{ field: 'contact_USR_No', order: 1 }]"
-      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [lazy]="true" [loading]="loading" [isRowSelectable]="isRowSelectable"></app-table>
+    <app-table
+      tableKey="TLS12060"
+      [data]="data"
+      [columns]="columns"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      [showCheckBox]="false"
+      [showManage]="false"
+      [showDelete]="false"
+      [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
+      [rows]="30"
+      [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
+      dataKey="id"
+      [multiSortMeta]="[{ field: 'contact_USR_No', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true"
+      [loading]="loading"
+      [isRowSelectable]="isRowSelectable"
+    ></app-table>
   </div>
 </div>
