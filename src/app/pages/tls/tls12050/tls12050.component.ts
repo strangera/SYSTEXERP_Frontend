@@ -1,15 +1,14 @@
+import { CommonModule, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
-import { TLS12050Service } from '../../../service/api/tls/tls12050.service';
-import { NgIf } from '@angular/common';
-import { CommonModule } from '@angular/common';
-import { environment } from 'src/environments/environment';
+import { AccordionModule } from 'primeng/accordion';
 import { ImageModule } from 'primeng/image';
+import { environment } from 'src/environments/environment';
+import { TLS12050Service } from '../../../service/api/tls/tls12050.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 
 @Component({
@@ -32,7 +31,6 @@ export class TLS12050Component extends BasicQueryPageComponent<any> implements O
   queryForm = this.fb.group({
     building_no: ['A'],
     FLOOR_NO: ['1F'],
-    // statusList: [],
   });
 
   dropdown1 = [
@@ -50,15 +48,6 @@ export class TLS12050Component extends BasicQueryPageComponent<any> implements O
     { label: '6F', value: '6F' },
   ];
 
-  // dropdown3 = [
-  //   { label: '閒置（未使用）', value: 'idle' },
-  //   { label: '洽談中（要約書）', value: 'negotiating' },
-  //   { label: '營運中（合約）', value: 'operating' },
-  //   { label: '停用', value: 'disabled' }
-  // ];
-
-  // 動態綁定欄位
-  // 無圖片預設
   blank = environment.ApiUrl + '/images/blank.jpg';
   selectedImage?: string; // 圖片 URL
   selectedFloor = ''; // 選擇的樓層
@@ -106,7 +95,8 @@ export class TLS12050Component extends BasicQueryPageComponent<any> implements O
     this.tls12050Service.queryTLS12050(frm.getRawValue()).subscribe({
       next: (res) => {
         const stat = res.Data?.[0];
-        this.selectedImage = environment.ApiUrl + '/' + stat?.Image_Url
+        const imgPath = stat?.Image_Url ? (environment.ApiUrl + '/' + stat.Image_Url) : this.blank;
+        this.selectedImage = imgPath;
         this.selectedFloor = frm.get('FLOOR_NO')?.value;
         this.selectedbuilding_no = frm.get('building_no')?.value;
         this.All_Count = stat?.All_Count ?? 0;
@@ -118,10 +108,6 @@ export class TLS12050Component extends BasicQueryPageComponent<any> implements O
         this.Outof_Service = this.calculatePercent(stat?.Outof_Service ?? 0, total);
 
       },
-      error: (err) => {
-        console.error('查詢失敗', err);
-      }
-
     });
   }
 
@@ -137,21 +123,12 @@ export class TLS12050Component extends BasicQueryPageComponent<any> implements O
         select_library: value.category,
         select_Floor: value.floor
       };
-
       this.loading = true;
-
       this.tls12050Service.queryTLS12050(payload).subscribe({
         next: (res: any) => {
           this.statsList = res.Data ?? [];
-          console.log('查詢結果:', res.Data);
-
-
           this.loading = false;
         },
-        error: (err: any) => {
-          console.error('查詢 TLS12050 發生錯誤', err);
-          this.loading = false;
-        }
       });
     }
   }
@@ -161,7 +138,6 @@ export class TLS12050Component extends BasicQueryPageComponent<any> implements O
     const percent = (value / total) * 100;
     return percent.toFixed(1) + '%';
   }
-
 
   onStatusChange(event: any): void {
     // const current = event.value || [];
