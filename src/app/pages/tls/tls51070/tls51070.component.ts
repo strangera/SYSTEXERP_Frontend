@@ -320,7 +320,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
         this.tls51070Service.deleteTLS51070(deleteBody).subscribe({
           next: (response) => {
             if (response.Status === '0000') {
-              this.messageService.successBubble('選中項目刪除成功');
+              this.messageService.successBubble('刪除成功');
             } else {
               console.error('API error:', response.Status, response.Message);
               this.messageService.errorBubble(`刪除失敗: ${response.Message}`);

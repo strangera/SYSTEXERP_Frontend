@@ -97,19 +97,26 @@ export class FIN52040Component extends BasicQueryPageComponent<Fin52040Request> 
   }
   // 刪除控制_Grace 9/9: 
   onDelete(selectedRows: Fin52040Response[]) {
-    const refCodeList = selectedRows.map(row => row.RefCode);
-    const requestBody = {
-      RefCodes: refCodeList
-    };
+    this.messageService.confirm({
+      message: `是否確認刪除選中的對象及對帳資料?`,
+      header: `確認刪除`,
+      accept: () => {
+        const refCodeList = selectedRows.map(row => row.RefCode);
+        const requestBody = {
+          RefCodes: refCodeList
+        };
 
-    console.log('delete request', requestBody);
-    this.fin52040Service.deleteFIN52040(requestBody).pipe(untilDestroyed(this)).subscribe({
-      next: () => {
-        this.onSubmit(this.queryForm);
-        this.selectedRows = [];
-      },
-      error: () => { this.loading = false; },
+        console.log('delete request', requestBody);
+        this.fin52040Service.deleteFIN52040(requestBody).pipe(untilDestroyed(this)).subscribe({
+          next: () => {
+            this.onSubmit(this.queryForm);
+            this.selectedRows = [];
+          },
+          error: () => { this.loading = false; },
+        });
+      }
     });
+
   }
 
   isRowSelectable(row: Fin52040Response) {

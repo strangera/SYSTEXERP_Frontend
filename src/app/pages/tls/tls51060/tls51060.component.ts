@@ -148,7 +148,7 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
         this.tls51060Service.deleteTLS51060(deleteBody).pipe(untilDestroyed(this)).subscribe({
           next: (response) => {
             if (response.Status === '0000') {
-              this.messageService.successBubble('選中項目刪除成功');
+              this.messageService.successBubble('刪除成功');
             } else {
               console.error('API error:', response.Status, response.Message);
               this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
