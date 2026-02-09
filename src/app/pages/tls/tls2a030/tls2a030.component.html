@@ -32,7 +32,7 @@
 </div>
 
 <div class="card">
-  <app-table-report [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+  <app-tls2f010-table-report [data]="data" [columns]="columns" [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event" [showCheckBox]="false" dataKey="PAY_NO" tableKey="tls2a030"
     [totalRecords]="totalRecords" [loading]="loading" [lastQueryBody]="historyRequestBody"
     [queryFunction]="tls2a030Service.queryTLS2A030.bind(tls2a030Service)" [showManage]="false" [showDelete]="false"
@@ -43,5 +43,5 @@
           (click)="onExportExcel()" [disabled]="data.length === 0"></p-button>
       </div>
     </header>
-  </app-table-report>
+  </app-tls2f010-table-report>
 </div>

@@ -58,17 +58,16 @@ export class Tls12010DetailService {
     }
 
     deletePotential(selectedItems: any[], data: any[]): void {
-        if (confirm(`確定要刪除 ${selectedItems.length} 個其他商場項目嗎？`)) {
-            selectedItems.forEach(item => {
-                const index = data.findIndex(d => d.id === item.id);
-                if (index > -1) {
-                    if (data[index].status === 'new') {
-                        data.splice(index, 1);
-                    } else {
-                        data[index].status = 'deleted';
-                    }
+        // 這裡只負責處理資料狀態，不負責詢問
+        selectedItems.forEach(item => {
+            const index = data.findIndex(d => d.id === item.id);
+            if (index > -1) {
+                if (data[index].status === 'new') {
+                    data.splice(index, 1); // 新增的資料直接刪除
+                } else {
+                    data[index].status = 'deleted'; // 既有資料標記為刪除
                 }
-            });
-        }
+            }
+        });
     }
 }

@@ -541,3 +541,10 @@ export interface Aps1002Item {
   BNK_BRANCHNAME: string;   // 分行名稱
   BNK_AccType: string;      // 帳戶類型 (例如: 1-支存, 2-活存...)
 }
+
+/**
+ * 查詢會計科目設定檔(GLS1005)下拉式選單(只顯示 GLS1005.ledger_MD=1)
+ */
+export interface IGLS1005LedgerMDItem extends IDropdownItem {
+  ABAT_YN: string; // 應收廠商
+}
