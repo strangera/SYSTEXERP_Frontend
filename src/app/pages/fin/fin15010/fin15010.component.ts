@@ -3,7 +3,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -122,7 +122,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
   systemTypeOptions: Option[] = getSYS1000Options('SYS_ORIGIN');      // 系統別 (APS2002.SYS_ORIGIN, 下拉選單為SYS1000.SYS_ORIGIN)
   salTypeOptions: Option[] = getSYS1000Options('PUR_DirectType');     // 直接扣抵法稅額分攤種類 (APS2002.PUR_DirectType, 下拉選單為SYS1000.PUR_DirectType)
   taxTypeOptions: Option[] = getSYS1000Options('PUR_TaxType');        // 課稅別 (APS2002.PUR_TaxType, 下拉選單為SYS1000.PUR_TaxType)
-  discountOptions: Option[] = getSYS1000Options('PUR_DiscNo');        // 扣抵代號 (APS2002.PUR_DiscNo, 下拉選單為SYS1000.PUR_DiscNo)
+  discountOptions: Option[] = [];   // 扣抵代號 (label: SYS_Code-SYS_Name)，在 ngOnInit 賦值
   invoiceTypeOptions: Option[] = getSYS1000Options('PUR_Type');       // 類別區分 (APS2002.PUR_Type, 下拉選單為SYS1000.PUR_Type)
 
   // 列印方式
@@ -147,6 +147,10 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
 
   ngOnInit(): void {
     this.initializePage('FIN15010', 'fin/fin15010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.discountOptions = SystemOptionsService.getOptions('PUR_DiscNo').map((item) => ({
+      value: item.SYS_Code,
+      label: `${item.SYS_Code}-${item.SYS_Name}`,
+    }));
     this.loadDropdownOptions();
     // 設定PUR_RepYYYYMM預設值
     const currentDate = new Date();
