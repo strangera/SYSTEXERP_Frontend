@@ -60,6 +60,14 @@ export class TLS12050Component extends BasicQueryPageComponent<any> implements O
   Outof_Service = '';
 
   statsList: any[] = [];
+  // mouse coordinates relative to image (origin: left-bottom)
+  mouseX = 0;
+  mouseY = 0;
+  // marker (標定) coordinates and visibility
+  markerLeft = 0;   // css left (px)
+  markerTop = 0;    // css top (px)
+  markerBottom = 0; // displayed Y with origin at bottom
+  markerVisible = false;
 
   constructor(
     private fb: FormBuilder,
@@ -157,6 +165,45 @@ export class TLS12050Component extends BasicQueryPageComponent<any> implements O
   }
   get selectedBuildingLabel(): string {
     return this.dropdown1.find(opt => opt.value === this.selectedbuilding_no)?.label ?? this.selectedbuilding_no;
+  }
+
+  // mouse move handler on image container
+  onImageMouseMove(event: MouseEvent, container?: HTMLElement): void {
+    const el = container ?? (event.currentTarget as HTMLElement);
+    if (!el) return;
+    const img = el.querySelector('img') as HTMLImageElement | null;
+    const rect = img ? img.getBoundingClientRect() : el.getBoundingClientRect();
+    const x = event.clientX - rect.left; // distance from left of img
+    const yFromTop = event.clientY - rect.top; // distance from top of img
+    const yFromBottom = rect.height - yFromTop; // convert to distance from bottom
+
+    // clamp and round
+    this.mouseX = Math.max(0, Math.min(Math.round(x), Math.round(rect.width)));
+    this.mouseY = Math.max(0, Math.min(Math.round(yFromBottom), Math.round(rect.height)));
+  }
+
+  onImageMouseLeave(): void {
+    // optional: clear or keep last coordinate. Here we keep last value.
+    // To clear, uncomment next two lines:
+    // this.mouseX = 0;
+    // this.mouseY = 0;
+  }
+
+  // click to set marker coordinate
+  onImageClick(event: MouseEvent, container?: HTMLElement): void {
+    const el = container ?? (event.currentTarget as HTMLElement);
+    if (!el) return;
+    const img = el.querySelector('img') as HTMLImageElement | null;
+    const rect = img ? img.getBoundingClientRect() : el.getBoundingClientRect();
+    const x = Math.round(event.clientX - rect.left);
+    const yFromTop = Math.round(event.clientY - rect.top);
+    const yFromBottom = Math.round(rect.height - yFromTop);
+
+    // store both css top/left for positioning and bottom-based Y for display
+    this.markerLeft = Math.max(0, Math.min(x, Math.round(rect.width)));
+    this.markerTop = Math.max(0, Math.min(yFromTop, Math.round(rect.height)));
+    this.markerBottom = Math.max(0, Math.min(yFromBottom, Math.round(rect.height)));
+    this.markerVisible = true;
   }
 
 }
