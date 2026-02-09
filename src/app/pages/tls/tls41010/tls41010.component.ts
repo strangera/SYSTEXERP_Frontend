@@ -150,6 +150,16 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     this.tls11010Service.queryData(payload).pipe(finalize(() => this.loading = false)).subscribe({
       next: (res) => {
         console.log('查詢 TLS11010 成功', res.Data);
+
+        // 如果有資料，自動帶入館別、樓層、區域
+        if (res?.Data && res.Data.length > 0) {
+          const locationData = res.Data[0];
+          this.queryForm.patchValue({
+            ECR_Group: locationData.building_no ?? '',      // 館別
+            ECR_SubGroup: locationData.FLOOR_NO ?? '',      // 樓層
+            ECR_AreaNo: locationData.AREA_NO?.trim() ?? ''  // 區域（去除空白）
+          }, { emitEvent: false });
+        }
       },
     });
   }

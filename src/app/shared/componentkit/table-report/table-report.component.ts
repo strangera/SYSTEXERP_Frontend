@@ -17,7 +17,7 @@ import { finalize, Observable } from 'rxjs';
 import { TableCaptionComponent } from '../table/table-caption/table-caption.component';
 import { TableExpansionComponent } from '../table/table-expansion/table-expansion.component';
 import { TableReportUtilityService } from './table-report-utility.service';
-import { AddButton, ColumnGroup, expandAnimation, formatAmount2, ReportColumn, TableQueryPayload } from './table-report.model';
+import { AddButton, ColumnGroup, expandAnimation, ReportColumn, TableQueryPayload } from './table-report.model';
 
 @Component({
   selector: 'app-table-report',
@@ -94,6 +94,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() footerPercentData: any;     // (百分比)頁尾資料
   @Input() extraFooterData: any; // 額外的 footer 資料（可為 object 或 array），會顯示於 footer 區塊，不對應欄位
   @Input() groupRowsBy?: string;    // (小計)群組欄位
+  @Input() subTotalLabel = '小計'; // 小計列左側標籤文字
   groupTotals: Record<string, Record<string, number>> = {}; // 用於儲存每個群組的總計
   @Input() subTotalData: any;    // (小計)頁尾資料
   @Output() selectButton = new EventEmitter<any>();    // 選擇 按鈕事件
@@ -107,6 +108,8 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() expansionDataKey = 'details';
   @Input() expansionMultiSortMeta = [{ field: this.expansionDataKey, order: 1 }];
   @Input() expansionLoadFn?: (rowData: any) => Observable<any>;
+  @Input() expansionShowSort = true;
+  @Input() expansionShowReorder = true;
   expandedRows: Record<string, boolean> = {};
   // 連結
   @Output() linkClick = new EventEmitter<{ rowData: any, field: string }>();
@@ -135,6 +138,9 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       if (this.data.length !== 0) {
         if (this.dt) {
           this.dt.virtualScroll = false;
+          setTimeout(() => {
+            this.syncTableSortMeta();
+          });
         }
         this.cdr.detectChanges();
         // 判斷是否需要進行虛擬滾動，如果資料小於 pageSize 則不進行
@@ -154,26 +160,15 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     }
   }
 
-  // 對 extraFooter 的 key 做中文對應
-  private rawLabelMap: Record<string, string> = {
-    UnPostedAmt_NoTax: '未登錄餘額(免稅)',
-    UnPostedAmt_WithTax: '未登錄餘額(含稅)',
-  };
-
-  private formatValue(v: any): any {
-    if (v === null || v === undefined || v === '') return '';
-    const num = Number(v);
-    if (!isNaN(num)) return formatAmount2(num);
-    return String(v);
-  }
-
-
   loadMoreData() {
     if (this._loading || !this.queryFunction || !this.lastQueryBody) {
       return; // 如果正在載入、沒有查詢函式、沒有查詢條件或已載入全部資料，則退出
     }
     const pageSize = this.lastQueryBody?.pageSize || this.lastQueryBody?.PageSize || 30;
     const currentSort = this.dt?.multiSortMeta;
+    if (currentSort) {
+      this.lastQueryBody.SortBy = currentSort;
+    }
     const body = {
       ...this.lastQueryBody,
       pageIndex: Math.floor(this.data.length / pageSize) + 1,
@@ -187,6 +182,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         this.updateGroupTotals(res.Data);
         this.cdr.detectChanges();
         this.data = [...this.data, ...res.Data];
+        this.syncTableSortMeta();
         this.dataChange.emit(this.data);
         this.virtualData = this.data;
         this.totalRecords = res.TotalCount || this.data.length;
@@ -212,6 +208,10 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (!this.queryFunction || !this.lastQueryBody || !this.showSort) {
       return;
     }
+    this.lastQueryBody = {
+      ...this.lastQueryBody,
+      SortBy: this.dt.multiSortMeta
+    };
     const body = {
       ...this.lastQueryBody,
       pageIndex: 1, // 重新排序時，總是從第一頁開始
@@ -227,6 +227,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         this.groupTotals = {}; // 清空小計，因為這是新的一組資料
         this.updateGroupTotals(res.Data);
         this.data = res.Data;
+        this.syncTableSortMeta();
         this.cdr.detectChanges();
 
         // 判斷是否開啟虛擬滾動：將 30 改為 pageSize
@@ -275,6 +276,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     this.cdr.markForCheck();
   }
   onLazyLoad() {
+    console.log('🔍 onLazyLoad');
     if (this.isAllSelected) {
       this.selectedItems = this.data.filter(rowData => {
         const selectable = this.isRowSelectable(rowData);
@@ -464,5 +466,28 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         }
       });
     });
+  }
+  /**
+ * 將上次查詢的排序條件同步回 p-table 元件，確保 UI 狀態一致
+ */
+  private syncTableSortMeta() {
+    // 確保 dt 已初始化且有排序資料
+    if (!this.dt || !this.lastQueryBody?.SortBy) return;
+
+    const sortBy = this.lastQueryBody.SortBy;
+    const meta = Array.isArray(sortBy) ? [...sortBy] : [sortBy];
+
+    // 1. 同步資料
+    this.dt.multiSortMeta = meta.map(m => ({
+      field: m.field || m.Field,
+      order: m.order || m.Order
+    }));
+
+    // 3. 核心：通知 TableService 排序已變動，這會讓 Header 的小箭頭亮起來
+    // PrimeNG 內部是靠這個 Observable 來通知 Header 元件更新 UI
+    setTimeout(() => {
+      this.dt.tableService.onSort(this.dt.multiSortMeta || []);
+      this.cdr.detectChanges();
+    }, 0);
   }
 }

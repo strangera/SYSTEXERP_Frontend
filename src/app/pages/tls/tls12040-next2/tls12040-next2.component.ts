@@ -462,6 +462,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
           const masterSelected = item.is_selected !== undefined ? Boolean(item.is_selected) : true;
           return {
             ...item,
+            id: `renewal_master_${Date.now()}_${itemIndex}_${Math.random().toString(36).substring(2, 9)}`,
             tlt_id: item.tlt_id,         // 使用原始 API 值
             apply_no: '',                // 清空 apply_no
             talent_id: '',               // 清空 talent_id

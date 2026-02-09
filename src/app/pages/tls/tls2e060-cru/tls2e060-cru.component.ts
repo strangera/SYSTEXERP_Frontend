@@ -62,24 +62,51 @@ export class TLS2E060CRUComponent extends BasicCruPageComponent<Tls2e060Data> im
   ngOnInit(): void {
     this.initializePage('TLS2E060', this.dataForm);
 
-    this.tls2e060Service.queryTltTalentDropdownList()
-      .pipe(untilDestroyed(this))
+    // 1. 初始化時先禁用專櫃下拉 (如果年月沒值)
+    if (!this.dataForm.controls.sam_yyymm.value) {
+      this.dataForm.controls.tlt_no.disable();
+    }
+
+    // 2. 監聽 結帳年月 的變化
+    this.dataForm.controls.sam_yyymm.valueChanges.pipe(untilDestroyed(this)).subscribe((val) => {
+      const formattedYYYMM = this.datePipe.transform(val, 'yyyyMM');
+      if (formattedYYYMM) {
+        this.fetchTltOptions(formattedYYYMM);
+      } else {
+        // 沒年月，清空並禁用
+        this.tlt_noOptions = [];
+        this.dataForm.controls.tlt_no.setValue(null);
+        this.dataForm.controls.tlt_no.disable();
+      }
+    });
+
+    // 3. 如果是編輯模式，初始就有年月，直接觸發一次查詢
+    if (!this.isFormCreateable && this.rowdata?.sam_yyymm) {
+      this.fetchTltOptions(this.rowdata?.sam_yyymm);
+    }
+  }
+  /** 封裝打 API 的邏輯 */
+  private fetchTltOptions(yyyymm: string): void {
+    this.loading = true; // 開啟讀取狀態
+    this.tls2e060Service.queryTltTalentDropdownList(yyyymm)
+      .pipe(
+        finalize(() => this.loading = false),
+        untilDestroyed(this)
+      )
       .subscribe(res => {
         this.tlt_noOptions = (res.Data || []).map(item => ({
           ...item,
           label: `${item.tlt_no} - ${item.tlt_name}`
         }));
 
-        // 編輯模式
+        // 啟用下拉選單
+        this.dataForm.controls.tlt_no.enable();
+
+        // 編輯模式回填
         if (!this.isFormCreateable && this.rowdata) {
-          // 找到對應的物件引用
           const targetOption = this.tlt_noOptions.find(opt => opt.tlt_no === this.rowdata?.tlt_no);
-
-          if (targetOption && this.dataForm.controls.tlt_no) {
-            // 因為沒給 optionValue，所以要塞入整個物件
+          if (targetOption) {
             this.dataForm.controls.tlt_no.setValue(targetOption);
-
-            // 順便把剩下的隱藏/顯示欄位填入
             this.dataForm.patchValue({
               contract_no: targetOption.contract_no,
               contract_subno: targetOption.contract_subno

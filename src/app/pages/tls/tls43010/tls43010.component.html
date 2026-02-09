@@ -44,9 +44,10 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="NOT_No" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords" [showCheckBox]="true"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+  <app-table-report dataKey="NOT_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [totalRecords]="totalRecords" [showCheckBox]="true" [loading]="loading"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
-    [isRowSelectable]="isRowSelectable" [editDisabled]="editDisabled"></app-table>
+    [isRowSelectable]="isRowSelectable" [editDisabled]="editDisabled"
+    [queryFunction]="tls43010Service.queryTLS43010.bind(tls43010Service)"
+    [lastQueryBody]="lastQueryBody"></app-table-report>
 </div>

@@ -72,8 +72,8 @@
           </div>
           <!-- VEN_BNK_No_Param: 匯款銀行代號 (Dropdown) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="匯款銀行代號" controlName="VEN_BNK_No_Param" [options]="VEN_BNK_No_ParamOptions"
-              optionLabel="DisplayText" optionValue="BNK_id" [control]="queryForm.controls.VEN_BNK_No_Param"
+            <app-dropdown label="匯款銀行代號" controlName="VEN_BNK_No_Param" [options]="VEN_BNK_No_ParamOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.VEN_BNK_No_Param"
               [submitted]="submitted"></app-dropdown>
           </div>
           <!-- BankAccountNo: 銀行帳號 -->

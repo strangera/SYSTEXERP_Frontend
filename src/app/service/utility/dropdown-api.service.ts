@@ -7,6 +7,8 @@ import { Observable, of } from 'rxjs';
 import { catchError, map, shareReplay } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import {
+  Aps1001ComboItem,
+  Aps1001ComboQuery,
   Aps1001Item,
   Aps1001Query,
   Aps1002Item,
@@ -22,6 +24,7 @@ import {
   EcrQuery,
   ENG1001Item,
   IDropdownItem,
+  IGLS1005LedgerMDItem,
   LogoAccorHosItem,
   LogoAccorHosQuery,
   Option,
@@ -51,6 +54,8 @@ import {
   TalentChargeItem,
   TalentChargeQuery,
   TalentItem,
+  TalentOpenFlagItem,
+  TalentOpenFlagQuery,
   TalentQuery,
   TalentStatusQuery,
   TalentStoreWayQuery,
@@ -244,6 +249,13 @@ export class DropdownApiService {
   /** 查詢會計科目設定檔(GLS1005) */
   queryGls1005(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<IDropdownItem>('/queryGLS1005_DropDownList', 'No', 'Name').pipe(
+      shareReplay({ bufferSize: 1, refCount: true })// 避免重複查詢
+    );
+  }
+
+  // 查詢會計科目設定檔(GLS1005)下拉式選單(只顯示 GLS1005.ledger_MD=1)
+  queryGls1005_ledgerMD(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IGLS1005LedgerMDItem>('/queryGLS1005_ledgerMD_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true })// 避免重複查詢
     );
   }
@@ -573,6 +585,12 @@ export class DropdownApiService {
     );
   }
 
+  queryTltTalentOpenFlag(body: TalentOpenFlagQuery): Observable<TalentOpenFlagItem[] | null> {
+    return this.queryDropdownWithParams<TalentOpenFlagItem, TalentOpenFlagQuery>('/queryTLTTALENT_tlt_openflag_DropDownList', body).pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
   // 能源系列
 
   // 取得能源錶號
@@ -647,6 +665,18 @@ export class DropdownApiService {
       shareReplay({ bufferSize: 1, refCount: true })// 避免重複查詢
     );
   }
+  /** 查詢銀行+分行資料表(APS1001 JOIN APS1004)下拉選單 */
+  queryAps1001_DropDownList(body: Aps1001ComboQuery = { SearchKeyword: '' }): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<Aps1001ComboItem, Aps1001ComboQuery>(
+      '/queryAPS1001_DropDownList',
+      'No',
+      'Name',
+      body
+    ).pipe(
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
   queryTALPORDERM_DropDownListShare(body?: TALPORDERMQueryForShare): Observable<Option[] | null> {
     const request = {
       ...body,

@@ -103,7 +103,7 @@
             optionValue="value"
             [control]="$any(form.controls['apply_type'])"
             [submitted]="submitted"
-            [readonly]="isViewMode"
+            [readonly]="isViewMode || !isCreateMode"
             (valueChange)="onApplyTypeChange($event)"
           ></app-dropdown>
         </div>

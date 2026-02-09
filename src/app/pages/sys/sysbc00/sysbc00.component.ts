@@ -2,17 +2,18 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
 import { Sys1004Service } from '../../../service/api/sys/sys1004.service';
-import { ISysbc00Data, Sysbc00Service } from '../../../service/api/sys/sysbc00.service';
+import { IQuerySysbc00Request, ISysbc00Data, Sysbc00Service } from '../../../service/api/sys/sysbc00.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { Column, formatDateTime } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-sysbc00',
@@ -25,7 +26,7 @@ import { Column, createPaginationConfig, formatDateTime } from '../../../shared/
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
   ],
 })
@@ -35,12 +36,15 @@ export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> impl
     BNK_No: ['', [Validators.maxLength(10), this.validation.numberValidator]], // 銀行代號
     BNK_Name: ['', [Validators.maxLength(60)]], // 銀行名稱
     BNK_ShortName: ['', [Validators.maxLength(30)]], // 銀行簡稱
-    ...createPaginationConfig([{ field: 'BNK_No', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'BNK_No', order: 1 }]],
   });
   totalRecords = 0;
+  lastQueryBody: IQuerySysbc00Request | null = null
   data: ISysbc00Data[] = [];
   selectedRows: ISysbc00Data[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'BNK_No', header: '銀行代號', visible: true },
     { field: 'BNK_Name', header: '銀行名稱', visible: true },
     { field: 'BNK_ShortName', header: '銀行簡稱', visible: true },
@@ -65,7 +69,7 @@ export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> impl
   ];
 
   constructor(
-    private readonly sysbc00Service: Sysbc00Service,
+    public readonly sysbc00Service: Sysbc00Service,
     private readonly sys1004Service: Sys1004Service,
     private readonly validation: ValidationService,
   ) {
@@ -79,6 +83,7 @@ export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> impl
     this.handleSubmit(frm, () => {
       this.sysbc00Service.querySYSBC00(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.data = response.Data;
+        this.lastQueryBody = frm.value;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });

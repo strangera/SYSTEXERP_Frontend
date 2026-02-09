@@ -10,20 +10,20 @@ import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 
 import {
   ApiResponse,
@@ -31,15 +31,17 @@ import {
   QueryTLS25030Request,
   QueryTLS25030Row,
   TLS25030Service,
+  UpdateTLS25030StatusRequest,
 } from '../../../service/api/tls/tls25030.service';
 
-import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
-import { FloorService } from '@service/basic/querySYS3900.service';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { DeductionService } from '@service/basic/queryAPS1003.service';
+import { FloorService } from '@service/basic/querySYS3900.service';
+import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { Actions } from '@shared/service/permission-guard.service';
 
-type SortItem = { field: string; order: number };
+interface SortItem { field: string; order: number }
 
 @UntilDestroy()
 @Component({
@@ -83,6 +85,10 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
   readonly defaultSort: SortItem[] = [{ field: 'UPD_Date', order: -1 }];
   private _currentSortBy: SortItem[] = this.defaultSort;
 
+  isEditDisabled = (row: QueryTLS25030Row): boolean => {
+    return Number(row.fine_status) === 0;
+  };
+
   columns: ReportColumn[] = [
     { field: 'fine_no', header: '單據編號' },
     { field: 'tlt_no', header: '專櫃編號' },
@@ -97,6 +103,25 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
     { field: 'UPD_Date', header: '維護日', format: (v: string) => this.formatDate(v) },
     { field: 'fine_status_Name', header: '狀態' },
     { field: 'violation_otherdesc', header: '備註' },
+  ];
+
+  addButton: AddButton[] = [
+    {
+      label: '作廢', icon: 'pi pi-trash text-red-500',
+      action: (rowData: QueryTLS25030Row) => {
+        if (!rowData.fine_status || !rowData.fine_no) {
+          return;
+        }
+
+        const req: UpdateTLS25030StatusRequest = {
+          fine_status: rowData.fine_status,
+          fine_noList: [rowData.fine_no]
+        };
+
+        this.statusChange(req);
+      },
+      disabled: (rowData: QueryTLS25030Row) => rowData.fine_status === "0" || !this.hasPermission(Actions.Invalidate)
+    }, // 作廢
   ];
 
   /** ✅ 下拉 options */
@@ -266,63 +291,116 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
         return { Data: rows, TotalCount: totalCount, GrandTotal: null };
       })
     );
+private resetToDefault(): void {
+  this.queryForm.reset(
+    {
+      tlt_no: '',
+      tlt_name: '',
+      fine_no: '',
 
-  ngOnInit(): void {
-    this.initializePage('TLS25030', '/tls/tls25030cru', this.queryForm, (form) => this.onSubmit(form));
+      fine_date_s: null,
+      fine_date_e: null,
+      deduct_date_s: null,
+      deduct_date_e: null,
 
-    // ✅ 先載入下拉，再做「還原 + 自動查詢」，避免多選 options 尚未就緒時顯示怪怪的
-    this.loading = true;
+      amount_s: null,
+      amount_e: null,
 
-    const floors$ = this.floorService.getFloors().pipe(
-      take(1),
-      catchError((err) => {
-        console.error('getFloors error:', err);
-        return of([] as OptionItem[]);
-      })
-    );
+      violation_type: '',
+      cap_item: '',
+      org_id: '',
+      fine_status: '',
+      pay_type: '',
+      floors: [],
+      crt_usr_no: '',
 
-    const counters$ = this.counterNameService.getCounters().pipe(
-      take(1),
-      catchError((err) => {
-        console.error('getCounters error:', err);
-        return of([] as any[]);
-      })
-    );
+      // ✅ 這三個要給「值」不是給 control config
+      pageIndex: 1,
+      pageSize: 30,
+      SortBy: this.defaultSort as any, // 或下面那個 cast 寫法
+    },
+    { emitEvent: false }
+  );
 
-    const capItems$ = this.deductionService.getAPS1003DropDownList({ cap_typeList: ['Z'] }).pipe(
-      take(1),
-      catchError((err) => {
-        console.error('APS1003 dropdown load error:', err);
-        return of([] as any[]);
-      })
-    );
+  this.submitted = false;
+  this.data = [];
+  this.totalRecords = 0;
+  this.viewTotalRecords = 0;
+  this.footerData = undefined;
+  this.lastQueryBody = null;
+  this._currentSortBy = this.defaultSort;
 
-    forkJoin([floors$, counters$, capItems$])
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-          this.cdr.detectChanges();
-        }),
-        untilDestroyed(this)
-      )
-      .subscribe(([floors, counters, capList]) => {
-        this.floorOptions = floors || [];
+  this.tableVer++;
+}
 
-        this.CounterOptions = (counters || []).map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        }));
 
-        this.capItemOptions = (capList || []).map((x: any) => ({
-          value: String(x.value),
-          label: `${x.value} - ${x.label}`,
-        }));
+ngOnInit(): void {
+  this.initializePage('TLS25030', '/tls/tls25030cru', this.queryForm, (form) => this.onSubmit(form));
 
-        // ✅ 下拉完成後再還原 & 自動查詢（比照 FIN64010）
+  const fromCru = !!history.state?.fromCru;
+
+  // ✅ 先載入下拉 options，再決定是否 restore
+  this.loading = true;
+
+  const floors$ = this.floorService.getFloors().pipe(
+    take(1),
+    catchError((err) => {
+      console.error('getFloors error:', err);
+      return of([] as OptionItem[]);
+    })
+  );
+
+  const counters$ = this.counterNameService.getCounters().pipe(
+    take(1),
+    catchError((err) => {
+      console.error('getCounters error:', err);
+      return of([] as any[]);
+    })
+  );
+
+  const capItems$ = this.deductionService.getAPS1003DropDownList({ cap_typeList: ['Z'] }).pipe(
+    take(1),
+    catchError((err) => {
+      console.error('APS1003 dropdown load error:', err);
+      return of([] as any[]);
+    })
+  );
+
+  forkJoin([floors$, counters$, capItems$])
+    .pipe(
+      finalize(() => {
+        this.loading = false;
+        this.cdr.detectChanges();
+      }),
+      untilDestroyed(this)
+    )
+    .subscribe(([floors, counters, capList]) => {
+      this.floorOptions = floors || [];
+
+      this.CounterOptions = (counters || []).map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      }));
+
+      this.capItemOptions = (capList || []).map((x: any) => ({
+        value: String(x.value),
+        label: `${x.value} - ${x.label}`,
+      }));
+
+      // ✅ 下拉完成後：只有從 CRU 回來才 restore + auto query
+      if (fromCru) {
         this.restoreQueryStateAndAutoQuery();
-      });
-  }
+      } else {
+        // ✅ 其他頁回來：回預設 + 清掉保存狀態（避免下次誤還原）
+        this.resetToDefault();
+        try {
+          this.queryStateService.clearQueryState('TLS25030');
+        } catch {}
+      }
+    });
+}
+
 
   onSubmit(_frm: any) {
     this.submitted = true;
@@ -508,5 +586,13 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
 
     // ✅ 清掉保存的狀態（可選；如果你希望清除後回來也清空，就保留）
     this.saveQueryState();
+  }
+
+  statusChange(rowData: UpdateTLS25030StatusRequest) {
+    this.btnLoading = true;
+    this.tls25030Service.updateTLS25030Status(rowData).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
+      this.messageService.successBubble(response.Message);
+      this.onSubmit(this.queryForm);
+    });
   }
 }

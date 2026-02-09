@@ -20,7 +20,6 @@ const now = new Date();
 @Component({
   selector: 'app-sys0790',
   templateUrl: './sys0790.component.html',
-  styleUrl: './sys0790.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -102,7 +101,7 @@ export class SYS0790Component extends BasicQpageComponent implements OnInit {
 
   onCreate() {
     if (this.canAdd()) {
-      let extras: NavigationExtras = {
+      const extras: NavigationExtras = {
         state: {
           crudstatus: CRUDStatus.Create,
           queryform: this.queryForm,
@@ -115,7 +114,7 @@ export class SYS0790Component extends BasicQpageComponent implements OnInit {
 
   onEdit(data: any) {
     if (this.canEdit()) {
-      let extras: NavigationExtras = {
+      const extras: NavigationExtras = {
         state: {
           crudstatus: CRUDStatus.Edit,
           rowdata: data,
@@ -128,7 +127,7 @@ export class SYS0790Component extends BasicQpageComponent implements OnInit {
   }
 
   onDetail(data: any) {
-    let extras: NavigationExtras = {
+    const extras: NavigationExtras = {
       state: {
         crudstatus: CRUDStatus.Read,
         rowdata: data,

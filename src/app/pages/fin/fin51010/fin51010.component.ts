@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin51010Service, QueryFIN51010CountResponse, QueryFIN51010Request, QueryFIN51010Response } from '@service/api/fin/fin51010.service';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -63,6 +63,8 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
     { field: 'Remark', header: '傳票摘要' },
     { field: 'Debit_Amt', header: '借方金額', format: formatAmount },
     { field: 'Credit_Amt', header: '貸方金額', format: formatAmount },
+    { field: 'PostFlag', header: '傳票狀態', format: (value: string) => getSYS1000('PostFlag', value) },
+    { field: 'Trans_Status', header: '拋轉狀態', format: (value: string) => getSYS1000('Trans_Status', value) },
   ];
 
   countData: QueryFIN51010CountResponse[] = [];
@@ -81,14 +83,11 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
 
   /** 載入憑證種類與儀表板 */
   loadSheetTypeCount() {
-    this.fin51010Service.queryFIN51010Count()
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        if (res.Data) {
-          // 儲存原始統計資料供頂部儀表板使用
-          this.countData = res.Data;
-        }
-      });
+    this.fin51010Service.queryFIN51010Count().pipe(untilDestroyed(this)).subscribe(res => {
+      if (res.Data) {
+        this.countData = res.Data; // 儲存原始統計資料供頂部儀表板使用
+      }
+    });
   }
 
   /** 2. 儀表板點擊事件：帶入種類並自動查詢 */
@@ -99,12 +98,10 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
       VouNo: null,
       NoteDesc: null
     });
-
     // 自動收合查詢區塊，讓表格往上提
     if (this.queryAccordion) {
       this.queryAccordion.tabs[0].selected = false;
     }
-
     this.onSubmit(this.queryForm);
   }
 
@@ -117,25 +114,18 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
         VouDate_From: frm.value.VouDate_From ? frm.value.VouDate_From : null,
         VouDate_To: frm.value.VouDate_To ? frm.value.VouDate_To : null
       };
-
-      this.fin51010Service.queryFIN51010(body)
-        .pipe(
-          finalize(() => this.loading = false),
-          untilDestroyed(this)
-        )
-        .subscribe(res => {
-          this.data = res.Data;
-          this.totalRecords = res.TotalCount;
-          this.lastQuery = body;
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
-        });
+      this.fin51010Service.queryFIN51010(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount;
+        this.lastQuery = body;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      });
     });
   }
 
   /** 執行拋轉作業 */
   onTransfer() {
     if (this.selectedItems.length === 0) return;
-
     this.messageService.confirm({
       header: '拋轉確認',
       message: '是否拋轉所選項目?',
@@ -144,43 +134,64 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
         const body = { GLS6001_IDList: idList };
 
         this.btnLoading = true;
-        this.fin51010Service.transferFIN51010(body)
-          .pipe(
-            finalize(() => { this.btnLoading = false; }),
-            untilDestroyed(this)
-          )
-          .subscribe(res => {
-            if (res.Data.ErrCode === 0) {
-              // --- 關鍵修改：使用 setTimeout 避開 UI 關閉衝突 ---
-              setTimeout(() => {
-                this.messageService.confirm({
-                  header: '拋轉成功',
-                  message: res.Data.ErrMsg || '資料已成功拋轉！',
-                  icon: 'pi pi-check-circle',
-                  acceptLabel: '確定',
-                  showRejectButton: false,
-                  accept: () => {
-                    // 按下確定後，才刷新資料
-                    this.selectedItems = [];
-                    this.onSubmit(this.queryForm);
-                    this.loadSheetTypeCount();
-                  }
-                });
-              }, 200); // 延遲 200 毫秒
-
-            } else {
-              // 失敗時同樣建議稍微延遲
-              setTimeout(() => {
-                this.messageService.confirm({
-                  header: '拋轉失敗',
-                  message: res.Data.ErrMsg || '拋轉失敗',
-                  icon: 'pi pi-exclamation-triangle',
-                  acceptLabel: '關閉',
-                  showRejectButton: false
-                });
-              }, 200);
+        this.fin51010Service.transferFIN51010(body).pipe(finalize(() => { this.btnLoading = false; }), untilDestroyed(this)).subscribe(res => {
+          if (res.Data.ErrCode === 0) {
+            setTimeout(() => {
+              this.messageService.confirm({
+                header: '拋轉成功',
+                message: res.Data.ErrMsg || '資料已成功拋轉！',
+                icon: 'pi pi-check-circle',
+                acceptLabel: '確定',
+                showRejectButton: false,
+                accept: () => {
+                  // 按下確定後，才刷新資料
+                  this.selectedItems = [];
+                  this.onSubmit(this.queryForm);
+                  this.loadSheetTypeCount();
+                }
+              });
+            }, 200); // 延遲 200 毫秒
+          } else {
+            setTimeout(() => {
+              this.messageService.confirm({
+                header: '拋轉失敗',
+                message: res.Data.ErrMsg || '拋轉失敗',
+                icon: 'pi pi-exclamation-triangle',
+                acceptLabel: '關閉',
+                showRejectButton: false
+              });
+            }, 200);
+          }
+        });
+      }
+    });
+  }
+  onVoid() {
+    if (this.selectedItems.length === 0) return;
+    this.messageService.confirm({
+      header: '作廢確認',
+      message: '是否作廢所選項目?',
+      accept: () => {
+        const idList = this.selectedItems.map(item => item.id).join(',');
+        const body = { GLS6001_IDList: idList };
+        this.btnLoading = true;
+        this.fin51010Service.voidFIN51010(body).pipe(finalize(() => { this.btnLoading = false; }), untilDestroyed(this)).subscribe(res => {
+          setTimeout(() => {
+            this.messageService.confirm({
+              header: '作廢成功',
+              message: res.Data.ErrMsg || '資料已成功作廢！',
+              icon: 'pi pi-check-circle',
+              acceptLabel: '確定',
+              showRejectButton: false,
+              accept: () => {
+                this.selectedItems = [];
+                this.onSubmit(this.queryForm);
+                this.loadSheetTypeCount();
+              }
             }
-          });
+            );
+          }, 200); // 延遲 200 毫秒
+        });
       }
     });
   }

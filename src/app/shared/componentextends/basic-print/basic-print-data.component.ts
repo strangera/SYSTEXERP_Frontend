@@ -7,6 +7,7 @@ import { SystemDataService } from '@service/system/system-data.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
 import { FileExportService } from '@shared/service/file-export.service';
+import { finalize } from 'rxjs';
 import { AuthService } from '../../../service/system/auth.service';
 import { REPORT_TITLES } from '../../componentkit/table/report-titles';
 import { TableService } from '../../componentkit/table/report.service';
@@ -22,6 +23,7 @@ import { CurrentPageService } from './../../../core/layout/app.menulist/current-
 export abstract class BasicPrintDataComponent {
   IsPrint = true;
   exportDialog = false;
+  exportLoading = false;
   exportStatus: 'PDF' | 'Excel' = 'PDF';
 
   cdr = inject(ChangeDetectorRef);
@@ -85,10 +87,10 @@ export abstract class BasicPrintDataComponent {
       file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`,
       data_key_name: DataKeyName
     };
-
+    this.exportLoading = true;
     const export$ = this.tableService.exportPDF(body)
     this.fileExportService.executeFileExport(
-      export$.pipe(untilDestroyed(this)),
+      export$.pipe(untilDestroyed(this), finalize(() => this.exportLoading = false)),
       '.pdf',
       (isLoading) => this.exportDialog = isLoading
     ).subscribe();
@@ -128,9 +130,9 @@ export abstract class BasicPrintDataComponent {
       file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`,
       data_key_name: DataKeyName
     };
-    this.tableService.exportExcel(body)
+    this.exportLoading = true;
     const export$ = this.tableService.exportExcel(body)
-    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.exportDialog = isLoading).subscribe();
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this), finalize(() => this.exportLoading = false)), '.xlsx', (isLoading) => this.exportDialog = isLoading).subscribe();
   }
   toggleVisibility(): void {
     this.IsPrint = !this.IsPrint;
