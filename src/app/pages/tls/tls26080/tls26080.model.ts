@@ -76,6 +76,22 @@ export interface TLS26080DetailResult {
   pod_type?: string;                 // 活動類型
 }
 
+/** Request for queryTLS26080TLTTALENT_D16_D17 */
+export interface QueryTLS26080TLTTALENT_D16_D17Request {
+  tlt_no: string;
+  tlt_id: string;
+}
+
+/** Single row from queryTLS26080TLTTALENT_D16_D17 Data[] (API returns string rates) */
+export interface TLS26080TLTTALENT_D16_D17Row {
+  tlt_id: string;
+  tlt_no: string;
+  cap_item_D16: string;
+  tpy_rate_D16: string;
+  cap_item_D17: string;
+  tpy_rate_D17: string;
+}
+
 export interface TLS26080InsertPayload {
   pod_no: string;             // 活動申請編號
   pod_type: string;           // 活動類型

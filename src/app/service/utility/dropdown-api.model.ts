@@ -260,6 +260,13 @@ export interface TalentOpenFlagQuery {
 }
 
 /**
+ * 查詢 TLTTALENT_tlt_openflag_DropDownList 回傳的項目型別（含 talent_id）
+ */
+export interface TalentOpenFlagItem extends IDropdownItem {
+  talent_id: number;
+}
+
+/**
  * 查詢 queryTLTTALENTDropDownList 時的請求 body
  */
 export interface TLTTALENTItem {

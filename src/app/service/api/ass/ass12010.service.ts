@@ -66,7 +66,7 @@ export class ASS12010Service {
    * 下載請購申請報表
    */
   downloadReportASS12010(payload: ASS12010DownloadReportRequest): Observable<HttpResponse<Blob>> {
-    return this.http.post(`${this.apiUrl}/reportDetailASS12010`, payload, {
+    return this.http.post(`${this.apiUrl}/exportPDFASS12010`, payload, {
       responseType: 'blob',
       observe: 'response'
     }).pipe(
