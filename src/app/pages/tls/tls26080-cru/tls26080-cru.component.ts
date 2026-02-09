@@ -4,7 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26080Service } from '@service/api/tls/tls26080.service';
-import { IDropdownItem, Option } from '@service/utility/dropdown-api.model';
+import { Option } from '@service/utility/dropdown-api.model';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -25,7 +25,7 @@ import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fi
 import { PanelModule } from 'primeng/panel';
 import { finalize, map, Observable, tap } from 'rxjs';
 import * as XLSX from 'xlsx';
-import { CampaignData, TLS26080Data, TLS26080EditTable, TLS26080InsertPayload, TLS26080KeyInTable, TLS26080UpdatePayload } from '../tls26080/tls26080.model';
+import { CampaignData, TLS26080Data, TLS26080EditTable, TLS26080InsertPayload, TLS26080UpdatePayload } from '../tls26080/tls26080.model';
 
 @Component({
   selector: 'app-tls26080-cru',
@@ -508,10 +508,12 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     this.fetchTltTalentOptions("").subscribe(res => {
       if (res == null) return;
       const options = res.map(item => ({
-        No: item.No,
-        Name: item.Name,
-        value: item.No,
-        label: `${item.No}-${item.Name}`,
+        ...item,
+        No: item['No'] ?? item.value,
+        Name: item['Name'] ?? item.label,
+        value: item.value ?? item['No'],
+        label: item.label ?? `${item['No']}-${item['Name']}`,
+        talent_id: item.talent_id,
       }));
       this.dialogData.set(options);
       this.filteredDialogData.set(options);
@@ -599,8 +601,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
           tlt_no: this.service.tltTalentMap().get(item.tlt_no)?.value ?? '',
           tlt_name: this.service.tltTalentMap().get(item.tlt_no)?.['Name'] ?? '',
           calc_date_type: item.calc_date_type ?? 'Y',
-          cap_item_D16: 'D16',
-          cap_item_D17: 'D17',
+          cap_item_D16: item.cap_item_D16 ?? 'D16',
+          cap_item_D17: item.cap_item_D17 ?? 'D17',
           approved_date: item.approved_date ? new Date(item.approved_date).toISOString() : null,
           pod_status: item.pod_status ?? '0',
         })),
@@ -725,50 +727,52 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         pod_no: podNo,
       } as TLS26080EditTable));
 
-    const formatKeyInData = (data: TLS26080EditTable[]): TLS26080KeyInTable[] =>
-      data.map(td => ({
-        ...td,
-        tpy_rate_D16: String(td.tpy_rate_D16).split('%')[0],
-        tpy_rate_D17: String(td.tpy_rate_D17).split('%')[0],
-      }))
-        .filter(td => td.id !== 0 && td.id !== undefined);
-
     for (const item of newItems) {
-      const payload = {
-        ...item,
-        tpy_rate_D16: String(item.tpy_rate_D16),
-        tpy_rate_D17: String(item.tpy_rate_D17),
-      };
-      const keyInData = formatKeyInData(currentData.concat(newItems.filter(ni => ni.tlt_no !== item.tlt_no)));
+      const talentId = this.service.tltTalentOptions().find(o => o.value === item.tlt_no)?.talent_id;
+      if (talentId == null) {
+        this.messageService.errorBubble('無法取得專櫃 ID，請重新選擇專櫃');
+        return;
+      }
 
-      this.logger.debug(`dialog keyin payload:`, [payload, keyInData, currentData]);
+      this.service.queryTLS26080TLTTALENT_D16_D17({ tlt_no: item.tlt_no, tlt_id: item.tlt_id })
+        .subscribe(d16Res => {
+          console.log("d16Res", d16Res);
+          const d16d17 = d16Res.Status === '0000' && d16Res.Data ? d16Res.Data : null;
 
-      this.service.keyInTLS26080(payload, keyInData).subscribe(res => {
-        if (res.Status !== '0000') return;
-        const responseData = res.Data.queryTLS26080_DetailResponses.pop();
-        if (!responseData) return;
-        this.logger.debug(`dialog keyin:`, [responseData]);
+          this.service.queryTltTalentCharge(talentId).subscribe(opts => {
+            this.tltIdList.update(m => new Map(m).set(talentId, opts));
 
-        this.service.queryTltTalentCharge(responseData.talent_id).subscribe(opts => {
-          this.tltIdList.update(map => new Map(map).set(responseData.talent_id, opts));
+            const tltId = d16d17?.tlt_id ?? opts?.[0]?.value ?? '0';
+            const chargeOpt = opts.find(c => c.value === tltId);
+            const tltIdDesc = chargeOpt?.['tlt_id_desc'] ?? opts?.[0]?.['tlt_id_desc'] ?? '';
 
-          this.tableData.update(td => {
-            const currentTltId = opts.find(c => c.value === responseData.tlt_id);
             const newRow: TLS26080EditTable = {
-              ...responseData,
-              tlt_id_desc: currentTltId?.['tlt_id_desc'] ?? responseData.tlt_id_desc,
-              tlt_name: tltTalentMap.get(responseData.tlt_no)?.['Name'] || '',
-              tpy_rate_D16: Number(String(responseData.tpy_rate_D16).replace('%', '')),
-              tpy_rate_D17: Number(String(responseData.tpy_rate_D17).replace('%', '')),
+              id: 0,
+              talent_id: talentId,
+              tlt_no: item.tlt_no,
+              tlt_name: tltTalentMap.get(item.tlt_no)?.['Name'] ?? '',
+              tlt_id: tltId,
+              tlt_id_desc: tltIdDesc,
+              calc_date_type: 'Y',
+              tpy_rate_D16: d16d17 ? this.parseRateValue(d16d17.tpy_rate_D16) : 0,
+              tpy_rate_D17: d16d17 ? this.parseRateValue(d16d17.tpy_rate_D17) : 0,
+              cap_item_D16: d16d17?.cap_item_D16 ?? 'D16',
+              cap_item_D17: d16d17?.cap_item_D17 ?? 'D17',
               pod_no: podNo,
+              pod_status: '0',
+              approved_usrno: '',
+              approved_usr_name: '',
+              approved_date: undefined,
             };
-            const existingIndex = td.findIndex(t => t.tlt_no === newRow.tlt_no);
-            return existingIndex >= 0
-              ? td.map((t, i) => i === existingIndex ? newRow : t)
-              : [...td, newRow];
+
+            this.tableData.update(td => {
+              const existingIndex = td.findIndex(t => t.tlt_no === newRow.tlt_no);
+              return existingIndex >= 0
+                ? td.map((t, i) => i === existingIndex ? newRow : t)
+                : [...td, newRow];
+            });
           });
         });
-      });
     }
 
     this.tableData.update(td => td.filter(t => selectedTltNos.has(t.tlt_no)));
@@ -837,58 +841,46 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         if (!this.duplicateVal(event.value, rowData).isValid) {
           rowData.tlt_no = tableData[event.index ?? 0].tlt_no;
           return;
-        };
-        const payload = {
-          ...rowData,
-          tpy_rate_D16: String(rowData.tpy_rate_D16),
-          tpy_rate_D17: String(rowData.tpy_rate_D17),
-          tlt_id: '0',
-          tlt_id_desc: '',
-          tlt_no: event.value,
-          tlt_name: this.service.tltTalentMap().get(event.value)?.['Name'] || '',
-        };
-        const keyInData: TLS26080KeyInTable[] = tableData.map((td, ti) => {
-          if (ti === index) return payload;
-          return {
-            ...td,
-            tpy_rate_D16: String(String(payload.tpy_rate_D16 ?? td.tpy_rate_D16).split('%')[0]),
-            tpy_rate_D17: String(String(payload.tpy_rate_D17 ?? td.tpy_rate_D17).split('%')[0]),
-          };
-        }).filter(td => td.id !== 0 && td.id !== undefined);
-        this.logger.debug(`keyin payload:`, [payload, keyInData]);
+        }
+        const newTalentId = this.service.tltTalentOptions().find(o => o.value === event.value)?.talent_id;
+        if (newTalentId == null) {
+          rowData._err = true;
+          this.messageService.errorBubble('無法取得專櫃 ID');
+          return;
+        }
 
-        this.service.keyInTLS26080(payload, keyInData).subscribe(res => {
-          rowData._err = false;
-          if (res.Status !== '0000') {
-            rowData._err = true;
-            this.messageService.errorBubble(res.Message);
-            return;
-          };
+        this.service.queryTLS26080TLTTALENT_D16_D17({ tlt_no: event.value, tlt_id: '0' })
+          .subscribe(d16Res => {
+            const d16d17 = d16Res.Status === '0000' && d16Res.Data ? d16Res.Data : null;
 
-          const next = res.Data.queryTLS26080_DetailResponses.pop();
-          if (!next) return;
-          this.logger.debug(`keyin:`, [next]);
+            this.service.queryTltTalentCharge(newTalentId).subscribe(opts => {
+              this.updateTltIdOptions(newTalentId);
 
-          this.tableData.update(td => {
-            this.updateTltIdOptions(next.talent_id);
+              const tltId = d16d17?.tlt_id ?? opts?.[0]?.value ?? '0';
+              const chargeOpt = opts.find(c => c.value === tltId);
+              const tltIdDesc = chargeOpt?.['tlt_id_desc'] ?? opts?.[0]?.['tlt_id_desc'] ?? '';
 
-            return td.map((t, i) => {
-              if (i !== index) return t;
-              const currentTltId = this.tltIdList().get(next.talent_id)?.find(c => c.value === next.tlt_id);
-              return {
-                ...t,
-                talent_id: next.talent_id,
-                tlt_id: currentTltId?.value ?? next.tlt_id,
-                tlt_id_desc: currentTltId?.['tlt_id_desc'] ?? next.tlt_id_desc,
-                tpy_rate_D16: this.parseRateValue(next.tpy_rate_D16, t.tpy_rate_D16),
-                tpy_rate_D17: this.parseRateValue(next.tpy_rate_D17, t.tpy_rate_D17),
-              };
+              this.tableData.update(td =>
+                td.map((t, i) => {
+                  if (i !== index) return t;
+                  return {
+                    ...t,
+                    talent_id: newTalentId,
+                    tlt_no: event.value,
+                    tlt_name: this.service.tltTalentMap().get(event.value)?.['Name'] ?? '',
+                    tlt_id: tltId,
+                    tlt_id_desc: tltIdDesc,
+                    tpy_rate_D16: d16d17 ? this.parseRateValue(d16d17.tpy_rate_D16) : t.tpy_rate_D16,
+                    tpy_rate_D17: d16d17 ? this.parseRateValue(d16d17.tpy_rate_D17) : t.tpy_rate_D17,
+                    cap_item_D16: d16d17?.cap_item_D16 ?? t.cap_item_D16 ?? 'D16',
+                    cap_item_D17: d16d17?.cap_item_D17 ?? t.cap_item_D17 ?? 'D17',
+                  };
+                })
+              );
+              this.updateTltIdOptions(talentId);
+              this.fieldChanges.set(undefined);
             });
           });
-          this.logger.debug(`keyin updated tableData:`, [this.tableData()]);
-          this.updateTltIdOptions(talentId);
-          return this.fieldChanges.set(undefined);
-        });
         break;
       }
 
@@ -1016,17 +1008,14 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     return rowData.pod_status !== ApprovalStatus.已核准 && rowData.pod_status !== ApprovalStatus.刪除;
   }
 
-  private parseRateValue(value: unknown, fallback: number | null | undefined): number {
-    if (value === undefined || value === null || value === '') {
-      return fallback ?? 0;
-    }
-    if (typeof value === 'number') return value;
-    const normalized = String(value).replace('%', '').trim();
-    const parsed = Number(normalized);
-    return isNaN(parsed) ? (fallback ?? 0) : parsed;
+  private parseRateValue(value: string): number {
+    if (value === undefined || value === null || value === '') return 0;
+    const fallback = 0;
+    const parsed = Number(value);
+    return isNaN(parsed) ? fallback : parsed * 100;
   }
 
-  public fetchTltTalentOptions(venNoOrBody: string | Record<string, unknown>): Observable<IDropdownItem[]> {
+  public fetchTltTalentOptions(venNoOrBody: string | Record<string, unknown>): Observable<(Option & { talent_id: number })[]> {
     const ven_no = typeof venNoOrBody === 'string'
       ? venNoOrBody
       : (venNoOrBody?.['ven_no'] as string) ?? '';
@@ -1035,9 +1024,10 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       tap(res => {
         const options = res.map(item => ({
           ...item,
-          value: item.No,
-          label: `${item.No}-${item.Name}`,
-        }));
+          value: item['No'] ?? item.value,
+          label: `${item['No'] ?? item.value}-${item['Name'] ?? item.label}`,
+          talent_id: item.talent_id,
+        } as Option & { talent_id: number }));
         this.dialogData.set(options);
         this.filteredDialogData.set(options);
         this.dialogTotalRecords.set(options.length);

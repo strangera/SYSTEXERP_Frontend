@@ -53,6 +53,7 @@ import {
   TalentChargeItem,
   TalentChargeQuery,
   TalentItem,
+  TalentOpenFlagItem,
   TalentOpenFlagQuery,
   TalentQuery,
   TalentStatusQuery,
@@ -576,8 +577,8 @@ export class DropdownApiService {
     );
   }
 
-  queryTltTalentOpenFlag(body: TalentOpenFlagQuery): Observable<IDropdownItem[] | null> {
-    return this.queryDropdownWithParams<IDropdownItem, TalentOpenFlagQuery>('/queryTLTTALENT_tlt_openflag_DropDownList', body).pipe(
+  queryTltTalentOpenFlag(body: TalentOpenFlagQuery): Observable<TalentOpenFlagItem[] | null> {
+    return this.queryDropdownWithParams<TalentOpenFlagItem, TalentOpenFlagQuery>('/queryTLTTALENT_tlt_openflag_DropDownList', body).pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
