@@ -145,18 +145,74 @@ export class TLS41020Component
         }));
       });
 
-    // ✅ 還原查詢條件（參考 FIN64010）
+   // ✅ 只從 CRU 回來才還原
+  const fromCru =
+    !!(history.state && history.state['fromCru']) ||
+    sessionStorage.getItem('TLS41020_fromCru') === '1';
+
+  if (fromCru) {
     const saved = this.queryStateService.getQueryStateValue('TLS41020');
     if (saved?.formValue) {
       this.queryForm.patchValue(saved.formValue, { emitEvent: false });
-      this._currentSortBy = Array.isArray(saved.currentSortBy) && saved.currentSortBy.length
-        ? saved.currentSortBy
-        : this.defaultSort;
+
+      this._currentSortBy =
+        Array.isArray(saved.currentSortBy) && saved.currentSortBy.length
+          ? saved.currentSortBy
+          : this.defaultSort;
+
       this.lastQueryBody = saved.lastQueryBody ?? null;
 
+      // ✅ 還原後自動查詢
       Promise.resolve().then(() => this.onSubmit(this.queryForm));
     }
+
+    // ✅ 用完就清掉，避免下一次「非 CRU 進來」也誤判
+    sessionStorage.removeItem('TLS41020_fromCru');
+  } else {
+    // ✅ 其他頁進來：回預設條件（不要 restore）
+    this.resetToDefaultQuery();
   }
+}
+/** ✅ 其他頁進來時的「預設條件」 */
+private resetToDefaultQuery(): void {
+  const defaultPageSize = 20;
+
+  this.queryForm.reset(
+    {
+      // 查詢欄位
+      ECR_No: null,
+      EDC_No: null,
+      EDC_BegDate_From: null,
+      EDC_BegDate_To: null,
+      EDC_EdnDate_From: null,
+      EDC_EdnDate_To: null,
+      EDC_Status1: null,
+      EDC_Status2: null,
+      ECR_TLT_No: null,
+      EDC_IP1: null,
+      EDC_IP2: null,
+      EDC_IP3: null,
+      EDC_TmID1: null,
+      EDC_TmID2: null,
+      EDC_TmID3: null,
+
+      // 分頁/排序（注意你的 buildPayload 用的是 PageIndex/PageSize/SortBy）
+      PageIndex: 1,
+      PageSize: defaultPageSize,
+      SortBy: this.defaultSort,
+    } as any,
+    { emitEvent: false }
+  );
+
+  this.submitted = false;
+  this.data = [];
+  this.totalRecords = 0;
+  this.lastQueryBody = null;
+  this._currentSortBy = this.defaultSort;
+
+  // ⚠️ 這邊「不要 clearQueryState」
+  // 因為你還需要保留 queryState 給「下次從 CRU 回來」使用
+}
 
   ngAfterViewInit(): void {
     setTimeout(() => {

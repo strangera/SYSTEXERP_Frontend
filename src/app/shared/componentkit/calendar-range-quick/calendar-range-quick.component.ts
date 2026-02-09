@@ -37,6 +37,7 @@ export class CalendarRangeQuickComponent extends BasicKitComponent implements On
   @Input() startControl = new FormControl; // 起始日期
   @Input() endControl = new FormControl; // 結束日期
   @Input() submitted = false; // 檢查欄位是否標準
+  @Input() descLabel = '(起迄)'; // 標籤說明
   // PrimeNG 設置
   @Input() timeOnly = false;
   @Input() showTime = false;
@@ -69,14 +70,7 @@ export class CalendarRangeQuickComponent extends BasicKitComponent implements On
     if (this.timeUnit) {
       this.filterTimeRanges();
     }
-    this.endControl.valueChanges.subscribe((val) => {
-      if (val instanceof Date) {
-        const endOfDay = new Date(val);
-        endOfDay.setHours(23, 59, 59, 999);
-        if (val.getTime() !== endOfDay.getTime()) {
-          this.endControl.setValue(endOfDay, { emitEvent: false });
-        }
-      }
+    this.endControl.valueChanges.subscribe(() => {
       this.validateRange();
     });
 
@@ -85,7 +79,14 @@ export class CalendarRangeQuickComponent extends BasicKitComponent implements On
       this.validateRange();
     });
   }
-
+  fixEndOfDay() {
+    const val = this.endControl.value;
+    if (val instanceof Date) {
+      const endOfDay = new Date(val);
+      endOfDay.setHours(23, 59, 59, 999);
+      this.endControl.setValue(endOfDay, { emitEvent: false });
+    }
+  }
   validateRange() {
     const startVal = this.startControl.value;
     const endVal = this.endControl.value;

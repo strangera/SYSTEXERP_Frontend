@@ -36,7 +36,7 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
   dialogQueryForm = this.formBuilder.nonNullable.group({ RCV_No: [''] });
   dialogData: any[] = [];
   dialogColumns: any[] = [
-    { field: 'No', header: '收貨單號' },
+    { field: 'No', header: '收款單號' },
     { field: 'Name', header: '收款日期' },
     { field: 'Name', header: '備註' }
   ];

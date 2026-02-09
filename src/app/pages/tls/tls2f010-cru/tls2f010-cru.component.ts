@@ -29,11 +29,12 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { formatAmount, formatYYYYMM, ReportColumn } from './../../../shared/componentkit/table-report/table-report.model';
+import { TLS2F010TableReportComponent } from './tls2f010-table-report.component';
 @Component({
   selector: 'app-tls2f010-cru',
   templateUrl: './tls2f010-cru.component.html',
   standalone: true,
-  imports: [TableEditComponent, NgIf, PanelModule, InputNumberRangeComponent, CalendarComponent, InputTextComponent, SelectButtonModule, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TranslateModule]
+  imports: [TableEditComponent, NgIf, PanelModule, InputNumberRangeComponent, CalendarComponent, InputTextComponent, SelectButtonModule, TLS2F010TableReportComponent, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TranslateModule]
 })
 export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
 
@@ -147,7 +148,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   invoiceTypeOptions = getSYS1000Options('invoice_type');
   invoiceFormatOptions = [
     { value: '21', label: '21/進項三聯式、電子計算機統一發票' },
-    { value: '25', label: '25-進項三聯式收銀機統一發票' },
+    { value: '25', label: '25/進項三聯式收銀機統一發票' },
     { value: '27', label: '27/彙總登陸每張稅額五百元以下之進項二聯式收銀機統一發票、載有稅額之其他憑證' },
   ];
   queryLoading = false;
@@ -666,8 +667,8 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   // 第一張表（主區）選取變更
-  onChangeEditSelection(items: any[]): void {
-    this.selectedMainItems = items ?? [];
+  onChangeEditSelection(items: any): void {
+    this.selectedMainItems = Array.isArray(items) ? items : (items ? [items] : []);
     this.selectedMain = (this.selectedMainItems && this.selectedMainItems.length) ? this.selectedMainItems[0] : null;
   }
 

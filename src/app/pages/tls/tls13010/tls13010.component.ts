@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { AddButton, Column, createPaginationConfig, formatDate, formatYN } from '../../../shared/componentkit/table/table.model';
 import { Actions } from '../../../shared/service/permission-guard.service';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 // 格式化函數
 import {
@@ -118,9 +119,9 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
 
     // 專櫃日期範圍
     tlt_bdate_start_from: [],
-    tlt_bdate_end_to: [],
+    tlt_bdate_start_to: [],
     tlt_edate_start_from: [],
-    tlt_edate_end_to: [],
+    tlt_edate_start_to: [],
 
     // 合約日期範圍
     tlt_contract_bdate_from: [],
@@ -397,7 +398,12 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
 
     // 根據 contract_type 決定導向哪個頁面
     if (rowData.contract_type === '要約書') {
-      this.router.navigate(['account/tls/tls12040cru']);
+      this.router.navigate(['account/tls/tls12040cru'], {
+        state: {
+          crudstatus: CRUDStatus.Edit,
+          rowdata: rowData
+        }
+      });
       this.messageService.infoBubble('進入要約書編輯模式');
     } else {
       this.router.navigate(['account/tls/tls13010cru']);
@@ -413,7 +419,12 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
 
     // 根據 contract_type 決定導向哪個頁面
     if (rowData.contract_type === '要約書') {
-      this.router.navigate(['account/tls/tls12040cru']);
+      this.router.navigate(['account/tls/tls12040cru'], {
+        state: {
+          crudstatus: CRUDStatus.Read,
+          rowdata: rowData
+        }
+      });
       this.messageService.infoBubble('進入要約書檢視模式');
     } else {
       this.router.navigate(['account/tls/tls13010cru']);

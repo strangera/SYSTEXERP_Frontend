@@ -6,19 +6,17 @@ import { TranslateModule } from '@ngx-translate/core';
 import { CalendarComponent } from "@shared/componentkit/calendar/calendar.component";
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs/operators';
 import { Tls41040Service } from '../../../service/api/tls/tls41040.service'; // 引入剛剛做的 service
 import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
-import { DropDownListService } from '../../../service/utility/dropDownList.service';
-import { ExecSpFuncService } from '../../../service/utility/execSpFunc.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column } from '../../../shared/componentkit/table/table.model';
 
 // 定義資料項目介面
 interface TLS41040Item {
@@ -58,7 +56,7 @@ interface TLS41040Item {
     ReactiveFormsModule,
     NgStyle,
     DropdownComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     DropdownComponent,
     CalendarComponent,
@@ -74,8 +72,10 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
     NOT_EndDateTime: [yesterday], // 結束時間
     NOT_Status: ['A'], // 通告狀態
     NOT_Remark: ['', [Validators.maxLength(200)]], // 改成和後端一樣
-    ...createPaginationConfig([{ field: 'NOT_SeqNo', order: 1 }]),
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
   });
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
   ECRNoOptions: { label: string; value: string }[] = [];
 
@@ -134,14 +134,13 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
   ];
 
   data: TLS41040Item[] = [];
+  lastQueryBody: any | null = null;
   totalRecords = 0;
   selectedItems: TLS41040Item[] = [];
 
   constructor(
-    private ECRNoService: ECRNoService,
-    private dropDownListService: DropDownListService,
-    private tls41040Service: Tls41040Service, // 注入 Service
-    private execSpFuncService: ExecSpFuncService
+    private readonly ECRNoService: ECRNoService,
+    public readonly tls41040Service: Tls41040Service, // 注入 Service
   ) {
     super();
   }
@@ -177,7 +176,6 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
       const payload = {
         PageSize: frmValue?.pageSize || 10,
         PageIndex: (frmValue?.pageIndex ?? 1),
-        SortBy: frmValue?.SortBy || [{ field: 'NOT_SeqNo', order: 1 }],
         STO_No: '10',
         ECR_No: frmValue.ECR_No || '',
         NOT_BegDateTime: beg,
@@ -192,6 +190,7 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
         .subscribe({
           next: (res) => {
             this.data = res?.Data ?? [];
+            this.lastQueryBody = payload;
             this.totalRecords = res?.TotalCount ?? 0;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
             console.log('查詢結果', this.data.find(x => x.ID === 69));
@@ -222,19 +221,30 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
     return end < today; // 結束日 < 今天 => 禁用編輯/刪除
   };
 
-  // rowEditDisabled 與 isEditDisabled 相同邏輯
-  isRowEditDisabled = (row: TLS41040Item) => this.isEditDisabled(row);
-
-
   // ---- 刪除 ----
   onDelete(selectedRows: TLS41040Item[]): void {
     const idList = selectedRows.map(row => row.ID || row.id).filter((id): id is number => typeof id === 'number');
-    const deletePayload = { idList };
-    this.tls41040Service.deleteTLS41040(deletePayload).pipe(untilDestroyed(this)).subscribe({
-      next: () => {
-        this.onSubmit(this.queryForm);
-        this.selectedItems = [];
-      },
+    if (!idList.length) {
+      this.messageService.warnBubble('無有效的 ID 可供刪除');
+      return;
+    }
+
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: '是否刪除所選項目?',
+      accept: () => {
+        const deletePayload = { idList };
+        this.tls41040Service.deleteTLS41040(deletePayload).pipe(untilDestroyed(this)).subscribe({
+          next: () => {
+            this.onSubmit(this.queryForm);
+            this.selectedItems = [];
+          },
+          error: (err) => {
+            console.error('刪除失敗', err);
+            this.messageService.errorBubble('刪除失敗');
+          }
+        });
+      }
     });
   }
 

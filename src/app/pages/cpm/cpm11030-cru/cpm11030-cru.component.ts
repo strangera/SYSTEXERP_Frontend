@@ -80,7 +80,7 @@ export class CPM11030CRUComponent extends BasicCruPageComponent<any> implements 
     Loan_No: [{ value: '' as string, disabled: true }],
 
     /** nullable:true（你要強制必填可加 Validators.required） */
-    Service_Id: ['' as string, [Validators.maxLength(7)]],
+    Service_Id: ['' as string, [Validators.required, Validators.maxLength(7)]],
 
     /** 出借日期：string($date-time)（通常必填比較合理，但規格寫 nullable:true 就先不強制） */
     Loan_Date: [null as Date | null, [Validators.required]],
@@ -96,7 +96,7 @@ export class CPM11030CRUComponent extends BasicCruPageComponent<any> implements 
     Cert_Type: ['' as string, [Validators.maxLength(2)]],
     Cert_No: ['' as string, [Validators.maxLength(50)]],
     Loan_Phone: ['' as string, [Validators.maxLength(20)]],
-    Device_ID: ['' as string, [Validators.maxLength(50)]],
+    Device_ID: ['' as string, [Validators.required, Validators.maxLength(50)]],
     Device_Name: ['' as string, [Validators.maxLength(50)]],
   });
 
@@ -128,9 +128,12 @@ export class CPM11030CRUComponent extends BasicCruPageComponent<any> implements 
 
     // 把 Cert_Type 從「顯示用的 01-身分證」轉成「後端要的代碼 01」
     const certRaw = this.dataForm.get('Cert_Type')?.value as any;
-    const certType = certRaw.includes('-')
-      ? certRaw.split('-')[0].trim()
-      : certRaw.trim();
+    // 統一轉成乾淨的 string
+    const raw = typeof certRaw === 'string' ? certRaw.trim() : '';
+    // 取 '-' 前面的值
+    const certType = raw.includes('-')
+      ? raw.split('-')[0].trim()
+      : raw.trim();
     this.dataForm.patchValue({ Cert_Type: certType }, { emitEvent: false });
 
     // ✅ 先把後端/route 帶回來的值正規化成 Date（給 calendar 顯示用）
@@ -138,34 +141,40 @@ export class CPM11030CRUComponent extends BasicCruPageComponent<any> implements 
     const rawTime = this.dataForm.get('Loan_Time')?.value as any;
 
     const parsedDate = rawDate instanceof Date ? rawDate : rawDate ? new Date(rawDate) : null;
-    const parsedTime = rawTime instanceof Date ? rawTime : rawTime ? new Date(rawTime) : null;
 
     const patch: any = {};
     if (parsedDate && !isNaN(parsedDate.getTime())) patch.Loan_Date = parsedDate;
-    if (parsedTime && !isNaN(parsedTime.getTime())) patch.Loan_Time = parsedTime;
 
     if (Object.keys(patch).length) {
       this.dataForm.patchValue(patch, { emitEvent: false });
     }
 
-    // ✅ Create：預設帶現在日期 + 現在時間（但「已有值就不覆蓋」）
+    // ✅ Create：預設帶現在日期（但「已有值就不覆蓋」）
     if (this.crudstatus === CRUDStatus.Create) {
       const now = new Date();
 
       const curDate = this.dataForm.get('Loan_Date')?.value as any;
-      const curTime = this.dataForm.get('Loan_Time')?.value as any;
 
       const hasDate = curDate instanceof Date && !isNaN(curDate.getTime());
-      const hasTime = curTime instanceof Date && !isNaN(curTime.getTime());
 
       this.dataForm.patchValue(
         {
           Loan_Date: hasDate ? curDate : now,
-          Loan_Time: hasTime ? curTime : now,
         },
         { emitEvent: false }
       );
     }
+
+    // ✅ 處理 Loan_Time：HHMM 轉成 Date 顯示用
+    const hasTime = this.hhmmToDate(rawTime);
+    if (hasTime !== null) {
+      patch.Loan_Time = hasTime;
+    }
+
+    if (Object.keys(patch).length) {
+      this.dataForm.patchValue(patch, { emitEvent: false });
+    }
+
   }
 
 
@@ -257,6 +266,21 @@ export class CPM11030CRUComponent extends BasicCruPageComponent<any> implements 
       Device_ID: deviceId ?? '',
       Device_Name: deviceName ?? '',
     };
+  }
+
+  // HHMM 轉成 Date
+  private hhmmToDate(raw: string | null | undefined): Date | null {
+    if (!raw) return null;
+
+    const t = raw.trim(); // 去除前後空白
+    if (!/^\d{4}$/.test(t)) return null; // 只能是 4 個數字
+
+    const hh = Number(t.substring(0, 2));
+    const mm = Number(t.substring(2, 4));
+
+    const d = new Date();
+    d.setHours(hh, mm, 0, 0); // 只設定時間
+    return d;
   }
 
   onSubmit(form: FormGroup): void {

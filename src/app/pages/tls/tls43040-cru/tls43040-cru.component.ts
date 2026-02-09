@@ -42,7 +42,6 @@ export interface TLS43040Detail {
 @Component({
   selector: 'app-tls43040-cru',
   templateUrl: './tls43040-cru.component.html',
-  styleUrls: ['./tls43040-cru.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,

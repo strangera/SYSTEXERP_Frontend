@@ -60,8 +60,9 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
     isSafetyStock: [false],
     // 預設排序：PLU_MagNo asc
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
+    pageSize: [30],
   });
-
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
   // 管理編號
   suggestions: IQueryPOS2004DetailResponse[] = [];
@@ -127,7 +128,7 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
     this.dropDownListService.queryPOS2003_DropDownList().subscribe({
       next: (res: { Data: any[]; TotalCount: number }) => {
         this.bigCategoryOptions = (res.Data ?? []).map(item => ({
-          label: item.Name,
+          label: `${item.No}-${item.Name}`,
           value: item.No,
           Name: item.Name,
           No: item.No
@@ -143,7 +144,7 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
         this.dropDownListService.queryPOS20031_DropDownList(params).subscribe({
           next: (res) => {
             this.midCategoryOptions = (res.Data ?? []).map(item => ({
-              label: item.Name,
+              label: `${item.No}-${item.Name}`,
               value: item.No,
               Name: item.Name,
               No: item.No
@@ -175,7 +176,7 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
         this.dropDownListService.queryPOS20032_DropDownList(params).subscribe({
           next: (res) => {
             this.smallCategoryOptions = (res.Data ?? []).map(item => ({
-              label: item.Name,
+              label: `${item.No}-${item.Name}`,
               value: item.No,
               Name: item.Name,
               No: item.No
@@ -195,7 +196,7 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
       next: (res) => {
         const data = res.Data as unknown as IPLULOGOItem[];
         this.brandCodeOptions = (data ?? []).map(item => ({
-          label: `${item.No} ${item.LOGO_EN_NAME}（${item.Name}）`,
+          label: `${item.No}-${item.LOGO_EN_NAME}（${item.Name}）`,
           value: item.No,
           No: item.No,
           Name: item.Name,

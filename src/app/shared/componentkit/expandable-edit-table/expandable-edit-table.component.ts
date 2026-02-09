@@ -2951,6 +2951,13 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   /**
+   * 檢查特定欄位是否有錯誤（用於單格錯誤標記）
+   */
+  hasCellError(rowData: any, field: string): boolean {
+    return !!(rowData?._errorFields && Array.isArray(rowData._errorFields) && rowData._errorFields.includes(field));
+  }
+
+  /**
    * 清除錯誤狀態
    */
   clearRowErrors(rowData: any): void {

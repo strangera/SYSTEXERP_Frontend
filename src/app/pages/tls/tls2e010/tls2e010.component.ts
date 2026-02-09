@@ -30,6 +30,7 @@ export class TLS2E010Component extends BasicQueryPageComponent<Tls2e010Data> imp
     sam_yyymm_end: [new Date(), [Validators.required]], // 起迄年月
     PageSize: [30],
     PageIndex: [1],
+    SortBy: [[{ field: 'sam_yyymm', order: 1 }, { field: 'tlt_no', order: 1 }]],
   });
   tlt_noOptions$ = this.dropdown.queryTltTalent();
   totalRecords = 0;
@@ -37,9 +38,9 @@ export class TLS2E010Component extends BasicQueryPageComponent<Tls2e010Data> imp
   footerData: Tls2e010Data | null = null;
   data: Tls2e010Data[] = [];
   columns: Column[] = [
+    { field: 'sam_yyymm', header: '結算年月', visible: true, format: formatYYYYMM },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
-    { field: 'sam_yyymm', header: '結算年月', visible: true, format: formatYYYYMM },
     { field: 'rent_net', header: '未稅金額', visible: true, format: formatAmount },
     { field: 'rent_tax', header: '稅額', visible: true, format: formatAmount },
     { field: 'rent_amt', header: '總金額', visible: true, format: formatAmount },
@@ -55,6 +56,20 @@ export class TLS2E010Component extends BasicQueryPageComponent<Tls2e010Data> imp
 
   ngOnInit(): void {
     this.initializePage('TLS2E010');
+    // 新增：監聽「起日」變化，自動帶入「迄日」
+    this.queryForm.controls.sam_yyymm_start.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(startDate => {
+        // 如果起日有值，且迄日目前沒有值（或你想強制覆蓋），則同步
+        if (startDate) {
+          // 這裡採取「若迄日為空則自動帶入」或「連動帶入」的邏輯
+          // 如果要強迫同步，就直接 patchValue
+          // 如果你希望只有在迄日還沒被選過時才自動帶入，可以加個判斷：
+          // if (startDate && !this.queryForm.controls.sam_yyymm_end.dirty) {
+          this.queryForm.patchValue({ sam_yyymm_end: startDate });
+          // }
+        }
+      });
     // 監聽起迄年月的變化
     this.queryForm.valueChanges.pipe(untilDestroyed(this)).subscribe(val => {
       const start = val.sam_yyymm_start;
@@ -92,6 +107,7 @@ export class TLS2E010Component extends BasicQueryPageComponent<Tls2e010Data> imp
       const body = {
         PageSize: frm.value.PageSize,
         PageIndex: frm.value.PageIndex,
+        SortBy: frm.value.SortBy,
         tlt_no: frm.value.tlt_no,
         sam_yyymm_start: this.datePipe.transform(frm.value.sam_yyymm_start, 'yyyyMM'),
         sam_yyymm_end: this.datePipe.transform(frm.value.sam_yyymm_end, 'yyyyMM'),

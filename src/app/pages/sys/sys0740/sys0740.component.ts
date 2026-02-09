@@ -1,18 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
+import { ProgNoDropdownResponse, QuerySYS0740Request, QuerySYS0740Response, Sys0740Service } from '@service/api/sys/sys0740.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-
-// 導入新的 SYS0740 服務和模型
-import { QuerySYS0740Request, QuerySYS0740Response, ProgNoDropdownResponse, Sys0740Service } from '@service/api/sys/sys0740.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 @Component({
   selector: 'app-sys0740',
@@ -24,7 +22,7 @@ import { QuerySYS0740Request, QuerySYS0740Response, ProgNoDropdownResponse, Sys0
     FormsModule,
     ReactiveFormsModule,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     DropdownComponent
   ],
@@ -35,22 +33,25 @@ export class SYS0740Component extends BasicQueryPageComponent<QuerySYS0740Respon
   queryForm = this.formBuilder.group({
     Prog_No: ['', [Validators.required, Validators.maxLength(10)]], // 作業代碼，必填且限制長度
     // 預設排序欄位為 Role_No，排序順序為 ASC (1)
-    ...createPaginationConfig([{ field: 'Role_No', order: 1 }]),
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'Role_No', order: 1 }]],
   });
 
   totalRecords = 0;
   data: QuerySYS0740Response[] = [];
+  lastQueryBody: QuerySYS0740Request | null = null;
   progNoOptions: ProgNoDropdownResponse[] = []; // 用於作業代碼下拉選單
 
   // 定義表格的欄位
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'Role_No', header: '角色代號', visible: true, showSort: true },
     { field: 'Role_Name', header: '角色名稱', visible: true, showSort: true },
     { field: 'FunctionBehaviors', header: '角色權限之功能行為', visible: true, showSort: true },
   ];
 
   constructor(
-    private readonly sys0740Service: Sys0740Service // 用於查詢角色權限和作業代碼下拉選單
+    public readonly sys0740Service: Sys0740Service // 用於查詢角色權限和作業代碼下拉選單
   ) {
     super();
   }
@@ -84,6 +85,7 @@ export class SYS0740Component extends BasicQueryPageComponent<QuerySYS0740Respon
         .subscribe((response) => {
           if (response.Data) {
             this.data = response.Data;
+            this.lastQueryBody = frm.value;
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
           } else {

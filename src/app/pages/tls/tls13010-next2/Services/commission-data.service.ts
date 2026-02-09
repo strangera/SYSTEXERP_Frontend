@@ -303,6 +303,7 @@ export class CommissionDataService {
         // 關鍵修正：優先使用 step1 的值，確保同步
         cap_saletype1: this.convertYNToBoolean(chargeSetting.cap_saletype1),
         cap_saletype2: this.convertYNToBoolean(chargeSetting.cap_saletype2),
+        cap_saletype3: this.convertYNToBoolean(chargeSetting.cap_saletype3),
         cap_saletype5: this.convertYNToBoolean(chargeSetting.cap_saletype5),
 
         selectedSettingOption: 'discount',

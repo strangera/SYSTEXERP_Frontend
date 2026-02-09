@@ -112,18 +112,18 @@
       </ng-container>
 
       <ng-container *ngIf="showResultTables">
-        <app-table-report tableKey="TLS2F010ChangeEdit" class="col-12" [columns]="columns1" [data]="changeEditData"
-          [totalRecords]="changeEditData.length" [loading]="queryLoading" [lazy]="false" [showManage]="false"
-          [showDelete]="false" [showReportMode]="false" [showFilter]="false" [showCheckBox]="false"
+        <app-tls2f010-table-report tableKey="TLS2F010ChangeEdit" class="col-12" [columns]="columns1"
+          [data]="changeEditData" [totalRecords]="changeEditData.length" [loading]="queryLoading" [lazy]="false"
+          [showManage]="false" [showDelete]="false" [showReportMode]="false" [showFilter]="false" [showCheckBox]="false"
           [selectedItems]="selectedMainItems" (selectionChange)="onChangeEditSelection($event)">
-        </app-table-report>
+        </app-tls2f010-table-report>
         <br />
 
-        <app-table-report tableKey="TLS2F010SourceInvoice" class="col-12" [columns]="columns2"
+        <app-tls2f010-table-report tableKey="TLS2F010SourceInvoice" class="col-12" [columns]="columns2"
           [data]="sourceInvoiceData" [totalRecords]="sourceInvoiceData.length" [loading]="queryLoading" [lazy]="false"
           [showManage]="false" [showDelete]="false" [showReportMode]="false" [showFilter]="false" [showCheckBox]="false"
           [footerData]="null" [extraFooterData]="footer2" footerLabel="" [autoHeight]="true" [showFooterTotal]="false">
-        </app-table-report>
+        </app-tls2f010-table-report>
 
         <app-table-edit #detailEdit title="新增單據" tableKey="VEN_No" class="col-12" [columns]="columns3"
           [data]="detailEditData" [defaultInsertData]="detailDefaultInsert" dataStatusField="status"

@@ -20,8 +20,7 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="sys0710" [data]="data" [columns]="columns" (edit)="onEdit($event)" [showManage]="false"
-    [loading]="loading" [multiSortMeta]="[{ field: 'MainSystemCode', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [showDelete]="false"></app-table>
+  <app-table-report tableKey="sys0710" [data]="data" [columns]="columns" (edit)="onEdit($event)" [showManage]="false"
+    [loading]="loading" [totalRecords]="totalRecords" [showDelete]="false" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="sys0710Service.querySys0710.bind(sys0710Service)"></app-table-report>
 </div>

@@ -25,11 +25,25 @@
   </ng-container>
 </div>
 
-<div class="wizard-container">
+<!-- 載入中提示 -->
+<div *ngIf="loading" class="flex align-items-center justify-content-center" style="min-height: 300px">
+  <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+  <span class="ml-2">資料載入中...</span>
+</div>
+
+<div class="wizard-container" *ngIf="!loading">
   <!-- 步驟指示器 (使用 visualStepIndex 對應動態步驟) -->
   <div class="steps-header">
     <p-steps [model]="steps" [activeIndex]="visualStepIndex" [readonly]="false" (activeIndexChange)="goToStep($event)">
     </p-steps>
+  </div>
+
+  <!-- 抽成別變更警告 -->
+  <div *ngIf="hasCommissionTypeChanged()" class="p-3 mb-3 border-round surface-200">
+    <i class="pi pi-exclamation-triangle text-orange-500 mr-2"></i>
+    <span class="text-orange-700">
+      抽成別已變更，部分設定可能需要重新調整
+    </span>
   </div>
 
   <!-- 步驟內容 -->
@@ -68,6 +82,7 @@
       [discountOptions]="discountOptions"
       [capSaletype1]="step1Form.get('cap_saletype1')?.value"
       [capSaletype2]="step1Form.get('cap_saletype2')?.value"
+      [capSaletype3]="step1Form.get('cap_saletype3')?.value"
       [capSaletype5]="step1Form.get('cap_saletype5')?.value"
       (commissionItemsChange)="onStep3DataChange($event)"
     ></app-step3-commission>

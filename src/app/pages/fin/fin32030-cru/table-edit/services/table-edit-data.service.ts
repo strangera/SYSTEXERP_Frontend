@@ -87,6 +87,8 @@ export class TableEditDataService {
         item[dataStatusField] = dataStatusValue.Original;
         item[dataKey] = item[dataKey] ?? `temp-${uuidv4()}`;
       }
+      // 清除舊的欄位驗證錯誤，避免外部更新資料後殘留過期的驗證狀態
+      delete item._validationErrors;
       this.calculateRow(item, columns);
       if (rowValidate) {
         item._rowValidationError = rowValidate(item, index);

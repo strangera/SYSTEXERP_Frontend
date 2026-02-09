@@ -24,7 +24,7 @@
               label="收銀機號"
               controlName="ECR_No"
               [options]="ECRNoOptions"
-              optionLabel="value"
+              optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.ECR_No"
               [submitted]="submitted">
@@ -186,7 +186,7 @@
       <div class="flex justify-content-end gap-2">
         <p-button
           styleClass="p-2"
-          label="匯出發票報表.PDF"
+          label="發票報表.PDF"
           [loading]="btnLoading"
           icon="pi pi-file"
           (click)="onExportPDF()"
@@ -195,7 +195,7 @@
 
         <p-button
           styleClass="p-2"
-          label="匯出發票報表.XLSX"
+          label="發票報表.XLSX"
           [loading]="btnLoading"
           icon="pi pi-file-excel"
           (click)="onExportXLSX()"

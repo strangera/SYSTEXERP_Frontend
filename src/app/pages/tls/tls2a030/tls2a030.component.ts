@@ -18,6 +18,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { Column, createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
+import { TLS2F010TableReportComponent } from '../tls2f010-cru/tls2f010-table-report.component';
 
 
 interface SalesRecord {
@@ -45,7 +46,8 @@ interface SalesRecord {
     DropdownRangeComponent,
     ButtonComponent,
     TranslateModule,
-    ButtonModule
+    ButtonModule,
+    TLS2F010TableReportComponent
   ]
 })
 export class TLS2A030Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -402,7 +404,7 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
               PreAudit_OVER_PayAmt: total.PreAudit_OVER_Total_PayAmt,
               Actual_ReceivedAmt: total.Actual_ReceivedAmt_Total,
               BOOK_PayAmt: total.BOOK_Total_PayAmt,
-              // 傳入原始後端值，讓欄位的 `format` 函式處理轉換
+              // 傳入原始值，讓 column 的 format 函數處理
               Compare_CD: total.Compare_CD_Total,
               Compare_AB: total.Compare_AB_Total
             };

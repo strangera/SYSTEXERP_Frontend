@@ -85,6 +85,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_CustTypeEntry: ['N', [Validators.required, Validators.maxLength(1)]],
     ECR_ClerkEntry: ['N', [Validators.required, Validators.maxLength(1)]],
     ECR_ForceMember: ['N', [Validators.required, Validators.maxLength(1)]],
+    ECR_BoxReqCode: ['N', [Validators.required, Validators.maxLength(1)]],
     ECR_SelfReport: ['Y', [Validators.required, Validators.maxLength(1)]],
     ECR_SaleRpt1: ['Y', [Validators.required, Validators.maxLength(1)]],
     ECR_SaleRpt2: ['Y', [Validators.required, Validators.maxLength(1)]],
@@ -166,6 +167,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   CounterOptions: any[] = [];
   CashierOptions: IDropdownItem[] = [];
   LocOptions: IDropdownItem[] = [];
+  KBLevelOptions: any[] = []; // 機台鍵盤編號 下拉選項
   tmplDetailList: any[] = [];
 
   constructor(
@@ -216,24 +218,11 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     });
     this.dropDownListService.queryPOS10015_DropDownList().subscribe(option => {
       this.ECR_SrvIP_Option = option.Data.map(item => ({
-        label: `${item.Name}`, // 下拉顯示 IP
+        label: `${item.Name} - ${item.No}`, // 下拉顯示 IP
         value: item.No,        // 實際值使用代碼(例如 DEVAP / TEST01)
         No: item.No,
         Name: item.Name,
       }));
-
-      const currentSrvIP = this.dataForm.get('ECR_SrvIP')?.value;
-      if (currentSrvIP) {
-        const matched = this.ECR_SrvIP_Option.find(opt =>
-          opt.value === currentSrvIP ||
-          opt.Name === currentSrvIP ||
-          opt.label === currentSrvIP,
-        );
-
-        if (matched && currentSrvIP !== matched.value) {
-          this.dataForm.patchValue({ ECR_SrvIP: matched.value }, { emitEvent: false });
-        }
-      }
     });
 
     //收銀員下拉選單
@@ -266,6 +255,22 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
           value: item.No,
           label: item.Name
         }));
+      });
+
+    // 機台鍵盤編號下拉 (來自 TLS42010 下拉資料)
+    this.dropDownListService.queryTLS42010DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        const list = (res?.Data && Array.isArray(res.Data)) ? res.Data : (Array.isArray(res) ? res : (res && res.Data ? res.Data : []));
+        this.KBLevelOptions = (list || []).map((item: any) => {
+          if (!item || typeof item !== 'object') return { label: String(item ?? ''), value: item };
+          const keys = Object.keys(item);
+          const labelKey = keys.find(k => /value/i.test(k)) || keys.find(k => /name|label/i.test(k));
+          const valueKey = keys.find(k => /key|no|id/i.test(k)) || keys.find(k => /value/i.test(k)) || keys[0];
+          const label = labelKey ? item[labelKey] : (item.Name ?? item.label ?? Object.values(item)[1] ?? Object.values(item)[0]);
+          const value = valueKey ? item[valueKey] : (item.No ?? item.value ?? Object.values(item)[0]);
+          return { label: String(label ?? ''), value: value ?? '' };
+        });
       });
 
     this.dataForm.get('ECR_LocNo')?.valueChanges

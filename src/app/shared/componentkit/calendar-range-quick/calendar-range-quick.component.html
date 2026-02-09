@@ -1,4 +1,5 @@
-<label *ngIf="label" [for]="endControl" class="flex align-content-center gap-1">{{ label }}(起迄)
+<label *ngIf="label" [for]="endControl" class="flex align-content-center gap-1">
+  {{ label }}{{ descLabel }}
   <span *ngIf="isRequired" class="text-red-500">*</span>
   <p-button icon="pi pi-cog" [rounded]="true" [raised]="true" size="small" styleClass="p-0"
     [style]="{'width': '16px','height':'16px'}" (onClick)="op.toggle($event)"
@@ -49,7 +50,8 @@
     <p-calendar [formControl]="endControl" [placeholder]="endControl.disabled ? '' : placeholder2" [timeOnly]="timeOnly"
       [showTime]="showTime" hourFormat="24" [dateFormat]="dateFormat" [view]="view" [iconDisplay]="'input'"
       [ngClass]="{'ng-invalid ng-dirty': submitted && endControl.errors}" [showIcon]="!endControl.disabled"
-      [appendTo]="'body'" (onInput)="onInput($event)" (keydown.enter)="$event.preventDefault()">
+      [appendTo]="'body'" (onInput)="onInput($event)" (keydown.enter)="$event.preventDefault()"
+      (onBlur)="fixEndOfDay()">
       <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
         <i *ngIf="timeOnly" class="pi pi-clock pointer-events-none"></i>
         <i *ngIf="!timeOnly" class="pi pi-calendar pointer-events-none"></i>

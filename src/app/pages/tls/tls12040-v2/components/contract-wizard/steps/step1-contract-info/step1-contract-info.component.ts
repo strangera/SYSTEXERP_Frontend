@@ -407,12 +407,12 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
       this.validationService.updatePaymentValidators(this.form);
     });
 
-    // 設定保證金付款方式變更監聽
-    ['open_deposit', 'construct_deposit', 'expiration_deposit'].forEach(fieldName => {
-      this.form.get(fieldName)?.valueChanges.subscribe(() => {
-        this.validationService.updateDepositValidators(this.form);
-      });
-    });
+    // [暫時註解] 保證金付款方式變更監聽 - 選擇付款方式時金額變必填
+    // ['open_deposit', 'construct_deposit', 'expiration_deposit'].forEach(fieldName => {
+    //   this.form.get(fieldName)?.valueChanges.subscribe(() => {
+    //     this.validationService.updateDepositValidators(this.form);
+    //   });
+    // });
 
     // 設定日期驗證器
     this.dateValidationService.setupDateValidators(this.form, this.messageService);
@@ -614,12 +614,13 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     this.messageService.successBubble('已自動填入廠商編號、廠商名稱、公司登記地址和帳戶名稱');
 
     // B. 載入潛在客戶資料或續約資料
+    // 續約只在新增模式下觸發，編輯模式不允許切換續約
     const applyType = this.form.get('apply_type')?.value;
-    if (applyType === '2') {
+    if (applyType === '2' && this.isCreateMode) {
       // 續約模式：載入原合約資料
       this.loadRenewalData(vendorVenNo);
     } else {
-      // 非續約模式：載入潛在客戶資料
+      // 非續約模式（或編輯模式）：載入潛在客戶資料
       this.loadPotentialCustomerData(vendorData.No || '');
     }
 
@@ -732,6 +733,9 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
    */
   private patchFormForRenewal(basicInfo: RenewalBasicInfo, nextContractSubno: number): void {
     const renewalFields: Record<string, any> = {
+      // 續約必須強制設為 '2'（防止被其他流程重置）
+      apply_type: '2',
+
       // 專櫃基本資訊
       tlt_no: basicInfo.tlt_no,
       tlt_shortname: basicInfo.tlt_shortname,
@@ -857,6 +861,8 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     }));
 
     this.updateDisplayLocationData();
+    // 通知 wizard 更新 wizardState.locationData（續約位置資料）
+    this.emitDataChange();
   }
 
   // ========== 分類變更處理 ==========
@@ -900,15 +906,14 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
    * 申請類型變更處理（增強版）
    */
   onApplyTypeChange(applyType: string): void {
-    if (applyType === '2') {
-      // 續約模式
+    // 續約只在新增模式下觸發
+    if (applyType === '2' && this.isCreateMode) {
       this.messageService.infoBubble('請選擇廠商統一編號以載入原合約資料');
       const venNo = this.form.get('ven_no')?.value;
       if (venNo) {
         this.loadRenewalData(venNo);
       }
     } else {
-      // 非續約模式
       this.lastRenewalVenNo = null;
     }
     this.emitDataChange();

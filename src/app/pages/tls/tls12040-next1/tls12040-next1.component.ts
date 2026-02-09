@@ -1294,10 +1294,11 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.flowService.clearAll();
 
     // 導航
-    this.router.navigate(['/account/tls/tls12040'])
-      .then(() => {
-        this.messageService.infoBubble('已清除並返回');
-      });
+    this.router.navigate(['/account/tls/tls12040'], {
+      state: { fromRoute: this.router.url }
+    }).then(() => {
+      this.messageService.infoBubble('已清除並返回');
+    });
   }
 
 

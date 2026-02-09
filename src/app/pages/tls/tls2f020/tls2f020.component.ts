@@ -175,7 +175,7 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
       return;
     }
     if (sam_termno == null) {
-      this.messageService.warnBubble('請選擇 期別');
+      this.messageService.warnBubble('請選擇 帳次');
       return;
     }
 

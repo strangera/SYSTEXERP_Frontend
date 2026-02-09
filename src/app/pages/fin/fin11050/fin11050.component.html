@@ -6,7 +6,7 @@
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
           <!-- 發票格式代號 -->
           <app-input-text class="col-12 md:col-6 lg:col-4" label="發票格式代號" controlName="INV_GUIType"
@@ -24,9 +24,21 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="FIN11050" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" dataKey="id" [showCheckBox]="true"
-    (delete)="onDelete($event)" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading">
-  </app-table>
+  <div class="col-12">
+    <app-table-report [data]="tableData()"
+                      dataKey="id"
+                      tableKey="FIN11050_Data"
+                      [columns]="columns"
+                      [totalRecords]="totalRecords()"
+                      [loading]="tableLoading()"
+                      [lastQueryBody]="lastQueryBody"
+                      [queryFunction]="queryFunction"
+                      [showCheckBox]="true"
+                      [selectedItems]="selectedItems"
+                      (selectionChange)="selectedItems = $event"
+                      (edit)="onEdit($event)"
+                      (detail)="onDetail($event)"
+                      (delete)="onDelete($event)"
+                      [isRowSelectable]="isRowSelectable"></app-table-report>
+  </div>
 </div>

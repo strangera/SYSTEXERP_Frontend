@@ -32,8 +32,11 @@ export class FIN31020Component extends BasicQueryPageComponent<FIN31020Data> imp
     pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'CAR_AccNo', order: 1 }]],
+
   });
-  AccNoOptions: { label: string; value: string }[] = []; // 科目代號選項
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
+
+  AccNoOptions: { label: string; value: string; ABAT_YN?: string }[] = []; // 科目代號選項 (包含 ABAT_YN)
   selectedItems: FIN31020Data[] = [];
   totalRecords = 0
   data: FIN31020Data[] = [];
@@ -77,10 +80,16 @@ export class FIN31020Component extends BasicQueryPageComponent<FIN31020Data> imp
     this.loadOptions();
   }
   private loadOptions(): void {
-    // 科目代號
-    this.dropDownListService.queryGLS1005_DropDownList()
+    // 科目代號 (使用 ledgerMD 版本，包含 ABAT_YN)
+    this.dropDownListService.queryGLS1005_ledgerMD_DropDownList()
       .pipe(untilDestroyed(this))
-      .subscribe(res => this.AccNoOptions = res.Data.map((x: { No: string; Name: string }) => ({ label: `${x.No} - ${x.Name}`, value: x.No })));
+      .subscribe(res => {
+        this.AccNoOptions = (res.Data || []).map((x: { No: string; Name: string; ABAT_YN?: string }) => ({
+          label: `${x.No} - ${x.Name}`,
+          value: x.No,
+          ABAT_YN: x.ABAT_YN?.trim() ?? ''
+        }));
+      });
 
   }
   onSubmit(frm: FormGroup): void {

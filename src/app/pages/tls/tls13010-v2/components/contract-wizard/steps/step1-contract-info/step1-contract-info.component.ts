@@ -159,14 +159,8 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     this.setupDateAutoFillListeners();
     this.updateDisplayLocationData();
 
-    // 確保 dropdownService 選項已載入後才更新 selector panel
-    // 等待一小段時間讓 parent component 的 dropdownService.initialize() 完成
-    setTimeout(() => {
-      this.updateSelectorPanelOptions();
-    }, 100);
-
-    // 注意：中小分類選項的載入由父組件 (contract-wizard) 在 loadContractData 後處理
-    // 因為子組件的 ngOnInit 可能在父組件載入資料之前執行
+    // 父組件透過 isInitialized 控制渲染時機，確保 dropdownService 已完成初始化
+    this.updateSelectorPanelOptions();
   }
 
   ngOnChanges(changes: SimpleChanges): void {

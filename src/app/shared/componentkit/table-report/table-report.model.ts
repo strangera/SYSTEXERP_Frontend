@@ -28,7 +28,7 @@ export interface ColumnGroup {
 }
 export interface AddButton {
   label: string;
-  icon: string;
+  icon?: string;
   action: (rowData: any, event?: Event) => void;
   disabled?: (rowData: any) => boolean;
 }

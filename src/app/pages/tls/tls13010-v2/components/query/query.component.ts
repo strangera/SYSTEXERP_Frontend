@@ -20,6 +20,7 @@ import {
   formatYN
 } from '@shared/componentkit/table/table.model';
 import { Actions } from '@shared/service/permission-guard.service';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 // PrimeNG
 import { AccordionModule } from 'primeng/accordion';
@@ -143,9 +144,9 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
 
     // 專櫃日期範圍
     tlt_bdate_start_from: [],
-    tlt_bdate_end_to: [],
+    tlt_bdate_start_to: [],
     tlt_edate_start_from: [],
-    tlt_edate_end_to: [],
+    tlt_edate_start_to: [],
 
     // 合約日期範圍
     tlt_contract_bdate_from: [],
@@ -333,7 +334,19 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   }
 
   private startEditWorkflow(rowData: ContractItem, isViewMode: boolean): void {
-    // 導航到精靈頁面，透過 state 傳遞資料和模式
+    // 要約書 → TLS12040-v2
+    if (rowData.contract_type === '要約書') {
+      this.router.navigate(['account/tls/tls12040v2cru'], {
+        state: {
+          crudstatus: isViewMode ? CRUDStatus.Read : CRUDStatus.Edit,
+          rowdata: rowData
+        }
+      });
+      this.messageService.infoBubble(isViewMode ? '進入要約書檢視模式' : '進入要約書編輯模式');
+      return;
+    }
+
+    // 契約書 → TLS13010-v2
     this.router.navigate(['account/tls/tls13010v2cru'], {
       state: {
         mode: isViewMode ? 'view' : 'edit',

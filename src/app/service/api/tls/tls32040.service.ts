@@ -18,6 +18,11 @@ export interface TLS32040Request extends BaseQueryRequest {
     "BusType": string;
     "BusClass": string;
   }[],
+  "BusSClassList": {
+    "BusType": string;
+    "BusClass": string;
+    "BusSClass": string;
+  }[],
   "TltKindList": string, // 櫃別（SYS1000 TLT_Kind） → TLTTALENT.tlt_kind (多選)
   "OrgList": string, // 組織 → TLTTALENT.org_id (多選)
   "TltNoList": string, // 專櫃編號 → TLTTALENT.tlt_no
@@ -65,6 +70,11 @@ export interface TLS32040DetailRequest extends BaseQueryRequest {
   "BusClassList": { //中分類 → TLTTALENT.bus_class (多選)
     "BusType": string;
     "BusClass": string;
+  }[],
+  "BusSClassList": {
+    "BusType": string;
+    "BusClass": string;
+    "BusSClass": string;
   }[],
   "TltKindList": string, // 櫃別（SYS1000 TLT_Kind） → TLTTALENT.tlt_kind (多選)
   "OrgList": string, // 組織 → TLTTALENT.org_id (多選)

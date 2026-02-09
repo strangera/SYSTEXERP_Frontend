@@ -1,8 +1,11 @@
 import { NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateDuplicate, validateMaxLength, validateMaxNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { PanelModule } from 'primeng/panel';
@@ -13,9 +16,6 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
-import { validateDuplicate, validateMaxLength, validateMaxNumber, validateRequired } from '../../../shared/componentkit/table/validate-field.model';
 
 @Component({
   selector: 'app-sysbc00.cru',
@@ -28,7 +28,7 @@ import { validateDuplicate, validateMaxLength, validateMaxNumber, validateRequir
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    TableComponent,
+    TableEditComponent,
     NgIf,
     TranslateModule,
   ],
@@ -44,11 +44,11 @@ export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> imp
   data: Aps1004Request[] = [];
   selectedRows: Aps1004Request[] = [];
   deleteRows: Aps1004Request[] = [];
-  columns: Column[] = [
-    { field: 'BNK_BranchNo', header: '銀行分行代號', type: 'input', validate: [validateDuplicate, validateRequired, validateMaxLength(10)] },
-    { field: 'BNK_BranchName', header: '銀行分行名稱', type: 'input', validate: [validateRequired, validateMaxLength(100)] },
-    { field: 'ACC_LEN', header: '該行帳號最小長度', type: 'inputNumber', useGrouping: false, validate: [validateRequired, validateMaxNumber(99999999)] },
-    { field: 'ACC_LEN_MAX', header: '該行帳號最大長度', type: 'inputNumber', useGrouping: false, validate: [validateRequired, validateMaxNumber(99999999)] },
+  columns: EditColumn[] = [
+    { field: 'BNK_BranchNo', header: '銀行分行代號', type: 'input', maxLength: 10, validate: [validateDuplicate, validateRequired, validateMaxLength(10)] },
+    { field: 'BNK_BranchName', header: '銀行分行名稱', type: 'input', maxLength: 100, validate: [validateRequired, validateMaxLength(100)] },
+    { field: 'ACC_LEN', header: '該行帳號最小長度', type: 'inputNumber', maxLength: 8, validate: [validateRequired, validateMaxNumber(99999999)] },
+    { field: 'ACC_LEN_MAX', header: '該行帳號最大長度', type: 'inputNumber', maxLength: 8, validate: [validateRequired, validateMaxNumber(99999999)] },
   ];
   constructor(
     private sys1004Service: Sys1004Service,
@@ -67,10 +67,14 @@ export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> imp
       });
     }
   }
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.loading = true;
-
+      const valid = this.tableEditComponent.validateAndShowErrors();
+      if (!valid) {
+        this.loading = false;
+        return;
+      }
       const isCreate = this.isFormCreateable;
 
       const saveMain$ = isCreate

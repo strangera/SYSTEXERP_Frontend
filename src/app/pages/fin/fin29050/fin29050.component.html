@@ -57,11 +57,10 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table-subheader tableKey="VoucherNo" dataKey="VoucherNo" [data]="data" [columns]="columns"
-      [showCheckBox]="false" [showManage]="false" [showDelete]="false" (detail)="onDetail($event)" [multiSortMeta]="[]"
-      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [lazy]="true" [groupRowsBy]="''" [groupRowsByName]="''" [showGroupheader]="false" [loading]="loading"
-      [showSerialNo]="false" [showPaginator]="false" [showReportMode]="false" [showSort]="false">
+    <app-table-subheader tableKey="VoucherNo" dataKey="VoucherNo" [data]="data" [columns]="columns" [showDelete]="false"
+      [showCheckBox]="false" [showManage]="false" (detail)="onDetail($event)" [totalRecords]="totalRecords"
+      [showReportMode]="false" [lazy]="true" [showGroupheader]="false" [loading]="loading" [showPage]="false"
+      [showTotal]="true" [rows]="30" (lazyLoadData)="onLazyLoadData($event)">
       <header>
         <div class="flex justify-content-end align-items-center gap-2">
           <p-button styleClass="p-2" label="應付帳款明細表.PDF" icon="pi pi-file" (click)="onExportPDF()"

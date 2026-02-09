@@ -150,6 +150,16 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     this.tls11010Service.queryData(payload).pipe(finalize(() => this.loading = false)).subscribe({
       next: (res) => {
         console.log('查詢 TLS11010 成功', res.Data);
+
+        // 如果有資料，自動帶入館別、樓層、區域
+        if (res?.Data && res.Data.length > 0) {
+          const locationData = res.Data[0];
+          this.queryForm.patchValue({
+            ECR_Group: locationData.building_no ?? '',      // 館別
+            ECR_SubGroup: locationData.FLOOR_NO ?? '',      // 樓層
+            ECR_AreaNo: locationData.AREA_NO?.trim() ?? ''  // 區域（去除空白）
+          }, { emitEvent: false });
+        }
       },
     });
   }
@@ -414,18 +424,26 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       this.messageService.warnBubble('無有效的 ID 可供刪除');
       return;
     }
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: '是否刪除所選項目?',
+      accept: () => {
+        this.tls41010Service.deleteTLS41010(idList)
+          .pipe(untilDestroyed(this))
+          .subscribe({
+            next: (res) => {
+              if (res.Status === '0000') {
+                this.messageService.successBubble('選中項目刪除成功');
+                this.selectedItems = []; // 清空選中項目
+                this.onSubmit(this.queryForm); // 重新查詢刷新列表
+              } else {
+                console.error('API error:', res.Status, res.Message);
+                this.messageService.errorBubble(`刪除失敗: ${res.Message}`);
+              }
+            },
 
-    this.tls41010Service.deleteTLS41010(idList).subscribe({
-      next: (res) => {
-        if (res.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-          this.selectedItems = [];          // 清空選中項目
-          this.onSubmit(this.queryForm);    // 重新查詢刷新列表
-        } else {
-          console.error('API error:', res.Status, res.Message);
-          this.messageService.errorBubble(`刪除失敗: ${res.Message}`);
-        }
-      },
+          });
+      }
     });
   }
 }

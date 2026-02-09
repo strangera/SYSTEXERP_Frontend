@@ -46,7 +46,9 @@ export class TLS56030Component extends BasicQueryPageComponent<any> implements O
     APPLY_Date_Start: [null],                  // 申請日期 起
     APPLY_Date_End: [null],                    // 申請日期 迄
     ...createPaginationConfig([{ field: 'RPM_No', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
   });
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
 
   // Dropdown options
@@ -86,25 +88,26 @@ export class TLS56030Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('TLS56030', '/TLS/TLS56030CRU', this.queryForm, (form) => this.onSubmit(form));
     // 倉別 (HOS_No)
     this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this),
-      map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
+      map(response => (response?.Data ?? []).map((x: any) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
     ).subscribe(options => { this.warehouseOptions = options; });
     // 品牌代碼 (LOGO_No)
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this),
-      map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
-    ).subscribe(options => { this.brandOptions = options.map(item => ({ label: `${item.value} - ${item.label}`, value: item.value })); });
+    this.dropDownListService.queryPLULOGO_DropDownList().pipe(
+      untilDestroyed(this),
+      map(res => (res?.Data ?? []).map((x: any) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
+    ).subscribe(options => this.brandOptions = options);
 
     // 申請人員、審核人員、結案人員 (共用人員下拉選單)
     this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this),
-      map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
+      map(res => (res?.Data ?? []).map((x: any) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
     ).subscribe(options => {
       this.userOptions = options;
     });
     this.dropDownListService.querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(response => {
-        this.departmentOptions = (response.Data || []).map(item => ({
-          label: item.Name,
-          value: item.No
+        this.departmentOptions = (response.Data || []).map((x: any) => ({
+          label: `${x.No}-${x.Name}`,
+          value: x.No
         }));
       });
     this.issuanceNoteStatusOptions = [

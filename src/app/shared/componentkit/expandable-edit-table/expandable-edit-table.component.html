@@ -140,6 +140,7 @@
           *ngFor="let col of mainColumns"
           [hidden]="col.hidden"
           [ngStyle]="getColumnStyle(col)"
+          [ngClass]="{ 'error-cell': hasCellError(rowData, col.field) }"
           style="text-align: center"
         >
           <!-- 可編輯欄位 -->
@@ -581,6 +582,7 @@
                     *ngFor="let col of getDetailColumnsForTab(rowData)"
                     [hidden]="col.hidden"
                     [ngStyle]="getColumnStyle(col)"
+                    [ngClass]="{ 'error-cell': hasCellError(detailData, col.field) }"
                     style="text-align: center"
                   >
                     <!-- 可編輯欄位 -->
@@ -700,8 +702,8 @@
                             [ngModel]="
                               getDateInputValue(detailData, col, true, di)
                             "
-                            (input)="handleDateInput($event, detailData, col)"
-                            (blur)="onDateInputBlur(detailData, col, false)"
+                            (input)="onDetailDateInputChange(detailData, col, $any($event.target).value, ri, di)"
+                            (blur)="onDetailDateInputBlur(detailData, col, ri, di)"
                             (keydown)="
                               onFieldKeyDown(
                                 $event,

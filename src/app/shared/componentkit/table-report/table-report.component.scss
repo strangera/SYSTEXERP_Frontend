@@ -130,6 +130,13 @@
     .p-component-overlay {
       background-color: rgb(217 217 217 / 40%) !important;
     }
+
+    // .p-datatable-thead > tr > th {
+    //   background: var(--table-header-bg);
+    // }
+    .p-datatable-tfoot > tr > td {
+      background: var(--table-footer-bg);
+    }
   }
   .html-cell,
   .html-cell * {

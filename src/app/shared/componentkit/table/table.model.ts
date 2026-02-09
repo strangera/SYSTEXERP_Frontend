@@ -27,6 +27,8 @@ export interface Column<T = Record<string, any>> {
   prefix?: string; // 前綴 (適用於 input 類型)
   suffix?: string; // 後綴 (適用於 input 類型)
   fractionDigits?: number;
+  min?: number; // 最小值 (適用於 inputNumber、percent)
+  max?: number; // 最大值 (適用於 inputNumber、percent)
   useGrouping?: boolean;
   required?: boolean; // 是否為必填欄位 (適用於輸入欄位)
 
@@ -82,7 +84,7 @@ export interface LazyLoadEvent {
 
 export const createPaginationConfig = (defaultSortBy?: SortMeta[]) => {
   return {
-    pageSize: [20],
+    pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [defaultSortBy ?? []],
   };

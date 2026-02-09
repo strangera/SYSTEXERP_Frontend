@@ -14,9 +14,9 @@
   <ng-template pTemplate="caption">
     <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
       [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event" [tableKey]="tableKey"
-      [showCaption]="showCaption" [showHeader]="showHeader" [showFilter]="showFilter" [showReportMode]="false"
-      [showReportPDF]="false" [showReportExcel]="false" [deleteData]="false" [showDelete]="false" [disabled]="false"
-      [totalRecords]="dt.totalRecords">
+      [showCaption]="showCaption" [showHeader]="showHeader" [showFilter]="showFilter" [showPage]="showPage"
+      [showReportMode]="false" [showReportPDF]="false" [showReportExcel]="false" [deleteData]="false"
+      [showDelete]="false" [disabled]="false" [totalRecords]="dt.totalRecords">
       <header><ng-content select="header"></ng-content></header>
     </app-table-caption>
   </ng-template>

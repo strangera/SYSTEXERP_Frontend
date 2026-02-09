@@ -288,6 +288,7 @@ export class SubmitDataService {
         sst_rate: item.sst_rate,
         cap_saletype1: this.boolToYN(item.cap_saletype1),
         cap_saletype2: this.boolToYN(item.cap_saletype2),
+        cap_saletype3: this.boolToYN(item.cap_saletype3),
         cap_saletype5: this.boolToYN(item.cap_saletype5),
         cag_bdate: this.formatDate(item.mainStartDate || item.cag_bdate),
         cag_edate: this.formatDate(item.mainEndDate || item.cag_edate)
@@ -315,8 +316,8 @@ export class SubmitDataService {
         if (!discount.selected) continue;
 
         const isNewItem = discount._status === 'new' || String(discount.id || '').startsWith('temp_');
-        // 後端期望字串 ID
-        const discountId = this.parseStringId(discount.id);
+        // 後端要求 id 必填；新增項目保留 temp_ ID 供 level charged_id 關聯比對
+        const discountId = discount.id ? String(discount.id) : '0';
 
         const cleanDiscount = {
           id: discountId,
@@ -350,22 +351,8 @@ export class SubmitDataService {
     for (const commission of commissionItems) {
       if (commission._status === 'deleted') continue;
 
-      console.log('[buildAnnualSettings] 處理 commission:', {
-        commissionId: commission.id,
-        commissionStatus: commission._status,
-        annualCount: commission.annualPerformanceItems?.length || 0,
-        annualItems: commission.annualPerformanceItems?.map(a => ({
-          id: a.id,
-          selected: a.selected,
-          _status: a._status,
-          year_amount: a.year_amount,
-          extra_rate: a.extra_rate
-        }))
-      });
-
       for (const annual of (commission.annualPerformanceItems || [])) {
         if (!annual.selected) {
-          console.log('[buildAnnualSettings] 跳過未選取的項目:', annual.id);
           continue;
         }
 
@@ -373,7 +360,7 @@ export class SubmitDataService {
         const hasValidId = annual.id && !String(annual.id).startsWith('temp_');
 
         const cleanAnnual = {
-          id: hasValidId ? Number(annual.id) : undefined,
+          id: hasValidId ? Number(annual.id) : 0,
           tlt_id: this.str(commission.tlt_id),
           tlt_bdate: this.formatDateOnly(annual.tlt_bdate),
           tlt_edate: this.formatDateOnly(annual.tlt_edate),
@@ -381,45 +368,20 @@ export class SubmitDataService {
           extra_rate: this.convertPercentageToRate(annual.extra_rate)
         };
 
-        console.log('[buildAnnualSettings] 處理 annual 項目:', {
-          id: annual.id,
-          _status: annual._status,
-          isNewItem,
-          hasValidId,
-          cleanAnnual
-        });
-
         if (annual._status === 'deleted') {
           if (hasValidId) {
             toDelete.push({ id: Number(annual.id) });
-            console.log('[buildAnnualSettings] 加入 toDelete:', annual.id);
           }
         } else if (isNewItem) {
           toInsert.push(cleanAnnual);
-          console.log('[buildAnnualSettings] 加入 toInsert:', cleanAnnual);
         } else if (annual._status === 'modified') {
           toUpdate.push(cleanAnnual);
-          console.log('[buildAnnualSettings] 加入 toUpdate (modified):', cleanAnnual);
         } else if (hasValidId && (annual._status === 'original' || !annual._status)) {
-          // 暫時解決方案：即使 _status 仍為 original，也加入 toUpdate
-          // 這是因為欄位變更事件有時沒有正確觸發
-          // TODO: 需要修復根本原因 - 為什麼 _status 沒有被更新
-          console.warn('[buildAnnualSettings] ⚠️ _status 仍為 original，強制加入 toUpdate:', {
-            id: annual.id,
-            _status: annual._status,
-            year_amount: annual.year_amount,
-            extra_rate: annual.extra_rate
-          });
+          // _status 仍為 original 時也加入 toUpdate，因為欄位變更事件有時沒有正確觸發 _status 更新
           toUpdate.push(cleanAnnual);
         }
       }
     }
-
-    console.log('[buildAnnualSettings] 最終結果:', {
-      toInsertCount: toInsert.length,
-      toUpdateCount: toUpdate.length,
-      toDeleteCount: toDelete.length
-    });
 
     return { toInsert, toUpdate, toDelete };
   }
@@ -436,9 +398,9 @@ export class SubmitDataService {
         if (!level.selected) continue;
 
         const isNewItem = level._status === 'new' || String(level.id || '').startsWith('temp_');
-        // 後端期望字串 ID
-        const levelId = this.parseStringId(level.id);
-        const chargedId = this.parseStringId(level.charged_id);
+        // 後端要求 id 必填；保留 temp_ ID 供 discount/level 關聯比對
+        const levelId = level.id ? String(level.id) : '0';
+        const chargedId = level.charged_id ? String(level.charged_id) : '0';
 
         const cleanLevel = {
           id: levelId,
