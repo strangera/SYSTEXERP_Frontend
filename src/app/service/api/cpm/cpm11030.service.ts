@@ -70,6 +70,7 @@ export interface DailyEquipAvailabilityRow {
   Device_Name: string;
   Device_TotQty: number;
   CSS_CurrentQty: number;
+  CSS_PriorQty: number;
 }
 
 export interface InsertDailyEquipAvailabilityRequest {

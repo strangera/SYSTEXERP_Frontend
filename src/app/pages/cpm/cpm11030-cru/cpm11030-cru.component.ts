@@ -45,6 +45,7 @@ import {
 })
 export class CPM11030CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   readonly CRUD = CRUDStatus;
+  device_IDisRead = false;
   /** ✅ 服務中心位置編號下拉 */
   counterCodeOptions: OptionItem[] = [];
 
@@ -173,6 +174,10 @@ export class CPM11030CRUComponent extends BasicCruPageComponent<any> implements 
 
     if (Object.keys(patch).length) {
       this.dataForm.patchValue(patch, { emitEvent: false });
+    }
+
+    if (this.crudstatus === CRUDStatus.Edit) {
+      this.device_IDisRead = true;
     }
 
   }
