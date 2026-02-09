@@ -4,7 +4,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { TLS12020Service } from '../../../service/api/tls/tls12020.service';
@@ -42,8 +41,8 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
     VEN_Name: [null, Validators.maxLength(60)], // 原本 ven_name
     VEN_EngName: [null, Validators.maxLength(60)],
     building_no: [null], // 館別（必填）
-    InterviewDateStart: [yesterday], // 原本 contact_Datestart
-    InterviewDateEnd: [yesterday],   // 原本 contact_Dateend
+    InterviewDateStart: [new Date()], // 原本 contact_Datestart
+    InterviewDateEnd: [new Date()],   // 原本 contact_Dateend
     contact_USR_No: [null],
     contact_USR_Name: [null], // 訪談人員
     willing_level: [null], // 後端要 string，不要 null

@@ -50,8 +50,8 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
     VEN_BossEmail: ['', [Validators.maxLength(60), Validators.pattern(/^[A-Za-z0-9._%+-@]*$/)]], // 聯絡人電子郵件 只允許英文與常用符號
     VEN_Addr: ['', [Validators.maxLength(100)]], // 公司地址
     VEN_BossFax: ['', [Validators.maxLength(18)]], // 聯絡人傳真
-    contact_Date: [null, [Validators.required]], // 訪談日期（必填）
-    contact_Time: [null, [Validators.required]], // 訪談時間(24H)（必填）
+    contact_Date: [new Date(), [Validators.required]], // 訪談日期（必填）
+    contact_Time: [new Date(), [Validators.required]], // 訪談時間(24H) 預設為現在時間（必填）
     building_no: [''], // 館別
     willing_level: ['', [Validators.required]], //
     FLOOR_NO: [''], // 樓層編號
@@ -82,9 +82,31 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
   }
   ngOnInit(): void {
     this.initializePage('TLS12020', this.dataForm);
+    // (debug logs removed)
     if (this.rowdata) {
       const mapped = this.mapRowDataToForm(this.rowdata);
+      // mapped prepared
       this.dataForm.patchValue(mapped);
+
+      // 若 navigation state 的 rowdata 只是一份快取，為保險起見以 ID 向後端抓最新完整資料再覆蓋
+      const id = (this.rowdata as any).ID;
+      if (id) {
+        this.tls12020Service.queryTLS12020({ ID: id })
+          .pipe(untilDestroyed(this))
+          .subscribe({
+            next: (res) => {
+              if (res?.Status === '0000' && Array.isArray(res.Data) && res.Data.length) {
+                const fresh = res.Data[0];
+                // 只有當後端回傳的第一筆與我們要求的 ID 相同時，才用後端回傳覆蓋表單
+                if ((fresh as any).ID === id) {
+                  const freshMapped = this.mapRowDataToForm(fresh);
+                  this.dataForm.patchValue(freshMapped);
+                }
+              }
+            },
+            error: () => { /* ignore errors silently */ }
+          });
+      }
     }
     this.loadDropdownOptions();
     //訪談人員api
@@ -236,15 +258,37 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
       VEN_BossTitle: row.VEN_BossTitle,    // 聯絡人稱謂
       VEN_BossMobile: row.VEN_BossMobile,  // 聯絡人手機
       VEN_BossEmail: row.VEN_BossEmail,    // 聯絡人電子郵件
+      VEN_BossFax: row.VEN_BossFax,        // 聯絡人傳真
       VEN_Addr: row.VEN_Addr,              // 公司地址
-      contact_Date: row.contact_Date,      // 訪談日期
-      contact_Time: row.contact_Time,      // 訪談時間
+      contact_Date: row.contact_Date ? new Date(row.contact_Date) : undefined,      // 訪談日期 (轉 Date)
+      contact_Time: (() => {
+        const t = row.contact_Time;
+        if (!t) return undefined;
+        // 可能格式: "1613" 或 "16:13" 或 已是 Date
+        if (t instanceof Date) return t;
+        if (typeof t === 'string') {
+          if (/^\d{4}$/.test(t)) {
+            const hh = parseInt(t.substring(0, 2), 10);
+            const mm = parseInt(t.substring(2, 4), 10);
+            const d = new Date();
+            d.setHours(hh, mm, 0, 0);
+            return d;
+          }
+          if (/^\d{2}:\d{2}$/.test(t)) {
+            const [h, m] = t.split(':');
+            const d = new Date();
+            d.setHours(parseInt(h, 10), parseInt(m, 10), 0, 0);
+            return d;
+          }
+        }
+        return undefined;
+      })(),      // 訪談時間 (轉 Date)
       building_no: row.building_no,        // 館別
       willing_level: row.willing_level,    // 意願等級
       FLOOR_NO: row.FLOOR_NO,              // 樓層編號
       LOCATION_No: row.LOCATION_No,        // 位置編號
-      contact_record: row.contact_record,  // 洽談重點
-      contact_remarks: row.contact_remarks,// 備註
+      contact_record: row.contact_record ?? '',  // 洽談重點
+      contact_remarks: row.contact_remarks ?? '',// 備註
       contact_USR_Name: row.contact_USR_Name, // 訪談人員
     };
   }
@@ -268,6 +312,7 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
         VEN_BossTitle: formValue.VEN_BossTitle,
         VEN_BossMobile: formValue.VEN_BossMobile,
         VEN_BossEmail: formValue.VEN_BossEmail,
+        VEN_BossFax: formValue.VEN_BossFax,
         VEN_Addr: formValue.VEN_Addr,
         contact_Date: this.formatDateOnly(formValue.contact_Date), // 確保是 YYYY-MM-DDT00:00:00
         contact_Time: this.formatTime(formValue.contact_Time),
