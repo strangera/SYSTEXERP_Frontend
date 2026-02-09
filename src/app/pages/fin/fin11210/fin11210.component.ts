@@ -60,7 +60,7 @@ export class FIN11210Component extends BasicQueryPageComponent<FIN11210Data> imp
   selectedItems: FIN11210Data[] = [];
   btnLoading = false;
 
-  ECR_No_Options: any[] = [{ Name: 'ALL-全機台', No: 'ALL' }];
+  ECR_No_Options: any[] = [];
   ARG_No_Options: any[] = [];
 
   columns: ReportColumn[] = [
@@ -164,13 +164,10 @@ export class FIN11210Component extends BasicQueryPageComponent<FIN11210Data> imp
       .pipe(untilDestroyed(this))
       .subscribe(response => {
         const data = response.Data ?? [];
-        this.ECR_No_Options = [
-          { Name: 'ALL-全機台', No: 'ALL' },
-          ...data.map((item: { No?: string; Name?: string }) => ({
-            No: item.No ?? '',
-            Name: `${item.No ?? ''}-${item.Name ?? ''}`
-          }))
-        ];
+        this.ECR_No_Options = data.map((item: { No?: string; Name?: string }) => ({
+          No: item.No ?? '',
+          Name: `${item.No ?? ''}-${item.Name ?? ''}`
+        }));
       });
     // 取得參數代號下拉選單資料
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'ARG_NO' })
