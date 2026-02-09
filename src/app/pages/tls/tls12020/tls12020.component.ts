@@ -45,7 +45,7 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
     InterviewDateStart: [yesterday], // 原本 contact_Datestart
     InterviewDateEnd: [yesterday],   // 原本 contact_Dateend
     contact_USR_No: [null],
-    contact_USR_Name: [this.authService.currentUserValue?.user_No], // 訪談人員
+    contact_USR_Name: [null], // 訪談人員
     willing_level: [null], // 後端要 string，不要 null
     ...createPaginationConfig([{ field: 'location_no', order: 1 }]), // 原本是 ECR_LocNo
     pageSize: [30], // 本頁預設送後端每頁 30 筆

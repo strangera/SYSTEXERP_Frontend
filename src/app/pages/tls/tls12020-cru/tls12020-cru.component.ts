@@ -63,7 +63,7 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
 
 
   // 下拉選單 options
-  vendorUIDOptions: IDropdownItem[] = [];
+  vendorUIDOptions: (IDropdownItem & { VEN_EngName?: string; VEN_Address?: string; ShortName?: string })[] = [];
   industryCodeOptions: IDropdownItem[] = [];
   willinglevelOptions: IDropdownItem[] = [];
   floorOptions: IDropdownItem[] = [];
@@ -117,12 +117,47 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
     this.dropDownListService.queryPOS2013_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
+        // 保留原始後端欄位，方便之後自動帶入
         this.vendorUIDOptions = res.Data.map(item => ({
-          label: `${item.Name} ${item.No}`, // 顯示中文+數字
-          value: item.No,                   // 送出用的值
-          Name: item.Name,                  // 加入 Name 屬性
-          No: item.No                       // 加入 No 屬性
+          label: `${item.No} - ${item.Name}`, // 顯示中文+數字
+          value: item.No,                      // 送出用的值
+          Name: item.Name,                     // 中文名稱
+          No: item.No,                         // 編號
+          // 處理英文名稱：若後端回傳空字串，保留空字串；若回傳值只有允許的英文/數字/常用符號才視為有效，否則不提供（undefined）
+          VEN_EngName: (() => {
+            const raw = (item as any).VEN_EngName ?? item.ShortName ?? undefined;
+            if (raw === '') return '';
+            if (typeof raw === 'string') {
+              const validEng = /^[A-Za-z0-9 .,\-()]*$/;
+              return validEng.test(raw) ? raw : undefined;
+            }
+            return undefined;
+          })(),
+          VEN_Address: (item as any).VEN_Address ?? undefined,
+          ShortName: item.ShortName ?? undefined,
         }));
+      });
+
+    // 選擇統編後自動帶入廠商名稱、英文名稱、公司地址
+    this.dataForm.get('vendorUID')?.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(selectedNo => {
+        const selected = this.vendorUIDOptions.find(v => v.value === selectedNo);
+        if (selected) {
+          const patch: any = {
+            vendorCName: selected.Name ?? '',
+            VEN_Addr: selected.VEN_Address ?? ''
+          };
+
+          // 只有當 vendor Eng 名稱為空字串或經過驗證為英文格式時，才覆蓋 vendorEName
+          if (selected.VEN_EngName !== undefined) {
+            patch.vendorEName = selected.VEN_EngName; // 可能為 '' 或有效英文字串
+          }
+
+          this.dataForm.patchValue(patch, { emitEvent: false });
+        } else {
+          this.dataForm.patchValue({ vendorCName: '', vendorEName: '', VEN_Addr: '' }, { emitEvent: false });
+        }
       });
 
     //位置編號
