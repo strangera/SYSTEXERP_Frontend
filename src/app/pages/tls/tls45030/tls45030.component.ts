@@ -10,7 +10,7 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatDate } from '@shared/componentkit/table/table.model';
+import { formatDate, formatDateTime } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs'; // 加入 finalize
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -42,8 +42,8 @@ export class TLS45030Component extends BasicQueryPageComponent<QueryTLS45030Resp
     { field: 'ECR_Name', header: '收銀機名稱', visible: true },
     { field: 'USR_No', header: '收銀員編號', visible: true },
     { field: 'user_Name', header: '收銀員姓名', visible: true },
-    { field: 'EOS_StartUpTime', header: '開機時間', visible: true, format: formatDate },
-    { field: 'EOS_CloseTime', header: '清機時間', visible: true, format: formatDate },
+    { field: 'EOS_StartUpTime', header: '開機時間', visible: true, format: formatDateTime },
+    { field: 'EOS_CloseTime', header: '清機時間', visible: true, format: formatDateTime },
   ];
   ECR_NoOptions: { No: string, Name: string, label: string; }[] = [];
   TLTTALENT_DropDownList: { No: string, Name: string, label: string; }[] = [];
