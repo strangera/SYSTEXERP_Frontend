@@ -117,6 +117,13 @@ export interface ITLTBUSSCLASSRequest_new {
   queryTLTBUSSCLASSInfos: ITLTBUSSCLASSInfo[];
 }
 
+// GLS1005 ledgerMD 下拉選單項目
+export interface IGLS1005LedgerMDItem {
+  No: string;
+  Name: string;
+  ABAT_YN: string;
+}
+
 export interface ISYS3100TreeRequest {
   org_id: string;
   stop_flag: string;
@@ -344,6 +351,11 @@ export class DropDownListService {
   // 查詢會計科目設定檔(GLS1005)下拉式選單 (只取1103科目)
   queryGLS1005For1103_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryGLS1005For1103_DropDownList`, {});
+  }
+
+  // 查詢會計科目設定檔(GLS1005) ledgerMD 下拉式選單 (含 ABAT_YN 欄位)
+  queryGLS1005_ledgerMD_DropDownList(): Observable<ApiResponse<IGLS1005LedgerMDItem[]>> {
+    return this.http.post<ApiResponse<IGLS1005LedgerMDItem[]>>(`${this.apiUrl}/queryGLS1005_ledgerMD_DropDownList`, {});
   }
 
   // 查詢扣款代碼檔(APS1003)資料表

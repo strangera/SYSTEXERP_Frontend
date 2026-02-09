@@ -193,4 +193,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls2f010', loadComponent: () => import('./tls2f010/tls2f010.component').then(m => m.TLS2F010Component), data: { progNo: 'TLS2F010' } },
   // 廠商發票請款登入暨維護作業 CRU
   { path: 'tls2f010cru', loadComponent: () => import('./tls2f010-cru/tls2f010-cru.component').then(m => m.TLS2F010CRUComponent), data: { progNo: 'TLS2F010' } },
+
+  // 傳票項目之會計科目設定作業_NEW
+  { path: 'tls21020', loadComponent: () => import('./tls21020/tls21020.component').then(m => m.TLS21020Component), data: { progNo: 'TLS21020' } },
+
 ];
