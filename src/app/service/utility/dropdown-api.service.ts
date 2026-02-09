@@ -23,6 +23,7 @@ import {
   EcrItem,
   EcrQuery,
   ENG1001Item,
+  GLS1005LedgerMDItem,
   IDropdownItem,
   LogoAccorHosItem,
   LogoAccorHosQuery,
@@ -248,6 +249,13 @@ export class DropdownApiService {
   queryGls1005(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<IDropdownItem>('/queryGLS1005_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true })// 避免重複查詢
+    );
+  }
+
+  /** 查詢會計科目設定檔(GLS1005) ledgerMD 下拉 - 用於 FIN53010 科目代號 */
+  queryGLS1005LedgerMD(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<GLS1005LedgerMDItem>('/queryGLS1005_ledgerMD_DropDownList', 'No', 'Name').pipe(
+      shareReplay({ bufferSize: 1, refCount: true })
     );
   }
 
