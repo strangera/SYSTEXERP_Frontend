@@ -3,6 +3,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -189,51 +190,52 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
 
   // 刪除項目
   onDelete(data: Potential_Customer | Potential_Customer[]): void {
-    console.log('Delete data:', JSON.stringify(data, null, 2));
+    this.messageService.confirm({
+      message: `是否確認刪除選中的潛在客戶?`,
+      header: `確認刪除`,
+      accept: () => {
+        // 1. 準備 ID 陣列
+        const items = Array.isArray(data) ? data : [data];
+        const ids = items
+          .filter(item => item && item.id != null)
+          .map(item => item.id);
 
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {
-      console.error('No items to delete');
-      this.messageService.errorBubble('無法刪除：沒有選中的項目');
-      return;
-    }
-
-    // 收集所有有效的 ID
-    const idList = items
-      .filter((item) => item && item.id != null && item.id !== undefined)
-      .map((item) => item.id);
-
-    if (idList.length === 0) {
-      console.error('No valid IDs to delete');
-      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
-      return;
-    }
-
-    const deleteBody = {
-      idList: idList, // 符合 API 的 idList 格式
-    };
-
-    console.log('deleteBody', deleteBody);
-
-    this.tls12010Service.deleteTLS12010(deleteBody).pipe(untilDestroyed(this)).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-        } else {
-          console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        if (ids.length === 0) {
+          this.messageService.errorBubble('請先選擇要刪除的項目');
+          return;
         }
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.messageService.errorBubble('刪除失敗');
-      },
-      complete: () => {
-        this.onSubmit(this.queryForm);
-      },
-    });
 
-    this.selectedItems = [];
+        // 2. 根據你提供的 API 需求，格式應該是這樣：
+        const deleteBody = {
+          idList: ids  // 直接對應 API 的 {"idList": [0]}
+        };
+
+        console.log('Sending Delete Payload:', deleteBody);
+
+        this.loading = true;
+        this.tls12010Service.deleteTLS12010(deleteBody)
+          .pipe(
+            untilDestroyed(this),
+            finalize(() => this.loading = false)
+          )
+          .subscribe({
+            next: (response) => {
+              if (response.Status === '0000') {
+                this.messageService.successBubble('刪除成功');
+                this.selectedItems = [];
+                this.onSubmit(this.queryForm);
+              } else {
+                // 這裡會抓到 API 回傳的 "idList field is required" 錯誤
+                this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+              }
+            },
+            error: (err) => {
+              console.error('HTTP Error:', err);
+              this.messageService.errorBubble('網路通訊失敗');
+            }
+          });
+      }
+    });
   }
 
   //接待人員變化
