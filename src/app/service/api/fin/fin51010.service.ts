@@ -134,4 +134,12 @@ export class Fin51010Service {
       body
     );
   }
+
+  // 作廢
+  voidFIN51010(body: { GLS6001_IDList: string }): Observable<ApiResponse<TransferFIN51010Response>> {
+    return this.http.post<ApiResponse<TransferFIN51010Response>>(
+      `${this.apiUrl}/FIN0000/GLS1000/voidFIN51010`,
+      body
+    );
+  }
 }
