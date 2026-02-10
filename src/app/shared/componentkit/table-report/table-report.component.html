@@ -101,7 +101,8 @@
     let-expanded="expanded">
     <tr [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined" [pSelectableRow]="rowData"
       [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }" [style]="{ height: '46px' }"
-      [pSelectableRowDisabled]="!isRowSelectable(rowData)" [pReorderableRow]="index" [pSelectableRowIndex]="rowIndex">
+      [pSelectableRowDisabled]="!isRowSelectable(rowData)" [pReorderableRow]="index" [pSelectableRowIndex]="rowIndex"
+      (click)="itemClick.emit(rowData)">
       <td *ngIf="showReorder" class="text-center" pFrozenColumn>{{ rowIndex + 1 }}</td>
       <td *ngIf="showCheckBox">
         <p-tableCheckbox class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData"
