@@ -1,3 +1,4 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -18,9 +19,8 @@ import { DropDownListService } from './../../../service/utility/dropDownList.ser
 @Component({
   selector: 'app-fin31020-cru',
   templateUrl: './fin31020-cru.component.html',
-  styleUrl: './fin31020-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, ButtonComponent, TranslateModule, DropdownComponent]
+  imports: [NgIf, MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, ButtonComponent, TranslateModule, DropdownComponent]
 })
 
 export class FIN31020CRUComponent extends BasicCruPageComponent<FIN31020Data> implements OnInit {
