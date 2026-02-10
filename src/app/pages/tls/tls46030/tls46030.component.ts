@@ -72,8 +72,24 @@ export class TLS46030Component extends BasicQueryPageComponent<any> implements O
         return option ? option.label : value;
       }
     },
-    { field: 'ECR_FLD_NewVal', header: '新機台內容' },
-    { field: 'ECR_FLD_OrgVal', header: '原機台內容' },
+    {
+      field: 'ECR_FLD_NewVal', header: '新機台內容', format: (value: any, i?: number, row?: any) => {
+        if (row?.ECR_FLD_ID === 'ECR_CloseDate') {
+          const d = this.parseEcrFieldDate(value);
+          return d ? formatDate(d.toISOString()) : (value ?? '');
+        }
+        return value ?? '';
+      }
+    },
+    {
+      field: 'ECR_FLD_OrgVal', header: '原機台內容', format: (value: any, i?: number, row?: any) => {
+        if (row?.ECR_FLD_ID === 'ECR_CloseDate') {
+          const d = this.parseEcrFieldDate(value);
+          return d ? formatDate(d.toISOString()) : (value ?? '');
+        }
+        return value ?? '';
+      }
+    },
     { field: 'ECR_SchFinTime', header: '異動作業完成時間', format: formatDate },
   ];
 
@@ -85,6 +101,78 @@ export class TLS46030Component extends BasicQueryPageComponent<any> implements O
 
   ) {
     super();
+  }
+
+  // 解析後端可能傳回的停用日期字串，例如: "08 31 2017 12:00AM"
+  private parseEcrFieldDate(value: any): Date | null {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+
+    // 已是 ISO 或可被 Date 解析的字串
+    const tryIso = new Date(value);
+    if (!isNaN(tryIso.getTime())) return tryIso;
+
+    const str = String(value).trim();
+    // 常見格式: MM DD YYYY hh:mmAM/PM 或 MM DD YYYY hh:mm AM/PM
+    const re = /^(\d{1,2})\s+(\d{1,2})\s+(\d{4})\s+(\d{1,2}):(\d{2})\s*(AM|PM)$/i;
+    const m = str.match(re);
+    if (m) {
+      const month = parseInt(m[1], 10);
+      const day = parseInt(m[2], 10);
+      const year = parseInt(m[3], 10);
+      let hour = parseInt(m[4], 10);
+      const minute = parseInt(m[5], 10);
+      const meridian = m[6].toUpperCase();
+      if (meridian === 'AM') {
+        if (hour === 12) hour = 0;
+      } else {
+        if (hour !== 12) hour += 12;
+      }
+      return new Date(year, month - 1, day, hour, minute, 0);
+    }
+
+    // 嘗試取數字年月日時間重組: 例如 '08 31 2017 12:00AM' 可能沒有空格分隔時間和 AM
+    const re2 = /^(\d{1,2})\s+(\d{1,2})\s+(\d{4})\s*(\d{1,2}:\d{2})(AM|PM)?$/i;
+    const m2 = str.match(re2);
+    if (m2) {
+      const month = parseInt(m2[1], 10);
+      const day = parseInt(m2[2], 10);
+      const year = parseInt(m2[3], 10);
+      const timeParts = m2[4].split(':');
+      let hour = parseInt(timeParts[0], 10);
+      const minute = parseInt(timeParts[1], 10);
+      const meridian = (m2[5] || '').toUpperCase();
+      if (meridian) {
+        if (meridian === 'AM') {
+          if (hour === 12) hour = 0;
+        } else {
+          if (hour !== 12) hour += 12;
+        }
+      }
+      return new Date(year, month - 1, day, hour, minute, 0);
+    }
+
+    return null;
+  }
+
+  // 在導向新增頁面前儲存查詢條件
+  override onCreate(data?: unknown, queryConditions?: any) {
+    try {
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+    } catch (err) {
+      console.warn('保存查詢狀態失敗', err);
+    }
+    super.onCreate(data, queryConditions);
+  }
+
+  // 在導向編輯頁面前儲存查詢條件
+  override onEdit(data: any, queryConditions?: any) {
+    try {
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+    } catch (err) {
+      console.warn('保存查詢狀態失敗', err);
+    }
+    super.onEdit(data, queryConditions);
   }
 
 
@@ -109,6 +197,45 @@ export class TLS46030Component extends BasicQueryPageComponent<any> implements O
 
   onSubmit(frm: FormGroup) {
     const frmValue = frm.value as any;
+
+    // Normalize date range values to local start/end times to avoid timezone/precision issues
+    const toDate = (v: any): Date | null => {
+      if (!v) return null;
+      if (v instanceof Date) return v;
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? null : d;
+    };
+
+    // 轉為後端期待的 UTC ISO 格式 (含 Z)
+    const toISOStringUTC = (d: Date) => d.toISOString();
+
+    // 設定啟用日期: 起 -> 00:00:00 ; 訖 -> next day 00:00:00 (以配合後端 < end 的半開區間)
+    const sDate = toDate(frmValue.ECR_SchDate_Start);
+    const eDate = toDate(frmValue.ECR_SchDate_End);
+    if (sDate) {
+      sDate.setHours(0, 0, 0, 0);
+      frmValue.ECR_SchDate_Start = toISOStringUTC(sDate);
+    }
+    if (eDate) {
+      const nextDay = new Date(eDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+      nextDay.setHours(0, 0, 0, 0);
+      frmValue.ECR_SchDate_End = toISOStringUTC(nextDay);
+    }
+
+    // 排程作業完成時間: 起 -> 00:00:00 ; 訖 -> next day 00:00:00
+    const sFin = toDate(frmValue.ECR_SchFinTime_Start);
+    const eFin = toDate(frmValue.ECR_SchFinTime_End);
+    if (sFin) {
+      sFin.setHours(0, 0, 0, 0);
+      frmValue.ECR_SchFinTime_Start = toISOStringUTC(sFin);
+    }
+    if (eFin) {
+      const nextFin = new Date(eFin);
+      nextFin.setDate(nextFin.getDate() + 1);
+      nextFin.setHours(0, 0, 0, 0);
+      frmValue.ECR_SchFinTime_End = toISOStringUTC(nextFin);
+    }
 
     const payload = {
       PageSize: frmValue.pageSize ?? 10,

@@ -83,8 +83,8 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
   // ----------------------------------------------------------------
   venderOptions: any[] = [];
   remitFeeOptions = [
-    { value: '1', label: '廠商負擔' },
-    { value: '2', label: '公司負擔' }
+    { value: '0', label: '廠商負擔' },
+    { value: '1', label: '公司負擔' }
   ];
   // ====== Table / Options ======
   approvalOptions: { label: string; value: string }[] = [
