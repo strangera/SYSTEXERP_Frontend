@@ -64,6 +64,7 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
   tlt_buildingListOption = this.dropdown.querySys3800();
   check_typeListOption = getSYS1000Options('check_type');
   totalRecords = 0;
+  isAllSelected = false;
   data: IQueryData[] = [];
   selectedItems: IQueryData[] = [];
   columns: ReportColumn[] = [
@@ -129,7 +130,7 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
       exportList: []
     };
 
-    if (this.selectedItems.length !== this.totalRecords) {
+    if (this.selectedItems.length === this.totalRecords || !this.isAllSelected) {
       body.exportList = this.selectedItems.map(item => {
         let sam_yyymm_string = '';
         if (item.sam_yyymm) {
@@ -178,7 +179,7 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
       exportList: []
     };
 
-    if (this.selectedItems.length !== this.totalRecords) {
+    if (this.selectedItems.length === this.totalRecords || !this.isAllSelected) {
       body.exportList = this.selectedItems.map(item => {
         let sam_yyymm_string = '';
         if (item.sam_yyymm) {
