@@ -1,6 +1,6 @@
 <p-confirmDialog #cd>
   <ng-template pTemplate="headless" let-message>
-    <div class="flex flex-column align-items-center p-5 surface-overlay border-round">
+    <div class="flex flex-column align-items-center p-5 surface-overlay border-round" style="min-width: 20rem">
       <div *ngIf="showIcon || message.icon"
         class="border-circle bg-primary inline-flex justify-content-center align-items-center h-6rem w-6rem">
         <i class="pi pi-{{ message.icon || 'question' }} text-5xl"></i>
