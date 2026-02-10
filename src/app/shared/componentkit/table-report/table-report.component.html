@@ -219,8 +219,7 @@
   <ng-template pTemplate="footer" let-columns let-rowData>
     <tr *ngIf="footerData" class="font-bold text-center text-sm text-primary">
       <td class="text-center"
-        [colSpan]="(showReorder ? 1 : 0) + (showCheckBox ? 1 : 0) + (expansionColumns.length ? 1 : 0) + tableUtility.getFirstFooterIndex(columns, footerData)"
-        pFrozenColumn>
+        [colSpan]="(showReorder ? 1 : 0) + (showCheckBox ? 1 : 0) + (expansionColumns.length ? 1 : 0) + tableUtility.getFirstFooterIndex(columns, footerData)">
         <span class="font-bold">{{ footerLabel }}</span>
       </td>
       <ng-container *ngFor="let col of columns; let i = index">
