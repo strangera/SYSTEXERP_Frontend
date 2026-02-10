@@ -8,9 +8,9 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 查詢年月 -->
+          <!-- 查詢年份 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar label="查詢年月" calendarType="dateYearOne" [control]="queryForm.controls.budget_yy"
+            <app-calendar label="查詢年份" calendarType="dateYearOne" [control]="queryForm.controls.budget_yy"
               [submitted]="submitted"></app-calendar>
           </div>
           <!-- 專櫃編號 -->
