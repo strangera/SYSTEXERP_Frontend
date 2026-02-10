@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
 // Shared
@@ -204,7 +204,7 @@ export class TLS12040Component extends BasicQueryPageComponent<ContractItem> imp
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS12040', '/tls/tls12040cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS12040', '/tls/tls12040v1cru', this.queryForm, (form) => this.onSubmit(form));
 
     // 載入下拉選單選項
     this.loadDropdownOptions();

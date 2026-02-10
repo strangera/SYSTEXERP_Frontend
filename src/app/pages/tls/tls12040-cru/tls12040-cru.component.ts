@@ -1,4 +1,4 @@
-import { NgFor, NgIf } from '@angular/common';
+﻿import { NgFor, NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, NavigationExtras } from '@angular/router';
@@ -672,7 +672,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 3秒後返回列表頁面
     setTimeout(() => {
-      this.router.navigate(['account/tls/tls12040'], {
+      this.router.navigate(['account/tls/tls12040v1'], {
         state: { fromRoute: this.router.url }
       });
     }, 3000);
@@ -1099,7 +1099,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     };
 
     if (this.crudstatus === CRUDStatus.Read) {
-      this.router.navigate(['account/tls/tls12040'], extras);
+      this.router.navigate(['account/tls/tls12040v1'], extras);
       this.messageService.infoBubble('已退出檢視模式');
       return;
     }
@@ -1113,7 +1113,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.flowService.setCruData(completeData);
     }
     this.flowService.clearAll();
-    this.router.navigate(['account/tls/tls12040'], extras);
+    this.router.navigate(['account/tls/tls12040v1'], extras);
 
   }
 
@@ -1136,7 +1136,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     if (isSaved) {
       this.messageService.successBubble('資料已暫存，可以進入下一步');
       // 導航到下一步（如果需要）
-      this.router.navigate(['account/tls/tls12040next1']);
+      this.router.navigate(['account/tls/tls12040v1next1']);
     } else {
       this.messageService.errorBubble('資料儲存失敗，請重試');
     }
@@ -1195,7 +1195,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       }
     };
 
-    this.router.navigate(['account/tls/tls12040next1'], navigationExtras);
+    this.router.navigate(['account/tls/tls12040v1next1'], navigationExtras);
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {

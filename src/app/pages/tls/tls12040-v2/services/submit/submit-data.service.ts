@@ -279,6 +279,7 @@ export class SubmitDataService {
 
   /**
    * 根據抽成類型將 conditionItems 分配到對應的條件 bucket
+   * 每種類型明確列出欄位，避免送出多餘欄位
    */
   private assembleConditions(
     conditionItems: ConditionItem[],
@@ -309,31 +310,64 @@ export class SubmitDataService {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     conditionItems.forEach((item: any) => {
-      if (item._status === 'deleted') {
+      const status = item._status || 'original';
+
+      if (status === 'deleted') {
         if (this.hasValidId(item.id)) {
           bucket.toDelete.push({ id: Number(item.id) });
         }
         return;
       }
 
-      const cleanItem = { ...item };
-      if (!this.hasValidId(cleanItem.id)) {
-        delete cleanItem.id;
-      }
-      // 移除內部追蹤欄位
-      delete cleanItem._status;
-      delete cleanItem._hasValidationError;
-      delete cleanItem._hasDateOverlapError;
-      delete cleanItem._errorFields;
+      if (status === 'original') return; // 未變更不處理
 
-      if (isCreateMode || item._status === 'new') {
+      const cleanItem = this.buildCleanConditionItem(item, commissionType, status !== 'new' && !isCreateMode);
+
+      if (isCreateMode || status === 'new') {
         bucket.toInsert.push(cleanItem);
-      } else if (item._status === 'modified') {
+      } else if (status === 'modified') {
         bucket.toUpdate.push(cleanItem);
       }
     });
 
     return result;
+  }
+
+  /**
+   * 根據抽成類型，明確提取需要的欄位
+   * INSERT 不帶 apply_no（由後端從 contractInfo 關聯）
+   * UPDATE 帶 apply_no（識別既有資料）
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private buildCleanConditionItem(item: any, commissionType: string, includeApplyNo: boolean): Record<string, unknown> {
+    // 基礎欄位：所有類型共用
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const base: Record<string, any> = {
+      ...(this.hasValidId(item.id) ? { id: Number(item.id) } : {}),
+      apply_no: includeApplyNo ? (item.apply_no || null) : null,
+      cag_bdate: this.formatDateToString(item.cag_bdate),
+      cag_edate: this.formatDateToString(item.cag_edate)
+    };
+
+    switch (String(commissionType).trim()) {
+      case '1': // 固定租金
+        return { ...base, base_rent: item.base_rent || 0 };
+
+      case '2': // 底租抽成取高者
+        return { ...base, base_rent: item.base_rent || 0, cag_charge_rate: item.cag_charge_rate || 0 };
+
+      case '4': // 包底抽成
+        return { ...base, limit_amt: item.limit_amt || 0, limit_charge_rate: item.limit_charge_rate || 0 };
+
+      case '5': // 層級抽成
+        return { ...base, seq_no: item.seq_no || 0, start_number: item.start_number || 0, end_number: item.end_number || 0, charge_rate: item.charge_rate || 0 };
+
+      case '6': // 包底加層級
+        return { ...base, seq_no: item.seq_no || 0, limit_amt: item.limit_amt || 0, start_number: item.start_number || 0, end_number: item.end_number || 0, charge_rate: item.charge_rate || 0 };
+
+      default:
+        return base;
+    }
   }
 
   // ========== 日期格式化 ==========

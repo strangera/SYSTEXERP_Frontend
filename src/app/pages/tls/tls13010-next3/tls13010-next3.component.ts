@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+﻿import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, NavigationExtras } from '@angular/router';
 import { catchError, firstValueFrom, Subscription } from 'rxjs';
@@ -276,7 +276,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       this.loadDataWithPriority();
     } else {
       console.warn('沒有有效的工作流程資料，重導向到前一步');
-      this.router.navigate(['account/tls/tls13010cru']);
+      this.router.navigate(['account/tls/tls13010v1cru']);
     }
   }
 
@@ -1381,7 +1381,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       const extras: NavigationExtras = {
         state: { fromRoute: this.router.url }
       };
-      this.router.navigate(['account/tls/tls13010'], extras);
+      this.router.navigate(['account/tls/tls13010v1'], extras);
     }, 3000);
   }
 
@@ -1434,10 +1434,10 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     // 檢視模式：根據合約類型決定導航目標
     if (contractTermType === '1') {
       console.log('🔍 檢視模式：合約類型為1，直接跳轉到 next1');
-      this.router.navigate(['account/tls/tls13010next1']);
+      this.router.navigate(['account/tls/tls13010v1next1']);
     } else {
       console.log('🔍 檢視模式：合約類型非1，跳轉到 next2');
-      this.router.navigate(['account/tls/tls13010next2']);
+      this.router.navigate(['account/tls/tls13010v1next2']);
 
     }
     this.saveConditionDataToWorkflow();
@@ -1449,7 +1449,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     const extras: NavigationExtras = {
       state: { fromRoute: this.router.url },
     };
-    this.router.navigate(['account/tls/tls13010'], extras);
+    this.router.navigate(['account/tls/tls13010v1'], extras);
     this.notificationService.infoBubble('已清空暫存資料並離開');
   }
 

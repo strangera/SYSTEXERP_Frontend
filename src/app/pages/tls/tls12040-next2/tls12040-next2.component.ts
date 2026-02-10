@@ -1,4 +1,4 @@
-import { NgIf } from '@angular/common';
+﻿import { NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, Inject, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, NavigationExtras } from '@angular/router';
@@ -1482,7 +1482,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   private navigateToNext(): void {
     if (this.isGeneralCommissionMode) {
-      this.router.navigate(['account/tls/tls12040']);
+      this.router.navigate(['account/tls/tls12040v1']);
     } else {
       const navigationExtras: NavigationExtras = {
         state: {
@@ -1491,7 +1491,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         }
       };
       // 重要：要使用 navigationExtras
-      this.router.navigate(['account/tls/tls12040next3'], navigationExtras);
+      this.router.navigate(['account/tls/tls12040v1next3'], navigationExtras);
     }
   }
 
@@ -1503,14 +1503,14 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         fromRoute: this.router.url
       }
     };
-    this.router.navigate(['account/tls/tls12040next3'], navigationExtras);
+    this.router.navigate(['account/tls/tls12040v1next3'], navigationExtras);
   }
 
   onClearAndExit(): void {
     console.log('清空並離開');
     this.skipSaveOnDestroy = true;
     this.flowService.clearAll();
-    this.router.navigate(['account/tls/tls12040']);
+    this.router.navigate(['account/tls/tls12040v1']);
     this.messageService.infoBubble('已清空暫存資料並離開');
   }
 
@@ -1535,7 +1535,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       this.flowService.onSubmitSuccess();
 
       setTimeout(() => {
-        this.router.navigate(['account/tls/tls12040']);
+        this.router.navigate(['account/tls/tls12040v1']);
       }, 2000);
 
     } catch (error) {
@@ -1554,7 +1554,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       }
     };
 
-    this.router.navigate(['account/tls/tls12040next1'], navigationExtras);
+    this.router.navigate(['account/tls/tls12040v1next1'], navigationExtras);
   }
 
   /**

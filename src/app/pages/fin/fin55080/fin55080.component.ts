@@ -34,8 +34,8 @@ import { TableSubheaderGroupingComponent } from './fin55080-table/fin55080-table
 export class FIN55080Component extends BasicQueryPageComponent<QueryFIN55080Response> implements OnInit {
   // 由於 FIN55080 的資料結構與 FIN55090 類似，這裡使用 QueryFIN5508Response 介面
   queryForm = this.formBuilder.group({
-    DateFrom: this.formBuilder.nonNullable.control(new Date('2025-09-01'), [Validators.required]),
-    DateTo: this.formBuilder.nonNullable.control(new Date('2025-10-31'), [Validators.required]),
+    DateFrom: this.formBuilder.nonNullable.control(new Date(), [Validators.required]),
+    DateTo: this.formBuilder.nonNullable.control(new Date(), [Validators.required]),
     // 類別預設為 '1' (明細)
     Ledger_MD: this.formBuilder.nonNullable.control('0' as '0' | '1', [Validators.required]),
     // 部門/活動代碼為選填

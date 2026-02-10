@@ -9,16 +9,16 @@ export const tlsRoutes: Routes = [
   { path: 'tls12010', loadComponent: () => import('./tls12010/tls12010.component').then(m => m.TLS12010Component), data: { progNo: 'TLS12010' } },
   // 專櫃訪談記錄維護
   { path: 'tls12020', loadComponent: () => import('./tls12020/tls12020.component').then(m => m.TLS12020Component), data: { progNo: 'TLS12020' } },
-  // 專櫃要約書維護
-  { path: 'tls12040', loadComponent: () => import('./tls12040/tls12040.component').then(m => m.TLS12040Component), data: { progNo: 'TLS12040' } },
+  // 專櫃要約書維護 (V1 舊版)
+  { path: 'tls12040v1', loadComponent: () => import('./tls12040/tls12040.component').then(m => m.TLS12040Component), data: { progNo: 'TLS12040' } },
   // 專櫃位置圖
   { path: 'tls12050', loadComponent: () => import('./tls12050/tls12050.component').then(m => m.TLS12050Component), data: { progNo: 'TLS12050' } },
   // 招商進度監控
   { path: 'tls12060', loadComponent: () => import('./tls12060/tls12060.component').then(m => m.TLS12060Component), data: { progNo: 'TLS12060' } },
   // 專櫃訪談紀錄追蹤表
   { path: 'tls12070', loadComponent: () => import('./tls12070/tls12070.component').then(m => m.TLS12070Component), data: { progNo: 'TLS12070' } },
-  // 專櫃契約書維護
-  { path: 'tls13010', loadComponent: () => import('./tls13010/tls13010.component').then(m => m.TLS13010Component), data: { progNo: 'TLS13010' } },
+  // 專櫃契約書維護 (V1 舊版)
+  { path: 'tls13010v1', loadComponent: () => import('./tls13010/tls13010.component').then(m => m.TLS13010Component), data: { progNo: 'TLS13010' } },
   // 專櫃契約代扣款報表
   { path: 'tls13030', loadComponent: () => import('./tls13030/tls13030.component').then(m => m.TLS13030Component), data: { progNo: 'TLS13030' } },
   // 專櫃契約抽成報表
@@ -47,38 +47,38 @@ export const tlsRoutes: Routes = [
   { path: 'tls12010cru', loadComponent: () => import('./tls12010-cru/tls12010-cru.component').then(m => m.TLS12010CRUComponent), data: { progNo: 'TLS12010' } },
   // 專櫃訪談記錄維護 CRU
   { path: 'tls12020cru', loadComponent: () => import('./tls12020-cru/tls12020-cru.component').then(m => m.TLS12020CRUComponent), data: { progNo: 'TLS12020' } },
-  // 專櫃要約書維護 CRU
-  { path: 'tls12040cru', loadComponent: () => import('./tls12040-cru/tls12040-cru.component').then(m => m.TLS12040CRUComponent), data: { progNo: 'TLS12040' } },
-  // 專櫃要約書維護 next1
-  { path: 'tls12040next1', loadComponent: () => import('./tls12040-next1/tls12040-next1.component').then(m => m.TLS12040Next1Component), data: { progNo: 'TLS12040' } },
-  // 專櫃要約書維護 next2
-  { path: 'tls12040next2', loadComponent: () => import('./tls12040-next2/tls12040-next2.component').then(m => m.TLS12040Next2Component), data: { progNo: 'TLS12040' } },
-  // 專櫃要約書維護 next3
-  { path: 'tls12040next3', loadComponent: () => import('./tls12040-next3/tls12040-next3.component').then(m => m.TLS12040Next3Component), data: { progNo: 'TLS12040' } },
+  // 專櫃要約書維護 CRU (V1 舊版)
+  { path: 'tls12040v1cru', loadComponent: () => import('./tls12040-cru/tls12040-cru.component').then(m => m.TLS12040CRUComponent), data: { progNo: 'TLS12040' } },
+  // 專櫃要約書維護 next1 (V1 舊版)
+  { path: 'tls12040v1next1', loadComponent: () => import('./tls12040-next1/tls12040-next1.component').then(m => m.TLS12040Next1Component), data: { progNo: 'TLS12040' } },
+  // 專櫃要約書維護 next2 (V1 舊版)
+  { path: 'tls12040v1next2', loadComponent: () => import('./tls12040-next2/tls12040-next2.component').then(m => m.TLS12040Next2Component), data: { progNo: 'TLS12040' } },
+  // 專櫃要約書維護 next3 (V1 舊版)
+  { path: 'tls12040v1next3', loadComponent: () => import('./tls12040-next3/tls12040-next3.component').then(m => m.TLS12040Next3Component), data: { progNo: 'TLS12040' } },
   // 專櫃訪談紀錄追蹤表 CRU
   { path: 'tls12070cru', loadComponent: () => import('./tls12070-cru/tls12070-cru.component').then(m => m.Tls12070CRUComponent), data: { progNo: 'Tls12070' } },
-  // 專櫃契約書維護 CRU
-  { path: 'tls13010cru', loadComponent: () => import('./tls13010-cru/tls13010-cru.component').then(m => m.TLS13010CRUComponent), data: { progNo: 'TLS13010' } },
+  // 專櫃契約書維護 CRU (V1 舊版)
+  { path: 'tls13010v1cru', loadComponent: () => import('./tls13010-cru/tls13010-cru.component').then(m => m.TLS13010CRUComponent), data: { progNo: 'TLS13010' } },
   // 保證票維護作業 CRU
   { path: 'tls14030cru', loadComponent: () => import('./tls14030-cru/tls14030-cru.component').then(m => m.Tls14030CRUComponent), data: { progNo: 'Tls14030' } },
-  // 專櫃契約書維護 NEXT1
-  { path: 'tls13010next1', loadComponent: () => import('./tls13010-next1/tls13010-next1.component').then(m => m.TLS13010Next1Component), data: { progNo: 'tls13010' } },
-  // 專櫃契約書維護 NEXT2
-  { path: 'tls13010next2', loadComponent: () => import('./tls13010-next2/tls13010-next2.component').then(m => m.TLS13010Next2Component), data: { progNo: 'tls13010' } },
-  // 專櫃契約書維護 NEXT3
-  { path: 'tls13010next3', loadComponent: () => import('./tls13010-next3/tls13010-next3.component').then(m => m.Tls13010Next3Component), data: { progNo: 'tls13010' } },
+  // 專櫃契約書維護 NEXT1 (V1 舊版)
+  { path: 'tls13010v1next1', loadComponent: () => import('./tls13010-next1/tls13010-next1.component').then(m => m.TLS13010Next1Component), data: { progNo: 'tls13010' } },
+  // 專櫃契約書維護 NEXT2 (V1 舊版)
+  { path: 'tls13010v1next2', loadComponent: () => import('./tls13010-next2/tls13010-next2.component').then(m => m.TLS13010Next2Component), data: { progNo: 'tls13010' } },
+  // 專櫃契約書維護 NEXT3 (V1 舊版)
+  { path: 'tls13010v1next3', loadComponent: () => import('./tls13010-next3/tls13010-next3.component').then(m => m.Tls13010Next3Component), data: { progNo: 'tls13010' } },
 
-  // ========== TLS13010-V2 專櫃契約書維護 (重構版) ==========
-  // V2 查詢頁面
-  { path: 'tls13010v2', loadComponent: () => import('./tls13010-v2/components/query/query.component').then(m => m.QueryComponent), data: { progNo: 'TLS13010' } },
-  // V2 合約精靈 (單頁面包含所有步驟) - 使用 tls13010v2cru 作為主路由
-  { path: 'tls13010v2cru', loadComponent: () => import('./tls13010-v2/components/contract-wizard/contract-wizard.component').then(m => m.ContractWizardComponent), data: { progNo: 'TLS13010' } },
+  // ========== TLS13010 專櫃契約書維護 (V2 重構版，現為主版本) ==========
+  // 查詢頁面
+  { path: 'tls13010', loadComponent: () => import('./tls13010-v2/components/query/query.component').then(m => m.QueryComponent), data: { progNo: 'TLS13010' } },
+  // 合約精靈 (單頁面包含所有步驟)
+  { path: 'tls13010cru', loadComponent: () => import('./tls13010-v2/components/contract-wizard/contract-wizard.component').then(m => m.ContractWizardComponent), data: { progNo: 'TLS13010' } },
 
-  // ========== TLS12040-V2 專櫃要約書維護 (重構版) ==========
-  // V2 查詢頁面
-  { path: 'tls12040v2', loadComponent: () => import('./tls12040-v2/components/query/query.component').then(m => m.QueryComponent), data: { progNo: 'TLS12040' } },
-  // V2 合約精靈 (單頁面包含所有步驟)
-  { path: 'tls12040v2cru', loadComponent: () => import('./tls12040-v2/components/contract-wizard/contract-wizard.component').then(m => m.ContractWizardComponent), data: { progNo: 'TLS12040' } },
+  // ========== TLS12040 專櫃要約書維護 (V2 重構版，現為主版本) ==========
+  // 查詢頁面
+  { path: 'tls12040', loadComponent: () => import('./tls12040-v2/components/query/query.component').then(m => m.QueryComponent), data: { progNo: 'TLS12040' } },
+  // 合約精靈 (單頁面包含所有步驟)
+  { path: 'tls12040cru', loadComponent: () => import('./tls12040-v2/components/contract-wizard/contract-wizard.component').then(m => m.ContractWizardComponent), data: { progNo: 'TLS12040' } },
 
   // 傳票項目之會計科目設定作業_NEW
   { path: 'tls21020', loadComponent: () => import('./tls21020/tls21020.component').then(m => m.TLS21020Component), data: { progNo: 'TLS21020' } },

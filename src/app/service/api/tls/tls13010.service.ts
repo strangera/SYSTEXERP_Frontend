@@ -250,6 +250,14 @@ export class TLS13010Service {
     );
   }
 
+  /** 根據廠商編號查詢POS2013廠商聯絡資訊 */
+  queryVendorInfo(venNo: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryVendorInfo`, { venNo }).pipe(
+      tap((res) => console.log('查詢廠商聯絡資訊結果:', res)),
+      catchError(this.errorHandler.handleError)
+    );
+  }
+
   /**
  * 刷新使用者資料權限範圍
  */

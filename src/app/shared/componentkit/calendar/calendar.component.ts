@@ -94,9 +94,14 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
       this.maxLength = maxLen; // 這是 BasicKitComponent 的屬性，會連動影響 placeholder
 
       if (this.control) {
-        // 更新驗證器，保留原有的，但加入 maxLength
+        // 更新驗證器，保留原有的，但加入 maxLength；若有 required 一併保留以維持 hasValidator(Validators.required) 為 true（標籤 * 顯示）
+        const hadRequiredBefore = this.control.hasValidator(Validators.required);
         const currentValidators = this.control.validator ? [this.control.validator] : [];
-        this.control.setValidators([...currentValidators, Validators.maxLength(maxLen)]);
+        const newValidators = [...currentValidators, Validators.maxLength(maxLen)];
+        if (hadRequiredBefore) {
+          newValidators.push(Validators.required);
+        }
+        this.control.setValidators(newValidators);
         this.control.updateValueAndValidity({ emitEvent: false });
       }
       if (!this.customPlaceholder || this.customPlaceholder === '請選擇') {

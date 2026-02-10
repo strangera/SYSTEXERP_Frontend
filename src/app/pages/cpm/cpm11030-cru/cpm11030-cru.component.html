@@ -55,19 +55,6 @@
           ></app-calendar>
         </div>
 
-        <!-- 出借狀態 -->
-        <!-- <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="出借狀態"
-            controlName="Loan_Status"
-            [options]="loanStatusOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.Loan_Status"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div> -->
-
         <!-- 借用人姓名 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
@@ -121,6 +108,7 @@
             optionValue="value"
             [control]="dataForm.controls.Device_ID"
             [submitted]="submitted"
+            [disabled]="device_IDisRead"
           ></app-dropdown>
         </div>
       </div>

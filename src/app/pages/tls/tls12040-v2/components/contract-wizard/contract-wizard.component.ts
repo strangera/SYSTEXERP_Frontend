@@ -13,6 +13,7 @@ import { CommonModule, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 
 // PrimeNG
 import { MenuItem } from 'primeng/api';
@@ -115,7 +116,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     { label: '合約基本資料' },
     { label: '代扣款設定' },
     { label: '抽成設定' },
-    { label: '條件設定' }
+    { label: '租金設定' }
   ];
 
   /**
@@ -450,10 +451,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   // ========== 路由狀態處理 ==========
   private async handleRouterState(): Promise<void> {
-    // 新增模式 - 初始化空表單
+    // 新增模式 - 初始化空表單 + 載入可用代扣款項目
     if (this.isFormCreateable) {
       this.tlsBaseService.initializeEmptyForm(this.dataForm, 'TLS12040');
       this.tlsBaseService.setCurrentUserAsNegotiator(this.dataForm);
+      await this.loadFareData('');
       return;
     }
 
@@ -655,8 +657,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
           cag_edate: item.cag_edate || '',
           cag_remark: item.cag_remark || '',
           remark: item.cag_remark || '',
-          mainStartDate: item.cag_bdate || '',
-          mainEndDate: item.cag_edate || '',
+          mainStartDate: this.dataForm.get('tlt_bdate')?.value || item.cag_bdate || '',
+          mainEndDate: this.dataForm.get('tlt_edate')?.value || item.cag_edate || '',
           // 使用 buildCompleteDiscountItems 建立完整的折扣設定列表
           discountSettingItems: this.buildCompleteDiscountItems(item.ChargeDetails || []),
           // 明細映射：YearChargeDetails → annualPerformanceItems
@@ -1067,19 +1069,25 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       item._status === 'original' ? item : { ...item, tpy_bdate: startDate, tpy_edate: endDate }
     );
 
-    // Step 3: 抽成設定（跳過既有項目）
+    // Step 3: 抽成設定
+    // mainStartDate/mainEndDate 永遠同步（作為複製功能的合約日期上限參考）
+    // 折扣/年度/層級子項目：跳過既有已勾選項目（保護使用者手動調整的資料）
     this.wizardState.commissionItems = this.wizardState.commissionItems.map(item => {
-      if (item._status === 'original') return item;
-      return {
+      const updatedItem = {
         ...item,
-        cag_bdate: startDate,
-        cag_edate: endDate,
         mainStartDate: startDate,
         mainEndDate: endDate,
-        discountSettingItems: (item.discountSettingItems || []).map(d =>
-          d._status === 'original' ? d : { ...d, tlt_bdate: startDate, tlt_edate: endDate }
-        )
       } as typeof item;
+
+      if (item._status !== 'original') {
+        updatedItem.cag_bdate = startDate;
+        updatedItem.cag_edate = endDate;
+        updatedItem.discountSettingItems = (item.discountSettingItems || []).map(d =>
+          d._status === 'original' ? d : { ...d, tlt_bdate: startDate, tlt_edate: endDate }
+        );
+      }
+
+      return updatedItem;
     });
 
     // Step 4: 條件設定（跳過既有項目）
@@ -1137,10 +1145,19 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
         this.messageService.successBubble(successMessage);
 
+        // 新增契約時刷新使用者資料權限，否則看不到剛新增的資料
+        if (isInsert) {
+          try {
+            await firstValueFrom(this.apiService.refreshUserDataPermissions());
+          } catch {
+            this.messageService.warnBubble('契約已成功建立，但權限更新失敗。請重新登入以查看新專櫃。');
+          }
+        }
+
         // 延遲返回查詢頁，讓使用者看到成功訊息
         setTimeout(() => {
-          this.router.navigate(['account/tls/tls12040v2'], {
-            state: { fromRoute: 'account/tls/tls12040v2cru' }
+          this.router.navigate(['account/tls/tls12040'], {
+            state: { fromRoute: 'account/tls/tls12040cru' }
           });
         }, 2000);
       } else {
@@ -1277,8 +1294,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
    * 離開（回到列表頁）
    */
   onClearAndExit(): void {
-    this.router.navigate(['account/tls/tls12040v2'], {
-      state: { fromRoute: '/tls/tls12040v2cru' }
+    this.router.navigate(['account/tls/tls12040'], {
+      state: { fromRoute: '/tls/tls12040cru' }
     });
   }
 
@@ -1287,8 +1304,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
    */
   override onCancel(): void {
     if (this.isFirstStep) {
-      this.router.navigate(['account/tls/tls12040v2'], {
-        state: { fromRoute: '/tls/tls12040v2cru' }
+      this.router.navigate(['account/tls/tls12040'], {
+        state: { fromRoute: '/tls/tls12040cru' }
       });
     } else {
       this.goToPreviousStep();

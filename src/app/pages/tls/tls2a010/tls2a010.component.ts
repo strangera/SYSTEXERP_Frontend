@@ -1,4 +1,4 @@
-import { DatePipe, NgIf, NgStyle } from '@angular/common';
+import { DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -40,7 +40,6 @@ yesterday.setDate(yesterday.getDate() - 1);
     DropdownComponent,
     CalendarComponent,
     Button,
-    NgStyle,
     NgIf,
     TooltipModule,
     DropdownRangeComponent,
@@ -59,7 +58,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     PAY_NO: ['', Validators.required],
     Building_No: [''],
     SYS_StoreNo: [this.authService.currentUserValue?.SYS_StoreNo ?? ''],
-    pageSize: [100],
+    pageSize: [30],
     pageIndex: [1],
     SortBy: [[{ field: 'ECR_No', order: 1 }]],
   });
@@ -71,7 +70,6 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   buildingNoOptions: IDropdownItem[] = [];
   payNoToTypeMap = new Map<string, string>();
   selectedItems: any[] = [];
-  selectionMode = 'single';
   data: any[] = [];
   footerData: any = [];
   totalRecords = 0;
@@ -85,7 +83,6 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   dialogVisible = false;
   dialogData: any[] = [];
   dialogColumns: EditColumn[] = [];
-  isFormReadable = false; // 控制表單是否只讀
 
   addButtons = [
     {
@@ -245,8 +242,8 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     this.handleSubmit(frm, () => {
       const raw = frm.value;
       const payload = {
-        PageSize: raw.pageSize ?? 0,
-        PageIndex: raw.pageIndex ?? 0,
+        pageSize: raw.pageSize ?? 0,
+        pageIndex: raw.pageIndex ?? 0,
         SortBy: raw.SortBy ?? [],
         TXN_Date: raw.TXN_Date && raw.TXN_Date instanceof Date
           ? `${raw.TXN_Date.getFullYear()}-${String(raw.TXN_Date.getMonth() + 1).padStart(2, '0')}-${String(raw.TXN_Date.getDate()).padStart(2, '0')}`
@@ -257,19 +254,18 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         PAY_NO: raw.PAY_NO ?? '',
         Building_No: raw.Building_No ?? ''
       };
-      this.tls2a010Service.queryTLS2A010(payload)
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-          this.data = response.Data ? response.Data : [];
-          this.footerData = response.footerData;
-          this.totalRecords = response.TotalCount;
-          this.selectedItems = [];
-          this.onPayNoChange(payload.PAY_NO);
-          this.historyRequestBody = payload;
-          const first = this.data[0];
-          this.PAY_NO = this.queryForm.value.PAY_NO || '';
-          this.TXN_Date = first?.TXN_Date || '';
-          this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-        });
+      this.tls2a010Service.queryTLS2A010(payload).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        this.data = response.Data ? response.Data : [];
+        this.footerData = response.footerData;
+        this.totalRecords = response.TotalCount;
+        this.selectedItems = [];
+        this.onPayNoChange(payload.PAY_NO);
+        this.historyRequestBody = payload;
+        const first = this.data[0];
+        this.PAY_NO = this.queryForm.value.PAY_NO || '';
+        this.TXN_Date = first?.TXN_Date || '';
+        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+      });
     });
   }
 

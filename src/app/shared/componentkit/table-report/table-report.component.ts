@@ -50,6 +50,8 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() selectedItems: any = [];
   @Output() selectionChange = new EventEmitter<any>();
   @Output() selectAllChange = new EventEmitter<boolean>();
+  /** 資料點選(事件) */
+  @Output() itemClick = new EventEmitter<any>();
   @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true;
   rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => { return this.isRowSelectable(data) };
   @Input() isAllSelected = false;           // 是否全選

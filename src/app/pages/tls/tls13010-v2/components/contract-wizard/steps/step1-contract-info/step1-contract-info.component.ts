@@ -33,6 +33,7 @@ import { LocationOptionsService } from '@service/api/dropdownservice/location-op
 import { NegotiatorOptionsService } from '@service/api/dropdownservice/negotiator-options.service';
 import { VendorCategoryOptionsService } from '@service/api/dropdownservice/vendor-category-options.service';
 import { Tls12010Service } from '@service/api/tls/tls12010.service';
+import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
 
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -148,6 +149,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     private bankService: BankOptionsService,
     private negotiatorService: NegotiatorOptionsService,
     private tls12010Service: Tls12010Service,
+    private tls13010Service: TLS13010Service,
     private tlsBaseService: TlsContractBaseService,
     private messageService: NotificationService
   ) { }
@@ -334,11 +336,44 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
       vendor_acct_name: selectedOption.Name || selectedOption.label || ''
     }, { emitEvent: false });
 
+    // 查詢POS2013廠商聯絡資訊自動帶入（新增/編輯皆可）
+    if (this.crudstatus !== CRUDStatus.Read) {
+      this.loadVendorContactInfo(vendorVenNo);
+    }
+
     // 載入潛在客戶資料
     const vendorNo = selectedOption.No || '';
     if (vendorNo) {
       this.loadPotentialCustomerData(vendorNo);
     }
+  }
+
+  /** 根據廠商編號查詢POS2013廠商聯絡資訊並自動帶入 */
+  private loadVendorContactInfo(venNo: string): void {
+    this.tls13010Service.queryVendorInfo(venNo).subscribe({
+      next: (res: any) => {
+        if (res?.Status === '0000' && res?.Data) {
+          const d = res.Data;
+          this.form.patchValue({
+            email: d.email || '',
+            invoice_email: d.invoice_email || '',
+            CHECK_TITLE: d.CHECK_TITLE || '',
+            contact_tel: d.contact_tel || '',
+            contact_fax: d.contact_fax || '',
+            contact_addr: d.contact_addr || '',
+            bank_id: d.bank_id || '',
+            vendor_acct_name: d.vendor_acct_name || '',
+            vendor_acct_no: d.vendor_acct_no || '',
+            paytype: d.paytype || '',
+            check_day: d.check_day || ''
+          }, { emitEvent: false });
+          this.messageService.successBubble('已自動帶入廠商聯絡資訊');
+        }
+      },
+      error: (err) => {
+        console.error('查詢廠商聯絡資訊失敗:', err);
+      }
+    });
   }
 
   private loadPotentialCustomerData(vendorNo: string): void {
@@ -352,17 +387,15 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
       next: (result: any) => {
         if (result.Data && result.Data.length > 0) {
           const data = result.Data[0];
+          // 只帶入 tlt_name、bus_type，聯絡資訊由 POS2013 queryVendorInfo 帶入
           this.form.patchValue({
             tlt_name: data.tlt_name || '',
-            bus_type: data.bus_type || '',
-            contact_tel: data.VEN_BossTel || '',
-            contact_fax: data.VEN_BossFax || '',
-            contact_addr: data.VEN_Addr || ''
+            bus_type: data.bus_type || ''
           }, { emitEvent: true });
           this.messageService.successBubble('已自動帶入潛在客戶資料');
         } else {
           this.form.patchValue({
-            tlt_name: '', bus_type: '', contact_tel: '', contact_fax: '', contact_addr: ''
+            tlt_name: '', bus_type: ''
           }, { emitEvent: true });
           this.messageService.infoBubble('查無潛在客戶資料');
         }

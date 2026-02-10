@@ -39,7 +39,7 @@ export class FIN11210CRUComponent extends BasicCruPageComponent<FIN11210Data> im
   });
 
   ECR_No_Options: any[] = [
-    { Name: '全機台', No: 'ALL' }
+    { Name: 'ALL-全機台', No: 'ALL' }
   ];
   ARG_No_Options: any[] = [];
 
@@ -96,13 +96,18 @@ export class FIN11210CRUComponent extends BasicCruPageComponent<FIN11210Data> im
   }
 
   loadOptions() {
-    // 取得收銀機號下拉選單資料
+    // 取得收銀機號下拉選單資料（顯示格式 {No}-{Name}，API 仍只傳 No）
     this.dropDownListService.queryPOS1002_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(response => {
-        let tempAry = [{ Name: '全機台', No: 'ALL' }];
-        tempAry.push(...response.Data);
-        this.ECR_No_Options = tempAry;
+        const data = response.Data ?? [];
+        this.ECR_No_Options = [
+          { Name: 'ALL-全機台', No: 'ALL' },
+          ...data.map((item: { No?: string; Name?: string }) => ({
+            No: item.No ?? '',
+            Name: `${item.No ?? ''}-${item.Name ?? ''}`
+          }))
+        ];
       });
     // 取得參數代號下拉選單資料
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'ARG_NO' })
