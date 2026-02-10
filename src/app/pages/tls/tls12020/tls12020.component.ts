@@ -4,6 +4,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
+import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { TLS12020Service } from '../../../service/api/tls/tls12020.service';
@@ -62,14 +64,16 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
     { header: '廠商名稱(中文)', field: 'VEN_Name' },
     { header: '廠商名稱(英文)', field: 'VEN_EngName' },
     { header: '品牌', field: 'tlt_name' },
-    { header: '館別', field: 'building_no_name' },
+    // { header: '館別', field: 'building_no' },
+    { header: '館別', field: 'building_name' },
+    // { header: '業種', field: 'bus_type_no' },
     { header: '業種', field: 'bus_type_name' },
     { header: '聯絡人', field: 'VEN_ContactPerson' },
     { header: '聯絡人電話', field: 'VEN_BossTel' },
     { header: '訪談日期', field: 'contact_Date', visible: true, format: (value: any) => formatDate(value, 'yyyy/MM/dd', 'en-US') },
     { header: '訪談時間', field: 'contact_Time', visible: true, format: this.formatTimeHHmm },
     { header: '訪談人員', field: 'contact_USR_Name' },
-    { header: '意願等級', field: 'willing_level_name' },
+    { header: '意願等級', field: 'willing_level', format: (v) => getSYS1000('T116', v), exportFormat: transformOptionsForExport(getSYS1000Options('T116')) },
   ];
 
   selectedItems: any[] = [];
@@ -190,12 +194,7 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
         .pipe(finalize(() => (this.loading = false)))
         .subscribe({
           next: (res) => {
-            const data = (res.Data ?? []).map((row: { building_no: string; bus_type: string; willing_level: string }) => ({
-              ...row,
-              building_no_name: this.buildingNoOptions.find(opt => opt.value === row.building_no)?.label || row.building_no,
-              bus_type_name: this.industryCodeOptions.find(opt => opt.value === row.bus_type || opt.No === row.bus_type)?.label || row.bus_type,
-              willing_level_name: this.willinglevelOptions.find(opt => opt.No === row.willing_level)?.label || row.willing_level
-            }));
+            const data = res.Data;
             this.data = data;
             this.totalRecords = res.TotalCount ?? 0;
             this.queryStateService.setQueryState(this.ProgNo, params);

@@ -364,7 +364,9 @@ export class FIN15090Component extends BasicQueryPageComponent<TDS1002> implemen
               }
             }
           },
-          error: () => { /* show error toast if needed */ },
+          error: (err) => {
+            this.loading = false;
+          },
           complete: () => {
             this.loading = false;
           },
@@ -399,7 +401,8 @@ export class FIN15090Component extends BasicQueryPageComponent<TDS1002> implemen
           const taxNos = response.Data?.TDS1003STO_TaxNos ?? [];
           // 根據實際回傳陣列改寫
           this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string; REP_BegGUIYM: string; REP_EndGUIYM: string; STO_Status: string }) => ({
-            Label: item.STO_TaxNo + "/" + item.STO_TaxName + "/" + item.REP_BegGUIYM + "~" + item.REP_EndGUIYM,
+            // Label: item.STO_TaxNo + "/" + item.STO_TaxName + "/" + item.REP_BegGUIYM + "~" + item.REP_EndGUIYM,
+            Label: item.STO_TaxNo + "-" + item.STO_TaxName,
             No: item.STO_TaxNo,
             STO_Status: item.STO_Status
           }));

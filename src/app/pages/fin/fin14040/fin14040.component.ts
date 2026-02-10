@@ -97,7 +97,7 @@ export class FIN14040Component extends BasicQueryPageComponent<unknown> implemen
         next: (response) => {
           const taxNos = response.Data?.TDS1003STO_TaxNos ?? [];
           this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string; REP_BegGUIYM: string; REP_EndGUIYM: string; STO_Status: string }) => ({
-            Label: item.STO_TaxNo + "/" + item.STO_TaxName,
+            Label: item.STO_TaxNo + "-" + item.STO_TaxName,
             No: item.STO_TaxNo,
             STO_Status: item.STO_Status
           }));
