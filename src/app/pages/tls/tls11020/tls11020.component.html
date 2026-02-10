@@ -102,6 +102,8 @@
     [showCheckBox]="true"
     dataKey="id"
     (edit)="onEdit($event)"
+     [isRowSelectable]="isRowSelectable"
+  [editDisabled]="editDisabled"
     (detail)="onDetail($event)"
     (lazyLoadData)="onLazyLoadData($event, queryForm)"
     (dataChange)="data = $event"

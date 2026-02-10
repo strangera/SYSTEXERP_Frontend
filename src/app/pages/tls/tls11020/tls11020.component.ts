@@ -51,6 +51,18 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
 
   // 給 table-report 用：由它內部呼叫（lazy 分頁/排序用）
   queryTLS11020Fn = (body: any) => this.tls11020Service.queryTLS11020(body);
+  /** 023 這筆不允許勾選、不允許編輯 */
+private isBlockedRow = (row: any): boolean => String(row?.CAP_Item ?? '').trim() === '023';
+
+/** 給 app-table-report 用：控制 checkbox 是否可勾 */
+isRowSelectable = (row: any): boolean => !this.isBlockedRow(row);
+
+/** 給 app-table-report 用：控制「編輯」按鈕 disabled */
+editDisabled = (row: any): boolean => this.isBlockedRow(row);
+
+// 如果你也想讓「查看/明細」一起鎖：
+// detailDisabled = (row: any): boolean => this.isBlockedRow(row);
+
 
   // 下拉
   deductionCategoryOptions = [
