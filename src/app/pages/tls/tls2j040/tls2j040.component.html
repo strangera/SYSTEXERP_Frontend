@@ -28,17 +28,13 @@
   </p-accordion>
 </div>
 <div class="card">
-    <app-table tableKey="TLS2J040" dataKey="TxnGUINo" [data]="data" [columns]="columns"
-        [showReportMode]="false"
-        [showCheckBox]="false" [showEdit]="false" [showDetail]="false" [showManage]="false" [showDelete]="false"
-        [multiSortMeta]="[{ field: 'TxnGUINo', order: 1 }]" apiUrl="queryTLS2J040"
-        [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-        [lazy]="true" [loading]="loading"
-        (selectionChange)="selectedRows = $event"
-        [selectedItems]="selectedRows"
-        (itemClick)="onRowClick($event)"
-        >
-    </app-table>
+  <div class="col-12">
+    <app-table-report [data]="tableData()" dataKey="InvoiceNumber" tableKey="TLS2J040" [columns]="columns"
+      [totalRecords]="totalRecords()" [loading]="tableLoading()" [lastQueryBody]="lastQueryBody"
+      [queryFunction]="queryFunction" [showCheckBox]="false" [showEdit]="false" [showDetail]="false"
+      [showManage]="false" [showDelete]="false" [showReportMode]="false"
+      (itemClick)="onRowClick($event)"></app-table-report>
+  </div>
 </div>
 
 

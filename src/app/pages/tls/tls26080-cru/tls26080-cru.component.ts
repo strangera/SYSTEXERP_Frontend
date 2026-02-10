@@ -736,7 +736,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
       this.service.queryTLS26080TLTTALENT_D16_D17({ tlt_no: item.tlt_no, tlt_id: item.tlt_id })
         .subscribe(d16Res => {
-          console.log("d16Res", d16Res);
           const d16d17 = d16Res.Status === '0000' && d16Res.Data ? d16Res.Data : null;
 
           this.service.queryTltTalentCharge(talentId).subscribe(opts => {
@@ -747,7 +746,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
             const tltIdDesc = chargeOpt?.['tlt_id_desc'] ?? opts?.[0]?.['tlt_id_desc'] ?? '';
 
             const newRow: TLS26080EditTable = {
-              id: 0,
+              id: Number(item.tlt_no) || 0,
               talent_id: talentId,
               tlt_no: item.tlt_no,
               tlt_name: tltTalentMap.get(item.tlt_no)?.['Name'] ?? '',
