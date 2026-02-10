@@ -333,9 +333,10 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
         .pipe(finalize(() => this.loading = false), untilDestroyed(this))
         .subscribe((res) => {
           this.lastQueryForm = body;
-          this.totalRecords = res.TotalCount;
+          this.totalRecords = res?.TotalCount || 0;
           this.footerTotal = null;
-          this.data = res.Data.map(item => {
+          const resData = Array.isArray(res?.Data) ? res.Data : [];
+          this.data = resData.map(item => {
             let dateValue: Date | null = null;
             if (typeof item.ECR_SettleHHNN === 'string' && item.ECR_SettleHHNN.length === 4) {
               dateValue = new Date(`1970-01-01T${item.ECR_SettleHHNN.substring(0, 2)}:${item.ECR_SettleHHNN.substring(2, 4)}:00`);
@@ -368,10 +369,21 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       };
       // 判斷是否為新增或更新，假設「new」是新增
       // 更新
-      this.tls41010Service.updateTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
-        console.log('更新成功', res);
-        this.dialogVisible = false;
-        this.onSubmit(this.queryForm);
+      this.tls41010Service.updateTLS41010(body).pipe(untilDestroyed(this)).subscribe({
+        next: (res) => {
+          console.log('更新成功', res);
+          if (res?.Status === '0000') {
+            this.messageService.successBubble('複製設定成功');
+            this.dialogVisible = false;
+            this.onSubmit(this.queryForm);
+          } else {
+            this.messageService.errorBubble(`複製失敗: ${res?.Message ?? '未知錯誤'}`);
+          }
+        },
+        error: (err) => {
+          console.error('更新失敗', err);
+          this.messageService.errorBubble('複製失敗');
+        }
       });
     });
   }

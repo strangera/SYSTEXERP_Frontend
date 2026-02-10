@@ -1695,12 +1695,12 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
           });
         }, 2000);
       } else {
-        throw new Error(response?.message || '儲存失敗');
+        throw new Error(response?.message || '契約書資料提交失敗');
       }
     } catch (error: unknown) {
-      console.error('儲存失敗:', error);
+      console.error('契約書資料提交失敗:', error);
       const errorMessage = error instanceof Error ? error.message : '未知錯誤';
-      this.messageService.errorBubble(`儲存失敗: ${errorMessage}`);
+      this.messageService.errorBubble(`契約書資料提交失敗: ${errorMessage}`);
     } finally {
       this.isSaving = false;
     }

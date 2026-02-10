@@ -8,10 +8,9 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <label for="RCV_No" class="p-d-block p-mb-1">收款單號</label>
             <div class="flex gap-2" role="button" tabindex="0" aria-label="收款單號 選擇" (click)="rcvDialogVisible = true"
               (keydown.enter)="$event.preventDefault(); rcvDialogVisible = true">
-              <app-input-text class="flex-1" controlName="RCV_No" [control]="queryForm.controls.RCV_No"
+              <app-input-text class="flex-1" label="收款單號" controlName="RCV_No" [control]="queryForm.controls.RCV_No"
                 [submitted]="submitted" [readonly]="true"></app-input-text>
             </div>
           </div>

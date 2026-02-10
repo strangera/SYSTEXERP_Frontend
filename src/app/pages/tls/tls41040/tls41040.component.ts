@@ -7,7 +7,6 @@ import { CalendarComponent } from "@shared/componentkit/calendar/calendar.compon
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs/operators';
@@ -68,8 +67,8 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
   // ---- 表單 ----
   queryForm = this.formBuilder.nonNullable.group({
     ECR_No: [''], // 收銀機號
-    NOT_BegDateTime: [yesterday], // 開始時間
-    NOT_EndDateTime: [yesterday], // 結束時間
+    NOT_BegDateTime: [new Date()], // 開始時間
+    NOT_EndDateTime: [new Date()], // 結束時間
     NOT_Status: ['A'], // 通告狀態
     NOT_Remark: ['', [Validators.maxLength(200)]], // 改成和後端一樣
     pageSize: [30],

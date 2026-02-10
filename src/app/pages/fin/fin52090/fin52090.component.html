@@ -28,10 +28,11 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table [data]="tableData()" [columns]="columns" [totalRecords]="totalRecords()" [showCheckBox]="true"
-      [showEdit]="true" [showDelete]="true" (detail)="onDetail($event)" (edit)="onEdit($event)"
-      (delete)="onDelete($event)" [tableKey]="'FIN52090'" [dataKey]="'id'"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()" [lazy]="true"
-      [loading]="tableLoading()"></app-table>
+    <app-table-report [data]="tableData()" dataKey="id" tableKey="FIN52090" [columns]="columns"
+      [totalRecords]="totalRecords()" [loading]="tableLoading()" [lastQueryBody]="lastQueryBody"
+      [queryFunction]="queryFunction" [showCheckBox]="true" [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event" (edit)="onEdit($event)" (detail)="onDetail($event)"
+      (delete)="onDelete($event)" [isRowSelectable]="isRowSelectable">
+    </app-table-report>
   </div>
 </div>
