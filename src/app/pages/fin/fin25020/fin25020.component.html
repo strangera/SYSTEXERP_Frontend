@@ -101,5 +101,7 @@
     [selectedItems]="selectedItems"
     [isRowSelectable]="isRowSelectable"
     (selectionChange)="selectedItems = $event"
+    [rows]="30"
+    [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
   ></app-table>
 </div>
