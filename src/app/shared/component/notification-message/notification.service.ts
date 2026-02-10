@@ -34,6 +34,9 @@ interface InputBoxOptions {
   providedIn: 'root'
 })
 export class NotificationService {
+  add(arg0: { severity: string; summary: string; detail: any; }) {
+    throw new Error('Method not implemented.');
+  }
   private bubbleMsgSource = new BehaviorSubject<Message | null>(null);
   bubbleMsg$ = this.bubbleMsgSource.asObservable();
   private boxMsgSource = new Subject<{ header?: string; message: string }>();
