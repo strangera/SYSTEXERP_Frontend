@@ -147,9 +147,9 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   bus_classOptions: IDropdownItem[] = [];
   invoiceTypeOptions = getSYS1000Options('invoice_type');
   invoiceFormatOptions = [
-    { value: '21', label: '21/進項三聯式、電子計算機統一發票' },
-    { value: '25', label: '25/進項三聯式收銀機統一發票' },
-    { value: '27', label: '27/彙總登陸每張稅額五百元以下之進項二聯式收銀機統一發票、載有稅額之其他憑證' },
+    { value: '21', label: '21-進項三聯式、電子計算機統一發票' },
+    { value: '25', label: '25-進項三聯式收銀機統一發票' },
+    { value: '27', label: '27-彙總登陸每張稅額五百元以下之進項二聯式收銀機統一發票、載有稅額之其他憑證' },
   ];
   queryLoading = false;
 
@@ -202,6 +202,8 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
 
   detailEditData: any[] = [];
   detailDefaultInsert: any = {};
+  // snapshot 用於按下 Cancel 時還原 table-edit 的資料
+  private originalDetailSnapshot: any[] | null = null;
   columns3: EditColumn[] = [
     { field: 'GUIType', header: '單據別', type: 'dropdown', width: '120px', options: this.invoiceTypeOptions, optionLabel: 'label', optionValue: 'value', showClear: true },
     { field: 'VEN_No', header: '廠商編號', type: 'dropdown', width: '200px', options: () => this.vendorTLS2F010Options, optionLabel: 'label', optionValue: 'value', showClear: true },
@@ -237,7 +239,21 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     { field: 'GUITax', header: '稅額', type: 'inputNumber', width: '120px', textAlign: 'right', disabled: () => true },
     { field: 'GUIAmt', header: '應稅金額', type: 'inputNumber', width: '120px', textAlign: 'right', disabled: () => true },
     { field: 'PUR_GUIPaper', header: '發票格式', type: 'dropdown', width: '180px', options: this.invoiceFormatOptions, optionLabel: 'label', optionValue: 'value', showClear: true },
-    { field: 'INV_UseType', header: '發票用途', type: 'input', width: '120px' },
+    {
+      field: 'INV_UseType',
+      header: '發票用途',
+      type: 'input',
+      width: '120px',
+      maxLength: 1,
+      placeholder: '',
+      validate: [
+        (value: any, _row: any, _data: any[], _field: string, header: string) => {
+          const s = value == null ? '' : String(value);
+          const ok = s.length <= 1;
+          return { isValid: ok, errorMessage: ok ? [] : [`${header} 只能輸入 1 個字元`] };
+        }
+      ]
+    },
   ];
 
   constructor(
@@ -273,6 +289,18 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
         COMM_MONEY_TYPE: this.mapLabelToValue(this.money_typeOptions, row.COMM_MONEY_TYPE),
         PUR_DiscNo: this.mapLabelToValue(this.discountOptions, row.PUR_DiscNo),
       });
+      // 若後端在 rowdata 中帶入明細（Details / details），將其載入為 table-edit 的初始資料，並建立快照
+      const backendDetails = row.Details ?? row.details ?? [];
+      try {
+        this.detailEditData = JSON.parse(JSON.stringify(backendDetails || []));
+      } catch (e) {
+        this.detailEditData = (backendDetails || []).slice();
+      }
+      try {
+        this.originalDetailSnapshot = JSON.parse(JSON.stringify(this.detailEditData || []));
+      } catch (e) {
+        this.originalDetailSnapshot = (this.detailEditData || []).slice();
+      }
     }
 
 
@@ -307,6 +335,13 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       this.showResultTables = false;
     } else {
       this.showEditArea = false;
+    }
+
+    // 保存初始的 detailEditData snapshot（如果未來需還原）
+    try {
+      this.originalDetailSnapshot = JSON.parse(JSON.stringify(this.detailEditData || []));
+    } catch (e) {
+      this.originalDetailSnapshot = (this.detailEditData || []).slice();
     }
 
     // 編輯模式下：只允許特定欄位可編輯，其餘鎖定
@@ -494,6 +529,12 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
             this.selectedMain = mains[0];
             this.selectedMainItems = [mains[0]];
           }
+          // 載入完成後儲存 detailEditData 快照，用於 Cancel 還原
+          try {
+            this.originalDetailSnapshot = JSON.parse(JSON.stringify(this.detailEditData || []));
+          } catch (e) {
+            this.originalDetailSnapshot = (this.detailEditData || []).slice();
+          }
         },
         error: (err: any) => {
           this.queryLoading = false;
@@ -674,6 +715,25 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
 
   onDetailEditDataChange(data: any[]): void {
     this.detailEditData = data;
+  }
+
+  // 當點選 Cancel 時，由頁面層負責還原 table-edit 的資料快照，然後返回上一頁
+  onLocalCancel(): void {
+    // 先還原 table-edit 資料
+    if (this.originalDetailSnapshot != null) {
+      try {
+        this.detailEditData = JSON.parse(JSON.stringify(this.originalDetailSnapshot));
+      } catch (e) {
+        this.detailEditData = (this.originalDetailSnapshot || []).slice();
+      }
+    } else {
+      // 沒有快照則清空
+      this.detailEditData = [];
+    }
+    // 若有選取主表也還原為空
+    this.selectedMain = null;
+    this.selectedMainItems = [];
+    // 留在當前頁面（不顯示提示）
   }
 
 
