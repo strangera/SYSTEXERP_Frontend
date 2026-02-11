@@ -3,25 +3,26 @@ import { ValidationService } from './../../../shared/service/validation.service'
 import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
+import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-
-
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { Tls12010DetailService } from './tls12010-detail.service';
+
 
 export interface Potential_Customer {
   id: number; // 主鍵，自動編號
@@ -90,7 +91,7 @@ export interface POS2013 {
   templateUrl: './tls12010-cru.component.html',
   styleUrl: './tls12010-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, CommonModule, DropdownComponent, RadiobuttonComponent, EditorTextComponent, ExpandableEditTableComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, NgFor, ButtonComponent, NgIf, TranslateModule]
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, CommonModule, DropdownComponent, RadiobuttonComponent, EditorTextComponent, ExpandableEditTableComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, NgFor, ButtonComponent, NgIf, TranslateModule, ButtonModule]
 })
 export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Customer> implements OnInit {
   @ViewChild('detailTable') detailTable!: ExpandableEditTableComponent;
@@ -550,5 +551,60 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         this.messageService.successBubble('已刪除');
       },
     });
+  }
+
+  // 列印明細
+  btnPDFLoading = false;
+  btnExcelLoading = false;
+  onReport(isExcel: boolean) {
+    const formValue = { PC_id: this.dataForm.get('id')?.value };
+
+    if (isExcel) {
+      this.btnExcelLoading = true;
+      this.tls12010Service.exportTLS12010_Detail(formValue)
+        .pipe(
+          finalize(() => this.btnExcelLoading = false),
+          untilDestroyed(this)
+        )
+        .subscribe({
+          next: (blob: Blob) => {
+            this.downloadFile(blob, `潛在客戶明細_${new Date().getTime()}.xlsx`);
+            this.messageService.successBubble('匯出成功');
+          },
+          error: (err) => {
+            console.error(err);
+            this.messageService.errorBubble('匯出失敗');
+          }
+        });
+    } else {
+      this.btnPDFLoading = true;
+      this.tls12010Service.exportTLS12010_DetailPDF(formValue)
+        .pipe(
+          finalize(() => this.btnPDFLoading = false),
+          untilDestroyed(this)
+        )
+        .subscribe({
+          next: (blob: Blob) => {
+            this.downloadFile(blob, `潛在客戶明細_${new Date().getTime()}.pdf`);
+            this.messageService.successBubble('匯出成功');
+          },
+          error: (err) => {
+            console.error(err);
+            this.messageService.errorBubble('匯出失敗');
+          }
+        });
+    }
+  }
+
+  // 輔助方法：處理 Blob 下載
+  private downloadFile(data: Blob, fileName: string) {
+    const url = window.URL.createObjectURL(data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url); // 釋放記憶體
+    document.body.removeChild(a);
   }
 }
