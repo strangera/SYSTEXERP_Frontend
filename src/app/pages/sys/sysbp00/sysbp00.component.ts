@@ -7,6 +7,7 @@ import { Sysbp00Request, Sysbp00Response, Sysbp00Service } from '@service/api/sy
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -26,6 +27,7 @@ export class SYSBP00Component extends BasicQueryPageComponent<Sysbp00Response> i
     SYS_Type: [null, [Validators.maxLength(40)]],
     SYS_Code: [null, [Validators.maxLength(50)]],
     SYS_Name: [null, [Validators.maxLength(50)]],
+    ...createPaginationConfig([{ field: 'SYS_Sort', order: 1 }])
   });
   data: Sysbp00Response[] = [];
   selectedRows: Sysbp00Response[] = [];
