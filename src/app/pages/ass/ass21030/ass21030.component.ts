@@ -433,4 +433,7 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
     return of({ Data: [] });
   };
 
+  onExportTemplate() {
+    this.messageService.infoBubble('準備中');
+  }
 }
