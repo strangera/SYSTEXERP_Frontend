@@ -149,6 +149,7 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
 
   btnPDFLoading = false; // PDF 讀取進度條
   btnExcelLoading = false; // Excel 讀取進度條
+  btnTemplateLoading = false;
 
   // 展開詳細資料的欄位定義 (分攤設定)
   expansionColumns: Column[] = [
