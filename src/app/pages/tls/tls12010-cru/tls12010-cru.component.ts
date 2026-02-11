@@ -460,11 +460,13 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
           this.dataForm.patchValue({
             VEN_Name: vendor.VEN_Name || '',
             VEN_EngName: vendor.VEN_EngName || '',
-            VEN_Address: vendor.VEN_Address || '', // 公司營登地址
-            VEN_Addr: vendor.VEN_GUIAddr || '',    // 郵寄地址 (對應 GUI 地址)
             VEN_BossTel: vendor.VEN_Tel || '',         // 廠商聯絡人電話 (對應 API 的公司電話)
+
             VEN_BossFax: vendor.VEN_Fax || '',         // 廠商聯絡人傳真
             VEN_BossEmail: vendor.VEN_Email || '',     // 廠商聯絡人電子郵件
+
+            VEN_Address: vendor.VEN_Address || '', // 公司營登地址
+            VEN_Addr: vendor.VEN_GUIAddr || '',    // 郵寄地址 (對應 GUI 地址)
 
           }, { emitEvent: false }); // 使用 emitEvent: false 避免觸發其他連動
 
