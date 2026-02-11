@@ -46,10 +46,10 @@ export class SYSB920CRUComponent extends BasicCruPageComponent<CategoryItem> imp
   optionsMid: { value: string, label: string }[] = [];
   dataForm = this.formBuilder.nonNullable.group({
     id: [0], // ID
-    bus_sclass: ['', [Validators.maxLength(2)]], // 小分類代碼
-    bus_sclass_name: ['', [Validators.maxLength(40)]], // 小分類名稱
-    bus_type: [''], // 大分類代碼
-    bus_class: [''], // 中分類代碼
+    bus_sclass: ['', [Validators.required, Validators.maxLength(2)]], // 小分類代碼
+    bus_sclass_name: ['', [Validators.required, Validators.maxLength(40)]], // 小分類名稱
+    bus_type: ['', [Validators.required]], // 大分類代碼
+    bus_class: ['', [Validators.required]], // 中分類代碼
     bus_sclass_desc: ['', [Validators.maxLength(200)]], // 備註
   });
   //
@@ -92,7 +92,6 @@ export class SYSB920CRUComponent extends BasicCruPageComponent<CategoryItem> imp
       } else {
         this.optionsMid = [];
         this.dataForm.controls.bus_class.setValue('');
-        this.messageService.warnBubble('請選擇大分類');
       }
     });
   }

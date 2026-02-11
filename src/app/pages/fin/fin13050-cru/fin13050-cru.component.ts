@@ -260,7 +260,6 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
 
     if (rd.PUR_VenUniform) {
       patch.PUR_VenUniform = rd.PUR_VenUniform;
-      patch.PUR_VenNo = rd.PUR_VenUniform;
     }
 
     this.dataForm.patchValue(patch, { emitEvent: false });
@@ -461,38 +460,38 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
 
   // FIN13050CRUComponent
 
-override onCancel(): void {
-  this.router.navigate(['/account/fin', 'fin13050'], {
-    state: { fromCru: true },
-  });
-}
+  override onCancel(): void {
+    this.router.navigate(['/account/fin', 'fin13050'], {
+      state: { fromCru: true },
+    });
+  }
 
-// 更新成功後
-private doUpdate(payload: any): void {
-  this.fin13050Service.updateFIN13050(payload).subscribe({
-    next: () => {
-      this.messageService.successBubble('更新成功');
-      this.onCancel(); // 會帶 fromCru
-    },
-    error: () => this.messageService.unblockUi(),
-  });
-}
+  // 更新成功後
+  private doUpdate(payload: any): void {
+    this.fin13050Service.updateFIN13050(payload).subscribe({
+      next: () => {
+        this.messageService.successBubble('更新成功');
+        this.onCancel(); // 會帶 fromCru
+      },
+      error: () => this.messageService.unblockUi(),
+    });
+  }
 
-// 新增成功後：如果你要回列表就 onCancel；如果你要留在頁面繼續新增就不要帶 fromCru
-private doInsert(payload: any): void {
-  const { id, ...forInsert } = payload;
-  this.fin13050Service.insertFIN13050(forInsert).subscribe({
-    next: () => {
-      this.messageService.successBubble('新增成功');
-      // 方案A：新增後回列表（會還原）
-      this.onCancel();
+  // 新增成功後：如果你要回列表就 onCancel；如果你要留在頁面繼續新增就不要帶 fromCru
+  private doInsert(payload: any): void {
+    const { id, ...forInsert } = payload;
+    this.fin13050Service.insertFIN13050(forInsert).subscribe({
+      next: () => {
+        this.messageService.successBubble('新增成功');
+        // 方案A：新增後回列表（會還原）
+        this.onCancel();
 
-      // 方案B：新增後留在 CRU 繼續新增（不回列表就不需要 fromCru）
-      // this.resetFormAfterInsert();
-    },
-    error: () => this.messageService.unblockUi(),
-  });
-}
+        // 方案B：新增後留在 CRU 繼續新增（不回列表就不需要 fromCru）
+        // this.resetFormAfterInsert();
+      },
+      error: () => this.messageService.unblockUi(),
+    });
+  }
 
 
   /** 新增成功後重設表單 */
