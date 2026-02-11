@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { ApiResponse } from './cpm11030.service';
+import { ApiResponse } from '../fin/fin26010.service';
 
 /** 查詢條件 Interface */
 export interface QueryCPM11090Request {
