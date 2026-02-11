@@ -1,132 +1,230 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
+    <app-button
+      btnType="create"
+      (click)="onCreate()"
+      label="{{ 'create' | translate }}"
+    ></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="公司代號(統一編號)" controlName="STR_Uniform" [control]="queryForm.controls.STR_Uniform"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="公司代號(統一編號)"
+              controlName="STR_Uniform"
+              [control]="queryForm.controls.STR_Uniform"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-12 lg:col-4">
-            <app-input-text label="公司名稱(中文)" controlName="SYS_StoreName" [control]="queryForm.controls.SYS_StoreName"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="公司名稱(中文)"
+              controlName="SYS_StoreName"
+              [control]="queryForm.controls.SYS_StoreName"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-12 lg:col-4">
-            <app-input-text label="公司名稱(英文)" controlName="SYS_StoreNameENG"
-              [control]="queryForm.controls.SYS_StoreNameENG" [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="公司名稱(英文)"
+              controlName="SYS_StoreNameENG"
+              [control]="queryForm.controls.SYS_StoreNameENG"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="稅籍編號" controlName="STO_TaxNo" [control]="queryForm.controls.STO_TaxNo"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="稅籍編號"
+              controlName="STO_TaxNo"
+              [control]="queryForm.controls.STO_TaxNo"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="負責人" controlName="STO_ManagerName" [control]="queryForm.controls.STO_ManagerName"
-              [submitted]="submitted">
+            <app-input-text
+              label="負責人"
+              controlName="STO_ManagerName"
+              [control]="queryForm.controls.STO_ManagerName"
+              [submitted]="submitted"
+            >
               >
             </app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-12 lg:col-4">
-            <app-input-text label="聯絡人" controlName="STO_ContactName" [control]="queryForm.controls.STO_ContactName"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="聯絡人"
+              controlName="STO_ContactName"
+              [control]="queryForm.controls.STO_ContactName"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="聯絡人電話" controlName="STO_ContactTel" [control]="queryForm.controls.STO_ContactTel"
-              [submitted]="submitted">
+            <app-input-text
+              label="聯絡人電話"
+              controlName="STO_ContactTel"
+              [control]="queryForm.controls.STO_ContactTel"
+              [submitted]="submitted"
+            >
               >
             </app-input-text>
           </div>
           <div class="col-12 md:col-12 lg:col-4">
-            <app-input-text label="聯絡人傳真" controlName="STO_ContactFax" [control]="queryForm.controls.STO_ContactFax"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="聯絡人傳真"
+              controlName="STO_ContactFax"
+              [control]="queryForm.controls.STO_ContactFax"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="郵遞區號" controlName="STO_PostCode" [control]="queryForm.controls.STO_PostCode"
-              [submitted]="submitted">
+            <app-input-text
+              label="郵遞區號"
+              controlName="STO_PostCode"
+              [control]="queryForm.controls.STO_PostCode"
+              [submitted]="submitted"
+            >
               >
             </app-input-text>
           </div>
           <div class="col-12 md:col-12 lg:col-4">
-            <app-input-text label="營業登記證號" controlName="STO_BRN" [control]="queryForm.controls.STO_BRN"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="營業登記證號"
+              controlName="STO_BRN"
+              [control]="queryForm.controls.STO_BRN"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="公司電話" controlName="STO_Tel" [control]="queryForm.controls.STO_Tel"
-              [submitted]="submitted">
+            <app-input-text
+              label="公司電話"
+              controlName="STO_Tel"
+              [control]="queryForm.controls.STO_Tel"
+              [submitted]="submitted"
+            >
               >
             </app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-12 lg:col-6">
-            <app-input-text label="公司(營業處)地址(中文)" controlName="STO_Addr" [control]="queryForm.controls.STO_Addr"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="公司(營業處)地址(中文)"
+              controlName="STO_Addr"
+              [control]="queryForm.controls.STO_Addr"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-6">
-            <app-input-text label="公司(營業處)地址(英文)" controlName="STO_AddrENG" [control]="queryForm.controls.STO_AddrENG"
-              [submitted]="submitted">
+            <app-input-text
+              label="公司(營業處)地址(英文)"
+              controlName="STO_AddrENG"
+              [control]="queryForm.controls.STO_AddrENG"
+              [submitted]="submitted"
+            >
               >
             </app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-12 lg:col-6">
-            <app-input-text label="公司登記地址(中文)" controlName="STO_RegAddr" [control]="queryForm.controls.STO_RegAddr"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="公司登記地址(中文)"
+              controlName="STO_RegAddr"
+              [control]="queryForm.controls.STO_RegAddr"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-6">
-            <app-input-text label="公司登記地址(英文)" controlName="STO_RegAddrENG"
-              [control]="queryForm.controls.STO_RegAddrENG" [submitted]="submitted">
+            <app-input-text
+              label="公司登記地址(英文)"
+              controlName="STO_RegAddrENG"
+              [control]="queryForm.controls.STO_RegAddrENG"
+              [submitted]="submitted"
+            >
               >
             </app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-3">
-            <app-input-text label="公司網址" controlName="STO_URL" [control]="queryForm.controls.STO_URL"
-              [submitted]="submitted">
+            <app-input-text
+              label="公司網址"
+              controlName="STO_URL"
+              [control]="queryForm.controls.STO_URL"
+              [submitted]="submitted"
+            >
               >
             </app-input-text>
           </div>
           <div class="col-12 md:col-12 lg:col-3">
-            <app-input-text label="電子信箱" controlName="STO_Email" [control]="queryForm.controls.STO_Email"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="電子信箱"
+              controlName="STO_Email"
+              [control]="queryForm.controls.STO_Email"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-12 lg:col-6">
-            <app-input-text label="發票地址" controlName="STO_InvoiceAddr" [control]="queryForm.controls.STO_InvoiceAddr"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="發票地址"
+              controlName="STO_InvoiceAddr"
+              [control]="queryForm.controls.STO_InvoiceAddr"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-3">
-            <app-input-text label="郵寄電話" controlName="STO_MailTel" [control]="queryForm.controls.STO_MailTel"
-              [submitted]="submitted">
+            <app-input-text
+              label="郵寄電話"
+              controlName="STO_MailTel"
+              [control]="queryForm.controls.STO_MailTel"
+              [submitted]="submitted"
+            >
               >
             </app-input-text>
           </div>
           <div class="col-12 md:col-12 lg:col-3">
-            <app-input-text label="郵寄傳真" controlName="STO_MailFax" [control]="queryForm.controls.STO_MailFax"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="郵寄傳真"
+              controlName="STO_MailFax"
+              [control]="queryForm.controls.STO_MailFax"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-6">
-            <app-input-text label="郵寄地址" controlName="STO_MailAddr" [control]="queryForm.controls.STO_MailAddr"
-              [submitted]="submitted">
+            <app-input-text
+              label="郵寄地址"
+              controlName="STO_MailAddr"
+              [control]="queryForm.controls.STO_MailAddr"
+              [submitted]="submitted"
+            >
               >
             </app-input-text>
           </div>
         </div>
         <!-- <div> -->
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -137,10 +235,25 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table tableKey="SYSB100" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
-      [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'SYS_StoreNo', order: 1 }]"
-      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [lazy]="true" [loading]="loading"></app-table>
+    <app-table
+      tableKey="SYSB100"
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      (delete)="onDelete($event)"
+      [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
+      [rows]="30"
+      [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
+      [showCheckBox]="true"
+      dataKey="id"
+      [multiSortMeta]="[{ field: 'SYS_StoreNo', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true"
+      [loading]="loading"
+    ></app-table>
   </div>
 </div>
