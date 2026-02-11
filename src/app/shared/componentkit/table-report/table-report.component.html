@@ -17,12 +17,12 @@
       [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event"
       [selectedItems]="selectedItems" [tableKey]="tableKey" [showCaption]="showCaption" [showFilter]="showFilter"
       [showReportMode]="showReportMode" [showDelete]="showDelete" [showExcel]="showExcel"
-      [showExcelExport]="showExcelExport" [showExcelImport]="showExcelImport" [pageOrientation]="pageOrientation"
-      [pageSizeSetting]="pageSizeSetting" [showCustomExcelImport]="showCustomExcelImport"
-      [exportExcelLoading]="exportExcelLoading" [showPage]="false" (delete)="delete.emit($event)"
-      (exportExcel)="exportExcel.emit()" (importExcel)="importExcel.emit($event)" [totalRecords]="dt.totalRecords"
-      [apiUrl]="apiUrl" [DataKeyName]="DataKeyName" [PrintRemark]="PrintRemark" [customReport]="customReport"
-      (exportEvent)="exportEvent.emit($event)" [Conditions]="Conditions">
+      [expansionColumns]="expansionColumns" [expandedRows]="expandedRows" [showExcelExport]="showExcelExport"
+      [showExcelImport]="showExcelImport" [pageOrientation]="pageOrientation" [pageSizeSetting]="pageSizeSetting"
+      [showCustomExcelImport]="showCustomExcelImport" [exportExcelLoading]="exportExcelLoading" [showPage]="false"
+      (delete)="delete.emit($event)" (exportExcel)="exportExcel.emit()" (importExcel)="importExcel.emit($event)"
+      [totalRecords]="dt.totalRecords" [apiUrl]="apiUrl" [DataKeyName]="DataKeyName" [PrintRemark]="PrintRemark"
+      [customReport]="customReport" (exportEvent)="exportEvent.emit($event)" [Conditions]="Conditions">
       <header>
         <ng-content select="header"></ng-content>
       </header>
