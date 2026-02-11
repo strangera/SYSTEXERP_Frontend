@@ -2,8 +2,24 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
-import { BehaviorSubject, catchError, Observable, shareReplay, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, map, Observable, shareReplay, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { SystemOptionsService } from './sys1000.service';
+
+export interface QuerySystemCodeResponse {
+  CRT_Date: string,
+  CRT_USR_No: string,
+  CRT_USR_Name: string,
+  UPD_Date: string,
+  UPD_USR_No: string,
+  UPD_USR_Name: string,
+  ID: number,
+  SYS_Type: string,
+  SYS_Code: string,
+  SYS_Name: string,
+  SYS_Enabled: string,
+  SYS_Sort: number
+}
 
 @Injectable({
   providedIn: 'root'
@@ -79,9 +95,9 @@ export class SystemDataService {
    * 最佳實踐：使用 tap 處理副作用，並使用 shareReplay(1) 優化性能。
    * @returns 包含系統代碼的 API 響應 Observable
    */
-  queryAllSystemCode(): Observable<ApiResponse<unknown[]>> {
-    return this.http.post<ApiResponse<unknown[]>>(`${this.apiUrl}/User/queryAllSystemCode`, {}).pipe(
-      tap((response: ApiResponse<unknown[]>) => {
+  queryAllSystemCode(): Observable<ApiResponse<QuerySystemCodeResponse[]>> {
+    return this.http.post<ApiResponse<QuerySystemCodeResponse[]>>(`${this.apiUrl}/User/queryAllSystemCode`, {}).pipe(
+      tap((response: ApiResponse<QuerySystemCodeResponse[]>) => {
         if (response.Status === '0000' && response.Data) {
           // 1. 將資料儲存到 localStorage
           localStorage.setItem('SYS1000', JSON.stringify(response.Data));
@@ -89,12 +105,39 @@ export class SystemDataService {
           this._sys1000.next(response.Data);
         }
       }),
-      catchError((error) => {
-        console.error('Error fetching SystemCode', error);
-        return throwError(() => error);
-      }),
-      // 性能優化：確保多次訂閱只會執行一次 HTTP 請求
       shareReplay(1)
+    );
+  }
+  /**
+ * 定向更新特定類型的代碼檔
+ * 回傳 Observable 確保呼叫端可以等待更新完成
+ */
+  refreshSystemCodeByType(sysType: string): Observable<QuerySystemCodeResponse[]> {
+    const payload = {
+      SYS_Type: sysType,
+      SYS_Code: "",
+      SYS_Name: "",
+      SYS_Enabled: ""
+    };
+
+    return this.http.post<ApiResponse<QuerySystemCodeResponse[]>>(`${this.apiUrl}/User/queryFilterSystemCode`, payload).pipe(
+      tap(response => {
+        if (response.Status === '0000' && response.Data) {
+          const allData = [...this._sys1000.getValue() as QuerySystemCodeResponse[]];
+          const otherTypes = allData.filter(item => item.SYS_Type !== sysType);
+          const updatedList = [...otherTypes, ...response.Data];
+
+          this._sys1000.next(updatedList);
+          localStorage.setItem('SYS1000', JSON.stringify(updatedList));
+          SystemOptionsService.refreshCache();
+        }
+      }),
+      // 轉換成只回傳資料部分，方便後續處理
+      map(response => response.Data || []),
+      catchError(err => {
+        console.error('Refresh System Code Failed', err);
+        return throwError(() => err);
+      })
     );
   }
 
