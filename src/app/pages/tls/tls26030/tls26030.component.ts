@@ -4,19 +4,20 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls11010Service } from '@service/api/tls/tls11010.service';
-import { TLS26030Data, TLS26030Service } from '@service/api/tls/tls26030.service';
+import { TLS26030Data, TLS26030QueryRequest, TLS26030Service } from '@service/api/tls/tls26030.service';
 import { Tls51080Service } from '@service/api/tls/tls51080.service';
 import { FloorService } from '@service/basic/querySYS3900.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
+import { finalize, map, Observable, tap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from "../../../shared/componentkit/multi-select/multi-select.component";
-import { Column, createPaginationConfig, formatAmount, formatDate, formatToSixDigits } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, formatToSixDigits } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls26030',
@@ -31,7 +32,7 @@ import { Column, createPaginationConfig, formatAmount, formatDate, formatToSixDi
     CalendarRangeComponent,
     MultiSelectComponent,
     TranslateModule,
-    CustomFooterTableComponent
+    TableReportComponent
   ]
 })
 export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> implements OnInit {
@@ -64,23 +65,24 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
   data: TLS26030Data[] = [];
   selectedItems: TLS26030Data[] = [];
   footerData: any[] = [];
+  lastQueryBody: TLS26030QueryRequest | null = null;
 
-  columns: Column[] = [
-    { field: 'TXN_Date', header: '銷售日期', format: formatDate },
-    { field: 'ECR_No', header: '收銀機號' },
-    { field: 'TXN_No', header: '交易序號', format: formatToSixDigits },
-    { field: 'TLT_No', header: '專櫃編號' },
-    { field: 'tlt_name', header: '專櫃名稱' },
-    { field: 'TXN_TotSaleAmt', header: '預售金額', format: formatAmount, isTotal: true },
-    { field: 'Recog_Amt', header: '認列金額', format: formatAmount, isTotal: true },
-    { field: 'Batch_No', header: '認列批號' },
-    { field: 'Preorder_status', header: '預售狀態' },
-    { field: 'CANCEL_Date', header: '作廢日期', format: formatDate },
-    { field: 'CANCEL_ECR_No', header: '作廢機號' },
-    { field: 'CANCEL_TXN_No', header: '作廢序號' },
-    { field: 'Close_Date', header: '結帳日期', format: formatDate },
-    { field: 'Close_Ecr_No', header: '結帳機號' },
-    { field: 'Close_Txn_No', header: '結帳序號', format: formatToSixDigits }
+  columns: ReportColumn[] = [
+    { field: 'TXN_Date', header: '銷售日期', visible: true, format: formatDate },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true, format: formatToSixDigits },
+    { field: 'TLT_No', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    { field: 'TXN_TotSaleAmt', header: '預售金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'Recog_Amt', header: '認列金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'Batch_No', header: '認列批號', visible: true },
+    { field: 'Preorder_status', header: '預售狀態', visible: true },
+    { field: 'CANCEL_Date', header: '作廢日期', visible: true, format: formatDate },
+    { field: 'CANCEL_ECR_No', header: '作廢機號', visible: true },
+    { field: 'CANCEL_TXN_No', header: '作廢序號', visible: true },
+    { field: 'Close_Date', header: '結帳日期', visible: true, format: formatDate },
+    { field: 'Close_Ecr_No', header: '結帳機號', visible: true },
+    { field: 'Close_Txn_No', header: '結帳序號', visible: true, format: formatToSixDigits }
   ];
 
   // 下拉選單選項
@@ -108,16 +110,31 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.tls26030Service.queryTLS26030(frm.value)
+      const body = frm.getRawValue() as TLS26030QueryRequest;
+      this.tls26030Service.queryTLS26030(body)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
           this.footerData = response.footerData;
           this.totalRecords = response.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+          this.lastQueryBody = body;
+          this.queryStateService.setQueryState(this.ProgNo, body);
         });
     });
   }
+
+  /** 供 table-report 分頁/排序時呼叫，回傳符合 { Data, TotalCount } 的 Observable 並更新 footerData */
+  queryFunction = (body: TLS26030QueryRequest): Observable<{ Data: TLS26030Data[]; TotalCount: number }> => {
+    return this.tls26030Service.queryTLS26030(body).pipe(
+      tap(res => {
+        this.footerData = res.footerData ?? [];
+      }),
+      map(res => ({
+        Data: res.Data ?? [],
+        TotalCount: res.TotalCount ?? 0
+      }))
+    );
+  };
 
   loadOptions() {
     // 加載館別選項
