@@ -441,32 +441,103 @@ private resetToDefaultQuery(): void {
 
 
   /** 刪除：改用 id 作為鍵值（支援單筆或多筆） */
-  onDelete(data: any | any[]): void {
-    const items = Array.isArray(data) ? data : [data];
-    const idList = items
-      .map((x) => x?.id)
-      .filter((id) => id !== null && id !== undefined);
+onDelete(event: any | any[]): void {
+  const idList = this.normalizeDeleteIds(event);
 
-    if (!idList.length) {
-      this.messageService.errorBubble('無法刪除：缺少有效鍵值 (id)');
-      return;
-    }
-
-    const body = { idList };
-    this.tls41020Service.deleteTLS41020(body)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res) => {
-          if (res?.Status === '0000') {
-            this.messageService.successBubble('刪除成功');
-            this.onSubmit(this.queryForm);
-          } else {
-            this.messageService.errorBubble(`刪除失敗: ${res?.Message || ''}`);
-          }
-        },
-        error: () => this.messageService.errorBubble('刪除發生錯誤'),
-      });
+  if (!idList.length) {
+    this.messageService.warnBubble('請先選擇要刪除的資料');
+    return;
   }
+
+  this.messageService.confirm({
+    message: `確定要刪除選取的 ${idList.length} 筆資料嗎？`,
+    header: '刪除確認',
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: '確定',
+    rejectLabel: '取消',
+    accept: () => {
+      this.messageService.blockUi();
+
+      this.tls41020Service
+        .deleteTLS41020({ idList })
+        .pipe(untilDestroyed(this))
+        .subscribe({
+          next: (res: any) => {
+            if (res?.Status === '0000') {
+              this.messageService.successBubble('刪除成功');
+
+              // ✅ 刪除成功後：優先用 lastQueryBody 重新查（跟 FIN13060 一樣）
+              if (this.lastQueryBody) {
+                const pageSize =
+                  Number(this.lastQueryBody?.PageSize) > 0 ? this.lastQueryBody.PageSize : 20;
+
+                const body = { ...this.lastQueryBody, PageSize: pageSize };
+
+                // 🔧 如果你希望刪除後回第一頁（常見）
+                body.PageIndex = 1;
+
+                this.lastQueryBody = body;
+
+                this.tls41020Service
+                  .queryTLS41020(body)
+                  .pipe(untilDestroyed(this))
+                  .subscribe({
+                    next: (qres: any) => {
+                      this.data = qres?.Data || [];
+                      this.totalRecords =
+                        Number(qres?.TotalCount ?? this.data.length) || 0;
+
+                      // 重新同步 sort 狀態
+                      this._currentSortBy = body.SortBy ?? this.defaultSort;
+
+                      this.saveQueryState();
+                      this.cdr.detectChanges();
+                    },
+                    error: () => {
+                      this.messageService.errorBubble('重新查詢失敗');
+                    },
+                    complete: () => {
+                      this.messageService.unblockUi();
+                    },
+                  });
+
+                return;
+              }
+
+              // ✅ 沒有 lastQueryBody 就退回你原本行為：直接 onSubmit
+              this.onSubmit(this.queryForm);
+              this.messageService.unblockUi();
+              return;
+            }
+
+            this.messageService.errorBubble(`刪除失敗: ${res?.Message || ''}`);
+            this.messageService.unblockUi();
+          },
+          error: () => {
+            this.messageService.errorBubble('刪除失敗，請稍後再試');
+            this.messageService.unblockUi();
+          },
+        });
+    },
+    reject: () => {},
+  });
+}
+
+/** ✅ 把刪除事件轉成 idList（支援單筆/多筆/只傳 idList） */
+private normalizeDeleteIds(event: any | any[]): any[] {
+  const arr = Array.isArray(event) ? event : [event];
+
+  // 1) 直接是 idList（有些 table 會直接丟 {idList:[...]}）
+  const direct = arr?.[0]?.idList;
+  if (Array.isArray(direct) && direct.length) return direct;
+
+  // 2) row 上有 id
+  const ids = arr
+    .map((x) => x?.id)
+    .filter((id) => id !== null && id !== undefined);
+
+  return ids;
+}
 
   private saveQueryState(): void {
     this.queryStateService.setQueryState('TLS41020', {
