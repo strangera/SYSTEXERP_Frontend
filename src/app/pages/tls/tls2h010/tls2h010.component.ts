@@ -19,7 +19,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectButtonModule } from 'primeng/selectbutton';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -72,6 +72,74 @@ export class TLS2H010Component extends BasicQueryPageComponent<any> implements O
     this.addButton = [
       { label: '預覽列印', icon: 'fa fa-file-pdf text-blue-500', action: (rowData: any) => { this.previewPrint(rowData); }, disabled: (rowData: any) => !rowData?.GuiNo }
     ];
+  }
+
+  // Wrapper for table-report: convert SortBy array into OrderBy string for backend
+  queryWithSort(body: any) {
+    const params = { ...body };
+    try {
+      const sort = params.SortBy ?? params.sortBy ?? [];
+      if (Array.isArray(sort) && sort.length > 0) {
+        const parts = sort.map((s: any) => {
+          const field = s.field ?? s.fieldName ?? s.SortField ?? '';
+          const order = s.order === -1 ? 'DESC' : 'ASC';
+          return `${field} ${order}`;
+        }).filter((p: string) => p.trim().length > 0);
+        if (parts.length > 0) params.OrderBy = parts.join(',');
+      }
+    } catch { }
+    return this.tls2h010Service.queryTLS2H010(params).pipe(map((res: any) => {
+      try {
+        const sort = params.SortBy ?? params.sortBy ?? [];
+        if (Array.isArray(sort) && sort.length > 0 && res && Array.isArray(res.Data)) {
+          res.Data = this.applySortToArray(res.Data, sort);
+        }
+      } catch { }
+      return res;
+    }));
+  }
+
+  private applySortToArray(arr: any[], sort: any[]): any[] {
+    if (!Array.isArray(arr) || !Array.isArray(sort) || sort.length === 0) return arr;
+    const cmp = (a: any, b: any, field: string, dir: number) => {
+      const va = a?.[field];
+      const vb = b?.[field];
+      if (va == null && vb == null) return 0;
+      if (va == null) return -1 * dir;
+      if (vb == null) return 1 * dir;
+      if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir;
+      const sa = String(va).toLowerCase();
+      const sb = String(vb).toLowerCase();
+      if (sa < sb) return -1 * dir;
+      if (sa > sb) return 1 * dir;
+      return 0;
+    };
+    const copy = [...arr];
+    copy.sort((a, b) => {
+      for (const s of sort) {
+        const field = s.field ?? s.fieldName ?? s.SortField ?? '';
+        const dir = s.order === -1 ? -1 : 1;
+        const r = cmp(a, b, field, dir);
+        if (r !== 0) return r;
+      }
+      return 0;
+    });
+    return copy;
+  }
+
+  private buildOrderByFromSort(sort: any): string {
+    try {
+      const arr = sort ?? [];
+      if (!Array.isArray(arr) || arr.length === 0) return '';
+      const parts = arr.map((s: any) => {
+        const field = s.field ?? s.fieldName ?? s.SortField ?? '';
+        const order = s.order === -1 ? 'DESC' : 'ASC';
+        return `${field} ${order}`;
+      }).filter((p: string) => p.trim().length > 0);
+      return parts.join(',');
+    } catch {
+      return '';
+    }
   }
 
   previewPrint(rowData: any): void {
@@ -211,6 +279,15 @@ export class TLS2H010Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS2H010', 'tls/tls2h010cru', this.queryForm, (form) => this.onSubmit(form));
+    // 初始化 lastQueryBody，確保 table-report 在尚未查詢前也能響應排序操作
+    try {
+      const raw = this.queryForm.getRawValue();
+      this.lastQueryBody = {
+        PageSize: raw.pageSize ?? 30,
+        PageIndex: raw.pageIndex ?? 1,
+        SortBy: raw.SortBy ?? [],
+      };
+    } catch { }
   }
 
   onCreateInvoice(frm: FormGroup) {
@@ -275,10 +352,22 @@ export class TLS2H010Component extends BasicQueryPageComponent<any> implements O
         TltNo: raw.TltNo,
       };
 
+      // Ensure OrderBy is populated from SortBy for back-end compatibility
+      try { body.OrderBy = this.buildOrderByFromSort(body.SortBy); } catch { body.OrderBy = ''; }
+
       this.tls2h010Service.queryTLS2H010(body)
         .pipe(untilDestroyed(this), finalize(() => { this.loading = false; this.messageService.unblockUi(); }))
         .subscribe(res => {
-          this.data = res?.Data || [];
+          try {
+            const sort = body.SortBy || [];
+            if (Array.isArray(sort) && sort.length > 0 && res && Array.isArray(res.Data)) {
+              this.data = this.applySortToArray(res.Data, sort);
+            } else {
+              this.data = res?.Data || [];
+            }
+          } catch {
+            this.data = res?.Data || [];
+          }
           this.lastQueryBody = body;
           this.totalRecords = res?.TotalCount || 0;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
