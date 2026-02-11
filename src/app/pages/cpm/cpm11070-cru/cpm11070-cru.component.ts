@@ -4,7 +4,7 @@ import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { CPM11070DetailData, CPM11070Service } from '@service/api/cpm/cpm11070.service';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
@@ -85,7 +85,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
   ];
   SPACE1Options = getSYS1000Options('LOCATION');
   // 為顯示 'No - Name' 格式，產生一份帶有格式化 label 的選項清單
-  SPACE1OptionsLabelled = this.SPACE1Options.map(opt => ({ value: opt.value, label: `${opt.value} - ${opt.label}` }));
+  SPACE1OptionsLabelled: any[] = [];
   USER5Options: any[] = [
     { Name: '遊客', No: '1' },
     { Name: '員工', No: '2' },
@@ -135,6 +135,36 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
 
   ngOnInit(): void {
     this.initializePage('CPM11070', this.dataForm);
+    // 先嘗試從後端更新 LOCATION 的 SYS1000，確保剛在其他頁面新增的選項能即時取得
+    try {
+      this.systemDataService.refreshSystemCodeByType('LOCATION')
+        .pipe(untilDestroyed(this))
+        .subscribe({
+          next: () => {
+            // 後端回傳並更新 localStorage + SystemOptionsService cache（由 service 處理）
+            try {
+              SystemOptionsService.refreshCache();
+            } catch { }
+            this.SPACE1Options = getSYS1000Options('LOCATION');
+            this.SPACE1OptionsLabelled = this.SPACE1Options.map(opt => ({ value: opt.value, label: `${opt.value} - ${opt.label}` }));
+            this.cdr.detectChanges();
+          },
+          error: () => {
+            // 若後端更新失敗，fallback 從 localStorage 重新讀取快取
+            try { SystemOptionsService.refreshCache(); } catch { }
+            this.SPACE1Options = getSYS1000Options('LOCATION');
+            this.SPACE1OptionsLabelled = this.SPACE1Options.map(opt => ({ value: opt.value, label: `${opt.value} - ${opt.label}` }));
+            this.cdr.detectChanges();
+          }
+        });
+    } catch (e) {
+      try { SystemOptionsService.refreshCache(); } catch { }
+      this.SPACE1Options = getSYS1000Options('LOCATION');
+      this.SPACE1OptionsLabelled = this.SPACE1Options.map(opt => ({ value: opt.value, label: `${opt.value} - ${opt.label}` }));
+    }
+
+    // 載入物品類別下拉（頁面層容錯：若 filter API 失敗則抓全部再過濾）
+    this.loadLostGoodsTypeOptions();
     // 讀取從查詢頁傳入的 mode
     this.mode = (this.rowdata as any)?.mode as any;
     const seqId = (this.rowdata as any)?.SeqId ?? (this.rowdata as any)?.SEQ_ID;
@@ -256,6 +286,41 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
           this.showReceiveInfo = true;
         }
       });
+    }
+  }
+
+  private loadLostGoodsTypeOptions(): void {
+    try {
+      this.systemDataService.refreshSystemCodeByType('LOST_GOODS_TYPE')
+        .pipe(untilDestroyed(this))
+        .subscribe({
+          next: (res: any) => {
+            const hasData = Array.isArray(res) && res.length > 0;
+            if (hasData) {
+              this.Type2Options = getSYS1000Options('LOST_GOODS_TYPE');
+              this.cdr.detectChanges();
+            } else {
+              this.systemDataService.queryAllSystemCode().pipe(untilDestroyed(this)).subscribe(resp => {
+                const all = resp?.Data ?? [];
+                const items = (all as any[]).filter(i => i.SYS_Type === 'LOST_GOODS_TYPE');
+                this.Type2Options = (items || []).map(i => ({ value: i.SYS_Code, label: i.SYS_Name }));
+                this.cdr.detectChanges();
+              });
+            }
+          },
+          error: () => {
+            this.systemDataService.queryAllSystemCode().pipe(untilDestroyed(this)).subscribe(resp => {
+              const all = resp?.Data ?? [];
+              const items = (all as any[]).filter(i => i.SYS_Type === 'LOST_GOODS_TYPE');
+              this.Type2Options = (items || []).map(i => ({ value: i.SYS_Code, label: i.SYS_Name }));
+              this.cdr.detectChanges();
+            });
+          }
+        });
+    } catch (e) {
+      try { SystemOptionsService.refreshCache(); } catch { }
+      this.Type2Options = getSYS1000Options('LOST_GOODS_TYPE');
+      this.cdr.detectChanges();
     }
   }
 
