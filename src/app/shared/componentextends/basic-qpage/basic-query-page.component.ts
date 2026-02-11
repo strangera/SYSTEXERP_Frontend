@@ -116,16 +116,38 @@ export abstract class BasicQueryPageComponent<T> {
   }
 
   // 送出查詢
-  handleSubmit(queryForm: FormGroup, callback: () => void) {
-    this.submitted = true;
-    this.loading = true;
+  handleSubmit(
+    queryForm: FormGroup,
+    callback: () => void,
+    setLoading?: (value: boolean) => void,
+    setSubmitted?: (value: boolean) => void
+  ) {
+    // 1. 決定如何處理 Loading
+    // 如果有傳入 setLoading，就執行它；否則就改原本的 this.loading
+    const updateLoading = (val: boolean) => {
+      if (setLoading) {
+        setLoading(val);
+      } else {
+        this.loading = val;
+      }
+    };
+    // 2. 決定如何處理 Submitted
+    const updateSubmitted = (val: boolean) => {
+      if (setSubmitted) {
+        setSubmitted(val);
+      } else {
+        this.submitted = val;
+      }
+    };
+    updateSubmitted(true);
+    updateLoading(true);
     this.messageService.blockUi();
     if (queryForm.valid) {
-      this.submitted = false;
-      callback(); // 執行傳入的回調函數
+      updateSubmitted(false);
+      callback();
     } else {
       this.logValidationErrors(queryForm);
-      this.loading = false;
+      updateLoading(false);
     }
 
     this.messageService.unblockUi();
