@@ -206,7 +206,7 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     // 憑證/傳票/系統別/備註
     Source_Doc_No: ['', [alnumMax16IfFilled]],
     Voucher_No: [{ value: '', disabled: true }],
-    SAL_Type: ['G'],
+    SYS_ORIGIN: ['G'],
     PUR_Remark: [''],
   });
 
@@ -448,7 +448,7 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
       PUR_Type: fv.PUR_Type ?? null,
       Source_Doc_No: (fv.Source_Doc_No ?? '').toString().trim() || null,
       Voucher_No: fv.Voucher_No ?? null,
-      SAL_Type: fv.SAL_Type ?? null,
+      SYS_ORIGIN: fv.SYS_ORIGIN ?? null,
       PUR_Remark: fv.PUR_Remark ?? null,
     };
   }
