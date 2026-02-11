@@ -106,7 +106,7 @@
             [control]="dataForm.controls.CRT_Date" [submitted]="submitted" />
         </div>
         <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="cancel" [form]="dataForm"></app-button>
+          <app-button btnType="cancel" [form]="dataForm" (clickEvent)="onLocalCancel()"></app-button>
           <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit(dataForm)" />
         </div>
       </ng-container>
@@ -131,7 +131,7 @@
           (dataChange)="onDetailEditDataChange($event)" (fieldChange)="onDetailFieldChange($event)">
         </app-table-edit>
         <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="cancel" [form]="dataForm"></app-button>
+          <app-button btnType="cancel" [form]="dataForm" (clickEvent)="onLocalCancel()"></app-button>
           <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit(dataForm)" />
         </div>
       </ng-container>

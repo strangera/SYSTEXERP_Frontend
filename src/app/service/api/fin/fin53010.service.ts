@@ -254,7 +254,7 @@ export class FIN53010Service {
     this.usrLoading.set(!0);
     this.dropdownApi.queryTblUserOrgid().pipe(
       take(1),
-      map(res => res?.map(item => ({ value: item['user_No'], label: item['user_Name'] } as Option)) ?? []),
+      map(res => res?.map(item => ({ value: item['user_No'], label: item['user_No'] + ' - ' + item['user_Name'] } as Option)) ?? []),
       tap(res => {
         this.usrOptions.set(res);
         this.logger.debug('查詢UsrOptions結果:', [res]);
