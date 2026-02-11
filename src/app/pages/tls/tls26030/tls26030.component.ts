@@ -160,7 +160,7 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
     // 收銀機號下拉
     this.dropDownListService.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
       this.ecrOptions = options.Data.map(item => ({
-        label: item.Name,
+        label: `${item.No} - ${item.Name}`,
         value: item.No
       }));
     });
