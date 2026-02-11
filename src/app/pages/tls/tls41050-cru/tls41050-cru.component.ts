@@ -78,10 +78,10 @@ export class TLS41050CRUComponent extends BasicCruPageComponent<POS1002>
     ECR_Status: [{ value: '', disabled: true }], // 收銀機狀態，A=啟用(預設值)、C=停用、S=強制停用、T=訓練
     ECR_GUI_Type: [{ value: '', disabled: true }, [Validators.required]], // 發票使用類別（不可新增/修改）
     ECR_GUI_PeriodQty: [ // 發票預設配號量，預設值為50，設定值必須為50的倍數
-      50, [Validators.required, this.validationService.optionalMultipleOfFiftyValidator(), Validators.min(50), Validators.max(99999999)]
+      50, [Validators.required, this.validationService.optionalMultipleOfFiftyValidator(), Validators.min(50), Validators.max(99999950)]
     ],
     ECR_GUI_MinQty: [ // 發票安全存量，預設值為50，設定值必須為50的倍數
-      50, [Validators.required, this.validationService.optionalMultipleOfFiftyValidator(), Validators.min(50), Validators.max(99999999)]
+      50, [Validators.required, this.validationService.optionalMultipleOfFiftyValidator(), Validators.min(50), Validators.max(99999950)]
     ],
   });
   //
