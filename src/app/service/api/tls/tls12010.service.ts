@@ -36,6 +36,11 @@ export class Tls12010Service {
     return this.http.post<any>(`${this.apiUrl}/deleteTLS12010`, body);
   }
 
+  // 查詢 POS2013 資料表
+  queryTLS12010_POS2013(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS12010_POS2013`, body);
+  }
+
   //匯出 明細PDF
   exportTLS12010_Detail(body: any): Observable<Blob> {
     return this.http.post(`${this.apiUrl}/exportTLS12010_Detail`, body, {

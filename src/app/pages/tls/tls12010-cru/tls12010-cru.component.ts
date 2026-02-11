@@ -123,7 +123,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     bus_type: ['', [Validators.required, Validators.maxLength(2)]], // 業種-大分類代碼(tltbustype)
     tlt_name: ['', [Validators.maxLength(100)]],  // 品牌(專櫃名稱) --- 20251007: 品牌名稱(中文)應為文字輸入欄位，目前下拉選單取到自營的品牌資料，改為純文字，不卡控
     tlt_EngName: ['', [Validators.maxLength(100), this.validationService.noChineseValidator]], // 品牌英文(專櫃名稱)
-    VEN_Boss: ['', [Validators.required, Validators.maxLength(20)]], // 廠商聯絡人
+    VEN_Boss: ['', [Validators.required, Validators.maxLength(12)]], // 廠商聯絡人
     VEN_BossTel: ['', [Validators.required, Validators.maxLength(20), this.validationService.phoneNumberValidator]], // 廠商聯絡人電話
     VEN_BossTitle: ['', [Validators.maxLength(20)]], // 廠商聯絡人頭銜
     VEN_BossFax: ['', [Validators.maxLength(20), this.validationService.phoneNumberValidator]], // 廠商聯絡人傳真
@@ -227,22 +227,19 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       if (this.skipValueChanges) return;
       this.onCusTypeChange(value);
     });
-
-    //品牌 valueChanges
-    // --- 20251007: 品牌名稱(中文)應為文字輸入欄位，目前下拉選單取到自營的品牌資料，改為純文字，不卡控
-
-    // this.dataForm.get('tlt_name')?.valueChanges.subscribe(value => {
-    //   if (this.skipValueChanges) return;
-    //   const match = this.tlt_name_Option.find(opt => opt.No === value);
-    //   if (match) {
-    //     this.dataForm.get('tlt_EngName')?.setValue(match.LOGO_EN_NAME);
-    //   } else {
-    //     this.dataForm.get('tlt_EngName')?.setValue('');
-    //     // this.messageService.errorBubble('無該廠商名稱資料');
-    //   }
-    // });
-
     console.log('讀取資料', this.dataForm.value);
+
+    // 訂閱 cus_uniform_id 有應到的POS2013就填寫其他欄位
+    this.dataForm.get('cus_uniform_id')?.valueChanges.pipe(
+      untilDestroyed(this)
+    ).subscribe(value => {
+      // Only trigger auto-fill if type is '1' (Tax ID) and we aren't skipping initial value changes
+      if (this.skipValueChanges || this.dataForm.get('cus_type')?.value !== '1') return;
+
+      if (value && value.length >= 8) { // Typical minimum length for Tax ID
+        this.fetchVendorData(value);
+      }
+    });
 
     // 最後設為 false，代表資料已匯入完成，之後就會開始觸發 valueChanges
     this.skipValueChanges = false;
@@ -402,6 +399,11 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       }));
       console.log('接洽人員代號:', this.contact_USR_Option);
     });
+
+    //查 統一編號
+    this.tls12010Service.queryPOS2013_DropDownList({ "VEN_Flag": "1" }).pipe(untilDestroyed(this)).subscribe((response) => {
+      console.log('統一編號', response)
+    });
   }
 
   // 讀取明細資料
@@ -435,6 +437,49 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       // 若找不到，清空欄位或保留原值，看你的需求
       this.dataForm.get('contact_USR_Name')?.setValue('');
     }
+  }
+
+  // 統編變化
+  fetchVendorData(uniformId: string) {
+    const body = {
+      VEN_Flag: "1",
+      VEN_Uniform: uniformId
+    };
+
+    this.tls12010Service.queryTLS12010_POS2013(body).pipe(
+      untilDestroyed(this)
+    ).subscribe({
+      next: (response) => {
+        // Assuming the API returns a list and we take the first match
+        if (response && response.Data && response.Data.length > 0) {
+          const vendor = response.Data[0];
+
+          console.log('統編變化查詢結果', response.Data);
+
+          // 將 API 結果寫入表單對應欄位
+          this.dataForm.patchValue({
+            VEN_Name: vendor.VEN_Name || '',
+            VEN_EngName: vendor.VEN_EngName || '',
+            VEN_Address: vendor.VEN_Address || '', // 公司營登地址
+            VEN_Addr: vendor.VEN_GUIAddr || '',    // 郵寄地址 (對應 GUI 地址)
+            VEN_BossTel: vendor.VEN_Tel || '',         // 廠商聯絡人電話 (對應 API 的公司電話)
+            VEN_BossFax: vendor.VEN_Fax || '',         // 廠商聯絡人傳真
+            VEN_BossEmail: vendor.VEN_Email || '',     // 廠商聯絡人電子郵件
+
+          }, { emitEvent: false }); // 使用 emitEvent: false 避免觸發其他連動
+
+          // 更新快取，確保在切換類型時能還原資料
+          this.cachedVendorData = {
+            cus_uniform_id: uniformId,
+            VEN_Name: vendor.VEN_Name || '',
+            VEN_EngName: vendor.VEN_EngName || ''
+          };
+        }
+      },
+      error: (err) => {
+        console.error('Failed to fetch vendor data', err);
+      }
+    });
   }
 
   // 廠商類型 radio button 連動的驗證器變化
