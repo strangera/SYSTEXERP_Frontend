@@ -1,16 +1,16 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { NgIf } from '@angular/common';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Cpm12040Data, Cpm12040Service } from '@service/api/cpm/cpm12040.service';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { finalize } from 'rxjs';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Cpm12040Data, Cpm12040Service } from '@service/api/cpm/cpm12040.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 //5.1.2.4 顧客意見來源維護 CRU
 @Component({
@@ -35,7 +35,7 @@ export class CPM12040CRUComponent extends BasicCruPageComponent<Cpm12040Data> im
 
   // ----------------------------------------------------------------
   constructor(
-    private cpm12040Service: Cpm12040Service, // 注入服務
+    private readonly cpm12040Service: Cpm12040Service, // 注入服務
   ) {
     super(); // 呼叫父類建構子
   }
@@ -52,19 +52,15 @@ export class CPM12040CRUComponent extends BasicCruPageComponent<Cpm12040Data> im
         ? this.cpm12040Service.insertCPM12040(frm.getRawValue())
         : this.cpm12040Service.updateCPM12040(frm.getRawValue());
 
-      $request.pipe(
-        finalize(() => this.loading = false),
-        untilDestroyed(this)
-      ).subscribe(res => {
+      $request.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.messageService.successBubble(res.Message);
-
-        if (this.isFormCreateable) {
-          // 新增成功後清空表單
-          this.dataForm.reset();
-        } else {
-          // 修改成功後返回列表頁
-          this.onCancel();
-        }
+        this.systemDataService.refreshSystemCodeByType('SUGG_SOURCE').subscribe(() => {
+          if (this.isFormCreateable) {
+            this.dataForm.reset();
+          } else {
+            this.onCancel();
+          }
+        });
       });
     })
   }
