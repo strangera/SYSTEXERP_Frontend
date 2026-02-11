@@ -12,7 +12,7 @@ import { InputNumberRangeComponent } from '@shared/componentkit/input-number-ran
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
@@ -36,7 +36,7 @@ import { FIN53010Data, FIN53010Payload } from './fin53010.model';
     MenubarComponent,
     MultiSelectComponent,
     RadiobuttonComponent,
-    TableComponent,
+    TableReportComponent,
   ],
 })
 export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> implements OnInit {
@@ -73,17 +73,20 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
   public readonly tableLoading = signal<boolean>(!1);
 
   public readonly loadingEffect = effect(() => {
-    this.loading = this.tableLoading()
+    this.loading = this.tableLoading();
   }, { allowSignalWrites: true });
 
   public readonly columns: Column[] = [
-    { field: 'VouNo', header: '傳票號碼' },
-    { field: 'VouType', header: '傳票類別', format: d => this.service.vouTypeOptions.find(({ value }) => value === d)?.label ?? d },
-    { field: 'VouDate', header: '傳票日期', format: d => this.date.transform(d, 'yyyy/MM/dd') ?? d },
-    { field: 'Remark', header: '傳票摘要', format: d => this.service.noteDescMap().get(d)?.label ?? d },
-    { field: 'AccAmt', header: '傳票金額', format: d => formatAmount(d), style: 'text-right' },
-    { field: 'DetailCount', header: '明細筆數' },
+    { field: 'VouNo', header: '傳票號碼', align: 'left' },
+    { field: 'VouType', header: '傳票類別', align: 'left', format: d => this.service.vouTypeOptions.find(({ value }) => value === d)?.label ?? d },
+    { field: 'VouDate', header: '傳票日期', align: 'left', format: d => this.date.transform(d, 'yyyy/MM/dd') ?? d },
+    { field: 'Remark', header: '傳票摘要', align: 'left', format: d => this.service.noteDescMap().get(d)?.label ?? d },
+    { field: 'AccAmt', header: '傳票金額', align: 'right', format: d => formatAmount(d), style: 'text-right' },
+    { field: 'DetailCount', header: '明細筆數', align: 'right' },
   ];
+
+  /** 給 app-table-report 使用的最後查詢條件（保留 pageSize/pageIndex 供前端使用） */
+  public lastQueryBody: FIN53010Payload | null = null;
 
   constructor(
     public readonly service: FIN53010Service,
@@ -102,22 +105,11 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const vns = this.qf().VouNoStart.value;
-      const vne = this.qf().VouNoEnd.value;
-
-      const raw = {
-        ...this.queryForm.getRawValue(),
-        VouNoStart: String(vns ?? ''),
-        VouNoEnd: String(vne ?? ''),
-        VoucherType: this.formatListForBackend(this.qf().VoucherType.value),
-      } as FIN53010Payload;
-      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
-        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
-      )) as unknown as FIN53010Payload;
-
+      const payload = this.buildApiPayload();
+      this.lastQueryBody = payload;
       this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-      this.logger.debug(`onSubmit:`, [vns, vne, payload]);
+      this.logger.debug(`onSubmit:`, [payload]);
       this.service.loadFIN53010(payload).pipe(
         tap(res => this.service.getAccDescOptions(res.Data.map(d => d.Remark).filter(Boolean))),
         finalize(() => this.tableLoading.set(!1)),
@@ -140,5 +132,44 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
       return list.map(item => String(item)).join(',');
     }
     return null;
+  }
+
+  /**
+   * 單一入口：取得可送 API 的 payload。
+   */
+  public buildApiPayload(body?: FIN53010Payload): FIN53010Payload {
+    return body ?? this.buildQueryBodyFromForm();
+  }
+
+  /** 從表單組出查詢條件（含 pageSize/pageIndex/SortBy），過濾空值，不含分頁正規化。 */
+  private buildQueryBodyFromForm(): FIN53010Payload {
+    const vns = this.qf().VouNoStart.value;
+    const vne = this.qf().VouNoEnd.value;
+
+    const raw = {
+      ...this.queryForm.getRawValue(),
+      VouNoStart: String(vns ?? ''),
+      VouNoEnd: String(vne ?? ''),
+      VoucherType: this.formatListForBackend(this.qf().VoucherType.value),
+    };
+
+    const cleanedEntries = Object.entries(raw).filter(([, v]) =>
+      v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0),
+    );
+
+    return Object.fromEntries(cleanedEntries) as FIN53010Payload;
+  }
+
+  /** 將分頁欄位
+  /**
+   * 給 app-table-report 使用的查詢函式（分頁 / 排序載入）。
+   */
+  public queryFIN53010(body: FIN53010Payload) {
+    this.lastQueryBody = body;
+    const payload = this.buildApiPayload(body);
+    this.logger.debug('queryFIN53010 (table-report):', [body, payload]);
+    return this.service.loadFIN53010(payload).pipe(
+      tap(res => this.service.getAccDescOptions(res.Data.map(d => d.Remark).filter(Boolean))),
+    );
   }
 }
