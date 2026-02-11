@@ -15,7 +15,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
-import { CommonModule } from '@angular/common';
+import { NgIf } from '@angular/common';
 import { CPM11040Data, CPM11040Service } from '../../../service/api/cpm/cpm11040.service';
 import { getSYS1000Options } from '../../../service/system/sys1000.service';
 
@@ -35,7 +35,7 @@ import { getSYS1000Options } from '../../../service/system/sys1000.service';
     ButtonComponent,
     TranslateModule,
     CalendarComponent,
-    CommonModule,
+    NgIf,
   ],
 })
 export class CPM11040CRUComponent extends BasicCruPageComponent<any> implements OnInit {

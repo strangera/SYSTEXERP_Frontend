@@ -25,7 +25,6 @@ import { formatAmount, formatYYYYMM } from './../../../shared/componentkit/table
 @Component({
   selector: 'app-fin24020',
   templateUrl: './fin24020.component.html',
-  styleUrl: './fin24020.component.scss',
   standalone: true,
   imports: [AsyncPipe, NgIf, CalendarRangeQuickComponent, TableComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, InputTextComponent, ButtonComponent, TranslateModule]
 })
@@ -42,12 +41,13 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
     PayGenerated: [null],
     Remark: [null, [Validators.maxLength(200)]],
   });
-  pageSize = 20;
+  pageSize = 30;
   pageIndex = 1;
   sortBy = '';
   totalRecords = 0;
   data: any[] = [];
   lastQueryBody: any | null = null;
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
   detailColumns: ReportColumn[] = [
     // { field: 'ACP_No', header: '應付ID' },
     { field: 'ACP_YYYYMM', header: '應付帳款年月', format: formatYYYYMM },
@@ -134,13 +134,9 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
       const body: any = {
         PageSize: this.pageSize,
         PageIndex: this.pageIndex,
-        pageSize: this.pageSize,
-        pageIndex: this.pageIndex,
         Offset: 0,
         OrderBy: this.sortBy ?? '',
-        SortBy: this.sortBy
-          ? [{ field: this.sortBy, order: 1 }]
-          : [],
+        SortBy: (this as any).sortMeta ?? (this.sortBy ? [{ field: this.sortBy, order: (this as any).sortOrder ?? 1 }] : []),
         ACP_No: frm.value.ACP_No ?? '',
         VEN_No: frm.value.VEN_No ?? '',
         ACP_YYYYMM: acpYyyymm,
@@ -171,7 +167,18 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
   handleLazyLoad(event: any) {
     if (!event) return;
     this.pageIndex = event.pageIndex ?? this.pageIndex ?? 1;
-    this.pageSize = event.pageSize ?? this.pageSize ?? 20;
+    this.pageSize = event.pageSize ?? this.pageSize ?? 30;
+    // 處理排序：table 會傳入 SortBy (array of SortMeta)，取第一個欄位作為主要排序欄
+    try {
+      const sb = event.SortBy ?? event.SortBy ?? null;
+      if (sb && Array.isArray(sb) && sb.length > 0) {
+        this.sortBy = String(sb[0].field || '');
+      } else {
+        this.sortBy = '';
+      }
+    } catch (e) {
+      this.sortBy = '';
+    }
     // 觸發查詢，保留當前 queryForm 條件
     this.onSubmit(this.queryForm);
   }

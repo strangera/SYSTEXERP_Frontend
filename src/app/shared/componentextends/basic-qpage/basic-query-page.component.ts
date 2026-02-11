@@ -166,5 +166,29 @@ export abstract class BasicQueryPageComponent<T> {
       pageIndex: event.pageIndex,
       SortBy: event.SortBy
     });
+
+    // 同步到子類別常用屬性（若存在）
+    try {
+      if ((this as any).pageIndex !== undefined && event.pageIndex !== undefined) {
+        (this as any).pageIndex = event.pageIndex;
+      }
+      if ((this as any).pageSize !== undefined && event.pageSize !== undefined) {
+        (this as any).pageSize = event.pageSize;
+      }
+      const sb = event.SortBy ?? event.SortBy;
+      if (sb) {
+        // 保存原始 SortBy 結構以便子類使用完整排序資訊
+        (this as any).sortMeta = sb;
+        if (Array.isArray(sb) && sb.length > 0) {
+          (this as any).sortBy = String(sb[0].field ?? '');
+          (this as any).sortOrder = sb[0].order ?? 1;
+        } else if (typeof sb === 'string') {
+          (this as any).sortBy = sb;
+          (this as any).sortOrder = 1;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 }

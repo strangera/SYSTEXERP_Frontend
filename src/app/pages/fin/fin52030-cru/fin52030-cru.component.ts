@@ -400,19 +400,28 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
   public onDelete(event: (FIN52030DetailTable & Partial<EditColumnExtend>)[]): void {
     const data = this.tableData();
+    const ev = event ?? [];
+    // 用 event 陣列索引判斷刪除列（row 沒有 .index；刪除「新增」列時該列會從 fullData 移除，event 筆數會變少）
     const deletedIndexes = new Set<number>(
-      (event ?? [])
-        .filter(e => e?._dataStatus === 'deleted')
-        .map(e => e.index!)
-        .filter(i => typeof i === 'number')
+      ev.length < data.length
+        ? [] // 筆數變少：下方用「以 event 為剩餘資料」處理，不依 deletedIndexes
+        : ev.map((e, i) => (e?._dataStatus === 'deleted' ? i : -1)).filter(i => i >= 0)
     );
 
     this.logger.debug(`onDelete:`, [event, data, deletedIndexes]);
-    if (!deletedIndexes.size) return;
 
-    this.tableData.update(current =>
-      current.filter((_, index) => !deletedIndexes.has(index))
-    );
+    if (ev.length < data.length) {
+      // 刪除的是「新增」列，table-edit 已從 fullData 移除，event 即剩餘列
+      this.tableData.set(
+        ev.map((item, index) => ({ ...item, index, SerNo: (index + 1) * 10 }))
+      );
+    } else if (deletedIndexes.size > 0) {
+      this.tableData.update(current =>
+        current
+          .filter((_, index) => !deletedIndexes.has(index))
+          .map((item, index) => ({ ...item, index, SerNo: (index + 1) * 10 }))
+      );
+    }
     this.logger.debug(`onDelete - table updated:`, [this.tableData()]);
   }
 

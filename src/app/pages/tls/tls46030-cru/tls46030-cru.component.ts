@@ -166,6 +166,24 @@ export class TLS46030CRUComponent extends BasicCruPageComponent<any> implements 
           label: item.No + '-' + item.Name,
           value: item.No
         })) || [];
+      // 如果目前已選擇該異動類型，更新可用下拉選項（處理 preload 完成晚於 valueChanges 的情況）
+      try {
+        const currentFld = this.dataForm?.controls?.ECR_FLD_ID?.value;
+        if (currentFld === 'ECR_TLT_No') {
+          this.NewValDropdownOptions = this.dropdownCache['ECR_TLT_No'] || [];
+          this.selectedType = 'dropdown';
+          const newValCtrl = this.dataForm.controls.ECR_FLD_NewVal;
+          try {
+            newValCtrl.enable();
+            const rawVal = this.rowdata?.ECR_FLD_NewVal ?? '';
+            newValCtrl.setValue(rawVal);
+          } catch (e) {
+            // ignore
+          }
+        }
+      } catch (err) {
+        // ignore
+      }
     });
     // ECR_LocNo
     this.dropdownCache['ECR_LocNo'] = getSYS1000Options('ECR_LocNo');
@@ -174,7 +192,7 @@ export class TLS46030CRUComponent extends BasicCruPageComponent<any> implements 
     this.dropDownListService.queryPOS10015_DropDownList().subscribe(res => {
       this.dropdownCache['SYS_SrvNo'] =
         res?.Data?.map((item: any) => ({
-          label: item.Name,
+          label: `${item.No}-${item.Name}`,
           value: item.No
         })) || [];
     });

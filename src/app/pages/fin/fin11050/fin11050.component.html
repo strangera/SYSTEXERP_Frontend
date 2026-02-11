@@ -25,20 +25,10 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table-report [data]="tableData()"
-                      dataKey="id"
-                      tableKey="FIN11050_Data"
-                      [columns]="columns"
-                      [totalRecords]="totalRecords()"
-                      [loading]="tableLoading()"
-                      [lastQueryBody]="lastQueryBody"
-                      [queryFunction]="queryFunction"
-                      [showCheckBox]="true"
-                      [selectedItems]="selectedItems"
-                      (selectionChange)="selectedItems = $event"
-                      (edit)="onEdit($event)"
-                      (detail)="onDetail($event)"
-                      (delete)="onDelete($event)"
-                      [isRowSelectable]="isRowSelectable"></app-table-report>
+    <app-table-report [data]="tableData()" dataKey="id" tableKey="FIN11050" [columns]="columns"
+      [totalRecords]="totalRecords()" [loading]="tableLoading()" [lastQueryBody]="lastQueryBody"
+      [queryFunction]="queryFunction" [showCheckBox]="true" [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event" (edit)="onEdit($event)" (detail)="onDetail($event)"
+      (delete)="onDelete($event)" [isRowSelectable]="isRowSelectable"></app-table-report>
   </div>
 </div>

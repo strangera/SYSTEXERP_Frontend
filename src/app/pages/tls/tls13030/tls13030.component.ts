@@ -10,15 +10,13 @@ import { TranslateModule } from '@ngx-translate/core';
 import { finalize, map } from 'rxjs/operators';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import {
-  LazyLoadEvent
-} from '../../../shared/componentkit/table/table.model';
+import { LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS13030Service } from '../../../service/api/tls/tls13030.service';
 import { DeductionService } from '../../../service/basic/queryAPS1003.service';
 import { BigCategoryCodeService } from '../../../service/basic/queryTLTBUSTYPE.service';
-
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 // UI
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -28,11 +26,11 @@ import { MultiLocationFilterComponent } from '../../../shared/componentkit/multi
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
-// ✅ 自動取消訂閱
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @UntilDestroy()
 @Component({
@@ -49,7 +47,7 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
     MultiLocationFilterComponent,
     CalendarRangeQuickComponent,
     ButtonComponent,
-    TableComponent,
+     TableReportComponent,
     TranslateModule,
     DropdownComponent,
     CalendarRangeComponent,
@@ -58,12 +56,12 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 export class TLS13030Component extends BasicQueryPageComponent<any> {
   // ===== 排序 / lazy 相關 =====
   sortMeta: any[] = [];
-  readonly defaultSort: any[] = [{ field: 'tlt_no', order: 1 }]; // 與 createPaginationConfig 一致
+  readonly defaultSort: any[] = [{ field: 'tlt_no', order: 1 }];
   private lastQuerySig: string | null = null;
   private lazyTimer: any = null;
   private readonly includePagingAndSorting = true;
-
-  // ✅ 後端支援的排序欄位白名單（防止 groupKey 等未知欄位流入）
+lastQueryBody: any = null;
+queryTLS13030Fn = (body: any) => this.tls13030Service.queryTLS13030(body);
   private readonly allowedSortFields = new Set<string>([
     'tlt_no', 'tlt_name', 'tlt_building', 'location_no',
     'floor_desc', 'area_desc', 'bus_type', 'bus_type_name',
@@ -73,64 +71,63 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   ]);
 
   isPrint = true;
-  readonly yesterday: Date = (() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() - 1);
-    return d;
-  })();
 
   data: any[] = [];
   totalRecords = 0;
   selectedItems: any[] = [];
 
   // ===== 表單 =====
-  queryForm = this.formBuilder.group({
-    tlt_no: ['', [Validators.maxLength(10)]],
-    tlt_name: ['', [Validators.maxLength(50)]],
-    floor_noList: [[] as string[]],
-    area_noList: [[] as string[]],
-    tlt_openflagList: [[] as string[]],
-    tlt_bdate_start: [],
-    tlt_bdate_end: [],
-    tlt_edate_start: [null],
-    tlt_edate_end: [null],
-    cap_typeList: [[] as string[]],
-    cap_itemList: [[] as string[]],
-    tpy_bdate_start: [null],
-    tpy_bdate_end: [null],
-    tpy_edate_start: [null],
-    tpy_edate_end: [null],
-    bus_typeList: [[] as string[]],
-    tlt_building: ['', [Validators.maxLength(1)]],
-    SortBy: [[]],
-    org_idList: [[]],
-    PageSize: [20],
-    PageIndex: [1],
-  });
+queryForm = this.formBuilder.group({
+  tlt_no: ['', [Validators.maxLength(10)]],
+  tlt_name: ['', [Validators.maxLength(50)]],
+  floor_noList: [[] as string[]],
+  area_noList: [[] as string[]],
+  tlt_openflagList: [[] as string[]],
+  tlt_bdate_start: [],
+  tlt_bdate_end: [],
+  tlt_edate_start: [null],
+  tlt_edate_end: [null],
+
+  cap_typeList: [[] as string[]], // 扣款類別
+  cap_itemList: [[] as string[]], // 扣款代碼
+
+  tpy_bdate_start: [null],
+  tpy_bdate_end: [null],
+  tpy_edate_start: [null],
+  tpy_edate_end: [null],
+  bus_typeList: [[] as string[]],
+  tlt_building: ['', [Validators.maxLength(1)]],
+  org_idList: [[] as string[]],
+
+  // ✅ 分頁 + 排序（小寫 pageIndex / pageSize）
+  ...createPaginationConfig([
+    { field: 'tlt_no', order: 1 },
+  ]),
+});
 
   // ===== 下拉選項 =====
-  regionOptions: any[] = [];
-  floorOptions: any[] = [];
   operationStatusOptions = [
-    { value: 0, label: '閉店/撤櫃' },
-    { value: 1, label: '營業中' },
-    { value: 2, label: '合約結束' },
-    { value: 9, label: '核准時合約尚未開始' },
+    { value: 0, label: '0-閉店/撤櫃' },
+    { value: 1, label: '1-營業中' },
+    { value: 2, label: '2-合約結束' },
+    { value: 9, label: '9-核准時合約尚未開始' },
   ];
+
   bus_typeOptions: any[] = [];
   deductionCategoryOptions = [
-    { value: 'A', label: '一次扣款' },
-    { value: 'B', label: '每月扣款' },
-    { value: 'C', label: '平均分攤' },
-    { value: 'D', label: '比率分攤' },
-    { value: 'E', label: '活動扣款' },
-    { value: 'Z', label: '其他扣款' },
+    { value: 'A', label: 'A-一次扣款' },
+    { value: 'B', label: 'B-每月扣款' },
+    { value: 'C', label: 'C-平均分攤' },
+    { value: 'D', label: 'D-比率分攤' },
+    { value: 'E', label: 'E-活動扣款' },
+    { value: 'Z', label: 'Z-其他扣款' },
   ];
-  deductionCodeNameServOptions: any[] = [];
+
+  deductCodeNameOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   organizationOptions: any[] = [];
   CounterOptions: any[] = [];
+
 
   // ===== 表格欄位 =====
   columns: any[] = [
@@ -158,8 +155,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     { field: 'down_payment', header: '頭期款', visible: true, format: (v: any) => this.moneyFormat(v), style: 'text-right' },
     { field: 'period_nos', header: '期數', visible: true },
     { field: 'tpy_amount', header: '每期金額', visible: true, format: (v: any) => this.moneyFormat(v), style: 'text-right' },
- { field: 'down_payment', header: '首期金額', visible: true, format: (v: any) => this.moneyFormat(v), style: 'text-right' },
-    
+    { field: 'down_payment', header: '首期金額', visible: true, format: (v: any) => this.moneyFormat(v), style: 'text-right' },
     { field: 'tpy_rate', header: '比率或元(月利率%)', visible: true, style: 'text-right' },
     { field: 'defSalesAmt', header: '預設營業額', visible: true, format: (v: any) => v ?? 0, style: 'text-right' },
     { field: 'commRate', header: '抽成百分比%', visible: true, format: (v: any) => v ?? 0, style: 'text-right' },
@@ -190,29 +186,6 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
       .pipe(untilDestroyed(this))
       .subscribe((res) => (this.BUILDING_NO_Options = res));
 
-    // 扣款類別 → 扣款代碼/名稱連動
-    this.queryForm.controls.cap_typeList.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe((selectedCapTypes: string[] | null) => {
-        if (selectedCapTypes?.length) {
-          const payload = { cap_typeList: selectedCapTypes };
-          this.deductionService
-            .getAPS1003DropDownList(payload)
-            .pipe(untilDestroyed(this))
-            .subscribe(res => {
-              this.deductionCodeNameServOptions = res?.map((x: any) => ({
-                label: `${x.value} - ${x.label}`,
-                value: x.value
-              })) || [];
-              this.queryForm.controls.cap_itemList.setValue([]);
-            });
-        } else {
-          this.deductionCodeNameServOptions = [];
-          this.queryForm.controls.cap_itemList.setValue([]);
-        }
-      });
-
-    // 組織下拉
     this.tls13030Service
       .getSYS3100DropDownList()
       .pipe(
@@ -222,53 +195,137 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
         }))),
         untilDestroyed(this)
       )
-      .subscribe(opts => {
-        this.organizationOptions = opts;
-      });
+      .subscribe(opts => (this.organizationOptions = opts));
 
-    // 專櫃下拉
     this.counterNameService.getCounters()
       .pipe(untilDestroyed(this))
-      .subscribe(v => this.CounterOptions = (v || []).map((x) => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value,
-      })));
+      .subscribe(v => {
+        this.CounterOptions = (v || []).map((x) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        }));
+      });
+   this.tls13030Service.getAPS1003DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(v => {
+        this.deductCodeNameOptions = (v || []).map((x) => ({
+          label:  `${x.value} - ${x.label}`,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        }));
+      });
+
   }
+
+  
 
   // ===== lazy 事件（分頁/排序）=====
-  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
-    // 1) 讀 event 的 pageIndex/pageSize
-    const evPageIndex = Number.isFinite(event.pageIndex) ? Number(event.pageIndex) : undefined;
-    const evPageSize = Number.isFinite(event.pageSize) ? Number(event.pageSize) : undefined;
+// ===== lazy 事件（分頁/排序）=====
+// ※前提：queryForm 內請改成 pageIndex: [1] (小寫)
+override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
+  // 1) 取出 event 的 pageIndex / pageSize（若沒給就 undefined）
+  const evPageIndex =
+    Number.isFinite(event.pageIndex) ? Number(event.pageIndex) : undefined;
 
-    // 2) 排序：沿用現有或表單內
-    const currSort = JSON.stringify(form.value?.SortBy ?? []);
-    const nextSort = JSON.stringify(event.SortBy ?? form.value.SortBy ?? []);
-    const nextPageIndex = currSort !== nextSort ? 1 : (evPageIndex ?? form.value.PageIndex ?? 1);
+  const evPageSize =
+    Number.isFinite(event.pageSize) ? Number(event.pageSize) : undefined;
 
-    // 3) 只 patch 大寫分頁鍵
-    form.patchValue({
-      SortBy: event.SortBy ?? form.value.SortBy ?? [],
-      PageIndex: nextPageIndex,
-      PageSize: evPageSize ?? form.value.PageSize ?? 20,
-    }, { emitEvent: false });
+  // 2) 判斷排序是否改變：排序一變就要回到第一頁
+  const currSort = JSON.stringify(form.value?.SortBy ?? []);
+  const nextSort = JSON.stringify(event.SortBy ?? form.value?.SortBy ?? []);
 
-    // 4) 更新排序 UI 狀態
-    this.sortMeta = (event.SortBy ?? []).map(s => ({ ...s }));
+  const nextPageIndex =
+    currSort !== nextSort
+      ? 1
+      : (evPageIndex ?? form.value?.pageIndex ?? 1);
 
-    // 5) 去重簽章
-    const sig = JSON.stringify({
-      PageIndex: form.value.PageIndex,
-      PageSize: form.value.PageSize,
-      SortBy: form.value.SortBy,
+  // 3) 寫回表單（emitEvent:false 避免 valueChanges 連鎖）
+  form.patchValue(
+    {
+      SortBy: event.SortBy ?? form.value?.SortBy ?? [],
+      pageIndex: nextPageIndex,
+      pageSize: evPageSize ?? form.value?.pageSize ?? 30,
+    },
+    { emitEvent: false }
+  );
+
+  // 4) 更新本地 sortMeta（若你 table 需要）
+  this.sortMeta = (event.SortBy ?? []).map((s: any) => ({ ...s }));
+
+  // 5) 防止同樣分頁/排序重複打 API
+  const sig = JSON.stringify({
+    pageIndex: form.value?.pageIndex,
+    pageSize: form.value?.pageSize,
+    SortBy: form.value?.SortBy,
+  });
+
+  if (sig === this.lastQuerySig) return;
+  this.lastQuerySig = sig;
+
+  // 6) 觸發查詢（避免連續事件）
+  if (this.lazyTimer) clearTimeout(this.lazyTimer);
+  this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
+}
+
+
+// ===== 組 payload（分頁/排序 + 清理空值）=====
+private buildPayload(val: any) {
+  // 1) pageSize / pageIndex（小寫）
+  const pageSize =
+    Number.isFinite(val?.pageSize) ? Number(val.pageSize) : 30;
+
+  const pageIndex =
+    Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
+
+  // 2) SortBy：優先 val.SortBy，其次 this.sortMeta，再其次 defaultSort
+  const rawSortBy = Array.isArray(val?.SortBy) ? val.SortBy : [];
+  const sortByArr =
+    rawSortBy.length
+      ? rawSortBy
+      : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
+
+  // 3) 只允許後端認得的排序欄位（避免 SQL injection / 後端報錯）
+  const filteredSortBy = (sortByArr || []).filter((s: any) =>
+    this.allowedSortFields.has(String(s?.field || ''))
+  );
+
+  // 4) 複製一份當 payload 基礎
+  const o: any = { ...val };
+
+  // 5) 只在需要時帶入分頁/排序（你原本的行為）
+  if (this.includePagingAndSorting) {
+    Object.assign(o, {
+      pageSize,
+      pageIndex,
+      SortBy: filteredSortBy,
     });
-    if (sig === this.lastQuerySig) return;
-    this.lastQuerySig = sig;
-
-    if (this.lazyTimer) clearTimeout(this.lazyTimer);
-    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
   }
+
+  // 6) 清掉表單內同名欄位（避免帶出重複欄位）
+  //    你表單有 pageSize/pageIndex 就會被上面 Object.assign 覆蓋成 number，
+  //    但還是建議清掉不必要的舊欄位（包含你以前的 PageIndex）
+  delete o.PageIndex; // ★如果你有舊欄位殘留，直接保險砍掉
+  // （注意：不要 delete o.pageSize / o.pageIndex，因為這次 payload 就要送它們）
+
+  // 7) 清理空值/空陣列
+  Object.keys(o).forEach((k) => {
+    const v = o[k];
+
+    if (v === undefined || v === '') {
+      delete o[k];
+      return;
+    }
+
+    if (Array.isArray(v) && v.length === 0) {
+      delete o[k];
+      return;
+    }
+  });
+
+  return o;
+}
+
 
   // ===== 查詢 =====
   onSubmit(form: FormGroup): void {
@@ -276,7 +333,6 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
 
     const raw = { ...form.value };
 
-    // 修剪字串、空字串轉 null
     for (const k in raw) {
       if (typeof raw[k] === 'string') {
         raw[k] = raw[k].trim();
@@ -285,20 +341,14 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
       if (raw[k] === '') raw[k] = null;
     }
 
-    // 下拉物件 → 值
     if (raw.tlt_building && typeof raw.tlt_building === 'object') {
       raw.tlt_building = raw.tlt_building?.value;
     }
 
-    // 明確轉字串陣列
     const listKeys = [
-      'tlt_idList',
-      'tlt_term_typeList',
-      'cag_barcodeList',
       'bus_typeList',
       'tlt_openflagList',
       'org_idList',
-      'tlt_floorList',
       'area_noList',
       'floor_noList',
       'cap_typeList',
@@ -308,11 +358,9 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
       if (Array.isArray(raw[key])) raw[key] = raw[key].map((v: any) => String(v));
     }
 
-    // 對應欄位
     raw.tlt_floorList = raw.floor_noList;
     raw.area_noList = raw.area_noList;
 
-    // ===== 月份欄位（dateMonthRange）轉成 YYYYMM =====
     const monthKeys = [
       'tpy_bdate_start',
       'tpy_bdate_end',
@@ -320,15 +368,15 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
       'tpy_edate_end',
     ];
     for (const key of monthKeys) {
-      if (raw[key]) {
-        const yyyymm = this.toYYYYMM(raw[key]);
-        raw[key] = yyyymm;
-      }
+      if (raw[key]) raw[key] = this.toYYYYMM(raw[key]);
     }
 
-    // 產生 payload（含分頁/排序 + 白名單過濾）
     const payload = this.buildPayload({ ...raw });
 
+// ✅ 給 table-report 往下滾用
+this.lastQueryBody = { ...payload };
+// ✅（可選）同步一下 sortMeta，避免 UI sort 箭頭不同步
+this.sortMeta = payload.SortBy ?? this.sortMeta;
     this.loading = true;
     this.messageService.blockUi();
 
@@ -358,46 +406,10 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  /** 組查詢 payload（含排序＆分頁鍵，且會過濾未知排序欄位例如 groupKey） */
-  private buildPayload(val: any) {
-    const pageSize = Number.isFinite(val?.PageSize) ? Number(val.PageSize) : 10;
-    const pageIndex = Number.isFinite(val?.PageIndex) ? Number(val.PageIndex) : 1;
 
-    const rawSortBy = Array.isArray(val?.SortBy) ? val.SortBy : [];
-    const sortByArr = rawSortBy.length ? rawSortBy : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
-
-    // ✅ 過濾不在白名單的排序欄位（擋掉 groupKey 等）
-    const filteredSortBy = (sortByArr || []).filter((s: any) => this.allowedSortFields.has(String(s?.field || '')));
-
-    const o: any = { ...val };
-
-    if (this.includePagingAndSorting) {
-      Object.assign(o, {
-        PageSize: pageSize,
-        PageIndex: pageIndex,
-        SortBy: filteredSortBy,
-      });
-    }
-
-    // 🔎 主動移除小寫分頁鍵，避免後端看到兩份
-    delete o.pageSize;
-    delete o.pageIndex;
-
-    // 一般清理
-    Object.keys(o).forEach(k => {
-      const v = o[k];
-      if (v === undefined || v === '') delete o[k];
-      if (Array.isArray(v) && v.length === 0) delete o[k];
-    });
-
-    return o;
-  }
-
-  // ===== Helper：Date / 字串 → YYYYMM =====
   private toYYYYMM(value: any): string | null {
     if (!value) return null;
 
-    // 如果已經是 "YYYYMM" 就直接回傳
     if (typeof value === 'string') {
       const trimmed = value.trim();
       if (/^\d{6}$/.test(trimmed)) return trimmed;
@@ -411,12 +423,12 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     return `${year}${month}`;
   }
 
-  // ===== 後端回傳資料格式化 =====
   processResultData(resData: any[]): any[] {
     const formatYYYYMM = (value: string): string => {
       if (value && value.length === 6) return `${value.substring(0, 4)}/${value.substring(4, 6)}`;
       return value;
     };
+
     return (resData || []).map((item: any) => ([
       'defSalesAmt',
       'commRate',

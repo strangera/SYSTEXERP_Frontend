@@ -1161,11 +1161,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
           });
         }, 2000);
       } else {
-        this.messageService.errorBubble(response?.message || '儲存失敗');
+        this.messageService.errorBubble(response?.message || '要約書資料提交失敗');
       }
     } catch (error: any) {
-      console.error('儲存失敗:', error);
-      this.messageService.errorBubble(error.message || '儲存失敗');
+      console.error('要約書資料提交失敗:', error);
+      this.messageService.errorBubble(error.message || '要約書資料提交失敗');
     } finally {
       this.isSaving = false;
       this.messageService.unblockUi();

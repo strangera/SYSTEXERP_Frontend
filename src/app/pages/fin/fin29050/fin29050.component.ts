@@ -209,11 +209,13 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
             this.queryFn = (body: any) => {
               const pageSize = body?.pageSize ?? body?.PageSize ?? requestData.PageSize ?? 30;
               const pageIndex = body?.pageIndex ?? body?.PageIndex ?? 1;
+              const sortFromEvent = body?.SortBy ?? body?.multiSortMeta ?? requestData.SortBy ?? [];
               const mapped: QueryFIN29050Request = {
                 ...requestData,
                 PageSize: pageSize,
                 PageIndex: pageIndex,
                 Offset: Math.max(pageIndex - 1, 0) * pageSize,
+                SortBy: sortFromEvent,
               } as QueryFIN29050Request;
               console.log('[FIN29050] queryFn mapped request ->', mapped);
               return this.fin29050Service.queryFIN29050(mapped);
@@ -258,6 +260,15 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
     const pageIndex = (event as any).pageIndex ?? 1;
     const body = { pageIndex, pageSize, SortBy: (event as any).SortBy ?? (event as any).multiSortMeta ?? [] };
     console.log('[FIN29050] onLazyLoadData', { pageIndex, pageSize, body, queryFormExists: !!queryForm });
+
+    // 把目前的分頁與排序回寫到 queryForm，讓匯出/儲存狀態時能保留排序與分頁
+    if (queryForm) {
+      try {
+        queryForm.patchValue({ pageIndex, pageSize, SortBy: body.SortBy || body.SortBy || [] });
+      } catch (e) {
+        // ignore patch errors
+      }
+    }
 
     if (!this.queryFn) {
       return;

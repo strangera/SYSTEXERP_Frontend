@@ -73,6 +73,8 @@ export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements 
     { No: 'N', Name: '不補發票' }
   ];
   editData: any[] = [];
+  // 保存查詢帶入的原始明細複本，用於還原
+  private originalDetails: any[] = [];
   selectedItems: any[] = [];
   editFooterData = {
     d_amt: 0, // 借方總金額
@@ -142,12 +144,14 @@ export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements 
 
     const details = this.queryData?.details as any[] | undefined;
     if (Array.isArray(details) && details.length) {
-      this.editData = details;
+      // 儲存原始的複本，避免之後在編輯時修改原始資料來源
+      this.originalDetails = details.map(d => ({ ...d }));
+      this.editData = this.originalDetails.map(d => ({ ...d }));
       this.editFooterData = {
-        d_amt: details.reduce((sum, r) => sum + (Number(r.d_amt) || 0), 0),
-        c_amt: details.reduce((sum, r) => sum + (Number(r.c_amt) || 0), 0),
+        d_amt: this.originalDetails.reduce((sum, r) => sum + (Number(r.d_amt) || 0), 0),
+        c_amt: this.originalDetails.reduce((sum, r) => sum + (Number(r.c_amt) || 0), 0),
       };
-      this.totalRecords = details.length;
+      this.totalRecords = this.originalDetails.length;
     }
 
     // 將查詢畫面輸入的傳票日期帶入 CRU 顯示
@@ -237,6 +241,34 @@ export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements 
         },
 
       });
+  }
+
+  // 取消/還原：將編輯表格還原為原始查詢帶入的明細，並回復表單欄位
+  // 還原編輯資料為查詢時的初始明細（由 originalDetails 提供）
+  onRestore(): void {
+    this.submitted = false;
+
+    if (Array.isArray(this.originalDetails) && this.originalDetails.length) {
+      this.editData = this.originalDetails.map(d => ({ ...d }));
+      this.editFooterData = {
+        d_amt: this.originalDetails.reduce((sum, r) => sum + (Number(r.d_amt) || 0), 0),
+        c_amt: this.originalDetails.reduce((sum, r) => sum + (Number(r.c_amt) || 0), 0),
+      };
+      this.totalRecords = this.originalDetails.length;
+    } else {
+      this.editData = [];
+      this.editFooterData = { d_amt: 0, c_amt: 0 };
+      this.totalRecords = 0;
+    }
+
+    // 回填查詢時帶入的表單欄位（若有）
+    const queryForm = this.queryData?.form as any | undefined;
+    if (queryForm) {
+      const restore: any = {};
+      if (queryForm.VouDate !== undefined) restore.VouDate = queryForm.VouDate;
+      if (queryForm.Remark !== undefined) restore.Remark = queryForm.Remark;
+      try { this.dataForm.patchValue(restore); } catch (e) { /* ignore */ }
+    }
   }
 
 }

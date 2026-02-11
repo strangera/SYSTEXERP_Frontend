@@ -74,10 +74,10 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_GUI_Type: ['07', [Validators.required, Validators.maxLength(2)]],
     ECR_TimeTickInvl: [1, [Validators.required, Validators.min(1), Validators.max(999999)]],
     ECR_Interval: [6, [Validators.required, Validators.min(0), Validators.max(999999)]],
-    ECR_MaxQty: [999999, [Validators.required, Validators.min(0), Validators.max(9999999999.99)]],
-    ECR_MaxAmt: [99999999, [Validators.required, Validators.min(0), Validators.max(9999999999.99)]],
-    ECR_MaxItemAmt: [99999999, [Validators.required, Validators.min(0), Validators.max(9999999999.99)]],
-    ECR_MaxDisc: [0, [Validators.required, Validators.min(0), Validators.max(9999999999.99)]],
+    ECR_MaxQty: [999999, [Validators.required, Validators.min(0), Validators.max(9999999999)]],
+    ECR_MaxAmt: [99999999, [Validators.required, Validators.min(0), Validators.max(9999999999)]],
+    ECR_MaxItemAmt: [99999999, [Validators.required, Validators.min(0), Validators.max(9999999999)]],
+    ECR_MaxDisc: [0, [Validators.required, Validators.min(0), Validators.max(9999999999)]],
     ECR_EdcTimeout: [60, [Validators.required, Validators.min(0), Validators.max(999999)]],
     ECR_EdcSettle: ['Y', [Validators.required, Validators.maxLength(1)]],
     ECR_ForceInput: ['N', [Validators.required, Validators.maxLength(1)]],
@@ -300,11 +300,32 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
           const patchObj: any = {};
           Object.keys(this.dataForm.controls).forEach(key => {
             if (detail[key] !== undefined) {
+              // 特別處理連接埠欄位為 null 的情況
               if ((key === 'ECR_MSRCom' || key === 'ECR_OrderPrnCom') && (detail[key] === null || detail[key] === undefined)) {
                 patchObj[key] = 0;
-              } else {
-                patchObj[key] = detail[key];
+                return;
               }
+
+              // 特別處理 ECR_SettleHHNN：可能為 '2330' / 2330 / Date
+              if (key === 'ECR_SettleHHNN') {
+                const val = detail[key];
+                if (val instanceof Date) {
+                  patchObj[key] = val;
+                } else if (typeof val === 'number' || (typeof val === 'string' && /^\d{3,4}$/.test(String(val)))) {
+                  const s = String(val).padStart(4, '0');
+                  const hh = parseInt(s.substring(0, 2), 10);
+                  const mm = parseInt(s.substring(2, 4), 10);
+                  const d = new Date();
+                  d.setHours(hh, mm, 0, 0);
+                  patchObj[key] = d;
+                } else {
+                  patchObj[key] = this.defaultTime1110();
+                }
+                return;
+              }
+
+              // 其他欄位直接帶入
+              patchObj[key] = detail[key];
             }
           });
           this.dataForm.patchValue(patchObj);
