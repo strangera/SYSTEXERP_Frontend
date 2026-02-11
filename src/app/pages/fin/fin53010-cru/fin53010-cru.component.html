@@ -76,48 +76,50 @@
           [control]="df().INV_YN"
           [submitted]="submitted"
         ></app-dropdown>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="建立者"
-          controlName="CRT_USR_No"
-          [control]="df().CRT_USR_No"
-          [disabled]="!0"
-          [options]="service.usrOptions()"
-          optionLabel="label"
-          optionValue="value"
-          [loading]="service.usrLoading()"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-calendar
-          class="col-12 md:col-6 lg:col-4"
-          calendarType="dateOne"
-          label="建立日期"
-          controlName="CRT_Date"
-          [control]="df().CRT_Date"
-          [disabled]="!0"
-          [submitted]="submitted"
-        ></app-calendar>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="修改者"
-          controlName="UPD_USR_No"
-          [control]="df().UPD_USR_No"
-          [disabled]="!0"
-          [options]="service.usrOptions()"
-          optionLabel="label"
-          optionValue="value"
-          [loading]="service.usrLoading()"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-calendar
-          class="col-12 md:col-6 lg:col-4"
-          calendarType="dateOne"
-          label="修改日期"
-          controlName="UPD_Date"
-          [control]="df().UPD_Date"
-          [disabled]="!0"
-          [submitted]="submitted"
-        ></app-calendar>
+        @if (!isFormCreateable) {
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="建立者"
+            controlName="CRT_USR_No"
+            [control]="df().CRT_USR_No"
+            [disabled]="!0"
+            [options]="service.usrOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [loading]="service.usrLoading()"
+            [submitted]="submitted"
+          ></app-dropdown>
+          <app-calendar
+            class="col-12 md:col-6 lg:col-4"
+            calendarType="dateOne"
+            label="建立日期"
+            controlName="CRT_Date"
+            [control]="df().CRT_Date"
+            [disabled]="!0"
+            [submitted]="submitted"
+          ></app-calendar>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="修改者"
+            controlName="UPD_USR_No"
+            [control]="df().UPD_USR_No"
+            [disabled]="!0"
+            [options]="service.usrOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [loading]="service.usrLoading()"
+            [submitted]="submitted"
+          ></app-dropdown>
+          <app-calendar
+            class="col-12 md:col-6 lg:col-4"
+            calendarType="dateOne"
+            label="修改日期"
+            controlName="UPD_Date"
+            [control]="df().UPD_Date"
+            [disabled]="!0"
+            [submitted]="submitted"
+          ></app-calendar>
+        }
         <!--
         <app-radiobutton
           class="col-12 md:col-6 lg:col-4"
@@ -148,9 +150,9 @@
     <div class="col-12">
       <p-panel header="資料" class="line-height-3 m-0 mb-3">
         <app-table-edit
-          [showCheckBox]="isFormCreateable"
-          [showReorder]="isFormCreateable"
-          [disabled]="!isFormCreateable"
+          [showCheckBox]="!isFormReadable"
+          [showReorder]="!isFormReadable"
+          [disabled]="isFormReadable"
           (fieldChange)="onFieldChange($event)"
           (dataChange)="onDataChange($event)"
           (rowReorderData)="onRowReorder($event)"
@@ -236,7 +238,7 @@
       </p-table>
     </div>
 
-    <div
+    <!-- <div
       class="flex justify-content-end gap-2 mt-3 pt-2 border-top-1 surface-border"
     >
       <button
@@ -251,7 +253,7 @@
         class="p-button-outlined"
         (click)="selectTemplateItem(rowData); overlayPanel.hide()"
       ></button>
-    </div>
+    </div> -->
   </div>
 </ng-template>
 

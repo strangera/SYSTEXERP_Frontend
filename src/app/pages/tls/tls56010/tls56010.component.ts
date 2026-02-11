@@ -5,9 +5,11 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS56010Service } from '@service/api/tls/tls56010.service';
 import { DropDownListService, IDropdownItem, IPOS20032Request } from '@service/utility/dropDownList.service';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { formatAmount } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
+import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -64,6 +66,8 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
   });
   expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
+  private lazyLoadTrigger$ = new Subject<any>();
+
   // 管理編號
   suggestions: IQueryPOS2004DetailResponse[] = [];
   fieldsConfig: FieldsConfig[] = [
@@ -104,7 +108,7 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
     { field: 'STK_CurrentQty', header: '現有庫存量', visible: true },
     { field: 'Calc_SafeQty', header: '安全庫存量', visible: true },
     { field: 'PLU_UNITNAME', header: '單位', visible: true },
-    { field: 'PLU_SalePrc', header: '售價', visible: true },
+    { field: 'PLU_SalePrc', header: '售價', visible: true, format: formatAmount },
     { field: 'LOGO_No', header: '品牌代碼', visible: true },
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
     { field: 'SaleQty_30Days', header: '30天銷售量', visible: true },
@@ -227,27 +231,48 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
         this.queryForm.patchValue({ generalCode: null }, { emitEvent: false });
       }
     });
+
+    // 合併快速的 lazyLoad 事件，避免重複送出查詢
+    this.lazyLoadTrigger$.pipe(debounceTime(50), untilDestroyed(this)).subscribe(() => {
+      this.onSubmit(this.queryForm);
+    });
+  }
+
+  // 處理 table 的 lazyLoad 事件（只綁定到 template 一個 handler，避免重複呼叫）
+  onTableLazy(event: any) {
+    // 先用 base class 處理 pageIndex/pageSize/SortBy 的 patch
+    try {
+      super.onLazyLoadData(event, this.queryForm);
+    } catch (e) {
+      // ignore
+    }
+    // 延遲合併呼叫真正的 onSubmit
+    this.lazyLoadTrigger$.next(event);
   }
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       this.loading = true;
-      const v = form.getRawValue() as any;
+      this.messageService.infoBubble('查詢中,請稍候...');
 
+      const v = form.getRawValue() as any;
       const toStr = (val: any) => Array.isArray(val) ? (val[0] ?? '') : (val ?? '');
       const toArr = (val: any) =>
         Array.isArray(val) ? val.filter((x) => x != null && x !== '') :
           (val != null && val !== '' ? [val] : []);
       const nonEmpty = (s?: string | null) => !!(s && s.trim().length);
 
-      // 依你要的顯示順序建立物件，並且對空字串「不送欄位」
+      const normalizeSortBy = (sortBy: any) => {
+        if (!Array.isArray(sortBy) || !sortBy.length) return [{ field: 'PLU_MagNo', order: 1 }];
+        return sortBy
+          .filter((s: any) => s && typeof s.field === 'string')
+          .map((s: any) => ({ field: s.field, order: s.order === -1 ? 2 : (s.order ?? 1) }));
+      };
+
       const body: any = {
         PageSize: Number(v.pageSize ?? 10),
         PageIndex: Number(v.pageIndex ?? 1),
-        SortBy: (Array.isArray(v.SortBy) && v.SortBy.length)
-          ? v.SortBy
-          : [{ field: 'PLU_MagNo', order: 1 }],
-        // 下面這些只在有值時才加入（避免空字串造成後端拋錯）
+        SortBy: normalizeSortBy(v.SortBy),
         ...(nonEmpty(toStr(v.CAT_LNo)) ? { CAT_LNo: toStr(v.CAT_LNo) } : {}),
         ...(nonEmpty(toStr(v.CAT_MNo)) ? { CAT_MNo: toStr(v.CAT_MNo) } : {}),
         ...(nonEmpty(toStr(v.CAT_SNo)) ? { CAT_SNo: toStr(v.CAT_SNo) } : {}),
@@ -261,32 +286,48 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
         LOGO_No: v.LOGO_No,
       };
 
-      // // 小防呆：若所有條件都空，避免打到後端直接噴錯
-      // if (!body.PLU_MagNo && !body.CAT_LNo && !body.CAT_MNo && !body.CAT_SNo && !body.LOGO_No) {
-      //   this.messageService.errorBubble('請至少輸入一個查詢條件（例如：管理編號或分類/品牌）');
-      //   this.loading = false;
-      //   this.messageService.unblockUi();
-      //   return;
-      // }
-
-      // console.log('payload =', JSON.stringify(body));  // 會是你要的順序
-
       this.tls56010Service.queryTLS56010(body).subscribe({
         next: (res: { Data: any[]; TotalCount: number }) => {
           this.data = res?.Data ?? [];
-          this.filteredData = [...this.data];
+          // 若後端沒有依 SortBy 排序，可在 client 端以 body.SortBy 做回退排序
+          if (Array.isArray(body.SortBy) && body.SortBy.length) {
+            this.filteredData = this.applyLocalSort([...this.data], body.SortBy);
+          } else {
+            this.filteredData = [...this.data];
+          }
           this.totalRecords = res?.TotalCount ?? this.data.length;
           this.queryStateService.setQueryState(this.ProgNo, body);
           this.loading = false;
           this.messageService.unblockUi();
         },
-        error: (err) => {
-          console.error('TLS56010 查詢失敗:', err);
-          this.messageService.errorBubble('查詢失敗，請稍後再試');
-          this.loading = false;
-          this.messageService.unblockUi();
-        }
+
       });
+    });
+  }
+
+  // 當後端無法正確排序時，於 client 端對當前 page 的資料做回退排序
+  private applyLocalSort(rows: any[], sortBy: any[]): any[] {
+    if (!Array.isArray(sortBy) || !sortBy.length) return rows;
+    const compareValue = (a: any, b: any) => {
+      if (a == null && b == null) return 0;
+      if (a == null) return -1;
+      if (b == null) return 1;
+      // numeric compare if both numeric
+      const na = Number(a);
+      const nb = Number(b);
+      if (!isNaN(na) && !isNaN(nb)) return na - nb;
+      // fallback string compare
+      return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+    };
+
+    return rows.sort((r1, r2) => {
+      for (const s of sortBy) {
+        const field = s?.field;
+        const order = s?.order === -1 ? -1 : (s?.order === 2 ? -1 : 1); // support -1,1 or 2
+        const v = compareValue(r1?.[field], r2?.[field]);
+        if (v !== 0) return order === -1 ? -v : v;
+      }
+      return 0;
     });
   }
 
