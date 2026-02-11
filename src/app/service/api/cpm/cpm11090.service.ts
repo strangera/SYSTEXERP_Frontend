@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { getSYS1000Options } from '@service/system/sys1000.service';
-import { map, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { ApiResponse } from '../fin/fin26010.service';
 
@@ -90,20 +89,7 @@ export class Cpm11090Service {
    * @param body 查詢條件
    */
   queryCPM11090(body: QueryCPM11090Request): Observable<ApiResponse<QueryCPM11090Response[]>> {
-    return this.http.post<ApiResponse<QueryCPM11090Response[]>>(`${this.apiUrl}/queryCPM11090`, body).pipe(
-      map(res => {
-        return {
-          ...res,
-          Data: res.Data.map(item => ({
-            ...item,
-            // 處理稱謂轉換
-            salutation: getSYS1000Options('SALUTATION').find(opt => opt.label === item.SalutationName)?.value || '',
-            // 處理廣播狀態顯示文字 (可選：視後端回傳格式而定)
-            broadcasT_YN: item.broadcasT_YN === 'Y' ? '已廣播' : (item.broadcasT_YN === 'N' ? '不廣播' : '待廣播')
-          }))
-        };
-      })
-    );
+    return this.http.post<ApiResponse<QueryCPM11090Response[]>>(`${this.apiUrl}/queryCPM11090`, body)
   }
 
   /**
