@@ -86,17 +86,23 @@ export class SYS0210Component extends BasicQueryPageComponent<tblRole>
 
   // 刪除項目
   onDelete(data: tblRole[]): void {
-    const idList = data.map(row => row.id).filter(id => id !== undefined && id !== null && typeof id === 'number');
-    this.sys0210Service.deleteRole({ ids: idList }).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.messageService.successBubble(response.Message);
-          this.onSubmit(this.queryForm);
-        } else {
-          this.messageService.errorBubble(response.Message);
-        }
+    this.messageService.confirm({
+      message: `是否確認刪除選中的角色基本資料?`,
+      header: `確認刪除`,
+      accept: () => {
+        const idList = data.map(row => row.id).filter(id => id !== undefined && id !== null && typeof id === 'number');
+        this.sys0210Service.deleteRole({ ids: idList }).subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble(response.Message);
+              this.onSubmit(this.queryForm);
+            } else {
+              this.messageService.errorBubble(response.Message);
+            }
+          },
+        });
+        this.selectedItems = [];
       },
     });
-    this.selectedItems = [];
   }
 }
