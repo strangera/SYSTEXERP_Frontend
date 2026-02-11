@@ -80,8 +80,9 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
   ];
   Type2Options = getSYS1000Options('LOST_GOODS_TYPE');
   SPACE3Options: any[] = [ //是否廣播
-    { label: '是', value: 'Y' },
-    { label: '否', value: 'N' },
+    { label: '已廣播', value: 'Y', disabled: true }, // 預設「已廣播」不能手動點選
+    { label: '待廣播', value: null, disabled: false },
+    { label: '不廣播', value: 'N', disabled: false },
   ];
   SPACE1Options = getSYS1000Options('LOCATION');
   // 為顯示 'No - Name' 格式，產生一份帶有格式化 label 的選項清單
@@ -135,6 +136,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
 
   ngOnInit(): void {
     this.initializePage('CPM11070', this.dataForm);
+    // 預設保持廣播欄位可編輯；在建立/載入時根據狀態決定是否鎖定
     // 先嘗試從後端更新 LOCATION 的 SYS1000，確保剛在其他頁面新增的選項能即時取得
     try {
       this.systemDataService.refreshSystemCodeByType('LOCATION')
@@ -174,6 +176,8 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
     if (!seqId) {
       this.dataForm.patchValue({ DocType: defaultDoc });
       try { this.dataForm.controls.DocType.disable(); } catch { }
+      // 建立模式：確保 BROADCAST_YN 可編輯
+      try { this.dataForm.controls.BROADCAST_YN.enable(); } catch { }
       // SEQ_TYPE 預設為 '1' (登錄)，並鎖定
       this.dataForm.patchValue({ SEQ_TYPE: '1' });
       try { this.dataForm.controls.SEQ_TYPE.disable(); } catch { }
@@ -236,6 +240,15 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
         try { this.dataForm.controls.OFF_DATE.disable(); } catch { }
         // detail view: lock MSG_DATE
         try { this.dataForm.controls.MSG_DATE.disable(); } catch { }
+        // 若後端帶入 BROADCAST_YN 為空字串（代表「已廣播」），則鎖定該欄位
+        try {
+          const b = d.BROADCAST_YN;
+          if (b === '') {
+            this.dataForm.controls.BROADCAST_YN.disable();
+          } else {
+            try { this.dataForm.controls.BROADCAST_YN.enable(); } catch { }
+          }
+        } catch { }
         // 如果是從列表「領回」按鈕開啟，將表單除領回區塊外設為唯讀
         if (openMode === 'receive') {
           this.onlyReceiveEditable = true;

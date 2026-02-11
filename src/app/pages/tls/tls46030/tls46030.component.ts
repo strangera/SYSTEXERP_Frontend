@@ -209,7 +209,7 @@ export class TLS46030Component extends BasicQueryPageComponent<any> implements O
     // 轉為後端期待的 UTC ISO 格式 (含 Z)
     const toISOStringUTC = (d: Date) => d.toISOString();
 
-    // 設定啟用日期: 起 -> 00:00:00 ; 訖 -> next day 00:00:00 (以配合後端 < end 的半開區間)
+    // 設定啟用日期: 起 -> 00:00:00 ; 訖 -> 23:59:59
     const sDate = toDate(frmValue.ECR_SchDate_Start);
     const eDate = toDate(frmValue.ECR_SchDate_End);
     if (sDate) {
@@ -217,13 +217,12 @@ export class TLS46030Component extends BasicQueryPageComponent<any> implements O
       frmValue.ECR_SchDate_Start = toISOStringUTC(sDate);
     }
     if (eDate) {
-      const nextDay = new Date(eDate);
-      nextDay.setDate(nextDay.getDate() + 1);
-      nextDay.setHours(0, 0, 0, 0);
-      frmValue.ECR_SchDate_End = toISOStringUTC(nextDay);
+      const endOfDay = new Date(eDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      frmValue.ECR_SchDate_End = toISOStringUTC(endOfDay);
     }
 
-    // 排程作業完成時間: 起 -> 00:00:00 ; 訖 -> next day 00:00:00
+    // 排程作業完成時間: 起 -> 00:00:00 ; 訖 -> 23:59:59
     const sFin = toDate(frmValue.ECR_SchFinTime_Start);
     const eFin = toDate(frmValue.ECR_SchFinTime_End);
     if (sFin) {
@@ -231,10 +230,9 @@ export class TLS46030Component extends BasicQueryPageComponent<any> implements O
       frmValue.ECR_SchFinTime_Start = toISOStringUTC(sFin);
     }
     if (eFin) {
-      const nextFin = new Date(eFin);
-      nextFin.setDate(nextFin.getDate() + 1);
-      nextFin.setHours(0, 0, 0, 0);
-      frmValue.ECR_SchFinTime_End = toISOStringUTC(nextFin);
+      const endOfDay = new Date(eFin);
+      endOfDay.setHours(23, 59, 59, 999);
+      frmValue.ECR_SchFinTime_End = toISOStringUTC(endOfDay);
     }
 
     const payload = {
