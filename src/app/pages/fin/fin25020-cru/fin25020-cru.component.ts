@@ -57,6 +57,7 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
     D_Date_End: [null],
   });
   transferSourceData: QueryUnremittedPAMResponse[] = [];
+  selectedTransferSource: QueryUnremittedPAMResponse | null = null;
   transferSourceColumns: Column[] = [
     { field: 'PAM_No', header: '匯款來源單號', visible: true },
     {
@@ -69,7 +70,7 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
         return `${year}/${month}/${day}`;
       }
     },
-    { field: 'Remit_Status', header: '是否形成電匯', visible: true },
+    { field: 'Remit_Status', header: '是否形成電匯', visible: true, format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : value },
     // { field: 'ItemCount', header: '筆數', visible: true },
   ];
 
@@ -147,6 +148,7 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
 
   // 開啟匯款來源單號查詢對話框
   openTransferSourceDialog(): void {
+    this.selectedTransferSource = null;
     this.showTransferSourceDialog = true;
     this.loadTransferSourceData();
   }
@@ -171,10 +173,21 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
     this.loadTransferSourceData();
   }
 
-  // 選擇匯款來源單號（雙擊）
-  onSelectTransferSource(data: QueryUnremittedPAMResponse): void {
+  // 選擇匯款來源單號（單選 radio）
+  onSelectTransferSource(event: { data?: QueryUnremittedPAMResponse }): void {
+    if (event.data) {
+      this.selectedTransferSource = event.data;
+    }
+  }
+
+  // 確認選擇匯款來源單號
+  confirmTransferSourceSelection(): void {
+    if (!this.selectedTransferSource) {
+      this.messageService.errorBubble('請選擇一筆匯款來源單號');
+      return;
+    }
     this.dataForm.patchValue({
-      TransferSourceNo: data.PAM_No,
+      TransferSourceNo: this.selectedTransferSource.PAM_No,
     });
     this.showTransferSourceDialog = false;
   }

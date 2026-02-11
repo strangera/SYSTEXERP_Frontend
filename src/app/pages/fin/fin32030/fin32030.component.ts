@@ -50,7 +50,7 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
     VouFrom: ['', [Validators.maxLength(20)]], // 傳票單號起
     VouTo: ['', [Validators.maxLength(20)]], // 傳票單號迄
     Remark: ['', [Validators.maxLength(100)]], // 備註
-    pageSize: [20], // 每頁筆數 (小寫,配合 onLazyLoadData)
+    pageSize: [30], // 每頁筆數 (小寫,配合 onLazyLoadData)
     pageIndex: [1], // 頁碼 (小寫,配合 onLazyLoadData)
     SortBy: [[{ field: 'RCV_No', order: 1 }]], // 排序參數
   });
@@ -71,7 +71,7 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
     VEN_No: [null as string | null], // 廠客代號
     DateFrom: [null], // 立帳日期起
     DateTo: [null], // 立帳日期迄
-    pageSize: [20],
+    pageSize: [30],
     pageIndex: [1],
     SortBy: [[{ field: 'VEN_No', order: 1 }]],
   });
@@ -169,7 +169,7 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
       VEN_No: null,
       DateFrom: null,
       DateTo: null,
-      pageSize: 20,
+      pageSize: 30,
       pageIndex: 1,
       SortBy: [{ field: 'VEN_No', order: 1 }],
     });
@@ -202,7 +202,7 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
       DateFrom: formValue.DateFrom || undefined,
       DateTo: formValue.DateTo || undefined,
       PageIndex: formValue.pageIndex ?? 1,
-      PageSize: formValue.pageSize ?? 20,
+      PageSize: formValue.pageSize ?? 30,
       SortBy: formValue.SortBy || undefined,
     };
 

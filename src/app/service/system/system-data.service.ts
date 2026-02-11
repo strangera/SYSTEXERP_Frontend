@@ -113,6 +113,13 @@ export class SystemDataService {
  * 回傳 Observable 確保呼叫端可以等待更新完成
  */
   refreshSystemCodeByType(sysType: string): Observable<QuerySystemCodeResponse[]> {
+    // 如果 sysType 長度超過後端限制 (12)，改成抓取全部 SYS1000，避免驗證錯誤或誤刪快取
+    if ((sysType ?? '').toString().length > 12) {
+      return this.queryAllSystemCode().pipe(
+        map(response => response.Data || [])
+      );
+    }
+
     const payload = {
       SYS_Type: sysType,
       SYS_Code: "",
@@ -123,7 +130,18 @@ export class SystemDataService {
     return this.http.post<ApiResponse<QuerySystemCodeResponse[]>>(`${this.apiUrl}/User/queryFilterSystemCode`, payload).pipe(
       tap(response => {
         if (response.Status === '0000' && response.Data) {
-          const allData = [...this._sys1000.getValue() as QuerySystemCodeResponse[]];
+          // 取得目前快取，若 service 尚未載入則嘗試從 localStorage 讀取
+          let allData = this._sys1000.getValue() as QuerySystemCodeResponse[];
+          if (!allData || allData.length === 0) {
+            try {
+              const stored = localStorage.getItem('SYS1000');
+              allData = stored ? (JSON.parse(stored) as QuerySystemCodeResponse[]) : [];
+            } catch {
+              allData = [];
+            }
+          }
+
+          // 使用傳入的 sysType 來篩除原本同類別的項目，再合併後端回傳的同類別項目
           const otherTypes = allData.filter(item => item.SYS_Type !== sysType);
           const updatedList = [...otherTypes, ...response.Data];
 

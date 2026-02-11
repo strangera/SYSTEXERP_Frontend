@@ -33,8 +33,6 @@ interface CategoryItem {
 }
 
 
-const storageKey = 'SYSB920';
-
 @Component({
   selector: 'app-sysb920',
   templateUrl: './sysb920.component.html',
@@ -87,7 +85,7 @@ export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> impl
   }
 
   ngOnInit(): void {
-    this.initializePage('SYSB920', '/SYS/SYSB920CRU');
+    this.initializePage('SYSB920', '/SYS/SYSB920CRU', this.queryForm, (form) => this.onSubmit(form));
 
     // 載入大分類代碼
     this.Sysb800DropdownService.getSystemTypes().subscribe({
@@ -117,7 +115,6 @@ export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> impl
       }
     });
 
-    this.handleQueryRestore(this.queryForm, storageKey, (form) => this.onSubmit(form));
   }
 
 
@@ -149,7 +146,7 @@ export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> impl
             this.filteredData = [...this.data];
             this.totalRecords = response.TotalCount || response.Data.length;
             // 儲存查詢條件（成功查詢後）
-            this.queryStateService.setQueryState(storageKey, frm.value);
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
             if (this.data.length === 0) {
               console.log('查詢結果為空');
               this.messageService.infoBubble('查詢結果為空');
@@ -183,25 +180,28 @@ export class SYSB920Component extends BasicQueryPageComponent<CategoryItem> impl
       return;
     }
 
-    this.apiService.deleteSYSB920({ idList }).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-        } else {
-          console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-        }
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.messageService.errorBubble('刪除失敗');
-      },
-      complete: () => {
-        this.onSubmit(this.queryForm); // 刷新資料
-      },
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: `是否確定刪除所選的 ${idList.length} 筆項目?`,
+      accept: () => {
+        this.apiService.deleteSYSB920({ idList }).subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble('選中項目刪除成功');
+              this.selectedItems = [];
+              this.onSubmit(this.queryForm); // 刷新資料
+            } else {
+              console.error('API error:', response.Status, response.Message);
+              this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+            }
+          },
+          error: (err: string) => {
+            console.error('API error:', err);
+            this.messageService.errorBubble('刪除失敗');
+          },
+        });
+      }
     });
-
-    this.selectedItems = [];
   }
 
   private loadMiddleCategoriesByMultipleBusType(busTypes: string[]): void {

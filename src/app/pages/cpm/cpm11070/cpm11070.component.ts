@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
@@ -137,6 +137,28 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
   ngOnInit(): void {
     this.initializePage('CPM11070', '/CPM/CPM11070CRU', this.queryForm, (frm) => this.onSubmit(frm));
 
+    // 嘗試向後端刷新 LOCATION 的 SYS1000，確保剛在其他頁面新增的選項會顯示
+    try {
+      this.systemDataService.refreshSystemCodeByType('LOCATION')
+        .pipe(untilDestroyed(this))
+        .subscribe({
+          next: () => {
+            try { SystemOptionsService.refreshCache(); } catch { }
+            this.SPACE1Options = getSYS1000Options('LOCATION');
+          },
+          error: () => {
+            try { SystemOptionsService.refreshCache(); } catch { }
+            this.SPACE1Options = getSYS1000Options('LOCATION');
+          }
+        });
+    } catch (e) {
+      try { SystemOptionsService.refreshCache(); } catch { }
+      this.SPACE1Options = getSYS1000Options('LOCATION');
+    }
+
+    // 載入物品類別下拉（頁面層容錯：若 filter API 失敗則抓全部再過濾）
+    this.loadLostGoodsTypeOptions();
+
     // 設定自訂管理按鈕：領回 -> 開啟編輯頁面以進行領回流程
     this.addButton = [
       {
@@ -215,7 +237,7 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
         .queryCPM11070(payload)
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
         .subscribe({
-          next: (res) => {
+          next: (res: any) => {
             this.data = res.Data || [];
             this.lastQueryBody = payload;
             this.totalRecords = res.TotalCount || this.data.length;
@@ -295,4 +317,36 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
       });
   }
 
+  private loadLostGoodsTypeOptions(): void {
+    try {
+      this.systemDataService.refreshSystemCodeByType('LOST_GOODS_TYPE')
+        .pipe(untilDestroyed(this))
+        .subscribe({
+          next: (res: any) => {
+            // 若回傳為空，fallback 為 queryAllSystemCode 並過濾
+            const hasData = Array.isArray(res) && res.length > 0;
+            if (hasData) {
+              this.Type2Options = getSYS1000Options('LOST_GOODS_TYPE');
+            } else {
+              this.systemDataService.queryAllSystemCode().pipe(untilDestroyed(this)).subscribe((resp: any) => {
+                const all = resp?.Data ?? [];
+                const items = (all as any[]).filter(i => i.SYS_Type === 'LOST_GOODS_TYPE');
+                this.Type2Options = (items || []).map(i => ({ value: i.SYS_Code, label: i.SYS_Name }));
+              });
+            }
+          },
+          error: () => {
+            // fallback to queryAll
+            this.systemDataService.queryAllSystemCode().pipe(untilDestroyed(this)).subscribe((resp: any) => {
+              const all = resp?.Data ?? [];
+              const items = (all as any[]).filter(i => i.SYS_Type === 'LOST_GOODS_TYPE');
+              this.Type2Options = (items || []).map(i => ({ value: i.SYS_Code, label: i.SYS_Name }));
+            });
+          }
+        });
+    } catch (e) {
+      try { SystemOptionsService.refreshCache(); } catch { }
+      this.Type2Options = getSYS1000Options('LOST_GOODS_TYPE');
+    }
+  }
 }

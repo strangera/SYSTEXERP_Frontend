@@ -51,7 +51,7 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
   columns: Column[] = [
     { field: 'bus_type', header: '大分類代號', visible: true },
     { field: 'bus_type_name', header: '大分類名稱', visible: true },
-    { field: 'bus_type_desc', header: '備註', visible: true, type: 'html' },
+    { field: 'bus_type_desc', header: '備註', visible: true },
     // 其他欄位
   ];
 
@@ -111,25 +111,28 @@ export class SYSB800Component extends BasicQueryPageComponent<CategoryItem> impl
       return;
     }
 
-    this.apiService.deleteSYSB800({ idList }).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-        } else {
-          console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-        }
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.messageService.errorBubble('刪除失敗');
-      },
-      complete: () => {
-        this.onSubmit(this.queryForm); // 刷新資料
-      },
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: `是否確定刪除所選的 ${idList.length} 筆項目?`,
+      accept: () => {
+        this.apiService.deleteSYSB800({ idList }).subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble('選中項目刪除成功');
+              this.selectedItems = [];
+              this.onSubmit(this.queryForm); // 刷新資料
+            } else {
+              console.error('API error:', response.Status, response.Message);
+              this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+            }
+          },
+          error: (err: string) => {
+            console.error('API error:', err);
+            this.messageService.errorBubble('刪除失敗');
+          },
+        });
+      }
     });
-
-    this.selectedItems = [];
   }
 
   isRowSelectable(rowData: CategoryItem): boolean {
