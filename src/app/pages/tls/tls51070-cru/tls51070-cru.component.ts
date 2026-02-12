@@ -799,10 +799,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     this.submitted = false;
   }
 
-  submitForm(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
   onClearForm() {
     this.dataForm.reset(); // 重置表單
   }

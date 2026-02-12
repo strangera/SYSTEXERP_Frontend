@@ -92,10 +92,6 @@ export class TLS51080CRUComponent extends BasicCruPageComponent<POS2034>
     });
   }
 
-  onClearForm() {
-    this.dataForm.reset(); // 重置表單
-  }
-
   // 讀取dopropdown選項
   loadOptions() {
     {
