@@ -350,8 +350,6 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
           Name: item.Name,
           Label: item.No + '-' + item.Name,
         }));
-
-        // console.log('商品單位:', this.unitOptions);
       });
 
     // 查詢 品牌代碼
@@ -363,8 +361,6 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
           Name: item.Name,
           Label: item.No + '-' + item.Name,
         }));
-
-        // console.log('品牌代碼:', this.brandOption);
       });
 
     // 查詢 專櫃編號
@@ -373,7 +369,6 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
         No: item.No, // 專櫃編號代碼
         Label: item.No + '-' + item.Name, // 組合成顯示用的Label
       }));
-      // console.log('專櫃編號代碼:', response.Data);
     });
   }
 
@@ -389,8 +384,6 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
             Name: item.Name,
             Label: item.No + '-' + item.Name,
           }));
-
-          // console.log('大分類:', this.largeOption);
         });
 
       // 禁用中分類、小分類
