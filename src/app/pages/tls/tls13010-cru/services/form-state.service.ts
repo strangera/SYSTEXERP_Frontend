@@ -1,4 +1,4 @@
-// form-state.service.ts
+﻿// form-state.service.ts
 
 import { Injectable } from '@angular/core';
 import { FormGroup } from '@angular/forms';
@@ -50,10 +50,11 @@ export class FormStateService {
     this.formReadonlySubject.next(isFormReadonly);
 
     // 確保所有欄位都是 enabled 狀態(移除所有 disabled)
+    // 使用 emitEvent: false 避免觸發 valueChanges 訂閱，防止驗證服務覆蓋 API 載入的值
     Object.keys(formGroup.controls).forEach(key => {
       const control = formGroup.get(key);
       if (control && control.disabled) {
-        control.enable();
+        control.enable({ emitEvent: false });
       }
     });
 
@@ -187,7 +188,7 @@ export class FormStateService {
       state: { fromRoute: this.router.url },
     };
 
-    this.router.navigate(['account/tls/tls13010'], extras);
+    this.router.navigate(['account/tls/tls13010v1'], extras);
 
     if (messageService) {
       messageService.infoBubble('已退出檢視模式');
@@ -204,7 +205,7 @@ export class FormStateService {
       console.log('✏️ 切換到編輯模式');
 
       // 移除 URL 參數,導航到乾淨的編輯頁面
-      this.router.navigate(['account/tls/tls13010cru'], {
+      this.router.navigate(['account/tls/tls13010v1cru'], {
         queryParams: {}  // 清空參數
       });
 

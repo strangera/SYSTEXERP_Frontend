@@ -24,7 +24,9 @@
       </div>
       <div class="flex align-items-center gap-3 ml-auto">
         <span class="text-500" *ngIf="totalLocationSpace > 0">
-          總坪數: <strong>{{ totalLocationSpace }}</strong> 坪
+          總坪數:
+          <strong>{{ totalLocationSpace }}</strong>
+          坪
         </span>
       </div>
     </div>
@@ -38,7 +40,7 @@
             [data]="contractInfoData"
             [mainColumns]="contractInfoColumns"
             [showCheckBox]="false"
-            [showSequenceNumber]="false"
+            [showSequenceNumber]="true"
             [showPaginator]="false"
             [showAddButton]="false"
             [showBatchDelete]="false"
@@ -56,9 +58,7 @@
     <div *ngIf="!hasAnyData()" class="text-center p-5">
       <i class="pi pi-info-circle text-4xl text-gray-400 mb-3"></i>
       <h5 class="text-gray-600 mb-2">沒有找到扣款資料</h5>
-      <p class="text-gray-500 mb-3">
-        目前沒有設定任何扣款項目
-      </p>
+      <p class="text-gray-500 mb-3">目前沒有設定任何扣款項目</p>
       <app-button
         label="重新載入資料"
         icon="pi pi-refresh"
@@ -86,16 +86,23 @@
             <!-- 變更統計 -->
             <div class="flex align-items-center gap-2 ml-auto">
               <span class="text-500 text-sm">
-                (已選 {{ getSelectedCount(capType) }} / {{ getTotalCount(capType) }} 項)
+                (已選 {{ getSelectedCount(capType) }} /
+                {{ getTotalCount(capType) }} 項)
               </span>
               <ng-container *ngIf="getChangeCount(capType) as changes">
                 <span *ngIf="changes.newCount > 0" class="p-tag p-tag-success">
                   +{{ changes.newCount }} 新增
                 </span>
-                <span *ngIf="changes.modifiedCount > 0" class="p-tag p-tag-warning">
+                <span
+                  *ngIf="changes.modifiedCount > 0"
+                  class="p-tag p-tag-warning"
+                >
                   {{ changes.modifiedCount }} 修改
                 </span>
-                <span *ngIf="changes.deletedCount > 0" class="p-tag p-tag-danger">
+                <span
+                  *ngIf="changes.deletedCount > 0"
+                  class="p-tag p-tag-danger"
+                >
                   -{{ changes.deletedCount }} 刪除
                 </span>
               </ng-container>
@@ -123,7 +130,11 @@
           </div>
 
           <!-- 代扣款表格 -->
-          <div *ngIf="hasDataForType(capType)" class="col-12" [ngClass]="{'compact-table-d': capType === 'D'}">
+          <div
+            *ngIf="hasDataForType(capType)"
+            class="col-12"
+            [ngClass]="{ 'compact-table-d': capType === 'D' }"
+          >
             <app-expandable-edit-table
               [data]="fareData[capType]"
               [mainColumns]="getColumnsForType(capType)"
@@ -139,7 +150,14 @@
               [minColumnWidth]="capType === 'D' ? 45 : 80"
               [maxColumnWidth]="capType === 'D' ? 120 : 350"
               [emptyMessage]="'尚未設定' + getCapTypeName(capType) + '項目'"
-              (fieldChange)="onFieldChange($event.fieldName, $event.newValue, $event.rowData, capType)"
+              (fieldChange)="
+                onFieldChange(
+                  $event.fieldName,
+                  $event.newValue,
+                  $event.rowData,
+                  capType
+                )
+              "
               (buttonClick)="onButtonClick($event, capType)"
             ></app-expandable-edit-table>
           </div>
@@ -170,3 +188,51 @@
     </ng-container>
   </div>
 </div>
+
+<!-- 自動計算確認對話框 -->
+<app-dialog
+  [visible]="showCalculationDialog"
+  (visibleChange)="onCalculationDialogClose($event)"
+  (save)="onCalculationSave()"
+  header="自動計算確認"
+  width="500px"
+  height="auto"
+  maxWidth="600px"
+  [showFooter]="true"
+>
+  <div class="calculation-content" *ngIf="calculationResult">
+    <div class="result-summary text-center mb-4">
+      <h4 class="text-primary mb-3">計算結果</h4>
+
+      <div class="result-cards flex gap-3 justify-content-center">
+        <div class="result-card bg-blue-50 p-3 border-round text-center flex-1">
+          <div class="text-sm text-gray-600 mb-1">每月金額</div>
+          <div class="text-2xl font-bold text-primary">
+            {{ calculationResult.monthlyAmount | number }}
+          </div>
+          <div class="text-sm text-gray-500">元</div>
+        </div>
+
+        <div
+          class="result-card bg-green-50 p-3 border-round text-center flex-1"
+        >
+          <div class="text-sm text-gray-600 mb-1">首期金額</div>
+          <div class="text-2xl font-bold text-green-600">
+            {{ calculationResult.downPayment | number }}
+          </div>
+          <div class="text-sm text-gray-500">元</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="summary-info text-center">
+      <div class="text-lg text-gray-600">
+        總金額
+        <strong>{{ calculationResult.totalAmount | number }}</strong>
+        元 分
+        <strong>{{ calculationResult.periods }}</strong>
+        期攤還
+      </div>
+    </div>
+  </div>
+</app-dialog>

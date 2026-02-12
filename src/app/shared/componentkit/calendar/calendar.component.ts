@@ -94,9 +94,14 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
       this.maxLength = maxLen; // 這是 BasicKitComponent 的屬性，會連動影響 placeholder
 
       if (this.control) {
-        // 更新驗證器，保留原有的，但加入 maxLength
+        // 更新驗證器，保留原有的，但加入 maxLength；若有 required 一併保留以維持 hasValidator(Validators.required) 為 true（標籤 * 顯示）
+        const hadRequiredBefore = this.control.hasValidator(Validators.required);
         const currentValidators = this.control.validator ? [this.control.validator] : [];
-        this.control.setValidators([...currentValidators, Validators.maxLength(maxLen)]);
+        const newValidators = [...currentValidators, Validators.maxLength(maxLen)];
+        if (hadRequiredBefore) {
+          newValidators.push(Validators.required);
+        }
+        this.control.setValidators(newValidators);
         this.control.updateValueAndValidity({ emitEvent: false });
       }
       if (!this.customPlaceholder || this.customPlaceholder === '請選擇') {
@@ -143,16 +148,17 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
       } catch (error) {
         console.warn('日期格式轉換失敗:', this.control.value);
       }
-    } else if (this.control.value instanceof Date) {
-      // 如果已經是 Date 物件，確保移除時間
-      const dateOnly = new Date(
-        this.control.value.getFullYear(),
-        this.control.value.getMonth(),
-        this.control.value.getDate()
-      );
-      if (dateOnly.getTime() !== this.control.value.getTime()) {
-        this.control.setValue(dateOnly, { emitEvent: false });
-      }
+      // !!!此處造成時間被強制歸0，請在自己的作業提交前做轉換避免在共通元件做處理(不懂之處請參考PrimeNg文檔)
+      // } else if (this.control.value instanceof Date && !this.timeOnly) {
+      //   // 如果已經是 Date 物件，確保移除時間（timeOnly 模式需保留時間）
+      //   const dateOnly = new Date(
+      //     this.control.value.getFullYear(),
+      //     this.control.value.getMonth(),
+      //     this.control.value.getDate()
+      //   );
+      //   if (dateOnly.getTime() !== this.control.value.getTime()) {
+      //     this.control.setValue(dateOnly, { emitEvent: false });
+      //   }
     }
     // 監聽 control 值變化
     this.valueChangeSubscription = this.control.valueChanges.subscribe((val) => {

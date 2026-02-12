@@ -81,7 +81,12 @@ export class TLS46030CRUComponent extends BasicCruPageComponent<any> implements 
 
     // 收銀機號
     this.ECRNoService.getECRNo().subscribe((data) => {
-      this.ECRNoOptions = data;
+      // normalize to { value: string, label }
+      this.ECRNoOptions = (data || []).map((d: any) => ({ label: d.label, value: String(d.value) }));
+      // if editing and a value exists in rowdata, ensure control holds the same string so dropdown shows label
+      if (this.rowdata && this.rowdata.ECR_No !== undefined && this.rowdata.ECR_No !== null) {
+        this.dataForm.controls.ECR_No.setValue(String(this.rowdata.ECR_No));
+      }
     });
 
     // 預先打所有下拉 API
@@ -113,6 +118,8 @@ export class TLS46030CRUComponent extends BasicCruPageComponent<any> implements 
       this.dataForm.controls.ECR_SchStatus.setValue('A');
       this.ECR_SchStatus_SelectOptions = this.ECR_SchStatus_Options.filter(opt => opt.value === 'A');
     }
+    // normalize ECR_FLD_IDOptions values to string so selected label resolves correctly
+    this.ECR_FLD_IDOptions = (this.ECR_FLD_IDOptions || []).map(o => ({ label: o.label, value: String(o.value) }));
     // 監聽異動類型
     this.dataForm.controls.ECR_FLD_ID.valueChanges.subscribe(val => {
       const newValCtrl = this.dataForm.controls.ECR_FLD_NewVal;
@@ -138,6 +145,10 @@ export class TLS46030CRUComponent extends BasicCruPageComponent<any> implements 
       }
     });
     this.dataForm.controls.ECR_FLD_ID.updateValueAndValidity();
+    // if editing, ensure control value is string so dropdown shows label
+    if (this.rowdata && this.rowdata.ECR_FLD_ID !== undefined && this.rowdata.ECR_FLD_ID !== null) {
+      this.dataForm.controls.ECR_FLD_ID.setValue(String(this.rowdata.ECR_FLD_ID));
+    }
     this.dataForm.controls.ECR_FLD_NewVal.setValue(this.rowdata?.ECR_FLD_NewVal || '');
   }
 
@@ -155,6 +166,24 @@ export class TLS46030CRUComponent extends BasicCruPageComponent<any> implements 
           label: item.No + '-' + item.Name,
           value: item.No
         })) || [];
+      // 如果目前已選擇該異動類型，更新可用下拉選項（處理 preload 完成晚於 valueChanges 的情況）
+      try {
+        const currentFld = this.dataForm?.controls?.ECR_FLD_ID?.value;
+        if (currentFld === 'ECR_TLT_No') {
+          this.NewValDropdownOptions = this.dropdownCache['ECR_TLT_No'] || [];
+          this.selectedType = 'dropdown';
+          const newValCtrl = this.dataForm.controls.ECR_FLD_NewVal;
+          try {
+            newValCtrl.enable();
+            const rawVal = this.rowdata?.ECR_FLD_NewVal ?? '';
+            newValCtrl.setValue(rawVal);
+          } catch (e) {
+            // ignore
+          }
+        }
+      } catch (err) {
+        // ignore
+      }
     });
     // ECR_LocNo
     this.dropdownCache['ECR_LocNo'] = getSYS1000Options('ECR_LocNo');
@@ -163,7 +192,7 @@ export class TLS46030CRUComponent extends BasicCruPageComponent<any> implements 
     this.dropDownListService.queryPOS10015_DropDownList().subscribe(res => {
       this.dropdownCache['SYS_SrvNo'] =
         res?.Data?.map((item: any) => ({
-          label: item.Name,
+          label: `${item.No}-${item.Name}`,
           value: item.No
         })) || [];
     });
@@ -216,6 +245,8 @@ export class TLS46030CRUComponent extends BasicCruPageComponent<any> implements 
                 this.messageService.successBubble('更新成功');
               }
               console.log('更新結果:', res);
+              this.onCancel();
+
             }
           });
       } else {
@@ -239,10 +270,9 @@ export class TLS46030CRUComponent extends BasicCruPageComponent<any> implements 
                 this.messageService.successBubble('新增成功');
               }
               console.log('新增結果:', res);
+              this.onCancel();
+
             },
-            error: () => {
-              this.loading = false;
-            }
           });
 
       }

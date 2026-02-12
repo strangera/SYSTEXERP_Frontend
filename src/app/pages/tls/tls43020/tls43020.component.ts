@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { QueryTls43020Response, Tls43020Service } from '@service/api/tls/tls43020.service';
+import { QueryTls43020Request, QueryTls43020Response, Tls43020Service } from '@service/api/tls/tls43020.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -10,8 +10,9 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { AddButton, Column, createPaginationConfig, formatDate, formatDateTime } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AddButton, formatDate, formatDateTime } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
 
@@ -28,7 +29,7 @@ import { finalize, Observable } from 'rxjs';
     InputTextComponent,
     CalendarComponent,
     DropdownComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     CalendarRangeComponent
   ]
@@ -44,11 +45,14 @@ export class TLS43020Component extends BasicQueryPageComponent<QueryTls43020Resp
     NOT_EndDate_End: [null as null | Date], // 有效結束日期
     NOT_File: ['', [Validators.maxLength(200)]], // 媒體檔案名稱
     NOT_Status: [null], // 狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
-    ...createPaginationConfig([{ field: 'NOT_No', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'NOT_No', order: 1 }]],
   });
   totalRecords = 0;
   data: QueryTls43020Response[] = [];
-  columns: Column[] = [
+  lastQueryBody: QueryTls43020Request | null = null;
+  columns: ReportColumn[] = [
     { field: 'NOT_No', header: '通告編號', visible: true },
     { field: 'NOT_Date', header: '建立日期', visible: true, format: formatDate },
     { field: 'NOT_BegDate', header: '有效開始日期時間', visible: true, format: formatDateTime },
@@ -79,7 +83,7 @@ export class TLS43020Component extends BasicQueryPageComponent<QueryTls43020Resp
   ];
 
   constructor(
-    private tls43020Service: Tls43020Service,
+    public readonly tls43020Service: Tls43020Service,
   ) {
     super();
   }
@@ -99,9 +103,9 @@ export class TLS43020Component extends BasicQueryPageComponent<QueryTls43020Resp
         NOT_EndDate_End: frm.value.NOT_EndDate_End ? frm.value.NOT_EndDate_End.toISOString() : null
       };
 
-      this.loading = true;
       this.tls43020Service.queryTls43020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-        this.data = Array.isArray(res.Data) ? res.Data.flat() : [];
+        this.data = res.Data;
+        this.lastQueryBody = body;
         this.totalRecords = res.TotalCount || 0;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });

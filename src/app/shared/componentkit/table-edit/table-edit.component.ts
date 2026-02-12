@@ -450,7 +450,7 @@ export class TableEditComponent implements OnChanges {
       rowData,
       col,
       index,
-      disabled: this.disabled,
+      disabled: this.disabled || !!this.rowEditDisabled(rowData),
       onValueChange: this.onValueChange.bind(this),
     };
   }

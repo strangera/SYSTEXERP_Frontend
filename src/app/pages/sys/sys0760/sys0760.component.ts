@@ -1,20 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
-import { SYS0760Service, userLoginErrorRequest, userLoginErrorResponse } from '@service/api/sys/sys0760.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
 import { IUserResponse, Sys0110Service } from '@service/api/sys/sys0110.service';
+import { SYS0760Service, userLoginErrorRequest, userLoginErrorResponse } from '@service/api/sys/sys0760.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatDateTime } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 @Component({
   selector: 'app-sys0760',
@@ -26,10 +26,9 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
     FormsModule,
     ReactiveFormsModule,
     DropdownComponent,
-    InputNumberComponent,
     CalendarRangeQuickComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     InputTextComponent
   ],
@@ -42,10 +41,13 @@ export class SYS0760Component extends BasicQueryPageComponent<userLoginErrorResp
     From_IP: [''], // 日期限制 (start-end datetime yyyy/mm/dd)
     Start_Date: [null], // 日期限制 (start-end datetime yyyy/mm/dd)
     End_Date: [null], // Input Text
-    ...createPaginationConfig([{ field: 'User_No', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'User_No', order: 1 }]],
   });
   totalRecords = 0
   userNoOptions: IUserResponse[] = [];
+  lastQueryBody: userLoginErrorRequest | null = null;
   errotMsg: { value: string, label: string }[] = [
     { label: "錯誤使用者", value: "錯誤使用者" },
     { label: "密碼錯誤", value: "密碼錯誤" },
@@ -54,14 +56,14 @@ export class SYS0760Component extends BasicQueryPageComponent<userLoginErrorResp
     { label: "使用者不在允許登入時間區間", value: "使用者不在允許登入時間區間" },
   ]
   data: userLoginErrorResponse[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'User_No', header: '使用者編號', visible: true },
     { field: 'Description', header: '使用者名稱', visible: true },
     { field: 'From_IP', header: '登入者位址', visible: true },
     { field: 'Login_time', header: '登入時間', visible: true, format: formatDateTime },
   ];
   constructor(
-    private readonly sys0760Service: SYS0760Service,
+    public readonly sys0760Service: SYS0760Service,
     private readonly sys0110Service: Sys0110Service
   ) {
     super();
@@ -86,6 +88,7 @@ export class SYS0760Component extends BasicQueryPageComponent<userLoginErrorResp
       const frmValue = frm.getRawValue() as userLoginErrorRequest;
       this.sys0760Service.queryUserLoginError(frmValue).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
         this.data = res.Data ?? [];
+        this.lastQueryBody = frmValue;
         this.totalRecords = res.TotalCount ?? 0;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       })

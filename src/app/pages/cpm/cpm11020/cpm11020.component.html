@@ -58,6 +58,8 @@
     [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     [lazy]="true"
+    [rows]="30"
+    [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
     [loading]="loading"
     [showDelete]="true"
     [selectedItems]="selectedItems"

@@ -16,6 +16,7 @@ import {
   Column,
   createPaginationConfig,
   formatAmount,
+  formatDate,
 } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -73,6 +74,7 @@ export class FIN15110Component
     DataType: [['1', '2'] as string[]],
     displayMode: ['1'],
     ...createPaginationConfig([{ field: 'Ecr_No', order: 1 }]),
+    pageSize: [30],
   });
 
   /** 表格資料 */
@@ -159,7 +161,7 @@ export class FIN15110Component
         format: formatAmount,
         isTotal: true,
       },
-      TXN_VoidDT: { field: 'TXN_VoidDT', header: '發票作廢日期', visible: true, showSort: true },
+      TXN_VoidDT: { field: 'TXN_VoidDT', header: '發票作廢日期', visible: true, showSort: true, format: formatDate },
       INVStatus: { field: 'INVStatus', header: '發票狀態', visible: true, showSort: true },
       GUIType: { field: 'GUIType', header: '發票類型', visible: true, showSort: true },
       PLU_TaxType: { field: 'PLU_TaxType', header: '稅別', visible: true, showSort: true },
@@ -408,7 +410,7 @@ export class FIN15110Component
       // 在查詢時更新表格欄位配置
       this.columns = this.getColumnsByReportType(v.displayMode || '1');
       const payload = {
-        PageSize: v.pageSize || 20,
+        PageSize: v.pageSize || 30,
         PageIndex: v.pageIndex ?? 1,
         OrderBy: '',
         Offset: 0,

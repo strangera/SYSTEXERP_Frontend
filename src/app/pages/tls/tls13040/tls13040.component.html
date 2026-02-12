@@ -8,17 +8,25 @@
       header="{{ 'query-conditions' | translate }}"
       [selected]="true"
       class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-  
-                 <app-dropdown label="專櫃編號" controlName="TLT_No" [options]="CounterOptions"
-              optionLabel="formLabel" optionValue="value" [control]="queryForm.controls.tlt_no" [submitted]="submitted">
-            </app-dropdown>
+            <app-dropdown
+              label="專櫃編號"
+              controlName="TLT_No"
+              [options]="CounterOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_no"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
-
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
@@ -27,15 +35,15 @@
               [control]="queryForm.controls.bus_typeList"
               optionLabel="label"
               optionValue="value"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12">
             <app-multi-location-filter
               [form]="queryForm"
-              [submitted]="submitted">
-            </app-multi-location-filter>
+              [submitted]="submitted"
+            ></app-multi-location-filter>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -45,8 +53,8 @@
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.tlt_openflagList"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <app-calendar-range-quick
@@ -54,24 +62,24 @@
             label="合約起始日期"
             [startControl]="queryForm.controls.tlt_bdate_start"
             [endControl]="queryForm.controls.tlt_bdate_end"
-            [submitted]="submitted">
-          </app-calendar-range-quick>
+            [submitted]="submitted"
+          ></app-calendar-range-quick>
 
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
             label="合約終止日期"
             [startControl]="queryForm.controls.tlt_edate_start"
             [endControl]="queryForm.controls.tlt_edate_end"
-            [submitted]="submitted">
-          </app-calendar-range-quick>
+            [submitted]="submitted"
+          ></app-calendar-range-quick>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="抽成別"
               [options]="commissionTypeOptions"
               [control]="queryForm.controls.tlt_term_typeList"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -79,8 +87,8 @@
               label="抽成類別"
               [options]="DeductionbigCategoryOptions"
               [control]="queryForm.controls.tlt_idList"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -88,8 +96,8 @@
               label="折扣"
               [options]="discountOptions"
               [control]="queryForm.controls.cag_barcodeList"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -99,12 +107,14 @@
               optionLabel="formLabel"
               optionValue="value"
               [control]="queryForm.controls.org_idList"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -114,23 +124,19 @@
 </div>
 
 <div class="card">
-  <app-table
-    apiUrl="queryTLS13040"
+  <app-table-report
     tableKey="TLS13040"
     [data]="data"
     [columns]="columns"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    [showCheckBox]="false"
-    dataKey="_key"
-    [multiSortMeta]="sortMeta"
     [totalRecords]="totalRecords"
-    [lazy]="true"
     [loading]="loading"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
+    [lazy]="true"
+    [dataKey]="'_key'"
+    [showCheckBox]="false"
     [showManage]="false"
     [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm)">
-  </app-table>
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="queryTLS13040Fn"
+    (dataChange)="data = $event"
+  ></app-table-report>
 </div>

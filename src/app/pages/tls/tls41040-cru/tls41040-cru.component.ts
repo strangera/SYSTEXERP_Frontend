@@ -15,7 +15,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
 
@@ -38,7 +37,6 @@ export interface TLS41040Detail {
 @Component({
   selector: 'app-tls41040-cru',
   templateUrl: './tls41040-cru.component.html',
-  styleUrls: ['./tls41040-cru.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -51,14 +49,12 @@ export interface TLS41040Detail {
     RadiobuttonComponent,
     ButtonComponent,
     CommonModule,
-    TableComponent,
     InputTextareaComponent,
     TableEditComponent,
   ]
 })
 export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   private originalSnapshot: TLS41040Detail[] = [];
-  // ===== 主檔表單 =====
   dataForm = this.formBuilder.group({
     NOT_DateTime: [new Date(), [Validators.required]],
     NOT_BegDateTime: [new Date(), [Validators.required]],
@@ -115,6 +111,22 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
       status: 'original'
     }));
     this.originalSnapshot = JSON.parse(JSON.stringify(this.data));
+
+    // 如果傳入的 rowdata 沒有明細 (可能是從列表直接跳轉但未帶 Details)，就向後端補抓一次
+    if (this.rowdata?.ID && (!this.rowdata.Details || this.rowdata.Details.length === 0)) {
+      this.tls41040Service.queryTLS41040({ ID: this.rowdata.ID, PageSize: 1, PageIndex: 1 })
+        .pipe()
+        .subscribe({
+          next: (res) => {
+            const item = res?.Data && res.Data.length ? res.Data[0] : null;
+            const details = (item?.Details ?? []) as TLS41040Detail[];
+            this.data = details.map(d => ({ ...d, ID: d.ID ?? 0, status: 'original' }));
+            this.originalSnapshot = JSON.parse(JSON.stringify(this.data));
+            this.cdr.detectChanges();
+          },
+          error: () => { /* 忽略錯誤，保留既有資料 */ }
+        });
+    }
   }
   private loadDropdownOptions(): void {
     forkJoin({
@@ -514,6 +526,28 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
     this.onDataChange(this.data);
     this.selectedRows = [];
     this.messageService.successBubble('已標記刪除');
+  }
+
+  /**
+   * Cancel 按鈕被按下時呼叫：還原明細資料與已選列
+   */
+  onCancelClicked(): void {
+    this.selectedRows = [];
+
+    if (this.isFormCreateable) {
+      this.data = [];
+      this.cdr.detectChanges();
+      return;
+    }
+
+    const snapshot = Array.isArray(this.originalSnapshot) ? JSON.parse(JSON.stringify(this.originalSnapshot)) : [];
+    // 先清空再還原以強制 child 重新初始化
+    this.data = [];
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.data = snapshot;
+      this.cdr.detectChanges();
+    }, 0);
   }
 
 

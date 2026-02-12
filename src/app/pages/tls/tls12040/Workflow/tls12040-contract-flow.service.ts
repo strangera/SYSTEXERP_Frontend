@@ -815,6 +815,7 @@ export class TLS12040FlowService {
         sst_rate: this.parseNumber(commission.sst_rate),
         cap_saletype1: commission.cap_saletype1 === true || commission.cap_saletype1 === 'Y' ? 'Y' : 'N',
         cap_saletype2: commission.cap_saletype2 === true || commission.cap_saletype2 === 'Y' ? 'Y' : 'N',
+        cap_saletype3: commission.cap_saletype3 === true || commission.cap_saletype3 === 'Y' ? 'Y' : 'N',
         cap_saletype5: commission.cap_saletype5 === true || commission.cap_saletype5 === 'Y' ? 'Y' : 'N',
         cag_bdate: this.formatDate(commission.cag_bdate),
         cag_edate: this.formatDate(commission.cag_edate)
@@ -1473,8 +1474,8 @@ export class TLS12040FlowService {
     const cleanChargeSettings = (settings: any[]) => {
       if (!Array.isArray(settings)) return [];
       return settings.map(setting => {
-        // 🔥 主設定也需要根據 is_selected 決定狀態
-        const isSelected = Boolean(setting.is_selected);
+        // 續約帶回的資料預設為勾選，只有明確設為 false 時才不勾
+        const isSelected = setting.is_selected !== undefined ? Boolean(setting.is_selected) : true;
         return {
           ...setting,
           id: undefined,
@@ -1483,7 +1484,7 @@ export class TLS12040FlowService {
           _status: isSelected ? 'new' : undefined,
           is_selected: isSelected,
           ChargeDetails: (setting.ChargeDetails || []).map((detail: any) => {
-            const detailSelected = Boolean(detail.is_selected);
+            const detailSelected = detail.is_selected !== undefined ? Boolean(detail.is_selected) : true;
             return {
               ...detail,
               id: undefined,
@@ -1493,7 +1494,7 @@ export class TLS12040FlowService {
             };
           }),
           YearChargeDetails: (setting.YearChargeDetails || []).map((detail: any) => {
-            const detailSelected = Boolean(detail.is_selected);
+            const detailSelected = detail.is_selected !== undefined ? Boolean(detail.is_selected) : true;
             return {
               ...detail,
               id: undefined,
@@ -1503,7 +1504,7 @@ export class TLS12040FlowService {
             };
           }),
           LevelChargeDetails: (setting.LevelChargeDetails || []).map((detail: any) => {
-            const detailSelected = Boolean(detail.is_selected);
+            const detailSelected = detail.is_selected !== undefined ? Boolean(detail.is_selected) : true;
             return {
               ...detail,
               id: undefined,
@@ -1579,6 +1580,16 @@ export class TLS12040FlowService {
 
     console.warn('⚠️ 無法識別的 CommissionData 結構:', commissionData);
     return [];
+  }
+
+  /**
+   * 取得續約用的原始 ExistingData 物件
+   * 供組件使用 mapBackendDataToFrontend 做正確的欄位映射
+   */
+  getRenewalCommissionExistingData(): any | null {
+    const renewalData = this.getRenewalData();
+    if (!renewalData?.commissionData?.ExistingData) return null;
+    return renewalData.commissionData.ExistingData;
   }
 
   // ========== 私有輔助方法 ==========

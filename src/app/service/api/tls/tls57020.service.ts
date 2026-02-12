@@ -14,6 +14,7 @@ export interface Tls57020TableReportData {
   PaymentDetails: any[];
   PaymentFooters: any[];
   InvoiceDetails: any[];
+  Signatories: any;
 }
 
 @Injectable({

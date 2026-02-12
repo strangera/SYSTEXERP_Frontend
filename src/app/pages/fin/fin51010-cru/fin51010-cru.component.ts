@@ -43,17 +43,17 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
   });
   data: QueryFIN51010DetailLine[] = [];
   columns: EditColumn[] = [
-    { field: 'SerNo', header: '序號', width: '60px' },
-    { field: 'AccNo', header: '科目代號', width: '120px' },
-    { field: 'AccCName', header: '科目名稱', width: '180px' },
-    { field: 'NoteDesc', header: '摘要', type: 'input' },
+    { field: 'SerNo', header: '序號', width: '60px', textAlign: 'left' },
+    { field: 'AccNo', header: '科目代號', width: '120px', textAlign: 'left' },
+    { field: 'AccCName', header: '科目名稱', width: '180px', textAlign: 'left' },
+    { field: 'NoteDesc', header: '摘要', type: 'input', textAlign: 'left' },
     { field: 'Debit_Amt', header: '借方金額', width: '120px', format: formatAmount, textAlign: 'right', aggregate: 'sum' },
     { field: 'Credit_Amt', header: '貸方金額', width: '120px', format: formatAmount, textAlign: 'right', aggregate: 'sum' },
-    { field: 'ORG_ID', header: '組織代號', width: '120px' },
-    { field: 'ProjectNo', header: '活動代號', width: '120px' },
-    { field: 'PTA', header: '立沖代號', width: '120px' },
-    { field: 'DetailNo', header: '廠商編號', width: '120px' },
-    { field: 'SubDetailNo', header: '對象別編號', width: '120px' },
+    { field: 'ORG_ID', header: '組織代號', width: '120px', textAlign: 'left' },
+    { field: 'ProjectNo', header: '活動代號', width: '120px', textAlign: 'left' },
+    { field: 'PTA', header: '立沖代號', width: '120px', textAlign: 'left' },
+    { field: 'DetailNo', header: '廠商編號', width: '120px', textAlign: 'left' },
+    { field: 'SubDetailNo', header: '對象別編號', width: '120px', textAlign: 'left' },
   ];
   PostFlagOptions = getSYS1000Options('PostFlag');
   Trans_StatusOptions = getSYS1000Options('Trans_Status');

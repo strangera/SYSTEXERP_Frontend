@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Observable, forkJoin, of } from 'rxjs';
@@ -52,13 +52,18 @@ export class TLS13010DataLoaderService {
       // 統一使用 ContractFlowService 的模式判定
       if (this.contractFlowService.isNewContractMode()) {
         this.loadNewModeData(component);
+      } else if (this.contractFlowService.isViewMode()) {
+        // ✅ 檢視模式：跳過 session，由 loadDataIfNeeded 從 API 載入最新資料
+        console.log('🔍 檢視模式：跳過 session 載入，等待 API 載入最新資料');
       } else {
-        // ✅ 修正：編輯模式先檢查 session
+        // ✅ 編輯模式：先檢查 session
         this.loadEditModeDataWithSessionCheck(component, workflowData);
       }
     } else {
       console.warn('❌ 沒有工作流程資料,重導向到查詢頁面');
-      this.router.navigate(['account/tls/tls13010']);
+      this.router.navigate(['account/tls/tls13010v1'], {
+        state: { fromRoute: this.router.url }
+      });
     }
   }
 
@@ -375,11 +380,11 @@ export class TLS13010DataLoaderService {
       total_amt_vendor_unit: queryData['total_amt_vendor_unit'] as string,
       org_id: queryData['org_id'] as string,
       vip_yn: queryData['vip_yn'] as string,
+      rent_ahead: queryData['rent_ahead'] as string,
       card_sales: queryData['card_sales'] as number,
 
       // 金額欄位
       monthly_rent: queryData['monthly_rent'] as number,
-      rent_ahead: queryData['rent_ahead'] as number,
       rent_after_months: queryData['rent_after_months'] as number,
       rent_after: queryData['rent_after'] as number,
       rent_amount: queryData['rent_amount'] as number,
@@ -609,15 +614,22 @@ export class TLS13010DataLoaderService {
           console.log(' 工作流程初始化成功');
 
           // ✅ 使用 Promise.resolve().then() 確保初始化完成後載入
-          Promise.resolve().then(() => {
-            this.loadWorkflowData(component);
-          });
+          // ✅ 檢視模式不再二次載入，避免 session 覆蓋 API 資料
+          if (!this.contractFlowService.isViewMode()) {
+            Promise.resolve().then(() => {
+              this.loadWorkflowData(component);
+            });
+          } else {
+            console.log('🔍 檢視模式：跳過延遲載入，由 loadDataIfNeeded 處理');
+          }
 
           return true;
         } else {
           console.error('❌ 工作流程初始化失敗');
           this.messageService.errorBubble('載入資料失敗,請重新選擇要檢視的項目');
-          this.router.navigate(['account/tls/tls13010']);
+          this.router.navigate(['account/tls/tls13010v1'], {
+            state: { fromRoute: this.router.url }
+          });
           return false;
         }
 
@@ -630,7 +642,9 @@ export class TLS13010DataLoaderService {
     } catch (error) {
       console.error('❌ 處理 router state 失敗:', error);
       this.messageService.errorBubble('初始化失敗,請重新操作');
-      this.router.navigate(['account/tls/tls13010']);
+      this.router.navigate(['account/tls/tls13010v1'], {
+        state: { fromRoute: this.router.url }
+      });
       return false;
     }
   }

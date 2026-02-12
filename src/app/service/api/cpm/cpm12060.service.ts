@@ -26,15 +26,22 @@ export interface CPM12060Data {
 }
 
 // 查詢 CPS3006 資料表_點開主檔
-export interface detailCPM12060Request {
+export interface detailCPM12060MainRequest {
   ID: number; // 主鍵識別碼
+}
+
+// 查詢 CPS3006 資料表_點開明細
+export interface detailCPM12060DetailRequest {
+  SEQ_ID: string; // 主鍵識別碼
 }
 
 export interface main12060Data {
   ID: number;
   SEQ_ID: string;
   KIND_ID: string;
+  KIND_Name: string;
   KIND_ID_SUB: string;
+  KIND_SubName: string;
   CUST_NAME: string;
   SEX: string;
   CONTACT_ADDR: string;
@@ -44,6 +51,7 @@ export interface main12060Data {
   COMPLAIN_NOTES: string;
   COMPLAIN_DATE: Date;
   SUGG_SOURCE: string;
+  SUGG_SOURCE_NAME: string;
   SUGG_SOURCE_OTHER: string;
   ORG_ID: string;
   MEMBER_ID: string;
@@ -82,12 +90,12 @@ export class Cpm12060Service {
   }
 
   // 查詢 CPS3006 資料表_點開主檔
-  queryCPM12060_Main(req: detailCPM12060Request): Observable<BaseQueryResponse<main12060Data>> {
+  queryCPM12060_Main(req: detailCPM12060MainRequest): Observable<BaseQueryResponse<main12060Data>> {
     return this.http.post<BaseQueryResponse<main12060Data>>(`${this.apiUrl}/queryCPM12060_Main`, req);
   }
 
   // 查詢 CPS3006 資料表_點開明細檔
-  queryCPM12060_Detail(req: detailCPM12060Request): Observable<BaseQueryResponse<detail12060Data>> {
+  queryCPM12060_Detail(req: detailCPM12060DetailRequest): Observable<BaseQueryResponse<detail12060Data>> {
     return this.http.post<BaseQueryResponse<detail12060Data>>(`${this.apiUrl}/queryCPM12060_Detail`, req);
   }
 }

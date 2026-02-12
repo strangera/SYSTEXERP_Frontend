@@ -19,16 +19,16 @@
   </ng-template>
 
   <ng-template pTemplate="groupfooter" let-rowData>
-    <ng-container *ngIf="getGroupFooterData(rowData) as groupFooter">
+    <ng-container *ngFor="let footerRow of getGroupFooterData(rowData)">
       <tr class="font-bold text-sm bg-gray-200 text-primary">
         <ng-container *ngFor="let col of columns">
           <td [class]="{
-              'text-left': col.align === 'left' || !col.align,
-              'text-center': col.align === 'center',
-              'text-right': col.align === 'right'
-            }">
+            'text-left': col.align === 'left' || !col.align,
+            'text-center': col.align === 'center',
+            'text-right': col.align === 'right'
+          }">
             <span class="font-bold">
-              {{ col.format ? col.format(groupFooter[col.field]) : groupFooter[col.field] }}
+              {{ col.format ? col.format(footerRow[col.field]) : footerRow[col.field] }}
             </span>
           </td>
         </ng-container>

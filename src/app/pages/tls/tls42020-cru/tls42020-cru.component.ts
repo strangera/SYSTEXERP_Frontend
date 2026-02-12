@@ -6,8 +6,10 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS42020Data, TLS42020DetailData, TLS42020InsertDetailData, TLS42020InsertRequest, TLS42020Service, TLS42020UpdateRequest } from '@service/api/tls/tls42020.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, FieldChangeEvent } from '@shared/componentkit/table/table.model';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { FieldChangeEvent } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
@@ -41,7 +43,7 @@ interface TLTOption extends DropdownOption {
     CalendarComponent,
     TranslateModule,
     NgIf,
-    TableComponent
+    TableEditComponent
   ]
 })
 export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> implements OnInit {
@@ -56,6 +58,8 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
   private readonly STORE_NO = '10';
   data: TLS42020DetailData[] = [];
   selectedRows: TLS42020DetailData[] = [];
+  // 用於控制 table-edit 是否禁止 row 編輯（檢視模式使用）
+  rowEditDisabledFn = (rowData: any) => this.isFormReadable;
   // 原始明細資料
   private originalDetailData: TLS42020DetailData[] = [];
 
@@ -71,39 +75,43 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
   // 商品管理編號下拉選項
   PLU_MagNoOptions: any[] = [];
 
-  // 明細資料欄位定義
-  columns: Column[] = [
+  // 明細資料欄位定義 (使用 table-edit 的 EditColumn 型別)
+  columns: EditColumn[] = [
     {
       field: 'SBM_BtnNo',
       header: '菜單按鍵序號',
       type: 'input',
-      validate: [this.requiredValidator('菜單按鍵序號為必填欄位')],
-      required: true
+      validate: [validateRequired]
+
     },
     {
       field: 'PLU_MagNo',
-      header: '商品管理編號',
+      header: '商品管理碼',
       type: 'dropdown',
-      options: () => this.PLU_MagNoOptions, // 使用函數動態返回選項
-      optionLabel: 'label',
+      options: (rowData?: any) => this.PLU_MagNoOptions, // 使用函數動態返回選項
+      optionLabel: 'PLU_MagNo', // 顯示 PLU_MagNo
       optionValue: 'PLU_MagNo',
+      showClear: true,
     },
     {
       field: 'PLU_No',
       header: '國際條碼',
       type: 'input',
+      disabled: (value: any, index?: number, rowData?: any) => !!rowData?.PLU_MagNo // 若選擇商品管理碼則禁用
     },
     {
       field: 'PLU_Name',
       header: '商品名稱',
       type: 'input',
-      validate: [this.requiredValidator('商品名稱為必填欄位')],
-      required: true
+      validate: [validateRequired]
+
     },
     {
       field: 'PLU_PrnName',
       header: '商品列印名稱',
       type: 'input',
+      validate: [validateRequired]
+
     },
     {
       field: 'PLU_FixPrc',
@@ -114,8 +122,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       field: 'PLU_SalePrc',
       header: '商品售價',
       type: 'inputNumber',
-      validate: [this.requiredValidator('商品售價為必填欄位')],
-      required: true,
+      validate: [validateRequired]
     }
   ];
   //#endregion
@@ -178,20 +185,46 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
 
   // 選擇 PLU_MagNo (商品管理編號) 後自動帶出其他欄位的資料
   onFieldChange(event: FieldChangeEvent): void {
-    if (event.field === 'PLU_MagNo' && event.index !== undefined) {
-      const selectedProduct = this.PLU_MagNoOptions.find(item => item.PLU_MagNo === event.value);
-      if (selectedProduct) {
-        // 更新該行的其他欄位
-        const rowData = this.data[event.index];
-        if (rowData) {
-          rowData.PLU_No = selectedProduct.PLU_No || selectedProduct.PLU_MagNo || '';
-          rowData.PLU_Name = selectedProduct.PLU_Name || '';
-          rowData.PLU_PrnName = selectedProduct.PLU_PrnName || selectedProduct.PLU_Name || '';
-          rowData.PLU_FixPrc = selectedProduct.PLU_FixPrc || selectedProduct.PLU_FixPrc || '';
-          rowData.PLU_SalePrc = selectedProduct.PLU_SalePrc || '';
-          // 觸發變更檢測
-          this.changeDetectorRef.detectChanges();
+    // Normalize event shape to support different table implementations
+    const anyEvent: any = event as any;
+    const field = anyEvent.field ?? anyEvent.fieldName;
+    const index = anyEvent.index ?? anyEvent.rowIndex;
+    const value = anyEvent.value ?? anyEvent.newValue;
+    const rowData = anyEvent.rowData ?? (typeof index === 'number' ? this.data[index] : undefined);
+
+    if (field === 'PLU_MagNo' && typeof index === 'number') {
+      let selectedProduct: any | undefined;
+      // 支援下拉回傳物件或僅回傳值的情況，並以字串比對避免型別不一致
+      if (value && typeof value === 'object') {
+        const valPLU_No = (value.PLU_No ?? value.PLUNo ?? value.value ?? '');
+        const valMag = (value.PLU_MagNo ?? value.PLU_MagNo ?? value.label ?? '');
+        selectedProduct = this.PLU_MagNoOptions.find(item => item === value || String(item.PLU_No) === String(valPLU_No) || String(item.PLU_MagNo) === String(valMag)) || value;
+      } else {
+        selectedProduct = this.PLU_MagNoOptions.find(item => String(item.PLU_No) === String(value) || String(item.PLU_MagNo) === String(value));
+      }
+
+      if (selectedProduct && rowData) {
+        // 只有當後端有回傳 PLU_MagNo 且非空白時，才寫入 PLU_MagNo
+        if (selectedProduct.PLU_MagNo && String(selectedProduct.PLU_MagNo).trim()) {
+          rowData.PLU_MagNo = selectedProduct.PLU_MagNo;
+        } else {
+          rowData.PLU_MagNo = rowData.PLU_MagNo ?? '';
         }
+
+        // 永遠嘗試帶入其他 PLU 欄位（允許空字串）
+        rowData.PLU_No = selectedProduct.PLU_No ?? '';
+        rowData.PLU_Name = selectedProduct.PLU_Name ?? '';
+        rowData.PLU_PrnName = selectedProduct.PLU_PrnName ?? selectedProduct.PLU_Name ?? (rowData.PLU_PrnName ?? '');
+        rowData.PLU_FixPrc = selectedProduct.PLU_FixPrc ?? '';
+        rowData.PLU_SalePrc = selectedProduct.PLU_SalePrc ?? '';
+        this.changeDetectorRef.detectChanges();
+      }
+    } else if (field === 'PLU_Name') {
+      // 當手動輸入/修改 PLU_Name 時，同步更新 PLU_PrnName 為相同值（即時同步）
+      if (rowData) {
+        const newName = value ?? rowData.PLU_Name ?? '';
+        rowData.PLU_PrnName = newName;
+        this.changeDetectorRef.detectChanges();
       }
     }
   }
@@ -211,6 +244,9 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
 
   //#region CRUD 操作
   private performInsert(payload: TLS42020InsertRequest): void {
+    // debug: 印出要送出的 payload，方便後端錯誤追查
+    console.debug('TLS42020 insert payload:', payload);
+
     this.tls42020Service.insertTLS42020M(payload)
       .pipe(
         untilDestroyed(this),
@@ -221,6 +257,11 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
           this.messageService.successBubble('新增成功');
           this.dataForm.reset();
           this.data = []; // 清空明細資料
+        },
+        error: (err) => {
+          console.error('TLS42020 insert error:', err);
+          const msg = err?.error?.Message || err?.message || JSON.stringify(err);
+          this.messageService.errorBubble('新增失敗: ' + msg);
         }
       });
   }
@@ -242,13 +283,17 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
   private createInsertRequestBody(): TLS42020InsertRequest {
     const formValue = this.dataForm.getRawValue();
     // 主檔資料
+    // 轉成後端期望的 ISO 字串 (含 Z)
+    const begDateISO = formValue.SBM_BegDate ? new Date(formValue.SBM_BegDate).toISOString() : '';
+    const endDateISO = formValue.SBM_EndDate ? new Date(formValue.SBM_EndDate).toISOString() : '';
+
     const mainData = {
       STO_No: this.STORE_NO,
       SBM_Type: formValue.SBM_Type!,
       TLT_No: formValue.TLT_No!,
       TLT_Name: this.tltNoOptions.find(item => item.value === formValue.TLT_No)?.name ?? '',
-      SBM_BegDate: formValue.SBM_BegDate!,
-      SBM_EndDate: formValue.SBM_EndDate!
+      SBM_BegDate: begDateISO,
+      SBM_EndDate: endDateISO
     };
     // 深拷貝明細資料並加上主檔欄位，符合 TLS42020InsertDetailData 格式
     const detailData: TLS42020InsertDetailData[] = this.data.map((item) => ({
@@ -267,8 +312,8 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       PLU_No: item.PLU_No,
       PLU_Name: item.PLU_Name,
       PLU_PrnName: item.PLU_PrnName,
-      PLU_FixPrc: String(item.PLU_FixPrc),
-      PLU_SalePrc: String(item.PLU_SalePrc),
+      PLU_FixPrc: item.PLU_FixPrc !== undefined && item.PLU_FixPrc !== null ? String(item.PLU_FixPrc) : '',
+      PLU_SalePrc: item.PLU_SalePrc !== undefined && item.PLU_SalePrc !== null ? String(item.PLU_SalePrc) : '',
       SBM_BtnNo: item.SBM_BtnNo
     }));
 
@@ -280,7 +325,10 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
 
   private createUpdateRequestBody(): TLS42020UpdateRequest {
     const formValue = this.dataForm.getRawValue();
-    // 主檔資料
+    // 主檔資料：將日期轉為 ISO 字串（後端期望帶 Z 的 ISO）
+    const begDateISO = formValue.SBM_BegDate ? new Date(formValue.SBM_BegDate).toISOString() : '';
+    const endDateISO = formValue.SBM_EndDate ? new Date(formValue.SBM_EndDate).toISOString() : '';
+
     const mainData = {
       ID: this.rowdata!.id, // 從原始資料取得 ID
       MID: 0,
@@ -288,8 +336,8 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       SBM_Type: formValue.SBM_Type!,
       TLT_No: formValue.TLT_No!,
       TLT_Name: this.tltNoOptions.find(item => item.value === formValue.TLT_No)?.name ?? '',
-      SBM_BegDate: formValue.SBM_BegDate!,
-      SBM_EndDate: formValue.SBM_EndDate!
+      SBM_BegDate: begDateISO,
+      SBM_EndDate: endDateISO
     };
     // 取得目前明細資料的 ID 集合
     const currentDetailIds = new Set(this.data.map(item => item.ID).filter(id => id));
@@ -305,7 +353,8 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       SBM_EndDate: mainData.SBM_EndDate,
       // 明細資料
       SBM_SeqNo: item.SBM_SeqNo ?? '',  // 後端處理
-      PLU_MagNo: item.PLU_MagNo ?? '',  // 若為空則由後端產生
+      // 若 PLU_MagNo 為空，回退填入 PLU_No（避免傳空字串導致後端 SQL 組合錯誤）
+      PLU_MagNo: (item.PLU_MagNo && String(item.PLU_MagNo).trim()) ? item.PLU_MagNo : (item.PLU_No ?? ''),
       PLU_No: item.PLU_No,
       PLU_Name: item.PLU_Name,
       PLU_PrnName: item.PLU_PrnName,
@@ -346,7 +395,8 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
 
 
   private requiredValidator(errorMessage: string) {
-    return (value: string) => ({
+    // 符合 TableEdit 的 validate 函式簽名
+    return (value: any, rowData?: any, data?: any[], field?: string, header?: string) => ({
       isValid: !!value,
       errorMessage: [errorMessage]
     });
@@ -354,12 +404,25 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
 
   // 載入 PLU_MagNo 選項
   loadPLU_MagNoOptions(tltNo: string): void {
-    this.tls42020Service.dropdownTLS42020({ TLT_NO: [tltNo ?? ''] })
-      .pipe(
-        untilDestroyed(this)
-      )
+    // 使用 QueryPLU_No 以支援依 TLT_No 與模糊關鍵字查詢
+    const body = { TLT_No: tltNo ?? '', PLU_No: '', PLU_Name: '' };
+    this.tls42020Service.QueryPLU_No(body)
+      .pipe(untilDestroyed(this))
       .subscribe(res => {
-        this.PLU_MagNoOptions = res.Data;
+        // 後端回傳結構預期為 { Status, Data: [...] }
+        const list = (res?.Data || []);
+        this.PLU_MagNoOptions = list.map((item: any) => {
+          const rawMag = item.PLU_MagNo;
+          const mag = rawMag && String(rawMag).trim() ? rawMag : '';
+          return {
+            PLU_MagNo: mag,
+            PLU_No: item.PLU_No ?? '',
+            PLU_Name: item.PLU_Name ?? item.Name ?? item.Label ?? item.label ?? item.PLUName ?? String(item),
+            PLU_PrnName: item.PLU_PrnName ?? '',
+            PLU_FixPrc: item.PLU_FixPrc ?? '',
+            PLU_SalePrc: item.PLU_SalePrc ?? ''
+          };
+        });
       });
   }
 }

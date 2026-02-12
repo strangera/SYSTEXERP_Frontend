@@ -60,7 +60,7 @@ export class FIN52070CRUComponent extends BasicCruPageComponent<GLS1005> impleme
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // 科目三碼代號維護
-    ClassNo: ['', [Validators.required, Validators.maxLength(14), this.validationService.numberValidator]], //  三碼代號
+    ClassNo: ['', [Validators.required, Validators.maxLength(3), this.validationService.numberValidator]], //  三碼代號
     ClassCName: ['', [Validators.required, Validators.maxLength(100)]], // 三碼名稱
     ClassEname: ['', [Validators.maxLength(100), this.validationService.noChineseValidator]], // 三碼英文名稱 (非必填)
     ParentClass: ['', [Validators.required, Validators.maxLength(3), this.validationService.numberValidator]], //  中類代碼

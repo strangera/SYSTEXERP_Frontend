@@ -10,8 +10,8 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number label="領用單編號" controlName="issuanceNoteCode"
-              [control]="queryForm.controls.issuanceNoteCode" [submitted]="submitted"></app-input-number>
+            <app-input-text label="領用單編號" controlName="SPM_No" [control]="queryForm.controls.SPM_No"
+              [submitted]="submitted"></app-input-text>
           </div>
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉別" controlName="HOS_No"
             [options]="warehouseOptions" optionLabel="label" optionValue="value"
@@ -28,13 +28,14 @@
             [submitted]="submitted"></app-multi-select>
           <!-- 廠商編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="領用類別" controlName="issuanceType" [options]="issuanceTypeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.issuanceType" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="領用類別" controlName="SPM_TypeList" [options]="issuanceTypeOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.SPM_TypeList"
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="領用單狀態" controlName="issuanceNoteStatus" [options]="issuanceNoteStatusOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.issuanceNoteStatus"
-              [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="領用單狀態" controlName="SPM_StatusList" [options]="issuanceNoteStatusOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.SPM_StatusList"
+              [submitted]="submitted"></app-multi-select>
           </div>
           <hr />
         </div>
@@ -57,7 +58,7 @@
             [submitted]="submitted" />
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear" />
+          <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading" />
         </div>
       </form>
@@ -69,7 +70,8 @@
     [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'VEN_No', order: 1 }]" [totalRecords]="totalRecords"
     [lazy]="true" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="true"
     [loading]="loading" [showDelete]="false" (selectionChange)="onSelectionChange($event)"
-    [selectedItems]="selectedItems" [buttonsLoading]="btnLoading" [isRowSelectable]="isRowSelectable">
+    [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
+    [rows]="30" [selectedItems]="selectedItems" [buttonsLoading]="btnLoading" [isRowSelectable]="isRowSelectable">
     <header>
       <div class="flex align-items-center gap-2">
         <p-button label="單據審核" [style]="{ height: '35px' }" pTooltip="僅限【已申請】單據" tooltipPosition="top" [rounded]="true"

@@ -279,7 +279,7 @@
               calendarType="dateRange"
               label="營運起始日"
               [startControl]="queryForm.controls.tlt_bdate_start_from"
-              [endControl]="queryForm.controls.tlt_bdate_end_to"
+              [endControl]="queryForm.controls.tlt_bdate_start_to"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
@@ -288,7 +288,7 @@
               calendarType="dateRange"
               label="營運截止日"
               [startControl]="queryForm.controls.tlt_edate_start_from"
-              [endControl]="queryForm.controls.tlt_edate_end_to"
+              [endControl]="queryForm.controls.tlt_edate_start_to"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
@@ -511,6 +511,8 @@
       [loading]="loading"
       [showDelete]="false"
       [editDisabled]="editDisabled"
+      [rows]="30"
+      [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
     >
       <header>
         <p-button

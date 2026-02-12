@@ -4,7 +4,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { yesterday } from '@shared/models/system/query-form.model';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
+import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { TLS12020Service } from '../../../service/api/tls/tls12020.service';
@@ -42,13 +43,17 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
     VEN_Name: [null, Validators.maxLength(60)], // 原本 ven_name
     VEN_EngName: [null, Validators.maxLength(60)],
     building_no: [null], // 館別（必填）
-    InterviewDateStart: [yesterday], // 原本 contact_Datestart
-    InterviewDateEnd: [yesterday],   // 原本 contact_Dateend
+    InterviewDateStart: [new Date()], // 原本 contact_Datestart
+    InterviewDateEnd: [new Date()],   // 原本 contact_Dateend
     contact_USR_No: [null],
-    contact_USR_Name: [this.authService.currentUserValue?.user_No], // 訪談人員
+    contact_USR_Name: [null], // 訪談人員
     willing_level: [null], // 後端要 string，不要 null
     ...createPaginationConfig([{ field: 'location_no', order: 1 }]), // 原本是 ECR_LocNo
+    pageSize: [30], // 本頁預設送後端每頁 30 筆
   });
+
+  // expansion 明細分頁選項（只在本頁使用）
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
 
 
@@ -59,14 +64,16 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
     { header: '廠商名稱(中文)', field: 'VEN_Name' },
     { header: '廠商名稱(英文)', field: 'VEN_EngName' },
     { header: '品牌', field: 'tlt_name' },
-    { header: '館別', field: 'building_no_name' },
+    // { header: '館別', field: 'building_no' },
+    { header: '館別', field: 'building_name' },
+    // { header: '業種', field: 'bus_type_no' },
     { header: '業種', field: 'bus_type_name' },
     { header: '聯絡人', field: 'VEN_ContactPerson' },
     { header: '聯絡人電話', field: 'VEN_BossTel' },
     { header: '訪談日期', field: 'contact_Date', visible: true, format: (value: any) => formatDate(value, 'yyyy/MM/dd', 'en-US') },
     { header: '訪談時間', field: 'contact_Time', visible: true, format: this.formatTimeHHmm },
     { header: '訪談人員', field: 'contact_USR_Name' },
-    { header: '意願等級', field: 'willing_level_name' },
+    { header: '意願等級', field: 'willing_level', format: (v) => getSYS1000('T116', v), exportFormat: transformOptionsForExport(getSYS1000Options('T116')) },
   ];
 
   selectedItems: any[] = [];
@@ -187,12 +194,7 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
         .pipe(finalize(() => (this.loading = false)))
         .subscribe({
           next: (res) => {
-            const data = (res.Data ?? []).map((row: { building_no: string; bus_type: string; willing_level: string }) => ({
-              ...row,
-              building_no_name: this.buildingNoOptions.find(opt => opt.value === row.building_no)?.label || row.building_no,
-              bus_type_name: this.industryCodeOptions.find(opt => opt.value === row.bus_type || opt.No === row.bus_type)?.label || row.bus_type,
-              willing_level_name: this.willinglevelOptions.find(opt => opt.No === row.willing_level)?.label || row.willing_level
-            }));
+            const data = res.Data;
             this.data = data;
             this.totalRecords = res.TotalCount ?? 0;
             this.queryStateService.setQueryState(this.ProgNo, params);
@@ -226,6 +228,22 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
     // 取出上次查詢條件
     const query = this.queryStateService.getQueryStateValue(progNo);
     if (query) {
+
+      // 將上次查詢條件回填到查詢表單（避免修改共用元件）
+      try {
+        const fill: any = { ...query };
+        // 將可能的 ISO/字符串時間轉回 Date
+        if (fill.InterviewDateStart) {
+          fill.InterviewDateStart = new Date(fill.InterviewDateStart);
+        }
+        if (fill.InterviewDateEnd) {
+          fill.InterviewDateEnd = new Date(fill.InterviewDateEnd);
+        }
+        // 如果保存時有 contact_Datestart/contact_Dateend，保留為 null（後端用），但不覆寫表單上的 InterviewDate* 欄位
+        this.queryForm.patchValue(fill);
+      } catch (e) {
+        // ignore patch errors
+      }
 
       if (onSubmit) {
         onSubmit(queryForm!);

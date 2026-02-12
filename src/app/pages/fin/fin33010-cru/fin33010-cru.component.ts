@@ -1,5 +1,5 @@
 import { DatePipe, NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -22,7 +22,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 @Component({
   selector: 'app-fin33010-cru',
   templateUrl: './fin33010-cru.component.html',
-  styleUrl: './fin33010-cru.component.scss',
   standalone: true,
   imports: [
     NgIf,
@@ -41,6 +40,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
   ]
 })
 export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
+  @ViewChild(TableEditComponent) tableEditComponent?: TableEditComponent;
   dataForm = this.formBuilder.nonNullable.group({
     WSLIP_NO: [{ value: '系統自動產生', disabled: true }],  // 匯款單號
     INV_YN: ['N'],                     // 補發票與否
@@ -75,6 +75,7 @@ export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements 
   // 組織代碼下拉
   Org_IdOptions: IDropdownItem[] = [];
   editData: any[] = [];
+  originalEditData: any[] = [];
   selectedItems: any[] = [];
   editFooterData = {
     D_Amt: 0, // 借方總金額
@@ -150,6 +151,8 @@ export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements 
     const details = this.queryData?.details as any[] | undefined;
     if (Array.isArray(details) && details.length) {
       this.editData = details;
+      // 儲存一份原始資料快照，供取消時還原
+      this.originalEditData = JSON.parse(JSON.stringify(details));
       this.editFooterData = {
         D_Amt: details.reduce((sum, r) => sum + (Number(r.D_Amt) || 0), 0),
         C_Amt: details.reduce((sum, r) => sum + (Number(r.C_Amt) || 0), 0),
@@ -188,6 +191,49 @@ export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements 
 
   }
 
+  // 當按下取消或清除時，呼叫此方法還原明細及其他狀態
+  onReset(): void {
+    // 還原 editData 為初始快照
+    if (this.originalEditData && this.originalEditData.length) {
+      this.editData = JSON.parse(JSON.stringify(this.originalEditData));
+      this.editFooterData = {
+        D_Amt: this.editData.reduce((sum, r) => sum + (Number(r.D_Amt) || 0), 0),
+        C_Amt: this.editData.reduce((sum, r) => sum + (Number(r.C_Amt) || 0), 0),
+      };
+      this.totalRecords = this.editData.length;
+    } else {
+      this.editData = [];
+      this.editFooterData = { D_Amt: 0, C_Amt: 0 };
+      this.totalRecords = 0;
+    }
+    // 清除已選擇項
+    this.selectedItems = [];
+
+    // 強制通知 TableEditComponent 重新初始化內部資料 (避免 Service 判定為已同步而跳過初始化)
+    const te = this.tableEditComponent as any;
+    if (te && te.dataService && typeof te.dataService.initializeData === 'function') {
+      try {
+        te.dataService.initializeData(
+          this.editData,
+          te.columns || this.editColumns,
+          te.dataKey || '_TABLE_KEY',
+          te.dataStatusField || '_dataStatus',
+          te.dataStatusValue || { Original: 'original', New: 'new', Modified: 'modified', Deleted: 'deleted' },
+          te.keepDeletedData || false,
+          te.canInsert || false,
+          te.rowValidate || undefined,
+          te.defaultInsertData || {},
+          te.disabled || false
+        );
+        // 觸發子元件變更檢測
+        if (te.cdr && typeof te.cdr.detectChanges === 'function') te.cdr.detectChanges();
+      } catch (e) {
+        console.warn('force reinit table edit failed', e);
+      }
+    }
+  }
+
+
   onSubmit(frm: FormGroup): void {
     this.submitted = true;
     this.loading = true;
@@ -214,7 +260,7 @@ export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements 
 
     const queryVouDateObj = typeof queryVouDate === 'string' ? new Date(queryVouDate) : queryVouDate;
 
-    const rows = (this.editData || []).filter(r => !r._isAutoInsertCandidate);
+    const rows = (this.editData || []).filter((r: any) => !r._isAutoInsertCandidate);
 
     const payload = {
       PageSize: 0,
@@ -224,7 +270,7 @@ export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements 
       SortBy: [{ field: 'AccNo', order: 1 }],
       RCV_No: queryForm?.RCV_No ?? '',
       VouDate: queryVouDateObj ? queryVouDateObj.toISOString() : '',
-      Details: rows.map(r => ({
+      Details: rows.map((r: any) => ({
         SerNo: r.SerNo || '',
         DC: r.dc || r.DC || '',
         AccNo: r.AccNo || '',
@@ -250,7 +296,7 @@ export class FIN33010CRUComponent extends BasicCruPageComponent<any> implements 
         }),
       )
       .subscribe({
-        next: (res) => {
+        next: (res: any) => {
           if (res.Status === '0000' || res.Status === '0001') {
             this.messageService.successBubble(res.Message || '儲存成功');
             this.onCancel();

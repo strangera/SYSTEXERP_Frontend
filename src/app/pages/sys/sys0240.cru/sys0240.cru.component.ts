@@ -1,26 +1,26 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core'; // 引入 ChangeDetectorRef
-import { Validators, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
-import { apiOption, tblRole } from '../../../shared/models/sys/sysb000.model';
+import { animate, style, transition, trigger } from '@angular/animations';
+import { NgClass, NgFor, NgIf } from '@angular/common';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core'; // 引入 ChangeDetectorRef
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { PrimeTemplate } from 'primeng/api';
+import { CheckboxModule } from 'primeng/checkbox';
+import { DividerModule } from 'primeng/divider';
+import { PanelModule } from 'primeng/panel';
+import { TabViewModule } from 'primeng/tabview';
 import { Sys0210Service } from '../../../service/api/sys/sys0210.service';
 import { Sys0230Service } from '../../../service/api/sys/sys0230.service';
-import { animate, style, transition, trigger } from '@angular/animations';
-import { TreeNode } from '../../../shared/models/sys/role.model'; // 引入 TreeNode
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputGroupComponent } from '../../../shared/componentkit/input-group/input-group.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { NgIf, NgClass, NgFor } from '@angular/common';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { DividerModule } from 'primeng/divider';
-import { TabViewModule } from 'primeng/tabview';
-import { PrimeTemplate } from 'primeng/api';
-import { AccordionModule } from 'primeng/accordion';
-import { TranslateModule } from '@ngx-translate/core';
+import { Column } from '../../../shared/componentkit/table/table.model';
+import { TreeNode } from '../../../shared/models/sys/role.model'; // 引入 TreeNode
+import { apiOption, tblRole } from '../../../shared/models/sys/sysb000.model';
+import { InputGroupComponent } from './input-group/input-group.component';
 
 // 配對角色
 export interface UserOption {

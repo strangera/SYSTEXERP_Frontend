@@ -43,8 +43,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="ECR_TmplNo" [data]="data" [columns]="columns" (detail)="onDetail($event)" [showEdit]="false"
-    [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords" [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [addButton]="addButton" [buttonsLoading]="btnLoading"></app-table>
+  <app-table-report dataKey="ECR_TmplNo" [data]="data" [columns]="columns" (detail)="onDetail($event)"
+    [showEdit]="false" [totalRecords]="totalRecords" [showDelete]="false" [loading]="loading" [addButton]="addButton"
+    [buttonsLoading]="btnLoading" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="tls43020Service.queryTls43020.bind(tls43020Service)"></app-table-report>
 </div>

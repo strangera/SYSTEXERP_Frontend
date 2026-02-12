@@ -293,7 +293,16 @@ export class TLS25030CRUComponent extends BasicCruPageComponent<any> implements 
       }
     });
   }
-
+override onCancel(): void {
+  this.router.navigate(['/account/tls', 'tls25030'], {
+    state: { fromCru: true },
+  });
+}
+goBack(): void {
+  this.router.navigate(['/account/tls', 'tls25030'], {
+    state: { fromCru: true },
+  });
+}
   get isRead(): boolean {
     return this.crudstatus === CRUDStatus.Read;
   }

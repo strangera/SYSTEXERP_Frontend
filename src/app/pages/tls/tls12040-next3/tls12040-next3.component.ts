@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+﻿import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, NavigationExtras } from '@angular/router';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
@@ -18,6 +18,7 @@ import { DialogModule } from 'primeng/dialog';
 import { PrimeTemplate } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { BaseCommissionCondition, BaseRentHigherCondition, BaseTierCondition, ConditionItem, FixedRentCondition, GeneralCommissionCondition, GraduatedCommissionCondition } from './models/tls12040.table.model';
+import { RentSettingApiData } from './models/tls12040-api.model';
 import { TLS12040SmartDateSegmentationService } from './services/smart-date-manager.service';
 import { TLS12040ConditionDataManager } from './services/condition-data-manager.service';
 import { TLS12040UpConditionDataManager } from './services/updated-condition-data-manager.service';
@@ -276,7 +277,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
       this.loadDataWithPriority();
     } else {
       console.warn('沒有有效的工作流程資料，重導向到前一步');
-      this.router.navigate(['account/tls/tls12040cru']);
+      this.router.navigate(['account/tls/tls12040v1cru']);
     }
   }
 
@@ -322,7 +323,32 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
       isRenewalMode: this.contractFlowService.isRenewalMode()
     });
 
-    // 【優先】檢查是否有 Next3 暫存資料（包含用戶修改的內容）
+    // 【最優先】續約模式：續約資料優先於暫存資料
+    if (this.contractFlowService.isRenewalMode()) {
+      console.log('續約模式：優先載入續約條件資料');
+
+      // 優先使用原始 ExistingData 物件，透過 mapBackendDataToFrontend 做正確欄位映射
+      const renewalExistingData = this.contractFlowService.getRenewalCommissionExistingData();
+      if (renewalExistingData) {
+        console.log('使用續約條件資料（ExistingData 物件映射）');
+        this.loadRenewalFromExistingData(renewalExistingData, commissionType || '3');
+        this.conditionDataLoaded = true;
+        this.dataLoaded = true;
+        return;
+      }
+
+      // 向下相容：舊的扁平陣列格式
+      const renewalCommissionData = this.contractFlowService.getRenewalCommissionData();
+      if (renewalCommissionData && renewalCommissionData.length > 0) {
+        console.log('使用續約條件資料（舊格式），共', renewalCommissionData.length, '筆');
+        this.loadRenewalCommissionData(renewalCommissionData, commissionType || '3');
+        this.conditionDataLoaded = true;
+        this.dataLoaded = true;
+        return;
+      }
+    }
+
+    // 檢查是否有 Next3 暫存資料（包含用戶修改的內容）
     const savedNext3StepData = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
     const cachedConditionItems = savedNext3StepData?.data;
 
@@ -332,19 +358,6 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
       this.conditionDataLoaded = true;
       this.dataLoaded = true;
       return;
-    }
-
-    // 沒有暫存時，檢查是否為續約模式（只在第一次進入時載入續約資料）
-    if (this.contractFlowService.isRenewalMode()) {
-      console.log('續約模式：檢查是否有續約條件資料');
-      const renewalCommissionData = this.contractFlowService.getRenewalCommissionData();
-      if (renewalCommissionData && renewalCommissionData.length > 0) {
-        console.log('首次使用續約條件資料，共', renewalCommissionData.length, '筆');
-        this.loadRenewalCommissionData(renewalCommissionData, commissionType || '3');
-        this.conditionDataLoaded = true;
-        this.dataLoaded = true;
-        return;
-      }
     }
 
     // 根據 CRUDStatus 判斷：新增模式初始化空資料，編輯/檢視模式呼叫 API 載入
@@ -406,6 +419,57 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
 
     } catch (error) {
       console.error('❌ 載入續約條件資料失敗:', error);
+      this.notificationService.warnBubble('載入續約條件資料失敗');
+      this.initializeNewContractConditionData(commissionType);
+    }
+  }
+
+  /**
+   * 續約載入：使用 mapBackendDataToFrontend 做正確的欄位映射
+   * 與 loadExistingConditionData 走相同的映射邏輯，再套用續約轉換（清 ID、換日期、標記新增）
+   */
+  private loadRenewalFromExistingData(existingData: RentSettingApiData, commissionType: string): void {
+    console.log('🔄 開始從 ExistingData 物件載入續約條件資料，抽成類型:', commissionType);
+
+    const cruData = this.contractFlowService.getCruData();
+    const contractStartDate = cruData?.tlt_contract_bdate || cruData?.tlt_bdate || null;
+    const contractEndDate = cruData?.tlt_contract_edate || cruData?.tlt_edate || null;
+
+    console.log('📅 新契約日期:', { contractStartDate, contractEndDate });
+
+    try {
+      // 使用與 API 載入相同的映射邏輯
+      const mappedItems = this.conditionDataManager.mapBackendDataToFrontend(existingData, commissionType);
+
+      if (mappedItems && mappedItems.length > 0) {
+        // 套用續約轉換：清除 ID、更新日期、標記為新增
+        this.allConditionItems = mappedItems.map((item, index) => {
+          const itemAny = item as unknown as Record<string, unknown>;
+          const isSelected = itemAny['is_selected'] !== undefined
+            ? Boolean(itemAny['is_selected'])
+            : true;
+          return {
+            ...item,
+            id: `renewal_condition_${Date.now()}_${index}_${Math.random().toString(36).substring(2, 9)}`,
+            apply_no: '',
+            talent_id: '',
+            cag_bdate: contractStartDate || itemAny['cag_bdate'] as string,
+            cag_edate: contractEndDate || itemAny['cag_edate'] as string,
+            _status: isSelected ? 'new' as const : undefined,
+            _isNew: isSelected,
+            is_selected: isSelected
+          };
+        });
+
+        this.categorizeConditionItems();
+        console.log('📊 續約條件資料載入完成（ExistingData 映射）:', this.allConditionItems.length, '筆');
+        this.notificationService.successBubble('已載入原合約條件設定');
+      } else {
+        console.log('⚠️ ExistingData 映射後無資料，初始化新的條件設定');
+        this.initializeNewContractConditionData(commissionType);
+      }
+    } catch (error) {
+      console.error('❌ 從 ExistingData 載入續約條件資料失敗:', error);
       this.notificationService.warnBubble('載入續約條件資料失敗');
       this.initializeNewContractConditionData(commissionType);
     }
@@ -1204,7 +1268,9 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
 
   onSubmitNext(): void {
     if (this.isReadOnlyMode) {
-      this.router.navigate(['account/tls/tls12040']);
+      this.router.navigate(['account/tls/tls12040v1'], {
+        state: { fromRoute: this.router.url }
+      });
       this.notificationService.infoBubble('已結束檢視');
       return;
     }
@@ -1461,7 +1527,9 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
     this.contractFlowService.onSubmitSuccess();
 
     setTimeout(() => {
-      this.router.navigate(['account/tls/tls12040']);
+      this.router.navigate(['account/tls/tls12040v1'], {
+        state: { fromRoute: this.router.url }
+      });
     }, 3000);
   }
 
@@ -1511,11 +1579,11 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
     if (tltTermType === '1') {
       // 固定租金：返回 next1（因為 next2 被跳過）
       console.log('🔍 合約類型為固定租金(1)，返回 next1');
-      this.router.navigate(['account/tls/tls12040next1'], navigationExtras);
+      this.router.navigate(['account/tls/tls12040v1next1'], navigationExtras);
     } else {
       // 其他類型：正常返回 next2
       console.log('🔍 合約類型非固定租金，返回 next2');
-      this.router.navigate(['account/tls/tls12040next2'], navigationExtras);
+      this.router.navigate(['account/tls/tls12040v1next2'], navigationExtras);
     }
   }
 
@@ -1524,7 +1592,7 @@ export class TLS12040Next3Component extends BasicCruPageComponent<TEST> implemen
     const extras: NavigationExtras = {
       state: { fromRoute: this.router.url },
     };
-    this.router.navigate(['account/tls/tls12040'], extras);
+    this.router.navigate(['account/tls/tls12040v1'], extras);
     this.notificationService.infoBubble('已清空暫存資料並離開');
   }
 

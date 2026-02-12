@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, inject, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
@@ -18,6 +18,7 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
 import { Tls12010Service } from '@service/api/tls/tls12010.service';
 import { RenewalBasicInfo, RenewalLocationInfo, RenewalQueryResponse, TLS12040Service } from '@service/api/tls/tls12040.service';
+import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 
@@ -58,12 +59,14 @@ interface DropdownOption {
     ExpandableEditTableComponent
   ]
 })
-export class Step1ContractInfoComponent implements OnInit, OnDestroy {
+export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy {
   @Input() form!: FormGroup;
   @Input() locationData: LocationItem[] = [];
   @Input() isViewMode = false;
   @Input() submitted = false;
   @Input() isCreateMode = false;
+  /** 父元件 API 載入完成後設為 true，通知 step1 載入依賴下拉 */
+  @Input() dataReady = false;
 
   @Output() dataChange = new EventEmitter<{
     formValue: any;
@@ -77,6 +80,7 @@ export class Step1ContractInfoComponent implements OnInit, OnDestroy {
   private readonly messageService = inject(NotificationService);
   private readonly tls12040Service = inject(TLS12040Service);
   private readonly tls12010Service = inject(Tls12010Service);
+  private readonly tls13010Service = inject(TLS13010Service);
   private readonly businessClassificationService = inject(BusinessClassificationService);
   private readonly validationService = inject(TLS12040ValidationService);
   private readonly dateValidationService = inject(DateValidationService);
@@ -208,6 +212,17 @@ export class Step1ContractInfoComponent implements OnInit, OnDestroy {
     this.applyTypeOptions = this.sharedDropdownService.applyTypeOptions;
     this.contractTypeOptions = this.sharedDropdownService.contractTypeOptions;
     this.applyStatusOptions = this.sharedDropdownService.applyStatusOptions;
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // locationData 從父元件更新時，自動刷新顯示
+    if (changes['locationData']) {
+      this.updateDisplayLocationData();
+    }
+    // 父元件 API 載入完成，載入依賴下拉（中分類、小分類）
+    if (changes['dataReady'] && this.dataReady && this.form?.get('bus_type')?.value) {
+      this.loadDependentDropdowns();
+    }
   }
 
   ngOnInit(): void {
@@ -394,12 +409,12 @@ export class Step1ContractInfoComponent implements OnInit, OnDestroy {
       this.validationService.updatePaymentValidators(this.form);
     });
 
-    // 設定保證金付款方式變更監聽
-    ['open_deposit', 'construct_deposit', 'expiration_deposit'].forEach(fieldName => {
-      this.form.get(fieldName)?.valueChanges.subscribe(() => {
-        this.validationService.updateDepositValidators(this.form);
-      });
-    });
+    // [暫時註解] 保證金付款方式變更監聽 - 選擇付款方式時金額變必填
+    // ['open_deposit', 'construct_deposit', 'expiration_deposit'].forEach(fieldName => {
+    //   this.form.get(fieldName)?.valueChanges.subscribe(() => {
+    //     this.validationService.updateDepositValidators(this.form);
+    //   });
+    // });
 
     // 設定日期驗證器
     this.dateValidationService.setupDateValidators(this.form, this.messageService);
@@ -602,12 +617,18 @@ export class Step1ContractInfoComponent implements OnInit, OnDestroy {
 
     // B. 載入潛在客戶資料或續約資料
     const applyType = this.form.get('apply_type')?.value;
-    if (applyType === '2') {
+    const contractType = this.form.get('contract_type')?.value;
+    if (applyType === '2' && this.isCreateMode) {
       // 續約模式：載入原合約資料
       this.loadRenewalData(vendorVenNo);
-    } else {
-      // 非續約模式：載入潛在客戶資料
+    } else if (contractType === '1') {
+      // 申請案件型態=潛在客戶：載入潛在客戶資料
       this.loadPotentialCustomerData(vendorData.No || '');
+    }
+
+    // C. 載入 POS2013 廠商聯絡資訊（不限 apply_type，僅排除檢視模式）
+    if (!this.isViewMode) {
+      this.loadVendorContactInfo(vendorVenNo);
     }
 
     this.emitDataChange();
@@ -643,10 +664,7 @@ export class Step1ContractInfoComponent implements OnInit, OnDestroy {
 
           this.form.patchValue({
             tlt_name: potentialData.tlt_name || '',
-            bus_type: potentialData.bus_type || '',
-            contact_tel: potentialData.VEN_BossTel || '',
-            contact_fax: potentialData.VEN_BossFax || '',
-            contact_addr: potentialData.VEN_Addr || ''
+            bus_type: potentialData.bus_type || ''
           }, { emitEvent: true });
 
           // 標記為已觸碰
@@ -660,6 +678,36 @@ export class Step1ContractInfoComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.messageService.warnBubble('查詢潛在客戶資料失敗');
+      }
+    });
+  }
+
+  // ========== POS2013 廠商聯絡資訊 ==========
+
+  /** 根據廠商編號查詢POS2013廠商聯絡資訊並自動帶入 */
+  private loadVendorContactInfo(venNo: string): void {
+    this.tls13010Service.queryVendorInfo(venNo).subscribe({
+      next: (res: any) => {
+        if (res?.Status === '0000' && res?.Data) {
+          const d = res.Data;
+          this.form.patchValue({
+            email: d.email || '',
+            invoice_email: d.invoice_email || '',
+            CHECK_TITLE: d.CHECK_TITLE || '',
+            contact_tel: d.contact_tel || '',
+            contact_fax: d.contact_fax || '',
+            contact_addr: d.contact_addr || '',
+            bank_id: d.bank_id || '',
+            vendor_acct_name: d.vendor_acct_name || '',
+            vendor_acct_no: d.vendor_acct_no || '',
+            paytype: d.paytype || '',
+            check_day: d.check_day || ''
+          }, { emitEvent: false });
+          this.messageService.successBubble('已自動帶入廠商聯絡資訊');
+        }
+      },
+      error: (err) => {
+        console.error('查詢廠商聯絡資訊失敗:', err);
       }
     });
   }
@@ -719,6 +767,9 @@ export class Step1ContractInfoComponent implements OnInit, OnDestroy {
    */
   private patchFormForRenewal(basicInfo: RenewalBasicInfo, nextContractSubno: number): void {
     const renewalFields: Record<string, any> = {
+      // 續約必須強制設為 '2'（防止被其他流程重置）
+      apply_type: '2',
+
       // 專櫃基本資訊
       tlt_no: basicInfo.tlt_no,
       tlt_shortname: basicInfo.tlt_shortname,
@@ -844,6 +895,8 @@ export class Step1ContractInfoComponent implements OnInit, OnDestroy {
     }));
 
     this.updateDisplayLocationData();
+    // 通知 wizard 更新 wizardState.locationData（續約位置資料）
+    this.emitDataChange();
   }
 
   // ========== 分類變更處理 ==========
@@ -887,16 +940,33 @@ export class Step1ContractInfoComponent implements OnInit, OnDestroy {
    * 申請類型變更處理（增強版）
    */
   onApplyTypeChange(applyType: string): void {
-    if (applyType === '2') {
-      // 續約模式
+    // 續約只在新增模式下觸發
+    if (applyType === '2' && this.isCreateMode) {
       this.messageService.infoBubble('請選擇廠商統一編號以載入原合約資料');
       const venNo = this.form.get('ven_no')?.value;
       if (venNo) {
         this.loadRenewalData(venNo);
       }
     } else {
-      // 非續約模式
       this.lastRenewalVenNo = null;
+    }
+
+    this.emitDataChange();
+  }
+
+  /**
+   * 申請案件型態(contract_type)變更處理
+   * 切到「潛在客戶」(1) 且已選廠商 → 載入潛在客戶資料
+   */
+  onContractTypeChange(contractType: string): void {
+    if (contractType === '1') {
+      // 潛在客戶：清空回函截止日
+      this.form.patchValue({ due_date: null }, { emitEvent: false });
+
+      const venUniform = this.form.get('ven_uniform')?.value;
+      if (venUniform) {
+        this.loadPotentialCustomerData(venUniform);
+      }
     }
     this.emitDataChange();
   }

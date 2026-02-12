@@ -81,9 +81,27 @@
 
         <app-input-text
           class="col-12 md:col-6 lg:col-4"
+          label="客戶意見類別名稱"
+          controlName="KIND_Name"
+          [control]="mainForm.controls.KIND_Name"
+          [submitted]="submitted"
+          [readonly]="true"
+        />
+      </div>
+      <div class="grid p-fluid">
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
           label="客戶意見子類別"
           controlName="KIND_ID_SUB"
           [control]="mainForm.controls.KIND_ID_SUB"
+          [submitted]="submitted"
+          [readonly]="true"
+        />
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="客戶意見子類別名稱"
+          controlName="KIND_SubName"
+          [control]="mainForm.controls.KIND_SubName"
           [submitted]="submitted"
           [readonly]="true"
         />
@@ -95,6 +113,14 @@
           label="客戶意見來源別"
           controlName="SUGG_SOURCE"
           [control]="mainForm.controls.SUGG_SOURCE"
+          [submitted]="submitted"
+          [readonly]="true"
+        />
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="客戶意見來源別(中文)"
+          controlName="SUGG_SOURCE_NAME"
+          [control]="mainForm.controls.SUGG_SOURCE_NAME"
           [submitted]="submitted"
           [readonly]="true"
         />

@@ -34,7 +34,7 @@ export class Cpm11090Component extends BasicQueryPageComponent<QueryCPM11090Resp
     { field: 'ByMissingPeople', header: '被尋人姓名' },
     { field: 'CollectionSites', header: '集合地點' },
     { field: 'SalutationName', header: '被尋人稱謂' },
-    { field: 'broadcasT_YN', header: '是否廣播' },
+    { field: 'BroadcastYN', header: '是否廣播' },
     { field: 'IsFinished', header: '是否結案' },
   ];
   totalRecords = 0;

@@ -1,8 +1,8 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button *ngIf="isFormEditable" label="已領回" (click)="onMarkReceived()"></app-button>
-    <app-button *ngIf="isFormEditable" label="重新廣播" (click)="onRebroadcast()"></app-button>
+    <!-- <app-button *ngIf="isFormEditable" label="已領回" (click)="onMarkReceived()"></app-button> -->
+    <!-- <app-button *ngIf="isFormEditable" label="重新廣播" (click)="onRebroadcast()"></app-button> -->
     <app-button btnType="back" (click)="onCancel()" />
 
   </div>
@@ -13,42 +13,45 @@
           [control]="dataForm.controls.SEQ_ID" [submitted]="submitted"></app-input-text>
         <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="登錄日期" controlName="REC_DATE"
           [control]="dataForm.controls.REC_DATE" [submitted]="submitted" />
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="失物類別" controlName="DocType" [options]="Type1Options" optionLabel="Name" optionValue="No"
+        <!-- <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="失物狀態" controlName="DocType" [options]="Type1Options" optionLabel="Name" optionValue="No"
             [control]="dataForm.controls.DocType" [submitted]="submitted"></app-dropdown>
-        </div>
+        </div> -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="地點" controlName="LOCATION" [options]="SPACE1Options" optionLabel="label"
+          <app-dropdown label="地點" controlName="LOCATION" [options]="SPACE1OptionsLabelled" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.LOCATION" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="失物狀態" controlName="SEQ_TYPE" [options]="Type3Options" optionLabel="Name" optionValue="No"
             [control]="dataForm.controls.SEQ_TYPE" [submitted]="submitted"></app-dropdown>
         </div>
-        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="遺失/拾獲日期" controlName="LOST_DATE"
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne"
+          [label]="getLabel('LOST_DATE_HEADER','遺失/拾獲日期')" controlName="LOST_DATE"
           [control]="dataForm.controls.LOST_DATE" [submitted]="submitted" />
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="物品類別" controlName="GOODS" [options]="Type2Options" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.GOODS" [submitted]="submitted"></app-dropdown>
         </div>
+        <!-- <app-input-text class="col-12 md:col-6 lg:col-4" label="登錄者" controlName="KEY_USER"
+          [control]="dataForm.controls.KEY_USER" [submitted]="submitted"></app-input-text> -->
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="服務人員" controlName="OTHER_GOODS" [options]="ProcessingUserOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.OTHER_GOODS" [submitted]="submitted"></app-dropdown>
+        </div>
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="通知日期" controlName="MSG_DATE"
+          [control]="dataForm.controls.MSG_DATE" [submitted]="submitted" />
         <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="轉出日期" controlName="OFF_DATE"
           [control]="dataForm.controls.OFF_DATE" [submitted]="submitted" />
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="登錄者" controlName="KEY_USER"
-          [control]="dataForm.controls.KEY_USER" [submitted]="submitted"></app-input-text>
-
         <div class="col-12 md:col-6 lg:col-4">
           <app-radiobutton label="是否已廣播" controlName="BROADCAST_YN" [control]="dataForm.controls.BROADCAST_YN"
             [options]="SPACE3Options" [submitted]="submitted"></app-radiobutton>
         </div>
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="服務人員" controlName="OTHER_GOODS"
-          [control]="dataForm.controls.OTHER_GOODS" [submitted]="submitted"></app-input-text>
-        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="通知日期" controlName="MSG_DATE"
-          [control]="dataForm.controls.MSG_DATE" [submitted]="submitted" />
         <app-input-textarea class="col-12" label="物品敘述" controlName="BROADCAST_DATE"
           [control]="dataForm.controls.BROADCAST_DATE" [submitted]="submitted"></app-input-textarea>
       </div>
-      <div class="card">
+      <div class="card" *ngIf="showReceiveInfo && !isFormCreateable">
         <h4>領回資訊</h4>
         <div class="grid p-fluid">
           <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="領回日期" controlName="RECEIVE_DATE"
@@ -62,17 +65,19 @@
         </div>
       </div>
       <div class="card">
-        <h4>遺失/拾獲基本資料</h4>
+        <h4>{{ getLabel('SECTION_TITLE','遺失/拾獲基本資料') }}</h4>
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="報失者/拾獲者姓名" controlName="REGISTRANT"
-            [control]="dataForm.controls.REGISTRANT" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" [label]="getLabel('REGISTRANT','報失者/拾獲者姓名')"
+            controlName="REGISTRANT" [control]="dataForm.controls.REGISTRANT" [submitted]="submitted"></app-input-text>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="報失者/拾獲者身分別" controlName="Identity_KIND" [options]="USER5Options" optionLabel="Name"
-              optionValue="No" [control]="dataForm.controls.Identity_KIND" [submitted]="submitted"></app-dropdown>
+            <app-dropdown [label]="getLabel('IDENTITY_KIND','報失者/拾獲者身分別')" controlName="Identity_KIND"
+              [options]="USER5Options" optionLabel="Name" optionValue="No" [control]="dataForm.controls.Identity_KIND"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="報失者/拾獲者性別" controlName="SEX" [options]="USER6Options" optionLabel="Name"
-              optionValue="No" [control]="dataForm.controls.SEX" [submitted]="submitted"></app-dropdown>
+            <app-dropdown [label]="getLabel('SEX','報失者/拾獲者性別')" controlName="SEX" [options]="USER6Options"
+              optionLabel="Name" optionValue="No" [control]="dataForm.controls.SEX"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <app-input-text class="col-12 md:col-6 lg:col-4" label="電話" controlName="TEL"
             [control]="dataForm.controls.TEL" [submitted]="submitted"></app-input-text>

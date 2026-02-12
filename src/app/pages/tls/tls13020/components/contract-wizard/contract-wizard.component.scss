@@ -1,0 +1,103 @@
+// TLS12040-v2 Contract Wizard Component Styles（與 TLS13010-v2 一致）
+
+:host {
+  display: block;
+}
+
+.card {
+  padding: 1.5rem;
+  background: var(--surface-card);
+  border-radius: var(--border-radius);
+  box-shadow: var(--card-shadow);
+}
+
+// 步驟指示器
+.steps-header {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+
+  ::ng-deep {
+    .p-steps {
+      .p-steps-item {
+        .p-menuitem-link {
+          background: transparent;
+          padding: 0.25rem;
+
+          .p-steps-number {
+            min-width: 1.5rem;
+            height: 1.5rem;
+            line-height: 1.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            color: #6c757d;
+          }
+
+          .p-steps-title {
+            font-size: 0.75rem;
+            margin-top: 0.35rem;
+            color: #6c757d;
+          }
+        }
+
+        // 當前步驟
+        &.p-highlight {
+          .p-steps-number {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: #fff;
+          }
+
+          .p-steps-title {
+            color: var(--primary-color);
+            font-weight: 600;
+          }
+        }
+
+        // hover 效果
+        &:not(.p-highlight):not(.p-disabled) {
+          .p-menuitem-link:hover {
+            background: transparent;
+
+            .p-steps-number {
+              border-color: var(--primary-color);
+              color: var(--primary-color);
+            }
+
+            .p-steps-title {
+              color: var(--primary-color);
+            }
+          }
+        }
+
+        // 禁用步驟
+        &.p-disabled {
+          .p-steps-number {
+            background: #e9ecef;
+            color: #adb5bd;
+          }
+
+          .p-steps-title {
+            color: #adb5bd;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Step content area
+.step-content {
+  flex: 1;
+  min-height: 400px;
+  padding: 1rem 0;
+}
+
+// Navigation buttons
+.border-top-1 {
+  border-top: 1px solid var(--surface-border);
+}

@@ -116,16 +116,38 @@ export abstract class BasicQueryPageComponent<T> {
   }
 
   // 送出查詢
-  handleSubmit(queryForm: FormGroup, callback: () => void) {
-    this.submitted = true;
-    this.loading = true;
+  handleSubmit(
+    queryForm: FormGroup,
+    callback: () => void,
+    setLoading?: (value: boolean) => void,
+    setSubmitted?: (value: boolean) => void
+  ) {
+    // 1. 決定如何處理 Loading
+    // 如果有傳入 setLoading，就執行它；否則就改原本的 this.loading
+    const updateLoading = (val: boolean) => {
+      if (setLoading) {
+        setLoading(val);
+      } else {
+        this.loading = val;
+      }
+    };
+    // 2. 決定如何處理 Submitted
+    const updateSubmitted = (val: boolean) => {
+      if (setSubmitted) {
+        setSubmitted(val);
+      } else {
+        this.submitted = val;
+      }
+    };
+    updateSubmitted(true);
+    updateLoading(true);
     this.messageService.blockUi();
     if (queryForm.valid) {
-      this.submitted = false;
-      callback(); // 執行傳入的回調函數
+      updateSubmitted(false);
+      callback();
     } else {
       this.logValidationErrors(queryForm);
-      this.loading = false;
+      updateLoading(false);
     }
 
     this.messageService.unblockUi();
@@ -166,5 +188,29 @@ export abstract class BasicQueryPageComponent<T> {
       pageIndex: event.pageIndex,
       SortBy: event.SortBy
     });
+
+    // 同步到子類別常用屬性（若存在）
+    try {
+      if ((this as any).pageIndex !== undefined && event.pageIndex !== undefined) {
+        (this as any).pageIndex = event.pageIndex;
+      }
+      if ((this as any).pageSize !== undefined && event.pageSize !== undefined) {
+        (this as any).pageSize = event.pageSize;
+      }
+      const sb = event.SortBy ?? event.SortBy;
+      if (sb) {
+        // 保存原始 SortBy 結構以便子類使用完整排序資訊
+        (this as any).sortMeta = sb;
+        if (Array.isArray(sb) && sb.length > 0) {
+          (this as any).sortBy = String(sb[0].field ?? '');
+          (this as any).sortOrder = sb[0].order ?? 1;
+        } else if (typeof sb === 'string') {
+          (this as any).sortBy = sb;
+          (this as any).sortOrder = 1;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 }

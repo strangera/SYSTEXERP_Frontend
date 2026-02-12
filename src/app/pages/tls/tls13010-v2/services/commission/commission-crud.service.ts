@@ -20,13 +20,26 @@ export interface AddCommissionOptions {
   discountOptions: DropdownOption[];
   defaultCapSaletype1?: boolean;
   defaultCapSaletype2?: boolean;
+  defaultCapSaletype3?: boolean;
   defaultCapSaletype5?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
 export class CommissionCrudService {
 
+  /** 折扣別排序對照表 (cag_barcode → Sort 值)，由外部設定 */
+  private discountSortMap = new Map<string, number>();
+
   constructor(private syncService: CommissionSyncService) {}
+
+  /**
+   * 設定折扣別排序對照表
+   */
+  setDiscountSortMap(options: DropdownOption[]): void {
+    this.discountSortMap = new Map(
+      options.map(opt => [opt.value, opt.sort ?? 999])
+    );
+  }
 
   /**
    * 新增抽成項目
@@ -55,6 +68,7 @@ export class CommissionCrudService {
       sst_rate: 0,
       cap_saletype1: options.defaultCapSaletype1 ?? false,
       cap_saletype2: options.defaultCapSaletype2 ?? false,
+      cap_saletype3: options.defaultCapSaletype3 ?? false,
       cap_saletype5: options.defaultCapSaletype5 ?? false,
       selectedSettingOption: 'discount',
       currentTab: 'discount',
@@ -216,11 +230,27 @@ export class CommissionCrudService {
           .filter(item => item._status !== 'deleted')
           .map(item => ({ ...item, _originalType: 'annual' }));
         break;
-      case 'level':
+      case 'level': {
+        // 取得已勾選折扣的 id 集合，用來過濾對應的 level 項目
+        const selectedDiscountIds = new Set(
+          commissionItem.discountSettingItems
+            ?.filter(d => d.selected && d._status !== 'deleted')
+            .map(d => d.id) || []
+        );
         commissionItem.detailItems = commissionItem.discountLevelItems
-          .filter(item => item._status !== 'deleted')
+          .filter(item =>
+            item._status !== 'deleted' &&
+            (item.charged_id ? selectedDiscountIds.has(item.charged_id) : true)
+          )
+          .sort((a, b) => {
+            // 按照折扣別的 Sort 值升序排列 (1→8)
+            const aSort = this.discountSortMap.get(a.cag_barcode) ?? 999;
+            const bSort = this.discountSortMap.get(b.cag_barcode) ?? 999;
+            return aSort - bSort;
+          })
           .map(item => ({ ...item, _originalType: 'level' }));
         break;
+      }
     }
   }
 
@@ -228,16 +258,11 @@ export class CommissionCrudService {
    * 更新項目狀態
    */
   updateItemStatus(item: CommissionItem | DiscountSettingItem | AnnualPerformanceItem | DiscountLevelItem): void {
-    const oldStatus = item._status;
     if (item._status === 'new') {
-      console.log('[updateItemStatus] 保持 new 狀態:', { id: (item as { id?: unknown }).id, status: item._status });
       return;
     }
     if (item._status === 'original' || !item._status) {
       item._status = 'modified';
-      console.log('[updateItemStatus] 狀態變更:', { id: (item as { id?: unknown }).id, oldStatus, newStatus: item._status });
-    } else {
-      console.log('[updateItemStatus] 狀態未變更:', { id: (item as { id?: unknown }).id, status: item._status });
     }
   }
 
@@ -445,6 +470,6 @@ export class CommissionCrudService {
   }
 
   private generateTempId(): string {
-    return `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `temp_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
   }
 }

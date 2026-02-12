@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
@@ -14,8 +15,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column } from '../../../shared/componentkit/table/table.model';
 import { columns, MainInvoiceData, subColumns } from './fin11020.model';
 import { YearMonthComponent } from './query-year-month/query-year-month.component';
 
@@ -25,7 +25,7 @@ import { YearMonthComponent } from './query-year-month/query-year-month.componen
   templateUrl: './fin11020.component.html',
   styleUrls: ['./fin11020.component.scss'],
   standalone: true,
-  imports: [YearMonthComponent, InputGroupModule, InputGroupAddonModule, MenubarComponent, FileUploadModule, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, InputTextRangeComponent, TableComponent, TranslateModule]
+  imports: [YearMonthComponent, InputGroupModule, InputGroupAddonModule, MenubarComponent, FileUploadModule, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, InputTextRangeComponent, TableReportComponent, TranslateModule]
 })
 export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -34,16 +34,19 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
     GUI_Track: [null, [this.validationService.guiTrackValidator, Validators.maxLength(2), Validators.minLength(2)]], // 字軌
     GUI_No_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 發票起始號碼
     GUI_No_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 發票結束號碼
-    ...createPaginationConfig([{ field: 'GUI_YYMM', order: 1 }, { field: 'GUI_SerNo', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'GUI_YYMM', order: 1 }, { field: 'GUI_SerNo', order: 1 }]],
   }, { validators: this.validationService.guiNumberRangeValidator('GUI_No_start', 'GUI_No_end') });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: MainInvoiceData[] = [];
   selectedRows: MainInvoiceData[] = [];
+  lastQueryBody: any = {};
   columns: Column[] = columns;
   subColumns: Column[] = subColumns;
   constructor(
-    private fin11020Service: Fin11020Service,
-    private validationService: ValidationService
+    public readonly fin11020Service: Fin11020Service,
+    private readonly validationService: ValidationService
   ) {
     super(); // 呼叫父類建構子
   }
@@ -63,7 +66,8 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.fin11020Service.queryFIN11020(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
-        this.data = response.Data
+        this.data = response.Data;
+        this.lastQueryBody = frm.value;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });

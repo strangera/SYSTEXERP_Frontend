@@ -1,4 +1,4 @@
-import { NgFor, NgIf } from '@angular/common';
+import { NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -13,15 +13,13 @@ import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 @Component({
   selector: 'app-sysbp00.cru',
   templateUrl: './sysbp00.cru.component.html',
   standalone: true,
-  imports: [TableEditComponent, MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, CheckboxModule, NgFor, DropdownComponent, InputNumberComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [TableEditComponent, MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, CheckboxModule, ButtonComponent, NgIf, TranslateModule]
 })
 // 參數資料設定維護 CRU
 export class SYSBP00CRUComponent extends BasicCruPageComponent<Sysbp00Response> implements OnInit {
@@ -89,5 +87,14 @@ export class SYSBP00CRUComponent extends BasicCruPageComponent<Sysbp00Response> 
     this.data.forEach((rowData, index) => {
       rowData.SYS_Sort = index + 1;
     });
+  }
+
+  onClear() {
+    if (this.isFormCreateable) {
+      this.dataForm.reset();
+      this.data = [];
+    } else {
+      this.data = this.rowdata?.Details ?? [];
+    }
   }
 }

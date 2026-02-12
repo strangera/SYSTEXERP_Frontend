@@ -347,6 +347,6 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
 
   // *pod_status=1 不可編輯；pod_status=9 列表不顯示；
   isRowEditDisabled = (rowData: TALPORDERM) => {
-    return rowData.pod_status === '1';
+    return rowData.pod_status === '1' || rowData.pod_status === '9';
   };
 }

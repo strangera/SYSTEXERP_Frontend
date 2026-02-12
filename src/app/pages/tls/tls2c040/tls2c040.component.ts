@@ -4,7 +4,8 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AddButton, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { TLS2C040Service } from '../../../service/api/tls/tls2c040.service';
@@ -13,12 +14,10 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 @Component({
   selector: 'app-tls2c040',
   templateUrl: './tls2c040.component.html',
-  styleUrl: './tls2c040.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -29,7 +28,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
     InputTextComponent,
     MultiSelectComponent,
     CalendarRangeComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule
   ]
 })
@@ -40,24 +39,22 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
     VouDate_End: [''],                                         // 傳票日期(迄)
     PostFlagList: [[]],                                        // 傳票狀態(多選)
     No: ['', Validators.maxLength(12)],                         // 結帳單號
-    ...createPaginationConfig([])
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
   });
 
   data: any[] = [];
   selectedItems: any[] = [];
   totalRecords = 0;
+  lastQueryBody: any;
 
   addButton: AddButton[] = [
     {
       label: '應收',
-      displayText: '應收',
-      icon: '',
       action: (rowData: any) => { this.onDetail(rowData, '應收') },
     },
     {
       label: '應付',
-      displayText: '應付',
-      icon: '',
       action: (rowData: any) => { this.onDetail(rowData, '應付') },
     },
   ];
@@ -74,7 +71,7 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
   ];
   //#endregion
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'VouNo', header: '傳票編號', visible: true },
     { field: 'SrcSheetType', header: '傳票種類', visible: true, format: (value: string) => this.srcSheetTypeOptions.find(item => item.No === value)?.Name || value },
     { field: 'VouDate', header: '傳票日期', visible: true, format: formatDate },
@@ -84,8 +81,8 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
   ];
 
   constructor(
-    private tls2c040Service: TLS2C040Service,
-    private dropDownListService: DropDownListService
+    public readonly tls2c040Service: TLS2C040Service,
+    private readonly dropDownListService: DropDownListService
   ) {
     super();
   }
@@ -93,36 +90,20 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
   ngOnInit(): void {
     this.initializePage('TLS2C040', 'tls/tls2c040cru', this.queryForm, (form) => this.onSubmit(form));
     // 載入傳票種類
-    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'entry_type' })
-      .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        this.srcSheetTypeOptions = response.Data;
-      });
+    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'entry_type' }).pipe(untilDestroyed(this)).subscribe(response => {
+      this.srcSheetTypeOptions = response.Data;
+    });
   }
 
   onSubmit(form: FormGroup) {
     this.handleSubmit(form, () => {
-      this.tls2c040Service.queryTLS2C040(form.getRawValue())
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-        .subscribe(response => {
-          this.data = response.Data.map((item: any) => this.restructureData(item));
-          this.totalRecords = response.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
-        });
+      // Service 已經處理好 map 了，這裡直接賦值
+      this.tls2c040Service.queryTLS2C040(form.getRawValue()).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        this.data = response.Data; // 直接等於 response.Data
+        this.totalRecords = response.TotalCount;
+        this.lastQueryBody = form.getRawValue();
+        this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+      });
     });
-  }
-
-  restructureData(item: any) {
-    return {
-      ...item._GLS6001,
-      _GLS6002List: item._GLS6002List?.sort((a: any, b: any) => {
-        // 先以AccDC遞減排序
-        if (b.AccDC !== a.AccDC) {
-          return b.AccDC - a.AccDC;
-        }
-        // 再以SerNo遞增排序
-        return a.SerNo - b.SerNo;
-      })
-    }
   }
 }

@@ -378,7 +378,7 @@ export class TLS12040ConditionDataManager {
 
     return data.RentDetails.map((item: any) => ({
       id: item.id,
-      apply_no: item.apply_no.toString(),
+      apply_no: (item.apply_no ?? '').toString(),
       tlt_id: item.tlt_id || '',
       cag_bdate: this.formatDate(item.cag_bdate),
       cag_edate: this.formatDate(item.cag_edate),
@@ -392,7 +392,7 @@ export class TLS12040ConditionDataManager {
 
     return data.RentDetails.map((rentItem: any, index: number) => ({
       id: rentItem.id,
-      apply_no: rentItem.apply_no.toString(),
+      apply_no: (rentItem.apply_no ?? '').toString(),
       tlt_id: rentItem.tlt_id || '',
       cag_bdate: this.formatDate(rentItem.cag_bdate),
       cag_edate: this.formatDate(rentItem.cag_edate),
@@ -407,7 +407,7 @@ export class TLS12040ConditionDataManager {
 
     return data.LimitDetails.map((item: any) => ({
       id: item.id,
-      apply_no: item.apply_no.toString(),
+      apply_no: (item.apply_no ?? '').toString(),
       tlt_id: item.tlt_id || '',
       cag_bdate: this.formatDate(item.cag_bdate),
       cag_edate: this.formatDate(item.cag_edate),
@@ -422,7 +422,7 @@ export class TLS12040ConditionDataManager {
 
     return data.LevelDetails.map((item: any) => ({
       id: item.id,
-      apply_no: item.apply_no.toString(),
+      apply_no: (item.apply_no ?? '').toString(),
       seq_no: item.seq_no || 0,
       cag_bdate: this.formatDate(item.cag_bdate),
       cag_edate: this.formatDate(item.cag_edate),
@@ -439,7 +439,7 @@ export class TLS12040ConditionDataManager {
       console.log('🎯 使用新的 BottomTierDetails 資料');
       return data.BottomTierDetails.map((item: BottomTierDetailApiItem) => ({
         id: item.id,
-        apply_no: item.apply_no.toString(),
+        apply_no: (item.apply_no ?? '').toString(),
         seq_no: item.seq_no || 0,
         tlt_id: '', // BottomTierDetails 中沒有 tlt_id
         cag_bdate: this.formatDate(item.cag_bdate),
@@ -452,13 +452,13 @@ export class TLS12040ConditionDataManager {
       }));
     }
 
-    // 保留原本的邏輯作為備用
-    if (!data.LimitDetails?.length || !data.LevelDetails?.length) return [];
+    // 保留原本的邏輯作為備用：LevelDetails 有資料即可（limit_amt 可能已內嵌在每筆中）
+    if (!data.LevelDetails?.length) return [];
 
-    console.log('🎯 使用舊的 LimitDetails + LevelDetails 組合邏輯');
+    console.log('🎯 使用 LevelDetails 資料映射（LimitDetails 筆數:', data.LimitDetails?.length || 0, '）');
     return data.LevelDetails.map((levelItem: any) => ({
       id: levelItem.id,
-      apply_no: levelItem.apply_no.toString(),
+      apply_no: (levelItem.apply_no ?? '').toString(),
       seq_no: levelItem.seq_no || 0,
       tlt_id: '',
       cag_bdate: this.formatDate(levelItem.cag_bdate),

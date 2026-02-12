@@ -4,174 +4,88 @@
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <!-- 客戶意見編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="客戶意見編號"
-              controlName="SEQ_ID"
-              [control]="queryForm.controls.SEQ_ID"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="客戶意見編號" controlName="SEQ_ID" [control]="queryForm.controls.SEQ_ID"
+              [submitted]="submitted"></app-input-text>
           </div>
           <!-- 客戶姓名 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="客戶姓名"
-              controlName="CUST_NAME"
-              [control]="queryForm.controls.CUST_NAME"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="客戶姓名" controlName="CUST_NAME" [control]="queryForm.controls.CUST_NAME"
+              [submitted]="submitted"></app-input-text>
           </div>
           <!-- 性別 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="性別"
-              controlName="SEX"
-              [control]="queryForm.controls.SEX"
-              [options]="sexOptions"
-              [submitted]="submitted"
-              [editable]="false"
-              optionLabel="label"
-              optionValue="value"
-            ></app-dropdown>
+            <app-dropdown label="性別" controlName="SEX" [control]="queryForm.controls.SEX" [options]="sexOptions"
+              [submitted]="submitted" [editable]="false" optionLabel="label" optionValue="value"></app-dropdown>
           </div>
           <!-- 處理狀況 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="處理狀況"
-              controlName="STATUS"
-              [control]="queryForm.controls.STATUS"
-              [options]="statusOptions"
-              [submitted]="submitted"
-              [editable]="false"
-              optionLabel="label"
-              optionValue="value"
-            ></app-dropdown>
+            <app-dropdown label="處理狀況" controlName="STATUS" [control]="queryForm.controls.STATUS"
+              [options]="statusOptions" [submitted]="submitted" [editable]="false" optionLabel="label"
+              optionValue="value"></app-dropdown>
           </div>
           <!-- 意見類型 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="意見類型"
-              controlName="KIND_ID"
-              [control]="queryForm.controls.KIND_ID"
-              [options]="kindIdOptions"
-              [submitted]="submitted"
-              [editable]="false"
-              optionLabel="label"
-              optionValue="value"
-            ></app-dropdown>
+            <app-dropdown label="意見類型" controlName="KIND_ID" [control]="queryForm.controls.KIND_ID"
+              [options]="kindIdOptions" [submitted]="submitted" [editable]="false" optionLabel="label"
+              optionValue="value"></app-dropdown>
           </div>
           <!-- 建議來源 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="建議來源"
-              controlName="SUGG_SOURCE"
-              [control]="queryForm.controls.SUGG_SOURCE"
-              [options]="suggSourceOptions"
-              [submitted]="submitted"
-              [editable]="false"
-              optionLabel="label"
-              optionValue="value"
-            ></app-dropdown>
+            <app-dropdown label="建議來源" controlName="SUGG_SOURCE" [control]="queryForm.controls.SUGG_SOURCE"
+              [options]="suggSourceOptions" [submitted]="submitted" [editable]="false" optionLabel="label"
+              optionValue="value"></app-dropdown>
           </div>
           <!-- 聯絡電話 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="聯絡電話"
-              controlName="CONTACT_TEL"
-              [control]="queryForm.controls.CONTACT_TEL"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="聯絡電話" controlName="CONTACT_TEL" [control]="queryForm.controls.CONTACT_TEL"
+              [submitted]="submitted"></app-input-text>
           </div>
           <!-- 手機號碼 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="手機號碼"
-              controlName="CELL_PHONE"
-              [control]="queryForm.controls.CELL_PHONE"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="手機號碼" controlName="CELL_PHONE" [control]="queryForm.controls.CELL_PHONE"
+              [submitted]="submitted"></app-input-text>
           </div>
           <!-- Email -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="Email"
-              controlName="E_MAIL"
-              [control]="queryForm.controls.E_MAIL"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="Email" controlName="E_MAIL" [control]="queryForm.controls.E_MAIL"
+              [submitted]="submitted"></app-input-text>
           </div>
           <!-- 顧客意見內容 -->
           <div class="col-12">
-            <app-input-textarea
-              label="顧客意見內容"
-              controlName="COMPLAIN_NOTES"
-              [control]="queryForm.controls.COMPLAIN_NOTES"
-              [submitted]="submitted"
-            ></app-input-textarea>
+            <app-input-textarea label="顧客意見內容" controlName="COMPLAIN_NOTES"
+              [control]="queryForm.controls.COMPLAIN_NOTES" [submitted]="submitted"></app-input-textarea>
           </div>
           <!-- 組織 -->
           <div class="col-12 md:col-6 lg:col-2">
-            <app-dropdown
-              label="組織"
-              controlName="ORG_ID_QUERY"
-              [control]="queryForm.controls.ORG_ID_QUERY"
-              [options]="orgIdQueryOptions"
-              [submitted]="submitted"
-              [editable]="false"
-              optionLabel="label"
-              optionValue="value"
-              (valueChange)="onOrgQueryChange($event)"
-            ></app-dropdown>
+            <app-dropdown label="組織" controlName="ORG_ID_QUERY" [control]="queryForm.controls.ORG_ID_QUERY"
+              [options]="orgIdQueryOptions" [submitted]="submitted" [editable]="false" optionLabel="label"
+              optionValue="value" (valueChange)="onOrgQueryChange($event)"></app-dropdown>
           </div>
           <!-- 責任單位 -->
           <div class="col-12 md:col-6 lg:col-2">
-            <app-dropdown
-              label="責任單位"
-              controlName="ORG_ID"
-              [control]="queryForm.controls.ORG_ID"
-              [options]="orgIdOptions"
-              [submitted]="submitted"
-              [editable]="false"
-              optionLabel="label"
-              optionValue="value"
-            ></app-dropdown>
+            <app-dropdown label="責任單位" controlName="ORG_ID" [control]="queryForm.controls.ORG_ID"
+              [options]="orgIdOptions" [submitted]="submitted" [editable]="false" optionLabel="label"
+              optionValue="value"></app-dropdown>
           </div>
           <!-- 建檔人員 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="建檔人員"
-              controlName="CRT_USR_Name"
-              [control]="queryForm.controls.CRT_USR_Name"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="建檔人員" controlName="CRT_USR_Name" [control]="queryForm.controls.CRT_USR_Name"
+              [submitted]="submitted"></app-input-text>
           </div>
           <!-- 接件日期(起迄) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="接件日期"
-              [startControl]="queryForm.controls.COMPLAIN_DATE_F"
-              [endControl]="queryForm.controls.COMPLAIN_DATE_T"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="接件日期"
+              [startControl]="queryForm.controls.COMPLAIN_DATE_F" [endControl]="queryForm.controls.COMPLAIN_DATE_T"
+              [submitted]="submitted"></app-calendar-range>
           </div>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -180,64 +94,37 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table
-    tableKey="CPM12050"
-    dataKey="ID"
-    [data]="data"
-    [columns]="columns"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [showCheckBox]="false"
-    [showDelete]="false"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    [multiSortMeta]="[]"
-    [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [lazy]="true"
-    [loading]="loading"
-    expansionDataKey="details"
-    [expansionColumns]="expansionColumns"
-    [expansionLoadFn]="expansionLoadFn"
-    [addButton]="addButton"
-  ></app-table>
+  <app-table tableKey="CPM12050" dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    [editDisabled]="editDisabled" (detail)="onDetail($event)" [showCheckBox]="false" [showDelete]="false"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [multiSortMeta]="[]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading" expansionDataKey="details" [expansionColumns]="expansionColumns"
+    [expansionLoadFn]="expansionLoadFn" [addButton]="addButton"></app-table>
 </div>
 
-<app-dialog
-  [visible]="dialogVisible"
-  header="結案"
-  (visibleChange)="dialogVisible = $event"
-  (save)="saveDialog()"
-  [disable]="closeForm.invalid"
->
+<app-dialog [visible]="dialogVisible" header="結案" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
+  [disable]="closeForm.invalid">
   <form [formGroup]="closeForm" id="closeForm">
     <div class="grid p-fluid">
       <!-- 使用者編號 -->
       <div class="col-12 md:col-6">
-        <app-input-text
-          label="使用者編號"
-          controlName="USR_NO"
-          [control]="closeForm.controls.USR_NO"
-          [submitted]="submitted"
-        ></app-input-text>
+        <app-input-text label="使用者編號" controlName="USR_NO" [control]="closeForm.controls.USR_NO"
+          [submitted]="submitted"></app-input-text>
       </div>
       <!-- 使用者名稱 -->
       <div class="col-12 md:col-6">
-        <app-input-text
-          label="使用者名稱"
-          controlName="USR_NAME"
-          [control]="closeForm.controls.USR_NAME"
-          [submitted]="submitted"
-        ></app-input-text>
+        <app-input-text label="使用者名稱" controlName="USR_NAME" [control]="closeForm.controls.USR_NAME"
+          [submitted]="submitted"></app-input-text>
+      </div>
+      <!-- 通知相關單位處理日期 -->
+      <div class="col-12 md:col-6">
+        <app-calendar label="通知相關單位處理日期" calendarType="dateOne" controlName="ALERT_DATE"
+          [control]="closeForm.controls.ALERT_DATE" [submitted]="submitted"></app-calendar>
       </div>
       <!-- 結案備註 -->
       <div class="col-12">
-        <app-input-textarea
-          label="結案備註"
-          controlName="CLOSE_MEMO"
-          [control]="closeForm.controls.CLOSE_MEMO"
-          [submitted]="submitted"
-        ></app-input-textarea>
+        <app-input-textarea label="結案備註" controlName="CLOSE_MEMO" [control]="closeForm.controls.CLOSE_MEMO"
+          [submitted]="submitted"></app-input-textarea>
       </div>
     </div>
   </form>

@@ -1,9 +1,11 @@
-import { NgIf } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { Cpm12010Service } from '@service/api/cpm/cpm12010.service';
 import { Cpm12060Service, detail12060Data } from '@service/api/cpm/cpm12060.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { formatDateTime } from '@shared/componentkit/table/table.model';
@@ -23,6 +25,7 @@ import { EditColumn } from '../../../shared/componentkit/table-edit/table-edit.m
   standalone: true,
   templateUrl: './cpm12060-cru.component.html',
   imports: [
+    AsyncPipe,
     MenubarComponent,
     PanelModule,
     FormsModule,
@@ -54,7 +57,9 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
   mainForm = this.formBuilder.nonNullable.group({
     SEQ_ID: [null as any], // 單號
     KIND_ID: [''], // 客戶意見類別代號
+    KIND_Name: [''], // 客戶意見類別名稱
     KIND_ID_SUB: [''], // 客戶意見子類別代號
+    KIND_SubName: [''], // 客戶意見子類別名稱
     CUST_NAME: [''], // 客戶名稱
     SEX: [''], // 性別
     CONTACT_ADDR: [''], // 聯絡住址
@@ -64,6 +69,7 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
     COMPLAIN_NOTES: [''], // 客戶提供意見內容
     COMPLAIN_DATE: [null as Date | string | null], // 提供日期
     SUGG_SOURCE: [''], // 客戶意見來源別
+    SUGG_SOURCE_NAME: [''], // 客戶意見來源別名稱
     SUGG_SOURCE_OTHER: [''], // 客戶意見來源別:其他
     ORG_ID: [''], // 處理單位
     MEMBER_ID: [''], // 會員編號
@@ -105,13 +111,16 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
   displayDialog = false;
 
   constructor(
+    private readonly cpm12010Service: Cpm12010Service,
     private readonly cpm12060Service: Cpm12060Service,
+    private readonly dropdown: DropdownApiService,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('CPM12060', this.dataForm);
+
     // 載入主檔資料
     const id = this.dataForm.get('ID')?.value;
     if (!id) return;
@@ -126,7 +135,9 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
       });
 
     // 載入明細資料
-    this.cpm12060Service.queryCPM12060_Detail({ ID: id })
+    const SEQ_ID = this.dataForm.get('SEQ_ID')?.value;
+    if (!SEQ_ID) return;
+    this.cpm12060Service.queryCPM12060_Detail({ SEQ_ID: SEQ_ID })
       .pipe(untilDestroyed(this))
       .subscribe(response => {
         // console.log('明細資料:', response.Data);

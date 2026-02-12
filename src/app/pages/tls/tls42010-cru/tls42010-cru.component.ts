@@ -46,6 +46,8 @@ export interface KeyItem {
   mergeRight?: number;
   mergeDown?: number;
   KB_Merge?: string;
+  // internal flag to force treat this key as configured when pasted
+  __isCopied?: boolean;
 }
 
 @Component({
@@ -78,6 +80,11 @@ export interface KeyItem {
   ]
 })
 export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
+  // store original state for cancel/restore
+  private originalPagesSnapshot: KeyItem[][] | null = null;
+  private originalPageOriginalNos: number[] | null = null;
+  private originalPageSavedFlags: boolean[] | null = null;
+  private originalSelectedCode: string | null = null;
   activeIndex = 0;
   copiedAttributes: Partial<KeyItem> | null = null;
   multiSelectMode = false;
@@ -133,6 +140,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
 
   // ---------------- Dropdown Data ----------------
   pos1008Map: Record<string, { width: number; height: number }> = {};
+  // 模板提供的按鍵預設寬高（若下拉只回傳整體模板尺寸）
+  templateDefaultKeySize: { width: number; height: number } = { width: 1, height: 1 };
   TSB_NameOptions: IDropdownItem[] = [];
   ECR_KBTypeOptions: IDropdownItem[] = [];
   KB_StyleOptions: IDropdownItem[] = [];
@@ -204,6 +213,10 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       KB_FontColor, KB_Style, KB_Font, KB_Size,
       KB_Fonttyped, KB_Switch, KB_Arg1, KB_Arg2, KB_Arg3
     };
+    // also capture merge-related and KB_Merge if present (button shape)
+    (this.copiedAttributes as any).KB_Merge = this.selected.KB_Merge;
+    (this.copiedAttributes as any).mergeRight = this.selected.mergeRight;
+    (this.copiedAttributes as any).mergeDown = this.selected.mergeDown;
     console.log('已複製屬性:', this.copiedAttributes);
   }
   pasteKeyAttributes(event: MouseEvent) {
@@ -213,16 +226,64 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     targets.forEach(key => {
       if (!key) return;
       const originalId = key.ID;
+      // apply copied attrs but keep identity fields
       Object.assign(key, {
         ...this.copiedAttributes,
         ID: originalId,              // 保留原 ID
         KB_ScanCode: key.code,       // 保留原掃描碼
         code: key.code               // 不可覆蓋
       });
+      // ensure merge/count properties copied if present
+      const ca: any = this.copiedAttributes as any;
+      if (ca.mergeRight !== undefined) key.mergeRight = ca.mergeRight;
+      if (ca.mergeDown !== undefined) key.mergeDown = ca.mergeDown;
+      if (ca.KB_Merge !== undefined) key.KB_Merge = ca.KB_Merge;
+
+      // mark as pasted so buildDetailList will include even default-equal values
+      (key as any).__isCopied = true;
     });
 
     if (!isMulti && this.selected) {
-      this.selectedKeyForm.patchValue(this.selected, { emitEvent: true });
+      // Force-update individual controls so color pickers and other derived controls
+      // react even when pasted values equal the current defaults.
+      const val = this.selected;
+      this.selectedKeyForm.patchValue({
+        KB_Func: val.KB_Func ?? '',
+        KB_Switch: val.KB_Switch ?? 'Y',
+        KB_Display1: val.KB_Display1 ?? '',
+        KB_Display2: val.KB_Display2 ?? '',
+        KB_Color: val.KB_Color ?? 'RGB:255,255,255',
+        KB_Style: val.KB_Style ?? '1',
+        KB_Font: val.KB_Font ?? 'Microsoft JhengHei',
+        KB_Size: val.KB_Size ?? 12,
+        KB_FontColor: val.KB_FontColor ?? 'RGB:0,0,0',
+        KB_Fonttyped: val.KB_Fonttyped ?? 'NNN',
+        KB_Arg1: val.KB_Arg1 ?? '',
+        KB_Arg2: val.KB_Arg2 ?? '',
+        KB_Arg3: val.KB_Arg3 ?? '',
+        KB_Merge: val.KB_Merge ?? ''
+      }, { emitEvent: true });
+
+      // Also update color picker objects so they display correctly
+      try {
+        const kc = val.KB_Color ?? '';
+        if (typeof kc === 'string' && kc.startsWith('RGB:')) {
+          const parts = kc.replace('RGB:', '').split(',').map((n: string) => Number(n));
+          if (parts.length === 3) this.selectedKeyForm.controls['color'].setValue({ r: parts[0], g: parts[1], b: parts[2] }, { emitEvent: true });
+        } else {
+          this.selectedKeyForm.controls['color'].setValue(null, { emitEvent: true });
+        }
+      } catch (err) { /* ignore */ }
+
+      try {
+        const fc = val.KB_FontColor ?? '';
+        if (typeof fc === 'string' && fc.startsWith('RGB:')) {
+          const parts = fc.replace('RGB:', '').split(',').map((n: string) => Number(n));
+          if (parts.length === 3) this.selectedKeyForm.controls['FontColor'].setValue({ r: parts[0], g: parts[1], b: parts[2] }, { emitEvent: true });
+        } else {
+          this.selectedKeyForm.controls['FontColor'].setValue(null, { emitEvent: true });
+        }
+      } catch (err) { /* ignore */ }
     }
 
     console.log(' 屬性貼上到:', targets);
@@ -253,6 +314,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         KB_Color: 'RGB:255,255,255',
         KB_FontColor: 'RGB:0,0,0'
       });
+      // clear pasted flag
+      if ((key as any).__isCopied) delete (key as any).__isCopied;
     });
 
     if (!isMulti && this.selected) {
@@ -293,6 +356,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   ngOnInit(): void {
     this.initializePage('TLS42010', this.dataForm);
     this.pages = [this.buildGrid(0)];
+    // capture initial snapshot so cancel can restore
+    this.captureOriginalSnapshot();
     // 初始化原始頁碼映射（第一頁原始為 1）
     this.pageOriginalNos = [1];
     this.pageSavedFlags = [false];
@@ -316,14 +381,82 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
 
     // 新增：即時更新按鍵顏色、字型顏色和字型大小
     this.selectedKeyForm.controls['KB_Color'].valueChanges.subscribe(color => {
-      if (this.selected) {
+      if (!this.selected) return;
+
+      try {
+        const s = typeof color === 'string' ? color.trim() : '';
+        // 檢查是否需要轉換：以 $ 開頭、或以 cl 開頭的 Delphi 名稱、或純 hex (6~8 位)
+        const shouldConvert = typeof s === 'string' && (s.startsWith('$') || /^cl/i.test(s) || /^[0-9A-Fa-f]{6,8}$/.test(s));
+        if (shouldConvert) {
+          const converted = this.convertTColorToRGB(s);
+          if (converted) {
+            // 更新 KB_Color 欄位為 RGB 格式並同步 ColorPicker（避免觸發循環）
+            this.selectedKeyForm.controls['KB_Color'].setValue(converted, { emitEvent: false });
+            const parts = converted.replace('RGB:', '').split(',').map((n: string) => Number(n));
+            if (parts.length === 3) {
+              this.selectedKeyForm.controls['color'].setValue({ r: parts[0], g: parts[1], b: parts[2] }, { emitEvent: false });
+            }
+            this.selected.KB_Color = converted;
+          } else {
+            // 轉換回空值表示系統色或 clDefault/clNone，保留原本顏色（不覆蓋）
+            // 把表單欄位恢復為目前 selected 的值，避免顯示原始 $ 字串
+            const current = this.selected.KB_Color || '';
+            this.selectedKeyForm.controls['KB_Color'].setValue(current, { emitEvent: false });
+          }
+          return;
+        }
+
+        // 如果使用者輸入 RGB:...，同步 ColorPicker
+        if (typeof color === 'string' && color.startsWith('RGB:')) {
+          const parts = color.replace('RGB:', '').split(',').map((n: string) => Number(n));
+          if (parts.length === 3) {
+            this.selectedKeyForm.controls['color'].setValue({ r: parts[0], g: parts[1], b: parts[2] }, { emitEvent: false });
+          }
+          this.selected.KB_Color = color;
+          return;
+        }
+
+        // 其他情況（空字串或非字串），直接賦值
         this.selected.KB_Color = color;
+      } catch (err) {
+        console.warn('KB_Color parsing error', err);
       }
     });
 
     this.selectedKeyForm.controls['KB_FontColor'].valueChanges.subscribe(fontColor => {
-      if (this.selected) {
+      if (!this.selected) return;
+
+      try {
+        const sfc = typeof fontColor === 'string' ? fontColor.trim() : '';
+        const shouldConvertFont = typeof sfc === 'string' && (sfc.startsWith('$') || /^cl/i.test(sfc) || /^[0-9A-Fa-f]{6,8}$/.test(sfc));
+        if (shouldConvertFont) {
+          const converted = this.convertTColorToRGB(sfc);
+          if (converted) {
+            this.selectedKeyForm.controls['KB_FontColor'].setValue(converted, { emitEvent: false });
+            const parts = converted.replace('RGB:', '').split(',').map((n: string) => Number(n));
+            if (parts.length === 3) {
+              this.selectedKeyForm.controls['FontColor'].setValue({ r: parts[0], g: parts[1], b: parts[2] }, { emitEvent: false });
+            }
+            this.selected.KB_FontColor = converted;
+          } else {
+            const current = this.selected.KB_FontColor || '';
+            this.selectedKeyForm.controls['KB_FontColor'].setValue(current, { emitEvent: false });
+          }
+          return;
+        }
+
+        if (typeof fontColor === 'string' && fontColor.startsWith('RGB:')) {
+          const parts = fontColor.replace('RGB:', '').split(',').map((n: string) => Number(n));
+          if (parts.length === 3) {
+            this.selectedKeyForm.controls['FontColor'].setValue({ r: parts[0], g: parts[1], b: parts[2] }, { emitEvent: false });
+          }
+          this.selected.KB_FontColor = fontColor;
+          return;
+        }
+
         this.selected.KB_FontColor = fontColor;
+      } catch (err) {
+        console.warn('KB_FontColor parsing error', err);
       }
     });
 
@@ -366,17 +499,38 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   private loadDropdowns() {
     this.dropDownListService.queryPOS1008DropDownList().subscribe({
       next: (res) => {
-        this.TSB_NameOptions = res?.Data?.map((item: any) => ({ No: item.TSB_Name, Name: item.TSB_Name })) ?? [];
-        res?.Data?.forEach((item: any) => {
+        const data: any[] = res?.Data ?? [];
+        this.TSB_NameOptions = data.map((item: any) => ({ No: item.TSB_Name, Name: item.TSB_Name })) ?? [];
+
+        // 若後端回傳的是模板層級的欄位（TSB_XCount/TSB_YCount/TSB_Width/TSB_Height），
+        // 以第一筆為預設模板，更新 grid 大小與模板按鍵預設尺寸
+        if (data.length) {
+          const t: any = data[0];
+          if (t.TSB_XCount != null) this.xCount = Number(t.TSB_XCount) || this.xCount;
+          if (t.TSB_YCount != null) this.yCount = Number(t.TSB_YCount) || this.yCount;
+          if (t.TSB_Width != null || t.TSB_Height != null) {
+            this.templateDefaultKeySize = {
+              width: Number(t.TSB_Width) || 1,
+              height: Number(t.TSB_Height) || 1,
+            };
+          }
+        }
+
+        // 若回傳為逐鍵設定則填入 pos1008Map（以 KB_ScanCode 為 key）
+        data.forEach((item: any) => {
           if (item.KB_ScanCode) {
-            this.pos1008Map[item.KB_ScanCode] = { width: item.KB_Width ?? 1, height: item.KB_Height ?? 1 };
+            this.pos1008Map[item.KB_ScanCode] = {
+              width: Number(item.KB_Width) || 1,
+              height: Number(item.KB_Height) || 1,
+            };
           }
         });
       }
     });
 
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'ECR_KBType' }).subscribe(res => {
-      this.ECR_KBTypeOptions = res?.Data ?? [];
+      // 過濾掉 No 為空字串的選項（例如 { No: "", Name: "無" }）
+      this.ECR_KBTypeOptions = (res?.Data ?? []).filter((item: any) => (item?.No ?? '') !== '');
     });
 
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'KB_Style' }).subscribe(res => {
@@ -571,7 +725,9 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         KB_Switch: d.KB_Switch,
         KB_Display1: d.KB_Display1,
         KB_Display2: d.KB_Display2,
-        KB_Color: d.KB_Color,
+        KB_Color: (typeof d.KB_Color === 'string' && d.KB_Color.startsWith('$'))
+          ? (this.convertTColorToRGB(d.KB_Color) || 'RGB:255,255,255')
+          : (d.KB_Color || 'RGB:255,255,255'),
         KB_Style: d.KB_Style,
         KB_Font: d.KB_Font,
         KB_Size: d.KB_Size,
@@ -579,7 +735,9 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         KB_Arg1: d.KB_Arg1,
         KB_Arg2: d.KB_Arg2,
         KB_Arg3: d.KB_Arg3,
-        KB_FontColor: d.KB_FontColor,
+        KB_FontColor: (typeof d.KB_FontColor === 'string' && d.KB_FontColor.startsWith('$'))
+          ? (this.convertTColorToRGB(d.KB_FontColor) || 'RGB:0,0,0')
+          : (d.KB_FontColor || 'RGB:0,0,0'),
         mergeRight,
         mergeDown
       });
@@ -609,6 +767,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         KB_Arg3: first.KB_Arg3 ?? ''
       });
     }
+    // save snapshot after loading details
+    this.captureOriginalSnapshot();
     console.table(detailList.map(d => ({
       id: d.id,
       ID: d.ID,
@@ -621,7 +781,20 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   selectKey(k: KeyItem, event?: MouseEvent) {
     // 切換前，先把目前表單內容寫回目前選中的按鍵（編輯模式限定）
     if (this.crudstatus !== CRUDStatus.Read && this.selected) {
-      Object.assign(this.selected, this.selectedKeyForm.getRawValue());
+      // 只將使用者實際修改過的欄位回寫（避免把表單的預設值覆蓋按鍵原始設定）
+      const raw = this.selectedKeyForm.getRawValue();
+      const sel = this.selected; // local reference to satisfy TS narrowing in callbacks
+      Object.keys(this.selectedKeyForm.controls).forEach(ctrlName => {
+        const control = this.selectedKeyForm.controls[ctrlName];
+        if (control && control.dirty && sel) {
+          // 只回寫存在於 selected 的對應欄位
+          if (ctrlName in sel) {
+            (sel as any)[ctrlName] = raw[ctrlName];
+          }
+        }
+      });
+      // 重置表單 dirty 狀態（已寫回）
+      this.selectedKeyForm.markAsPristine();
     }
 
     // Shift 多選模式（只有在非 Read 模式才允許）
@@ -683,7 +856,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     return this.pages.flatMap((page, pageIndex) =>
       page.map(k => {
         const hasConfig =
-          !!(k.KB_Func ||
+          !!((k as any).__isCopied ||
+            k.KB_Func ||
             k.KB_Display1 ||
             k.KB_Display2 ||
             k.KB_Color !== 'RGB:255,255,255' ||
@@ -691,10 +865,15 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
             k.KB_Style !== '1' ||
             k.KB_Font !== 'Microsoft JhengHei' ||
             k.KB_Size !== 12);
-        const pos1008 = this.pos1008Map[k.code] ?? { width: 1, height: 1 };
+        const pos1008 = this.pos1008Map[k.code] ?? this.templateDefaultKeySize ?? { width: 1, height: 1 };
         const mergeRight = k.mergeRight || 0;
         const mergeDown = k.mergeDown || 0;
         const mergeValue = mergeRight > 0 || mergeDown > 0 ? `${mergeRight},${mergeDown}` : '';
+        // 判斷此按鍵是否為被隱藏（即屬於某個已合併的主鍵範圍內）
+        const isHidden = this.isKeyHidden(k, page);
+        // 如果不是被隱藏的主鍵，且有合併設定，則把寬高放大為合併後的尺寸
+        const kbWidth = !isHidden ? (pos1008.width * (mergeRight + 1)) : pos1008.width;
+        const kbHeight = !isHidden ? (pos1008.height * (mergeDown + 1)) : pos1008.height;
         const keyId =
           this.crudstatus === CRUDStatus.Create
             ? 0
@@ -719,8 +898,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
           KB_Fonttyped: hasConfig ? k.KB_Fonttyped || 'NNN' : 'NNN',
           KB_Style: hasConfig ? k.KB_Style || '1' : '1',
           KB_Switch: hasConfig ? k.KB_Switch || 'Y' : 'Y',
-          KB_Width: pos1008.width,
-          KB_Height: pos1008.height,
+          KB_Width: kbWidth,
+          KB_Height: kbHeight,
           KB_Merge: mergeValue,
           KB_Color: hasConfig ? k.KB_Color || 'RGB:255,255,255' : 'RGB:255,255,255',
           KB_FontColor: hasConfig ? k.KB_FontColor || 'RGB:0,0,0' : 'RGB:0,0,0',
@@ -893,6 +1072,147 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       style['grid-row'] = `span ${mergeDown + 1}`;
     }
     return style;
+  }
+  // capture deep copy snapshot of current pages and related arrays
+  private captureOriginalSnapshot(): void {
+    try {
+      this.originalPagesSnapshot = JSON.parse(JSON.stringify(this.pages || []));
+      this.originalPageOriginalNos = this.pageOriginalNos ? [...this.pageOriginalNos] : null;
+      this.originalPageSavedFlags = this.pageSavedFlags ? [...this.pageSavedFlags] : null;
+      this.originalSelectedCode = this.selected?.code ?? null;
+    } catch (err) {
+      this.originalPagesSnapshot = null;
+      this.originalPageOriginalNos = null;
+      this.originalPageSavedFlags = null;
+      this.originalSelectedCode = null;
+    }
+  }
+
+  // restore pages/selection back to captured snapshot (used by cancel)
+  onCancelClicked(): void {
+    if (this.originalPagesSnapshot) {
+      // deep copy to avoid reference sharing
+      this.pages = JSON.parse(JSON.stringify(this.originalPagesSnapshot));
+      this.pageOriginalNos = this.originalPageOriginalNos ? [...this.originalPageOriginalNos] : this.pageOriginalNos;
+      this.pageSavedFlags = this.originalPageSavedFlags ? [...this.originalPageSavedFlags] : this.pageSavedFlags;
+
+      // clear any internal pasted flags
+      this.pages.forEach(page => page.forEach(k => { if ((k as any).__isCopied) delete (k as any).__isCopied; }));
+
+      // restore selected key if possible
+      let sel: KeyItem | undefined;
+      if (this.originalSelectedCode) {
+        sel = this.pages.flat().find(p => p.code === this.originalSelectedCode);
+      }
+      if (!sel) {
+        sel = this.pages?.[0]?.[0];
+      }
+      this.selected = sel;
+      if (this.selected) {
+        this.selectedKeys = [this.selected];
+        this.selectedKeyForm.patchValue({
+          KB_Func: this.selected.KB_Func ?? '',
+          KB_Switch: this.selected.KB_Switch ?? 'Y',
+          KB_Display1: this.selected.KB_Display1 ?? '',
+          KB_Display2: this.selected.KB_Display2 ?? '',
+          KB_Color: this.selected.KB_Color ?? 'RGB:255,255,255',
+          KB_Style: this.selected.KB_Style ?? '1',
+          KB_Font: this.selected.KB_Font ?? 'Microsoft JhengHei',
+          KB_Size: this.selected.KB_Size ?? 12,
+          KB_FontColor: this.selected.KB_FontColor ?? 'RGB:0,0,0',
+          KB_Fonttyped: this.selected.KB_Fonttyped ?? 'NNN',
+          KB_Arg1: this.selected.KB_Arg1 ?? '',
+          KB_Arg2: this.selected.KB_Arg2 ?? '',
+          KB_Arg3: this.selected.KB_Arg3 ?? ''
+        }, { emitEvent: true });
+        this.updateMergeDisplay();
+      }
+      // ensure UI updated
+      this.dataForm.markAsPristine();
+      this.selectedKeyForm.markAsPristine();
+    } else {
+      // fallback: reset forms only
+      if (this.dataForm) {
+        try { this.dataForm.reset(); } catch { }
+      }
+      if (this.selectedKeyForm) {
+        try { this.selectedKeyForm.reset(); } catch { }
+      }
+    }
+  }
+  /**
+   * Delphi TColor ($00BBGGRR) → RGB:r,g,b
+   */
+  convertTColorToRGB(tcolor: string): string {
+    if (!tcolor) return 'RGB:0,0,0';
+
+    // 如果已經是 RGB 格式，直接回傳
+    if ((tcolor as string).startsWith && (tcolor as string).startsWith('RGB:')) return tcolor;
+
+    // 先處理常見 Delphi 名稱（例如使用者直接輸入 clBtnFace / clWindowText）
+    const name = (tcolor || '').toString().trim().toLowerCase();
+    const nameMap: Record<string, string> = {
+      'clblack': 'RGB:0,0,0',
+      'clmaroon': 'RGB:128,0,0',
+      'clgreen': 'RGB:0,128,0',
+      'clolive': 'RGB:128,128,0',
+      'clnavy': 'RGB:0,0,128',
+      'clpurple': 'RGB:128,0,128',
+      'clteal': 'RGB:0,128,128',
+      'clgray': 'RGB:128,128,128',
+      'clsilver': 'RGB:192,192,192',
+      'clred': 'RGB:255,0,0',
+      'cllime': 'RGB:0,255,0',
+      'clyellow': 'RGB:255,255,0',
+      'clblue': 'RGB:0,0,255',
+      'clfuchsia': 'RGB:255,0,255',
+      'claqua': 'RGB:0,255,255',
+      'clltgray': 'RGB:192,192,192',
+      'cldkgray': 'RGB:128,128,128',
+      'clwhite': 'RGB:255,255,255',
+      'clmoneygreen': 'RGB:192,220,192',
+      'clskyblue': 'RGB:166,202,240',
+      'clcream': 'RGB:255,251,240',
+      'clmedgray': 'RGB:160,160,164',
+      'clbtnface': 'RGB:240,240,240',
+      'clwindowtext': 'RGB:0,0,0',
+      'clnone': '',
+      'cldefault': ''
+    };
+    if (nameMap[name] !== undefined) return nameMap[name];
+
+    // 移除 $ 符號與非十六進位字元
+    let hex = tcolor.replace(/\$/g, '').trim();
+    hex = hex.replace(/[^0-9A-Fa-f]/g, '');
+
+    // 若為 8 位元（常見系統色或特殊值），檢查特殊碼
+    if (hex.length === 8) {
+      const up = hex.toUpperCase();
+      // clNone / clDefault：無法直接對應顯示色（系統或無色），回傳空字串以讓 UI 使用預設
+      if (up === '1FFFFFFF' || up === '20000000') return '';
+      // 若高位元非 00（代表系統色參考），嘗試匹配常見系統色的 hex
+      const high = parseInt(up.substring(0, 2), 16);
+      if (high !== 0) {
+        // 若為系統色（高位元非 00），嘗試以尾 6 碼匹配常見顏色
+        const tail6 = up.slice(-6);
+        const sysMap: Record<string, string> = {
+          'F0F0F0': 'RGB:240,240,240', // btnface-like
+          '000000': 'RGB:0,0,0', // black/window text
+        };
+        if (sysMap[tail6]) return sysMap[tail6];
+        return '';
+      }
+    }
+
+    // 取最後 6 個字元當作 BGR，若不足則左側補 0
+    if (hex.length < 6) hex = hex.padStart(6, '0');
+    if (hex.length > 6) hex = hex.slice(-6);
+
+    const b = parseInt(hex.substring(0, 2), 16) || 0;
+    const g = parseInt(hex.substring(2, 4), 16) || 0;
+    const r = parseInt(hex.substring(4, 6), 16) || 0;
+
+    return `RGB:${r},${g},${b}`;
   }
   convertRGBToCss(rgbString: string): string {
     if (!rgbString || !rgbString.startsWith('RGB:')) {

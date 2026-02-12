@@ -37,7 +37,7 @@
               label="收銀機號"
               controlName="ECR_No"
               [options]="ECRNoOptions"
-              optionLabel="value"
+              optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.ECR_No"
               [submitted]="submitted">
@@ -123,7 +123,7 @@
         <!-- 只保留主表 PDF 匯出 -->
         <p-button
           styleClass="p-2"
-          label="匯出收銀機區間報表.PDF"
+          label="收銀機區間報表.PDF"
           icon="pi pi-file"
           [loading]="btnLoading"
           [disabled]="data.length === 0"

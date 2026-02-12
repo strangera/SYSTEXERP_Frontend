@@ -2,13 +2,16 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
@@ -34,6 +37,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
     TableComponent,
     TranslateModule,
     CalendarRangeComponent,
+    CalendarComponent,
     InputTextareaComponent,
     DialogComponent
   ]
@@ -75,18 +79,15 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
 
   // 意見類型選項
   kindIdOptions: any[] = [];
-
-  // 建議來源選項
-  suggSourceOptions = [
-    { label: 'WEB', value: 'WEB' },
-    { label: 'APP', value: 'APP' },
-  ];
+  suggSourceOptions = getSYS1000Options('SUGG_SOURCE');
 
   // 組織選項
   orgIdQueryOptions: any[] = [];
 
   // 責任單位選項
   orgIdOptions: any[] = [];
+  // 全部責任單位備份
+  orgIdAllOptions: any[] = [];
   //#endregion
 
   // table設定
@@ -130,6 +131,24 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
       action: (rowData: CPM12050Data) => this.onClose(rowData),
       disabled: (rowData: CPM12050Data) => rowData.STATUS === 'Z'
     },
+    {
+      label: '高權限',
+      displayText: '高權限',
+      icon: '',
+      action: (rowData: CPM12050Data) => {
+        const extras = {
+          state: {
+            crudstatus: CRUDStatus.Edit,
+            rowdata: rowData,
+            fromRoute: this.router.url,
+            queryConditions: this.queryForm.getRawValue(),
+            forceEditAll: true
+          }
+        };
+        this.router.navigate([`account/${this.cruPage.toLocaleLowerCase()}`], extras);
+      },
+      disabled: () => false
+    },
   ];
 
   // Dialog相關
@@ -138,7 +157,8 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
   closeForm = this.formBuilder.group({
     USR_NO: [''],          // 使用者編號
     USR_NAME: [''],        // 使用者名稱
-    CLOSE_MEMO: ['', [Validators.required, Validators.maxLength(1000)]]  // 結案備註
+    CLOSE_MEMO: ['', [Validators.required, Validators.maxLength(1000)]],  // 結案備註
+    ALERT_DATE: [null, Validators.required] // 通知相關單位處理日期 (必填)
   });
 
   constructor(
@@ -189,19 +209,30 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
           }))
         );
       })
+    // 直接載入責任單位選項，讓使用者不需先選組織即能下拉
+    this.dropdownApiService.queryCss1005()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.orgIdAllOptions = res || [];
+        this.orgIdOptions = this.orgIdAllOptions;
+      });
   }
 
   onOrgQueryChange(orgId: string) {
-    if (!orgId) {
-      this.orgIdOptions = [];
-      this.queryForm.patchValue({ ORG_ID: null });
-      return
-    };
-    this.dropdownApiService.queryCss1005({ ORG_ID: orgId })
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        this.orgIdOptions = res || [];
-      });
+    // 不影響 ORG_ID 下拉選單：保持 ORG_ID 與 ORG_ID_QUERY 完全獨立
+    // 此處保留為空以供未來擴充（例如僅做查詢條件相關動作），但不會修改 orgIdOptions 或 ORG_ID 控件
+    return;
+  }
+
+  // 判斷是否禁用編輯按鈕: 只有結案（label '結案' 或 value 'Z'）為不可編輯
+  editDisabled = (rowData: any): boolean => {
+    const status = rowData?.STATUS;
+    if (!status) return false;
+    const disabledLabels = ['結案'];
+    const disabledValues = this.statusOptions
+      .filter(o => disabledLabels.includes(o.label))
+      .map(o => o.value);
+    return disabledLabels.includes(status) || disabledValues.includes(status);
   }
 
   expansionLoadFn = (rowData: CPM12050Data): Observable<any> => {
@@ -243,12 +274,23 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
   }
 
   saveDialog() {
+    const alertVal: any = this.closeForm.get('ALERT_DATE')!.value;
+    let alertIso: string | null = null;
+    try {
+      if ((alertVal as any) instanceof Date) alertIso = (alertVal as Date).toISOString();
+      else if (typeof alertVal === 'string' && alertVal) alertIso = new Date(alertVal).toISOString();
+    } catch (e) {
+      alertIso = null;
+    }
+
     const req = {
       ID: this.selectedRowDataId,
       CLOSE_MEMO: this.closeForm.get('CLOSE_MEMO')!.value || '',
       USR_NO: this.authService.getUserInfo()?.user_No,
-      USR_NAME: this.authService.getUserInfo()?.user_Name
+      USR_NAME: this.authService.getUserInfo()?.user_Name,
+      ALERT_DATE: alertIso
     }
+    console.log('closeCPM12050 req', req);
     this.cpm12050Service.closeCPM12050(req)
       .pipe(untilDestroyed(this))
       .subscribe(() => {

@@ -44,8 +44,8 @@
         <th *ngIf="!showSubTotal && data.length && (showReorder || showRowEdit)" class="w-1rem" rowspan="2"></th>
         <th *ngIf="showSerialNo" class="w-1rem" rowspan="2">序號</th>
         <th class="w-1rem group-header" rowspan="2"
-          *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
-          <p-tableHeaderCheckbox />
+          *ngIf="IsPrint && showCheckBox && !rowEditing && (selectionMode === 'multiple' || selectionMode === 'single')">
+          <p-tableHeaderCheckbox *ngIf="selectionMode === 'multiple'" />
         </th>
         <th class="w-1rem group-header" rowspan="2" *ngIf="expansionColumns.length && IsPrint">
           收合/展開
@@ -110,9 +110,9 @@
             IsPrint &&
             showCheckBox &&
             !rowEditing &&
-            selectionMode === 'multiple'
+            (selectionMode === 'multiple' || selectionMode === 'single')
           ">
-          <p-tableHeaderCheckbox [disabled]="disabled" />
+          <p-tableHeaderCheckbox *ngIf="selectionMode === 'multiple'" [disabled]="disabled" />
         </th>
         <th class="w-1rem" *ngIf="expansionColumns.length && IsPrint">
           收合/展開
@@ -140,7 +140,7 @@
     <tr>
       <td class="text-center font-bold">小計</td>
       <td *ngIf="
-          IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'
+          IsPrint && showCheckBox && !rowEditing && (selectionMode === 'multiple' || selectionMode === 'single')
         "></td>
       <td *ngIf="expansionColumns.length && IsPrint"></td>
       <ng-container *ngFor="let col of columns">
@@ -168,8 +168,10 @@
           <span class="pi pi-bars" pReorderableRowHandle></span>
         </td>
         <td *ngIf="showSerialNo" class="text-center">{{ rowIndex + 1 }}</td>
-        <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
-          <p-tableCheckbox class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData"
+        <td *ngIf="IsPrint && showCheckBox && !rowEditing && (selectionMode === 'multiple' || selectionMode === 'single')">
+          <p-tableCheckbox *ngIf="selectionMode === 'multiple'" class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData"
+            [disabled]="!isRowSelectable(rowData) || disabled" />
+          <p-tableRadioButton *ngIf="selectionMode === 'single'" class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData"
             [disabled]="!isRowSelectable(rowData) || disabled" />
         </td>
         <td *ngIf="expansionColumns.length && IsPrint" class="text-center">
@@ -256,7 +258,7 @@
     <tr>
       <td class="text-center font-bold">總計</td>
       <td *ngIf="
-          IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'
+          IsPrint && showCheckBox && !rowEditing && (selectionMode === 'multiple' || selectionMode === 'single')
         "></td>
       <td *ngIf="expansionColumns.length && IsPrint"></td>
       <td *ngFor="let col of columns" class="text-center font-bold pr-2">

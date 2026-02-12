@@ -34,8 +34,9 @@
       <app-table class="col-12" [dataKey]="optionValue" [data]="dialogData" [selectedItems]="selectedItems"
         (selectionChange)="onSelectionChange($event)" (itemClick)="onRowClick($event)" [columns]="dialogColumns"
         [showHeader]="false" [showPage]="false" [showCheckBox]="true" selectionMode="single" [showManage]="false"
-        scrollHeight="200px" [loading]="loading" [totalRecords]="totalRecords"
-        (lazyLoadData)="onLazyLoadData($event, formGroup)" [lazy]="lazy" [showCaption]="false" />
+        scrollHeight="200px" [loading]="loading" [totalRecords]="totalRecords" [rows]="30"
+        [rowsPerPageOptions]="[30,60,90]" (lazyLoadData)="onLazyLoadData($event, formGroup)" [lazy]="lazy"
+        [showCaption]="false" />
     </form>
   </ng-container>
 </p-overlayPanel>

@@ -1,4 +1,4 @@
-import { TLS12040FareColumnDefinitions } from './services/tls12040-fare-column-definitions';
+﻿import { TLS12040FareColumnDefinitions } from './services/tls12040-fare-column-definitions';
 import {
   TLS12040FareItem,
   TLS12040APIResponse,
@@ -1269,7 +1269,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     console.log('🚀 導航參數:', navigationExtras.state);
 
-    this.router.navigate(['account/tls/tls12040cru'], navigationExtras)
+    this.router.navigate(['account/tls/tls12040v1cru'], navigationExtras)
       .then(success => {
         if (success) {
           console.log(' 成功返回 CRU');
@@ -1294,10 +1294,11 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.flowService.clearAll();
 
     // 導航
-    this.router.navigate(['/account/tls/tls12040'])
-      .then(() => {
-        this.messageService.infoBubble('已清除並返回');
-      });
+    this.router.navigate(['/account/tls/tls12040v1'], {
+      state: { fromRoute: this.router.url }
+    }).then(() => {
+      this.messageService.infoBubble('已清除並返回');
+    });
   }
 
 
@@ -2611,10 +2612,10 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       const tltTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
       if (tltTermType === '1') {
         console.log('🔍 合約類型為固定租金(1)，直接跳轉到 next3');
-        this.router.navigate(['account/tls/tls12040next3'], navigationExtras);
+        this.router.navigate(['account/tls/tls12040v1next3'], navigationExtras);
       } else {
         console.log('🔍 合約類型非固定租金，跳轉到 next2');
-        this.router.navigate(['account/tls/tls12040next2'], navigationExtras);
+        this.router.navigate(['account/tls/tls12040v1next2'], navigationExtras);
       }
     } catch (error) {
       console.error('❌ 導航時發生錯誤:', error);

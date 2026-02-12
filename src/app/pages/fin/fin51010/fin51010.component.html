@@ -123,6 +123,9 @@
         <p-button styleClass="p-button-sm p-button-primary" label="拋轉傳票" [rounded]="true" [loading]="btnLoading"
           icon="pi pi-send" (click)="onTransfer()" [disabled]="data.length === 0 || selectedItems.length === 0">
         </p-button>
+        <p-button styleClass="p-button-sm p-button-danger" label="作廢" [rounded]="true" [loading]="btnLoading"
+          icon="pi pi-trash" (click)="onVoid()" [disabled]="data.length === 0 || selectedItems.length === 0">
+        </p-button>
       </div>
     </header>
   </app-table-report>

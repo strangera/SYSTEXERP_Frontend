@@ -50,6 +50,7 @@ export class FIN54020Component extends BasicQueryPageComponent<any> implements O
     VouNoTo: [null, [Validators.maxLength(12)]],
     VoucherType: [''],
     ...createPaginationConfig([{ field: 'VouNo', order: 1 }]),
+    PageSize: [30],
   });
 
   Subpoenastatus: IDropdownItem[] = [];
@@ -58,7 +59,7 @@ export class FIN54020Component extends BasicQueryPageComponent<any> implements O
   selectedItems: any[] = [];
   selectAll = false;
   btnLoading = false;
-  lazyBatchSize = 20;
+  lazyBatchSize = 30;
   lastQueryBody: any = null;
 
   columns: any[] = [
@@ -117,8 +118,8 @@ export class FIN54020Component extends BasicQueryPageComponent<any> implements O
     this.handleSubmit(frm, () => {
       const v = frm.value;
       const basePayload = {
-        VouDateFrom: v.VouDateFrom ? formatDateToYYYY_MM_DD(v.VouDateFrom) : '',
-        VouDateTo: v.VouDateTo ? formatDateToYYYY_MM_DD(v.VouDateTo) : '',
+        VouDateFrom: v.VouDateFrom,
+        VouDateTo: v.VouDateTo,
         VouNoFrom: (v.VouNoFrom ?? '').toString().trim(),
         VouNoTo: (v.VouNoTo ?? '').toString().trim(),
         VoucherType: (v.VoucherType ?? '').toString().trim(),

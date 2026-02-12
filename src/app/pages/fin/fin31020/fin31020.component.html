@@ -32,9 +32,10 @@
 </div>
 <div class="card">
   <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" [showDelete]="false" (detail)="onDetail($event)"
-    [showReportMode]="false" [showManage]="true" dataKey="Id" [multiSortMeta]="[{ field: 'CAR_AccNo', order: 1 }]"
-    [totalRecords]="totalRecords" [showCheckBox]="false" [showEdit]="true"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+    [showReportMode]="false" [showManage]="true" dataKey="CRT_Date" tableKey="CRT_Date" [multiSortMeta]="multiSortMeta"
+    [totalRecords]="totalRecords" [showCheckBox]="false" [showEdit]="true" [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
+    [expansionRowsPerPageOptions]="expansionRowsPerPageOptions" [rows]="30"
+    (lazyLoadData)="onTableLazyLoad($event)" [lazy]="true" [loading]="loading"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showExcel]="false">
   </app-table>
 </div>

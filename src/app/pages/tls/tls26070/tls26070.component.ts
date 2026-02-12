@@ -7,20 +7,21 @@ import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { AccordionModule } from 'primeng/accordion';
-import { debounceTime, finalize } from 'rxjs';
+import { debounceTime, finalize, map } from 'rxjs';
 import { TLS26050Service } from '../../../service/api/tls/tls26050.service';
-import { TLS26070Data, TLS26070Service } from '../../../service/api/tls/tls26070.service';
+import { TLS26070Data, TLS26070QueryRequest, TLS26070Service } from '../../../service/api/tls/tls26070.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
 import { DropdownOption } from '../tls13010/tls13010.dropdown';
 
 @Component({
@@ -41,7 +42,7 @@ import { DropdownOption } from '../tls13010/tls13010.dropdown';
     NgIf,
     MultiSelectComponent,
     CalendarRangeQuickComponent,
-    CustomFooterTableComponent,
+    TableReportComponent,
     DropdownComponent
   ]
 })
@@ -104,10 +105,13 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
 
   totalRecords = 0;
   data: TLS26070Data[] = [];
-  footerData: TLS26070Data[] = [];
+  /** 總計列（table-report 為單一物件，取 AllData 第一筆） */
+  footerData: TLS26070Data | null = null;
   selectedItems: TLS26070Data[] = [];
 
-  columns: Column[] = [];
+  lastQueryBody?: TLS26070QueryRequest;
+
+  columns: ReportColumn[] = [];
 
   //#region 下拉選項定義
   // 1. 日期查詢條件相關下拉選項
@@ -166,33 +170,52 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
     this.setReadOnlyFields();
   }
 
+  private buildPayload(formValue: any, body?: any): TLS26070QueryRequest {
+    const pageSize = body?.pageSize ?? body?.PageSize ?? formValue?.pageSize ?? 30;
+    const pageIndex = body?.pageIndex ?? body?.PageIndex ?? formValue?.pageIndex ?? 1;
+    return {
+      ...formValue,
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: body?.SortBy ?? formValue?.SortBy,
+      onedateyy: this.datePipe.transform(formValue.onedateyy, 'yyyy'),
+      onedateyy_c: this.datePipe.transform(formValue.onedateyy_c, 'yyyy'),
+      onedatemm: this.datePipe.transform(formValue.onedatemm, 'yyyyMM'),
+      onedatemm_c: this.datePipe.transform(formValue.onedatemm_c, 'yyyyMM'),
+      halfyear_onedateyy: this.datePipe.transform(formValue.halfyear_onedateyy, 'yyyy'),
+      halfyear_onedateyy_c: this.datePipe.transform(formValue.halfyear_onedateyy_c, 'yyyy'),
+      year_onedateyy: this.datePipe.transform(formValue.year_onedateyy, 'yyyy'),
+      year_onedateyy_c: this.datePipe.transform(formValue.year_onedateyy_c, 'yyyy'),
+      bus_class: formValue.bus_class ? formValue.bus_class.map((item: any) => [item.bus_type, item.No]) : null
+    } as TLS26070QueryRequest;
+  }
+
+  queryFunction = (body: any) => {
+    const raw = this.queryForm.getRawValue();
+    const payload = this.buildPayload(raw, body);
+    return this.tls26070Service.queryTLS26070(payload).pipe(
+      map(response => ({
+        Data: response.Data?.QueryData ?? [],
+        TotalCount: response.TotalCount ?? 0
+      }))
+    );
+  };
+
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const formValue = frm.getRawValue();
-      const payload = {
-        ...formValue,
-        // 週營業報表 - 年度格式化 (yyyy)
-        onedateyy: this.datePipe.transform(formValue.onedateyy, 'yyyy'),
-        onedateyy_c: this.datePipe.transform(formValue.onedateyy_c, 'yyyy'),
-        // 月營業報表 - 年月格式化 (yyyyMM)
-        onedatemm: this.datePipe.transform(formValue.onedatemm, 'yyyyMM'),
-        onedatemm_c: this.datePipe.transform(formValue.onedatemm_c, 'yyyyMM'),
-        // 半年營業報表 - 年度格式化 (yyyy)
-        halfyear_onedateyy: this.datePipe.transform(formValue.halfyear_onedateyy, 'yyyy'),
-        halfyear_onedateyy_c: this.datePipe.transform(formValue.halfyear_onedateyy_c, 'yyyy'),
-        // 年營業報表 - 年度格式化 (yyyy)
-        year_onedateyy: this.datePipe.transform(formValue.year_onedateyy, 'yyyy'),
-        year_onedateyy_c: this.datePipe.transform(formValue.year_onedateyy_c, 'yyyy'),
-        // 中分類處理：將物件陣列轉換成 [[bus_type, No]] 格式
-        bus_class: formValue.bus_class ? formValue.bus_class.map((item: any) => [item.bus_type, item.No]) : null
-      };
+      const payload = this.buildPayload(formValue);
       this.tls26070Service.queryTLS26070(payload)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.setColumns(frm.value.tax);
           this.data = response.Data.QueryData;
-          this.footerData = response.Data.AllData;
+          const allData = response.Data.AllData;
+          this.footerData = Array.isArray(allData) && allData.length > 0
+            ? { ...allData[0], talent_id: '' }
+            : null;
           this.totalRecords = response.TotalCount;
+          this.lastQueryBody = payload;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
@@ -276,7 +299,7 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
       });
   }
 
-  // 根據銷售金額是否含稅設定顯示Header
+  // 根據銷售金額是否含稅設定顯示Header（ReportColumn 僅用 visible，不用 hidden）
   setColumns(tax: boolean) {
     this.columns = [
       { field: 'tlt_building', header: '館別', visible: true },
@@ -284,33 +307,33 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
       { field: 'team_name', header: 'TEAM', visible: true },
       { field: 'division_name', header: '組別', visible: true },
       { field: 'tlt_kind', header: '櫃別', visible: true },
-      { field: 'bus_class_name', header: '大分類', hidden: true },
+      { field: 'bus_class_name', header: '大分類', visible: false },
       { field: 'bus_sclass_name', header: '小分類', visible: true },
       { field: 'tlt_name', header: '專櫃名稱', visible: true },
       { field: 'budget_now', header: '目標', visible: true, format: formatAmount, isTotal: true },
-      { field: 'preorder_amt_now', header: '當期預售金額', hidden: tax, format: formatAmount, isTotal: true },
-      { field: 'preorder_namt_now', header: '當期預售金額', hidden: !tax, format: formatAmount, isTotal: true },
-      { field: 'Achievement_rate_now', header: '目標達成率', hidden: tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isTotal: true },
-      { field: 'nAchievement_rate_now', header: '目標達成率', hidden: !tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isTotal: true },
+      { field: 'preorder_amt_now', header: '當期預售金額', visible: !tax, format: formatAmount, isTotal: true },
+      { field: 'preorder_namt_now', header: '當期預售金額', visible: tax, format: formatAmount, isTotal: true },
+      { field: 'Achievement_rate_now', header: '目標達成率', visible: !tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isTotal: true },
+      { field: 'nAchievement_rate_now', header: '目標達成率', visible: tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isTotal: true },
       { field: 'preorder_custcnt_now', header: '當期交易筆數', visible: true, isTotal: true },
-      { field: 'avg_ordervalue_now', header: '當期客單價', hidden: tax, format: formatAmount, isTotal: true },
-      { field: 'navg_ordervalue_now', header: '當期客單價', hidden: !tax, format: formatAmount, isTotal: true },
-      { field: 'preorder_amt_last', header: '去年同期預售金額', hidden: tax, format: formatAmount, isTotal: true },
-      { field: 'preorder_namt_last', header: '去年同期預售金額', hidden: !tax, format: formatAmount, isTotal: true },
+      { field: 'avg_ordervalue_now', header: '當期客單價', visible: !tax, format: formatAmount, isTotal: true },
+      { field: 'navg_ordervalue_now', header: '當期客單價', visible: tax, format: formatAmount, isTotal: true },
+      { field: 'preorder_amt_last', header: '去年同期預售金額', visible: !tax, format: formatAmount, isTotal: true },
+      { field: 'preorder_namt_last', header: '去年同期預售金額', visible: tax, format: formatAmount, isTotal: true },
       { field: 'preorder_custcnt_last', header: '去年同期交易筆數', visible: true, isTotal: true },
-      { field: 'avg_ordervalue_last', header: '去年同期客單價', hidden: tax, format: formatAmount, isTotal: true },
-      { field: 'navg_ordervalue_last', header: '去年同期客單價', hidden: !tax, format: formatAmount, isTotal: true },
-      { field: 'Growth', header: '成長比', hidden: tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isTotal: true },
-      { field: 'nGrowth', header: '成長比', hidden: !tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isTotal: true },
-      { field: 'PerformanceDiff', header: '業績差異', hidden: tax, format: formatAmount, isTotal: true },
-      { field: 'nPerformanceDiff', header: '業績差異', hidden: !tax, format: formatAmount, isTotal: true },
+      { field: 'avg_ordervalue_last', header: '去年同期客單價', visible: !tax, format: formatAmount, isTotal: true },
+      { field: 'navg_ordervalue_last', header: '去年同期客單價', visible: tax, format: formatAmount, isTotal: true },
+      { field: 'Growth', header: '成長比', visible: !tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isTotal: true },
+      { field: 'nGrowth', header: '成長比', visible: tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isTotal: true },
+      { field: 'PerformanceDiff', header: '業績差異', visible: !tax, format: formatAmount, isTotal: true },
+      { field: 'nPerformanceDiff', header: '業績差異', visible: tax, format: formatAmount, isTotal: true },
       { field: 'TransactionsNumber', header: '交易筆數差異', visible: true, isTotal: true },
-      { field: 'OrdervalueDiff', header: '客單差異', hidden: tax, isTotal: true },
-      { field: 'nOrdervalueDiff', header: '客單差異', hidden: !tax, isTotal: true },
+      { field: 'OrdervalueDiff', header: '客單差異', visible: !tax, isTotal: true },
+      { field: 'nOrdervalueDiff', header: '客單差異', visible: tax, isTotal: true },
       { field: 'tlt_space', header: '營業坪數', visible: true, isTotal: true },
-      { field: 'MonthlyFloorEffect', header: '月坪效', hidden: tax, format: formatAmount, isTotal: true },
-      { field: 'nMonthlyFloorEffect', header: '月坪效', hidden: !tax, format: formatAmount, isTotal: true }
-    ]
+      { field: 'MonthlyFloorEffect', header: '月坪效', visible: !tax, format: formatAmount, isTotal: true },
+      { field: 'nMonthlyFloorEffect', header: '月坪效', visible: tax, format: formatAmount, isTotal: true }
+    ];
   }
 
   // 查詢週報表起訖日期

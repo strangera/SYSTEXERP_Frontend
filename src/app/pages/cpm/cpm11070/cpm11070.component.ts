@@ -3,10 +3,13 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { getSYS1000Options } from '@service/system/sys1000.service';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -14,11 +17,8 @@ import { CPM11070Data, CPM11070Service, QueryCPM11070Request } from '../../../se
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-cpm11070',
@@ -31,10 +31,10 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    CalendarRangeComponent,
+    CalendarRangeQuickComponent,
     DropdownComponent,
     TranslateModule,
-    TableComponent,
+    TableReportComponent,
     RadiobuttonComponent,
     InputTextareaComponent
   ],
@@ -42,7 +42,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> implements OnInit {
   queryForm = this.formBuilder.group({
     SeqId: ['', [Validators.maxLength(11)]],
-    RecDateFrom: [null as Date | null, [Validators.required,]],
+    RecDateFrom: [new (Date), [Validators.required,]],
     RecDateTo: [null as Date | null],
     LostDateFrom: [null as Date | null],
     LostDateTo: [null as Date | null],
@@ -71,32 +71,36 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
     Tel: ['', [Validators.maxLength(10)]],
     MobilePhone: ['', [Validators.maxLength(10)]],
     IdNo: ['', [Validators.maxLength(20)]],
-    ...createPaginationConfig([{ field: 'SeqId', order: 1 }]),
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'SeqId', order: 1 }]],
   });
-  selectedItems: CPM11070Data[] = [];
   totalRecords = 0;
   data: CPM11070Data[] = [];
-  Type1Options: any[] = [
+  lastQueryBody: QueryCPM11070Request | null = null;
+  Type1Options = [
     { No: 'L', Name: '遺失' },
     { No: 'F', Name: '拾獲' },
   ];
-  Type3Options: any[] = [
+  addButton: AddButton[] = [];
+  Type3Options = [
     { Name: '登錄', No: '1' },
     { Name: '已通知', No: '3' },
     { Name: '領回', No: '4' },
     { Name: '轉出', No: '6' },
   ];
   Type2Options = getSYS1000Options('LOST_GOODS_TYPE');
-  SPACE3Options: any[] = [ //是否廣播
+  SPACE3Options = [ //是否廣播
     { label: '已廣播', value: 'Y' },
     { label: '不廣播', value: 'N' },
     { label: '全部', value: 'A' },
   ];
   SPACE1Options = getSYS1000Options('LOCATION');
-  USER5Options: any[] = [
+  USER5Options = [
     { Name: '遊客', No: '1' },
     { Name: '員工', No: '2' },
   ];
+  ProcessingUserOptions: { label: string; value: string }[] = [];
   // 判斷是否為已結案(已領回/已轉出)案件
   private isClosed(row: CPM11070Data): boolean {
     const status = row.SeqStatusName?.trim();
@@ -107,10 +111,10 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
   editDisabled = (row: CPM11070Data): boolean => {
     return this.isClosed(row);
   };
-  columns: any[] = [
+  columns: ReportColumn[] = [
+    { field: 'SeqId', header: '登錄編號', visible: true },
     { field: 'GoodsType', header: '物品類別', visible: true },
     { field: 'GoodsDesc', header: '物品敘述', visible: true },
-    { field: 'SeqId', header: '登錄編號', visible: true },
     { field: 'RecDate', header: '登錄日期', visible: true, format: formatDate },
     { field: 'MsgDate', header: '通知日期', visible: true, format: formatDate },
     { field: 'ReceiveDate', header: '領回日期', visible: true, format: formatDate },
@@ -120,14 +124,14 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
     { field: 'Location', header: '地點', visible: true },
     { field: 'ServiceUser', header: '服務人員', visible: true },
     { field: 'Registrant', header: '遺失者/拾獲者姓名', visible: true },
-    { field: 'Tel', header: '電話(夜)', visible: true },
-    { field: 'Mobile', header: '電話(日)', visible: true },
+    { field: 'Tel', header: '電話', visible: true },
+    { field: 'Mobile', header: '手機', visible: true },
 
   ];
   constructor(
-    private dropdownApiService: DropdownApiService,
-    private readonly cpm11070Service: CPM11070Service,
+    public readonly cpm11070Service: CPM11070Service,
     private readonly datePipe: DatePipe,
+    private readonly dropDownListService: DropDownListService,
   ) {
     super();
   }
@@ -135,6 +139,65 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
 
   ngOnInit(): void {
     this.initializePage('CPM11070', '/CPM/CPM11070CRU', this.queryForm, (frm) => this.onSubmit(frm));
+
+    // 嘗試向後端刷新 LOCATION 的 SYS1000，確保剛在其他頁面新增的選項會顯示
+    try {
+      this.systemDataService.refreshSystemCodeByType('LOCATION')
+        .pipe(untilDestroyed(this))
+        .subscribe({
+          next: () => {
+            try { SystemOptionsService.refreshCache(); } catch { }
+            this.SPACE1Options = getSYS1000Options('LOCATION');
+          },
+          error: () => {
+            try { SystemOptionsService.refreshCache(); } catch { }
+            this.SPACE1Options = getSYS1000Options('LOCATION');
+          }
+        });
+    } catch (e) {
+      try { SystemOptionsService.refreshCache(); } catch { }
+      this.SPACE1Options = getSYS1000Options('LOCATION');
+    }
+
+    // 載入物品類別下拉（頁面層容錯：若 filter API 失敗則抓全部再過濾）
+    this.loadLostGoodsTypeOptions();
+
+    // 載入協助顧客領回處理人員下拉（共用人員清單）
+    try {
+      this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
+        this.ProcessingUserOptions = (options?.Data || []).map((item: any) => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
+      });
+    } catch (e) {
+      this.ProcessingUserOptions = [];
+    }
+
+    // 設定自訂管理按鈕：領回 -> 開啟編輯頁面以進行領回流程
+    this.addButton = [
+      {
+        label: '領回',
+        icon: 'pi pi-check-circle',
+        action: (row: CPM11070Data) => {
+          if (this.isClosed(row)) {
+            this.messageService.errorBubble('已轉出或已領回資料不可領回');
+            return;
+          }
+          this.onEdit({ ...row, _openMode: 'receive' } as any);
+        },
+        disabled: (row: CPM11070Data) => this.isClosed(row),
+      },
+      {
+        label: '轉出',
+        icon: 'pi pi-arrow-right',
+        action: (row: CPM11070Data) => {
+          if (this.isClosed(row)) {
+            this.messageService.errorBubble('已轉出或已領回資料不可轉出');
+            return;
+          }
+          this.onEdit({ ...row, _openMode: 'transfer' } as any);
+        },
+        disabled: (row: CPM11070Data) => this.isClosed(row),
+      },
+    ];
 
   }
 
@@ -198,8 +261,9 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
         .queryCPM11070(payload)
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
         .subscribe({
-          next: (res) => {
+          next: (res: any) => {
             this.data = res.Data || [];
+            this.lastQueryBody = payload;
             this.totalRecords = res.TotalCount || this.data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
           },
@@ -277,4 +341,36 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
       });
   }
 
+  private loadLostGoodsTypeOptions(): void {
+    try {
+      this.systemDataService.refreshSystemCodeByType('LOST_GOODS_TYPE')
+        .pipe(untilDestroyed(this))
+        .subscribe({
+          next: (res: any) => {
+            // 若回傳為空，fallback 為 queryAllSystemCode 並過濾
+            const hasData = Array.isArray(res) && res.length > 0;
+            if (hasData) {
+              this.Type2Options = getSYS1000Options('LOST_GOODS_TYPE');
+            } else {
+              this.systemDataService.queryAllSystemCode().pipe(untilDestroyed(this)).subscribe((resp: any) => {
+                const all = resp?.Data ?? [];
+                const items = (all as any[]).filter(i => i.SYS_Type === 'LOST_GOODS_TYPE');
+                this.Type2Options = (items || []).map(i => ({ value: i.SYS_Code, label: i.SYS_Name }));
+              });
+            }
+          },
+          error: () => {
+            // fallback to queryAll
+            this.systemDataService.queryAllSystemCode().pipe(untilDestroyed(this)).subscribe((resp: any) => {
+              const all = resp?.Data ?? [];
+              const items = (all as any[]).filter(i => i.SYS_Type === 'LOST_GOODS_TYPE');
+              this.Type2Options = (items || []).map(i => ({ value: i.SYS_Code, label: i.SYS_Name }));
+            });
+          }
+        });
+    } catch (e) {
+      try { SystemOptionsService.refreshCache(); } catch { }
+      this.Type2Options = getSYS1000Options('LOST_GOODS_TYPE');
+    }
+  }
 }

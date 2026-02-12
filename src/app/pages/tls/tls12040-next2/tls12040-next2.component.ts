@@ -1,4 +1,4 @@
-import { NgIf } from '@angular/common';
+﻿import { NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, Inject, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, NavigationExtras } from '@angular/router';
@@ -458,41 +458,42 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       if (renewalChargeData && Array.isArray(renewalChargeData)) {
         // 轉換續約資料（移除 ID，標記為新增，清空日期以便套用新契約日期）
         this.commissionData = renewalChargeData.map((item: any, itemIndex: number) => {
-          // 🔥 主設定也根據 is_selected 來決定狀態
-          const masterSelected = Boolean(item.is_selected);
+          // 續約帶回的資料預設為勾選，只有明確設為 false 時才不勾
+          const masterSelected = item.is_selected !== undefined ? Boolean(item.is_selected) : true;
           return {
             ...item,
-            tlt_id: item.tlt_id,         // 🔥 使用原始 API 值（通常是 0）
+            id: `renewal_master_${Date.now()}_${itemIndex}_${Math.random().toString(36).substring(2, 9)}`,
+            tlt_id: item.tlt_id,         // 使用原始 API 值
             apply_no: '',                // 清空 apply_no
             talent_id: '',               // 清空 talent_id
-            _status: masterSelected ? 'new' : undefined,  // 🔥 只有勾選的才標記為新增
+            _status: masterSelected ? 'new' : undefined,
             _isNew: masterSelected,
-            is_selected: masterSelected, // 🔥 保留 API 回傳的選擇狀態
+            is_selected: masterSelected,
             // 處理 ChargeDetails（清空日期以便套用新契約日期）
             ChargeDetails: item.ChargeDetails?.map((detail: any, detailIndex: number) => {
-              const isSelected = Boolean(detail.is_selected);
+              const isSelected = detail.is_selected !== undefined ? Boolean(detail.is_selected) : true;
               return {
                 ...detail,
-                id: `renewal_charge_${Date.now()}_${itemIndex}_${detailIndex}_${Math.random().toString(36).substring(2, 9)}`,  // 🔥 產生唯一 ID
+                id: `renewal_charge_${Date.now()}_${itemIndex}_${detailIndex}_${Math.random().toString(36).substring(2, 9)}`,
                 apply_no: '',
-                tlt_bdate: null,           // 🔥 清空起始日期（由 ensureDataConsistency 套用新契約日期）
-                tlt_edate: null,           // 🔥 清空結束日期（由 ensureDataConsistency 套用新契約日期）
-                cag_charge_rate: (detail.cag_charge_rate != null ? detail.cag_charge_rate * 100 : 0),  // 🔥 小數轉百分比
-                _status: isSelected ? 'new' : undefined,  // 🔥 只有勾選的才標記為新增
+                tlt_bdate: null,           // 清空起始日期（由 ensureDataConsistency 套用新契約日期）
+                tlt_edate: null,           // 清空結束日期（由 ensureDataConsistency 套用新契約日期）
+                cag_charge_rate: (detail.cag_charge_rate != null ? detail.cag_charge_rate * 100 : 0),  // 小數轉百分比
+                _status: isSelected ? 'new' : undefined,
                 _isNew: isSelected,
-                is_selected: isSelected    // 🔥 保留 API 回傳的選擇狀態
+                is_selected: isSelected
               };
             }) || [],
             // 處理 YearChargeDetails（清空日期以便套用新契約日期）
             YearChargeDetails: item.YearChargeDetails?.map((detail: any, yearIndex: number) => {
-              const isSelected = Boolean(detail.is_selected);
+              const isSelected = detail.is_selected !== undefined ? Boolean(detail.is_selected) : true;
               return {
                 ...detail,
                 id: `renewal_year_${Date.now()}_${itemIndex}_${yearIndex}_${Math.random().toString(36).substring(2, 9)}`,
                 apply_no: '',
                 tlt_bdate: null,
                 tlt_edate: null,
-                extra_rate: (detail.extra_rate != null ? detail.extra_rate * 100 : 0),  // 🔥 小數轉百分比
+                extra_rate: (detail.extra_rate != null ? detail.extra_rate * 100 : 0),  // 小數轉百分比
                 _status: isSelected ? 'new' : undefined,
                 _isNew: isSelected,
                 is_selected: isSelected
@@ -500,7 +501,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
             }) || [],
             // 處理 LevelChargeDetails（清空日期以便套用新契約日期）
             LevelChargeDetails: item.LevelChargeDetails?.map((detail: any, levelIndex: number) => {
-              const isSelected = Boolean(detail.is_selected);
+              const isSelected = detail.is_selected !== undefined ? Boolean(detail.is_selected) : true;
               return {
                 ...detail,
                 id: `renewal_level_${Date.now()}_${itemIndex}_${levelIndex}_${Math.random().toString(36).substring(2, 9)}`,  // 🔥 產生唯一 ID
@@ -1481,7 +1482,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
   private navigateToNext(): void {
     if (this.isGeneralCommissionMode) {
-      this.router.navigate(['account/tls/tls12040']);
+      this.router.navigate(['account/tls/tls12040v1']);
     } else {
       const navigationExtras: NavigationExtras = {
         state: {
@@ -1490,7 +1491,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         }
       };
       // 重要：要使用 navigationExtras
-      this.router.navigate(['account/tls/tls12040next3'], navigationExtras);
+      this.router.navigate(['account/tls/tls12040v1next3'], navigationExtras);
     }
   }
 
@@ -1502,14 +1503,14 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         fromRoute: this.router.url
       }
     };
-    this.router.navigate(['account/tls/tls12040next3'], navigationExtras);
+    this.router.navigate(['account/tls/tls12040v1next3'], navigationExtras);
   }
 
   onClearAndExit(): void {
     console.log('清空並離開');
     this.skipSaveOnDestroy = true;
     this.flowService.clearAll();
-    this.router.navigate(['account/tls/tls12040']);
+    this.router.navigate(['account/tls/tls12040v1']);
     this.messageService.infoBubble('已清空暫存資料並離開');
   }
 
@@ -1534,7 +1535,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       this.flowService.onSubmitSuccess();
 
       setTimeout(() => {
-        this.router.navigate(['account/tls/tls12040']);
+        this.router.navigate(['account/tls/tls12040v1']);
       }, 2000);
 
     } catch (error) {
@@ -1553,7 +1554,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       }
     };
 
-    this.router.navigate(['account/tls/tls12040next1'], navigationExtras);
+    this.router.navigate(['account/tls/tls12040v1next1'], navigationExtras);
   }
 
   /**

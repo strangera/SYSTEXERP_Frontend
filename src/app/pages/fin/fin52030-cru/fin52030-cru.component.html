@@ -94,11 +94,7 @@
 
     <div class="flex justify-content-end gap-2 mt-3 pt-2 border-top-1 surface-border">
       <button pButton label="取消" class="p-button-text" (click)="overlayPanel.hide()"></button>
-      <button pButton label="清除" class="p-button-outlined" (click)="
-          selectTemplateItem(rowData);
-          onValueChange(rowData, rowData.DetailNo, col, index);
-          overlayPanel.hide()
-        "></button>
+      <button pButton label="清除" class="p-button-outlined" (click)="templateSearchTerm = ''"></button>
     </div>
   </div>
 </ng-template>

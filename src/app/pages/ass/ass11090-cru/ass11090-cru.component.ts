@@ -11,7 +11,11 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+<<<<<<< HEAD
 import { ASS11090Data, ASS11090UpdateRequest, ASS11090DetailRequest, ASS11090DetailItem, PurchaseAccountDetail, ExpenseTransferDetail, DepreciationDetail } from '../ass11090/ass11090.model';
+=======
+import { ASS11090Data, ASS11090UpdateRequest, PurchaseAccountDetail, ExpenseTransferDetail, DepreciationDetail } from '../ass11090/ass11090.model';
+>>>>>>> dev
 import { ASS11090Service } from '../../../service/api/ass/ass11090.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { DropDownListService } from '../../../service/utility/dropDownList.service';
@@ -19,7 +23,11 @@ import { Option } from '../../../service/utility/dropdown-api.model';
 import { TableEditComponent } from '../../../shared/componentkit/table-edit/table-edit.component';
 import { EditColumn, FieldChangeEvent } from '../../../shared/componentkit/table-edit/table-edit.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
+<<<<<<< HEAD
 import { finalize, forkJoin } from 'rxjs';
+=======
+import { finalize } from 'rxjs';
+>>>>>>> dev
 
 //3.1.1.9 資材中分類會計科目維護作業 CRU
 @UntilDestroy()
@@ -50,16 +58,23 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
   bigCategoryOptions: Option[] = []; // 大分類下拉選單（API 尚未開發，先保留欄位）
   midCategoryOptions: Option[] = []; // 中分類下拉選單（API 尚未開發，先保留欄位）
   accountingOptions: Option[] = []; // 所有會計科目下拉選單（共用 queryGLS1005）
+<<<<<<< HEAD
   organizationOptions = signal<Option[]>([]); // 組織代號下拉選單（signal 讓 columns 依賴後 org 載入時會重算）
+=======
+  organizationOptions: Option[] = []; // 組織代號下拉選單
+>>>>>>> dev
 
   // 明細表格資料（使用 signal 管理，類似 fin53010-cru）
   purchaseAccountDetails = signal<PurchaseAccountDetail[]>([]);
   expenseTransferDetails = signal<ExpenseTransferDetail[]>([]);
   depreciationDetails = signal<DepreciationDetail[]>([]);
 
+<<<<<<< HEAD
   // 保存原始資料，用於後續更新時比較變更
   private originalData: ASS11090Data | null = null;
 
+=======
+>>>>>>> dev
   // 表單結構
   dataForm = this.formBuilder.nonNullable.group({
     // 基本資料
@@ -86,6 +101,7 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
     AccumulatedDepreciationCreditName2: [''],
     DepreciationLife: [null as number | null, [Validators.maxLength(2)]], // 折舊年限
     Description: [''], // 說明
+<<<<<<< HEAD
   });
 
   // 明細表格欄位定義
@@ -204,6 +220,62 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
   ];
   });
 
+=======
+  });
+
+  // 明細表格欄位定義
+  purchaseAccountColumns = computed<EditColumn[]>(() => [
+    {
+      field: 'AccountingCode',
+      header: '會計科目(借)代號/名稱',
+      type: this.isFormCreateable || this.isFormEditable ? 'dropdown' : undefined,
+      required: true,
+      options: () => this.accountingOptions,
+      optionLabel: 'label',
+      optionValue: 'value',
+      format: (v, i, r) => {
+        if (!r?.AccountingCode) return '';
+        const option = this.accountingOptions.find(opt => opt.value === r.AccountingCode);
+        return option?.label ?? '';
+      },
+    },
+  ]);
+
+  expenseTransferColumns = computed<EditColumn[]>(() => [
+    {
+      field: 'ExpenseCode',
+      header: '費用科目代號/名稱',
+      type: this.isFormCreateable || this.isFormEditable ? 'dropdown' : undefined,
+      required: true,
+      options: () => this.accountingOptions,
+      optionLabel: 'label',
+      optionValue: 'value',
+      format: (v, i, r) => {
+        if (!r?.ExpenseCode) return '';
+        const option = this.accountingOptions.find(opt => opt.value === r.ExpenseCode);
+        return option?.label ?? '';
+      },
+    },
+  ]);
+
+  depreciationColumns = computed<EditColumn[]>(() => [
+    {
+      field: 'ExpenseCode',
+      header: '費用科目代號/名稱',
+      type: this.isFormCreateable || this.isFormEditable ? 'dropdown' : undefined,
+      required: true,
+      options: () => this.accountingOptions,
+      optionLabel: 'label',
+      optionValue: 'value',
+      format: (v, i, r) => {
+        if (!r?.ExpenseCode) return '';
+        const option = this.accountingOptions.find(opt => opt.value === r.ExpenseCode);
+        return option?.label ?? '';
+      },
+    }
+  ]);
+
+>>>>>>> dev
   constructor(
     private ass11090Service: ASS11090Service,
     private dropdownApiService: DropdownApiService,
@@ -215,6 +287,7 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
   ngOnInit(): void {
     this.initializePage('ASS11090', this.dataForm);
     this.loadDropdownOptions();
+<<<<<<< HEAD
 
     // 編輯/查看模式時，呼叫 detailASS11090 取得完整資料
     if (!this.isFormCreateable && this.rowdata) {
@@ -662,6 +735,254 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
     });
   }
 
+=======
+  }
+
+  // 載入下拉選單選項
+  loadDropdownOptions(): void {
+    // 載入會計科目下拉選單（使用 queryGLS1005_DropDownList）
+    this.dropdownApiService.queryGls1005().pipe(untilDestroyed(this)).subscribe({
+      next: (options) => {
+        if (options) {
+          this.accountingOptions = options;
+        }
+      },
+      error: (err) => {
+        console.error('載入會計科目下拉選單失敗:', err);
+      }
+    });
+
+    // 載入組織代號下拉選單
+    this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe({
+      next: (response) => {
+        if (response.Status === '0000' && response.Data) {
+          this.organizationOptions = response.Data.map(item => ({
+            label: `${item.No || ''}-${item.Name || ''}`,
+            value: item.No || ''
+          }));
+        }
+      },
+      error: (err) => {
+        console.error('載入組織代號下拉選單失敗:', err);
+      }
+    });
+
+    // 大分類和中分類下拉選單的 API 尚未開發完畢，先留空
+    // 待 API 開發完成後，可在此處載入
+  }
+
+  // 新增明細項目
+  addPurchaseAccountDetail(): void {
+    const newDetail: PurchaseAccountDetail & { selected?: boolean } = {
+      SerialNo: this.purchaseAccountDetails().length + 1,
+      AccountingCode: undefined,
+      AccountingName: undefined,
+      OrganizationCode: undefined,
+      OrganizationName: undefined,
+      selected: false,
+    };
+    this.purchaseAccountDetails.update(details => [...details, newDetail]);
+  }
+
+  addExpenseTransferDetail(): void {
+    const newDetail: ExpenseTransferDetail & { selected?: boolean } = {
+      SerialNo: this.expenseTransferDetails().length + 1,
+      ExpenseCode: undefined,
+      ExpenseName: undefined,
+      OrganizationCode: undefined,
+      OrganizationName: undefined,
+      selected: false,
+    };
+    this.expenseTransferDetails.update(details => [...details, newDetail]);
+  }
+
+  addDepreciationDetail(): void {
+    const newDetail: DepreciationDetail & { selected?: boolean } = {
+      SerialNo: this.depreciationDetails().length + 1,
+      ExpenseCode: undefined,
+      ExpenseName: undefined,
+      OrganizationCode: undefined,
+      OrganizationName: undefined,
+      selected: false,
+    };
+    this.depreciationDetails.update(details => [...details, newDetail]);
+  }
+
+  // 明細資料變更處理
+  onPurchaseAccountDataChange(data: PurchaseAccountDetail[]): void {
+    this.purchaseAccountDetails.set(data);
+  }
+
+  onExpenseTransferDataChange(data: ExpenseTransferDetail[]): void {
+    this.expenseTransferDetails.set(data);
+  }
+
+  onDepreciationDataChange(data: DepreciationDetail[]): void {
+    this.depreciationDetails.set(data);
+  }
+
+  // 明細欄位變更處理
+  onPurchaseAccountFieldChange(event: FieldChangeEvent): void {
+    const rowData = event.rowData;
+    if (event.field === 'AccountingCode') {
+      const option = this.accountingOptions.find(opt => opt.value === event.value);
+      rowData.AccountingName = option?.label ?? '';
+    } else if (event.field === 'OrganizationCode') {
+      const option = this.organizationOptions.find(opt => opt.value === event.value);
+      rowData.OrganizationName = option?.label ?? '';
+    }
+  }
+
+  onExpenseTransferFieldChange(event: FieldChangeEvent): void {
+    const rowData = event.rowData;
+    if (event.field === 'ExpenseCode') {
+      const option = this.accountingOptions.find(opt => opt.value === event.value);
+      rowData.ExpenseName = option?.label ?? '';
+    } else if (event.field === 'OrganizationCode') {
+      const option = this.organizationOptions.find(opt => opt.value === event.value);
+      rowData.OrganizationName = option?.label ?? '';
+    }
+  }
+
+  onDepreciationFieldChange(event: FieldChangeEvent): void {
+    const rowData = event.rowData;
+    if (event.field === 'ExpenseCode') {
+      const option = this.accountingOptions.find(opt => opt.value === event.value);
+      rowData.ExpenseName = option?.label ?? '';
+    } else if (event.field === 'OrganizationCode') {
+      const option = this.organizationOptions.find(opt => opt.value === event.value);
+      rowData.OrganizationName = option?.label ?? '';
+    }
+  }
+
+  // 資料拆分：將 API 回傳的資料拆分到三個區塊（編輯模式使用）
+  splitDataToSections(data: ASS11090Data): void {
+    // 基本資料
+    this.dataForm.patchValue({
+      BigCategoryCode: data.BigCategoryCode ?? null,
+      BigCategoryName: data.BigCategoryName ?? '',
+      MidCategoryCode: data.MidCategoryCode ?? null,
+      MidCategoryName: data.MidCategoryName ?? '',
+      AccountingDebitCode: data.AccountingDebitCode ?? null,
+      AccountingDebitName: data.AccountingDebitName ?? '',
+      AccountingCreditCode: data.AccountingCreditCode ?? null,
+      AccountingCreditName: data.AccountingCreditName ?? '',
+      InputTaxDebitCode: data.InputTaxDebitCode ?? null,
+      InputTaxDebitName: data.InputTaxDebitName ?? '',
+      ExpenseAccountCode: data.ExpenseAccountCode ?? null,
+      ExpenseAccountName: data.ExpenseAccountName ?? '',
+      AccumulatedDepreciationCreditCode1: data.AccumulatedDepreciationCreditCode ?? null,
+      AccumulatedDepreciationCreditName1: data.AccumulatedDepreciationCreditName ?? '',
+      DepreciationDebitCode: data.DepreciationDebitCode ?? null,
+      DepreciationDebitName: data.DepreciationDebitName ?? '',
+      AccumulatedDepreciationCreditCode2: data.AccumulatedDepreciationCreditCode ?? null,
+      AccumulatedDepreciationCreditName2: data.AccumulatedDepreciationCreditName ?? '',
+      DepreciationLife: data.DepreciationLife ?? null,
+      Description: data.Description ?? '',
+    });
+
+    // 明細資料（如果 API 有回傳）
+    // 注意：目前 API 可能還沒有回傳明細資料，這裡先保留結構
+    if ((data as any).PurchaseAccountDetails) {
+      this.purchaseAccountDetails.set((data as any).PurchaseAccountDetails);
+    }
+    if ((data as any).ExpenseTransferDetails) {
+      this.expenseTransferDetails.set((data as any).ExpenseTransferDetails);
+    }
+    if ((data as any).DepreciationDetails) {
+      this.depreciationDetails.set((data as any).DepreciationDetails);
+    }
+  }
+
+  // 資料合併：將三個區塊的資料合併成單一物件（提交時使用）
+  mergeDataFromSections(): ASS11090UpdateRequest {
+    const formValue = this.dataForm.getRawValue();
+    return {
+      id: this.rowdata?.id,
+      BigCategoryCode: formValue.BigCategoryCode ?? undefined,
+      BigCategoryName: formValue.BigCategoryName || undefined,
+      MidCategoryCode: formValue.MidCategoryCode ?? undefined,
+      MidCategoryName: formValue.MidCategoryName || undefined,
+      AccountingDebitCode: formValue.AccountingDebitCode ?? undefined,
+      AccountingDebitName: formValue.AccountingDebitName || undefined,
+      AccountingCreditCode: formValue.AccountingCreditCode ?? undefined,
+      AccountingCreditName: formValue.AccountingCreditName || undefined,
+      InputTaxDebitCode: formValue.InputTaxDebitCode ?? undefined,
+      InputTaxDebitName: formValue.InputTaxDebitName || undefined,
+      ExpenseAccountCode: formValue.ExpenseAccountCode ?? undefined,
+      ExpenseAccountName: formValue.ExpenseAccountName || undefined,
+      AccumulatedDepreciationCreditCode: formValue.AccumulatedDepreciationCreditCode2 ?? formValue.AccumulatedDepreciationCreditCode1 ?? undefined,
+      AccumulatedDepreciationCreditName: formValue.AccumulatedDepreciationCreditName2 || formValue.AccumulatedDepreciationCreditName1 || undefined,
+      DepreciationDebitCode: formValue.DepreciationDebitCode ?? undefined,
+      DepreciationDebitName: formValue.DepreciationDebitName || undefined,
+      DepreciationLife: formValue.DepreciationLife ?? undefined,
+      Description: formValue.Description || undefined,
+      PurchaseAccountDetails: this.purchaseAccountDetails().filter(d => d.AccountingCode && d.OrganizationCode),
+      ExpenseTransferDetails: this.expenseTransferDetails().filter(d => d.ExpenseCode && d.OrganizationCode),
+      DepreciationDetails: this.depreciationDetails().filter(d => d.ExpenseCode && d.OrganizationCode),
+    };
+  }
+
+  // 編輯模式
+  Edit(rowdata: any): void {
+    this.loading = true;
+    this.ass11090Service.queryASS11090Detail({ id: rowdata.id }).pipe(
+      finalize(() => this.loading = false),
+      untilDestroyed(this)
+    ).subscribe({
+      next: (response) => {
+        if (response.Status === '0000' && response.Data) {
+          this.splitDataToSections(response.Data);
+          // 編輯模式下，大分類和中分類欄位設為 disabled
+          this.dataForm.get('BigCategoryCode')?.disable();
+          this.dataForm.get('BigCategoryName')?.disable();
+          this.dataForm.get('MidCategoryCode')?.disable();
+          this.dataForm.get('MidCategoryName')?.disable();
+        }
+      },
+      error: (err) => {
+        console.error('載入資料失敗:', err);
+        this.messageService.errorBubble('載入資料失敗');
+      }
+    });
+  }
+
+
+  // 提交表單
+  onSubmit(frm: FormGroup): void {
+    this.submitted = true;
+
+    this.handleSubmit(frm, () => {
+
+      if (this.isFormCreateable) {
+        // 新增模式（如果 API 有提供 insert 方法）
+        this.messageService.errorBubble('新增功能尚未實作');
+        this.loading = false;
+      } else {
+        // 編輯模式
+        const payload = this.mergeDataFromSections();
+        this.ass11090Service.updateASS11090(payload).pipe(
+          finalize(() => this.loading = false),
+          untilDestroyed(this)
+        ).subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble(response.Message || '更新成功');
+              this.onCancel();
+            } else {
+              this.messageService.errorBubble(response.Message || '更新失敗');
+            }
+          },
+          error: (err) => {
+            console.error('更新失敗:', err);
+            this.messageService.errorBubble('更新失敗');
+          }
+        });
+      }
+    });
+  }
+
+>>>>>>> dev
   submitForm(frm: FormGroup): void {
     this.onSubmit(frm);
   }

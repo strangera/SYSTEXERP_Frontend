@@ -1,34 +1,23 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { NgIf } from '@angular/common';
+import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { PanelModule } from 'primeng/panel';
-
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { PanelModule } from 'primeng/panel';
+import { catchError, combineLatest, finalize, map, Observable, of, startWith, switchMap, tap, withLatestFrom } from 'rxjs';
+import { Cpm11030Service, QueryCPM11030Row } from '../../../service/api/cpm/cpm11030.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-
-import {
-  Cpm11030Service,
-  DropDownListResponse,
-  InsertCPM11030Request,
-  OptionItem,
-  UpdateCPM11030Request,
-} from '../../../service/api/cpm/cpm11030.service';
-
-
-@UntilDestroy()
 @Component({
   selector: 'app-cpm11030-cru',
   templateUrl: './cpm11030-cru.component.html',
-  styleUrl: './cpm11030-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -41,268 +30,134 @@ import {
     NgIf,
     TranslateModule,
     CalendarComponent,
+    AsyncPipe,
   ],
 })
-export class CPM11030CRUComponent extends BasicCruPageComponent<any> implements OnInit {
-  readonly CRUD = CRUDStatus;
-  /** ✅ 服務中心位置編號下拉 */
-  counterCodeOptions: OptionItem[] = [];
-
-  /** ✅ 證件類型下拉 */
-  certTypeOptions: OptionItem[] = [];
-
-  /** ✅ 設備名稱下拉 */
-  deviceNameOptions: OptionItem[] = [];
-  private mapDropDownToOptions(resp: DropDownListResponse | null | undefined): OptionItem[] {
-    const rows = Array.isArray(resp?.Data) ? resp!.Data! : [];
-    return rows
-      .filter(x => x && x.No != null && x.Name != null)
-      .map(x => ({
-        value: String(x.No).trim(),
-        label: `${String(x.No).trim()}-${String(x.Name).trim()}`,
-      }));
-  }
-
-
-
-  /** 出借狀態：1已出借 2已歸還 */
-  loanStatusOptions: { value: string; label: string }[] = [
-    { value: '1', label: '1-已出借' },
-    { value: '2', label: '2-已歸還' },
-  ];
+export class CPM11030CRUComponent extends BasicCruPageComponent<QueryCPM11030Row> implements OnInit {
 
   /** 依欄位說明：大多 nullable:true，所以不要全部 required（除非你前端想強制） */
   dataForm = this.formBuilder.group({
     /** Update 用 */
     ID: [null as number | null],
-
     /** 顯示用（後端產生；單據規則 YY+MM+DD+SSS） */
-    Loan_No: [{ value: '' as string, disabled: true }],
-
+    Loan_No: [{ value: '系統自動產生' as string, disabled: true }],
     /** nullable:true（你要強制必填可加 Validators.required） */
-    Service_Id: ['' as string, [Validators.maxLength(7)]],
-
+    Service_Id: [null as string | null, [Validators.required, Validators.maxLength(7)]],
     /** 出借日期：string($date-time)（通常必填比較合理，但規格寫 nullable:true 就先不強制） */
-    Loan_Date: [null as Date | null, [Validators.required]],
-
+    Loan_Date: [new Date(), [Validators.required]],
     /** 出借時間：HHMM（nullable:true） */
-    Loan_Time: [null as Date | null],
-
+    Loan_Time: [new Date()],
     /** 出借狀態：1/2（nullable:true） */
-    Loan_Status: ['' as string],
-
+    Loan_Status: [{ value: '1' as string, disabled: true }],
     /** 其他欄位皆 nullable:true */
-    User_Name: ['' as string, [Validators.maxLength(50)]],
-    Cert_Type: ['' as string, [Validators.maxLength(2)]],
-    Cert_No: ['' as string, [Validators.maxLength(50)]],
-    Loan_Phone: ['' as string, [Validators.maxLength(20)]],
-    Device_ID: ['' as string, [Validators.maxLength(50)]],
-    Device_Name: ['' as string, [Validators.maxLength(50)]],
+    User_Name: [null, [Validators.maxLength(50), Validators.required]],
+    Cert_Type: [null, [Validators.required]],
+    Cert_No: [null, [Validators.maxLength(50), Validators.required]],
+    Loan_Phone: [null, [Validators.maxLength(20)]],
+    Device_ID: [null, [Validators.required, Validators.maxLength(50)]],
+    Device_Name: [null, [Validators.maxLength(50)]],
   });
+  counterCodeOptions = this.dropDown.queryCSS1001();
+  certTypeOptions = getSYS1000Options('Cert_Type');
+  deviceNameOptions: Observable<any[] | null> = combineLatest([
+    this.dataForm.get('Service_Id')!.valueChanges.pipe(startWith(this.dataForm.get('Service_Id')?.value)),
+    this.dataForm.get('Loan_Date')!.valueChanges.pipe(startWith(this.dataForm.get('Loan_Date')?.value))
+  ]).pipe(
+    untilDestroyed(this),
+    // 增加一個 tap：當這兩個值任一改變時，清空 Device_ID 和 Device_Name
+    tap(() => {
+      if (this.isFormCreateable) {
+        this.dataForm.patchValue({ Device_ID: null, Device_Name: null }, { emitEvent: false });
+      }
+    }),
+    // 只有當 Service_Id 和 Loan_Date 都有值時才呼叫 API
+    switchMap(([serviceId, loanDate]) => {
+      if (!serviceId || !loanDate) {
+        // 如果條件不足，禁用 Device_ID 並回傳空陣列
+        this.dataForm.get('Device_ID')?.disable({ emitEvent: false });
+        return of([]);
+      }
 
-  constructor(private cpm11030Service: Cpm11030Service) {
+      const formattedDate = this.datePipe.transform(loanDate, 'yyyy-MM-dd');
+      return this.cpm11030Service.queryCPM11030_DailyEquipAvailability({
+        Service_Id: serviceId as string,
+        CSS_Date: formattedDate as string
+      }).pipe(
+        map(res => {
+          const data = res.Data || [];
+          // 有資料才啟用 Device_ID (僅在新增模式)
+          if (this.isFormCreateable) {
+            data.length > 0 ? this.dataForm.get('Device_ID')?.enable({ emitEvent: false })
+              : this.dataForm.get('Device_ID')?.disable({ emitEvent: false });
+          }
+
+          return data.filter(item => item.CSS_CurrentQty > 0).map(item => ({
+            label: `${item.Device_ID} - ${item.Device_Name} (剩餘:${item.CSS_CurrentQty})`,
+            value: item.Device_ID,
+            Name: item.Device_Name
+          }));
+        }),
+        catchError(() => {
+          this.dataForm.get('Device_ID')?.disable({ emitEvent: false });
+          return of([]);
+        })
+      );
+    })
+  );
+  loanStatusOptions = getSYS1000Options('Loan_Status');
+
+  constructor(
+    private readonly cpm11030Service: Cpm11030Service,
+    private readonly dropDown: DropdownApiService,
+    private readonly datePipe: DatePipe
+  ) {
     super();
   }
-
   ngOnInit(): void {
     this.initializePage('CPM11030', this.dataForm);
-    this.updateDisabledState();
-
-    // ✅ 下拉：跟 Query 共用同一份快取（只會真的打一次）
-    this.cpm11030Service
-      .getDropdownsOnce()
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: ({ css1001, sys1000, css2001 }) => {
-          this.counterCodeOptions = this.mapDropDownToOptions(css1001);
-          this.certTypeOptions = this.mapDropDownToOptions(sys1000);
-          this.deviceNameOptions = this.mapDropDownToOptions(css2001);
-        },
-        error: (err) => {
-          console.error('CPM11030 CRU dropdown load error:', err);
-          this.counterCodeOptions = [];
-          this.certTypeOptions = [];
-          this.deviceNameOptions = [];
-        },
-      });
-
-    // 把 Cert_Type 從「顯示用的 01-身分證」轉成「後端要的代碼 01」
-    const certRaw = this.dataForm.get('Cert_Type')?.value as any;
-    const certType = certRaw.includes('-')
-      ? certRaw.split('-')[0].trim()
-      : certRaw.trim();
-    this.dataForm.patchValue({ Cert_Type: certType }, { emitEvent: false });
-
-    // ✅ 先把後端/route 帶回來的值正規化成 Date（給 calendar 顯示用）
-    const rawDate = this.dataForm.get('Loan_Date')?.value as any;
-    const rawTime = this.dataForm.get('Loan_Time')?.value as any;
-
-    const parsedDate = rawDate instanceof Date ? rawDate : rawDate ? new Date(rawDate) : null;
-    const parsedTime = rawTime instanceof Date ? rawTime : rawTime ? new Date(rawTime) : null;
-
-    const patch: any = {};
-    if (parsedDate && !isNaN(parsedDate.getTime())) patch.Loan_Date = parsedDate;
-    if (parsedTime && !isNaN(parsedTime.getTime())) patch.Loan_Time = parsedTime;
-
-    if (Object.keys(patch).length) {
-      this.dataForm.patchValue(patch, { emitEvent: false });
+    if (this.isFormCreateable) {
+      const { Service_Id, Loan_Date } = this.dataForm.value;
+      if (!Service_Id || !Loan_Date) {
+        this.dataForm.get('Device_ID')?.disable({ emitEvent: false });
+      }
+    } else {
+      this.dataForm.get('Service_Id')?.disable();
+      this.dataForm.get('Device_ID')?.disable();
+      this.dataForm.get('Device_Name')?.disable();
+      this.dataForm.get('Loan_Date')?.disable();
     }
-
-    // ✅ Create：預設帶現在日期 + 現在時間（但「已有值就不覆蓋」）
-    if (this.crudstatus === CRUDStatus.Create) {
-      const now = new Date();
-
-      const curDate = this.dataForm.get('Loan_Date')?.value as any;
-      const curTime = this.dataForm.get('Loan_Time')?.value as any;
-
-      const hasDate = curDate instanceof Date && !isNaN(curDate.getTime());
-      const hasTime = curTime instanceof Date && !isNaN(curTime.getTime());
-
-      this.dataForm.patchValue(
-        {
-          Loan_Date: hasDate ? curDate : now,
-          Loan_Time: hasTime ? curTime : now,
-        },
-        { emitEvent: false }
-      );
-    }
-  }
-
-
-
-  private updateDisabledState(): void {
-    if (this.crudstatus === CRUDStatus.Read) {
-      if (!this.useReadonlyInsteadOfDisable) this.dataForm.disable();
-      return;
-    }
-
-    this.dataForm.enable();
-
-    // Loan_No 永遠不給改（顯示用）
-    this.dataForm.get('Loan_No')?.disable();
-
-    // Edit：ID 通常不給改（但仍需送出）
-    if (this.crudstatus === CRUDStatus.Edit) {
-      this.dataForm.get('ID')?.disable();
-    }
-  }
-
-  /** Loan_Date：送 ISO datetime */
-  private toIso(d: Date | null | undefined): string {
-    const dt = d instanceof Date ? d : new Date();
-    return dt.toISOString();
-  }
-
-  /** Loan_Time：依規格送 HHMM（不是 HH:mm:ss） */
-  private toHHMM(t: Date | null | undefined): string {
-    if (!(t instanceof Date)) return '';
-    const hh = String(t.getHours()).padStart(2, '0');
-    const mm = String(t.getMinutes()).padStart(2, '0');
-    return `${hh}${mm}`;
-  }
-
-  private trimOrEmpty(v: any): string {
-    return (v ?? '').toString().trim();
-  }
-
-  private buildInsertPayload(raw: any): InsertCPM11030Request {
-    const deviceId = this.trimOrEmpty(raw.Device_ID);
-    const deviceName =
-      this.deviceNameOptions.find(o => o.value === deviceId)?.label
-        ?.split('-')
-        .slice(1)
-        .join('-') || '';
-
-    return {
-      Service_Id: this.trimOrEmpty(raw.Service_Id),
-      Loan_Date: raw.Loan_Date ? this.toIso(raw.Loan_Date) : '', // nullable:true，但 DTO 是 string：沒值就送空字串
-      Loan_Time: raw.Loan_Time ? this.toHHMM(raw.Loan_Time) : '',
-      Loan_Status: this.trimOrEmpty(raw.Loan_Status),
-
-      User_Name: this.trimOrEmpty(raw.User_Name),
-      Cert_Type: this.trimOrEmpty(raw.Cert_Type),
-      Cert_No: this.trimOrEmpty(raw.Cert_No),
-      Loan_Phone: this.trimOrEmpty(raw.Loan_Phone),
-
-      Device_ID: deviceId ?? '',
-      Device_Name: deviceName ?? '',
-    };
-  }
-
-  private buildUpdatePayload(raw: any): UpdateCPM11030Request {
-    const deviceId = this.trimOrEmpty(raw.Device_ID);
-    const deviceName =
-      this.deviceNameOptions.find(o => o.value === deviceId)?.label
-        ?.split('-')
-        .slice(1)
-        .join('-') || '';
-
-    return {
-      ID: Number(raw.ID ?? 0),
-      Loan_No: this.trimOrEmpty(raw.Loan_No),
-
-      Service_Id: this.trimOrEmpty(raw.Service_Id),
-      Loan_Date: raw.Loan_Date ? this.toIso(raw.Loan_Date) : '',
-      Loan_Time: raw.Loan_Time ? this.toHHMM(raw.Loan_Time) : '',
-      Loan_Status: this.trimOrEmpty(raw.Loan_Status),
-
-      User_Name: this.trimOrEmpty(raw.User_Name),
-      Cert_Type: this.trimOrEmpty(raw.Cert_Type),
-      Cert_No: this.trimOrEmpty(raw.Cert_No),
-      Loan_Phone: this.trimOrEmpty(raw.Loan_Phone),
-
-      Device_ID: deviceId ?? '',
-      Device_Name: deviceName ?? '',
-    };
-  }
-
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      const raw = form.getRawValue();
-
-      switch (this.crudstatus) {
-        case CRUDStatus.Create:
-          if (!this.canAdd()) return;
-
-          this.cpm11030Service
-            .insertCPM11030(this.buildInsertPayload(raw))
-            .pipe(untilDestroyed(this))
-            .subscribe({
-              next: (res: any) => {
-                if (res?.IsSuccess === false) {
-                  this.messageService.errorBubble(res?.Message ?? '新增失敗');
-                  return;
-                }
-                this.messageService.successBubble('新增成功');
-                this.onCancel();
-              },
-              error: () => this.messageService.errorBubble('新增失敗'),
-            });
-          break;
-
-        case CRUDStatus.Edit:
-          if (!this.canEdit()) return;
-
-          this.cpm11030Service
-            .updateCPM11030(this.buildUpdatePayload(raw))
-            .pipe(untilDestroyed(this))
-            .subscribe({
-              next: (res: any) => {
-                if (res?.IsSuccess === false) {
-                  this.messageService.errorBubble(res?.Message ?? '更新失敗');
-                  return;
-                }
-                this.messageService.successBubble('更新成功');
-                this.onCancel();
-              },
-              error: () => this.messageService.errorBubble('更新失敗'),
-            });
-          break;
+    this.dataForm.get('Device_ID')?.valueChanges.pipe(untilDestroyed(this), withLatestFrom(this.deviceNameOptions)).subscribe(([selectedId, options]) => {
+      const selectedDevice = options?.find(opt => opt.value === selectedId);
+      if (selectedDevice) {
+        this.dataForm.patchValue({ Device_Name: selectedDevice.Name }, { emitEvent: false });
       }
     });
   }
-
-  get isRead(): boolean {
-    return this.crudstatus === CRUDStatus.Read;
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+      const raw = form.getRawValue();
+      const body = {
+        ...raw,
+        Loan_Date: this.datePipe.transform(raw.Loan_Date, 'yyyy-MM-dd'),
+        Loan_Time: this.datePipe.transform(raw.Loan_Time, 'HHmm'),
+      };
+      const request$ = this.isFormCreateable
+        ? this.cpm11030Service.insertCPM11030(body)
+        : this.cpm11030Service.updateCPM11030(body);
+      request$.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+        this.messageService.successBubble(res.Message || (this.isFormCreateable ? '新增成功' : '更新成功'));
+        if (this.isFormCreateable) {
+          this.dataForm.reset({
+            Loan_No: '系統自動產生',
+            Loan_Date: new Date(),
+            Loan_Time: new Date(),
+            Loan_Status: '1'
+          }); // 重設時給予預設值
+          this.dataForm.get('Device_ID')?.disable();
+        } else {
+          this.onCancel();
+        }
+      });
+    });
   }
 }

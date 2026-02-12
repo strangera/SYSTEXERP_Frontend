@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, signal } from '@angular/core';
+import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ECRNoService } from '@service/basic/queryPOS1002.service';
@@ -8,14 +8,16 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { FIN12020Data, FIN12020Service } from '../../../service/api/fin/fin12020.service';
+import { FIN12020Data, FIN12020QueryRequest, FIN12020Service } from '../../../service/api/fin/fin12020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn, formatDate } from '../../../shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { removeEmptyValues } from '../../../shared/utils/object-utils';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 @Component({
@@ -31,7 +33,7 @@ import { YearMonthComponent } from '../fin11020/query-year-month/query-year-mont
     InputTextComponent,
     InputTextRangeComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     MultiSelectComponent,
     YearMonthComponent
@@ -51,11 +53,14 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
     ...createPaginationConfig([]) // 分頁和排序參數
   });
 
-  totalRecords = 0;
-  data: FIN12020Data[] = [];
+  readonly tableData = signal<FIN12020Data[]>([]);
+  readonly totalRecords = signal<number>(0);
+  readonly tableLoading = signal<boolean>(false);
+  lastQueryBody?: FIN12020QueryRequest;
+
   selectedItems: FIN12020Data[] = [];
 
-  columns: Column[] = [
+  readonly columns: ReportColumn[] = [
     { field: 'GUI_YYMM', header: '發票年月', visible: true },
     { field: 'ECR_NO', header: '收銀機號', visible: true },
     { field: 'GUI_TRACK', header: '字軌', visible: true },
@@ -90,7 +95,7 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
   }
 
   ngOnInit(): void {
-    this.initializePage('FIN12020', 'fin/fin12020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('FIN12020', 'fin/fin12020cru', this.queryForm, () => this.onSubmit());
     this.loadOptions();
     // 設定發票年月預設值
     const currentDate = new Date();
@@ -102,17 +107,76 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
     this.queryForm.get('GUI_YYMM_end')?.setValue(this.datePipe.transform(currentDate, 'yyyyMM'));
   }
 
-  onSubmit(frm: FormGroup) {
+  /** 表單多選欄位推論為 never，用 unknown 轉型後再檢查是否有長度 */
+  private optionalList(value: unknown): string[] | undefined {
+    return Array.isArray(value) && value.length ? value : undefined;
+  }
+
+  queryFunction = (body: any) => {
+    const raw = this.queryForm.getRawValue();
+    const pageSize = body?.pageSize ?? body?.PageSize ?? raw?.pageSize ?? 30;
+    const pageIndex = body?.pageIndex ?? body?.PageIndex ?? raw?.pageIndex ?? 1;
+    const payload: FIN12020QueryRequest = {
+      GUI_YYMM_start: raw.GUI_YYMM_start || undefined,
+      GUI_YYMM_end: raw.GUI_YYMM_end || undefined,
+      GUI_TRACK: raw.GUI_TRACK || undefined,
+      GUINo_start: raw.GUINo_start || undefined,
+      GUINo_end: raw.GUINo_end || undefined,
+      GUIPaperList: this.optionalList(raw.GUIPaperList),
+      ECR_NOList: this.optionalList(raw.ECR_NOList),
+      GUI_StatusList: this.optionalList(raw.GUI_StatusList),
+      SAL_TypeList: this.optionalList(raw.SAL_TypeList),
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: body?.SortBy ?? raw?.SortBy,
+    };
+    const clean = removeEmptyValues(payload) as FIN12020QueryRequest;
+    return this.fin12020Service.queryFIN12020(clean);
+  };
+
+  onSubmit(): void {
+    const frm = this.queryForm;
     this.handleSubmit(frm, () => {
-      this.fin12020Service.queryFIN12020(frm.value)
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-        .subscribe(response => {
-          this.data = response.Data;
-          this.totalRecords = response.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      const raw = frm.getRawValue();
+      this.lastQueryBody = {
+        GUI_YYMM_start: raw.GUI_YYMM_start || undefined,
+        GUI_YYMM_end: raw.GUI_YYMM_end || undefined,
+        GUI_TRACK: raw.GUI_TRACK || undefined,
+        GUINo_start: raw.GUINo_start || undefined,
+        GUINo_end: raw.GUINo_end || undefined,
+        GUIPaperList: this.optionalList(raw.GUIPaperList),
+        ECR_NOList: this.optionalList(raw.ECR_NOList),
+        GUI_StatusList: this.optionalList(raw.GUI_StatusList),
+        SAL_TypeList: this.optionalList(raw.SAL_TypeList),
+        PageSize: raw.pageSize ?? 30,
+        PageIndex: raw.pageIndex ?? 1,
+        SortBy: raw.SortBy,
+      } as FIN12020QueryRequest;
+
+      this.tableLoading.set(true);
+      this.queryStateService.setQueryState(this.ProgNo, raw);
+      this.queryFunction(this.lastQueryBody)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => {
+            this.tableLoading.set(false);
+            this.loading = false;
+          })
+        )
+        .subscribe({
+          next: response => {
+            if (response.Status === '0000') {
+              this.tableData.set(response.Data ?? []);
+              this.totalRecords.set(response.TotalCount ?? 0);
+            } else {
+              this.messageService.errorBubble(`查詢失敗: ${response.Message}`);
+            }
+          }
         });
     });
   }
+
+  isRowSelectable = (_rowData: FIN12020Data): boolean => true;
 
   loadOptions() {
     // 取得發票類別選項

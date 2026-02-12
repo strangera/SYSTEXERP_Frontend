@@ -30,5 +30,6 @@
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
     [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'CAT_LNo', order: 1 }]" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [isRowSelectable]="isRowSelectable" [loading]="loading"></app-table>
+    [isRowSelectable]="isRowSelectable" [loading]="loading"
+    [rows]="30" [rowsPerPageOptions]="[30, 60, 90, 120, 150]"></app-table>
 </div>

@@ -27,7 +27,7 @@ import { SharedDropdownService } from '@shared/services/shared-dropdown.service'
 import { TLS12040Service } from '@service/api/tls/tls12040.service';
 
 // Models
-import { WizardMode } from '../../core/constants/workflow-step.enum';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 // i18n
 import { TranslateModule } from '@ngx-translate/core';
@@ -94,12 +94,6 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
       icon: 'pi pi-times-circle text-red-500',
       action: (rowData: ContractItem) => this.onVoid(rowData),
       disabled: (rowData: ContractItem) => this.isVoidDisabled(rowData) || !this.hasPermission(Actions.Invalidate)
-    },
-    {
-      label: '續約',
-      icon: 'pi pi-refresh text-blue-500',
-      action: (rowData: ContractItem) => this.onRenewal(rowData),
-      disabled: (rowData: ContractItem) => rowData.approve_status !== '2' || !this.hasPermission(Actions.Create)
     }
   ];
 
@@ -127,9 +121,9 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
     contact_Date_to: [null as Date | null],
     paper_typeList: [[] as string[]],
     tlt_bdate_start_from: [null as Date | null],
-    tlt_bdate_end_to: [null as Date | null],
+    tlt_bdate_start_to: [null as Date | null],
     tlt_edate_start_from: [null as Date | null],
-    tlt_edate_end_to: [null as Date | null],
+    tlt_edate_start_to: [null as Date | null],
     tlt_contract_bdate_from: [null as Date | null],
     tlt_contract_bdate_to: [null as Date | null],
     tlt_contract_edate_from: [null as Date | null],
@@ -189,7 +183,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
 
   ngOnInit(): void {
     // 初始化頁面，導航到精靈頁面
-    this.initializePage('TLS12040', '/tls/tls12040v2cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS12040', '/tls/tls12040cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadDropdownOptions();
   }
 
@@ -291,68 +285,38 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
     this.queryForm.reset();
   }
 
-  // ========== 導航 ==========
-  /**
-   * 導航到精靈頁面
-   */
-  private navigateToWizard(mode: WizardMode, rowData?: ContractItem): void {
-    this.router.navigate(['/account/tls/tls12040v2cru'], {
-      state: {
-        mode,
-        rowData,
-        fromQuery: true
-      }
-    });
-  }
+  // ========== 導航（使用 BasicQueryPageComponent 標準模式）==========
 
   /**
-   * 新增
-   */
-  override onCreate(): void {
-    if (this.hasPermission(Actions.Create)) {
-      this.navigateToWizard('create');
-    }
-  }
-
-  /**
-   * 編輯
+   * 編輯 - 額外檢查合約是否可編輯
    */
   override onEdit(rowData: ContractItem): void {
     if (this.hasPermission(Actions.Edit) && this.canEditContract(rowData)) {
-      this.navigateToWizard('edit', rowData);
+      this.navigateWithState(CRUDStatus.Edit, rowData);
     }
   }
 
-  /**
-   * 檢視
-   */
-  override onDetail(rowData: ContractItem): void {
-    if (this.hasPermission(Actions.Query)) {
-      this.navigateToWizard('view', rowData);
-    }
-  }
-
-  /**
-   * 續約
-   */
-  onRenewal(rowData: ContractItem): void {
-    if (this.hasPermission(Actions.Create)) {
-      this.navigateToWizard('renewal', rowData);
-    }
-  }
+  // /**
+  //  * 續約
+  //  */
+  // onRenewal(rowData: ContractItem): void {
+  //   if (this.hasPermission(Actions.Create)) {
+  //     this.navigateToWizard('renewal', rowData);
+  //   }
+  // }
 
   /**
    * 點擊行
    */
   onRowClick(rowData: ContractItem): void {
     if (this.hasPermission(Actions.Edit) && this.canEditContract(rowData)) {
-      this.navigateToWizard('edit', rowData);
+      this.navigateWithState(CRUDStatus.Edit, rowData);
     }
   }
 
   onDetailClick(rowData: ContractItem): void {
     if (this.hasPermission(Actions.Query)) {
-      this.navigateToWizard('view', rowData);
+      this.navigateWithState(CRUDStatus.Read, rowData);
     }
   }
 
@@ -380,6 +344,10 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
       next: (response: any) => {
         if (response.Status === '0000') {
           this.messageService.successBubble('審核成功');
+          // 審核後刷新使用者資料權限
+          this.apiService.refreshUserDataPermissions().subscribe({
+            error: () => this.messageService.warnBubble('審核成功，但權限更新失敗。請重新登入以查看更新。')
+          });
           this.onSubmit(this.queryForm);
         } else {
           this.messageService.errorBubble(`審核失敗: ${response.Message || '未知錯誤'}`);

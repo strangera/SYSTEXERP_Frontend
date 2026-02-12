@@ -33,8 +33,18 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="FIN11070" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" dataKey="TXN_No" [totalRecords]="totalRecords" [multiSortMeta]="[]"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showManage]="false" [showDelete]="false"></app-table>
+  <div class="col-12">
+    <app-table-report [data]="tableData()"
+                      dataKey="TXN_No"
+                      tableKey="FIN11070_Data"
+                      [columns]="columns"
+                      [totalRecords]="totalRecords()"
+                      [loading]="tableLoading()"
+                      [lastQueryBody]="lastQueryBody"
+                      [queryFunction]="queryFunction"
+                      [showCheckBox]="false"
+                      [showEdit]="false"
+                      [showDetail]="false"
+                      [showDelete]="false"></app-table-report>
+  </div>
 </div>

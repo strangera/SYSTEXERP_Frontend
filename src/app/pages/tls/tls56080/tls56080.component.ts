@@ -1,24 +1,24 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
+import { IQueryTLS56080Request, IQueryTLS56080Response, Tls56080Service } from '@service/api/tls/tls56080.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
+import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { CommonModule } from '@angular/common';
-import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
-import { IQueryTLS56080Response, Tls56080Service } from '@service/api/tls/tls56080.service';
-import { finalize } from 'rxjs';
-import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
-import { ButtonModule } from 'primeng/button';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 export const enum TRDStatus {
   申請中 = '1',
@@ -41,7 +41,7 @@ export const enum TRDStatus {
     InputTextComponent,
     DropdownComponent,
     TranslateModule,
-    TableComponent,
+    TableReportComponent,
     CommonModule,
     MultiSelectComponent,
     CalendarRangeQuickComponent,
@@ -63,11 +63,14 @@ export class TLS56080Component extends BasicQueryPageComponent<IQueryTLS56080Res
     APRV_USR: [null],
     APRV_Date_Start: [null],
     APRV_Date_End: [null],
-    ...createPaginationConfig([{ field: 'TRD_No', order: 1 }]),
+    pageSize: [30],
+    pageIndex: [1],
+    SortBy: [[{ field: 'TRD_No', order: 1 }]],
   });
   totalRecords = 0;
   data: IQueryTLS56080Response[] = [];
   selectedItems: IQueryTLS56080Response[] = [];
+  lastQuery: IQueryTLS56080Request | null = null;
   columns: Column[] = [
     { field: 'TRD_No', header: '調撥單編號', visible: true },
     { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDateTime },
@@ -106,8 +109,8 @@ export class TLS56080Component extends BasicQueryPageComponent<IQueryTLS56080Res
   userOptions: { label: string; value: string }[] = [];
 
   constructor(
-    private tls56080Service: Tls56080Service,
-    private dropDownListService: DropDownListService,
+    public readonly tls56080Service: Tls56080Service,
+    private readonly dropDownListService: DropDownListService,
     private readonly tls52010Service: Tls52010Service
   ) {
     super();
@@ -134,6 +137,7 @@ export class TLS56080Component extends BasicQueryPageComponent<IQueryTLS56080Res
     this.handleSubmit(frm, () => {
       this.loading = true;
       this.tls56080Service.queryTLS56080(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
+        this.lastQuery = frm.value;
         this.data = response.Data;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);

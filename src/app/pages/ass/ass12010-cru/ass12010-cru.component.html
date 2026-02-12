@@ -1,105 +1,109 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-    </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="申請人代號" controlName="applicantCode" [options]="applicantCodeOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.applicantCode"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="部門代號" controlName=" organizationNumber" [options]="organizationNumberOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.organizationNumber"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar calendarType="dateOne" label="需求日期" [control]="dataForm.controls.requestDate"
-                        [submitted]="submitted">
-                    </app-calendar>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="需求期限(天)" controlName="demandLimit"
-                        [control]="dataForm.controls.demandLimit" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="倉別" controlName="storage" [options]="storageOptions" optionLabel="label"
-                        optionValue="value" [control]="dataForm.controls.storage" [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-            </div>
-            <hr />
-            <app-editor-text label="說明" controlName="remark" [control]="dataForm.controls.remark"
-                [style]="{ height: '100px' }" [submitted]="submitted">
-            </app-editor-text>
-            <hr />
-            <hr />
-            <ng-container formArrayName="items">
-                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-                    <div class="grid align-items-center">
-                        <div class="col" style="flex: 1">
-                            <h5>品項 {{ i + 1 }}</h5>
-                        </div>
-                        <div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
 
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown label="品項代碼" controlName="itemCode" [options]="itemCodeOptions"
-                                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'itemCode')"
-                                [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown label="保管人" controlName="keepingPerson" [options]="applicantCodeOptions"
-                                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'keepingPerson')"
-                                [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="保管單位" controlName="keepingUnit"
-                                [control]="getFormControl(i, 'keepingUnit')" [submitted]="submitted">
-                            </app-input-text>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="單位" controlName="unit" [control]="getFormControl(i, 'unit')"
-                                [submitted]="submitted">
-                            </app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="數量" controlName="amount" [control]="getFormControl(i, 'amount')"
-                                [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                    </div>
-                    <hr />
-                    <app-editor-text label="單項說明" controlName="editortext" [control]="getFormControl(i, 'amount')"
-                        [style]="{ height: '100px' }" [submitted]="submitted">
-                    </app-editor-text>
-                    <hr />
-                </ng-container>
-            </ng-container>
-            <div class="pt-1">
+  <p-panel header="新增資訊" class="line-height-3 m-0 mb-3">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
+      <div class="grid p-fluid">
+        <app-dropdown
+          class="col-12 md:col-6"
+          label="部門代號"
+          controlName="ORG_ID"
+          [options]="orgIdOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [control]="df().ORG_ID"
+          [disabled]="isFormReadable"
+          [submitted]="submitted"
+        ></app-dropdown>
+        <app-dropdown
+          class="col-12 md:col-6"
+          label="申請人代號"
+          controlName="EMP_ID"
+          [options]="empIdOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [control]="df().EMP_ID"
+          [disabled]="isFormReadable"
+          [submitted]="submitted"
+        ></app-dropdown>
+      </div>
+      <div class="grid p-fluid">
+        <app-calendar
+          class="col-12 md:col-6"
+          calendarType="dateOne"
+          label="需求日期"
+          controlName="APPLY_DATE"
+          [control]="df().APPLY_DATE"
+          [disabled]="isFormReadable"
+          [submitted]="submitted"
+        ></app-calendar>
+        <app-input-text
+          class="col-12 md:col-6"
+          label="需求期限(天)"
+          controlName="NEED_NUM"
+          [control]="df().NEED_NUM"
+          [disabled]="isFormReadable"
+          [submitted]="submitted"
+        ></app-input-text>
+      </div>
+      <div class="grid p-fluid">
+        <app-dropdown
+          class="col-12 md:col-6"
+          label="倉別"
+          controlName="WH_ID"
+          [options]="whIdOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [control]="df().WH_ID"
+          [disabled]="isFormReadable"
+          [submitted]="submitted"
+        ></app-dropdown>
+        <app-input-text
+          class="col-12 md:col-6"
+          label="說明"
+          controlName="REMARK"
+          [control]="df().REMARK"
+          [disabled]="isFormReadable"
+          [submitted]="submitted"
+        ></app-input-text>
+      </div>
 
-            </div>
-        </form>
-        <div class="col pt-4">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
-            </div>
-        </div>
-    </p-panel>
+      <br />
+
+      <app-table-edit
+        tableKey="ASS12010_items"
+        [data]="tableData()"
+        [columns]="editColumns"
+        [selectedItems]="selectedItems"
+        (selectionChange)="selectedItems = $event"
+        (insert)="onTableInsert()"
+        (dataChange)="tableData.set($event)"
+        [showCheckBox]="!isFormReadable"
+        [showDelete]="!isFormReadable"
+        [showInsert]="!isFormReadable"
+        [disabled]="isFormReadable"
+        [canInsert]="true"
+        [loading]="tableLoading()"
+      ></app-table-edit>
+
+      <!-- 底部操作按鈕 -->
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-4 border-top-1 surface-border pt-3"
+      >
+        <app-button
+          btnType="cancel"
+          [form]="dataForm"
+          [disabled]="isFormReadable"
+        ></app-button>
+        <app-button
+          btnType="submit"
+          [loading]="loading"
+          [disabled]="isFormReadable"
+        ></app-button>
+      </div>
+    </form>
+  </p-panel>
 </div>

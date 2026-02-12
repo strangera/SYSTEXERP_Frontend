@@ -1,4 +1,4 @@
-import { NgFor, NgIf } from '@angular/common';
+﻿import { NgFor, NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, NavigationExtras } from '@angular/router';
@@ -35,6 +35,7 @@ import { EmailValidationService } from '../tls13010-cru/validation/email-validat
 import { LocationDetails, TLS12040DetailModel, TLS12040RequestModel, Tls12040SelectorTableColumn } from './models/tls12040-cru.model';
 import { BusinessClassificationService } from './services/business-classification.service';
 import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
+import { sanitizeDateFields } from '@shared/services/tls/tls-form-defaults.constants';
 import { TLS12040ValidationService } from './validation/tls12040-validation.service';
 
 interface CategoryItem {
@@ -671,7 +672,9 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 3秒後返回列表頁面
     setTimeout(() => {
-      this.router.navigate(['account/tls/tls12040']);
+      this.router.navigate(['account/tls/tls12040v1'], {
+        state: { fromRoute: this.router.url }
+      });
     }, 3000);
   }
 
@@ -1096,7 +1099,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     };
 
     if (this.crudstatus === CRUDStatus.Read) {
-      this.router.navigate(['account/tls/tls12040'], extras);
+      this.router.navigate(['account/tls/tls12040v1'], extras);
       this.messageService.infoBubble('已退出檢視模式');
       return;
     }
@@ -1110,7 +1113,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.flowService.setCruData(completeData);
     }
     this.flowService.clearAll();
-    this.router.navigate(['account/tls/tls12040'], extras);
+    this.router.navigate(['account/tls/tls12040v1'], extras);
 
   }
 
@@ -1133,7 +1136,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     if (isSaved) {
       this.messageService.successBubble('資料已暫存，可以進入下一步');
       // 導航到下一步（如果需要）
-      this.router.navigate(['account/tls/tls12040next1']);
+      this.router.navigate(['account/tls/tls12040v1next1']);
     } else {
       this.messageService.errorBubble('資料儲存失敗，請重試');
     }
@@ -1192,7 +1195,7 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       }
     };
 
-    this.router.navigate(['account/tls/tls12040next1'], navigationExtras);
+    this.router.navigate(['account/tls/tls12040v1next1'], navigationExtras);
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {
@@ -1903,12 +1906,12 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 設定預收租金相關監聽
     this.setupRentAheadCalculation();
 
-    // 設定保證金付款方式變更監聽
-    ['open_deposit', 'construct_deposit', 'expiration_deposit'].forEach(fieldName => {
-      this.dataForm.get(fieldName)?.valueChanges.subscribe(() => {
-        this.validationService.updateDepositValidators(this.dataForm);
-      });
-    });
+    // [暫時註解] 保證金付款方式變更監聽 - 選擇付款方式時金額變必填
+    // ['open_deposit', 'construct_deposit', 'expiration_deposit'].forEach(fieldName => {
+    //   this.dataForm.get(fieldName)?.valueChanges.subscribe(() => {
+    //     this.validationService.updateDepositValidators(this.dataForm);
+    //   });
+    // });
 
     // 初始驗證器設定
     this.validationService.updateAllValidators(this.dataForm);
@@ -2252,8 +2255,11 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
       // ⚠️ 設定旗標
       this.isLoadingExistingData = true;
 
-      // 使用 { emitEvent: false } 避免觸發監聽器
-      this.dataForm.patchValue(existingData, { emitEvent: false });
+      // 將 ISO 日期字串轉為 Date 物件（避免日期欄位顯示時間戳）
+      const sanitizedData = sanitizeDateFields(existingData);
+
+      // 使用 { emitEvent: false } 避免觸發監聯器
+      this.dataForm.patchValue(sanitizedData, { emitEvent: false });
 
       this.locationInfo = existingData.locationInfo || [];
       this.displayLocationData = this.locationInfo.filter(item => item._status !== 'deleted');
@@ -2547,11 +2553,15 @@ export class TLS12040CRUComponent extends BasicCruPageComponent<CategoryItem> im
     dateFields.forEach(field => {
       const dateString = parsedData[field];
       if (dateString && typeof dateString === 'string') {
-        // 嘗試解析日期字串，如果解析失敗則保留原值
-        const dateObject = new Date(dateString);
-        // 檢查是否為有效的日期，並進行賦值
-        if (!isNaN(dateObject.getTime())) {
-          parsedData[field] = dateObject;
+        // 移除時間部分，只取日期
+        const datePart = dateString.split(/[T\s]/)[0];
+        const match = datePart.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+        if (match) {
+          parsedData[field] = new Date(
+            parseInt(match[1], 10),
+            parseInt(match[2], 10) - 1,
+            parseInt(match[3], 10)
+          );
         }
       }
     });

@@ -91,6 +91,13 @@
   <div class="flex justify-content-end align-items-center gap-2 mb-2">
     <p-button
       styleClass="p-2"
+      label="下載excel範本"
+      icon="pi pi-file-pdf"
+      (click)="onExportTemplate()"
+      [loading]="btnTemplateLoading"
+    ></p-button>
+    <p-button
+      styleClass="p-2"
       label="能源抄表作業.PDF"
       icon="pi pi-file-pdf"
       (click)="onExportPDF(queryForm)"
@@ -125,6 +132,9 @@
       [showManage]="true"
       [showDelete]="true"
       [showEdit]="true"
+      [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
+      [rows]="30"
+      [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
       [editDisabled]="editDisabled"
       [showCheckBox]="true"
       [showReportMode]="false"
