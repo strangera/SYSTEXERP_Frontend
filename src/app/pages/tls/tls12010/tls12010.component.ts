@@ -16,7 +16,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 
 export interface Potential_Customer {
@@ -148,6 +148,21 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
     { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
     { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
+  ];
+
+  addButton: AddButton[] = [
+    {
+      label: '匯出PDF',
+      icon: 'fa-regular fa-file-pdf',
+      action: (rowData) => this.onReport(rowData, false), // 傳入 rowData 並指定非 Excel
+      loading: () => this.btnPDFLoading
+    },
+    {
+      label: '匯出Excel',
+      icon: 'fa-regular fa-file-lines',
+      action: (rowData) => this.onReport(rowData, true), // 傳入 rowData 並指定為 Excel
+      loading: () => this.btnExcelLoading
+    }
   ];
 
   selectedItems: Potential_Customer[] = [];// 多選項目
@@ -310,5 +325,66 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
       }));
       console.log('接待人員代號:', this.contact_USR_Option);
     });
+  }
+
+  // 列印明細
+  btnPDFLoading = false;
+  btnExcelLoading = false;
+  onReport(rowData: Potential_Customer, isExcel: boolean) {
+    if (!rowData || !rowData.id) {
+      this.messageService.errorBubble('找不到該筆資料的 ID');
+      return;
+    }
+
+    // 根據 API 需求包裝參數，對應您原本程式碼中的 PC_id
+    const formValue = { PC_id: rowData.id };
+
+    if (isExcel) {
+      this.btnExcelLoading = true;
+      this.tls12010Service.exportTLS12010_Detail(formValue)
+        .pipe(
+          finalize(() => this.btnExcelLoading = false),
+          untilDestroyed(this)
+        )
+        .subscribe({
+          next: (blob: Blob) => {
+            this.downloadFile(blob, `潛在客戶明細_${rowData.id}_${new Date().getTime()}.xlsx`);
+            this.messageService.successBubble('匯出 Excel 成功');
+          },
+          error: (err) => {
+            console.error(err);
+            this.messageService.errorBubble('匯出失敗');
+          }
+        });
+    } else {
+      this.btnPDFLoading = true;
+      this.tls12010Service.exportTLS12010_DetailPDF(formValue)
+        .pipe(
+          finalize(() => this.btnPDFLoading = false),
+          untilDestroyed(this)
+        )
+        .subscribe({
+          next: (blob: Blob) => {
+            this.downloadFile(blob, `潛在客戶明細_${rowData.id}_${new Date().getTime()}.pdf`);
+            this.messageService.successBubble('匯出 PDF 成功');
+          },
+          error: (err) => {
+            console.error(err);
+            this.messageService.errorBubble('匯出失敗');
+          }
+        });
+    }
+  }
+
+  // 輔助方法：處理 Blob 下載
+  private downloadFile(data: Blob, fileName: string) {
+    const url = window.URL.createObjectURL(data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url); // 釋放記憶體
+    document.body.removeChild(a);
   }
 }
