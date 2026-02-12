@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { CPM11070DetailData, CPM11070Service } from '@service/api/cpm/cpm11070.service';
 import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
@@ -43,10 +44,10 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailData> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     SEQ_ID: [{ value: '系統自動產生', disabled: true }],
-    REC_DATE: [null as Date | null, [Validators.required,]],
+    REC_DATE: [new Date(), [Validators.required,]],
     LOST_DATE: [new Date(), [Validators.required,]],
     OFF_DATE: [null as Date | null],
-    MSG_DATE: [new Date()],
+    MSG_DATE: [null as Date | null],
     RECEIVE_DATE: [new Date()],
     DocType: ['', [Validators.required,]],
     Identity_KIND: [''],
@@ -56,7 +57,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
     GOODS: ['', [Validators.required,]],
     BROADCAST_DATE: ['', [Validators.maxLength(400)]],
     BROADCAST_YN: ['N'],
-    OTHER_GOODS: [{ value: this.user?.user_No, disabled: true }, [Validators.required, Validators.maxLength(20)]],
+    OTHER_GOODS: [this.user?.user_No, [Validators.required, Validators.maxLength(20)]],
     REGISTRANT: ['', [Validators.required, Validators.maxLength(10)]],
     TEL: ['', [Validators.maxLength(10)]],
     MOBILE_PHONE: ['', [Validators.maxLength(10)]],
@@ -95,6 +96,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
     { Name: '男性', No: '1' },
     { Name: '女性', No: '2' },
   ];
+  ProcessingUserOptions: any[] = [];
   RebroadcastLoading = false;
   // 控制是否顯示「領回資訊」區塊
   showReceiveInfo = true;
@@ -102,6 +104,8 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
   onlyReceiveEditable = false;
   // 模式：L = 遺失, F = 拾獲
   mode?: 'L' | 'F';
+  // 開啟模式來源（例如 'receive' 或 'transfer'）
+  openMode?: string | undefined;
 
   private labelMap: Record<string, Record<string, string>> = {
     L: {
@@ -129,6 +133,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
     private dropdownApiService: DropdownApiService,
     private readonly cpm11070Service: CPM11070Service,
     private readonly cdr: ChangeDetectorRef,
+    private readonly dropDownListService: DropDownListService,
   ) {
     super();
   }
@@ -167,10 +172,20 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
 
     // 載入物品類別下拉（頁面層容錯：若 filter API 失敗則抓全部再過濾）
     this.loadLostGoodsTypeOptions();
+    // 載入協助顧客領回處理人員下拉（共用人員清單）
+    try {
+      this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
+        this.ProcessingUserOptions = (options?.Data || []).map((item: any) => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
+        this.cdr.detectChanges();
+      });
+    } catch (e) {
+      this.ProcessingUserOptions = [];
+    }
     // 讀取從查詢頁傳入的 mode
     this.mode = (this.rowdata as any)?.mode as any;
     const seqId = (this.rowdata as any)?.SeqId ?? (this.rowdata as any)?.SEQ_ID;
     const openMode = (this.rowdata as any)?._openMode as string | undefined;
+    this.openMode = openMode;
     // 設定 DocType 預設值並鎖定（不可編輯）
     const defaultDoc = this.mode === 'F' ? 'F' : 'L';
     if (!seqId) {
@@ -183,7 +198,8 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
       try { this.dataForm.controls.SEQ_TYPE.disable(); } catch { }
       // OFF_DATE 在建立時不可編輯
       try { this.dataForm.controls.OFF_DATE.disable(); } catch { }
-      // MSG_DATE 在建立時不可編輯
+      // MSG_DATE 在建立時設為 null 並不可編輯
+      try { this.dataForm.patchValue({ MSG_DATE: null }); } catch { }
       try { this.dataForm.controls.MSG_DATE.disable(); } catch { }
       // 確保 OTHER_GOODS、PROCESSING_USER 在建立時預設為目前使用者
       try {
@@ -204,7 +220,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
         const d = res.Data;
         this.dataForm.patchValue({
           SEQ_ID: d.SEQ_ID,
-          REC_DATE: d.REC_DATE ? new Date(d.REC_DATE) : null,
+          REC_DATE: d.REC_DATE ? new Date(d.REC_DATE) : undefined,
           LOST_DATE: d.LOST_DATE ? new Date(d.LOST_DATE) : (d.FIND_DATE ? new Date(d.FIND_DATE) : new Date()),
           OFF_DATE: d.OFF_DATE ? new Date(d.OFF_DATE) : null,
           MSG_DATE: d.MSG_DATE ? new Date(d.MSG_DATE) : new Date(),
@@ -227,6 +243,15 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
           RECAPTION_PHONE: d.RECAPTION_PHONE,
           PROCESSING_USER: d.PROCESSING_USER,
         });
+        // 若為一般編輯模式，領回資訊區塊應為唯讀（disabled）
+        try {
+          if (this.isFormEditable) {
+            const recvKeys = ['RECEIVE_DATE', 'RECAPTION_NAME', 'RECAPTION_PHONE', 'PROCESSING_USER'];
+            recvKeys.forEach(k => {
+              try { this.dataForm.get(k)?.disable(); } catch { }
+            });
+          }
+        } catch { }
         // detail view: lock DocType control
         try { this.dataForm.controls.DocType.disable(); } catch { }
         // detail view: lock SEQ_TYPE (保持原值或設定為 '1' 若無)
@@ -298,6 +323,40 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
           } catch { }
           this.showReceiveInfo = true;
         }
+        // 如果是從列表「轉出」按鈕開啟，僅允許使用者設定轉出日期
+        if (openMode === 'transfer') {
+          try {
+            // 只允許 OFF_DATE 可編輯
+            const editableKeys = ['OFF_DATE'];
+            const controlKeys = Object.keys(this.dataForm.controls);
+            controlKeys.forEach(k => {
+              try {
+                const ctrl = this.dataForm.get(k);
+                if (!ctrl) return;
+                if (!editableKeys.includes(k)) {
+                  ctrl.disable();
+                } else {
+                  ctrl.enable();
+                }
+              } catch { }
+            });
+
+            // 若後端未帶 OFF_DATE，預設為目前時間；同時將狀態設為轉出('6')
+            const offCtrl = this.dataForm.get('OFF_DATE');
+            if (offCtrl && !offCtrl.value) {
+              offCtrl.setValue(new Date(), { emitEvent: true });
+            }
+            const seqTypeCtrl = this.dataForm.get('SEQ_TYPE');
+            if (seqTypeCtrl && seqTypeCtrl.value !== '6') {
+              seqTypeCtrl.setValue('6', { emitEvent: true });
+            }
+
+            // 設定 OFF_DATE 為必填
+            try { offCtrl?.setValidators([Validators.required]); offCtrl?.updateValueAndValidity(); } catch { }
+
+            this.showReceiveInfo = false;
+          } catch { }
+        }
       });
     }
   }
@@ -368,7 +427,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
       .subscribe({
         next: (res) => {
           if (res.Status === '0000') {
-            this.messageService.successBubble(res.Message || '已標記為已領回');
+            this.messageService.successBubble('領回成功');
             this.loading = false;
             this.onCancel();
           } else {
@@ -384,34 +443,34 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
       });
   }
 
-  onRebroadcast(): void {
-    const raw = this.dataForm.getRawValue();
-    const seqId = raw.SEQ_ID;
+  // onRebroadcast(): void {
+  //   const raw = this.dataForm.getRawValue();
+  //   const seqId = raw.SEQ_ID;
 
-    if (!seqId || seqId === '系統自動產生') {
-      this.messageService.errorBubble('尚未產生登錄編號，無法重新廣播');
-      return;
-    }
+  //   if (!seqId || seqId === '系統自動產生') {
+  //     this.messageService.errorBubble('尚未產生登錄編號，無法重新廣播');
+  //     return;
+  //   }
 
-    this.RebroadcastLoading = true;
-    // 點擊後先隱藏領回區塊
-    this.showReceiveInfo = false;
-    this.cpm11070Service.broadcastCPM11070({ SEQ_ID: String(seqId) })
-      .pipe(untilDestroyed(this), finalize(() => (this.RebroadcastLoading = false)))
-      .subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            this.messageService.successBubble(res.Message || '重新廣播成功');
-            this.onCancel();
-          } else {
-            const errMsg = (res.Data as unknown as string) || res.Message || '重新廣播失敗';
-            this.messageService.errorBubble(errMsg);
-            // 出錯時恢復顯示
-            this.showReceiveInfo = true;
-          }
-        },
-      });
-  }
+  //   this.RebroadcastLoading = true;
+  //   // 點擊後先隱藏領回區塊
+  //   this.showReceiveInfo = false;
+  //   this.cpm11070Service.broadcastCPM11070({ SEQ_ID: String(seqId) })
+  //     .pipe(untilDestroyed(this), finalize(() => (this.RebroadcastLoading = false)))
+  //     .subscribe({
+  //       next: (res) => {
+  //         if (res.Status === '0000') {
+  //           this.messageService.successBubble(res.Message || '重新廣播成功');
+  //           this.onCancel();
+  //         } else {
+  //           const errMsg = (res.Data as unknown as string) || res.Message || '重新廣播失敗';
+  //           this.messageService.errorBubble(errMsg);
+  //           // 出錯時恢復顯示
+  //           this.showReceiveInfo = true;
+  //         }
+  //       },
+  //     });
+  // }
 
   onSubmit(frm: FormGroup): void {
     if (this.onlyReceiveEditable) {
@@ -501,6 +560,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
         const updatePayload = {
           SEQ_ID: raw.SEQ_ID,
           LOCATION: locationLabel,
+          SEQ_TYPE: raw.SEQ_TYPE,
           OFF_DATE: raw.OFF_DATE,
           SERVICE_USER: raw.OTHER_GOODS,
           MSG_DATE: raw.MSG_DATE,
@@ -523,7 +583,14 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
           .subscribe({
             next: (res) => {
               if (res.Status === '0000') {
-                this.messageService.successBubble(res.Message || '修改成功');
+                // 根據開啟模式顯示不同成功訊息
+                if (this.openMode === 'receive') {
+                  this.messageService.successBubble('領回成功');
+                } else if (this.openMode === 'transfer') {
+                  this.messageService.successBubble('轉出成功');
+                } else {
+                  this.messageService.successBubble('修改成功');
+                }
                 this.onCancel();
               } else {
                 const errMsg = (res.Data as unknown as string) || res.Message || '修改失敗';
