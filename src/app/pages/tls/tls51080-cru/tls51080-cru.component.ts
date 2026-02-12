@@ -1,20 +1,20 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { apiOption } from '../../../shared/models/sys/sysb000.model';
-import { POS2034 } from '../../../shared/models/tls/tls000.model';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { ValidationService } from '@shared/service/validation.service';
+import { PanelModule } from 'primeng/panel';
 import { Tls51080Service } from '../../../service/api/tls/tls51080.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { ValidationService } from '@shared/service/validation.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { apiOption } from '../../../shared/models/sys/sysb000.model';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { POS2034 } from '../../../shared/models/tls/tls000.model';
 
 // 2.5.1.6 品牌設定作業  CRU
 @Component({
@@ -63,48 +63,33 @@ export class TLS51080CRUComponent extends BasicCruPageComponent<POS2034>
   }
 
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.unblockUi();
-      return;
-    }
-
     // 送出前去除org_id中/以後的部分
     if (frm.value.org_id) {
       frm.value.org_id = frm.value.org_id.split('/')[0];
     }
 
-    const formValue = frm.getRawValue();
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          console.log('insert', formValue);
-          this.tls51080Service.insertTLS51080(formValue).subscribe(() => {
-            this.messageService.successBubble('新增成功');
-            // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-            this.dataForm.reset(); // 重置表單
-          });
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          console.log('update', formValue);
-          this.tls51080Service.updateTLS51080(formValue).subscribe(() => {
-            // this.messageService.successBubble('更新成功');
-            this.onCancel(); // 儲存後，會返回列表
-          });
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    this.onSubmit(frm);
+    // 使用父類別的 handleSubmit 來處理驗證與泡泡訊息
+    this.handleSubmit(frm, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            const formValue = frm.getRawValue();
+            this.tls51080Service.insertTLS51080(formValue).subscribe(() => {
+              this.messageService.successBubble('新增成功');
+              this.dataForm.reset();
+            });
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            const formValue = frm.getRawValue();
+            this.tls51080Service.updateTLS51080(formValue).subscribe(() => {
+              this.onCancel();
+            });
+          }
+          break;
+      }
+    });
   }
 
   onClearForm() {
