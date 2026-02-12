@@ -3,12 +3,12 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
+import { Tls52010Service } from '@service/api/tls/tls52010.service';
 import { IQueryTLS56040Request, ITLS56040Data, Tls56040Service } from '@service/api/tls/tls56040.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, Column, formatDate } from '@shared/componentkit/table/table.model';
@@ -33,6 +33,7 @@ export const enum MVMStatus {
   templateUrl: './tls56040.component.html',
   standalone: true,
   imports: [
+    ProductAutocompleteComponent,
     MenubarComponent,
     ButtonComponent,
     AccordionModule,
@@ -44,7 +45,6 @@ export const enum MVMStatus {
     TableReportComponent,
     CommonModule,
     MultiSelectComponent,
-    DropdownTableComponent,
     CalendarRangeQuickComponent
   ],
 })
@@ -143,27 +143,6 @@ export class TLS56040Component extends BasicQueryPageComponent<ITLS56040Data> im
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
-    });
-  }
-  // 管理編號
-  suggestions: IQueryPOS2004DetailResponse[] = [];
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
-  ];
-  onAutoCompleteInputChange(event: Record<'label', string>) {
-    const body = {
-      VEN_No: '',
-      LOGO_No: '',
-      queryNo: event.label || '',
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'PLU_No', order: 1 }],
-    }
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
-        ...item,
-        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
-      }))];
     });
   }
   btnLoading = false;

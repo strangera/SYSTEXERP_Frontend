@@ -3,12 +3,12 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
+import { Tls52010Service } from '@service/api/tls/tls52010.service';
 import { IQueryTLS56050Request, ITLS56050Response, Tls56050Service } from '@service/api/tls/tls56050.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { Column, formatDateTime } from '@shared/componentkit/table/table.model';
@@ -36,8 +36,8 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     TableReportComponent,
     CommonModule,
     MultiSelectComponent,
-    DropdownTableComponent,
-    CalendarRangeQuickComponent
+    CalendarRangeQuickComponent,
+    ProductAutocompleteComponent
   ],
 })
 export class TLS56050Component extends BasicQueryPageComponent<ITLS56050Response> implements OnInit {
@@ -136,27 +136,6 @@ export class TLS56050Component extends BasicQueryPageComponent<ITLS56050Response
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
-    });
-  }
-  // 管理編號
-  suggestions: IQueryPOS2004DetailResponse[] = [];
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
-  ];
-  onAutoCompleteInputChange(event: Record<'label', string>) {
-    const body = {
-      VEN_No: '',
-      LOGO_No: '',
-      queryNo: event.label || '',
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'PLU_No', order: 1 }],
-    }
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
-        ...item,
-        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
-      }))];
     });
   }
   editDisabled(rowData: ITLS56050Response): boolean {

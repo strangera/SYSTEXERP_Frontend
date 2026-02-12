@@ -16,10 +16,7 @@
             [options]="poStatusOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.ODM_StatusList" [submitted]="submitted"></app-multi-select>
           <!-- 國際條碼/商品管理編號/廠商貨號 -->
-          <app-dropdown-table class="col-12" [showOverlay]="false" [control]="queryForm.controls.queryNo"
-            [submitted]="submitted" optionLabel="label" optionValue="PLU_No" [suggestions]="suggestions"
-            [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)">
-          </app-dropdown-table>
+          <app-product-autocomplete class="col-12" [control]="queryForm.controls.queryNo" [submitted]="submitted" />
           <!-- 廠商編號 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商編號/名稱" controlName="VEN_No"
             [options]="vendorOptions | async" optionLabel="label" optionValue="value"

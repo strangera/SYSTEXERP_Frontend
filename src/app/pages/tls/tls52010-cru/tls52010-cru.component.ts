@@ -6,9 +6,12 @@ import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000 } from '@service/system/sys1000.service';
 import { LogoAccorHosItem, Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
+import { IQueryPOS2004DetailRequest } from '@shared/biz-components/product-autocomplete/product-autocomplete.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmountWithDecimals } from '@shared/componentkit/table-report/table-report.model';
 import { PanelModule } from 'primeng/panel';
 import { debounceTime, finalize, forkJoin, map, withLatestFrom } from 'rxjs';
@@ -19,12 +22,10 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
-import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, formatAmount } from '../../../shared/componentkit/table/table.model';
 
 // 2.5.2.1  採購單維護作業 CRU
@@ -44,9 +45,9 @@ import { Column, formatAmount } from '../../../shared/componentkit/table/table.m
     InputNumberComponent,
     CalendarComponent,
     InputTextareaComponent,
-    TableComponent,
+    TableReportComponent,
     DialogComponent,
-    DropdownTableComponent,
+    ProductAutocompleteComponent,
     TranslateModule,
     AsyncPipe,
     TableEditComponent
@@ -232,7 +233,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   constructor(
     private readonly dropDownListService: DropDownListService,
     public readonly dropdown: DropdownApiService,
-    private readonly tls52010Service: Tls52010Service,
+    public readonly tls52010Service: Tls52010Service,
     private readonly cdr: ChangeDetectorRef
   ) { super(); }
 
@@ -474,21 +475,22 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   // 選擇商品相關
   dialogVisible = false;
   dialogQueryForm = this.formBuilder.group({
-    PLU_MagNo: ['', [Validators.maxLength(20)]], // 商品管理編號
+    queryNo: ['', [Validators.maxLength(20)]], // 商品管理編號
     PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
     CAT_LNo: [null], // 大分類代碼
     CAT_MNo: [{ value: null, disabled: true }], // 中分類代碼
     CAT_SNo: [{ value: null, disabled: true }], // 小分類代碼
-    pageSize: [20],
+    pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'PLU_MagNo', order: 1 }]],
+    SortBy: [[{ field: 'PLU_No', order: 1 }]],
   });
   totalRecords = 0;
   CAT_LNoOptions: IDropdownItem[] = [];
   CAT_MNoOptions: IDropdownItem[] = [];
   CAT_SNoOptions: IDropdownItem[] = [];
-  dialogData: IPOS2004DetailData[] = [];
-  selectedItemsDialog: IPOS2004DetailData[] = [];
+  dialogData: IQueryPOS2004DetailResponse[] = [];
+  dialogLastQueryBody: IQueryPOS2004DetailRequest | null = null;
+  selectedItemsDialog: IQueryPOS2004DetailResponse[] = [];
   dialogColumns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
@@ -545,9 +547,10 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       VEN_No: this.dataForm.controls.VEN_No.value,
       LOGO_No: this.dataForm.controls.LOGO_No.value,
     }
-    this.tls52010Service.queryPOS2004DetailByVenNo(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
+    this.tls52010Service.queryPOS2004Detail(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
       this.dialogData = response.Data;
       this.totalRecords = response.TotalCount;
+      this.dialogLastQueryBody = body;
     })
   }
   saveDialog() {
@@ -579,7 +582,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     });
     this.data = [
       ...this.data,
-      ...newItems
+      ...newItems as any
     ];
     this.calculateTotals();
     this.selectedItemsDialog = [];
@@ -689,25 +692,6 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
           this.onCancel();
         }
       });
-    });
-  }
-  suggestions: IQueryPOS2004DetailResponse[] = [];
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號 - 商品名稱', mainDataField: true },
-  ];
-  onAutoCompleteInputChange(event: Record<'label', string>) {
-    const body = {
-      VEN_No: this.dataForm.controls.VEN_No.value,
-      LOGO_No: this.dataForm.controls.LOGO_No.value,
-      queryNo: event.label || '',
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'PLU_No', order: 1 }],
-    }
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
-        ...item, label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
-      }))];
     });
   }
   ShortName? = '';

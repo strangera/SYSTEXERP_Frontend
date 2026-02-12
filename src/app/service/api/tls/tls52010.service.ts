@@ -1,6 +1,7 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 請確認你的 ApiResponse 介面路徑是否正確
+import { SortMeta } from 'primeng/api';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
 
@@ -106,10 +107,17 @@ export interface IPOS2004DetailData {
 
 /** 國際條碼/商品管理編號/廠商貨號查詢商品 (queryPOS2004Detail) 的請求介面 */
 export interface IQueryPOS2004DetailRequest {
-  VEN_No: string | null; // 廠商編號
-  queryNo: string; // 查詢編號 (國際條碼/商品管理編號/廠商貨號)
-  PLU_Name?: string; // 商品名稱 (查詢條件，可選)
-  LOGO_No: string | null; // LOGO代碼
+  pageSize?: number,
+  pageIndex?: number,
+  SortBy?: SortMeta[],
+  VEN_No: string | null,
+  queryNo?: string,
+  PLU_Name?: string,
+  LOGO_No: string | null,
+  HOS_No?: string,
+  CAT_LNo?: string,
+  CAT_MNo?: string,
+  CAT_SNo?: string
 }
 
 export interface IQueryPOS2004DetailResponse {
@@ -125,6 +133,7 @@ export interface IQueryPOS2004DetailResponse {
   PLU_SalePrc_UNI: number,
   PLU_SalePrc: number,
   PLU_TaxType: string,
+  NowHaveQty: number,
 
   POD_SubQty?: number,
   POD_BuyNet?: number,
@@ -134,18 +143,6 @@ export interface IQueryPOS2004DetailResponse {
   POD_BuyAmt?: number
   POD_SaleTax?: number
 }
-
-/** 查詢廠商所有商品 (queryPOS2004Detail_VEN_No) 的請求介面 */
-export interface IQueryPOS2004DetailByVenNoRequest {
-  VEN_No: string; // 廠商編號
-  PLU_MagNo?: string; // 商品管理編號 (查詢條件，可選)
-  PLU_Name?: string; // 商品名稱 (查詢條件，可選)
-  CAT_LNo?: string; // 大分類代碼 (查詢條件，可選)
-  CAT_MNo?: string; // 中分類代碼 (查詢條件，可選)
-  CAT_SNo?: string; // 小分類代碼 (查詢條件，可選)
-  LOGO_No: string; // LOGO代碼
-}
-
 
 /** 採購單明細資料介面 (用於 insert/update TLS52010 的 Details 陣列) */
 export interface IPODetail {
@@ -272,7 +269,21 @@ export class Tls52010Service {
    * @returns 包含 IPOS2004DetailData 陣列的 API 響應
    */
   queryPOS2004Detail(params: IQueryPOS2004DetailRequest): Observable<ApiResponse<IQueryPOS2004DetailResponse[]>> {
-    return this.http.post<ApiResponse<IQueryPOS2004DetailResponse[]>>(`${this.apiUrl}/queryPOS2004Detail`, params);
+    const body = {
+      ...params,
+      pageSize: params.pageSize || 30,
+      pageIndex: params.pageIndex || 1,
+      SortBy: params.SortBy || [{ field: 'PLU_No', order: 1 }],
+      VEN_No: params.VEN_No || '',
+      queryNo: params.queryNo || '',
+      PLU_Name: params.PLU_Name || '',
+      LOGO_No: params.LOGO_No || '',
+      HOS_No: params.HOS_No || '',
+      CAT_LNo: params.CAT_LNo || '',
+      CAT_MNo: params.CAT_MNo || '',
+      CAT_SNo: params.CAT_SNo || ''
+    }
+    return this.http.post<ApiResponse<IQueryPOS2004DetailResponse[]>>(`${this.apiUrl}/queryPOS2004Detail`, body);
   }
   /**
    * TLS56020 專用的商品查詢 API（國際條碼/商品管理編號/廠商貨號）
@@ -280,14 +291,6 @@ export class Tls52010Service {
    */
   queryPOS2004Detail_TLS56020(params: any): Observable<ApiResponse<IQueryPOS2004DetailResponse[]>> {
     return this.http.post<ApiResponse<IQueryPOS2004DetailResponse[]>>(`${this.apiUrl}/queryPOS2004Detail_TLS56020`, params);
-  }
-  /**
-   * 查詢廠商所有商品 (POS2004 詳細資料)
-   * @param params 查詢條件 (VEN_No, LOGO_No, PLU_MagNo, PLU_Name, CAT_LNo, CAT_MNo, CAT_SNo)
-   * @returns 包含 IPOS2004DetailData 陣列的 API 響應
-   */
-  queryPOS2004DetailByVenNo(params: IQueryPOS2004DetailByVenNoRequest): Observable<ApiResponse<IPOS2004DetailData[]>> {
-    return this.http.post<ApiResponse<IPOS2004DetailData[]>>(`${this.apiUrl}/queryPOS2004Detail_VEN_No`, params);
   }
   /**
    * 查詢 POS2017 (採購單明細) 資料表
