@@ -48,7 +48,7 @@ export class SYSBR10CRUComponent extends BasicCruPageComponent<QuerySYSBR10Respo
 
   // 3. 使用 Signal 管理明細資料
   detailList = signal<QuerySYSBR10DetailResponse[]>([]);
-
+  originalDetailList = signal<QuerySYSBR10DetailResponse[]>([]);
   dataForm = this.formBuilder.nonNullable.group({
     Pub_StartDate: [new Date(), Validators.required],
     Pub_EndDate: [null as Date | null, Validators.required],
@@ -90,10 +90,13 @@ export class SYSBR10CRUComponent extends BasicCruPageComponent<QuerySYSBR10Respo
 
   ngOnInit(): void {
     this.initializePage('SYSBR10', this.dataForm);
-
+    this.initData();
+  }
+  initData() {
     if (!this.isFormCreateable && this.rowdata) {
-      this.loading = true;
 
+      this.loading = true;
+      this.dataForm.patchValue(this.rowdata as any);
       // 處理特殊類型禁用
       if (this.dataForm.get('Pub_Type')?.value === '3') {
         this.dataForm.get('Pub_Type')?.disable();
@@ -118,6 +121,7 @@ export class SYSBR10CRUComponent extends BasicCruPageComponent<QuerySYSBR10Respo
         )
         .subscribe(res => {
           this.detailList.set(res?.Data ?? []);
+          this.originalDetailList.set(res?.Data ?? []);
         });
     }
   }
@@ -173,5 +177,14 @@ export class SYSBR10CRUComponent extends BasicCruPageComponent<QuerySYSBR10Respo
           }
         });
     });
+  }
+
+  onClear() {
+    if (this.isFormCreateable) {
+      this.detailList.set([]);
+      this.dataForm.reset();
+    } else {
+      this.initData();
+    }
   }
 }

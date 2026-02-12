@@ -27,6 +27,6 @@
   <app-table-report dataKey="SYS_Type" [data]="data" [columns]="columns" [expansionColumns]="subColumns"
     (edit)="onEdit($event)" (detail)="onDetail($event)" (delete)="onDelete($event)" [totalRecords]="totalRecords"
     [loading]="loading" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
-    expansionDataKey="Details" [lastQueryBody]="lastQuery" [showDelete]="false"
+    expansionDataKey="Details" [lastQueryBody]="lastQuery" [showDelete]="false" [lazy]="false"
     [queryFunction]="sysbp00Service.querySYSBP00.bind(sysbp00Service)"></app-table-report>
 </div>

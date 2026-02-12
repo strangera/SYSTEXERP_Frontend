@@ -25,7 +25,7 @@
   </div>
   <div *ngIf="IsPrint" class="flex gap-2 py-2">
     <div *ngIf="expansionColumns.length > 0 && IsPrint" class="flex align-items-center">
-      <p-button [icon]="'pi pi-angle-up'" (onClick)="toggleExpandCollapse()" [label]="'全部收合'" text />
+      <p-button styleClass="p-2" label="全部收合" icon="pi pi-angle-up" text (click)="toggleExpandCollapse()"></p-button>
     </div>
     <div *ngIf="showExcel" class="flex gap-2 align-items-center">
       <p-button *ngIf="showExcelExport" label="匯出excel範本" severity="success" [icon]="

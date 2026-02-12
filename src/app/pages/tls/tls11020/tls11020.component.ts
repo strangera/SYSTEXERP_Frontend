@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
@@ -20,9 +20,10 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
 import { TLS11020Service } from '../../../service/api/tls/tls11020.service';
 import { AccountingaccountService } from '../../../service/basic/queryGLS1005.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 @Component({
   selector: 'app-tls11020',
@@ -40,7 +41,7 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
     TableReportComponent,
   ],
 })
-export class TLS11020Component extends BasicQueryPageComponent<any> {
+export class TLS11020Component extends BasicQueryPageComponent<any> implements OnInit {
   data: any[] = [];
   selectedItems: any[] = [];
   totalRecords = 0;
@@ -52,16 +53,16 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
   // 給 table-report 用：由它內部呼叫（lazy 分頁/排序用）
   queryTLS11020Fn = (body: any) => this.tls11020Service.queryTLS11020(body);
   /** 023 這筆不允許勾選、不允許編輯 */
-private isBlockedRow = (row: any): boolean => String(row?.CAP_Item ?? '').trim() === '023';
+  private isBlockedRow = (row: any): boolean => String(row?.CAP_Item ?? '').trim() === '023';
 
-/** 給 app-table-report 用：控制 checkbox 是否可勾 */
-isRowSelectable = (row: any): boolean => !this.isBlockedRow(row);
+  /** 給 app-table-report 用：控制 checkbox 是否可勾 */
+  isRowSelectable = (row: any): boolean => !this.isBlockedRow(row);
 
-/** 給 app-table-report 用：控制「編輯」按鈕 disabled */
-editDisabled = (row: any): boolean => this.isBlockedRow(row);
+  /** 給 app-table-report 用：控制「編輯」按鈕 disabled */
+  editDisabled = (row: any): boolean => this.isBlockedRow(row);
 
-// 如果你也想讓「查看/明細」一起鎖：
-// detailDisabled = (row: any): boolean => this.isBlockedRow(row);
+  // 如果你也想讓「查看/明細」一起鎖：
+  // detailDisabled = (row: any): boolean => this.isBlockedRow(row);
 
 
   // 下拉
@@ -208,87 +209,20 @@ editDisabled = (row: any): boolean => this.isBlockedRow(row);
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
-      this.loading = true;
-      this.messageService.blockUi();
-
       const raw = form.getRawValue();
       const payload = this.buildApiPayload(raw);
 
-      // 給 table-report 使用（保留最後一次查詢 body）
       this.lastQueryBody = { ...payload };
-
-      this.tls11020Service.queryTLS11020(payload).subscribe({
+      this.tls11020Service.queryTLS11020(payload).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe({
         next: (res: any) => {
           if (res.Status === '0000') {
             this.data = res?.Data || [];
             this.totalRecords = res?.TotalCount || this.data.length;
-
-            // ✅ 建議存「raw form」(還原 UI 更準)
             this.queryStateService.setQueryState(this.ProgNo, raw);
           }
         },
-        error: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
       });
     });
-  }
-
-  /** Table lazy event：把頁碼/筆數/排序寫回 form，然後查詢 */
-  override onLazyLoadData(event: any, form: FormGroup): void {
-    const evPageIndex =
-      Number.isFinite(event?.pageIndex)
-        ? Number(event.pageIndex)
-        : Number.isFinite(event?.first) && Number.isFinite(event?.rows)
-          ? Math.floor(Number(event.first) / Number(event.rows)) + 1
-          : undefined;
-
-    const evPageSize =
-      Number.isFinite(event?.pageSize)
-        ? Number(event.pageSize)
-        : Number.isFinite(event?.rows)
-          ? Number(event.rows)
-          : undefined;
-
-    const nextSort = Array.isArray(event?.SortBy)
-      ? event.SortBy
-      : Array.isArray(event?.multiSortMeta)
-        ? event.multiSortMeta
-        : form.value?.SortBy ?? [];
-
-    const currSortSig = JSON.stringify(form.value?.SortBy ?? []);
-    const nextSortSig = JSON.stringify(nextSort ?? []);
-
-    const nextPageIndex =
-      currSortSig !== nextSortSig ? 1 : (evPageIndex ?? form.value?.pageIndex ?? 1);
-
-    const nextPageSize = evPageSize ?? form.value?.pageSize ?? 30;
-
-    form.patchValue(
-      {
-        pageIndex: nextPageIndex,
-        pageSize: nextPageSize,
-        SortBy: nextSort ?? [],
-      },
-      { emitEvent: false }
-    );
-
-    const sig = JSON.stringify({
-      pageIndex: form.value?.pageIndex,
-      pageSize: form.value?.pageSize,
-      SortBy: form.value?.SortBy,
-    });
-
-    if (sig === this.lastQuerySig) return;
-    this.lastQuerySig = sig;
-
-    if (this.lazyTimer) clearTimeout(this.lazyTimer);
-    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
   }
 
   onDelete(selectedItems: any[]) {
@@ -306,44 +240,6 @@ editDisabled = (row: any): boolean => this.isBlockedRow(row);
       },
       error: () => this.messageService.errorBubble('刪除失敗'),
     });
-  }
-
-
-  override onEdit(row: any): void {
-    if (!this.hasPermission('30')) return;
-    this.navigateWithState(CRUDStatus.Edit, row);
-  }
-
-  override onDetail(row: any): void {
-    if (!this.hasPermission('20')) return;
-    this.navigateWithState(CRUDStatus.Read, row);
-  }
-
-  onClear(): void {
-    const form = this.queryForm;
-
-    const paging = {
-      pageIndex: form.get('pageIndex')?.value ?? 1,
-      pageSize: form.get('pageSize')?.value ?? 20,
-      SortBy: form.get('SortBy')?.value ?? [{ field: 'CAP_Item', order: 1 }],
-    };
-
-    form.reset();
-
-    form.get('CAP_Item')?.setValue('');
-    form.get('CAP_Name')?.setValue('');
-    form.get('CAP_BaseRate')?.setValue('');
-    form.get('CAP_Remark')?.setValue('');
-    (form.get('CAP_Type') as any)?.setValue([]);
-
-    form.patchValue(paging, { emitEvent: false });
-
-    this.submitted = false;
-    form.markAsPristine();
-    form.markAsUntouched();
-
-    const cleared = form.getRawValue();
-    this.queryStateService.setQueryState(this.ProgNo, cleared);
   }
 
   getLabelFromOptions(value: any, options: any[]): string {

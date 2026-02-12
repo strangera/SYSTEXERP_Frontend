@@ -13,6 +13,16 @@ export class Tls2f010Service {
 
   constructor(private http: HttpClient) { }
   queryTLS2F010(params: any): Observable<any> {
+    // Defensive: ensure DEC_YM is at most 6 digits (YYYYMM). Accept YYYYMMDD and trim.
+    try {
+      if (params && params.DEC_YM !== undefined && params.DEC_YM !== null) {
+        const s = String(params.DEC_YM).trim();
+        const m = s.match(/^(\d{6})/);
+        params.DEC_YM = m ? m[1] : '';
+      }
+    } catch (e) {
+      // ignore
+    }
     return this.http.post<any>(`${this.apiUrl}/QueryTLS2F010`, params);
   }
   queryTLS2F010_TLT_No(params: any): Observable<any> {

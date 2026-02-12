@@ -138,7 +138,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     VEN_No: [null as string | null],
     DateFrom: [null as Date | null],
     DateTo: [null as Date | null],
-    pageSize: [20],
+    pageSize: [30],
     pageIndex: [1],
     SortBy: [[{ field: 'VEN_No', order: 1 }]],
   });
@@ -588,7 +588,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       VEN_No: null,
       DateFrom: null,
       DateTo: null,
-      pageSize: 20,
+      pageSize: 30,
       pageIndex: 1,
       SortBy: [{ field: 'VEN_No', order: 1 }],
     });
@@ -644,7 +644,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       DateFrom: formValue.DateFrom ? (formValue.DateFrom as Date).toISOString() : undefined,
       DateTo: formValue.DateTo ? (formValue.DateTo as Date).toISOString() : undefined,
       PageIndex: formValue.pageIndex ?? 1,
-      PageSize: formValue.pageSize ?? 20,
+      PageSize: formValue.pageSize ?? 30,
       SortBy: sortBy,
     };
 

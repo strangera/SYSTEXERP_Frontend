@@ -729,4 +729,17 @@ export class DropdownApiService {
       shareReplay({ bufferSize: 1, refCount: true })
     );
   }
+
+  // 查詢CPM11030 服務台位置編號下拉選單
+  queryCSS1001(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryCSS1001_DropDownList', 'No', 'Name').pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+  // 查詢CPM11030 設備名稱下拉選單
+  queryCSS2001(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryCSS2001_DropDownList', 'No', 'Name').pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
 }

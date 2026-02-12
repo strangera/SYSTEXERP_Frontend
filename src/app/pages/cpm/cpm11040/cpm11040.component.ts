@@ -7,6 +7,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { finalize, map, Observable } from 'rxjs';
 import { CPM11010Service } from '../../../service/api/cpm/cpm11020.service';
 import { CPM11040Data, CPM11040Service } from '../../../service/api/cpm/cpm11040.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { getSYS1000Options } from '../../../service/system/sys1000.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -39,7 +40,7 @@ export class CPM11040Component extends BasicQueryPageComponent<CPM11040Data> imp
     CertNo: ['', [Validators.maxLength(20)]], // 證件編號
     DeviceID: ['', [Validators.maxLength(10)]], // 設備編號
     DeviceName: [null], // 設備名稱
-    LoanUserName: ['', [Validators.maxLength(10)]], // 出借處理人員
+    LoanUserName: [null], // 出借處理人員
     ...createPaginationConfig([{ field: 'LoanDate', order: -1 }]), // 分頁和排序參數
   });
 
@@ -67,6 +68,9 @@ export class CPM11040Component extends BasicQueryPageComponent<CPM11040Data> imp
     )
   );
 
+  // 出借處理人員下拉選項 - 從 API 載入
+  loanUserOptions = this.dropdownApiService.queryTblUser();
+
   // 證件類型選項 (從 SYS1000 取得)
   certTypeOptions = getSYS1000Options('Cert_Type').map(opt => ({ ...opt, label: `${opt.value}-${opt.label}` }));
 
@@ -89,7 +93,8 @@ export class CPM11040Component extends BasicQueryPageComponent<CPM11040Data> imp
 
   constructor(
     private readonly cpm11040Service: CPM11040Service,
-    private readonly cpm11010Service: CPM11010Service
+    private readonly cpm11010Service: CPM11010Service,
+    private readonly dropdownApiService: DropdownApiService
   ) {
     super();
   }

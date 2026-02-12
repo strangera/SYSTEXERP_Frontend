@@ -106,13 +106,18 @@
             [submitted]="submitted"
             [showClear]="true"
           ></app-dropdown>
-          <app-input-text
+          <app-dropdown
             class="col-12 md:col-6 lg:col-4"
             label="出借處理人員"
             controlName="LoanUserName"
+            [options]="loanUserOptions | async"
+            optionLabel="label"
+            optionValue="value"
             [control]="queryForm.controls.LoanUserName"
             [submitted]="submitted"
-          ></app-input-text>
+            [showClear]="true"
+            [filter]="true"
+          ></app-dropdown>
         </div>
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"

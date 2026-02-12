@@ -2,7 +2,6 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
-
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
@@ -80,13 +79,12 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
-
-          <div>
-            <div class="grid justify-content-end gap-2 m-0 mt-2 pt-3">
-              <app-button btnType="clear" [form]="queryForm"></app-button>
-              <app-button btnType="query" [loading]="loading"></app-button>
-            </div>
-          </div>
+        </div>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>

@@ -51,9 +51,9 @@ export class FIN63050Component extends BasicQueryPageComponent<Fin63050ListData>
   lastQuery: QueryFin63050Request | null = null;
   totalRecords = 0;
   columns: ReportColumn[] = [
-    { field: 'TotalCount', header: '總筆數', visible: false },
-    { field: 'CanPickupYn', header: '支票是否可領取', visible: false, format: (v) => getSYS1000('YES_NO', v) },
-    { field: 'RowNo', header: '序號', visible: false },
+    // { field: 'TotalCount', header: '總筆數', visible: false },
+    // { field: 'CanPickupYn', header: '支票是否可領取', visible: false, format: (v) => getSYS1000('YES_NO', v) },
+    // { field: 'RowNo', header: '序號', visible: false },
     { field: 'CheckNo', header: '票據號碼' },
     { field: 'VendorNo', header: '廠客代號' },
     { field: 'VEN_Name', header: '廠客名稱', visible: false },

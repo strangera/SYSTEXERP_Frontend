@@ -1,16 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 // Shared
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Sysb100m } from '../../../shared/models/sys/sysb000.model';
-import { Sysb100Service } from '../../../service/api/sys/sysb100.service';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { Sysb100Service } from '../../../service/api/sys/sysb100.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Sysb100m } from '../../../shared/models/sys/sysb000.model';
 
 @Component({
   selector: 'app-sysb100',
@@ -140,47 +140,53 @@ export class SYSB100Component
 
   // 刪除項目
   onDelete(data: Sysb100m | Sysb100m[]): void {
-    console.log('Delete data:', JSON.stringify(data, null, 2));
+    this.messageService.confirm({
+      message: `是否確認刪除選中的公司基本資料?`,
+      header: `確認刪除`,
+      accept: () => {
+        console.log('Delete data:', JSON.stringify(data, null, 2));
 
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {
-      console.error('No items to delete');
-      this.messageService.errorBubble('無法刪除：沒有選中的項目');
-      return;
-    }
-
-    // 收集所有有效的 ID
-    const idList = items
-      .filter((item) => item && item.id != null && item.id !== undefined)
-      .map((item) => item.id);
-
-    if (idList.length === 0) {
-      console.error('No valid IDs to delete');
-      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
-      return;
-    }
-
-    const deleteBody = {
-      idList: idList, // 符合 API 的 idList 格式
-    };
-    this.sysb100Service.deleteSYSB100(deleteBody).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-        } else {
-          console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        const items = Array.isArray(data) ? data : [data];
+        if (items.length === 0) {
+          console.error('No items to delete');
+          this.messageService.errorBubble('無法刪除：沒有選中的項目');
+          return;
         }
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.messageService.errorBubble('刪除失敗');
-      },
-      complete: () => {
-        this.onSubmit(this.queryForm);
+
+        // 收集所有有效的 ID
+        const idList = items
+          .filter((item) => item && item.id != null && item.id !== undefined)
+          .map((item) => item.id);
+
+        if (idList.length === 0) {
+          console.error('No valid IDs to delete');
+          this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+          return;
+        }
+
+        const deleteBody = {
+          idList: idList, // 符合 API 的 idList 格式
+        };
+        this.sysb100Service.deleteSYSB100(deleteBody).subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble('選中項目刪除成功');
+            } else {
+              console.error('API error:', response.Status, response.Message);
+              this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+            }
+          },
+          error: (err: string) => {
+            console.error('API error:', err);
+            this.messageService.errorBubble('刪除失敗');
+          },
+          complete: () => {
+            this.onSubmit(this.queryForm);
+          },
+        });
+
+        this.selectedItems = [];
       },
     });
-
-    this.selectedItems = [];
   }
 }

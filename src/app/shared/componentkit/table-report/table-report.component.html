@@ -17,12 +17,12 @@
       [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event"
       [selectedItems]="selectedItems" [tableKey]="tableKey" [showCaption]="showCaption" [showFilter]="showFilter"
       [showReportMode]="showReportMode" [showDelete]="showDelete" [showExcel]="showExcel"
-      [showExcelExport]="showExcelExport" [showExcelImport]="showExcelImport" [pageOrientation]="pageOrientation"
-      [pageSizeSetting]="pageSizeSetting" [showCustomExcelImport]="showCustomExcelImport"
-      [exportExcelLoading]="exportExcelLoading" [showPage]="false" (delete)="delete.emit($event)"
-      (exportExcel)="exportExcel.emit()" (importExcel)="importExcel.emit($event)" [totalRecords]="dt.totalRecords"
-      [apiUrl]="apiUrl" [DataKeyName]="DataKeyName" [PrintRemark]="PrintRemark" [customReport]="customReport"
-      (exportEvent)="exportEvent.emit($event)" [Conditions]="Conditions">
+      [expansionColumns]="expansionColumns" [expandedRows]="expandedRows" [showExcelExport]="showExcelExport"
+      [showExcelImport]="showExcelImport" [pageOrientation]="pageOrientation" [pageSizeSetting]="pageSizeSetting"
+      [showCustomExcelImport]="showCustomExcelImport" [exportExcelLoading]="exportExcelLoading" [showPage]="false"
+      (delete)="delete.emit($event)" (exportExcel)="exportExcel.emit()" (importExcel)="importExcel.emit($event)"
+      [totalRecords]="dt.totalRecords" [apiUrl]="apiUrl" [DataKeyName]="DataKeyName" [PrintRemark]="PrintRemark"
+      [customReport]="customReport" (exportEvent)="exportEvent.emit($event)" [Conditions]="Conditions">
       <header>
         <ng-content select="header"></ng-content>
       </header>
@@ -236,12 +236,7 @@
     </tr>
   </ng-template>
   <ng-template pTemplate="summary" *ngIf="showSummary">
-    <div class="flex align-items-center justify-content-between p-2">
-      <div [style.min-width.px]="150" class="flex align-items-center">
-        <span *ngIf="selectedItems.length" [@fadeInOut] class="block" style="line-height: normal;">
-          已選擇 {{ selectedItems.length }} 筆
-        </span>
-      </div>
+    <div class="flex align-items-center justify-content-end p-2">
       <div class="flex align-items-center">
         <span [pTooltip]="'已載入筆數 ' + data.length">
           總筆數: {{ totalRecords }} 筆

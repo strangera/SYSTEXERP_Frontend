@@ -49,7 +49,7 @@
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear" />
+          <app-button btnType="clear" [form]="queryForm" />
           <app-button btnType="query" [loading]="loading" />
         </div>
       </form>
@@ -58,10 +58,9 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="TLS56010" [data]="data" [columns]="columns" [showCheckBox]="false" dataKey="id" [showSort]="true"
-    [multiSortMeta]="queryForm.value.SortBy || [{ field: 'PLU_MagNo', order: 1 }]" [totalRecords]="totalRecords"
-    [rows]="30" [lazy]="true" [loading]="loading"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+  <app-table tableKey="TLS56010" [data]="filteredData" [columns]="columns" [showCheckBox]="false" dataKey="id"
+    [showSort]="true" [multiSortMeta]="queryForm.value.SortBy || [{ field: 'PLU_MagNo', order: 1 }]"
+    [totalRecords]="totalRecords" [rows]="30" [lazy]="true" [loading]="loading" (lazyLoadData)="onTableLazy($event)"
     [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
     [showManage]="false" [showDelete]="false">
   </app-table>

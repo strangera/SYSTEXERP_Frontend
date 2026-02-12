@@ -34,5 +34,5 @@
     [addButton]="addButton" [lastQueryBody]="lastQueryBody" [showDelete]="false" [showReportMode]="false"
     [showCheckBox]="true" [showDetail]="false" [showEdit]="false" [showManage]="true" [loading]="loading"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-    [queryFunction]="tls2h010Service.queryTLS2H010.bind(tls2h010Service)"></app-table-report>
+    [queryFunction]="queryWithSort.bind(this)"></app-table-report>
 </div>
