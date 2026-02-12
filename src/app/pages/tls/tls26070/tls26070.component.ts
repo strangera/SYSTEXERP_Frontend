@@ -211,7 +211,9 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
           this.setColumns(frm.value.tax);
           this.data = response.Data.QueryData;
           const allData = response.Data.AllData;
-          this.footerData = Array.isArray(allData) && allData.length > 0 ? allData[0] : null;
+          this.footerData = Array.isArray(allData) && allData.length > 0
+            ? { ...allData[0], talent_id: '' }
+            : null;
           this.totalRecords = response.TotalCount;
           this.lastQueryBody = payload;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
