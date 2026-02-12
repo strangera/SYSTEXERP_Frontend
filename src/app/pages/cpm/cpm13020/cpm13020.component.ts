@@ -172,34 +172,7 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
       }
     });
 
-    // ✅ 還原查詢條件
-    const saved = this.queryStateService.getQueryStateValue('CPM13020');
-    if (saved) {
-      const formValue = saved.formValue ?? saved; // 兼容舊版只存 form 的情況
 
-      if (formValue) {
-        this.queryForm.patchValue(formValue, { emitEvent: false });
-
-        // 還原 reportMode（保險起見，再同步一次）
-        const mode = formValue.reportMode === 'POS' ? 'POS' : 'ALL';
-        this.reportMode = mode;
-      }
-
-      // 還原排序
-      if (Array.isArray(saved.currentSortBy) && saved.currentSortBy.length) {
-        this._currentSortBy = saved.currentSortBy;
-      } else if (formValue?.SortBy) {
-        this._currentSortBy = this.normalizeSortMeta(formValue.SortBy);
-      } else {
-        this._currentSortBy = this.defaultSort;
-      }
-
-      // 還原 lastQueryBody
-      this.lastQueryBody = saved.lastQueryBody ?? null;
-
-      // 自動查一次
-      Promise.resolve().then(() => this.onSubmit(this.queryForm));
-    }
   }
 
   // 解析 API 回傳的總計物件

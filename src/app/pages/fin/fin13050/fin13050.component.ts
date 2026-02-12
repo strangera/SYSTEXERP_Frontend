@@ -1,11 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, OnInit } from '@angular/core';
-import {
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { finalize } from 'rxjs';
 
@@ -23,8 +18,8 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 interface SortMeta { field: string; order: 1 | -1 }
 
@@ -39,12 +34,12 @@ interface SortMeta { field: string; order: 1 | -1 }
     ReactiveFormsModule,
     InputTextComponent,
     CalendarRangeComponent,
-    TableComponent,
     MultiSelectComponent,
     TranslateModule,
     CalendarComponent,
     InputNumberRangeComponent,
     YearMonthComponent,
+    TableReportComponent,
   ],
   templateUrl: './fin13050.component.html',
   styleUrls: ['./fin13050.component.scss'],
@@ -52,11 +47,9 @@ interface SortMeta { field: string; order: 1 | -1 }
 export class FIN13050Component extends BasicQueryPageComponent<any> implements OnInit {
   totalRecords = 0;
   data: any[] = [];
+  selectedItems: any[] = [];
 
-  private vendorMap: Record<
-    string,
-    { VEN_No: string; VEN_Name: string; VEN_Uniform: string }
-  > = {};
+  private vendorMap: Record<string, { VEN_No: string; VEN_Name: string; VEN_Uniform: string }> = {};
 
   // 下拉/多選選項
   PUR_VoucherTypeOptions: any[] = [];
@@ -65,31 +58,24 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
   PUR_DiscNoOptions: { label: string; value: string }[] = [];
   typeOptions: { label: string; value: string }[] = [];
   SYS_ORIGINOptions: { label: string; value: string }[] = [];
-  private sysOriginMap: Record<string, string> = {};
   vendorOptions: any[] = [];
 
-  /** 預設排序（清除 / 無 SortBy 時使用） */
-  private readonly defaultSort: SortMeta[] = [
-    { field: 'PUR_RepYYYYMM', order: 1 },
-  ];
+  /** 預設排序 */
+  readonly defaultSort: SortMeta[] = [{ field: 'PUR_RepYYYYMM', order: 1 }];
 
-  /** 還原查詢條件用：目前排序＋最後一次查詢 payload */
-  private _currentSortBy: SortMeta[] = this.defaultSort;
-  private lastQueryBody: any = null;
+  /** table-report：最後查詢 body（table-report 會用這個去做 lazy / sort / loadMore） */
+  lastQueryBody: any = null;
 
-  private makeRowKey(row: any): string {
-    const no = row?.PUR_GUINo ?? '';
-    const dt = row?.PUR_GUIDate ?? '';
-    return `${no}#${dt}`;
-  }
+  /** table-report 需要：提供 queryFunction (Observable) */
+  queryFIN13050Fn = (body: any) => this.fin13050Service.queryFIN13050(body);
 
   // ✅ Voucher_No 有值的資料不可勾選（無法刪除）
-  isRowSelectable = (row: any): boolean => {
-    // 有傳票號碼 => 不可選
-    return !row?.Voucher_No;
-  };
+  isRowSelectable = (row: any): boolean => !row?.Voucher_No;
 
-  // ===== 表單：全面改成後端欄位命名 =====
+  editDisabled = (row: any): boolean => !this.isRowSelectable(row);
+  detailDisabled = (row: any): boolean => !this.isRowSelectable(row);
+
+  // ===== 表單 =====
   queryForm = this.formBuilder.group({
     ...createPaginationConfig([
       { field: 'PUR_GUINo', order: 1 } as any,
@@ -97,12 +83,11 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
     ]),
 
     PUR_VoucherType: [],
-    PUR_GUINo: [, [Validators.maxLength(10)]],
+    PUR_GUINo: [null as any, [Validators.maxLength(10)]],
 
     PUR_GUIDate_Start: [],
     PUR_GUIDate_End: [],
 
-    // ✅ 這兩個改型別（重點）
     PUR_GUIDate_YYYYMM: [null as Date | null],
     PUR_RepYYYYMM: [null as Date | null],
 
@@ -120,10 +105,10 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
     PUR_DiscNo: [],
     PUR_Type: [],
     SYS_ORIGIN: [],
-    Source_Doc_No: [, [Validators.maxLength(14)]],
-    Voucher_No: [, [Validators.maxLength(11)]],
+    Source_Doc_No: [null as any, [Validators.maxLength(14)]],
+    Voucher_No: [null as any, [Validators.maxLength(11)]],
     SAL_Type: [],
-    PUR_Remark: [, [Validators.maxLength(100)]],
+    PUR_Remark: [null as any, [Validators.maxLength(100)]],
 
     CRT_USR_Name: [],
     CRT_Date_Start: [],
@@ -133,30 +118,24 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
     UPD_Date_End: [],
   });
 
-
-  // ===== Table 欄位：用後端回傳欄位 =====
+  // ===== Table 欄位 =====
   columns: any[] = [
     { field: 'PUR_VoucherType', header: '發票格式', visible: true },
     { field: 'PUR_GUINo', header: '發票號碼', visible: true },
-    {
-      field: 'PUR_GUIDate',
-      header: '發票日期',
-      visible: true,
-      format: this.formatDateTime,
-    },
+    { field: 'PUR_GUIDate', header: '發票日期', visible: true, format: (v: any) => this.formatDateTime(v) },
     { field: 'PUR_GUIDate_YYYYMM', header: '資料所屬年月', visible: true },
     { field: 'PUR_RepYYYYMM', header: '申報年月', visible: true },
     { field: 'PUR_VenUniform', header: '廠商統編', visible: true },
-    { field: 'PUR_Amt', header: '發票總金額', visible: true, format: this.money },
-    { field: 'PUR_Net', header: '發票未稅金額', visible: true, format: this.money },
-    { field: 'PUR_Tax', header: '發票稅額', visible: true, format: this.money },
+    { field: 'PUR_Amt', header: '發票總金額', visible: true, format: (v: any) => this.money(v) },
+    { field: 'PUR_Net', header: '發票未稅金額', visible: true, format: (v: any) => this.money(v) },
+    { field: 'PUR_Tax', header: '發票稅額', visible: true, format: (v: any) => this.money(v) },
     { field: 'PUR_DirectTypeDesc', header: '發票用途', visible: true },
     { field: 'PUR_TaxTypeDesc', header: '課稅別', visible: true },
     { field: 'PUR_DiscNoDesc', header: '扣抵代號', visible: true },
     { field: 'PUR_TypeDesc', header: '類別區分', visible: true },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
-    { field: 'SYS_ORIGIN', header: '系統別', visible: true, format: (v: string) => this.sysOriginMap[v] ?? v },
+    { field: 'SAL_Type', header: '系統別', visible: true },
     { field: 'PUR_Remark', header: '備註', visible: true },
   ];
 
@@ -194,7 +173,6 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
         const m = Number(m2[2]) - 1;
         return isFinite(y) && isFinite(m) ? new Date(y, m, 1) : null;
       }
-
       return null;
     };
 
@@ -215,7 +193,6 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
       let evenMonth = month % 2 === 0 ? month : month + 1;
       if (evenMonth > 12) evenMonth = 12;
 
-      // FIN13050 的 PUR_RepYYYYMM 目前是 Date 型態（你也有 normalizeMonthControl）
       this.queryForm.patchValue(
         { PUR_RepYYYYMM: new Date(year, evenMonth - 1, 1) },
         { emitEvent: false },
@@ -243,7 +220,10 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
       }));
     });
 
-    this.fin13050Service.querySYS1000DropDownList('PUR_DirectType').subscribe((res) => {
+    // ⚠️ 這裡用 any 轉型，避免你現在遇到的 TS2345（string 不能給 null|undefined）
+    const sys1000 = (type: string) => (this.fin13050Service as any).querySYS1000DropDownList(type);
+
+    sys1000('PUR_DirectType').subscribe((res: any) => {
       const list = res?.Data ?? [];
       this.directTypeOptions = list.map((x: any) => ({
         value: String(x.No),
@@ -251,7 +231,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
       }));
     });
 
-    this.fin13050Service.querySYS1000DropDownList('PUR_TaxType').subscribe((res) => {
+    sys1000('PUR_TaxType').subscribe((res: any) => {
       const list = res?.Data ?? [];
       this.taxTypeOptions = list.map((x: any) => ({
         value: String(x.No),
@@ -259,7 +239,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
       }));
     });
 
-    this.fin13050Service.querySYS1000DropDownList('PUR_DiscNo').subscribe((res) => {
+    sys1000('PUR_DiscNo').subscribe((res: any) => {
       const list = res?.Data ?? [];
       this.PUR_DiscNoOptions = list.map((x: any) => ({
         value: String(x.No),
@@ -267,7 +247,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
       }));
     });
 
-    this.fin13050Service.querySYS1000DropDownList('PUR_Type').subscribe((res) => {
+    sys1000('PUR_Type').subscribe((res: any) => {
       const list = res?.Data ?? [];
       this.typeOptions = list.map((x: any) => ({
         value: String(x.No),
@@ -275,26 +255,22 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
       }));
     });
 
-    this.fin13050Service.querySYS1000DropDownList('SYS_ORIGIN').subscribe((res) => {
+    sys1000('SYS_ORIGIN').subscribe((res: any) => {
       const list = res?.Data ?? [];
       this.SYS_ORIGINOptions = list.map((x: any) => ({
         value: String(x.No),
         label: `${x.No}-${x.Name}`,
       }));
-      this.sysOriginMap = Object.fromEntries(
-        list.map((x: any) => [String(x.No), `${x.No}-${x.Name}`])
-      );
     });
 
     // 發票號碼輸入：若被輸入數字，改成字串避免被格式化
-    const toStr = (v: any) => (v == null ? v : String(v));
-    this.queryForm.controls.PUR_GUINo?.valueChanges.subscribe((v) => {
+    this.queryForm.controls.PUR_GUINo?.valueChanges.subscribe((v: any) => {
       if (typeof v === 'number') {
-        this.queryForm.controls.PUR_GUINo.patchValue(toStr(v), { emitEvent: false });
+        this.queryForm.controls.PUR_GUINo.patchValue(String(v), { emitEvent: false });
       }
     });
 
-    // 先 normalize 初始的年月欄位
+    // normalize 初始的年月欄位
     normalizeMonthControl(this.queryForm.controls.PUR_RepYYYYMM);
     normalizeMonthControl(this.queryForm.controls.PUR_GUIDate_YYYYMM);
 
@@ -308,62 +284,31 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
 
         if (formValue) {
           this.queryForm.patchValue(formValue, { emitEvent: false });
-
-          // 還原年月欄位型別（可能被存成字串）
           normalizeMonthControl(this.queryForm.controls.PUR_RepYYYYMM);
           normalizeMonthControl(this.queryForm.controls.PUR_GUIDate_YYYYMM);
         }
 
-        if (Array.isArray(saved.currentSortBy) && saved.currentSortBy.length) {
-          this._currentSortBy = saved.currentSortBy;
-        } else if (formValue?.SortBy) {
-          this._currentSortBy = formValue.SortBy as SortMeta[];
-        } else {
-          this._currentSortBy = this.defaultSort;
-        }
-
         this.lastQueryBody = saved.lastQueryBody ?? null;
 
-        // ✅ 自動查一次
+        // 回來就自動查一次
         Promise.resolve().then(() => this.onSubmit(this.queryForm));
       }
     } else {
-      // 不是從 CRU 回來：清掉狀態，走預設值
       this.queryStateService.clearQueryState('FIN13050');
-      this._currentSortBy = this.defaultSort;
       this.lastQueryBody = null;
-
       setDefaultRepYYYYMMByToday();
-
-      // 你若要「進來就自動查」也可以打開：
-      // Promise.resolve().then(() => this.onSubmit(this.queryForm));
     }
-
-    // 需要的話這裡可以做狀態同步
-    this.queryForm.valueChanges.subscribe(() => {
-      // noop
-    });
-
-    // 可選：避免瀏覽器 back/forward 保留 state 造成下次誤判 fromCru
-    // history.replaceState({}, '', location.href);
   }
 
-
   /** 將多選值正規化為陣列（空陣列=>undefined 不送） */
-  private arr<T = any>(
-    value: any,
-    mapFn?: (x: any) => T | undefined,
-  ): T[] | undefined {
+  private arr<T = any>(value: any, mapFn?: (x: any) => T | undefined): T[] | undefined {
     if (value == null) return undefined;
 
-    const pushSafe = (src: any): T | undefined =>
-      mapFn ? mapFn(src) : (src as T);
+    const pushSafe = (src: any): T | undefined => (mapFn ? mapFn(src) : (src as T));
 
     if (Array.isArray(value)) {
-      const arr = value
-        .map(pushSafe)
-        .filter((x): x is T => x != null && x !== '');
-      return arr.length ? arr : undefined;
+      const a = value.map(pushSafe).filter((x): x is T => x != null && x !== '');
+      return a.length ? a : undefined;
     }
 
     const single = pushSafe(value);
@@ -373,8 +318,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
   private toYYYYMMOne(input: any): string | undefined {
     if (!input) return undefined;
     if (typeof input === 'string' && /^\d{6}$/.test(input)) return input;
-    if (typeof input === 'string' && /^\d{8}$/.test(input))
-      return input.slice(0, 6);
+    if (typeof input === 'string' && /^\d{8}$/.test(input)) return input.slice(0, 6);
     if (typeof input === 'string') {
       const m = input.match(/^(\d{4})[-\/](\d{2})/);
       if (m) return m[1] + m[2];
@@ -386,10 +330,6 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
       return `${y}${m}`;
     }
     return undefined;
-  }
-
-  private toYYYYMMArray(value: any): string[] | undefined {
-    return this.arr<string>(value, (v) => this.toYYYYMMOne(v));
   }
 
   private uniform8Array(value: any): string[] | undefined {
@@ -407,9 +347,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
     if (!value) return '';
     const date = new Date(value);
     const pad = (n: number) => n.toString().padStart(2, '0');
-    return `${date.getFullYear()}/${pad(
-      date.getMonth() + 1,
-    )}/${pad(date.getDate())}`;
+    return `${date.getFullYear()}/${pad(date.getMonth() + 1)}/${pad(date.getDate())}`;
   }
 
   /** 金額格式化（千分位） */
@@ -421,10 +359,6 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
   private saveQueryState(): void {
     this.queryStateService.setQueryState(this.ProgNo, {
       formValue: this.queryForm.getRawValue(),
-      currentSortBy:
-        this._currentSortBy && this._currentSortBy.length
-          ? this._currentSortBy
-          : this.defaultSort,
       lastQueryBody: this.lastQueryBody,
     });
   }
@@ -438,20 +372,16 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
 
     const v = form.value as any;
 
+    // ✅ 排序：優先用表單 SortBy；若沒有就用 defaultSort
     const sortBy: SortMeta[] =
-      v.SortBy && v.SortBy.length
-        ? (v.SortBy as SortMeta[])
-        : this._currentSortBy?.length
-          ? this._currentSortBy
-          : this.defaultSort;
+      v.SortBy && v.SortBy.length ? (v.SortBy as SortMeta[]) : this.defaultSort;
 
     const payload: any = {
-      pageSize: v.pageSize ?? 20,
+      pageSize: v.pageSize ?? 30,
       pageIndex: v.pageIndex ?? 1,
       SortBy: sortBy,
 
       PUR_GUINo: v.PUR_GUINo?.toUpperCase() || undefined,
-
       PUR_VoucherType: this.arr(v.PUR_VoucherType),
 
       PUR_GUIDate_Start: v.PUR_GUIDate_Start || undefined,
@@ -497,101 +427,90 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
     this.loading = true;
     this.messageService.blockUi();
 
-    this.fin13050Service
-      .queryFIN13050(payload)
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        }),
-      )
+    this.fin13050Service.queryFIN13050(payload)
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.messageService.unblockUi();
+      }))
       .subscribe({
         next: (res) => {
           this.data = res?.Data ?? [];
           this.totalRecords = res?.TotalCount ?? this.data.length ?? 0;
 
-          // 更新排序與最後查詢條件並儲存
-          this._currentSortBy = payload.SortBy;
+          // ✅ table-report 用：一定要把最後查詢 body 記住（含 SortBy）
           this.lastQueryBody = { ...payload };
+
           this.saveQueryState();
         },
-        error: () => {
-          // 已由 errorHandler 處理
-        },
+        error: () => { /* 全域錯誤處理 */ },
       });
   }
 
-  override onLazyLoadData(event: any, form: FormGroup) {
-    // 讓父類把分頁/排序寫回 form
-    super.onLazyLoadData(event, form);
-    // 重新查詢（會用 form 裡的 pageIndex / SortBy）
-    this.onSubmit(this.queryForm);
+onDelete = (selection: any | any[]) => {
+  const rows = Array.isArray(selection) ? selection : [selection];
+
+  const invalid = rows.filter((r) => !!r?.Voucher_No);
+  if (invalid.length) {
+    this.messageService.warnBubble('已產生傳票號碼之資料不可刪除');
+    return;
   }
 
-  onDelete = (selection: any | any[]) => {
-    const rows = Array.isArray(selection) ? selection : [selection];
-
-    // ✅ 防呆：有 Voucher_No 的資料不能刪
-    const invalid = rows.filter((r) => !!r?.Voucher_No);
-    if (invalid.length) {
-      this.messageService.warnBubble('已產生傳票號碼之資料不可刪除');
-      return;
-    }
-
-    const ids = rows
-      .map((r) => Number(r?.id))
-      .filter((id) => Number.isFinite(id));
-
-    if (!ids.length) {
-      this.messageService.warnBubble('請先選擇要刪除的資料（缺少 id）');
-      return;
-    }
-
-    this.messageService.blockUi();
-    this.fin13050Service
-      .deleteFIN13050(ids)
-      .pipe(finalize(() => this.messageService.unblockUi()))
-      .subscribe({
-        next: () => {
-          this.messageService.successBubble('刪除成功');
-          const v = this.queryForm.value as any;
-          const pageSize = v.pageSize ?? 20;
-          let pageIndex = v.pageIndex ?? 1;
-          if (this.data.length === ids.length && pageIndex > 1) {
-            pageIndex -= 1;
-            this.queryForm.patchValue({ pageIndex });
-          }
-          this.onSubmit(this.queryForm);
-        },
-        error: () => {
-          // 全域錯誤處理
-        },
-      });
-  };
-
-  private toYYYYMMCsv(value: any): string | undefined {
-    if (Array.isArray(value)) {
-      const items = value
-        .map((v) => this.toYYYYMMOne(v))
-        .filter((v): v is string => !!v);
-      return items.length ? items.join(',') : undefined;
-    }
-    return this.toYYYYMMOne(value);
+  const ids = rows.map((r) => Number(r?.id)).filter((id) => Number.isFinite(id));
+  if (!ids.length) {
+    this.messageService.warnBubble('請先選擇要刪除的資料（缺少 id）');
+    return;
   }
 
-  private uniform8(value: any): string | undefined {
-    if (value == null || value === '') return undefined;
-    const s = String(value).trim();
-    const head = s.split('-')[0].trim();
-    const digits = head.replace(/\D/g, '');
-    if (digits.length >= 8) return digits.slice(0, 8);
-    return undefined;
-  }
+  // ✅ 確認視窗（只傳 1 個 options 物件，避免 TS2554）
+  this.messageService.confirm({
+    header: '刪除確認',
+    message: `確定要刪除選取的 ${ids.length} 筆資料嗎？`,
+    icon: 'pi pi-exclamation-triangle',
+    acceptLabel: '確定',
+    rejectLabel: '取消',
+    accept: () => {
+      this.messageService.blockUi();
+
+      this.fin13050Service
+        .deleteFIN13050(ids)
+        .pipe(finalize(() => this.messageService.unblockUi()))
+        .subscribe({
+          next: () => {
+            this.messageService.successBubble('刪除成功');
+
+            const v = this.queryForm.value as any;
+            const pageSize = v.pageSize ?? 30;
+            let pageIndex = v.pageIndex ?? 1;
+
+            // 若刪掉整頁，往前一頁
+            if (this.data.length === ids.length && pageIndex > 1) {
+              pageIndex -= 1;
+              this.queryForm.patchValue({ pageIndex }, { emitEvent: false });
+            }
+
+            // 保險：若 onSubmit 會用到 pageSize，也確保還在
+            if (!this.queryForm.value?.pageSize) {
+              this.queryForm.patchValue({ pageSize }, { emitEvent: false });
+            }
+
+            this.onSubmit(this.queryForm);
+          },
+          error: () => {
+            /* 全域錯誤處理 */
+          },
+        });
+    },
+    reject: () => {
+      // 取消：不做事
+    },
+  });
+};
+
 
   private buildInitialQueryValues() {
     return {
       pageIndex: 1,
-      pageSize: 20,
+      pageSize: 30,
       SortBy: this.defaultSort as SortMeta[],
 
       PUR_GUINo: null,
@@ -634,9 +553,10 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
 
     this.data = [];
     this.totalRecords = 0;
+    this.selectedItems = [];
 
     this.lastQueryBody = null;
-    this._currentSortBy = this.defaultSort;
+
     this.saveQueryState();
   }
 }

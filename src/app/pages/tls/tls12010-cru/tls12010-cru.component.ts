@@ -7,7 +7,6 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
 import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -116,7 +115,6 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     VEN_Name: ['', [Validators.required, Validators.maxLength(100)]], // 廠商名稱
     /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
     /*若廠商類型為3=員工id, tblUser.user_name */
-    // 有資料可以用 [烘焙坊] 輸入測試試試
     VEN_EngName: ['', [Validators.maxLength(100), this.validationService.englishNumberSpaceSymbolValidator]], // 廠商英文名稱
     /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
     /*若廠商類型為3=員工id, 由使用者自行輸入 */
@@ -602,60 +600,5 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         this.messageService.successBubble('已刪除');
       },
     });
-  }
-
-  // 列印明細
-  btnPDFLoading = false;
-  btnExcelLoading = false;
-  onReport(isExcel: boolean) {
-    const formValue = { PC_id: this.dataForm.get('id')?.value };
-
-    if (isExcel) {
-      this.btnExcelLoading = true;
-      this.tls12010Service.exportTLS12010_Detail(formValue)
-        .pipe(
-          finalize(() => this.btnExcelLoading = false),
-          untilDestroyed(this)
-        )
-        .subscribe({
-          next: (blob: Blob) => {
-            this.downloadFile(blob, `潛在客戶明細_${new Date().getTime()}.xlsx`);
-            this.messageService.successBubble('匯出成功');
-          },
-          error: (err) => {
-            console.error(err);
-            this.messageService.errorBubble('匯出失敗');
-          }
-        });
-    } else {
-      this.btnPDFLoading = true;
-      this.tls12010Service.exportTLS12010_DetailPDF(formValue)
-        .pipe(
-          finalize(() => this.btnPDFLoading = false),
-          untilDestroyed(this)
-        )
-        .subscribe({
-          next: (blob: Blob) => {
-            this.downloadFile(blob, `潛在客戶明細_${new Date().getTime()}.pdf`);
-            this.messageService.successBubble('匯出成功');
-          },
-          error: (err) => {
-            console.error(err);
-            this.messageService.errorBubble('匯出失敗');
-          }
-        });
-    }
-  }
-
-  // 輔助方法：處理 Blob 下載
-  private downloadFile(data: Blob, fileName: string) {
-    const url = window.URL.createObjectURL(data);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url); // 釋放記憶體
-    document.body.removeChild(a);
   }
 }

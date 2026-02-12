@@ -34,7 +34,7 @@
             ></app-multi-select>
           </div>
 
-          <!-- 發票號碼（字軌＋數字，共10碼） -->
+          <!-- 發票號碼 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="發票號碼"
@@ -55,7 +55,7 @@
             ></app-calendar-range>
           </div>
 
-          <!-- 發票年月（可選） -->
+          <!-- 發票年月 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar
               controlName="PUR_GUIDate_YYYYMM"
@@ -66,10 +66,9 @@
             ></app-calendar>
           </div>
 
-          <!-- 資料所屬年月 -->
+          <!-- 申報年月 -->
           <div class="col-12 md:col-6 lg:col-4">
-
-                    <app-year-month
+            <app-year-month
               label="申報年月"
               [control]="queryForm.controls.PUR_RepYYYYMM"
               [submitted]="submitted"
@@ -120,7 +119,7 @@
             ></app-input-number-range>
           </div>
 
-          <!-- 發票用途（多選=>逗號字串） -->
+          <!-- 發票用途 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="直接扣抵法稅額分攤種類"
@@ -132,7 +131,7 @@
             ></app-multi-select>
           </div>
 
-          <!-- 課稅別（多選=>逗號字串） -->
+          <!-- 課稅別 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="課稅別"
@@ -143,6 +142,7 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="扣抵代號"
@@ -154,7 +154,7 @@
             ></app-multi-select>
           </div>
 
-          <!-- 類別區分（多選=>逗號字串） -->
+          <!-- 類別區分 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="類別區分"
@@ -204,7 +204,7 @@
             ></app-input-text>
           </div>
 
-          <!-- 建/改檔者與日期（可選） -->
+          <!-- 建/改檔 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="建檔人員"
@@ -212,6 +212,7 @@
               [submitted]="submitted"
             ></app-input-text>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               label="建檔日期"
@@ -221,6 +222,7 @@
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="修改人員"
@@ -228,6 +230,7 @@
               [submitted]="submitted"
             ></app-input-text>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               label="修改日期"
@@ -251,22 +254,32 @@
 </div>
 
 <div class="card">
-  <app-table
+  <app-table-report
     tableKey="FIN13050"
     [data]="data"
     [columns]="columns"
-    dataKey="id"
-    [multiSortMeta]="[{ field: 'PUR_GUIDate', order: 1 }]"
     [totalRecords]="totalRecords"
-    [lazy]="true"
     [loading]="loading"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
+    [lazy]="true"
+    [dataKey]="'id'"
+
     [showManage]="true"
     [showDelete]="true"
     [showCheckBox]="true"
-    (delete)="onDelete($event)"
+
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+
     [isRowSelectable]="isRowSelectable"
-    (lazyLoadData)="onLazyLoadData($event, queryForm)"
-  ></app-table>
+    [editDisabled]="editDisabled"
+    [detailDisabled]="detailDisabled"
+
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="queryFIN13050Fn"
+
+    (delete)="onDelete($event)"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    (dataChange)="data = $event"
+  ></app-table-report>
 </div>
