@@ -263,26 +263,52 @@ const toStringArray = (v: any): string[] =>
 /** === 建構查詢 Body：把表單值 + 分頁轉成後端規格（TLS56020QueryRequest） === */
 export const buildTLS56020QueryBody = (
   formValue: any,
-  paging?: any
-): TLS56020QueryRequest => {
+  paging?: any,
+  alwaysIncludeAllFields = false,
+): any => {
   const v = formValue || {};
-  const body: TLS56020QueryRequest = {};
+  const body: any = {};
 
-  putIfHasValue(body, 'SPM_No', v.SPM_No);
-  putIfHasValue(body, 'queryNo', v.queryNo);
+  if (alwaysIncludeAllFields) {
+    // 強制帶出所有欄位（即使為空值或空陣列），以符合後端範例格式
+    body.SPM_No = v.SPM_No ?? '';
+    body.queryNo = v.queryNo ?? '';
 
-  putIfHasValue(body, 'HOS_NoList', toStringArray(v.HOS_NoList));
-  putIfHasValue(body, 'LOGO_NoList', toStringArray(v.LOGO_NoList));
-  putIfHasValue(body, 'SPM_TypeList', toStringArray(v.SPM_TypeList));
-  putIfHasValue(body, 'SPM_StatusList', toStringArray(v.SPM_StatusList));
+    body.HOS_NoList = toStringArray(v.HOS_NoList);
+    body.LOGO_NoList = toStringArray(v.LOGO_NoList);
+    body.SPM_TypeList = toStringArray(v.SPM_TypeList);
+    body.SPM_StatusList = toStringArray(v.SPM_StatusList);
 
-  putIfHasValue(body, 'APPLY_USR', v.APPLY_USR);
-  putIfHasValue(body, 'APRV_USR', v.APRV_USR);
+    body.APPLY_USR = v.APPLY_USR ?? '';
+    body.APRV_USR = v.APRV_USR ?? '';
 
-  putIfHasValue(body, 'APPLY_Date_Start', toYmd(v.APPLY_Date_Start));
-  putIfHasValue(body, 'APPLY_Date_End', toYmd(v.APPLY_Date_End));
-  putIfHasValue(body, 'APRV_Date_Start', toYmd(v.APRV_Date_Start));
-  putIfHasValue(body, 'APRV_Date_End', toYmd(v.APRV_Date_End));
+    body.APPLY_Date_Start = toYmd(v.APPLY_Date_Start) ?? '';
+    body.APPLY_Date_End = toYmd(v.APPLY_Date_End) ?? '';
+    body.APRV_Date_Start = toYmd(v.APRV_Date_Start) ?? '';
+    body.APRV_Date_End = toYmd(v.APRV_Date_End) ?? '';
+  } else {
+    putIfHasValue(body, 'SPM_No', v.SPM_No);
+    putIfHasValue(body, 'queryNo', v.queryNo);
+
+    putIfHasValue(body, 'HOS_NoList', toStringArray(v.HOS_NoList));
+    putIfHasValue(body, 'LOGO_NoList', toStringArray(v.LOGO_NoList));
+    putIfHasValue(body, 'SPM_TypeList', toStringArray(v.SPM_TypeList));
+    putIfHasValue(body, 'SPM_StatusList', toStringArray(v.SPM_StatusList));
+
+    putIfHasValue(body, 'APPLY_USR', v.APPLY_USR);
+    putIfHasValue(body, 'APRV_USR', v.APRV_USR);
+
+    putIfHasValue(body, 'APPLY_Date_Start', toYmd(v.APPLY_Date_Start));
+    putIfHasValue(body, 'APPLY_Date_End', toYmd(v.APPLY_Date_End));
+    putIfHasValue(body, 'APRV_Date_Start', toYmd(v.APRV_Date_Start));
+    putIfHasValue(body, 'APRV_Date_End', toYmd(v.APRV_Date_End));
+  }
+
+  // 若有傳入分頁/排序參數，就把它轉成後端需要的欄位並合併進 body
+  if (paging) {
+    const pagingMapped = mapPagingToBackend(paging);
+    Object.assign(body, pagingMapped);
+  }
 
   return body;
 };
