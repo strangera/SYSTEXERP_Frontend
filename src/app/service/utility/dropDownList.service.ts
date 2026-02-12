@@ -398,7 +398,7 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS1002ECR_TypeDropDownList`, body);
   }
 
-  queryPOS1002Group_SubGroup_AreaNo_DropDownList(body: { building_no: string, floor_no: string, area_no: string }): Observable<ApiResponse<POS1002Item[]>> {
+  queryPOS1002Group_SubGroup_AreaNo_DropDownList(body: { building_no?: string, floor_no?: string, area_no?: string, ecr_no?: string }): Observable<ApiResponse<POS1002Item[]>> {
     return this.http.post<ApiResponse<POS1002Item[]>>(`${this.apiUrl}/queryPOS1002Group_SubGroup_AreaNo_DropDownList`, body);
   }
 

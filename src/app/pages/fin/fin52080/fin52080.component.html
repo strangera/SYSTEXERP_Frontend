@@ -4,60 +4,152 @@
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab [header]="'query-conditions' | translate" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
+    <p-accordionTab
+      [header]="'query-conditions' | translate"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="科目代號" controlName="AccNo" [control]="qf().AccNo"
-            [keyFilter]="service.accNoFilter" [submitted]="submitted"></app-input-text>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="科目代號"
+            controlName="AccNo"
+            [control]="qf().AccNo"
+            [keyFilter]="service.accNoFilter"
+            [submitted]="submitted"
+          ></app-input-text>
 
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="科目名稱" controlName="AccCName" [control]="qf().AccCName"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="科目名稱"
+            controlName="AccCName"
+            [control]="qf().AccCName"
+            [submitted]="submitted"
+          ></app-input-text>
 
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="科目英文名稱" controlName="AccEName"
-            [control]="qf().AccEName" [submitted]="submitted"></app-input-text>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="科目英文名稱"
+            controlName="AccEName"
+            [control]="qf().AccEName"
+            [submitted]="submitted"
+          ></app-input-text>
 
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="折舊攤提年限" controlName="rest_value"
-            [control]="qf().rest_value" [submitted]="submitted"></app-input-text>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="折舊攤提年限"
+            controlName="rest_value"
+            [control]="qf().rest_value"
+            [submitted]="submitted"
+          ></app-input-text>
 
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="殘值年限" controlName="rest_value2"
-            [control]="qf().rest_value2" [submitted]="submitted"></app-input-text>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="殘值年限"
+            controlName="rest_value2"
+            [control]="qf().rest_value2"
+            [submitted]="submitted"
+          ></app-input-text>
 
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="傳票格式" controlName="Voucher_Type"
-            [options]="service.voucherTypeOption" optionLabel="label" optionValue="value" [control]="qf().Voucher_Type"
-            [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="傳票格式"
+            controlName="Voucher_Type"
+            [options]="service.voucherTypeOption"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().Voucher_Type"
+            [submitted]="submitted"
+          ></app-dropdown>
 
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="借/貸" controlName="AccDC" [options]="service.accDCOption"
-            optionLabel="label" optionValue="value" [control]="qf().AccDC" [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="借/貸"
+            controlName="AccDC"
+            [options]="service.accDCOption"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().AccDC"
+            [submitted]="submitted"
+          ></app-dropdown>
 
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="統制/明細" controlName="Ledger_MD"
-            [options]="service.ledgerMDOption" optionLabel="label" optionValue="value" [control]="qf().Ledger_MD"
-            [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="統制/明細"
+            controlName="Ledger_MD"
+            [options]="service.ledgerMDOption"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().Ledger_MD"
+            [submitted]="submitted"
+          ></app-dropdown>
 
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="三碼代號" controlName="ClassNo"
-            [options]="service.classNoOptions()" optionLabel="label" optionValue="value" [control]="qf().ClassNo"
-            [loading]="service.classNoLoading()" [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="三碼代號"
+            controlName="ClassNo"
+            [options]="service.classNoOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="qf().ClassNo"
+            [loading]="service.classNoLoading()"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
 
         <div class="grid p-fluid">
-          <app-radiobutton-yn class="col-12 md:col-6 lg:col-3" label="是否為沖帳代號" controlName="ABAT_YN"
-            [control]="qf().ABAT_YN" [showAll]="!0" [submitted]="submitted"></app-radiobutton-yn>
+          <app-radiobutton-yn
+            class="col-12 md:col-6 lg:col-3"
+            label="是否為沖帳代號"
+            controlName="ABAT_YN"
+            [control]="qf().ABAT_YN"
+            [showAll]="!0"
+            [submitted]="submitted"
+          ></app-radiobutton-yn>
 
-          <app-radiobutton-yn class="col-12 md:col-6 lg:col-3" label="是否設定部門代號" controlName="Org_YN"
-            [control]="qf().Org_YN" [showAll]="!0" [submitted]="submitted"></app-radiobutton-yn>
+          <app-radiobutton-yn
+            class="col-12 md:col-6 lg:col-3"
+            label="是否設定部門代號"
+            controlName="Org_YN"
+            [control]="qf().Org_YN"
+            [showAll]="!0"
+            [submitted]="submitted"
+          ></app-radiobutton-yn>
 
-          <app-radiobutton-yn class="col-12 md:col-6 lg:col-3" label="是否為預算科目" controlName="Budget_YN"
-            [control]="qf().Budget_YN" [showAll]="!0" [submitted]="submitted"></app-radiobutton-yn>
+          <app-radiobutton-yn
+            class="col-12 md:col-6 lg:col-3"
+            label="是否為預算科目"
+            controlName="Budget_YN"
+            [control]="qf().Budget_YN"
+            [showAll]="!0"
+            [submitted]="submitted"
+          ></app-radiobutton-yn>
 
-          <app-radiobutton-yn class="col-12 md:col-6 lg:col-3" label="是否可輸" controlName="Input_YN"
-            [control]="qf().Input_YN" [showAll]="!0" [submitted]="submitted"></app-radiobutton-yn>
+          <app-radiobutton-yn
+            class="col-12 md:col-6 lg:col-3"
+            label="是否可輸"
+            controlName="Input_YN"
+            [control]="qf().Input_YN"
+            [showAll]="!0"
+            [submitted]="submitted"
+          ></app-radiobutton-yn>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           @if (!treeLoading()) {
-          <app-tree-dropdown [members]="FIN52080Tree()" [Columns]="treeElements.treeColumn"
-            [LeaveColumnLabel]="treeElements.leaveLabel" [listTitle]="treeElements.listTitle"
-            (confirmSelected)="onLevelSelected($event)" [SelectbleCheckBox]="!1" [card]="!1"
-            [loading]="treeLoading()"></app-tree-dropdown>
+            <app-tree-dropdown
+              [members]="FIN52080Tree()"
+              [Columns]="treeElements.treeColumn"
+              [LeaveColumnLabel]="treeElements.leaveLabel"
+              [listTitle]="treeElements.listTitle"
+              (confirmSelected)="onLevelSelected($event)"
+              [SelectbleCheckBox]="!1"
+              [card]="!1"
+              [loading]="treeLoading()"
+            ></app-tree-dropdown>
           }
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
@@ -67,11 +159,22 @@
   </p-accordion>
 </div>
 
-
 <div class="card">
-  <app-table [tableKey]="'FIN52080'" [dataKey]="'AccNo'" [data]="tableData()" [columns]="columns"
-    (edit)="onEdit($event)" (detail)="onDetail($event)" [totalRecords]="totalRecords()"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()" [lazy]="!0" [loading]="tableLoading()"
-    [showCheckBox]="true" (delete)="onDelete($event)">
-  </app-table>
+  <app-table
+    [tableKey]="'FIN52080'"
+    [dataKey]="'AccNo'"
+    [data]="tableData()"
+    [columns]="columns"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    [totalRecords]="totalRecords()"
+    [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
+    [rows]="30"
+    [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
+    [lazy]="!0"
+    [loading]="tableLoading()"
+    [showCheckBox]="true"
+    (delete)="onDelete($event)"
+  ></app-table>
 </div>

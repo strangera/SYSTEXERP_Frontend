@@ -29,4 +29,6 @@ export const sysRoutes: Routes = [
   { path: 'sys0770', loadComponent: () => import('./sys0770/sys0770.component').then(m => m.SYS0770Component), data: { progNo: 'SYS0770' } }, // 作業權限統計表
   { path: 'sysbq00', loadComponent: () => import('./sysbq00/sysbq00.component').then(m => m.SYSBQ00Component), data: { progNo: 'SYSBQ00' } }, // 簽核權限設定維護
   { path: 'sysbq00cru', loadComponent: () => import('./sysbq00.cru/sysbq00.cru.component').then(m => m.SYSBQ00CRUComponent), data: { progNo: 'SYSBQ00' } }, // 簽核權限設定維護 CRU
+  { path: 'sysbr00', loadComponent: () => import('./sysbr00/sysbr00.component').then(m => m.SYSBR00Component), data: { progNo: 'SYSBR00' } }, // 縣市區域資料維護作業
+  { path: 'sysbr00cru', loadComponent: () => import('./sysbr00.cru/sysbr00.cru.component').then(m => m.SYSBR00CRUComponent), data: { progNo: 'SYSBR00' } }, // 縣市區域資料維護作業 CRU
 ];

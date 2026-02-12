@@ -1,22 +1,22 @@
-import { Tls41030Service } from './../../../service/api/tls/tls41030.service';
+import { NgStyle } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
-import { option } from '../../../shared/models/sys/sysb000.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { apiOption } from '@shared/models/tls/tls000.model';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
+import { concatMap, finalize, from } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { concatMap, finalize, from } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { ButtonModule } from 'primeng/button';
-import { NgStyle } from '@angular/common';
-import { TooltipModule } from 'primeng/tooltip';
-import { apiOption } from '@shared/models/tls/tls000.model';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { option } from '../../../shared/models/sys/sysb000.model';
+import { Tls41030Service } from './../../../service/api/tls/tls41030.service';
 
 
 interface POS2001 {
@@ -141,7 +141,7 @@ export class TLS41030Component extends BasicQueryPageComponent<POS2001> implemen
     { value: '1', label: '集中收銀' },
   ];
 
-  TLTOption: apiOption[]= [];
+  TLTOption: apiOption[] = [];
 
   constructor(
     private tls41030Service: Tls41030Service,
@@ -182,37 +182,43 @@ export class TLS41030Component extends BasicQueryPageComponent<POS2001> implemen
   }
 
   onDelete(data: POS2001 | POS2001[]): void {
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) return;
+    this.messageService.confirm({
+      message: `是否確認刪除選中的收銀專櫃人員資料?`,
+      header: `確認刪除`,
+      accept: () => {
+        const items = Array.isArray(data) ? data : [data];
+        if (items.length === 0) return;
 
-    const idList = items
-      .filter(item => item && item.id != null)
-      .map(item => item.id);
+        const idList = items
+          .filter(item => item && item.id != null)
+          .map(item => item.id);
 
-    if (idList.length === 0) {
-      this.messageService.warnBubble('未找到有效的刪除項目');
-      return;
-    }
-
-    this.tls41030Service.deleteTLS41030({ idList }).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-        } else {
-          console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        if (idList.length === 0) {
+          this.messageService.warnBubble('未找到有效的刪除項目');
+          return;
         }
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.messageService.errorBubble('刪除失敗');
-      },
-      complete: () => {
-        this.onSubmit(this.queryForm); // 刷新資料
+
+        this.tls41030Service.deleteTLS41030({ idList }).subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble('選中項目刪除成功');
+            } else {
+              console.error('API error:', response.Status, response.Message);
+              this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+            }
+          },
+          error: (err: string) => {
+            console.error('API error:', err);
+            this.messageService.errorBubble('刪除失敗');
+          },
+          complete: () => {
+            this.onSubmit(this.queryForm); // 刷新資料
+          },
+        });
+
+        this.selectedItems = [];
       },
     });
-
-    this.selectedItems = [];
   }
 
   //---0710規格更新--
@@ -260,17 +266,17 @@ export class TLS41030Component extends BasicQueryPageComponent<POS2001> implemen
   }
 
   loadOptions() {
-      //查詢 專櫃主檔 下拉選單
-      this.tls41030Service
-        .queryTLTTALENT_DropDownList({})
-        .subscribe((response) => {
-          this.TLTOption = response.Data.map((item: apiOption) => ({
-            No: item.No,
-            Name: item.Name,
-            Label: item.No + '-' + item.Name,
-          }));
+    //查詢 專櫃主檔 下拉選單
+    this.tls41030Service
+      .queryTLTTALENT_DropDownList({})
+      .subscribe((response) => {
+        this.TLTOption = response.Data.map((item: apiOption) => ({
+          No: item.No,
+          Name: item.Name,
+          Label: item.No + '-' + item.Name,
+        }));
 
-          console.log('專櫃主檔:', this.TLTOption);
-        });
-    }
+        console.log('專櫃主檔:', this.TLTOption);
+      });
+  }
 }
