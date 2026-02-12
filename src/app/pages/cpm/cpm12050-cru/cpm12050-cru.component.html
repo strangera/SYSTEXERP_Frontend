@@ -128,9 +128,10 @@
         </div> -->
       </div>
       <div class="col-12" *ngIf="!isFormCreateable">
-        <app-table-edit [columns]="columns" [data]="data" [tableRequired]="false" [disabled]="isFormReadable"
-          [rowEditDisabled]="isExistingDetail" [isRowSelectable]="detailRowSelectable"
-          (dataChange)="onTableDataChange($event)" [loading]="loading"></app-table-edit>
+        <app-table-edit [columns]="columns" [data]="data" [tableRequired]="false"
+          [disabled]="isFormReadable && !forceEditAll" [rowEditDisabled]="rowEditDisabledWrapper"
+          [isRowSelectable]="detailRowSelectable" (dataChange)="onTableDataChange($event)"
+          [loading]="loading"></app-table-edit>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>

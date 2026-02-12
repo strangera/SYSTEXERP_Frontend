@@ -15,7 +15,7 @@ import { validateRequired } from '@shared/componentkit/table-edit/validate-field
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
 import { Observable, finalize, forkJoin } from 'rxjs';
-import { CPM12050Data, CPM12050Service, InsertCPM12050DetailRequest, InsertCPM12050Request, UpdateCPM12050Request } from '../../../service/api/cpm/cpm12050.service';
+import { CPM12050Data, CPM12050Service, InsertCPM12050DetailRequest, InsertCPM12050Request, UpdateCPM12050DetailRequest, UpdateCPM12050Request } from '../../../service/api/cpm/cpm12050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
@@ -72,7 +72,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     ALERT_DATE: [null],
     ANSWER_YN: [null],
     STATUS: [null],
-    SUGG_TYPE: [null],
+    SUGG_TYPE: [null, Validators.required], // 意見類型（必填）
     CLASS_EMAIL: [null],
   });
   ANSWER_YNOptions = [
@@ -112,6 +112,8 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
   // 編輯table設定
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   data: any[] = [];
+  // 用來儲存載入時的明細快照，供判斷既有明細是否被修改
+  private _originalDetails: any[] = [];
   // 用來記錄明細上次的有效筆數（不含 candidate row），用來判斷是否為第一次新增明細
   private _detailCountPrev = 0;
   // 載入時是否已提供 ALERT_DATE（用來判斷唯讀觸發來源）
@@ -142,9 +144,21 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
   isExistingDetail = (rowData: Record<string, any>): boolean => !!rowData['SEQ_ID'];
   detailRowSelectable: (rowData: any, rowIndex: number, data: any) => boolean | undefined = (rowData) => {
     try {
+      if (this.forceEditAll) return true;
       return !this.isExistingDetail(rowData);
     } catch (e) {
       return true;
+    }
+  }
+
+  // wrapper for row edit disabled logic that respects high-privilege override
+  rowEditDisabledWrapper: (rowData: any, rowIndex?: number, data?: any) => boolean = (rowData) => {
+    try {
+      // 當 forceEditAll 時允許編輯既有明細
+      if (this.forceEditAll) return false;
+      return this.isExistingDetail(rowData);
+    } catch (e) {
+      return false;
     }
   }
 
@@ -300,6 +314,8 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
           this.data = response.Data;
           // 初始化 prev count
           this._detailCountPrev = Array.isArray(this.data) ? this.data.length : 0;
+          // 保存原始明細快照以便後續判斷有哪些既有明細被修改（high-privilege 可編輯既有明細）
+          this._originalDetails = Array.isArray(this.data) ? JSON.parse(JSON.stringify(this.data)) : [];
         });
     }
 
@@ -519,6 +535,59 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
             ];
             if (newDetails.length > 0) {
               requests.push(this.cpm12050Service.insertCPM12050Detail(newDetails));
+            }
+
+            // 當具有高權限時，既有的明細可能可被編輯。
+            // 僅在既有明細的關鍵欄位（目前為 ANSWER, ANSWER_ID）實際變更時才送出 update 請求，
+            // 避免因型別差異或暫存欄位導致不必要的 update 呼叫（例如新增其他明細時不該更新既有明細）。
+            console.log('DEBUG originalDetails length', Array.isArray(this._originalDetails) ? this._originalDetails.length : 0);
+            console.log('DEBUG originalDetails summary', (this._originalDetails || []).map((o: any) => ({ ID: o?.ID, SEQ_ID: o?.SEQ_ID, ANSWER: o?.ANSWER, ANSWER_ID: o?.ANSWER_ID })));
+            console.log('DEBUG currentDetails length', Array.isArray(this.data) ? this.data.length : 0);
+            console.log('DEBUG currentDetails summary', (this.data || []).map((o: any) => ({ ID: o?.ID, SEQ_ID: o?.SEQ_ID, ANSWER: o?.ANSWER, ANSWER_ID: o?.ANSWER_ID })));
+            const updatedDetails: UpdateCPM12050DetailRequest[] = (this.data || [])
+              // 只針對來自後端的既有明細（有 SEQ_ID）做比對與可能更新
+              .filter((item: any) => !!item.SEQ_ID)
+              .map((item: any) => {
+                // 嘗試以 ID 或 SEQ_ID 找到原始紀錄
+                const orig = this._originalDetails.find((o: any) => {
+                  try {
+                    if (o.ID !== undefined && item.ID !== undefined) return String(o.ID) === String(item.ID);
+                    return String(o.SEQ_ID) === String(item.SEQ_ID);
+                  } catch (e) {
+                    return false;
+                  }
+                });
+                // 若找不到原始記錄，視為無須更新（避免誤送）
+                if (!orig) return null;
+                const origAnswer = orig.ANSWER ?? '';
+                const origAnswerId = orig.ANSWER_ID ?? '';
+                const curAnswer = item.ANSWER ?? '';
+                const curAnswerId = item.ANSWER_ID ?? '';
+                const changed = origAnswer !== curAnswer || origAnswerId !== curAnswerId;
+                if (!changed) return null;
+                // 先用 any 建立，再在回傳時 cast 為 UpdateCPM12050DetailRequest，避免當 ID 缺少時 TypeScript 編譯錯誤
+                const detailReqAny: any = {
+                  SEQ_ID: item.SEQ_ID,
+                  ANSWER: item.ANSWER,
+                  ANSWER_ID: item.ANSWER_ID,
+                  USR_NO: formValue.CRT_USR_No,
+                  USR_NAME: formValue.CRT_USR_Name
+                };
+                if (item.ID !== undefined) {
+                  detailReqAny.ID = item.ID;
+                }
+                return detailReqAny as UpdateCPM12050DetailRequest;
+              })
+              .filter((d: any) => d !== null) as UpdateCPM12050DetailRequest[];
+
+            if (updatedDetails.length > 0) {
+              console.log('DEBUG originalDetails:', this._originalDetails);
+              console.log('DEBUG currentDetails:', this.data);
+              console.log('DEBUG updatedDetails to send:', updatedDetails);
+              // updateCPM12050Detail 接受單筆 detail request，因此逐筆加入
+              updatedDetails.forEach(d => requests.push(this.cpm12050Service.updateCPM12050Detail(d)));
+            } else {
+              console.log('DEBUG no updatedDetails to send');
             }
 
             forkJoin(requests)

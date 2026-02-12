@@ -36,7 +36,7 @@ export class TlsContractBaseService {
    */
   initializeFormByMode(
     form: FormGroup,
-    moduleType: 'TLS13010' | 'TLS12040',
+    moduleType: 'TLS13010' | 'TLS12040' | 'TLS13020',
     mode: CRUDStatus,
     existingData?: any
   ): void {
@@ -74,7 +74,7 @@ export class TlsContractBaseService {
    * @param form 表單實例
    * @param moduleType 模組類型
    */
-  initializeEmptyForm(form: FormGroup, moduleType: 'TLS13010' | 'TLS12040'): void {
+  initializeEmptyForm(form: FormGroup, moduleType: 'TLS13010' | 'TLS12040' | 'TLS13020'): void {
     console.log(`🔧 初始化 ${moduleType} 空白表單`);
 
     const defaultValues = moduleType === 'TLS13010'
