@@ -63,13 +63,15 @@ interface IQueryPOS2004DetailResponse {
     MultiSelectComponent,
     DropdownTableComponent,
     InputNumberComponent,
-    Button
+    Button,
+    InputTextComponent
   ],
 })
 export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> implements OnInit {
   // === 查詢條件：完全對齊後端 ===
   queryForm = this.formBuilder.group({
-    SPM_No: ['', [Validators.maxLength(20)]],    // 領用單編號
+    ...createPaginationConfig([{ field: 'SPM_No', order: 1 }]),
+    SPM_No: [null, [Validators.maxLength(20)]],    // 領用單編號
     queryNo: ['', [Validators.maxLength(50)]],   // 管理編號/關鍵字
     HOS_NoList: [[]],                            // 倉別 (多選)
     LOGO_NoList: [[]],                           // 品牌 (多選)
@@ -84,7 +86,7 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
     issuanceNoteStatus: [null],
     issuanceType: [null],
     issuanceNoteCode: [null],
-    pageSize: [30],
+    // pageSize / pageIndex / SortBy 由 createPaginationConfig 提供
   });
   expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
@@ -149,8 +151,13 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
     this.submitted = true;
     this.loading = true;
 
-    const paging = createPaginationConfig([{ field: 'SPM_No', order: 1 }]);
-    const body = buildTLS56020QueryBody(frm.value, paging);
+    const paging = {
+      pageSize: frm.value.pageSize ?? 30,
+      pageIndex: frm.value.pageIndex ?? 1,
+      SortBy: frm.value.SortBy ?? [{ field: 'SPM_No', order: 1 }],
+    };
+
+    const body = buildTLS56020QueryBody(frm.value, paging, true);
 
     this.tls56020Service.queryTLS56020(body).pipe(
       finalize(() => this.loading = false),
@@ -168,7 +175,7 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
 
   onClearForm() {
     this.queryForm.reset({
-      SPM_No: '',
+      SPM_No: null,
       queryNo: '',
       HOS_NoList: null,
       LOGO_NoList: null,
