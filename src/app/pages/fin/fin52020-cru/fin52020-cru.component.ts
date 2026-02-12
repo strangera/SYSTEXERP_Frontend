@@ -1,17 +1,17 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TDS52020Data } from '../fin52020/fin52020.model';
-import { Fin52020Service } from '../../../service/api/fin/fin52020.service';
-import { finalize } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { NgIf } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { ValidationService } from '@shared/service/validation.service';
+import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
+import { Fin52020Service } from '../../../service/api/fin/fin52020.service';
+import { TDS52020Data } from '../fin52020/fin52020.model';
 
 @Component({
   selector: 'app-fin52020-cru',
@@ -31,7 +31,7 @@ import { ValidationService } from '@shared/service/validation.service';
 export class FIN52020CRUComponent extends BasicCruPageComponent<TDS52020Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     Id: [0],
-    VoucherKind: ['', [Validators.required, Validators.maxLength(10), this.validationService.alphanumericValidator]],
+    VoucherKind: ['', [Validators.required, Validators.maxLength(2), this.validationService.alphanumericValidator]],
     VoucherName: ['', [Validators.required, Validators.maxLength(50)]],
   });
 
@@ -71,15 +71,15 @@ export class FIN52020CRUComponent extends BasicCruPageComponent<TDS52020Data> im
     });
   }
 
-buildInsertBody(frm: FormGroup): any {
-  return {
-    voucherKind: frm.get('VoucherKind')?.value,
-    voucherName: frm.get('VoucherName')?.value
-  };
-}
+  buildInsertBody(frm: FormGroup): any {
+    return {
+      voucherKind: frm.get('VoucherKind')?.value,
+      voucherName: frm.get('VoucherName')?.value
+    };
+  }
   buildUpdateBody(frm: FormGroup): {
-      Id: number;
-      VoucherName: string;
+    Id: number;
+    VoucherName: string;
   } {
     return {
       Id: frm.get('Id')?.value,

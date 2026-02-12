@@ -1,18 +1,18 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { config, finalize } from 'rxjs';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { Fin52020Service } from '../../../service/api/fin/fin52020.service';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { columns, TDS52020Data } from './fin52020.model';
+import { TranslateModule } from '@ngx-translate/core';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { ValidationService } from '@shared/service/validation.service';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { Fin52020Service } from '../../../service/api/fin/fin52020.service';
+import { columns, TDS52020Data } from './fin52020.model';
 
 @Component({
   selector: 'app-fin52020',
@@ -31,7 +31,7 @@ import { ValidationService } from '@shared/service/validation.service';
 })
 export class FIN52020Component extends BasicQueryPageComponent<TDS52020Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    VoucherKind: ['', [Validators.maxLength(3), this.validationService.alphanumericValidator]],
+    VoucherKind: ['', [Validators.maxLength(2), this.validationService.alphanumericValidator]],
     VoucherName: ['', [Validators.maxLength(30)]],
     ...createPaginationConfig([{ field: 'VoucherName', order: 1 }]),
   });
@@ -53,7 +53,7 @@ export class FIN52020Component extends BasicQueryPageComponent<TDS52020Data> imp
   }
 
   onSubmit(form: FormGroup) {
-     
+
     this.handleSubmit(form, () => {
       this.loading = true;
       this.fin52020Service.queryFIN52020(form.value)
@@ -68,11 +68,24 @@ export class FIN52020Component extends BasicQueryPageComponent<TDS52020Data> imp
   }
 
   onDelete(rows: TDS52020Data[]) {
-    const idList = rows.map(row => row.Id);
-    this.fin52020Service.deleteFIN52020({ idList }).pipe(untilDestroyed(this)).subscribe(res => {
-      this.onSubmit(this.queryForm);
-      this.selectedRows = [];
-      this.messageService.successBubble(res.Message);
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: `確定要刪除選取的 ${rows.length} 筆資料嗎？`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: '確定',
+      rejectLabel: '取消',
+      accept: () => {
+        const idList = rows.map(row => row.Id);
+        this.loading = true;
+        this.fin52020Service
+          .deleteFIN52020({ idList })
+          .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
+          .subscribe(res => {
+            this.onSubmit(this.queryForm);
+            this.selectedRows = [];
+            this.messageService.successBubble(res.Message);
+          });
+      },
     });
   }
 }
