@@ -22,7 +22,6 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
@@ -53,7 +52,7 @@ import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/i
     ButtonModule,
     InputTextRangeComponent,
     TableReportComponent,
-   
+
   ],
 })
 export class TLS23040Component extends BasicQueryPageComponent<any> {
@@ -85,7 +84,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   activeFooter: Record<string, number> | undefined = undefined;
   totalRecords = 0;
   // ★ 新增：記住伺服器回傳的總筆數（避免被 30 蓋掉）
-  private lastTotalCount = 0;
+  public lastTotalCount = 0;
 
   // 匯出控制
   btnLoading = false;
@@ -449,28 +448,58 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   // 匯出（沿用：發票報表）
   onExportPDF() {
     if (!this.historyRequestBody) return this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
-    if (this.invoiceRows.length === 0) return this.messageService?.warnBubble?.('目前沒有發票明細可匯出。');
+    if (this.lastTotalCount <= 0) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
+
     this.btnLoading = true;
+
     this.tls23040Service
       .exportTLS23040PDF(this.historyRequestBody)
       .pipe(
         untilDestroyed(this),
         finalize(() => (this.btnLoading = false))
       )
-      .subscribe({ next: (r: HttpResponse<Blob>) => this.handleFileExport(r, '.pdf') });
-  }
+      .subscribe({
+        next: (res) => {
+          // 後端: Ok(ApiResponse<string>(..., "/temp/xxx.pdf"))
+          const urlPath = res?.Data;
 
+          if (!urlPath) {
+            this.messageService?.warnBubble?.(res?.ReturnMessage || '沒有回傳 PDF 下載路徑');
+            return;
+          }
+
+          const fullUrl = this.resolveDownloadUrl(urlPath);
+
+          // ✅ 直接開新視窗（最穩）
+          window.open(fullUrl, '_blank');
+
+          // 如果你要「直接下載」而不是開視窗，改用：
+          // const a = document.createElement('a');
+          // a.href = fullUrl;
+          // a.download = this.extractFileNameFromPath(urlPath) || 'TLS23040_發票報表.pdf';
+          // document.body.appendChild(a);
+          // a.click();
+          // document.body.removeChild(a);
+        },
+        error: () => this.messageService?.errorBubble?.('PDF 匯出失敗'),
+      });
+  }
   onExportXLSX() {
     if (!this.historyRequestBody) return this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
-    if (this.invoiceRows.length === 0) return this.messageService?.warnBubble?.('目前沒有發票明細可匯出。');
+    if (this.lastTotalCount <= 0) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
+
     this.btnLoading = true;
+
     this.tls23040Service
       .exportTLS23040Excel(this.historyRequestBody)
       .pipe(
         untilDestroyed(this),
         finalize(() => (this.btnLoading = false))
       )
-      .subscribe({ next: (r: HttpResponse<Blob>) => this.handleFileExport(r, '.xlsx') });
+      .subscribe({
+        next: (r: HttpResponse<Blob>) => this.handleFileExport(r, '.xlsx'),
+        error: () => this.messageService?.errorBubble?.('Excel 匯出失敗'),
+      });
   }
 
   private handleFileExport(response: HttpResponse<Blob>, ext: string): void {
@@ -497,7 +526,25 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     if (m?.[1]) { try { return decodeURIComponent(m[1].replace(/\+/g, ' ')); } catch { return m[1]; } }
     return `download${def}`;
   }
+  private resolveDownloadUrl(path: string): string {
+    if (!path) return '';
+    if (/^https?:\/\//i.test(path)) return path;
 
+    // environment.ApiUrl 通常長這樣：
+    // https://xxx.com/api  或  https://xxx.com/TSRDERPAPI
+    const apiBase = (this.tls23040Service.apiUrl || '').replace(/\/+$/, '');
+    const p = path.startsWith('/') ? path : `/${path}`;
+    return `${apiBase}${p}`;
+  }
+
+  private extractFileNameFromPath(path: string): string {
+    try {
+      const p = path.split('?')[0];
+      return decodeURIComponent(p.substring(p.lastIndexOf('/') + 1));
+    } catch {
+      return '';
+    }
+  }
   // === 欄位設定 ===
   invoiceColumns = [
     { field: 'TXN_Date', header: '銷售日期', visible: true, format: (v: string) => this.formatDate(v) },
@@ -511,7 +558,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_TotGUI', header: '發票金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n) },
     { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n) },
     { field: 'TaxType_desc', header: '交易稅別', visible: true, isTotal: true, style: 'text-right' },
-  
+
 
     { field: 'TXN_StatusName', header: '交易型態', visible: true, format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions) },
     { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號', visible: true },

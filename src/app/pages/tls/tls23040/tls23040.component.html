@@ -190,7 +190,7 @@
           [loading]="btnLoading"
           icon="pi pi-file"
           (click)="onExportPDF()"
-          [disabled]="invoiceRows.length === 0">
+         [disabled]="!historyRequestBody || lastTotalCount === 0">
         </p-button>
 
         <p-button
@@ -199,7 +199,7 @@
           [loading]="btnLoading"
           icon="pi pi-file-excel"
           (click)="onExportXLSX()"
-          [disabled]="invoiceRows.length === 0">
+          [disabled]="!historyRequestBody || lastTotalCount === 0">
         </p-button>
       </div>
     </header>
