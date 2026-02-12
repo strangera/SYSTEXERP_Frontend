@@ -153,13 +153,13 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
   addButton: AddButton[] = [
     {
       label: '匯出PDF',
-      icon: 'pi pi-file-pdf',
+      icon: 'fa-regular fa-file-pdf',
       action: (rowData) => this.onReport(rowData, false), // 傳入 rowData 並指定非 Excel
       loading: () => this.btnPDFLoading
     },
     {
       label: '匯出Excel',
-      icon: 'pi pi-file-excel',
+      icon: 'fa-regular fa-file-lines',
       action: (rowData) => this.onReport(rowData, true), // 傳入 rowData 並指定為 Excel
       loading: () => this.btnExcelLoading
     }
