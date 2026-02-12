@@ -249,23 +249,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
   //---新增卡控(tlt_id =8 只能有一筆)---
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    // 1. Form 驗證
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble('主檔資料有誤，請檢查欄位');
-      this.messageService.unblockUi();
-      return;
-    }
-
-    // 2. 明細欄位驗證 (呼叫修正後的函式)
-    if (!this.isDetailValid()) {
-      this.messageService.unblockUi();
-      return;
-    }
-
-    // 3. 檢核至少要有一筆 "有效" 明細 (修正 length 問題)
+    // 2. 檢核至少要有一筆 "有效" 明細 (修正 length 問題)
     const validRows = this.opendisc_Detail.filter(x => x.status !== 'deleted');
     if (validRows.length === 0) {
       this.messageService.errorBubble('至少需有一筆有效明細');
@@ -273,7 +257,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       return;
     }
 
-    // 4. 檢核 API 資料完整性 (防止 API 還沒回來就存檔)
+    // 3. 檢核 API 資料完整性 (防止 API 還沒回來就存檔)
     // 檢查是否有 tlt_no 但沒有 talent_id 的情況
     const incompleteRows = validRows.filter(item => item.tlt_no && (!item.talent_id || item.talent_id === 0));
     if (incompleteRows.length > 0) {
@@ -282,7 +266,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       return;
     }
 
-    // 5. 建立 Payload
+    // 4. 建立 Payload
     const processedDetail = this.opendisc_Detail.map(item => ({
       id: item.status === 'new' ? 0 : item.id,
       talent_id: item.talent_id,
@@ -302,30 +286,27 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
     console.log('Final Body:', body); // Debug 用，上線移除
 
-    // 6. 發送請求
-    if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-      this.tls29010Service.insertTLS29010(body).pipe(untilDestroyed(this)).subscribe({
-        next: () => {
-          this.messageService.successBubble('新增成功');
-          this.messageService.unblockUi(); // 確保在 subscribe 內解鎖
-        },
-        error: () => {
-          this.messageService.unblockUi();
-        }
-      });
-    } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-      this.tls29010Service.updateTLS29010(body).pipe(untilDestroyed(this)).subscribe({
-        next: () => {
-          this.onCancel();
-          this.messageService.unblockUi();
-        },
-        error: () => {
-          this.messageService.unblockUi();
-        }
-      });
-    } else {
-      this.messageService.unblockUi();
-    }
+    // 使用父類別的 handleSubmit 來處理驗證與泡泡訊息
+    this.handleSubmit(frm, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            this.tls29010Service.insertTLS29010(body).subscribe(() => {
+              this.messageService.successBubble('新增成功');
+              this.dataForm.reset();
+            });
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            this.tls29010Service.updateTLS29010(body).subscribe(() => {
+              this.onCancel();
+            });
+          }
+          break;
+      }
+    });
+
   }
 
   loadOption() {
@@ -385,9 +366,6 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
   // #region 明細檔操作(row變化時重新寫入明細)
   async onDataChange(newData: TALPORDERD_OPENDisc[]): Promise<void> {
-    // 1. 不要再從 this.opendisc_Detail 複製，改用我們維護的 lastDetailSnapshot
-    // const previousState = JSON.parse(JSON.stringify(this.opendisc_Detail)); (這行刪除)
-
     // 用之前的快照來比對
     const previousState = this.lastDetailSnapshot;
 

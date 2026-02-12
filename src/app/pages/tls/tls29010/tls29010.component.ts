@@ -198,8 +198,6 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
   ngOnInit(): void {
     this.initializePage('TLS29010', 'TLS/TLS29010cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOption();
-
-    // console.log('帳號審核狀態:', this.hasPermission(this.Actions.Audit), '帳號反審核狀態:', this.hasPermission(this.Actions.AntiAudit));
   }
 
   onSubmit(frm: FormGroup) {
@@ -234,8 +232,6 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
       message: `是否確認刪除選中的折扣開放資料?`,
       header: `確認刪除`,
       accept: () => {
-        // console.log('Delete data:', JSON.stringify(data, null, 2));
-
         const items = Array.isArray(data) ? data : [data];
         if (items.length === 0) {
           console.error('No items to delete');
@@ -340,7 +336,6 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     // 折扣別 下拉選單
     this.tls29010Service.dropdownTLS29010bytalentid({ "talent_id": null }).pipe(untilDestroyed(this)).pipe(untilDestroyed(this)).subscribe((response) => {
       this.cag_barcode_Options = response.Data;
-      console.log('折扣別 下拉:', this.cag_barcode_Options);
     });
   }
 
