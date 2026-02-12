@@ -9,7 +9,7 @@ import { formatAmount } from '@shared/componentkit/table-report/table-report.mod
 import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
-import { Subject } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -67,6 +67,8 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
   expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
   private lazyLoadTrigger$ = new Subject<any>();
+  // 在還原查詢狀態時暫時抑制分類欄位的 valueChanges 處理
+  private suppressCategoryHandlers = false;
 
   // 管理編號
   suggestions: IQueryPOS2004DetailResponse[] = [];
@@ -143,6 +145,7 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
 
     // 大 → 中
     this.queryForm.get('CAT_LNo')?.valueChanges.pipe(debounceTime(300)).subscribe((bigCode) => {
+      if (this.suppressCategoryHandlers) return;
       if (bigCode) {
         const params: IPOS20031Request = { CAT_LNo: [bigCode] };
         this.dropDownListService.queryPOS20031_DropDownList(params).subscribe({
@@ -167,6 +170,7 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
 
     // 中 → 小
     this.queryForm.get('CAT_MNo')?.valueChanges.pipe(debounceTime(300)).subscribe((midCode) => {
+      if (this.suppressCategoryHandlers) return;
       const bigCode = this.queryForm.get('CAT_LNo')?.value;
       if (bigCode && midCode) {
         const params: IPOS20032Request = {
@@ -239,15 +243,122 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
   }
 
   // 處理 table 的 lazyLoad 事件（只綁定到 template 一個 handler，避免重複呼叫）
-  onTableLazy(event: any) {
+  async onTableLazy(event: any) {
+    // 儲存目前使用者選擇的分類值（以便在還原流程後還原，避免被舊的 queryState 覆蓋）
+    const currentCats = {
+      CAT_LNo: this.queryForm.get('CAT_LNo')?.value,
+      CAT_MNo: this.queryForm.get('CAT_MNo')?.value,
+      CAT_SNo: this.queryForm.get('CAT_SNo')?.value,
+    };
+
+    // 在還原期間暫時抑制 valueChanges 內的自動清除行為
+    this.suppressCategoryHandlers = true;
     // 先用 base class 處理 pageIndex/pageSize/SortBy 的 patch
     try {
       super.onLazyLoadData(event, this.queryForm);
     } catch (e) {
       // ignore
     }
-    // 延遲合併呼叫真正的 onSubmit
-    this.lazyLoadTrigger$.next(event);
+    const saved = this.queryStateService.getQueryStateValue(this.ProgNo);
+    const proceed = async () => {
+      // 確保中/小分類的 options 包含目前使用者選擇，若不足就主動載入
+      try {
+        if (currentCats.CAT_LNo) {
+          // 若 mid 選項不包含使用者的 mid 值，則重新載入 mid 選單
+          const hasMid = this.midCategoryOptions.some(o => o.value === currentCats.CAT_MNo);
+          if (!hasMid) {
+            const params = { CAT_LNo: [currentCats.CAT_LNo] } as IPOS20031Request;
+            const res = await firstValueFrom(this.dropDownListService.queryPOS20031_DropDownList(params).pipe(untilDestroyed(this)));
+            this.midCategoryOptions = (res.Data ?? []).map((item: any) => ({ label: `${item.No}-${item.Name}`, value: item.No, Name: item.Name, No: item.No }));
+          }
+        }
+        if (currentCats.CAT_LNo && currentCats.CAT_MNo) {
+          const hasSmall = this.smallCategoryOptions.some(o => o.value === currentCats.CAT_SNo);
+          if (!hasSmall) {
+            const params2: IPOS20032Request = { CATList: [{ CAT_LNo: currentCats.CAT_LNo, CAT_MNo: currentCats.CAT_MNo }] };
+            const res2 = await firstValueFrom(this.dropDownListService.queryPOS20032_DropDownList(params2).pipe(untilDestroyed(this)));
+            this.smallCategoryOptions = (res2.Data ?? []).map((item: any) => ({ label: `${item.No}-${item.Name}`, value: item.No, Name: item.Name, No: item.No }));
+          }
+        }
+      } catch (e) {
+        // ignore loading errors here; user selections will be restored regardless
+      }
+
+      // 還原使用者當前的分類選擇（若存在）以優先保留使用者操作
+      const restore: any = {};
+      if (currentCats.CAT_LNo !== null && currentCats.CAT_LNo !== undefined) restore.CAT_LNo = currentCats.CAT_LNo;
+      if (currentCats.CAT_MNo !== null && currentCats.CAT_MNo !== undefined) restore.CAT_MNo = currentCats.CAT_MNo;
+      if (currentCats.CAT_SNo !== null && currentCats.CAT_SNo !== undefined) restore.CAT_SNo = currentCats.CAT_SNo;
+      if (Object.keys(restore).length) {
+        this.queryForm.patchValue(restore, { emitEvent: false });
+      }
+      this.suppressCategoryHandlers = false;
+      this.lazyLoadTrigger$.next(event);
+    };
+
+    if (saved && (saved.CAT_LNo || saved.CAT_MNo || saved.CAT_SNo)) {
+      // 正規化 saved 的值（若為陣列則取首項）
+      const norm = (v: any) => Array.isArray(v) ? (v[0] ?? null) : v ?? null;
+      const big = norm(saved.CAT_LNo);
+      const mid = norm(saved.CAT_MNo);
+      const small = norm(saved.CAT_SNo);
+
+      if (big) {
+        // 先設定大分類，但不觸發 valueChanges，接著手動載中分類選項
+        this.queryForm.patchValue({ CAT_LNo: big }, { emitEvent: false });
+        const params = { CAT_LNo: [big] } as IPOS20031Request;
+        this.dropDownListService.queryPOS20031_DropDownList(params).pipe(untilDestroyed(this)).subscribe({
+          next: (res) => {
+            this.midCategoryOptions = (res.Data ?? []).map((item: any) => ({
+              label: `${item.No}-${item.Name}`,
+              value: item.No,
+              Name: item.Name,
+              No: item.No
+            }));
+            if (mid) {
+              // 設定中分類，並載入小分類
+              this.queryForm.patchValue({ CAT_MNo: mid }, { emitEvent: false });
+              const params2: IPOS20032Request = {
+                CATList: [{ CAT_LNo: big, CAT_MNo: mid }]
+              };
+              this.dropDownListService.queryPOS20032_DropDownList(params2).pipe(untilDestroyed(this)).subscribe({
+                next: (res2) => {
+                  this.smallCategoryOptions = (res2.Data ?? []).map((item: any) => ({
+                    label: `${item.No}-${item.Name}`,
+                    value: item.No,
+                    Name: item.Name,
+                    No: item.No
+                  }));
+                  if (small) {
+                    this.queryForm.patchValue({ CAT_SNo: small }, { emitEvent: false });
+                  }
+                  proceed();
+                },
+                error: () => {
+                  this.messageService.errorBubble('載入小分類選單失敗');
+                  proceed();
+                }
+              });
+            } else {
+              // 沒有中分類值，清空小分類
+              this.smallCategoryOptions = [];
+              this.queryForm.patchValue({ CAT_SNo: null }, { emitEvent: false });
+              proceed();
+            }
+          },
+          error: () => {
+            this.messageService.errorBubble('載入中分類選單失敗');
+            proceed();
+          }
+        });
+      } else {
+        // 沒有大分類，直接繼續
+        proceed();
+      }
+    } else {
+      // 沒有儲存分類，直接觸發查詢
+      proceed();
+    }
   }
 
   onSubmit(form: FormGroup): void {

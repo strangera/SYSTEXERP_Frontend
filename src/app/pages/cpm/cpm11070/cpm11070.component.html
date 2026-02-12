@@ -54,8 +54,11 @@
             <app-dropdown label="地點" controlName="LocationKeyword" [options]="SPACE1Options" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.LocationKeyword" [submitted]="submitted"></app-dropdown>
           </div>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="服務人員" controlName="ServiceUser"
-            [control]="queryForm.controls.ServiceUser" [submitted]="submitted"></app-input-text>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="服務人員" controlName="ServiceUser" [options]="ProcessingUserOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ServiceUser" [submitted]="submitted"></app-dropdown>
+          </div>
+
           <app-input-text class="col-12 md:col-6 lg:col-4" label="登錄者" controlName="KEY_USER"
             [control]="queryForm.controls.KEY_USER" [submitted]="submitted"></app-input-text>
           <div class="col-12 md:col-6 lg:col-4">
@@ -72,8 +75,11 @@
             [control]="queryForm.controls.RecaptionPhone" [submitted]="submitted"></app-input-text>
           <app-input-text class="col-12 md:col-6 lg:col-4" label="報失者/拾獲者姓名" controlName="RegistrantKeyword"
             [control]="queryForm.controls.RegistrantKeyword" [submitted]="submitted"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="協助顧客領回處理人員" controlName="ProcessingUser"
-            [control]="queryForm.controls.ProcessingUser" [submitted]="submitted"></app-input-text>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="協助顧客領回處理人員" controlName="ProcessingUser" [options]="ProcessingUserOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.ProcessingUser"
+              [submitted]="submitted"></app-dropdown>
+          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="報失者/拾獲者身分別" controlName="IdentityKind" [options]="USER5Options" optionLabel="Name"
               optionValue="No" [control]="queryForm.controls.IdentityKind" [submitted]="submitted"></app-dropdown>
