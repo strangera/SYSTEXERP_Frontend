@@ -369,6 +369,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
         this.columns = [
           { field: 'tlt_no', header: '專櫃編號' },
           { field: 'tlt_name', header: '專櫃名稱' },
+          { field: 'contract_subno', header: '版次' },
           { field: 'source_type', header: '扣款來源', format: (value: any) => this.sourceTypeOptions.find(item => item.No === value)?.Name || value },
           { field: 'CAP_Item', header: '扣款代碼' },
           { field: 'CAP_Name', header: '扣款名稱' },
