@@ -30,6 +30,10 @@
 <app-dialog [visible]="dialogVisible" header="選擇收銀機" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
   [disable]="selectedItemsDialog.length === 0">
   <form [formGroup]="dialogQueryForm" class="flex pb-2 align-items-end gap-2">
+    <app-dropdown-table class="flex-grow-1" [showOverlay]="false" [control]="dialogQueryForm.controls.ecr_no"
+      [submitted]="submitted" optionLabel="label" optionValue="ECR_No" [suggestions]="suggestions"
+      [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)">
+    </app-dropdown-table>
     <app-dropdown class="flex-grow-1" label="館別" controlName="building_no" [options]="buildingOptions$ | async"
       optionLabel="Name" optionValue="No" [control]="dialogQueryForm.controls.building_no" />
     <app-dropdown class="flex-grow-1" label="樓層" controlName="floor_no" [control]="dialogQueryForm.controls.floor_no"

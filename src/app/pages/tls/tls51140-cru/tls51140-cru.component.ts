@@ -7,12 +7,13 @@ import { QueryTLS51140ResponseData, Tls51140Service } from '@service/api/tls/tls
 import { DropDownListService, POS1002Item } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { Column } from '@shared/componentkit/table/table.model';
 import { PanelModule } from 'primeng/panel';
-import { debounceTime, finalize, tap } from 'rxjs';
+import { debounceTime, finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -20,7 +21,7 @@ import { DropdownApiService } from './../../../service/utility/dropdown-api.serv
 @Component({
   selector: 'app-tls51140-cru',
   standalone: true,
-  imports: [TableReportComponent, TableEditComponent, AsyncPipe, DialogComponent, MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, ButtonComponent, NgIf, TranslateModule],
+  imports: [DropdownTableComponent, TableReportComponent, TableEditComponent, AsyncPipe, DialogComponent, MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, ButtonComponent, NgIf, TranslateModule],
   templateUrl: './tls51140-cru.component.html'
 })
 export class Tls51140CruComponent extends BasicCruPageComponent<QueryTLS51140ResponseData> implements OnInit {
@@ -84,31 +85,17 @@ export class Tls51140CruComponent extends BasicCruPageComponent<QueryTLS51140Res
   // 處理 Dialog 查詢表單變動 (從 ngOnInit 中移出)
   // ----------------------------------------------------
   setupDialogQuerySubscription(): void {
-    this.dialogQueryForm.valueChanges
-      .pipe(
-        untilDestroyed(this),
-        tap(() => this.dialogLoading = true),
-        debounceTime(500),
-        // finalize 必須在 subscribe 之前，否則 loading 狀態會出錯
-      )
-      .subscribe(formValues => {
-        const request: { building_no: string; floor_no: string; area_no: string; } = {
-          // trim().toLowerCase() 應在查詢 API 呼叫前處理
-          building_no: formValues.building_no?.trim().toLowerCase() || '',
-          floor_no: formValues.floor_no?.trim().toLowerCase() || '',
-          area_no: formValues.area_no?.trim().toLowerCase() || '',
-        };
-
-        this.dropDownListService.queryPOS1002Group_SubGroup_AreaNo_DropDownList(request)
-          .pipe(
-            untilDestroyed(this),
-            // 將 finalize 移至此處，確保 API 完成後才關閉 loading
-            finalize(() => this.dialogLoading = false)
-          )
-          .subscribe(res => {
-            this.dialogData = res.Data;
-          });
+    this.dialogQueryForm.valueChanges.pipe(untilDestroyed(this), debounceTime(500),).subscribe(formValues => {
+      const request: { building_no: string; floor_no: string; area_no: string; ecr_no: string } = {
+        building_no: formValues.building_no?.trim().toLowerCase() || '',
+        floor_no: formValues.floor_no?.trim().toLowerCase() || '',
+        area_no: formValues.area_no?.trim().toLowerCase() || '',
+        ecr_no: formValues.ecr_no?.trim().toLowerCase() || '',
+      };
+      this.dropDownListService.queryPOS1002Group_SubGroup_AreaNo_DropDownList(request).pipe(untilDestroyed(this), finalize(() => this.dialogLoading = false)).subscribe(res => {
+        this.dialogData = res.Data;
       });
+    });
   }
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   onSubmit(frm: FormGroup) {
@@ -139,6 +126,7 @@ export class Tls51140CruComponent extends BasicCruPageComponent<QueryTLS51140Res
     });
   }
   dialogQueryForm = this.formBuilder.nonNullable.group({
+    ecr_no: [null as string | null], // 收銀機
     building_no: [null as string | null], // 館別
     floor_no: [null as string | null], // 樓層
     area_no: [null as string | null] // 區域
@@ -154,6 +142,22 @@ export class Tls51140CruComponent extends BasicCruPageComponent<QueryTLS51140Res
     { field: 'ECR_No', header: '收銀機號' },
     { field: 'ECR_Name', header: '收銀機名稱' },
   ];
+  suggestions: POS1002Item[] = [];
+  ecrNoOptions$ = this.dropdown.queryPos2034();
+  fieldsConfig: FieldsConfig[] = [
+    { field: 'ecr_no', header: '收銀機號/名稱', mainDataField: true },
+  ];
+  onAutoCompleteInputChange(event: Record<'label', string>) {
+    const body = {
+      ecr_no: event.label
+    }
+    this.dropDownListService.queryPOS1002Group_SubGroup_AreaNo_DropDownList(body).pipe(untilDestroyed(this)).subscribe(res => {
+      this.suggestions = [...res.Data.map(item => ({
+        ...item,
+        label: item.ECR_No + '-' + item.ECR_Name
+      }))];
+    });
+  }
   isRowSelectable(event: POS1002Item): boolean {
     return !this.data || !this.data.some((item: POS1002Item) => item.ECR_No === event.ECR_No);
   }
