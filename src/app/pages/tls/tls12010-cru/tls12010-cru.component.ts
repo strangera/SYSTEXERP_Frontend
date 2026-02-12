@@ -116,7 +116,6 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     VEN_Name: ['', [Validators.required, Validators.maxLength(100)]], // 廠商名稱
     /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
     /*若廠商類型為3=員工id, tblUser.user_name */
-    // 有資料可以用 [烘焙坊] 輸入測試試試
     VEN_EngName: ['', [Validators.maxLength(100), this.validationService.englishNumberSpaceSymbolValidator]], // 廠商英文名稱
     /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
     /*若廠商類型為3=員工id, 由使用者自行輸入 */

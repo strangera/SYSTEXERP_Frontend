@@ -1,30 +1,65 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
+    <app-button
+      btnType="create"
+      (click)="onCreate()"
+      label="{{ 'create' | translate }}"
+    ></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀員編號" controlName="USR_No"
-            [control]="queryForm.controls.USR_No" [submitted]="submitted"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀員姓名" controlName="USR_Name"
-            [control]="queryForm.controls.USR_Name" [submitted]="submitted"></app-input-text>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="收銀員編號"
+            controlName="USR_No"
+            [control]="queryForm.controls.USR_No"
+            [submitted]="submitted"
+          ></app-input-text>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="收銀員姓名"
+            controlName="USR_Name"
+            [control]="queryForm.controls.USR_Name"
+            [submitted]="submitted"
+          ></app-input-text>
           <!-- <app-input-text class="col-12 md:col-6 lg:col-4" label="密碼" controlName="USR_Passwd"
             [control]="queryForm.controls.USR_Passwd" [submitted]="submitted"></app-input-text> -->
 
-
           <!-- <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀鍵盤等級" controlName="USR_Level"
             [control]="queryForm.controls.USR_Level" [submitted]="submitted"></app-input-text> -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀員授權等級" controlName="USR_Auth"
-            [control]="queryForm.controls.USR_Auth" [submitted]="submitted"></app-input-text>
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="USR_TLT_No" [options]="TLTOption"
-            optionLabel="Label" optionValue="No" [control]="queryForm.controls.USR_TLT_No"
-            [submitted]="submitted"></app-dropdown>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="收銀員授權等級"
+            controlName="USR_Auth"
+            [control]="queryForm.controls.USR_Auth"
+            [submitted]="submitted"
+          ></app-input-text>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="專櫃編號"
+            controlName="USR_TLT_No"
+            [options]="TLTOption"
+            optionLabel="Label"
+            optionValue="No"
+            [control]="queryForm.controls.USR_TLT_No"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -33,15 +68,40 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (delete)="onDelete($event)"
-    (detail)="onDetail($event)" [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'USR_No', order: 1 }]"
-    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading" [isRowSelectable]="isRowSelectable" (selectionChange)="selectedItems = $event"
-    [selectedItems]="selectedItems">
+  <app-table
+    [data]="data"
+    [columns]="columns"
+    (edit)="onEdit($event)"
+    (delete)="onDelete($event)"
+    (detail)="onDetail($event)"
+    [showCheckBox]="true"
+    dataKey="id"
+    [multiSortMeta]="[{ field: 'USR_No', order: 1 }]"
+    [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
+    [rows]="30"
+    [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
+    [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [lazy]="true"
+    [loading]="loading"
+    [isRowSelectable]="isRowSelectable"
+    (selectionChange)="selectedItems = $event"
+    [selectedItems]="selectedItems"
+  >
     <header>
-      <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }" pTooltip="下傳"
-        pTooltip="下傳" tooltipPosition="top" pButton icon="pi pi-upload rotate-180" severity="success"
-        class="p-button-rounded p-button-text" [disabled]="selectedItems.length === 0" (click)="onUpload()" />
+      <p-button
+        [ngStyle]="{ width: '35px', height: '35px' }"
+        [style]="{ width: '35px', height: '35px' }"
+        pTooltip="下傳"
+        pTooltip="下傳"
+        tooltipPosition="top"
+        pButton
+        icon="pi pi-upload rotate-180"
+        severity="success"
+        class="p-button-rounded p-button-text"
+        [disabled]="selectedItems.length === 0"
+        (click)="onUpload()"
+      />
     </header>
   </app-table>
 </div>
