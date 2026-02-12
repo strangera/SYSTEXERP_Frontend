@@ -1,0 +1,84 @@
+<div class="step4-condition-container">
+  <!-- 載入中指示器 -->
+  <div *ngIf="loading" class="flex justify-content-center align-items-center p-4">
+    <p-progressSpinner></p-progressSpinner>
+    <span class="ml-2">載入條件設定資料中...</span>
+  </div>
+
+  <!-- 主要內容 -->
+  <div *ngIf="!loading">
+    <!-- 專櫃契約書資訊 -->
+    <p-accordion *ngIf="contractInfoData && contractInfoData.length > 0">
+      <p-accordionTab
+        header="專櫃契約書資訊"
+        [selected]="true"
+        class="line-height-3 m-0"
+      >
+        <div class="col-12">
+          <app-expandable-edit-table
+            class="custom-table-red"
+            [data]="contractInfoData"
+            [mainColumns]="contractInfoColumns"
+            [showCheckBox]="false"
+            [showPaginator]="false"
+            [showAddButton]="false"
+            [showBatchDelete]="false"
+            [showActionColumn]="false"
+            [loading]="loading"
+            dataKey="id"
+            [readonly]="true"
+            detailKey=""
+            emptyMessage="沒有合約資訊"
+          ></app-expandable-edit-table>
+        </div>
+      </p-accordionTab>
+    </p-accordion>
+
+    <!-- 動態表格渲染 -->
+    <ng-container *ngFor="let tableConfig of getVisibleTableConfigurations()">
+      <p-accordion>
+        <p-accordionTab
+          [header]="tableConfig.title"
+          [selected]="true"
+          class="line-height-3 m-0"
+        >
+          <div>
+            <app-expandable-edit-table
+              [data]="getTableData(tableConfig)"
+              [mainColumns]="getTableColumns(tableConfig)"
+              [showCheckBox]="!isFormReadonly"
+              [showPaginator]="false"
+              [showAddButton]="!isFormReadonly"
+              [showBatchDelete]="!isFormReadonly"
+              [showActionColumn]="false"
+              [autoAddRowOnTab]="true"
+              [showSequenceNumber]="true"
+              [loading]="loading"
+              dataKey="id"
+              [readonly]="isFormReadonly"
+              [forceEditMode]="!isFormReadonly"
+              detailKey=""
+              [emptyMessage]="tableConfig.emptyMessage"
+              (addMainItem)="callTableMethod(tableConfig.addMethod)"
+              (save)="onTableSave($event, tableConfig.commissionType)"
+              (edit)="onTableEdit($event, tableConfig.commissionType)"
+              (cancel)="onTableCancel($event, tableConfig.commissionType)"
+              (batchDelete)="onBatchDelete($event, tableConfig.commissionType)"
+              (fieldChange)="onTableFieldChange($event, tableConfig.commissionType)"
+            ></app-expandable-edit-table>
+          </div>
+        </p-accordionTab>
+      </p-accordion>
+    </ng-container>
+
+    <!-- 不支援類型提示 -->
+    <div *ngIf="shouldShowUnsupportedTypeMessage()" class="text-center p-5">
+      <i class="pi pi-info-circle text-4xl text-gray-400 mb-3"></i>
+      <h5 class="text-gray-600 mb-2">此抽成類型暫不支援條件設定</h5>
+      <p class="text-gray-500 mb-3">
+        當前抽成類型代碼：<strong>{{ getCurrentCommissionTypeName() }}</strong>
+      </p>
+      <p class="text-gray-500 text-sm">可直接進入下一步，或返回前一步修改抽成類型</p>
+    </div>
+  </div>
+</div>

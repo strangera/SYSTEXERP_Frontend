@@ -1,0 +1,39 @@
+<div class="step3-container">
+  <!-- 需要抽成設定的情況 -->
+  <ng-container *ngIf="requiresCommission">
+    <!-- 專櫃契約書資訊 -->
+    <app-commission-info
+      [contractInfoData]="contractInfoDataArray"
+      [contractInfoColumns]="contractInfoColumns"
+      [headerText]="'專櫃契約書資訊'">
+    </app-commission-info>
+
+    <!-- 抽成設定表格 -->
+    <app-commission-table
+      [commissionData]="commissionItems"
+      [commissionColumns]="commissionColumns"
+      [settingTabs]="settingTabs"
+      [detailColumnsMap]="detailColumnsMap"
+      [isViewMode]="isFormReadonly"
+      [dataLoaded]="dataLoaded"
+      [headerText]="'抽成設定'"
+      [defaultDetailTab]="'discount'"
+      (fieldChange)="onFieldChange($event)"
+      (detailFieldChange)="onDetailFieldChange($event)"
+      (detailTabChange)="onDetailTabChange($event)"
+      (addMainItem)="onAddCommissionItem()"
+      (addDetailItem)="onAddDetailItem($event)"
+      (batchDelete)="onBatchDelete($event)"
+      (detailBatchDelete)="onDetailBatchDelete($event)"
+      (detailButtonClick)="onDetailButtonClick($event)">
+    </app-commission-table>
+  </ng-container>
+
+  <!-- 不需要抽成設定的提示 -->
+  <div *ngIf="!requiresCommission" class="text-center p-5 surface-ground border-round">
+    <i class="pi pi-check-circle text-green-500 text-3xl mb-3 block"></i>
+    <span class="text-lg">
+      目前抽成類型「{{ commissionTypeName }}」不需要設定抽成項目
+    </span>
+  </div>
+</div>
