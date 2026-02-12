@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
-import { AfterViewInit, ChangeDetectorRef, Component, ViewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { map } from 'rxjs/operators';
@@ -19,9 +19,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 
@@ -37,6 +34,11 @@ import {
   QueryFIN63020Request,
   SortItem,
 } from '../../../service/api/fin/fin63020.service';
+
+// ✅ 使用 app-table-report
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 export interface QueryFIN63020Row {
   CanPickupYn?: string;
@@ -60,10 +62,10 @@ export interface QueryFIN63020Row {
   OrgId?: string;
   Org_Name?: string;
 
-  CheckStatus?: string;    // 可能是代碼或文字
-  StatusFlag?: string;     // 可能是代碼或文字
+  CheckStatus?: string;    // 代碼或文字
+  StatusFlag?: string;     // 代碼或文字
 
-  PickupStatus?: string;   // 可能是代碼或文字
+  PickupStatus?: string;   // 代碼或文字
   PickupDate?: string | null;
 
   VoucherNoIssued?: string | null;
@@ -93,19 +95,18 @@ export interface QueryFIN63020Row {
     CalendarComponent,
     InputNumberRangeComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
   ],
 })
-export class FIN63020Component
-  extends BasicQueryPageComponent<any>
-  implements AfterViewInit
-{
+export class FIN63020Component extends BasicQueryPageComponent<any> implements AfterViewInit {
   /* ----------------- 列表狀態 ----------------- */
   data: QueryFIN63020Row[] = [];
   totalRecords = 0;
-  selectedItems: QueryFIN63020Row[] = [];
-  lastQueryBody: any = null;
 
+  // ✅ table-report selection 是 Input+Output，不是 [(...)]
+  selectedItems: QueryFIN63020Row[] = [];
+
+  lastQueryBody: any = null;
   btnLoading = false;
 
   /** ✅ dialog */
@@ -123,27 +124,21 @@ export class FIN63020Component
   /** ✅ 勾選條件：PickupStatus === '0' 才能勾選 */
   isRowSelectable = (row: QueryFIN63020Row) => this.isPickup0(row?.PickupStatus);
 
-  /** ✅ 讓查詢頁「編輯按鈕不顯示」：已領 or 兌現 or 拋轉…都不顯示 */
+  /** ✅ 讓查詢頁「編輯按鈕不顯示」（需要 table-report 支援 editHidden） */
   editHidden = (row: QueryFIN63020Row): boolean => {
     const pickupStatus = String(row?.PickupStatus ?? '').trim();
     const checkStatus = String(row?.CheckStatus ?? '').trim();
     const statusFlag = String(row?.StatusFlag ?? '').trim();
 
-    // ✅ 已領(1/已領/郵寄) 就不給編
-    if (!this.isPickup0(pickupStatus)) return true;
-
-    // ✅ 兌現(3/兌現) 就不給編
-    if (this.isCashed(checkStatus)) return true;
-
-    // ✅ 已拋轉(2/拋轉) 你若也不想給編，就加這行
-    if (this.isPosted(statusFlag)) return true;
-
+    if (!this.isPickup0(pickupStatus)) return true;  // 已領/郵寄
+    if (this.isCashed(checkStatus)) return true;     // 兌現
+    if (this.isPosted(statusFlag)) return true;      // 拋轉（你要禁編就保留）
     return false;
   };
 
-  /** ✅ 如果你也想同步禁用（例如沒權限時），保留 disabled 條件 */
+  /** ✅ 同步禁用（避免不支援 editHidden 的情況也能擋住） */
   editDisabled = (row: QueryFIN63020Row): boolean => {
-    return this.editHidden(row); // 這裡讓 disabled 跟 hidden 同步
+    return this.editHidden(row);
   };
 
   // ====== 顯示轉換 ======
@@ -186,8 +181,8 @@ export class FIN63020Component
     return n.toLocaleString('en-US');
   }
 
-  /** ✅ columns */
-  columns: Column[] = [
+  /** ✅ columns：table-report 用 ReportColumn */
+  columns: ReportColumn[] = [
     { field: 'CheckNo', header: '票據號碼' },
     { field: 'VendorNo', header: '廠客代號' },
     { field: 'VEN_Name', header: '廠商名稱' },
@@ -361,25 +356,25 @@ export class FIN63020Component
       });
 
     // 公司銀行科目（APS1002）
-this.fin26010Service
-  .queryAPS1002DropDownList()
-  .pipe(untilDestroyed(this))
-  .subscribe({
-    next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
-      const list = Array.isArray(res?.Data) ? res.Data : [];
-      this.BankCodeOptions = list
-        .slice()
-        .sort((a, b) => String(a.BNK_id).localeCompare(String(b.BNK_id)))
-        .map((x) => ({
-          label: `${x.BNK_id}-${x.BNK_AccName}`,
-          value: x.BNK_id,
-          raw: x,
-        }));
-    },
-    error: () => {
-      this.BankCodeOptions = [];
-    },
-  });
+    this.fin26010Service
+      .queryAPS1002DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
+          const list = Array.isArray(res?.Data) ? res.Data : [];
+          this.BankCodeOptions = list
+            .slice()
+            .sort((a, b) => String(a.BNK_id).localeCompare(String(b.BNK_id)))
+            .map((x) => ({
+              label: `${x.BNK_id}-${x.BNK_AccName}`,
+              value: x.BNK_id,
+              raw: x,
+            }));
+        },
+        error: () => {
+          this.BankCodeOptions = [];
+        },
+      });
 
     // 廠客代號（POS2013）
     this.dropDownListService
@@ -392,6 +387,20 @@ this.fin26010Service
           value: x.VEN_No,
         }));
       });
+  }
+
+  ngAfterViewInit(): void {
+    // app-table-report 自己處理 lazy / scroll / sort，
+    // FIN63020 不需要像 app-table 那樣去抓 dt.onLazyLoad
+  }
+
+  /** ✅ table-report：同步 selection */
+  onSelectionChange(rows: QueryFIN63020Row[]): void {
+    this.selectedItems = Array.isArray(rows) ? rows : [];
+  }
+  onSelectAllChange(_checked: boolean): void {
+    // table-report 內部已處理可選條件與 selectedItems
+    // 這裡保留 hook，若你要額外處理可加
   }
 
   /** ✅ 點明細 */
@@ -413,7 +422,8 @@ this.fin26010Service
 
   /** ✅ 點編輯 */
   override onEdit(row: QueryFIN63020Row) {
-    if (this.editHidden(row)) return; // ✅ double safety
+    if (this.editHidden(row)) return;
+
     const chkNo = String(row?.CheckNo ?? '').trim();
     if (!chkNo) return;
 
@@ -618,6 +628,7 @@ this.fin26010Service
     return { rows: [], total: 0 };
   }
 
+  /** ✅ 給 app-table-report lazy/scroll 用 */
   public queryFIN63020ForReport = (body: any) =>
     this.fin63020Service.queryFIN63020(this.buildQueryPayload(body || {})).pipe(
       map((res: ApiResponse<any>) => {
@@ -651,7 +662,7 @@ this.fin26010Service
           const parsed = this.parseQueryResponse(res);
           this.data = parsed.rows;
           this.totalRecords = parsed.total;
-          this.lastQueryBody = { ...payload };
+          this.lastQueryBody = { ...payload, pageIndex: payload.PageIndex, pageSize: payload.PageSize }; // ✅ table-report 常用 pageIndex/pageSize
           this._currentSortBy = payload.SortBy ?? this.defaultSort;
           this.loading = false;
           this.cdr.detectChanges();
@@ -820,114 +831,15 @@ this.fin26010Service
       });
   }
 
-  override onLazyLoadData(e: any) {
-    const raw = this.queryForm.getRawValue();
-    const payload = this.buildQueryPayload({
-      ...raw,
-      pageIndex: e?.pageIndex,
-      pageSize: e?.pageSize,
-      SortBy: e?.SortBy,
-    });
-
-    this.loading = true;
-    this.fin63020Service
-      .queryFIN63020(payload)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res: ApiResponse<any>) => {
-          const parsed = this.parseQueryResponse(res);
-          this.data = parsed.rows;
-          this.totalRecords = parsed.total;
-          this.lastQueryBody = { ...payload };
-          this.loading = false;
-          this.cdr.detectChanges();
-        },
-        error: () => {
-          this.data = [];
-          this.totalRecords = 0;
-          this.loading = false;
-          this.cdr.detectChanges();
-        },
-      });
-  }
-
-  @ViewChild('finTable') finTable!: TableComponent;
-
-  ngAfterViewInit(): void {
-    setTimeout(() => {
-      try {
-        (this.finTable as any).IsPrint = true;
-      } catch {}
-
-      const dt: any = (this.finTable as any).dt;
-
-      if (dt?.onLazyLoad) {
-        dt.onLazyLoad.pipe(untilDestroyed(this)).subscribe((e: any) => {
-          const pageSize = Number(e?.rows ?? 30);
-          const first = Number(e?.first ?? 0);
-          const pageIndex = Math.floor(first / pageSize) + 1;
-          this.fireQueryByPage(pageIndex, pageSize, e?.multiSortMeta);
-        });
-      }
-    });
-  }
-
-  private readonly _allowSortFields = new Set(this.columns.map((c) => c.field).filter(Boolean) as string[]);
-
-  private fireQueryByPage(pageIndex: number, pageSize: number, sortMeta?: any) {
-    const raw = this.queryForm.getRawValue();
-
-    let sortBy: SortItem[] | undefined;
-
-    if (Array.isArray(sortMeta) && sortMeta.length) {
-      const filtered = sortMeta
-        .filter((s: any) => this._allowSortFields.has(String(s?.field)))
-        .map((s: any) => ({ field: String(s.field), order: Number(s.order) || 1 }));
-      if (filtered.length) sortBy = filtered;
-    }
-
-    if (!sortBy || !sortBy.length) {
-      sortBy = this._currentSortBy?.length ? this._currentSortBy : this.defaultSort;
-    }
-
-    const payload = this.buildQueryPayload({ ...raw, pageIndex, pageSize, SortBy: sortBy });
-
-    this._currentSortBy = payload.SortBy ?? this.defaultSort;
-
-    this.loading = true;
-    this.fin63020Service
-      .queryFIN63020(payload)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res: ApiResponse<any>) => {
-          const parsed = this.parseQueryResponse(res);
-          this.data = parsed.rows;
-          this.totalRecords = parsed.total;
-          this.lastQueryBody = { ...payload };
-          this.loading = false;
-          this.saveQueryState();
-          this.cdr.detectChanges();
-        },
-        error: () => {
-          this.data = [];
-          this.totalRecords = 0;
-          this.loading = false;
-          this.cdr.detectChanges();
-        },
-      });
-  }
-
   // ---------- 狀態判斷（支援代碼 & 文字） ----------
   private isPickup0(v: any): boolean {
     const s = String(v ?? '').trim();
     return s === '0' || s === '未領';
   }
-
   private isCashed(v: any): boolean {
     const s = String(v ?? '').trim();
     return s === '3' || s === '兌現';
   }
-
   private isPosted(v: any): boolean {
     const s = String(v ?? '').trim();
     return s === '2' || s === '拋轉';
