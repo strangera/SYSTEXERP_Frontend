@@ -12,7 +12,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 //
 
 //5.1.2.6  顧客意見處理狀況表
@@ -73,8 +73,8 @@ export class CPM12060Component extends BasicQueryPageComponent<CPM12060Data> imp
         this.SEXOptions.find((option) => option.value === value)?.label ||
         value
     },
-    { field: 'COMPLAIN_DATE', header: '提供日期', visible: true, format: formatDateTime },
-    { field: 'ALERT_DATE', header: '通知日期', visible: true, format: formatDateTime },
+    { field: 'COMPLAIN_DATE', header: '提供日期', visible: true, format: formatDate },
+    { field: 'ALERT_DATE', header: '通知日期', visible: true, format: formatDate },
     { field: 'ANSWER_NAME', header: '處理者', visible: true },
     {
       field: 'ANSWER_YN', header: '處理狀況', visible: true,
