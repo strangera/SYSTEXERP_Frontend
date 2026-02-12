@@ -7,7 +7,7 @@ import { CPM11080Service } from '@service/api/cpm/cpm11080.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { AddButton, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { AddButton, createPaginationConfig, formatDate, formatYN } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
@@ -58,7 +58,7 @@ export class CPM11080Component extends BasicQueryPageComponent<any> implements O
     { field: 'SALUTATION', header: '被尋人稱謂', visible: true },
     { field: 'COLLECTION_SITES', header: '集合地點', visible: true },
     { field: 'REGISTRANT', header: '遺失者/拾獲者姓名', visible: true },
-    { field: 'BROADCAST_YN', header: '已廣播', visible: true },
+    { field: 'BROADCAST_YN', header: '已廣播', visible: true, format: formatYN },
   ];
 
   SubpoenastatusOptions: any[] = [
@@ -99,6 +99,20 @@ export class CPM11080Component extends BasicQueryPageComponent<any> implements O
         const d = new Date(value as any);
         return isNaN(d.getTime()) ? null : d.toISOString();
       };
+      const toIsoStart = (value: unknown): string | null => {
+        if (!value) { return null; }
+        const d = new Date(value as any);
+        if (isNaN(d.getTime())) return null;
+        d.setHours(0, 0, 0, 0);
+        return d.toISOString();
+      };
+      const toIsoEnd = (value: unknown): string | null => {
+        if (!value) { return null; }
+        const d = new Date(value as any);
+        if (isNaN(d.getTime())) return null;
+        d.setHours(23, 59, 59, 999);
+        return d.toISOString();
+      };
 
       const payload = {
         PageSize: raw.pageSize ?? 20,
@@ -106,8 +120,8 @@ export class CPM11080Component extends BasicQueryPageComponent<any> implements O
         OrderBy: '',
         Offset: 0,
         SortBy: raw.SortBy ?? [{ field: 'SEQ_ID', order: 1 }],
-        REC_DATE_FROM: toIsoString(raw.REC_DATE_FROM),
-        REC_DATE_TO: toIsoString(raw.REC_DATE_TO),
+        REC_DATE_FROM: toIsoStart(raw.REC_DATE_FROM),
+        REC_DATE_TO: toIsoEnd(raw.REC_DATE_TO),
         KIND: raw.KIND || null,
       };
 

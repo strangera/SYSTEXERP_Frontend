@@ -46,13 +46,13 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-customFooter-table #tableComponent tableKey="TLS26020" [data]="data" [columns]="columns"
+  <app-table-report tableKey="TLS26020" [data]="data" [columns]="columns"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" dataKey="tlt_no"
-    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [lazy]="true" [loading]="loading" [showManage]="false"
-    [showDelete]="false" [expansionColumns]="expansionColumns" expansionDataKey="id" [expansionShowPaginator]="true"
-    [expansionRows]="50" [expansionLoadFn]="loadDetails"
+    [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody" [queryFunction]="queryFunction"
+    [lazy]="true" [loading]="loading" [showManage]="false"
+    [showDelete]="false" [expansionColumns]="expansionColumns" expansionDataKey="id"
+    [expansionLoadFn]="loadDetails"
     [expansionMultiSortMeta]="[{ field: 'TXN_DATE', order: -1 }, { field: 'ECR_NO', order: 1 }, { field: 'TXN_NO', order: -1 }]"
     [footerData]="footerData">
-  </app-customFooter-table>
+  </app-table-report>
 </div>

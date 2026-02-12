@@ -218,17 +218,17 @@
     </ng-container>
   </ng-template>
   <ng-template pTemplate="footer" let-columns let-rowData>
-    <tr *ngIf="footerData" class="font-bold text-center text-sm text-primary">
+    <tr *ngFor="let row of footerRows" class="font-bold text-center text-sm text-primary">
       <td class="text-center"
-        [colSpan]="(showReorder ? 1 : 0) + (showCheckBox ? 1 : 0) + (expansionColumns.length ? 1 : 0) + tableUtility.getFirstFooterIndex(columns, footerData)">
-        <span class="font-bold">{{ footerLabel }}</span>
+        [colSpan]="(showReorder ? 1 : 0) + (showCheckBox ? 1 : 0) + (expansionColumns.length ? 1 : 0) + tableUtility.getFirstFooterIndex(columns, row)">
+        <span class="font-bold">{{ footerLabelField && row[footerLabelField] != null ? row[footerLabelField] : footerLabel }}</span>
       </td>
       <ng-container *ngFor="let col of columns; let i = index">
-        <td *ngIf="i >= tableUtility.getFirstFooterIndex(columns, footerData)"
+        <td *ngIf="i >= tableUtility.getFirstFooterIndex(columns, row)"
           [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
           [ngClass]="[ col.cellClass ? col.cellClass(rowData, 'footer') || '' : '']">
           <span class="font-bold">
-            {{ col.format ? col.format(footerData[col.field]) : footerData[col.field] }}
+            {{ col.format ? col.format(row[col.field]) : row[col.field] }}
           </span>
         </td>
       </ng-container>
