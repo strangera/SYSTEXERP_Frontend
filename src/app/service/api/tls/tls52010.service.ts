@@ -369,4 +369,26 @@ export class Tls52010Service {
         responseType: 'blob'
       });
   }
+
+
+  //!!! 等其他人修完刪除
+  /**
+  * 查詢廠商所有商品 (POS2004 詳細資料)
+  * @param params 查詢條件 (VEN_No, LOGO_No, PLU_MagNo, PLU_Name, CAT_LNo, CAT_MNo, CAT_SNo)
+  * @returns 包含 IPOS2004DetailData 陣列的 API 響應
+  */
+  queryPOS2004DetailByVenNo(params: IQueryPOS2004DetailByVenNoRequest): Observable<ApiResponse<IPOS2004DetailData[]>> {
+    return this.http.post<ApiResponse<IPOS2004DetailData[]>>(`${this.apiUrl}/queryPOS2004Detail_VEN_No`, params);
+  }
+}
+
+/** 查詢廠商所有商品 (queryPOS2004Detail_VEN_No) 的請求介面 */
+export interface IQueryPOS2004DetailByVenNoRequest {
+  VEN_No: string; // 廠商編號
+  PLU_MagNo?: string; // 商品管理編號 (查詢條件，可選)
+  PLU_Name?: string; // 商品名稱 (查詢條件，可選)
+  CAT_LNo?: string; // 大分類代碼 (查詢條件，可選)
+  CAT_MNo?: string; // 中分類代碼 (查詢條件，可選)
+  CAT_SNo?: string; // 小分類代碼 (查詢條件，可選)
+  LOGO_No: string; // LOGO代碼
 }
