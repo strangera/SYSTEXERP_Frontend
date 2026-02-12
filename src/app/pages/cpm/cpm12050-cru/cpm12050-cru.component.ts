@@ -14,8 +14,7 @@ import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
-import { Observable, finalize, forkJoin, from, of } from 'rxjs';
-import { concatMap, mapTo, catchError, toArray } from 'rxjs/operators';
+import { Observable, finalize, forkJoin } from 'rxjs';
 import { CPM12050Data, CPM12050Service, InsertCPM12050DetailRequest, InsertCPM12050Request, UpdateCPM12050DetailRequest, UpdateCPM12050Request } from '../../../service/api/cpm/cpm12050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -591,45 +590,18 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
               console.log('DEBUG no updatedDetails to send');
             }
 
-            // 先處理主檔與新增明細（可並行）
             forkJoin(requests)
-              .pipe(untilDestroyed(this))
+              .pipe(
+                untilDestroyed(this),
+                finalize(() => this.loading = false)
+              )
               .subscribe({
                 next: () => {
-                  // 若有需要更新的既有明細，改以逐筆順序更新並獨立處理錯誤，避免並行導致後端失敗或難以判斷哪一筆錯誤
-                  if (updatedDetails.length > 0) {
-                    from(updatedDetails)
-                      .pipe(
-                        concatMap(d => this.cpm12050Service.updateCPM12050Detail(d)
-                          .pipe(
-                            mapTo({ success: true, detail: d }),
-                            catchError(err => of({ success: false, detail: d, err }))
-                          )
-                        ),
-                        toArray(),
-                        untilDestroyed(this),
-                        finalize(() => this.loading = false)
-                      )
-                      .subscribe(results => {
-                        const failed = (results || []).filter((r: any) => !r.success);
-                        if (failed.length > 0) {
-                          console.error('updateCPM12050Detail failures', failed);
-                          const msgs = failed.map((f: any) => `ID:${f.detail?.ID ?? ''} SEQ:${f.detail?.SEQ_ID ?? ''}`);
-                          this.messageService.errorBubble(`部分明細更新失敗: ${msgs.join(', ')}`);
-                        } else {
-                          this.messageService.successBubble('修改成功');
-                          this.onCancel();
-                        }
-                      });
-                  } else {
-                    this.loading = false;
-                    this.messageService.successBubble('修改成功');
-                    this.onCancel();
-                  }
+                  this.messageService.successBubble('修改成功');
+                  this.onCancel();
                 },
                 error: (err) => {
                   console.error('updateCPM12050 error', err);
-                  this.loading = false;
                   const msg = err?.error?.Message || err?.message || '修改失敗（後端錯誤）';
                   this.messageService.errorBubble(msg);
                 }
