@@ -4,25 +4,25 @@ import { Component } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize, map } from 'rxjs/operators';
 
+import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23050Service } from '../../../service/api/tls/tls23050.service';
 import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 import { FloorService } from '../../../service/basic/querySYS3900.service';
-
-import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonModule } from 'primeng/button';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 @Component({
   selector: 'app-tls23050',
@@ -130,7 +130,7 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
         org_id: Array.isArray(val?.org_id) && val?.org_id.length ? val.org_id : undefined,
         ECR_No: Array.isArray(val?.ECR_No) && val?.ECR_No.length ? val.ECR_No : undefined,
 
-        // 固定 30
+        // 固定 30（查詢當下送後端）
         pageSize: 30,
         pageIndex: Number(val?.pageIndex) || 1,
         SortBy: Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : [{ field: 'ECR_No', order: 1 }],
@@ -160,18 +160,22 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
               ...r,
               _rowKey: `${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
             }));
-            this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+
+            // ✅ 這支 API 屬於「pack + details 一次回來」型，不做真正分頁
+            //    totalRecords 一律等於目前資料筆數，避免 TableReportComponent 誤判「還有下一頁」而無限 loadMore
+            this.totalRecords = this.data.length;
 
             // 表尾總計（依欄位名稱直接餵值）
             this.footerData = this.buildFooterFromPack(first);
 
-            // ⭐ 調整 historyRequestBody.pageSize（解決「N 排序不打 API」問題）
+            // ✅ 關掉 virtual scroll 造成的 onScroll→loadMore 連續打 API
+            //    TableReportComponent 的判斷是 data.length < lastQueryBody.pageSize 才會關掉 virtual scroll
+            //    所以把 pageSize 設很大，且 pageIndex 固定 1
             if (this.historyRequestBody) {
-              const realPageSize =
-                this.data.length || this.historyRequestBody.pageSize || 30;
               this.historyRequestBody = {
                 ...this.historyRequestBody,
-                pageSize: realPageSize,
+                pageSize: 999999,
+                pageIndex: 1,
               };
             }
           },
@@ -184,37 +188,24 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  // === 提供給 app-table-report 的查詢函式（支援分頁/排序；固定 pageSize:30）===
+  // === 提供給 app-table-report 的查詢函式（支援排序 UI，但不做真正分頁；避免無限 loadMore）===
   public queryTLS23050ForReport = (body: any) => {
     console.log('=== TLS23050 lazy query body ===', body);
     console.log('form rece_yn = ', this.queryForm.value.rece_yn);
 
     const formVal = this.queryForm.value as any;
 
-    // 1. 固定從表單取查詢條件
+    // 1) 固定從表單取查詢條件
     const basePayload: any = {
       TXN_Date: this.toDateOnly(formVal?.TXN_Date),
       rece_yn: formVal?.rece_yn ?? undefined,
       tlt_building: formVal?.tlt_building ?? undefined,
-      tlt_floor:
-        Array.isArray(formVal?.tlt_floor) && formVal.tlt_floor.length
-          ? formVal.tlt_floor
-          : undefined,
-      org_id:
-        Array.isArray(formVal?.org_id) && formVal.org_id.length
-          ? formVal.org_id
-          : undefined,
-      ECR_No:
-        Array.isArray(formVal?.ECR_No) && formVal.ECR_No.length
-          ? formVal.ECR_No
-          : undefined,
+      tlt_floor: Array.isArray(formVal?.tlt_floor) && formVal.tlt_floor.length ? formVal.tlt_floor : undefined,
+      org_id: Array.isArray(formVal?.org_id) && formVal.org_id.length ? formVal.org_id : undefined,
+      ECR_No: Array.isArray(formVal?.ECR_No) && formVal.ECR_No.length ? formVal.ECR_No : undefined,
     };
 
-    // ⭐ 先把 pageIndex 算好，避免在同一行混用 ?? 和 ||
-    const formPageIndex = Number(formVal?.pageIndex) || 1;
-    const pageIndex =
-      body?.pageIndex != null ? body.pageIndex : formPageIndex;
-
+    // 2) 排序：優先用 table 傳進來的 SortBy，否則用表單 SortBy，最後給預設
     const sortBy =
       body?.SortBy && body.SortBy.length
         ? body.SortBy
@@ -222,50 +213,51 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
           ? formVal.SortBy
           : [{ field: 'ECR_No', order: 1 }];
 
-    const pagingAndSort = {
+    // ✅ 這支 API 是 pack 形式，不做真正分頁；統一送 pageIndex=1
+    //    但 pageSize 保留 30 給後端（若後端會用到），同時避免 table-report 用這個值去判斷還有下一頁：
+    //    「是否還有下一頁」由我們回傳的 TotalCount 控制（固定 rows.length）
+    const payload = {
+      ...basePayload,
       pageSize: 30,
-      pageIndex,
+      pageIndex: 1,
       SortBy: sortBy,
     };
 
-    return this.tls23050Service
-      .queryTLS23050({
-        ...basePayload,
-        ...pagingAndSort,
-      })
-      .pipe(
-        map((res: any) => {
-          const first =
-            Array.isArray(res?.Data) && res.Data.length > 0
-              ? res.Data[0]
-              : res?.Data ?? null;
+    return this.tls23050Service.queryTLS23050(payload).pipe(
+      map((res: any) => {
+        const first = Array.isArray(res?.Data) && res.Data.length > 0 ? res.Data[0] : res?.Data ?? null;
 
-          const details = Array.isArray(first?.tLS23050Details)
-            ? first.tLS23050Details
-            : [];
+        const details = Array.isArray(first?.tLS23050Details) ? first.tLS23050Details : [];
 
-          const rows = details.map((r: any, i: number) => ({
-            ...r,
-            _rowKey: `${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
-          }));
+        const rows = details.map((r: any, i: number) => ({
+          ...r,
+          _rowKey: `${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+        }));
 
-          let totalCount =
-            typeof res?.TotalCount === 'number'
-              ? res.TotalCount
-              : rows.length;
+        // ✅ 關鍵：TotalCount 固定等於本次 rows.length
+        //    TableReportComponent 看到 data.length < totalRecords 才會 loadMore
+        //    所以這裡永遠不讓它成立
+        const totalCount = rows.length;
 
-          // ⭐ 如果是第二頁以上，卻已經沒有任何資料，視為「到底了」
-          //    把 totalCount 壓成目前已載入的筆數，避免 loadMoreData 一直打 pageIndex=2
-          if (pageIndex > 1 && rows.length === 0) {
-            totalCount = this.data.length;
-          }
+        const grand = first ? this.buildFooterFromPack(first) : this.footerData ?? {};
+        this.footerData = grand;
 
-          const grand = first ? this.buildFooterFromPack(first) : this.footerData ?? {};
-          this.footerData = grand;
+        // ✅ 同步外層 totalRecords（有些頁面會用到）
+        this.totalRecords = totalCount;
 
-          return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
-        }),
-      );
+        // ✅ 同步 historyRequestBody，確保 table-report 不會開 virtual scroll 造成 loadMore
+        if (this.historyRequestBody) {
+          this.historyRequestBody = {
+            ...this.historyRequestBody,
+            SortBy: sortBy,
+            pageSize: 999999,
+            pageIndex: 1,
+          };
+        }
+
+        return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+      }),
+    );
   };
 
   // === 匯出（PDF / Excel）— 不傳 pageSize / pageIndex ===
@@ -350,8 +342,7 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
   }
 
   // === 欄位定義（總計列會以 footerData 顯示）===
-  moneyFormat = (value: number): string =>
-    value != null ? Number(value || 0).toLocaleString('en-US') : '0';
+  moneyFormat = (value: number): string => (value != null ? Number(value || 0).toLocaleString('en-US') : '0');
 
   columns = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
