@@ -58,7 +58,6 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   dataForm = this.formBuilder.nonNullable.group({
     PO_No: [{ value: '系統自動產生', disabled: true }], // 採購單號 (與 POS2016.PO_No 對應)
     VEN_No: [null as string | null, [Validators.required]], // 廠商編號 (與 POS2016.VEN_No 對應)
-    vendorShortName: [{ value: '' as string | undefined, disabled: true }], // 廠商簡稱 (前端專用，不對應資料庫欄位，顯示在 VEN_No 下一欄)
     LOGO_No: [null as string | null, [Validators.required]], // 品牌代碼 (與 POS2016.LOGO_No 對應)
     remainingBudgetAmount: [{ value: 0, disabled: true }], // 剩餘預算金額 (前端顯示用，不對應資料庫欄位)
     HOS_No: [null as string | null, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
@@ -251,13 +250,6 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         }));
         this.originalData = [...this.data];
       });
-      this.vendorOptions.subscribe(options => {
-        const shortName = options?.find(opt => opt.value === this.dataForm.controls.VEN_No.value)?.['ShortName'];
-        this.dataForm.controls.vendorShortName.setValue(
-          shortName ? `廠商簡稱: ${shortName}` : ''
-        );
-        this.ShortName = options?.find(opt => opt.value === this.dataForm.controls.VEN_No.value)?.['ShortName'] ?? '';
-      });
       this.GetBudgetAmount();
       this.loadDropdownOptions();
     } else {
@@ -311,11 +303,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
 
     // 2. 監聽表單欄位變化
     // 監聽廠商編號變化 (邏輯不變)
-    VEN_No.valueChanges.pipe(withLatestFrom(this.vendorOptions), untilDestroyed(this)).subscribe(([vendorNo, options]) => {
-      const shortName = options?.find(opt => opt.value === this.dataForm.controls.VEN_No.value)?.['ShortName'];
-      this.dataForm.controls.vendorShortName.setValue(
-        shortName ? `廠商簡稱: ${shortName}` : ''
-      );
+    VEN_No.valueChanges.pipe(withLatestFrom(this.vendorOptions), untilDestroyed(this)).subscribe(() => {
       this.calculateTotals();
       [this.data, this.selectedItems, this.dialogData] = [[], [], []];
     });
@@ -505,17 +493,32 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       this.CAT_LNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     });
     // 監聽大分類變化
-    this.dialogQueryForm.controls.CAT_LNo.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
+    this.dialogQueryForm.controls.CAT_LNo.valueChanges.pipe(
+      debounceTime(300),
+      untilDestroyed(this)
+    ).subscribe((value) => {
+      // 1. 先重置後續分類的選項與值
+      this.CAT_MNoOptions = [];
+      this.CAT_SNoOptions = [];
+      this.dialogQueryForm.controls.CAT_MNo.setValue(null);
+      this.dialogQueryForm.controls.CAT_SNo.setValue(null);
+
       if (value) {
-        this.dropDownListService.queryPOS20031_DropDownList({ CAT_LNo: [value] }).pipe(untilDestroyed(this)).subscribe(response => {
-          this.CAT_MNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
-          this.dialogQueryForm.controls.CAT_MNo.enable();
-        });
+        this.dropDownListService.queryPOS20031_DropDownList({ CAT_LNo: [value] })
+          .pipe(untilDestroyed(this))
+          .subscribe(response => {
+            this.CAT_MNoOptions = response.Data.map(item => ({
+              ...item,
+              label: `${item.No} - ${item.Name}`
+            }));
+            // 2. 先 Enable 才能確保 UI 選項能被選取
+            this.dialogQueryForm.controls.CAT_MNo.enable();
+            // 3. 強制變更偵測，讓 PrimeNG 渲染新的 Options
+            this.cdr.detectChanges();
+          });
       } else {
         this.dialogQueryForm.controls.CAT_MNo.disable();
       }
-      this.dialogQueryForm.controls.CAT_MNo.setValue(null); // 清空中分類選擇
-      this.dialogQueryForm.controls.CAT_SNo.setValue(null); // 清空中分類選擇
     });
     // 監聽中分類變化
     this.dialogQueryForm.controls.CAT_MNo.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
@@ -690,16 +693,10 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       });
     });
   }
-  ShortName? = '';
   remainingBudgetAmount = 0;
   onReset() {
-    // 加上「廠商簡稱: 」前綴，並處理 null/undefined 的情況
-    const displayShortName = this.ShortName ? `廠商簡稱: ${this.ShortName}` : '';
-    this.dataForm.controls.vendorShortName.setValue(displayShortName, { emitEvent: false });
-
     // 如果剩餘預算也需要格式化（例如加上 $ 符號或「金額: 」），也可以比照辦理
     this.dataForm.controls.remainingBudgetAmount.setValue(this.remainingBudgetAmount, { emitEvent: false });
-
     // 還原資料列表
     this.data = [...this.originalData];
   }

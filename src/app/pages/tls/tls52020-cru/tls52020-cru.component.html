@@ -3,19 +3,21 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
+
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+
       <div class="grid p-fluid">
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="退貨單編號" controlName="PO_No"
+        <app-input-text class="col-12 md:col-4 lg:col-3" label="退貨單編號" controlName="CRN_No"
           [control]="dataForm.controls.CRN_No" [submitted]="submitted" />
+
+        <div class="col-12 md:col-8 lg:col-9">
+          <app-dropdown label="廠商編號/名稱" controlName="VEN_No" [options]="vendorOptions | async" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.VEN_No" [submitted]="submitted" />
+        </div>
       </div>
-      <div class="grid p-fluid">
-        <app-dropdown class="col-12" label="廠商編號/名稱" controlName="VEN_No" [options]="vendorOptions | async"
-          optionLabel="label" optionValue="value" [control]="dataForm.controls.VEN_No" [submitted]="submitted" />
 
-        <!-- <app-input-text *ngIf="dataForm.controls.VEN_No.value" class="col-12 md:col-6 lg:col-2" label="廠商簡稱"
-          controlName="vendorShortName" [control]="dataForm.controls.vendorShortName" [submitted]="submitted" /> -->
-
+      <div class="grid p-fluid mt-2">
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="品牌代碼/名稱" controlName="LOGO_No"
           [options]="filteredLogoOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.LOGO_No"
           [submitted]="submitted" />
@@ -24,40 +26,47 @@
           [options]="filteredWarehouseOptions" optionLabel="label" optionValue="value"
           [control]="dataForm.controls.HOS_No" [submitted]="submitted" />
 
-        <app-input-number class="col-12 md:col-6 lg:col-4" label="退貨金額" controlName="PO_TotalBuyNet"
-          [control]="dataForm.controls.CRN_TotalBuyNet" [useGrouping]="true" [minFractionDigits]="0"
-          [maxFractionDigits]="2" [submitted]="submitted" />
+        <div class="hidden lg:block lg:col-4"></div>
+      </div>
 
-        <app-input-number class="col-12 md:col-6 lg:col-4" label="稅額" controlName="PO_TotalBuyTax"
-          [control]="dataForm.controls.CRN_TotalBuyTax" [useGrouping]="true" [minFractionDigits]="0"
-          [maxFractionDigits]="2" [submitted]="submitted" />
+      <div class="grid p-fluid mt-2 surface-50 border-round p-2">
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="退貨金額" controlName="CRN_TotalBuyNet"
+          [control]="dataForm.controls.CRN_TotalBuyNet" [useGrouping]="true" [submitted]="submitted" />
 
-        <app-input-number class="col-12 md:col-6 lg:col-4" label="合計金額" controlName="PO_TotalBuyAmt"
-          [control]="dataForm.controls.CRN_TotalBuyAmt" [useGrouping]="true" [minFractionDigits]="0"
-          [maxFractionDigits]="2" [submitted]="submitted" />
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="稅額" controlName="CRN_TotalBuyTax"
+          [control]="dataForm.controls.CRN_TotalBuyTax" [useGrouping]="true" [submitted]="submitted" />
 
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="申請人" controlName="APPLY_USR_Name"
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="合計金額" controlName="CRN_TotalBuyAmt"
+          [control]="dataForm.controls.CRN_TotalBuyAmt" [useGrouping]="true" [submitted]="submitted" />
+
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="售價總計" controlName="CRN_TotalSaleAmt"
+          [control]="dataForm.controls.CRN_TotalSaleAmt" [useGrouping]="true" [submitted]="submitted" />
+      </div>
+
+      <div class="grid p-fluid mt-2">
+        <app-input-text class="col-12 md:col-6 lg:col-2" label="申請人" controlName="APPLY_USR_Name"
           [control]="dataForm.controls.APPLY_USR_Name" [submitted]="submitted" />
 
-        <app-calendar class="col-12 md:col-6 lg:col-4" label="申請日期" controlName="APPLY_Date"
+        <app-calendar class="col-12 md:col-6 lg:col-3" label="申請日期" controlName="APPLY_Date"
           [control]="dataForm.controls.APPLY_Date" [submitted]="submitted" />
 
-        <app-input-number class="col-12 md:col-6 lg:col-4" label="售價總計" controlName="PO_TotalSaleAmt"
-          [control]="dataForm.controls.CRN_TotalSaleAmt" [useGrouping]="true" [minFractionDigits]="0"
-          [maxFractionDigits]="2" [submitted]="submitted" />
-
-        <app-input-textarea class="col-12" label="退貨單說明" controlName="PO_Remark"
-          [control]="dataForm.controls.CRN_Remark" [submitted]="submitted" />
+        <app-input-textarea class="col-12 lg:col-7" label="退貨單說明" controlName="CRN_Remark"
+          [control]="dataForm.controls.CRN_Remark" [submitted]="submitted" [rows]="1" />
       </div>
-      <app-table-edit class="col-12" tableKey="TLS52020Detail" [columns]="editColumns" [data]="data"
-        (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
-        (dataChange)="data = $event;calculateTotals()" [tableRequired]="true" [disabled]="isFormReadable"
-        (insert)="dialogVisible = true" [showInsert]="isFormCreateable || rowdata?.CRN_Status === '0'"
-        [rowValidate]="validateEntireRow"
-        [disabled]="isFormReadable || dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value ? false : true"
-        [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value ? false : true" />
 
-      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <div class="mt-4">
+        <div class="flex justify-content-between align-items-center mb-2">
+          <span class="text-xl font-bold text-primary"><i class="pi pi-undo mr-2"></i>退貨商品明細</span>
+        </div>
+        <app-table-edit class="col-12" tableKey="TLS52020Detail" [columns]="editColumns" [data]="data"
+          (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
+          (dataChange)="data = $event;calculateTotals()" [tableRequired]="true" [rowValidate]="validateEntireRow"
+          [disabled]="isFormReadable || !(dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value)"
+          (insert)="dialogVisible = true" [showInsert]="isFormCreateable || rowdata?.CRN_Status === '0'"
+          [insertDisabled]="!(dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value)" />
+      </div>
+
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-4 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" (clickEvent)="onReset()" />
         <app-button btnType="submit" [loading]="loading" />
       </div>
@@ -65,27 +74,34 @@
   </p-panel>
 </div>
 
-<app-dialog [visible]="dialogVisible" header="選擇商品明細" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
+<app-dialog [visible]="dialogVisible" header="選擇退貨商品" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
   [disable]="selectedItemsDialog.length === 0">
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
     <div class="grid p-fluid">
       <app-product-autocomplete class="col-12" [control]="dialogQueryForm.controls.queryNo" [submitted]="submitted"
         [extraFilters]="{ VEN_No: dataForm.controls.VEN_No.value, LOGO_No: dataForm.controls.LOGO_No.value}" />
+
       <app-input-text class="col-12" label="商品名稱" controlName="PLU_Name"
         [control]="dialogQueryForm.controls.PLU_Name" />
-      <app-dropdown class="col-12 col-6 lg:col-4" label="大分類代碼" controlName="CAT_LNo"
+
+      <app-dropdown class="col-12 md:col-4" label="大類" controlName="CAT_LNo"
         [control]="dialogQueryForm.controls.CAT_LNo" [options]="CAT_LNoOptions" optionLabel="label" optionValue="No" />
-      <app-dropdown class="col-12 col-6 lg:col-4" label="中分類代碼" controlName="CAT_MNo"
+
+      <app-dropdown class="col-12 md:col-4" label="中類" controlName="CAT_MNo"
         [control]="dialogQueryForm.controls.CAT_MNo" [options]="CAT_MNoOptions" optionLabel="label" optionValue="No" />
-      <app-dropdown class="col-12 col-6 lg:col-4" label="小分類代碼" controlName="CAT_SNo"
+
+      <app-dropdown class="col-12 md:col-4" label="小類" controlName="CAT_SNo"
         [control]="dialogQueryForm.controls.CAT_SNo" [options]="CAT_SNoOptions" optionLabel="label" optionValue="No" />
     </div>
-    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+
+    <div class="flex justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3">
       <app-button btnType="clear" [form]="dialogQueryForm"></app-button>
       <app-button btnType="query" [loading]="dialogLoading"></app-button>
     </div>
   </form>
-  <hr />
+
+  <hr class="my-3" />
+
   <app-table-report tableKey="tls52010CruDialogTable" dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData"
     [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
     (selectionChange)="selectedItemsDialog = $event" [showManage]="false" [showCheckBox]="true"

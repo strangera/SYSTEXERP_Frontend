@@ -58,7 +58,6 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
   dataForm = this.formBuilder.nonNullable.group({
     CRN_No: [{ value: '系統自動產生', disabled: true }], // 採購單號 (與 POS2016.PO_No 對應)
     VEN_No: [null as string | null, [Validators.required]], // 廠商編號 (與 POS2016.VEN_No 對應)
-    vendorShortName: [{ value: '' as string | undefined, disabled: true }], // 廠商簡稱 (前端專用，不對應資料庫欄位，顯示在 VEN_No 下一欄)
     LOGO_No: [null as string | null, [Validators.required]], // 品牌代碼 (與 POS2016.LOGO_No 對應)
     HOS_No: [null as string | null as string | null, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
     CRN_TotalBuyNet: [{ value: 0, disabled: true }], // 採購金額
@@ -366,9 +365,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     });
 
     // 4. 監聽廠商編號變化 (邏輯不變)
-    this.dataForm.controls.VEN_No.valueChanges.pipe(withLatestFrom(this.vendorOptions), untilDestroyed(this)).subscribe(([vendorNo, options]) => {
-      this.dataForm.controls.vendorShortName.setValue(options?.find(opt => opt.value === vendorNo)?.['ShortName'] ?? '', { emitEvent: false });
-      // this.calculateTotals(); // 註釋掉：廠商變更不應觸發總計計算
+    this.dataForm.controls.VEN_No.valueChanges.pipe(withLatestFrom(this.vendorOptions), untilDestroyed(this)).subscribe(() => {
       [this.data, this.selectedItems, this.dialogData] = [[], [], []];
     });
   }
@@ -678,9 +675,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
       });
     });
   }
-  ShortName? = '';
   onReset() {
-    this.dataForm.controls.vendorShortName.setValue(this.ShortName, { emitEvent: false });
     this.data = [...this.originalData];
   }
 }
