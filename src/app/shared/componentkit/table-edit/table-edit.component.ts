@@ -530,4 +530,25 @@ export class TableEditComponent implements OnChanges {
     }
     return baseColspan + firstAggregateIndex;// 合併數為：基礎 colspan + 第一個有總計值的資料欄位索引
   }
+
+  focusFirstInput(rowIndex: number) {
+    // 這裡使用 this.table.el.nativeElement，只會在「這個元件實例」的 HTML 範圍內找
+    if (!this.table || !this.table.el) return;
+
+    setTimeout(() => {
+      const tbody = this.table.el.nativeElement.querySelector('.p-datatable-tbody');
+      if (tbody) {
+        const rows = tbody.querySelectorAll('tr');
+        const targetRow = rows[rowIndex];
+
+        if (targetRow) {
+          // 優先找輸入框，找不到再找 dropdown 或其他可點選元件
+          const input = targetRow.querySelector('input, select, textarea, .p-dropdown-label, [tabindex="0"]') as HTMLElement;
+          if (input) {
+            input.focus();
+          }
+        }
+      }
+    });
+  }
 }

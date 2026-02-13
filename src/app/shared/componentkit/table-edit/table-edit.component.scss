@@ -43,11 +43,35 @@
       background-color: var(--table-invalid-row) !important;
     }
     .insert-row {
-      .p-dropdown.p-component,
-      .p-inputtext {
+      background-color: var(
+        --surface-50
+      ) !important; // 給一個極淡的底色區別已有的資料
+
+      // 讓文字看起來像 Placeholder
+      span.text-blue-500 {
+        color: var(--text-color-secondary) !important;
+        font-style: italic;
+        font-size: 0.9rem;
+      }
+
+      // 針對這行的輸入框，加強「這裡可以打字」的感覺
+      .p-inputtext,
+      .p-dropdown {
         border-style: dashed !important;
-        // border-width: 2px !important;
-        // border-color: var(--blue-400) !important;
+        background: transparent !important;
+        transition: all 0.2s;
+
+        &:hover,
+        &:focus {
+          border-style: solid !important;
+          background: var(--surface-ground) !important;
+          border-color: var(--primary-color) !important;
+        }
+      }
+
+      // 移除這行的 hover 手型，避免使用者覺得整行可以點
+      &.p-selectable-row:hover {
+        cursor: default !important;
       }
     }
     .p-datatable-wrapper {
