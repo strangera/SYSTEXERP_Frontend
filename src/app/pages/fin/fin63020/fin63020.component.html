@@ -48,8 +48,6 @@
               [control]="queryForm.controls.bankAccountCode"
               [submitted]="submitted"
             ></app-dropdown>
-
-
           </div>
 
           <!-- 第2列 -->
@@ -247,9 +245,7 @@
           </div>
         </div>
 
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button
             [type]="'button'"
             label="支票領取"
@@ -269,57 +265,63 @@
   </p-accordion>
 </div>
 
-<!-- ✅ 列表：改用 app-table 才有內建 checkbox + isRowSelectable -->
+<!-- ✅ 工具列：匯出放在 table 上方（不依賴 table-report 內建報表按鈕） -->
 <div class="card">
-<app-table
-  #finTable
-  [tableKey]="'FIN63020_TABLE'"
-  [dataKey]="'CheckNo'"
-  [columns]="columns"
-  [data]="data"
-  [totalRecords]="totalRecords"
-  [loading]="loading"
-  [showSerialNo]="true"
-  [showCheckBox]="true"
-  [selectionMode]="'multiple'"
-  [(selectedItems)]="selectedItems"
-  [isRowSelectable]="isRowSelectable"
-  [showManage]="true"
-  [showDetail]="true"
-  [showReportMode]="false"
-  [showDelete]="false"
-  [showEdit]="false"
-  [lazy]="true"
-  (detail)="onDetail($event)"
->
+  <div class="flex justify-content-between align-items-center w-full mb-2">
+    <div></div>
 
+    <div class="flex gap-2">
+      <p-button
+        styleClass="p-2"
+        label="應付票據維護報表.PDF"
+        [loading]="btnLoading"
+        icon="pi pi-file"
+        (click)="onExportPDF()"
+        [disabled]="data.length === 0"
+      ></p-button>
 
-   <header>
-      <div class="flex justify-content-between align-items-center w-full">
-        <div></div>
+      <p-button
+        styleClass="p-2"
+        label="應付票據維護報表.XLSX"
+        [loading]="btnLoading"
+        icon="pi pi-file"
+        (click)="onExportXLSX()"
+        [disabled]="data.length === 0"
+      ></p-button>
+    </div>
+  </div>
 
-        <div class="flex gap-2">
-          <p-button
-            styleClass="p-2"
-            label="匯出應付票據維護報表.PDF"
-            [loading]="btnLoading"
-            icon="pi pi-file"
-            (click)="onExportPDF()"
-            [disabled]="data.length === 0"
-          ></p-button>
+  <!-- ✅ 列表：改用 app-table-report -->
+  <app-table-report
+    [tableKey]="'FIN63020_TABLE'"
+    [dataKey]="'CheckNo'"
+    [columns]="columns"
+    [data]="data"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [lazy]="true"
 
-          <p-button
-            styleClass="p-2"
-            label="匯出應付票據維護報表.XLSX"
-            [loading]="btnLoading"
-            icon="pi pi-file"
-            (click)="onExportXLSX()"
-            [disabled]="data.length === 0"
-          ></p-button>
-        </div>
-      </div>
-    </header>
-  </app-table>
+    [showCheckBox]="true"
+    [selectedItems]="selectedItems"
+    (selectionChange)="onSelectionChange($event)"
+    (selectAllChange)="onSelectAllChange($event)"
+    [isRowSelectable]="isRowSelectable"
+
+    [showManage]="true"
+    [showDetail]="true"
+    [showEdit]="true"
+    [editDisabled]="editDisabled"
+    
+    (detail)="onDetail($event)"
+    (edit)="onEdit($event)"
+
+    [showReportMode]="false"
+    [showDelete]="false"
+
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="queryFIN63020ForReport"
+  >
+  </app-table-report>
 </div>
 
 <!-- ✅ 支票領取 Dialog -->

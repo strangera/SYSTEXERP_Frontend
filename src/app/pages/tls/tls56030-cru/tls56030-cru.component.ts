@@ -408,7 +408,7 @@ export class TLS56030CRUComponent
     this.tls52010Service
       .queryPOS2004Detail(body)
       .pipe(untilDestroyed(this))
-      .subscribe((results) => {
+      .subscribe((results: any) => {
         this.suggestions = [...results.Data];
       });
   }
@@ -427,7 +427,7 @@ export class TLS56030CRUComponent
     this.tls52010Service
       .queryPOS2004Detail(body)
       .pipe(untilDestroyed(this))
-      .subscribe((results) => {
+      .subscribe((results: any) => {
         this.opData = [...results.Data];
         this.opTotalRecords = results.TotalCount;
         this.opLoading = false;
@@ -453,7 +453,7 @@ export class TLS56030CRUComponent
 
     setTimeout(() => {
       if (!this.dataForm.controls.LOGO_No.value || !value) return;
-      this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results: any) => {
         if (results.Data && results.Data.length > 0) {
           const newData = results.Data[0];
           const buyPrc = newData.PLU_SalePrc_UNI || 0;
@@ -549,9 +549,9 @@ export class TLS56030CRUComponent
     };
 
     this.tls52010Service
-      .queryPOS2004DetailByVenNo(body)
+      .queryPOS2004Detail(body)
       .pipe(finalize(() => (this.dialogLoading = false)), untilDestroyed(this))
-      .subscribe((response) => {
+      .subscribe((response: any) => {
         this.dialogData = response.Data;
         this.opTotalRecords = response.TotalCount;
       });

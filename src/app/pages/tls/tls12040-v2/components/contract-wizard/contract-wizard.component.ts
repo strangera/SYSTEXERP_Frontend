@@ -1272,6 +1272,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       VEN_Name: formData.VEN_Name || '',
       contract_subno: formData.contract_subno || '',
       tlt_term_type: (formData.tlt_term_type || '').toString().trim(),
+      tlt_ctype_mtotal: formData.tlt_ctype_mtotal || '',
+      overall_status: formData.overall_status || '',
       tlt_bdate: formData.tlt_bdate || '',
       tlt_edate: formData.tlt_edate || '',
       tlt_contract_bdate: formData.tlt_contract_bdate || '',
