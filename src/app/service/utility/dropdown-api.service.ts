@@ -502,8 +502,8 @@ export class DropdownApiService {
   }
 
   /** 查詢收銀機(POS1002) (依照ECR_Type查詢) */
-  queryPos1002EcrType(body: Pos1002EcrTypeQuery): Observable<IDropdownItem[] | null> {
-    return this.queryDropdownWithParams<IDropdownItem, Pos1002EcrTypeQuery>('/queryPOS1002ECR_TypeDropDownList', body).pipe(
+  queryPos1002EcrType(body: Pos1002EcrTypeQuery): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem, Pos1002EcrTypeQuery>('/queryPOS1002ECR_TypeDropDownList', 'No', 'Name', body).pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
@@ -551,8 +551,8 @@ export class DropdownApiService {
   }
 
   /** 查詢專櫃主檔(TLTTALENT) (依照store_way查詢) */
-  queryTltTalentStoreWay(body: TalentStoreWayQuery): Observable<IDropdownItem[] | null> {
-    return this.queryDropdownWithParams<IDropdownItem, TalentStoreWayQuery>('/queryTLTTALENT_StoreWay_DropDownList', body).pipe(
+  queryTltTalentStoreWay(body: TalentStoreWayQuery): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem, TalentStoreWayQuery>('/queryTLTTALENT_StoreWay_DropDownList', 'No', 'Name', body).pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }

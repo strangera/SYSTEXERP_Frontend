@@ -10,12 +10,12 @@
         <div class="grid p-fluid">
           <!-- 專櫃編號 → POS5006.TLT_No -->
           <app-multi-select class="col-12 md:col-6" label="專櫃編號/名稱" controlName="TLT_NO"
-            [control]="queryForm.controls.TLT_NO" [submitted]="submitted" [options]="TLT_NoOptions" optionLabel="label"
-            optionValue="No" />
+            [control]="queryForm.controls.TLT_NO" [submitted]="submitted" [options]="TLT_NoOptions | async"
+            optionLabel="label" optionValue="value" />
           <!-- 收銀機號 → POS5006.ECR_No -->
           <app-multi-select class="col-12 md:col-6" label="收銀機號/名稱" controlName="ECR_No"
-            [control]="queryForm.controls.ECR_No" [submitted]="submitted" [options]="ECR_NoOptions" optionLabel="label"
-            optionValue="No" />
+            [control]="queryForm.controls.ECR_No" [submitted]="submitted" [options]="ECR_NoOptions | async"
+            optionLabel="label" optionValue="value" />
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
