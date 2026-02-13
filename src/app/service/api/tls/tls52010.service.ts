@@ -95,6 +95,7 @@ export interface IPOS2004DetailData {
   PLU_BoxQty: number; // 包裝入數
   PLU_StockTaxType: string; // 進貨稅別
   PLU_TaxType: string; // 售價稅別
+  POD_SaleTax?: number;
   PLU_SalePrc_UNI?: number; // 單價
   PLU_SalePrc?: number; // 售價
   POD_SubQty?: number; // 採購數量

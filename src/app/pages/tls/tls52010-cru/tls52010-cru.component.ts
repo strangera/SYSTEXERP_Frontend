@@ -102,21 +102,18 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       validate: [validateRequired, validateMinNumber(1)],
       width: '100px',
       calculate: (row) => {
-        const subQty = Number(row.POD_SubQty ?? 0);
-        const buyPrc = Number(row.PLU_SalePrc_UNI ?? 0); // 採購單價
-        const salePrc = Number(row.PLU_SalePrc ?? 0); // 售價
-        const taxType = row.PLU_StockTaxType; // 採購稅別
-
         // 採購金額計算
-        const buyNet = Math.round(subQty * buyPrc); // 採購淨額 (未稅小計)
-        const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0; // 採購稅額
+        const buyNet = Math.round(Number(row.POD_SubQty ?? 0) * Number(row.PLU_SalePrc_UNI ?? 0)); // 採購淨額 (未稅小計)
+        const buyTax = row.PLU_StockTaxType === '1' ? Math.round(buyNet * 0.05) : 0; // 採購稅額
         const buyAmt = buyNet + buyTax; // 採購合計 (含稅小計)
 
         // 售價小計計算 (PLU_SalePrc 是含稅售價，假設無需再次計算稅額)
-        const saleAmt = Math.round(subQty * salePrc);
+        const saleAmt = Math.round(Number(row.POD_SubQty ?? 0) * Number(row.PLU_SalePrc ?? 0));
         // 銷售稅額 (雖然欄位沒有顯示，但提交時需要，先算出來)
-        const saleTax = row.PLU_TaxType === '1' ? Math.round((saleAmt || 0) / 21) : 0; // 假設銷售稅率 5%
-
+        // 依照公式：(含稅售價 * 數量) / 21
+        const saleTax = row.PLU_TaxType === '1'
+          ? Math.round((Number(row.PLU_SalePrc ?? 0) * Number(row.POD_SubQty ?? 0)) / 21)
+          : 0;
         return {
           'POD_BuyNet': buyNet,
           'POD_BuyTax': buyTax, // 新增：明細採購稅額
@@ -172,7 +169,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
           const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0;
           const buyAmt = buyNet + buyTax;
           const saleAmt = Math.round(subQty * salePrc);
-          const saleTax = newData.PLU_TaxType === '1' ? Math.round((saleAmt || 0) / 21) : 0;
+          const saleTax = newData.PLU_TaxType === '1' ? Math.round((salePrc * subQty) / 21) : 0;
           const updatedRow: IQueryPOS2004DetailResponse = {
             ...newData,
             id: 0,
@@ -565,8 +562,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0;
       const buyAmt = buyNet + buyTax;
       const saleAmt = Math.round(subQty * salePrc);
-      const saleTax = item.PLU_TaxType === '1' ? Math.round((saleAmt || 0) / 21) : 0;
-
+      const saleTax = item.PLU_TaxType === '1' ? Math.round((salePrc * subQty) / 21) : 0;
       return {
         ...item,
         id: 0,
@@ -648,7 +644,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         PLU_Unit: item.PLU_Unit,
         PLU_BoxQty: item.PLU_BoxQty || 0,
         PLU_StockTaxType: item.PLU_StockTaxType,
-        POD_SaleTax: item.PLU_TaxType === '1' ? Math.round((item.POD_SaleAmt || 0) * 0.05) : 0,
+        POD_SaleTax: item.POD_SaleTax || 0,
         PLU_TaxType: item.PLU_TaxType,
         POD_SubQty: item.POD_SubQty || 0, // 確保有值，使用之前計算好的 POD_SubQty
         POD_BuyPrc: item.PLU_SalePrc_UNI || 0, // 採購單價 (未稅進價)
