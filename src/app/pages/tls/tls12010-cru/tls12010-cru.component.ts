@@ -459,16 +459,13 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
             VEN_Name: vendor.VEN_Name || null, // 廠商名稱(中文) 
             VEN_EngName: vendor.VEN_EngName || null, // 廠商名稱(英文)
 
-            VEN_Boss: vendor.CHARGE_STAFF || null, // 廠商聯絡人
             VEN_BossTel: vendor.VEN_Tel || null,         // 廠商聯絡人電話 (對應 API 的公司電話)
             VEN_BossTitle: vendor.CHARGE_TITLE || null,         // 廠商聯絡人頭銜
             VEN_BossFax: vendor.VEN_Fax || null,         // 廠商聯絡人傳真
-            VEN_BossMobile: vendor.VEN_Tel || null,     // 廠商聯絡人行動電話
             VEN_BossEmail: vendor.VEN_Email || null,     // 廠商聯絡人電子郵件
 
             VEN_Addr: vendor.VEN_GUIAddr || null,    // 郵寄地址
             VEN_Address: vendor.VEN_Address || null, // 公司營登地址
-            VEN_PersonInCharge: vendor.CHARGE_STAFF || null, // 公司負責人
 
           }, { emitEvent: false }); // 使用 emitEvent: false 避免觸發其他連動
 

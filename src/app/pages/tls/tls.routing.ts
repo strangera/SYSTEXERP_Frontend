@@ -74,6 +74,12 @@ export const tlsRoutes: Routes = [
   // 合約精靈 (單頁面包含所有步驟)
   { path: 'tls13010cru', loadComponent: () => import('./tls13010-v2/components/contract-wizard/contract-wizard.component').then(m => m.ContractWizardComponent), data: { progNo: 'TLS13010' } },
 
+  // ========== TLS13020 專櫃契約書續約維護作業 ==========
+  // 查詢頁面
+  { path: 'tls13020', loadComponent: () => import('./tls13020/components/query/query.component').then(m => m.QueryComponent), data: { progNo: 'TLS13020' } },
+  // 合約精靈 (單頁面包含所有步驟)
+  { path: 'tls13020cru', loadComponent: () => import('./tls13020/components/contract-wizard/contract-wizard.component').then(m => m.ContractWizardComponent), data: { progNo: 'TLS13020' } },
+
   // ========== TLS12040 專櫃要約書維護 (V2 重構版，現為主版本) ==========
   // 查詢頁面
   { path: 'tls12040', loadComponent: () => import('./tls12040-v2/components/query/query.component').then(m => m.QueryComponent), data: { progNo: 'TLS12040' } },

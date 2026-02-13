@@ -9,7 +9,7 @@
       (click)="goToPreviousStep()"
     ></app-button>
     <app-button
-      *ngIf="!isLastStep && !isViewMode"
+      *ngIf="!isLastStep"
       btnType="next"
       [label]="nextStepLabel"
       (click)="goToNextStep()"

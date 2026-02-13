@@ -52,7 +52,7 @@
         </div>
       </div>
       <hr />
-      <app-table dataKey="PLU_MagNo" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
+      <!-- <app-table-report dataKey="PLU_MagNo" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
         [showCheckBox]="!isFormReadable" (selectionChange)="selectedItems = $event" [showEdit]="false"
         [showDetail]="false" [showInsert]="true" [showDelete]="!isFormReadable"
         (insert)="dialogVisible = true;selectedItemsDialog = [];dialogData = []" [showRowEdit]="true"
@@ -60,7 +60,7 @@
         [insertDisabled]="dataForm.controls.HOS_No.value && dataForm.controls.LOGO_No.value ? false : true"
         [showInsert]="!isFormReadable" (rowEditSave)="onRowEditSave($event)" [showCaption]="!isFormReadable"
         (dataChange)="data = $event">
-      </app-table>
+      </app-table-report> -->
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" (click)="data = originalData" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading" />
@@ -72,10 +72,9 @@
   [disable]="selectedItemsDialog.length === 0">
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
     <div class="grid p-fluid">
-      <app-dropdown-table class="col-12" [showOverlay]="false" [control]="dialogQueryForm.controls.queryNo"
-        [submitted]="submitted" optionLabel="label" optionValue="PLU_No" [suggestions]="suggestions"
-        [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)">
-      </app-dropdown-table>
+      <app-product-autocomplete class="col-12" [control]="dialogQueryForm.controls.queryNo" [submitted]="submitted"
+        [extraFilters]="{ VEN_No: dataForm.controls.VEN_No.value, LOGO_No: dataForm.controls.LOGO_No.value}" />
+
       <app-input-text class="col-12" label="商品名稱" controlName="PLU_Name"
         [control]="dialogQueryForm.controls.PLU_Name" />
     </div>
@@ -85,11 +84,10 @@
     </div>
   </form>
   <hr />
-  <app-table tableKey="tls56080CruDialogTable" dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData"
+  <app-table-report tableKey="tls56080CruDialogTable" dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData"
     [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
-    (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
-    [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, dialogQueryForm); onQuery(dialogQueryForm)" [lazy]="true"
-    [loading]="dialogLoading" [isRowSelectable]="isRowSelectable.bind(this)">
-  </app-table>
+    (selectionChange)="selectedItemsDialog = $event" [showManage]="false" [showCheckBox]="true"
+    [queryFunction]="tls52010Service.queryPOS2004Detail.bind(tls52010Service)" [lastQueryBody]="dialogLastQueryBody"
+    [totalRecords]="totalRecords" [loading]="dialogLoading" [isRowSelectable]="isRowSelectable.bind(this)">
+  </app-table-report>
 </app-dialog>

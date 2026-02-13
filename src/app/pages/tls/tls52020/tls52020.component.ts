@@ -7,6 +7,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { FileExportService } from '@shared/service/file-export.service';
@@ -15,12 +16,11 @@ import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { finalize, Observable } from 'rxjs';
-import { IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
+import { Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { IQueryTLS52020Request, ITLS52020Data, Tls52020Service } from '../../../service/api/tls/tls52020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
@@ -46,7 +46,25 @@ export const enum CRNtatus {
     ])
   ],
   standalone: true,
-  imports: [AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, DropdownTableComponent, DropdownComponent, CalendarRangeQuickComponent, TableReportComponent, Button, TooltipModule, NgStyle, NgIf, TranslateModule]
+  imports: [
+    ProductAutocompleteComponent,
+    AsyncPipe,
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    MultiSelectComponent,
+    DropdownComponent,
+    CalendarRangeQuickComponent,
+    TableReportComponent,
+    Button,
+    TooltipModule,
+    NgStyle,
+    NgIf,
+    TranslateModule
+  ]
 })
 export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -207,26 +225,5 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
 
   get selectedCount() {
     return this.selectedItems.length;
-  }
-  // 管理編號
-  suggestions: IQueryPOS2004DetailResponse[] = [];
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
-  ];
-  onAutoCompleteInputChange(event: Record<'label', string>) {
-    const body = {
-      VEN_No: '',
-      LOGO_No: '',
-      queryNo: event.label || '',
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'PLU_No', order: 1 }],
-    }
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
-        ...item,
-        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
-      }))];
-    });
   }
 }

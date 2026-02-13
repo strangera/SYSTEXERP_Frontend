@@ -63,6 +63,12 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
    * @param frm 表單群組
    */
   onSettle(frm: FormGroup) {
+    // 結算時加回必填驗證
+    this.queryForm.controls.money_type.setValidators([Validators.required]);
+    this.queryForm.controls.sam_yyymm.setValidators([Validators.required]);
+    this.queryForm.controls.money_type.updateValueAndValidity();
+    this.queryForm.controls.sam_yyymm.updateValueAndValidity();
+
     this.handleSubmit(frm, () => {
       const body: ExecuteTls2d030Request = {
         sam_yyymm: this.datePipe.transform(frm.value.sam_yyymm, 'yyyyMM') as string,
@@ -91,6 +97,13 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
    * @param frm 表單群組
    */
   onSubmit(frm: FormGroup) {
+    // 查詢時移除必填驗證
+    ['money_type', 'sam_yyymm'].forEach(key => {
+      const control = this.queryForm.get(key);
+      control?.clearValidators();
+      control?.updateValueAndValidity({ emitEvent: false });
+    });
+
     this.loading = true;
     const body: QueryTls2d030Request = {
       ...frm.value,

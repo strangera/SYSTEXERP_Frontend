@@ -1,24 +1,25 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS2C010Service } from '@service/api/tls/tls2-c010.service';
-import { TLS2C030Data, TLS2C030Service } from '@service/api/tls/tls2-c030.service';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TLS2C030Data, TLS2C030QueryRequest, TLS2C030Service } from '@service/api/tls/tls2-c030.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn, formatDate } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls2c030',
   templateUrl: './tls2c030.component.html',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule, TableComponent]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule, TableReportComponent]
 })
 export class TLS2C030Component extends BasicQueryPageComponent<TLS2C030Data> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -28,13 +29,14 @@ export class TLS2C030Component extends BasicQueryPageComponent<TLS2C030Data> imp
 
   closeDate = ''; // 最近關帳日期
 
-  data: TLS2C030Data[] = [];
-  selectedItems: TLS2C030Data[] = [];
-  totalRecords = 0;
+  readonly tableData = signal<TLS2C030Data[]>([]);
+  readonly totalRecords = signal<number>(0);
+  readonly tableLoading = signal<boolean>(false);
+  lastQueryBody?: TLS2C030QueryRequest;
 
-  columns: Column[] = [
-    { field: 'id', header: 'ID', hidden: true },
-    { field: 'mid', header: 'MID', hidden: true },
+  readonly columns: ReportColumn[] = [
+    { field: 'id', header: 'ID', visible: false },
+    { field: 'mid', header: 'MID', visible: false },
     { field: 'cls_date', header: '關帳日期', visible: true, format: formatDate },
     { field: 'day_lock_date', header: '日關帳鎖定日期', visible: true, format: formatDate },
     { field: 'day_USR_No', header: '日關帳鎖定人員', visible: true },
@@ -64,18 +66,48 @@ export class TLS2C030Component extends BasicQueryPageComponent<TLS2C030Data> imp
       });
   }
 
+  onTableDataChange(data: TLS2C030Data[]) {
+    this.tableData.set(data ?? []);
+  }
+
+  queryFunction = (body: any) => {
+    const raw = this.queryForm.getRawValue();
+    const pageSize = body?.pageSize ?? body?.PageSize ?? raw?.pageSize ?? 30;
+    const pageIndex = body?.pageIndex ?? body?.PageIndex ?? raw?.pageIndex ?? 1;
+    const payload: TLS2C030QueryRequest = {
+      onedatedd: this.datePipe.transform(this.queryForm.get('onedatedd')?.value, 'yyyy-MM-ddTHH:mm:ss') || '',
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: body?.SortBy ?? raw?.SortBy,
+    };
+    return this.tls2c030Service.queryTLS2C030(payload);
+  };
+
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.tls2c030Service.queryTLS2C030(
-        {
-          ...frm.getRawValue(),
-          onedatedd: this.datePipe.transform(frm.get('onedatedd')?.value, 'yyyy-MM-ddTHH:mm:ss') || ''
-        })
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-        .subscribe(response => {
-          this.data = response.Data;
-          this.totalRecords = response.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+      const raw = frm.getRawValue();
+      this.lastQueryBody = {
+        onedatedd: this.datePipe.transform(frm.get('onedatedd')?.value, 'yyyy-MM-ddTHH:mm:ss') || '',
+        PageSize: raw.pageSize ?? 30,
+        PageIndex: raw.pageIndex ?? 1,
+        SortBy: raw.SortBy,
+      } as TLS2C030QueryRequest;
+
+      this.tableLoading.set(true);
+      this.queryStateService.setQueryState(this.ProgNo, raw);
+      this.queryFunction(this.lastQueryBody)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => {
+            this.tableLoading.set(false);
+            this.loading = false;
+          })
+        )
+        .subscribe({
+          next: response => {
+            this.tableData.set(response.Data ?? []);
+            this.totalRecords.set(response.TotalCount ?? 0);
+          }
         });
     });
   }
