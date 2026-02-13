@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -9,7 +9,7 @@ import { environment } from '../../../../environments/environment';
 export class TLS12020Service {
   private apiUrl = `${environment.ApiUrl}/TLS0000/TLS1000`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   queryTLS12020(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS12020`, data);
@@ -25,5 +25,8 @@ export class TLS12020Service {
 
   deleteTLS12020(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteTLS12020`, data);
+  }
+  queryTLS12010_POS2013(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS12010_POS2013`, data);
   }
 }

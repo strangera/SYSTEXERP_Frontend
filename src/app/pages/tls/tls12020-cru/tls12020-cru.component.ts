@@ -127,7 +127,7 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
     });
     //樓層API
     this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.floorOptions = res.Data.map(item => ({
+      this.floorOptions = res.Data.map((item: any) => ({
         ...item,
         label: item.Name,  // 顯示名稱
         value: item.No     // 實際值
@@ -136,7 +136,7 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
     //業種API
     this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       if (res?.Status === '0000') {
-        this.industryCodeOptions = res.Data.map(item => ({
+        this.industryCodeOptions = res.Data.map((item: any) => ({
           ...item,
           label: item.Name,
           value: item.No
@@ -147,29 +147,35 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.buildingNoOptions = res.Data.map(x => ({ label: x.Name, value: x.No, Name: x.Name, No: x.No }));
     });
-    //統編API
-    this.dropDownListService.queryPOS2013_DropDownList()
+    // 統編 API: 改為使用 TLS12010 的 POS2013 查詢介面，後端需接收 { VEN_Flag, VEN_Uniform }
+    const vendorBody = { VEN_Flag: '', VEN_Uniform: '' };
+    this.tls12020Service
+      .queryTLS12010_POS2013(vendorBody)
       .pipe(untilDestroyed(this))
       .subscribe(res => {
-        // 保留原始後端欄位，方便之後自動帶入
-        this.vendorUIDOptions = res.Data.map(item => ({
-          label: `${item.No} - ${item.Name}`, // 顯示中文+數字
-          value: item.No,                      // 送出用的值
-          Name: item.Name,                     // 中文名稱
-          No: item.No,                         // 編號
-          // 處理英文名稱：若後端回傳空字串，保留空字串；若回傳值只有允許的英文/數字/常用符號才視為有效，否則不提供（undefined）
-          VEN_EngName: (() => {
-            const raw = (item as any).VEN_EngName ?? item.ShortName ?? undefined;
-            if (raw === '') return '';
-            if (typeof raw === 'string') {
-              const validEng = /^[A-Za-z0-9 .,\-()]*$/;
-              return validEng.test(raw) ? raw : undefined;
-            }
-            return undefined;
-          })(),
-          VEN_Address: (item as any).VEN_Address ?? undefined,
-          ShortName: item.ShortName ?? undefined,
-        }));
+        if (res?.Status === '0000' && Array.isArray(res.Data)) {
+          this.vendorUIDOptions = res.Data.map((item: any) => ({
+            label: `${item.VEN_Uniform || item.VEN_No || ''} - ${item.VEN_Name || item.VEN_ShortName || ''}`,
+            value: item.VEN_Uniform || item.VEN_No || '',
+            Name: item.VEN_Name || item.VEN_ShortName || undefined,
+            No: item.VEN_No ?? undefined,
+            VEN_EngName: (() => {
+              const raw = item.VEN_EngName ?? item.VEN_ShortName ?? undefined;
+              if (raw === '') return '';
+              if (typeof raw === 'string') {
+                const validEng = /^[A-Za-z0-9 .,\-()]*$/;
+                return validEng.test(raw) ? raw : undefined;
+              }
+              return undefined;
+            })(),
+            VEN_Address: item.VEN_Address ?? item.VEN_Addr ?? item.VEN_GUIAddr ?? undefined,
+            ShortName: item.VEN_ShortName ?? undefined,
+            // 保留原始物件以便完整帶入表單其它欄位
+            raw: item,
+          }));
+        } else {
+          this.vendorUIDOptions = [];
+        }
       });
 
     // 選擇統編後自動帶入廠商名稱、英文名稱、公司地址
@@ -178,19 +184,27 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
       .subscribe(selectedNo => {
         const selected = this.vendorUIDOptions.find(v => v.value === selectedNo);
         if (selected) {
+          const raw = (selected as any).raw ?? selected;
           const patch: any = {
-            vendorCName: selected.Name ?? '',
-            VEN_Addr: selected.VEN_Address ?? ''
+            vendorCName: raw.VEN_Name || raw.VEN_ShortName || selected.Name || '',
+            VEN_Addr: raw.VEN_Address || raw.VEN_Addr || raw.VEN_GUIAddr || selected.VEN_Address || '',
+            VEN_Boss: raw.VEN_ContactPerson || raw.CHARGE_STAFF || raw.VEN_Contact || '',
+            VEN_BossTel: raw.VEN_Tel || raw.CHARGE_TEL || raw.ORDER_TEL || '',
+            VEN_BossTitle: raw.VEN_CheckTitle || raw.CHARGE_TITLE || '',
+            VEN_BossMobile: raw.VEN_BossMobile || raw.CHARGE_TEL || '',
+            VEN_BossEmail: raw.VEN_Email || raw.VEN_GUIEmail || '',
+            VEN_BossFax: raw.VEN_Fax || raw.VEN_GUIFax || '',
           };
 
-          // 只有當 vendor Eng 名稱為空字串或經過驗證為英文格式時，才覆蓋 vendorEName
           if (selected.VEN_EngName !== undefined) {
-            patch.vendorEName = selected.VEN_EngName; // 可能為 '' 或有效英文字串
+            patch.vendorEName = selected.VEN_EngName; // 保留空字串或有效英文字串
+          } else if (raw.VEN_EngName !== undefined) {
+            patch.vendorEName = raw.VEN_EngName ?? '';
           }
 
           this.dataForm.patchValue(patch, { emitEvent: false });
         } else {
-          this.dataForm.patchValue({ vendorCName: '', vendorEName: '', VEN_Addr: '' }, { emitEvent: false });
+          this.dataForm.patchValue({ vendorCName: '', vendorEName: '', VEN_Addr: '', VEN_Boss: '', VEN_BossTel: '', VEN_BossTitle: '', VEN_BossMobile: '', VEN_BossEmail: '', VEN_BossFax: '' }, { emitEvent: false });
         }
       });
 
@@ -215,7 +229,7 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
 
   loadDropdownOptions() {
     this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.contact_USR_NameOptions = res.Data.map(item => ({
+      this.contact_USR_NameOptions = res.Data.map((item: any) => ({
         ...item,
         label: item.Name,
         value: item.No
@@ -223,7 +237,7 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
     });
 
     this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.floorOptions = res.Data.map(item => ({
+      this.floorOptions = res.Data.map((item: any) => ({
         ...item,
         label: item.Name,
         value: item.No

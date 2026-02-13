@@ -14,7 +14,7 @@ import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
-import { Observable, finalize, forkJoin } from 'rxjs';
+import { Observable, catchError, finalize, forkJoin, of } from 'rxjs';
 import { CPM12050Data, CPM12050Service, InsertCPM12050DetailRequest, InsertCPM12050Request, UpdateCPM12050DetailRequest, UpdateCPM12050Request } from '../../../service/api/cpm/cpm12050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -559,23 +559,36 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
                 });
                 // 若找不到原始記錄，視為無須更新（避免誤送）
                 if (!orig) return null;
-                const origAnswer = orig.ANSWER ?? '';
-                const origAnswerId = orig.ANSWER_ID ?? '';
-                const curAnswer = item.ANSWER ?? '';
-                const curAnswerId = item.ANSWER_ID ?? '';
-                const changed = origAnswer !== curAnswer || origAnswerId !== curAnswerId;
-                if (!changed) return null;
-                // 先用 any 建立，再在回傳時 cast 為 UpdateCPM12050DetailRequest，避免當 ID 缺少時 TypeScript 編譯錯誤
-                const detailReqAny: any = {
-                  SEQ_ID: item.SEQ_ID,
-                  ANSWER: item.ANSWER,
-                  ANSWER_ID: item.ANSWER_ID,
-                  USR_NO: formValue.CRT_USR_No,
-                  USR_NAME: formValue.CRT_USR_Name
+
+                // 深度比對：忽略識別與使用者欄位（ID, SEQ_ID, USR_NO, USR_NAME）
+                const sanitize = (obj: any) => {
+                  const copy: any = {};
+                  Object.keys(obj || {}).forEach(k => {
+                    if (['ID', 'SEQ_ID', 'USR_NO', 'USR_NAME'].includes(k)) return;
+                    // 將日期轉為字串，比較時更穩定
+                    const v = obj[k];
+                    if (v instanceof Date) copy[k] = v.toISOString();
+                    else copy[k] = v;
+                  });
+                  return copy;
                 };
-                if (item.ID !== undefined) {
-                  detailReqAny.ID = item.ID;
-                }
+
+                const cleanOrig = sanitize(orig);
+                const cleanCur = sanitize(item);
+                const origJson = JSON.stringify(cleanOrig);
+                const curJson = JSON.stringify(cleanCur);
+                const changed = origJson !== curJson;
+                if (!changed) return null;
+
+                // 若有任一欄位改變，送 update request，僅包含後端要求的欄位
+                const detailReqAny: any = {
+                  ID: item.ID !== undefined ? item.ID : 0,
+                  SEQ_ID: String(item.SEQ_ID ?? ''),
+                  ANSWER: item.ANSWER ?? '',
+                  ANSWER_ID: item.ANSWER_ID ?? '',
+                  USR_NO: formValue.CRT_USR_No ?? '',
+                  USR_NAME: formValue.CRT_USR_Name ?? ''
+                };
                 return detailReqAny as UpdateCPM12050DetailRequest;
               })
               .filter((d: any) => d !== null) as UpdateCPM12050DetailRequest[];
@@ -590,21 +603,29 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
               console.log('DEBUG no updatedDetails to send');
             }
 
-            forkJoin(requests)
+            // 包裝每個 request，避免其中一個失敗導致整個 forkJoin 錯誤，並能回傳失敗的詳細資訊
+            const wrappedRequests = requests.map((r, idx) =>
+              r.pipe(
+                catchError(err => of({ __error: true, __index: idx, err }))
+              )
+            );
+
+            forkJoin(wrappedRequests)
               .pipe(
                 untilDestroyed(this),
                 finalize(() => this.loading = false)
               )
-              .subscribe({
-                next: () => {
-                  this.messageService.successBubble('修改成功');
-                  this.onCancel();
-                },
-                error: (err) => {
-                  console.error('updateCPM12050 error', err);
+              .subscribe((results: any[]) => {
+                const failed = (results || []).find(r => r && r.__error);
+                if (failed) {
+                  console.error('updateCPM12050 partial failures', results);
+                  const err = failed.err;
                   const msg = err?.error?.Message || err?.message || '修改失敗（後端錯誤）';
-                  this.messageService.errorBubble(msg);
+                  this.messageService.errorBubble(`修改失敗：${msg}`);
+                  return;
                 }
+                this.messageService.successBubble('修改成功');
+                this.onCancel();
               });
           }
           break;
