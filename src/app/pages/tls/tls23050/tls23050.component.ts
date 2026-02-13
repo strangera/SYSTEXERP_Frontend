@@ -118,147 +118,159 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
   }
 
   // === 查詢（送出）===
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      const val = this.queryForm.value as any;
+  // === 查詢（送出）===
+onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+    const val = this.queryForm.getRawValue() as any;
 
-      const payload: any = {
-        TXN_Date: this.toDateOnly(val?.TXN_Date), // 單日
-        rece_yn: val?.rece_yn ?? undefined,
-        tlt_building: val?.tlt_building ?? undefined,
-        tlt_floor: Array.isArray(val?.tlt_floor) && val?.tlt_floor.length ? val.tlt_floor : undefined,
-        org_id: Array.isArray(val?.org_id) && val?.org_id.length ? val.org_id : undefined,
-        ECR_No: Array.isArray(val?.ECR_No) && val?.ECR_No.length ? val.ECR_No : undefined,
+    const payload: any = {
+      TXN_Date: this.toDateOnly(val?.TXN_Date), // 單日
+      rece_yn: val?.rece_yn ?? undefined,
+      tlt_building: val?.tlt_building ?? undefined,
+      tlt_floor: Array.isArray(val?.tlt_floor) && val?.tlt_floor.length ? val.tlt_floor : undefined,
+      org_id: Array.isArray(val?.org_id) && val?.org_id.length ? val.org_id : undefined,
+      ECR_No: Array.isArray(val?.ECR_No) && val?.ECR_No.length ? val.ECR_No : undefined,
 
-        // 固定 30（查詢當下送後端）
-        pageSize: 30,
-        pageIndex: Number(val?.pageIndex) || 1,
-        SortBy: Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : [{ field: 'ECR_No', order: 1 }],
-      };
+      // 固定 30（送後端；TableReport 內部分頁不靠這個）
+      pageSize: 30,
+      pageIndex: 1, // ✅ pack 型報表，固定第一頁
+      SortBy: Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : [{ field: 'ECR_No', order: 1 }],
+    };
 
-      // 匯出時要拿掉 pageSize/pageIndex，所以另存
-      this.historyRequestBody = { ...payload };
+    // 匯出要用（稍後會 remove pageSize/pageIndex）
+    this.historyRequestBody = { ...payload };
 
-      this.loading = true;
-      this.messageService?.blockUi();
+    this.loading = true;
+    this.messageService?.blockUi();
 
-      this.tls23050Service
-        .queryTLS23050(payload)
-        .pipe(
-          finalize(() => {
-            this.loading = false;
-            this.messageService?.unblockUi();
-          }),
-        )
-        .subscribe({
-          next: (res: any) => {
-            const first = Array.isArray(res?.Data) && res.Data.length > 0 ? res.Data[0] : (res?.Data ?? null);
+    this.tls23050Service
+      .queryTLS23050(payload)
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.messageService?.unblockUi();
+        }),
+      )
+      .subscribe({
+        next: (res: any) => {
+          const first =
+            Array.isArray(res?.Data) && res.Data.length > 0
+              ? res.Data[0]
+              : res?.Data ?? null;
 
-            // 明細
-            const details = Array.isArray(first?.tLS23050Details) ? first.tLS23050Details : [];
-            this.data = details.map((r: any, i: number) => ({
-              ...r,
-              _rowKey: `${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
-            }));
+          // 明細
+          const details = Array.isArray(first?.tLS23050Details)
+            ? first.tLS23050Details
+            : [];
 
-            // ✅ 這支 API 屬於「pack + details 一次回來」型，不做真正分頁
-            //    totalRecords 一律等於目前資料筆數，避免 TableReportComponent 誤判「還有下一頁」而無限 loadMore
-            this.totalRecords = this.data.length;
+          this.data = details.map((r: any, i: number) => ({
+            ...r,
+            _rowKey: `${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+          }));
 
-            // 表尾總計（依欄位名稱直接餵值）
-            this.footerData = this.buildFooterFromPack(first);
+          // ✅ pack 型：TotalRecords 一律等於「目前資料筆數」
+          //    讓 TableReportComponent 判定「沒有下一頁」，避免無限 loadMore
+          this.totalRecords = this.data.length;
 
-            // ✅ 關掉 virtual scroll 造成的 onScroll→loadMore 連續打 API
-            //    TableReportComponent 的判斷是 data.length < lastQueryBody.pageSize 才會關掉 virtual scroll
-            //    所以把 pageSize 設很大，且 pageIndex 固定 1
-            if (this.historyRequestBody) {
-              this.historyRequestBody = {
-                ...this.historyRequestBody,
-                pageSize: 999999,
-                pageIndex: 1,
-              };
-            }
-          },
-          error: () => {
-            this.data = [];
-            this.totalRecords = 0;
-            this.footerData = {};
-          },
-        });
-    });
-  }
+          // Footer 總計
+          this.footerData = this.buildFooterFromPack(first);
+
+          // ✅ 關鍵：把 lastQueryBody.pageSize 撐大，讓 TableReport 的 ngOnChanges 判斷：
+          //    data.length < lastQueryBody.pageSize -> dt.virtualScroll = false
+          //    進而避免 onScroll 觸發 loadMoreData
+          if (this.historyRequestBody) {
+            this.historyRequestBody = {
+              ...this.historyRequestBody,
+              pageIndex: 1,
+              pageSize: 999999,
+            };
+          }
+        },
+        error: () => {
+          this.data = [];
+          this.totalRecords = 0;
+          this.footerData = {};
+        },
+      });
+  });
+}
+
 
   // === 提供給 app-table-report 的查詢函式（支援排序 UI，但不做真正分頁；避免無限 loadMore）===
-  public queryTLS23050ForReport = (body: any) => {
-    console.log('=== TLS23050 lazy query body ===', body);
-    console.log('form rece_yn = ', this.queryForm.value.rece_yn);
+// === 提供給 app-table-report 的查詢函式（支援排序，但不做分頁；避免無限 loadMore）===
+public queryTLS23050ForReport = (body: any) => {
+  const formVal = this.queryForm.getRawValue() as any;
 
-    const formVal = this.queryForm.value as any;
-
-    // 1) 固定從表單取查詢條件
-    const basePayload: any = {
-      TXN_Date: this.toDateOnly(formVal?.TXN_Date),
-      rece_yn: formVal?.rece_yn ?? undefined,
-      tlt_building: formVal?.tlt_building ?? undefined,
-      tlt_floor: Array.isArray(formVal?.tlt_floor) && formVal.tlt_floor.length ? formVal.tlt_floor : undefined,
-      org_id: Array.isArray(formVal?.org_id) && formVal.org_id.length ? formVal.org_id : undefined,
-      ECR_No: Array.isArray(formVal?.ECR_No) && formVal.ECR_No.length ? formVal.ECR_No : undefined,
-    };
-
-    // 2) 排序：優先用 table 傳進來的 SortBy，否則用表單 SortBy，最後給預設
-    const sortBy =
-      body?.SortBy && body.SortBy.length
-        ? body.SortBy
-        : formVal?.SortBy && formVal.SortBy.length
-          ? formVal.SortBy
-          : [{ field: 'ECR_No', order: 1 }];
-
-    // ✅ 這支 API 是 pack 形式，不做真正分頁；統一送 pageIndex=1
-    //    但 pageSize 保留 30 給後端（若後端會用到），同時避免 table-report 用這個值去判斷還有下一頁：
-    //    「是否還有下一頁」由我們回傳的 TotalCount 控制（固定 rows.length）
-    const payload = {
-      ...basePayload,
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: sortBy,
-    };
-
-    return this.tls23050Service.queryTLS23050(payload).pipe(
-      map((res: any) => {
-        const first = Array.isArray(res?.Data) && res.Data.length > 0 ? res.Data[0] : res?.Data ?? null;
-
-        const details = Array.isArray(first?.tLS23050Details) ? first.tLS23050Details : [];
-
-        const rows = details.map((r: any, i: number) => ({
-          ...r,
-          _rowKey: `${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
-        }));
-
-        // ✅ 關鍵：TotalCount 固定等於本次 rows.length
-        //    TableReportComponent 看到 data.length < totalRecords 才會 loadMore
-        //    所以這裡永遠不讓它成立
-        const totalCount = rows.length;
-
-        const grand = first ? this.buildFooterFromPack(first) : this.footerData ?? {};
-        this.footerData = grand;
-
-        // ✅ 同步外層 totalRecords（有些頁面會用到）
-        this.totalRecords = totalCount;
-
-        // ✅ 同步 historyRequestBody，確保 table-report 不會開 virtual scroll 造成 loadMore
-        if (this.historyRequestBody) {
-          this.historyRequestBody = {
-            ...this.historyRequestBody,
-            SortBy: sortBy,
-            pageSize: 999999,
-            pageIndex: 1,
-          };
-        }
-
-        return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
-      }),
-    );
+  // 1) 固定用表單條件（避免 body 殘留舊條件）
+  const basePayload: any = {
+    TXN_Date: this.toDateOnly(formVal?.TXN_Date),
+    rece_yn: formVal?.rece_yn ?? undefined,
+    tlt_building: formVal?.tlt_building ?? undefined,
+    tlt_floor: Array.isArray(formVal?.tlt_floor) && formVal.tlt_floor.length ? formVal.tlt_floor : undefined,
+    org_id: Array.isArray(formVal?.org_id) && formVal.org_id.length ? formVal.org_id : undefined,
+    ECR_No: Array.isArray(formVal?.ECR_No) && formVal.ECR_No.length ? formVal.ECR_No : undefined,
   };
+
+  // 2) 排序：優先 table body.SortBy，其次 form.SortBy，最後 default
+  const sortBy =
+    body?.SortBy && Array.isArray(body.SortBy) && body.SortBy.length
+      ? body.SortBy
+      : Array.isArray(formVal?.SortBy) && formVal.SortBy.length
+        ? formVal.SortBy
+        : [{ field: 'ECR_No', order: 1 }];
+
+  // ✅ pack 型：永遠查第一頁（後端會回完整 pack）
+  const payload: any = {
+    ...basePayload,
+    pageSize: 30,     // 給後端用（若有用到）
+    pageIndex: 1,     // ✅ 固定第一頁
+    SortBy: sortBy,
+  };
+
+  return this.tls23050Service.queryTLS23050(payload).pipe(
+    map((res: any) => {
+      const first =
+        Array.isArray(res?.Data) && res.Data.length > 0
+          ? res.Data[0]
+          : res?.Data ?? null;
+
+      const details = Array.isArray(first?.tLS23050Details)
+        ? first.tLS23050Details
+        : [];
+
+      const rows = details.map((r: any, i: number) => ({
+        ...r,
+        _rowKey: `${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+      }));
+
+      // ✅ 關鍵：TotalCount 固定等於 rows.length
+      //    TableReportComponent 的 loadMore 條件：data.length < totalRecords
+      //    這裡永遠不會成立，所以不會無限打 API
+      const totalCount = rows.length;
+
+      // Footer 總計
+      const grand = first ? this.buildFooterFromPack(first) : this.footerData ?? {};
+      this.footerData = grand;
+
+      // 同步外層 totalRecords（如果頁面有用到）
+      this.totalRecords = totalCount;
+
+      // ✅ 同步 lastQueryBody，撐大 pageSize 讓 virtualScroll 關閉（避免 onScroll→loadMore）
+      if (this.historyRequestBody) {
+        this.historyRequestBody = {
+          ...this.historyRequestBody,
+          ...basePayload,
+          SortBy: sortBy,
+          pageIndex: 1,
+          pageSize: 999999,
+        };
+      }
+
+      return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+    }),
+  );
+};
+
 
   // === 匯出（PDF / Excel）— 不傳 pageSize / pageIndex ===
   private buildExportBody() {
