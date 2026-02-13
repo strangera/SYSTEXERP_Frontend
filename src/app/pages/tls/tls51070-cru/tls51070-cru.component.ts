@@ -38,27 +38,47 @@ export type SectionName =
 export type FieldSectionMap = Record<string, SectionName>;
 
 export const fieldSectionMap: FieldSectionMap = {
+  // 基本資料 (buttonID === 1)
   PLU_MagNo: '基本資料',
   PLU_Name: '基本資料',
+  PLU_EngName: '基本資料',
+  PLU_PrnName: '基本資料',
   VEN_No: '基本資料',
+  PLU_OrgPLUNo: '基本資料',
+  PLU_No: '基本資料',
   CAT_LNo: '基本資料',
   CAT_MNo: '基本資料',
   CAT_SNo: '基本資料',
+  PLU_MinOrder: '基本資料',
+  PLU_Lable: '基本資料',
+  PLU_Reserve1: '基本資料',
 
+  // 商品規格 (buttonID === 2)
   PLU_Attribute: '商品規格',
   PLU_StockTaxType: '商品規格',
   PLU_Unit: '商品規格',
   PLU_TaxType: '商品規格',
   PLU_Type: '商品規格',
+  PLU_BoxQty: '商品規格',
+  PLU_Length: '商品規格',
+  PLU_Width: '商品規格',
+  PLU_Height: '商品規格',
+  PLU_Weight: '商品規格',
+  PLU_Volume: '商品規格',
 
+  // 商品規格(二) (buttonID === 3)
   PLU_Reserve2: '商品規格(二)',
   PLU_Reserve3: '商品規格(二)',
 
+  // 商品資訊 (buttonID === 4)
   TLT_NO: '商品資訊',
   LOGO_No: '商品資訊',
+  PLU_ECStatus: '商品資訊',
   PLU_SalePrc: '商品資訊',
-  PLU_Status: '商品資訊',
-  PLU_OpenPrc: '商品資訊',
+  STK_CurrentQty: '商品資訊',
+  PLU_OrderPrc: '商品資訊',
+  PLU_SafeQty: '商品資訊',
+  PLU_OrderPrcRate: '商品資訊',
 };
 
 @UntilDestroy()
@@ -173,7 +193,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
     //---
     PLU_OrderPrcRate: [{ value: 0, disabled: true }], // 進價折數 預設0 (依照品牌 PLULOGO)
-    PLU_ECStatus: [null, [Validators.maxLength(1)]], // EC商品狀態: 1.正常2.停用3.停進4,下架 For EC (備註: 原來的 商品狀態(PLU_Status) 改為 EC商品狀態(PLU_ECStatus))
+    PLU_ECStatus: ['1', [Validators.maxLength(1)]], // EC商品狀態: 1.正常2.停用3.停進4,下架 For EC (備註: 原來的 商品狀態(PLU_Status) 改為 EC商品狀態(PLU_ECStatus))
     // 20251013: PLU_ECStatus從顯示移除
     // 20251030: 新增此下拉單選欄位於 品牌代碼後面，不用預設值，非必填
     PLU_Status: ['0', [Validators.required, Validators.maxLength(1)]], // 商品狀態:0一般 不顯示
@@ -549,29 +569,26 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     this.submitted = true;
 
     //---送出前的POS2004檢核---
+    const invalidSections = new Set<string>();
+    // 收集有錯誤的區塊
+    Object.keys(this.dataForm.controls).forEach(key => {
+      const control = this.dataForm.get(key);
+      if (control && control.invalid) {
+        // 使用 type assertion 告訴 TS key 是索引
+        const section = (fieldSectionMap as any)[key] || '其他';
+        invalidSections.add(section);
+      }
+    });
 
-    // 檢查step1-step5 dataform 所有必填 並跳出提示
-    // if (this.dataForm.invalid) {
-    //   this.messageService.unblockUi();
+    if (invalidSections.size > 0) {
+      this.messageService.errorBubble(
+        Array.from(invalidSections).join('、') + ' 出現錯誤，請重新確認'
+      );
+    }
 
-    //   // 收集有錯誤的區塊
-    //   const invalidSections = new Set<string>();
+    // 重要：讓頁面上的輸入框顯示錯誤紅框
+    this.dataForm.markAllAsTouched();
 
-    //   Object.keys(this.dataForm.controls).forEach(key => {
-    //     const control = this.dataForm.get(key);
-    //     if (control && control.invalid) {
-    //       const section = fieldSectionMap[key] || '其他';
-    //       invalidSections.add(section);
-    //     }
-    //   });
-
-    //   if (invalidSections.size > 0) {
-    //     this.messageService.errorBubble(
-    //       '必填項目未填寫:\n' + Array.from(invalidSections).join(', ')
-    //     );
-    //   }
-    //   return;
-    // }
 
     // POS2004 國際條碼 和 POS2005國際條碼必須對應，且POS2004要在第一筆
     // 另外可以允許兩者都是null(此情況後端會自動依照商品編號設置)
