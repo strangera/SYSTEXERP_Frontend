@@ -126,6 +126,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
    * - 其他: 全部 4 個步驟
    */
   get steps(): MenuItem[] {
+    // 意向書：只顯示 Step 1（合約基本資料）
+    if (this.dataForm?.get('contract_type')?.value === '2') {
+      return [this.allSteps[0]];
+    }
+
     const commissionType = this.currentCommissionType as CommissionType;
 
     switch (commissionType) {
@@ -144,6 +149,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
    * 取得實際步驟索引對應表
    */
   get stepIndexMap(): number[] {
+    // 意向書：只有 Step 0
+    if (this.dataForm?.get('contract_type')?.value === '2') {
+      return [0];
+    }
+
     const commissionType = this.currentCommissionType as CommissionType;
 
     switch (commissionType) {
@@ -363,6 +373,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   // ========== 動態驗證器 ==========
   private setupDynamicValidators(): void {
+    // 監聽契約類型變更（意向書時只顯示 Step 1）
+    this.dataForm.get('contract_type')?.valueChanges.subscribe(() => {
+      this.currentStep = 0;
+    });
+
     // 監聽抽成別變更
     this.dataForm.get('tlt_term_type')?.valueChanges.subscribe((value) => {
       this.updateDynamicValidators();
@@ -1174,12 +1189,14 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private assembleSubmitData(): any {
+    const isIntentionLetter = this.dataForm?.get('contract_type')?.value === '2';
+
     return this.submitDataService.assembleSubmitData(
       this.dataForm.getRawValue(),
       this.wizardState.locationData,
-      this.wizardState.fareItems,
-      this.wizardState.commissionItems,
-      this.wizardState.conditionItems,
+      isIntentionLetter ? [] : this.wizardState.fareItems,
+      isIntentionLetter ? [] : this.wizardState.commissionItems,
+      isIntentionLetter ? [] : this.wizardState.conditionItems,
       this.isFormCreateable || this.isRenewalMode,
       this.isRenewalMode,
       this.currentCommissionType
