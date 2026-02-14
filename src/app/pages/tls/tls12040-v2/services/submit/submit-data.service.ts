@@ -119,7 +119,15 @@ export class SubmitDataService {
         interval: Number(item.interval) || 0,
         down_payment: Number(item.down_payment) || 0,
         period_nos: Number(item.period_nos) || 0,
-        tpy_rate: Number(item.tpy_rate) || 0
+        tpy_rate: Number(item.tpy_rate) || 0,
+        // D 類型專用欄位
+        cap_saletype: item.cap_saletype || '',
+        instms_type: item.instms_type || '',
+        edc_bank: item.edc_bank || '',
+        pay_no: item.pay_no || '',
+        calc_type: item.calc_type || '',
+        over_base_rate: Number(item.over_base_rate) || 0,
+        rent_plus_rate: Number(item.rent_plus_rate) || 0
       };
 
       // Create 模式：所有已勾選都是 insert
