@@ -463,13 +463,19 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     this.payNoOptions = this.dropdownService.getPayNoOptions();
 
     if (this.payNoOptions.length === 0) {
-      setTimeout(() => {
-        this.payNoOptions = this.dropdownService.getPayNoOptions();
-        if (this.payNoOptions.length > 0) {
-          this.clearColumnCache();
-          this.cdr.detectChanges();
+      // 如果 payNoOptions 為空，主動呼叫 API 載入
+      this.dropdownService.initPayNoOptionsWithRetry().subscribe({
+        next: (options) => {
+          this.payNoOptions = options;
+          if (this.payNoOptions.length > 0) {
+            this.clearColumnCache();
+            this.cdr.detectChanges();
+          }
+        },
+        error: (err) => {
+          console.error('❌ 載入支付編號選項失敗:', err);
         }
-      }, 500);
+      });
     }
   }
 
