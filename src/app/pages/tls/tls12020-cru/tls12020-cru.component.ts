@@ -133,16 +133,17 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
       const seen = new Set<string>();
       this.vendorUIDOptions = [];
       for (const item of data) {
-        const no = item.No ?? item.VEN_No ?? '';
+        const baseNo = item.No ?? '';
         const name = item.Name ?? item.ShortName ?? '';
-        const key = `${no}|${name}`;
+        const key = `${baseNo}|${name}`; // 去重依據仍為 No + Name
         if (seen.has(key)) continue;
         seen.add(key);
+        const displayNo = item.VEN_No ?? baseNo; // 顯示 VEN_No（有則用）
         this.vendorUIDOptions.push({
-          label: `${no}-${name}`,
-          value: no,
+          label: `${displayNo}-${name}`,
+          value: baseNo,
           Name: name,
-          No: no,
+          No: baseNo,
           ShortName: item.ShortName,
           VEN_No: item.VEN_No,
         });
@@ -192,7 +193,7 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
       .subscribe(res => {
         if (res?.Status === '0000' && Array.isArray(res.Data)) {
           this.vendorUIDOptions = res.Data.map((item: any) => ({
-            label: `${item.VEN_Uniform || item.VEN_No || ''} - ${item.VEN_Name || item.VEN_ShortName || ''}`,
+            label: `${item.VEN_No || item.VEN_Uniform || ''} - ${item.VEN_Name || item.VEN_ShortName || ''}`,
             value: item.VEN_Uniform || item.VEN_No || '',
             Name: item.VEN_Name || item.VEN_ShortName || undefined,
             No: item.VEN_No ?? undefined,

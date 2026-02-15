@@ -132,16 +132,17 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
         const seen = new Set<string>();
         this.vendorUIDOptions = [];
         for (const item of data) {
-          const no = item.No ?? item.VEN_No ?? '';
+          const baseNo = item.No ?? '';
           const name = item.Name ?? item.ShortName ?? '';
-          const key = `${no}|${name}`;
+          const key = `${baseNo}|${name}`; // 去重依據仍為 No + Name
           if (seen.has(key)) continue;
           seen.add(key);
+          const displayNo = item.VEN_No ?? baseNo; // 下拉顯示使用 VEN_No（若存在）否則回落為 No
           this.vendorUIDOptions.push({
-            label: `${no}-${name}`,
-            value: no,
+            label: `${displayNo}-${name}`,
+            value: baseNo,
             Name: name,
-            No: no,
+            No: baseNo,
             ShortName: item.ShortName,
             VEN_No: item.VEN_No
           });

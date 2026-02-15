@@ -589,6 +589,13 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
               if (this.formFile1) formData.append('formFile1', this.formFile1, this.formFile1.name);
               if (this.formFile2) formData.append('formFile2', this.formFile2, this.formFile2.name);
               if (this.formFile3) formData.append('formFile3', this.formFile3, this.formFile3.name);
+              // debug: 列出 formData 內容（key 與檔名或值），便於 Network 對照
+              try {
+                const entries = Array.from((formData as any).entries()).map(([k, v]: any) => [k, v instanceof File ? v.name : v]);
+                console.log('DEBUG updateCPM12050 FormData entries ->', entries);
+              } catch (e) {
+                console.log('DEBUG updateCPM12050 FormData (unable to enumerate entries)');
+              }
               requests.push(this.cpm12050Service.updateCPM12050(formData));
             } else {
               requests.push(this.cpm12050Service.updateCPM12050(payload));
