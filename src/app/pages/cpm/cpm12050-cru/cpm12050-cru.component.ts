@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { ImageService } from '@service/utility/image.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
@@ -13,8 +14,11 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
+import { GalleriaModule } from 'primeng/galleria';
 import { PanelModule } from 'primeng/panel';
-import { Observable, catchError, finalize, forkJoin, of } from 'rxjs';
+import { Observable, catchError, finalize, firstValueFrom, forkJoin, of } from 'rxjs';
+import { environment } from 'src/environments/environment';
 import { CPM12050Data, CPM12050Service, InsertCPM12050DetailRequest, InsertCPM12050Request, UpdateCPM12050DetailRequest, UpdateCPM12050Request } from '../../../service/api/cpm/cpm12050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -37,7 +41,9 @@ import { InputTextareaComponent } from '../../../shared/componentkit/input-texta
     DropdownComponent,
     TranslateModule,
     TableEditComponent,
-    CalendarComponent
+    CalendarComponent,
+    FileUploadModule,
+    GalleriaModule
   ]
 })
 export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> implements OnInit {
@@ -75,6 +81,25 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     SUGG_TYPE: [null, Validators.required], // 意見類型（必填）
     CLASS_EMAIL: [null],
   });
+  uploadedFiles: any[] = [];
+  mediaItems: { url: string; type: 'image' | 'video'; name: string }[] = [];
+  visible = false;
+  // 三個檔案欄位
+  formFile1?: File | null = null;
+  formFile2?: File | null = null;
+  formFile3?: File | null = null;
+
+  @ViewChild('fileUpload1') fileUpload1!: FileUpload;
+  @ViewChild('fileUpload2') fileUpload2!: FileUpload;
+  @ViewChild('fileUpload3') fileUpload3!: FileUpload;
+  // 已存在後端檔案名稱（若後端有紀錄，顯示下載連結）
+  existingFile1: string | null = null;
+  existingFile2: string | null = null;
+  existingFile3: string | null = null;
+  // 後端實際儲存的路徑/檔名（下載/刪除請求需用此值）
+  rawExistingFile1: string | null = null;
+  rawExistingFile2: string | null = null;
+  rawExistingFile3: string | null = null;
   ANSWER_YNOptions = [
     { label: '已建立', value: 'S' },
     { label: '已派單', value: 'W' },
@@ -84,6 +109,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
   SUGG_TYPEOptions = [
     { label: '客訴', value: '0' },
     { label: '表揚', value: '1' },
+    // deleteImage API usage removed per request: UI no longer offers delete button.
 
   ];
 
@@ -165,7 +191,8 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
   constructor(
     private cpm12050Service: CPM12050Service,
     private dropDownListService: DropDownListService,
-    private dropdownApiService: DropdownApiService
+    private dropdownApiService: DropdownApiService,
+    private imageService: ImageService
   ) {
     super();
   }
@@ -293,6 +320,23 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
         SUGG_TYPE: (this.rowdata as any).SUGG_TYPE ?? null,
         STATUS: (this.rowdata as any).STATUS ? String((this.rowdata as any).STATUS).toUpperCase() : null
       } as any);
+      // 設定既有檔案顯示名稱（取最後檔名）
+      const extractName = (p: any) => {
+        try {
+          if (!p) return null;
+          const s = String(p);
+          return s.split('\\').pop()?.split('/').pop() ?? s;
+        } catch (e) { return null; }
+      };
+      const raw1 = (this.rowdata as any).FileName1;
+      const raw2 = (this.rowdata as any).FileName2;
+      const raw3 = (this.rowdata as any).FileName3;
+      this.rawExistingFile1 = raw1 ?? null;
+      this.rawExistingFile2 = raw2 ?? null;
+      this.rawExistingFile3 = raw3 ?? null;
+      this.existingFile1 = extractName(raw1);
+      this.existingFile2 = extractName(raw2);
+      this.existingFile3 = extractName(raw3);
       // 記錄載入時 ALERT_DATE 是否存在（若存在代表後端預設已填，則可依規則設為唯讀）
       this._alertDateInitiallyProvided = !!this.rowdata.ALERT_DATE;
       // 如果是檢視模式（Read），將 ANSWER_YN 與 STATUS 設為唯讀
@@ -530,9 +574,32 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
             console.log('updateCPM12050 req', payload);
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const requests: Observable<any>[] = [
-              this.cpm12050Service.updateCPM12050(payload)
-            ];
+            const requests: Observable<any>[] = [];
+
+            // 如果有任一檔案，使用 FormData 傳送主檔（updateCPM12050 已支援 FormData）
+            const hasFiles = !!(this.formFile1 || this.formFile2 || this.formFile3);
+            if (hasFiles) {
+              const formData = new FormData();
+              // Append payload fields (只 append primitive/string 欄位)
+              Object.keys(payload || {}).forEach(k => {
+                const v = payload[k];
+                if (v === undefined || v === null) return;
+                formData.append(k, String(v));
+              });
+              if (this.formFile1) formData.append('formFile1', this.formFile1, this.formFile1.name);
+              if (this.formFile2) formData.append('formFile2', this.formFile2, this.formFile2.name);
+              if (this.formFile3) formData.append('formFile3', this.formFile3, this.formFile3.name);
+              // debug: 列出 formData 內容（key 與檔名或值），便於 Network 對照
+              try {
+                const entries = Array.from((formData as any).entries()).map(([k, v]: any) => [k, v instanceof File ? v.name : v]);
+                console.log('DEBUG updateCPM12050 FormData entries ->', entries);
+              } catch (e) {
+                console.log('DEBUG updateCPM12050 FormData (unable to enumerate entries)');
+              }
+              requests.push(this.cpm12050Service.updateCPM12050(formData));
+            } else {
+              requests.push(this.cpm12050Service.updateCPM12050(payload));
+            }
             if (newDetails.length > 0) {
               requests.push(this.cpm12050Service.insertCPM12050Detail(newDetails));
             }
@@ -597,8 +664,8 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
               console.log('DEBUG originalDetails:', this._originalDetails);
               console.log('DEBUG currentDetails:', this.data);
               console.log('DEBUG updatedDetails to send:', updatedDetails);
-              // updateCPM12050Detail 接受單筆 detail request，因此逐筆加入
-              updatedDetails.forEach(d => requests.push(this.cpm12050Service.updateCPM12050Detail(d)));
+              // updateCPM12050Detail 現在接受多筆 detail request（陣列），一次送出
+              requests.push(this.cpm12050Service.updateCPM12050Detail(updatedDetails));
             } else {
               console.log('DEBUG no updatedDetails to send');
             }
@@ -620,7 +687,9 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
                 if (failed) {
                   console.error('updateCPM12050 partial failures', results);
                   const err = failed.err;
-                  const msg = err?.error?.Message || err?.message || '修改失敗（後端錯誤）';
+                  // 印出完整錯誤回應協助分析
+                  console.error('backend error full response:', err);
+                  const msg = err?.error?.Message || err?.message || JSON.stringify(err?.error) || '修改失敗（後端錯誤）';
                   this.messageService.errorBubble(`修改失敗：${msg}`);
                   return;
                 }
@@ -683,4 +752,145 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
         }));
       })
   }
+  // 處理三個不同的檔案上傳（各自單檔）
+  onSelectFile1(event: FileSelectEvent) {
+    const files = [...event.files];
+    const picked = files.length > 0 ? files[0] : null;
+    if (picked && this.existingFile1) {
+      const ok = confirm('目前已有檔案，是否依然要上傳，會刪除原本檔案？');
+      if (!ok) {
+        try { this.fileUpload1.clear(); } catch (e) { }
+        return;
+      }
+      this.existingFile1 = null;
+    }
+    this.formFile1 = picked;
+  }
+
+  onSelectFile2(event: FileSelectEvent) {
+    const files = [...event.files];
+    const picked = files.length > 0 ? files[0] : null;
+    if (picked && this.existingFile2) {
+      const ok = confirm('目前已有檔案，是否依然要上傳，會刪除原本檔案？');
+      if (!ok) {
+        try { this.fileUpload2.clear(); } catch (e) { }
+        return;
+      }
+      this.existingFile2 = null;
+    }
+    this.formFile2 = picked;
+  }
+
+  onSelectFile3(event: FileSelectEvent) {
+    const files = [...event.files];
+    const picked = files.length > 0 ? files[0] : null;
+    if (picked && this.existingFile3) {
+      const ok = confirm('目前已有檔案，是否依然要上傳，會刪除原本檔案？');
+      if (!ok) {
+        try { this.fileUpload3.clear(); } catch (e) { }
+        return;
+      }
+      this.existingFile3 = null;
+    }
+    this.formFile3 = picked;
+  }
+
+  removeFile1() {
+    this.formFile1 = null;
+    try { this.fileUpload1.clear(); } catch (e) { }
+  }
+
+  removeFile2() {
+    this.formFile2 = null;
+    try { this.fileUpload2.clear(); } catch (e) { }
+  }
+
+  removeFile3() {
+    this.formFile3 = null;
+    try { this.fileUpload3.clear(); } catch (e) { }
+  }
+
+  // 下載既有檔案：使用 ImageService 下載後觸發瀏覽器下載
+  downloadExistingFile(slot: 1 | 2 | 3) {
+    if (!this.rowdata) return;
+    const seq = (this.rowdata as any).SEQ_ID;
+    const fileName = slot === 1 ? this.existingFile1 : slot === 2 ? this.existingFile2 : this.existingFile3;
+    if (!fileName) return;
+    // use raw file path/name when requesting download
+    const raw = slot === 1 ? this.rawExistingFile1 : slot === 2 ? this.rawExistingFile2 : this.rawExistingFile3;
+    // 嘗試多種可能的 IMG_SeqNo（SEQ_ID、ID、字串），參考 tls43010 的查詢邏輯
+    const seqCandidates = Array.from(new Set([
+      String(seq || ''),
+      String((this.rowdata as any)?.ID ?? ''),
+      String((this.rowdata as any)?.SEQ_ID ?? ''),
+      String((this.rowdata as any)?.NOT_No ?? '')
+    ].filter(s => s && s !== 'undefined')));
+
+    const tryQuerySequentially = async (): Promise<any[]> => {
+      for (const s of seqCandidates) {
+        try {
+
+          const res: any = await firstValueFrom(this.imageService.queryImages({ IMG_Type: 'CPM12050', IMG_SeqNo: s }));
+          console.log('queryImages for CPM12050 seq', s, res);
+          if (res && Array.isArray(res.Data) && res.Data.length > 0) return res.Data;
+        } catch (e) {
+          console.warn('queryImages failed for seq', s, e);
+        }
+      }
+      return [];
+    };
+
+    tryQuerySequentially().then(list => {
+      // 嘗試以 basename 配對
+      const base = (raw ?? fileName).split('\\').pop()?.split('/').pop() ?? fileName;
+      const found = list.find((f: any) => String(f.IMG_File) === String(base));
+      if (found) {
+        if (found.IMG_Path) {
+          const url = `${environment.ApiUrl}/${String(found.IMG_Path).replace('~', '')}/${found.IMG_File}`;
+          this.mediaItems = [{ url, type: 'image', name: found.IMG_File }];
+          this.visible = true;
+          return;
+        }
+        // 如果後端只回傳 IMG_File 為完整伺服器路徑（e.g. C:\...\Uploads\CPM12050\file.jpg），嘗試從中擷取相對路徑
+        const rawFile = String(found.IMG_File || '');
+        const baseName = rawFile.split('\\').pop()?.split('/').pop() ?? fileName;
+        const uploadsMatch = rawFile.match(/(Uploads|IMAGES)[\\/].*/i);
+        if (uploadsMatch) {
+          // 取出從 Uploads/IMAGES 開始的相對路徑，並組成可存取的 URL
+          const rel = uploadsMatch[0].replace(/\\/g, '/');
+          // 如果 rel 包含檔名，移除檔名，改用 basename 以避免重複
+          const relDir = rel.split('/').slice(0, -1).join('/');
+          const url = `${environment.ApiUrl}/${relDir}/${baseName}`;
+          this.mediaItems = [{ url, type: 'image', name: baseName }];
+          this.visible = true;
+          return;
+        }
+        // 若無法推導出可開啟的 URL，交由 download endpoint 處理（下方 fallback）
+      }
+
+      // 若沒有在 Image table 找到紀錄，嘗試使用 rowdata 的 FileName 欄位直接組 URL
+      const rawFromRow = raw ?? (this.rowdata as any).FileName1 ?? (this.rowdata as any).FileName2 ?? (this.rowdata as any).FileName3 ?? null;
+      if (rawFromRow) {
+        const baseName = String(rawFromRow).split('\\').pop()?.split('/').pop() ?? fileName;
+        const uploadsMatch = String(rawFromRow).match(/(Uploads|IMAGES)[\\/].*/i);
+        if (uploadsMatch) {
+          const rel = uploadsMatch[0].replace(/\\/g, '/');
+          const relDir = rel.split('/').slice(0, -1).join('/');
+          const url = `${environment.ApiUrl}/${relDir}/${baseName}`;
+          this.mediaItems = [{ url, type: 'image', name: baseName }];
+          this.visible = true;
+          return;
+        }
+      }
+
+      // 無法預覽，提示使用者
+      this.messageService.errorBubble('找不到可預覽的檔案');
+    }).catch(err => {
+      console.error('sequential queryImages failed', err);
+      this.messageService.errorBubble('查詢檔案失敗');
+    });
+  }
+
+  // deleteImage API removed: UI no longer exposes delete operation for files
 }
+

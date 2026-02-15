@@ -127,6 +127,92 @@
             [submitted]="submitted"></app-input-text>
         </div> -->
       </div>
+      <div class="col-12">
+        <label for="file">媒體檔案（最多 3 個）</label>
+        <div class="grid">
+          <div class="col-12 md:col-4">
+            <!-- File 1 -->
+            <p-fileUpload #fileUpload1 [multiple]="false" accept=".bmp,.jpg,.wmv,.avi,.mpeg,.mp4"
+              maxFileSize="100000000" mode="advanced" [showUploadButton]="false" [disabled]="isFormReadable"
+              chooseLabel="選擇檔案" (onSelect)="onSelectFile1($event)" [showCancelButton]="false">
+              <ng-template pTemplate="content" let-files let-removeFileCallback="removeFileCallback">
+                <div class="flex align-items-center justify-content-between gap-2">
+                  <i class="pi pi-file text-blue-600 text-xl flex-shrink-0"></i>
+                  <div class="flex-1 overflow-hidden" style="text-overflow:ellipsis; white-space:nowrap;">
+                    <a *ngIf="!formFile1 && existingFile1" (click)="downloadExistingFile(1)" class="text-blue-600"
+                      role="button">{{ existingFile1 }}</a>
+                    <span *ngIf="formFile1">{{ formFile1.name }}</span>
+                    <span *ngIf="!formFile1 && !existingFile1">尚未選擇檔案</span>
+                  </div>
+                  <div class="flex-shrink-0">
+                    <button *ngIf="formFile1 && !isFormReadable" type="button" (click)="removeFile1()"
+                      class="p-button p-button-text p-button-danger p-button-sm w-auto">
+                      <i class="pi pi-trash text-lg"></i>
+                    </button>
+                    <!-- delete removed per request -->
+                  </div>
+                </div>
+              </ng-template>
+              <ng-template pTemplate="file"></ng-template>
+            </p-fileUpload>
+          </div>
+
+          <div class="col-12 md:col-4">
+            <!-- File 2 -->
+            <p-fileUpload #fileUpload2 [multiple]="false" accept=".bmp,.jpg,.wmv,.avi,.mpeg,.mp4"
+              maxFileSize="100000000" mode="advanced" [showUploadButton]="false" [disabled]="isFormReadable"
+              chooseLabel="選擇檔案" (onSelect)="onSelectFile2($event)" [showCancelButton]="false">
+              <ng-template pTemplate="content" let-files let-removeFileCallback="removeFileCallback">
+                <div class="flex align-items-center justify-content-between gap-2">
+                  <i class="pi pi-file text-blue-600 text-xl flex-shrink-0"></i>
+                  <div class="flex-1 overflow-hidden" style="text-overflow:ellipsis; white-space:nowrap;">
+                    <a *ngIf="!formFile2 && existingFile2" (click)="downloadExistingFile(2)" class="text-blue-600"
+                      role="button">{{ existingFile2 }}</a>
+                    <span *ngIf="formFile2">{{ formFile2.name }}</span>
+                    <span *ngIf="!formFile2 && !existingFile2">尚未選擇檔案</span>
+                  </div>
+                  <div class="flex-shrink-0">
+                    <button *ngIf="formFile2 && !isFormReadable" type="button" (click)="removeFile2()"
+                      class="p-button p-button-text p-button-danger p-button-sm w-auto">
+                      <i class="pi pi-trash text-lg"></i>
+                    </button>
+                    <!-- delete removed per request -->
+                  </div>
+                </div>
+              </ng-template>
+              <ng-template pTemplate="file"></ng-template>
+            </p-fileUpload>
+          </div>
+
+          <div class="col-12 md:col-4">
+            <!-- File 3 -->
+            <p-fileUpload #fileUpload3 [multiple]="false" accept=".bmp,.jpg,.wmv,.avi,.mpeg,.mp4"
+              maxFileSize="100000000" mode="advanced" [showUploadButton]="false" [disabled]="isFormReadable"
+              chooseLabel="選擇檔案" (onSelect)="onSelectFile3($event)" [showCancelButton]="false">
+              <ng-template pTemplate="content" let-files let-removeFileCallback="removeFileCallback">
+                <div class="flex align-items-center justify-content-between gap-2">
+                  <i class="pi pi-file text-blue-600 text-xl flex-shrink-0"></i>
+                  <div class="flex-1 overflow-hidden" style="text-overflow:ellipsis; white-space:nowrap;">
+                    <a *ngIf="!formFile3 && existingFile3" (click)="downloadExistingFile(3)" class="text-blue-600"
+                      role="button">{{ existingFile3 }}</a>
+                    <span *ngIf="formFile3">{{ formFile3.name }}</span>
+                    <span *ngIf="!formFile3 && !existingFile3">尚未選擇檔案</span>
+                  </div>
+                  <div class="flex-shrink-0">
+                    <button *ngIf="formFile3 && !isFormReadable" type="button" (click)="removeFile3()"
+                      class="p-button p-button-text p-button-danger p-button-sm w-auto">
+                      <i class="pi pi-trash text-lg"></i>
+                    </button>
+                    <!-- delete removed per request -->
+                  </div>
+                </div>
+              </ng-template>
+              <ng-template pTemplate="file"></ng-template>
+            </p-fileUpload>
+          </div>
+        </div>
+      </div>
+
       <div class="col-12" *ngIf="!isFormCreateable">
         <app-table-edit [columns]="columns" [data]="data" [tableRequired]="false"
           [disabled]="isFormReadable && !forceEditAll" [rowEditDisabled]="rowEditDisabledWrapper"
@@ -140,3 +226,14 @@
     </form>
   </p-panel>
 </div>
+<p-galleria #galleria [value]="mediaItems" [(visible)]="visible" [containerStyle]="{ 'max-width': '850px' }"
+  [circular]="true" [fullScreen]="true" [showThumbnails]="false" [autoPlay]="true">
+  <ng-template pTemplate="item" let-item>
+    <ng-container *ngIf="item.type === 'image'">
+      <img [src]="item.url" alt="Image" style="width: 100%; display: block;" />
+    </ng-container>
+    <ng-container *ngIf="item.type === 'video'">
+      <video [src]="item.url" controls style="width: 100%; display: block;">您的瀏覽器不支援影片標籤。</video>
+    </ng-container>
+  </ng-template>
+</p-galleria>
