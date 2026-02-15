@@ -193,14 +193,15 @@ export class SubmitDataService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (item.discountSettingItems || []).forEach((detail: any) => {
         if (detail._status === 'deleted') {
-          if (this.hasValidId(detail.id)) {
+          // 新建/續約模式下的項目不需要刪除（DB 中不存在）
+          if (!isCreateMode && this.hasValidId(detail.id)) {
             discountSettings.toDelete.push({ id: String(detail.id) });
           }
           return;
         }
-        // 未勾選的項目：既有的送刪除，新增的跳過
+        // 未勾選的項目：既有的送刪除，新增/續約的跳過
         if (!detail.selected) {
-          if (this.hasValidId(detail.id)) {
+          if (!isCreateMode && item._status !== 'new' && detail._status !== 'new' && this.hasValidId(detail.id)) {
             discountSettings.toDelete.push({ id: String(detail.id) });
           }
           return;
@@ -226,7 +227,8 @@ export class SubmitDataService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (item.annualPerformanceItems || []).forEach((detail: any) => {
         if (detail._status === 'deleted') {
-          if (this.hasValidId(detail.id)) {
+          // 新建/續約模式下的項目不需要刪除（DB 中不存在）
+          if (!isCreateMode && this.hasValidId(detail.id)) {
             annualSettings.toDelete.push({ id: Number(detail.id) });
           }
           return;
@@ -251,14 +253,15 @@ export class SubmitDataService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (item.discountLevelItems || []).forEach((detail: any, index: number) => {
         if (detail._status === 'deleted') {
-          if (this.hasValidId(detail.id)) {
+          // 新建/續約模式下的項目不需要刪除（DB 中不存在）
+          if (!isCreateMode && this.hasValidId(detail.id)) {
             levelSettings.toDelete.push({ id: Number(detail.id) });
           }
           return;
         }
-        // 未勾選的項目：既有的送刪除，新增的跳過
+        // 未勾選的項目：既有的送刪除，新增/續約的跳過
         if (detail.selected === false || detail.is_enabled === false) {
-          if (this.hasValidId(detail.id)) {
+          if (!isCreateMode && item._status !== 'new' && detail._status !== 'new' && this.hasValidId(detail.id)) {
             levelSettings.toDelete.push({ id: Number(detail.id) });
           }
           return;

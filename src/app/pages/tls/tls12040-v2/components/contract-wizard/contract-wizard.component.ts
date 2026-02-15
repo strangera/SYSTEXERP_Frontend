@@ -838,54 +838,77 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     const formStartDate = this.dataForm.get('tlt_bdate')?.value || new Date();
     const formEndDate = this.dataForm.get('tlt_edate')?.value || new Date();
 
-    this.wizardState.commissionItems = chargeSettings.map((item: Record<string, unknown>) => ({
-      id: '',
-      tlt_id: (item['tlt_id'] as string) || '',
-      tlt_id_desc: (item['tlt_id_desc'] as string) || '',
-      cag_taxtype: item['cag_taxtype'] ?? '',
-      discountSummary: (item['discountSummary'] as string) || '',
-      sst_amount: (item['sst_amount'] as number) || 0,
-      sst_rate: (item['sst_rate'] as number) || 0,
-      cap_saletype1: item['cap_saletype1'] === 'Y' || item['cap_saletype1'] === true,
-      cap_saletype2: item['cap_saletype2'] === 'Y' || item['cap_saletype2'] === true,
-      cap_saletype3: item['cap_saletype3'] === 'Y' || item['cap_saletype3'] === true,
-      cap_saletype5: item['cap_saletype5'] === 'Y' || item['cap_saletype5'] === true,
-      selectedSettingOption: (item['selectedSettingOption'] as string) || '',
-      charge_rate: (item['charge_rate'] as number) || 0,
-      cag_bdate: formStartDate || item['cag_bdate'] || '',
-      cag_edate: formEndDate || item['cag_edate'] || '',
-      cag_remark: item['cag_remark'] || '',
-      remark: item['cag_remark'] || '',
-      mainStartDate: formStartDate || item['cag_bdate'] || '',
-      mainEndDate: formEndDate || item['cag_edate'] || '',
-      discountSettingItems: this.buildCompleteDiscountItems(
+    this.wizardState.commissionItems = chargeSettings.map((item: Record<string, unknown>) => {
+      // 1. 先建立折扣設定項目（此時仍保留 TLTTENT 的舊 ID）
+      const discountItems = this.buildCompleteDiscountItems(
         (item['ChargeDetails'] as Record<string, unknown>[]) || [],
         true  // forRenewal = true
-      ),
-      annualPerformanceItems: ((item['YearChargeDetails'] as unknown[]) || []).map((d: unknown) => {
-        const detail = d as Record<string, unknown>;
-        return {
-          ...detail,
-          extra_rate: this.convertRateToPercentage(Number(detail['extra_rate'] || detail['EXTRA_RATE'] || 0)),
-          selected: (detail['is_selected'] ?? detail['selected'] ?? false) as boolean,
-          _status: 'new' as DataStatus
-        };
-      }),
-      discountLevelItems: ((item['LevelChargeDetails'] as unknown[]) || []).map((d: unknown) => {
-        const detail = d as Record<string, unknown>;
-        return {
-          ...detail,
-          level_charge_rate: this.convertRateToPercentage(Number(detail['level_charge_rate'] || detail['LEVEL_CHARGE_RATE'] || 0)),
-          selected: (detail['is_selected'] ?? detail['selected'] ?? detail['is_enabled'] ?? false) as boolean,
-          is_configured: (detail['is_configured'] ?? true) as boolean,
-          is_enabled: (detail['is_enabled'] ?? true) as boolean,
-          _status: 'new' as DataStatus
-        };
-      }),
-      detailItems: [],
-      currentTab: 'discount',
-      _status: 'new' as DataStatus
-    } as unknown as V2CommissionItem));
+      );
+
+      // 2. 續約模式：將 TLTTENT 舊 ID 替換為臨時 ID，建立 oldId → newTempId 映射
+      //    這樣 levelSettings 的 charged_id 可以正確對應到新的折扣設定
+      const idMapping = new Map<string, string | number>();
+      discountItems.forEach(di => {
+        const oldId = String(di.id || '');
+        if (oldId && !oldId.startsWith('temp_') && !oldId.startsWith('new_')) {
+          const newId = this.generateTempId();
+          idMapping.set(oldId, newId);
+          di.id = newId;
+        }
+      });
+
+      return {
+        id: '',
+        tlt_id: (item['tlt_id'] as string) || '',
+        tlt_id_desc: (item['tlt_id_desc'] as string) || '',
+        cag_taxtype: item['cag_taxtype'] ?? '',
+        discountSummary: (item['discountSummary'] as string) || '',
+        sst_amount: (item['sst_amount'] as number) || 0,
+        sst_rate: (item['sst_rate'] as number) || 0,
+        cap_saletype1: item['cap_saletype1'] === 'Y' || item['cap_saletype1'] === true,
+        cap_saletype2: item['cap_saletype2'] === 'Y' || item['cap_saletype2'] === true,
+        cap_saletype3: item['cap_saletype3'] === 'Y' || item['cap_saletype3'] === true,
+        cap_saletype5: item['cap_saletype5'] === 'Y' || item['cap_saletype5'] === true,
+        selectedSettingOption: (item['selectedSettingOption'] as string) || '',
+        charge_rate: (item['charge_rate'] as number) || 0,
+        cag_bdate: formStartDate || item['cag_bdate'] || '',
+        cag_edate: formEndDate || item['cag_edate'] || '',
+        cag_remark: item['cag_remark'] || '',
+        remark: item['cag_remark'] || '',
+        mainStartDate: formStartDate || item['cag_bdate'] || '',
+        mainEndDate: formEndDate || item['cag_edate'] || '',
+        discountSettingItems: discountItems,
+        annualPerformanceItems: ((item['YearChargeDetails'] as unknown[]) || []).map((d: unknown) => {
+          const detail = d as Record<string, unknown>;
+          // 續約模式：移除 TLTTENT 的 id，避免送出舊合約 ID 給 TLTAPPLY
+          const { id: _id, ID: _ID, ...rest } = detail;
+          return {
+            ...rest,
+            extra_rate: this.convertRateToPercentage(Number(detail['extra_rate'] || detail['EXTRA_RATE'] || 0)),
+            selected: (detail['is_selected'] ?? detail['selected'] ?? false) as boolean,
+            _status: 'new' as DataStatus
+          };
+        }),
+        discountLevelItems: ((item['LevelChargeDetails'] as unknown[]) || []).map((d: unknown) => {
+          const detail = d as Record<string, unknown>;
+          // 續約模式：移除 TLTTENT 的 id，charged_id 映射為新的臨時 ID
+          const { id: _id, ID: _ID, ...rest } = detail;
+          const oldChargedId = String(detail['charged_id'] || '');
+          return {
+            ...rest,
+            charged_id: idMapping.get(oldChargedId) || oldChargedId,
+            level_charge_rate: this.convertRateToPercentage(Number(detail['level_charge_rate'] || detail['LEVEL_CHARGE_RATE'] || 0)),
+            selected: (detail['is_selected'] ?? detail['selected'] ?? detail['is_enabled'] ?? false) as boolean,
+            is_configured: (detail['is_configured'] ?? true) as boolean,
+            is_enabled: (detail['is_enabled'] ?? true) as boolean,
+            _status: 'new' as DataStatus
+          };
+        }),
+        detailItems: [],
+        currentTab: 'discount',
+        _status: 'new' as DataStatus
+      } as unknown as V2CommissionItem;
+    });
   }
 
   /**
