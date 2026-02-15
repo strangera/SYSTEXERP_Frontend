@@ -7,7 +7,8 @@ import { InputNumberComponent } from "@shared/componentkit/input-number/input-nu
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
+import { combineLatest, finalize, of } from 'rxjs';
+import { debounceTime, startWith, switchMap } from 'rxjs/operators';
 import { TLS12020Service } from '../../../service/api/tls/tls12020.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -38,6 +39,9 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 
 export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.fb.nonNullable.group({
+    // 先讓 user 輸入查詢條件，再向後端查明細
+    vendorFlag: [''],
+    vendorUniform: [''],
     vendorUID: ['', [Validators.required]], // 廠商統一編號（必填）
     vendorCName: ['', [Validators.required, Validators.maxLength(60)]], // 廠商名稱(中文)
     vendorEName: ['', [Validators.maxLength(60), Validators.pattern(/^[A-Za-z0-9 .,\-()]*$/)]], // 廠商名稱(英文) 只允許英文與數字及常用符號
@@ -72,6 +76,8 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
   LOCATION_Options: IDropdownItem[] = [];
   buildingNoOptions: IDropdownItem[] = [];
   btnLoading = false;
+  // 當前選取或查到的完整廠商明細
+  selectedVendorDetails: any = null;
   // store original values when editing
   private originalContactDate: string | null = null; // formatted via formatDateOnly
   private originalContactTime: string | null = null; // formatted via formatTime
@@ -121,6 +127,27 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
       }
     }
     this.loadDropdownOptions();
+    // 初始載入下拉改為使用輕量的 POS2013 下拉（顯示中文+編號），避免一次載入大量資料
+    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      const data = (res?.Data) || [];
+      const seen = new Set<string>();
+      this.vendorUIDOptions = [];
+      for (const item of data) {
+        const no = item.No ?? item.VEN_No ?? '';
+        const name = item.Name ?? item.ShortName ?? '';
+        const key = `${no}|${name}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        this.vendorUIDOptions.push({
+          label: `${no}-${name}`,
+          value: no,
+          Name: name,
+          No: no,
+          ShortName: item.ShortName,
+          VEN_No: item.VEN_No,
+        });
+      }
+    });
     //訪談人員api
     this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.contact_USR_NameOptions = res.Data;
@@ -147,11 +174,21 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.buildingNoOptions = res.Data.map(x => ({ label: x.Name, value: x.No, Name: x.Name, No: x.No }));
     });
-    // 統編 API: 改為使用 TLS12010 的 POS2013 查詢介面，後端需接收 { VEN_Flag, VEN_Uniform }
-    const vendorBody = { VEN_Flag: '', VEN_Uniform: '' };
-    this.tls12020Service
-      .queryTLS12010_POS2013(vendorBody)
-      .pipe(untilDestroyed(this))
+    // 查詢機制改為：先讓 user 輸入 `vendorFlag` / `vendorUniform`，再查明細以避免初次載入過慢
+    const flag$ = this.dataForm.get('vendorFlag')!.valueChanges.pipe(startWith(this.dataForm.get('vendorFlag')!.value));
+    const uniform$ = this.dataForm.get('vendorUniform')!.valueChanges.pipe(startWith(this.dataForm.get('vendorUniform')!.value));
+
+    combineLatest([flag$, uniform$])
+      .pipe(
+        debounceTime(300),
+        untilDestroyed(this),
+        switchMap(([flag, uniform]) => {
+          const hasAny = (flag ?? '') !== '' || (uniform ?? '') !== '';
+          if (!hasAny) return of({ Status: '0000', Data: [] });
+          const vendorBody = { VEN_Flag: flag ?? '', VEN_Uniform: uniform ?? '' };
+          return this.tls12020Service.queryTLS12010_POS2013(vendorBody);
+        })
+      )
       .subscribe(res => {
         if (res?.Status === '0000' && Array.isArray(res.Data)) {
           this.vendorUIDOptions = res.Data.map((item: any) => ({
@@ -170,7 +207,6 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
             })(),
             VEN_Address: item.VEN_Address ?? item.VEN_Addr ?? item.VEN_GUIAddr ?? undefined,
             ShortName: item.VEN_ShortName ?? undefined,
-            // 保留原始物件以便完整帶入表單其它欄位
             raw: item,
           }));
         } else {
@@ -183,10 +219,21 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
       .pipe(untilDestroyed(this))
       .subscribe(selectedNo => {
         const selected = this.vendorUIDOptions.find(v => v.value === selectedNo);
-        if (selected) {
-          const raw = (selected as any).raw ?? selected;
+        if (!selected) {
+          this.dataForm.patchValue({ vendorCName: '', vendorEName: '', VEN_Addr: '', VEN_Boss: '', VEN_BossTel: '', VEN_BossTitle: '', VEN_BossMobile: '', VEN_BossEmail: '', VEN_BossFax: '' }, { emitEvent: false });
+          return;
+        }
+
+        // 如果下拉項已包含完整 raw（先前的行為），直接使用；否則向後端查明細再帶入
+        const maybeRaw = (selected as any).raw;
+        if (maybeRaw) {
+          const raw = maybeRaw;
+          // 存下完整明細供 template 或其他邏輯使用
+          this.selectedVendorDetails = raw;
           const patch: any = {
+            vendorUID: raw.VEN_Uniform || raw.VEN_No || selected.value || '',
             vendorCName: raw.VEN_Name || raw.VEN_ShortName || selected.Name || '',
+            vendorEName: raw.VEN_EngName ?? raw.VEN_ShortName ?? '',
             VEN_Addr: raw.VEN_Address || raw.VEN_Addr || raw.VEN_GUIAddr || selected.VEN_Address || '',
             VEN_Boss: raw.VEN_ContactPerson || raw.CHARGE_STAFF || raw.VEN_Contact || '',
             VEN_BossTel: raw.VEN_Tel || raw.CHARGE_TEL || raw.ORDER_TEL || '',
@@ -194,17 +241,95 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
             VEN_BossMobile: raw.VEN_BossMobile || raw.CHARGE_TEL || '',
             VEN_BossEmail: raw.VEN_Email || raw.VEN_GUIEmail || '',
             VEN_BossFax: raw.VEN_Fax || raw.VEN_GUIFax || '',
+            // 以下為額外明細，若 form 無對應欄位，patchValue 會忽略；但完整物件已存在於 selectedVendorDetails
+            VEN_No: raw.VEN_No,
+            VEN_Uniform: raw.VEN_Uniform,
+            VEN_RemitFeeMode: raw.VEN_RemitFeeMode,
+            VEN_Post: raw.VEN_Post,
+            VEN_PayType: raw.VEN_PayType,
+            VEN_BNK_No: raw.VEN_BNK_No,
+            VEN_BNK_BranchNo: raw.VEN_BNK_BranchNo,
+            VEN_BankAccountNo: raw.VEN_BankAccountNo,
+            VEN_AccountName: raw.VEN_AccountName,
+            VEN_PayConditionDay: raw.VEN_PayConditionDay,
+            VEN_Status: raw.VEN_Status,
+            GUI_ID_WIRE: raw.GUI_ID_WIRE,
+            VEN_Remark: raw.VEN_Remark,
           };
-
-          if (selected.VEN_EngName !== undefined) {
-            patch.vendorEName = selected.VEN_EngName; // 保留空字串或有效英文字串
-          } else if (raw.VEN_EngName !== undefined) {
-            patch.vendorEName = raw.VEN_EngName ?? '';
-          }
 
           this.dataForm.patchValue(patch, { emitEvent: false });
         } else {
-          this.dataForm.patchValue({ vendorCName: '', vendorEName: '', VEN_Addr: '', VEN_Boss: '', VEN_BossTel: '', VEN_BossTitle: '', VEN_BossMobile: '', VEN_BossEmail: '', VEN_BossFax: '' }, { emitEvent: false });
+          // 用選到的 value 去撈明細
+          const vendorBody = { VEN_Flag: '', VEN_Uniform: selected.value };
+          this.tls12020Service.queryTLS12010_POS2013(vendorBody).pipe(untilDestroyed(this)).subscribe(res => {
+            if (res?.Status === '0000' && Array.isArray(res.Data) && res.Data.length) {
+              const item = res.Data[0];
+              // 將 raw 放回對應下拉選項，並存完整明細
+              (selected as any).raw = item;
+              this.selectedVendorDetails = item;
+              const patch: any = {
+                vendorUID: item.VEN_Uniform || item.VEN_No || selected.value || '',
+                vendorCName: item.VEN_Name || item.VEN_ShortName || selected.Name || '',
+                vendorEName: item.VEN_EngName ?? item.VEN_ShortName ?? '',
+                VEN_Addr: item.VEN_Address || item.VEN_Addr || item.VEN_GUIAddr || selected.VEN_Address || '',
+                VEN_Boss: item.VEN_ContactPerson || item.CHARGE_STAFF || item.VEN_Contact || '',
+                VEN_BossTel: item.VEN_Tel || item.CHARGE_TEL || item.ORDER_TEL || '',
+                VEN_BossTitle: item.VEN_CheckTitle || item.CHARGE_TITLE || '',
+                VEN_BossMobile: item.VEN_BossMobile || item.CHARGE_TEL || '',
+                VEN_BossEmail: item.VEN_Email || item.VEN_GUIEmail || '',
+                VEN_BossFax: item.VEN_Fax || item.VEN_GUIFax || '',
+                // 額外明細欄位同步入 form (若存在)
+                VEN_No: item.VEN_No,
+                VEN_Uniform: item.VEN_Uniform,
+                VEN_RemitFeeMode: item.VEN_RemitFeeMode,
+                VEN_Post: item.VEN_Post,
+                VEN_PayType: item.VEN_PayType,
+                VEN_BNK_No: item.VEN_BNK_No,
+                VEN_BNK_BranchNo: item.VEN_BNK_BranchNo,
+                VEN_BankAccountNo: item.VEN_BankAccountNo,
+                VEN_AccountName: item.VEN_AccountName,
+                VEN_PayConditionDay: item.VEN_PayConditionDay,
+                VEN_CheckTitle: item.VEN_CheckTitle,
+                VEN_Status: item.VEN_Status,
+                GUI_ID_WIRE: item.GUI_ID_WIRE,
+                VEN_Remark: item.VEN_Remark,
+                CRT_Date: item.CRT_Date,
+                CRT_USR_No: item.CRT_USR_No,
+                CRT_USR_Name: item.CRT_USR_Name,
+                UPD_Date: item.UPD_Date,
+                UPD_USR_No: item.UPD_USR_No,
+                UPD_USR_Name: item.UPD_USR_Name,
+                CHARGE_STAFF: item.CHARGE_STAFF,
+                CHARGE_TITLE: item.CHARGE_TITLE,
+                CHARGE_PID: item.CHARGE_PID,
+                CHARGE_TEL: item.CHARGE_TEL,
+                CHARGE_ADDR: item.CHARGE_ADDR,
+                CHARGE_EMAIL: item.CHARGE_EMAIL,
+                ORDER_ADDR: item.ORDER_ADDR,
+                ORDER_TEL: item.ORDER_TEL,
+                ORDER_FAX: item.ORDER_FAX,
+                FACTO_ADDR: item.FACTO_ADDR,
+                FACTO_TEL: item.FACTO_TEL,
+                FACTO_FAX: item.FACTO_FAX,
+                DELIVERY: item.DELIVERY,
+                RETURN_ORDER: item.RETURN_ORDER,
+                DELIVERY_LIMIT: item.DELIVERY_LIMIT,
+                VEN_ORDER_ADDR: item.VEN_ORDER_ADDR,
+                VEN_ORDER_TEL: item.VEN_ORDER_TEL,
+                VEN_ORDER_FAX: item.VEN_ORDER_FAX,
+                VEN_FACTO_ADDR: item.VEN_FACTO_ADDR,
+                VEN_FACTO_TEL: item.VEN_FACTO_TEL,
+                VEN_FACTO_FAX: item.VEN_FACTO_FAX,
+                VEN_DELIVERY: item.VEN_DELIVERY,
+                VEN_RETURN_ORDER: item.VEN_RETURN_ORDER,
+                VEN_DELIVERY_LIMIT: item.VEN_DELIVERY_LIMIT,
+              };
+
+              this.dataForm.patchValue(patch, { emitEvent: false });
+            } else {
+              this.dataForm.patchValue({ vendorCName: '', vendorEName: '', VEN_Addr: '', VEN_Boss: '', VEN_BossTel: '', VEN_BossTitle: '', VEN_BossMobile: '', VEN_BossEmail: '', VEN_BossFax: '' }, { emitEvent: false });
+            }
+          });
         }
       });
 
