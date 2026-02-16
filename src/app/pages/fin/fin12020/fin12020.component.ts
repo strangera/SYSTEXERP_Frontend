@@ -66,6 +66,7 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
     { field: 'GUI_TRACK', header: '字軌', visible: true },
     { field: 'GUI_SNOS', header: '發票起始號碼', visible: true },
     { field: 'GUI_ENOS', header: '發票結束號碼', visible: true },
+    { field: 'NEXT_SNOS', header: '下一個發票號碼', visible: true },
     { field: 'TOT_NOS', header: '全部張數', visible: true },
     { field: 'USED_NOS', header: '已用張數', visible: true },
     { field: 'FREE_NOS', header: '未用張數', visible: true },
@@ -166,6 +167,7 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
         .subscribe({
           next: response => {
             if (response.Status === '0000') {
+              // console.log('API Response:', response);
               this.tableData.set(response.Data ?? []);
               this.totalRecords.set(response.TotalCount ?? 0);
             } else {
