@@ -277,18 +277,17 @@
 
 
     <!-- ✅ 彙總表 -->
-  <app-table-report
+<app-table-report
   *ngIf="queryForm.get('showSummary')?.value"
   tableKey="TLS23020summary"
-  [lastQueryBody]="historyRequestBody"
   [data]="summaryData"
   [columns]="summaryColumns"
-  [totalRecords]="summaryData.length || 0"
+  [totalRecords]="summaryData.length"
+  [lazy]="false"
+  [showReportMode]="false"
   [showDelete]="false"
   [showManage]="false"
-  [showReportMode]="false"
-  [queryFunction]="queryTLS23020SummaryForReport"
-  [footerData]="undefined"
+  [footerData]="summaryFooter"
 >
   <header>
     <div class="flex justify-content-between align-items-center w-full">
