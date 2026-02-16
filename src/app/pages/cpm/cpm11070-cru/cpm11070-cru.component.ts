@@ -48,7 +48,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
     LOST_DATE: [new Date(), [Validators.required,]],
     OFF_DATE: [null as Date | null],
     MSG_DATE: [null as Date | null],
-    RECEIVE_DATE: [new Date()],
+    RECEIVE_DATE: [null as Date | null],
     DocType: ['', [Validators.required,]],
     Identity_KIND: [''],
     LOCATION: [''],
@@ -64,7 +64,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
     ADDRESS: ['', [Validators.maxLength(100)]],
     RECAPTION_NAME: ['', [Validators.maxLength(10)]],
     RECAPTION_PHONE: ['', [Validators.maxLength(10)]],
-    PROCESSING_USER: [{ value: this.user?.user_No, disabled: true }, [Validators.maxLength(20)]],
+    PROCESSING_USER: [{ value: '', disabled: true }, [Validators.maxLength(20)]],
   });
   selectedItems: any[] = [];
   totalRecords = 0;
@@ -106,6 +106,63 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
   mode?: 'L' | 'F';
   // 開啟模式來源（例如 'receive' 或 'transfer'）
   openMode?: string | undefined;
+
+  get showRebroadcastButton(): boolean {
+    if (!this.isFormEditable) return false;
+    try {
+      const seqType = (this.dataForm?.getRawValue && this.dataForm.getRawValue().SEQ_TYPE) ?? this.dataForm.controls.SEQ_TYPE?.value;
+      if (seqType === '4' || seqType === '6') return false; // 已領回 or 轉出
+    } catch { }
+    if (this.openMode === 'receive' || this.openMode === 'transfer') return false;
+    return true;
+  }
+
+  private afterCreateClearForm(): void {
+    try {
+      // reset form values
+      this.dataForm.reset();
+
+      // basic defaults for create mode
+      const defaultDoc = this.mode === 'F' ? 'F' : 'L';
+      const me = this.user?.user_No ?? '';
+
+      try { this.dataForm.controls.SEQ_ID.setValue('系統自動產生'); } catch { }
+      try { this.dataForm.controls.SEQ_ID.disable(); } catch { }
+
+      try { this.dataForm.patchValue({ DocType: defaultDoc }); } catch { }
+      try { this.dataForm.controls.DocType.disable(); } catch { }
+
+      try { this.dataForm.patchValue({ SEQ_TYPE: '1' }); } catch { }
+      try { this.dataForm.controls.SEQ_TYPE.disable(); } catch { }
+
+      try { this.dataForm.controls.REC_DATE.setValue(new Date()); } catch { }
+      try { this.dataForm.controls.LOST_DATE.setValue(new Date()); } catch { }
+
+      try { this.dataForm.controls.OFF_DATE.setValue(null); } catch { }
+      try { this.dataForm.controls.OFF_DATE.disable(); } catch { }
+
+      try { this.dataForm.controls.MSG_DATE.setValue(null); } catch { }
+      try { this.dataForm.controls.MSG_DATE.disable(); } catch { }
+
+      try { this.dataForm.controls.BROADCAST_YN.setValue('N'); } catch { }
+      try { this.dataForm.controls.BROADCAST_YN.enable(); } catch { }
+
+      try { this.dataForm.controls.OTHER_GOODS.setValue(me); } catch { }
+      try { this.dataForm.controls.PROCESSING_USER.setValue(me); } catch { }
+      try { this.dataForm.controls.PROCESSING_USER.disable(); } catch { }
+
+      // reset receive block visibility/state
+      this.showReceiveInfo = true;
+      this.onlyReceiveEditable = false;
+
+      this.submitted = false;
+      this.loading = false;
+      this.cdr.detectChanges();
+    } catch (e) {
+      // fallback: reload page state
+      try { this.onCancel(); } catch { }
+    }
+  }
 
   private labelMap: Record<string, Record<string, string>> = {
     L: {
@@ -223,8 +280,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
           REC_DATE: d.REC_DATE ? new Date(d.REC_DATE) : undefined,
           LOST_DATE: d.LOST_DATE ? new Date(d.LOST_DATE) : (d.FIND_DATE ? new Date(d.FIND_DATE) : new Date()),
           OFF_DATE: d.OFF_DATE ? new Date(d.OFF_DATE) : null,
-          MSG_DATE: d.MSG_DATE ? new Date(d.MSG_DATE) : new Date(),
-          RECEIVE_DATE: d.RECEIVE_DATE ? new Date(d.RECEIVE_DATE) : new Date(),
+          MSG_DATE: d.MSG_DATE ? new Date(d.MSG_DATE) : null,
           DocType: d.DocType,
           Identity_KIND: d.Identity_KIND,
           LOCATION: d.LOCATION,
@@ -241,14 +297,41 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
           ADDRESS: d.ADDRESS,
           RECAPTION_NAME: d.RECAPTION_NAME,
           RECAPTION_PHONE: d.RECAPTION_PHONE,
-          PROCESSING_USER: d.PROCESSING_USER,
         });
+
+        // RECEIVE_DATE 與 PROCESSING_USER 若後端未帶值，保留為空（使用 reset 以避免 nonNullable 衝突）
+        try {
+          const recvCtrl = this.dataForm.get('RECEIVE_DATE');
+          if (d.RECEIVE_DATE) {
+            recvCtrl?.setValue(new Date(d.RECEIVE_DATE));
+          } else {
+            recvCtrl?.reset();
+          }
+        } catch { }
+
+        try {
+          const procCtrl = this.dataForm.get('PROCESSING_USER') as FormControl;
+          if (d.PROCESSING_USER) {
+            procCtrl?.setValue(d.PROCESSING_USER);
+          } else {
+            procCtrl?.reset();
+          }
+        } catch { }
         // 若為一般編輯模式，領回資訊區塊應為唯讀（disabled）
         try {
           if (this.isFormEditable) {
             const recvKeys = ['RECEIVE_DATE', 'RECAPTION_NAME', 'RECAPTION_PHONE', 'PROCESSING_USER'];
             recvKeys.forEach(k => {
-              try { this.dataForm.get(k)?.disable(); } catch { }
+              try {
+                const ctrl = this.dataForm.get(k);
+                // 若是透過「領回」開啟，不要先 reset（後續會預設值並 enable）
+                if (this.openMode === 'receive') {
+                  try { /* leave value as-is; enable/validators handled in receive block */ } catch { }
+                } else {
+                  try { ctrl?.reset(); } catch { }
+                }
+                try { ctrl?.disable(); } catch { }
+              } catch { }
             });
           }
         } catch { }
@@ -283,6 +366,14 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
             const procCtrl = this.dataForm.get('PROCESSING_USER');
             if (procCtrl && (procCtrl.value === null || procCtrl.value === undefined || procCtrl.value === '')) {
               procCtrl.setValue(me, { emitEvent: true });
+            }
+          } catch { }
+          // 若後端未帶 RECEIVE_DATE，預設為現在時間
+          try {
+            const me = this.user?.user_No ?? '';
+            const rCtrl = this.dataForm.get('RECEIVE_DATE');
+            if (rCtrl && (rCtrl.value === null || rCtrl.value === undefined)) {
+              rCtrl.setValue(new Date(), { emitEvent: true });
             }
           } catch { }
           const editableKeys = ['RECEIVE_DATE', 'RECAPTION_NAME', 'RECAPTION_PHONE', 'PROCESSING_USER'];
@@ -406,7 +497,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
     ];
 
     for (const field of requiredFields) {
-      if (field.value === null || field.value === undefined || field.value === '') {
+      if (field.value === null || field.value === undefined || (typeof field.value === 'string' && field.value === '')) {
         this.messageService.errorBubble(`「${field.label}」為必填`);
         this.loading = false;
         return;
@@ -443,34 +534,34 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
       });
   }
 
-  // onRebroadcast(): void {
-  //   const raw = this.dataForm.getRawValue();
-  //   const seqId = raw.SEQ_ID;
+  onRebroadcast(): void {
+    const raw = this.dataForm.getRawValue();
+    const seqId = raw.SEQ_ID;
 
-  //   if (!seqId || seqId === '系統自動產生') {
-  //     this.messageService.errorBubble('尚未產生登錄編號，無法重新廣播');
-  //     return;
-  //   }
+    if (!seqId || seqId === '系統自動產生') {
+      this.messageService.errorBubble('尚未產生登錄編號，無法重新廣播');
+      return;
+    }
 
-  //   this.RebroadcastLoading = true;
-  //   // 點擊後先隱藏領回區塊
-  //   this.showReceiveInfo = false;
-  //   this.cpm11070Service.broadcastCPM11070({ SEQ_ID: String(seqId) })
-  //     .pipe(untilDestroyed(this), finalize(() => (this.RebroadcastLoading = false)))
-  //     .subscribe({
-  //       next: (res) => {
-  //         if (res.Status === '0000') {
-  //           this.messageService.successBubble(res.Message || '重新廣播成功');
-  //           this.onCancel();
-  //         } else {
-  //           const errMsg = (res.Data as unknown as string) || res.Message || '重新廣播失敗';
-  //           this.messageService.errorBubble(errMsg);
-  //           // 出錯時恢復顯示
-  //           this.showReceiveInfo = true;
-  //         }
-  //       },
-  //     });
-  // }
+    this.RebroadcastLoading = true;
+    // 點擊後先隱藏領回區塊
+    this.showReceiveInfo = false;
+    this.cpm11070Service.broadcastCPM11070({ SEQ_ID: String(seqId) })
+      .pipe(untilDestroyed(this), finalize(() => (this.RebroadcastLoading = false)))
+      .subscribe({
+        next: (res) => {
+          if (res.Status === '0000') {
+            this.messageService.successBubble(res.Message || '重新廣播成功');
+            this.onCancel();
+          } else {
+            const errMsg = (res.Data as unknown as string) || res.Message || '重新廣播失敗';
+            this.messageService.errorBubble(errMsg);
+            // 出錯時恢復顯示
+            this.showReceiveInfo = true;
+          }
+        },
+      });
+  }
 
   onSubmit(frm: FormGroup): void {
     if (this.onlyReceiveEditable) {
@@ -495,10 +586,11 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
           SERVICE_USER: raw.OTHER_GOODS,
           MSG_DATE: raw.MSG_DATE,
           NOTES: raw.BROADCAST_DATE,
-          RECEIVE_DATE: raw.RECEIVE_DATE,
+          // 新增時明確傳空值給後端（避免預設值被送出）
+          RECEIVE_DATE: null,
           RECAPTION_NAME: raw.RECAPTION_NAME,
           RECAPTION_PHONE: raw.RECAPTION_PHONE,
-          PROCESSING_USER: raw.PROCESSING_USER,
+          PROCESSING_USER: null,
           REGISTRANT: raw.REGISTRANT,
           Identity_KIND: raw.Identity_KIND,
           SEX: raw.SEX,
@@ -507,13 +599,19 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
           ADDRESS: raw.ADDRESS,
         };
 
-        this.cpm11070Service.createCPM11070(payload)
+        // 若為 null，從 payload 中移除屬性，嘗試避免後端自動填入預設值
+        const cleanPayload: any = { ...payload };
+        if (cleanPayload.RECEIVE_DATE === null) delete cleanPayload.RECEIVE_DATE;
+        if (cleanPayload.PROCESSING_USER === null) delete cleanPayload.PROCESSING_USER;
+
+        this.cpm11070Service.createCPM11070(cleanPayload)
           .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
           .subscribe({
             next: (res) => {
               if (res.Status === '0000') {
                 this.messageService.successBubble(res.Message || '新增成功');
-                this.onCancel();
+                // 清空表單但保留建立頁面的預設值與鎖定狀態
+                this.afterCreateClearForm();
               } else {
                 const errMsg = (res.Data as unknown as string) || res.Message || '新增失敗';
                 this.messageService.errorBubble(errMsg);
