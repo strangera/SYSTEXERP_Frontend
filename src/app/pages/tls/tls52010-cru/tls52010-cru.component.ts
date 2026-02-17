@@ -131,11 +131,21 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   data: IPOS2004DetailData[] = [];
   selectedItems: IPOS2004DetailData[] = [];
 
-  validateEntireRow = (rowData: IPOS2004DetailData): { isValid: boolean, errorMessage: string } => {
-    const hasDuplicatePLU_MagNo = this.data.some((item: IPOS2004DetailData) =>
-      item.PLU_MagNo === rowData.PLU_MagNo && item._TABLE_KEY !== rowData._TABLE_KEY);
+  validateEntireRow = (rowData: IPOS2004DetailData): { isValid: boolean, errorMessage: string; } => {
+    // 1. 如果商品編號還沒填入，先不檢查重複（交給 validateRequired 處理）
+    if (!rowData.PLU_MagNo) {
+      return { isValid: true, errorMessage: '' };
+    }
+
+    // 2. 檢查重複時，排除掉 key 為空的狀況，並確保比對的是「其他」行
+    const hasDuplicatePLU_MagNo = this.data.some((item) =>
+      item.PLU_MagNo === rowData.PLU_MagNo &&
+      item._TABLE_KEY !== rowData._TABLE_KEY &&
+      rowData._TABLE_KEY !== undefined // 確保目前的行有 key
+    );
+
     if (hasDuplicatePLU_MagNo) {
-      return { isValid: false, errorMessage: '商品管理編號重複' };
+      return { isValid: false, errorMessage: '商品已重複' };
     }
 
     return { isValid: true, errorMessage: '' };

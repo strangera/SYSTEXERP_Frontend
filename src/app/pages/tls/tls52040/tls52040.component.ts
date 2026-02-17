@@ -15,7 +15,6 @@ import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { finalize, Observable } from 'rxjs';
-import { Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { IQueryTLS52040Request, ITLS52040Data, Tls52040Service } from '../../../service/api/tls/tls52040.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -145,7 +144,6 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
     },
   ];
   constructor(
-    private readonly tls52010Service: Tls52010Service,
     public readonly tls52040Service: Tls52040Service,
     private readonly dropdown: DropdownApiService,
     private readonly fileExportService: FileExportService
@@ -158,7 +156,14 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
     this.handleSubmit(frm, () => {
       this.tls52040Service.queryTLS52040(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.lastQueryBody = frm.value;
-        this.data = response.Data;
+        const state = this.router.lastSuccessfulNavigation?.extras.state;
+        const returnData = state?.['data'];
+        if (returnData?.Status === 'insert') {
+          this.data = [response.Data[0]];
+          delete returnData['Status'];
+        } else {
+          this.data = response.Data;
+        }
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });

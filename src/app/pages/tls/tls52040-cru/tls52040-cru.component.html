@@ -73,12 +73,12 @@
 <app-dialog [visible]="dialogVisible" header="選擇退貨單" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
   [disable]="selectedItemsDialog.length === 0" [width]="'80vw'">
   <div class="p-2">
-    <app-table tableKey="tls52030DialogTable" dataKey="CRN_No" [showReportMode]="false" [data]="dialogData"
-      [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
-      (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
-      [isRowSelectable]="isRowSelectable.bind(this)" [multiSortMeta]="[{ field: 'CRN_No', order: 1 }]"
-      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, dataForm);" [lazy]="true"
-      [loading]="dialogLoading" [scrollable]="true" scrollHeight="400px">
-    </app-table>
+    <app-table-report dataKey="CRN_No" [showReportMode]="false" [data]="dialogData" [columns]="dialogColumns"
+      [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
+      (selectionChange)="selectedItemsDialog = $event" [showManage]="false" [showCheckBox]="true"
+      [isRowSelectable]="isRowSelectable.bind(this)" [totalRecords]="totalRecords" [loading]="dialogLoading"
+      scrollHeight="400px" [lastQueryBody]="dialogLastQueryParams"
+      [queryFunction]="tls52040Service.GetPOS2031P.bind(tls52040Service)">
+    </app-table-report>
   </div>
 </app-dialog>

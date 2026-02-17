@@ -15,7 +15,6 @@ import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { finalize, Observable } from 'rxjs';
-import { Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { IQueryTLS52030Request, ITLS52030Data, Tls52030Service } from '../../../service/api/tls/tls52030.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -148,7 +147,6 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   ];
 
   constructor(
-    private readonly tls52010Service: Tls52010Service,
     public readonly tls52030Service: Tls52030Service,
     private readonly dropdown: DropdownApiService,
     private readonly fileExportService: FileExportService

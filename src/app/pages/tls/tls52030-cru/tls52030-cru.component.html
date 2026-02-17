@@ -73,11 +73,10 @@
 
 <app-dialog [visible]="dialogVisible" header="選擇採購單" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
   [disable]="selectedItemsDialog.length === 0" [height]="'500px'">
-  <app-table tableKey="tls52030DialogTable" dataKey="PO_No" [showReportMode]="false" [data]="dialogData"
-    [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
-    (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
-    [isRowSelectable]="isRowSelectable.bind(this)" [multiSortMeta]="[{ field: 'PO_No', order: 1 }]"
-    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, dataForm);" [lazy]="true"
-    [loading]="dialogLoading">
-  </app-table>
+  <app-table-report dataKey="PO_No" [showReportMode]="false" [data]="dialogData" [columns]="dialogColumns"
+    [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
+    (selectionChange)="selectedItemsDialog = $event" [showManage]="false" [showCheckBox]="true"
+    [isRowSelectable]="isRowSelectable.bind(this)" [totalRecords]="totalRecords" [loading]="dialogLoading"
+    [lastQueryBody]="dialogLastQueryParams" [queryFunction]="tls52030Service.getPOS2016.bind(tls52030Service)" ]>
+  </app-table-report>
 </app-dialog>

@@ -129,12 +129,21 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
   originalData: TLS52020Detail[] = [];
   data: TLS52020Detail[] = [];
   selectedItems: TLS52020Detail[] = [];
-
   validateEntireRow = (rowData: IPOS2004DetailData): { isValid: boolean, errorMessage: string; } => {
+    // 1. 如果商品編號還沒填入，先不檢查重複（交給 validateRequired 處理）
+    if (!rowData.PLU_MagNo) {
+      return { isValid: true, errorMessage: '' };
+    }
+
+    // 2. 檢查重複時，排除掉 key 為空的狀況，並確保比對的是「其他」行
     const hasDuplicatePLU_MagNo = this.data.some((item: TLS52020Detail) =>
-      item.PLU_MagNo === rowData.PLU_MagNo && item._TABLE_KEY !== rowData._TABLE_KEY);
+      item.PLU_MagNo === rowData.PLU_MagNo &&
+      item._TABLE_KEY !== rowData._TABLE_KEY &&
+      rowData._TABLE_KEY !== undefined // 確保目前的行有 key
+    );
+
     if (hasDuplicatePLU_MagNo) {
-      return { isValid: false, errorMessage: '商品管理編號重複' };
+      return { isValid: false, errorMessage: '商品已重複' };
     }
 
     return { isValid: true, errorMessage: '' };
@@ -174,9 +183,10 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
           const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0; // 計算稅額
           const buyAmt = buyNet + buyTax; // 計算合計
           const saleAmt = Math.round(subQty * salePrc); // 銷售小計
-
+          const originalKey = this.data[index]._TABLE_KEY;
           const updatedProps = {
             ...newData, // 帶入所有查詢結果的屬性
+            _TABLE_KEY: originalKey,
             id: 0,
             PLU_MagNo: newData.PLU_MagNo,
             PLU_Name: newData.PLU_Name,
