@@ -23,6 +23,7 @@ import { debounceTime, Subject } from 'rxjs';
 import { TableEditDataService } from './services/table-edit-data.service';
 import { TableUtilityService } from './services/table-edit-utility.service';
 import { TableValidationService } from './services/table-validation.service';
+import { AutoCompleteCellComponent } from './table-edit-cell/auto-complete-cell.component';
 import { CheckboxCellComponent } from './table-edit-cell/checkbox-cell.component';
 import { DateCellComponent } from './table-edit-cell/date-cell.component';
 import { DropdownCellComponent } from './table-edit-cell/dropdown-cell.component';
@@ -434,6 +435,8 @@ export class TableEditComponent implements OnChanges {
         return NumberCellComponent;
       case 'dropdown':
         return DropdownCellComponent;
+      case 'autoComplete':
+        return AutoCompleteCellComponent;
       case 'date':
         return DateCellComponent;
       case 'checkbox':
@@ -452,6 +455,11 @@ export class TableEditComponent implements OnChanges {
       index,
       disabled: this.disabled || !!this.rowEditDisabled(rowData),
       onValueChange: this.onValueChange.bind(this),
+      onFilterComplete: (event: any, rowData: any, col: EditColumn, index: number) => {
+        if (col.onFilterComplete) {
+          col.onFilterComplete(event, rowData, col, index);
+        }
+      }
     };
   }
   /**

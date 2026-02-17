@@ -136,13 +136,14 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     private readonly datePipe: DatePipe
   ) { super(); }
   ngOnInit(): void {
+    this.loadInitialData();
+  }
+  loadInitialData() {
     this.initializePage('TLS24010', this.dataForm);
     const rowDataTyped = this.rowdata as TLS24010Data;
     this.TXN_GUIPaper = rowDataTyped.TXN_GUIPaper ?? this.queryData.TXN_GUIPaper;
     this.TLT_Name = rowDataTyped.TLT_Name;
     this.store_way = rowDataTyped.store_way;
-    const titleName = this.isFormCreateable ? '新增補登資訊' : FIX_TYPE_LABEL[this.type!];
-    this.formTitle = (this.store_way === STORE_WAY.專櫃 ? '(專櫃)' : '(自營)') + titleName;
     this.talent_id = rowDataTyped.talent_id;
     this.rece_yn = rowDataTyped.rece_yn;
     const TXN_Date = this.datePipe.transform(rowDataTyped.TXN_Date, 'yyyy-MM-dd');
@@ -166,6 +167,8 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       this.type = rowDataTyped?.type as FIX_TYPE;
       this.dataForm.get('TXN_Remark')?.enable();
     }
+    const titleName = this.isFormCreateable ? '新增補登資訊' : FIX_TYPE_LABEL[this.type!] || '顯示補登資訊';
+    this.formTitle = (this.store_way === STORE_WAY.專櫃 ? '(專櫃)' : '(自營)') + titleName;
     // 不是新增時候
     if (!this.isFormCreateable) {
       this.dataForm.disable();
@@ -347,22 +350,29 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
             TXN_No: this.isFormCreateable ? undefined : frm.getRawValue().TXN_No,
             TXN_Time: frm.getRawValue().TXN_Time ? formatTimeToHHMMSS(frm.getRawValue().TXN_Time) : '00:00:00',
             TXN_Status: 'N',
-            POS5007_INFO: pos5007Data.map((item) => {
-              if (typeof item.PLU_MagNo === 'object' && item.PLU_MagNo !== null) {
-                return {
-                  PLU_MagNo: item.PLU_MagNo.PLU_MagNo || '',
-                  PLU_No: item.PLU_MagNo.PLU_No || '',
-                  TXN_Qty: item.TXN_Qty || 0,
-                  PLU_SalePrc: item.PLU_SalePrc || 0,
-                  TXN_Disc: item.TXN_Disc || 0,
-                  TXN_SaleAmt: item.TXN_SaleAmt || 0,
-                  tlt_id: item.tlt_id || '0',
-                  PLU_TaxType: item.PLU_TaxType || '1',
-                  TXN_DiscCode: item.TXN_DiscCode || '000'
-                };
-              }
-              return item;
-            }),
+            POS5007_INFO: pos5007Data
+              .filter(item => {
+                const price = (typeof item.PLU_MagNo === 'object' && item.PLU_MagNo !== null)
+                  ? item.PLU_SalePrc
+                  : item.PLU_SalePrc;
+                return Number(price) !== 0;
+              })
+              .map((item) => {
+                if (typeof item.PLU_MagNo === 'object' && item.PLU_MagNo !== null) {
+                  return {
+                    PLU_MagNo: item.PLU_MagNo.PLU_MagNo || '',
+                    PLU_No: item.PLU_MagNo.PLU_No || '',
+                    TXN_Qty: item.TXN_Qty || 0,
+                    PLU_SalePrc: item.PLU_SalePrc || 0,
+                    TXN_Disc: item.TXN_Disc || 0,
+                    TXN_SaleAmt: item.TXN_SaleAmt || 0,
+                    tlt_id: item.tlt_id || '0',
+                    PLU_TaxType: item.PLU_TaxType || '1',
+                    TXN_DiscCode: item.TXN_DiscCode || '000'
+                  };
+                }
+                return item;
+              }),
             POS5008_INFO: pos5008Data.map((item) => {
               return {
                 PAY_No: item.PAY_No || '',
@@ -439,9 +449,10 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         if (this.type === FIX_TYPE.專櫃編號修正) {
           const updatePOS5007List = this.tltnoComp?.tltIdData.map(item => {
             const pluMagNo = item.PLU_MagNo as POS2004Item;
+            console.log(pluMagNo);
             return {
               POS5007_ID: item.ID,
-              TLT_No: item.TLT_No || '',
+              TLT_No: item.TLT_No || this.dataForm.getRawValue().TLT_No || '',
               PLU_MagNo: this.store_way === STORE_WAY.專櫃 ? pluMagNo.TLT_No as string : pluMagNo.PLU_MagNo as string || '',
               PLU_No: this.store_way === STORE_WAY.專櫃 ? pluMagNo.TLT_No as string : item.PLU_No as string || '',
               Talent_ID: item.Talent_ID || this.talent_id || 0,
@@ -606,6 +617,10 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     }
     controls.ORG_TXN_Date.updateValueAndValidity();
     controls.ORG_ECR_No.updateValueAndValidity();
+  }
+
+  get currentTotalSaleAmt(): number {
+    return this.pos5007Comp?.POS5007Data.reduce((sum, item) => sum + (Number(item.TXN_SaleAmt) || 0), 0) || 0;
   }
 }
 

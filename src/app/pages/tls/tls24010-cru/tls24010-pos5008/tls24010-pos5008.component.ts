@@ -6,13 +6,13 @@ import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { POS5008Data } from '../../../../service/api/tls/tls24010.service';
-import { SystemOption, SystemOptionsService } from '../../../../service/system/sys1000.service';
+import { getSYS1000Options, SystemOption, SystemOptionsService } from '../../../../service/system/sys1000.service';
 import { DropDownListService, IDropdownItem } from '../../../../service/utility/dropDownList.service';
 import { DropdownComponent } from '../../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../../shared/componentkit/input-text/input-text.component';
 import { Column } from '../../../../shared/componentkit/table/table.model';
-import { CRD_TypeOptions, POS5008Columns } from '../tls24010-cru.model';
+import { POS5008Columns } from '../tls24010-cru.model';
 
 @UntilDestroy()
 @Component({
@@ -42,6 +42,16 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
   @Input() isFormEditable?: boolean;
   @Input() isFormReadable?: boolean;
   @Input() submitted?: boolean;
+  @Input() totalSaleAmt = 0; // 接收父層傳來的銷售總金額
+  get currentTotalPaid(): number {
+    return this.posFormArrayControls.reduce((sum, group, index) => {
+      // 如果該行被勾選，則計入其金額
+      if (this.POS5008Data[index].selected) {
+        return sum + (Number(group.get('TXN_PayAmt')?.value) || 0);
+      }
+      return sum;
+    }, 0);
+  }
 
   form?: FormGroup;
   POS5008FormArray: FormArray = this.fb.array([]);
@@ -51,7 +61,7 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
   isOptionsLoaded = false;
   trackByRow = (index: number, item: POS5008Data) => { return item?.id || index; }
 
-  CRD_TypeOptions = CRD_TypeOptions;
+  CRD_TypeOptions = getSYS1000Options('CRD_Type');
   PAY_TypeOptions: IDropdownItem[] = [];
   sys_typeOptions: SystemOption[] = [];
 
@@ -188,6 +198,16 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
     const termNoControl = formGroup.get('TERM_No');
     const txnPayDescControl = formGroup.get('TXN_PayDesc');
     const txnCouponNoControl = formGroup.get('TXN_CouponNo');
+
+    // --- 新增自動帶入金額邏輯 ---
+    // 剩餘應付 = 總金額 - 目前已填寫的支付總額 (此時這筆剛勾選，金額還是 null 或 0)
+    const remaining = this.totalSaleAmt - this.currentTotalPaid;
+
+    // 只有在金額欄位沒有值或為 0 的時候才自動帶入，且剩餘金額大於 0 才帶入
+    if (!txnPayAmtControl?.value && remaining > 0) {
+      txnPayAmtControl?.setValue(remaining, { emitEvent: false });
+    }
+    // -------------------------
 
     // A. 通用：金額必填
     txnPayAmtControl?.setValidators([Validators.required]);

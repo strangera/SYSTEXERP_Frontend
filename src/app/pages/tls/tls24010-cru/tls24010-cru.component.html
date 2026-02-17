@@ -110,7 +110,7 @@
       <div *ngIf="type !== EDIT_TYPES.PAY_NO" class="grid p-fluid card">
         <app-tls24010-pos5008 [data]="PaymentDetailsList" class="col-12" [rece_yn]="rece_yn" [submitted]="submitted"
           [isFormCreateable]="isFormCreateable" [isFormEditable]="isFormEditable" [type]="type"
-          [isFormReadable]="isFormReadable"></app-tls24010-pos5008>
+          [isFormReadable]="isFormReadable" [totalSaleAmt]="currentTotalSaleAmt"></app-tls24010-pos5008>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" />
