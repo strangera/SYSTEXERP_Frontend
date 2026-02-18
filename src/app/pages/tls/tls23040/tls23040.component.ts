@@ -1,19 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { CommonModule } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize, map } from 'rxjs/operators';
 
+// services
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23040Service } from '../../../service/api/tls/tls23040.service';
 import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 import { FloorService } from '../../../service/basic/querySYS3900.service';
 import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
+
+// base
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
-import { CommonModule } from '@angular/common';
+// ui
 import { TranslateModule } from '@ngx-translate/core';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -27,7 +32,6 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 
 // untilDestroyed
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 
 @UntilDestroy()
 @Component({
@@ -43,7 +47,6 @@ import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/i
     ReactiveFormsModule,
     CalendarRangeQuickComponent,
     MultiSelectComponent,
-    // InputNumberRangeComponent,
     InputTextComponent,
     ButtonComponent,
     DialogModule,
@@ -52,7 +55,6 @@ import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/i
     ButtonModule,
     InputTextRangeComponent,
     TableReportComponent,
-
   ],
 })
 export class TLS23040Component extends BasicQueryPageComponent<any> {
@@ -71,19 +73,25 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
 
   // 畫面繫結
   get activeRows() {
-    return this.viewMode === 'payment' ? this.paymentRows :
-      this.viewMode === 'discount' ? this.discountRows :
-        this.invoiceRows;
+    return this.viewMode === 'payment'
+      ? this.paymentRows
+      : this.viewMode === 'discount'
+        ? this.discountRows
+        : this.invoiceRows;
   }
+
   get activeColumns() {
-    return this.viewMode === 'payment' ? this.paymentColumns :
-      this.viewMode === 'discount' ? this.discountColumns :
-        this.invoiceColumns;
+    return this.viewMode === 'payment'
+      ? this.paymentColumns
+      : this.viewMode === 'discount'
+        ? this.discountColumns
+        : this.invoiceColumns;
   }
 
   activeFooter: Record<string, number> | undefined = undefined;
   totalRecords = 0;
-  // ★ 新增：記住伺服器回傳的總筆數（避免被 30 蓋掉）
+
+  // ★ 記住伺服器回傳的總筆數（避免被 30 蓋掉）
   public lastTotalCount = 0;
 
   // 匯出控制
@@ -125,8 +133,8 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   statusFlagOptions = [
     { value: '1', label: '外交官零稅' },
     { value: '2', label: '事後登錄' },
-    // { value: '3', label: '預售' },
   ];
+
   txnStatusOptions: any[] = [
     { value: '1', label: '正常交易' },
     { value: '2', label: '作廢交易' },
@@ -135,6 +143,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     { value: '5', label: '預售解約' },
     { value: '6', label: '預售退貨' },
   ];
+
   BUILDING_NO_Options: any[] = [];
   floorOptions: any[] = [];
   OrganizationCodeOptions: any[] = [];
@@ -194,26 +203,30 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
       });
   }
 
-  // ===== 共用工具 =====
-  private toIso(x: any) {
-    if (!x) return undefined;
-    const d = typeof x === 'string' ? new Date(x) : (x as Date);
-    if (isNaN(d.getTime())) return undefined;
-    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
-  }
+  // =========================
+  // 共用工具
+  // =========================
   private ensureArr(v: any) { return Array.isArray(v) ? v : v == null || v === '' ? [] : [v]; }
   private toNumOrUndef(v: any) { return v == null || v === '' || isNaN(Number(v)) ? undefined : Number(v); }
+
   private formatDate(val: string): string {
     const d = new Date(val);
     if (isNaN(d.getTime())) return val;
-    const yyyy = d.getFullYear(), mm = String(d.getMonth() + 1).padStart(2, '0'), dd = String(d.getDate()).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
     return `${yyyy}/${mm}/${dd}`;
   }
-  private formatNumber(val: number): string { return Number(val ?? 0).toLocaleString('en-US'); }
+
+  private formatNumber(val: number): string {
+    return Number(val ?? 0).toLocaleString('en-US');
+  }
+
   private getLabelFromOptions(value: any, options: any[]): string {
     const found = options?.find((opt) => String(opt.value) === String(value));
     return found ? found.label : value;
   }
+
   private padTxnNo(v: any): string {
     const s = String(v ?? '').trim();
     return s ? s.padStart(6, '0') : '';
@@ -225,20 +238,62 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     return sortBy.filter(s => s && typeof s.field === 'string' && !s.field.startsWith('_'));
   }
 
-  // === 查詢（送出）===
-  onSubmit(form: FormGroup): void {
-    const raw = this.queryForm.getRawValue() as any;
-
-    const rawSort: any[] = Array.isArray(raw?.SortBy) && raw.SortBy.length ? raw.SortBy : [
+  /** ✅ 依 viewMode 回傳預設排序（付款明細：銷售日期、收銀機號、交易序號） */
+  private getDefaultSortBy(mode: 'invoice' | 'payment' | 'discount') {
+    if (mode === 'payment') {
+      return [
+        { field: 'TXN_Date', order: 1 },
+        { field: 'ECR_No', order: 1 },
+        { field: 'TXN_No', order: 1 },
+      ];
+    }
+    return [
       { field: 'tlt_no', order: 1 },
       { field: 'TXN_Date', order: 1 },
       { field: 'ECR_No', order: 1 },
       { field: 'TXN_No', order: 1 },
     ];
+  }
+  onExportPDFClick(ev?: Event) {
+    ev?.preventDefault?.();
+    ev?.stopPropagation?.();
+    this.onExportPDF(); // 你原本的下載邏輯
+  }
+  /** 固定 PDF 檔名：TLS23040_發票報表_yyyyMMddHHmmss.pdf */
+  private buildPdfFilename(): string {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const MM = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const HH = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    const ss = String(d.getSeconds()).padStart(2, '0');
+    return `TLS23040_發票報表_${yyyy}${MM}${dd}${HH}${mm}${ss}.pdf`;
+  }
+
+  /** ✅ 只送日期 yyyy-MM-dd */
+  private toDateOnly(x: any): string | undefined {
+    if (!x) return undefined;
+    const d = typeof x === 'string' ? new Date(x) : (x as Date);
+    if (isNaN(d.getTime())) return undefined;
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  // =========================
+  // 查詢（送出）
+  // =========================
+  onSubmit(form: FormGroup): void {
+    const raw = this.queryForm.getRawValue() as any;
+
+    const safeSort = this.sanitizeSortBy(raw?.SortBy);
+    const sortBy = safeSort.length ? safeSort : this.getDefaultSortBy(this.viewMode);
 
     const payload: any = {
-      TXN_DateStart: this.toDateOnly(raw?.TXN_DateStart ?? this.yesterday), // ✅ yyyy-MM-dd
-      TXN_DateEnd: this.toDateOnly(raw?.TXN_DateEnd ?? this.yesterday), // ✅ yyyy-MM-dd
+      TXN_DateStart: this.toDateOnly(raw?.TXN_DateStart ?? this.yesterday),
+      TXN_DateEnd: this.toDateOnly(raw?.TXN_DateEnd ?? this.yesterday),
 
       ...(this.ensureArr(raw?.ECR_No).length ? { ECR_No: this.ensureArr(raw?.ECR_No) } : {}),
       ...(this.ensureArr(raw?.TLT_No).length ? { TLT_No: this.ensureArr(raw?.TLT_No) } : {}),
@@ -257,14 +312,13 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
 
       pageIndex: Number(raw?.pageIndex) || 1,
       pageSize: Number(raw?.pageSize) || 30,
-      SortBy: this.sanitizeSortBy(rawSort),
+      SortBy: sortBy,
     };
 
     this.historyRequestBody = { ...payload };
     this.loading = true;
     this.messageService?.blockUi();
 
-    // 先取一頁，填入三組 rows 與總計，讓畫面立即顯示
     this.tls23040Service.queryTLS23040(payload)
       .pipe(untilDestroyed(this))
       .subscribe({
@@ -288,6 +342,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
                 _rowKey: `inv|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
               };
             });
+
           this.invoiceRows = inv;
           this.invoiceTotals = {
             TotalGUI: packs.reduce((s, p) => s + Number(p?.invoice?.TotalGUI ?? 0), 0),
@@ -307,6 +362,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
                 _rowKey: `pay|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
               };
             });
+
           this.paymentRows = pay;
           this.paymentTotals = {
             TotalPayAmt: packs.reduce((s, p) => s + Number(p?.payment?.TotalPayAmt ?? 0), 0),
@@ -325,15 +381,15 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
                 _rowKey: `disc|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
               };
             });
-          this.discountRows = disc;
 
+          this.discountRows = disc;
           this.discountTotals = {
             TotalSalePrc: packs.reduce((s, p) => s + Number(p?.discount?.TotalSalePrc ?? 0), 0),
             TotalNet: packs.reduce((s, p) => s + Number(p?.discount?.TotalNet ?? 0), 0),
             TotalTax: packs.reduce((s, p) => s + Number(p?.discount?.TotalTax ?? 0), 0),
           };
 
-          // ★ 關鍵：記住伺服器回傳的總筆數，不要在切換視圖時被 30 覆蓋
+          // ★ 記住伺服器回傳的總筆數
           this.lastTotalCount = Number(res?.TotalCount ?? this.activeRows.length ?? 0);
           this.totalRecords = this.lastTotalCount;
 
@@ -343,7 +399,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
           this.invoiceRows = this.paymentRows = this.discountRows = [];
           this.invoiceTotals = this.paymentTotals = this.discountTotals = null;
           this.totalRecords = 0;
-          this.lastTotalCount = 0; // ★ 清空
+          this.lastTotalCount = 0;
           this.activeFooter = undefined;
         },
         complete: () => {
@@ -353,21 +409,31 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
       });
   }
 
-  // 切換檢視：只更新總計，不覆蓋總筆數
+  // ✅ 切換檢視：付款明細預設排序（銷售日期、收銀機號、交易序號）
   onViewChange() {
-    // this.totalRecords = this.activeRows.length;  // ← 造成顯示 30 的元兇
-    this.totalRecords = this.lastTotalCount;        // ★ 使用記住的伺服器總筆數
+    this.totalRecords = this.lastTotalCount;
     this.updateActiveFooter();
+
+    if (this.historyRequestBody) {
+      this.historyRequestBody = {
+        ...this.historyRequestBody,
+        pageIndex: 1,
+        SortBy: this.getDefaultSortBy(this.viewMode),
+      };
+    }
   }
 
+  // =========================
   // 提供給 app-table-report 的查詢函式（支援排序/分頁）
-  public queryTLS23040ForReport = (body: any) =>
-    this.tls23040Service.queryTLS23040({
+  // =========================
+  public queryTLS23040ForReport = (body: any) => {
+    const safeSort = this.sanitizeSortBy(body?.SortBy);
+    const sortBy = safeSort.length ? safeSort : this.getDefaultSortBy(this.viewMode);
+
+    return this.tls23040Service.queryTLS23040({
       ...body,
       pageSize: 30,
-      SortBy: this.sanitizeSortBy(body?.SortBy),
-
-      // ✅ 確保用 DateOnly
+      SortBy: sortBy,
       TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
       TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
     }).pipe(
@@ -394,6 +460,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
                 _rowKey: `inv|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
               };
             });
+
           grand = {
             TXN_TotGUI: packs.reduce((s, p) => s + Number(p?.invoice?.TotalGUI ?? 0), 0),
             TXN_TotSaleAmt: packs.reduce((s, p) => s + Number(p?.invoice?.TotalSaleAmt ?? 0), 0),
@@ -411,6 +478,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
                 _rowKey: `pay|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
               };
             });
+
           grand = {
             TXN_PayAmt: packs.reduce((s, p) => s + Number(p?.payment?.TotalPayAmt ?? 0), 0),
           };
@@ -427,6 +495,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
                 _rowKey: `disc|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
               };
             });
+
           grand = {
             TXN_SaleAmt: packs.reduce((s, p) => s + Number(p?.discount?.TotalSalePrc ?? 0), 0),
             TXN_Net: packs.reduce((s, p) => s + Number(p?.discount?.TotalNet ?? 0), 0),
@@ -436,7 +505,6 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
 
         const totalCount = Number(res?.TotalCount ?? rows.length ?? 0);
 
-        // ★ 同步到頁面狀態，避免被切換檢視時寫回 30
         this.lastTotalCount = totalCount;
         this.totalRecords = totalCount;
         this.activeFooter = { ...grand };
@@ -444,54 +512,78 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
         return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
       })
     );
+  };
 
-  // 匯出（沿用：發票報表）
-  onExportPDF() {
-    if (!this.historyRequestBody) return this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
-    if (this.lastTotalCount <= 0) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
+  // =========================
+  // 匯出：PDF（Blob 下載，避免導頁成 PDF Viewer）
+  // =========================
+onExportPDF() {
+  if (!this.historyRequestBody) return this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+  if (this.lastTotalCount <= 0) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
 
-    this.btnLoading = true;
+  this.btnLoading = true;
 
-    this.tls23040Service
-      .exportTLS23040PDF(this.historyRequestBody)
-      .pipe(
-        untilDestroyed(this),
-        finalize(() => (this.btnLoading = false))
-      )
-      .subscribe({
-        next: (res) => {
-          // 後端: Ok(ApiResponse<string>(..., "/temp/xxx.pdf"))
-          const urlPath = res?.Data;
+  this.tls23040Service.exportTLS23040PDF(this.historyRequestBody)
+    .pipe(
+      untilDestroyed(this),
+      finalize(() => (this.btnLoading = false))
+    )
+    .subscribe({
+      next: (res) => {
+        const urlPath = res?.Data; // 後端回 /temp/xxx.pdf 或 http://localhost:5142/temp/xxx.pdf
+        if (!urlPath) {
+          this.messageService?.warnBubble?.(res?.ReturnMessage || '沒有回傳 PDF 路徑');
+          return;
+        }
 
-          if (!urlPath) {
-            this.messageService?.warnBubble?.(res?.ReturnMessage || '沒有回傳 PDF 下載路徑');
-            return;
-          }
+        // ✅ 直接開新分頁到後端實際位置（避免 4200 的 /temp 404）
+        const openUrl = this.resolveTempUrlForOpen(urlPath);
+        if (!openUrl) {
+          this.messageService?.warnBubble?.('PDF 路徑不正確，無法開啟。');
+          return;
+        }
 
-          const fullUrl = this.resolveDownloadUrl(urlPath);
+        window.open(openUrl, '_blank', 'noopener');
+      },
+      error: () => this.messageService?.errorBubble?.('PDF 匯出失敗'),
+    });
+}
+/** ✅ 給「開分頁」用：確保一定指向後端 host（例如 5142） */
+private resolveTempUrlForOpen(pathOrUrl: string): string {
+  if (!pathOrUrl) return '';
 
-          // ✅ 直接開新視窗（最穩）
-          window.open(fullUrl, '_blank');
+  // 後端若已回完整 URL，直接用
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
 
-          // 如果你要「直接下載」而不是開視窗，改用：
-          // const a = document.createElement('a');
-          // a.href = fullUrl;
-          // a.download = this.extractFileNameFromPath(urlPath) || 'TLS23040_發票報表.pdf';
-          // document.body.appendChild(a);
-          // a.click();
-          // document.body.removeChild(a);
-        },
-        error: () => this.messageService?.errorBubble?.('PDF 匯出失敗'),
-      });
-  }
+  // 抽出 /temp/xxx.pdf
+  const idx = pathOrUrl.indexOf('/temp/');
+  const tempPath =
+    idx >= 0 ? pathOrUrl.substring(idx) :
+    pathOrUrl.startsWith('/') ? pathOrUrl :
+    `/${pathOrUrl}`;
+
+  // 用 apiUrl 的 host 組完整 URL（例如 http://localhost:5142 + /temp/xxx.pdf）
+  const apiBase = (this.tls23040Service.apiUrl || '').replace(/\/+$/, '');
+  return `${apiBase}${tempPath}`;
+}
+
+
+/** 把後端回來的 Data 轉成 /temp/...（同源 proxy 用） */
+private toTempPath(pathOrUrl: string): string {
+  const idx = pathOrUrl.indexOf('/temp/');
+  if (idx >= 0) return pathOrUrl.substring(idx); // 變成 /temp/xxx.pdf
+  if (pathOrUrl.startsWith('/')) return pathOrUrl;
+  return `/${pathOrUrl}`;
+}
+
+
   onExportXLSX() {
     if (!this.historyRequestBody) return this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
     if (this.lastTotalCount <= 0) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
 
     this.btnLoading = true;
 
-    this.tls23040Service
-      .exportTLS23040Excel(this.historyRequestBody)
+    this.tls23040Service.exportTLS23040Excel(this.historyRequestBody)
       .pipe(
         untilDestroyed(this),
         finalize(() => (this.btnLoading = false))
@@ -506,11 +598,14 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     const cd = response.headers.get('Content-Disposition');
     const name = this.getFilenameFromHeader(cd, ext);
     const blob = response.body;
+
     if (blob && blob.size > 0) {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url; a.download = name;
-      document.body.appendChild(a); a.click();
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } else {
@@ -521,30 +616,43 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   private getFilenameFromHeader(cd: string | null, def: string): string {
     if (!cd) return `download${def}`;
     const star = /filename\*=([^;]+)/.exec(cd);
-    if (star?.[1]) { try { return decodeURIComponent(star[1].replace(/^UTF-8''/, '')); } catch { return star[1]; } }
+    if (star?.[1]) {
+      try { return decodeURIComponent(star[1].replace(/^UTF-8''/, '')); }
+      catch { return star[1]; }
+    }
     const m = /filename="([^"]+)"/.exec(cd);
-    if (m?.[1]) { try { return decodeURIComponent(m[1].replace(/\+/g, ' ')); } catch { return m[1]; } }
+    if (m?.[1]) {
+      try { return decodeURIComponent(m[1].replace(/\+/g, ' ')); }
+      catch { return m[1]; }
+    }
     return `download${def}`;
   }
+
   private resolveDownloadUrl(path: string): string {
     if (!path) return '';
     if (/^https?:\/\//i.test(path)) return path;
-
-    // environment.ApiUrl 通常長這樣：
-    // https://xxx.com/api  或  https://xxx.com/TSRDERPAPI
     const apiBase = (this.tls23040Service.apiUrl || '').replace(/\/+$/, '');
     const p = path.startsWith('/') ? path : `/${path}`;
     return `${apiBase}${p}`;
   }
 
-  private extractFileNameFromPath(path: string): string {
-    try {
-      const p = path.split('?')[0];
-      return decodeURIComponent(p.substring(p.lastIndexOf('/') + 1));
-    } catch {
-      return '';
+  // 依視圖更新總計列
+  private updateActiveFooter() {
+    if (this.viewMode === 'invoice') {
+      this.activeFooter = this.invoiceTotals
+        ? { TXN_TotGUI: this.invoiceTotals.TotalGUI, TXN_TotSaleAmt: this.invoiceTotals.TotalSaleAmt }
+        : undefined;
+    } else if (this.viewMode === 'payment') {
+      this.activeFooter = this.paymentTotals
+        ? { TXN_PayAmt: this.paymentTotals.TotalPayAmt }
+        : undefined;
+    } else {
+      this.activeFooter = this.discountTotals
+        ? { TXN_SaleAmt: this.discountTotals.TotalSalePrc, TXN_Net: this.discountTotals.TotalNet, TXN_Tax: this.discountTotals.TotalTax }
+        : undefined;
     }
   }
+
   // === 欄位設定 ===
   invoiceColumns = [
     { field: 'TXN_Date', header: '銷售日期', visible: true, format: (v: string) => this.formatDate(v) },
@@ -557,9 +665,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     { field: 'GUIEndNo', header: '發票結束號碼', visible: true },
     { field: 'TXN_TotGUI', header: '發票金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n) },
     { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, isTotal: true, style: 'text-right', format: (n: number) => this.formatNumber(n) },
-    { field: 'TaxType_desc', header: '交易稅別', visible: true, isTotal: true, style: 'text-right' },
-
-
+    { field: 'TaxType_desc', header: '交易稅別', visible: true, style: 'text-right' },
     { field: 'TXN_StatusName', header: '交易型態', visible: true, format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions) },
     { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號', visible: true },
     { field: 'USR_No', header: '收銀員', visible: true },
@@ -598,37 +704,8 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     { field: 'tlt_id', header: '抽成別代號', visible: true },
     { field: 'tlt_id_desc', header: '商品抽成類別', visible: true },
     { field: 'PRM_TXN_DiscName', header: '原折扣', visible: true },
-
     { field: 'PLU_TaxTypeName', header: '稅別', visible: true },
     { field: 'PLU_No', header: '報帳條碼', visible: true },
     { field: 'TXN_StatusName', header: '狀態', visible: true },
   ];
-
-  // 依視圖更新總計列
-  private updateActiveFooter() {
-    if (this.viewMode === 'invoice') {
-      this.activeFooter = this.invoiceTotals
-        ? { TXN_TotGUI: this.invoiceTotals.TotalGUI, TXN_TotSaleAmt: this.invoiceTotals.TotalSaleAmt }
-        : undefined;
-    } else if (this.viewMode === 'payment') {
-      this.activeFooter = this.paymentTotals
-        ? { TXN_PayAmt: this.paymentTotals.TotalPayAmt }
-        : undefined;
-    } else {
-      this.activeFooter = this.discountTotals
-        ? { TXN_SaleAmt: this.discountTotals.TotalSalePrc, TXN_Net: this.discountTotals.TotalNet, TXN_Tax: this.discountTotals.TotalTax }
-        : undefined;
-    }
-  }
-  // 1) 新增這個工具函式（放在 component 裡即可）
-  private toDateOnly(x: any): string | undefined {
-    if (!x) return undefined;
-    const d = typeof x === 'string' ? new Date(x) : (x as Date);
-    if (isNaN(d.getTime())) return undefined;
-    // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}`;
-  }
 }
