@@ -460,10 +460,10 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   /**
    * 判斷資料列是否可選取
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  isRowSelectable(_rowData: ContractItem): boolean {
-    return true;
-  }
+  isRowSelectable = (rowData: ContractItem): boolean => {
+    // 要約書不可選取（下傳僅支援契約書）
+    return rowData.source_type !== '要約書';
+  };
 
   /**
    * 判斷合約是否可編輯
