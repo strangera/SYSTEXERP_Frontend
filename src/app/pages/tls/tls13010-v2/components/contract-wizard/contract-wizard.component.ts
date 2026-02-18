@@ -44,14 +44,6 @@ import { ConditionItem } from '../../core/models/condition';
 import { ContractInfo, LocationItem } from '../../core/models/contract';
 import { FareItem } from '../../core/models/deduction';
 import { CommissionType } from '../../core/constants';
-import {
-  isFixedRentCondition,
-  isBaseRentHigherCondition,
-  isBaseCommissionCondition,
-  isGraduatedCommissionCondition,
-  isBaseTierCondition
-} from '../../core/type-guards/condition.guard';
-
 // 子組件
 import { Step1ContractInfoComponent } from './steps/step1-contract-info/step1-contract-info.component';
 import { Step2DeductionComponent } from './steps/step2-deduction/step2-deduction.component';
@@ -1439,24 +1431,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
       return true;
     }
 
-    // 只取得符合當前抽成別的未刪除條件資料
-    const activeItems = this.wizardState.conditionItems.filter(item => {
-      if (item._status === 'deleted') return false;
-      switch (commissionType) {
-        case CommissionType.FIXED_RENT:
-          return isFixedRentCondition(item);
-        case CommissionType.BASE_RENT_HIGHER:
-          return isBaseRentHigherCondition(item);
-        case CommissionType.BASE_COMMISSION:
-          return isBaseCommissionCondition(item);
-        case CommissionType.GRADUATED:
-          return isGraduatedCommissionCondition(item);
-        case CommissionType.BASE_TIER:
-          return isBaseTierCondition(item);
-        default:
-          return true;
-      }
-    });
+    // 過濾未刪除的條件（commissionType 已明確知道類型，不需要 type guard）
+    const activeItems = this.wizardState.conditionItems.filter(item => item._status !== 'deleted');
 
     // 清除所有錯誤標記
     this.clearStep4ErrorFlags(activeItems);

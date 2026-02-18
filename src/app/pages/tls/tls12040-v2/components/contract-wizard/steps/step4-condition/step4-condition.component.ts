@@ -203,13 +203,43 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
     this.baseTierColumns = this.tableConfigService.getBaseTierColumns();
   }
 
+  /**
+   * 根據 commissionType 直接分配條件項目到對應的陣列
+   * 不使用 property 偵測（避免 limit_amt 等多餘欄位導致誤判）
+   */
   private categorizeConditionItems(): void {
-    const categorized = this.dataManagerService.categorizeConditionItems(this.conditionItems);
-    this.fixedRentItems = categorized.fixedRent;
-    this.baseRentHigherItems = categorized.baseRentHigher;
-    this.baseCommissionItems = categorized.baseCommission;
-    this.graduatedItems = categorized.graduated;
-    this.baseTierItems = categorized.baseTier;
+    // 先清空所有陣列
+    this.fixedRentItems = [];
+    this.baseRentHigherItems = [];
+    this.baseCommissionItems = [];
+    this.graduatedItems = [];
+    this.baseTierItems = [];
+
+    if (!this.conditionItems?.length) return;
+
+    // 補上 _status 預設值
+    const items = this.conditionItems.map(item => ({
+      ...item,
+      _status: item._status || 'original'
+    }));
+
+    switch (this.commissionType) {
+      case CommissionType.FIXED_RENT:       // '1'
+        this.fixedRentItems = items as any[];
+        break;
+      case CommissionType.BASE_RENT_HIGHER: // '2'
+        this.baseRentHigherItems = items as any[];
+        break;
+      case CommissionType.BASE_COMMISSION:  // '4'
+        this.baseCommissionItems = items as any[];
+        break;
+      case CommissionType.GRADUATED:        // '5'
+        this.graduatedItems = items as any[];
+        break;
+      case CommissionType.BASE_TIER:        // '6'
+        this.baseTierItems = items as any[];
+        break;
+    }
   }
 
   private initializeIfEmpty(): void {

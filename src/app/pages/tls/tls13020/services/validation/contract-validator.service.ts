@@ -3,13 +3,6 @@ import { FormGroup } from '@angular/forms';
 
 import { ContractDateRange } from '@shared/utils/contract-date-validator.util';
 import { FareValidationService } from '../../../tls13010-next1/Services/fare-validation.service';
-import {
-  isFixedRentCondition,
-  isBaseRentHigherCondition,
-  isBaseCommissionCondition,
-  isGraduatedCommissionCondition,
-  isBaseTierCondition
-} from '../../../tls13010-v2/core/type-guards/condition.guard';
 import { CommissionItem, AnnualPerformanceItem, DiscountLevelItem } from '../../../tls13010-v2/core/models/commission/commission-item.interface';
 import { DiscountSettingItem } from '../../../tls13010-v2/core/models';
 import { CommissionCrudService } from '../../../tls13010-v2/services/commission/commission-crud.service';
@@ -423,20 +416,8 @@ export class ContractValidatorService {
       return { isValid: true, errorMessages: [] };
     }
 
-    // 過濾符合當前抽成別的未刪除條件
-    const activeItems = conditionItems.filter(item => {
-      if (item._status === 'deleted') return false;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const guard = item as any; // TLS12040-v2 ConditionItem → TLS13010-v2 type guard
-      switch (commissionType) {
-        case '1': return isFixedRentCondition(guard);
-        case '2': return isBaseRentHigherCondition(guard);
-        case '4': return isBaseCommissionCondition(guard);
-        case '5': return isGraduatedCommissionCondition(guard);
-        case '6': return isBaseTierCondition(guard);
-        default: return true;
-      }
-    });
+    // 過濾未刪除的條件（commissionType 已明確知道類型，不需要 type guard）
+    const activeItems = conditionItems.filter(item => item._status !== 'deleted');
 
     // 清除錯誤標記
     activeItems.forEach(item => {
