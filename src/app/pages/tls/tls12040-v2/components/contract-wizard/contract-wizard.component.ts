@@ -731,26 +731,63 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   /**
    * 從 ExistingData 物件中提取對應抽成類型的條件項目陣列
+   * 必須明確 map 每種類型所需的欄位，避免多餘欄位（如 limit_amt）
+   * 導致 categorizeConditionItems 的類型判斷錯誤
    */
   private extractConditionItems(existingData: any, commissionType: string): any[] {
     switch (commissionType) {
       case '1': // 固定租金
-        return existingData.RentDetails || [];
+        return (existingData.RentDetails || []).map((item: any) => ({
+          id: item.id || item.ID,
+          tlt_id: item.tlt_id || item.TLT_ID || '',
+          cag_bdate: item.cag_bdate || item.CAG_BDATE,
+          cag_edate: item.cag_edate || item.CAG_EDATE,
+          base_rent: Number(item.base_rent || item.BASE_RENT || 0)
+        }));
 
       case '2': // 底租抽成取高者
         return (existingData.RentDetails || []).map((item: any, index: number) => ({
-          ...item,
-          cag_charge_rate: existingData.ChargedDetails?.[index]?.cag_charge_rate || 0
+          id: item.id || item.ID,
+          tlt_id: item.tlt_id || item.TLT_ID || '',
+          cag_bdate: item.cag_bdate || item.CAG_BDATE,
+          cag_edate: item.cag_edate || item.CAG_EDATE,
+          base_rent: Number(item.base_rent || item.BASE_RENT || 0),
+          cag_charge_rate: Number(existingData.ChargedDetails?.[index]?.cag_charge_rate || item.cag_charge_rate || 0)
         }));
 
       case '4': // 包底抽成
-        return existingData.LimitDetails || [];
+        return (existingData.LimitDetails || []).map((item: any) => ({
+          id: item.id || item.ID,
+          tlt_id: item.tlt_id || item.TLT_ID || '',
+          cag_bdate: item.cag_bdate || item.CAG_BDATE,
+          cag_edate: item.cag_edate || item.CAG_EDATE,
+          limit_amt: Number(item.limit_amt || item.LIMIT_AMT || 0),
+          limit_charge_rate: Number(item.limit_charge_rate || item.LIMIT_CHARGE_RATE || 0)
+        }));
 
-      case '5': // 層級抽成
-        return existingData.LevelDetails || [];
+      case '5': // 層級抽成 — 不可包含 limit_amt，否則會被誤判為包底加層級
+        return (existingData.LevelDetails || []).map((item: any) => ({
+          id: item.id || item.ID,
+          seq_no: Number(item.seq_no || item.SEQ_NO || 0),
+          cag_bdate: item.cag_bdate || item.CAG_BDATE,
+          cag_edate: item.cag_edate || item.CAG_EDATE,
+          start_number: Number(item.start_number || item.START_NUMBER || 0),
+          end_number: Number(item.end_number || item.END_NUMBER || 0),
+          charge_rate: Number(item.charge_rate || item.CHARGE_RATE || 0)
+        }));
 
       case '6': // 包底加層級
-        return existingData.BottomTierDetails || existingData.LevelDetails || [];
+        return (existingData.BottomTierDetails || existingData.LevelDetails || []).map((item: any) => ({
+          id: item.id || item.ID,
+          seq_no: Number(item.seq_no || item.SEQ_NO || 0),
+          tlt_id: item.tlt_id || item.TLT_ID || '',
+          cag_bdate: item.cag_bdate || item.CAG_BDATE,
+          cag_edate: item.cag_edate || item.CAG_EDATE,
+          limit_amt: Number(item.limit_amt || item.LIMIT_AMT || 0),
+          start_number: Number(item.start_number || item.START_NUMBER || 0),
+          end_number: Number(item.end_number || item.END_NUMBER || 0),
+          charge_rate: Number(item.charge_rate || item.CHARGE_RATE || 0)
+        }));
 
       default:
         return [];
@@ -763,7 +800,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
   private formatDateToString(value: any): string {
     if (!value) return '';
     if (typeof value === 'string') {
-      return value.split('T')[0];
+      return value.split('T')[0].replace(/\//g, '-');
     }
     if (value instanceof Date && !isNaN(value.getTime())) {
       const y = value.getFullYear();

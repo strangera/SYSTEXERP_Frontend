@@ -387,7 +387,7 @@ export class SubmitDataService {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private formatDateToString(value: any): string {
     if (!value) return '';
-    if (typeof value === 'string') return value.split('T')[0];
+    if (typeof value === 'string') return value.split('T')[0].replace(/\//g, '-');
     if (value instanceof Date && !isNaN(value.getTime())) {
       const y = value.getFullYear();
       const m = String(value.getMonth() + 1).padStart(2, '0');

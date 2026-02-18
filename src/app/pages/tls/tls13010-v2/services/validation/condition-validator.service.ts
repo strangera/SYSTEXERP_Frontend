@@ -15,6 +15,7 @@ import {
   createEmptyResult,
   DetailedValidationResult
 } from './validation-result.interface';
+import { ConditionDataManagerService } from '../condition/condition-data-manager.service';
 
 @Injectable({
   providedIn: 'root'
@@ -46,6 +47,11 @@ export class ConditionValidatorService {
     items.forEach((item, index) => {
       this.validateItemByType(item, index, commissionType, result);
     });
+
+    // 層級抽成 / 包底加層級：驗證金額範圍連續性與重疊
+    if (commissionType === CommissionType.GRADUATED || commissionType === CommissionType.BASE_TIER) {
+      this.validateAmountRanges(items, result);
+    }
 
     return result;
   }
@@ -164,6 +170,8 @@ export class ConditionValidatorService {
     label: string,
     result: DetailedValidationResult
   ): void {
+    const MAX_AMOUNT = ConditionDataManagerService.MAX_AMOUNT;
+
     // 驗證序號
     if (item.seq_no === undefined || item.seq_no === null) {
       result.warnings.push(`${label}: 建議設定層級序號`);
@@ -173,9 +181,27 @@ export class ConditionValidatorService {
     if (item.start_number !== undefined && item.end_number !== undefined) {
       const start = Number(item.start_number);
       const end = Number(item.end_number);
-      if (start > end) {
+      if (start > end && end !== 0) {
         result.isValid = false;
         result.errors.push(`${label}: 結束金額必須大於等於起始金額`);
+      }
+      // 驗證金額上限
+      if (start > MAX_AMOUNT) {
+        result.isValid = false;
+        result.errors.push(`${label}: 起始金額不能超過 ${MAX_AMOUNT.toLocaleString()}`);
+      }
+      if (end > MAX_AMOUNT) {
+        result.isValid = false;
+        result.errors.push(`${label}: 結束金額不能超過 ${MAX_AMOUNT.toLocaleString()}`);
+      }
+      // 驗證負數
+      if (start < 0) {
+        result.isValid = false;
+        result.errors.push(`${label}: 起始金額不能為負數`);
+      }
+      if (end < 0) {
+        result.isValid = false;
+        result.errors.push(`${label}: 結束金額不能為負數`);
       }
     }
 
@@ -222,5 +248,45 @@ export class ConditionValidatorService {
     };
 
     return descriptions[commissionType] || '';
+  }
+
+  /**
+   * 驗證層級金額範圍的連續性與重疊
+   * - 各層級的金額範圍不可重疊
+   * - 後一筆的起始金額應 = 前一筆結束金額 + 1
+   */
+  private validateAmountRanges(
+    items: ConditionItem[],
+    result: DetailedValidationResult
+  ): void {
+    // 只取未刪除、有 seq_no 的項目
+    const rangeItems = items
+      .filter((item: any) => item._status !== 'deleted' && item.seq_no !== undefined)
+      .sort((a: any, b: any) => (a.seq_no || 0) - (b.seq_no || 0));
+
+    if (rangeItems.length < 2) return;
+
+    for (let i = 1; i < rangeItems.length; i++) {
+      const prev = rangeItems[i - 1] as any;
+      const curr = rangeItems[i] as any;
+
+      const prevEnd = Number(prev.end_number || 0);
+      const currStart = Number(curr.start_number || 0);
+
+      // 檢查重疊：後一筆起始金額 <= 前一筆結束金額
+      if (currStart <= prevEnd && prevEnd > 0) {
+        result.isValid = false;
+        result.errors.push(
+          `層級 ${prev.seq_no} 與 ${curr.seq_no} 金額範圍重疊（${prevEnd.toLocaleString()} ≥ ${currStart.toLocaleString()}）`
+        );
+      }
+
+      // 檢查不連續（警告）：後一筆起始金額 != 前一筆結束金額 + 1
+      if (prevEnd > 0 && currStart !== prevEnd + 1 && currStart > prevEnd) {
+        result.warnings.push(
+          `層級 ${prev.seq_no} 與 ${curr.seq_no} 金額範圍不連續（${prevEnd.toLocaleString()} → ${currStart.toLocaleString()}）`
+        );
+      }
+    }
   }
 }
