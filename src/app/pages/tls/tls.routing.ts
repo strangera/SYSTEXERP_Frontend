@@ -86,6 +86,12 @@ export const tlsRoutes: Routes = [
   // 合約精靈 (單頁面包含所有步驟)
   { path: 'tls12040cru', loadComponent: () => import('./tls12040-v2/components/contract-wizard/contract-wizard.component').then(m => m.ContractWizardComponent), data: { progNo: 'TLS12040' } },
 
+  // ========== TLS12080 專櫃意向書維護 ==========
+  // 查詢頁面
+  { path: 'tls12080', loadComponent: () => import('./tls12080/components/query/query.component').then(m => m.QueryComponent), data: { progNo: 'TLS12080' } },
+  // 合約精靈 (單頁面包含所有步驟)
+  { path: 'tls12080cru', loadComponent: () => import('./tls12080/components/contract-wizard/contract-wizard.component').then(m => m.ContractWizardComponent), data: { progNo: 'TLS12080' } },
+
   // 傳票項目之會計科目設定作業_NEW
   { path: 'tls21020', loadComponent: () => import('./tls21020/tls21020.component').then(m => m.TLS21020Component), data: { progNo: 'TLS21020' } },
   // 對帳單備註維護作業
