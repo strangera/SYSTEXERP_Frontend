@@ -38,7 +38,9 @@ interface Fin13060CruForm {
   mid: FormControl<number | null>;
   SYS_StoreNo: FormControl<string | null>;
 
-  // ✅ 需求：這兩個要 ZZZ，所以 TXN_No 用 string 才能放 ZZZ
+  // ✅ Create(新增)：可輸入（預設 ZZZ 但可改）
+  // ✅ Edit/Read：唯讀
+  // ✅ 送出：ZZZ 視為空值(null)
   ECR_No: FormControl<string | null>;
   TXN_No: FormControl<string | null>;
 
@@ -51,10 +53,10 @@ interface Fin13060CruForm {
   INV_GUITrack: FormControl<string | null>;
   INV_GUINumber: FormControl<string | null>;
 
-  TXN_Date: FormControl<Date | string | null>; // UI 收 Date/string，送出字串($date)
+  TXN_Date: FormControl<Date | string | null>;
 
-  INV_YM: FormControl<string | null>;        // 發票年月（'YYYYMM'，唯讀）
-  INV_DeclareYM: FormControl<string | null>; // 申報年月（'YYYYMM'，偶數月）
+  INV_YM: FormControl<string | null>;
+  INV_DeclareYM: FormControl<string | null>;
 
   TXN_SaleAmt: FormControl<number | null>;
   TXN_Net: FormControl<number | null>;
@@ -64,7 +66,7 @@ interface Fin13060CruForm {
 
   Source_Doc_No: FormControl<string | null>;
   Voucher_No: FormControl<string | null>;
-  SAL_Type: FormControl<string | null>; // 系統別（T205）
+  SAL_Type: FormControl<string | null>;
   AssetType: FormControl<string | null>;
   INV_Remark: FormControl<string | null>;
   Tlt_No: FormControl<string | null>;
@@ -94,12 +96,11 @@ interface Fin13060CruForm {
 export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   @Output() fieldChange = new EventEmitter<any>();
 
-  // 下拉選項
   taxTypeOptions: any[] = [];
-  SAL_TypeOptions: any[] = []; // 系統別（T205）
+  SAL_TypeOptions: any[] = [];
   AssetNoteOptions: any[] = [];
   ECRNoOptions: any[] = [];
-  CounterOptions: any[] = []; // 專櫃
+  CounterOptions: any[] = [];
   INV_NoneTaxOptions: any[] = [];
   INV_CancelOptions: any[] = [
     { label: '否', value: 'N' },
@@ -109,13 +110,11 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
   TXN_GUIPaperOptions: any[] = [];
   INV_GUITypeOptions: any[] = [];
 
-  /** 格式代號 -> 發票種類 對應 */
   private readonly GUI_TYPE_TO_PAPER: Record<string, string> = {
-    '31': '3', // 31 -> 3-手開三聯式發票
-    '32': '2', // 32 -> 2-手開二聯式發票
+    '31': '3',
+    '32': '2',
   };
 
-  /** Typed FormGroup */
   dataForm: FormGroup<Fin13060CruForm> = new FormGroup<Fin13060CruForm>({
     ID: new FormControl<number | null>(null),
 
@@ -157,13 +156,9 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
 
     TXN_Date: new FormControl<Date | string | null>(null, { validators: [Validators.required] }),
 
-    // 發票年月（由發票日期自動帶入，不用 disabled 改用 HTML readonly）
     INV_YM: new FormControl<string | null>(null, [Validators.required]),
-
-    // 申報年月（偶數月）
     INV_DeclareYM: new FormControl<string | null>(null, [Validators.required, this.declareYMValidator()]),
 
-    // 金額欄位 maxLength(10)
     TXN_SaleAmt: new FormControl<number | null>(null, {
       validators: [Validators.required, Validators.maxLength(10)],
     }),
@@ -205,15 +200,18 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     this.initializePage('FIN13060', this.dataForm);
     this.hydrateStoreInfoFromLocalStorage();
 
-    // ✅ 先套一次（Read/Edit/Create 的 enable/disable）
+    // ✅ 先依狀態套 enable/disable（Create 可輸入；Edit/Read 唯讀）
     this.updateDisabledState();
 
-    // ✅ Create：收銀機號/交易序號 預設 ZZZ（仍唯讀）
+    // ✅ Create：預設 ZZZ（但可改，因為 Create 不 disable）
     if (this.crudstatus === CRUDStatus.Create) {
-      this.dataForm.patchValue({ ECR_No: 'ZZZ', TXN_No: 'ZZZ' }, { emitEvent: false });
+      const curEcr = this.dataForm.controls.ECR_No.value;
+      const curTxn = this.dataForm.controls.TXN_No.value;
+      if (!curEcr) this.dataForm.controls.ECR_No.setValue('ZZZ', { emitEvent: false });
+      if (!curTxn) this.dataForm.controls.TXN_No.setValue('1000', { emitEvent: false });
     }
 
-    // ✅ 連動：格式代號 -> 發票種類（只註冊一次，避免重複訂閱）
+    // ✅ 連動：格式代號 -> 發票種類
     this.dataForm.controls.INV_GUIType.valueChanges.subscribe((v) => {
       this.applyGuiTypeToPaper(v);
     });
@@ -226,7 +224,6 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
         label: `${x.No}-${x.Name}`,
       }));
 
-      // Create：預設 G
       if (this.crudstatus === CRUDStatus.Create && !this.dataForm.controls.SAL_Type.value) {
         const hasG = this.SAL_TypeOptions.some((o) => o.value === 'G');
         if (hasG) this.dataForm.controls.SAL_Type.setValue('G', { emitEvent: false });
@@ -281,15 +278,13 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
           ? '31'
           : this.INV_GUITypeOptions[0]?.value ?? null;
 
-        // emitEvent:true 會觸發連動
         this.dataForm.controls.INV_GUIType.setValue(defaultValue, { emitEvent: true });
       }
 
-      // Edit/其他：保險同步一次
       this.applyGuiTypeToPaper(this.dataForm.controls.INV_GUIType.value);
     });
 
-    // 收銀機號下拉（雖然唯讀，保留 options 用於顯示 label）
+    // 收銀機號下拉（Edit/Read 用來顯示 label，Create 也可用來選）
     this.ECRNoService.getECRNo().subscribe((res) => {
       this.ECRNoOptions = (res ?? []).map((x: any) => ({
         label: x.label,
@@ -304,35 +299,25 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
       this.taxTypeOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
     });
 
-    // 發票種類（options 回來後再 apply 一次，確保 UI 下拉能顯示）
+    // 發票種類
     this.fin13050Service.querySYS1000DropDownList('TXN_GUIPaper').subscribe((res) => {
       const list = res?.Data ?? [];
       this.TXN_GUIPaperOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
-
-      // ✅ 關鍵：options 回來後再套一次
       this.applyGuiTypeToPaper(this.dataForm.controls.INV_GUIType.value);
     });
 
-    // 即時輸入限制（字軌/號碼/憑證）
     this.setupInputMasks();
-
-    // 稅額計算 & 發票日期→期別年月
     this.setupTaxCalculation();
     this.setupInvoiceDateToYM();
 
-    // Create：申報年月預設偶數月
     if (this.crudstatus === CRUDStatus.Create) {
       this.setDefaultDeclareYM();
     }
 
-    // ✅ 最後再確保一次唯讀（避免 enable/patch 影響）
-    this.dataForm.controls.ECR_No.disable({ emitEvent: false });
-    this.dataForm.controls.TXN_No.disable({ emitEvent: false });
+    // ❌ 原本你最後「無條件 disable」要拿掉
+    // ✅ 已交由 updateDisabledState() 控制
   }
 
-  // ─────────────────────────────────────────────
-  // ✅ 送出（新增/修改統一在這裡依 crudstatus 分流）
-  // ─────────────────────────────────────────────
   onSubmit(form: FormGroup<Fin13060CruForm>): void {
     const LABELS: Record<string, string> = {
       ECR_No: '收銀機號',
@@ -364,23 +349,14 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     this.handleSubmit(form, () => {
       const raw = form.getRawValue();
 
-      // ✅ ZZZ 視為空值
-      const normalizedECR = raw.ECR_No && raw.ECR_No !== 'ZZZ' ? String(raw.ECR_No).trim() : null;
-
-      // TXN_No 是 string：ZZZ => null；否則轉 number
-      const txnNoNum =
-        raw.TXN_No && raw.TXN_No !== 'ZZZ' && String(raw.TXN_No).trim() !== ''
-          ? Number(raw.TXN_No)
-          : null;
-
       const payload = {
         ID: raw.ID != null ? Number(raw.ID) : 0,
         mid: Number(raw.mid ?? 0),
         SYS_StoreNo: this.normalize(raw.SYS_StoreNo),
 
-        // 🔹 這兩欄已處理 ZZZ
-        ECR_No: normalizedECR,
-        TXN_No: txnNoNum ?? 0,
+        // ✅ ZZZ 視為空值
+        ECR_No: this.normalizeOrNullIfZZZ(raw.ECR_No),
+        TXN_No: this.normalizeOrNullIfZZZ(raw.TXN_No),
 
         TXN_GUIPaper: this.normalize(raw.TXN_GUIPaper),
         INV_NoneTax: this.normalize(raw.INV_NoneTax),
@@ -389,9 +365,9 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
         INV_GUITrack: this.normalize(raw.INV_GUITrack),
         INV_GUINumber: this.normalize(raw.INV_GUINumber),
 
-        TXN_Date: this.toDateOnlyString(raw.TXN_Date) ?? '', // YYYY-MM-DD
-        INV_YM: this.toYYYYMM(raw.INV_YM) ?? '', // YYYYMM
-        INV_DeclareYM: this.toYYYYMM(raw.INV_DeclareYM) ?? '', // YYYYMM
+        TXN_Date: this.toDateOnlyString(raw.TXN_Date) ?? '',
+        INV_YM: this.toYYYYMM(raw.INV_YM) ?? '',
+        INV_DeclareYM: this.toYYYYMM(raw.INV_DeclareYM) ?? '',
 
         TXN_SaleAmt: raw.TXN_SaleAmt != null ? Number(raw.TXN_SaleAmt) : 0,
         TXN_Net: raw.TXN_Net != null ? Number(raw.TXN_Net) : 0,
@@ -407,7 +383,6 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
         Ven_No: this.normalize(raw.Ven_No),
       } as const;
 
-      // 新增
       if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
         const { ID, ...insertPayload } = payload;
 
@@ -418,14 +393,10 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
           this.hydrateStoreInfoFromLocalStorage();
           this.updateDisabledState();
 
-          // 保持唯讀 + ZZZ
+          // ✅ Create reset 後：再次預設 ZZZ（但仍可修改）
           this.dataForm.patchValue({ ECR_No: 'ZZZ', TXN_No: 'ZZZ' }, { emitEvent: false });
-          this.dataForm.controls.ECR_No.disable({ emitEvent: false });
-          this.dataForm.controls.TXN_No.disable({ emitEvent: false });
         });
-      }
-      // 修改
-      else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
+      } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
         this.fin13060Service.updateFIN13060(payload).subscribe(() => {
           this.messageService.successBubble('更新成功');
           this.onCancel();
@@ -438,9 +409,6 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     this.router.navigate(['/account/fin', 'fin13060'], { state: { fromCru: true } });
   }
 
-  // ─────────────────────────────────────────────
-  // ✅ 格式代號 -> 發票種類（自動選）
-  // ─────────────────────────────────────────────
   private applyGuiTypeToPaper(guiType: any): void {
     const type = String(guiType ?? '').trim();
     const paper = this.GUI_TYPE_TO_PAPER[type];
@@ -452,9 +420,6 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     }
   }
 
-  // ─────────────────────────────────────────────
-  // ✅ 申報年月驗證器：接受 Date 或 'YYYYMM' 字串，檢查偶數月
-  // ─────────────────────────────────────────────
   private declareYMValidator(): ValidatorFn {
     return (ctrl: AbstractControl): ValidationErrors | null => {
       const v = ctrl.value;
@@ -475,7 +440,6 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     };
   }
 
-  /** 轉成 'YYYYMM'（可吃 Date 或字串 'YYYY/MM'、'YYYYMM'）*/
   private toYYYYMM(v: any): string | null {
     if (!v) return null;
 
@@ -492,7 +456,6 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     return digits.length >= 6 ? digits.slice(0, 6) : null;
   }
 
-  /** Create：申報年月預設偶數月 */
   private setDefaultDeclareYM(): void {
     const now = new Date();
     let year = now.getFullYear();
@@ -510,9 +473,6 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     this.dataForm.controls.INV_DeclareYM.setValue(yyyymm, { emitEvent: false });
   }
 
-  // ─────────────────────────────────────────────
-  // ✅ 稅額計算
-  // ─────────────────────────────────────────────
   private updatingFromNet = false;
   private updatingFromSaleAmt = false;
 
@@ -612,9 +572,6 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     }
   }
 
-  // ─────────────────────────────────────────────
-  // ✅ 發票日期 -> 發票年月(期別起始月)
-  // ─────────────────────────────────────────────
   private setupInvoiceDateToYM(): void {
     this.dataForm.controls.TXN_Date.valueChanges.subscribe((dateValue) => {
       if (!dateValue) {
@@ -626,7 +583,6 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
-  /** 將發票日期轉換為該期起始年月（例如 2026/02 -> 202601） */
   private toInvoicePeriodYM(v: any): string | null {
     const yyyymm = this.toYYYYMM(v);
     if (!yyyymm) return null;
@@ -638,9 +594,6 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     return `${year}${String(month).padStart(2, '0')}`;
   }
 
-  // ─────────────────────────────────────────────
-  // ✅ 即時輸入限制（字軌/號碼/憑證）
-  // ─────────────────────────────────────────────
   private setupInputMasks(): void {
     const guiTrack = this.dataForm.controls.INV_GUITrack;
     guiTrack.valueChanges.subscribe((v) => {
@@ -665,7 +618,6 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
-  /** 從 localStorage.UserInfo 取 mid、SYS_StoreNo */
   private hydrateStoreInfoFromLocalStorage(): void {
     try {
       const raw = localStorage.getItem('UserInfo');
@@ -698,6 +650,18 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     return s === '' ? null : s;
   }
 
+  private normalizeOrNullIfZZZ(v: any): string | null {
+    const s = this.normalize(v);
+    if (!s) return null;
+    return s.toUpperCase() === 'ZZZ' ? null : s;
+  }
+
+  /**
+   * ✅ 狀態控制（你要的規則）
+   * - Read：全表單唯讀
+   * - Edit：ECR_No / TXN_No 唯讀（不可改）
+   * - Create：ECR_No / TXN_No 可修改（不 disable）
+   */
   private updateDisabledState(): void {
     if (this.crudstatus === CRUDStatus.Read) {
       this.dataForm.disable();
@@ -708,12 +672,16 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     this.dataForm.controls.mid.disable({ emitEvent: false });
     this.dataForm.controls.SYS_StoreNo.disable({ emitEvent: false });
 
-    // ✅ 強制唯讀（依你的需求：不管 Create/Edit 都唯讀）
-    this.dataForm.controls.ECR_No.disable({ emitEvent: false });
-    this.dataForm.controls.TXN_No.disable({ emitEvent: false });
+    if (this.crudstatus === CRUDStatus.Edit) {
+      this.dataForm.controls.ECR_No.disable({ emitEvent: false });
+      this.dataForm.controls.TXN_No.disable({ emitEvent: false });
+    } else {
+      // Create：可輸入
+      this.dataForm.controls.ECR_No.enable({ emitEvent: false });
+      this.dataForm.controls.TXN_No.enable({ emitEvent: false });
+    }
   }
 
-  // 集中中文錯誤訊息（提交前使用）
   private showErrorsIfInvalid(form: FormGroup, labelMap: Record<string, string>): boolean {
     if (form.valid) return false;
 
