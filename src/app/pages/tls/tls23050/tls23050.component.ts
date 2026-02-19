@@ -152,40 +152,40 @@ onSubmit(form: FormGroup): void {
         }),
       )
       .subscribe({
-        next: (res: any) => {
-          const first =
-            Array.isArray(res?.Data) && res.Data.length > 0
-              ? res.Data[0]
-              : res?.Data ?? null;
+next: (res: any) => {
+  const first =
+    Array.isArray(res?.Data) && res.Data.length > 0
+      ? res.Data[0]
+      : res?.Data ?? null;
 
-          // 明細
-          const details = Array.isArray(first?.tLS23050Details)
-            ? first.tLS23050Details
-            : [];
+  const details = Array.isArray(first?.tLS23050Details)
+    ? first.tLS23050Details
+    : [];
 
-          this.data = details.map((r: any, i: number) => ({
-            ...r,
-            _rowKey: `${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
-          }));
+  this.data = details.map((r: any, i: number) => ({
+    ...r,
+    _rowKey: `${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+  }));
 
-          // ✅ pack 型：TotalRecords 一律等於「目前資料筆數」
-          //    讓 TableReportComponent 判定「沒有下一頁」，避免無限 loadMore
-          this.totalRecords = this.data.length;
+  // ✅ 1) totalRecords 改用後端總筆數（依你後端實際欄位擇一）
+  const total =
+    Number(res?.TotalCount ?? res?.TotalRecords ?? first?.totalCount ?? first?.totalRecords ?? this.data.length);
 
-          // Footer 總計
-          this.footerData = this.buildFooterFromPack(first);
+  this.totalRecords = total;
 
-          // ✅ 關鍵：把 lastQueryBody.pageSize 撐大，讓 TableReport 的 ngOnChanges 判斷：
-          //    data.length < lastQueryBody.pageSize -> dt.virtualScroll = false
-          //    進而避免 onScroll 觸發 loadMoreData
-          if (this.historyRequestBody) {
-            this.historyRequestBody = {
-              ...this.historyRequestBody,
-              pageIndex: 1,
-              pageSize: 999999,
-            };
-          }
-        },
+  // Footer 總計
+  this.footerData = this.buildFooterFromPack(first);
+
+  // ✅ 2) 不要再把 pageSize 撐大
+  if (this.historyRequestBody) {
+    this.historyRequestBody = {
+      ...this.historyRequestBody,
+      pageIndex: 1,
+      pageSize: 30,
+    };
+  }
+},
+
         error: () => {
           this.data = [];
           this.totalRecords = 0;
