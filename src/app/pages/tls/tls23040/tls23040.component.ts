@@ -518,8 +518,11 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   // 匯出：PDF（Blob 下載，避免導頁成 PDF Viewer）
   // =========================
 onExportPDF() {
-  if (!this.historyRequestBody) return this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
-  if (this.lastTotalCount <= 0) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
+  if (!this.historyRequestBody)
+    return this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+
+  if (this.lastTotalCount <= 0)
+    return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
 
   this.btnLoading = true;
 
@@ -529,25 +532,44 @@ onExportPDF() {
       finalize(() => (this.btnLoading = false))
     )
     .subscribe({
-      next: (res) => {
-        const urlPath = res?.Data; // 後端回 /temp/xxx.pdf 或 http://localhost:5142/temp/xxx.pdf
-        if (!urlPath) {
-          this.messageService?.warnBubble?.(res?.ReturnMessage || '沒有回傳 PDF 路徑');
-          return;
-        }
-
-        // ✅ 直接開新分頁到後端實際位置（避免 4200 的 /temp 404）
-        const openUrl = this.resolveTempUrlForOpen(urlPath);
-        if (!openUrl) {
-          this.messageService?.warnBubble?.('PDF 路徑不正確，無法開啟。');
-          return;
-        }
-
-        window.open(openUrl, '_blank', 'noopener');
-      },
+      next: (r: HttpResponse<Blob>) => this.handleFileExport(r, '.pdf'),
       error: () => this.messageService?.errorBubble?.('PDF 匯出失敗'),
     });
 }
+
+/** 用瀏覽器原生行為下載，不經過 Angular / XHR，所以不會有 CORS */
+private triggerBrowserDownload(url: string) {
+  const a = document.createElement('a');
+  a.href = url;
+
+  // 不開新分頁
+  a.target = '_self';
+
+  // 建議加上，某些瀏覽器會更確定是下載
+  a.setAttribute('download', '');
+
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+private resolveTempUrlForDownload(pathOrUrl: string): string {
+  if (!pathOrUrl) return '';
+
+  // 如果後端已經回完整 URL
+  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
+
+  // 抓出 /temp/xxx.pdf
+  const idx = pathOrUrl.indexOf('/temp/');
+  const tempPath =
+    idx >= 0 ? pathOrUrl.substring(idx) :
+    pathOrUrl.startsWith('/') ? pathOrUrl :
+    `/${pathOrUrl}`;
+
+  // 用 API host 組起來 (5142)
+  const apiBase = (this.tls23040Service.apiUrl || '').replace(/\/+$/, '');
+  return `${apiBase}${tempPath}`;
+}
+
 /** ✅ 給「開分頁」用：確保一定指向後端 host（例如 5142） */
 private resolveTempUrlForOpen(pathOrUrl: string): string {
   if (!pathOrUrl) return '';
