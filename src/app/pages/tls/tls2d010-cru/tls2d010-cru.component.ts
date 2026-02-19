@@ -63,6 +63,8 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
   currentCreateType: 'normal' | 'counter' = 'counter';
   isDetailMode = false;
+  // 當讀取後端資料時，若需要把 GUI_FLAG 設為唯讀，使用此旗標控制
+  guiFlagReadonly = false;
   data: any[] = [];
   // 各模式獨立選取狀態，避免互相干擾
   counterSelectedItems: any[] = [];
@@ -324,6 +326,14 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       if (this.crudstatus === CRUDStatus.Read) {
         this.isDetailMode = true;
       }
+      // 若有從 router 帶入的資料，視為已讀取後端資料，將 GUI_FLAG 設為唯讀
+      this.guiFlagReadonly = true;
+      try {
+        this.dataFormCounter.get('GUI_FLAG')?.disable({ emitEvent: false });
+      } catch { }
+      try {
+        this.dataFormNormal.get('GUI_FLAG')?.disable({ emitEvent: false });
+      } catch { }
       const counterMapping = (row: any) => {
         if (row.tlt_no && typeof row.tlt_no === 'object') {
           return {
@@ -577,7 +587,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           disabled: () => true
         },
         // { field: 'org_id', header: '組織代號', type: 'dropdown', width: '15rem', options: this.org_idOptions, optionLabel: 'label', optionValue: 'value' },
-        { field: 'GUI_FLAG', header: '是否開立發票', type: 'dropdown', width: '6rem', options: this.GuiFlagOptions, optionLabel: 'label', optionValue: 'value' },
+        { field: 'GUI_FLAG', header: '是否開立發票', type: 'dropdown', width: '6rem', options: this.GuiFlagOptions, optionLabel: 'label', optionValue: 'value', disabled: () => this.guiFlagReadonly },
         { field: 'cap_taxtype', header: '課稅別', type: 'dropdown', width: '6rem', options: this.cap_taxtypeOptions, optionLabel: 'label', optionValue: 'value', disabled: () => true },
         { field: 'tpy_net', header: '扣款金額(未稅)', type: 'inputNumber', width: '10rem', textAlign: 'right' },
         { field: 'remarks', header: '備註', type: 'input', width: '12rem' },
@@ -637,12 +647,14 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       }
     }
 
+    // 同步將後端回傳欄位帶入上方表單（包含 CAP_Type/ CAP_Name / AccNo / GUI_FLAG / cap_taxtype）
     this.dataFormNormal.patchValue(selected ? {
+      CAP_Type: selected.data.CAP_Type,
       CAP_Name: selected.data.CAP_Name,
       AccNo: accValue,
       GUI_FLAG: selected.data.GUI_FLAG,
       cap_taxtype: selected.data.CAP_TaxType != null ? String(selected.data.CAP_TaxType) : selected.data.CAP_TaxType
-    } : { CAP_Name: null, AccNo: null, GUI_FLAG: null, cap_taxtype: null });
+    } as any : { CAP_Type: null, CAP_Name: null, AccNo: null, GUI_FLAG: null, cap_taxtype: null } as any);
   }
   // table-edit 的資料有變動時會觸發
   onCounterDataChange(updatedData: any[]): void {
@@ -796,11 +808,28 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       const match = this.CAP_ItemOptions.find(it => String(it.CAP_Item).trim() === compareValue);
 
       if (match) {
-        row.AccNo = match.AccNo ? String(match.AccNo).trim() : '';
+        // 帶入扣款項目相關欄位
+        row.CAP_Type = match.CAP_Type ?? null;
+        row.CAP_Item = match.CAP_Item ?? row.CAP_Item;
+        row.CAP_Name = match.CAP_Name ?? null;
+
+        // 會計科目：嘗試以現有 AccNoOptions 找到對應的顯示值（並保留 code）
+        const accNoCode = match.AccNo != null ? String(match.AccNo).trim() : null;
+        if (accNoCode) {
+          const accOption = this.AccNoOptions.find(opt => {
+            const optValue = opt.value != null ? String(opt.value).trim() : null;
+            const optNo = opt.No != null ? String(opt.No).trim() : null;
+            return optValue === accNoCode || optNo === accNoCode;
+          });
+          row.AccNo = accOption ? (accOption.value != null ? String(accOption.value) : (accOption.No != null ? String(accOption.No) : accNoCode)) : accNoCode;
+          row.AccCName = accOption ? (accOption.Name ?? accOption.label ?? '') : '';
+        } else {
+          row.AccNo = null;
+          row.AccCName = null;
+        }
 
         row.GUI_FLAG = match.GUI_FLAG ?? null;
-        row.cap_taxtype =
-          match.CAP_TaxType != null ? String(match.CAP_TaxType) : null;
+        row.cap_taxtype = match.CAP_TaxType != null ? String(match.CAP_TaxType) : null;
       } else {
         row.AccNo = null;
         row.GUI_FLAG = null;
