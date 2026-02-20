@@ -1,4 +1,4 @@
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -78,7 +78,8 @@ export class TLS57010Component extends BasicQueryPageComponent<Tls57010DataItem>
     public readonly tls57040Service: Tls57040Service,
     public readonly tls57010Service: Tls57010Service,
     private readonly dropdown: DropdownApiService,
-    private readonly fileExportService: FileExportService
+    private readonly fileExportService: FileExportService,
+    private readonly datePipe: DatePipe,
   ) {
     super();
   }
@@ -127,6 +128,8 @@ export class TLS57010Component extends BasicQueryPageComponent<Tls57010DataItem>
       const body = {
         ...frm.value,
         STK_YM: convertDateToYYYYMM(frm.value.STK_YM),
+        APPLY_Date_Start: this.datePipe.transform(frm.value.APPLY_Date_Start, 'yyyy-MM-dd') || undefined,
+        APPLY_Date_End: this.datePipe.transform(frm.value.APPLY_Date_End, 'yyyy-MM-dd') || undefined,
         SortBy: frm.value.ShowType === 'M' ?
           [{ field: 'APPLY_Date', order: 1 }, { field: 'PO_No', order: 1 }]
           : [{ field: 'PO_No', order: 1 }, { field: 'PLU_MagNo', order: 1 }],
