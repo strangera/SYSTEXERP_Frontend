@@ -139,6 +139,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     this.loadInitialData();
   }
   loadInitialData() {
+    this.renderComponent = false;
     this.initializePage('TLS24010', this.dataForm);
     const rowDataTyped = this.rowdata as TLS24010Data;
     this.TXN_GUIPaper = rowDataTyped.TXN_GUIPaper ?? this.queryData.TXN_GUIPaper;
@@ -162,11 +163,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         ORG_TXN_Date: this.queryData.TXN_Date,
       });
     }
-    // 編輯時候
-    if (this.isFormEditable) {
-      this.type = rowDataTyped?.type as FIX_TYPE;
-      this.dataForm.get('TXN_Remark')?.enable();
-    }
+    this.type = rowDataTyped?.type as FIX_TYPE;
     const titleName = this.isFormCreateable ? '新增補登資訊' : FIX_TYPE_LABEL[this.type!] || '顯示補登資訊';
     this.formTitle = (this.store_way === STORE_WAY.專櫃 ? '(專櫃)' : '(自營)') + titleName;
     // 不是新增時候
@@ -178,9 +175,21 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         ECR_No: rowDataTyped.ECR_No,
         TXN_No: Number(rowDataTyped.TXN_No),
       }
-      this.tls24010Service.queryTLS24010_Detail(body).pipe(untilDestroyed(this)).subscribe((data) => {
-        this.ProductDetailList = data.Data[0].ProductDetailList;
-        this.PaymentDetailsList = data.Data[0].PaymentDetailsList;
+      this.tls24010Service.queryTLS24010_Detail(body).pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.loading = false;
+        })
+      ).subscribe((data) => {
+        this.ProductDetailList = [...data.Data[0].ProductDetailList];
+        this.PaymentDetailsList = [...data.Data[0].PaymentDetailsList];
+        // 如果是編輯模式，手動恢復那些被 disable 掉的欄位
+        if (this.isFormEditable) {
+          this.dataForm.get('TXN_Remark')?.enable();
+          if (this.type === FIX_TYPE.預售交易修正) {
+            this.dataForm.get('TXN_PreOrder')?.enable();
+          }
+        }
       })
     }
     // 檢查是否開立業主發票 (rece_yn)
@@ -189,9 +198,9 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       this.dataForm.get('TXN_GUIRemark')?.disable();
     }
     this.listenForChanges();
-    if (this.type === FIX_TYPE.預售交易修正) {
-      this.dataForm.get('TXN_PreOrder')?.enable();
-    }
+    setTimeout(() => {
+      this.renderComponent = true;
+    });
   }
   listenForChanges() {
     const controls = this.dataForm.controls;
@@ -621,6 +630,10 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
 
   get currentTotalSaleAmt(): number {
     return this.pos5007Comp?.POS5007Data.reduce((sum, item) => sum + (Number(item.TXN_SaleAmt) || 0), 0) || 0;
+  }
+  renderComponent = true;
+  onClear() {
+    this.loadInitialData();
   }
 }
 

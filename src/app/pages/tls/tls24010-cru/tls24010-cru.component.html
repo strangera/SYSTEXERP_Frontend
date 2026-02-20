@@ -10,7 +10,7 @@
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+    <form *ngIf="renderComponent" [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <!-- 付款別修正 -->
       <div *ngIf="type === EDIT_TYPES.PAY_NO" class="grid p-fluid card">
         <app-tls24010-payno [data]="PaymentDetailsList" class="col-12"></app-tls24010-payno>
@@ -113,7 +113,7 @@
           [isFormReadable]="isFormReadable" [totalSaleAmt]="currentTotalSaleAmt"></app-tls24010-pos5008>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataForm" />
+        <app-button btnType="cancel" [form]="dataForm" (click)="onClear()" />
         <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>
