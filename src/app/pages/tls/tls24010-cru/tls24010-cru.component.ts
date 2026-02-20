@@ -456,9 +456,33 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
           TXN_Remark: this.dataForm.getRawValue().TXN_Remark,
         }
         if (this.type === FIX_TYPE.專櫃編號修正) {
+          const rawDataList = this.tltnoComp?.tltIdData || [];
+          // --- 檢查 1：是否至少有一筆資料 ---
+          if (rawDataList.length === 0) {
+            this.messageService.errorBubble('無「專櫃編號修正」資料，無法修正', '專櫃編號修正失敗');
+            this.loading = false;
+            return;
+          }
+          // --- 檢查 2 & 3：檢查每一筆資料是否完整且有效 ---
+          for (const item of rawDataList) {
+            const pluMagNoObj = item.PLU_MagNo as POS2004Item;
+            // 檢查 2：是否有輸入（判斷 pluMagNoObj 是否存在且內部關鍵欄位有值）
+            const hasValue = pluMagNoObj;
+            if (!hasValue) {
+              this.messageService.errorBubble('「商品編號/專櫃編號」必填', '儲存失敗');
+              this.loading = false;
+              return;
+            }
+            // 檢查 3：是否為有效資料（判斷 PLU_Name 是否有值）
+            // 注意：在你的邏輯中，選中後應該會連動帶出 PLU_Name
+            if (!(pluMagNoObj.PLU_MagNo || pluMagNoObj.TLT_No)) {
+              this.messageService.errorBubble('無對應「商品編號/專櫃編號」，請重新輸入', '儲存失敗');
+              this.loading = false;
+              return;
+            }
+          }
           const updatePOS5007List = this.tltnoComp?.tltIdData.map(item => {
             const pluMagNo = item.PLU_MagNo as POS2004Item;
-            console.log(pluMagNo);
             return {
               POS5007_ID: item.ID,
               TLT_No: item.TLT_No || this.dataForm.getRawValue().TLT_No || '',
@@ -472,15 +496,6 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
               Contract_SubNo: this.store_way === STORE_WAY.專櫃 ? pluMagNo.Contract_SubNo as string : item.Contract_SubNo as string || ''
             }
           }) || [];
-          const invalidItem = updatePOS5007List.find(item => {
-            return !item.PLU_No || !item.TLT_No || !item.PLU_MagNo || !item.Contract_No || !item.Contract_SubNo;
-          });
-
-          if (invalidItem) {
-            this.messageService.errorBubble('無效的「商品編號/專過編號」或 資料尚未異動', '無法修正');
-            this.loading = false; // 確保 loading 狀態被關閉
-            return; // 阻止執行後續的 API 呼叫
-          }
           // 如果沒資料的話就條出錯誤訊息
           if (!updatePOS5007List.length) {
             this.messageService.errorBubble('無「專櫃編號修正」資料，無法修正', '專櫃編號修正失敗');

@@ -2,6 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, Host, Input, OnChanges, Optional, SimpleChanges } from '@angular/core';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { POS2004ForUpdateResponse, POS5007Data, Tls24010Service } from '@service/api/tls/tls24010.service';
+import { getSYS1000 } from '@service/system/sys1000.service';
 import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
@@ -29,7 +30,7 @@ export class Tls24010TltnoComponent implements OnChanges {
   @Input() TLT_NoOptions?: IDropdownItem[] = [];
   private previousData: POS5007Data[] = [];
   tltIdData: POS5007Data[] = [];
-  editColumn: EditColumn[] = [
+  private readonly baseColumns: EditColumn[] = [
     {
       field: 'PLU_MagNo',
       header: '商品編號/專櫃編號',
@@ -46,7 +47,9 @@ export class Tls24010TltnoComponent implements OnChanges {
     { field: 'TXN_Disc', header: '單價折扣讓金額(負數)', format: formatAmount },
     { field: 'TXN_SaleAmt', header: '單價銷售金額', format: formatAmount },
   ];
+  editColumn: EditColumn[] = [...this.baseColumns];
   POS2004Options: POS2004ForUpdateResponse[] = []; //下拉選單 商品資料
+  private initialExistingIds = new Set<string | number>();
   constructor(
     private readonly tls24010Service: Tls24010Service,
     private readonly datePipe: DatePipe,
@@ -54,6 +57,19 @@ export class Tls24010TltnoComponent implements OnChanges {
   ) { }
   ngOnChanges(changes: SimpleChanges): void {
     const newData: POS5007Data[] = changes['data']?.currentValue;
+    if (changes['data'] && newData) {
+      this.initialExistingIds.clear();
+      newData.forEach(item => {
+        if (this.store_way === STORE_WAY.自營) {
+          // 紀錄原始 MagNo
+          const magNo = typeof item.PLU_MagNo === 'object' ? (item.PLU_MagNo as any).PLU_MagNo : item.PLU_MagNo;
+          if (magNo) this.initialExistingIds.add(magNo);
+        } else {
+          // 紀錄原始 Talent_ID
+          if (item.Talent_ID) this.initialExistingIds.add(item.Talent_ID);
+        }
+      });
+    }
     if (newData?.length > 0 && !this.isSameData(newData, this.previousData)) {
 
       this.tltIdData = newData.map(item => {
@@ -64,7 +80,7 @@ export class Tls24010TltnoComponent implements OnChanges {
           ? (item.PLU_MagNo as any).PLU_MagNo
           : item.PLU_MagNo;
 
-        // 🎯 關鍵邏輯分流：
+        //  關鍵邏輯分流：
         // 專櫃：TLT_No 是老大的，PLU_MagNo 也要吃它
         // 自營：各有各的，維持原狀
         const finalTLTNo = item.TLT_No || (isStoreWaySpecial ? currentMagNo : '');
@@ -97,12 +113,32 @@ export class Tls24010TltnoComponent implements OnChanges {
       this.previousData = newData;
     }
 
-    if (changes['store_way']) {
+    if (changes['store_way'] || changes['data']) {
       const isStore = this.store_way === STORE_WAY.專櫃;
-      if (this.editColumn[0]) {
-        // 🎯 動態切換顯示欄位
-        this.editColumn[0].optionLabel = isStore ? 'TLT_No' : 'PLU_MagNo';
+
+      let newColumns = [...this.baseColumns];
+
+      // 修正：動態切換第一欄的 optionLabel
+      newColumns[0] = {
+        ...newColumns[0],
+        optionLabel: isStore ? 'TLT_No' : 'PLU_MagNo'
+      };
+
+      // 修正：重新加入不見的「專櫃模式專用欄位」
+      if (isStore) {
+        newColumns = [
+          ...newColumns,
+          { field: 'tlt_id_desc', header: '分類抽成類別', disabled: () => true },
+          {
+            field: 'PLU_TaxType',
+            header: '稅別',
+            format: (v) => getSYS1000('PLU_TaxType', v)
+          },
+          { field: 'TXN_DiscName', header: '折扣別', disabled: () => true },
+        ];
       }
+
+      this.editColumn = newColumns;
     }
   }
   private isSameData(newData: POS5007Data[], oldData: POS5007Data[]): boolean {
@@ -158,13 +194,9 @@ export class Tls24010TltnoComponent implements OnChanges {
         this.POS2004Options = formattedOptions;
 
         if (this.store_way === STORE_WAY.自營) {
-          return formattedOptions.filter(item =>
-            !this.tltIdData.find(data => data.PLU_MagNo === item.PLU_MagNo)
-          );
+          return formattedOptions.filter(item => !this.initialExistingIds.has(item.PLU_MagNo));
         } else if (this.store_way === STORE_WAY.專櫃) {
-          return formattedOptions.filter(item =>
-            !this.tltIdData.find(data => data.Talent_ID === item.talent_id)
-          );
+          return formattedOptions.filter(item => !this.initialExistingIds.has(item.talent_id));
         }
         return formattedOptions;
       })

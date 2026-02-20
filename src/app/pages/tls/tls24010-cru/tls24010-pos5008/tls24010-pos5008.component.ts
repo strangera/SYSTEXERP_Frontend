@@ -6,7 +6,7 @@ import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { POS5008Data } from '../../../../service/api/tls/tls24010.service';
-import { getSYS1000Options, SystemOption, SystemOptionsService } from '../../../../service/system/sys1000.service';
+import { getSYS1000Options } from '../../../../service/system/sys1000.service';
 import { DropDownListService, IDropdownItem } from '../../../../service/utility/dropDownList.service';
 import { DropdownComponent } from '../../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../../shared/componentkit/input-number/input-number.component';
@@ -63,7 +63,7 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
 
   CRD_TypeOptions = getSYS1000Options('CRD_Type');
   PAY_TypeOptions: IDropdownItem[] = [];
-  sys_typeOptions: SystemOption[] = [];
+  sys_typeOptions = getSYS1000Options('T109');
 
   constructor(
     private readonly dropDownListService: DropDownListService,
@@ -96,7 +96,6 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
         return row;
       });
       this.POS5008Data = rows;
-      this.sys_typeOptions = SystemOptionsService.getOptions('T109');
 
       this.isOptionsLoaded = true;
       this.applyInputData();
@@ -129,17 +128,43 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
 
   private applyInputData(): void {
     if (!this.isOptionsLoaded || !this.data?.length || !this.POS5008Data.length) return;
+
     this.POS5008SelectedItems = [...this.data];
     this.POS5008SelectedItems.forEach(item => {
       const rowIndex = this.POS5008Data.findIndex(d => d.PAY_No === item.PAY_No);
       if (rowIndex !== -1) {
         const formGroup = this.POS5008FormArray.at(rowIndex) as FormGroup;
+
+        // --- 關鍵修正：計算顯示用的複合欄位值 ---
+        // 先找出該支付方式的 PAY_Type (從預載的選項中找)
+        const selectedOption = this.PAY_TypeOptions.find(opt => opt.No === item.PAY_No);
+        const payType = selectedOption?.PAY_Type || item.PAY_Type;
+
+        let compositeValue = '';
+        if (payType === '0') {
+          compositeValue = item.CRD_No || '';
+        } else if (payType === 'A') {
+          compositeValue = item.TXN_PayDesc || '';
+        } else {
+          compositeValue = item.TXN_CouponNo || '';
+        }
+        console.log(compositeValue);
+
+        // ------------------------------------
+
         const patchedData = {
           ...item,
-          TERM_No: String(item.TERM_No),
+          TERM_No: item.TERM_No != null ? String(item.TERM_No) : null,
+          // 賦值給 Form 中對應的複合控制項名稱
+          CRD_NoTXN_CouponNoTXN_PayDesc: compositeValue
         };
+
         formGroup.patchValue(patchedData, { emitEvent: false });
         this.POS5008Data[rowIndex].selected = true;
+
+        // 更新 Data 狀態，確保 PAY_Type 也被存入 Data 物件
+        this.POS5008Data[rowIndex].PAY_Type = payType;
+
         formGroup.updateValueAndValidity({ emitEvent: false });
       }
     });
