@@ -354,6 +354,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       frm.get('rece_yn')?.setValue(data?.rece_yn);
     }
     const inertData = { ...frm.value, TXN_No: '系統自動產生' };
+    this.queryStateService.setQueryState(this.ProgNo, frm.value);
     this.onCreate(inertData, frm.value);
   }
 
