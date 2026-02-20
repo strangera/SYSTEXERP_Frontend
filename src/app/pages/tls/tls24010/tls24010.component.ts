@@ -251,7 +251,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         TXN_No: Number(rowData.TXN_No),
       };
       this.messageService.confirm({
-        header: '刪除交易', message: '確定要刪除交易嗎?',
+        header: '刪除交易', message: '交易資料刪除後，將查不到這筆資料，您確認要刪除嗎?',
         accept: () => {
           this.loading = true;
           this.tls24010Service.deleteTLS24010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
