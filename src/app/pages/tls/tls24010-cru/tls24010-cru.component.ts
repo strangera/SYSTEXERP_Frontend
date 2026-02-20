@@ -441,7 +441,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     defaultVoidDate.setHours(23, 0, 0, 0);
     this.messageService.confirm({
       header: this.type === FIX_TYPE.交易資料作廢 ? (isCross ? '開立折讓單' : '作廢交易資料') : FIX_TYPE_LABEL[this.type!],
-      message: this.type === FIX_TYPE.交易資料作廢 ? (isCross ? '此筆交易已跨期，需進行開立折讓單作業。確定要開立折讓單嗎?' : '此筆交易未跨期，確定要作廢交易資料嗎?') : `確定要${FIX_TYPE_LABEL[this.type!]}嗎?`,
+      message: this.type === FIX_TYPE.交易資料作廢 ? (isCross ? '此筆交易已跨期，確定作廢後會開立折讓單，確定作廢嗎?' : '此筆交易未跨期，確定要作廢交易資料嗎?') : `確定要${FIX_TYPE_LABEL[this.type!]}嗎?`,
       contentTemplate: this.type === FIX_TYPE.交易資料作廢 ? this.customTimeTemp : undefined, // 丟入 HTML 樣板
       templateContext: this.type === FIX_TYPE.交易資料作廢 ? { data: { selectedDate: defaultVoidDate } } : undefined,
       accept: (result) => {
