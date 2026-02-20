@@ -12,10 +12,9 @@
             controlName="sam_yyymm" [control]="dataForm.controls.sam_yyymm" [submitted]="submitted" />
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="專櫃編號/名稱" controlName="tlt_no" [options]="tlt_noOptions | async" optionLabel="label"
+            <app-dropdown label="專櫃編號/名稱" controlName="tlt_no" [options]="tltOptionsList" optionLabel="label"
               optionValue="value" [control]="dataForm.controls.tlt_no" [submitted]="submitted"></app-dropdown>
           </div>
-
         </div>
 
         <div class="grid p-fluid">
@@ -41,8 +40,8 @@
           <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="結帳年月"
             controlName="sam_yyymm" [control]="dataForm.controls.sam_yyymm" [submitted]="submitted" />
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="專櫃編號/名稱" controlName="tlt_no" [options]="tlt_noOptions | async" optionLabel="label"
-              optionValue="value" [control]="dataForm.controls.tlt_no" [submitted]="submitted"></app-dropdown>
+            <app-input-text label="專櫃編號/名稱" controlName="tlt_no" [control]="dataForm.controls.tlt_no"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="單據種類" controlName="PUR_GUIType" [options]="invoiceTypeOptions" optionLabel="label"
@@ -71,7 +70,7 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="廠商編號/名稱" controlName="ven_uniform" [options]="ven_noOptions | async"
+            <app-dropdown label="廠商統一編號/名稱" controlName="ven_uniform" [options]="ven_noOptions | async"
               optionLabel="label" optionValue="value" [control]="dataForm.controls.ven_uniform"
               [submitted]="submitted"></app-dropdown>
           </div>
