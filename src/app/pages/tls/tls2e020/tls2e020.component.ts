@@ -109,13 +109,10 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
   }
 
   onSubmit(frm: FormGroup) {
-    // 移除必填驗證
-    ['money_type', 'sam_termno', 'sam_yyymm'].forEach(key => {
-      const control = this.queryForm.get(key);
-      control?.clearValidators();
-      control?.updateValueAndValidity({ emitEvent: false });
-    });
-
+    this.queryForm.controls.money_type.clearValidators();
+    this.queryForm.controls.sam_termno.clearValidators();
+    this.queryForm.controls.money_type.updateValueAndValidity();
+    this.queryForm.controls.sam_termno.updateValueAndValidity();
     this.handleSubmit(frm, () => {
       const val = frm.value;
       const body = {
@@ -137,10 +134,8 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
   onSettle(frm: FormGroup) {
     this.queryForm.controls.money_type.setValidators([Validators.required]);
     this.queryForm.controls.sam_termno.setValidators([Validators.required]);
-    this.queryForm.controls.sam_yyymm.setValidators([Validators.required]);
     this.queryForm.controls.money_type.updateValueAndValidity();
     this.queryForm.controls.sam_termno.updateValueAndValidity();
-    this.queryForm.controls.sam_yyymm.updateValueAndValidity();
     this.submitted = true;
     if (!frm.valid) {
       this.submitted = false;
