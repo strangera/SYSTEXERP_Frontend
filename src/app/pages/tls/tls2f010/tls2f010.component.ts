@@ -93,21 +93,22 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     { field: 'COMM_YM', header: '請款付款年月', visible: true, format: formatYYYYMM },
     { field: 'sam_yyymm', header: '帳款年月', visible: true, format: formatYYYYMM },
     { field: 'MONEY_TYPE_DESC', header: '結帳方式', visible: true },
-    // { field: 'col9', header: '帳次', visible: true },
+    { field: 'sam_termno', header: '帳次', visible: true },
     { field: 'DEC_YM', header: '申報年月', visible: true, format: formatYYYYMM },
     { field: 'ven_uniform', header: '廠商統一編號', visible: true },
     { field: 'TAX_TYPE', header: '課稅別', visible: true },
     { field: 'ACP_GUIAmt', header: '發票總額', visible: true, format: formatAmount, align: 'right' },
     { field: 'ACP_GUINet', header: '未稅金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'ACP_GUITax', header: '稅額', visible: true, format: formatAmount, align: 'right' },
-    // { field: 'PUR_GUIPaper', header: '格式', visible: true },
+    { field: 'PUR_GUIPaper', header: '格式', visible: true },
+    { field: 'Status', header: '狀況', visible: true },
     { field: 'CRT_USR_No', header: '建立者', visible: true },
     { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
   ];
   invoiceFormatOptions = [
     { value: '21', label: '21-進項三聯式、電子計算機統一發票' },
-    { value: '25', label: '25-進項三聯式收銀機統一發票' },
-    { value: '27', label: '27-彙總登陸每張稅額五百元以下之進項二聯式收銀機統一發票、載有稅額之其他憑證' },
+    { value: '22', label: '22-進項二聯式收銀機統一發票、載有稅額之其他憑證' },
+    { value: '25', label: '25-進項三聯式收銀機統一發票及一般稅額計算之電子發票' },
   ];
 
   statusOptions = [
