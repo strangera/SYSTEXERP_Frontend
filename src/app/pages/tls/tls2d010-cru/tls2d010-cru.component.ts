@@ -86,6 +86,8 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
 
   // 本頁專用：提供給 table-edit 的唯一列 key
   private rowIdCounter = 1;
+  // 月結鎖定年月快取（格式 yyyymm 整數）
+  private maxClsMonthNum: number | null = null;
 
   // 專櫃選擇 Dialog 相關
   talentDialogVisible = false;
@@ -312,6 +314,20 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   ngOnInit(): void {
     this.dataFormNormal.get('tpy_date')?.valueChanges.subscribe((date: any) => {
       this.syncNormalTpyDateToRows(date);
+    });
+    // counter 模式：監聽表單上的扣款日期變更，嘗試驗證（會用於 header 日期變動時）
+    this.dataFormCounter.get('tpy_date')?.valueChanges.subscribe((date: any) => {
+      // 讓 existing rows 更新（若需要），並做驗證
+      if (this.currentCreateType === 'counter') {
+        // 若 header 日期變動，先把變更帶回 rows（若有未填的 row）
+        if (Array.isArray(this.data) && this.data.length) {
+          this.data.forEach(row => {
+            if (!row.tpy_date) row.tpy_date = date ?? null;
+          });
+          this.data = [...this.data];
+        }
+        this.validateCounterRows();
+      }
     });
     // normal 模式：當上方表單的扣款金額變更時，預設同步到下方所有明細列
     this.dataFormNormal.get('tpy_net')?.valueChanges.subscribe((amount: any) => {
@@ -666,6 +682,8 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       });
       // 更新總金額（使用共用方法）
       this.updateTotalCash();
+      // 當 counter table 的資料（尤其是 tpy_date）改變時，驗證每筆扣款日期是否在契約期間且晚於月結鎖定年月
+      this.validateCounterRows();
     }
     // normal模式 table-edit tlt_no欄位有新值就自動補 contract_no/contract_subno/org_id
     if (this.currentCreateType === 'normal') {
@@ -907,6 +925,96 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     const d = new Date(value);
     return isNaN(d.getTime()) ? null : d;
   }
+
+  private parseLockYmFromResponse(res: any): number | null {
+    try {
+      const raw = res?.Data ?? res;
+      let ym: string | null = null;
+      if (typeof raw === 'string' || typeof raw === 'number') {
+        ym = String(raw);
+      } else if (raw && typeof raw === 'object') {
+        ym = raw.maxClsMonth || raw.maxCls_YearMonth || raw.MaxClsMonth || raw.yyyymm || raw.yearMonth || raw.year_month || null;
+        if (!ym) {
+          if (Array.isArray(raw) && raw.length && (typeof raw[0] === 'string' || typeof raw[0] === 'number')) {
+            ym = String(raw[0]);
+          }
+        }
+      }
+      if (!ym) return null;
+      const m = ym.match(/(\d{4})[^\d]?(\d{1,2})/);
+      if (m) {
+        const y = Number(m[1]);
+        const mo = Number(m[2]);
+        return y * 100 + mo;
+      }
+      if (/^\d{6}$/.test(ym)) return Number(ym);
+    } catch (e) {
+      // ignore
+    }
+    return null;
+  }
+
+  private ensureMaxClsMonthThen(cb: (val: number | null) => void): void {
+    if (this.maxClsMonthNum != null) {
+      cb(this.maxClsMonthNum);
+      return;
+    }
+    this.tls2d010Service.queryMaxClsMonth()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: any) => {
+          this.maxClsMonthNum = this.parseLockYmFromResponse(res);
+          cb(this.maxClsMonthNum);
+        },
+        error: () => {
+          cb(null);
+        }
+      });
+  }
+
+  private validateCounterRows(): void {
+    if (this.currentCreateType !== 'counter') return;
+    if (!Array.isArray(this.data) || !this.data.length) return;
+
+    const contractB = this.parseBackendDate(this.dataFormCounter.get('tlt_contract_bdate')?.value);
+    const contractE = this.parseBackendDate(this.dataFormCounter.get('tlt_contract_edate')?.value);
+    if (!contractB || !contractE) {
+      // 無法驗證時不主動阻擋，但提醒使用者
+      return;
+    }
+
+    const rowsToCheck = this.data.filter(r => !r._isAutoInsertCandidate && r.tpy_date);
+    if (!rowsToCheck.length) return;
+
+    const doValidate = (lockYm: number | null) => {
+      for (const r of rowsToCheck) {
+        const d = this.parseBackendDate(r.tpy_date) ?? new Date(r.tpy_date);
+        if (!d || isNaN(d.getTime())) {
+          this.messageService.errorBubble('扣款日期格式錯誤');
+          return;
+        }
+        const start = new Date(contractB.getFullYear(), contractB.getMonth(), contractB.getDate(), 0, 0, 0, 0);
+        const end = new Date(contractE.getFullYear(), contractE.getMonth(), contractE.getDate(), 23, 59, 59, 999);
+        if (d < start || d > end) {
+          this.messageService.errorBubble(`扣款日期需在契約期間內：${formatDate(start, 'yyyy/MM/dd', 'en-US')} ~ ${formatDate(end, 'yyyy/MM/dd', 'en-US')}`);
+          return;
+        }
+        if (lockYm != null) {
+          const tpyYm = d.getFullYear() * 100 + (d.getMonth() + 1);
+          if (tpyYm <= lockYm) {
+            this.messageService.errorBubble('扣款年月需大於月結鎖定年月');
+            return;
+          }
+        }
+      }
+    };
+
+    if (this.maxClsMonthNum != null) {
+      doValidate(this.maxClsMonthNum);
+    } else {
+      this.ensureMaxClsMonthThen(lock => doValidate(lock));
+    }
+  }
   onSubmit(): void {
     if (this.isDetailMode) {
       return;
@@ -996,17 +1104,26 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         // 建立 feeItems 後再去重，避免當同一筆費用套用到多個專櫃時被重複送出
         const feeItems = this.data
           .filter(i => !i._isAutoInsertCandidate)
-          .map(i => ({
-            tpy_date: i.tpy_date ? formatDate(i.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
-            CAP_Type: i.CAP_Type || '',
-            CAP_Item: i.CAP_Item || '',
-            org_id: this.normalizeValue(i.org_id),
-            AccNo: this.normalizeValue(i.AccNo),
-            GUI_FLAG: i.GUI_FLAG || '',
-            cap_taxtype: i.cap_taxtype || '',
-            tpy_net: Number(i.tpy_net ?? 0),
-            remarks: i.remarks || ''
-          }));
+          .map(i => {
+            // 若 row 未帶 CAP_Type，嘗試以 CAP_Item 反查
+            let capType = i.CAP_Type;
+            const capItemVal = i.CAP_Item || '';
+            if ((!capType || capType === '') && capItemVal) {
+              const found = this.CAP_ItemOptions.find(it => String(it.CAP_Item) === String(capItemVal) || String((it as any).value) === String(capItemVal));
+              if (found) capType = found.CAP_Type ?? capType;
+            }
+            return ({
+              tpy_date: i.tpy_date ? formatDate(i.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
+              CAP_Type: capType || '',
+              CAP_Item: i.CAP_Item || '',
+              org_id: this.normalizeValue(i.org_id),
+              AccNo: this.normalizeValue(i.AccNo),
+              GUI_FLAG: i.GUI_FLAG || '',
+              cap_taxtype: i.cap_taxtype || '',
+              tpy_net: Number(i.tpy_net ?? 0),
+              remarks: i.remarks || ''
+            });
+          });
 
         const feeMap = new Map<string, any>();
         for (const f of feeItems) {
@@ -1019,31 +1136,126 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         const tltList = [{
           tlt_no: tltInfoFull?.tlt_no || '',
           talent_id: Number(tltInfoFull?.talent_id ?? 0),
-          pod_no: tltInfoFull?.pod_no || ''
+          pod_no: tltInfoFull?.pod_no || '',
+          org_id: tltInfoFull?.org_id ?? ''
         }];
 
         if (tltList && tltList.length > 1 && feeList.length > 1) {
           feeList = [feeList[0]];
         }
 
-        payload = { tltList, feeList };
+        // 取得月結鎖定年月並做驗證：扣款日期需在契約期間，且扣款年月需大於月結鎖定年月
+        this.tls2d010Service.queryMaxClsMonth()
+          .pipe(untilDestroyed(this))
+          .subscribe((res: any) => {
+            let lockYmNum: number | null = null;
+            try {
+              const raw = res?.Data ?? res;
+              let ym: string | null = null;
+              if (typeof raw === 'string' || typeof raw === 'number') {
+                ym = String(raw);
+              } else if (raw && typeof raw === 'object') {
+                // try common properties
+                ym = raw.maxClsMonth || raw.maxCls_YearMonth || raw.MaxClsMonth || raw.yyyymm || raw.yearMonth || raw.year_month || null;
+                if (!ym) {
+                  // if Data is array
+                  if (Array.isArray(raw) && raw.length && (typeof raw[0] === 'string' || typeof raw[0] === 'number')) {
+                    ym = String(raw[0]);
+                  }
+                }
+              }
+              if (ym) {
+                // normalize formats like '2023-05' or '202305' or '2023/05' -> yyyymm number
+                const m = ym.match(/(\d{4})[^\d]?(\d{1,2})/);
+                if (m) {
+                  const y = Number(m[1]);
+                  const mo = Number(m[2]);
+                  lockYmNum = y * 100 + mo;
+                } else if (/^\d{6}$/.test(ym)) {
+                  lockYmNum = Number(ym);
+                }
+              }
+            } catch (e) {
+              lockYmNum = null;
+            }
 
+            const contractB = this.parseBackendDate(this.dataFormCounter.get('tlt_contract_bdate')?.value);
+            const contractE = this.parseBackendDate(this.dataFormCounter.get('tlt_contract_edate')?.value);
+            if (!contractB || !contractE) {
+              this.messageService.errorBubble('契約期間不足，無法驗證扣款日期');
+              return;
+            }
+
+            for (const f of feeList) {
+              if (!f.tpy_date) {
+                this.messageService.errorBubble('扣款日期為必填，請確認所有明細');
+                return;
+              }
+              const d = this.parseBackendDate(f.tpy_date) ?? new Date(f.tpy_date);
+              if (!d || isNaN(d.getTime())) {
+                this.messageService.errorBubble('扣款日期格式錯誤');
+                return;
+              }
+              // 檢查在契約期間（含起迄日）
+              const start = new Date(contractB.getFullYear(), contractB.getMonth(), contractB.getDate(), 0, 0, 0, 0);
+              const end = new Date(contractE.getFullYear(), contractE.getMonth(), contractE.getDate(), 23, 59, 59, 999);
+              if (d < start || d > end) {
+                this.messageService.errorBubble(`扣款日期需在契約期間內：${formatDate(start, 'yyyy/MM/dd', 'en-US')} ~ ${formatDate(end, 'yyyy/MM/dd', 'en-US')}`);
+                return;
+              }
+
+              // 檢查年月需大於月結鎖定年月
+              if (lockYmNum != null) {
+                const tpyYm = d.getFullYear() * 100 + (d.getMonth() + 1);
+                if (tpyYm <= lockYmNum) {
+                  this.messageService.errorBubble('扣款年月需大於月結鎖定年月');
+                  return;
+                }
+              }
+            }
+
+            // 若通過驗證，組 payload 並送出
+            const payloadObj = { tltList, feeList };
+            this.tls2d010Service.insertTLS2D010(payloadObj)
+              .pipe(untilDestroyed(this))
+              .subscribe({
+                next: () => {
+                  this.messageService.successBubble('新增成功');
+                  this.onCancel();
+                },
+              });
+          }, (err: any) => {
+            this.messageService.errorBubble('取得月結鎖定年月失敗，請稍後再試');
+            return;
+          });
+
+        // 結束 counter 處理流程（insert 在 callback 中）
+        return;
 
       } else {
         const normalValue = this.dataFormNormal.getRawValue();
         const feeItems = this.data
           .filter(i => !i._isAutoInsertCandidate)
-          .map(i => ({
-            tpy_date: i.tpy_date ? formatDate(i.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
-            CAP_Type: i.CAP_Type || normalValue.CAP_Type || '',
-            CAP_Item: i.CAP_Item || normalValue.CAP_Item || '',
-            org_id: this.normalizeValue(i.org_id || normalValue.org_id),
-            AccNo: this.normalizeValue(i.AccNo || normalValue.AccNo),
-            GUI_FLAG: i.GUI_FLAG || normalValue.GUI_FLAG || '',
-            cap_taxtype: i.cap_taxtype || normalValue.cap_taxtype || '',
-            tpy_net: Number(i.tpy_net ?? normalValue.tpy_net ?? 0),
-            remarks: i.remarks || normalValue.remarks || ''
-          }));
+          .map(i => {
+            // CAP_Type 優先取 row 的值，若無則取上方表單，若仍無則以 CAP_Item 反查
+            let capType = i.CAP_Type || normalValue.CAP_Type || '';
+            const capItemVal = i.CAP_Item || normalValue.CAP_Item || '';
+            if ((!capType || capType === '') && capItemVal) {
+              const found = this.CAP_ItemOptions.find(it => String(it.CAP_Item) === String(capItemVal) || String((it as any).value) === String(capItemVal));
+              if (found) capType = found.CAP_Type ?? capType;
+            }
+            return ({
+              tpy_date: i.tpy_date ? formatDate(i.tpy_date, 'yyyy-MM-dd', 'en-US') : null,
+              CAP_Type: capType || '',
+              CAP_Item: i.CAP_Item || normalValue.CAP_Item || '',
+              org_id: this.normalizeValue(i.org_id || normalValue.org_id),
+              AccNo: this.normalizeValue(i.AccNo || normalValue.AccNo),
+              GUI_FLAG: i.GUI_FLAG || normalValue.GUI_FLAG || '',
+              cap_taxtype: i.cap_taxtype || normalValue.cap_taxtype || '',
+              tpy_net: Number(i.tpy_net ?? normalValue.tpy_net ?? 0),
+              remarks: i.remarks || normalValue.remarks || ''
+            });
+          });
 
         const feeMap = new Map<string, any>();
         for (const f of feeItems) {
@@ -1053,7 +1265,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           }
         }
         let feeList = Array.from(feeMap.values());
-        const tltMap = new Map<string, { tlt_no: string; talent_id: number; pod_no: string }>();
+        const tltMap = new Map<string, { tlt_no: string; talent_id: number; pod_no: string; org_id: string }>();
         for (const row of this.data.filter(i => !i._isAutoInsertCandidate)) {
           const rowTlt = row.tlt_no || normalValue.tlt_no;
           if (!rowTlt) {
@@ -1064,9 +1276,10 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           const tlt_no = full?.tlt_no || '';
           const talent_id = Number(full?.talent_id ?? 0);
           const pod_no = full?.pod_no || '';
-          const key = `${tlt_no}|${talent_id}|${pod_no}`;
+          const org_id = full?.org_id ?? '';
+          const key = `${tlt_no}|${talent_id}|${pod_no}|${org_id}`;
           if (!tltMap.has(key)) {
-            tltMap.set(key, { tlt_no, talent_id, pod_no });
+            tltMap.set(key, { tlt_no, talent_id, pod_no, org_id });
           }
         }
 

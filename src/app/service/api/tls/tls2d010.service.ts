@@ -35,4 +35,7 @@ export class Tls2d010Service {
       responseType: 'blob'
     });
   }
+  queryMaxClsMonth(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryMaxClsMonth`, {});
+  }
 }
