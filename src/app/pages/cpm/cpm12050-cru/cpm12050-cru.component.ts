@@ -138,11 +138,8 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
   // 編輯table設定
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   data: any[] = [];
-  // 用來儲存載入時的明細快照，供判斷既有明細是否被修改
   private _originalDetails: any[] = [];
-  // 用來記錄明細上次的有效筆數（不含 candidate row），用來判斷是否為第一次新增明細
   private _detailCountPrev = 0;
-  // 載入時是否已提供 ALERT_DATE（用來判斷唯讀觸發來源）
   private _alertDateInitiallyProvided = false;
   columns: EditColumn[] = [
     {
@@ -197,16 +194,11 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     super();
   }
 
-  // ALERT_DATE 與 STATUS 聯動：
-  // - 新增時預設 STATUS = 'S'
-  // - 若 STATUS 為 'Y' 或 'Z'，則 ALERT_DATE 為必填；若已有值則將其 disable (唯讀)
-  // - 若 STATUS 非 'Y'/'Z'，則移除必填並確保 ALERT_DATE 可編輯
   private setupAlertDateValidation(): void {
     const statusCtrl: any = (this.dataForm.controls as any).STATUS;
     const alertCtrl: any = (this.dataForm.controls as any).ALERT_DATE;
     if (!statusCtrl || !alertCtrl) return;
 
-    // debug: 監聽 ALERT_DATE 狀態變化，便於找出何時被 disable
     try {
       alertCtrl.statusChanges.pipe(untilDestroyed(this)).subscribe((s: any) => {
         console.log('DEBUG ALERT_DATE statusChanges ->', s, 'disabled=', alertCtrl.disabled);
@@ -481,26 +473,18 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
               )
               .subscribe((response: any) => {
                 console.log('insertCPM12050 response', response);
-                // 嘗試從 response 中找回新建立的識別（優先 SEQ_ID，否則 ID）
                 const seq = response?.Data?.SEQ_ID ?? (Array.isArray(response?.Data) ? response.Data[0]?.SEQ_ID : undefined) ?? response?.SEQ_ID;
                 const newId = response?.ID ?? (Array.isArray(response?.Data) ? response.Data[0]?.ID : undefined);
 
                 this.messageService.successBubble('新增成功');
 
-                // 若能取得 SEQ_ID 或 ID，立即呼叫查詢剛新增的那筆，確保 UI 與後端同步
                 if (seq) {
                   this.cpm12050Service.queryCPM12050({ SEQ_ID: seq })
                     .pipe(untilDestroyed(this))
                     .subscribe(r => {
-                      // 如果需要把查到的資料帶入 CRU 或轉導到編輯頁，可在此處處理
                       console.log('queried new record by SEQ_ID', r);
-                      // 例如回列表或關閉 CRU
                       this.onCancel();
                     });
-                  // ALERT_DATE 與 STATUS 聯動：
-                  // - 新增時預設 STATUS = 'S'
-                  // - 若 STATUS 為 'Y' 或 'Z'，則 ALERT_DATE 為必填；若已有值則將其 disable (唯讀)
-                  // - 若 STATUS 非 'Y'/'Z'，則移除必填並確保 ALERT_DATE 可編輯
                   return;
                 }
 
@@ -513,8 +497,6 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
                     });
                   return;
                 }
-
-                // 無法取得識別則維持原行為
                 this.dataForm.reset(); // 重置表單
               });
 
@@ -541,13 +523,11 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
               SUGG_TYPE: formValue.SUGG_TYPE ?? (this.rowdata as any)?.SUGG_TYPE,
               ANSWER_YN: formValue.ANSWER_YN ? String(formValue.ANSWER_YN).toUpperCase() : this.rowdata?.ANSWER_YN ?? undefined,
               CLASS_EMAIL: formValue.CLASS_EMAIL ?? (this.rowdata as any)?.CLASS_EMAIL,
-              // If forceEditAll (高權限) allow STATUS from form; otherwise default to 'Y'
               STATUS: this.forceEditAll ? (formValue.STATUS ?? this.rowdata?.STATUS) : 'Y',
               ALERT_DATE: formValue.ALERT_DATE ? (new Date(formValue.ALERT_DATE)).toISOString() : (this.rowdata?.ALERT_DATE ? (new Date(this.rowdata.ALERT_DATE)).toISOString() : undefined),
               USR_NO: formValue.CRT_USR_No ?? this.rowdata?.CRT_USR_No,
               USR_NAME: formValue.CRT_USR_Name ?? this.rowdata?.CRT_USR_Name
             };
-            // 過濾出新增的明細（沒有 SEQ_ID 的是新資料）
             const newDetails: InsertCPM12050DetailRequest[] = this.data
               .filter(item => !item.SEQ_ID)
               .map(item => ({
@@ -557,39 +537,55 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
                 USR_NAME: formValue.CRT_USR_Name
               }));
 
-            // 組合 API 請求：主檔修改 + 新明細新增（若有）
-            // 對後端容易受 null 影響的 string 欄位做清理（null -> ''），並印出 payload 便於檢查
             const payload: any = { ...updateRequest } as any;
             const stringFields = [
               'KIND_ID', 'KIND_ID_SUB', 'CUST_NAME', 'SEX', 'CONTACT_ADDR', 'CONTACT_TEL', 'CELL_PHONE', 'E_MAIL',
               'COMPLAIN_NOTES', 'SUGG_SOURCE', 'SUGG_SOURCE_OTHER', 'ORG_ID', 'MEMBER_ID', 'SUGG_TYPE', 'ANSWER_YN', 'CLASS_EMAIL', 'STATUS', 'ALERT_DATE', 'USR_NO', 'USR_NAME'
             ];
             stringFields.forEach(f => {
-              // keep null for missing optional fields (backend may expect null rather than empty string)
               if (payload[f] === undefined || payload[f] === '') payload[f] = null;
               if (payload[f] === null) return;
-              // ensure status and answer flags are upper-case strings
               if (f === 'STATUS' || f === 'ANSWER_YN') payload[f] = String(payload[f]).toUpperCase();
             });
             console.log('updateCPM12050 req', payload);
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const requests: Observable<any>[] = [];
 
-            // 如果有任一檔案，使用 FormData 傳送主檔（updateCPM12050 已支援 FormData）
+            const mainFields = [
+              'KIND_ID', 'KIND_ID_SUB', 'CUST_NAME', 'SEX', 'CONTACT_ADDR', 'CONTACT_TEL', 'CELL_PHONE', 'E_MAIL',
+              'COMPLAIN_NOTES', 'SUGG_SOURCE', 'SUGG_SOURCE_OTHER', 'ORG_ID', 'MEMBER_ID', 'SUGG_TYPE', 'CLASS_EMAIL',
+              'ALERT_DATE', 'STATUS', 'USR_NO', 'USR_NAME'
+            ];
+
+            const row: any = this.rowdata || {};
+            const normalize = (v: any) => (v === undefined || v === null ? null : String(v));
+            const mainChanged = mainFields.some(f => {
+              if (f === 'ALERT_DATE') {
+                const a = formValue.ALERT_DATE ? new Date(formValue.ALERT_DATE).toISOString() : null;
+                const b = row.ALERT_DATE ? new Date(row.ALERT_DATE).toISOString() : null;
+                return a !== b;
+              }
+              if (f === 'STATUS' && formValue[f] != null) {
+                return String(formValue[f]).toUpperCase() !== String(row[f] ?? '').toUpperCase();
+              }
+              return normalize(formValue[f]) !== normalize(row[f]);
+            });
+
             const hasFiles = !!(this.formFile1 || this.formFile2 || this.formFile3);
-            if (hasFiles) {
+
+            if (hasFiles || mainChanged) {
               const formData = new FormData();
-              // Append payload fields (只 append primitive/string 欄位)
               Object.keys(payload || {}).forEach(k => {
                 const v = payload[k];
-                if (v === undefined || v === null) return;
-                formData.append(k, String(v));
+                if (v === undefined || v === null) {
+                  formData.append(k, '');
+                } else {
+                  formData.append(k, String(v));
+                }
               });
               if (this.formFile1) formData.append('formFile1', this.formFile1, this.formFile1.name);
               if (this.formFile2) formData.append('formFile2', this.formFile2, this.formFile2.name);
               if (this.formFile3) formData.append('formFile3', this.formFile3, this.formFile3.name);
-              // debug: 列出 formData 內容（key 與檔名或值），便於 Network 對照
               try {
                 const entries = Array.from((formData as any).entries()).map(([k, v]: any) => [k, v instanceof File ? v.name : v]);
                 console.log('DEBUG updateCPM12050 FormData entries ->', entries);
@@ -598,19 +594,14 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
               }
               requests.push(this.cpm12050Service.updateCPM12050(formData));
             } else {
-              requests.push(this.cpm12050Service.updateCPM12050(payload));
+              console.log('DEBUG skip updateCPM12050 because no main changes and no files to upload');
             }
+
             if (newDetails.length > 0) {
               requests.push(this.cpm12050Service.insertCPM12050Detail(newDetails));
             }
 
             // 當具有高權限時，既有的明細可能可被編輯。
-            // 僅在既有明細的關鍵欄位（目前為 ANSWER, ANSWER_ID）實際變更時才送出 update 請求，
-            // 避免因型別差異或暫存欄位導致不必要的 update 呼叫（例如新增其他明細時不該更新既有明細）。
-            console.log('DEBUG originalDetails length', Array.isArray(this._originalDetails) ? this._originalDetails.length : 0);
-            console.log('DEBUG originalDetails summary', (this._originalDetails || []).map((o: any) => ({ ID: o?.ID, SEQ_ID: o?.SEQ_ID, ANSWER: o?.ANSWER, ANSWER_ID: o?.ANSWER_ID })));
-            console.log('DEBUG currentDetails length', Array.isArray(this.data) ? this.data.length : 0);
-            console.log('DEBUG currentDetails summary', (this.data || []).map((o: any) => ({ ID: o?.ID, SEQ_ID: o?.SEQ_ID, ANSWER: o?.ANSWER, ANSWER_ID: o?.ANSWER_ID })));
             const updatedDetails: UpdateCPM12050DetailRequest[] = (this.data || [])
               // 只針對來自後端的既有明細（有 SEQ_ID）做比對與可能更新
               .filter((item: any) => !!item.SEQ_ID)
@@ -624,15 +615,12 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
                     return false;
                   }
                 });
-                // 若找不到原始記錄，視為無須更新（避免誤送）
                 if (!orig) return null;
 
-                // 深度比對：忽略識別與使用者欄位（ID, SEQ_ID, USR_NO, USR_NAME）
                 const sanitize = (obj: any) => {
                   const copy: any = {};
                   Object.keys(obj || {}).forEach(k => {
                     if (['ID', 'SEQ_ID', 'USR_NO', 'USR_NAME'].includes(k)) return;
-                    // 將日期轉為字串，比較時更穩定
                     const v = obj[k];
                     if (v instanceof Date) copy[k] = v.toISOString();
                     else copy[k] = v;
@@ -649,7 +637,8 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
 
                 // 若有任一欄位改變，送 update request，僅包含後端要求的欄位
                 const detailReqAny: any = {
-                  ID: item.ID !== undefined ? item.ID : 0,
+                  MAIN_ID: updateRequest.ID ?? this.rowdata?.ID ?? 0,
+                  DETAIL_ID: item.ID !== undefined ? item.ID : 0,
                   SEQ_ID: String(item.SEQ_ID ?? ''),
                   ANSWER: item.ANSWER ?? '',
                   ANSWER_ID: item.ANSWER_ID ?? '',
@@ -661,22 +650,15 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
               .filter((d: any) => d !== null) as UpdateCPM12050DetailRequest[];
 
             if (updatedDetails.length > 0) {
-              console.log('DEBUG originalDetails:', this._originalDetails);
-              console.log('DEBUG currentDetails:', this.data);
-              console.log('DEBUG updatedDetails to send:', updatedDetails);
-              // updateCPM12050Detail 現在接受多筆 detail request（陣列），一次送出
               requests.push(this.cpm12050Service.updateCPM12050Detail(updatedDetails));
             } else {
               console.log('DEBUG no updatedDetails to send');
             }
-
-            // 包裝每個 request，避免其中一個失敗導致整個 forkJoin 錯誤，並能回傳失敗的詳細資訊
             const wrappedRequests = requests.map((r, idx) =>
               r.pipe(
                 catchError(err => of({ __error: true, __index: idx, err }))
               )
             );
-
             forkJoin(wrappedRequests)
               .pipe(
                 untilDestroyed(this),
@@ -685,10 +667,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
               .subscribe((results: any[]) => {
                 const failed = (results || []).find(r => r && r.__error);
                 if (failed) {
-                  console.error('updateCPM12050 partial failures', results);
                   const err = failed.err;
-                  // 印出完整錯誤回應協助分析
-                  console.error('backend error full response:', err);
                   const msg = err?.error?.Message || err?.message || JSON.stringify(err?.error) || '修改失敗（後端錯誤）';
                   this.messageService.errorBubble(`修改失敗：${msg}`);
                   return;
@@ -703,7 +682,6 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
   }
 
   loadOptions() {
-    // 獲取組織下拉選項
     this.dropDownListService.querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
@@ -713,7 +691,6 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
           label: `${item.No} - ${item.Name}`,
         }));
       })
-    // 獲取意見類型下拉選項
     this.dropDownListService.queryCSS1002DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
@@ -724,7 +701,6 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
           }))
         );
       })
-    // 直接載入責任單位選項，與 ORG_ID_QUERY 無關，保持獨立
     this.dropdownApiService.queryCss1005()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
@@ -816,9 +792,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     const seq = (this.rowdata as any).SEQ_ID;
     const fileName = slot === 1 ? this.existingFile1 : slot === 2 ? this.existingFile2 : this.existingFile3;
     if (!fileName) return;
-    // use raw file path/name when requesting download
     const raw = slot === 1 ? this.rawExistingFile1 : slot === 2 ? this.rawExistingFile2 : this.rawExistingFile3;
-    // 嘗試多種可能的 IMG_SeqNo（SEQ_ID、ID、字串），參考 tls43010 的查詢邏輯
     const seqCandidates = Array.from(new Set([
       String(seq || ''),
       String((this.rowdata as any)?.ID ?? ''),
@@ -841,7 +815,6 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     };
 
     tryQuerySequentially().then(list => {
-      // 嘗試以 basename 配對
       const base = (raw ?? fileName).split('\\').pop()?.split('/').pop() ?? fileName;
       const found = list.find((f: any) => String(f.IMG_File) === String(base));
       if (found) {
@@ -851,24 +824,18 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
           this.visible = true;
           return;
         }
-        // 如果後端只回傳 IMG_File 為完整伺服器路徑（e.g. C:\...\Uploads\CPM12050\file.jpg），嘗試從中擷取相對路徑
         const rawFile = String(found.IMG_File || '');
         const baseName = rawFile.split('\\').pop()?.split('/').pop() ?? fileName;
         const uploadsMatch = rawFile.match(/(Uploads|IMAGES)[\\/].*/i);
         if (uploadsMatch) {
-          // 取出從 Uploads/IMAGES 開始的相對路徑，並組成可存取的 URL
           const rel = uploadsMatch[0].replace(/\\/g, '/');
-          // 如果 rel 包含檔名，移除檔名，改用 basename 以避免重複
           const relDir = rel.split('/').slice(0, -1).join('/');
           const url = `${environment.ApiUrl}/${relDir}/${baseName}`;
           this.mediaItems = [{ url, type: 'image', name: baseName }];
           this.visible = true;
           return;
         }
-        // 若無法推導出可開啟的 URL，交由 download endpoint 處理（下方 fallback）
       }
-
-      // 若沒有在 Image table 找到紀錄，嘗試使用 rowdata 的 FileName 欄位直接組 URL
       const rawFromRow = raw ?? (this.rowdata as any).FileName1 ?? (this.rowdata as any).FileName2 ?? (this.rowdata as any).FileName3 ?? null;
       if (rawFromRow) {
         const baseName = String(rawFromRow).split('\\').pop()?.split('/').pop() ?? fileName;
@@ -891,6 +858,5 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     });
   }
 
-  // deleteImage API removed: UI no longer exposes delete operation for files
 }
 
