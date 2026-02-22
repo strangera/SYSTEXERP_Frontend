@@ -567,7 +567,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
 
             this.detailDefaultInsert = {
               // 從 Mains 帶入 VEN_No
-              VEN_No: firstMain?.ven_no ?? '',
+              VEN_No: firstMain?.ven_no != null ? String(firstMain?.ven_no) : (this.detailDefaultInsert?.VEN_No ?? ''),
               // 從後端 Details 或 Mains 帶入 ven_uniform
               ven_uniform: defaultVenUniform,
               // 不預設 PUR_GUINO
@@ -576,7 +576,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
               PUR_GUIDate: new Date(),
               DEC_YM: this.dataForm.controls.COMM_YM.value || null,
               // 預設單據別：若主表 (firstMain) 有 tlttalent.invoice_type 或 invoice_type，帶入該值
-              GUIType: (firstMain?.tlttalent?.invoice_type ?? firstMain?.invoice_type ?? '') as any,
+              GUIType: String(firstMain?.tlttalent?.invoice_type ?? firstMain?.invoice_type ?? ''),
               // 預設課稅別為「應稅」
               TAX_TYPE: taxVal,
               // 預設扣抵代號為「代表進項可扣抵之進貨及費用」
@@ -818,6 +818,21 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   onChangeEditSelection(items: any): void {
     this.selectedMainItems = Array.isArray(items) ? items : (items ? [items] : []);
     this.selectedMain = (this.selectedMainItems && this.selectedMainItems.length) ? this.selectedMainItems[0] : null;
+    // 當使用者選取主表時，同步 selectedMain 的一些欄位到新增單據的預設 insert 值
+    try {
+      if (this.selectedMain) {
+        const m = this.selectedMain as any;
+        this.detailDefaultInsert = {
+          ...this.detailDefaultInsert,
+          VEN_No: m?.ven_no != null ? String(m?.ven_no) : (this.detailDefaultInsert?.VEN_No ?? ''),
+          ven_uniform: m?.ven_uniform ?? this.detailDefaultInsert?.ven_uniform ?? '',
+          GUIType: String(m?.tlttalent?.invoice_type ?? m?.invoice_type ?? this.detailDefaultInsert?.GUIType ?? ''),
+          DEC_YM: this.dataForm.controls.COMM_YM.value || null,
+        };
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 
   onDetailEditDataChange(data: any[]): void {

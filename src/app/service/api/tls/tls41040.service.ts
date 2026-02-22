@@ -33,4 +33,7 @@ export class Tls41040Service {
   posTLS41040(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/posTLS41040`, data);
   }
+  queryTLTTALENT_TLS41040_DropDownList(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLTTALENT_TLS41040_DropDownList`, data);
+  }
 }

@@ -171,9 +171,9 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
 
       // ===== 專櫃 =====
       TLT: this.dropDownListService
-        .queryTLTTALENT_DropDownList()
+        .queryTLTTALENT_TLS41040_DropDownList()
         .pipe(
-          map(res => (res?.Data ?? []).map((item: any): IDropdownItem => ({
+          map((res: any) => (res?.Data ?? []).map((item: any): IDropdownItem => ({
             No: item.No,
             Name: item.Name,
             value: item.No,
