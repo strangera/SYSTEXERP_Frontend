@@ -168,6 +168,18 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('TLS2D040', 'tls/tls2d040cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
     this.setColumns('detail');
+
+    //當勾選「只顯示負值」時，自動設定狀況與類型
+    this.queryForm.get('ShowNeg1')?.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((checked) => {
+        if (checked) {
+          this.queryForm.patchValue({
+            status: '1',      // 彙總
+            report_type: '0'  // 依專櫃
+          }, { emitEvent: false });
+        }
+      });
   }
 
   loadOptions() {
@@ -244,7 +256,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
             this.setColumns('detail');
             this.data = response.Data.mainData;
             this.footerData = [{
-              group_name: '合計',
+              group_name: '合計(未稅金額: 999,999,999)', // 原本為 '合計'
               tpy_namt: response.Data.totalData[0].tpy_namt_PayAmt
             }];
             this.totalRecords = response.TotalCount;
@@ -262,7 +274,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
                 this.setColumns('0');
                 this.data = response.Data.mainData;
                 this.footerData = [{
-                  group_name: '合計',
+                  group_name: '合計(未稅金額: 999,999,999)', // 原本為 '合計'
                   tpy_namt: response.Data.totalData[0].tpy_namt_PayAmt
                 }];
                 this.totalRecords = response.TotalCount;
@@ -277,7 +289,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
                 this.setColumns('1');
                 this.data = response.Data.mainData;
                 this.footerData = [{
-                  group_name: '合計',
+                  group_name: '合計(未稅金額: 999,999,999)', // 原本為 '合計'
                   tpy_namt: response.Data.totalData[0].tpy_namt_PayAmt
                 }];
                 this.totalRecords = response.TotalCount;
@@ -292,7 +304,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
                 this.setColumns('2');
                 this.data = response.Data.mainData;
                 this.footerData = [{
-                  group_name: '合計',
+                  group_name: '合計(未稅金額: 999,999,999)', // 原本為 '合計'
                   tpy_namt: response.Data.totalData[0].tpy_namt_PayAmt
                 }];
                 this.totalRecords = response.TotalCount;
@@ -308,7 +320,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
                 this.setColumns('3');
                 this.data = response.Data.mainData;
                 this.footerData = [{
-                  group_name: '合計',
+                  group_name: '合計(未稅金額: 999,999,999)', // 原本為 '合計'
                   tpy_namt: response.Data.totalData[0].tpy_namt_PayAmt
                 }];
                 this.totalRecords = response.TotalCount;
@@ -332,7 +344,8 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           { field: 'VEN_Name', header: '廠商名稱' },
           { field: 'sam_yyymm', header: '扣款年月' },
           { field: 'GUI_FLAG', header: '是否開立發票' },
-          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
+          // { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
+          { field: 'tpy_namt', header: '扣款金額(含稅)', format: formatAmount, isTotal: true }
         ];
         break;
       case '1': // 依扣款項目
@@ -341,7 +354,8 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           { field: 'CAP_Name', header: '扣款名稱' },
           { field: 'sam_yyymm', header: '扣款年月' },
           { field: 'GUI_FLAG', header: '是否開立發票' },
-          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
+          // { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
+          { field: 'tpy_namt', header: '扣款金額(含稅)', format: formatAmount, isTotal: true }
         ];
         break;
       case '2': // 依部門
@@ -352,7 +366,8 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           { field: 'Org_Name', header: '組織名稱' },
           { field: 'sam_yyymm', header: '扣款年月' },
           { field: 'GUI_FLAG', header: '是否開立發票' },
-          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
+          // { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
+          { field: 'tpy_namt', header: '扣款金額(含稅)', format: formatAmount, isTotal: true }
         ];
         break;
       case '3': // 依會計科目
@@ -393,7 +408,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
       Array.isArray(val) ? val.filter(v => v !== '') : [];
 
     return {
-      PageSize: 0,
+      PageSize: 999999,
       PageIndex: 0,
       OrderBy: '',
       Offset: 0,
