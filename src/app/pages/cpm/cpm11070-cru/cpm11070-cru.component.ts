@@ -85,6 +85,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
     { label: '待廣播', value: null, disabled: false },
     { label: '不廣播', value: 'N', disabled: false },
   ];
+  // Y=已廣播、N=不廣播、NULL=待廣播
   SPACE1Options = getSYS1000Options('LOCATION');
   // 為顯示 'No - Name' 格式，產生一份帶有格式化 label 的選項清單
   SPACE1OptionsLabelled: any[] = [];
@@ -98,11 +99,8 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
   ];
   ProcessingUserOptions: any[] = [];
   RebroadcastLoading = false;
-  // 控制是否顯示「領回資訊」區塊
   showReceiveInfo = true;
-  // 當從列表點選「領回」進入 CRU 時，只允許領回區塊可編輯，其餘欄位唯讀
   onlyReceiveEditable = false;
-  // 模式：L = 遺失, F = 拾獲
   mode?: 'L' | 'F';
   // 開啟模式來源（例如 'receive' 或 'transfer'）
   openMode?: string | undefined;
@@ -119,10 +117,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
 
   private afterCreateClearForm(): void {
     try {
-      // reset form values
       this.dataForm.reset();
-
-      // basic defaults for create mode
       const defaultDoc = this.mode === 'F' ? 'F' : 'L';
       const me = this.user?.user_No ?? '';
 
@@ -151,7 +146,6 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
       try { this.dataForm.controls.PROCESSING_USER.setValue(me); } catch { }
       try { this.dataForm.controls.PROCESSING_USER.disable(); } catch { }
 
-      // reset receive block visibility/state
       this.showReceiveInfo = true;
       this.onlyReceiveEditable = false;
 
@@ -159,7 +153,6 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
       this.loading = false;
       this.cdr.detectChanges();
     } catch (e) {
-      // fallback: reload page state
       try { this.onCancel(); } catch { }
     }
   }
@@ -198,8 +191,6 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
 
   ngOnInit(): void {
     this.initializePage('CPM11070', this.dataForm);
-    // 預設保持廣播欄位可編輯；在建立/載入時根據狀態決定是否鎖定
-    // 先嘗試從後端更新 LOCATION 的 SYS1000，確保剛在其他頁面新增的選項能即時取得
     try {
       this.systemDataService.refreshSystemCodeByType('LOCATION')
         .pipe(untilDestroyed(this))
@@ -299,7 +290,6 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
           RECAPTION_PHONE: d.RECAPTION_PHONE,
         });
 
-        // RECEIVE_DATE 與 PROCESSING_USER 若後端未帶值，保留為空（使用 reset 以避免 nonNullable 衝突）
         try {
           const recvCtrl = this.dataForm.get('RECEIVE_DATE');
           if (d.RECEIVE_DATE) {
@@ -344,11 +334,8 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
           }
           this.dataForm.controls.SEQ_TYPE.disable();
         } catch { }
-        // detail view: lock OFF_DATE
         try { this.dataForm.controls.OFF_DATE.disable(); } catch { }
-        // detail view: lock MSG_DATE
         try { this.dataForm.controls.MSG_DATE.disable(); } catch { }
-        // 若後端帶入 BROADCAST_YN 為空字串（代表「已廣播」），則鎖定該欄位
         try {
           const b = d.BROADCAST_YN;
           if (b === '') {
@@ -417,7 +404,6 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
         // 如果是從列表「轉出」按鈕開啟，僅允許使用者設定轉出日期
         if (openMode === 'transfer') {
           try {
-            // 只允許 OFF_DATE 可編輯
             const editableKeys = ['OFF_DATE'];
             const controlKeys = Object.keys(this.dataForm.controls);
             controlKeys.forEach(k => {
@@ -431,8 +417,6 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
                 }
               } catch { }
             });
-
-            // 若後端未帶 OFF_DATE，預設為目前時間；同時將狀態設為轉出('6')
             const offCtrl = this.dataForm.get('OFF_DATE');
             if (offCtrl && !offCtrl.value) {
               offCtrl.setValue(new Date(), { emitEvent: true });
@@ -441,8 +425,6 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
             if (seqTypeCtrl && seqTypeCtrl.value !== '6') {
               seqTypeCtrl.setValue('6', { emitEvent: true });
             }
-
-            // 設定 OFF_DATE 為必填
             try { offCtrl?.setValidators([Validators.required]); offCtrl?.updateValueAndValidity(); } catch { }
 
             this.showReceiveInfo = false;
