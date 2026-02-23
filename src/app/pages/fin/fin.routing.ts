@@ -194,8 +194,7 @@ export const finRoutes: Routes = [
   { path: 'fin35010', loadComponent: () => import('./fin35010/fin35010.component').then(m => m.FIN35010Component), data: { progNo: 'FIN35010' } },
   { path: 'fin35010cru', loadComponent: () => import('./fin35010-cru/fin35010-cru.component').then(m => m.FIN35010CRUComponent), data: { progNo: 'FIN35010' } },
   // 部門預算匯出轉入作業
-  // { path: 'fin41010', loadComponent: () => import('./fin41010/fin41010.component').then(m => m.FIN41010Component),data:{progNo:'FIN41010'} },
-  // { path: 'fin41010cru', loadComponent: () => import('./fin41010-cru/fin41010-cru.component').then(m => m.FIN41010CRUComponent),data: { progNo: 'FIN41010'} },
+  { path: 'fin41010', loadComponent: () => import('./fin41010/fin41010.component').then(m => m.FIN41010Component), data: { progNo: 'FIN41010' } },
   // 部門預算編制維護
   // { path: 'fin41020', loadComponent: () => import('./fin41020/fin41020.component').then(m => m.FIN41020Component),data:{progNo:'FIN41020'} },
   // { path: 'fin41020cru', loadComponent: () => import('./fin41020-cru/fin41020-cru.component').then(m => m.FIN41020CRUComponent),data: { progNo: 'FIN41020'} },
