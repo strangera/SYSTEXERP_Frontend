@@ -466,39 +466,64 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
             };
 
             // 只呼叫主檔新增（新增模式無明細資料）
-            this.cpm12050Service.insertCPM12050(insertRequest)
-              .pipe(
-                untilDestroyed(this),
-                finalize(() => this.loading = false)
-              )
-              .subscribe((response: any) => {
-                console.log('insertCPM12050 response', response);
-                const seq = response?.Data?.SEQ_ID ?? (Array.isArray(response?.Data) ? response.Data[0]?.SEQ_ID : undefined) ?? response?.SEQ_ID;
-                const newId = response?.ID ?? (Array.isArray(response?.Data) ? response.Data[0]?.ID : undefined);
+            const hasFiles = !!(this.formFile1 || this.formFile2 || this.formFile3);
 
-                this.messageService.successBubble('新增成功');
+            const performInsert = (payload: any) => {
+              this.cpm12050Service.insertCPM12050(payload)
+                .pipe(
+                  untilDestroyed(this),
+                  finalize(() => this.loading = false)
+                )
+                .subscribe((response: any) => {
+                  console.log('insertCPM12050 response', response);
+                  const seq = response?.Data?.SEQ_ID ?? (Array.isArray(response?.Data) ? response.Data[0]?.SEQ_ID : undefined) ?? response?.SEQ_ID;
+                  const newId = response?.ID ?? (Array.isArray(response?.Data) ? response.Data[0]?.ID : undefined);
 
-                if (seq) {
-                  this.cpm12050Service.queryCPM12050({ SEQ_ID: seq })
-                    .pipe(untilDestroyed(this))
-                    .subscribe(r => {
-                      console.log('queried new record by SEQ_ID', r);
-                      this.onCancel();
-                    });
-                  return;
-                }
+                  this.messageService.successBubble('新增成功');
 
-                if (newId) {
-                  this.cpm12050Service.queryCPM12050({ ID: newId })
-                    .pipe(untilDestroyed(this))
-                    .subscribe(r => {
-                      console.log('queried new record by ID', r);
-                      this.onCancel();
-                    });
-                  return;
-                }
-                this.dataForm.reset(); // 重置表單
+                  if (seq) {
+                    this.cpm12050Service.queryCPM12050({ SEQ_ID: seq })
+                      .pipe(untilDestroyed(this))
+                      .subscribe(r => {
+                        console.log('queried new record by SEQ_ID', r);
+                        this.onCancel();
+                      });
+                    return;
+                  }
+
+                  if (newId) {
+                    this.cpm12050Service.queryCPM12050({ ID: newId })
+                      .pipe(untilDestroyed(this))
+                      .subscribe(r => {
+                        console.log('queried new record by ID', r);
+                        this.onCancel();
+                      });
+                    return;
+                  }
+                  this.dataForm.reset(); // 重置表單
+                });
+            };
+
+            if (hasFiles) {
+              const formData = new FormData();
+              Object.keys(insertRequest || {}).forEach(k => {
+                const v = (insertRequest as any)[k];
+                formData.append(k, v === undefined || v === null ? '' : String(v));
               });
+              if (this.formFile1) formData.append('formFile1', this.formFile1, this.formFile1.name);
+              if (this.formFile2) formData.append('formFile2', this.formFile2, this.formFile2.name);
+              if (this.formFile3) formData.append('formFile3', this.formFile3, this.formFile3.name);
+              try {
+                const entries = Array.from((formData as any).entries()).map(([k, v]: any) => [k, v instanceof File ? v.name : v]);
+                console.log('DEBUG insertCPM12050 FormData entries ->', entries);
+              } catch (e) {
+                console.log('DEBUG insertCPM12050 FormData (unable to enumerate entries)');
+              }
+              performInsert(formData);
+            } else {
+              console.log('DEBUG insertCPM12050 payload', insertRequest);
+              performInsert(insertRequest);
+            }
 
           }
           break;
@@ -792,7 +817,37 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     const seq = (this.rowdata as any).SEQ_ID;
     const fileName = slot === 1 ? this.existingFile1 : slot === 2 ? this.existingFile2 : this.existingFile3;
     if (!fileName) return;
+    // 優先使用 rowdata 提供的路徑（FileName1/FileName2/FileName3），避免呼叫舊的 Image API
     const raw = slot === 1 ? this.rawExistingFile1 : slot === 2 ? this.rawExistingFile2 : this.rawExistingFile3;
+    const rawFromRow = raw ?? (this.rowdata as any).FileName1 ?? (this.rowdata as any).FileName2 ?? (this.rowdata as any).FileName3 ?? null;
+
+    if (rawFromRow) {
+      try {
+        const s = String(rawFromRow);
+        // 如果已經是完整的可用 URL，直接使用
+        if (/^https?:\/\//i.test(s)) {
+          const baseName = s.split('\\').pop()?.split('/').pop() ?? fileName;
+          this.mediaItems = [{ url: s, type: 'image', name: baseName }];
+          this.visible = true;
+          return;
+        }
+
+        // 從絕對路徑中擷取 'Uploads/...' 的相對路徑（支援反斜線或斜線），再組成 API 可存取的 URL
+        const m = s.match(/(Uploads[\\/].*)/i);
+        if (m && m[1]) {
+          const rel = m[1].replace(/\\/g, '/'); // 將反斜線轉為正斜線
+          const url = `${environment.ApiUrl.replace(/\/$/, '')}/${rel.replace(/^\/+/, '')}`;
+          const baseName = rel.split('/').pop() ?? fileName;
+          this.mediaItems = [{ url, type: 'image', name: baseName }];
+          this.visible = true;
+          return;
+        }
+      } catch (e) {
+        console.warn('failed to construct image url from rowdata', e);
+      }
+    }
+
+    // 若 rowdata 未提供路徑，回退到舊的查詢 ImageService 的邏輯
     const seqCandidates = Array.from(new Set([
       String(seq || ''),
       String((this.rowdata as any)?.ID ?? ''),
@@ -803,7 +858,6 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     const tryQuerySequentially = async (): Promise<any[]> => {
       for (const s of seqCandidates) {
         try {
-
           const res: any = await firstValueFrom(this.imageService.queryImages({ IMG_Type: 'CPM12050', IMG_SeqNo: s }));
           console.log('queryImages for CPM12050 seq', s, res);
           if (res && Array.isArray(res.Data) && res.Data.length > 0) return res.Data;
@@ -815,7 +869,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     };
 
     tryQuerySequentially().then(list => {
-      const base = (raw ?? fileName).split('\\').pop()?.split('/').pop() ?? fileName;
+      const base = (fileName).split('\\').pop()?.split('/').pop() ?? fileName;
       const found = list.find((f: any) => String(f.IMG_File) === String(base));
       if (found) {
         if (found.IMG_Path) {
@@ -836,20 +890,6 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
           return;
         }
       }
-      const rawFromRow = raw ?? (this.rowdata as any).FileName1 ?? (this.rowdata as any).FileName2 ?? (this.rowdata as any).FileName3 ?? null;
-      if (rawFromRow) {
-        const baseName = String(rawFromRow).split('\\').pop()?.split('/').pop() ?? fileName;
-        const uploadsMatch = String(rawFromRow).match(/(Uploads|IMAGES)[\\/].*/i);
-        if (uploadsMatch) {
-          const rel = uploadsMatch[0].replace(/\\/g, '/');
-          const relDir = rel.split('/').slice(0, -1).join('/');
-          const url = `${environment.ApiUrl}/${relDir}/${baseName}`;
-          this.mediaItems = [{ url, type: 'image', name: baseName }];
-          this.visible = true;
-          return;
-        }
-      }
-
       // 無法預覽，提示使用者
       this.messageService.errorBubble('找不到可預覽的檔案');
     }).catch(err => {
