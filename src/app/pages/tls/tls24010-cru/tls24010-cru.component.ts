@@ -187,6 +187,9 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         }
       })
     }
+    if (rowDataTyped.ORG_TXN_Date) {
+      this.dataForm.get('isNegativeTXN')?.setValue(true);
+    }
     // 檢查是否開立業主發票 (rece_yn)
     if (this.rece_yn !== 'Y') {
       this.dataForm.get('TXN_TaxFreeCertNo')?.disable();
