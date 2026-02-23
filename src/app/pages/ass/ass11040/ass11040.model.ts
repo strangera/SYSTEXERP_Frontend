@@ -78,6 +78,14 @@ export interface CreateASS11040Request {
   RESI_STATUS?: string | null;
 }
 
+/** createASS11040 API 的 Data 欄位 */
+export interface CreateASS11040Response {
+  NewID?: number;
+  NewGoodsId?: string;
+  ReturnCode?: number;
+  ReturnMsg?: string;
+}
+
 /**
  * 更新品項請求（updateASS11040）
  * 不包含 CRT_*；包含 STO_NO、OLD_GOODS_ID、RecodeGoodsId、UPD_USR_No、UPD_USR_Name

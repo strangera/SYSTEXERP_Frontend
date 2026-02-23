@@ -5,8 +5,10 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 
 import { ASS11040Service } from '@service/api/ass/ass11040.service';
+import { ImageService } from '@service/utility/image.service';
 import {
   CreateASS11040Request,
+  CreateASS11040Response,
   FACLASS1Data,
   FACLASS2Data,
   FACLASSMData,
@@ -21,7 +23,8 @@ import { ButtonModule } from 'primeng/button';
 import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { GalleriaModule } from 'primeng/galleria';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
+import { catchError, EMPTY, finalize, switchMap } from 'rxjs';
+import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -148,7 +151,8 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
   private patchInProgress = false;
 
   constructor(
-    private readonly ass11040Service: ASS11040Service
+    private readonly ass11040Service: ASS11040Service,
+    private readonly imageService: ImageService
   ) {
     super();
   }
@@ -158,7 +162,7 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
     this.loadBigCategoryOptions();
     this.loadMidCategoryOptions('');
     this.loadSmlCategoryOptions('');
-    // this.setupCategoryListeners(); 大中小分類欄位連動監聽
+    this.setupCategoryListeners(); //大中小分類欄位連動監聽
     if (!this.isFormCreateable && this.rowdata) {
       this.patchFormFromRow(this.rowdata);
     }
@@ -224,23 +228,23 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
   }
 
   /** 設定分類連動監聽 */
-  // setupCategoryListeners(): void {
-  //   this.dataForm.controls.bigCategoryCode.valueChanges.pipe(untilDestroyed(this)).subscribe(bigCode => {
-  //     if (this.patchInProgress) return;
-  //     this.dataForm.controls.midCategoryCode.setValue(null);
-  //     this.dataForm.controls.smlCategoryCode.setValue(null);
-  //     this.midCategoryCodeOptions = [];
-  //     this.smlCategoryCodeOptions = [];
-  //     if (bigCode) this.loadMidCategoryOptions(bigCode);
-  //   });
+  setupCategoryListeners(): void {
+    this.dataForm.controls.bigCategoryCode.valueChanges.pipe(untilDestroyed(this)).subscribe(bigCode => {
+      if (this.patchInProgress) return;
+      this.dataForm.controls.midCategoryCode.setValue(null);
+      this.dataForm.controls.smlCategoryCode.setValue(null);
+      this.midCategoryCodeOptions = [];
+      this.smlCategoryCodeOptions = [];
+      if (bigCode) this.loadMidCategoryOptions(bigCode);
+    });
 
-  //   this.dataForm.controls.midCategoryCode.valueChanges.pipe(untilDestroyed(this)).subscribe(midCode => {
-  //     if (this.patchInProgress) return;
-  //     this.dataForm.controls.smlCategoryCode.setValue(null);
-  //     this.smlCategoryCodeOptions = [];
-  //     if (midCode) this.loadSmlCategoryOptions(midCode);
-  //   });
-  // }
+    this.dataForm.controls.midCategoryCode.valueChanges.pipe(untilDestroyed(this)).subscribe(midCode => {
+      if (this.patchInProgress) return;
+      this.dataForm.controls.smlCategoryCode.setValue(null);
+      this.smlCategoryCodeOptions = [];
+      if (midCode) this.loadSmlCategoryOptions(midCode);
+    });
+  }
 
   /** 載入中分類選項 */
   loadMidCategoryOptions(bigCategoryCode: string): void {
@@ -345,24 +349,105 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
           .createASS11040(createPayload)
           .pipe(
             untilDestroyed(this),
-            finalize(() => (this.loading = false))
+            finalize(() => (this.loading = false)),
+            switchMap((res: ApiResponse<CreateASS11040Response>) => {
+              if (res.Status !== '0000') {
+                this.messageService.errorBubble(res.Message ?? '新增失敗');
+                return EMPTY;
+              }
+              const goodid = res.Data?.NewGoodsId;
+              const stoNo: string | null = null;
+              if (!goodid) {
+                this.messageService.errorBubble('新增成功但未取得品項代碼(NewGoodsId)，無法更新圖片');
+                return EMPTY;
+              }
+              if (this.uploadedFiles.length === 0) {
+                this.messageService.successBubble(res.Message ?? '新增成功');
+                this.dataForm.reset();
+                this.clearUploadedFile();
+                return EMPTY;
+              }
+              return this.imageService.uploadImages({
+                IMG_Type: 'FASITEM',
+                IMG_SeqNo: goodid,
+                Files: this.uploadedFiles,
+              }).pipe(
+                switchMap((uploadRes: unknown) => {
+                  const data = (uploadRes as { Data?: Array<{ ImageUrl?: string; imageUrl?: string }> })?.Data?.[0];
+                  const rawUrl = data?.ImageUrl ?? data?.imageUrl;
+                  const photoUrl = rawUrl ?? null;
+                  const updatePayload: UpdateASS11040Request = {
+                    STO_NO: stoNo,
+                    OLD_GOODS_ID: goodid,
+                    GOODS_NAME: raw.itemName ?? null,
+                    BAR_CODE: raw.barCode ?? null,
+                    PHOTO_URL: photoUrl,
+                    MATERIAL_TYPE: raw.itemCategory ?? null,
+                    B_CLASS_ID: raw.bigCategoryCode ?? null,
+                    M_CLASS_ID: raw.midCategoryCode ?? null,
+                    S_CLASS_ID: raw.smlCategoryCode ?? null,
+                    LENGTH_CM: raw.lengthCm ?? null,
+                    WIDTH_CM: raw.widthCm ?? null,
+                    HEIGHT_CM: raw.heightCm ?? null,
+                    WEIGHT_KG: raw.weightKg ?? null,
+                    UNIT: raw.itemUnit ?? null,
+                    PACK_UNIT: raw.packageUnit ?? null,
+                    PACK_NUM: raw.packNum ?? null,
+                    COST_PRICE: raw.costPrice ?? null,
+                    TAX_CODE: raw.taxCode ?? null,
+                    MT_MODE: raw.warrantyMethod ?? null,
+                    MT_SUPP: raw.mtSupp ?? null,
+                    MT_YEAR: raw.mtYear ?? null,
+                    MT_MONTH: raw.mtMonth ?? null,
+                    MT_DAY: raw.mtDay ?? null,
+                    IVN_MODE: raw.maintenanceMethod ?? null,
+                    IVN_SUPP: raw.ivnSupp ?? null,
+                    IVN_YEAR: raw.ivnYear ?? null,
+                    IVN_MONTH: raw.ivnMonth ?? null,
+                    IVN_DAY: raw.ivnDay ?? null,
+                    EXP_YEAR: raw.expYear ?? null,
+                    EXP_MONTH: raw.expMonth ?? null,
+                    ADD_EXP_YEAR: raw.addExpYear ?? null,
+                    ADD_EXP_MONTH: raw.addExpMonth ?? null,
+                    NOTES: raw.illustrate ?? null,
+                    STATUS: null,
+                    MT_PERIOD: raw.mtPeriod ?? null,
+                    IVN_PERIOD: raw.ivnPeriod ?? null,
+                    SAFE_QTY: raw.safeQty ?? null,
+                    HIGH_STOCK_QTY: raw.highStockQty ?? null,
+                    STORE_SALES_AMT: null,
+                    RESI_STATUS: raw.resiStatus ?? null,
+                    UPD_USR_No: this.user?.user_No ?? null,
+                    UPD_USR_Name: this.user?.user_Name ?? null,
+                  };
+                  return this.ass11040Service.updateASS11040(updatePayload);
+                }),
+              );
+            }),
+            catchError(() => {
+              return EMPTY;
+            })
           )
           .subscribe({
-            next: res => {
-              if (res.Status !== '0000') return;
-              this.messageService.successBubble(res.Message ?? '新增成功');
+            next: updateRes => {
+              if (!updateRes) return;
+              if (updateRes.Status !== '0000') {
+                this.messageService.errorBubble(updateRes.Message ?? '更新圖片失敗');
+                return;
+              }
+              this.messageService.successBubble(updateRes.Message ?? '新增成功');
               this.dataForm.reset();
               this.clearUploadedFile();
             },
           });
       } else {
         const row = this.rowdata as QueryASS11040Response;
-        const updatePayload: UpdateASS11040Request = {
+        const buildUpdatePayload = (photoUrl: string | null): UpdateASS11040Request => ({
           STO_NO: row.STO_NO ?? null,
           OLD_GOODS_ID: row?.GOODS_ID ?? null,
           GOODS_NAME: raw.itemName ?? null,
           BAR_CODE: raw.barCode ?? null,
-          PHOTO_URL: null,
+          PHOTO_URL: photoUrl,
           MATERIAL_TYPE: raw.itemCategory ?? null,
           B_CLASS_ID: raw.bigCategoryCode ?? null,
           M_CLASS_ID: raw.midCategoryCode ?? null,
@@ -400,20 +485,48 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
           RESI_STATUS: raw.resiStatus ?? null,
           UPD_USR_No: this.user?.user_No ?? null,
           UPD_USR_Name: this.user?.user_Name ?? null,
-        };
-        this.ass11040Service
-          .updateASS11040(updatePayload)
-          .pipe(
-            untilDestroyed(this),
-            finalize(() => (this.loading = false))
-          )
-          .subscribe({
-            next: res => {
-              if (res.Status !== '0000') return;
-              this.messageService.successBubble(res.Message ?? '更新成功');
-              this.onCancel();
-            },
-          });
+        });
+
+        if (this.uploadedFiles.length > 0) {
+          this.imageService
+            .uploadImages({
+              IMG_Type: 'FASITEM',
+              IMG_SeqNo: row.GOODS_ID ?? '',
+              Files: this.uploadedFiles,
+            })
+            .pipe(
+              switchMap((uploadRes: unknown) => {
+                const data = (uploadRes as { Data?: Array<{ ImageUrl?: string; imageUrl?: string }> })?.Data?.[0];
+                const rawUrl = data?.ImageUrl ?? data?.imageUrl;
+                const photoUrl = rawUrl ?? null;
+                return this.ass11040Service.updateASS11040(buildUpdatePayload(photoUrl));
+              }),
+              untilDestroyed(this),
+              finalize(() => (this.loading = false))
+            )
+            .subscribe({
+              next: res => {
+                if (res.Status !== '0000') return;
+                this.messageService.successBubble(res.Message ?? '更新成功');
+                this.clearUploadedFile();
+                this.onCancel();
+              },
+            });
+        } else {
+          this.ass11040Service
+            .updateASS11040(buildUpdatePayload(row.PHOTO_URL ?? null))
+            .pipe(
+              untilDestroyed(this),
+              finalize(() => (this.loading = false))
+            )
+            .subscribe({
+              next: res => {
+                if (res.Status !== '0000') return;
+                this.messageService.successBubble(res.Message ?? '更新成功');
+                this.onCancel();
+              },
+            });
+        }
       }
     });
   }

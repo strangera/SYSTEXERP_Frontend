@@ -2,8 +2,10 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import {
   CreateASS11040Request,
+  CreateASS11040Response,
   QueryASS11040DataWrapper,
   QueryASS11040Request,
+  QueryASS11040Response,
   QueryFACLASS1DataWrapper,
   QueryFACLASS1Request,
   QueryFACLASS2DataWrapper,
@@ -33,9 +35,10 @@ export class ASS11040Service {
 
   /**
    * 新增品項（createASS11040）
+   * 回傳新建品項 NewID、NewGoodsId 等供後續上傳圖片與 update 使用
    */
-  createASS11040(params: CreateASS11040Request): Observable<ApiResponse<void>> {
-    return this.http.post<ApiResponse<void>>(`${this.apiUrl}/createASS11040`, params);
+  createASS11040(params: CreateASS11040Request): Observable<ApiResponse<CreateASS11040Response>> {
+    return this.http.post<ApiResponse<CreateASS11040Response>>(`${this.apiUrl}/createASS11040`, params);
   }
 
   /**
