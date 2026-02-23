@@ -1,10 +1,8 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import {
-  ApplyPurchaseRequestRow,
   ASS12020DeleteRequest,
   ASS12020Detail,
-  ASS12020DetailItem,
   ASS12020DetailRequest,
   ASS12020DetailResponseData,
   ASS12020ExportPDFRequest,
@@ -15,13 +13,8 @@ import {
   QueryASS12020Request,
 } from '@pages/ass/ass12020/ass12020.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
-import { map, Observable, of } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-
-const emptyApiMeta = {
-  Timestamp: '',
-  RequestId: '',
-};
 
 @Injectable({
   providedIn: 'root',
@@ -90,22 +83,6 @@ export class ASS12020Service {
           return res as unknown as ApiResponse<ASS12020Detail>;
         }
         const d = res.Data;
-        const details: ASS12020DetailItem[] = (d.Details ?? []).map(item => ({
-          ID: item.ID ?? null,
-          FAQuotationD_ID: item.FAQuotationD_ID ?? null,
-          NEED_ID: item.NEED_ID ?? null,
-          GOODS_ID: item.GOODS_ID ?? null,
-          MATERIAL_TYPE: item.MATERIAL_TYPE ?? null,
-          GOODS_PRICE: item.GOODS_PRICE ?? null,
-          SALE_PRICE: item.SALE_PRICE ?? null,
-          WH_ID: item.WH_ID ?? null,
-          QTY: item.QTY ?? null,
-          PURCHASE_QTY: item.PURCHASE_QTY ?? null,
-          GOODS_UNIT: item.GOODS_UNIT ?? null,
-          TOTAL_AMT: item.TOTAL_AMT ?? null,
-          NOTES: item.NOTES ?? null,
-          EXPIRE_LIMIT: item.EXPIRE_LIMIT ?? null,
-        }));
         return {
           ...res,
           Data: {
@@ -114,7 +91,7 @@ export class ASS12020Service {
             SUPPLIER_ID: d.SUPPLIER_ID ?? null,
             EXPDATE: d.EXPDATE ?? null,
             NOTES: d.NOTES ?? null,
-            Details: details,
+            Details: d.Details ?? [],
           },
         } as ApiResponse<ASS12020Detail>;
       })
@@ -130,40 +107,6 @@ export class ASS12020Service {
     return this.http.post(`${this.apiUrl}/exportPDFASS12020`, payload, {
       responseType: 'blob',
       observe: 'response',
-    });
-  }
-
-  /**
-   * 取得套用請購申請單清單 (API 未提供前維持 mock)
-   */
-  getApplyPurchaseRequestList(): Observable<ApiResponse<ApplyPurchaseRequestRow[]>> {
-    return of({
-      Status: '0000',
-      Data: [],
-      TotalCount: 0,
-      TotalPage: 0,
-      Message: '',
-      Error: null,
-      Meta: emptyApiMeta,
-    });
-  }
-
-  /**
-   * 取得單筆請購申請單明細 (套用至詢價登錄用，API 未提供前維持 mock)
-   */
-  getApplyPurchaseRequestDetail(
-    needId: string
-  ): Observable<
-    ApiResponse<{ SUPPLIER_ID?: string; EXPDATE?: string; NOTES?: string; Details: ASS12020DetailItem[] }>
-  > {
-    return of({
-      Status: '0000',
-      Data: { Details: [] },
-      TotalCount: 0,
-      TotalPage: 0,
-      Message: '',
-      Error: null,
-      Meta: emptyApiMeta,
     });
   }
 }

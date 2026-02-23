@@ -28,7 +28,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateMaxLength, validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, formatDateToYYYY_MM_DD, LazyLoadEvent } from '@shared/componentkit/table/table.model';
+import { Column, formatDate, formatDateToYYYY_MM_DD, LazyLoadEvent } from '@shared/componentkit/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -129,7 +129,7 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
     { field: 'NEED_ID', header: '需求編號' },
     { field: 'APPLICANT', header: '申請人' },
     { field: 'DEPT', header: '申請部門' },
-    { field: 'REQ_DATE', header: '日期' },
+    { field: 'REQ_DATE', header: '日期', format: formatDate },
     { field: 'ROW_COUNT', header: '筆數' },
   ];
 

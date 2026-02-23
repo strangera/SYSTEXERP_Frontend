@@ -46,9 +46,13 @@ export interface ASS12020QueryDataWrapper {
 
 /** 詢價登錄明細一筆 */
 export interface ASS12020DetailItem {
+  ID?: number | null;
+  FAQuotationD_ID?: number | null;
   NEED_ID?: string | null;
   GOODS_ID?: string | null;
+  MATERIAL_TYPE?: string | null;
   GOODS_PRICE?: number | null;
+  SALE_PRICE?: number | null;
   WH_ID?: string | null;
   QTY?: number | null;
   PURCHASE_QTY?: number | null;
