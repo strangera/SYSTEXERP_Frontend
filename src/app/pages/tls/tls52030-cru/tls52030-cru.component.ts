@@ -176,6 +176,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
         return;
       }
       const formData = frm.getRawValue();
+      const firstDetail = this.data[0];
       const details: IODDetail[] = this.data.map((item) => ({
         id: item.id,
         ODM_No: formData.ODM_No,
@@ -207,9 +208,10 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
         ODM_No: formData.ODM_No,
         SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
         VEN_No: formData.VEN_No,
-        // LOGO_No: formData.LOGO_No,
+        LOGO_No: firstDetail.LOGO_No || this.rowdata?.LOGO_No || '',
+        org_id: firstDetail.org_id || this.rowdata?.org_id || '',
+        ODM_TaxType: firstDetail.ODM_TaxType || this.rowdata?.ODM_TaxType || '1',
         HOS_No: formData.HOS_No,
-        org_id: this.rowdata?.org_id || null,
         ODM_Date: formData.ODM_Date,
         APRV_Date: formData.APRV_Date,
         ODM_USR_No: this.authService.currentUserValue?.user_No || '',
@@ -221,7 +223,6 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
         ODM_TotalSaleTax: totalSaleTax,
         ODM_TotalSaleAmt: formData.ODM_TotalSaleAmt, // 總金額
         ODM_Status: this.isFormCreateable ? POStatus.已確認 : this.rowdata?.ODM_Status,
-        ODM_TaxType: this.rowdata?.ODM_TaxType || '1', // 預設應稅
         ODM_Remark: formData.ODM_Remark || '',
         Details: details, // 帶入轉換後的明細資料陣列
       };
@@ -277,6 +278,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
     const body = {
       PO_NoList: this.selectedItemsDialog.map(item => item.PO_No).filter(poNo => poNo != null)
     };
+    const firstSelected = this.selectedItemsDialog[0];
     this.tls52030Service.getPOS2017AndPOS2019(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
       this.data = [
         ...this.data,
@@ -310,6 +312,9 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
             ODD_BuyAmt: buyAmt,
             ODD_SaleTax: saleTax,
             ODD_SaleAmt: saleAmt,
+            LOGO_No: firstSelected.LOGO_No,
+            org_id: firstSelected.org_id,
+            ODM_TaxType: firstSelected.ODM_TaxType || '1'
           };
         })
       ];
