@@ -81,7 +81,7 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
   whIdOptions: { value: string; label: string }[] = [];
   /** 採購單狀態：getSYS1000Options('NEEDS_STATUS') */
   subpoenaStatusOptions: { value: string; label: string }[] = [];
-  /** 未實作下拉 */
+  /** 供應商：queryPOS2013_DropDownList(VEN_Flag: '1') */
   supplierIdOptions: { value: string; label: string }[] = [];
 
   data: ASS12030QueryRow[] = [];
@@ -191,6 +191,16 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
         this.orgIdOptions = list.map((item: { No?: string; Name?: string }) => ({
           value: item.No ?? '',
           label: `${item.No ?? ''} - ${item.Name ?? ''}`,
+        }));
+      });
+    this.dropDownListService
+      .queryPOS2013_DropDownList({ VEN_Flag: '1' })
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        const list = res.Data ?? [];
+        this.supplierIdOptions = list.map((item: { VEN_No?: string; No?: string; Name?: string }) => ({
+          value: item.VEN_No ?? item.No ?? '',
+          label: `${item.VEN_No ?? item.No ?? ''} - ${item.Name ?? ''}`,
         }));
       });
     this.subpoenaStatusOptions = getSYS1000Options('NEEDS_STATUS');

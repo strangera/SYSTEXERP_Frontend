@@ -94,7 +94,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
   goodsIdOptions: { value: string; label: string }[] = [];
   /** 需求單號下拉選項 */
   needIdOptions: { value: string; label: string }[] = [];
-  /** 供應商下拉選項 */
+  /** 供應商：queryPOS2013_DropDownList(VEN_Flag: '1') */
   supplierIdOptions: { value: string; label: string }[] = [];
   /** 倉別下拉選項 */
   whIdOptions: { value: string; label: string }[] = [];
@@ -272,6 +272,16 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
         this.orgIdOptions = list.map((item: { No?: string; Name?: string }) => ({
           value: item.No ?? '',
           label: `${item.No ?? ''} - ${item.Name ?? ''}`,
+        }));
+      });
+    this.dropDownListService
+      .queryPOS2013_DropDownList({ VEN_Flag: '1' })
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        const list = res.Data ?? [];
+        this.supplierIdOptions = list.map((item: { VEN_No?: string; No?: string; Name?: string }) => ({
+          value: item.VEN_No ?? item.No ?? '',
+          label: `${item.VEN_No ?? item.No ?? ''} - ${item.Name ?? ''}`,
         }));
       });
 
