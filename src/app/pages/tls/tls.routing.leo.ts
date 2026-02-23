@@ -139,6 +139,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls55050', loadComponent: () => import('./tls55050/tls55050.component').then(m => m.TLS55050Component), data: { progNo: 'TLS55050' } },
   // 月結帳作業 CRU
   { path: 'tls55050cru', loadComponent: () => import('./tls55050-cru/tls55050-cru.component').then(m => m.TLS55050CRUComponent), data: { progNo: 'TLS55050' } },
+  // 銷貨日報查詢列印
+  { path: 'tls55070', loadComponent: () => import('./tls55070/tls55070.component').then(m => m.TLS55070Component), data: { progNo: 'TLS55070' } },
   // 倉別調撥申請維護
   { path: 'tls56040', loadComponent: () => import('./tls56040/tls56040.component').then(m => m.TLS56040Component), data: { progNo: 'TLS56040' } },
   // 倉別調撥發貨作業
